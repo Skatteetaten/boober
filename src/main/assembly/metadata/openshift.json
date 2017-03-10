@@ -1,0 +1,17 @@
+{
+  "docker": {
+    "maintainer": "Aurora OpenShift Utvikling <utvpaas@skatteetaten.no>",
+    "labels": {
+      "io.k8s.description": "Controler for creating/updating application objects",
+      "io.openshift.tags": "openshift,springboot,kotlin"
+    }
+  },
+  "java": {
+    "mainClass": "no.skatteetaten.aurora.boober.BooberApplication",
+    "jvmOpts": "-Dspring.profiles.active=openshift",
+    "applicationArgs": "--logging.config=${LOGBACK_FILE}"
+  },
+  "openshift": {
+    "readinessUrl": "/health"
+  }
+}

@@ -1,0 +1,54 @@
+= Boober dokumentasjon
+{version}
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 2
+:sectlinks:
+
+[introduction]
+= Introduksjon
+
+
+[[overview]]
+= Oversikt
+
+[[overview-http-verbs]]
+== HTTP verb
+API'et prøver å følge standard HTTP og ReST konvensjoner i bruk av HTTP verb.
+|===
+| Verb | Bruk
+
+| `GET`
+| Brukes til å hente ressurser
+
+| `POST`
+| Brukes til å lage en ny ressurs
+
+| `PUT`
+| Brukes til å oppdatere en ressurs. Kun komplette oppdateringer.
+
+| `DELETE`
+| Brukes til å slette en ressurs.
+|===
+
+[[overview-http-status-codes]]
+== HTTP status koder
+Prøver å følge standard HTTP og ReST konvensjoner i bruk av HTTP status koder.
+
+|===
+| Status kode | Bruk
+
+| `200 OK`
+| Standard svar for vellykket HTTP forespørsel. Selve svaret vil avhenge av hvilket endepunkt som blir brukt.
+
+| `204 No Content`
+| Forespørselen ble behandlet, men returnerte ikke noen respons.
+
+| `400 Bad Request`
+| Forespørselen kan ikke prosesseres på grunn av en klientside feil (ugyldig parameter eller forespørsel, f.eks.).
+
+| `404 Not Found`
+| Kunne ikke finne den forespurte ressursen.
+|===
