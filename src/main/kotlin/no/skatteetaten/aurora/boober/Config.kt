@@ -15,7 +15,7 @@ class ConfigService(val mapper: ObjectMapper) {
     fun createBooberResult(parentDir: File, jsonFiles: List<String>, overrides: Map<String, JsonNode>): Result {
 
         val jsonMap: Map<String, JsonNode> = jsonFiles.associateBy({ it }, { mapper.readTree(File(parentDir, it)) })
-        val allJsonValues : List<JsonNode> = jsonMap.values.toList().plus(overrides.values)
+        val allJsonValues: List<JsonNode> = jsonMap.values.toList().plus(overrides.values)
 
         val mergedJson = allJsonValues.merge()
 
@@ -69,27 +69,29 @@ data class Config(
         val config: Map<String, String>?,
         val secretFile: String?,
         val templateFile: String?,
-        val template:String?,
+        val template: String?,
         val parameters: Map<String, String>?,
         val envName: String?
 ) {
 
-    val dockerGroup:String =  build.groupId.replace(".", "_")
-    val dockerName:String = build.artifactId
-    val namespace:String = if(envName != null) "$affiliation$envName" else "$affiliation-$name"
+    val dockerGroup: String = build.groupId.replace(".", "_")
+    val dockerName: String = build.artifactId
+    val namespace: String = if (envName != null) "$affiliation$envName" else "$affiliation-$name"
 }
+
+data class NamespaceResult(val results: Map<String, Result>)
 
 data class Result(val config: Config, val sources: Map<String, JsonNode>, val overrides: Map<String, JsonNode>?, val parentDir: File) {
 
     //TODO: dette må vi legge i service laget ellern noe slikt
-    fun validate() : Boolean {
+    fun validate(): Boolean {
 
 
         //namespace i booberConfig må overholde 1  ^[a-z0-9][-a-z0-9]*[a-z0-9]$ ]] || error_exit "Env name $envName is not correct must match the regex [a-z0-9]([-a-z0-9]*[a-z0-9])? (e.g. 'my-name' or '123-abc')"
 
         //affiliation  ^[a-z]{0,23}[a-z]$ ]] || error_exit "Affiliation can only contain lowercase letters (at most 24 characters)"
 
-        when(config.type) {
+        when (config.type) {
             process -> {
                 //if templateFile check that it exists in parentDir templates folder
 
