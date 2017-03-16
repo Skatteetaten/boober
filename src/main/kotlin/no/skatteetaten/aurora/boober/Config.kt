@@ -77,6 +77,12 @@ data class Config(
     val dockerGroup: String = build.groupId.replace(".", "_")
     val dockerName: String = build.artifactId
     val namespace: String = if (envName != null) "$affiliation$envName" else "$affiliation-$name"
+
+    val cert:String? = if(flags != null && flags.contains("cert")) {
+        build.groupId + "." + build.artifactId
+    } else {
+        deploy?.certificate
+    }
 }
 
 data class NamespaceResult(val results: Map<String, Result>)
