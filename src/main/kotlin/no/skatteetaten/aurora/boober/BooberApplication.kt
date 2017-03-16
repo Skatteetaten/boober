@@ -13,13 +13,3 @@ class BooberApplication
 fun main(args: Array<String>) {
     SpringApplication.run(BooberApplication::class.java, *args)
 }
-
-@RestController
-class CustomerController  {
-
-    @GetMapping("/")
-    fun hello() = "Hello"
-
-    @GetMapping("/test")
-    fun test() = "Test"
-}
