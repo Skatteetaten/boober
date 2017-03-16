@@ -40,7 +40,6 @@ boober:
     url: "https://git.aurora.skead.no/scm/oc/"
     username: "boober"
     password: "komogsyngensang"
-
 spring:
   profiles:
     active: development

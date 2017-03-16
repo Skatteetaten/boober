@@ -1,10 +1,13 @@
 package services
 
-class AocConfigFiles {
+class BooberConfigFiles {
 
-  def globalAbout = """
+  def BooberConfigFiles = """
 {
-  "groups": "APP_PaaS_drift",
+ "flags": [
+    "cert"
+  ],
+  "groups": "APP_PaaS_drift APP_Paas_utv",
   "affiliation": "mfp"
 }
 """
@@ -13,8 +16,7 @@ class AocConfigFiles {
 {
   "flags": [
     "rolling",
-    "route",
-    "cert"
+    "route"
   ],
   "build": {
     "GROUP_ID": "ske.aurora.openshift.demo",

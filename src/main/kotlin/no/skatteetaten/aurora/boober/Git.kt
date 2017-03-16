@@ -1,9 +1,10 @@
-package no.skatteetaten.aurora.boober.git
+package no.skatteetaten.aurora.boober
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import no.skatteetaten.aurora.boober.BooberResult
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.revwalk.RevCommit
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
@@ -15,47 +16,6 @@ import org.springframework.web.bind.annotation.RestController
 import java.io.File
 
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class BooberConfig(
-        val groups: String? = null,
-        val affiliation: String? = null,
-        val type: String? = null,
-        val deploy: Map<String, String> = HashMap<String, String>()) {
-
-    fun merge(other: BooberConfig): BooberConfig {
-
-        return BooberConfig(
-                other.groups ?: groups,
-                other.affiliation ?: affiliation,
-                other.type ?: type,
-                deploy.plus(other.deploy)
-        )
-    }
-}
-
-@RestController
-class GitController(val gitService: GitService) {
-
-    @GetMapping("/setup/{token}/{affiliation}/{env}/{app}")
-    fun setup(@PathVariable token: String,
-              @PathVariable affiliation: String,
-              @PathVariable env: String,
-              @PathVariable app: String): BooberConfig {
-
-        val dir = File("/tmp/$token/$affiliation")
-
-        val git = gitService.get(dir)
-
-        val mapper = ObjectMapper().registerKotlinModule()
-
-        return listOf("about.json", "$env/about.json", "$app.json", "$env/$app.json")
-                .map { File(dir, it) }
-                .filter(File::exists)
-                .map { mapper.readValue<BooberConfig>(it) }
-                .reduce(BooberConfig::merge)
-
-    }
-}
 
 @Service
 class GitService(
@@ -124,25 +84,4 @@ class GitService(
 
     }
 
-}
-
-inline fun <T : AutoCloseable, R> T.use(block: (T) -> R): R {
-
-    var currentThrowable: java.lang.Throwable? = null
-    try {
-        return block(this)
-    } catch (throwable: Throwable) {
-        currentThrowable = throwable as java.lang.Throwable
-        throw throwable
-    } finally {
-        if (currentThrowable != null) {
-            try {
-                this.close()
-            } catch (throwable: Throwable) {
-                currentThrowable.addSuppressed(throwable)
-            }
-        } else {
-            this.close()
-        }
-    }
 }
