@@ -79,7 +79,7 @@ data class Config(
     val namespace: String = if (envName != null) "$affiliation$envName" else "$affiliation-$name"
 
     val cert:String? = if(flags != null && flags.contains("cert")) {
-        build.groupId + "." + build.artifactId
+        build.groupId + "." + name
     } else {
         deploy?.certificate
     }
