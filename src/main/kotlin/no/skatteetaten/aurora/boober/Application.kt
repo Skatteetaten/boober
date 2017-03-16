@@ -11,18 +11,18 @@ import org.springframework.context.annotation.Primary
 
 
 @SpringBootApplication
-class BooberApplication
+class Main
 
 fun main(args: Array<String>) {
-    SpringApplication.run(BooberApplication::class.java, *args)
+    SpringApplication.run(Main::class.java, *args)
 }
 
 @Configuration
-class ObjectMapperFactory {
+class Configuration {
 
     @Bean
     @Primary
     fun mapper(): ObjectMapper {
-        return jacksonObjectMapper().let{ it.setSerializationInclusion(JsonInclude.Include.NON_NULL)}
+        return jacksonObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
     }
 }

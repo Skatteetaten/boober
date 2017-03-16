@@ -1,11 +1,8 @@
 package services
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
-import no.skatteetaten.aurora.boober.BooberConfigService
 import spock.lang.Specification
 
-class BooberServiceTest extends Specification {
+class ServiceTest extends Specification {
 
   def aboutWithoutName = """
 {
@@ -39,8 +36,8 @@ class BooberServiceTest extends Specification {
       def mapper = new ObjectMapper()
       mapper.registerModule(new KotlinModule())
 
-      def service = new BooberConfigService(mapper)
-      def files = new BooberConfigFiles()
+      def service = new ConfigService(mapper)
+      def files = new ConfigFiles()
 
     when:
 

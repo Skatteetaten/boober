@@ -1,6 +1,6 @@
 package services
 
-class BooberConfigFiles {
+class ConfigFiles {
 
   def BooberConfigFiles = """
 {

@@ -90,7 +90,7 @@ dependencies {
 
 //bort med dette
 startScripts {
-  mainClassName = "no.skatteetaten.aurora.boober.BooberApplication"
+  mainClassName = "no.skatteetaten.aurora.boober.Main"
   applicationDefaultJvmArgs = [
       "-Dspring.profiles.active=openshift"
   ]
