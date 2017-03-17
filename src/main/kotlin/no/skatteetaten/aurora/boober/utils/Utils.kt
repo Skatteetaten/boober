@@ -1,17 +1,16 @@
 package no.skatteetaten.aurora.boober.utils
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.JsonNodeType
 import com.fasterxml.jackson.databind.node.ObjectNode
 
 
 inline fun <T : AutoCloseable, R> T.use(block: (T) -> R): R {
 
-    var currentThrowable: java.lang.Throwable? = null
+    var currentThrowable: Throwable? = null
     try {
         return block(this)
     } catch (throwable: Throwable) {
-        currentThrowable = throwable as java.lang.Throwable
+        currentThrowable = throwable
         throw throwable
     } finally {
         if (currentThrowable != null) {
