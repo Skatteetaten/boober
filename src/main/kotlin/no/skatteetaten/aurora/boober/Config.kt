@@ -12,7 +12,7 @@ import java.io.File
 @Service
 class ConfigService(val mapper: ObjectMapper) {
 
-    fun createBooberResult(parentDir: File, jsonFiles: List<String>, overrides: Map<String, JsonNode>): Result {
+    fun createBooberResult(parentDir: File, jsonFiles: List<String>, overrides: Map<String, JsonNode> = mapOf()): Result {
 
         val jsonMap: Map<String, JsonNode> = jsonFiles.map{ Pair(it, mapper.readTree(File(parentDir, it)))}.toMap()
 
