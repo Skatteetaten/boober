@@ -2,7 +2,7 @@ package no.skatteetaten.aurora.boober.controller
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.model.ConfigService
+import no.skatteetaten.aurora.boober.service.ConfigService
 import no.skatteetaten.aurora.boober.model.NamespaceResult
 import no.skatteetaten.aurora.boober.model.Result
 import no.skatteetaten.aurora.boober.service.GitService
