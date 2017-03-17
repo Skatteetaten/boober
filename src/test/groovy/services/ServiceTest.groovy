@@ -1,52 +1,54 @@
 package services
 
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
+
+import no.skatteetaten.aurora.boober.ConfigService
+import no.skatteetaten.aurora.boober.Result
 import spock.lang.Specification
 
 class ServiceTest extends Specification {
 
-  def aboutWithoutName = """
-{
-  "affiliation": "mfp",
-  "cluster": "utv",
-  "type": "deploy",
-  "build": {
-    "GROUP_ID": "no.skatt.aurora",
-    "ARTIFACT_ID": "console",
-    "VERSION": "3.2.1"
-  }
- }
- """
+  File configDir
+  ConfigService service
 
-  def aboutWithName = """
-{
-  "affiliation": "mfp",
-  "cluster": "utv",
-  "type": "deploy",
-  "name": "console2",
-  "build": {
-    "GROUP_ID": "no.skatt.aurora",
-    "ARTIFACT_ID": "console",
-    "VERSION": "3.2.1"
+  ObjectMapper mapper = new ObjectMapper()
+
+  def setup() {
+    mapper.registerModule(new KotlinModule()).setSerializationInclusion(JsonInclude.Include.NON_NULL)
+    service = new ConfigService(mapper)
+
+    GroovyClassLoader classLoader = new GroovyClassLoader(this.class.getClassLoader())
+    configDir = new File(classLoader.getResource("samples/config").path)
   }
- }
- """
-/*
-  def "Should merge muliple json files"() {
+
+  def "Should fail due to missing config file"() {
     given:
-      def mapper = new ObjectMapper()
-      mapper.registerModule(new KotlinModule())
-
-      def service = new ConfigService(mapper)
-      def files = new ConfigFiles()
+      def files = collectFilesToMap("about.json", "referanse.json", "utv/about.json")
 
     when:
-
-     // def result = service.createBooberResult([files.booberConfigFiles, aboutWithName, files.globalApp, files.environmentAbout])
+      Result result = service.createBooberResult("utv", "referanse", files)
 
     then:
-      //result.sources.size() == 4
-      //result.config != null
+      result.error != null
   }
-  */
 
+  def "Should successfully merge all config files"() {
+    given:
+      def files = collectFilesToMap("about.json", "referanse.json", "utv/about.json", "utv/referanse.json")
+
+    when:
+      Result result = service.createBooberResult("utv", "referanse", files)
+
+    then:
+      result.error == null
+      result.config.name == "refapp"
+      result.config.build.version == "1"
+  }
+
+  private Map<String, JsonNode> collectFilesToMap(String... fileNames) {
+    return fileNames.collectEntries { [(it), mapper.readTree(new File(configDir, it))] }
+  }
 }

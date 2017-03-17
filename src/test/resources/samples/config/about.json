@@ -1,0 +1,8 @@
+{
+  "groups": "APP_PaaS_drift APP_PaaS_utv",
+  "affiliation" : "aot",
+  "type": "deploy",
+  "deploy" : {
+    "SPLUNK_INDEX" : "openshift-test"
+  }
+}
