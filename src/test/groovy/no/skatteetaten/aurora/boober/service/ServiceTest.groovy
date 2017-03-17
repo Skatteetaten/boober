@@ -1,11 +1,11 @@
-package services
+package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import no.skatteetaten.aurora.boober.ConfigService
+import no.skatteetaten.aurora.boober.model.ConfigService
 import no.skatteetaten.aurora.boober.Configuration
-import no.skatteetaten.aurora.boober.Result
+import no.skatteetaten.aurora.boober.model.Result
 import spock.lang.Specification
 
 class ServiceTest extends Specification {

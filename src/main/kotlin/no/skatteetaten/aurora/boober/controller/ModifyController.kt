@@ -1,7 +1,11 @@
-package no.skatteetaten.aurora.boober
+package no.skatteetaten.aurora.boober.controller
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import no.skatteetaten.aurora.boober.model.ConfigService
+import no.skatteetaten.aurora.boober.model.NamespaceResult
+import no.skatteetaten.aurora.boober.model.Result
+import no.skatteetaten.aurora.boober.service.GitService
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -14,7 +18,7 @@ class ModifyController(val gitService: GitService, val configService: ConfigServ
     @PostMapping("/save/{token}/{affiliation}")
     fun setupNamespace(@PathVariable token: String,
                        @PathVariable affiliation: String,
-                       @RequestBody input: Map<String, JsonNode>):NamespaceResult {
+                       @RequestBody input: Map<String, JsonNode>): NamespaceResult {
 
 
         val dir = File("/tmp/$token/$affiliation")

@@ -1,5 +1,6 @@
-package no.skatteetaten.aurora.boober
+package no.skatteetaten.aurora.boober.service
 
+import no.skatteetaten.aurora.boober.model.Config
 import org.springframework.stereotype.Service
 
 @Service

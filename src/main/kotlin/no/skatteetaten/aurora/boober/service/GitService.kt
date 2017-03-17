@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober
+package no.skatteetaten.aurora.boober.service
 
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.revwalk.RevCommit

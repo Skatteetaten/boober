@@ -1,10 +1,11 @@
-package no.skatteetaten.aurora.boober
+package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.treeToValue
-import no.skatteetaten.aurora.boober.TemplateType.*
+import no.skatteetaten.aurora.boober.model.TemplateType.*
+import no.skatteetaten.aurora.boober.utils.reduceJsonNodes
 import org.springframework.stereotype.Service
 import java.io.File
 

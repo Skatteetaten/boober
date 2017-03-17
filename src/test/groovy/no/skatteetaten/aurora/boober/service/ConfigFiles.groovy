@@ -1,4 +1,4 @@
-package services
+package no.skatteetaten.aurora.boober.service
 
 class ConfigFiles {
 

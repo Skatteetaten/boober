@@ -1,7 +1,11 @@
-package no.skatteetaten.aurora.boober
+package no.skatteetaten.aurora.boober.controller
 
 
 import com.fasterxml.jackson.databind.JsonNode
+import no.skatteetaten.aurora.boober.model.ConfigService
+import no.skatteetaten.aurora.boober.service.GitService
+import no.skatteetaten.aurora.boober.model.NamespaceResult
+import no.skatteetaten.aurora.boober.model.Result
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
