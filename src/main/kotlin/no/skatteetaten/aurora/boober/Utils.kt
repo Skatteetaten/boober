@@ -27,19 +27,21 @@ inline fun <T : AutoCloseable, R> T.use(block: (T) -> R): R {
 }
 
 
-/*
-  Reducer to join JsonNodes
+/**
+ * Reducer to join JsonNodes
+ * Merging ObjectNodes and overrides everything else
  */
-fun reduceJsonNodes(acc: JsonNode, current: JsonNode): JsonNode {
-    val result: ObjectNode = acc.deepCopy()
-    current.fieldNames().forEach {
-        when (current.get(it).nodeType) {
-            JsonNodeType.OBJECT -> {
-                if (result.has(it)) (result.get(it) as ObjectNode).setAll(current.get(it) as ObjectNode)
-                else result.set(it, current.get(it))
+fun reduceJsonNodes(accNode: JsonNode, currentNode: JsonNode): JsonNode {
+    val result: ObjectNode = accNode.deepCopy()
+    currentNode.fieldNames().forEach { field ->
+        val currentValue: JsonNode = currentNode.get(field).deepCopy()
+        when (currentValue) {
+            is ObjectNode -> {
+                val resultValue = result.get(field) as ObjectNode?
+                resultValue?.setAll(currentValue) ?: result.set(field, currentValue)
             }
             else -> {
-                result.replace(it, current.get(it))
+                result.replace(field, currentValue)
             }
         }
     }
