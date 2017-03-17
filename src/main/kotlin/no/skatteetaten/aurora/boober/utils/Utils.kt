@@ -27,23 +27,28 @@ inline fun <T : AutoCloseable, R> T.use(block: (T) -> R): R {
 
 
 /**
- * Reducer to join JsonNodes
- * Merging ObjectNodes and overrides everything else
+ * Creates a copy of node1 and copies (and potentially overwriting) all properties from node2 into it.
+ * @param node1
+ * @param node2
  */
-fun reduceJsonNodes(accNode: JsonNode, currentNode: JsonNode): JsonNode {
-    val result: ObjectNode = accNode.deepCopy()
-    currentNode.fieldNames().forEach { field ->
-        val currentValue: JsonNode = currentNode.get(field).deepCopy()
-        when (currentValue) {
+fun createMergeCopy(node1: JsonNode, node2: JsonNode): JsonNode {
+    val mergeTarget: ObjectNode = node1.deepCopy()
+    return copyJsonProperties(mergeTarget, node2)
+}
+
+fun copyJsonProperties(targetNode: ObjectNode, sourceNode: JsonNode): ObjectNode {
+    sourceNode.fieldNames().forEach { field ->
+        val sourceProperty: JsonNode = sourceNode.get(field).deepCopy()
+        when (sourceProperty) {
             is ObjectNode -> {
-                val resultValue = result.get(field) as ObjectNode?
-                resultValue?.setAll(currentValue) ?: result.set(field, currentValue)
+                val targetProperty = targetNode.get(field) as ObjectNode?
+                targetProperty?.setAll(sourceProperty) ?: targetNode.set(field, sourceProperty)
             }
             else -> {
-                result.replace(field, currentValue)
+                targetNode.replace(field, sourceProperty)
             }
         }
     }
 
-    return result
+    return targetNode
 }

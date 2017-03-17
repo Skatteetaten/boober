@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.treeToValue
 import no.skatteetaten.aurora.boober.model.Config
 import no.skatteetaten.aurora.boober.model.Result
-import no.skatteetaten.aurora.boober.utils.reduceJsonNodes
+import no.skatteetaten.aurora.boober.utils.createMergeCopy
 import org.springframework.stereotype.Service
 
 
@@ -40,4 +40,4 @@ class ConfigService(val mapper: ObjectMapper) {
     }
 }
 
-fun List<JsonNode>.merge() = this.reduce(::reduceJsonNodes)
+fun List<JsonNode>.merge() = this.reduce(::createMergeCopy)
