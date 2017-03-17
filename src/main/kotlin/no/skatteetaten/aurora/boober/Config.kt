@@ -14,7 +14,8 @@ class ConfigService(val mapper: ObjectMapper) {
 
     fun createBooberResult(parentDir: File, jsonFiles: List<String>, overrides: Map<String, JsonNode>): Result {
 
-        val jsonMap: Map<String, JsonNode> = jsonFiles.associateBy({ it }, { mapper.readTree(File(parentDir, it)) })
+        val jsonMap: Map<String, JsonNode> = jsonFiles.map{ Pair(it, mapper.readTree(File(parentDir, it)))}.toMap()
+
         val allJsonValues: List<JsonNode> = jsonMap.values.toList().plus(overrides.values)
 
         val mergedJson = allJsonValues.merge()
