@@ -28,7 +28,9 @@ class ExecuteController(val gitService: GitService, val configService: ConfigSer
         val res: Map<String, Result> = apps.map {
             val files = listOf("about.json", "$env/about.json", "$it.json", "$env/$it.json")
             val matchedOverrides = overrides.filter { it.key == "about.json" || it.key == "$it.json" }
-            Pair(it, configService.createBooberResult(dir, files, matchedOverrides))
+
+            // TODO: Must collect files from git and replace mapOf
+            Pair(it, configService.createBooberResult(env, it, mapOf()))
         }.toMap()
 
         return NamespaceResult(res)
@@ -50,7 +52,8 @@ class ExecuteController(val gitService: GitService, val configService: ConfigSer
 
         val matchedOverrides = overrides.filter { it.key == "about.json" || it.key == "$app.json" }
 
-        return configService.createBooberResult(dir, files, matchedOverrides)
+        // TODO: Must collect files from git and replace mapOf
+        return configService.createBooberResult(env, app, mapOf())
 
     }
 

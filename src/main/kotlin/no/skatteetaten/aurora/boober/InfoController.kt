@@ -24,7 +24,8 @@ class InfoController(val gitService: GitService, val configService: ConfigServic
 
         val matchedOverrides: Map<String, JsonNode> = emptyMap()
 
-        return configService.createBooberResult(dir, files, matchedOverrides)
+        // TODO: Must collect files from git and replace mapOf
+        return configService.createBooberResult(env, app, mapOf())
 
     }
 }

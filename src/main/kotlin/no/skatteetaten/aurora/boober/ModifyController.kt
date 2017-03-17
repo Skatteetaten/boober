@@ -30,11 +30,13 @@ class ModifyController(val gitService: GitService, val configService: ConfigServ
         val allEnv = dir.listFiles({ dir -> dir.isDirectory}).filter{ File(dir, "about.json").exists()}
 
         val res:Map<String, Result> = allEnv.flatMap {
-            val env = it
+            val env = it.name
             val apps = it.listFiles({ _, name -> name != "about.json" }).toList().map(File::nameWithoutExtension)
             apps.map {
                 val files = listOf("about.json", "$env/about.json", "$it.json", "$env/$it.json")
-                Pair("$env/$it", configService.createBooberResult(dir, files))
+
+                // TODO: Must collect files from git and replace mapOf
+                Pair("$env/$it", configService.createBooberResult(env, it, mapOf()))
             }
         }.toMap()
 

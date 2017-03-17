@@ -12,7 +12,8 @@ import java.io.File
 @Service
 class ConfigService(val mapper: ObjectMapper) {
 
-    fun createBooberResult(parentDir: File, jsonFiles: List<String>, overrides: Map<String, JsonNode> = mapOf()): Result {
+    /*
+    fun createBooberResult2(parentDir: File, jsonFiles: List<String>, overrides: Map<String, JsonNode> = mapOf()): Result {
 
         val jsonMap: Map<String, JsonNode> = jsonFiles.map{ Pair(it, mapper.readTree(File(parentDir, it)))}.toMap()
 
@@ -21,7 +22,21 @@ class ConfigService(val mapper: ObjectMapper) {
         val mergedJson = allJsonValues.merge()
 
         val config: Config = mapper.treeToValue(mergedJson)
-        return Result(config, jsonMap, overrides, parentDir)
+        return Result(config, jsonMap)
+    }*/
+
+    fun createBooberResult(env: String, app: String, files: Map<String, JsonNode> ): Result {
+
+        val names = setOf("about.json", "$env/about.json", "$app.json", "$env/$app.json")
+        val missingFiles = names.filter { it !in files.keys }
+
+        if(missingFiles.isNotEmpty()) {
+            return Result(sources = files, error = "Files missing => $missingFiles")
+        }
+
+        val mergedJson = files.values.toList().merge()
+        val config: Config = mapper.treeToValue(mergedJson)
+        return Result(config = config, sources = files)
     }
 }
 
@@ -88,7 +103,7 @@ data class Config(
 
 data class NamespaceResult(val results: Map<String, Result>)
 
-data class Result(val config: Config, val sources: Map<String, JsonNode>, val overrides: Map<String, JsonNode>?, val parentDir: File) {
+data class Result(val config: Config? = null, val sources: Map<String, JsonNode>, val error: String? = null, val exception:Exception? = null) {
 
     //TODO: dette må vi legge i service laget ellern noe slikt
     fun validate(): Boolean {
@@ -98,7 +113,7 @@ data class Result(val config: Config, val sources: Map<String, JsonNode>, val ov
 
         //affiliation  ^[a-z]{0,23}[a-z]$ ]] || error_exit "Affiliation can only contain lowercase letters (at most 24 characters)"
 
-        when (config.type) {
+        when (config?.type) {
             process -> {
                 //if templateFile check that it exists in parentDir templates folder
 
