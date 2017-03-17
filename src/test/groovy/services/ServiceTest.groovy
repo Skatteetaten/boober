@@ -1,27 +1,24 @@
 package services
 
-import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 
 import no.skatteetaten.aurora.boober.ConfigService
+import no.skatteetaten.aurora.boober.Configuration
 import no.skatteetaten.aurora.boober.Result
 import spock.lang.Specification
 
 class ServiceTest extends Specification {
 
   File configDir
-  ConfigService service
 
-  ObjectMapper mapper = new ObjectMapper()
+  ObjectMapper mapper = new Configuration().mapper()
+
+  ConfigService service = new ConfigService(mapper)
 
   def setup() {
-    mapper.registerModule(new KotlinModule()).setSerializationInclusion(JsonInclude.Include.NON_NULL)
-    service = new ConfigService(mapper)
 
-    GroovyClassLoader classLoader = new GroovyClassLoader(this.class.getClassLoader())
-    configDir = new File(classLoader.getResource("samples/config").path)
+    configDir = new File(ServiceTest.getResource("/samples/config").path)
   }
 
   def "Should fail due to missing config file"() {
