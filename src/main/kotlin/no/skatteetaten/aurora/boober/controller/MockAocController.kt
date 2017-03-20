@@ -1,11 +1,14 @@
 package no.skatteetaten.aurora.boober.controller
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.util.JSONPObject
 import no.skatteetaten.aurora.boober.service.ConfigService
 import no.skatteetaten.aurora.boober.model.Result
 import no.skatteetaten.aurora.boober.service.GitService
 import org.springframework.web.bind.annotation.*
 import java.io.File
+import cbeust.klaxon
+
 
 
 @RestController
@@ -16,7 +19,7 @@ class MockAocController(val gitService: GitService, val configService: ConfigSer
     fun setupMock(@RequestHeader token: String,
                 @PathVariable env: String,
                 @PathVariable app: String,
-                @RequestBody files: List<Map<String, JsonNode>>
+                @RequestBody configs: Map<String, JsonNode>
                 ): Result {
 
         println("setup called")
@@ -24,9 +27,18 @@ class MockAocController(val gitService: GitService, val configService: ConfigSer
         println("Env: " + env)
         println("App: " + app)
 
-        for (file in files) {
-            println(file.keys)
-            println(file.values)
+        for (config in configs.entries) {
+            println(config.key)
+
+            println("Size: " + config.value.size())
+            println("Value: " + config.value)
+
+            val files: Map<String, JsonNode>
+
+            for (foo in config.value) {
+                println(foo)
+            }
+
         }
 
         val retVal: Map<String, JsonNode> = emptyMap()
