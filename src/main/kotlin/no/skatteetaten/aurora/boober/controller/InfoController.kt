@@ -13,6 +13,7 @@ import java.io.File
 @RestController
 class InfoController(val gitService: GitService, val configService: ConfigService) {
 
+    // Test : wget localhost:8080/api/getInfo/asdf/aot/utv/referanse
     @RequestMapping("/api/getInfo/{token}/{affiliation}/{env}/{app}")
     fun getInfo(@PathVariable token: String,
                 @PathVariable affiliation: String,
@@ -23,9 +24,9 @@ class InfoController(val gitService: GitService, val configService: ConfigServic
 
         gitService.get(dir)
 
-        val files = listOf("about.json", "$env/about.json", "$app.json", "$env/$app.json")
+        //val files = listOf("about.json", "$env/about.json", "$app.json", "$env/$app.json")
 
-        val matchedOverrides: Map<String, JsonNode> = emptyMap()
+        //val matchedOverrides: Map<String, JsonNode> = emptyMap()
 
         // TODO: Must collect files from git and replace mapOf
         return configService.createBooberResult(env, app, mapOf())
