@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.Configuration
 import no.skatteetaten.aurora.boober.model.Result
+import no.skatteetaten.aurora.boober.model.TemplateType
 import spock.lang.Specification
 
 class ServiceTest extends Specification {
@@ -21,6 +22,7 @@ class ServiceTest extends Specification {
   }
 
   def "Should fail due to missing config file"() {
+
     given:
       def files = collectFilesToMap("about.json", "referanse.json", "utv/about.json")
 
@@ -32,6 +34,7 @@ class ServiceTest extends Specification {
   }
 
   def "Should successfully merge all config files"() {
+
     given:
       def files = collectFilesToMap("about.json", "referanse.json", "utv/about.json", "utv/referanse.json")
 
@@ -40,8 +43,27 @@ class ServiceTest extends Specification {
 
     then:
       result.error == null
-      result.config.name == "refapp"
-      result.config.build.version == "1"
+
+      with(result.config) {
+        affiliation == "aot"
+        name == "refapp"
+        cluster == "utv"
+        replicas == 3
+        type == TemplateType.deploy
+        groups == "APP_PaaS_drift APP_PaaS_utv"
+        flags == ["rolling", "route", "cert"]
+        config == ["SERVER_URL": "http://localhost:8080"]
+
+        build.version == "1"
+        build.groupId == "ske.aurora.openshift.referanse"
+        build.artifactId == "openshift-referanse-springboot-server"
+
+        deploy.prometheusPort == 8081
+        deploy.managementPath == ":8081/actuator"
+        deploy.database == "referanseapp"
+        deploy.splunkIndex == "openshift-test"
+      }
+
   }
 
   private Map<String, JsonNode> collectFilesToMap(String... fileNames) {
