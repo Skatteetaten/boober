@@ -1,4 +1,5 @@
 #/bin/sh
 
-http POST :8080/setup/asdf/aot/utv/referanse  < overrides.json
+
+http POST :8080/setup/asdf/utv/referanse.json  < files.json
 

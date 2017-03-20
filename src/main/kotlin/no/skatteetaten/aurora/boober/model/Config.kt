@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.model.TemplateType.*
 
 enum class TemplateType {
     deploy, development, process,
@@ -64,34 +63,8 @@ data class Config(
 
 data class NamespaceResult(val results: Map<String, Result>)
 
-data class Result(val config: Config? = null, val sources: Map<String, JsonNode>, val error: String? = null, val exception: Exception? = null) {
+data class Result(val config: Config? = null, val sources: Map<String, JsonNode>, val errors: List<String> = listOf()) {
 
-    //TODO: dette må vi legge i service laget ellern noe slikt
-    fun validate(): Boolean {
+    val valid = errors.isEmpty()
 
-
-        //namespace i booberConfig må overholde 1  ^[a-z0-9][-a-z0-9]*[a-z0-9]$ ]] || error_exit "Env name $envName is not correct must match the regex [a-z0-9]([-a-z0-9]*[a-z0-9])? (e.g. 'my-name' or '123-abc')"
-
-        //affiliation  ^[a-z]{0,23}[a-z]$ ]] || error_exit "Affiliation can only contain lowercase letters (at most 24 characters)"
-
-        when (config?.type) {
-            process -> {
-                //if templateFile check that it exists in parentDir templates folder
-
-                //if template must exist in openshift namespace
-
-                //deploy cannot be set
-            }
-            deploy -> {
-                //name  ^[a-z][-a-z0-9]{0,23}[a-z0-9]$ ]] DNS 952 label (at most 24 characters, matching regex [a-z]([-a-z0-9]*[a-z0-9])?): e.g. 'my-name'"
-
-            }
-            development -> {
-                //name  ^[a-z][-a-z0-9]{0,23}[a-z0-9]$ ]] DNS 952 label (at most 24 characters, matching regex [a-z]([-a-z0-9]*[a-z0-9])?): e.g. 'my-name'"
-
-            }
-        }
-
-        return true
-    }
 }

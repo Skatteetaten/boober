@@ -34,6 +34,8 @@ endpoints:
     jolokia:
         enabled: false
 
+openshift:
+    url: https://utv-master.paas.skead.no:8443
 
 boober:
   git:

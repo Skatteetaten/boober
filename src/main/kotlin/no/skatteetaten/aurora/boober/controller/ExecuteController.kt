@@ -2,20 +2,19 @@ package no.skatteetaten.aurora.boober.controller
 
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.service.ConfigService
-import no.skatteetaten.aurora.boober.service.GitService
-import no.skatteetaten.aurora.boober.model.NamespaceResult
 import no.skatteetaten.aurora.boober.model.Result
+import no.skatteetaten.aurora.boober.service.ConfigService
+import no.skatteetaten.aurora.boober.service.ValidationService
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
-import java.io.File
 
 @RestController
-class ExecuteController(val gitService: GitService, val configService: ConfigService) {
+class ExecuteController(val configService: ConfigService, val validationService: ValidationService) {
 
 
+    /*
     @PostMapping("/setup/{token}/{affiliation}/{env}")
     fun setupNamespace(@PathVariable token: String,
                        @PathVariable affiliation: String,
@@ -40,25 +39,21 @@ class ExecuteController(val gitService: GitService, val configService: ConfigSer
         return NamespaceResult(res)
 
     }
-
-    @PostMapping("/setup/{token}/{affiliation}/{env}/{app}")
+*/
+    @PostMapping("/setup/{token}/{env}/{app}")
     fun setup(@PathVariable token: String,
-              @PathVariable affiliation: String,
               @PathVariable env: String,
               @PathVariable app: String,
-              @RequestBody overrides: Map<String, JsonNode>): Result {
+              @RequestBody files: Map<String, JsonNode>): Result {
 
-        val dir = File("/tmp/$token/$affiliation")
+        val res = configService.createBooberResult(env, app, files)
 
-        gitService.get(dir)
+        val validated = validationService.validate(res, token)
+        //TODO perform operations, maybe expand Result object here?
 
-        val files = listOf("about.json", "$env/about.json", "$app.json", "$env/$app.json")
-
-        val matchedOverrides = overrides.filter { it.key == "about.json" || it.key == "$app.json" }
-
-        // TODO: Must collect files from git and replace mapOf
-        return configService.createBooberResult(env, app, mapOf())
-
+        return validated
     }
 
 }
+
+

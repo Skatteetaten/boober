@@ -31,10 +31,11 @@ class ConfigService(val mapper: ObjectMapper) {
         val missingFiles = names.filter { it !in files.keys }
 
         if (missingFiles.isNotEmpty()) {
-            return Result(sources = files, error = "Files missing => $missingFiles")
+            return Result(sources = files, errors = listOf("Files missing => $missingFiles"))
         }
 
-        val mergedJson = files.values.toList().merge()
+        val selectedFile = files.filter{ it.key in names}.values.toList()
+        val mergedJson = selectedFile.merge()
         val config: Config = mapper.treeToValue(mergedJson)
         return Result(config = config, sources = files)
     }

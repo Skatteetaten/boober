@@ -30,7 +30,7 @@ class ServiceTest extends Specification {
       Result result = service.createBooberResult("utv", "referanse", files)
 
     then:
-      result.error != null
+      result.errors.size() == 1
   }
 
   def "Should successfully merge all config files"() {
@@ -42,7 +42,7 @@ class ServiceTest extends Specification {
       Result result = service.createBooberResult("utv", "referanse", files)
 
     then:
-      result.error == null
+      result.errors.isEmpty()
 
       with(result.config) {
         affiliation == "aot"
