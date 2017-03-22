@@ -9,6 +9,9 @@
       "type": "deploy",
       "deploy" : {
         "SPLUNK_INDEX" : "openshift-test"
+      },
+      "config" : {
+        "foo" : "bar"
       }
     },
     "referanse.json" : {
@@ -25,6 +28,9 @@
         "PROMETHEUS_PORT" : "8081",
         "MANAGEMENT_PATH": ":8081/actuator",
         "DATABASE": "referanseapp"
+      },
+      "config" : {
+        "foo2" : "bar"
       }
     },
     "utv/about.json" : {

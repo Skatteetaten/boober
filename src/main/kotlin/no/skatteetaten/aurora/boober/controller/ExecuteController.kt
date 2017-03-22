@@ -4,13 +4,14 @@ package no.skatteetaten.aurora.boober.controller
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.Result
 import no.skatteetaten.aurora.boober.service.ConfigService
+import no.skatteetaten.aurora.boober.service.OpenshiftService
 import no.skatteetaten.aurora.boober.service.ValidationService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.web.bind.annotation.*
 
 @RestController
-class ExecuteController(val configService: ConfigService, val validationService: ValidationService) {
+class ExecuteController(val configService: ConfigService, val validationService: ValidationService, val openshiftService:OpenshiftService) {
 
     val logger: Logger = LoggerFactory.getLogger(ExecuteController::class.java)
 
@@ -25,7 +26,11 @@ class ExecuteController(val configService: ConfigService, val validationService:
         val validated = validationService.validate(res, token)
         //TODO perform operations, maybe expand Result object here?
 
-        return validated
+        if(!validated.valid) {
+            return validated
+        }
+
+        return openshiftService.execute(res, token)
     }
 
 }

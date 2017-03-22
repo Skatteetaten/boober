@@ -22,8 +22,6 @@ data class ConfigDeploy(
         @JsonProperty("CPU_REQUEST") val cpuRequest: Int = 0,
         @JsonProperty("ROUTE_WEBSEAL") val websealRoute: String?,
         @JsonProperty("ROUTE_WEBSEAL_ROLES") val websealRoles: String?,
-        @JsonProperty("ROUTE_WEB2WEB") val web2web: String?,
-        @JsonProperty("ROUTE_WEB2APP") val web2app: String?,
         @JsonProperty("PROMETHEUS_ENABLED") val prometheus: Boolean = true,
         @JsonProperty("PROMETHEUS_PORT") val prometheusPort: Int = 8081,
         @JsonProperty("PROMETHEUS_PATH") val prometheusPath: String = "/prometheus",
@@ -32,11 +30,12 @@ data class ConfigDeploy(
 )
 
 data class Config(
+        val schemaVersion:String="v1",
         val affiliation: String,
         val groups: String?,
         val users: String?,
         val cluster: String,
-        val type: TemplateType?,
+        val type: TemplateType,
         val replicas: Int = 1,
         val flags: List<String>?,
         val build: ConfigBuild,
@@ -63,7 +62,10 @@ data class Config(
 
 data class NamespaceResult(val results: Map<String, Result>)
 
-data class Result(val config: Config? = null, val sources: Map<String, JsonNode>, val errors: List<String> = listOf()) {
+data class Result(val config: Config? = null,
+                  val sources: Map<String, JsonNode>,
+                  val errors: List<String> = listOf(),
+                  val openshiftObjects: Map<String, JsonNode>? = mapOf()) {
 
     val valid = errors.isEmpty()
 

@@ -52,12 +52,14 @@ metrics:
 
 logging:
   level:
+
     ske.aurora: DEBUG
     ske.aurora.filter: INFO
     org:
       springframework: WARN
       apache:
-        catalina: WARN
+        catalina: INFO
+        velocity: INFO
 
 
 

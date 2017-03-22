@@ -1,0 +1,14 @@
+#macro(Metadata $metadata $kind)
+
+"metadata": {
+  "name": "${it.metadata.name}",
+  "labels": {
+    #foreach ($label  in $it.metadata.labels.entrySet())
+       #if($velocityCount != 1)
+       ,
+       #end
+      "${label.key}": "${label.value}"
+    #end
+  }
+}
+#end

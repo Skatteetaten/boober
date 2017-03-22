@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.boober.model.Result
 import no.skatteetaten.aurora.boober.model.TemplateType
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.regex.Pattern
 
@@ -60,15 +59,4 @@ class ValidationService(val openshiftService: OpenshiftService) {
 
         return res.copy(errors = res.errors.plus(errors))
     }
-}
-
-@Service
-class OpenshiftService(@Value("\${openshift.url}") val url: String) {
-
-    fun templateExist(token: String, template: String): Boolean {
-        //TODO GET request to openshift with token to check if template exist in Openshift namespace
-        return true
-
-    }
-
 }
