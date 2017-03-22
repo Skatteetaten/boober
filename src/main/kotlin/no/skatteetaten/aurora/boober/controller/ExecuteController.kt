@@ -5,48 +5,22 @@ import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.Result
 import no.skatteetaten.aurora.boober.service.ConfigService
 import no.skatteetaten.aurora.boober.service.ValidationService
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RestController
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.web.bind.annotation.*
 
 @RestController
 class ExecuteController(val configService: ConfigService, val validationService: ValidationService) {
 
+    val logger: Logger = LoggerFactory.getLogger(ExecuteController::class.java)
 
-    /*
-    @PostMapping("/setup/{token}/{affiliation}/{env}")
-    fun setupNamespace(@PathVariable token: String,
-                       @PathVariable affiliation: String,
-                       @PathVariable env: String,
-                       @RequestBody overrides: Map<String, JsonNode>): NamespaceResult {
+    @PutMapping("/setup")
+    fun setup(@RequestHeader(value="Authentication") token:String,
+              @RequestBody cmd:SetupCommand): Result {
 
-        val dir = File("/tmp/$token/$affiliation")
-
-        gitService.get(dir)
-
-        val envDir = File(dir, env)
-        val apps = envDir.listFiles({ _, name -> name != "about.json" }).toList().map(File::nameWithoutExtension)
-
-        val res: Map<String, Result> = apps.map {
-            val files = listOf("about.json", "$env/about.json", "$it.json", "$env/$it.json")
-            val matchedOverrides = overrides.filter { it.key == "about.json" || it.key == "$it.json" }
-
-            // TODO: Must collect files from git and replace mapOf
-            Pair(it, configService.createBooberResult(env, it, mapOf()))
-        }.toMap()
-
-        return NamespaceResult(res)
-
-    }
-*/
-    @PostMapping("/setup/{token}/{env}/{app}")
-    fun setup(@PathVariable token: String,
-              @PathVariable env: String,
-              @PathVariable app: String,
-              @RequestBody files: Map<String, JsonNode>): Result {
-
-        val res = configService.createBooberResult(env, app, files)
+        logger.info("Setting up ${cmd.app!!} in ${cmd.env} with token $token")
+        //TODO swith on what is avilable in the command.
+        val res = configService.createBooberResult(cmd.env, cmd.app!!, cmd.files!!)
 
         val validated = validationService.validate(res, token)
         //TODO perform operations, maybe expand Result object here?
@@ -55,5 +29,7 @@ class ExecuteController(val configService: ConfigService, val validationService:
     }
 
 }
+
+data class SetupCommand(val affiliation:String, val env:String, val app:String?, val files: Map<String,JsonNode>?, val overrides:Map<String, JsonNode>?)
 
 

@@ -1,31 +1,36 @@
 {
-  "about.json" : {
-    "groups": "APP_PaaS_drift APP_PaaS_utv",
-    "affiliation" : "aot",
-    "type": "deploy",
-    "deploy" : {
-      "SPLUNK_INDEX" : "openshift-test"
-    }
-  },
-  "referanse.json" : {
-    "name": "refapp",
-    "replicas" : 3,
-    "flags" : ["rolling", "route", "cert" ],
-    "build" : {
-      "GROUP_ID":"ske.aurora.openshift.referanse",
-      "ARTIFACT_ID":"openshift-referanse-springboot-server",
-      "VERSION" : 0
+  "app" : "referanse",
+  "env" : "utv",
+  "affiliation": "aot",
+  "files" :{
+    "about.json" : {
+      "groups": "APP_PaaS_drift APP_PaaS_utv",
+      "affiliation" : "aot",
+      "type": "deploy",
+      "deploy" : {
+        "SPLUNK_INDEX" : "openshift-test"
+      }
     },
-    "deploy" : {
-      "PROMETHEUS_ENABLED" : true,
-      "PROMETHEUS_PORT" : "8081",
-      "MANAGEMENT_PATH": ":8081/actuator",
-      "DATABASE": "referanseapp"
+    "referanse.json" : {
+      "name": "refapp",
+      "replicas" : 3,
+      "flags" : ["rolling", "route", "cert" ],
+      "build" : {
+        "GROUP_ID":"ske.aurora.openshift.referanse",
+        "ARTIFACT_ID":"openshift-referanse-springboot-server",
+        "VERSION" : 0
+      },
+      "deploy" : {
+        "PROMETHEUS_ENABLED" : true,
+        "PROMETHEUS_PORT" : "8081",
+        "MANAGEMENT_PATH": ":8081/actuator",
+        "DATABASE": "referanseapp"
+      }
+    },
+    "utv/about.json" : {
+      "cluster":"utv"
+    },
+    "utv/referanse.json" : {
     }
-  },
-  "utv/about.json" : {
-    "cluster":"utv"
-  },
-  "utv/referanse.json" : {
   }
 }
