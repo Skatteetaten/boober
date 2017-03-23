@@ -50,12 +50,14 @@ class OpenshiftService(@Value("\${openshift.url}") val url: String, val ve: Velo
 
         val openshiftObjects = mapOf(
                 "configmap" to ve.parse("configmap.json", params.plus("config" to config.configLine)),
-                "route" to ve.parse("route.json", params),
                 "service" to ve.parse("service.json",params.plus("service" to svc)),
                 "imagestream" to ve.parse("imagestream.json", params.plus("docker" to docker)),
                 "dc" to ve.parse("deployment-config.json", params.plus(listOf("docker" to docker, "resources" to resources, "dc" to dc)))
-
         )
+
+        if(app.route) {
+            openshiftObjects.plus("route" to ve.parse("route.json", params))
+        }
         return res.copy(openshiftObjects = openshiftObjects)
 
     }
