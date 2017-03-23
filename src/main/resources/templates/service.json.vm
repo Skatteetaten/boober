@@ -1,0 +1,38 @@
+#parse("templates/metadata.json.vm")
+{
+  "kind": "Service",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "${it.app.name}",
+    "annotations": {
+      "sprocket.sits.no/service.webseal": "${it.service.websealPrefix}",
+      "sprocket.sits.no/service.webseal-roles": "${it.service.websealRoles}",
+      "prometheus.io/scheme": "http",
+      "prometheus.io/scrape": "${it.service.prometheusEnabled}",
+      "prometheus.io/path": "${it.service.prometheusPath}",
+      "prometheus.io/port": "${it.service.prometheusPort}"
+
+    },
+    "labels": {
+      "app": "${it.app.name}",
+      "updatedBy" : "${it.username}",
+      "affiliation": "${it.app.affiliation}"
+    }
+  },
+  "spec": {
+    "ports": [
+      {
+        "name": "http",
+        "protocol": "TCP",
+        "port": 80,
+        "targetPort": 8080,
+        "nodePort": 0
+      }
+    ],
+    "selector": {
+      "name": "${it.app.name}"
+    },
+    "type": "ClusterIP",
+    "sessionAffinity": "None"
+  }
+}

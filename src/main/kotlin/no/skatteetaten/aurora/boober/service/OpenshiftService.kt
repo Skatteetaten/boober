@@ -34,7 +34,8 @@ class OpenshiftService(@Value("\${openshift.url}") val url: String,  val ve: Vel
                 "configmap" to ve.parse("configmap.json", openshiftDto),
                 "route" to ve.parse("route.json", openshiftDto),
                 "service" to ve.parse("service.json", openshiftDto),
-                "imagestream" to ve.parse("imagestream.json", openshiftDto)
+                "imagestream" to ve.parse("imagestream.json", openshiftDto),
+                "dc" to ve.parse("deployment-config.json", openshiftDto)
 
         )
         //DC is missing
@@ -48,7 +49,7 @@ class OpenshiftService(@Value("\${openshift.url}") val url: String,  val ve: Vel
 
 }
 
-data class TemplateConfig(val username:String, val app: TemplateApp, val service:TemplateService, val docker:TemplateDocker, val config:String) {
+data class TemplateConfig(val username: String, val app: TemplateApp, val service: TemplateService, val docker: TemplateDocker, val config: String, val dc: TemplateDc, val resources: TemplateResources) {
     companion object Factory {
         fun fromV1Schema(config:Config, username:String): TemplateConfig {
 
@@ -56,16 +57,21 @@ data class TemplateConfig(val username:String, val app: TemplateApp, val service
                     ?.map { "${it.key}=${it.value}" }
                     ?.joinToString(separator= "\\n", transform = {it})
 
+
+
+            val routeName="TODO:create routename"
             return TemplateConfig(
                     username,
-                    TemplateApp(config.name, config.affiliation, config.type.name),
-                    TemplateService(config.deploy?.websealRoute,
-                            config.deploy?.websealRoles,
-                            config.deploy?.prometheus, config.deploy?.prometheusPath,
-                            config.deploy?.prometheusPort),
+                    TemplateApp(config.name, config.affiliation, config.type.name, config.replicas, config.deploy?.splunkIndex ?: "", config.flags?.contains("route") ?: false, routeName),
+                    TemplateService(config.deploy?.websealRoute ?: "",
+                            config.deploy?.websealRoles ?: "",
+                            config.deploy?.prometheus ?: true,
+                            config.deploy?.prometheusPath ?: "",
+                            config.deploy?.prometheusPort ?: 8080),
                     TemplateDocker("docker-registry.aurora.sits.no:5000", config.build.version),
-                    configString ?: ""
-
+                    configString ?: "",
+                    TemplateDc(config.deploy?.managementPath ?: "", config.deploy?.alarm ?: true, config.cert ?: "", config.deploy?.database ?: ""),
+                    TemplateResources(TemplateResourceFields("128Mi", config.deploy?.cpuRequest ?: ""), TemplateResourceFields(config.deploy?.maxMemory ?: "", "2000m"))
 
             )
         }
@@ -73,8 +79,12 @@ data class TemplateConfig(val username:String, val app: TemplateApp, val service
 }
 
 data class TemplateDocker(val registry:String, val tag:String, val istag:String = "default")
-data class TemplateApp(val name: String, val affiliation: String, val type: String)
-data class TemplateService(val websealPrefix:String? = "", val websealRoles:String? = "", val prometheusEnabled:Boolean? = true, val prometheusPath:String? = "", val prometheusPort: Int? = 8080)
+data class TemplateApp(val name: String, val affiliation: String, val type: String, val replicas: Int, val splunk: String, val route: Boolean, val routeName: String)
+data class TemplateService(val websealPrefix:String = "", val websealRoles:String = "", val prometheusEnabled:Boolean = true, val prometheusPath:String = "", val prometheusPort: Int = 8080)
+data class TemplateDc(val managementPath:String = "", val alarm:Boolean = true, val certificateCn:String = "", val database:String = "")
+data class TemplateResourceFields(val memory:String, val cpu:String)
+
+data class TemplateResources(val request:TemplateResourceFields, val limits:TemplateResourceFields)
 
 fun VelocityEngine.parse(template:String, content:Any): JsonNode {
     val context = VelocityContext()

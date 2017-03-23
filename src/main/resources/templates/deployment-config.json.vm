@@ -1,0 +1,177 @@
+{
+  "kind": "DeploymentConfig",
+  "apiVersion": "v1",
+  "metadata": {
+    "annotations": {
+      "marjory.skatteetaten.no/management-path": "${it.dc.managementPath}",
+      "marjory.skatteetaten.no/alarm": "${it.dc.alarm}",
+      "sprocket.sits.no/deployment-config.certificate": "${it.dc.certificateCn}",
+      "sprocket.sits.no/deployment-config.database": "${it.dc.database}"
+    },
+    "labels": {
+      "app": "${it.app.name}",
+      "updatedBy" : "${it.username}",
+      "affiliation": "${it.app.affiliation}"
+    },
+    "name": "${it.app.name}"
+  },
+  "spec": {
+    "strategy": {
+      "type": "Recreate",
+      "resources": {}
+    },
+    "triggers": [
+          {
+            "type": "ImageChange",
+            "imageChangeParams": {
+              "automatic": true,
+              "containerNames": [
+                "${it.app.name}"
+              ],
+              "from": {
+                "name": "${it.app.name}:${it.docker.istag}",
+                "kind": "ImageStreamTag"
+              }
+            }
+          }
+    ],
+    "replicas": ${it.app.replicas},
+    "selector": {
+      "name": "${it.app.name}"
+    },
+    "template": {
+      "metadata": {
+        "labels": {
+          "name": "${it.app.name}",
+          "updatedBy" : "${it.username}",
+          "affiliation": "${it.app.affiliation}"
+        }
+      },
+      "spec": {
+        "volumes": [
+          {
+            "name": "application-log-volume",
+            "emptyDir": {}
+          },
+          {
+            "name": "config",
+            "configMap": {
+              "name": "${it.app.name}"
+            }
+          }
+        ],
+        "containers": [
+          {
+            "name": "${it.app.name}",
+            "ports": [
+              {
+                "containerPort": 8080,
+                "protocol": "TCP",
+                "name": "http"
+              },
+              {
+                "containerPort": 8081,
+                "protocol": "TCP",
+                "name": "management"
+              },
+              {
+                "containerPort": 8778,
+                "name": "jolokia"
+              }
+            ],
+            "env": [
+              {
+                "name": "SPLUNK_INDEX",
+                "value": "${it.app.splunk}"
+              },
+              {
+                "name": "POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              },
+              {
+                "name": "POD_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "HTTP_PORT",
+                "value": "8080"
+              },
+              {
+                "name": "MANAGEMENT_HTTP_PORT",
+                "value": "8081"
+              },
+              {
+                "name": "APP_NAME",
+                "value": "${it.app.name}"
+              }
+                #if (${it.app.route})
+                  ,{
+                    "name": "ROUTE_NAME",
+                    "value": "${it.app.routeName}"
+                  }
+                #end
+            ],
+            "resources": {
+              "limits": {
+                "cpu": "2000m",
+                "memory": "${it.resources.limits.memory}"
+              },
+              "requests": {
+                "cpu": "${it.resources.request.cpu}",
+                "memory": "128Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "application-log-volume",
+                "mountPath": "/u01/logs"
+              },
+              {
+                "name": "config",
+                "mountPath": "/u01/config/configmap"
+              }
+            ],
+            "terminationMessagePath": "/dev/termination-log",
+            "imagePullPolicy": "IfNotPresent",
+            "capabilities": {},
+            "securityContext": {
+              "capabilities": {},
+              "privileged": false
+            },
+            "livenessProbe": {
+              "exec": {
+                "command": [
+                  "/u01/application/bin/liveness.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 1
+            },
+            "readinessProbe": {
+              "exec": {
+                "command": [
+                  "/u01/application/bin/readiness.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 1
+            }
+
+          }
+        ],
+        "restartPolicy": "Always",
+        "dnsPolicy": "ClusterFirst"
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "kind": "ConfigMap",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "${it.app.name}",
+    "labels": {
+      "app": "${it.app.name}",
+      "updatedBy" : "${it.username}",
+      "affiliation": "${it.app.affiliation}"
+    }
+  },
+  "data": {
+    "latest.properties": "${it.config}"
+  }
+}

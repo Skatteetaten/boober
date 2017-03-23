@@ -1,0 +1,18 @@
+{
+  "kind": "Route",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "${it.app.name}",
+    "labels": {
+      "app": "${it.app.name}",
+      "updatedBy" : "${it.username}",
+      "affiliation": "${it.app.affiliation}"
+    }
+  },
+  "spec": {
+    "to": {
+      "kind": "Service",
+      "name": "${it.app.name}"
+    }
+  }
+}

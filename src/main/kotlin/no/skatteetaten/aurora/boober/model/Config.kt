@@ -19,14 +19,15 @@ data class ConfigDeploy(
         @JsonProperty("DATABASE") val database: String?,
         @JsonProperty("CERTIFICATE_CN") val certificate: String?,
         @JsonProperty("TAG") val tag: String = "default",
-        @JsonProperty("CPU_REQUEST") val cpuRequest: Int = 0,
+        @JsonProperty("CPU_REQUEST") val cpuRequest: String = "",
         @JsonProperty("ROUTE_WEBSEAL") val websealRoute: String?,
         @JsonProperty("ROUTE_WEBSEAL_ROLES") val websealRoles: String?,
         @JsonProperty("PROMETHEUS_ENABLED") val prometheus: Boolean = true,
         @JsonProperty("PROMETHEUS_PORT") val prometheusPort: Int = 8081,
         @JsonProperty("PROMETHEUS_PATH") val prometheusPath: String = "/prometheus",
         @JsonProperty("MANAGEMENT_PATH") val managementPath: String = ":8081/actuator",
-        @JsonProperty("DEBUG") val debug: Boolean = false
+        @JsonProperty("DEBUG") val debug: Boolean = false,
+        @JsonProperty("ALARM") val alarm: Boolean = true
 )
 
 data class Config(
