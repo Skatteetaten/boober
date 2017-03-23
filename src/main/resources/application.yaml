@@ -52,10 +52,11 @@ metrics:
 
 logging:
   level:
-
     ske.aurora: DEBUG
     ske.aurora.filter: INFO
     org:
+      jboss: INFO
+      hibernate: WARN
       springframework: WARN
       apache:
         catalina: INFO

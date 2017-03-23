@@ -1,10 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.boober.model.Config
-import no.skatteetaten.aurora.boober.model.ConfigBuild
-import no.skatteetaten.aurora.boober.model.ConfigDeploy
+import no.skatteetaten.aurora.boober.ValidationHelper
 import no.skatteetaten.aurora.boober.model.Result
-import no.skatteetaten.aurora.boober.model.TemplateType
 import spock.lang.Specification
 
 class ValidationTest extends Specification {
@@ -13,11 +10,13 @@ class ValidationTest extends Specification {
   def service = new ValidationService(openshiftService)
   def token = "foobar"
 
+  def helper = new ValidationHelper()
+
   def "should not run validation if config is empty "() {
 
     given:
 
-      def res = new Result(null, [:], ["Files are missing"])
+      def res = new Result(null, [:], ["Files are missing"], [:])
 
     when:
       def validationResult = service.validate(res, token)
@@ -30,14 +29,7 @@ class ValidationTest extends Specification {
   def "should validate valid config"() {
 
     given:
-      def configBuild = new ConfigBuild("", "", "")
-      def configDeploy = new ConfigDeploy("", "", "", "", "", 250, "", "", "", "", false, 8081, "/prometheus", "",
-          false)
-      def config = new Config("oas", "", "", "utv", TemplateType.deploy, 1, [], configBuild, "test", configDeploy, [:],
-          "",
-          "", "", [:], "")
-
-      def res = new Result(config, [:], [])
+      def res = helper.validMinimalConfig()
 
     when:
       def validationResult = service.validate(res, token)
@@ -49,69 +41,33 @@ class ValidationTest extends Specification {
   def "should fail if name is not set"() {
 
     given:
-      def configBuild = new ConfigBuild("", "", "")
-      def configDeploy = new ConfigDeploy("", "", "", "", "", 250, "", "", "", "", false, 8081, "/prometheus", "",
-          false)
-      def config = new Config("oas", "", "", "utv", TemplateType.deploy, 1, [], configBuild, "", configDeploy, [:], "",
-          "", "", [:], "")
-
-      def res = new Result(config, [:], [])
-
+      def res = helper.configWithNameAndBuildArtifactIdMissing()
     when:
       def validationResult = service.validate(res, token)
 
     then:
-      validationResult.errors.contains("Name is not a valid DNS952 label ^[a-z][-a-z0-9]{0,23}[a-z0-9]\$")
+      validationResult.errors.contains("size must be between 1 and 2147483647 for field build.artifactId")
   }
 
   def "should fail if affiliation contains special character"() {
 
     given:
-      def configBuild = new ConfigBuild("", "", "")
-      def configDeploy = new ConfigDeploy("", "", "", "", "", 250, "", "", "", "", false, 8081, "/prometheus", "",
-          false)
-      def config = new Config("yoo!", "", "", "utv", TemplateType.deploy, 1, [], configBuild, "foo", configDeploy, [:],
-          "",
-          "", "", [:], "")
-
-      def res = new Result(config, [:], [])
+      def res = helper.affiliationWithSpecialChar()
 
     when:
       def validationResult = service.validate(res, token)
 
     then:
-      validationResult.errors.contains("Affiliation is not valid ^[a-z]{0,23}[a-z]\$")
-  }
+      validationResult.errors.contains("Only lowercase letters, max 24 length for field affiliation")
+      validationResult.errors.contains("Alphanumeric and dashes. Cannot end or start with dash for field namespace")
 
-  def "should fail if namespace contains special character"() {
-
-    given:
-      def configBuild = new ConfigBuild("", "", "")
-      def configDeploy = new ConfigDeploy("", "", "", "", "", 250, "", "", "", "", false, 8081, "/prometheus", "",
-          false)
-      def config = new Config("yoo", "", "", "utv", TemplateType.deploy, 1, [], configBuild, "foo", configDeploy, [:],
-          "",
-          "", "", [:], "!yoo")
-
-      def res = new Result(config, [:], [])
-
-    when:
-      def validationResult = service.validate(res, token)
-
-    then:
-      validationResult.errors.contains("Namespace is not valid ^[a-z0-9][-a-z0-9]*[a-z0-9]\$")
+      validationResult.errors.size() == 2
   }
 
   def "should fail if process type with invalid templateFile"() {
 
     given:
-      def configBuild = new ConfigBuild("", "", "")
-
-      def config = new Config("yoo", "", "", "utv", TemplateType.process, 1, [], configBuild, "foo", null, [:],
-          "",
-          "template/deploy-amq.json", null, [:], "")
-
-      def res = new Result(config, [:], [])
+      def res = helper.processWithTemplateFile("template/deploy-amq.json")
 
     when:
       def validationResult = service.validate(res, token)
@@ -123,13 +79,7 @@ class ValidationTest extends Specification {
   def "should fail if process type with invalid template"() {
 
     given:
-      def configBuild = new ConfigBuild("", "", "")
-
-      def config = new Config("yoo", "", "", "utv", TemplateType.process, 1, [], configBuild, "foo", null, [:],
-          "",
-          null, "foo", [:], "")
-
-      def res = new Result(config, [:], [])
+      def res = helper.processWithTemplate("foo")
       openshiftService.templateExist(token, "foo") >> false
 
     when:
@@ -140,17 +90,11 @@ class ValidationTest extends Specification {
       validationResult.errors.contains("Template foo does not exist in cluster.")
   }
 
-
   def "should fail if process type with both template and templateFile directive"() {
 
     given:
-      def configBuild = new ConfigBuild("", "", "")
+      def res = helper.processWithTemplateAndTemplateFile("foo", "template/deploy-amq.json")
 
-      def config = new Config("yoo", "", "", "utv", TemplateType.process, 1, [], configBuild, "foo", null, [:],
-          "",
-          "template/deploy-amq.json", "foo", [:], "")
-
-      def res = new Result(config, [:], [])
       openshiftService.templateExist(token, "foo") >> false
 
     when:
@@ -161,26 +105,5 @@ class ValidationTest extends Specification {
       validationResult.errors.contains("Template file template/deploy-amq.json is missing in sources")
       validationResult.errors.contains("Cannot specify both template and templateFile")
       validationResult.errors.size() == 3
-  }
-
-  def "should fail if process type with deploy block"() {
-
-    given:
-      def configBuild = new ConfigBuild("", "", "")
-      def configDeploy = new ConfigDeploy("", "", "", "", "", 250, "", "", "", "", false, 8081, "/prometheus", "",
-          false)
-      def config = new Config("yoo", "", "", "utv", TemplateType.process, 1, [], configBuild, "foo", configDeploy, [:],
-          "",
-          null, "foo", [:], "")
-
-      def res = new Result(config, [:], [])
-      openshiftService.templateExist(token, "foo") >> true
-
-    when:
-      def validationResult = service.validate(res, token)
-
-    then:
-      validationResult.errors.contains("Deploy parameters are not viable for process type")
-
   }
 }

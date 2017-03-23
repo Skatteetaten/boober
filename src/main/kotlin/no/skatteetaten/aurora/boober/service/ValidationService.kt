@@ -1,9 +1,9 @@
 package no.skatteetaten.aurora.boober.service
 
+import no.skatteetaten.aurora.boober.model.ProcessConfig
 import no.skatteetaten.aurora.boober.model.Result
-import no.skatteetaten.aurora.boober.model.TemplateType
 import org.springframework.stereotype.Service
-import java.util.regex.Pattern
+import javax.validation.Validation
 
 
 @Service
@@ -16,34 +16,20 @@ class ValidationService(val openshiftService: OpenshiftService) {
             return res
         }
 
+        val validator = Validation.buildDefaultValidatorFactory().validator
+        val err = validator.validate(config)
+
         val errors: MutableList<String> = mutableListOf()
 
-
-        val nameRe = "^[a-z][-a-z0-9]{0,23}[a-z0-9]$"
-        val affiliationRe = "^[a-z]{0,23}[a-z]$"
-        val namespaceRe = "^[a-z0-9][-a-z0-9]*[a-z0-9]$"
-
-        if (!Pattern.matches(nameRe, config.name)) {
-            errors.add("Name is not a valid DNS952 label $nameRe")
-
-        }
-        if (!Pattern.matches(affiliationRe, config.affiliation)) {
-            errors.add("Affiliation is not valid $affiliationRe")
-
+        if (err.isNotEmpty()) {
+            val map = err.map { "${it.message} for field ${it.propertyPath}" }
+            errors.addAll(map)
         }
 
-        if (!Pattern.matches(namespaceRe, config.namespace)) {
-            errors.add("Namespace is not valid $namespaceRe")
-        }
-
-        if (config.type == TemplateType.process) {
+        if (config is ProcessConfig) {
 
             if (config.templateFile != null && !res.sources.keys.contains(config.templateFile)) {
                 errors.add("Template file ${config.templateFile} is missing in sources")
-            }
-
-            if (config.deploy != null) {
-                errors.add("Deploy parameters are not viable for process type")
             }
 
             if(config.template !=null && config.templateFile != null) {

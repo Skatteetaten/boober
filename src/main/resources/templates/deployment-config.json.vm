@@ -5,8 +5,8 @@
     "annotations": {
       "marjory.skatteetaten.no/management-path": "${dc.managementPath}",
       "marjory.skatteetaten.no/alarm": "${dc.alarm}",
-      "sprocket.sits.no/deployment-config.certificate": "${dc.certificateCn}",
-      "sprocket.sits.no/deployment-config.database": "${dc.database}"
+      "sprocket.sits.no/deployment-appConfig.certificate": "${dc.certificateCn}",
+      "sprocket.sits.no/deployment-appConfig.database": "${dc.database}"
     },
     "labels": {
       "app": "${app.name}",
@@ -54,7 +54,7 @@
             "emptyDir": {}
           },
           {
-            "name": "config",
+            "name": "appConfig",
             "configMap": {
               "name": "${app.name}"
             }
@@ -114,7 +114,19 @@
                 "name": "APP_NAME",
                 "value": "${app.name}"
               }
-                #if (${app.route})
+              #if (${dc.debug})
+              ,
+                {
+                  "name": "REMOTE_DEBUG",
+                  "value": "true"
+                },
+                {
+                  "name": "DEBUG_PORT",
+                  "value": "5005"
+                }
+              #end
+
+              #if (${app.route})
                   ,{
                     "name": "ROUTE_NAME",
                     "value": "${app.routeName}"
@@ -137,8 +149,8 @@
                 "mountPath": "/u01/logs"
               },
               {
-                "name": "config",
-                "mountPath": "/u01/config/configmap"
+                "name": "appConfig",
+                "mountPath": "/u01/appConfig/configmap"
               }
             ],
             "terminationMessagePath": "/dev/termination-log",

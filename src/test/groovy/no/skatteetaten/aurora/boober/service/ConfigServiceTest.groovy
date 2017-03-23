@@ -12,6 +12,7 @@ import spock.lang.Specification
 
 class ConfigServiceTest extends Specification {
 
+
   ObjectMapper mapper = new Configuration().mapper()
   ConfigService service = new ConfigService(mapper)
 
@@ -39,7 +40,7 @@ class ConfigServiceTest extends Specification {
     then:
       result.errors.isEmpty()
 
-      with(result.config) {
+      with(result.getConfig()) {
         affiliation == "aot"
         name == "refapp"
         cluster == "utv"
@@ -77,7 +78,7 @@ class ConfigServiceTest extends Specification {
       Result result = service.createBooberResult("utv", "referanse", files)
 
     then:
-      result.config.name == "Awesome App"
+      result.getConfig().name == "Awesome App"
 
   }
 

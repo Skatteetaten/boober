@@ -17,7 +17,10 @@
     "referanse.json" : {
       "name": "refapp",
       "replicas" : 3,
-      "flags" : ["rolling", "route", "cert" ],
+      "flags": [
+        "rolling",
+        "cert"
+      ],
       "build" : {
         "GROUP_ID":"ske.aurora.openshift.referanse",
         "ARTIFACT_ID":"openshift-referanse-springboot-server",

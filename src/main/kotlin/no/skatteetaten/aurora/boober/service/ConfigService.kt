@@ -3,8 +3,10 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.model.Config
+import no.skatteetaten.aurora.boober.model.AppConfig
+import no.skatteetaten.aurora.boober.model.ProcessConfig
 import no.skatteetaten.aurora.boober.model.Result
+import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.utils.createMergeCopy
 import org.springframework.stereotype.Service
 
@@ -29,7 +31,16 @@ class ConfigService(val mapper: ObjectMapper) {
 
     fun tryToCreateResult(node: JsonNode, files: Map<String, JsonNode>): Result {
         try {
-            val config: Config = mapper.reader().forType(Config::class.java).readValue(node.toString())
+
+            val type = TemplateType.valueOf(node.get("type").asText())
+            val clazz: Class<*> = if (type == TemplateType.process) {
+                ProcessConfig::class.java
+            } else {
+                AppConfig::class.java
+            }
+
+            val config: AppConfig = mapper.reader().forType(clazz).readValue(node.toString())
+
             return Result(config, files)
         } catch (ex: JsonMappingException) {
             val missingProp = ex.path.map { it.fieldName }.reduce { acc, fieldName -> acc + ".$fieldName" }
@@ -37,3 +48,4 @@ class ConfigService(val mapper: ObjectMapper) {
         }
     }
 }
+

@@ -95,7 +95,7 @@ startScripts {
 }
 
 
-//plugin skru på med config hvis man har asciidoctor på classpath?
+//plugin skru på med appConfig hvis man har asciidoctor på classpath?
 asciidoctor {
   attributes([
       snippets: snippetsDir,
@@ -107,7 +107,7 @@ asciidoctor {
   sourceDir 'src/main/asciidoc'
 }
 
-//plugin skru på med config
+//plugin skru på med appConfig
 jar {
   dependsOn asciidoctor
   from("${asciidoctor.outputDir}/html5") {
