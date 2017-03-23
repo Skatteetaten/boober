@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
+import static no.skatteetaten.aurora.boober.utils.SampleFilesCollector.getUtvReferanseSampleFiles
+
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
@@ -10,20 +12,14 @@ import spock.lang.Specification
 
 class ConfigServiceTest extends Specification {
 
-  File configDir
-
   ObjectMapper mapper = new Configuration().mapper()
-
   ConfigService service = new ConfigService(mapper)
-
-  def setup() {
-    configDir = new File(ConfigServiceTest.getResource("/samples/config").path)
-  }
 
   def "Should fail due to missing config file"() {
 
     given:
-      def files = collectFilesToMap("about.json", "referanse.json", "utv/about.json")
+      Map<String, JsonNode> files = getUtvReferanseSampleFiles()
+      files.remove("referanse.json")
 
     when:
       Result result = service.createBooberResult("utv", "referanse", files)
@@ -35,7 +31,7 @@ class ConfigServiceTest extends Specification {
   def "Should successfully merge all config files"() {
 
     given:
-      def files = collectFilesToMap("about.json", "referanse.json", "utv/about.json", "utv/referanse.json")
+      Map<String, JsonNode> files = getUtvReferanseSampleFiles()
 
     when:
       Result result = service.createBooberResult("utv", "referanse", files)
@@ -65,8 +61,9 @@ class ConfigServiceTest extends Specification {
   }
 
   def "Should override name property in 'app'.json with name in 'env'/'app'.json"() {
+
     given:
-      def files = collectFilesToMap("about.json", "referanse.json", "utv/about.json", "utv/referanse.json")
+      Map<String, JsonNode> files = getUtvReferanseSampleFiles()
 
       def envAppOverride = """
         {
@@ -84,10 +81,10 @@ class ConfigServiceTest extends Specification {
 
   }
 
-  def "Should fail due to missing property"() {
+  def "Should fail due to missing required property"() {
 
     given:
-      def files = collectFilesToMap("about.json", "referanse.json", "utv/about.json", "utv/referanse.json")
+      Map<String, JsonNode> files = getUtvReferanseSampleFiles()
 
       def appOverride = """
         {
@@ -113,10 +110,10 @@ class ConfigServiceTest extends Specification {
       result.errors[0] == "build is required"
   }
 
-  def "Should fail due to missing nested property"() {
+  def "Should fail due to missing required nested property"() {
 
     given:
-      def files = collectFilesToMap("about.json", "referanse.json", "utv/about.json", "utv/referanse.json")
+      Map<String, JsonNode> files = getUtvReferanseSampleFiles()
 
       def consoleOverride = """
         {
@@ -144,9 +141,5 @@ class ConfigServiceTest extends Specification {
 
     then:
       result.errors[0] == "build.VERSION is required"
-  }
-
-  private Map<String, JsonNode> collectFilesToMap(String... fileNames) {
-    return fileNames.collectEntries { [(it), mapper.readTree(new File(configDir, it))] }
   }
 }
