@@ -27,13 +27,12 @@ class ConfigService(val mapper: ObjectMapper) {
         return tryToCreateResult(mergedJson, files)
     }
 
-
     fun tryToCreateResult(node: JsonNode, files: Map<String, JsonNode>): Result {
         try {
             val config: Config = mapper.reader().forType(Config::class.java).readValue(node.toString())
             return Result(config, files)
-        } catch (e: JsonMappingException) {
-            val missingProp: String = e.path.map { it.fieldName }.reduce { acc, s -> acc + ".$s" }
+        } catch (ex: JsonMappingException) {
+            val missingProp = ex.path.map { it.fieldName }.reduce { acc, fieldName -> acc + ".$fieldName" }
             return Result(sources = files, errors = listOf("$missingProp is required"))
         }
     }
