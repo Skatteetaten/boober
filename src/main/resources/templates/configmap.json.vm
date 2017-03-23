@@ -2,14 +2,14 @@
   "kind": "ConfigMap",
   "apiVersion": "v1",
   "metadata": {
-    "name": "${it.app.name}",
+    "name": "${app.name}",
     "labels": {
-      "app": "${it.app.name}",
-      "updatedBy" : "${it.username}",
-      "affiliation": "${it.app.affiliation}"
+      "app": "${app.name}",
+      "updatedBy" : "${app.username}",
+      "affiliation": "${app.affiliation}"
     }
   },
   "data": {
-    "latest.properties": "${it.config}"
+    "latest.properties": "${config}"
   }
 }

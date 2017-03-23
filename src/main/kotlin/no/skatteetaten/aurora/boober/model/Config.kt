@@ -59,6 +59,10 @@ data class Config(
     } else {
         deploy?.certificate
     }
+
+    val configLine = config
+            ?.map { "${it.key}=${it.value}" }
+            ?.joinToString(separator = "\\n", transform = { it }) ?: ""
 }
 
 data class NamespaceResult(val results: Map<String, Result>)

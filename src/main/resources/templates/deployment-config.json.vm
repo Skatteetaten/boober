@@ -3,17 +3,17 @@
   "apiVersion": "v1",
   "metadata": {
     "annotations": {
-      "marjory.skatteetaten.no/management-path": "${it.dc.managementPath}",
-      "marjory.skatteetaten.no/alarm": "${it.dc.alarm}",
-      "sprocket.sits.no/deployment-config.certificate": "${it.dc.certificateCn}",
-      "sprocket.sits.no/deployment-config.database": "${it.dc.database}"
+      "marjory.skatteetaten.no/management-path": "${dc.managementPath}",
+      "marjory.skatteetaten.no/alarm": "${dc.alarm}",
+      "sprocket.sits.no/deployment-config.certificate": "${dc.certificateCn}",
+      "sprocket.sits.no/deployment-config.database": "${dc.database}"
     },
     "labels": {
-      "app": "${it.app.name}",
-      "updatedBy" : "${it.username}",
-      "affiliation": "${it.app.affiliation}"
+      "app": "${app.name}",
+      "updatedBy" : "${app.username}",
+      "affiliation": "${app.affiliation}"
     },
-    "name": "${it.app.name}"
+    "name": "${app.name}"
   },
   "spec": {
     "strategy": {
@@ -26,25 +26,25 @@
             "imageChangeParams": {
               "automatic": true,
               "containerNames": [
-                "${it.app.name}"
+                "${app.name}"
               ],
               "from": {
-                "name": "${it.app.name}:${it.docker.istag}",
+                "name": "${app.name}:${docker.istag}",
                 "kind": "ImageStreamTag"
               }
             }
           }
     ],
-    "replicas": ${it.app.replicas},
+    "replicas": ${app.replicas},
     "selector": {
-      "name": "${it.app.name}"
+      "name": "${app.name}"
     },
     "template": {
       "metadata": {
         "labels": {
-          "name": "${it.app.name}",
-          "updatedBy" : "${it.username}",
-          "affiliation": "${it.app.affiliation}"
+          "name": "${app.name}",
+          "updatedBy" : "${username}",
+          "affiliation": "${app.affiliation}"
         }
       },
       "spec": {
@@ -56,13 +56,13 @@
           {
             "name": "config",
             "configMap": {
-              "name": "${it.app.name}"
+              "name": "${app.name}"
             }
           }
         ],
         "containers": [
           {
-            "name": "${it.app.name}",
+            "name": "${app.name}",
             "ports": [
               {
                 "containerPort": 8080,
@@ -82,7 +82,7 @@
             "env": [
               {
                 "name": "SPLUNK_INDEX",
-                "value": "${it.app.splunk}"
+                "value": "${app.splunk}"
               },
               {
                 "name": "POD_NAME",
@@ -112,22 +112,22 @@
               },
               {
                 "name": "APP_NAME",
-                "value": "${it.app.name}"
+                "value": "${app.name}"
               }
-                #if (${it.app.route})
+                #if (${app.route})
                   ,{
                     "name": "ROUTE_NAME",
-                    "value": "${it.app.routeName}"
+                    "value": "${app.routeName}"
                   }
                 #end
             ],
             "resources": {
               "limits": {
                 "cpu": "2000m",
-                "memory": "${it.resources.limits.memory}"
+                "memory": "${resources.limits.memory}"
               },
               "requests": {
-                "cpu": "${it.resources.request.cpu}",
+                "cpu": "${resources.request.cpu}",
                 "memory": "128Mi"
               }
             },

@@ -2,17 +2,17 @@
   "kind": "Route",
   "apiVersion": "v1",
   "metadata": {
-    "name": "${it.app.name}",
+    "name": "${app.name}",
     "labels": {
-      "app": "${it.app.name}",
-      "updatedBy" : "${it.username}",
-      "affiliation": "${it.app.affiliation}"
+      "app": "${app.name}",
+      "updatedBy" : "${app.username}",
+      "affiliation": "${app.affiliation}"
     }
   },
   "spec": {
     "to": {
       "kind": "Service",
-      "name": "${it.app.name}"
+      "name": "${app.name}"
     }
   }
 }

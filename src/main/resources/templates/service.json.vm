@@ -3,20 +3,20 @@
   "kind": "Service",
   "apiVersion": "v1",
   "metadata": {
-    "name": "${it.app.name}",
+    "name": "${app.name}",
     "annotations": {
-      "sprocket.sits.no/service.webseal": "${it.service.websealPrefix}",
-      "sprocket.sits.no/service.webseal-roles": "${it.service.websealRoles}",
+      "sprocket.sits.no/service.webseal": "${service.websealPrefix}",
+      "sprocket.sits.no/service.webseal-roles": "${service.websealRoles}",
       "prometheus.io/scheme": "http",
-      "prometheus.io/scrape": "${it.service.prometheusEnabled}",
-      "prometheus.io/path": "${it.service.prometheusPath}",
-      "prometheus.io/port": "${it.service.prometheusPort}"
+      "prometheus.io/scrape": "${service.prometheusEnabled}",
+      "prometheus.io/path": "${service.prometheusPath}",
+      "prometheus.io/port": "${service.prometheusPort}"
 
     },
     "labels": {
-      "app": "${it.app.name}",
-      "updatedBy" : "${it.username}",
-      "affiliation": "${it.app.affiliation}"
+      "app": "${app.name}",
+      "updatedBy" : "${app.username}",
+      "affiliation": "${app.affiliation}"
     }
   },
   "spec": {
@@ -30,7 +30,7 @@
       }
     ],
     "selector": {
-      "name": "${it.app.name}"
+      "name": "${app.name}"
     },
     "type": "ClusterIP",
     "sessionAffinity": "None"
