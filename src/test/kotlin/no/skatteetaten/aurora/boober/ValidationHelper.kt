@@ -8,13 +8,15 @@ class ValidationHelper {
     val process = ProcessConfig(
             name = "foo",
             cluster = "utv",
-            affiliation = "aos")
+            affiliation = "aos",
+            envName = "utv")
 
     val config = AppConfig(
             cluster = "utv",
             affiliation = "aos",
             build = ConfigBuild("foo", "bar", "1.0.0"),
-            type = TemplateType.deploy)
+            type = TemplateType.deploy,
+            envName = "utv")
 
     fun validMinimalConfig(): Result {
 

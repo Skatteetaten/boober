@@ -53,7 +53,7 @@ data class ConfigDeploy(
 
 interface Config {
     val cluster: String
-    val envName: String?
+    val envName: String
 
 
     @get:Pattern(message = "Only lowercase letters, max 24 length", regexp = "^[a-z]{0,23}[a-z]$")
@@ -72,7 +72,7 @@ interface Config {
 
     @get:Pattern(message = "Alphanumeric and dashes. Cannot end or start with dash", regexp = "^[a-z0-9][-a-z0-9]*[a-z0-9]$")
     val namespace: String
-        get() = if (envName != null) "$affiliation$envName" else "$affiliation-$name"
+        get() = "$affiliation$envName"
 
     val routeName: String
         get() = "http://$name-$namespace.$cluster.paas.skead.no"
@@ -101,7 +101,7 @@ data class ProcessConfig(
         override val name: String,
         override val config: Map<String, String> = mapOf(),
         override val secretFile: String? = null,
-        override val envName: String? = null,
+        override val envName: String,
         val templateFile: String? = null,
         val template: String? = null,
         val parameters: Map<String, String> = mapOf()
@@ -121,7 +121,7 @@ data class AppConfig(
         val deploy: ConfigDeploy = ConfigDeploy(),
         override val config: Map<String, String> = mapOf(),
         override val secretFile: String? = null,
-        override val envName: String? = null
+        override val envName: String
 ) : Config {
 
     val dockerGroup: String = build.groupId.replace(".", "_")

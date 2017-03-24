@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.model.AppConfig
 import no.skatteetaten.aurora.boober.model.ProcessConfig
 import no.skatteetaten.aurora.boober.model.Result
@@ -26,6 +27,10 @@ class ConfigService(val mapper: ObjectMapper) {
         val selectedFile = files.filter { it.key in names }.values.toList()
         val mergedJson = selectedFile.reduce(::createMergeCopy)
 
+        if (!mergedJson.has("envName")) {
+            (mergedJson as ObjectNode).put("envName", "-$env")
+        }
+
         return tryToCreateResult(mergedJson, files)
     }
 
@@ -33,10 +38,9 @@ class ConfigService(val mapper: ObjectMapper) {
         try {
 
             val type = TemplateType.valueOf(node.get("type").asText())
-            val clazz: Class<*> = if (type == TemplateType.process) {
-                ProcessConfig::class.java
-            } else {
-                AppConfig::class.java
+            val clazz: Class<*> = when (type) {
+                TemplateType.process -> ProcessConfig::class.java
+                else -> AppConfig::class.java
             }
 
             val config: AppConfig = mapper.reader().forType(clazz).readValue(node.toString())
