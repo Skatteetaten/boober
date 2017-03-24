@@ -11,10 +11,7 @@ class ValidationService(val openshiftService: OpenshiftService) {
 
     fun validate(res: Result, token: String): Result {
 
-        val config = res.config
-        if (config == null) {
-            return res
-        }
+        val config = res.config ?: return res
 
         val validator = Validation.buildDefaultValidatorFactory().validator
         val err = validator.validate(config)

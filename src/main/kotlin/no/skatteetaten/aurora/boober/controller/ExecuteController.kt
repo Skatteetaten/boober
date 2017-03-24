@@ -8,7 +8,10 @@ import no.skatteetaten.aurora.boober.service.OpenshiftService
 import no.skatteetaten.aurora.boober.service.ValidationService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class ExecuteController(val configService: ConfigService, val validationService: ValidationService, val openshiftService:OpenshiftService) {
@@ -35,6 +38,10 @@ class ExecuteController(val configService: ConfigService, val validationService:
 
 }
 
-data class SetupCommand(val affiliation:String, val env:String, val app:String?, val files: Map<String,JsonNode>?, val overrides:Map<String, JsonNode>?)
+data class SetupCommand(val affiliation: String,
+                        val env: String,
+                        val app: String?,
+                        val files: Map<String, JsonNode>?,
+                        val overrides: Map<String, JsonNode>?)
 
 
