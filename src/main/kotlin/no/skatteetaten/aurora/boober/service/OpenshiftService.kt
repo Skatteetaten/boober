@@ -70,7 +70,7 @@ class OpenshiftService(@Value("\${openshift.url}") val url: String, val ve: Velo
 
             val params = mapOf("app" to app)
 
-            val openshiftObjects = mapOf(
+            val openshiftObjects = mutableMapOf(
                     "configmap" to ve.parse("configmap.json", params.plus("appConfig" to config.configLine)),
                     "service" to ve.parse("service.json", params.plus("service" to svc)),
                     "imagestream" to ve.parse("imagestream.json", params.plus("docker" to docker)),
@@ -78,7 +78,7 @@ class OpenshiftService(@Value("\${openshift.url}") val url: String, val ve: Velo
             )
 
             if (app.route) {
-                openshiftObjects.plus("route" to ve.parse("route.json", params))
+                openshiftObjects.put("route", ve.parse("route.json", params))
             }
             return res.copy(openshiftObjects = openshiftObjects)
 
