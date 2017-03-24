@@ -52,7 +52,7 @@ class ValidationTest extends Specification {
       def validationResult = service.validate(res, token)
 
     then:
-      validationResult.errors.contains("size must be between 1 and 2147483647 for field build.artifactId")
+      validationResult.errors.contains("size must be between 1 and 50 for field build.artifactId")
   }
 
   def "should fail if affiliation contains special character"() {

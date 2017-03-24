@@ -26,9 +26,10 @@ data class ConfigBuild(
         @JsonProperty("VERSION")
         @get:NotNull
         @get:Size(min = 1)
-        val version: String
-)
+        val version: String,
 
+        val extraTags: String = "latest,major,minor,patch"
+)
 
 data class ConfigDeploy(
         @JsonProperty("SPLUNK_INDEX") val splunkIndex: String = "",

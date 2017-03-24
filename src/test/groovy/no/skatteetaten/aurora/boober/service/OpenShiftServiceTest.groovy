@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
+import static no.skatteetaten.aurora.boober.LoggingUtilsKt.setLogLevels
 import static no.skatteetaten.aurora.boober.utils.SampleFilesCollector.getUtvReferanseSampleFiles
 
 import org.apache.velocity.app.VelocityEngine
@@ -13,6 +14,9 @@ import spock.lang.Specification
 
 class OpenShiftServiceTest extends Specification {
 
+  def setupSpec() {
+    setLogLevels()
+  }
   Configuration configuration = new Configuration()
   VelocityEngine velocityEngine = configuration.velocity()
   ObjectMapper mapper = configuration.mapper()
@@ -130,12 +134,12 @@ class OpenShiftServiceTest extends Specification {
             }
           },
           "spec": {
-            "dockerImageRepository": "docker-registry.aurora.sits.no:5000",
+            "dockerImageRepository": "docker-registry.aurora.sits.no:5000/ske_aurora_openshift_referanse/openshift-referanse-springboot-server",
             "tags": [{
               "name": "default",
               "from": {
                 "kind": "DockerImage",
-                "name": "docker-registry.aurora.sits.no:5000:1"
+                "name": "docker-registry.aurora.sits.no:5000/ske_aurora_openshift_referanse/openshift-referanse-springboot-server:1"
               },
               "importPolicy": {
                 "scheduled": true
@@ -164,9 +168,15 @@ class OpenShiftServiceTest extends Specification {
             "name": "refapp"
           },
           "spec": {
-            "strategy": {
-              "type": "Recreate",
-              "resources": {}
+             "strategy": {
+              "type" : "Rolling",
+              "rollingParams": {
+                "intervalSeconds": 1,
+                "maxSurge": "25%",
+                "maxUnavailable": 0,
+                "timeoutSeconds": 120,
+                "updatePeriodSeconds": 1
+              }
             },
             "triggers": [
                   {

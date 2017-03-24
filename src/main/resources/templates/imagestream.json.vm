@@ -5,24 +5,26 @@
     "name": "${app.name}",
     "labels": {
       "app": "${app.name}",
-      "updatedBy" : "${app.username}",
+      "updatedBy": "${app.username}",
       "affiliation": "${app.affiliation}"
     }
-  },
+  }
     #if (${app.type} == "deploy")
+    ,
       "spec": {
-        "dockerImageRepository": "${docker.registry}",
-    "tags": [
+        "dockerImageRepository": "${docker.registry}/${docker.group}/${docker.name}",
+        "tags": [
           {
               "name": "${docker.istag}",
               "from": {
                 "kind": "DockerImage",
-                "name": "${docker.registry}:${docker.tag}"
+                "name": "${docker.registry}/${docker.group}/${docker.name}:${docker.tag}"
               },
               "importPolicy": {
                 "scheduled": true
               }
-            }     ]
+          }
+        ]
       }
     #end
 }

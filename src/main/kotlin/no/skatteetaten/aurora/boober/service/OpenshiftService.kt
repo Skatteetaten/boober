@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.model.AppConfig
 import no.skatteetaten.aurora.boober.model.ProcessConfig
 import no.skatteetaten.aurora.boober.model.Result
+import no.skatteetaten.aurora.boober.model.TemplateType
 import org.apache.velocity.VelocityContext
 import org.apache.velocity.app.VelocityEngine
 import org.springframework.beans.factory.annotation.Value
@@ -44,18 +45,24 @@ class OpenshiftService(@Value("\${openshift.url}") val url: String, val ve: Velo
                     findUsername(token)
             )
 
-
             val svc = TemplateService(config.deploy.websealRoute,
                     config.deploy.websealRoles,
                     config.deploy.prometheus,
                     config.deploy.prometheusPath,
                     config.deploy.prometheusPort
             )
+
             val docker = TemplateDocker(
                     "docker-registry.aurora.sits.no:5000",
                     config.build.version,
-                    config.deploy.tag
+                    config.dockerName,
+                    config.dockerGroup,
+                    config.deploy.tag,
+                    config.build.extraTags,
+                    TemplateImage("leveransepakkebygger", "prod"),
+                    TemplateImage("oracle8", "1")
             )
+
             val dc = TemplateDc(
                     config.deploy.managementPath,
                     config.deploy.alarm,
@@ -70,15 +77,21 @@ class OpenshiftService(@Value("\${openshift.url}") val url: String, val ve: Velo
 
             val params = mapOf("app" to app)
 
+            val paramsWithDocker = params.plus("docker" to docker)
             val openshiftObjects = mutableMapOf(
                     "configmap" to ve.parse("configmap.json", params.plus("appConfig" to config.configLine)),
                     "service" to ve.parse("service.json", params.plus("service" to svc)),
-                    "imagestream" to ve.parse("imagestream.json", params.plus("docker" to docker)),
-                    "dc" to ve.parse("deployment-config.json", params.plus(listOf("docker" to docker, "resources" to resources, "dc" to dc)))
+                    "imagestream" to ve.parse("imagestream.json", paramsWithDocker),
+                    "dc" to ve.parse("deployment-config.json", paramsWithDocker.plus(listOf("resources" to resources, "dc" to dc)))
             )
 
             if (app.route) {
                 openshiftObjects.put("route", ve.parse("route.json", params))
+            }
+
+            if (config.type == TemplateType.development) {
+                openshiftObjects.put("build", ve.parse("build-config.json", paramsWithDocker))
+
             }
             return res.copy(openshiftObjects = openshiftObjects)
 
@@ -91,9 +104,16 @@ class OpenshiftService(@Value("\${openshift.url}") val url: String, val ve: Velo
 
 }
 
+data class TemplateImage(val name: String, val version: String)
+
 data class TemplateDocker(val registry: String,
                           val tag: String,
-                          val istag: String)
+                          val name: String,
+                          val group: String,
+                          val istag: String,
+                          val extraTags: String,
+                          val builder: TemplateImage,
+                          val base: TemplateImage)
 
 data class TemplateApp(val name: String,
                        val affiliation: String,

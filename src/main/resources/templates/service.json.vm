@@ -1,4 +1,3 @@
-#parse("templates/metadata.json.vm")
 {
   "kind": "Service",
   "apiVersion": "v1",

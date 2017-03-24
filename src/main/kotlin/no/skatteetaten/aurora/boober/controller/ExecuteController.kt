@@ -14,22 +14,22 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class ExecuteController(val configService: ConfigService, val validationService: ValidationService, val openshiftService:OpenshiftService) {
+class ExecuteController(val configService: ConfigService, val validationService: ValidationService, val openshiftService: OpenshiftService) {
 
     val logger: Logger = LoggerFactory.getLogger(ExecuteController::class.java)
 
     @PutMapping("/setup")
-    fun setup(@RequestHeader(value="Authentication") token:String,
-              @RequestBody cmd:SetupCommand): Result {
+    fun setup(@RequestHeader(value = "Authentication") token: String,
+              @RequestBody cmd: SetupCommand): Result {
 
-        logger.info("Setting up ${cmd.app!!} in ${cmd.env} with token $token")
+        logger.info("Setting up ${cmd.app} in ${cmd.env} with token $token")
         //TODO swith on what is avilable in the command.
         val res = configService.createBooberResult(cmd.env, cmd.app!!, cmd.files!!)
 
         val validated = validationService.validate(res, token)
         //TODO perform operations, maybe expand Result object here?
 
-        if(!validated.valid) {
+        if (!validated.valid) {
             return validated
         }
 

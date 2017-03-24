@@ -31,7 +31,6 @@ class ValidationService(val openshiftService: OpenshiftService) {
 
             if(config.template !=null && config.templateFile != null) {
                 errors.add("Cannot specify both template and templateFile")
-
             }
 
             if (config.template != null && !openshiftService.templateExist(token, config.template)) {
