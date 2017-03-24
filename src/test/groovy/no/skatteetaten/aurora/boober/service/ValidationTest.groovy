@@ -1,10 +1,16 @@
 package no.skatteetaten.aurora.boober.service
 
+import static no.skatteetaten.aurora.boober.LoggingUtilsKt.setLogLevels
+
 import no.skatteetaten.aurora.boober.ValidationHelper
 import no.skatteetaten.aurora.boober.model.Result
 import spock.lang.Specification
 
 class ValidationTest extends Specification {
+
+  def setupSpec() {
+    setLogLevels()
+  }
 
   def openshiftService = Mock(OpenshiftService)
   def service = new ValidationService(openshiftService)

@@ -15,12 +15,12 @@ data class ConfigBuild(
 
         @JsonProperty("ARTIFACT_ID")
         @get:NotNull
-        @get:Size(min = 1)
+        @get:Size(min = 1, max = 50)
         val artifactId: String,
 
         @JsonProperty("GROUP_ID")
         @get:NotNull
-        @get:Size(min = 1)
+        @get:Size(min = 1, max = 200)
         val groupId: String,
 
         @JsonProperty("VERSION")
@@ -45,16 +45,11 @@ data class ConfigDeploy(
         @JsonProperty("MANAGEMENT_PATH") val managementPath: String = "",
         @JsonProperty("DEBUG") val debug: Boolean = false,
         @JsonProperty("ALARM") val alarm: Boolean = true
-) {
-    companion object {
-        fun empty() = ConfigDeploy()
-    }
-}
+)
 
 interface Config {
     val cluster: String
     val envName: String?
-
 
     @get:Pattern(message = "Only lowercase letters, max 24 length", regexp = "^[a-z]{0,23}[a-z]$")
     val affiliation: String
