@@ -40,7 +40,7 @@ class ModifyController(val gitService: GitService, val configService: ConfigServ
                 val files = listOf("about.json", "$env/about.json", "$it.json", "$env/$it.json")
 
                 // TODO: Must collect files from git and replace mapOf
-                Pair("$env/$it", configService.createBooberResult(env, it, mapOf()))
+                Pair("$env/$it", configService.createConfigFormAocConfigFiles(env, it, mapOf()))
             }
         }.toMap()
 

@@ -86,7 +86,7 @@ interface Config {
         get() = flags.contains("rolling")
 }
 
-data class ProcessConfig(
+data class TemplateProcessingConfig(
         override val affiliation: String,
         override val groups: String = "",
         override val users: String = "",
@@ -103,7 +103,7 @@ data class ProcessConfig(
         val parameters: Map<String, String> = mapOf()
 ) : Config
 
-data class AppConfig(
+data class AuroraDeploymentConfig(
         override val affiliation: String,
         override val groups: String = "",
         override val users: String = "",

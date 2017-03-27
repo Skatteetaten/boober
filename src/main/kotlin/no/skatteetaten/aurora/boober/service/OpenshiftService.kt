@@ -2,8 +2,8 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.model.AppConfig
-import no.skatteetaten.aurora.boober.model.ProcessConfig
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
+import no.skatteetaten.aurora.boober.model.TemplateProcessingConfig
 import no.skatteetaten.aurora.boober.model.Result
 import no.skatteetaten.aurora.boober.model.TemplateType
 import org.apache.velocity.VelocityContext
@@ -30,7 +30,7 @@ class OpenshiftService(val ve: VelocityEngine) {
 
         val config = res.config!!
 
-        if (config is AppConfig) {
+        if (config is AuroraDeploymentConfig) {
             //TODO This is the code that uses the default that was set in the old AOC, that is the template.
             //TODO If we get an unified interface in here we do not have to do this here. We can always move it out.
             //TODO What should we store in git?
@@ -98,7 +98,7 @@ class OpenshiftService(val ve: VelocityEngine) {
             }
             return res.copy(openshiftObjects = openshiftObjects)
 
-        } else if (config is ProcessConfig) {
+        } else if (config is TemplateProcessingConfig) {
             //TODO
             return res
         }

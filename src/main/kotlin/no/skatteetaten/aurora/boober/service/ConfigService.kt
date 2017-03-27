@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
-import no.skatteetaten.aurora.boober.model.AppConfig
-import no.skatteetaten.aurora.boober.model.ProcessConfig
-import no.skatteetaten.aurora.boober.model.Result
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
+import no.skatteetaten.aurora.boober.model.Config
+import no.skatteetaten.aurora.boober.model.TemplateProcessingConfig
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.utils.createMergeCopy
 import org.springframework.stereotype.Service
@@ -15,41 +15,44 @@ import org.springframework.stereotype.Service
 @Service
 class ConfigService(val mapper: ObjectMapper) {
 
-    fun createBooberResult(env: String, app: String, files: Map<String, JsonNode>): Result {
+    fun createConfigFormAocConfigFiles(environmentName: String, applicationName: String, aocConfigFiles: Map<String, JsonNode>): Config {
 
-        val names = setOf("about.json", "$env/about.json", "$app.json", "$env/$app.json")
-        val missingFiles = names.filter { it !in files.keys }
+        val requiredFilesForApplication = setOf(
+                "about.json",
+                "$environmentName/about.json",
+                "$applicationName.json",
+                "$environmentName/$applicationName.json")
 
-        if (missingFiles.isNotEmpty()) {
-            return Result(sources = files, errors = listOf("Files missing => $missingFiles"))
+        // Not sure this will maintain the required order of the setup files. Should probably map over required files instead.
+        val filesForApplication = aocConfigFiles.filter { it.key in requiredFilesForApplication }.values.toList()
+        if (filesForApplication.size != requiredFilesForApplication.size) {
+            val missingFiles = requiredFilesForApplication.filter { it !in aocConfigFiles.keys }
+            throw AocException("Unable to execute setup command. Required files missing => $missingFiles")
         }
 
-        val selectedFile = files.filter { it.key in names }.values.toList()
-        val mergedJson = selectedFile.reduce(::createMergeCopy)
-
+        val mergedJson = mergeAocConfigFiles(filesForApplication)
         if (!mergedJson.has("envName")) {
-            (mergedJson as ObjectNode).put("envName", "-$env")
+            (mergedJson as ObjectNode).put("envName", "-$environmentName")
         }
 
-        return tryToCreateResult(mergedJson, files)
-    }
+        val type = TemplateType.valueOf(mergedJson.get("type").asText())
+        val clazz: Class<*> = when (type) {
+            TemplateType.process -> TemplateProcessingConfig::class.java
+            else -> AuroraDeploymentConfig::class.java
+        }
 
-    fun tryToCreateResult(node: JsonNode, files: Map<String, JsonNode>): Result {
         try {
-
-            val type = TemplateType.valueOf(node.get("type").asText())
-            val clazz: Class<*> = when (type) {
-                TemplateType.process -> ProcessConfig::class.java
-                else -> AppConfig::class.java
-            }
-
-            val config: AppConfig = mapper.reader().forType(clazz).readValue(node.toString())
-
-            return Result(config, files)
+            return mapper.reader().forType(clazz).readValue(mergedJson.toString())
         } catch (ex: JsonMappingException) {
             val missingProp = ex.path.map { it.fieldName }.reduce { acc, fieldName -> acc + ".$fieldName" }
-            return Result(sources = files, errors = listOf("$missingProp is required"))
+            throw AocException("$missingProp is required")
         }
     }
-}
 
+    private fun mergeAocConfigFiles(filesForApplication: List<JsonNode>): JsonNode {
+
+        val mergedJson = filesForApplication.reduce(::createMergeCopy)
+
+        return mergedJson
+    }
+}

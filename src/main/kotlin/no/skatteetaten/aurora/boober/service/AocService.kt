@@ -24,7 +24,7 @@ class AocService(
     fun executeSetup(token: String, cmd: SetupCommand): Result {
 
         //TODO switch on what is available in the command.
-        val res = configService.createBooberResult(cmd.env, cmd.app!!, cmd.files!!)
+        val res = configService.createConfigFormAocConfigFiles(cmd.env, cmd.app!!, cmd.files!!)
 
         val validated = validationService.validate(res, token)
         //TODO perform operations, maybe expand Result object here?

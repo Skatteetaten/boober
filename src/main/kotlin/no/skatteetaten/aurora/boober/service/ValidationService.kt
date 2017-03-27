@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.boober.model.ProcessConfig
+import no.skatteetaten.aurora.boober.model.TemplateProcessingConfig
 import no.skatteetaten.aurora.boober.model.Result
 import org.springframework.stereotype.Service
 import javax.validation.Validation
@@ -23,7 +23,7 @@ class ValidationService(val openshiftService: OpenshiftService) {
             errors.addAll(map)
         }
 
-        if (config is ProcessConfig) {
+        if (config is TemplateProcessingConfig) {
 
             if (config.templateFile != null && !res.sources.keys.contains(config.templateFile)) {
                 errors.add("Template file ${config.templateFile} is missing in sources")

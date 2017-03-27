@@ -23,10 +23,10 @@ class ConfigServiceTest extends Specification {
       files.remove("referanse.json")
 
     when:
-      Result result = service.createBooberResult("utv", "referanse", files)
+      service.createConfigFormAocConfigFiles("utv", "referanse", files)
 
     then:
-      result.errors.size() == 1
+      thrown(AocException)
   }
 
   def "Should successfully merge all config files"() {
@@ -35,7 +35,7 @@ class ConfigServiceTest extends Specification {
       Map<String, JsonNode> files = getUtvReferanseSampleFiles()
 
     when:
-      Result result = service.createBooberResult("utv", "referanse", files)
+      Result result = service.createConfigFormAocConfigFiles("utv", "referanse", files)
 
     then:
       result.errors.isEmpty()
@@ -75,7 +75,7 @@ class ConfigServiceTest extends Specification {
       files.put("utv/referanse.json", mapper.readTree(envAppOverride))
 
     when:
-      Result result = service.createBooberResult("utv", "referanse", files)
+      Result result = service.createConfigFormAocConfigFiles("utv", "referanse", files)
 
     then:
       result.getConfig().name == "Awesome App"
@@ -105,7 +105,7 @@ class ConfigServiceTest extends Specification {
       files.put("utv/referanse.json", mapper.readTree("{}"))
 
     when:
-      Result result = service.createBooberResult("utv", "referanse", files)
+      Result result = service.createConfigFormAocConfigFiles("utv", "referanse", files)
 
     then:
       result.errors[0] == "build is required"
@@ -138,7 +138,7 @@ class ConfigServiceTest extends Specification {
       files.put("utv/referanse.json", mapper.readTree("{}"))
 
     when:
-      Result result = service.createBooberResult("utv", "referanse", files)
+      Result result = service.createConfigFormAocConfigFiles("utv", "referanse", files)
 
     then:
       result.errors[0] == "build.VERSION is required"

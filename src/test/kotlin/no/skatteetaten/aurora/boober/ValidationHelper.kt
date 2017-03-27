@@ -5,13 +5,13 @@ import no.skatteetaten.aurora.boober.model.*
 
 class ValidationHelper {
 
-    val process = ProcessConfig(
+    val process = TemplateProcessingConfig(
             name = "foo",
             cluster = "utv",
             affiliation = "aos",
             envName = "utv")
 
-    val config = AppConfig(
+    val config = AuroraDeploymentConfig(
             cluster = "utv",
             affiliation = "aos",
             build = ConfigBuild("foo", "bar", "1.0.0"),
