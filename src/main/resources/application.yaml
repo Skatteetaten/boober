@@ -52,7 +52,7 @@ metrics:
 
 logging:
   level:
-    ske.aurora: DEBUG
+    no.skatteetaten: DEBUG
     ske.aurora.filter: INFO
     org:
       jboss: INFO

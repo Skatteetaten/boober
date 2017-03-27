@@ -26,6 +26,7 @@ class OpenshiftClient(@Value("\${openshift.url}") val baseUrl: String, val clien
 
         val res = client.postForEntity(fullUrl, entity, JsonNode::class.java)
         logger.info("Saving resource to $fullUrl with response code ${res.statusCodeValue}")
+        logger.debug("Body=${res.body}")
         return res
     }
 
