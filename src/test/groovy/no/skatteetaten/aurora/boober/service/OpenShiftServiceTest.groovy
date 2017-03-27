@@ -228,7 +228,7 @@ class OpenShiftServiceTest extends Specification {
                     "emptyDir": {}
                   },
                   {
-                    "name": "appConfig",
+                    "name": "config",
                     "configMap": {
                       "name": "refapp"
                     }
@@ -309,8 +309,8 @@ class OpenShiftServiceTest extends Specification {
                         "mountPath": "/u01/logs"
                       },
                       {
-                        "name": "appConfig",
-                        "mountPath": "/u01/appConfig/configmap"
+                        "name": "config",
+                        "mountPath": "/u01/config/configmap"
                       }
                     ],
                     "terminationMessagePath": "/dev/termination-log",

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 
@@ -17,14 +18,15 @@ class OpenshiftClient(@Value("\${openshift.url}") val baseUrl: String, val clien
 
     val logger: Logger = LoggerFactory.getLogger(ExecuteController::class.java)
 
-    fun save(url: String, json: JsonNode, token: String): JsonNode {
+    fun save(url: String, json: JsonNode, token: String): ResponseEntity<JsonNode>? {
 
         val headers = createHeaders(token)
         val entity = HttpEntity<JsonNode>(json, headers)
         val fullUrl = baseUrl + url
 
-        logger.info("Saving resource to $fullUrl")
-        return client.postForObject(fullUrl, entity, JsonNode::class.java)
+        val res = client.postForEntity(fullUrl, entity, JsonNode::class.java)
+        logger.info("Saving resource to $fullUrl with response code ${res.statusCodeValue}")
+        return res
     }
 
     private fun createHeaders(token: String): HttpHeaders {

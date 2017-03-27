@@ -25,6 +25,7 @@ class OpenshiftService(val ve: VelocityEngine) {
         return token
     }
 
+
     fun generateObjects(res: Result, token: String): Result {
 
         val config = res.config!!

@@ -44,7 +44,6 @@ class ExecuteController(val configService: ConfigService,
 
         /* This really should not be in the controller layer */
         if (objects.openshiftObjects != null && objects.config != null) {
-
             //race condition if we create resources to fast
 
             val httpErrors: List<String> = listOf()
@@ -52,13 +51,16 @@ class ExecuteController(val configService: ConfigService,
             val results = objects.openshiftObjects.map {
                 val url = createOpenshiftUrl(it.key, objects.config.namespace)
                 try {
-                    httpResult = openshiftClient.save(url, it.value, token)
+                    val response = openshiftClient.save(url, it.value, token)
+                    httpResult = response?.body
+
 
                 } catch(e: HttpClientErrorException) {
                     val message = "Error saving url=$url, with message=${e.message}"
                     logger.debug(message)
                     httpErrors.plus(message)
                 }
+                Thread.sleep(1000)
                 Pair(it.key, httpResult)
 
             }.toMap()

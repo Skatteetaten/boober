@@ -67,7 +67,7 @@
             "emptyDir": {}
           },
           {
-            "name": "appConfig",
+            "name": "config",
             "configMap": {
               "name": "${app.name}"
             }
@@ -162,8 +162,8 @@
                 "mountPath": "/u01/logs"
               },
               {
-                "name": "appConfig",
-                "mountPath": "/u01/appConfig/configmap"
+                "name": "config",
+                "mountPath": "/u01/config/configmap"
               }
             ],
             "terminationMessagePath": "/dev/termination-log",
