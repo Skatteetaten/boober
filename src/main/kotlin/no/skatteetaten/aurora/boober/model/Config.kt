@@ -135,7 +135,8 @@ data class NamespaceResult(val results: Map<String, Result>)
 data class Result(val config: Config? = null,
                   val sources: Map<String, JsonNode> = mapOf(),
                   val errors: List<String> = listOf(),
-                  val openshiftObjects: Map<String, JsonNode>? = mapOf()) {
+                  val openshiftObjects: Map<String, JsonNode>? = mapOf(),
+                  val savedOjbects: Map<String, JsonNode?>? = mapOf()) {
 
     val valid = errors.isEmpty()
 

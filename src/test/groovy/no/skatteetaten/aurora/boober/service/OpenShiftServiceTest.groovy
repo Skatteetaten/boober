@@ -21,26 +21,42 @@ class OpenShiftServiceTest extends Specification {
   VelocityEngine velocityEngine = configuration.velocity()
   ObjectMapper mapper = configuration.mapper()
 
-  def openShiftService = new OpenshiftService("", velocityEngine)
+  def openShiftService = new OpenshiftService(velocityEngine)
   def configService = new ConfigService(mapper)
 
-  def "Should create five OpenShift objects from Velocity templates"() {
+  def "Should create six OpenShift objects from Velocity templates"() {
     given:
       def slurper = new JsonSlurper()
       Map<String, JsonNode> files = getUtvReferanseSampleFiles()
 
     when:
       def booberResult = configService.createBooberResult("utv", "referanse", files)
-      def openShiftResult = openShiftService.execute(booberResult, "hero")
+      def openShiftResult = openShiftService.generateObjects(booberResult, "hero")
 
-      def configMap = slurper.parseText(openShiftResult.openshiftObjects.get("configmap").toString())
-      def service = slurper.parseText(openShiftResult.openshiftObjects.get("service").toString())
-      def imageStream = slurper.parseText(openShiftResult.openshiftObjects.get("imagestream").toString())
-      def deploymentConfig = slurper.parseText(openShiftResult.openshiftObjects.get("dc").toString())
-      def route = slurper.parseText(openShiftResult.openshiftObjects.get("route").toString())
+      def configMap = slurper.parseText(openShiftResult.openshiftObjects.get("configmaps").toString())
+      def service = slurper.parseText(openShiftResult.openshiftObjects.get("services").toString())
+      def imageStream = slurper.parseText(openShiftResult.openshiftObjects.get("imagestreams").toString())
+      def deploymentConfig = slurper.parseText(openShiftResult.openshiftObjects.get("deploymentconfigs").toString())
+      def route = slurper.parseText(openShiftResult.openshiftObjects.get("routes").toString())
+      def project = slurper.parseText(openShiftResult.openshiftObjects.get("projects").toString())
 
     then:
-      openShiftResult.openshiftObjects.size() == 5
+      openShiftResult.openshiftObjects.size() == 6
+
+      project.toString() == slurper.parseText("""
+        {
+          "kind": "Project",
+          "apiVersion": "v1",
+          "metadata": {
+            "name": "aot-utv",
+            "labels": {
+              "updatedBy" : "hero",
+              "affiliation": "aot",
+              "openshift.io/requester": "hero"
+            }
+          }
+        }
+      """).toString()
 
       route.toString() == slurper.parseText("""
         {
@@ -157,8 +173,8 @@ class OpenShiftServiceTest extends Specification {
             "annotations": {
               "marjory.skatteetaten.no/management-path": ":8081/actuator",
               "marjory.skatteetaten.no/alarm": "true",
-              "sprocket.sits.no/deployment-appConfig.certificate": "ske.aurora.openshift.referanse.refapp",
-              "sprocket.sits.no/deployment-appConfig.database": "referanseapp"
+              "sprocket.sits.no/deployment-config.certificate": "ske.aurora.openshift.referanse.refapp",
+              "sprocket.sits.no/deployment-config.database": "referanseapp"
             },
             "labels": {
               "app": "refapp",

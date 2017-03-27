@@ -5,8 +5,8 @@
     "annotations": {
       "marjory.skatteetaten.no/management-path": "${dc.managementPath}",
       "marjory.skatteetaten.no/alarm": "${dc.alarm}",
-      "sprocket.sits.no/deployment-appConfig.certificate": "${dc.certificateCn}",
-      "sprocket.sits.no/deployment-appConfig.database": "${dc.database}"
+      "sprocket.sits.no/deployment-config.certificate": "${dc.certificateCn}",
+      "sprocket.sits.no/deployment-config.database": "${dc.database}"
     },
     "labels": {
       "app": "${app.name}",

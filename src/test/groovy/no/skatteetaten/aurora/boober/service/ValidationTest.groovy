@@ -22,7 +22,7 @@ class ValidationTest extends Specification {
 
     given:
 
-      def res = new Result(null, [:], ["Files are missing"], [:])
+      def res = new Result(null, [:], ["Files are missing"], [:], [:])
 
     when:
       def validationResult = service.validate(res, token)

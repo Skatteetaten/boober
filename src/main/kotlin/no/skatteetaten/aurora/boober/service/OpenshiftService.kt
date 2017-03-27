@@ -8,12 +8,11 @@ import no.skatteetaten.aurora.boober.model.Result
 import no.skatteetaten.aurora.boober.model.TemplateType
 import org.apache.velocity.VelocityContext
 import org.apache.velocity.app.VelocityEngine
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.StringWriter
 
 @Service
-class OpenshiftService(@Value("\${openshift.url}") val url: String, val ve: VelocityEngine) {
+class OpenshiftService(val ve: VelocityEngine) {
 
     fun templateExist(token: String, template: String): Boolean {
         //TODO GET request to openshift with token to check if template exist in Openshift namespace
@@ -21,20 +20,23 @@ class OpenshiftService(@Value("\${openshift.url}") val url: String, val ve: Velo
 
     }
 
+
     fun findUsername(token: String): String {
-        //TODO get call to cluster find username for bearer token
         return token
     }
 
-    fun execute(res: Result, token: String): Result {
+    fun generateObjects(res: Result, token: String): Result {
 
         val config = res.config!!
 
         if (config is AppConfig) {
             //TODO This is the code that uses the default that was set in the old AOC, that is the template.
+            //TODO If we get an unified interface in here we do not have to do this here. We can always move it out.
+            //TODO What should we store in git?
 
             val app = TemplateApp(
                     config.name,
+                    config.namespace,
                     config.affiliation,
                     config.type.name,
                     config.replicas,
@@ -74,23 +76,23 @@ class OpenshiftService(@Value("\${openshift.url}") val url: String, val ve: Velo
                     TemplateResourceFields("128Mi", config.deploy.cpuRequest),
                     TemplateResourceFields(config.deploy.maxMemory, "2000m"))
 
-
             val params = mapOf("app" to app)
 
             val paramsWithDocker = params.plus("docker" to docker)
             val openshiftObjects = mutableMapOf(
-                    "configmap" to ve.parse("configmap.json", params.plus("appConfig" to config.configLine)),
-                    "service" to ve.parse("service.json", params.plus("service" to svc)),
-                    "imagestream" to ve.parse("imagestream.json", paramsWithDocker),
-                    "dc" to ve.parse("deployment-config.json", paramsWithDocker.plus(listOf("resources" to resources, "dc" to dc)))
+                    "projects" to ve.parse("project.json", params),
+                    "configmaps" to ve.parse("configmap.json", params.plus("appConfig" to config.configLine)),
+                    "services" to ve.parse("service.json", params.plus("service" to svc)),
+                    "imagestreams" to ve.parse("imagestream.json", paramsWithDocker),
+                    "deploymentconfigs" to ve.parse("deployment-config.json", paramsWithDocker.plus(listOf("resources" to resources, "dc" to dc)))
             )
 
             if (app.route) {
-                openshiftObjects.put("route", ve.parse("route.json", params))
+                openshiftObjects.put("routes", ve.parse("route.json", params))
             }
 
             if (config.type == TemplateType.development) {
-                openshiftObjects.put("build", ve.parse("build-config.json", paramsWithDocker))
+                openshiftObjects.put("buildconfigs", ve.parse("build-config.json", paramsWithDocker))
 
             }
             return res.copy(openshiftObjects = openshiftObjects)
@@ -116,6 +118,7 @@ data class TemplateDocker(val registry: String,
                           val base: TemplateImage)
 
 data class TemplateApp(val name: String,
+                       val namespace: String,
                        val affiliation: String,
                        val type: String,
                        val replicas: Int,
