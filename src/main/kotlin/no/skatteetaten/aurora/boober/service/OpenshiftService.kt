@@ -25,7 +25,7 @@ class OpenshiftService(val ve: VelocityEngine) {
     }
 
 
-    fun generateObjects(config: AuroraDeploymentConfig, token: String): Map<String, JsonNode> {
+    fun generateObjects(config: AuroraDeploymentConfig, token: String): List<JsonNode> {
 
         //TODO This is the code that uses the default that was set in the old AOC, that is the template.
         //TODO If we get an unified interface in here we do not have to do this here. We can always move it out.
@@ -76,21 +76,21 @@ class OpenshiftService(val ve: VelocityEngine) {
         val params = mapOf("app" to app)
 
         val paramsWithDocker = params.plus("docker" to docker)
-        val openshiftObjects = mutableMapOf(
-                "projects" to ve.parse("project.json", params),
-                "configmaps" to ve.parse("configmap.json", params.plus("appConfig" to config.configLine)),
-                "services" to ve.parse("service.json", params.plus("service" to svc)),
-                "imagestreams" to ve.parse("imagestream.json", paramsWithDocker),
-                "deploymentconfigs" to ve.parse("deployment-config.json", paramsWithDocker.plus(listOf("resources" to resources, "dc" to dc)))
+
+        val openshiftObjects = mutableListOf(
+                ve.parse("project.json", params),
+                ve.parse("configmap.json", params.plus("appConfig" to config.configLine)),
+                ve.parse("service.json", params.plus("service" to svc)),
+                ve.parse("imagestream.json", paramsWithDocker),
+                ve.parse("deployment-config.json", paramsWithDocker.plus(listOf("resources" to resources, "dc" to dc)))
         )
 
         if (app.route) {
-            openshiftObjects.put("routes", ve.parse("route.json", params))
+            openshiftObjects.add(ve.parse("route.json", params))
         }
 
         if (config.type == TemplateType.development) {
-            openshiftObjects.put("buildconfigs", ve.parse("build-config.json", paramsWithDocker))
-
+            openshiftObjects.add(ve.parse("build-config.json", paramsWithDocker))
         }
         return openshiftObjects
     }

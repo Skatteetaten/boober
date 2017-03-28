@@ -9,7 +9,7 @@ import javax.validation.Validation
 @Service
 class ValidationService(val openshiftService: OpenshiftService) {
 
-    fun validate(config: Config/*, token: String*/) {
+    fun assertIsValid(config: Config/*, token: String*/) {
 
         val validator = Validation.buildDefaultValidatorFactory().validator
         val err = validator.validate(config)

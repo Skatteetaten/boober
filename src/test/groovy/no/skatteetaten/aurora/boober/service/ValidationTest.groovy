@@ -25,7 +25,7 @@ class ValidationTest extends Specification {
       def res = new Result(null, [:], ["Files are missing"], [:], [:])
 
     when:
-      def validationResult = service.validate(res, token)
+      def validationResult = service.assertIsValid(res, token)
 
     then:
       validationResult.errors.contains("Files are missing")
@@ -38,7 +38,7 @@ class ValidationTest extends Specification {
       def res = helper.validMinimalConfig()
 
     when:
-      def validationResult = service.validate(res, token)
+      def validationResult = service.assertIsValid(res, token)
 
     then:
       validationResult.valid
@@ -49,7 +49,7 @@ class ValidationTest extends Specification {
     given:
       def res = helper.configWithNameAndBuildArtifactIdMissing()
     when:
-      def validationResult = service.validate(res, token)
+      def validationResult = service.assertIsValid(res, token)
 
     then:
       validationResult.errors.contains("size must be between 1 and 50 for field build.artifactId")
@@ -61,7 +61,7 @@ class ValidationTest extends Specification {
       def res = helper.affiliationWithSpecialChar()
 
     when:
-      def validationResult = service.validate(res, token)
+      def validationResult = service.assertIsValid(res, token)
 
     then:
       validationResult.errors.contains("Only lowercase letters, max 24 length for field affiliation")
@@ -76,7 +76,7 @@ class ValidationTest extends Specification {
       def res = helper.processWithTemplateFile("template/deploy-amq.json")
 
     when:
-      def validationResult = service.validate(res, token)
+      def validationResult = service.assertIsValid(res, token)
 
     then:
       validationResult.errors.contains("Template file template/deploy-amq.json is missing in sources")
@@ -89,7 +89,7 @@ class ValidationTest extends Specification {
       openshiftService.templateExist(token, "foo") >> false
 
     when:
-      def validationResult = service.validate(res, token)
+      def validationResult = service.assertIsValid(res, token)
 
 
     then:
@@ -104,7 +104,7 @@ class ValidationTest extends Specification {
       openshiftService.templateExist(token, "foo") >> false
 
     when:
-      def validationResult = service.validate(res, token)
+      def validationResult = service.assertIsValid(res, token)
 
     then:
       validationResult.errors.contains("Template foo does not exist in cluster.")
