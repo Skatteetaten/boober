@@ -21,7 +21,7 @@ class OpenShiftServiceTest extends Specification {
   VelocityEngine velocityEngine = configuration.velocity()
   ObjectMapper mapper = configuration.mapper()
 
-  def openShiftService = new OpenshiftService(velocityEngine)
+  def openShiftService = new OpenShiftService(velocityEngine)
   def configService = new ConfigService(mapper)
 
   def "Should create six OpenShift objects from Velocity templates"() {

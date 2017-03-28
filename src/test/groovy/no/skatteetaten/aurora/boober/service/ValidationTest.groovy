@@ -12,7 +12,7 @@ class ValidationTest extends Specification {
     setLogLevels()
   }
 
-  def openshiftService = Mock(OpenshiftService)
+  def openshiftService = Mock(OpenShiftService)
   def service = new ValidationService(openshiftService)
   def token = "foobar"
 

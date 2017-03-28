@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.JsonNode
 import javax.validation.Valid
 import javax.validation.constraints.NotNull
 import javax.validation.constraints.Pattern
@@ -128,16 +127,4 @@ data class AuroraDeploymentConfig(
     } else {
         deploy.certificate
     }
-}
-
-data class NamespaceResult(val results: Map<String, Config>)
-
-data class Result(val config: Config? = null,
-                  val sources: Map<String, JsonNode> = mapOf(),
-                  val errors: List<String> = listOf(),
-                  val openshiftObjects: Map<String, JsonNode>? = mapOf(),
-                  val savedOjbects: Map<String, JsonNode?>? = mapOf()) {
-
-    val valid = errors.isEmpty()
-
 }

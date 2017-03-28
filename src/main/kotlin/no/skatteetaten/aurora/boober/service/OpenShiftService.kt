@@ -1,9 +1,8 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
-import no.skatteetaten.aurora.boober.model.Result
 import no.skatteetaten.aurora.boober.model.TemplateType
 import org.apache.velocity.VelocityContext
 import org.apache.velocity.app.VelocityEngine
@@ -11,12 +10,14 @@ import org.springframework.stereotype.Service
 import java.io.StringWriter
 
 @Service
-class OpenshiftService(val ve: VelocityEngine) {
+class OpenShiftService(
+        val ve: VelocityEngine,
+        val mapper: ObjectMapper
+) {
 
     fun templateExist(token: String, template: String): Boolean {
         //TODO GET request to openshift with token to check if template exist in Openshift namespace
         return true
-
     }
 
 
@@ -77,22 +78,31 @@ class OpenshiftService(val ve: VelocityEngine) {
 
         val paramsWithDocker = params.plus("docker" to docker)
 
-        val openshiftObjects = mutableListOf(
-                ve.parse("project.json", params),
-                ve.parse("configmap.json", params.plus("appConfig" to config.configLine)),
-                ve.parse("service.json", params.plus("service" to svc)),
-                ve.parse("imagestream.json", paramsWithDocker),
-                ve.parse("deployment-config.json", paramsWithDocker.plus(listOf("resources" to resources, "dc" to dc)))
+        val openShiftObjects = mutableListOf(
+                mergeVelocityTemplate("project.json", params),
+                mergeVelocityTemplate("configmap.json", params.plus("appConfig" to config.configLine)),
+                mergeVelocityTemplate("service.json", params.plus("service" to svc)),
+                mergeVelocityTemplate("imagestream.json", paramsWithDocker),
+                mergeVelocityTemplate("deployment-config.json", paramsWithDocker.plus(listOf("resources" to resources, "dc" to dc)))
         )
 
         if (app.route) {
-            openshiftObjects.add(ve.parse("route.json", params))
+            openShiftObjects.add(mergeVelocityTemplate("route.json", params))
         }
 
         if (config.type == TemplateType.development) {
-            openshiftObjects.add(ve.parse("build-config.json", paramsWithDocker))
+            openShiftObjects.add(mergeVelocityTemplate("build-config.json", paramsWithDocker))
         }
-        return openshiftObjects
+        return openShiftObjects
+    }
+
+    private fun mergeVelocityTemplate(template: String, content: Map<String, Any>): JsonNode {
+        val context = VelocityContext()
+        content.forEach { context.put(it.key, it.value) }
+        val t = ve.getTemplate("templates/$template.vm")
+        val sw = StringWriter()
+        t.merge(context, sw)
+        return mapper.readTree(sw.toString())
     }
 }
 
@@ -134,12 +144,3 @@ data class TemplateDc(val managementPath: String
 data class TemplateResourceFields(val memory: String, val cpu: String)
 
 data class TemplateResources(val request: TemplateResourceFields, val limits: TemplateResourceFields)
-
-fun VelocityEngine.parse(template: String, content: Map<String, Any>): JsonNode {
-    val context = VelocityContext()
-    content.forEach { context.put(it.key, it.value) }
-    val t = this.getTemplate("templates/$template.vm")
-    val sw = StringWriter()
-    t.merge(context, sw)
-    return jacksonObjectMapper().readTree(sw.toString())
-}

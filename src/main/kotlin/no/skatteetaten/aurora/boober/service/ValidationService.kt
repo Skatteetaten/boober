@@ -7,7 +7,7 @@ import javax.validation.Validation
 
 
 @Service
-class ValidationService(val openshiftService: OpenshiftService) {
+class ValidationService(val openShiftService: OpenShiftService) {
 
     fun assertIsValid(config: Config/*, token: String*/) {
 
@@ -34,7 +34,7 @@ class ValidationService(val openshiftService: OpenshiftService) {
             }
 /*
 
-            if (config.template != null && !openshiftService.templateExist(token, config.template)) {
+            if (config.template != null && !openShiftService.templateExist(token, config.template)) {
                 errors.add("Template ${config.template} does not exist in cluster.")
             }
 */

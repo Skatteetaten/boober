@@ -2,8 +2,8 @@ package no.skatteetaten.aurora.boober.controller
 
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.model.Result
-import no.skatteetaten.aurora.boober.service.AocConfig
+import no.skatteetaten.aurora.boober.model.AocConfig
+import no.skatteetaten.aurora.boober.service.AocResult
 import no.skatteetaten.aurora.boober.service.AocService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -13,13 +13,13 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class ExecuteController(val aocService: AocService) {
+class AocController(val aocService: AocService) {
 
-    val logger: Logger = LoggerFactory.getLogger(ExecuteController::class.java)
+    val logger: Logger = LoggerFactory.getLogger(AocController::class.java)
 
     @PutMapping("/setup")
     fun setup(@RequestHeader(value = "Authentication") rawToken: String,
-              @RequestBody cmd: SetupCommand): Result {
+              @RequestBody cmd: SetupCommand): AocResult {
 
         val token = rawToken.split(" ")[1]
 

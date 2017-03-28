@@ -1,7 +1,8 @@
-package no.skatteetaten.aurora.boober.service
+package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import no.skatteetaten.aurora.boober.service.AocException
 import no.skatteetaten.aurora.boober.utils.createMergeCopy
 
 class AocConfig(val aocConfigFiles: Map<String, JsonNode>) {

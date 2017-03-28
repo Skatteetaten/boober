@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.controller.ExecuteController
+import no.skatteetaten.aurora.boober.controller.AocController
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -22,7 +22,7 @@ data class OpenShiftResponse(
 @Service
 class OpenShiftClient(@Value("\${openshift.url}") val baseUrl: String, val client: RestTemplate) {
 
-    val logger: Logger = LoggerFactory.getLogger(ExecuteController::class.java)
+    val logger: Logger = LoggerFactory.getLogger(AocController::class.java)
 
     fun saveMany(namespace: String, openShiftObjects: List<JsonNode>, token: String): List<OpenShiftResponse> {
 

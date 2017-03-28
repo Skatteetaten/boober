@@ -3,10 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
-import no.skatteetaten.aurora.boober.model.Config
-import no.skatteetaten.aurora.boober.model.TemplateProcessingConfig
-import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.model.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -25,7 +22,7 @@ data class AocResult(
 class AocService(
         val mapper: ObjectMapper,
         val validationService: ValidationService,
-        val openshiftService: OpenshiftService,
+        val openShiftService: OpenShiftService,
         val openShiftClient: OpenShiftClient) {
 
     fun executeSetup(token: String, aocConfig: AocConfig, environmentName: String, applicationName: String): AocResult {
@@ -41,7 +38,7 @@ class AocService(
 
     private fun handleAuroraDeploymentConfig(config: AuroraDeploymentConfig, token: String): AocResult {
 
-        val openShiftObjects: List<JsonNode> = openshiftService.generateObjects(config, token)
+        val openShiftObjects: List<JsonNode> = openShiftService.generateObjects(config, token)
         val openShiftResponses: List<OpenShiftResponse> = openShiftClient.saveMany(config.namespace, openShiftObjects, token)
         return AocResult(openShiftResponses)
     }
