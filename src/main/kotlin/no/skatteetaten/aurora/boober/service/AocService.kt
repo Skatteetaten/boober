@@ -1,11 +1,10 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.model.*
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import no.skatteetaten.aurora.boober.model.AocConfig
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
+import no.skatteetaten.aurora.boober.model.Config
+import no.skatteetaten.aurora.boober.model.TemplateProcessingConfig
 import org.springframework.stereotype.Service
 
 /**
@@ -20,14 +19,13 @@ data class AocResult(
 
 @Service
 class AocService(
-        val mapper: ObjectMapper,
-        val validationService: ValidationService,
+        val aocConfigParserService: AocConfigParserService,
         val openShiftService: OpenShiftService,
         val openShiftClient: OpenShiftClient) {
 
     fun executeSetup(token: String, aocConfig: AocConfig, environmentName: String, applicationName: String): AocResult {
 
-        val config: Config = createConfigFromAocConfigFiles(aocConfig, environmentName, applicationName)
+        val config: Config = aocConfigParserService.createConfigFromAocConfigFiles(aocConfig, environmentName, applicationName)
 
         return when (config) {
             is AuroraDeploymentConfig -> handleAuroraDeploymentConfig(config, token)
@@ -45,28 +43,5 @@ class AocService(
 
     private fun handleTemplateProcessingConfig(config: TemplateProcessingConfig, token: String): AocResult {
         TODO("not implemented")
-    }
-
-    fun createConfigFromAocConfigFiles(aocConfig: AocConfig, environmentName: String, applicationName: String): Config {
-
-        val mergedJson = aocConfig.getMergedFileForApplication(environmentName, applicationName)
-
-        val type = TemplateType.valueOf(mergedJson.get("type").asText())
-        val clazz: Class<*> = when (type) {
-            TemplateType.process -> TemplateProcessingConfig::class.java
-            else -> AuroraDeploymentConfig::class.java
-        }
-
-        val config: Config?
-        try {
-            config = mapper.reader().forType(clazz).readValue<Config>(mergedJson.toString())
-        } catch (ex: JsonMappingException) {
-            val missingProp = ex.path.map { it.fieldName }.reduce { acc, fieldName -> acc + ".$fieldName" }
-            throw AocException("$missingProp is required", ex)
-        }
-
-        validationService.assertIsValid(config)
-
-        return config
     }
 }

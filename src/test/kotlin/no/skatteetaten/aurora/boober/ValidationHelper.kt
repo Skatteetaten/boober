@@ -4,7 +4,7 @@ import no.skatteetaten.aurora.boober.model.*
 
 
 class ValidationHelper {
-
+/*
     val process = TemplateProcessingConfig(
             name = "foo",
             cluster = "utv",
@@ -38,5 +38,5 @@ class ValidationHelper {
 
 
     fun processWithTemplateAndTemplateFile(template: String, file: String) =
-            Result(config = process.copy(template = template, templateFile = file))
+            Result(config = process.copy(template = template, templateFile = file))*/
 }

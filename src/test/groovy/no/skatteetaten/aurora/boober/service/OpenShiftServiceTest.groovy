@@ -10,9 +10,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import groovy.json.JsonSlurper
 import no.skatteetaten.aurora.boober.Configuration
+import spock.lang.Ignore
 import spock.lang.Specification
 
+@Ignore
 class OpenShiftServiceTest extends Specification {
+/*
 
   def setupSpec() {
     setLogLevels()
@@ -350,4 +353,5 @@ class OpenShiftServiceTest extends Specification {
 
       """).toString()
   }
+*/
 }
