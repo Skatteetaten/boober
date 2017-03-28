@@ -5,7 +5,7 @@
     "annotations": {
       "marjory.skatteetaten.no/management-path": "${dd.deploy.managementPath}",
       "marjory.skatteetaten.no/alarm": "${dd.deploy.alarm}",
-      "sprocket.sits.no/deployment-config.certificate": "${dd.cert}",
+      "sprocket.sits.no/deployment-config.certificate": "${dd.deploy.certificateCn}",
       "sprocket.sits.no/deployment-config.database": "${dd.deploy.database}"
     },
     "labels": {
@@ -16,7 +16,7 @@
     "name": "${adc.name}"
   },
   "spec": {
-    #if(${adc.rolling})
+    #if(${adc.deploymentStrategy} == "rolling")
       "strategy": {
         "type": "Rolling",
         "rollingParams": {

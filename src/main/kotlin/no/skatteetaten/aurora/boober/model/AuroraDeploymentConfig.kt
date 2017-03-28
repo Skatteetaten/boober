@@ -8,6 +8,10 @@ enum class TemplateType {
     deploy, development, process,
 }
 
+enum class DeploymentStrategy {
+    rolling, recreate
+}
+
 class AuroraDeploymentConfig(
         val cluster: String,
         val envName: String,
@@ -25,6 +29,8 @@ class AuroraDeploymentConfig(
         val flags: List<String>,
         val secretFile: String?,
         val config: Map<String, String>,
+        val route: Boolean,
+        val deploymentStrategy: DeploymentStrategy,
         val deployDescriptor: Any
 ) {
     @get:Pattern(message = "Alphanumeric and dashes. Cannot end or start with dash", regexp = "^[a-z0-9][-a-z0-9]*[a-z0-9]$")
@@ -39,12 +45,6 @@ class AuroraDeploymentConfig(
 
     val schemaVersion: String
         get() = "v1"
-
-    val route: Boolean
-        get() = flags.contains("route")
-
-    val rolling: Boolean
-        get() = flags.contains("rolling")
 }
 
 data class TemplateDeploy(
@@ -56,8 +56,7 @@ data class TemplateDeploy(
 data class AuroraDeploy(
         @get:Valid
         val build: ConfigBuild,
-        val deploy: ConfigDeploy = ConfigDeploy(),
-        val cert: String
+        val deploy: ConfigDeploy = ConfigDeploy()
 ) {
     val dockerGroup: String = build.groupId.replace(".", "_")
     val dockerName: String = build.artifactId
@@ -81,7 +80,8 @@ data class ConfigDeploy(
         val splunkIndex: String = "",
         val maxMemory: String = "256Mi",
         val database: String = "",
-        val certificate: String = "",
+        val generateCertificate: Boolean = false,
+        val certificateCn: String = "",
         val tag: String = "default",
         val cpuRequest: String = "0",
         val websealRoute: String = "",

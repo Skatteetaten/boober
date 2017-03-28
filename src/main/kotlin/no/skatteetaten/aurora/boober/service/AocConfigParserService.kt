@@ -3,6 +3,8 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.DeploymentStrategy.recreate
+import no.skatteetaten.aurora.boober.model.DeploymentStrategy.rolling
 
 class AocConfigParserService(
         val validationService: ValidationService
@@ -44,11 +46,19 @@ class AocConfigParserService(
                 name = name ?: configBuild.artifactId
 
                 val deployJson: JsonNode = json.get("deploy")
+
+                var certificateCn = deployJson.s("CERTIFICATE_CN")
+                val generateCertificate = flags.contains("cert") || certificateCn != null
+                if (generateCertificate && certificateCn == null) {
+                    certificateCn = configBuild.groupId + "." + name
+                }
+
                 val configDeploy = ConfigDeploy(
                         splunkIndex = deployJson.s("SPLUNK_INDEX") ?: "",
                         maxMemory = deployJson.s("MAX_MEMORY") ?: "256Mi",
                         database = deployJson.s("DATABASE") ?: "",
-                        certificate = deployJson.s("CERTIFICATE_CN") ?: "",
+                        generateCertificate = generateCertificate,
+                        certificateCn = certificateCn!!,
                         tag = deployJson.s("TAG") ?: "default",
                         cpuRequest = deployJson.s("CPU_REQUEST") ?: "0",
                         websealRoute = deployJson.s("ROUTE_WEBSEAL") ?: "",
@@ -61,13 +71,7 @@ class AocConfigParserService(
                         alarm = deployJson.b("ALARM") ?: true
                 )
 
-                val cert: String = if (flags.contains("cert")) {
-                    configBuild.groupId + "." + name
-                } else {
-                    configDeploy.certificate
-                }
-
-                AuroraDeploy(configBuild, configDeploy, cert)
+                AuroraDeploy(configBuild, configDeploy)
             }
         }
 
@@ -83,6 +87,8 @@ class AocConfigParserService(
                 secretFile = json.s("secretFile") ?: "",
                 type = type,
                 users = json.s("users") ?: "",
+                route = flags.contains("route"),
+                deploymentStrategy = if (flags.contains("rolling")) rolling else recreate,
                 deployDescriptor = deploymentDescriptor
         )
 
