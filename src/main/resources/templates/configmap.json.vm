@@ -2,14 +2,14 @@
   "kind": "ConfigMap",
   "apiVersion": "v1",
   "metadata": {
-    "name": "${app.name}",
+    "name": "${adc.name}",
     "labels": {
-      "app": "${app.name}",
-      "updatedBy" : "${app.username}",
-      "affiliation": "${app.affiliation}"
+      "app": "${adc.name}",
+      "updatedBy" : "${username}",
+      "affiliation": "${adc.affiliation}"
     }
   },
   "data": {
-    "latest.properties": "${appConfig}"
+    "latest.properties": "${adc.configLine}"
   }
 }

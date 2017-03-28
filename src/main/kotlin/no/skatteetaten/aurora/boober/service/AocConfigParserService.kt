@@ -45,20 +45,20 @@ class AocConfigParserService(
 
                 val deployJson: JsonNode = json.get("deploy")
                 val configDeploy = ConfigDeploy(
-                        deployJson.s("SPLUNK_INDEX") ?: "",
-                        deployJson.s("MAX_MEMORY") ?: "256Mi",
-                        deployJson.s("DATABASE") ?: "",
-                        deployJson.s("CERTIFICATE_CN") ?: "",
-                        deployJson.s("TAG") ?: "default",
-                        deployJson.s("CPU_REQUEST") ?: "0",
-                        deployJson.s("ROUTE_WEBSEAL") ?: "",
-                        deployJson.s("ROUTE_WEBSEAL_ROLES") ?: "",
-                        deployJson.b("PROMETHEUS_ENABLED") ?: false,
-                        deployJson.i("PROMETHEUS_PORT") ?: 8080,
-                        deployJson.s("PROMETHEUS_PATH") ?: "/prometheus",
-                        deployJson.s("MANAGEMENT_PATH") ?: "",
-                        deployJson.b("DEBUG") ?: false,
-                        deployJson.b("ALARM") ?: true
+                        splunkIndex = deployJson.s("SPLUNK_INDEX") ?: "",
+                        maxMemory = deployJson.s("MAX_MEMORY") ?: "256Mi",
+                        database = deployJson.s("DATABASE") ?: "",
+                        certificate = deployJson.s("CERTIFICATE_CN") ?: "",
+                        tag = deployJson.s("TAG") ?: "default",
+                        cpuRequest = deployJson.s("CPU_REQUEST") ?: "0",
+                        websealRoute = deployJson.s("ROUTE_WEBSEAL") ?: "",
+                        websealRoles = deployJson.s("ROUTE_WEBSEAL_ROLES") ?: "",
+                        prometheus = deployJson.b("PROMETHEUS_ENABLED") ?: false,
+                        prometheusPort = deployJson.i("PROMETHEUS_PORT") ?: 8080,
+                        prometheusPath = deployJson.s("PROMETHEUS_PATH") ?: "/prometheus",
+                        managementPath = deployJson.s("MANAGEMENT_PATH") ?: "",
+                        debug = deployJson.b("DEBUG") ?: false,
+                        alarm = deployJson.b("ALARM") ?: true
                 )
 
                 val cert: String = if (flags.contains("cert")) {

@@ -3,20 +3,20 @@
   "apiVersion": "v1",
   "metadata": {
     "annotations": {
-      "marjory.skatteetaten.no/management-path": "${dc.managementPath}",
-      "marjory.skatteetaten.no/alarm": "${dc.alarm}",
-      "sprocket.sits.no/deployment-config.certificate": "${dc.certificateCn}",
-      "sprocket.sits.no/deployment-config.database": "${dc.database}"
+      "marjory.skatteetaten.no/management-path": "${dd.deploy.managementPath}",
+      "marjory.skatteetaten.no/alarm": "${dd.deploy.alarm}",
+      "sprocket.sits.no/deployment-config.certificate": "${dd.cert}",
+      "sprocket.sits.no/deployment-config.database": "${dd.deploy.database}"
     },
     "labels": {
-      "app": "${app.name}",
-      "updatedBy" : "${app.username}",
-      "affiliation": "${app.affiliation}"
+      "app": "${adc.name}",
+      "updatedBy" : "${username}",
+      "affiliation": "${adc.affiliation}"
     },
-    "name": "${app.name}"
+    "name": "${adc.name}"
   },
   "spec": {
-    #if(${app.rolling})
+    #if(${adc.rolling})
       "strategy": {
         "type": "Rolling",
         "rollingParams": {
@@ -39,25 +39,25 @@
             "imageChangeParams": {
               "automatic": true,
               "containerNames": [
-                "${app.name}"
+                "${adc.name}"
               ],
               "from": {
-                "name": "${app.name}:${docker.istag}",
+                "name": "${adc.name}:${dd.deploy.tag}",
                 "kind": "ImageStreamTag"
               }
             }
           }
     ],
-    "replicas": ${app.replicas},
+    "replicas": ${adc.replicas},
     "selector": {
-      "name": "${app.name}"
+      "name": "${adc.name}"
     },
     "template": {
       "metadata": {
         "labels": {
-          "name": "${app.name}",
-          "updatedBy" : "${app.username}",
-          "affiliation": "${app.affiliation}"
+          "name": "${adc.name}",
+          "updatedBy" : "${username}",
+          "affiliation": "${adc.affiliation}"
         }
       },
       "spec": {
@@ -69,13 +69,13 @@
           {
             "name": "config",
             "configMap": {
-              "name": "${app.name}"
+              "name": "${adc.name}"
             }
           }
         ],
         "containers": [
           {
-            "name": "${app.name}",
+            "name": "${adc.name}",
             "ports": [
               {
                 "containerPort": 8080,
@@ -95,7 +95,7 @@
             "env": [
               {
                 "name": "SPLUNK_INDEX",
-                "value": "${app.splunk}"
+                "value": "${dd.deploy.splunkIndex}"
               },
               {
                 "name": "POD_NAME",
@@ -125,9 +125,9 @@
               },
               {
                 "name": "APP_NAME",
-                "value": "${app.name}"
+                "value": "${adc.name}"
               }
-              #if (${dc.debug})
+              #if (${dd.deploy.debug})
               ,
                 {
                   "name": "REMOTE_DEBUG",
@@ -139,20 +139,20 @@
                 }
               #end
 
-              #if (${app.route})
+              #if (${adc.route})
                   ,{
                     "name": "ROUTE_NAME",
-                    "value": "${app.routeName}"
+                    "value": "${adc.routeName}"
                   }
                 #end
             ],
             "resources": {
               "limits": {
                 "cpu": "2000m",
-                "memory": "${resources.limits.memory}"
+                "memory": "${dd.deploy.maxMemory}"
               },
               "requests": {
-                "cpu": "${resources.request.cpu}",
+                "cpu": "${dd.deploy.cpuRequest}",
                 "memory": "128Mi"
               }
             },

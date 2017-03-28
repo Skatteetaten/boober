@@ -27,78 +27,39 @@ class OpenShiftService(
     }
 
 
-    fun generateObjects(config: AuroraDeploymentConfig, token: String): List<JsonNode> {
+    fun generateObjects(auroraDc: AuroraDeploymentConfig, token: String): List<JsonNode> {
 
         //TODO This is the code that uses the default that was set in the old AOC, that is the template.
         //TODO If we get an unified interface in here we do not have to do this here. We can always move it out.
         //TODO What should we store in git?
 
-        val deployDescriptor = config.deployDescriptor as AuroraDeploy
+        val deployDescriptor = auroraDc.deployDescriptor as AuroraDeploy
 
-        val app = TemplateApp(
-                config.name,
-                config.namespace,
-                config.affiliation,
-                config.type.name,
-                config.replicas,
-                deployDescriptor.deploy.splunkIndex,
-                config.route,
-                config.rolling,
-                config.routeName,
-                findUsername(token)
+        val params = mapOf(
+                "adc" to auroraDc,
+                "dd" to deployDescriptor,
+                "username" to findUsername(token),
+                "dockerRegistry" to "docker-registry.aurora.sits.no:5000",
+                "builder" to mapOf("name" to "leveransepakkebygger", "version" to "prod"),
+                "base" to mapOf("name" to "oracle8", "version" to "1")
         )
 
-        val svc = TemplateService(
-                deployDescriptor.deploy.websealRoute,
-                deployDescriptor.deploy.websealRoles,
-                deployDescriptor.deploy.prometheus,
-                deployDescriptor.deploy.prometheusPath,
-                deployDescriptor.deploy.prometheusPort
+        val templatesToProcess = mutableListOf(
+                "project.json",
+                "configmap.json",
+                "service.json",
+                "imagestream.json",
+                "deployment-config.json"
         )
 
-        val docker = TemplateDocker(
-                "docker-registry.aurora.sits.no:5000",
-                deployDescriptor.build.version,
-                deployDescriptor.dockerName,
-                deployDescriptor.dockerGroup,
-                deployDescriptor.deploy.tag,
-                deployDescriptor.build.extraTags,
-                TemplateImage("leveransepakkebygger", "prod"),
-                TemplateImage("oracle8", "1")
-        )
-
-        val dc = TemplateDc(
-                deployDescriptor.deploy.managementPath,
-                deployDescriptor.deploy.alarm,
-                deployDescriptor.cert,
-                deployDescriptor.deploy.database,
-                deployDescriptor.deploy.debug
-        )
-
-        val resources = TemplateResources(
-                TemplateResourceFields("128Mi", deployDescriptor.deploy.cpuRequest),
-                TemplateResourceFields(deployDescriptor.deploy.maxMemory, "2000m"))
-
-        val params = mapOf("app" to app)
-
-        val paramsWithDocker = params.plus("docker" to docker)
-
-        val openShiftObjects = mutableListOf(
-                mergeVelocityTemplate("project.json", params),
-                mergeVelocityTemplate("configmap.json", params.plus("appConfig" to config.configLine)),
-                mergeVelocityTemplate("service.json", params.plus("service" to svc)),
-                mergeVelocityTemplate("imagestream.json", paramsWithDocker),
-                mergeVelocityTemplate("deployment-config.json", paramsWithDocker.plus(listOf("resources" to resources, "dc" to dc)))
-        )
-
-        if (app.route) {
-            openShiftObjects.add(mergeVelocityTemplate("route.json", params))
+        if (auroraDc.route) {
+            templatesToProcess.add("route.json")
         }
 
-        if (config.type == TemplateType.development) {
-            openShiftObjects.add(mergeVelocityTemplate("build-config.json", paramsWithDocker))
+        if (auroraDc.type == TemplateType.development) {
+            templatesToProcess.add("build-config.json")
         }
-        return openShiftObjects
+        return templatesToProcess.map { mergeVelocityTemplate(it, params) }
     }
 
     private fun mergeVelocityTemplate(template: String, content: Map<String, Any>): JsonNode {
@@ -110,42 +71,3 @@ class OpenShiftService(
         return mapper.readTree(sw.toString())
     }
 }
-
-data class TemplateImage(val name: String, val version: String)
-
-data class TemplateDocker(val registry: String,
-                          val tag: String,
-                          val name: String,
-                          val group: String,
-                          val istag: String,
-                          val extraTags: String,
-                          val builder: TemplateImage,
-                          val base: TemplateImage)
-
-data class TemplateApp(val name: String,
-                       val namespace: String,
-                       val affiliation: String,
-                       val type: String,
-                       val replicas: Int,
-                       val splunk: String,
-                       val route: Boolean,
-                       val rolling: Boolean,
-                       val routeName: String,
-                       val username: String)
-
-
-data class TemplateService(val websealPrefix: String,
-                           val websealRoles: String,
-                           val prometheusEnabled: Boolean,
-                           val prometheusPath: String,
-                           val prometheusPort: Int)
-
-data class TemplateDc(val managementPath: String
-                      , val alarm: Boolean
-                      , val certificateCn: String
-                      , val database: String
-                      , val debug: Boolean)
-
-data class TemplateResourceFields(val memory: String, val cpu: String)
-
-data class TemplateResources(val request: TemplateResourceFields, val limits: TemplateResourceFields)

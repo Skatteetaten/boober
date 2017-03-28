@@ -2,23 +2,23 @@
   "kind": "ImageStream",
   "apiVersion": "v1",
   "metadata": {
-    "name": "${app.name}",
+    "name": "${adc.name}",
     "labels": {
-      "app": "${app.name}",
-      "updatedBy": "${app.username}",
-      "affiliation": "${app.affiliation}"
+      "app": "${adc.name}",
+      "updatedBy": "${username}",
+      "affiliation": "${adc.affiliation}"
     }
   }
-    #if (${app.type} == "deploy")
+    #if (${adc.type} == "deploy")
     ,
       "spec": {
-        "dockerImageRepository": "${docker.registry}/${docker.group}/${docker.name}",
+        "dockerImageRepository": "${dockerRegistry}/${dd.dockerGroup}/${dd.dockerName}",
         "tags": [
           {
-              "name": "${docker.istag}",
+              "name": "${dd.deploy.tag}",
               "from": {
                 "kind": "DockerImage",
-                "name": "${docker.registry}/${docker.group}/${docker.name}:${docker.tag}"
+                "name": "${dockerRegistry}/${dd.dockerGroup}/${dd.dockerName}:${dd.build.version}"
               },
               "importPolicy": {
                 "scheduled": true

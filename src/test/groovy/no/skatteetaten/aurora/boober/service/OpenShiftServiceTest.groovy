@@ -19,6 +19,7 @@ class OpenShiftServiceTest extends Specification {
   def setupSpec() {
     setLogLevels()
   }
+
   Configuration configuration = new Configuration()
   VelocityEngine velocityEngine = configuration.velocity()
   ObjectMapper mapper = configuration.mapper()
@@ -34,16 +35,17 @@ class OpenShiftServiceTest extends Specification {
 
     when:
       def aocConfig = new AocConfig(files)
-      AuroraDeploymentConfig auroraDc = aocConfigParserService.createConfigFromAocConfigFiles(aocConfig, "utv", "referanse")
-      List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc, "hero")
-      def g = generatedObjects.collect { slurper.parseText(it.toString()) }
+      AuroraDeploymentConfig auroraDc = aocConfigParserService.
+          createConfigFromAocConfigFiles(aocConfig, "utv", "referanse")
+      List generatedObjects = openShiftService.generateObjects(auroraDc, "hero")
+          .collect { slurper.parseText(it.toString()) }
 
-      def configMap = g.find { it.kind == "ConfigMap" }
-      def service = g.find { it.kind == "Service" }
-      def imageStream = g.find { it.kind == "ImageStream" }
-      def deploymentConfig = g.find { it.kind == "DeploymentConfig" }
-      def route = g.find { it.kind == "Route" }
-      def project = g.find { it.kind == "Project" }
+      def configMap = generatedObjects.find { it.kind == "ConfigMap" }
+      def service = generatedObjects.find { it.kind == "Service" }
+      def imageStream = generatedObjects.find { it.kind == "ImageStream" }
+      def deploymentConfig = generatedObjects.find { it.kind == "DeploymentConfig" }
+      def route = generatedObjects.find { it.kind == "Route" }
+      def project = generatedObjects.find { it.kind == "Project" }
 
     then:
 
