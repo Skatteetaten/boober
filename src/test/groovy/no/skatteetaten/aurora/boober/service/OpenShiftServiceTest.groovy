@@ -8,7 +8,7 @@ import org.apache.velocity.app.VelocityEngine
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.Configuration
 import no.skatteetaten.aurora.boober.model.AocConfig
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
@@ -30,26 +30,24 @@ class OpenShiftServiceTest extends Specification {
 
   def "Should create six OpenShift objects from Velocity templates"() {
     given:
-      def slurper = new JsonSlurper()
       Map<String, JsonNode> files = getUtvReferanseSampleFiles()
 
     when:
       def aocConfig = new AocConfig(files)
       AuroraDeploymentConfig auroraDc = aocConfigParserService.
           createConfigFromAocConfigFiles(aocConfig, "utv", "referanse")
-      List generatedObjects = openShiftService.generateObjects(auroraDc, "hero")
-          .collect { slurper.parseText(it.toString()) }
+      List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc, "hero")
 
-      def configMap = generatedObjects.find { it.kind == "ConfigMap" }
-      def service = generatedObjects.find { it.kind == "Service" }
-      def imageStream = generatedObjects.find { it.kind == "ImageStream" }
-      def deploymentConfig = generatedObjects.find { it.kind == "DeploymentConfig" }
-      def route = generatedObjects.find { it.kind == "Route" }
-      def project = generatedObjects.find { it.kind == "Project" }
+      def configMap = generatedObjects.find { it.get("kind").asText() == "ConfigMap" }
+      def service = generatedObjects.find { it.get("kind").asText() == "Service" }
+      def imageStream = generatedObjects.find { it.get("kind").asText() == "ImageStream" }
+      def deploymentConfig = generatedObjects.find { it.get("kind").asText() == "DeploymentConfig" }
+      def route = generatedObjects.find { it.get("kind").asText() == "Route" }
+      def project = generatedObjects.find { it.get("kind").asText() == "Project" }
 
     then:
 
-      project.toString() == slurper.parseText("""
+      compareJson(project, """
         {
           "kind": "Project",
           "apiVersion": "v1",
@@ -62,9 +60,9 @@ class OpenShiftServiceTest extends Specification {
             }
           }
         }
-      """).toString()
+      """)
 
-      route.toString() == slurper.parseText("""
+      compareJson(route, """
         {
           "kind": "Route",
           "apiVersion": "v1",
@@ -83,9 +81,9 @@ class OpenShiftServiceTest extends Specification {
             }
           }
         }
-      """).toString()
+      """)
 
-      configMap.toString() == slurper.parseText("""
+      compareJson(configMap, """
         {
           "kind": "ConfigMap",
           "apiVersion": "v1",
@@ -101,9 +99,9 @@ class OpenShiftServiceTest extends Specification {
             "latest.properties": "SERVER_URL=http://localhost:8080"
           }
         }
-      """).toString()
+      """)
 
-      service.toString() == slurper.parseText("""
+      compareJson(service, """
         {
           "kind": "Service",
           "apiVersion": "v1",
@@ -141,9 +139,9 @@ class OpenShiftServiceTest extends Specification {
             "sessionAffinity": "None"
           }
         }
-      """).toString()
+      """)
 
-      imageStream.toString() == slurper.parseText("""
+      compareJson(imageStream, """
         {
           "kind": "ImageStream",
           "apiVersion": "v1",
@@ -169,9 +167,9 @@ class OpenShiftServiceTest extends Specification {
             }]
           }
         }
-      """).toString()
+      """)
 
-      deploymentConfig.toString() == slurper.parseText("""
+      compareJson(deploymentConfig, """
         {
           "kind": "DeploymentConfig",
           "apiVersion": "v1",
@@ -354,6 +352,11 @@ class OpenShiftServiceTest extends Specification {
           }
         }
 
-      """).toString()
+      """)
+  }
+
+  def compareJson(JsonNode jsonNode, String jsonString) {
+    assert JsonOutput.prettyPrint(jsonNode.toString()) == JsonOutput.prettyPrint(jsonString)
+    true
   }
 }

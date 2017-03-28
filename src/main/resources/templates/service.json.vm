@@ -4,13 +4,16 @@
   "metadata": {
     "name": "${adc.name}",
     "annotations": {
-      "sprocket.sits.no/service.webseal": "${dd.deploy.websealRoute}",
-      "sprocket.sits.no/service.webseal-roles": "${dd.deploy.websealRoles}",
+      "sprocket.sits.no/service.webseal": "$!{dd.websealRoute}",
+      "sprocket.sits.no/service.webseal-roles": "$!{dd.websealRoles}",
       "prometheus.io/scheme": "http",
-      "prometheus.io/scrape": "${dd.deploy.prometheus}",
-      "prometheus.io/path": "${dd.deploy.prometheusPath}",
-      "prometheus.io/port": "${dd.deploy.prometheusPort}"
-
+#if(${dd.prometheus})
+      "prometheus.io/scrape": "true",
+      "prometheus.io/path": "${dd.prometheus.path}",
+      "prometheus.io/port": "${dd.prometheus.port}"
+#else
+      "prometheus.io/scrape": "false",
+#end
     },
     "labels": {
       "app": "${adc.name}",

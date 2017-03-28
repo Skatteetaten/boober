@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.AuroraDeploy.Prometheus
 import no.skatteetaten.aurora.boober.model.DeploymentStrategy.recreate
 import no.skatteetaten.aurora.boober.model.DeploymentStrategy.rolling
 
@@ -39,39 +40,41 @@ class AocConfigParserService(
             }
             else -> {
                 val buildJson: JsonNode = json.get("build")
-                val configBuild = ConfigBuild(
-                        buildJson.s("ARTIFACT_ID")!!,
-                        buildJson.s("GROUP_ID")!!,
-                        buildJson.s("VERSION")!!)
-                name = name ?: configBuild.artifactId
-
                 val deployJson: JsonNode = json.get("deploy")
+
+                val artifactId = buildJson.s("ARTIFACT_ID")
+                val groupId = buildJson.s("GROUP_ID")
+
+                name = name ?: artifactId
 
                 var certificateCn = deployJson.s("CERTIFICATE_CN")
                 val generateCertificate = flags.contains("cert") || certificateCn != null
                 if (generateCertificate && certificateCn == null) {
-                    certificateCn = configBuild.groupId + "." + name
+                    certificateCn = groupId + "." + name
                 }
 
-                val configDeploy = ConfigDeploy(
+                val prometheus = if (deployJson.b("PROMETHEUS_ENABLED") ?: true) Prometheus(
+                        deployJson.i("PROMETHEUS_PORT") ?: 8080,
+                        deployJson.s("PROMETHEUS_PATH") ?: "/prometheus"
+                ) else null
+                AuroraDeploy(
+                        artifactId = artifactId!!,
+                        groupId = groupId!!,
+                        version = buildJson.s("VERSION")!!,
                         splunkIndex = deployJson.s("SPLUNK_INDEX") ?: "",
                         maxMemory = deployJson.s("MAX_MEMORY") ?: "256Mi",
-                        database = deployJson.s("DATABASE") ?: "",
+                        database = deployJson.s("DATABASE"),
                         generateCertificate = generateCertificate,
                         certificateCn = certificateCn!!,
                         tag = deployJson.s("TAG") ?: "default",
                         cpuRequest = deployJson.s("CPU_REQUEST") ?: "0",
-                        websealRoute = deployJson.s("ROUTE_WEBSEAL") ?: "",
-                        websealRoles = deployJson.s("ROUTE_WEBSEAL_ROLES") ?: "",
-                        prometheus = deployJson.b("PROMETHEUS_ENABLED") ?: false,
-                        prometheusPort = deployJson.i("PROMETHEUS_PORT") ?: 8080,
-                        prometheusPath = deployJson.s("PROMETHEUS_PATH") ?: "/prometheus",
+                        websealRoute = deployJson.s("ROUTE_WEBSEAL"),
+                        websealRoles = deployJson.s("ROUTE_WEBSEAL_ROLES"),
+                        prometheus = prometheus,
                         managementPath = deployJson.s("MANAGEMENT_PATH") ?: "",
                         debug = deployJson.b("DEBUG") ?: false,
                         alarm = deployJson.b("ALARM") ?: true
                 )
-
-                AuroraDeploy(configBuild, configDeploy)
             }
         }
 

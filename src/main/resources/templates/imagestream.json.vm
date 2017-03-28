@@ -15,10 +15,10 @@
         "dockerImageRepository": "${dockerRegistry}/${dd.dockerGroup}/${dd.dockerName}",
         "tags": [
           {
-              "name": "${dd.deploy.tag}",
+              "name": "${dd.tag}",
               "from": {
                 "kind": "DockerImage",
-                "name": "${dockerRegistry}/${dd.dockerGroup}/${dd.dockerName}:${dd.build.version}"
+                "name": "${dockerRegistry}/${dd.dockerGroup}/${dd.dockerName}:${dd.version}"
               },
               "importPolicy": {
                 "scheduled": true

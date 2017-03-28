@@ -1,8 +1,5 @@
 package no.skatteetaten.aurora.boober.utils
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-
 
 inline fun <T : AutoCloseable, R> T.use(block: (T) -> R): R {
 

@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.model
 
-import javax.validation.Valid
 import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
 
@@ -54,16 +53,6 @@ data class TemplateDeploy(
 )
 
 data class AuroraDeploy(
-        @get:Valid
-        val build: ConfigBuild,
-        val deploy: ConfigDeploy = ConfigDeploy()
-) {
-    val dockerGroup: String = build.groupId.replace(".", "_")
-    val dockerName: String = build.artifactId
-}
-
-data class ConfigBuild(
-
         @get:Size(min = 1, max = 50)
         val artifactId: String,
 
@@ -73,23 +62,27 @@ data class ConfigBuild(
         @get:Size(min = 1)
         val version: String,
 
-        val extraTags: String = "latest,major,minor,patch"
-)
+        val extraTags: String = "latest,major,minor,patch",
 
-data class ConfigDeploy(
-        val splunkIndex: String = "",
-        val maxMemory: String = "256Mi",
-        val database: String = "",
+        val splunkIndex: String,
+        val maxMemory: String,
+        val database: String?,
         val generateCertificate: Boolean = false,
         val certificateCn: String = "",
-        val tag: String = "default",
-        val cpuRequest: String = "0",
-        val websealRoute: String = "",
-        val websealRoles: String = "",
-        val prometheus: Boolean = false,
-        val prometheusPort: Int = 8080,
-        val prometheusPath: String = "/prometheus",
-        val managementPath: String = "",
+        val tag: String,
+        val cpuRequest: String,
+        val websealRoute: String?,
+        val websealRoles: String?,
+        val prometheus: Prometheus?,
+        val managementPath: String?,
         val debug: Boolean = false,
         val alarm: Boolean = true
-)
+) {
+    val dockerGroup: String = groupId.replace(".", "_")
+    val dockerName: String = artifactId
+
+    data class Prometheus(
+            val port: Int,
+            val path: String
+    )
+}
