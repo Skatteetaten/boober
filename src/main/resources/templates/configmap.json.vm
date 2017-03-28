@@ -10,6 +10,6 @@
     }
   },
   "data": {
-    "latest.properties": "${adc.configLine}"
+    "latest.properties": "${configMap}"
   }
 }

@@ -39,9 +39,6 @@ class AuroraDeploymentConfig(
     val routeName: String
         get() = "http://$name-$namespace.$cluster.paas.skead.no"
 
-    val configLine: String
-        get() = config.map { "${it.key}=${it.value}" }.joinToString(separator = "\\n", transform = { it })
-
     val schemaVersion: String
         get() = "v1"
 }

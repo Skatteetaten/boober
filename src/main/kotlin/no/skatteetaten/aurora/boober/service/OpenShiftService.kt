@@ -35,8 +35,10 @@ class OpenShiftService(
 
         val deployDescriptor = auroraDc.deployDescriptor as AuroraDeploy
 
+        val configMap = auroraDc.config.map { "${it.key}=${it.value}" }.joinToString(separator = "\\n", transform = { it })
         val params = mapOf(
                 "adc" to auroraDc,
+                "configMap" to configMap,
                 "dd" to deployDescriptor,
                 "username" to findUsername(token),
                 "dockerRegistry" to "docker-registry.aurora.sits.no:5000",
