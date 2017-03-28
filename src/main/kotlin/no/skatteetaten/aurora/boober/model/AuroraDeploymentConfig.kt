@@ -25,7 +25,6 @@ class AuroraDeploymentConfig(
         val users: String,
         val type: TemplateType,
         val replicas: Int,
-        val flags: List<String>,
         val secretFile: String?,
         val config: Map<String, String>,
         val route: Boolean,

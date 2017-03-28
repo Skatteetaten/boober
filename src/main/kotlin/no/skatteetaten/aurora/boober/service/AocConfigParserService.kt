@@ -51,7 +51,6 @@ class AocConfigParserService(
                 cluster = json.s("cluster") ?: "",
                 config = json.m("config"),
                 envName = json.s("envName") ?: "",
-                flags = flags,
                 groups = json.s("groups") ?: "",
                 name = name!!,
                 replicas = json.i("replicas") ?: 1,
