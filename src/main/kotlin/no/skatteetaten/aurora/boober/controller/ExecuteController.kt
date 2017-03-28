@@ -1,9 +1,10 @@
 package no.skatteetaten.aurora.boober.controller
 
 
+import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.Result
+import no.skatteetaten.aurora.boober.service.AocConfig
 import no.skatteetaten.aurora.boober.service.AocService
-import no.skatteetaten.aurora.boober.service.SetupCommand
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.web.bind.annotation.PutMapping
@@ -24,6 +25,13 @@ class ExecuteController(val aocService: AocService) {
 
         logger.info("Setting up ${cmd.app} in ${cmd.env} with token $token")
 
-        return aocService.executeSetup(token, cmd)
+        val aocConfig = AocConfig(cmd.files!!)
+        return aocService.executeSetup(token, aocConfig, cmd.env, cmd.app!!)
     }
 }
+
+data class SetupCommand(val affiliation: String,
+                        val env: String,
+                        val app: String?,
+                        val files: Map<String, JsonNode>?,
+                        val overrides: Map<String, JsonNode>?)

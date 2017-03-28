@@ -22,10 +22,10 @@ class AocService(
 
     val logger: Logger = LoggerFactory.getLogger(this.javaClass)
 
-    fun executeSetup(token: String, cmd: SetupCommand): Result {
+    fun executeSetup(token: String, aocConfig: AocConfig, environmentName: String, applicationName: String): Result {
 
         //TODO switch on what is available in the command.
-        val res: Config = configService.createConfigFromAocConfigFiles(cmd.env, cmd.app!!, cmd.files!!)
+        val res: Config = configService.createConfigFromAocConfigFiles(aocConfig, environmentName, applicationName)
 
         val validated = validationService.validate(res, token)
         //TODO perform operations, maybe expand Result object here?
@@ -80,9 +80,3 @@ class AocService(
 
     }
 }
-
-data class SetupCommand(val affiliation: String,
-                        val env: String,
-                        val app: String?,
-                        val files: Map<String, JsonNode>?,
-                        val overrides: Map<String, JsonNode>?)

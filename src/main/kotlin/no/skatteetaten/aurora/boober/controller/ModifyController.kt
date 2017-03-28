@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.boober.model.Config
 import no.skatteetaten.aurora.boober.service.ConfigService
 import no.skatteetaten.aurora.boober.model.NamespaceResult
 import no.skatteetaten.aurora.boober.model.Result
+import no.skatteetaten.aurora.boober.service.AocConfig
 import no.skatteetaten.aurora.boober.service.GitService
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -41,7 +42,7 @@ class ModifyController(val gitService: GitService, val configService: ConfigServ
                 val files = listOf("about.json", "$env/about.json", "$it.json", "$env/$it.json")
 
                 // TODO: Must collect files from git and replace mapOf
-                Pair("$env/$it", configService.createConfigFromAocConfigFiles(env, it, mapOf()))
+                Pair("$env/$it", configService.createConfigFromAocConfigFiles(AocConfig(mapOf()), env, it))
             }
         }.toMap()
 
