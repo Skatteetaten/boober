@@ -1,5 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-class AocException(s: String) : Throwable() {
-
+class AocException(messages: String?, cause: Throwable?) : Throwable(messages, cause) {
+    constructor(message: String, errors: List<String>) : this(message, null)
 }

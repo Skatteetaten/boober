@@ -3,10 +3,9 @@ package no.skatteetaten.aurora.boober.controller
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.model.Config
-import no.skatteetaten.aurora.boober.service.ConfigService
 import no.skatteetaten.aurora.boober.model.NamespaceResult
-import no.skatteetaten.aurora.boober.model.Result
 import no.skatteetaten.aurora.boober.service.AocConfig
+import no.skatteetaten.aurora.boober.service.AocService
 import no.skatteetaten.aurora.boober.service.GitService
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -15,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController
 import java.io.File
 
 @RestController
-class ModifyController(val gitService: GitService, val configService: ConfigService, val mapper: ObjectMapper) {
+class ModifyController(val gitService: GitService, val aocService: AocService, val mapper: ObjectMapper) {
 
     @PostMapping("/save/{token}/{affiliation}")
     fun setupNamespace(@PathVariable token: String,
@@ -33,16 +32,16 @@ class ModifyController(val gitService: GitService, val configService: ConfigServ
         }
 
 
-        val allEnv = dir.listFiles({ dir -> dir.isDirectory}).filter{ File(dir, "about.json").exists()}
+        val allEnv = dir.listFiles({ dir -> dir.isDirectory }).filter { File(dir, "about.json").exists() }
 
-        val res:Map<String, Config> = allEnv.flatMap {
+        val res: Map<String, Config> = allEnv.flatMap {
             val env = it.name
             val apps = it.listFiles({ _, name -> name != "about.json" }).toList().map(File::nameWithoutExtension)
             apps.map {
                 val files = listOf("about.json", "$env/about.json", "$it.json", "$env/$it.json")
 
                 // TODO: Must collect files from git and replace mapOf
-                Pair("$env/$it", configService.createConfigFromAocConfigFiles(AocConfig(mapOf()), env, it))
+                Pair("$env/$it", aocService.createConfigFromAocConfigFiles(AocConfig(mapOf()), env, it))
             }
         }.toMap()
 

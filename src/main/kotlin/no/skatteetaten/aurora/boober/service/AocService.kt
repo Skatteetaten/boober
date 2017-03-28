@@ -23,46 +23,27 @@ class AocService(
 
     val logger: Logger = LoggerFactory.getLogger(this.javaClass)
 
-    fun executeSetup(token: String, aocConfig: AocConfig, environmentName: String, applicationName: String): Result {
+    fun executeSetup(token: String, aocConfig: AocConfig, environmentName: String, applicationName: String): Map<String, JsonNode?> {
 
         //TODO switch on what is available in the command.
-        val res: Config = createConfigFromAocConfigFiles(aocConfig, environmentName, applicationName)
+        val config: Config = createConfigFromAocConfigFiles(aocConfig, environmentName, applicationName)
 
-        val validated = validationService.validate(res, token)
-        //TODO perform operations, maybe expand Result object here?
-
-        if (!validated.valid) {
-            return validated
+        return when (config) {
+            is AuroraDeploymentConfig -> handleAuroraDeploymentConfig(config, token)
+            is TemplateProcessingConfig -> handleTemplateProcessingConfig(config, token)
+            else -> mapOf()
         }
+    }
 
-        val objects = openshiftService.generateObjects(res, token)
+    private fun handleAuroraDeploymentConfig(config: AuroraDeploymentConfig, token: String): Map<String, JsonNode?> {
 
-        /* This really should not be in the controller layer */
-        if (objects.openshiftObjects != null && objects.config != null) {
-            //race condition if we create resources to fast
-
-            val httpErrors: List<String> = listOf()
-            var httpResult: JsonNode? = null
-            val results = objects.openshiftObjects.map {
-                val url = createOpenshiftUrl(it.key, objects.config.namespace)
-                try {
-                    val response = openshiftClient.save(url, it.value, token)
-                    httpResult = response?.body
-
-
-                } catch(e: HttpClientErrorException) {
-                    val message = "Error saving url=$url, with message=${e.message}"
-                    logger.debug(message)
-                    httpErrors.plus(message)
-                }
-                Thread.sleep(1000)
-                Pair(it.key, httpResult)
-
-            }.toMap()
-
-            return objects.copy(savedOjbects = results, errors = httpErrors)
-        }
+        val openShiftObjects: Map<String, JsonNode> = openshiftService.generateObjects(config, token)
+        val objects = openshiftClient.saveMany(config.namespace, openShiftObjects, token)
         return objects
+    }
+
+    private fun handleTemplateProcessingConfig(config: TemplateProcessingConfig, token: String): Map<String, JsonNode?> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     fun createConfigFromAocConfigFiles(aocConfig: AocConfig, environmentName: String, applicationName: String): Config {
@@ -75,27 +56,16 @@ class AocService(
             else -> AuroraDeploymentConfig::class.java
         }
 
+        val config: Config?
         try {
-            return mapper.reader().forType(clazz).readValue(mergedJson.toString())
+            config = mapper.reader().forType(clazz).readValue<Config>(mergedJson.toString())
         } catch (ex: JsonMappingException) {
             val missingProp = ex.path.map { it.fieldName }.reduce { acc, fieldName -> acc + ".$fieldName" }
-            throw AocException("$missingProp is required")
-        }
-    }
-
-    private fun createOpenshiftUrl(key: String, namespace: String): String {
-
-        if (key == "projects") {
-            return "/oapi/v1/projects"
+            throw AocException("$missingProp is required", ex)
         }
 
-        val prefix = if (key in listOf("services", "configmaps")) {
-            "/api"
-        } else {
-            "/oapi"
-        }
+        validationService.validate(config)
 
-        return "$prefix/v1/namespaces/$namespace/$key"
-
+        return config
     }
 }

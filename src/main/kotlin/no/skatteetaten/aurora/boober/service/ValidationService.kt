@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.boober.model.Config
 import no.skatteetaten.aurora.boober.model.TemplateProcessingConfig
-import no.skatteetaten.aurora.boober.model.Result
 import org.springframework.stereotype.Service
 import javax.validation.Validation
 
@@ -10,7 +9,7 @@ import javax.validation.Validation
 @Service
 class ValidationService(val openshiftService: OpenshiftService) {
 
-    fun validate(config: Config, token: String): Result {
+    fun validate(config: Config/*, token: String*/) {
 
         val validator = Validation.buildDefaultValidatorFactory().validator
         val err = validator.validate(config)
@@ -30,16 +29,20 @@ class ValidationService(val openshiftService: OpenshiftService) {
             }
 */
 
-            if(config.template !=null && config.templateFile != null) {
+            if (config.template != null && config.templateFile != null) {
                 errors.add("Cannot specify both template and templateFile")
             }
+/*
 
             if (config.template != null && !openshiftService.templateExist(token, config.template)) {
                 errors.add("Template ${config.template} does not exist in cluster.")
             }
+*/
 
         }
 
-        return Result(errors = errors)
+        if (errors.isNotEmpty()) {
+            throw AocException("AOC config contains errors", errors)
+        }
     }
 }
