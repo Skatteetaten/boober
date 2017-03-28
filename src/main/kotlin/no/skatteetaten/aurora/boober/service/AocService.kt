@@ -1,8 +1,9 @@
 package no.skatteetaten.aurora.boober.service
 
+import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.model.Config
-import no.skatteetaten.aurora.boober.model.Result
+import com.fasterxml.jackson.databind.ObjectMapper
+import no.skatteetaten.aurora.boober.model.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -15,7 +16,7 @@ import org.springframework.web.client.HttpClientErrorException
  */
 @Service
 class AocService(
-        val configService: ConfigService,
+        val mapper: ObjectMapper,
         val validationService: ValidationService,
         val openshiftService: OpenshiftService,
         val openshiftClient: OpenshiftClient) {
@@ -25,7 +26,7 @@ class AocService(
     fun executeSetup(token: String, aocConfig: AocConfig, environmentName: String, applicationName: String): Result {
 
         //TODO switch on what is available in the command.
-        val res: Config = configService.createConfigFromAocConfigFiles(aocConfig, environmentName, applicationName)
+        val res: Config = createConfigFromAocConfigFiles(aocConfig, environmentName, applicationName)
 
         val validated = validationService.validate(res, token)
         //TODO perform operations, maybe expand Result object here?
@@ -62,6 +63,24 @@ class AocService(
             return objects.copy(savedOjbects = results, errors = httpErrors)
         }
         return objects
+    }
+
+    fun createConfigFromAocConfigFiles(aocConfig: AocConfig, environmentName: String, applicationName: String): Config {
+
+        val mergedJson = aocConfig.getMergedFileForApplication(environmentName, applicationName)
+
+        val type = TemplateType.valueOf(mergedJson.get("type").asText())
+        val clazz: Class<*> = when (type) {
+            TemplateType.process -> TemplateProcessingConfig::class.java
+            else -> AuroraDeploymentConfig::class.java
+        }
+
+        try {
+            return mapper.reader().forType(clazz).readValue(mergedJson.toString())
+        } catch (ex: JsonMappingException) {
+            val missingProp = ex.path.map { it.fieldName }.reduce { acc, fieldName -> acc + ".$fieldName" }
+            throw AocException("$missingProp is required")
+        }
     }
 
     private fun createOpenshiftUrl(key: String, namespace: String): String {
