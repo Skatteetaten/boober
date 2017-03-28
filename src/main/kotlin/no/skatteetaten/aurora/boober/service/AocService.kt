@@ -3,8 +3,6 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.AocConfig
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
-import no.skatteetaten.aurora.boober.model.Config
-import no.skatteetaten.aurora.boober.model.TemplateProcessingConfig
 import org.springframework.stereotype.Service
 
 /**
@@ -25,23 +23,11 @@ class AocService(
 
     fun executeSetup(token: String, aocConfig: AocConfig, environmentName: String, applicationName: String): AocResult {
 
-        val config: Config = aocConfigParserService.createConfigFromAocConfigFiles(aocConfig, environmentName, applicationName)
+        val auroraDc: AuroraDeploymentConfig = aocConfigParserService.createConfigFromAocConfigFiles(aocConfig, environmentName, applicationName)
 
-        return when (config) {
-            is AuroraDeploymentConfig -> handleAuroraDeploymentConfig(config, token)
-            is TemplateProcessingConfig -> handleTemplateProcessingConfig(config, token)
-            else -> AocResult(listOf())
-        }
-    }
+        val openShiftObjects: List<JsonNode> = openShiftService.generateObjects(auroraDc, token)
+        val openShiftResponses: List<OpenShiftResponse> = openShiftClient.saveMany(auroraDc.namespace, openShiftObjects, token)
 
-    private fun handleAuroraDeploymentConfig(config: AuroraDeploymentConfig, token: String): AocResult {
-
-        val openShiftObjects: List<JsonNode> = openShiftService.generateObjects(config, token)
-        val openShiftResponses: List<OpenShiftResponse> = openShiftClient.saveMany(config.namespace, openShiftObjects, token)
         return AocResult(openShiftResponses)
-    }
-
-    private fun handleTemplateProcessingConfig(config: TemplateProcessingConfig, token: String): AocResult {
-        TODO("not implemented")
     }
 }

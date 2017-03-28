@@ -10,12 +10,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import groovy.json.JsonSlurper
 import no.skatteetaten.aurora.boober.Configuration
-import spock.lang.Ignore
+import no.skatteetaten.aurora.boober.model.AocConfig
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import spock.lang.Specification
 
-@Ignore
 class OpenShiftServiceTest extends Specification {
-/*
 
   def setupSpec() {
     setLogLevels()
@@ -24,8 +23,9 @@ class OpenShiftServiceTest extends Specification {
   VelocityEngine velocityEngine = configuration.velocity()
   ObjectMapper mapper = configuration.mapper()
 
-  def openShiftService = new OpenShiftService(velocityEngine)
-  def configService = new ConfigService(mapper)
+  def openShiftService = new OpenShiftService(velocityEngine, mapper)
+  def validationService = new ValidationService()
+  def aocConfigParserService = new AocConfigParserService(validationService)
 
   def "Should create six OpenShift objects from Velocity templates"() {
     given:
@@ -33,18 +33,19 @@ class OpenShiftServiceTest extends Specification {
       Map<String, JsonNode> files = getUtvReferanseSampleFiles()
 
     when:
-      def booberResult = configService.createConfigFromAocConfigFiles("utv", "referanse", files)
-      def openShiftResult = openShiftService.generateObjects(booberResult, "hero")
+      def aocConfig = new AocConfig(files)
+      AuroraDeploymentConfig auroraDc = aocConfigParserService.createConfigFromAocConfigFiles(aocConfig, "utv", "referanse")
+      List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc, "hero")
+      def g = generatedObjects.collect { slurper.parseText(it.toString()) }
 
-      def configMap = slurper.parseText(openShiftResult.openshiftObjects.get("configmaps").toString())
-      def service = slurper.parseText(openShiftResult.openshiftObjects.get("services").toString())
-      def imageStream = slurper.parseText(openShiftResult.openshiftObjects.get("imagestreams").toString())
-      def deploymentConfig = slurper.parseText(openShiftResult.openshiftObjects.get("deploymentconfigs").toString())
-      def route = slurper.parseText(openShiftResult.openshiftObjects.get("routes").toString())
-      def project = slurper.parseText(openShiftResult.openshiftObjects.get("projects").toString())
+      def configMap = g.find { it.kind == "ConfigMap" }
+      def service = g.find { it.kind == "Service" }
+      def imageStream = g.find { it.kind == "ImageStream" }
+      def deploymentConfig = g.find { it.kind == "DeploymentConfig" }
+      def route = g.find { it.kind == "Route" }
+      def project = g.find { it.kind == "Project" }
 
     then:
-      openShiftResult.openshiftObjects.size() == 6
 
       project.toString() == slurper.parseText("""
         {
@@ -353,5 +354,4 @@ class OpenShiftServiceTest extends Specification {
 
       """).toString()
   }
-*/
 }

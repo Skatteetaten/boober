@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import no.skatteetaten.aurora.boober.model.TemplateType
 import org.apache.velocity.VelocityContext
@@ -32,47 +33,51 @@ class OpenShiftService(
         //TODO If we get an unified interface in here we do not have to do this here. We can always move it out.
         //TODO What should we store in git?
 
+        val deployDescriptor = config.deployDescriptor as AuroraDeploy
+
         val app = TemplateApp(
                 config.name,
                 config.namespace,
                 config.affiliation,
                 config.type.name,
                 config.replicas,
-                config.deploy.splunkIndex,
+                deployDescriptor.deploy.splunkIndex,
                 config.route,
                 config.rolling,
                 config.routeName,
                 findUsername(token)
         )
 
-        val svc = TemplateService(config.deploy.websealRoute,
-                config.deploy.websealRoles,
-                config.deploy.prometheus,
-                config.deploy.prometheusPath,
-                config.deploy.prometheusPort
+        val svc = TemplateService(
+                deployDescriptor.deploy.websealRoute,
+                deployDescriptor.deploy.websealRoles,
+                deployDescriptor.deploy.prometheus,
+                deployDescriptor.deploy.prometheusPath,
+                deployDescriptor.deploy.prometheusPort
         )
 
         val docker = TemplateDocker(
                 "docker-registry.aurora.sits.no:5000",
-                config.build.version,
-                config.dockerName,
-                config.dockerGroup,
-                config.deploy.tag,
-                config.build.extraTags,
+                deployDescriptor.build.version,
+                deployDescriptor.dockerName,
+                deployDescriptor.dockerGroup,
+                deployDescriptor.deploy.tag,
+                deployDescriptor.build.extraTags,
                 TemplateImage("leveransepakkebygger", "prod"),
                 TemplateImage("oracle8", "1")
         )
 
         val dc = TemplateDc(
-                config.deploy.managementPath,
-                config.deploy.alarm,
-                config.cert,
-                config.deploy.database,
-                config.deploy.debug)
+                deployDescriptor.deploy.managementPath,
+                deployDescriptor.deploy.alarm,
+                deployDescriptor.cert,
+                deployDescriptor.deploy.database,
+                deployDescriptor.deploy.debug
+        )
 
         val resources = TemplateResources(
-                TemplateResourceFields("128Mi", config.deploy.cpuRequest),
-                TemplateResourceFields(config.deploy.maxMemory, "2000m"))
+                TemplateResourceFields("128Mi", deployDescriptor.deploy.cpuRequest),
+                TemplateResourceFields(deployDescriptor.deploy.maxMemory, "2000m"))
 
         val params = mapOf("app" to app)
 
