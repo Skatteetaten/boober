@@ -2,10 +2,9 @@ package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
-import no.skatteetaten.aurora.boober.service.AocException
 import no.skatteetaten.aurora.boober.utils.createMergeCopy
 
-class AocConfig(val aocConfigFiles: Map<String, JsonNode>) {
+class AuroraConfig(val aocConfigFiles: Map<String, JsonNode>) {
 
     fun getMergedFileForApplication(environmentName: String, applicationName: String) : JsonNode {
         val filesForApplication = getFilesForApplication(environmentName, applicationName)
@@ -27,7 +26,7 @@ class AocConfig(val aocConfigFiles: Map<String, JsonNode>) {
         val filesForApplication: List<JsonNode> = requiredFilesForApplication.mapNotNull { aocConfigFiles.get(it) }
         if (filesForApplication.size != requiredFilesForApplication.size) {
             val missingFiles = requiredFilesForApplication.filter { it !in aocConfigFiles.keys }
-            throw AocException("Unable to execute setup command. Required files missing => $missingFiles")
+            throw IllegalArgumentException("Unable to execute setup command. Required files missing => $missingFiles")
         }
         return filesForApplication
     }

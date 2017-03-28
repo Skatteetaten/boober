@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.controller.AocController
+import no.skatteetaten.aurora.boober.controller.SetupController
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -22,7 +22,7 @@ data class OpenShiftResponse(
 @Service
 class OpenShiftClient(@Value("\${openshift.url}") val baseUrl: String, val client: RestTemplate) {
 
-    val logger: Logger = LoggerFactory.getLogger(AocController::class.java)
+    val logger: Logger = LoggerFactory.getLogger(SetupController::class.java)
 
     fun saveMany(namespace: String, openShiftObjects: List<JsonNode>, token: String): List<OpenShiftResponse> {
 
@@ -47,7 +47,7 @@ class OpenShiftClient(@Value("\${openshift.url}") val baseUrl: String, val clien
             res = client.postForEntity(fullUrl, entity, JsonNode::class.java)
         } catch(e: HttpClientErrorException) {
             val message = "Error saving url=$url, with message=${e.message}"
-            throw AocException(message, e)
+            throw OpenShiftException(message, e)
         }
         logger.info("Saving resource to $fullUrl with responseBody code ${res.statusCodeValue}")
         logger.debug("Body=${res.body}")

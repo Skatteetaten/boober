@@ -7,13 +7,13 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploy.Prometheus
 import no.skatteetaten.aurora.boober.model.DeploymentStrategy.recreate
 import no.skatteetaten.aurora.boober.model.DeploymentStrategy.rolling
 
-class AocConfigParserService(
+class AuroraConfigParserService(
         val validationService: ValidationService
 ) {
 
-    fun createConfigFromAocConfigFiles(aocConfig: AocConfig, environmentName: String, applicationName: String): AuroraDeploymentConfig {
+    fun createAuroraDcFromAuroraConfig(auroraConfig: AuroraConfig, environmentName: String, applicationName: String): AuroraDeploymentConfig {
 
-        val mergedJson = aocConfig.getMergedFileForApplication(environmentName, applicationName)
+        val mergedJson = auroraConfig.getMergedFileForApplication(environmentName, applicationName)
 
         val schemaVersion = mergedJson.get("schemaVersion")?.asText() ?: "v1"
 

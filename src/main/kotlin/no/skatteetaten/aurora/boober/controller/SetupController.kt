@@ -2,9 +2,9 @@ package no.skatteetaten.aurora.boober.controller
 
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.model.AocConfig
-import no.skatteetaten.aurora.boober.service.AocResult
-import no.skatteetaten.aurora.boober.service.AocService
+import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.service.SetupResult
+import no.skatteetaten.aurora.boober.service.SetupService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.web.bind.annotation.PutMapping
@@ -13,20 +13,20 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class AocController(val aocService: AocService) {
+class SetupController(val setupService: SetupService) {
 
-    val logger: Logger = LoggerFactory.getLogger(AocController::class.java)
+    val logger: Logger = LoggerFactory.getLogger(SetupController::class.java)
 
     @PutMapping("/setup")
     fun setup(@RequestHeader(value = "Authentication") rawToken: String,
-              @RequestBody cmd: SetupCommand): AocResult {
+              @RequestBody cmd: SetupCommand): SetupResult {
 
         val token = rawToken.split(" ")[1]
 
         logger.info("Setting up ${cmd.app} in ${cmd.env} with token $token")
 
-        val aocConfig = AocConfig(cmd.files!!)
-        return aocService.executeSetup(token, aocConfig, cmd.env, cmd.app!!)
+        val auroraConfig = AuroraConfig(cmd.files!!)
+        return setupService.executeSetup(token, auroraConfig, cmd.env, cmd.app!!)
     }
 }
 

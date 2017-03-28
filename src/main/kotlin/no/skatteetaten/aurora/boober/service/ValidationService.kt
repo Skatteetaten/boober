@@ -47,7 +47,7 @@ class ValidationService(/*val openShiftService: OpenShiftService*/) {
 */
 
         if (errors.isNotEmpty()) {
-            throw AocException("AOC config contains errors", errors)
+            throw ValidationException("AOC config contains errors", errors)
         }
     }
 }

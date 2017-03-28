@@ -27,7 +27,7 @@ class ConfigServiceTest extends Specification {
       service.createConfigFromAocConfigFiles("utv", "referanse", files)
 
     then:
-      thrown(AocException)
+      thrown(OpenShiftException)
   }
 
   def "Should successfully merge all config files"() {
