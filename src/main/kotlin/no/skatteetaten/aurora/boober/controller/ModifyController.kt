@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.controller
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import no.skatteetaten.aurora.boober.model.Config
 import no.skatteetaten.aurora.boober.service.ConfigService
 import no.skatteetaten.aurora.boober.model.NamespaceResult
 import no.skatteetaten.aurora.boober.model.Result
@@ -33,14 +34,14 @@ class ModifyController(val gitService: GitService, val configService: ConfigServ
 
         val allEnv = dir.listFiles({ dir -> dir.isDirectory}).filter{ File(dir, "about.json").exists()}
 
-        val res:Map<String, Result> = allEnv.flatMap {
+        val res:Map<String, Config> = allEnv.flatMap {
             val env = it.name
             val apps = it.listFiles({ _, name -> name != "about.json" }).toList().map(File::nameWithoutExtension)
             apps.map {
                 val files = listOf("about.json", "$env/about.json", "$it.json", "$env/$it.json")
 
                 // TODO: Must collect files from git and replace mapOf
-                Pair("$env/$it", configService.createConfigFormAocConfigFiles(env, it, mapOf()))
+                Pair("$env/$it", configService.createConfigFromAocConfigFiles(env, it, mapOf()))
             }
         }.toMap()
 

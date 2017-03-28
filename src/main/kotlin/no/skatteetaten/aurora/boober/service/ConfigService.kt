@@ -15,25 +15,10 @@ import org.springframework.stereotype.Service
 @Service
 class ConfigService(val mapper: ObjectMapper) {
 
-    fun createConfigFormAocConfigFiles(environmentName: String, applicationName: String, aocConfigFiles: Map<String, JsonNode>): Config {
+    fun createConfigFromAocConfigFiles(environmentName: String, applicationName: String, aocConfigFiles: Map<String, JsonNode>): Config {
 
-        val requiredFilesForApplication = setOf(
-                "about.json",
-                "$environmentName/about.json",
-                "$applicationName.json",
-                "$environmentName/$applicationName.json")
-
-        // Not sure this will maintain the required order of the setup files. Should probably map over required files instead.
-        val filesForApplication = aocConfigFiles.filter { it.key in requiredFilesForApplication }.values.toList()
-        if (filesForApplication.size != requiredFilesForApplication.size) {
-            val missingFiles = requiredFilesForApplication.filter { it !in aocConfigFiles.keys }
-            throw AocException("Unable to execute setup command. Required files missing => $missingFiles")
-        }
-
-        val mergedJson = mergeAocConfigFiles(filesForApplication)
-        if (!mergedJson.has("envName")) {
-            (mergedJson as ObjectNode).put("envName", "-$environmentName")
-        }
+        val aocConfig = AocConfig(aocConfigFiles)
+        val mergedJson = aocConfig.getMergedFileForApplication(environmentName, applicationName)
 
         val type = TemplateType.valueOf(mergedJson.get("type").asText())
         val clazz: Class<*> = when (type) {
@@ -48,11 +33,38 @@ class ConfigService(val mapper: ObjectMapper) {
             throw AocException("$missingProp is required")
         }
     }
+}
+
+
+class AocConfig(val aocConfigFiles: Map<String, JsonNode>) {
+
+    fun getMergedFileForApplication(environmentName: String, applicationName: String) : JsonNode {
+        val filesForApplication = getFilesForApplication(environmentName, applicationName)
+        val mergedJson = mergeAocConfigFiles(filesForApplication)
+        if (!mergedJson.has("envName")) {
+            (mergedJson as ObjectNode).put("envName", "-$environmentName")
+        }
+        return mergedJson
+    }
+
+    fun getFilesForApplication(environmentName: String, applicationName: String): List<JsonNode> {
+
+        val requiredFilesForApplication = setOf(
+                "about.json",
+                "$applicationName.json",
+                "$environmentName/about.json",
+                "$environmentName/$applicationName.json")
+
+        val filesForApplication: List<JsonNode> = requiredFilesForApplication.mapNotNull { aocConfigFiles.get(it) }
+        if (filesForApplication.size != requiredFilesForApplication.size) {
+            val missingFiles = requiredFilesForApplication.filter { it !in aocConfigFiles.keys }
+            throw AocException("Unable to execute setup command. Required files missing => $missingFiles")
+        }
+        return filesForApplication
+    }
 
     private fun mergeAocConfigFiles(filesForApplication: List<JsonNode>): JsonNode {
 
-        val mergedJson = filesForApplication.reduce(::createMergeCopy)
-
-        return mergedJson
+        return filesForApplication.reduce(::createMergeCopy)
     }
 }

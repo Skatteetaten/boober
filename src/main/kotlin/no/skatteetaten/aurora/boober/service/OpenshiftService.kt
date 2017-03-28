@@ -2,10 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
-import no.skatteetaten.aurora.boober.model.TemplateProcessingConfig
-import no.skatteetaten.aurora.boober.model.Result
-import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.model.*
 import org.apache.velocity.VelocityContext
 import org.apache.velocity.app.VelocityEngine
 import org.springframework.stereotype.Service
@@ -26,9 +23,7 @@ class OpenshiftService(val ve: VelocityEngine) {
     }
 
 
-    fun generateObjects(res: Result, token: String): Result {
-
-        val config = res.config!!
+    fun generateObjects(config: Config, token: String): Result {
 
         if (config is AuroraDeploymentConfig) {
             //TODO This is the code that uses the default that was set in the old AOC, that is the template.
@@ -96,13 +91,13 @@ class OpenshiftService(val ve: VelocityEngine) {
                 openshiftObjects.put("buildconfigs", ve.parse("build-config.json", paramsWithDocker))
 
             }
-            return res.copy(openshiftObjects = openshiftObjects)
+            return Result(openshiftObjects = openshiftObjects)
 
         } else if (config is TemplateProcessingConfig) {
             //TODO
-            return res
+            return Result()
         }
-        return res
+        return Result()
     }
 
 }

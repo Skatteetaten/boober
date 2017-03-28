@@ -30,7 +30,7 @@ class OpenShiftServiceTest extends Specification {
       Map<String, JsonNode> files = getUtvReferanseSampleFiles()
 
     when:
-      def booberResult = configService.createConfigFormAocConfigFiles("utv", "referanse", files)
+      def booberResult = configService.createConfigFromAocConfigFiles("utv", "referanse", files)
       def openShiftResult = openShiftService.generateObjects(booberResult, "hero")
 
       def configMap = slurper.parseText(openShiftResult.openshiftObjects.get("configmaps").toString())

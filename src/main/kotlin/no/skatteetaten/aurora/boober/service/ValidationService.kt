@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
+import no.skatteetaten.aurora.boober.model.Config
 import no.skatteetaten.aurora.boober.model.TemplateProcessingConfig
 import no.skatteetaten.aurora.boober.model.Result
 import org.springframework.stereotype.Service
@@ -9,9 +10,7 @@ import javax.validation.Validation
 @Service
 class ValidationService(val openshiftService: OpenshiftService) {
 
-    fun validate(res: Result, token: String): Result {
-
-        val config = res.config ?: return res
+    fun validate(config: Config, token: String): Result {
 
         val validator = Validation.buildDefaultValidatorFactory().validator
         val err = validator.validate(config)
@@ -25,9 +24,11 @@ class ValidationService(val openshiftService: OpenshiftService) {
 
         if (config is TemplateProcessingConfig) {
 
+/*
             if (config.templateFile != null && !res.sources.keys.contains(config.templateFile)) {
                 errors.add("Template file ${config.templateFile} is missing in sources")
             }
+*/
 
             if(config.template !=null && config.templateFile != null) {
                 errors.add("Cannot specify both template and templateFile")
@@ -39,6 +40,6 @@ class ValidationService(val openshiftService: OpenshiftService) {
 
         }
 
-        return res.copy(errors = res.errors.plus(errors))
+        return Result(errors = errors)
     }
 }

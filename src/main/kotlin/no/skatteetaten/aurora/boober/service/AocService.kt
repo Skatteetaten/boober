@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
+import no.skatteetaten.aurora.boober.model.Config
 import no.skatteetaten.aurora.boober.model.Result
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -24,7 +25,7 @@ class AocService(
     fun executeSetup(token: String, cmd: SetupCommand): Result {
 
         //TODO switch on what is available in the command.
-        val res = configService.createConfigFormAocConfigFiles(cmd.env, cmd.app!!, cmd.files!!)
+        val res: Config = configService.createConfigFromAocConfigFiles(cmd.env, cmd.app!!, cmd.files!!)
 
         val validated = validationService.validate(res, token)
         //TODO perform operations, maybe expand Result object here?

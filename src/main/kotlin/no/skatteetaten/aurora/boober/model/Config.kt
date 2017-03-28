@@ -130,7 +130,7 @@ data class AuroraDeploymentConfig(
     }
 }
 
-data class NamespaceResult(val results: Map<String, Result>)
+data class NamespaceResult(val results: Map<String, Config>)
 
 data class Result(val config: Config? = null,
                   val sources: Map<String, JsonNode> = mapOf(),
