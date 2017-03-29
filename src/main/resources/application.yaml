@@ -9,7 +9,7 @@ management:
     health.status.order: DOWN, OUT_OF_SERVICE, UNKNOWN, COMMENT, UP
     security:
         enabled: false
-
+    port: 8081
 
 endpoints:
     health:
@@ -67,10 +67,6 @@ logging:
 ---
 spring:
   profiles: development
-
-
-management:
-    port: 8081
 
 
 ---
