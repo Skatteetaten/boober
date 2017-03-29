@@ -6,59 +6,61 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.Configuration
+import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraDeploy
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import no.skatteetaten.aurora.boober.model.TemplateType
-import spock.lang.Ignore
 import spock.lang.Specification
 
-@Ignore
 class ConfigServiceTest extends Specification {
 
-/*
   ObjectMapper mapper = new Configuration().mapper()
-  ConfigService service = new ConfigService(mapper)
+  def validationService = new ValidationService()
+  AuroraConfigParserService service = new AuroraConfigParserService(validationService)
 
   def "Should fail due to missing config file"() {
 
     given:
       Map<String, JsonNode> files = getUtvReferanseSampleFiles()
       files.remove("referanse.json")
+      def auroraConfig = new AuroraConfig(files)
 
     when:
-      service.createConfigFromAocConfigFiles("utv", "referanse", files)
+      service.createAuroraDcFromAuroraConfig(auroraConfig, "utv", "referanse")
 
     then:
-      thrown(OpenShiftException)
+      thrown(IllegalArgumentException)
   }
 
   def "Should successfully merge all config files"() {
 
     given:
       Map<String, JsonNode> files = getUtvReferanseSampleFiles()
+      def auroraConfig = new AuroraConfig(files)
 
     when:
-      Result result = service.createConfigFromAocConfigFiles("utv", "referanse", files)
+      AuroraDeploymentConfig auroraDc = service.createAuroraDcFromAuroraConfig(auroraConfig, "utv", "referanse")
 
     then:
-      result.errors.isEmpty()
-
-      with(result.getConfig()) {
+      with(auroraDc) {
         affiliation == "aot"
         name == "refapp"
         cluster == "utv"
         replicas == 3
         type == TemplateType.deploy
         groups == "APP_PaaS_drift APP_PaaS_utv"
-        flags == ["rolling", "route", "cert"]
         config == ["SERVER_URL": "http://localhost:8080"]
+      }
 
-        build.version == "1"
-        build.groupId == "ske.aurora.openshift.referanse"
-        build.artifactId == "openshift-referanse-springboot-server"
+      with(auroraDc.deployDescriptor as AuroraDeploy) {
+        version == "1"
+        groupId == "ske.aurora.openshift.referanse"
+        artifactId == "openshift-referanse-springboot-server"
 
-        deploy.prometheusPort == 8081
-        deploy.managementPath == ":8081/actuator"
-        deploy.database == "referanseapp"
-        deploy.splunkIndex == "openshift-test"
+        prometheus.port == 8081
+        managementPath == ":8081/actuator"
+        database == "referanseapp"
+        splunkIndex == "openshift-test"
       }
   }
 
@@ -69,23 +71,24 @@ class ConfigServiceTest extends Specification {
 
       def envAppOverride = """
         {
-          "name": "Awesome App"
+          "name": "awesome-app"
         }
       """
 
       files.put("utv/referanse.json", mapper.readTree(envAppOverride))
 
+      def auroraConfig = new AuroraConfig(files)
+
     when:
-      Result result = service.createConfigFromAocConfigFiles("utv", "referanse", files)
+      AuroraDeploymentConfig auroraDc = service.createAuroraDcFromAuroraConfig(auroraConfig, "utv", "referanse")
 
     then:
-      result.getConfig().name == "Awesome App"
-
+      auroraDc.name == "awesome-app"
   }
 
-  def "Should fail due to missing required property"() {
+  def "Should throw ValidationException due to missing required properties"() {
 
-    given:
+    given: "AuroraConfig without build properties"
       Map<String, JsonNode> files = getUtvReferanseSampleFiles()
 
       def appOverride = """
@@ -105,43 +108,14 @@ class ConfigServiceTest extends Specification {
       files.put("referanse.json", mapper.readTree(appOverride))
       files.put("utv/referanse.json", mapper.readTree("{}"))
 
+      def auroraConfig = new AuroraConfig(files)
+
     when:
-      Result result = service.createConfigFromAocConfigFiles("utv", "referanse", files)
+      service.createAuroraDcFromAuroraConfig(auroraConfig, "utv", "referanse")
+
 
     then:
-      result.errors[0] == "build is required"
+      def ex = thrown(ValidationException)
+      ex.errors.size() == 3
   }
-
-  def "Should fail due to missing required nested property"() {
-
-    given:
-      Map<String, JsonNode> files = getUtvReferanseSampleFiles()
-
-      def consoleOverride = """
-        {
-          "name" : "console",
-          "replicas" : 3,
-          "flags" : ["rolling", "route", "cert" ],
-            "build" : {
-            "GROUP_ID":"ske.aurora.openshift.referanse",
-            "ARTIFACT_ID":"openshift-referanse-springboot-server"
-          },
-          "deploy" : {
-            "PROMETHEUS_ENABLED" : true,
-            "PROMETHEUS_PORT" : "8081",
-            "MANAGEMENT_PATH": ":8081/actuator",
-            "DATABASE": "referanseapp"
-          }
-        }
-      """
-
-      files.put("referanse.json", mapper.readTree(consoleOverride))
-      files.put("utv/referanse.json", mapper.readTree("{}"))
-
-    when:
-      Result result = service.createConfigFromAocConfigFiles("utv", "referanse", files)
-
-    then:
-      result.errors[0] == "build.VERSION is required"
-  }*/
 }
