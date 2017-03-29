@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.AuroraDeploy.Prometheus
@@ -67,8 +68,10 @@ class AuroraConfigParserService(
 
     private fun createAuroraDeploy(json: JsonNode): AuroraDeploy {
 
-        val buildJson: JsonNode = json.get("build")
-        val deployJson: JsonNode = json.get("deploy")
+        val factory = JsonNodeFactory.instance
+
+        val buildJson: JsonNode = json.get("build") ?: factory.objectNode()
+        val deployJson: JsonNode = json.get("deploy") ?: factory.objectNode()
 
         val artifactId = buildJson.s("ARTIFACT_ID")
         val groupId = buildJson.s("GROUP_ID")
@@ -87,9 +90,9 @@ class AuroraConfigParserService(
                 deployJson.s("PROMETHEUS_PATH") ?: "/prometheus"
         ) else null
         return AuroraDeploy(
-                artifactId = artifactId!!,
-                groupId = groupId!!,
-                version = buildJson.s("VERSION")!!,
+                artifactId = artifactId,
+                groupId = groupId,
+                version = buildJson.s("VERSION"),
                 splunkIndex = deployJson.s("SPLUNK_INDEX") ?: "",
                 maxMemory = deployJson.s("MAX_MEMORY") ?: "256Mi",
                 database = deployJson.s("DATABASE"),

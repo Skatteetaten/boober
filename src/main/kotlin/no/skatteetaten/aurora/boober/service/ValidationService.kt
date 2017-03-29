@@ -11,14 +11,11 @@ class ValidationService(/*val openShiftService: OpenShiftService*/) {
     fun assertIsValid(config: AuroraDeploymentConfig/*, token: String*/) {
 
         val validator = Validation.buildDefaultValidatorFactory().validator
-        val err = validator.validate(config)
 
-        val errors: MutableList<String> = mutableListOf()
+        val auroraDcErrors = validator.validate(config)
+        val deployDescriptorErrors = validator.validate(config.deployDescriptor)
 
-        if (err.isNotEmpty()) {
-            val map = err.map { "${it.message} for field ${it.propertyPath}" }
-            errors.addAll(map)
-        }
+        val errors = (auroraDcErrors + deployDescriptorErrors).associateBy({ it.propertyPath.toString() }, { it.message })
 
 /*
         if (config is TemplateProcessingConfig) {
@@ -47,7 +44,7 @@ class ValidationService(/*val openShiftService: OpenShiftService*/) {
 */
 
         if (errors.isNotEmpty()) {
-            throw ValidationException("AOC config contains errors", errors)
+            throw ValidationException("AOC config contains errors", errors = errors)
         }
     }
 }

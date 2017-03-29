@@ -35,7 +35,7 @@ class OpenShiftService(
 
         val deployDescriptor = auroraDc.deployDescriptor as AuroraDeploy
 
-        val configMap = auroraDc.config.map { "${it.key}=${it.value}" }.joinToString(separator = "\\n", transform = { it })
+        val configMap = auroraDc.config?.map { "${it.key}=${it.value}" }?.joinToString(separator = "\\n", transform = { it })
         val params = mapOf(
                 "adc" to auroraDc,
                 "configMap" to configMap,
@@ -64,7 +64,7 @@ class OpenShiftService(
         return templatesToProcess.map { mergeVelocityTemplate(it, params) }
     }
 
-    private fun mergeVelocityTemplate(template: String, content: Map<String, Any>): JsonNode {
+    private fun mergeVelocityTemplate(template: String, content: Map<String, Any?>): JsonNode {
         val context = VelocityContext()
         content.forEach { context.put(it.key, it.value) }
         val t = ve.getTemplate("templates/$template.vm")

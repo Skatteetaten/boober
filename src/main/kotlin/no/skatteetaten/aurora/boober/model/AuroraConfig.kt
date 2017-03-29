@@ -23,7 +23,7 @@ class AuroraConfig(val aocConfigFiles: Map<String, JsonNode>) {
                 "$environmentName/about.json",
                 "$environmentName/$applicationName.json")
 
-        val filesForApplication: List<JsonNode> = requiredFilesForApplication.mapNotNull { aocConfigFiles.get(it) }
+        val filesForApplication: List<JsonNode> = requiredFilesForApplication.mapNotNull { aocConfigFiles[it] }
         if (filesForApplication.size != requiredFilesForApplication.size) {
             val missingFiles = requiredFilesForApplication.filter { it !in aocConfigFiles.keys }
             throw IllegalArgumentException("Unable to execute setup command. Required files missing => $missingFiles")

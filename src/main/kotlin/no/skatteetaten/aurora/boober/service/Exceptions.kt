@@ -4,6 +4,8 @@ abstract class ServiceException(message: String?, cause: Throwable?) : RuntimeEx
 
 class OpenShiftException(messages: String?, cause: Throwable?) : ServiceException(messages, cause)
 
-class ValidationException(messages: String?, cause: Throwable?) : ServiceException(messages, cause) {
-    constructor(message: String, errors: List<String>) : this(message, null)
-}
+class ValidationException(
+        messages: String?,
+        cause: Throwable? = null,
+        val errors: Map<String, String>?
+) : ServiceException(messages, cause)
