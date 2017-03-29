@@ -33,7 +33,7 @@ class AuroraConfigParserService(
 
     private fun createAuroraDeploymentConfig(json: JsonNode): AuroraDeploymentConfig {
 
-        val type = TemplateType.valueOf(json.s("type") ?: "")
+        val type = json.s("type")?.let { TemplateType.valueOf(it) }
         var name = json.s("name")
 
         val deployDescriptor: Any = when (type) {
