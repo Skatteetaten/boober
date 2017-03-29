@@ -7,7 +7,9 @@ import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.AuroraDeploy.Prometheus
 import no.skatteetaten.aurora.boober.model.DeploymentStrategy.recreate
 import no.skatteetaten.aurora.boober.model.DeploymentStrategy.rolling
+import org.springframework.stereotype.Service
 
+@Service
 class AuroraConfigParserService(
         val validationService: ValidationService
 ) {
