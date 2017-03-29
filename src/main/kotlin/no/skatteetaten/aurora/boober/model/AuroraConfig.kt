@@ -9,9 +9,11 @@ class AuroraConfig(val aocConfigFiles: Map<String, JsonNode>) {
     fun getMergedFileForApplication(environmentName: String, applicationName: String) : JsonNode {
         val filesForApplication = getFilesForApplication(environmentName, applicationName)
         val mergedJson = mergeAocConfigFiles(filesForApplication)
+
         if (!mergedJson.has("envName")) {
-            (mergedJson as ObjectNode).put("envName", "-$environmentName")
+            (mergedJson as ObjectNode).put("envName", environmentName)
         }
+
         return mergedJson
     }
 

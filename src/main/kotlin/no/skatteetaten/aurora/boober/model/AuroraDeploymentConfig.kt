@@ -38,7 +38,7 @@ class AuroraDeploymentConfig(
 ) {
     @get:Pattern(message = "Alphanumeric and dashes. Cannot end or start with dash", regexp = "^[a-z0-9][-a-z0-9]*[a-z0-9]$")
     val namespace: String
-        get() = "$affiliation$envName"
+        get() = "${affiliation}-${envName}"
 
     val routeName: String?
         get() = "http://$name-$namespace.$cluster.paas.skead.no"
