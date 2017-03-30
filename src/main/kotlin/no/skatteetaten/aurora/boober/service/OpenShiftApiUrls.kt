@@ -19,22 +19,14 @@ class OpenShiftApiUrls(
 
             val endpointKey = kind.toLowerCase() + "s"
 
-            if (endpointKey == "projects") {
-                return OpenShiftApiUrls(
-                        update = "$baseUrl/oapi/v1/projects",
-                        get = "$baseUrl/oapi/v1/projects/$name"
-                )
-            }
+            val apiType = if (endpointKey in listOf("services", "configmaps")) "api" else "oapi"
+            val namespacePrefix = if (endpointKey !in listOf("projects")) "/namespaces/$namespace" else ""
 
-            val prefix = if (endpointKey in listOf("services", "configmaps")) {
-                "/api"
-            } else {
-                "/oapi"
-            }
+            val resourceBasePath = "$baseUrl/$apiType/v1$namespacePrefix"
 
             return OpenShiftApiUrls(
-                    update = "$baseUrl/$prefix/v1/namespaces/$namespace/$endpointKey",
-                    get = "$baseUrl/$prefix/v1/namespaces/$namespace/$endpointKey/$name"
+                    update = resourceBasePath,
+                    get = "$resourceBasePath/$name"
             )
         }
     }
