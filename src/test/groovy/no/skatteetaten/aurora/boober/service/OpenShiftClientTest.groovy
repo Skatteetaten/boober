@@ -28,7 +28,7 @@ class OpenShiftClientTest extends Specification {
       List<JsonNode> openShiftObjects = openShiftService.generateObjects(auroraDc, token)
       def project = openShiftObjects.find { it.get('kind').asText() == "Project" }
     expect:
-      def openShiftResponse = openShiftClient.save("aurora-boober-test", project, token)
+      def openShiftResponse = openShiftClient.apply("aurora-boober-test", project, token)
       println ReflectionToStringBuilder.toString(openShiftResponse, ToStringStyle.MULTI_LINE_STYLE)
       true
   }

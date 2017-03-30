@@ -37,7 +37,7 @@ class SetupService(
 
         logger.info("Creating OpenShift objects for application ${auroraDc.name} in namespace ${auroraDc.namespace}")
         val openShiftObjects: List<JsonNode> = openShiftService.generateObjects(auroraDc, token)
-        val openShiftResponses: List<OpenShiftResponse> = openShiftClient.saveMany(auroraDc.namespace, openShiftObjects, token)
+        val openShiftResponses: List<OpenShiftResponse> = openShiftClient.applyMany(auroraDc.namespace, openShiftObjects, token)
 
         val setupResult = SetupResult()
         val applicationId = ApplicationId(environmentName, applicationName)
