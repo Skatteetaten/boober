@@ -12,7 +12,7 @@
       "prometheus.io/path": "${dd.prometheus.path}",
       "prometheus.io/port": "${dd.prometheus.port}"
 #else
-      "prometheus.io/scrape": "false",
+      "prometheus.io/scrape": "false"
 #end
     },
     "labels": {
