@@ -11,6 +11,9 @@ import spock.lang.Specification
 
 class AuroraConfigParserServiceTest extends Specification {
 
+  public static final String ENV_NAME = "boobertest"
+  public static final String APP_NAME = "referanse"
+
   def validationService = new ValidationService()
   AuroraConfigParserService service = new AuroraConfigParserService(validationService)
 
@@ -18,11 +21,11 @@ class AuroraConfigParserServiceTest extends Specification {
 
     given:
       Map<String, Map<String, Object>> files = getUtvReferanseSampleFiles()
-      files.remove("referanse.json")
+      files.remove("${APP_NAME}.json" as String)
       def auroraConfig = new AuroraConfig(files)
 
     when:
-      service.createAuroraDcFromAuroraConfig(auroraConfig, "utv", "referanse")
+      service.createAuroraDcFromAuroraConfig(auroraConfig, ENV_NAME, APP_NAME)
 
     then:
       thrown(IllegalArgumentException)
@@ -35,12 +38,12 @@ class AuroraConfigParserServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files)
 
     when:
-      AuroraDeploymentConfig auroraDc = service.createAuroraDcFromAuroraConfig(auroraConfig, "utv", "referanse")
+      AuroraDeploymentConfig auroraDc = service.createAuroraDcFromAuroraConfig(auroraConfig, ENV_NAME, APP_NAME)
 
     then:
       with(auroraDc) {
-        namespace == "aot-utv"
-        affiliation == "aot"
+        namespace == "aos-${ENV_NAME}"
+        affiliation == "aos"
         name == "refapp"
         cluster == "utv"
         replicas == 3
@@ -72,12 +75,12 @@ class AuroraConfigParserServiceTest extends Specification {
         }
       """
 
-      files.put("utv/referanse.json", jsonToMap(envAppOverride))
+      files.put("${ENV_NAME}/${APP_NAME}.json" as String, jsonToMap(envAppOverride))
 
       def auroraConfig = new AuroraConfig(files)
 
     when:
-      AuroraDeploymentConfig auroraDc = service.createAuroraDcFromAuroraConfig(auroraConfig, "utv", "referanse")
+      AuroraDeploymentConfig auroraDc = service.createAuroraDcFromAuroraConfig(auroraConfig, ENV_NAME, APP_NAME)
 
     then:
       auroraDc.name == "awesome-app"
@@ -102,13 +105,13 @@ class AuroraConfigParserServiceTest extends Specification {
         }
       """
 
-      files.put("referanse.json", jsonToMap(appOverride))
-      files.put("utv/referanse.json", [:])
+      files.put("${APP_NAME}.json" as String, jsonToMap(appOverride))
+      files.put("${ENV_NAME}/${APP_NAME}.json" as String, [:])
 
       def auroraConfig = new AuroraConfig(files)
 
     when:
-      service.createAuroraDcFromAuroraConfig(auroraConfig, "utv", "referanse")
+      service.createAuroraDcFromAuroraConfig(auroraConfig, ENV_NAME, APP_NAME)
 
 
     then:

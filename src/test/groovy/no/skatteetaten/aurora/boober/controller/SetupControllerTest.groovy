@@ -16,6 +16,10 @@ import no.skatteetaten.aurora.boober.utils.SampleFilesCollector
 
 class SetupControllerTest extends AbstractControllerTest {
 
+  public static final String AFFILIATION = "aos"
+  public static final String ENV_NAME = "boobertest"
+  public static final String APP_NAME = "referanse"
+
   def mapper = new Configuration().mapper()
 
   def validationService = new ValidationService()
@@ -28,7 +32,7 @@ class SetupControllerTest extends AbstractControllerTest {
     given:
       def files = SampleFilesCollector.utvReferanseSampleFiles
       files.put("about.json", [:])
-      SetupCommand cmd = new SetupCommand("aos", "utv", "referanse", files, [:])
+      SetupCommand cmd = new SetupCommand(AFFILIATION, ENV_NAME, APP_NAME, files, [:])
       def json = mapper.writeValueAsString(cmd)
 
     when:

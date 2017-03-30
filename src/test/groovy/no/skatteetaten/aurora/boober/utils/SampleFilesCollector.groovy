@@ -8,7 +8,7 @@ import no.skatteetaten.aurora.boober.Configuration
 class SampleFilesCollector {
 
   static Map<String, Map<String, Object>> getUtvReferanseSampleFiles() {
-    return collectFilesToMapOfJsonNode("about.json", "referanse.json", "utv/about.json", "utv/referanse.json")
+    return collectFilesToMapOfJsonNode("about.json", "referanse.json", "boobertest/about.json", "boobertest/referanse.json")
   }
 
   static Map<String, Map<String, Object>> collectFilesToMapOfJsonNode(String... fileNames) {

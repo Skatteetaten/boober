@@ -16,6 +16,9 @@ import spock.lang.Specification
 
 class OpenShiftServiceTest extends Specification {
 
+  public static final String ENV_NAME = "boobertest"
+  public static final String APP_NAME = "referanse"
+
   def setupSpec() {
     setLogLevels()
   }
@@ -35,7 +38,7 @@ class OpenShiftServiceTest extends Specification {
     when:
       def aocConfig = new AuroraConfig(files)
       AuroraDeploymentConfig auroraDc = aocConfigParserService.
-          createAuroraDcFromAuroraConfig(aocConfig, "utv", "referanse")
+          createAuroraDcFromAuroraConfig(aocConfig, ENV_NAME, APP_NAME)
       List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc, "hero")
 
       def configMap = generatedObjects.find { it.get("kind").asText() == "ConfigMap" }
@@ -52,10 +55,10 @@ class OpenShiftServiceTest extends Specification {
           "kind": "Project",
           "apiVersion": "v1",
           "metadata": {
-            "name": "aot-utv",
+            "name": "aos-boobertest",
             "labels": {
               "updatedBy" : "hero",
-              "affiliation": "aot",
+              "affiliation": "aos",
               "openshift.io/requester": "hero"
             }
           }
@@ -71,7 +74,7 @@ class OpenShiftServiceTest extends Specification {
             "labels": {
               "app": "refapp",
               "updatedBy" : "hero",
-              "affiliation": "aot"
+              "affiliation": "aos"
             }
           },
           "spec": {
@@ -92,7 +95,7 @@ class OpenShiftServiceTest extends Specification {
             "labels": {
               "app": "refapp",
               "updatedBy" : "hero",
-              "affiliation": "aot"
+              "affiliation": "aos"
             }
           },
           "data": {
@@ -119,7 +122,7 @@ class OpenShiftServiceTest extends Specification {
             "labels": {
               "app": "refapp",
               "updatedBy" : "hero",
-              "affiliation": "aot"
+              "affiliation": "aos"
             }
           },
           "spec": {
@@ -150,7 +153,7 @@ class OpenShiftServiceTest extends Specification {
             "labels": {
               "app": "refapp",
               "updatedBy" : "hero",
-              "affiliation": "aot"
+              "affiliation": "aos"
             }
           },
           "spec": {
@@ -183,7 +186,7 @@ class OpenShiftServiceTest extends Specification {
             "labels": {
               "app": "refapp",
               "updatedBy" : "hero",
-              "affiliation": "aot"
+              "affiliation": "aos"
             },
             "name": "refapp"
           },
@@ -222,7 +225,7 @@ class OpenShiftServiceTest extends Specification {
                 "labels": {
                   "name": "refapp",
                   "updatedBy" : "hero",
-                  "affiliation": "aot"
+                  "affiliation": "aos"
                 }
               },
               "spec": {
@@ -294,7 +297,7 @@ class OpenShiftServiceTest extends Specification {
                       },        
                       {
                         "name": "ROUTE_NAME",
-                        "value": "http://refapp-aot-utv.utv.paas.skead.no"
+                        "value": "http://refapp-aos-boobertest.utv.paas.skead.no"
                       }
                     ],
                     "resources": {
