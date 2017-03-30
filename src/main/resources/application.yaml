@@ -4,6 +4,14 @@ info:
     podLinks:
         metrics: "{metricsHostname}/dashboard/db/openshift-project-spring-actuator-view-instance?var-ds=openshift-{cluster}-ose&var-namespace={namespace}&var-app={name}&var-instance={podName}"
 
+openshift:
+    url: https://utv-master.paas.skead.no:8443
+
+boober:
+  git:
+    url: "https://git.aurora.skead.no/scm/oc/"
+    username: "boober"
+    password: "komogsyngensang"
 
 management:
     health.status.order: DOWN, OUT_OF_SERVICE, UNKNOWN, COMMENT, UP
@@ -33,22 +41,9 @@ endpoints:
         enabled: false
     jolokia:
         enabled: false
-
-openshift:
-    url: https://utv-master.paas.skead.no:8443
-
-boober:
-  git:
-    url: "https://git.aurora.skead.no/scm/oc/"
-    username: "boober"
-    password: "komogsyngensang"
 spring:
   profiles:
     active: development
-
-
-metrics:
-  resourceUseCollectInterval: "300000"
 
 logging:
   level:
@@ -61,8 +56,6 @@ logging:
       apache:
         catalina: INFO
         velocity: INFO
-
-
 
 ---
 spring:

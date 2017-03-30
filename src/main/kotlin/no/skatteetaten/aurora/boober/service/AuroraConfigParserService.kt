@@ -21,7 +21,7 @@ class AuroraConfigParserService(
             TODO("Only schema v1 supported")
         }
 
-        val auroraDc = createAuroraDeploymentConfig(mergedJson)
+        val auroraDc: AuroraDeploymentConfig = createAuroraDeploymentConfig(mergedJson)
 
         validationService.assertIsValid(auroraDc)
 

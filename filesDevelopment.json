@@ -1,11 +1,11 @@
 {
   "app": "referanse",
-  "env": "utv",
-  "affiliation": "aot",
+  "env": "boober",
+  "affiliation": "paas",
   "files": {
     "about.json": {
       "groups": "APP_PaaS_drift APP_PaaS_utv",
-      "affiliation": "aot",
+      "affiliation": "paas",
       "type": "development",
       "deploy": {
         "SPLUNK_INDEX": "openshift-test"
@@ -15,8 +15,8 @@
       }
     },
     "referanse.json": {
-      "name": "refapp",
-      "replicas": 3,
+      "name": "referansedev",
+      "replicas": 1,
       "flags": [
         "cert"
       ],
@@ -35,10 +35,10 @@
         "foo2": "bar"
       }
     },
-    "utv/about.json": {
+    "boober/about.json": {
       "cluster": "utv"
     },
-    "utv/referanse.json": {
+    "boober/referanse.json": {
     }
   }
 }

@@ -5,55 +5,76 @@ import no.skatteetaten.aurora.boober.controller.SetupController
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
+import org.springframework.http.*
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate
+import java.net.URI
+
+
+enum class OperationType {CREATED, NONE }
 
 
 data class OpenShiftResponse(
+        val operationType: OperationType,
         val payload: JsonNode,
         val responseBody: JsonNode?
 )
 
 @Service
-class OpenShiftClient(@Value("\${openshift.url}") val baseUrl: String, val client: RestTemplate) {
+class OpenShiftClient(
+        @Value("\${openshift.url}") val baseUrl: String,
+        val restTemplate: RestTemplate
+) {
 
     val logger: Logger = LoggerFactory.getLogger(SetupController::class.java)
 
-    fun saveMany(namespace: String, openShiftObjects: List<JsonNode>, token: String): List<OpenShiftResponse> {
+    fun applyMany(namespace: String, openShiftObjects: List<JsonNode>, token: String): List<OpenShiftResponse> {
 
         return openShiftObjects.map {
             Thread.sleep(1000)
             //race condition if we create resources to fast
-            save(namespace, it, token)
+            apply(namespace, it, token)
         }
     }
 
-    fun save(namespace: String, json: JsonNode, token: String): OpenShiftResponse {
+    fun apply(namespace: String, json: JsonNode, token: String): OpenShiftResponse {
 
-        val kind = json.get("kind").asText()
-        val url = createOpenShiftApiUrl(kind, namespace)
+        val urls: OpenShiftApiUrls = OpenShiftApiUrls.createUrlsForResource(baseUrl, namespace, json)
+        val headers: HttpHeaders = createHeaders(token)
 
-        val headers = createHeaders(token)
-        val entity = HttpEntity<JsonNode>(json, headers)
-        val fullUrl = baseUrl + url
-
-        val res: ResponseEntity<JsonNode>?
-        try {
-            res = client.postForEntity(fullUrl, entity, JsonNode::class.java)
-        } catch(e: HttpClientErrorException) {
-            val message = "Error saving url=$url, with message=${e.message}"
-            throw OpenShiftException(message, e)
+        val existingResource: ResponseEntity<JsonNode>? = getExistingResource(headers, urls.get)
+        return if (existingResource != null) {
+            logger.info("Resource ${urls.get} already exists. Skipping...")
+            OpenShiftResponse(OperationType.NONE, json, existingResource.body)
+        } else {
+            logger.info("Creating resource ${urls.get}")
+            val createdResource = createResource(headers, urls.update, json)
+            OpenShiftResponse(OperationType.CREATED, json, createdResource.body)
         }
-        logger.info("Saving resource to $fullUrl with responseBody code ${res.statusCodeValue}")
-        logger.debug("Body=${res.body}")
+    }
 
-        val httpResult: JsonNode? = res?.body
-        return OpenShiftResponse(json, httpResult)
+    private fun getExistingResource(headers: HttpHeaders, url: String): ResponseEntity<JsonNode>? {
+        return try {
+            val requestEntity = RequestEntity<Any>(headers, HttpMethod.GET, URI(url))
+            restTemplate.exchange(requestEntity, JsonNode::class.java)
+        } catch(e: HttpClientErrorException) {
+            if (e.statusCode != HttpStatus.NOT_FOUND) {
+                throw OpenShiftException("An unexpected error occurred when getting resource $url", e)
+            }
+            null
+        }
+    }
+
+    private fun createResource(headers: HttpHeaders, updateUrl: String, payload: JsonNode): ResponseEntity<JsonNode> {
+        val entity = HttpEntity<JsonNode>(payload, headers)
+        val createResponse: ResponseEntity<JsonNode> = try {
+            restTemplate.postForEntity(updateUrl, entity, JsonNode::class.java)
+        } catch(e: HttpClientErrorException) {
+            throw OpenShiftException("Error saving url=$updateUrl, with message=${e.message}", e)
+        }
+        logger.debug("Body=${createResponse.body}")
+        return createResponse
     }
 
     private fun createHeaders(token: String): HttpHeaders {
@@ -61,22 +82,5 @@ class OpenShiftClient(@Value("\${openshift.url}") val baseUrl: String, val clien
         headers.contentType = MediaType.APPLICATION_JSON
         headers.set("Authorization", "Bearer " + token)
         return headers
-    }
-
-    private fun createOpenShiftApiUrl(kind: String, namespace: String): String {
-
-        val endpointKey = kind.toLowerCase() + "s"
-
-        if (endpointKey == "projects") {
-            return "/oapi/v1/projects"
-        }
-
-        val prefix = if (endpointKey in listOf("services", "configmaps")) {
-            "/api"
-        } else {
-            "/oapi"
-        }
-
-        return "$prefix/v1/namespaces/$namespace/$endpointKey"
     }
 }

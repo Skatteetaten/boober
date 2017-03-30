@@ -1,43 +1,43 @@
 {
-  "app" : "referanse",
+  "app": "referanse",
   "env": "boober",
   "affiliation": "paas",
-  "files" :{
-    "about.json" : {
+  "files": {
+    "about.json": {
       "groups": "APP_PaaS_drift APP_PaaS_utv",
       "affiliation": "paas",
       "type": "deploy",
-      "deploy" : {
-        "SPLUNK_INDEX" : "openshift-test"
+      "deploy": {
+        "SPLUNK_INDEX": "openshift-test"
       },
-      "config" : {
-        "foo" : "bar"
+      "config": {
+        "foo": "bar"
       }
     },
-    "referanse.json" : {
-      "name": "boober",
-      "replicas" : 3,
+    "referanse.json": {
+      "name": "referanse",
+      "replicas": 1,
       "flags": [
         "rolling",
         "cert"
       ],
-      "build" : {
-        "GROUP_ID":"ske.aurora.openshift.referanse",
-        "ARTIFACT_ID":"openshift-referanse-springboot-server",
-        "VERSION" : 0
+      "build": {
+        "GROUP_ID": "ske.aurora.openshift.referanse",
+        "ARTIFACT_ID": "openshift-referanse-springboot-server",
+        "VERSION": 0
       },
-      "deploy" : {
-        "PROMETHEUS_ENABLED" : true,
-        "PROMETHEUS_PORT" : "8081",
+      "deploy": {
+        "PROMETHEUS_ENABLED": true,
+        "PROMETHEUS_PORT": "8081",
         "MANAGEMENT_PATH": ":8081/actuator",
         "DATABASE": "referanseapp"
       },
-      "config" : {
-        "foo2" : "bar"
+      "config": {
+        "foo2": "bar"
       }
     },
     "boober/about.json": {
-      "cluster":"utv"
+      "cluster": "utv"
     },
     "boober/referanse.json": {
     }
