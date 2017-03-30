@@ -5,13 +5,11 @@ import no.skatteetaten.aurora.boober.controller.SetupController
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
+import org.springframework.http.*
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate
+import java.net.URI
 
 
 data class OpenShiftResponse(
@@ -35,25 +33,35 @@ class OpenShiftClient(@Value("\${openshift.url}") val baseUrl: String, val clien
 
     fun save(namespace: String, json: JsonNode, token: String): OpenShiftResponse {
 
-        val kind = json.get("kind").asText()
-        val url = createOpenShiftApiUrl(kind, namespace)
+        val kind = json.get("kind")?.asText() ?: throw IllegalArgumentException("kind not specified for resource")
+        val name = json.get("metadata")?.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource")
 
-        val headers = createHeaders(token)
-        val entity = HttpEntity<JsonNode>(json, headers)
-        val fullUrl = baseUrl + url
+        val urls: Urls = createOpenShiftApiUrls(kind, namespace, name)
+        val headers: HttpHeaders = createHeaders(token)
 
-        val res: ResponseEntity<JsonNode>?
-        try {
-            res = client.postForEntity(fullUrl, entity, JsonNode::class.java)
+        val existingResource: ResponseEntity<JsonNode>? = try {
+            val requestEntity = RequestEntity<Any>(headers, HttpMethod.GET, URI(urls.get))
+            client.exchange(requestEntity, JsonNode::class.java)
         } catch(e: HttpClientErrorException) {
-            val message = "Error saving url=$url, with message=${e.message}"
-            throw OpenShiftException(message, e)
+            if (e.statusCode != HttpStatus.NOT_FOUND) {
+                throw OpenShiftException("An unexpected error occurred when getting resource ${urls.get}", e)
+            }
+            null
         }
-        logger.info("Saving resource to $fullUrl with responseBody code ${res.statusCodeValue}")
-        logger.debug("Body=${res.body}")
+        if (existingResource != null) {
+            logger.info("Resource ${urls.get} already exists. Skipping..")
+            return OpenShiftResponse(json, existingResource.body)
+        }
 
-        val httpResult: JsonNode? = res?.body
-        return OpenShiftResponse(json, httpResult)
+        val entity = HttpEntity<JsonNode>(json, headers)
+        val createResponse: ResponseEntity<JsonNode> = try {
+            client.postForEntity(urls.update, entity, JsonNode::class.java)
+        } catch(e: HttpClientErrorException) {
+            throw OpenShiftException("Error saving url=$urls, with message=${e.message}", e)
+        }
+        logger.debug("Body=${createResponse.body}")
+
+        return OpenShiftResponse(json, createResponse.body)
     }
 
     private fun createHeaders(token: String): HttpHeaders {
@@ -63,12 +71,20 @@ class OpenShiftClient(@Value("\${openshift.url}") val baseUrl: String, val clien
         return headers
     }
 
-    private fun createOpenShiftApiUrl(kind: String, namespace: String): String {
+    data class Urls(
+            val update: String,
+            val get: String
+    )
+
+    private fun createOpenShiftApiUrls(kind: String, namespace: String, name: String): Urls {
 
         val endpointKey = kind.toLowerCase() + "s"
 
         if (endpointKey == "projects") {
-            return "/oapi/v1/projects"
+            return Urls(
+                    update = "$baseUrl/oapi/v1/projects",
+                    get = "$baseUrl/oapi/v1/projects/$name"
+            )
         }
 
         val prefix = if (endpointKey in listOf("services", "configmaps")) {
@@ -77,6 +93,9 @@ class OpenShiftClient(@Value("\${openshift.url}") val baseUrl: String, val clien
             "/oapi"
         }
 
-        return "$prefix/v1/namespaces/$namespace/$endpointKey"
+        return Urls(
+                update = "$baseUrl/$prefix/v1/namespaces/$namespace/$endpointKey",
+                get = "$baseUrl/$prefix/v1/namespaces/$namespace/$endpointKey/$name"
+        )
     }
 }
