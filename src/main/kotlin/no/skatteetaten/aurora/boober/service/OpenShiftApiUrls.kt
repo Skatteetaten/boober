@@ -22,7 +22,7 @@ class OpenShiftApiUrls(
             val apiType = if (endpointKey in listOf("services", "configmaps")) "api" else "oapi"
             val namespacePrefix = if (endpointKey !in listOf("projects")) "/namespaces/$namespace" else ""
 
-            val resourceBasePath = "$baseUrl/$apiType/v1$namespacePrefix"
+            val resourceBasePath = "$baseUrl/$apiType/v1$namespacePrefix/$endpointKey"
 
             return OpenShiftApiUrls(
                     update = resourceBasePath,

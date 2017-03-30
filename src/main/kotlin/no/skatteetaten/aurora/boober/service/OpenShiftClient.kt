@@ -12,7 +12,11 @@ import org.springframework.web.client.RestTemplate
 import java.net.URI
 
 
+enum class OperationType {CREATED, NONE }
+
+
 data class OpenShiftResponse(
+        val operationType: OperationType,
         val payload: JsonNode,
         val responseBody: JsonNode?
 )
@@ -39,10 +43,15 @@ class OpenShiftClient(
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createUrlsForResource(baseUrl, namespace, json)
         val headers: HttpHeaders = createHeaders(token)
 
-        val resource: ResponseEntity<JsonNode> = getExistingResource(headers, urls.get)
-                ?: createResource(headers, urls.update, json)
-
-        return OpenShiftResponse(json, resource.body)
+        val existingResource: ResponseEntity<JsonNode>? = getExistingResource(headers, urls.get)
+        return if (existingResource != null) {
+            logger.info("Resource ${urls.get} already exists. Skipping...")
+            OpenShiftResponse(OperationType.NONE, json, existingResource.body)
+        } else {
+            logger.info("Creating resource ${urls.get}")
+            val createdResource = createResource(headers, urls.update, json)
+            OpenShiftResponse(OperationType.CREATED, json, createdResource.body)
+        }
     }
 
     private fun getExistingResource(headers: HttpHeaders, url: String): ResponseEntity<JsonNode>? {
