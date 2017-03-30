@@ -2,10 +2,8 @@ package no.skatteetaten.aurora.boober.controller
 
 
 import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.service.SetupResult
+import no.skatteetaten.aurora.boober.service.ApplicationResult
 import no.skatteetaten.aurora.boober.service.SetupService
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
@@ -15,12 +13,13 @@ import org.springframework.web.bind.annotation.RestController
 class SetupController(val setupService: SetupService) {
 
     @PutMapping("/setup")
-    fun setup(@RequestHeader(value = "Authentication") rawToken: String, @RequestBody cmd: SetupCommand): SetupResult {
+    fun setup(@RequestHeader(value = "Authentication") rawToken: String, @RequestBody cmd: SetupCommand): Response {
 
         val token = rawToken.split(" ")[1]
 
         val auroraConfig = AuroraConfig(cmd.files)
-        return setupService.executeSetup(token, auroraConfig, cmd.env, cmd.app!!)
+        val applicationResults: List<ApplicationResult> = setupService.executeSetup(token, auroraConfig, cmd.env, cmd.app!!)
+        return Response(items = applicationResults)
     }
 }
 
