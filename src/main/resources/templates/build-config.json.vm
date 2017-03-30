@@ -2,11 +2,11 @@
   "kind": "BuildConfig",
   "apiVersion": "v1",
   "metadata": {
-    "name": "${app.name}",
+    "name": "${adc.name}",
     "labels": {
-      "app": "${app.name}",
-      "updatedBy": "${app.username}",
-      "affiliation": "${app.affiliation}"
+      "app": "${adc.name}",
+      "updatedBy": "${username}",
+      "affiliation": "${adc.affiliation}"
     }
   },
   "spec": {
@@ -17,7 +17,7 @@
           "from": {
             "kind": "ImageStreamTag",
             "namespace": "openshift",
-            "name": "${docker.base.name}:${docker.base.version}"
+            "name": "${base.name}:${base.version}"
           }
         }
       },
@@ -32,32 +32,32 @@
         "from": {
           "kind": "ImageStreamTag",
           "namespace": "openshift",
-          "name": "${docker.builder.name}:${docker.builder.version}"
+          "name": "${builder.name}:${builder.version}"
         },
         "env": [
           {
             "name": "ARTIFACT_ID",
-            "value": "${docker.name}"
+            "value": "${adc.artifactId}"
           },
           {
             "name": "GROUP_ID",
-            "value": "${docker.group}"
+            "value": "${adc.groupId}"
           },
           {
             "name": "VERSION",
-            "value": "${docker.version}"
+            "value": "${adc.version}"
           },
           {
             "name": "DOCKER_BASE_VERSION",
-            "value": "${docker.builder.version}"
+            "value": "${base.version}"
           },
           {
             "name": "DOCKER_BASE_IMAGE",
-            "value": "aurora/${docker.builder.name}"
+            "value": "aurora/${base.name}"
           },
           {
             "name": "PUSH_EXTRA_TAGS",
-            "value": "${docker.extratags}"
+            "value": "${adc.deployDescriptor.extratags}"
           }
         ],
         "exposeDockerSocket": true
@@ -66,7 +66,7 @@
     "output": {
       "to": {
         "kind": "ImageStreamTag",
-        "name": "${app.name}:latest"
+        "name": "${adc.name}:latest"
       }
     }
   }
