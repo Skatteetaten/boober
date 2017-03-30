@@ -8,8 +8,10 @@
       "updatedBy" : "${username}",
       "affiliation": "${adc.affiliation}"
     }
-  },
-  "data": {
+  }
+  #if (${configMap})
+  ,"data": {
     "latest.properties": "${configMap}"
   }
+  #end
 }

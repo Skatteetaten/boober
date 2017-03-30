@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import static no.skatteetaten.aurora.boober.LoggingUtilsKt.setLogLevels
-import static no.skatteetaten.aurora.boober.utils.SampleFilesCollector.getUtvReferanseSampleFiles
+import static no.skatteetaten.aurora.boober.utils.SampleFilesCollector.getQaEbsUsersSampleFiles
 
 import org.apache.velocity.app.VelocityEngine
 
@@ -16,8 +16,8 @@ import spock.lang.Specification
 
 class OpenShiftServiceTest extends Specification {
 
-  public static final String ENV_NAME = "boobertest"
-  public static final String APP_NAME = "referanse"
+  public static final String ENV_NAME = "booberdev"
+  public static final String APP_NAME = "verify-ebs-users"
 
   def setupSpec() {
     setLogLevels()
@@ -33,7 +33,7 @@ class OpenShiftServiceTest extends Specification {
 
   def "Should create six OpenShift objects from Velocity templates"() {
     given:
-      Map<String, JsonNode> files = getUtvReferanseSampleFiles()
+      Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
 
     when:
       def aocConfig = new AuroraConfig(files)
@@ -55,7 +55,7 @@ class OpenShiftServiceTest extends Specification {
           "kind": "Project",
           "apiVersion": "v1",
           "metadata": {
-            "name": "aos-boobertest",
+            "name": "aos-booberdev",
             "labels": {
               "updatedBy" : "hero",
               "affiliation": "aos",
@@ -70,9 +70,9 @@ class OpenShiftServiceTest extends Specification {
           "kind": "Route",
           "apiVersion": "v1",
           "metadata": {
-            "name": "refapp",
+            "name": "verify-ebs-users",
             "labels": {
-              "app": "refapp",
+              "app": "verify-ebs-users",
               "updatedBy" : "hero",
               "affiliation": "aos"
             }
@@ -80,7 +80,7 @@ class OpenShiftServiceTest extends Specification {
           "spec": {
             "to": {
               "kind": "Service",
-              "name": "refapp"
+              "name": "verify-ebs-users"
             }
           }
         }
@@ -91,15 +91,12 @@ class OpenShiftServiceTest extends Specification {
           "kind": "ConfigMap",
           "apiVersion": "v1",
           "metadata": {
-            "name": "refapp",
+            "name": "verify-ebs-users",
             "labels": {
-              "app": "refapp",
+              "app": "verify-ebs-users",
               "updatedBy" : "hero",
               "affiliation": "aos"
             }
-          },
-          "data": {
-            "latest.properties": "SERVER_URL=http://localhost:8080"
           }
         }
       """)
@@ -109,18 +106,18 @@ class OpenShiftServiceTest extends Specification {
           "kind": "Service",
           "apiVersion": "v1",
           "metadata": {
-            "name": "refapp",
+            "name": "verify-ebs-users",
             "annotations": {
               "sprocket.sits.no/service.webseal": "",
               "sprocket.sits.no/service.webseal-roles": "",
               "prometheus.io/scheme": "http",
               "prometheus.io/scrape": "true",
               "prometheus.io/path": "/prometheus",
-              "prometheus.io/port": "8081"
+              "prometheus.io/port": "8080"
         
             },
             "labels": {
-              "app": "refapp",
+              "app": "verify-ebs-users",
               "updatedBy" : "hero",
               "affiliation": "aos"
             }
@@ -136,7 +133,7 @@ class OpenShiftServiceTest extends Specification {
               }
             ],
             "selector": {
-              "name": "refapp"
+              "name": "verify-ebs-users"
             },
             "type": "ClusterIP",
             "sessionAffinity": "None"
@@ -149,25 +146,12 @@ class OpenShiftServiceTest extends Specification {
           "kind": "ImageStream",
           "apiVersion": "v1",
           "metadata": {
-            "name": "refapp",
+            "name": "verify-ebs-users",
             "labels": {
-              "app": "refapp",
+              "app": "verify-ebs-users",
               "updatedBy" : "hero",
               "affiliation": "aos"
             }
-          },
-          "spec": {
-            "dockerImageRepository": "docker-registry.aurora.sits.no:5000/ske_aurora_openshift_referanse/openshift-referanse-springboot-server",
-            "tags": [{
-              "name": "default",
-              "from": {
-                "kind": "DockerImage",
-                "name": "docker-registry.aurora.sits.no:5000/ske_aurora_openshift_referanse/openshift-referanse-springboot-server:1"
-              },
-              "importPolicy": {
-                "scheduled": true
-              }
-            }]
           }
         }
       """)
@@ -178,17 +162,16 @@ class OpenShiftServiceTest extends Specification {
           "apiVersion": "v1",
           "metadata": {
             "annotations": {
-              "marjory.skatteetaten.no/management-path": ":8081/actuator",
+              "marjory.skatteetaten.no/management-path": "",
               "marjory.skatteetaten.no/alarm": "true",
-              "sprocket.sits.no/deployment-config.certificate": "ske.aurora.openshift.referanse.refapp",
-              "sprocket.sits.no/deployment-config.database": "referanseapp"
+              "sprocket.sits.no/deployment-config.certificate": "ske.admin.lisens.verify-ebs-users"
             },
             "labels": {
-              "app": "refapp",
+              "app": "verify-ebs-users",
               "updatedBy" : "hero",
               "affiliation": "aos"
             },
-            "name": "refapp"
+            "name": "verify-ebs-users"
           },
           "spec": {
              "strategy": {
@@ -207,23 +190,23 @@ class OpenShiftServiceTest extends Specification {
                     "imageChangeParams": {
                       "automatic": true,
                       "containerNames": [
-                        "refapp"
+                        "verify-ebs-users"
                       ],
                       "from": {
-                        "name": "refapp:default",
+                        "name": "verify-ebs-users:default",
                         "kind": "ImageStreamTag"
                       }
                     }
                   }
             ],
-            "replicas": 3,
+            "replicas": 1,
             "selector": {
-              "name": "refapp"
+              "name": "verify-ebs-users"
             },
             "template": {
               "metadata": {
                 "labels": {
-                  "name": "refapp",
+                  "name": "verify-ebs-users",
                   "updatedBy" : "hero",
                   "affiliation": "aos"
                 }
@@ -237,13 +220,13 @@ class OpenShiftServiceTest extends Specification {
                   {
                     "name": "config",
                     "configMap": {
-                      "name": "refapp"
+                      "name": "verify-ebs-users"
                     }
                   }
                 ],
                 "containers": [
                   {
-                    "name": "refapp",
+                    "name": "verify-ebs-users",
                     "ports": [
                       {
                         "containerPort": 8080,
@@ -293,17 +276,17 @@ class OpenShiftServiceTest extends Specification {
                       },
                       {
                         "name": "APP_NAME",
-                        "value": "refapp"
+                        "value": "verify-ebs-users"
                       },        
                       {
                         "name": "ROUTE_NAME",
-                        "value": "http://refapp-aos-boobertest.utv.paas.skead.no"
+                        "value": "http://verify-ebs-users-aos-booberdev.qa.paas.skead.no"
                       }
                     ],
                     "resources": {
                       "limits": {
                         "cpu": "2000m",
-                        "memory": "256Mi"
+                        "memory": "128Mi"
                       },
                       "requests": {
                         "cpu": "0",

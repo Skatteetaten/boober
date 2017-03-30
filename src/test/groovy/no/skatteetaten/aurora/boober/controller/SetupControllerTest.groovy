@@ -17,8 +17,8 @@ import no.skatteetaten.aurora.boober.utils.SampleFilesCollector
 class SetupControllerTest extends AbstractControllerTest {
 
   public static final String AFFILIATION = "aos"
-  public static final String ENV_NAME = "boobertest"
-  public static final String APP_NAME = "referanse"
+  public static final String ENV_NAME = "booberdev"
+  public static final String APP_NAME = "verify-ebs-users"
 
   def mapper = new Configuration().mapper()
 
@@ -30,7 +30,7 @@ class SetupControllerTest extends AbstractControllerTest {
 
   def "Should fail"() {
     given:
-      def files = SampleFilesCollector.utvReferanseSampleFiles
+      def files = SampleFilesCollector.qaEbsUsersSampleFiles
       files.put("about.json", [:])
       SetupCommand cmd = new SetupCommand(AFFILIATION, ENV_NAME, APP_NAME, files, [:])
       def json = mapper.writeValueAsString(cmd)

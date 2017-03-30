@@ -1,8 +1,0 @@
-{
-  "build" : {
-    "VERSION" : "1"
-  },
-  "config": {
-    "SERVER_URL": "http://localhost:8080"
-  }
-}

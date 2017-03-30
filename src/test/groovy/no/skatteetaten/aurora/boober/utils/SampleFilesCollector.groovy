@@ -7,8 +7,11 @@ import no.skatteetaten.aurora.boober.Configuration
 
 class SampleFilesCollector {
 
-  static Map<String, Map<String, Object>> getUtvReferanseSampleFiles() {
-    return collectFilesToMapOfJsonNode("about.json", "referanse.json", "boobertest/about.json", "boobertest/referanse.json")
+  public static final String ENV_NAME = "booberdev"
+  public static final String APP_NAME = "verify-ebs-users"
+
+  static Map<String, Map<String, Object>> getQaEbsUsersSampleFiles() {
+    return collectFilesToMapOfJsonNode("about.json", "${APP_NAME}.json", "${ENV_NAME}/about.json", "${ENV_NAME}/${APP_NAME}.json")
   }
 
   static Map<String, Map<String, Object>> collectFilesToMapOfJsonNode(String... fileNames) {
