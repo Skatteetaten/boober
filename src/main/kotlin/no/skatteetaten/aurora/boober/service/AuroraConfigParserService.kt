@@ -78,7 +78,7 @@ class AuroraConfigParserService(
 
         var certificateCn = deployJson.s("CERTIFICATE_CN")
         val generateCertificate = json.a("flags")?.contains("cert") ?: false || certificateCn != null
-        if (generateCertificate && certificateCn == null) {
+        if (certificateCn == null) {
             certificateCn = groupId + "." + name
         }
 
@@ -94,7 +94,7 @@ class AuroraConfigParserService(
                 maxMemory = deployJson.s("MAX_MEMORY") ?: "256Mi",
                 database = deployJson.s("DATABASE"),
                 generateCertificate = generateCertificate,
-                certificateCn = certificateCn!!,
+                certificateCn = certificateCn,
                 tag = deployJson.s("TAG") ?: "default",
                 cpuRequest = deployJson.s("CPU_REQUEST") ?: "0",
                 websealRoute = deployJson.s("ROUTE_WEBSEAL"),
