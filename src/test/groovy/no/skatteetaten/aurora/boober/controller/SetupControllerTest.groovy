@@ -27,7 +27,7 @@ class SetupControllerTest extends AbstractControllerTest {
   def "Should fail"() {
     given:
       def files = SampleFilesCollector.utvReferanseSampleFiles
-      files.put("about.json", mapper.readTree("{}"))
+      files.put("about.json", [:])
       SetupCommand cmd = new SetupCommand("aos", "utv", "referanse", files, [:])
       def json = mapper.writeValueAsString(cmd)
 

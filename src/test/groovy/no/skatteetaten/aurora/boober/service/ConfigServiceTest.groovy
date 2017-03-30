@@ -1,11 +1,8 @@
 package no.skatteetaten.aurora.boober.service
 
 import static no.skatteetaten.aurora.boober.utils.SampleFilesCollector.getUtvReferanseSampleFiles
+import static no.skatteetaten.aurora.boober.utils.SampleFilesCollector.jsonToMap
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-
-import no.skatteetaten.aurora.boober.Configuration
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
@@ -14,14 +11,13 @@ import spock.lang.Specification
 
 class ConfigServiceTest extends Specification {
 
-  ObjectMapper mapper = new Configuration().mapper()
   def validationService = new ValidationService()
   AuroraConfigParserService service = new AuroraConfigParserService(validationService)
 
   def "Should fail due to missing config file"() {
 
     given:
-      Map<String, JsonNode> files = getUtvReferanseSampleFiles()
+      Map<String, Map<String, Object>> files = getUtvReferanseSampleFiles()
       files.remove("referanse.json")
       def auroraConfig = new AuroraConfig(files)
 
@@ -35,7 +31,7 @@ class ConfigServiceTest extends Specification {
   def "Should successfully merge all config files"() {
 
     given:
-      Map<String, JsonNode> files = getUtvReferanseSampleFiles()
+      Map<String, Map<String, Object>> files = getUtvReferanseSampleFiles()
       def auroraConfig = new AuroraConfig(files)
 
     when:
@@ -43,6 +39,7 @@ class ConfigServiceTest extends Specification {
 
     then:
       with(auroraDc) {
+        namespace == "aot-utv"
         affiliation == "aot"
         name == "refapp"
         cluster == "utv"
@@ -67,7 +64,7 @@ class ConfigServiceTest extends Specification {
   def "Should override name property in 'app'.json with name in 'env'/'app'.json"() {
 
     given:
-      Map<String, JsonNode> files = getUtvReferanseSampleFiles()
+      Map<String, Map<String, Object>> files = getUtvReferanseSampleFiles()
 
       def envAppOverride = """
         {
@@ -75,7 +72,7 @@ class ConfigServiceTest extends Specification {
         }
       """
 
-      files.put("utv/referanse.json", mapper.readTree(envAppOverride))
+      files.put("utv/referanse.json", jsonToMap(envAppOverride))
 
       def auroraConfig = new AuroraConfig(files)
 
@@ -89,7 +86,7 @@ class ConfigServiceTest extends Specification {
   def "Should throw ValidationException due to missing required properties"() {
 
     given: "AuroraConfig without build properties"
-      Map<String, JsonNode> files = getUtvReferanseSampleFiles()
+      Map<String, Map<String, Object>> files = getUtvReferanseSampleFiles()
 
       def appOverride = """
         {
@@ -105,8 +102,8 @@ class ConfigServiceTest extends Specification {
         }
       """
 
-      files.put("referanse.json", mapper.readTree(appOverride))
-      files.put("utv/referanse.json", mapper.readTree("{}"))
+      files.put("referanse.json", jsonToMap(appOverride))
+      files.put("utv/referanse.json", [:])
 
       def auroraConfig = new AuroraConfig(files)
 
@@ -118,4 +115,5 @@ class ConfigServiceTest extends Specification {
       def ex = thrown(ValidationException)
       ex.errors.size() == 3
   }
+
 }

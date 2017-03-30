@@ -1,8 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.JsonNodeFactory
-import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.AuroraDeploy.Prometheus
 import no.skatteetaten.aurora.boober.model.DeploymentStrategy.recreate
@@ -18,7 +15,7 @@ class AuroraConfigParserService(
 
         val mergedJson = auroraConfig.getMergedFileForApplication(environmentName, applicationName)
 
-        val schemaVersion = mergedJson.get("schemaVersion")?.asText() ?: "v1"
+        val schemaVersion = mergedJson["schemaVersion"] ?: "v1"
 
         if (schemaVersion != "v1") {
             TODO("Only schema v1 supported")
@@ -31,7 +28,7 @@ class AuroraConfigParserService(
         return auroraDc
     }
 
-    private fun createAuroraDeploymentConfig(json: JsonNode): AuroraDeploymentConfig {
+    private fun createAuroraDeploymentConfig(json: Map<String, Any?>): AuroraDeploymentConfig {
 
         val type = json.s("type")?.let { TemplateType.valueOf(it) }
         var name = json.s("name")
@@ -48,7 +45,7 @@ class AuroraConfigParserService(
             }
         }
 
-        val flags = json.l("flags")
+        val flags = json.a("flags")
         val auroraDeploymentConfig = AuroraDeploymentConfig(
                 affiliation = json.s("affiliation") ?: "",
                 cluster = json.s("cluster") ?: "",
@@ -60,20 +57,18 @@ class AuroraConfigParserService(
                 secretFile = json.s("secretFile") ?: "",
                 type = type,
                 users = json.s("users") ?: "",
-                route = flags.contains("route"),
-                deploymentStrategy = if (flags.contains("rolling")) rolling else recreate,
+                route = flags?.contains("route") ?: false,
+                deploymentStrategy = if (flags?.contains("rolling") ?: false) rolling else recreate,
                 deployDescriptor = deployDescriptor
         )
 
         return auroraDeploymentConfig
     }
 
-    private fun createAuroraDeploy(json: JsonNode): AuroraDeploy {
+    private fun createAuroraDeploy(json: Map<String, Any?>): AuroraDeploy {
 
-        val factory = JsonNodeFactory.instance
-
-        val buildJson: JsonNode = json.get("build") ?: factory.objectNode()
-        val deployJson: JsonNode = json.get("deploy") ?: factory.objectNode()
+        val buildJson = json.m("build") ?: mapOf()
+        val deployJson = json.m("deploy") ?: mapOf()
 
         val artifactId = buildJson.s("ARTIFACT_ID")
         val groupId = buildJson.s("GROUP_ID")
@@ -82,13 +77,13 @@ class AuroraConfigParserService(
         name = name ?: artifactId
 
         var certificateCn = deployJson.s("CERTIFICATE_CN")
-        val generateCertificate = json.l("flags").contains("cert") || certificateCn != null
+        val generateCertificate = json.a("flags")?.contains("cert") ?: false || certificateCn != null
         if (generateCertificate && certificateCn == null) {
             certificateCn = groupId + "." + name
         }
 
         val prometheus = if (deployJson.b("PROMETHEUS_ENABLED") ?: true) Prometheus(
-                deployJson.i("PROMETHEUS_PORT") ?: 8080,
+                deployJson.s("PROMETHEUS_PORT")?.toInt() ?: 8080,
                 deployJson.s("PROMETHEUS_PATH") ?: "/prometheus"
         ) else null
         return AuroraDeploy(
@@ -112,13 +107,8 @@ class AuroraConfigParserService(
     }
 }
 
-fun JsonNode.s(field: String): String? = this.get(field)?.asText()
-fun JsonNode.i(field: String): Int? = this.get(field)?.asInt()
-fun JsonNode.b(field: String): Boolean? = this.get(field)?.asBoolean()
-fun JsonNode.l(field: String): List<String> = this.get(field)?.toList()?.map(JsonNode::asText) ?: listOf()
-fun JsonNode.m(field: String): Map<String, String> {
-    val objectNode = this.get(field) as ObjectNode?
-    return mutableMapOf<String, String>().apply {
-        objectNode?.fields()?.forEach { put(it.key, it.value.asText()) }
-    }
-}
+fun Map<String, Any?>.s(field: String): String? = this[field] as String?
+fun Map<String, Any?>.i(field: String): Int? = this[field] as Int?
+fun Map<String, Any?>.m(field: String): Map<String, Any?>? = this[field] as Map<String, Any?>?
+fun Map<String, Any?>.b(field: String): Boolean? = this[field] as Boolean?
+fun Map<String, Any?>.a(field: String): List<String>? = this[field] as List<String>?

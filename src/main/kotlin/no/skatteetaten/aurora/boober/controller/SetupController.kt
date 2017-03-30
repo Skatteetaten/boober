@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.controller
 
 
-import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.SetupResult
 import no.skatteetaten.aurora.boober.service.SetupService
@@ -18,14 +17,13 @@ class SetupController(val setupService: SetupService) {
     val logger: Logger = LoggerFactory.getLogger(SetupController::class.java)
 
     @PutMapping("/setup")
-    fun setup(@RequestHeader(value = "Authentication") rawToken: String,
-              @RequestBody cmd: SetupCommand): SetupResult {
+    fun setup(@RequestHeader(value = "Authentication") rawToken: String, @RequestBody cmd: SetupCommand): SetupResult {
 
         val token = rawToken.split(" ")[1]
 
         logger.info("Setting up ${cmd.app} in ${cmd.env} with token $token")
 
-        val auroraConfig = AuroraConfig(cmd.files!!)
+        val auroraConfig = AuroraConfig(cmd.files)
         return setupService.executeSetup(token, auroraConfig, cmd.env, cmd.app!!)
     }
 }
@@ -33,5 +31,5 @@ class SetupController(val setupService: SetupService) {
 data class SetupCommand(val affiliation: String,
                         val env: String,
                         val app: String?,
-                        val files: Map<String, JsonNode>?,
-                        val overrides: Map<String, JsonNode>?)
+                        val files: Map<String, Map<String, Any?>>,
+                        val overrides: Map<String, Map<String, Any?>>?)

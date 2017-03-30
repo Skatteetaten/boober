@@ -31,7 +31,7 @@ class AuroraDeploymentConfig(
         val users: String?,
         val replicas: Int?,
         val secretFile: String?,
-        val config: Map<String, String>?,
+        val config: Map<String, Any?>?,
         val route: Boolean = false,
         val deploymentStrategy: DeploymentStrategy?,
         val deployDescriptor: Any?

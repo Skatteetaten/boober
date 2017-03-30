@@ -1,29 +1,25 @@
 package no.skatteetaten.aurora.boober.utils
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-
 
 /**
  * Creates a copy of node1 and copies (and potentially overwriting) all properties from node2 into it.
  * @param node1
  * @param node2
  */
-fun createMergeCopy(node1: JsonNode, node2: JsonNode): JsonNode {
-    val mergeTarget: ObjectNode = node1.deepCopy()
+fun createMergeCopy(node1: Map<String, Any?>, node2: Map<String, Any?>): Map<String, Any?> {
+    val mergeTarget: MutableMap<String, Any?> = HashMap(node1)
     return copyJsonProperties(mergeTarget, node2)
 }
 
-fun copyJsonProperties(targetNode: ObjectNode, sourceNode: JsonNode): ObjectNode {
-    sourceNode.fieldNames().forEach { field ->
-        val sourceProperty: JsonNode = sourceNode.get(field).deepCopy()
-        when (sourceProperty) {
-            is ObjectNode -> {
-                val targetProperty = targetNode.get(field) as ObjectNode?
-                targetProperty?.setAll(sourceProperty) ?: targetNode.set(field, sourceProperty)
+fun copyJsonProperties(targetNode: MutableMap<String, Any?>, sourceNode: Map<String, Any?>): Map<String, Any?> {
+    sourceNode.forEach { (key, value) ->
+        when (value) {
+            is Map<*, *> -> {
+                val targetProperty = targetNode[key] as MutableMap<String, Any?>?
+                targetProperty?.putAll(value as Map<String, Any?>) ?: targetNode.put(key, value)
             }
             else -> {
-                targetNode.replace(field, sourceProperty)
+                targetNode.put(key, value)
             }
         }
     }
