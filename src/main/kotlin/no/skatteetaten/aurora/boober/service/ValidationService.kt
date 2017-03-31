@@ -20,7 +20,7 @@ class ValidationService(/*val openShiftService: OpenShiftService*/) {
         val errors = auroraDcErrors.map{ "${it.propertyPath}: ${it.message}" }
 
         if (errors.isNotEmpty()) {
-            throw ValidationException("AOC config contains errors", errors = errors)
+            throw ValidationException("Aurora config files contains errors", errors = errors)
         }
         //TODO:validate that all users/groups are actually valid groups/users
 /*
@@ -58,7 +58,7 @@ class AuroraConfigRequiredV1(val config: Map<String, Any?>?, val build: Map<Stri
 
     @get:Pattern(message = "Must be valid DNSDNS952 label", regexp = "^[a-z][-a-z0-9]{0,23}[a-z0-9]$")
     val name
-        get() = config?.s("name") ?: build.s("ARTIFACT_ID")
+        get() = config?.s("name") ?: build?.s("ARTIFACT_ID")
 
     val envName
         get() = config?.s("envName")

@@ -8,7 +8,7 @@ enum class DeploymentStrategy {
     rolling, recreate
 }
 
-class AuroraDeploymentConfig(
+data class AuroraDeploymentConfig(
         val affiliation: String,
         val cluster: String,
         val type: TemplateType,

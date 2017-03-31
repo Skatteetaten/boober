@@ -20,8 +20,8 @@ class AuroraConfigParserService(
         return createAuroraDeploymentConfig(mergedJson)
     }
 
-    private fun createAuroraDeploymentConfig(json: Map<String, Any?>): AuroraDeploymentConfig {
 
+    private fun createAuroraDeploymentConfig(json: Map<String, Any?>): AuroraDeploymentConfig {
 
         val type = json.s("type").let { TemplateType.valueOf(it!!) }
         var name = json.s("name")
@@ -66,8 +66,7 @@ class AuroraConfigParserService(
         val artifactId = buildJson.s("ARTIFACT_ID")
         val groupId = buildJson.s("GROUP_ID")
 
-        var name: String? = json.s("name")
-        name = name ?: artifactId
+        val name: String? = json.s("name") ?: artifactId
 
         var certificateCn = deployJson.s("CERTIFICATE_CN")
         val generateCertificate = json.a("flags")?.contains("cert") ?: false || certificateCn != null
@@ -75,10 +74,6 @@ class AuroraConfigParserService(
             certificateCn = groupId + "." + name
         }
 
-        val prometheus = if (deployJson.b("PROMETHEUS_ENABLED") ?: true) Prometheus(
-                deployJson.s("PROMETHEUS_PORT")?.toInt() ?: 8080,
-                deployJson.s("PROMETHEUS_PATH") ?: "/prometheus"
-        ) else null
         return AuroraDeploy(
                 artifactId = artifactId!!,
                 groupId = groupId!!,
@@ -92,11 +87,18 @@ class AuroraConfigParserService(
                 cpuRequest = deployJson.s("CPU_REQUEST") ?: "0",
                 websealRoute = deployJson.s("ROUTE_WEBSEAL"),
                 websealRoles = deployJson.s("ROUTE_WEBSEAL_ROLES"),
-                prometheus = prometheus,
+                prometheus = createPrometheus(deployJson),
                 managementPath = deployJson.s("MANAGEMENT_PATH") ?: "",
                 debug = deployJson.b("DEBUG") ?: false,
                 alarm = deployJson.b("ALARM") ?: true
         )
+    }
+
+    private fun createPrometheus(deployJson: Map<String, Any?>): Prometheus? {
+        return if (deployJson.b("PROMETHEUS_ENABLED") ?: true) Prometheus(
+                deployJson.s("PROMETHEUS_PORT")?.toInt() ?: 8080,
+                deployJson.s("PROMETHEUS_PATH") ?: "/prometheus"
+        ) else null
     }
 }
 
