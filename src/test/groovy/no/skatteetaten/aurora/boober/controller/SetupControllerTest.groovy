@@ -44,10 +44,7 @@ class SetupControllerTest extends AbstractControllerTest {
       def body = new JsonSlurper().parseText(response.andReturn().response.getContentAsString())
 
     then:
-      body.errors.size() == 3
-      body.errors.affiliation != null
-      body.errors.namespace != null
-      body.errors.type != null
+      body.items.size() == 1
       response.andExpect(status().is4xxClientError())
   }
 

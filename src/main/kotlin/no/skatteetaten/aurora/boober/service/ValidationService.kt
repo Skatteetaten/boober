@@ -17,7 +17,7 @@ class ValidationService(/*val openShiftService: OpenShiftService*/) {
         val config = AuroraConfigRequiredV1(mergedJson, mergedJson?.m("build"))
         val auroraDcErrors = validator.validate(config)
 
-        val errors = auroraDcErrors.associateBy({ it.propertyPath.toString() }, { it.message })
+        val errors = auroraDcErrors.map{ "${it.propertyPath}: ${it.message}" }
 
         if (errors.isNotEmpty()) {
             throw ValidationException("AOC config contains errors", errors = errors)
@@ -41,7 +41,6 @@ class ValidationService(/*val openShiftService: OpenShiftService*/) {
     }
 }
 
-
 class AuroraConfigRequiredV1(val config: Map<String, Any?>?, val build: Map<String, Any?>?) {
 
     @get:NotNull
@@ -59,7 +58,7 @@ class AuroraConfigRequiredV1(val config: Map<String, Any?>?, val build: Map<Stri
 
     @get:Pattern(message = "Must be valid DNSDNS952 label", regexp = "^[a-z][-a-z0-9]{0,23}[a-z0-9]$")
     val name
-        get() = config?.s("name")
+        get() = config?.s("name") ?: build.s("ARTIFACT_ID")
 
     val envName
         get() = config?.s("envName")
