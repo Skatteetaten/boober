@@ -15,22 +15,15 @@ class AuroraConfigParserService(
 
         val mergedJson = auroraConfig.getMergedFileForApplication(environmentName, applicationName)
 
-        val schemaVersion = mergedJson["schemaVersion"] ?: "v1"
+        validationService.assertIsValid(mergedJson)
 
-        if (schemaVersion != "v1") {
-            TODO("Only schema v1 supported")
-        }
-
-        val auroraDc: AuroraDeploymentConfig = createAuroraDeploymentConfig(mergedJson)
-
-        validationService.assertIsValid(auroraDc)
-
-        return auroraDc
+        return createAuroraDeploymentConfig(mergedJson)
     }
 
     private fun createAuroraDeploymentConfig(json: Map<String, Any?>): AuroraDeploymentConfig {
 
-        val type = json.s("type")?.let { TemplateType.valueOf(it) }
+
+        val type = json.s("type").let { TemplateType.valueOf(it!!) }
         var name = json.s("name")
 
         val deployDescriptor: Any = when (type) {
@@ -47,15 +40,15 @@ class AuroraConfigParserService(
 
         val flags = json.a("flags")
         val auroraDeploymentConfig = AuroraDeploymentConfig(
-                affiliation = json.s("affiliation") ?: "",
-                cluster = json.s("cluster") ?: "",
+                affiliation = json.s("affiliation")!!,
+                cluster = json.s("cluster")!!,
+                type = type,
+                name = name!!,
                 config = json.m("config"),
                 envName = json.s("envName") ?: "",
                 groups = json.s("groups") ?: "",
-                name = name!!,
                 replicas = json.i("replicas") ?: 1,
                 secretFile = json.s("secretFile") ?: "",
-                type = type,
                 users = json.s("users") ?: "",
                 route = flags?.contains("route") ?: false,
                 deploymentStrategy = if (flags?.contains("rolling") ?: false) rolling else recreate,
@@ -87,9 +80,9 @@ class AuroraConfigParserService(
                 deployJson.s("PROMETHEUS_PATH") ?: "/prometheus"
         ) else null
         return AuroraDeploy(
-                artifactId = artifactId,
-                groupId = groupId,
-                version = buildJson.s("VERSION"),
+                artifactId = artifactId!!,
+                groupId = groupId!!,
+                version = buildJson.s("VERSION")!!,
                 splunkIndex = deployJson.s("SPLUNK_INDEX") ?: "",
                 maxMemory = deployJson.s("MAX_MEMORY") ?: "256Mi",
                 database = deployJson.s("DATABASE"),
@@ -107,8 +100,8 @@ class AuroraConfigParserService(
     }
 }
 
-fun Map<String, Any?>.s(field: String): String? = this[field] as String?
-fun Map<String, Any?>.i(field: String): Int? = this[field] as Int?
-fun Map<String, Any?>.m(field: String): Map<String, Any?>? = this[field] as Map<String, Any?>?
-fun Map<String, Any?>.b(field: String): Boolean? = this[field] as Boolean?
-fun Map<String, Any?>.a(field: String): List<String>? = this[field] as List<String>?
+fun Map<String, Any?>.s(field: String) = this[field] as String?
+fun Map<String, Any?>.i(field: String) = this[field] as Int?
+fun Map<String, Any?>.m(field: String) = this[field] as Map<String, Any?>?
+fun Map<String, Any?>.b(field: String) = this[field] as Boolean?
+fun Map<String, Any?>.a(field: String) = this[field] as List<String>?

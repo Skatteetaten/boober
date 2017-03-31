@@ -7,9 +7,12 @@ class AuroraConfig(val aocConfigFiles: Map<String, Map<String, Any?>>) {
     fun getMergedFileForApplication(environmentName: String, applicationName: String): Map<String, Any?> {
         val filesForApplication = getFilesForApplication(environmentName, applicationName)
         val mergedJson = mergeAocConfigFiles(filesForApplication)
-        if (!mergedJson.containsKey("envName")) {
-            return HashMap(mergedJson).apply { put("envName", environmentName) }
+
+        mergedJson.apply {
+            putIfAbsent("envName", environmentName)
+            putIfAbsent("schemaVersion", "v1")
         }
+
         return mergedJson
     }
 
@@ -29,8 +32,8 @@ class AuroraConfig(val aocConfigFiles: Map<String, Map<String, Any?>>) {
         return filesForApplication
     }
 
-    private fun mergeAocConfigFiles(filesForApplication: List<Map<String, Any?>>): Map<String, Any?> {
+    private fun mergeAocConfigFiles(filesForApplication: List<Map<String, Any?>>): MutableMap<String, Any?> {
 
-        return filesForApplication.reduce(::createMergeCopy)
+        return filesForApplication.reduce(::createMergeCopy).toMutableMap()
     }
 }

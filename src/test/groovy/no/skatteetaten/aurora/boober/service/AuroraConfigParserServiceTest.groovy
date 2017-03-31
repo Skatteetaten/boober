@@ -45,7 +45,7 @@ class AuroraConfigParserServiceTest extends Specification {
         namespace == "aos-${ENV_NAME}"
         affiliation == "aos"
         name == APP_NAME
-        cluster == "qa"
+        cluster == "utv"
         replicas == 1
         type == TemplateType.development
         groups == "APP_PaaS_drift APP_PaaS_utv"
@@ -90,7 +90,6 @@ class AuroraConfigParserServiceTest extends Specification {
 
       def appOverride = """
         {
-          "name" : "console",
           "replicas" : 3,
           "flags" : ["rolling", "route", "cert" ],
           "deploy" : {
