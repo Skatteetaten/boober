@@ -30,9 +30,16 @@ class SetupService(
 
         val auroraDc: AuroraDeploymentConfig = auroraConfigParserService.createAuroraDcFromAuroraConfig(auroraConfig, environmentName, applicationName)
 
+
         logger.info("Creating OpenShift objects for application ${auroraDc.name} in namespace ${auroraDc.namespace}")
         val openShiftObjects: List<JsonNode> = openShiftService.generateObjects(auroraDc, token)
         val openShiftResponses: List<OpenShiftResponse> = openShiftClient.applyMany(auroraDc.namespace, openShiftObjects, token)
+
+        openShiftClient.updateRoleBinding(auroraDc.namespace, "admin", token,
+                auroraDc.users?.split(" ") ?: emptyList(),
+                auroraDc.groups?.split(" ") ?: emptyList()).let {
+            openShiftResponses.plus(it)
+        }
 
         val applicationResults = mutableListOf<ApplicationResult>()
         applicationResults.add(ApplicationResult(

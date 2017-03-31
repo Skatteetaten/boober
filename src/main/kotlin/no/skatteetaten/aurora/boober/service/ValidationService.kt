@@ -17,6 +17,7 @@ class ValidationService(/*val openShiftService: OpenShiftService*/) {
 
         val errors = (auroraDcErrors + deployDescriptorErrors).associateBy({ it.propertyPath.toString() }, { it.message })
 
+        //TODO:validate that all users/groups are actually valid groups/users
 /*
         if (config is TemplateProcessingConfig) {
 

@@ -1,7 +1,10 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.controller.SetupController
+import no.skatteetaten.aurora.boober.model.Rolebinding
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -12,7 +15,7 @@ import org.springframework.web.client.RestTemplate
 import java.net.URI
 
 
-enum class OperationType {CREATED, NONE }
+enum class OperationType {CREATED, UPDATE, NONE }
 
 
 data class OpenShiftResponse(
@@ -82,5 +85,35 @@ class OpenShiftClient(
         headers.contentType = MediaType.APPLICATION_JSON
         headers.set("Authorization", "Bearer " + token)
         return headers
+    }
+
+    fun updateRoleBinding(namespace: String, role: String, token: String, users: List<String>, groups: List<String>): OpenShiftResponse? {
+        val url: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, "rolebinding", namespace, role)
+        val headers: HttpHeaders = createHeaders(token)
+
+        val response = getExistingResource(headers, url.get)
+
+        val mapper = jacksonObjectMapper()
+
+        val newBindings: JsonNode = mapper.valueToTree(Rolebinding(groups, users))
+
+        if (response?.body == null) {
+            return null
+        }
+        val roleBinding: ObjectNode = response.body as ObjectNode
+        roleBinding.set("groupNames", newBindings.get("groupNames"))
+        roleBinding.set("userNames", newBindings.get("userNames"))
+        roleBinding.set("subjects", newBindings.get("subjects"))
+        val entity = HttpEntity<JsonNode>(roleBinding, headers)
+
+        val createResponse: ResponseEntity<JsonNode> = try {
+            restTemplate.exchange(url.get, HttpMethod.PUT, entity, JsonNode::class.java)
+        } catch(e: HttpClientErrorException) {
+            throw OpenShiftException("Error saving url=${url.get}, with message=${e.message}", e)
+        }
+        logger.debug("Body=${createResponse.body}")
+
+        return OpenShiftResponse(OperationType.UPDATE, roleBinding, createResponse.body)
+
     }
 }

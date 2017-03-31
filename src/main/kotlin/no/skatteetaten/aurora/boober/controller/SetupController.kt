@@ -21,6 +21,7 @@ class SetupController(val setupService: SetupService) {
         val applicationResults: List<ApplicationResult> = setupService.executeSetup(token, auroraConfig, cmd.env, cmd.app!!)
         return Response(items = applicationResults)
     }
+
 }
 
 data class SetupCommand(val affiliation: String,
