@@ -21,7 +21,7 @@ data class AuroraDeploymentConfig(
         val config: Map<String, Any?>?,
         val route: Boolean = false,
         val deploymentStrategy: DeploymentStrategy?,
-        val deployDescriptor: Any?
+        val deployDescriptor: DeployDescriptor?
 ) {
     val namespace: String
         get() = "$affiliation-$envName"
@@ -33,11 +33,13 @@ data class AuroraDeploymentConfig(
         get() = "v1"
 }
 
-data class TemplateDeploy(
+interface DeployDescriptor{}
+
+data class TemplateDeploy (
         val templateFile: String? = null,
         val template: String? = null,
         val parameters: Map<String, String>? = mapOf()
-)
+) : DeployDescriptor
 
 data class AuroraDeploy(
         val artifactId: String,
@@ -57,7 +59,7 @@ data class AuroraDeploy(
         val managementPath: String?,
         val debug: Boolean = false,
         val alarm: Boolean = true
-) {
+) : DeployDescriptor {
     val dockerGroup: String = groupId.replace(".", "_")
     val dockerName: String = artifactId
 
