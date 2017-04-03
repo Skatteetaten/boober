@@ -8,6 +8,7 @@ import no.skatteetaten.aurora.boober.service.ApplicationResult
 import no.skatteetaten.aurora.boober.service.AuroraConfigParserService
 import no.skatteetaten.aurora.boober.service.SetupService
 import org.springframework.security.core.annotation.AuthenticationPrincipal
+import no.skatteetaten.aurora.boober.service.ValidationException
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader

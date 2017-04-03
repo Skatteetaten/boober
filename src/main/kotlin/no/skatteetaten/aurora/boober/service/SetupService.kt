@@ -33,17 +33,15 @@ class SetupService(val openShiftService: OpenShiftService, val openShiftClient: 
 
         /*
         openShiftClient.updateRoleBinding(auroraDc.namespace, "admin", token,
-                auroraDc.users?.split(" ") ?: emptyList(),
-                auroraDc.groups?.split(" ") ?: emptyList()).let {
+                                          auroraDc.users?.split(" ") ?: emptyList(),
+                                          auroraDc.groups?.split(" ") ?: emptyList()).let {
             openShiftResponses.plus(it)
         }
 */
-        val applicationResults = mutableListOf<ApplicationResult>()
-        applicationResults.add(ApplicationResult(
-                applicationId = ApplicationId(environmentName, applicationName),
+        return listOf(ApplicationResult(
+                applicationId = ApplicationId(auroraDc.envName, auroraDc.name),
                 auroraDc = auroraDc,
                 openShiftResponses = openShiftResponses
         ))
-        return applicationResults
     }
 }
