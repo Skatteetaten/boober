@@ -11,7 +11,6 @@ import no.skatteetaten.aurora.boober.service.AuroraConfigParserService
 import no.skatteetaten.aurora.boober.service.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.OpenShiftService
 import no.skatteetaten.aurora.boober.service.SetupService
-import no.skatteetaten.aurora.boober.service.ValidationService
 import no.skatteetaten.aurora.boober.utils.SampleFilesCollector
 
 class SetupControllerTest extends AbstractControllerTest {
@@ -22,8 +21,7 @@ class SetupControllerTest extends AbstractControllerTest {
 
   def mapper = new Configuration().mapper()
 
-  def validationService = new ValidationService()
-  def auroraParser = new AuroraConfigParserService(validationService)
+  def auroraParser = new AuroraConfigParserService()
 
   def setupService = new SetupService(auroraParser, Stub(OpenShiftService), Stub(OpenShiftClient))
   def controller = new SetupController(setupService)
@@ -44,10 +42,7 @@ class SetupControllerTest extends AbstractControllerTest {
       def body = new JsonSlurper().parseText(response.andReturn().response.getContentAsString())
 
     then:
-      body.errors.size() == 3
-      body.errors.affiliation != null
-      body.errors.namespace != null
-      body.errors.type != null
+      body.items.size() == 1
       response.andExpect(status().is4xxClientError())
   }
 

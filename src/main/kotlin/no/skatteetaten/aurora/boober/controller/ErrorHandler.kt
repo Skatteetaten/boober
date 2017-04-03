@@ -3,6 +3,8 @@ package no.skatteetaten.aurora.boober.controller
 import no.skatteetaten.aurora.boober.service.ValidationException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatus.BAD_REQUEST
+import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ControllerAdvice
@@ -14,31 +16,26 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 class ErrorHandler : ResponseEntityExceptionHandler() {
 
     @ExceptionHandler(ValidationException::class)
-    fun handleValidationException(e: ValidationException, request: WebRequest): ResponseEntity<*> {
-
-        return handleException(e, request, HttpStatus.BAD_REQUEST)
-    }
+    fun handleValidationErrors(ex: ValidationException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
 
     @ExceptionHandler(IllegalArgumentException::class)
-    fun handleBadRequest(e: IllegalArgumentException, request: WebRequest): ResponseEntity<*> {
+    fun handleBadRequest(ex: IllegalArgumentException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
 
-        return handleException(e, request, HttpStatus.BAD_REQUEST)
-    }
+    @ExceptionHandler(RuntimeException::class)
+    fun handleGenericError(ex: RuntimeException, req: WebRequest) = handleException(ex, req, INTERNAL_SERVER_ERROR)
 
     private fun handleException(e: Exception, request: WebRequest, httpStatus: HttpStatus): ResponseEntity<*> {
 
         val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
+        val message = "${e.message}. ${e.cause?.message.let { "Cause: $it" }}"
 
-        val responseError = mutableMapOf(
-                "status" to httpStatus.value(),
-                "errorMessage" to e.message,
-                "cause" to e.cause?.message
-        )
-        val error = when (e) {
-            is ValidationException -> responseError + ("errors" to e.errors)
-            else -> responseError
+        val items = when (e) {
+            is ValidationException -> e.errors ?: listOf()
+            else -> listOf()
         }
 
-        return handleExceptionInternal(e, error, headers, httpStatus, request)
+        val response = Response(false, message, items)
+
+        return handleExceptionInternal(e, response, headers, httpStatus, request)
     }
 }

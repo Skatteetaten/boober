@@ -14,8 +14,7 @@ class AuroraConfigParserServiceTest extends Specification {
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
 
-  def validationService = new ValidationService()
-  AuroraConfigParserService service = new AuroraConfigParserService(validationService)
+  AuroraConfigParserService service = new AuroraConfigParserService()
 
   def "Should fail due to missing config file"() {
 
@@ -45,7 +44,7 @@ class AuroraConfigParserServiceTest extends Specification {
         namespace == "aos-${ENV_NAME}"
         affiliation == "aos"
         name == APP_NAME
-        cluster == "qa"
+        cluster == "utv"
         replicas == 1
         type == TemplateType.development
         groups == "APP_PaaS_drift APP_PaaS_utv"
@@ -90,7 +89,6 @@ class AuroraConfigParserServiceTest extends Specification {
 
       def appOverride = """
         {
-          "name" : "console",
           "replicas" : 3,
           "flags" : ["rolling", "route", "cert" ],
           "deploy" : {

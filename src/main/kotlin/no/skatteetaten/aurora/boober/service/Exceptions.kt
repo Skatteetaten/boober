@@ -7,5 +7,5 @@ class OpenShiftException(messages: String?, cause: Throwable?) : ServiceExceptio
 class ValidationException(
         messages: String?,
         cause: Throwable? = null,
-        val errors: Map<String, String>? = mapOf()
+        val errors: List<String>? = listOf()
 ) : ServiceException(messages, cause)
