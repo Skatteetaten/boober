@@ -31,7 +31,7 @@ class OpenShiftServiceTest extends Specification {
   def validationService = new ValidationService()
   def aocConfigParserService = new AuroraConfigParserService(validationService)
 
-  def "Should create six OpenShift objects from Velocity templates"() {
+  def "Should create seven OpenShift objects from Velocity templates"() {
     given:
       Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
 
@@ -47,8 +47,10 @@ class OpenShiftServiceTest extends Specification {
       def deploymentConfig = generatedObjects.find { it.get("kind").asText() == "DeploymentConfig" }
       def route = generatedObjects.find { it.get("kind").asText() == "Route" }
       def project = generatedObjects.find { it.get("kind").asText() == "Project" }
+      def buildConfig = generatedObjects.find { it.get("kind").asText() == "BuildConfig" }
 
     then:
+      generatedObjects.size() == 7
 
       compareJson(project, """
         {
@@ -280,7 +282,7 @@ class OpenShiftServiceTest extends Specification {
                       },        
                       {
                         "name": "ROUTE_NAME",
-                        "value": "http://verify-ebs-users-aos-booberdev.qa.paas.skead.no"
+                        "value": "http://verify-ebs-users-aos-booberdev.utv.paas.skead.no"
                       }
                     ],
                     "resources": {
@@ -339,6 +341,83 @@ class OpenShiftServiceTest extends Specification {
         }
 
       """)
+
+      compareJson(buildConfig, """
+      {
+        "kind": "BuildConfig",
+        "apiVersion": "v1",
+        "metadata": {
+          "name": "verify-ebs-users",
+          "labels": {
+            "app": "verify-ebs-users",
+            "updatedBy": "hero",
+            "affiliation": "aos"
+          }
+        },
+        "spec": {
+          "triggers": [
+            {
+              "type": "ImageChange",
+              "imageChange": {
+                "from": {
+                  "kind": "ImageStreamTag",
+                  "namespace": "openshift",
+                  "name": "oracle8:1"
+                }
+              }
+            },
+            {
+              "type": "ImageChange",
+              "imageChange": {}
+            }
+          ],
+          "strategy": {
+            "type": "Custom",
+            "customStrategy": {
+              "from": {
+                "kind": "ImageStreamTag",
+                "namespace": "openshift",
+                "name": "leveransepakkebygger:prod"
+              },
+              "env": [
+                {
+                  "name": "ARTIFACT_ID",
+                  "value": "verify-ebs-users"
+                },
+                {
+                  "name": "GROUP_ID",
+                  "value": "ske.admin.lisens"
+                },
+                {
+                  "name": "VERSION",
+                  "value": "1.0.3-SNAPSHOT"
+                },
+                {
+                  "name": "DOCKER_BASE_VERSION",
+                  "value": "1"
+                },
+                {
+                  "name": "DOCKER_BASE_IMAGE",
+                  "value": "aurora/oracle8"
+                },
+                {
+                  "name": "PUSH_EXTRA_TAGS",
+                  "value": "latest,major,minor,patch"
+                }
+              ],
+              "exposeDockerSocket": true
+            }
+          },
+          "output": {
+            "to": {
+              "kind": "ImageStreamTag",
+              "name": "verify-ebs-users:latest"
+            }
+          }
+        }
+      }
+    """)
+
   }
 
   def compareJson(JsonNode jsonNode, String jsonString) {
