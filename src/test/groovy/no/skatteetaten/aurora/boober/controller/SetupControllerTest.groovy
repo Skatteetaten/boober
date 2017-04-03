@@ -3,6 +3,8 @@ package no.skatteetaten.aurora.boober.controller
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
+import static no.skatteetaten.aurora.boober.utils.SampleFilesCollector.jsonToMap
+
 import org.springframework.http.MediaType
 
 import groovy.json.JsonSlurper
@@ -23,13 +25,19 @@ class SetupControllerTest extends AbstractControllerTest {
 
   def auroraParser = new AuroraConfigParserService()
 
-  def setupService = new SetupService(auroraParser, Stub(OpenShiftService), Stub(OpenShiftClient))
-  def controller = new SetupController(setupService)
+  def setupService = new SetupService(Stub(OpenShiftService), Stub(OpenShiftClient))
+  def controller = new SetupController(setupService, auroraParser)
 
-  def "Should fail"() {
+  def "Should return error"() {
     given:
       def files = SampleFilesCollector.qaEbsUsersSampleFiles
-      files.put("about.json", [:])
+      files.put("booberdev/verify-ebs-users.json", jsonToMap("""
+        {
+          "build": {
+            "VERSION": null
+          }
+        }
+      """))
       SetupCommand cmd = new SetupCommand(AFFILIATION, ENV_NAME, APP_NAME, files, [:])
       def json = mapper.writeValueAsString(cmd)
 
@@ -42,8 +50,7 @@ class SetupControllerTest extends AbstractControllerTest {
       def body = new JsonSlurper().parseText(response.andReturn().response.getContentAsString())
 
     then:
-      body.items.size() == 1
-      response.andExpect(status().is4xxClientError())
+      body.items[0]["errors"].size() == 1
   }
 
   @Override

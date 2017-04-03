@@ -11,6 +11,17 @@ import javax.validation.constraints.Size
 
 class AuroraConfig(val aocConfigFiles: Map<String, Map<String, Any?>>) {
 
+    val applications: List<String>
+        get() = aocConfigFiles.entries
+                .filter { it.key != "about.json" && !it.key.contains("/") }
+                .map { it.key.split(".")[0] }
+
+    val environments: List<String>
+        get() = aocConfigFiles.entries
+                .filter { it.key.contains("/") }
+                .map { it.key.split("/")[0].toLowerCase() }
+                .distinct()
+
     fun getMergedFileForApplication(environmentName: String, applicationName: String): Map<String, Any?> {
         val filesForApplication = getFilesForApplication(environmentName, applicationName)
         val mergedJson = mergeAocConfigFiles(filesForApplication)
@@ -45,6 +56,7 @@ class AuroraConfig(val aocConfigFiles: Map<String, Map<String, Any?>>) {
 
         return filesForApplication.reduce(::createMergeCopy).toMutableMap()
     }
+
 
     internal fun assertIsValid(mergedJson: Map<String, Any?>?) {
         val validator = Validation.buildDefaultValidatorFactory().validator

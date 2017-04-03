@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -16,20 +15,17 @@ data class ApplicationResult(
         val applicationId: ApplicationId,
         val auroraDc: AuroraDeploymentConfig,
         val openShiftResponses: List<OpenShiftResponse>
-)
+) {
+    val containsError: Boolean
+        get() = openShiftResponses.any { it.status >= 400 }
+}
 
 @Service
-class SetupService(
-        val auroraConfigParserService: AuroraConfigParserService,
-        val openShiftService: OpenShiftService,
-        val openShiftClient: OpenShiftClient) {
+class SetupService(val openShiftService: OpenShiftService, val openShiftClient: OpenShiftClient) {
 
     val logger: Logger = LoggerFactory.getLogger(SetupService::class.java)
 
-    fun executeSetup(token: String, auroraConfig: AuroraConfig, environmentName: String, applicationName: String): List<ApplicationResult> {
-
-        val auroraDc: AuroraDeploymentConfig = auroraConfigParserService.createAuroraDcFromAuroraConfig(auroraConfig, environmentName, applicationName)
-
+    fun executeSetup(token: String, auroraDc: AuroraDeploymentConfig): List<ApplicationResult> {
 
         logger.info("Creating OpenShift objects for application ${auroraDc.name} in namespace ${auroraDc.namespace}")
         val openShiftObjects: List<JsonNode> = openShiftService.generateObjects(auroraDc, token)
