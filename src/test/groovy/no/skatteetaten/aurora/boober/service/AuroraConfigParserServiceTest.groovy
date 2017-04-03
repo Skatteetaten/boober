@@ -14,8 +14,7 @@ class AuroraConfigParserServiceTest extends Specification {
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
 
-  def validationService = new ValidationService()
-  AuroraConfigParserService service = new AuroraConfigParserService(validationService)
+  AuroraConfigParserService service = new AuroraConfigParserService()
 
   def "Should fail due to missing config file"() {
 

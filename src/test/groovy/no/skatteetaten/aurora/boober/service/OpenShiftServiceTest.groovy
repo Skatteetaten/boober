@@ -28,8 +28,7 @@ class OpenShiftServiceTest extends Specification {
   ObjectMapper mapper = configuration.mapper()
 
   def openShiftService = new OpenShiftService(velocityEngine, mapper)
-  def validationService = new ValidationService()
-  def aocConfigParserService = new AuroraConfigParserService(validationService)
+  def aocConfigParserService = new AuroraConfigParserService()
 
   def "Should create seven OpenShift objects from Velocity templates"() {
     given:
