@@ -1,23 +1,58 @@
-package no.skatteetaten.aurora.boober.service
+package no.skatteetaten.aurora.boober.model
 
-import no.skatteetaten.aurora.boober.model.TemplateType
-import org.springframework.stereotype.Service
+import no.skatteetaten.aurora.boober.service.ValidationException
+import no.skatteetaten.aurora.boober.service.m
+import no.skatteetaten.aurora.boober.service.s
+import no.skatteetaten.aurora.boober.utils.createMergeCopy
 import javax.validation.Validation
 import javax.validation.constraints.NotNull
 import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
 
+class AuroraConfig(val aocConfigFiles: Map<String, Map<String, Any?>>) {
 
-@Service
-class ValidationService(/*val openShiftService: OpenShiftService*/) {
+    fun getMergedFileForApplication(environmentName: String, applicationName: String): Map<String, Any?> {
+        val filesForApplication = getFilesForApplication(environmentName, applicationName)
+        val mergedJson = mergeAocConfigFiles(filesForApplication)
 
-    fun assertIsValid(mergedJson: Map<String, Any?>?) {
+        mergedJson.apply {
+            putIfAbsent("envName", environmentName)
+            putIfAbsent("schemaVersion", "v1")
+        }
+
+        assertIsValid(mergedJson)
+
+        return mergedJson
+    }
+
+    fun getFilesForApplication(environmentName: String, applicationName: String): List<Map<String, Any?>> {
+
+        val requiredFilesForApplication = setOf(
+                "about.json",
+                "$applicationName.json",
+                "$environmentName/about.json",
+                "$environmentName/$applicationName.json")
+
+        val filesForApplication: List<Map<String, Any?>> = requiredFilesForApplication.mapNotNull { aocConfigFiles[it] }
+        if (filesForApplication.size != requiredFilesForApplication.size) {
+            val missingFiles = requiredFilesForApplication.filter { it !in aocConfigFiles.keys }
+            throw IllegalArgumentException("Unable to execute setup command. Required files missing => $missingFiles")
+        }
+        return filesForApplication
+    }
+
+    private fun mergeAocConfigFiles(filesForApplication: List<Map<String, Any?>>): MutableMap<String, Any?> {
+
+        return filesForApplication.reduce(::createMergeCopy).toMutableMap()
+    }
+
+    internal fun assertIsValid(mergedJson: Map<String, Any?>?) {
         val validator = Validation.buildDefaultValidatorFactory().validator
 
         val config = AuroraConfigRequiredV1(mergedJson, mergedJson?.m("build"))
         val auroraDcErrors = validator.validate(config)
 
-        val errors = auroraDcErrors.map{ "${it.propertyPath}: ${it.message}" }
+        val errors = auroraDcErrors.map { "${it.propertyPath}: ${it.message}" }
 
         if (errors.isNotEmpty()) {
             throw ValidationException("Aurora config files contains errors", errors = errors)

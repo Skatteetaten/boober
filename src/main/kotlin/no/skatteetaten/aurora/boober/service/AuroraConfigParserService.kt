@@ -7,15 +7,11 @@ import no.skatteetaten.aurora.boober.model.DeploymentStrategy.rolling
 import org.springframework.stereotype.Service
 
 @Service
-class AuroraConfigParserService(
-        val validationService: ValidationService
-) {
+class AuroraConfigParserService {
 
     fun createAuroraDcFromAuroraConfig(auroraConfig: AuroraConfig, environmentName: String, applicationName: String): AuroraDeploymentConfig {
 
         val mergedJson = auroraConfig.getMergedFileForApplication(environmentName, applicationName)
-
-        validationService.assertIsValid(mergedJson)
 
         return createAuroraDeploymentConfig(mergedJson)
     }
