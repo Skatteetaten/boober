@@ -22,7 +22,7 @@ class AuroraConfigParserService {
         val type = json.s("type").let { TemplateType.valueOf(it!!) }
         var name = json.s("name")
 
-        val deployDescriptor: Any = when (type) {
+        val deployDescriptor: DeployDescriptor = when (type) {
             TemplateType.process -> {
                 TemplateDeploy()
             }
@@ -98,7 +98,7 @@ class AuroraConfigParserService {
     }
 }
 
-fun Map<String, Any?>.s(field: String) = this[field] as String?
+fun Map<String, Any?>.s(field: String) = this[field]?.toString()
 fun Map<String, Any?>.i(field: String) = this[field] as Int?
 fun Map<String, Any?>.m(field: String) = this[field] as Map<String, Any?>?
 fun Map<String, Any?>.b(field: String) = this[field] as Boolean?
