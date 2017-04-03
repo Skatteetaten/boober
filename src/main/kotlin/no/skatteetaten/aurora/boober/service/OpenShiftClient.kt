@@ -20,7 +20,7 @@ enum class OperationType {CREATED, UPDATE, NONE }
 
 data class OpenShiftResponse(
         val operationType: OperationType,
-        val payload: JsonNode,
+        val payload: JsonNode? = null,
         val responseBody: JsonNode?
 )
 
@@ -55,6 +55,15 @@ class OpenShiftClient(
             val createdResource = createResource(headers, urls.update, json)
             OpenShiftResponse(OperationType.CREATED, json, createdResource.body)
         }
+    }
+
+    fun findCurrentUser(token: String): OpenShiftResponse {
+
+        val url = OpenShiftApiUrls.getCurrentUserPath(baseUrl)
+        val headers: HttpHeaders = createHeaders(token)
+
+        val currentUser = getExistingResource(headers, url)
+        return OpenShiftResponse(operationType = OperationType.NONE, responseBody = currentUser?.body)
     }
 
     private fun getExistingResource(headers: HttpHeaders, url: String): ResponseEntity<JsonNode>? {

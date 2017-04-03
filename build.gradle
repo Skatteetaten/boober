@@ -68,6 +68,7 @@ dependencies {
       "org.springframework.boot:spring-boot-starter-web",
       "org.springframework.boot:spring-boot-starter-actuator",
       "org.springframework.boot:spring-boot-starter-hateoas",
+      "org.springframework.boot:spring-boot-starter-security",
       "ske.aurora.springboot.prometheus:spring-boot-prometheus:3.1.2",
       'com.ryantenney.metrics:metrics-spring:3.1.2',
       "com.fasterxml.jackson.module:jackson-module-kotlin:2.8.7",
