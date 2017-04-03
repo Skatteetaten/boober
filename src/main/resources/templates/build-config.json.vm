@@ -37,15 +37,15 @@
         "env": [
           {
             "name": "ARTIFACT_ID",
-            "value": "${adc.artifactId}"
+            "value": "${dd.artifactId}"
           },
           {
             "name": "GROUP_ID",
-            "value": "${adc.groupId}"
+            "value": "${dd.groupId}"
           },
           {
             "name": "VERSION",
-            "value": "${adc.version}"
+            "value": "${dd.version}"
           },
           {
             "name": "DOCKER_BASE_VERSION",
@@ -57,7 +57,7 @@
           },
           {
             "name": "PUSH_EXTRA_TAGS",
-            "value": "${adc.deployDescriptor.extratags}"
+            "value": "${dd.extraTags}"
           }
         ],
         "exposeDockerSocket": true
