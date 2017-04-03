@@ -1,11 +1,10 @@
 package no.skatteetaten.aurora.boober.controller.security
 
-import no.skatteetaten.aurora.boober.controller.security.BearerAuthenticationManager
+import com.fasterxml.jackson.databind.JsonNode
 import org.springframework.context.annotation.Bean
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
-import org.springframework.security.core.userdetails.User
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter
@@ -27,7 +26,11 @@ class WebSecurityConfig(
     @Bean
     internal fun preAuthenticationProvider() = PreAuthenticatedAuthenticationProvider().apply {
         setPreAuthenticatedUserDetailsService({ it: PreAuthenticatedAuthenticationToken ->
-            User(it.principal as String, it.credentials as String, it.authorities)
+            val principal: JsonNode? = it.principal as JsonNode?
+            val username: String = principal?.get("metadata")?.get("name")?.asText() ?: throw IllegalArgumentException("Unable to determine username from response")
+            val fullName: String? = principal.get("fullName")?.asText()
+
+            User(username, it.credentials as String, fullName)
         })
     }
 

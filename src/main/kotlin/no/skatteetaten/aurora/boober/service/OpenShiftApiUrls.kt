@@ -29,7 +29,7 @@ class OpenShiftApiUrls(
             val endpointKey = kind.toLowerCase() + "s"
 
             val apiType = if (endpointKey in listOf("services", "configmaps")) "api" else "oapi"
-            val namespacePrefix = if (endpointKey !in listOf("projects")) {
+            val namespacePrefix = if (endpointKey !in listOf("projects", "users")) {
                 namespace ?: throw IllegalArgumentException("namespace required for resource kind ${kind}")
                 "/namespaces/$namespace"
             } else ""
