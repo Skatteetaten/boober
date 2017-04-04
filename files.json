@@ -1,6 +1,6 @@
 {
   "app": "referanse",
-  "env": "boober",
+  "env": "boober2",
   "affiliation": "paas",
   "files": {
     "about.json": {
@@ -36,10 +36,10 @@
         "foo2": "bar"
       }
     },
-    "boober/about.json": {
+    "boober2/about.json": {
       "cluster": "utv"
     },
-    "boober/referanse.json": {
+    "boober2/referanse.json": {
     }
   }
 }

@@ -1,12 +1,7 @@
 {
-  "kind": "Project",
+  "kind": "ProjectRequest",
   "apiVersion": "v1",
   "metadata": {
-    "name": "${adc.namespace}",
-    "labels": {
-      "updatedBy": "${username}",
-      "affiliation": "${adc.affiliation}",
-      "openshift.io/requester": "${username}"
-    }
+    "name": "${adc.namespace}"
   }
 }
