@@ -11,7 +11,6 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.service.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.OpenShiftService
 import no.skatteetaten.aurora.boober.utils.SampleFilesCollector
 
 class SetupControllerTest extends AbstractControllerTest {
@@ -21,12 +20,9 @@ class SetupControllerTest extends AbstractControllerTest {
   public static final String APP_NAME = "verify-ebs-users"
 
   @Autowired
-  OpenShiftService openShiftService
-
-  @Autowired
   OpenShiftClient openShiftClient
 
-  def "Should fail"() {
+  def "Should fail when Aurora Config contains errors"() {
     given:
       def files = SampleFilesCollector.qaEbsUsersSampleFiles
       files.put("about.json", [:])
