@@ -14,7 +14,7 @@ data class ApplicationId(
 data class ApplicationResult(
         val applicationId: ApplicationId,
         val auroraDc: AuroraDeploymentConfig,
-        val openShiftResponses: List<OpenShiftResponse>
+        val openShiftResponses: List<OpenShiftResponse> = listOf()
 ) {
     val containsError: Boolean
         get() = openShiftResponses.any { it.status >= 400 }

@@ -7,8 +7,8 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import no.skatteetaten.aurora.boober.service.ApplicationResult
 import no.skatteetaten.aurora.boober.service.AuroraConfigParserService
 import no.skatteetaten.aurora.boober.service.SetupService
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import no.skatteetaten.aurora.boober.service.ValidationException
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
@@ -19,17 +19,17 @@ class SetupController(val setupService: SetupService, val auroraConfigParserServ
     @PutMapping("/setup")
     fun setup(@AuthenticationPrincipal activeUser: User, @RequestBody cmd: SetupCommand): Response {
 
-        fun tryToCreateAuroraDeploymentConfig(): List<Any> {
-            val auroraConfig = AuroraConfig(cmd.files)
+        val auroraConfig = if (!cmd.app.isNullOrBlank()) {
+            AuroraConfig(cmd.app!!, cmd.env, cmd.files)
+        } else {
+            AuroraConfig(env = cmd.env, aocConfigFiles = cmd.files)
+        }
 
-            return auroraConfig.environments.flatMap { env ->
-                auroraConfig.applications.map { app ->
-                    try {
-                        auroraConfigParserService.createAuroraDcFromAuroraConfig(auroraConfig, env, app)
-                    } catch (ex: ValidationException) {
-                        mapOf("message" to ex.message, "errors" to ex.errors)
-                    }
-                }
+        val maybeAuroraDC: List<Any> = auroraConfig.applicationsToDeploy().map { (env, app) ->
+            try {
+                auroraConfigParserService.createAuroraDcFromAuroraConfig(auroraConfig, env, app)
+            } catch (ex: ValidationException) {
+                mapOf("message" to ex.message, "errors" to ex.errors)
             }
         }
 
@@ -40,9 +40,8 @@ class SetupController(val setupService: SetupService, val auroraConfigParserServ
             }
         }
 
-        val maybeAuroraDcs = tryToCreateAuroraDeploymentConfig()
-        val applicationResults = setupAuroraDeploymentConfig(maybeAuroraDcs)
-        val validationErrors = maybeAuroraDcs.filter { it is Map<*, *> }
+        val applicationResults = setupAuroraDeploymentConfig(maybeAuroraDC)
+        val validationErrors = maybeAuroraDC.filter { it !is AuroraDeploymentConfig }
 
         return Response(success = validationErrors.isEmpty() && applicationResults.none { it.containsError },
                         items = applicationResults + validationErrors)

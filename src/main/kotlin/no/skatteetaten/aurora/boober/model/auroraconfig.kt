@@ -9,18 +9,22 @@ import javax.validation.constraints.NotNull
 import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
 
-class AuroraConfig(val aocConfigFiles: Map<String, Map<String, Any?>>) {
+class AuroraConfig(
+        val app: String = "",
+        val env: String,
+        val aocConfigFiles: Map<String, Map<String, Any?>>
+) {
 
-    val applications: List<String>
-        get() = aocConfigFiles.entries
-                .filter { it.key != "about.json" && !it.key.contains("/") }
-                .map { it.key.split(".")[0] }
+    val isSingleApplication: Boolean
+        get() = !app.isNullOrBlank()
 
-    val environments: List<String>
-        get() = aocConfigFiles.entries
-                .filter { it.key.contains("/") }
-                .map { it.key.split("/")[0].toLowerCase() }
-                .distinct()
+    fun applicationsToDeploy(): List<Pair<String, String>> {
+        return if (isSingleApplication) listOf(Pair(env, app))
+        else aocConfigFiles.entries
+                .filter { !it.key.contains("about.json") && !it.key.contains("/") }
+                .map { Pair(env, it.key.removeSuffix(".json")) }
+    }
+
 
     fun getMergedFileForApplication(environmentName: String, applicationName: String): Map<String, Any?> {
         val filesForApplication = getFilesForApplication(environmentName, applicationName)
@@ -31,7 +35,7 @@ class AuroraConfig(val aocConfigFiles: Map<String, Map<String, Any?>>) {
             putIfAbsent("schemaVersion", "v1")
         }
 
-        assertIsValid(mergedJson)
+        assertIsValid(mergedJson, applicationName)
 
         return mergedJson
     }
@@ -58,7 +62,7 @@ class AuroraConfig(val aocConfigFiles: Map<String, Map<String, Any?>>) {
     }
 
 
-    internal fun assertIsValid(mergedJson: Map<String, Any?>?) {
+    internal fun assertIsValid(mergedJson: Map<String, Any?>?, applicationName: String) {
         val validator = Validation.buildDefaultValidatorFactory().validator
 
         val config = AuroraConfigRequiredV1(mergedJson, mergedJson?.m("build"))
@@ -67,7 +71,7 @@ class AuroraConfig(val aocConfigFiles: Map<String, Map<String, Any?>>) {
         val errors = auroraDcErrors.map { "${it.propertyPath}: ${it.message}" }
 
         if (errors.isNotEmpty()) {
-            throw ValidationException("Aurora config files contains errors", errors = errors)
+            throw ValidationException("Config for application '$applicationName' contains errors", errors = errors)
         }
         //TODO:validate that all users/groups are actually valid groups/users
 /*
