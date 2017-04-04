@@ -20,7 +20,9 @@ class WebSecurityConfig(
 
         http.authenticationProvider(preAuthenticationProvider())
                 .addFilter(requestHeaderAuthenticationFilter())
-                .authorizeRequests().anyRequest().authenticated()
+                .authorizeRequests()
+                .antMatchers("/health").permitAll()
+                .anyRequest().authenticated()
     }
 
     @Bean
