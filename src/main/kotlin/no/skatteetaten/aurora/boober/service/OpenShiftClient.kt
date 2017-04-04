@@ -64,7 +64,7 @@ class OpenShiftClient(
         val headers: HttpHeaders = createHeaders(token)
 
         val currentUser = getExistingResource(headers, url)
-        return OpenShiftResponse(operationType = OperationType.NONE, responseBody = currentUser?.body)
+        return OpenShiftResponse(currentUser?.statusCodeValue ?: 400, operationType = OperationType.NONE, responseBody = currentUser?.body)
     }
 
     private fun getExistingResource(headers: HttpHeaders, url: String): ResponseEntity<JsonNode>? {
