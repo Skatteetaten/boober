@@ -48,6 +48,11 @@ compileKotlin {
   }
 }
 
+compileTestKotlin.dependsOn = compileTestKotlin.taskDependencies.values - 'compileTestJava'
+compileTestGroovy.dependsOn compileTestKotlin
+compileTestGroovy.classpath += files(compileTestKotlin.destinationDir)
+testClasses.dependsOn compileTestGroovy
+
 group = 'no.skatteetaten.aurora'
 
 sourceCompatibility = '1.8'
