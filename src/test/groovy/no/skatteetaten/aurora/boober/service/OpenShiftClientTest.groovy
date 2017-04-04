@@ -4,14 +4,29 @@ import org.apache.commons.lang.builder.ReflectionToStringBuilder
 import org.apache.commons.lang.builder.ToStringStyle
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
 import com.fasterxml.jackson.databind.JsonNode
 
-import no.skatteetaten.aurora.boober.Configuration
+import no.skatteetaten.aurora.boober.controller.security.User
+import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import spock.lang.Specification
+import spock.mock.DetachedMockFactory
 
-@SpringBootTest(classes = [Configuration, OpenShiftClient, OpenShiftService])
+@SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration, OpenShiftClient, OpenShiftService, Config])
 class OpenShiftClientTest extends Specification {
+
+  @Configuration
+  static class Config {
+    private DetachedMockFactory factory = new DetachedMockFactory()
+
+    @Bean
+    UserDetailsProvider userDetailsProvider() {
+
+      factory.Mock(UserDetailsProvider)
+    }
+  }
 
   @Autowired
   OpenShiftClient openShiftClient
@@ -19,17 +34,21 @@ class OpenShiftClientTest extends Specification {
   @Autowired
   OpenShiftService openShiftService
 
+  @Autowired
+  UserDetailsProvider userDetailsProvider
+
   def auroraDc = TestDataKt.auroraDcDevelopment
 
-  def A() {
+  def "Smoke test"() {
 
     given:
       def token = "oc whoami -t".execute().text.trim()
+      userDetailsProvider.getAuthenticatedUser() >> new User("test", token, "Test User")
 
-      List<JsonNode> openShiftObjects = openShiftService.generateObjects(auroraDc, token)
+      List<JsonNode> openShiftObjects = openShiftService.generateObjects(auroraDc)
       def project = openShiftObjects.find { it.get('kind').asText() == "ProjectRequest" }
     expect:
-      def openShiftResponse = openShiftClient.apply("aurora-boober-test", project, token)
+      def openShiftResponse = openShiftClient.apply("aurora-boober-test", project, false)
       println ReflectionToStringBuilder.toString(openShiftResponse, ToStringStyle.MULTI_LINE_STYLE)
       true
   }

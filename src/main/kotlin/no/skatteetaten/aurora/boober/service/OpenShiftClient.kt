@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.controller.SetupController
+import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.Rolebinding
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -27,24 +28,25 @@ data class OpenShiftResponse(
 @Service
 class OpenShiftClient(
         @Value("\${openshift.url}") val baseUrl: String,
+        val userDetailsProvider: UserDetailsProvider,
         val restTemplate: RestTemplate
 ) {
 
     val logger: Logger = LoggerFactory.getLogger(SetupController::class.java)
 
-    fun applyMany(namespace: String, openShiftObjects: List<JsonNode>, token: String, dryRun: Boolean = false): List<OpenShiftResponse> {
+    fun applyMany(namespace: String, openShiftObjects: List<JsonNode>, dryRun: Boolean = false): List<OpenShiftResponse> {
 
         return openShiftObjects.map {
             Thread.sleep(1000)
             //race condition if we create resources to fast
-            apply(namespace, it, token, dryRun)
+            apply(namespace, it, dryRun)
         }
     }
 
-    fun apply(namespace: String, json: JsonNode, token: String, dryRun: Boolean = false): OpenShiftResponse {
+    fun apply(namespace: String, json: JsonNode, dryRun: Boolean = false): OpenShiftResponse {
 
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createUrlsForResource(baseUrl, namespace, json)
-        val headers: HttpHeaders = createHeaders(token)
+        val headers: HttpHeaders = createHeaders(userDetailsProvider.getAuthenticatedUser().token)
 
         val existingResource: ResponseEntity<JsonNode>? = getExistingResource(headers, urls.get)
         return if (existingResource != null) {
@@ -69,8 +71,8 @@ class OpenShiftClient(
         return try {
             val requestEntity = RequestEntity<Any>(headers, HttpMethod.GET, URI(url))
             restTemplate.exchange(requestEntity, JsonNode::class.java)
-        } catch(e: HttpClientErrorException) {
-            if (e.statusCode != HttpStatus.NOT_FOUND) {
+        } catch(e: Exception) {
+            if (e is HttpClientErrorException && e.statusCode != HttpStatus.NOT_FOUND) {
                 throw OpenShiftException("An unexpected error occurred when getting resource $url", e)
             }
             null

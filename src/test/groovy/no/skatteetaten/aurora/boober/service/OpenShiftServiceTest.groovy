@@ -10,6 +10,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.Configuration
+import no.skatteetaten.aurora.boober.controller.security.User
+import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import spock.lang.Specification
@@ -23,22 +25,24 @@ class OpenShiftServiceTest extends Specification {
     setLogLevels()
   }
 
+  UserDetailsProvider userDetailsProvider = Mock()
   Configuration configuration = new Configuration()
   VelocityEngine velocityEngine = configuration.velocity()
   ObjectMapper mapper = configuration.mapper()
 
-  def openShiftService = new OpenShiftService(velocityEngine, mapper)
+  def openShiftService = new OpenShiftService(userDetailsProvider, velocityEngine, mapper)
   def aocConfigParserService = new AuroraConfigParserService()
 
   def "Should create seven OpenShift objects from Velocity templates"() {
     given:
+      userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User")
       Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
 
     when:
       def aocConfig = new AuroraConfig(files)
       AuroraDeploymentConfig auroraDc = aocConfigParserService.
           createAuroraDcFromAuroraConfig(aocConfig, ENV_NAME, APP_NAME)
-      List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc, "hero")
+      List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc)
 
       def configMap = generatedObjects.find { it.get("kind").asText() == "ConfigMap" }
       def service = generatedObjects.find { it.get("kind").asText() == "Service" }

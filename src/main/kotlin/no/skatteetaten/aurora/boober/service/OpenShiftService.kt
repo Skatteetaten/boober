@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import no.skatteetaten.aurora.boober.model.TemplateType
@@ -12,22 +13,12 @@ import java.io.StringWriter
 
 @Service
 class OpenShiftService(
+        val userDetailsProvider: UserDetailsProvider,
         val ve: VelocityEngine,
         val mapper: ObjectMapper
 ) {
 
-    fun templateExist(token: String, template: String): Boolean {
-        //TODO GET request to openshift with token to check if template exist in Openshift namespace
-        return true
-    }
-
-
-    fun findUsername(token: String): String {
-        return token
-    }
-
-
-    fun generateObjects(auroraDc: AuroraDeploymentConfig, token: String): List<JsonNode> {
+    fun generateObjects(auroraDc: AuroraDeploymentConfig): List<JsonNode> {
 
         //TODO This is the code that uses the default that was set in the old AOC, that is the template.
         //TODO If we get an unified interface in here we do not have to do this here. We can always move it out.
@@ -40,7 +31,7 @@ class OpenShiftService(
                 "adc" to auroraDc,
                 "configMap" to configMap,
                 "dd" to deployDescriptor,
-                "username" to findUsername(token),
+                "username" to userDetailsProvider.getAuthenticatedUser().username,
                 "dockerRegistry" to "docker-registry.aurora.sits.no:5000",
                 "builder" to mapOf("name" to "leveransepakkebygger", "version" to "prod"),
                 "base" to mapOf("name" to "oracle8", "version" to "1")

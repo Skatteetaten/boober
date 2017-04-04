@@ -14,22 +14,21 @@ import org.springframework.web.bind.annotation.RestController
 class SetupController(val setupService: SetupService) {
 
     @PutMapping("/setup")
-    fun setup(@AuthenticationPrincipal activeUser: User, @RequestBody cmd: SetupCommand): Response {
+    fun setup(@RequestBody cmd: SetupCommand): Response {
 
-        return executeSetup(activeUser, cmd)
+        return executeSetup(cmd)
     }
 
     @PutMapping("/setup-dryrun")
-    fun setupDryRun(@AuthenticationPrincipal activeUser: User, @RequestBody cmd: SetupCommand): Response {
+    fun setupDryRun(@RequestBody cmd: SetupCommand): Response {
 
-        return executeSetup(activeUser, cmd, true)
+        return executeSetup(cmd, true)
     }
 
-    private fun executeSetup(activeUser: User, cmd: SetupCommand, dryRun: Boolean = false): Response {
-        val token = activeUser.token
+    private fun executeSetup(cmd: SetupCommand, dryRun: Boolean = false): Response {
 
         val auroraConfig = AuroraConfig(cmd.files)
-        val applicationResults: List<ApplicationResult> = setupService.executeSetup(token, auroraConfig, cmd.env, cmd.app!!, dryRun)
+        val applicationResults: List<ApplicationResult> = setupService.executeSetup(auroraConfig, cmd.env, cmd.app!!, dryRun)
         return Response(items = applicationResults)
     }
 }
