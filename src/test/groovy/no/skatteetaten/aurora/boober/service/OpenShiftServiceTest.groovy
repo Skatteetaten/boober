@@ -45,7 +45,7 @@ class OpenShiftServiceTest extends Specification {
       def imageStream = generatedObjects.find { it.get("kind").asText() == "ImageStream" }
       def deploymentConfig = generatedObjects.find { it.get("kind").asText() == "DeploymentConfig" }
       def route = generatedObjects.find { it.get("kind").asText() == "Route" }
-      def project = generatedObjects.find { it.get("kind").asText() == "Project" }
+      def project = generatedObjects.find { it.get("kind").asText() == "ProjectRequest" }
       def buildConfig = generatedObjects.find { it.get("kind").asText() == "BuildConfig" }
 
     then:
@@ -53,15 +53,10 @@ class OpenShiftServiceTest extends Specification {
 
       compareJson(project, """
         {
-          "kind": "Project",
+          "kind": "ProjectRequest",
           "apiVersion": "v1",
           "metadata": {
-            "name": "aos-booberdev",
-            "labels": {
-              "updatedBy" : "hero",
-              "affiliation": "aos",
-              "openshift.io/requester": "hero"
-            }
+            "name": "aos-booberdev"
           }
         }
       """)
