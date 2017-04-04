@@ -32,16 +32,16 @@ class OpenShiftClient(
 
     val logger: Logger = LoggerFactory.getLogger(SetupController::class.java)
 
-    fun applyMany(namespace: String, openShiftObjects: List<JsonNode>, token: String): List<OpenShiftResponse> {
+    fun applyMany(namespace: String, openShiftObjects: List<JsonNode>, token: String, dryRun: Boolean = false): List<OpenShiftResponse> {
 
         return openShiftObjects.map {
             Thread.sleep(1000)
             //race condition if we create resources to fast
-            apply(namespace, it, token)
+            apply(namespace, it, token, dryRun)
         }
     }
 
-    fun apply(namespace: String, json: JsonNode, token: String): OpenShiftResponse {
+    fun apply(namespace: String, json: JsonNode, token: String, dryRun: Boolean = false): OpenShiftResponse {
 
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createUrlsForResource(baseUrl, namespace, json)
         val headers: HttpHeaders = createHeaders(token)
@@ -51,9 +51,8 @@ class OpenShiftClient(
             logger.info("Resource ${urls.get} already exists. Skipping...")
             OpenShiftResponse(OperationType.NONE, json, existingResource.body)
         } else {
-            logger.info("Creating resource ${urls.get}")
-            val createdResource = createResource(headers, urls.update, json)
-            OpenShiftResponse(OperationType.CREATED, json, createdResource.body)
+            val createdResource = if (!dryRun) createResource(headers, urls.update, json) else null
+            OpenShiftResponse(OperationType.CREATED, json, createdResource?.body)
         }
     }
 
@@ -79,6 +78,9 @@ class OpenShiftClient(
     }
 
     private fun createResource(headers: HttpHeaders, updateUrl: String, payload: JsonNode): ResponseEntity<JsonNode> {
+
+        logger.info("Creating resource at ${updateUrl}")
+
         val entity = HttpEntity<JsonNode>(payload, headers)
         val createResponse: ResponseEntity<JsonNode> = try {
             restTemplate.postForEntity(updateUrl, entity, JsonNode::class.java)

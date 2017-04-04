@@ -26,14 +26,13 @@ class SetupService(
 
     val logger: Logger = LoggerFactory.getLogger(SetupService::class.java)
 
-    fun executeSetup(token: String, auroraConfig: AuroraConfig, environmentName: String, applicationName: String): List<ApplicationResult> {
+    fun executeSetup(token: String, auroraConfig: AuroraConfig, environmentName: String, applicationName: String, dryRun: Boolean = false): List<ApplicationResult> {
 
         val auroraDc: AuroraDeploymentConfig = auroraConfigParserService.createAuroraDcFromAuroraConfig(auroraConfig, environmentName, applicationName)
 
-
         logger.info("Creating OpenShift objects for application ${auroraDc.name} in namespace ${auroraDc.namespace}")
         val openShiftObjects: List<JsonNode> = openShiftService.generateObjects(auroraDc, token)
-        val openShiftResponses: List<OpenShiftResponse> = openShiftClient.applyMany(auroraDc.namespace, openShiftObjects, token)
+        val openShiftResponses: List<OpenShiftResponse> = openShiftClient.applyMany(auroraDc.namespace, openShiftObjects, token, dryRun)
 
         /*
         openShiftClient.updateRoleBinding(auroraDc.namespace, "admin", token,

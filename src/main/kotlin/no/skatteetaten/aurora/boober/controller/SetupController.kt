@@ -16,13 +16,22 @@ class SetupController(val setupService: SetupService) {
     @PutMapping("/setup")
     fun setup(@AuthenticationPrincipal activeUser: User, @RequestBody cmd: SetupCommand): Response {
 
+        return executeSetup(activeUser, cmd)
+    }
+
+    @PutMapping("/setup-dryrun")
+    fun setupDryRun(@AuthenticationPrincipal activeUser: User, @RequestBody cmd: SetupCommand): Response {
+
+        return executeSetup(activeUser, cmd, true)
+    }
+
+    private fun executeSetup(activeUser: User, cmd: SetupCommand, dryRun: Boolean = false): Response {
         val token = activeUser.token
 
         val auroraConfig = AuroraConfig(cmd.files)
-        val applicationResults: List<ApplicationResult> = setupService.executeSetup(token, auroraConfig, cmd.env, cmd.app!!)
+        val applicationResults: List<ApplicationResult> = setupService.executeSetup(token, auroraConfig, cmd.env, cmd.app!!, dryRun)
         return Response(items = applicationResults)
     }
-
 }
 
 data class SetupCommand(val affiliation: String,
