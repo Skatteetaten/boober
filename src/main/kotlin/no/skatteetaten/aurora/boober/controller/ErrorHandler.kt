@@ -1,6 +1,8 @@
 package no.skatteetaten.aurora.boober.controller
 
 import no.skatteetaten.aurora.boober.service.ValidationException
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_REQUEST
@@ -32,6 +34,10 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
         val items = when (e) {
             is ValidationException -> e.errors ?: listOf()
             else -> listOf()
+        }
+
+        if (httpStatus.is5xxServerError) {
+            logger.error("Unexpected error while handling request", e)
         }
 
         val response = Response(false, message, items)
