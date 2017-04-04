@@ -5,16 +5,25 @@ import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.docu
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic
 
 import org.junit.Rule
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.restdocs.JUnitRestDocumentation
 import org.springframework.restdocs.mockmvc.RestDocumentationResultHandler
 import org.springframework.restdocs.snippet.Snippet
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers
+import org.springframework.test.context.ContextConfiguration
+import org.springframework.test.context.support.AnnotationConfigContextLoader
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
+import org.springframework.web.context.WebApplicationContext
 
 import spock.lang.Specification
 
+@SpringBootTest
 abstract class AbstractControllerTest extends Specification {
 
   @Rule
@@ -22,12 +31,14 @@ abstract class AbstractControllerTest extends Specification {
 
   MockMvc mockMvc
 
+  @Autowired
+  WebApplicationContext wac;
+
   def setup() {
 
-    def controllers = []
-    controllers.addAll(controllersUnderTest)
-    mockMvc = MockMvcBuilders.standaloneSetup(controllers.toArray())
-        .setControllerAdvice(new ErrorHandler())
+    mockMvc = MockMvcBuilders
+        .webAppContextSetup(wac)
+        .apply(SecurityMockMvcConfigurers.springSecurity())
         .apply(documentationConfiguration(jUnitRestDocumentation))
         .build()
 
@@ -36,6 +47,4 @@ abstract class AbstractControllerTest extends Specification {
   protected static RestDocumentationResultHandler prettyDoc(String identifier, Snippet... snippets) {
     document(identifier, preprocessRequest(prettyPrint()), preprocessResponse(prettyPrint()), snippets)
   }
-
-  protected abstract List<Object> getControllersUnderTest()
 }

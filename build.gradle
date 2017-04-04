@@ -87,7 +87,8 @@ dependencies {
       "org.springframework.boot:spring-boot-starter-test",
       "cglib:cglib-nodep:3.1",
       "org.objenesis:objenesis:2.1",
-      "org.springframework.restdocs:spring-restdocs-mockmvc:1.1.0.RELEASE"
+      "org.springframework.restdocs:spring-restdocs-mockmvc:1.1.0.RELEASE",
+      "org.springframework.security:spring-security-test",
   )
 }
 

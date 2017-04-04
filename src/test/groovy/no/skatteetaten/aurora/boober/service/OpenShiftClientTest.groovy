@@ -7,9 +7,10 @@ import org.springframework.boot.test.context.SpringBootTest
 
 import com.fasterxml.jackson.databind.JsonNode
 
+import no.skatteetaten.aurora.boober.Configuration
 import spock.lang.Specification
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest(classes = [Configuration, OpenShiftClient, OpenShiftService])
 class OpenShiftClientTest extends Specification {
 
   @Autowired
@@ -26,7 +27,7 @@ class OpenShiftClientTest extends Specification {
       def token = "oc whoami -t".execute().text.trim()
 
       List<JsonNode> openShiftObjects = openShiftService.generateObjects(auroraDc, token)
-      def project = openShiftObjects.find { it.get('kind').asText() == "Project" }
+      def project = openShiftObjects.find { it.get('kind').asText() == "ProjectRequest" }
     expect:
       def openShiftResponse = openShiftClient.apply("aurora-boober-test", project, token)
       println ReflectionToStringBuilder.toString(openShiftResponse, ToStringStyle.MULTI_LINE_STYLE)
