@@ -17,11 +17,19 @@ class OpenShiftApiUrls(
 
         fun createOpenShiftApiUrls(baseUrl: String, kind: String, namespace: String, name: String): OpenShiftApiUrls {
 
-            val resourceBasePath = getCollectionPathForResource(baseUrl, kind, namespace)
+            val updateUrl = getCollectionPathForResource(baseUrl, kind, namespace)
+            val getUrl = if (kind == "ProjectRequest") {
+                // Nasty business; for ProjectRequest we need to use the Project kind when checking if the resource
+                // exists. So we need to switch here...
+                val collectionPathForProject = getCollectionPathForResource(baseUrl, "Project", namespace)
+                "$collectionPathForProject/$name"
+            } else {
+                "$updateUrl/$name"
+            }
 
             return OpenShiftApiUrls(
-                    update = resourceBasePath,
-                    get = "$resourceBasePath/$name"
+                    update = updateUrl,
+                    get = getUrl
             )
         }
 
@@ -29,7 +37,7 @@ class OpenShiftApiUrls(
             val endpointKey = kind.toLowerCase() + "s"
 
             val apiType = if (endpointKey in listOf("services", "configmaps")) "api" else "oapi"
-            val namespacePrefix = if (endpointKey !in listOf("projectrequests", "users")) {
+            val namespacePrefix = if (endpointKey !in listOf("projects", "projectrequests", "users")) {
                 namespace ?: throw IllegalArgumentException("namespace required for resource kind ${kind}")
                 "/namespaces/$namespace"
             } else ""
