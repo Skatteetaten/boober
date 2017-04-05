@@ -110,7 +110,7 @@ class AuroraConfigParserServiceTest extends Specification {
 
 
     then:
-      def ex = thrown(ValidationException)
+      def ex = thrown(ApplicationConfigException)
       ex.errors.size() == 3
   }
 

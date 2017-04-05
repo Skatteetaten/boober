@@ -9,43 +9,35 @@ import org.springframework.stereotype.Service
 @Service
 class AuroraConfigParserService {
 
-    fun createAuroraDcFromAuroraConfig(auroraConfig: AuroraConfig, environmentName: String, applicationName: String): AuroraDeploymentConfig {
+    fun createAuroraDcFromMergedFileForApplication(mergedFile: Map<String, Any?>): AuroraDeploymentConfig {
 
-        val mergedJson = auroraConfig.getMergedFileForApplication(environmentName, applicationName)
-
-        return createAuroraDeploymentConfig(mergedJson)
-    }
-
-
-    private fun createAuroraDeploymentConfig(json: Map<String, Any?>): AuroraDeploymentConfig {
-
-        val type = json.s("type").let { TemplateType.valueOf(it!!) }
-        var name = json.s("name")
+        val type = mergedFile.s("type").let { TemplateType.valueOf(it!!) }
+        var name = mergedFile.s("name")
 
         val deployDescriptor: DeployDescriptor = when (type) {
             TemplateType.process -> {
                 TemplateDeploy()
             }
             else -> {
-                val auroraDeploy = createAuroraDeploy(json)
+                val auroraDeploy = createAuroraDeploy(mergedFile)
                 // This is kind of messy. Name should probably be required.
                 name = name ?: auroraDeploy.artifactId
                 auroraDeploy
             }
         }
 
-        val flags = json.a("flags")
+        val flags = mergedFile.a("flags")
         val auroraDeploymentConfig = AuroraDeploymentConfig(
-                affiliation = json.s("affiliation")!!,
-                cluster = json.s("cluster")!!,
+                affiliation = mergedFile.s("affiliation")!!,
+                cluster = mergedFile.s("cluster")!!,
                 type = type,
                 name = name!!,
-                config = json.m("config"),
-                envName = json.s("envName") ?: "",
-                groups = json.s("groups") ?: "",
-                replicas = json.i("replicas") ?: 1,
-                secretFile = json.s("secretFile") ?: "",
-                users = json.s("users") ?: "",
+                config = mergedFile.m("config"),
+                envName = mergedFile.s("envName") ?: "",
+                groups = mergedFile.s("groups") ?: "",
+                replicas = mergedFile.i("replicas") ?: 1,
+                secretFile = mergedFile.s("secretFile") ?: "",
+                users = mergedFile.s("users") ?: "",
                 route = flags?.contains("route") ?: false,
                 deploymentStrategy = if (flags?.contains("rolling") ?: false) rolling else recreate,
                 deployDescriptor = deployDescriptor

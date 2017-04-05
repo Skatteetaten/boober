@@ -15,11 +15,10 @@ import org.springframework.web.client.RestTemplate
 import java.net.URI
 
 
-enum class OperationType {CREATED, UPDATE, NONE }
+enum class OperationType { CREATED, UPDATE, NONE }
 
 
 data class OpenShiftResponse(
-        val status: Int,
         val operationType: OperationType,
         val payload: JsonNode? = null,
         val responseBody: JsonNode?
@@ -50,11 +49,11 @@ class OpenShiftClient(
         val existingResource: ResponseEntity<JsonNode>? = getExistingResource(headers, urls.get)
         return if (existingResource != null) {
             logger.info("Resource ${urls.get} already exists. Skipping...")
-            OpenShiftResponse(existingResource.statusCodeValue, OperationType.NONE, json, existingResource.body)
+            OpenShiftResponse(OperationType.NONE, json, existingResource.body)
         } else {
             logger.info("Creating resource ${urls.get}")
             val createdResource = createResource(headers, urls.update, json)
-            OpenShiftResponse(createdResource.statusCodeValue, OperationType.CREATED, json, createdResource.body)
+            OpenShiftResponse(OperationType.CREATED, json, createdResource.body)
         }
     }
 
@@ -64,7 +63,7 @@ class OpenShiftClient(
         val headers: HttpHeaders = createHeaders(token)
 
         val currentUser = getExistingResource(headers, url)
-        return OpenShiftResponse(currentUser?.statusCodeValue ?: 400, operationType = OperationType.NONE, responseBody = currentUser?.body)
+        return OpenShiftResponse(operationType = OperationType.NONE, responseBody = currentUser?.body)
     }
 
     private fun getExistingResource(headers: HttpHeaders, url: String): ResponseEntity<JsonNode>? {
@@ -123,7 +122,7 @@ class OpenShiftClient(
         }
         logger.debug("Body=${createResponse.body}")
 
-        return OpenShiftResponse(createResponse.statusCodeValue, OperationType.UPDATE, roleBinding, createResponse.body)
+        return OpenShiftResponse(OperationType.UPDATE, roleBinding, createResponse.body)
 
     }
 }

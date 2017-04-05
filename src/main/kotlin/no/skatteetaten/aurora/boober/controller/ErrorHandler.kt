@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.boober.controller
 
-import no.skatteetaten.aurora.boober.service.ValidationException
+import no.skatteetaten.aurora.boober.service.ApplicationConfigException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_REQUEST
@@ -15,8 +15,8 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @ControllerAdvice
 class ErrorHandler : ResponseEntityExceptionHandler() {
 
-    @ExceptionHandler(ValidationException::class)
-    fun handleValidationErrors(ex: ValidationException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
+    @ExceptionHandler(ApplicationConfigException::class)
+    fun handleValidationErrors(ex: ApplicationConfigException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
 
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleBadRequest(ex: IllegalArgumentException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
@@ -30,7 +30,7 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
         val message = "${e.message}. ${e.cause?.message.let { "Cause: $it" }}"
 
         val items = when (e) {
-            is ValidationException -> e.errors ?: listOf()
+            is ApplicationConfigException -> e.errors ?: listOf()
             else -> listOf()
         }
 
