@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.boober.controller
 
-import no.skatteetaten.aurora.boober.service.ApplicationConfigException
+import no.skatteetaten.aurora.boober.service.AuroraConfigException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_REQUEST
@@ -15,8 +15,8 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @ControllerAdvice
 class ErrorHandler : ResponseEntityExceptionHandler() {
 
-    @ExceptionHandler(ApplicationConfigException::class)
-    fun handleValidationErrors(ex: ApplicationConfigException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
+    @ExceptionHandler(AuroraConfigException::class)
+    fun handleValidationErrors(ex: AuroraConfigException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
 
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleBadRequest(ex: IllegalArgumentException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
@@ -27,10 +27,10 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
     private fun handleException(e: Exception, request: WebRequest, httpStatus: HttpStatus): ResponseEntity<*> {
 
         val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
-        val message = "${e.message}. ${e.cause?.message.let { "Cause: $it" }}"
+        val message = "${e.message}. ${e.cause?.message?.let { " Cause: $it" } ?: ""}"
 
         val items = when (e) {
-            is ApplicationConfigException -> e.errors ?: listOf()
+            is AuroraConfigException -> e.errors
             else -> listOf()
         }
 
