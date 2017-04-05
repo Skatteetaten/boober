@@ -39,10 +39,15 @@ class OpenShiftService(
 
         val templatesToProcess = mutableListOf(
                 "project.json",
+                // It is important that the DeploymentConfig is created before the ImageStream (preferably several
+                // seconds earlier - just in case), because Sprocket needs to have time to update the dc with its
+                // modifications before a deployment is started. The first deployment will start as soon as the
+                // ImageStream has been created, by an ImageChangeTrigger. Case in point; don't change the order of
+                // these objects unless you really know whats going on.
+                "deployment-config.json",
                 "configmap.json",
                 "service.json",
-                "imagestream.json",
-                "deployment-config.json"
+                "imagestream.json"
         )
 
         if (auroraDc.route) {
