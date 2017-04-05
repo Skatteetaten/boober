@@ -1,6 +1,6 @@
 {
-  "app": "referanse",
-  "env": "boober",
+  "apps": ["referanse"],
+  "envs": ["boober"],
   "affiliation": "paas",
   "files": {
     "about.json": {

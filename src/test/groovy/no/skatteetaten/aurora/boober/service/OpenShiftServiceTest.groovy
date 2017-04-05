@@ -20,6 +20,7 @@ class OpenShiftServiceTest extends Specification {
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
+  final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
   def setupSpec() {
     setLogLevels()
@@ -31,7 +32,7 @@ class OpenShiftServiceTest extends Specification {
   ObjectMapper mapper = configuration.mapper()
 
   def openShiftService = new OpenShiftService(userDetailsProvider, velocityEngine, mapper)
-  def aocConfigParserService = new AuroraConfigParserService()
+  def auroraConfigParserService = new AuroraConfigParserService()
 
   def "Should create seven OpenShift objects from Velocity templates"() {
     given:
@@ -39,9 +40,9 @@ class OpenShiftServiceTest extends Specification {
       Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
 
     when:
-      def aocConfig = new AuroraConfig(files)
-      AuroraDeploymentConfig auroraDc = aocConfigParserService.
-          createAuroraDcFromAuroraConfig(aocConfig, ENV_NAME, APP_NAME)
+      def auroraConfig = new AuroraConfig(files)
+      def mergedFileForApplication = auroraConfig.getMergedFileForApplication(aid)
+      AuroraDeploymentConfig auroraDc = auroraConfigParserService.createAuroraDcFromMergedFileForApplication(mergedFileForApplication)
       List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc)
 
       def configMap = generatedObjects.find { it.get("kind").asText() == "ConfigMap" }

@@ -1,6 +1,6 @@
 {
-  "app": "referanse",
-  "env": "boober2",
+  "apps": ["referanse", "referanse2"],
+  "envs": ["boober2", "boober3"],
   "affiliation": "paas",
   "files": {
     "about.json": {
@@ -36,10 +36,41 @@
         "foo2": "bar"
       }
     },
+    "referanse2.json": {
+      "name": "referanse2",
+      "replicas": 1,
+      "flags": [
+        "rolling",
+        "cert"
+      ],
+      "build": {
+        "GROUP_ID": "ske.aurora.openshift.referanse",
+        "ARTIFACT_ID": "openshift-referanse-springboot-server",
+        "VERSION": 0
+      },
+      "deploy": {
+        "PROMETHEUS_ENABLED": true,
+        "PROMETHEUS_PORT": "8081",
+        "MANAGEMENT_PATH": ":8081/actuator",
+        "DATABASE": "referanseapp"
+      },
+      "config": {
+        "foo2": "bar"
+      }
+    },
     "boober2/about.json": {
       "cluster": "utv"
     },
     "boober2/referanse.json": {
+    },
+    "boober2/referanse2.json": {
+    },
+    "boober3/about.json": {
+      "cluster": "utv"
+    },
+    "boober3/referanse.json": {
+    },
+    "boober3/referanse2.json": {
     }
   }
 }

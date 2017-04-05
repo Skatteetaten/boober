@@ -15,7 +15,12 @@ data class ApplicationId(
 data class ApplicationResult(
         val applicationId: ApplicationId,
         val auroraDc: AuroraDeploymentConfig,
-        val openShiftResponses: List<OpenShiftResponse>
+        val openShiftResponses: List<OpenShiftResponse> = listOf()
+)
+
+data class Error(
+        val applicationId: ApplicationId,
+        val errors: List<String> = listOf()
 )
 
 @Service
@@ -26,27 +31,49 @@ class SetupService(
 
     val logger: Logger = LoggerFactory.getLogger(SetupService::class.java)
 
-    fun executeSetup(auroraConfig: AuroraConfig, environmentName: String, applicationName: String, dryRun: Boolean = false): List<ApplicationResult> {
+    fun executeSetup(auroraConfig: AuroraConfig, envs: List<String>, apps: List<String>, dryRun: Boolean = false): List<ApplicationResult> {
 
-        val auroraDc: AuroraDeploymentConfig = auroraConfigParserService.createAuroraDcFromAuroraConfig(auroraConfig, environmentName, applicationName)
+        val applicationIds: List<ApplicationId> = envs.flatMap { env -> apps.map { app -> ApplicationId(env, app) } }
+        val auroraDcs: MutableList<AuroraDeploymentConfig> = createAuroraDcsForApplications(auroraConfig, applicationIds)
 
-        logger.info("Creating OpenShift objects for application ${auroraDc.name} in namespace ${auroraDc.namespace}")
-        val openShiftObjects: List<JsonNode> = openShiftService.generateObjects(auroraDc)
-        val openShiftResponses: List<OpenShiftResponse> = openShiftClient.applyMany(auroraDc.namespace, openShiftObjects, dryRun)
+        return auroraDcs.map { applyDeploymentConfig(it, dryRun) }
+    }
 
-        /*
-        openShiftClient.updateRoleBinding(auroraDc.namespace, "admin", token,
-                auroraDc.users?.split(" ") ?: emptyList(),
-                auroraDc.groups?.split(" ") ?: emptyList()).let {
-            openShiftResponses.plus(it)
+    private fun createAuroraDcsForApplications(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>): MutableList<AuroraDeploymentConfig> {
+
+        val auroraDcs: MutableList<AuroraDeploymentConfig> = mutableListOf()
+        val errors: MutableList<Error> = mutableListOf()
+        applicationIds.forEach { aid ->
+            try {
+                val mergedFileForApplication = auroraConfig.getMergedFileForApplication(aid)
+                val auroraDc = auroraConfigParserService.createAuroraDcFromMergedFileForApplication(mergedFileForApplication)
+                auroraDcs.add(auroraDc)
+            } catch (e: ApplicationConfigException) {
+                errors.add(Error(aid, e.errors))
+            }
         }
-*/
-        val applicationResults = mutableListOf<ApplicationResult>()
-        applicationResults.add(ApplicationResult(
-                applicationId = ApplicationId(environmentName, applicationName),
-                auroraDc = auroraDc,
+        if (errors.isNotEmpty()) {
+            throw AuroraConfigException("AuroraConfig contained errors for one or more applications", errors)
+        }
+        return auroraDcs
+    }
+
+    private fun applyDeploymentConfig(it: AuroraDeploymentConfig, dryRun: Boolean = false): ApplicationResult {
+
+        logger.info("Creating OpenShift objects for application ${it.name} in namespace ${it.namespace}")
+        val openShiftObjects: List<JsonNode> = openShiftService.generateObjects(it)
+        val openShiftResponses: List<OpenShiftResponse> = openShiftClient.applyMany(it.namespace, openShiftObjects, dryRun)
+        /*
+            openShiftClient.updateRoleBinding(auroraDc.namespace, "admin", token,
+                                              auroraDc.users?.split(" ") ?: emptyList(),
+                                              auroraDc.groups?.split(" ") ?: emptyList()).let {
+                openShiftResponses.plus(it)
+            }
+    */
+        return ApplicationResult(
+                applicationId = ApplicationId(it.envName, it.name),
+                auroraDc = it,
                 openShiftResponses = openShiftResponses
-        ))
-        return applicationResults
+        )
     }
 }

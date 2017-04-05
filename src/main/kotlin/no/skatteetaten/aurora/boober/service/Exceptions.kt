@@ -1,11 +1,18 @@
 package no.skatteetaten.aurora.boober.service
 
-abstract class ServiceException(message: String?, cause: Throwable?) : RuntimeException(message, cause)
+abstract class ServiceException(message: String?, cause: Throwable?) : RuntimeException(message, cause) {
+    constructor(message: String) : this(message, null)
+}
 
 class OpenShiftException(messages: String?, cause: Throwable?) : ServiceException(messages, cause)
 
-class ValidationException(
-        messages: String?,
+class ApplicationConfigException(
+        messages: String,
         cause: Throwable? = null,
-        val errors: List<String>? = listOf()
+        val errors: List<String> = listOf()
 ) : ServiceException(messages, cause)
+
+class AuroraConfigException(
+        message: String,
+        val errors: List<Error> = listOf()
+) : ServiceException(message)

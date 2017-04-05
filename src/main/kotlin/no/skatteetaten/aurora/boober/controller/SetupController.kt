@@ -1,11 +1,9 @@
 package no.skatteetaten.aurora.boober.controller
 
 
-import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.ApplicationResult
 import no.skatteetaten.aurora.boober.service.SetupService
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
@@ -28,13 +26,13 @@ class SetupController(val setupService: SetupService) {
     private fun executeSetup(cmd: SetupCommand, dryRun: Boolean = false): Response {
 
         val auroraConfig = AuroraConfig(cmd.files)
-        val applicationResults: List<ApplicationResult> = setupService.executeSetup(auroraConfig, cmd.env, cmd.app!!, dryRun)
+        val applicationResults: List<ApplicationResult> = setupService.executeSetup(auroraConfig, cmd.envs, cmd.apps)
         return Response(items = applicationResults)
     }
 }
 
 data class SetupCommand(val affiliation: String,
-                        val env: String,
-                        val app: String?,
+                        val envs: List<String> = listOf(),
+                        val apps: List<String> = listOf(),
                         val files: Map<String, Map<String, Any?>>,
                         val overrides: Map<String, Map<String, Any?>>?)

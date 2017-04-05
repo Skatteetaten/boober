@@ -26,7 +26,7 @@ class SetupControllerTest extends AbstractControllerTest {
     given:
       def files = SampleFilesCollector.qaEbsUsersSampleFiles
       files.put("about.json", [:])
-      SetupCommand cmd = new SetupCommand(AFFILIATION, ENV_NAME, APP_NAME, files, [:])
+      SetupCommand cmd = new SetupCommand(AFFILIATION, [ENV_NAME], [APP_NAME], files, [:])
       def json = JsonOutput.toJson(cmd)
 
     when:
@@ -38,7 +38,7 @@ class SetupControllerTest extends AbstractControllerTest {
       def body = new JsonSlurper().parseText(response.andReturn().response.getContentAsString())
 
     then:
-      body.items.size() == 1
+      body.items[0]["errors"].size() == 1
       response.andExpect(status().is4xxClientError())
   }
 }

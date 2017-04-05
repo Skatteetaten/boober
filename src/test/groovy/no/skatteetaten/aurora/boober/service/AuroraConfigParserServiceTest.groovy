@@ -13,6 +13,7 @@ class AuroraConfigParserServiceTest extends Specification {
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
+  final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
   AuroraConfigParserService service = new AuroraConfigParserService()
 
@@ -24,7 +25,8 @@ class AuroraConfigParserServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files)
 
     when:
-      service.createAuroraDcFromAuroraConfig(auroraConfig, ENV_NAME, APP_NAME)
+      def mergedFileForApplication = auroraConfig.getMergedFileForApplication(aid)
+      service.createAuroraDcFromMergedFileForApplication(mergedFileForApplication)
 
     then:
       thrown(IllegalArgumentException)
@@ -37,7 +39,8 @@ class AuroraConfigParserServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files)
 
     when:
-      AuroraDeploymentConfig auroraDc = service.createAuroraDcFromAuroraConfig(auroraConfig, ENV_NAME, APP_NAME)
+      def mergedFileForApplication = auroraConfig.getMergedFileForApplication(aid)
+      AuroraDeploymentConfig auroraDc = service.createAuroraDcFromMergedFileForApplication(mergedFileForApplication)
 
     then:
       with(auroraDc) {
@@ -76,7 +79,8 @@ class AuroraConfigParserServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files)
 
     when:
-      AuroraDeploymentConfig auroraDc = service.createAuroraDcFromAuroraConfig(auroraConfig, ENV_NAME, APP_NAME)
+      def mergedFileForApplication = auroraConfig.getMergedFileForApplication(aid)
+      AuroraDeploymentConfig auroraDc = service.createAuroraDcFromMergedFileForApplication(mergedFileForApplication)
 
     then:
       auroraDc.name == "awesome-app"
@@ -106,11 +110,12 @@ class AuroraConfigParserServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files)
 
     when:
-      service.createAuroraDcFromAuroraConfig(auroraConfig, ENV_NAME, APP_NAME)
+      def mergedFileForApplication = auroraConfig.getMergedFileForApplication(aid)
+      service.createAuroraDcFromMergedFileForApplication(mergedFileForApplication)
 
 
     then:
-      def ex = thrown(ValidationException)
+      def ex = thrown(ApplicationConfigException)
       ex.errors.size() == 3
   }
 

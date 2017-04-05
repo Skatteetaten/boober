@@ -13,7 +13,7 @@ data class AuroraDeploymentConfig(
         val cluster: String,
         val type: TemplateType,
         val name: String,
-        val envName: String?,
+        val envName: String,
         val groups: String?,
         val users: String?,
         val replicas: Int?,

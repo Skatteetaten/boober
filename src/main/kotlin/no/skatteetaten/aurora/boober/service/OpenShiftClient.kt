@@ -16,7 +16,7 @@ import org.springframework.web.client.RestTemplate
 import java.net.URI
 
 
-enum class OperationType {CREATED, UPDATE, NONE }
+enum class OperationType { CREATED, UPDATE, NONE }
 
 
 data class OpenShiftResponse(

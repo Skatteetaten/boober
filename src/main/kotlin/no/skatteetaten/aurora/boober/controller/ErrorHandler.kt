@@ -1,8 +1,6 @@
 package no.skatteetaten.aurora.boober.controller
 
-import no.skatteetaten.aurora.boober.service.ValidationException
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import no.skatteetaten.aurora.boober.service.AuroraConfigException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_REQUEST
@@ -17,8 +15,8 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @ControllerAdvice
 class ErrorHandler : ResponseEntityExceptionHandler() {
 
-    @ExceptionHandler(ValidationException::class)
-    fun handleValidationErrors(ex: ValidationException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
+    @ExceptionHandler(AuroraConfigException::class)
+    fun handleValidationErrors(ex: AuroraConfigException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
 
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleBadRequest(ex: IllegalArgumentException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
@@ -29,10 +27,10 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
     private fun handleException(e: Exception, request: WebRequest, httpStatus: HttpStatus): ResponseEntity<*> {
 
         val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
-        val message = "${e.message}. ${e.cause?.message.let { "Cause: $it" }}"
+        val message = "${e.message}. ${e.cause?.message?.let { " Cause: $it" } ?: ""}"
 
         val items = when (e) {
-            is ValidationException -> e.errors ?: listOf()
+            is AuroraConfigException -> e.errors
             else -> listOf()
         }
 
