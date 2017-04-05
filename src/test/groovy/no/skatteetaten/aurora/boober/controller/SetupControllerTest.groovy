@@ -26,7 +26,7 @@ class SetupControllerTest extends AbstractControllerTest {
     given:
       def files = SampleFilesCollector.qaEbsUsersSampleFiles
       files.put("about.json", [:])
-      SetupCommand cmd = new SetupCommand(AFFILIATION, ENV_NAME, APP_NAME, files, [:])
+      SetupCommand cmd = new SetupCommand(AFFILIATION, [ENV_NAME], [APP_NAME], files, [:])
       def json = JsonOutput.toJson(cmd)
 
     when:
