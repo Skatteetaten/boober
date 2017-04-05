@@ -1,11 +1,9 @@
 package no.skatteetaten.aurora.boober.controller
 
 
-import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.ApplicationResult
 import no.skatteetaten.aurora.boober.service.SetupService
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
@@ -14,13 +12,22 @@ import org.springframework.web.bind.annotation.RestController
 class SetupController(val setupService: SetupService) {
 
     @PutMapping("/setup")
-    fun setup(@AuthenticationPrincipal activeUser: User, @RequestBody cmd: SetupCommand): Response {
+    fun setup(@RequestBody cmd: SetupCommand): Response {
+
+        return executeSetup(cmd)
+    }
+
+    @PutMapping("/setup-dryrun")
+    fun setupDryRun(@RequestBody cmd: SetupCommand): Response {
+
+        return executeSetup(cmd, true)
+    }
+
+    private fun executeSetup(cmd: SetupCommand, dryRun: Boolean = false): Response {
 
         val auroraConfig = AuroraConfig(cmd.files)
-
-        val applicationResults: List<ApplicationResult> = setupService.executeSetup(activeUser.token, auroraConfig, cmd.envs, cmd.apps)
-
-        return Response(success = true, items = applicationResults)
+        val applicationResults: List<ApplicationResult> = setupService.executeSetup(auroraConfig, cmd.envs, cmd.apps)
+        return Response(items = applicationResults)
     }
 }
 

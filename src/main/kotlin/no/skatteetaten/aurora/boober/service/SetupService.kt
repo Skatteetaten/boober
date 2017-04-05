@@ -31,12 +31,12 @@ class SetupService(
 
     val logger: Logger = LoggerFactory.getLogger(SetupService::class.java)
 
-    fun executeSetup(token: String, auroraConfig: AuroraConfig, envs: List<String>, apps: List<String>): List<ApplicationResult> {
+    fun executeSetup(auroraConfig: AuroraConfig, envs: List<String>, apps: List<String>, dryRun: Boolean = false): List<ApplicationResult> {
 
         val applicationIds: List<ApplicationId> = envs.flatMap { env -> apps.map { app -> ApplicationId(env, app) } }
         val auroraDcs: MutableList<AuroraDeploymentConfig> = createAuroraDcsForApplications(auroraConfig, applicationIds)
 
-        return auroraDcs.map { applyDeploymentConfig(it, token) }
+        return auroraDcs.map { applyDeploymentConfig(it, dryRun) }
     }
 
     private fun createAuroraDcsForApplications(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>): MutableList<AuroraDeploymentConfig> {
@@ -58,11 +58,11 @@ class SetupService(
         return auroraDcs
     }
 
-    private fun applyDeploymentConfig(it: AuroraDeploymentConfig, token: String): ApplicationResult {
+    private fun applyDeploymentConfig(it: AuroraDeploymentConfig, dryRun: Boolean = false): ApplicationResult {
 
         logger.info("Creating OpenShift objects for application ${it.name} in namespace ${it.namespace}")
-        val openShiftObjects: List<JsonNode> = openShiftService.generateObjects(it, token)
-        val openShiftResponses: List<OpenShiftResponse> = openShiftClient.applyMany(it.namespace, openShiftObjects, token)
+        val openShiftObjects: List<JsonNode> = openShiftService.generateObjects(it)
+        val openShiftResponses: List<OpenShiftResponse> = openShiftClient.applyMany(it.namespace, openShiftObjects, dryRun)
         /*
             openShiftClient.updateRoleBinding(auroraDc.namespace, "admin", token,
                                               auroraDc.users?.split(" ") ?: emptyList(),

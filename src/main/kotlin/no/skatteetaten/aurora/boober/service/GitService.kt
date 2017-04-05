@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service
 import java.io.File
 
 
-@Service
+//@Service
 class GitService(
         @Value("\${boober.git.url}") val url: String,
         @Value("\${boober.git.username}") val username: String,

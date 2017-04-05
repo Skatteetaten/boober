@@ -34,6 +34,10 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
             else -> listOf()
         }
 
+        if (httpStatus.is5xxServerError) {
+            logger.error("Unexpected error while handling request", e)
+        }
+
         val response = Response(false, message, items)
 
         return handleExceptionInternal(e, response, headers, httpStatus, request)
