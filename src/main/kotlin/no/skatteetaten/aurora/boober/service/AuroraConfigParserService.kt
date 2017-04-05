@@ -9,7 +9,8 @@ import org.springframework.stereotype.Service
 @Service
 class AuroraConfigParserService {
 
-    fun createAuroraDcFromMergedFileForApplication(mergedFile: Map<String, Any?>): AuroraDeploymentConfig {
+    fun createAuroraDcFromMergedFileForApplication(mergedFile: Map<String, Any?>,
+                                                   secrets: Map<String, String>?): AuroraDeploymentConfig {
 
         val type = mergedFile.s("type").let { TemplateType.valueOf(it!!) }
         var name = mergedFile.s("name")
@@ -33,10 +34,10 @@ class AuroraConfigParserService {
                 type = type,
                 name = name!!,
                 config = mergedFile.m("config"),
+                secrets = secrets,
                 envName = mergedFile.s("envName") ?: "",
                 groups = mergedFile.s("groups") ?: "",
                 replicas = mergedFile.i("replicas") ?: 1,
-                secretFile = mergedFile.s("secretFile") ?: "",
                 users = mergedFile.s("users") ?: "",
                 route = flags?.contains("route") ?: false,
                 deploymentStrategy = if (flags?.contains("rolling") ?: false) rolling else recreate,

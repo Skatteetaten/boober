@@ -40,9 +40,10 @@ class OpenShiftServiceTest extends Specification {
       Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
 
     when:
-      def auroraConfig = new AuroraConfig(files)
+      def auroraConfig = new AuroraConfig(files, [:])
       def mergedFileForApplication = auroraConfig.getMergedFileForApplication(aid)
-      AuroraDeploymentConfig auroraDc = auroraConfigParserService.createAuroraDcFromMergedFileForApplication(mergedFileForApplication)
+      AuroraDeploymentConfig auroraDc = auroraConfigParserService.
+          createAuroraDcFromMergedFileForApplication(mergedFileForApplication, null)
       List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc)
 
       def configMap = generatedObjects.find { it.get("kind").asText() == "ConfigMap" }
@@ -55,6 +56,7 @@ class OpenShiftServiceTest extends Specification {
 
     then:
       generatedObjects.size() == 7
+
 
       compareJson(project, """
         {

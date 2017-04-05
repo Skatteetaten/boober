@@ -50,6 +50,12 @@ class OpenShiftService(
                 "imagestream.json"
         )
 
+        //TODO:Hvis configmap er tom her så trenger vi ikke parse dette.
+
+        auroraDc.secrets?.let {
+            templatesToProcess.add("secret.json")
+        }
+
         if (auroraDc.route) {
             templatesToProcess.add("route.json")
         }

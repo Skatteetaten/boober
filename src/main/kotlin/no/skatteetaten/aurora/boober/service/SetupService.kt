@@ -43,18 +43,28 @@ class SetupService(
 
         val auroraDcs: MutableList<AuroraDeploymentConfig> = mutableListOf()
         val errors: MutableList<Error> = mutableListOf()
+
         applicationIds.forEach { aid ->
             try {
                 val mergedFileForApplication = auroraConfig.getMergedFileForApplication(aid)
-                val auroraDc = auroraConfigParserService.createAuroraDcFromMergedFileForApplication(mergedFileForApplication)
+                val secrets = mergedFileForApplication.s("secretFolder")?.let {
+                    val secrets = auroraConfig.getSecrets(it)
+                    if (secrets.isEmpty()) {
+                        errors.add(Error(aid, listOf("No secret files with prefix $it")))
+                    }
+                    secrets
+                }
+                val auroraDc = auroraConfigParserService.createAuroraDcFromMergedFileForApplication(mergedFileForApplication, secrets)
                 auroraDcs.add(auroraDc)
             } catch (e: ApplicationConfigException) {
                 errors.add(Error(aid, e.errors))
             }
         }
+
         if (errors.isNotEmpty()) {
             throw AuroraConfigException("AuroraConfig contained errors for one or more applications", errors)
         }
+
         return auroraDcs
     }
 
@@ -64,6 +74,7 @@ class SetupService(
         val openShiftObjects: List<JsonNode> = openShiftService.generateObjects(it)
         val openShiftResponses: List<OpenShiftResponse> = openShiftClient.applyMany(it.namespace, openShiftObjects, dryRun)
         /*
+        //TODO:Her må vi nok finne creator av prosjektet og legge denn inn i users i tilegg for at dette skal bli rett.
             openShiftClient.updateRoleBinding(auroraDc.namespace, "admin", token,
                                               auroraDc.users?.split(" ") ?: emptyList(),
                                               auroraDc.groups?.split(" ") ?: emptyList()).let {

@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.utils
 
+import java.util.*
+
 
 inline fun <T : AutoCloseable, R> T.use(block: (T) -> R): R {
 
@@ -21,3 +23,6 @@ inline fun <T : AutoCloseable, R> T.use(block: (T) -> R): R {
         }
     }
 }
+
+inline fun String.base64encode(): String =
+        Base64.getEncoder().encodeToString(this.toByteArray(java.nio.charset.StandardCharsets.UTF_8))

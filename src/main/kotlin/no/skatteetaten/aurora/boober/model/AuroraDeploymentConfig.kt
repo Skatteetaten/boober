@@ -17,7 +17,7 @@ data class AuroraDeploymentConfig(
         val groups: String?,
         val users: String?,
         val replicas: Int?,
-        val secretFile: String?,
+        val secrets: Map<String, Any?>?,
         val config: Map<String, Any?>?,
         val route: Boolean = false,
         val deploymentStrategy: DeploymentStrategy?,

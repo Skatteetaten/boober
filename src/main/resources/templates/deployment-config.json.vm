@@ -76,6 +76,15 @@
               "name": "${adc.name}"
             }
           }
+          #if(${adc.secrets})
+          ,
+            {
+              "name": "secrets",
+              "secret": {
+                "secretName": "${adc.name}"
+              }
+            }
+          #end
         ],
         "containers": [
           {
@@ -169,6 +178,13 @@
                 "name": "config",
                 "mountPath": "/u01/config/configmap"
               }
+              #if(${adc.secrets})
+              ,
+                {
+                  "name": "secrets",
+                  "mountPath": "/u01/config/secret"
+                }
+              #end
             ],
             "terminationMessagePath": "/dev/termination-log",
             "imagePullPolicy": "IfNotPresent",

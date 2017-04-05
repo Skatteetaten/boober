@@ -4,6 +4,7 @@ import no.skatteetaten.aurora.boober.service.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.ApplicationId
 import no.skatteetaten.aurora.boober.service.m
 import no.skatteetaten.aurora.boober.service.s
+import no.skatteetaten.aurora.boober.utils.base64encode
 import no.skatteetaten.aurora.boober.utils.createMergeCopy
 import javax.validation.Validation
 import javax.validation.constraints.NotNull
@@ -11,11 +12,17 @@ import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
 
 class AuroraConfig(
-        val aocConfigFiles: Map<String, Map<String, Any?>>
+        val aocConfigFiles: Map<String, Map<String, Any?>>,
+        val secrets: Map<String, String> = mapOf()
 ) {
+    fun getSecrets(secretFolder: String): Map<String, String> {
+        return secrets.filter { it.key.startsWith(secretFolder) }.map { Pair(it.key.removePrefix(secretFolder), it.value.base64encode()) }.toMap()
+    }
+
     fun getMergedFileForApplication(aid: ApplicationId): Map<String, Any?> {
         val filesForApplication = getFilesForApplication(aid)
         val mergedJson = mergeAocConfigFiles(filesForApplication)
+
 
         mergedJson.apply {
             putIfAbsent("envName", aid.environmentName)
@@ -60,6 +67,7 @@ class AuroraConfig(
         if (errors.isNotEmpty()) {
             throw ApplicationConfigException("Config for application '$applicationName' contains errors", errors = errors)
         }
+
         //TODO:validate that all users/groups are actually valid groups/users
 /*
         if (config is TemplateProcessingConfig) {

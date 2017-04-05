@@ -25,7 +25,7 @@ class SetupController(val setupService: SetupService) {
 
     private fun executeSetup(cmd: SetupCommand, dryRun: Boolean = false): Response {
 
-        val auroraConfig = AuroraConfig(cmd.files)
+        val auroraConfig = AuroraConfig(cmd.files, cmd.secrets)
         val applicationResults: List<ApplicationResult> = setupService.executeSetup(auroraConfig, cmd.envs, cmd.apps)
         return Response(items = applicationResults)
     }
@@ -35,4 +35,5 @@ data class SetupCommand(val affiliation: String,
                         val envs: List<String> = listOf(),
                         val apps: List<String> = listOf(),
                         val files: Map<String, Map<String, Any?>>,
+                        val secrets: Map<String, String> = mapOf(),
                         val overrides: Map<String, Map<String, Any?>>?)

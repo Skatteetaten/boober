@@ -56,8 +56,10 @@
       },
       "config": {
         "foo2": "bar"
-      }
+      },
+      "secretFolder": "/tmp/foo/"
     },
+
     "boober2/about.json": {
       "cluster": "utv"
     },
@@ -72,5 +74,9 @@
     },
     "boober3/referanse2.json": {
     }
+  },
+  "secrets": {
+    "/tmp/foo/latest.properties": "FOO=bar\\nBAR=baz",
+    "/tmp/foo/1.2.3.properties": "FOO=OHYEAH\\nBAR=FOOBAR"
   }
 }

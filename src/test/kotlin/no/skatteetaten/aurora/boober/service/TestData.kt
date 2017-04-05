@@ -37,5 +37,5 @@ val auroraDcDevelopment = AuroraDeploymentConfig(
         replicas = 1,
         route = true,
         users = null,
-        secretFile = null
+        secrets = emptyMap()
 )

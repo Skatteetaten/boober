@@ -22,7 +22,7 @@ class AuroraConfigParserServiceTest extends Specification {
     given:
       Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
       files.remove("${APP_NAME}.json" as String)
-      def auroraConfig = new AuroraConfig(files)
+      def auroraConfig = new AuroraConfig(files, [:])
 
     when:
       def mergedFileForApplication = auroraConfig.getMergedFileForApplication(aid)
@@ -36,11 +36,12 @@ class AuroraConfigParserServiceTest extends Specification {
 
     given:
       Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
-      def auroraConfig = new AuroraConfig(files)
+      def auroraConfig = new AuroraConfig(files, [:])
 
     when:
       def mergedFileForApplication = auroraConfig.getMergedFileForApplication(aid)
-      AuroraDeploymentConfig auroraDc = service.createAuroraDcFromMergedFileForApplication(mergedFileForApplication)
+      AuroraDeploymentConfig auroraDc = service.
+          createAuroraDcFromMergedFileForApplication(mergedFileForApplication, [:])
 
     then:
       with(auroraDc) {
@@ -76,11 +77,12 @@ class AuroraConfigParserServiceTest extends Specification {
 
       files.put("${ENV_NAME}/${APP_NAME}.json" as String, jsonToMap(envAppOverride))
 
-      def auroraConfig = new AuroraConfig(files)
+      def auroraConfig = new AuroraConfig(files, [:])
 
     when:
       def mergedFileForApplication = auroraConfig.getMergedFileForApplication(aid)
-      AuroraDeploymentConfig auroraDc = service.createAuroraDcFromMergedFileForApplication(mergedFileForApplication)
+      AuroraDeploymentConfig auroraDc = service.
+          createAuroraDcFromMergedFileForApplication(mergedFileForApplication, [:])
 
     then:
       auroraDc.name == "awesome-app"
@@ -107,7 +109,7 @@ class AuroraConfigParserServiceTest extends Specification {
       files.put("${APP_NAME}.json" as String, jsonToMap(appOverride))
       files.put("${ENV_NAME}/${APP_NAME}.json" as String, [:])
 
-      def auroraConfig = new AuroraConfig(files)
+      def auroraConfig = new AuroraConfig(files, [:])
 
     when:
       def mergedFileForApplication = auroraConfig.getMergedFileForApplication(aid)
