@@ -100,9 +100,11 @@ class OpenShiftClient(
         return headers
     }
 
-    fun updateRoleBinding(namespace: String, role: String, token: String, users: List<String>, groups: List<String>): OpenShiftResponse? {
+    fun updateRoleBinding(namespace: String, role: String, users: Set<String>, groups: Set<String>): OpenShiftResponse? {
         val url: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, "rolebinding", namespace, role)
-        val headers: HttpHeaders = createHeaders(token)
+        val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
+
+        val headers: HttpHeaders = createHeaders(authenticatedUser.token)
 
         val response = getExistingResource(headers, url.get)
 
@@ -128,5 +130,13 @@ class OpenShiftClient(
 
         return OpenShiftResponse(OperationType.UPDATE, roleBinding, createResponse.body)
 
+    }
+
+    fun isValidUser(user: String): Boolean {
+        return true
+    }
+
+    fun isValidGroup(group: String): Boolean {
+        return true
     }
 }

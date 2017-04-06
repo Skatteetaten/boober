@@ -47,6 +47,7 @@ class OpenShiftService(
                 "deployment-config.json",
                 "configmap.json",
                 "service.json",
+                "rolebinding.json",
                 "imagestream.json"
         )
 

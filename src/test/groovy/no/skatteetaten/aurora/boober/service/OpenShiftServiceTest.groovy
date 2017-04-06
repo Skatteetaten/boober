@@ -34,7 +34,7 @@ class OpenShiftServiceTest extends Specification {
   def openShiftService = new OpenShiftService(userDetailsProvider, velocityEngine, mapper)
   def auroraConfigParserService = new AuroraConfigParserService()
 
-  def "Should create seven OpenShift objects from Velocity templates"() {
+  def "Should create OpenShift objects from Velocity templates"() {
     given:
       userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User")
       Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
@@ -53,9 +53,45 @@ class OpenShiftServiceTest extends Specification {
       def route = generatedObjects.find { it.get("kind").asText() == "Route" }
       def project = generatedObjects.find { it.get("kind").asText() == "ProjectRequest" }
       def buildConfig = generatedObjects.find { it.get("kind").asText() == "BuildConfig" }
+      def rolebindings = generatedObjects.find { it.get("kind").asText() == "RoleBinding" }
 
     then:
-      generatedObjects.size() == 7
+      generatedObjects.size() == 8
+
+
+      compareJson(rolebindings, """
+        {
+               "kind": "RoleBinding",
+               "apiVersion": "v1",
+               "metadata": {
+                   "name": "verify-ebs-users"
+               },
+               "groupNames": [
+                   "APP_PaaS_drift",
+                   "APP_PaaS_utv"
+               ],
+               "userNames": [
+                   "foo"
+               ],
+               "subjects": [
+                   {
+                       "kind": "User",
+                       "name": "foo"
+                   },
+                   {
+                       "kind": "Group",
+                       "name": "APP_PaaS_drift"
+                   },
+                   {
+                       "kind": "Group",
+                       "name": "APP_PaaS_utv"
+                   }
+               ],
+               "roleRef": {
+                   "name": "admin"
+               }
+           }
+      """)
 
 
       compareJson(project, """

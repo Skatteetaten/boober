@@ -55,6 +55,19 @@ class SetupService(
                     secrets
                 }
                 val auroraDc = auroraConfigParserService.createAuroraDcFromMergedFileForApplication(mergedFileForApplication, secrets)
+
+                auroraDc.groups?.filter {
+                    !openShiftClient.isValidGroup(it)
+                }?.let {
+                    errors.add(Error(aid, listOf("The following groups are not valid= ${it.joinToString()}")))
+                }
+
+                auroraDc.users?.filter {
+                    !openShiftClient.isValidUser(it)
+                }?.let {
+                    errors.add(Error(aid, listOf("The following users are not valid= ${it.joinToString()}")))
+
+                }
                 auroraDcs.add(auroraDc)
             } catch (e: ApplicationConfigException) {
                 errors.add(Error(aid, e.errors))
@@ -68,22 +81,15 @@ class SetupService(
         return auroraDcs
     }
 
-    private fun applyDeploymentConfig(it: AuroraDeploymentConfig, dryRun: Boolean = false): ApplicationResult {
+    private fun applyDeploymentConfig(adc: AuroraDeploymentConfig, dryRun: Boolean = false): ApplicationResult {
 
-        logger.info("Creating OpenShift objects for application ${it.name} in namespace ${it.namespace}")
-        val openShiftObjects: List<JsonNode> = openShiftService.generateObjects(it)
-        val openShiftResponses: List<OpenShiftResponse> = openShiftClient.applyMany(it.namespace, openShiftObjects, dryRun)
-        /*
-        //TODO:Her må vi nok finne creator av prosjektet og legge denn inn i users i tilegg for at dette skal bli rett.
-            openShiftClient.updateRoleBinding(auroraDc.namespace, "admin", token,
-                                              auroraDc.users?.split(" ") ?: emptyList(),
-                                              auroraDc.groups?.split(" ") ?: emptyList()).let {
-                openShiftResponses.plus(it)
-            }
-    */
+        logger.info("Creating OpenShift objects for application ${adc.name} in namespace ${adc.namespace}")
+        val openShiftObjects: List<JsonNode> = openShiftService.generateObjects(adc)
+        val openShiftResponses: List<OpenShiftResponse> = openShiftClient.applyMany(adc.namespace, openShiftObjects, dryRun)
+
         return ApplicationResult(
-                applicationId = ApplicationId(it.envName, it.name),
-                auroraDc = it,
+                applicationId = ApplicationId(adc.envName, adc.name),
+                auroraDc = adc,
                 openShiftResponses = openShiftResponses
         )
     }

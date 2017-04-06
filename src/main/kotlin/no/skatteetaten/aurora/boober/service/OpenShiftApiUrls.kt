@@ -48,7 +48,7 @@ class OpenShiftApiUrls(
 
         fun getCurrentUserPath(baseUrl: String): String {
 
-            val collectionPathForResource = getCollectionPathForResource(baseUrl, "user", null)
+            val collectionPathForResource = getCollectionPathForResource(baseUrl, "user")
             return "$collectionPathForResource/~"
         }
     }

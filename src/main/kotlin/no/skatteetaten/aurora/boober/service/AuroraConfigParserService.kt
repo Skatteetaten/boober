@@ -36,9 +36,9 @@ class AuroraConfigParserService {
                 config = mergedFile.m("config"),
                 secrets = secrets,
                 envName = mergedFile.s("envName") ?: "",
-                groups = mergedFile.s("groups") ?: "",
+                groups = mergedFile.s("groups")?.split(" ")?.toSet() ?: emptySet(),
                 replicas = mergedFile.i("replicas") ?: 1,
-                users = mergedFile.s("users") ?: "",
+                users = mergedFile.s("users")?.split(" ")?.toSet() ?: emptySet(),
                 route = flags?.contains("route") ?: false,
                 deploymentStrategy = if (flags?.contains("rolling") ?: false) rolling else recreate,
                 deployDescriptor = deployDescriptor

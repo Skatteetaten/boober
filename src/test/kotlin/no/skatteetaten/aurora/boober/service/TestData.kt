@@ -32,10 +32,10 @@ val auroraDcDevelopment = AuroraDeploymentConfig(
 
         ),
         envName = "boober-unit-test",
-        groups = "",
+        groups = setOf("foo", "bar"),
         name = "dev-test",
         replicas = 1,
         route = true,
-        users = null,
+        users = setOf("m123", "x123bar"),
         secrets = emptyMap()
 )

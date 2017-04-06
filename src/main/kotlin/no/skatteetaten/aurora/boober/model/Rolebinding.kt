@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.model
 
 
-data class Rolebinding(val groupNames: List<String>, val userNames: List<String>) {
+data class Rolebinding(val groupNames: Set<String>, val userNames: Set<String>) {
     val subjects: List<KindName>
         get() = groupNames.map { KindName("Group", it) }.plus(userNames.map { KindName("User", it) })
 }

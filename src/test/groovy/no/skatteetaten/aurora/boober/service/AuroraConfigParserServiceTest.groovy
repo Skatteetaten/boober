@@ -51,7 +51,7 @@ class AuroraConfigParserServiceTest extends Specification {
         cluster == "utv"
         replicas == 1
         type == TemplateType.development
-        groups == "APP_PaaS_drift APP_PaaS_utv"
+        groups.containsAll(["APP_PaaS_drift", "APP_PaaS_utv"])
       }
 
       with(auroraDc.deployDescriptor as AuroraDeploy) {
