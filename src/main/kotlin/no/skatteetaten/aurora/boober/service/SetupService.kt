@@ -56,17 +56,20 @@ class SetupService(
                 }
                 val auroraDc = auroraConfigParserService.createAuroraDcFromMergedFileForApplication(mergedFileForApplication, secrets)
 
-                auroraDc.groups?.filter {
+                auroraDc.groups.filter {
                     !openShiftClient.isValidGroup(it)
-                }?.let {
-                    errors.add(Error(aid, listOf("The following groups are not valid= ${it.joinToString()}")))
+                }.let {
+                    if (it.isNotEmpty()) {
+                        errors.add(Error(aid, listOf("The following groups are not valid=${it.joinToString()}")))
+                    }
                 }
 
-                auroraDc.users?.filter {
+                auroraDc.users.filter {
                     !openShiftClient.isValidUser(it)
-                }?.let {
-                    errors.add(Error(aid, listOf("The following users are not valid= ${it.joinToString()}")))
-
+                }.let {
+                    if (it.isNotEmpty()) {
+                        errors.add(Error(aid, listOf("The following users are not valid=${it.joinToString()}")))
+                    }
                 }
                 auroraDcs.add(auroraDc)
             } catch (e: ApplicationConfigException) {

@@ -49,13 +49,42 @@ class OpenShiftClient(
         val headers: HttpHeaders = createHeaders(userDetailsProvider.getAuthenticatedUser().token)
 
         val existingResource: ResponseEntity<JsonNode>? = getExistingResource(headers, urls.get)
-        return if (existingResource != null) {
-            logger.info("Resource ${urls.get} already exists. Skipping...")
-            OpenShiftResponse(OperationType.NONE, json, existingResource.body)
-        } else {
-            val createdResource = if (!dryRun) createResource(headers, urls.update, json) else null
-            OpenShiftResponse(OperationType.CREATED, json, createdResource?.body)
+        if (existingResource == null) {
+            val createdResource = if (!dryRun) createResource(headers, urls.create, json) else null
+            return OpenShiftResponse(OperationType.CREATED, json, createdResource?.body)
         }
+
+        logger.info("Resource ${urls.get} already exists. Skipping...")
+        val resourceVersion = existingResource.body.get("metadata")?.get("resourceVersion") ?: throw IllegalArgumentException("resourceVersion not set not")
+
+        return OpenShiftResponse(OperationType.NONE, json, existingResource.body)
+/* Start at handling how we update objects
+        return when (json.get("kind")?.asText()?.toLowerCase()) {
+            "rolebinding" -> {
+                val metadata = json.get("metadata") as ObjectNode
+                metadata.set("resourceVersion", resourceVersion)
+                val updated = if (!dryRun) updateResource(headers, urls.update, json) else null
+                OpenShiftResponse(OperationType.UPDATE, json, updated?.body)
+            }
+            else ->
+                OpenShiftResponse(OperationType.NONE, json, existingResource.body)
+        }
+        */
+    }
+
+
+    private fun updateResource(headers: HttpHeaders, updateUrl: String, payload: JsonNode): ResponseEntity<JsonNode> {
+
+        logger.info("Update resource at $updateUrl")
+
+        val entity = HttpEntity<JsonNode>(payload, headers)
+
+        val updateResponse: ResponseEntity<JsonNode> = try {
+            restTemplate.exchange(updateUrl, HttpMethod.PUT, entity, JsonNode::class.java)
+        } catch(e: HttpClientErrorException) {
+            throw OpenShiftException("Error saving url=${updateUrl}, with message=${e.message}", e)
+        }
+        return updateResponse
     }
 
     fun findCurrentUser(token: String): OpenShiftResponse {

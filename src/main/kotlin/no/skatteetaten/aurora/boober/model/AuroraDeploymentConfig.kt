@@ -14,8 +14,8 @@ data class AuroraDeploymentConfig(
         val type: TemplateType,
         val name: String,
         val envName: String,
-        val groups: Set<String>?,
-        val users: Set<String>?,
+        val groups: Set<String>,
+        val users: Set<String>,
         val replicas: Int?,
         val secrets: Map<String, Any?>?,
         val config: Map<String, Any?>?,
@@ -33,8 +33,8 @@ data class AuroraDeploymentConfig(
         get() = "v1"
     val rolebindings: Map<String, String>
         get(): Map<String, String> {
-            val userPart = users?.map { Pair(it, "User") }?.toMap() ?: emptyMap()
-            val groupPart = groups?.map { Pair(it, "Group") }?.toMap() ?: emptyMap()
+            val userPart = users.map { Pair(it, "User") }.toMap()
+            val groupPart = groups.map { Pair(it, "Group") }.toMap()
             val map = userPart.toMutableMap()
             map.putAll(groupPart)
             return map

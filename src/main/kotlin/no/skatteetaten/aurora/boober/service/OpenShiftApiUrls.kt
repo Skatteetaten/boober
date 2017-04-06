@@ -3,8 +3,9 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 
 class OpenShiftApiUrls(
-        val update: String,
-        val get: String
+        val create: String,
+        val get: String,
+        val update: String
 ) {
     companion object Factory {
         fun createUrlsForResource(baseUrl: String, namespace: String, json: JsonNode): OpenShiftApiUrls {
@@ -17,19 +18,20 @@ class OpenShiftApiUrls(
 
         fun createOpenShiftApiUrls(baseUrl: String, kind: String, namespace: String, name: String): OpenShiftApiUrls {
 
-            val updateUrl = getCollectionPathForResource(baseUrl, kind, namespace)
+            val createUrl = getCollectionPathForResource(baseUrl, kind, namespace)
             val getUrl = if (kind == "ProjectRequest") {
                 // Nasty business; for ProjectRequest we need to use the Project kind when checking if the resource
                 // exists. So we need to switch here...
                 val collectionPathForProject = getCollectionPathForResource(baseUrl, "Project", namespace)
                 "$collectionPathForProject/$name"
             } else {
-                "$updateUrl/$name"
+                "$createUrl/$name"
             }
 
             return OpenShiftApiUrls(
-                    update = updateUrl,
-                    get = getUrl
+                    create = createUrl,
+                    get = getUrl,
+                    update = "$createUrl/$name"
             )
         }
 
