@@ -4,7 +4,6 @@ import no.skatteetaten.aurora.boober.service.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.ApplicationId
 import no.skatteetaten.aurora.boober.service.m
 import no.skatteetaten.aurora.boober.service.s
-import no.skatteetaten.aurora.boober.utils.base64encode
 import no.skatteetaten.aurora.boober.utils.createMergeCopy
 import javax.validation.Validation
 import javax.validation.constraints.NotNull
@@ -16,7 +15,9 @@ class AuroraConfig(
         val secrets: Map<String, String> = mapOf()
 ) {
     fun getSecrets(secretFolder: String): Map<String, String> {
-        return secrets.filter { it.key.startsWith(secretFolder) }.map { Pair(it.key.removePrefix(secretFolder), it.value.base64encode()) }.toMap()
+
+        val prefix = if (secretFolder.endsWith("/")) secretFolder else "$secretFolder/"
+        return secrets.filter { it.key.startsWith(prefix) }.mapKeys { it.key.removePrefix(prefix) }
     }
 
     fun getMergedFileForApplication(aid: ApplicationId): Map<String, Any?> {

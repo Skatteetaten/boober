@@ -75,8 +75,8 @@
     "boober3/referanse2.json": {
     }
   },
-  "secrets": {
-    "/tmp/foo/latest.properties": "FOO=bar\\nBAR=baz",
-    "/tmp/foo/1.2.3.properties": "FOO=OHYEAH\\nBAR=FOOBAR"
+  "secretFiles": {
+    "/tmp/foo/latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg==",
+    "/tmp/foo/1.2.3.properties": "Rk9PPU9IWUVBSApCQVI9Rk9PQkFSCg=="
   }
 }
