@@ -64,7 +64,7 @@ class OpenShiftServiceTest extends Specification {
                "kind": "RoleBinding",
                "apiVersion": "v1",
                "metadata": {
-                   "name": "verify-ebs-users"
+                   "name": "admin"
                },
                "groupNames": [
                    "APP_PaaS_drift",

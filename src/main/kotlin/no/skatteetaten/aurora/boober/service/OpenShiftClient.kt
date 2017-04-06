@@ -57,9 +57,9 @@ class OpenShiftClient(
         logger.info("Resource ${urls.get} already exists. Skipping...")
         val resourceVersion = existingResource.body.get("metadata")?.get("resourceVersion") ?: throw IllegalArgumentException("resourceVersion not set not")
 
-        return OpenShiftResponse(OperationType.NONE, json, existingResource.body)
-/* Start at handling how we update objects
+        //   return OpenShiftResponse(OperationType.NONE, json, existingResource.body)
         return when (json.get("kind")?.asText()?.toLowerCase()) {
+        //TODO some operations are repeated for each application in each env. Like creating the project and updating the rolebinding, that is not neccesary.
             "rolebinding" -> {
                 val metadata = json.get("metadata") as ObjectNode
                 metadata.set("resourceVersion", resourceVersion)
@@ -69,7 +69,6 @@ class OpenShiftClient(
             else ->
                 OpenShiftResponse(OperationType.NONE, json, existingResource.body)
         }
-        */
     }
 
 

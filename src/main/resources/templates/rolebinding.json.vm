@@ -2,7 +2,7 @@
   "kind": "RoleBinding",
   "apiVersion": "v1",
   "metadata": {
-    "name": "${adc.name}"
+    "name": "admin"
   }
 #if (${adc.groups.size()} != 0)
 ,"groupNames": [
