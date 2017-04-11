@@ -3,9 +3,9 @@ buildscript {
   ext.springBootVersion = '1.5.2.RELEASE'
 
   repositories {
-    maven {
-      url "$nexusUrl/content/groups/public"
-    }
+    mavenCentral()
+    jcenter()
+    mavenLocal()
   }
 
   dependencies {
@@ -15,7 +15,7 @@ buildscript {
         "org.jetbrains.kotlin:kotlin-allopen:$kotlin_version",
 
         "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion",
-        'ske.aurora.gradle.plugins:aurora-gradle-plugin:2.1.0',
+        'no.skatteetaten.aurora.gradle.plugins:aurora-gradle-plugin:feature_AOS_1064_opensource_gradle_plugins-SNAPSHOT',
         'org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.2.1',
         'info.solidsoft.gradle.pitest:gradle-pitest-plugin:1.1.11',
         'org.asciidoctor:asciidoctor-gradle-plugin:1.5.3',
@@ -23,9 +23,17 @@ buildscript {
   }
 }
 
-ext.snippetsDir = file("$buildDir/docs/generated-snippets")
+repositories {
+  mavenCentral()
+//  mavenLocal()
+}
 
-apply plugin: 'ske.plugins.aurora'
+ext.snippetsDir = file("$buildDir/docs/generated-snippets")
+ext.aurora = [
+    applyNexusRepositories: false
+]
+
+apply plugin: 'no.skatteetaten.plugins.aurora'
 apply plugin: 'org.sonarqube'
 apply plugin: 'java'
 apply plugin: 'groovy'
@@ -57,10 +65,6 @@ group = 'no.skatteetaten.aurora'
 
 sourceCompatibility = '1.8'
 
-repositories {
-  mavenLocal()
-}
-
 //plugin
 pitest {
   outputFormats = ['XML', 'HTML']
@@ -74,8 +78,8 @@ dependencies {
       "org.springframework.boot:spring-boot-starter-actuator",
       "org.springframework.boot:spring-boot-starter-hateoas",
       "org.springframework.boot:spring-boot-starter-security",
-      "ske.aurora.springboot.prometheus:spring-boot-prometheus:3.1.2",
-      'com.ryantenney.metrics:metrics-spring:3.1.2',
+//      "ske.aurora.springboot.prometheus:spring-boot-prometheus:3.1.2",
+//      'com.ryantenney.metrics:metrics-spring:3.1.2',
       "com.fasterxml.jackson.module:jackson-module-kotlin:2.8.7",
       'org.eclipse.jgit:org.eclipse.jgit:4.6.1.201703071140-r',
       'org.apache.velocity:velocity:1.7',
