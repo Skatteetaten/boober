@@ -13,10 +13,10 @@ class OpenShiftApiUrls(
             val kind = json.get("kind")?.asText() ?: throw IllegalArgumentException("kind not specified for resource")
             val name = json.get("metadata")?.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource")
 
-            return createOpenShiftApiUrls(baseUrl, kind, namespace, name)
+            return createOpenShiftApiUrls(baseUrl, kind, name, namespace)
         }
 
-        fun createOpenShiftApiUrls(baseUrl: String, kind: String, namespace: String, name: String): OpenShiftApiUrls {
+        fun createOpenShiftApiUrls(baseUrl: String, kind: String, name: String, namespace: String? = null): OpenShiftApiUrls {
 
             val createUrl = getCollectionPathForResource(baseUrl, kind, namespace)
             val getUrl = if (kind == "ProjectRequest") {
@@ -39,7 +39,7 @@ class OpenShiftApiUrls(
             val endpointKey = kind.toLowerCase() + "s"
 
             val apiType = if (endpointKey in listOf("services", "configmaps", "secrets")) "api" else "oapi"
-            val namespacePrefix = if (endpointKey !in listOf("projects", "projectrequests", "users")) {
+            val namespacePrefix = if (endpointKey !in listOf("projects", "projectrequests", "users", "groups")) {
                 namespace ?: throw IllegalArgumentException("namespace required for resource kind ${kind}")
                 "/namespaces/$namespace"
             } else ""

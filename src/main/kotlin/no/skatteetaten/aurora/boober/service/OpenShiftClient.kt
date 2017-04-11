@@ -1,11 +1,9 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.controller.SetupController
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.model.Rolebinding
+import no.skatteetaten.aurora.boober.utils.updateField
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -54,22 +52,32 @@ class OpenShiftClient(
             return OpenShiftResponse(OperationType.CREATED, json, createdResource?.body)
         }
 
-        logger.info("Resource ${urls.get} already exists. Skipping...")
-        val resourceVersion = existingResource.body.get("metadata")?.get("resourceVersion") ?: throw IllegalArgumentException("resourceVersion not set not")
+        val kind = json.get("kind")?.asText()?.toLowerCase()
 
-        //   return OpenShiftResponse(OperationType.NONE, json, existingResource.body)
-        return when (json.get("kind")?.asText()?.toLowerCase()) {
-        //TODO some operations are repeated for each application in each env. Like creating the project and updating the rolebinding, that is not neccesary.
-            "rolebinding" -> {
-                val metadata = json.get("metadata") as ObjectNode
-                metadata.set("resourceVersion", resourceVersion)
-                val updated = if (!dryRun) updateResource(headers, urls.update, json) else null
-                OpenShiftResponse(OperationType.UPDATE, json, updated?.body)
-            }
-            else ->
-                OpenShiftResponse(OperationType.NONE, json, existingResource.body)
+        val existing = existingResource.body
+        if (kind == "projectrequest") {
+            return OpenShiftResponse(OperationType.NONE, json, existing)
         }
+
+        json.updateField(existing, "/metadata", "resourceVersion")
+
+        if (kind == "service") {
+            json.updateField(existing, "/spec", "clusterIP")
+        }
+
+        if (kind == "deploymentconfig") {
+            json.updateField(existing, "/spec/template/spec/containers/0", "image")
+        }
+
+        if (kind == "buildconfig") {
+            json.updateField(existing, "/spec", "triggers")
+        }
+        val updated = if (!dryRun) updateResource(headers, urls.update, json) else null
+        return OpenShiftResponse(OperationType.UPDATE, json, updated?.body)
+
+
     }
+
 
 
     private fun updateResource(headers: HttpHeaders, updateUrl: String, payload: JsonNode): ResponseEntity<JsonNode> {
@@ -128,43 +136,20 @@ class OpenShiftClient(
         return headers
     }
 
-    fun updateRoleBinding(namespace: String, role: String, users: Set<String>, groups: Set<String>): OpenShiftResponse? {
-        val url: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, "rolebinding", namespace, role)
-        val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
-
-        val headers: HttpHeaders = createHeaders(authenticatedUser.token)
-
-        val response = getExistingResource(headers, url.get)
-
-        val mapper = jacksonObjectMapper()
-
-        val newBindings: JsonNode = mapper.valueToTree(Rolebinding(groups, users))
-
-        if (response?.body == null) {
-            return null
-        }
-        val roleBinding: ObjectNode = response.body as ObjectNode
-        roleBinding.set("groupNames", newBindings.get("groupNames"))
-        roleBinding.set("userNames", newBindings.get("userNames"))
-        roleBinding.set("subjects", newBindings.get("subjects"))
-        val entity = HttpEntity<JsonNode>(roleBinding, headers)
-
-        val createResponse: ResponseEntity<JsonNode> = try {
-            restTemplate.exchange(url.get, HttpMethod.PUT, entity, JsonNode::class.java)
-        } catch(e: HttpClientErrorException) {
-            throw OpenShiftException("Error saving url=${url.get}, with message=${e.message}", e)
-        }
-        logger.debug("Body=${createResponse.body}")
-
-        return OpenShiftResponse(OperationType.UPDATE, roleBinding, createResponse.body)
-
-    }
-
     fun isValidUser(user: String): Boolean {
-        return true
+        val url = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, "user", user)
+        val headers: HttpHeaders = createHeaders(userDetailsProvider.getAuthenticatedUser().token)
+
+        val existingResource = getExistingResource(headers, url.get)
+        return existingResource != null
+
     }
 
     fun isValidGroup(group: String): Boolean {
-        return true
+        val url = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, "group", group)
+        val headers: HttpHeaders = createHeaders(userDetailsProvider.getAuthenticatedUser().token)
+
+        val existingResource = getExistingResource(headers, url.get)
+        return existingResource != null
     }
 }

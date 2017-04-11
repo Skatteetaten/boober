@@ -63,6 +63,13 @@ class AuroraConfigParserService {
             certificateCn = groupId + "." + name
         }
 
+        val tag = if (json.s("type") == "development") {
+            "latest"
+        } else {
+            deployJson.s("TAG") ?: "default"
+        }
+
+
         return AuroraDeploy(
                 artifactId = artifactId!!,
                 groupId = groupId!!,
@@ -72,7 +79,7 @@ class AuroraConfigParserService {
                 database = deployJson.s("DATABASE"),
                 generateCertificate = generateCertificate,
                 certificateCn = certificateCn,
-                tag = deployJson.s("TAG") ?: "default",
+                tag = tag,
                 cpuRequest = deployJson.s("CPU_REQUEST") ?: "0",
                 websealRoute = deployJson.s("ROUTE_WEBSEAL"),
                 websealRoles = deployJson.s("ROUTE_WEBSEAL_ROLES"),

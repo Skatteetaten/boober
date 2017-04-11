@@ -23,7 +23,7 @@
       "build": {
         "GROUP_ID": "ske.aurora.openshift.referanse",
         "ARTIFACT_ID": "openshift-referanse-springboot-server",
-        "VERSION": 0
+        "VERSION": "0.0.95"
       },
       "deploy": {
         "PROMETHEUS_ENABLED": true,

@@ -24,11 +24,11 @@
       "build": {
         "GROUP_ID": "ske.aurora.openshift.referanse",
         "ARTIFACT_ID": "openshift-referanse-springboot-server",
-        "VERSION": 0
+        "VERSION": "0"
       },
       "deploy": {
         "PROMETHEUS_ENABLED": true,
-        "PROMETHEUS_PORT": "8081",
+        "PROMETHEUS_PORT": "8082",
         "MANAGEMENT_PATH": ":8081/actuator",
         "DATABASE": "referanseapp"
       },
@@ -41,12 +41,13 @@
       "replicas": 1,
       "flags": [
         "rolling",
-        "cert"
+        "cert",
+        "route"
       ],
       "build": {
         "GROUP_ID": "ske.aurora.openshift.referanse",
         "ARTIFACT_ID": "openshift-referanse-springboot-server",
-        "VERSION": 0
+        "VERSION": "0.0.95"
       },
       "deploy": {
         "PROMETHEUS_ENABLED": true,

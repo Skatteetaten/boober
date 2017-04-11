@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
 
-http PUT :8080/setup Authorization:'Bearer m89870'  < filesDevelopment.json
+token=$(oc whoami -t)
+http --timeout 300 PUT :8080/setup Authorization:"bearer $token"  < filesDevelopment.json

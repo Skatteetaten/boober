@@ -232,7 +232,7 @@ class OpenShiftServiceTest extends Specification {
                         "verify-ebs-users"
                       ],
                       "from": {
-                        "name": "verify-ebs-users:default",
+                        "name": "verify-ebs-users:latest",
                         "kind": "ImageStreamTag"
                       }
                     }
