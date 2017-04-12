@@ -1,6 +1,8 @@
 package no.skatteetaten.aurora.boober.service
 
+import static no.skatteetaten.aurora.boober.LoggingUtilsKt.setLogLevels
 import static no.skatteetaten.aurora.boober.utils.SampleFilesCollector.getQaEbsUsersSampleFiles
+import static no.skatteetaten.aurora.boober.utils.SampleFilesCollector.getQaEbsUsersSampleFilesForEnv
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -20,6 +22,10 @@ import spock.mock.DetachedMockFactory
     Config])
 class SetupServiceTest extends Specification {
 
+  def setupSpec() {
+    setLogLevels()
+  }
+
   @Configuration
   static class Config {
     private DetachedMockFactory factory = new DetachedMockFactory()
@@ -37,6 +43,11 @@ class SetupServiceTest extends Specification {
   }
 
   @Autowired
+  OpenShiftClient openShiftClient
+
+  @Autowired
+  UserDetailsProvider userDetailsProvider
+  @Autowired
   SetupService setupService
 
   public static final String ENV_NAME = "booberdev"
@@ -46,9 +57,9 @@ class SetupServiceTest extends Specification {
   def "Should create aurora dc for application"() {
 
     given:
-      setupService.openShiftService.userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
-      setupService.openShiftClient.isValidGroup(_) >> true
-      setupService.openShiftClient.isValidUser(_) >> true
+      userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
+      openShiftClient.isValidGroup(_) >> true
+      openShiftClient.isValidUser(_) >> true
 
       Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
       def auroraConfig = new AuroraConfig(files, [:])
@@ -58,5 +69,84 @@ class SetupServiceTest extends Specification {
 
     then:
       result != null
+  }
+
+  def "Should get error if user is not valid"() {
+
+    given:
+      userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
+      openShiftClient.isValidGroup(_) >> true
+      openShiftClient.isValidUser(_) >> false
+
+      Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
+      def auroraConfig = new AuroraConfig(files, [:])
+
+    when:
+      setupService.createAuroraDcsForApplications(auroraConfig, [aid])
+
+    then:
+      AuroraConfigException e = thrown()
+      e.errors.size() == 1
+      e.errors[0].errors[0] == "The following users are not valid=foo"
+  }
+
+  def "Should get error if group is not valid"() {
+
+    given:
+      userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
+      openShiftClient.isValidGroup(_) >> false
+      openShiftClient.isValidUser(_) >> true
+
+      Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
+      def auroraConfig = new AuroraConfig(files, [:])
+
+    when:
+      setupService.createAuroraDcsForApplications(auroraConfig, [aid])
+
+    then:
+      AuroraConfigException e = thrown()
+      e.errors.size() == 1
+      e.errors[0].errors[0] == "The following groups are not valid=APP_PaaS_drift, APP_PaaS_utv"
+  }
+
+  def "Should collect secrets"() {
+
+    given:
+      userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
+      openShiftClient.isValidGroup(_) >> true
+      openShiftClient.isValidUser(_) >> true
+
+      def envName = "secrettest"
+      Map<String, Map<String, Object>> files = getQaEbsUsersSampleFilesForEnv(envName)
+      def auroraConfig = new AuroraConfig(files, ["/tmp/foo/latest.properties": "FOO=BAR"])
+
+    when:
+
+      def result = setupService.createAuroraDcsForApplications(auroraConfig, [new ApplicationId(envName, APP_NAME)])
+
+    then:
+      result[0].secrets.containsKey("latest.properties")
+  }
+
+  def "Should get error if we want secrets but there are none "() {
+
+    given:
+      userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
+      openShiftClient.isValidGroup(_) >> true
+      openShiftClient.isValidUser(_) >> true
+
+      def envName = "secrettest"
+      Map<String, Map<String, Object>> files = getQaEbsUsersSampleFilesForEnv(envName)
+      def auroraConfig = new AuroraConfig(files, [:])
+
+    when:
+
+      setupService.createAuroraDcsForApplications(auroraConfig, [new ApplicationId(envName, APP_NAME)])
+
+
+    then:
+      AuroraConfigException e = thrown()
+      e.errors.size() == 1
+      e.errors[0].errors[0] == "No secret files with prefix /tmp/foo"
   }
 }

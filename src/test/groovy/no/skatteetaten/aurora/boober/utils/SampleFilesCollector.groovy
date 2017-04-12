@@ -14,6 +14,11 @@ class SampleFilesCollector {
     return collectFilesToMapOfJsonNode("about.json", "${APP_NAME}.json", "${ENV_NAME}/about.json", "${ENV_NAME}/${APP_NAME}.json")
   }
 
+  static Map<String, Map<String, Object>> getQaEbsUsersSampleFilesForEnv(String envName) {
+    return collectFilesToMapOfJsonNode("about.json", "${APP_NAME}.json", "${envName}/about.json",
+        "${envName}/${APP_NAME}.json")
+  }
+
   static Map<String, Map<String, Object>> collectFilesToMapOfJsonNode(String... fileNames) {
     File configDir = new File(SampleFilesCollector.getResource("/samples/config").path)
 

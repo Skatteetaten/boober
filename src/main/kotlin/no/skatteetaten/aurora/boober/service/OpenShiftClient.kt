@@ -59,7 +59,7 @@ class OpenShiftClient(
         val existingResource: ResponseEntity<JsonNode>? = getExistingResource(headers, urls.get)
         if (existingResource == null) {
             val createdResource = if (!dryRun) createResource(headers, urls.create, json) else null
-            return OpenShiftResponse(kind, OperationType.CREATED, existingResource?.body, json, createdResource?.body)
+            return OpenShiftResponse(kind, OperationType.CREATED, null, json, createdResource?.body)
         }
 
 
