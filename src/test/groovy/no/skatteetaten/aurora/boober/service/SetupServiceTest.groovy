@@ -87,7 +87,7 @@ class SetupServiceTest extends Specification {
     then:
       AuroraConfigException e = thrown()
       e.errors.size() == 1
-      e.errors[0].errors[0] == "The following users are not valid=foo"
+      e.errors[0].messages[0] == "The following users are not valid=foo"
   }
 
   def "Should get error if group is not valid"() {
@@ -106,7 +106,7 @@ class SetupServiceTest extends Specification {
     then:
       AuroraConfigException e = thrown()
       e.errors.size() == 1
-      e.errors[0].errors[0] == "The following groups are not valid=APP_PaaS_drift, APP_PaaS_utv"
+      e.errors[0].messages[0] == "The following groups are not valid=APP_PaaS_drift, APP_PaaS_utv"
   }
 
   def "Should collect secrets"() {
@@ -147,6 +147,6 @@ class SetupServiceTest extends Specification {
     then:
       AuroraConfigException e = thrown()
       e.errors.size() == 1
-      e.errors[0].errors[0] == "No secret files with prefix /tmp/foo"
+      e.errors[0].messages[0] == "No secret files with prefix /tmp/foo"
   }
 }

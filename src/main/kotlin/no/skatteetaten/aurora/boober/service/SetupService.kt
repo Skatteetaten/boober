@@ -20,7 +20,7 @@ data class ApplicationResult(
 
 data class Error(
         val applicationId: ApplicationId,
-        val errors: List<String> = listOf()
+        val messages: List<String> = listOf()
 )
 
 @Service
