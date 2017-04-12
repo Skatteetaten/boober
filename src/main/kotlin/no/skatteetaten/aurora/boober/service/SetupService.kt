@@ -50,15 +50,14 @@ class SetupService(
             }
         }
 
-        return result.orElse { throw AuroraConfigException("AuroraConfig contained errors for one or more applications", it) }
+        return result.orElseThrow { AuroraConfigException("AuroraConfig contained errors for one or more applications", it) }
 
     }
 
-
-    fun <T : Any> List<Pair<T?, Error?>>.orElse(block: (List<Error>) -> Nothing): List<T> {
+    fun <T : Any> List<Pair<T?, Error?>>.orElseThrow(block: (List<Error>) -> Exception): List<T> {
         this.mapNotNull { it.second }
                 .takeIf { it.isNotEmpty() }
-                ?.let { block(it) }
+                ?.let { throw block(it) }
 
         return this.mapNotNull { it.first }
 
