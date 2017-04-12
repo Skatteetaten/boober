@@ -19,10 +19,10 @@ class OpenShiftApiUrls(
         fun createOpenShiftApiUrls(baseUrl: String, kind: String, name: String, namespace: String? = null): OpenShiftApiUrls {
 
             val createUrl = getCollectionPathForResource(baseUrl, kind, namespace)
-            val getUrl = if (kind == "ProjectRequest") {
+            val getUrl = if (kind == "projectrequest") {
                 // Nasty business; for ProjectRequest we need to use the Project kind when checking if the resource
                 // exists. So we need to switch here...
-                val collectionPathForProject = getCollectionPathForResource(baseUrl, "Project", namespace)
+                val collectionPathForProject = getCollectionPathForResource(baseUrl, "project", namespace)
                 "$collectionPathForProject/$name"
             } else {
                 "$createUrl/$name"

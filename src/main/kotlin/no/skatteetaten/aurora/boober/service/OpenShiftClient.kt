@@ -28,7 +28,8 @@ data class OpenShiftResponse(
 class OpenShiftClient(
         @Value("\${openshift.url}") val baseUrl: String,
         val userDetailsProvider: UserDetailsProvider,
-        val restTemplate: RestTemplate
+        val restTemplate: RestTemplate,
+        val resource: OpenshiftResourceClient
 ) {
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftClient::class.java)
@@ -36,9 +37,8 @@ class OpenShiftClient(
     fun applyMany(namespace: String, openShiftObjects: List<JsonNode>, dryRun: Boolean = false): List<OpenShiftResponse> {
 
         val responses = openShiftObjects.map {
-            val resource = createResourceClient(dryRun, it, namespace)
 
-            apply(namespace, it, resource)
+            apply(namespace, it)
         }
 
 
@@ -49,23 +49,22 @@ class OpenShiftClient(
 
     }
 
-    private fun createResourceClient(dryRun: Boolean, it: JsonNode, namespace: String): OpenshiftResourceClient {
-        val urls: OpenShiftApiUrls = OpenShiftApiUrls.createUrlsForResource(baseUrl, namespace, it)
-        val headers: HttpHeaders = createHeaders(userDetailsProvider.getAuthenticatedUser().token)
-        val resource = OpenshiftResourceClient(urls, headers, restTemplate, dryRun)
-        return resource
-    }
 
-    fun apply(namespace: String, json: JsonNode, resource: OpenshiftResourceClient): OpenShiftResponse {
+    fun apply(namespace: String, json: JsonNode): OpenShiftResponse {
 
         val kind = json.get("kind")?.asText()?.toLowerCase() ?: throw IllegalArgumentException("Kind must be set")
+        val name = json.get("metadata")?.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource")
 
-        val existingResource: ResponseEntity<JsonNode>? = resource.get()
-        if (existingResource == null) {
-            val createdResource = resource.post(json)
-            return OpenShiftResponse(kind, OperationType.CREATED, null, json, createdResource?.body)
+        //I do not like code like this.
+        val existingResource = try {
+            resource.get(kind, name, namespace)
+        } catch(e: OpenShiftException) {
+            if (e.cause is HttpClientErrorException && e.cause.statusCode == HttpStatus.NOT_FOUND) {
+                val createdResource = resource.post(kind, name, namespace, json)
+                return OpenShiftResponse(kind, OperationType.CREATED, null, json, createdResource.body)
+            }
+            throw e
         }
-
 
         val existing = existingResource.body
         if (kind == "projectrequest") {
@@ -86,8 +85,8 @@ class OpenShiftClient(
         if (kind == "buildconfig") {
             json.updateField(existing, "/spec", "triggers")
         }
-        val updated = resource.put(json)
-        return OpenShiftResponse(kind, OperationType.UPDATE, existing, json, updated?.body)
+        val updated = resource.put(kind, name, namespace, json)
+        return OpenShiftResponse(kind, OperationType.UPDATE, existing, json, updated.body)
 
     }
 

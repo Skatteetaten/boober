@@ -14,7 +14,7 @@ import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
-@SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration, OpenShiftClient, OpenShiftService, Config])
+@SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration, OpenshiftResourceClient, OpenShiftClient, OpenShiftService, Config])
 class OpenShiftClientTest extends Specification {
 
   @Configuration
@@ -48,9 +48,8 @@ class OpenShiftClientTest extends Specification {
       List<JsonNode> openShiftObjects = openShiftService.generateObjects(auroraDc)
       def project = openShiftObjects.find { it.get('kind').asText() == "ProjectRequest" }
 
-      def resource = openShiftClient.createResourceClient(false, project, "aurora-boober-test")
     expect:
-      def openShiftResponse = openShiftClient.apply("aurora-boober-test", project, resource)
+      def openShiftResponse = openShiftClient.apply("aurora-boober-test", project)
       println ReflectionToStringBuilder.toString(openShiftResponse, ToStringStyle.MULTI_LINE_STYLE)
       true
   }
