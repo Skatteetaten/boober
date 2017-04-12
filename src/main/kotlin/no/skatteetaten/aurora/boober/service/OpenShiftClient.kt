@@ -36,9 +36,7 @@ class OpenShiftClient(
     fun applyMany(namespace: String, openShiftObjects: List<JsonNode>, dryRun: Boolean = false): List<OpenShiftResponse> {
 
         val responses = openShiftObjects.map {
-            val urls: OpenShiftApiUrls = OpenShiftApiUrls.createUrlsForResource(baseUrl, namespace, it)
-            val headers: HttpHeaders = createHeaders(userDetailsProvider.getAuthenticatedUser().token)
-            val resource = OpenshiftResourceClient(urls, headers, restTemplate, dryRun)
+            val resource = createResourceClient(dryRun, it, namespace)
 
             apply(namespace, it, resource)
         }
@@ -49,6 +47,13 @@ class OpenShiftClient(
         //That is start build for deployment or start deploy for others
         return responses
 
+    }
+
+    private fun createResourceClient(dryRun: Boolean, it: JsonNode, namespace: String): OpenshiftResourceClient {
+        val urls: OpenShiftApiUrls = OpenShiftApiUrls.createUrlsForResource(baseUrl, namespace, it)
+        val headers: HttpHeaders = createHeaders(userDetailsProvider.getAuthenticatedUser().token)
+        val resource = OpenshiftResourceClient(urls, headers, restTemplate, dryRun)
+        return resource
     }
 
     fun apply(namespace: String, json: JsonNode, resource: OpenshiftResourceClient): OpenShiftResponse {
