@@ -17,7 +17,7 @@ buildscript {
         "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion",
         'no.skatteetaten.aurora.gradle.plugins:aurora-gradle-plugin:feature_AOS_1064_opensource_gradle_plugins-SNAPSHOT',
         'org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.2.1',
-        'info.solidsoft.gradle.pitest:gradle-pitest-plugin:1.1.11',
+//        'info.solidsoft.gradle.pitest:gradle-pitest-plugin:1.1.11',
         'org.asciidoctor:asciidoctor-gradle-plugin:1.5.3',
     )
   }
@@ -41,7 +41,7 @@ apply plugin: 'groovy'
 apply plugin: 'maven'
 */
 //apply plugin: "jacoco"
-apply plugin: "info.solidsoft.pitest"
+//apply plugin: "info.solidsoft.pitest"
 apply plugin: 'org.asciidoctor.convert'
 apply plugin: 'kotlin'
 apply plugin: 'kotlin-spring'
@@ -70,9 +70,11 @@ group = 'no.skatteetaten.aurora'
 sourceCompatibility = '1.8'
 
 //plugin
+/*
 pitest {
   outputFormats = ['XML', 'HTML']
 }
+*/
 
 dependencies {
   compile(
