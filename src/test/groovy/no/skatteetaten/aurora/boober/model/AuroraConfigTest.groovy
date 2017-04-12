@@ -5,6 +5,30 @@ import spock.lang.Specification
 
 class AuroraConfigTest extends Specification {
 
+  def "Should fetch secrets"() {
+    given:
+      def auroraConfig = new AuroraConfig([:], ["/tmp/foo/bar/secret1.properties": "Secret stuff"])
+
+    when:
+      def secretsForFolder = auroraConfig.getSecrets("/tmp/foo/bar")
+
+    then:
+      secretsForFolder.size() == 1
+      secretsForFolder.get("secret1.properties") != null
+  }
+
+  def "Should fetch secrets with trailing slash"() {
+    given:
+      def auroraConfig = new AuroraConfig([:], ["/tmp/foo/bar/secret1.properties": "Secret stuff"])
+
+    when:
+      def secretsForFolder = auroraConfig.getSecrets("/tmp/foo/bar/")
+
+    then:
+      secretsForFolder.size() == 1
+      secretsForFolder.get("secret1.properties") != null
+  }
+
   def "Returns files for application"() {
     given:
       def files = createMockFiles("about.json", "referanse.json", "utv/about.json", "utv/referanse.json")

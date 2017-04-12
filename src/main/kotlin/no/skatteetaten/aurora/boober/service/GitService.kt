@@ -4,7 +4,6 @@ import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.revwalk.RevCommit
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 import java.io.File
 
 
@@ -43,7 +42,7 @@ class GitService(
 
     }
 
-    fun get(dir: File): Git {
+    fun get(affiliation: String, dir: File): Git {
 
 
         /*Det vi egentlig vil her er vel ca følgende flyt

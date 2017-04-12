@@ -18,7 +18,9 @@ enum class OperationType { CREATED, UPDATE, NONE }
 
 
 data class OpenShiftResponse(
+        val kind: String,
         val operationType: OperationType,
+        val previous: JsonNode? = null,
         val payload: JsonNode? = null,
         val responseBody: JsonNode?
 )
@@ -34,29 +36,36 @@ class OpenShiftClient(
 
     fun applyMany(namespace: String, openShiftObjects: List<JsonNode>, dryRun: Boolean = false): List<OpenShiftResponse> {
 
-        return openShiftObjects.map {
+        val responses = openShiftObjects.map {
             Thread.sleep(1000)
             //race condition if we create resources to fast
             apply(namespace, it, dryRun)
         }
+
+
+        //TODO:Do we need a manual deploy?
+        //If the build.version is changed we do not need to deploy. Otherwise we do.
+        //That is start build for deployment or start deploy for others
+        return responses
+
     }
 
     fun apply(namespace: String, json: JsonNode, dryRun: Boolean = false): OpenShiftResponse {
 
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createUrlsForResource(baseUrl, namespace, json)
         val headers: HttpHeaders = createHeaders(userDetailsProvider.getAuthenticatedUser().token)
+        val kind = json.get("kind")?.asText()?.toLowerCase() ?: throw IllegalArgumentException("Kind must be set")
 
         val existingResource: ResponseEntity<JsonNode>? = getExistingResource(headers, urls.get)
         if (existingResource == null) {
             val createdResource = if (!dryRun) createResource(headers, urls.create, json) else null
-            return OpenShiftResponse(OperationType.CREATED, json, createdResource?.body)
+            return OpenShiftResponse(kind, OperationType.CREATED, existingResource?.body, json, createdResource?.body)
         }
 
-        val kind = json.get("kind")?.asText()?.toLowerCase()
 
         val existing = existingResource.body
         if (kind == "projectrequest") {
-            return OpenShiftResponse(OperationType.NONE, json, existing)
+            return OpenShiftResponse(kind, OperationType.NONE, existing, json, null)
         }
 
         json.updateField(existing, "/metadata", "resourceVersion")
@@ -67,13 +76,14 @@ class OpenShiftClient(
 
         if (kind == "deploymentconfig") {
             json.updateField(existing, "/spec/template/spec/containers/0", "image")
+            //TODO:Handle sprocket done?
         }
 
         if (kind == "buildconfig") {
             json.updateField(existing, "/spec", "triggers")
         }
         val updated = if (!dryRun) updateResource(headers, urls.update, json) else null
-        return OpenShiftResponse(OperationType.UPDATE, json, updated?.body)
+        return OpenShiftResponse(kind, OperationType.UPDATE, existing, json, updated?.body)
 
 
     }
@@ -100,7 +110,7 @@ class OpenShiftClient(
         val headers: HttpHeaders = createHeaders(token)
 
         val currentUser = getExistingResource(headers, url)
-        return OpenShiftResponse(operationType = OperationType.NONE, responseBody = currentUser?.body)
+        return OpenShiftResponse("user", operationType = OperationType.NONE, responseBody = currentUser?.body)
     }
 
     private fun getExistingResource(headers: HttpHeaders, url: String): ResponseEntity<JsonNode>? {

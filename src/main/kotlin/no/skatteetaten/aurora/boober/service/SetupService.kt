@@ -33,47 +33,23 @@ class SetupService(
 
     fun executeSetup(auroraConfig: AuroraConfig, envs: List<String>, apps: List<String>, dryRun: Boolean = false): List<ApplicationResult> {
 
+        //∕TODO: Need to filter this somewhere on cluster
         val applicationIds: List<ApplicationId> = envs.flatMap { env -> apps.map { app -> ApplicationId(env, app) } }
-        val auroraDcs: MutableList<AuroraDeploymentConfig> = createAuroraDcsForApplications(auroraConfig, applicationIds)
+        val auroraDcs: List<AuroraDeploymentConfig> = createAuroraDcsForApplications(auroraConfig, applicationIds)
 
         return auroraDcs.map { applyDeploymentConfig(it, dryRun) }
     }
 
-    private fun createAuroraDcsForApplications(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>): MutableList<AuroraDeploymentConfig> {
+    fun createAuroraDcsForApplications(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>): List<AuroraDeploymentConfig> {
 
-        val auroraDcs: MutableList<AuroraDeploymentConfig> = mutableListOf()
         val errors: MutableList<Error> = mutableListOf()
 
-        applicationIds.forEach { aid ->
+        val auroraDcs: List<AuroraDeploymentConfig> = applicationIds.mapNotNull { aid ->
             try {
-                val mergedFileForApplication = auroraConfig.getMergedFileForApplication(aid)
-                val secrets = mergedFileForApplication.s("secretFolder")?.let {
-                    val secrets = auroraConfig.getSecrets(it)
-                    if (secrets.isEmpty()) {
-                        errors.add(Error(aid, listOf("No secret files with prefix $it")))
-                    }
-                    secrets
-                }
-                val auroraDc = auroraConfigParserService.createAuroraDcFromMergedFileForApplication(mergedFileForApplication, secrets)
-
-                auroraDc.groups.filter {
-                    !openShiftClient.isValidGroup(it)
-                }.let {
-                    if (it.isNotEmpty()) {
-                        errors.add(Error(aid, listOf("The following groups are not valid=${it.joinToString()}")))
-                    }
-                }
-
-                auroraDc.users.filter {
-                    !openShiftClient.isValidUser(it)
-                }.let {
-                    if (it.isNotEmpty()) {
-                        errors.add(Error(aid, listOf("The following users are not valid=${it.joinToString()}")))
-                    }
-                }
-                auroraDcs.add(auroraDc)
+                createAuroraDcForApplication(aid, auroraConfig)
             } catch (e: ApplicationConfigException) {
                 errors.add(Error(aid, e.errors))
+                null
             }
         }
 
@@ -82,6 +58,40 @@ class SetupService(
         }
 
         return auroraDcs
+    }
+
+    fun createAuroraDcForApplication(aid: ApplicationId, auroraConfig: AuroraConfig): AuroraDeploymentConfig {
+        val errors: MutableList<Error> = mutableListOf()
+
+        val mergedFileForApplication = auroraConfig.getMergedFileForApplication(aid)
+        val secrets = mergedFileForApplication.s("secretFolder")?.let {
+            val secrets = auroraConfig.getSecrets(it)
+            if (secrets.isEmpty()) {
+                errors.add(Error(aid, listOf("No secret files with prefix $it")))
+            }
+            secrets
+        }
+        val auroraDc = auroraConfigParserService.createAuroraDcFromMergedFileForApplication(mergedFileForApplication, secrets)
+
+        auroraDc.groups.filter {
+            !openShiftClient.isValidGroup(it)
+        }.let {
+            if (it.isNotEmpty()) {
+                errors.add(Error(aid, listOf("The following groups are not valid=${it.joinToString()}")))
+            }
+        }
+
+        auroraDc.users.filter {
+            !openShiftClient.isValidUser(it)
+        }.let {
+            if (it.isNotEmpty()) {
+                errors.add(Error(aid, listOf("The following users are not valid=${it.joinToString()}")))
+            }
+        }
+        if (errors.isNotEmpty()) {
+            throw AuroraConfigException("Creating AuroraDeploymentConfig for application=$aid contained errors.", errors)
+        }
+        return auroraDc
     }
 
     private fun applyDeploymentConfig(adc: AuroraDeploymentConfig, dryRun: Boolean = false): ApplicationResult {
