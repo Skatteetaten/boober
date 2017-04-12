@@ -1,3 +1,5 @@
 spring:
     main:
         banner-mode: "off"
+openshift:
+    url: https://utv-master.paas.skead.no:8443
