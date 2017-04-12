@@ -45,8 +45,7 @@ class SetupService(
         val errors: MutableList<Error> = mutableListOf()
         val auroraDcs: List<AuroraDeploymentConfig> = applicationIds.mapNotNull { aid ->
             try {
-                auroraConfigParserService.createAuroraDcForApplication(auroraConfig, aid)
-                        .apply { validateOpenShiftReferences(this) }
+                createAuroraScForApplication(auroraConfig, aid)
             } catch (e: ApplicationConfigException) {
                 errors.add(Error(aid, e.errors))
                 null
@@ -58,6 +57,11 @@ class SetupService(
         }
 
         return auroraDcs
+    }
+
+    fun createAuroraScForApplication(auroraConfig: AuroraConfig, aid: ApplicationId): AuroraDeploymentConfig {
+        return auroraConfigParserService.createAuroraDcForApplication(auroraConfig, aid)
+                .apply { validateOpenShiftReferences(this) }
     }
 
     /**
