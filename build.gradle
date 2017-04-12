@@ -35,9 +35,11 @@ ext.aurora = [
 
 apply plugin: 'no.skatteetaten.plugins.aurora'
 apply plugin: 'org.sonarqube'
+/*
 apply plugin: 'java'
 apply plugin: 'groovy'
 apply plugin: 'maven'
+*/
 //apply plugin: "jacoco"
 apply plugin: "info.solidsoft.pitest"
 apply plugin: 'org.asciidoctor.convert'
@@ -88,7 +90,7 @@ dependencies {
       'com.github.martinwithaar:encryptor4j:0.1')
 
   testCompile(
-      "org.codehaus.groovy:groovy-all:2.4.4",
+//      "org.codehaus.groovy:groovy-all:2.4.4",
       "org.spockframework:spock-core:1.1-groovy-2.4-rc-3",
       "org.spockframework:spock-spring:1.1-groovy-2.4-rc-3",
       "org.springframework.boot:spring-boot-starter-test",
