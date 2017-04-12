@@ -3,6 +3,8 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
+import no.skatteetaten.aurora.boober.utils.Resource
+import no.skatteetaten.aurora.boober.utils.orElseThrow
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -42,22 +44,18 @@ class SetupService(
 
     fun createAuroraDcsForApplications(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>): List<AuroraDeploymentConfig> {
 
-        val errors: MutableList<Error> = mutableListOf()
-        val auroraDcs: List<AuroraDeploymentConfig> = applicationIds.mapNotNull { aid ->
+        val result: List<Resource<AuroraDeploymentConfig?, Error?>> = applicationIds.map { aid ->
             try {
-                createAuroraDcForApplication(auroraConfig, aid)
+                Resource(createAuroraDcForApplication(auroraConfig, aid), null)
             } catch (e: ApplicationConfigException) {
-                errors.add(Error(aid, e.errors))
-                null
+                Resource(null, Error(aid, e.errors))
             }
         }
 
-        if (errors.isNotEmpty()) {
-            throw AuroraConfigException("AuroraConfig contained errors for one or more applications", errors)
-        }
+        return result.orElseThrow { AuroraConfigException("AuroraConfig contained errors for one or more applications", it) }
 
-        return auroraDcs
     }
+
 
     fun createAuroraDcForApplication(auroraConfig: AuroraConfig, aid: ApplicationId): AuroraDeploymentConfig {
         return auroraConfigParserService.createAuroraDcForApplication(auroraConfig, aid)
