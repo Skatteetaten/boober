@@ -16,8 +16,6 @@ buildscript {
 
         "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion",
         'no.skatteetaten.aurora.gradle.plugins:aurora-gradle-plugin:feature_AOS_1064_opensource_gradle_plugins-SNAPSHOT',
-//        'org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.2.1',
-//        'info.solidsoft.gradle.pitest:gradle-pitest-plugin:1.1.11',
         'org.asciidoctor:asciidoctor-gradle-plugin:1.5.3',
     )
   }
@@ -34,24 +32,10 @@ ext.aurora = [
 ]
 
 apply plugin: 'no.skatteetaten.plugins.aurora'
-//apply plugin: 'org.sonarqube'
-/*
-apply plugin: 'java'
-apply plugin: 'groovy'
-apply plugin: 'maven'
-*/
-//apply plugin: "jacoco"
-//apply plugin: "info.solidsoft.pitest"
 apply plugin: 'org.asciidoctor.convert'
 apply plugin: 'kotlin'
 apply plugin: 'kotlin-spring'
 apply plugin: 'org.springframework.boot'
-/*
-apply plugin: 'application'
-
-distZip.classifier = 'Leveransepakke'
-*/
-
 
 compileKotlin {
   kotlinOptions {
@@ -69,13 +53,6 @@ group = 'no.skatteetaten.aurora'
 
 sourceCompatibility = '1.8'
 
-//plugin
-/*
-pitest {
-  outputFormats = ['XML', 'HTML']
-}
-*/
-
 dependencies {
   compile(
       "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version",
@@ -84,15 +61,12 @@ dependencies {
       "org.springframework.boot:spring-boot-starter-actuator",
       "org.springframework.boot:spring-boot-starter-hateoas",
       "org.springframework.boot:spring-boot-starter-security",
-//      "ske.aurora.springboot.prometheus:spring-boot-prometheus:3.1.2",
-//      'com.ryantenney.metrics:metrics-spring:3.1.2',
       "com.fasterxml.jackson.module:jackson-module-kotlin:2.8.7",
       'org.eclipse.jgit:org.eclipse.jgit:4.6.1.201703071140-r',
       'org.apache.velocity:velocity:1.7',
       'com.github.martinwithaar:encryptor4j:0.1')
 
   testCompile(
-//      "org.codehaus.groovy:groovy-all:2.4.4",
       "org.spockframework:spock-core:1.1-groovy-2.4-rc-3",
       "org.spockframework:spock-spring:1.1-groovy-2.4-rc-3",
       "org.springframework.boot:spring-boot-starter-test",
@@ -123,17 +97,6 @@ jar {
     into 'static/docs'
   }
 }
-
-//plugin
-/*
-jacocoTestReport {
-  reports {
-    xml.enabled false
-    csv.enabled false
-    html.destination "${buildDir}/reports/jacoco"
-  }
-}
-*/
 
 task wrapper(type: Wrapper) {
   gradleVersion = '3.4.1'
