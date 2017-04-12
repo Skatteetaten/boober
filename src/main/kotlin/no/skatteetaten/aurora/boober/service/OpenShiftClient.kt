@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.controller.SetupController
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.utils.updateField
 import org.slf4j.Logger
@@ -32,14 +31,16 @@ class OpenShiftClient(
         val restTemplate: RestTemplate
 ) {
 
-    val logger: Logger = LoggerFactory.getLogger(SetupController::class.java)
+    val logger: Logger = LoggerFactory.getLogger(OpenShiftClient::class.java)
 
     fun applyMany(namespace: String, openShiftObjects: List<JsonNode>, dryRun: Boolean = false): List<OpenShiftResponse> {
 
         val responses = openShiftObjects.map {
-            Thread.sleep(1000)
-            //race condition if we create resources to fast
-            apply(namespace, it, dryRun)
+            val urls: OpenShiftApiUrls = OpenShiftApiUrls.createUrlsForResource(baseUrl, namespace, it)
+            val headers: HttpHeaders = createHeaders(userDetailsProvider.getAuthenticatedUser().token)
+            val resource = OpenshiftResourceClient(urls, headers, restTemplate, dryRun)
+
+            apply(namespace, it, resource)
         }
 
 
@@ -50,15 +51,13 @@ class OpenShiftClient(
 
     }
 
-    fun apply(namespace: String, json: JsonNode, dryRun: Boolean = false): OpenShiftResponse {
+    fun apply(namespace: String, json: JsonNode, resource: OpenshiftResourceClient): OpenShiftResponse {
 
-        val urls: OpenShiftApiUrls = OpenShiftApiUrls.createUrlsForResource(baseUrl, namespace, json)
-        val headers: HttpHeaders = createHeaders(userDetailsProvider.getAuthenticatedUser().token)
         val kind = json.get("kind")?.asText()?.toLowerCase() ?: throw IllegalArgumentException("Kind must be set")
 
-        val existingResource: ResponseEntity<JsonNode>? = getExistingResource(headers, urls.get)
+        val existingResource: ResponseEntity<JsonNode>? = resource.get()
         if (existingResource == null) {
-            val createdResource = if (!dryRun) createResource(headers, urls.create, json) else null
+            val createdResource = resource.post(json)
             return OpenShiftResponse(kind, OperationType.CREATED, null, json, createdResource?.body)
         }
 
@@ -82,27 +81,11 @@ class OpenShiftClient(
         if (kind == "buildconfig") {
             json.updateField(existing, "/spec", "triggers")
         }
-        val updated = if (!dryRun) updateResource(headers, urls.update, json) else null
+        val updated = resource.put(json)
         return OpenShiftResponse(kind, OperationType.UPDATE, existing, json, updated?.body)
 
-
     }
 
-
-
-    private fun updateResource(headers: HttpHeaders, updateUrl: String, payload: JsonNode): ResponseEntity<JsonNode> {
-
-        logger.info("Update resource at $updateUrl")
-
-        val entity = HttpEntity<JsonNode>(payload, headers)
-
-        val updateResponse: ResponseEntity<JsonNode> = try {
-            restTemplate.exchange(updateUrl, HttpMethod.PUT, entity, JsonNode::class.java)
-        } catch(e: HttpClientErrorException) {
-            throw OpenShiftException("Error saving url=${updateUrl}, with message=${e.message}", e)
-        }
-        return updateResponse
-    }
 
     fun findCurrentUser(token: String): OpenShiftResponse {
 
@@ -123,20 +106,6 @@ class OpenShiftClient(
             }
             null
         }
-    }
-
-    private fun createResource(headers: HttpHeaders, updateUrl: String, payload: JsonNode): ResponseEntity<JsonNode> {
-
-        logger.info("Creating resource at ${updateUrl}")
-
-        val entity = HttpEntity<JsonNode>(payload, headers)
-        val createResponse: ResponseEntity<JsonNode> = try {
-            restTemplate.postForEntity(updateUrl, entity, JsonNode::class.java)
-        } catch(e: HttpClientErrorException) {
-            throw OpenShiftException("Error saving url=$updateUrl, with message=${e.message}", e)
-        }
-        logger.debug("Body=${createResponse.body}")
-        return createResponse
     }
 
     private fun createHeaders(token: String): HttpHeaders {

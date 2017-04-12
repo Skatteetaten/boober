@@ -45,10 +45,13 @@ class OpenShiftClientTest extends Specification {
       def token = "oc whoami -t".execute().text.trim()
       userDetailsProvider.getAuthenticatedUser() >> new User("test", token, "Test User")
 
+
       List<JsonNode> openShiftObjects = openShiftService.generateObjects(auroraDc)
       def project = openShiftObjects.find { it.get('kind').asText() == "ProjectRequest" }
+
+
     expect:
-      def openShiftResponse = openShiftClient.apply("aurora-boober-test", project, false)
+      def openShiftResponse = OpenShiftClient.apply("aurora-boober-test", project, false)
       println ReflectionToStringBuilder.toString(openShiftResponse, ToStringStyle.MULTI_LINE_STYLE)
       true
   }
