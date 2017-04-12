@@ -16,7 +16,7 @@ buildscript {
 
         "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion",
         'no.skatteetaten.aurora.gradle.plugins:aurora-gradle-plugin:feature_AOS_1064_opensource_gradle_plugins-SNAPSHOT',
-        'org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.2.1',
+//        'org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.2.1',
 //        'info.solidsoft.gradle.pitest:gradle-pitest-plugin:1.1.11',
         'org.asciidoctor:asciidoctor-gradle-plugin:1.5.3',
     )
@@ -34,7 +34,7 @@ ext.aurora = [
 ]
 
 apply plugin: 'no.skatteetaten.plugins.aurora'
-apply plugin: 'org.sonarqube'
+//apply plugin: 'org.sonarqube'
 /*
 apply plugin: 'java'
 apply plugin: 'groovy'
