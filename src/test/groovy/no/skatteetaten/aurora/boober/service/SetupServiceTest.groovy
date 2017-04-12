@@ -54,7 +54,7 @@ class SetupServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files, [:])
 
     when:
-      def result = setupService.createAuroraDcForApplication(aid, auroraConfig)
+      def result = setupService.createAuroraDcsForApplications(auroraConfig, [aid])
 
     then:
       result != null

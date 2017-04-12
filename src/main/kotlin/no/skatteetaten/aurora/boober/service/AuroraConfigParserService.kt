@@ -9,8 +9,10 @@ import org.springframework.stereotype.Service
 @Service
 class AuroraConfigParserService {
 
-    fun createAuroraDcFromMergedFileForApplication(mergedFile: Map<String, Any?>,
-                                                   secrets: Map<String, String>?): AuroraDeploymentConfig {
+    fun createAuroraDcForApplication(auroraConfig: AuroraConfig, aid: ApplicationId): AuroraDeploymentConfig {
+
+        val mergedFile: Map<String, Any?> = auroraConfig.getMergedFileForApplication(aid)
+        val secrets: Map<String, String>? = mergedFile.s("secretFolder")?.let { auroraConfig.getSecrets(it) }
 
         val type = mergedFile.s("type").let { TemplateType.valueOf(it!!) }
         var name = mergedFile.s("name")

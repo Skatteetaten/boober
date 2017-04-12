@@ -43,10 +43,10 @@ class SetupService(
     fun createAuroraDcsForApplications(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>): List<AuroraDeploymentConfig> {
 
         val errors: MutableList<Error> = mutableListOf()
-
         val auroraDcs: List<AuroraDeploymentConfig> = applicationIds.mapNotNull { aid ->
             try {
-                createAuroraDcForApplication(aid, auroraConfig)
+                auroraConfigParserService.createAuroraDcForApplication(auroraConfig, aid)
+                        .apply { validateOpenShiftReferences(this) }
             } catch (e: ApplicationConfigException) {
                 errors.add(Error(aid, e.errors))
                 null
@@ -60,38 +60,27 @@ class SetupService(
         return auroraDcs
     }
 
-    fun createAuroraDcForApplication(aid: ApplicationId, auroraConfig: AuroraConfig): AuroraDeploymentConfig {
-        val errors: MutableList<Error> = mutableListOf()
+    /**
+     * Validates that references to objects on OpenShift in the configuration are valid.
+     *
+     * This method should probably be extracted into its own class at some point when we add more validation,
+     * like references to templates, etc.
+     */
+    private fun validateOpenShiftReferences(auroraDc: AuroraDeploymentConfig) {
+        val errors: MutableList<String> = mutableListOf()
+        auroraDc.groups
+                .filter { !openShiftClient.isValidGroup(it) }
+                .takeIf { it.isNotEmpty() }
+                ?.let { errors.add("The following groups are not valid=${it.joinToString()}") }
 
-        val mergedFileForApplication = auroraConfig.getMergedFileForApplication(aid)
-        val secrets = mergedFileForApplication.s("secretFolder")?.let {
-            val secrets = auroraConfig.getSecrets(it)
-            if (secrets.isEmpty()) {
-                errors.add(Error(aid, listOf("No secret files with prefix $it")))
-            }
-            secrets
-        }
-        val auroraDc = auroraConfigParserService.createAuroraDcFromMergedFileForApplication(mergedFileForApplication, secrets)
+        auroraDc.users
+                .filter { !openShiftClient.isValidUser(it) }
+                .takeIf { it.isNotEmpty() }
+                ?.let { errors.add("The following users are not valid=${it.joinToString()}") }
 
-        auroraDc.groups.filter {
-            !openShiftClient.isValidGroup(it)
-        }.let {
-            if (it.isNotEmpty()) {
-                errors.add(Error(aid, listOf("The following groups are not valid=${it.joinToString()}")))
-            }
-        }
-
-        auroraDc.users.filter {
-            !openShiftClient.isValidUser(it)
-        }.let {
-            if (it.isNotEmpty()) {
-                errors.add(Error(aid, listOf("The following users are not valid=${it.joinToString()}")))
-            }
-        }
         if (errors.isNotEmpty()) {
-            throw AuroraConfigException("Creating AuroraDeploymentConfig for application=$aid contained errors.", errors)
+            throw ApplicationConfigException("Configuration contained references to one or more objects on OpenShift that does not exist", errors = errors)
         }
-        return auroraDc
     }
 
     private fun applyDeploymentConfig(adc: AuroraDeploymentConfig, dryRun: Boolean = false): ApplicationResult {

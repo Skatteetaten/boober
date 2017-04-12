@@ -39,9 +39,7 @@ class AuroraConfigParserServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files, [:])
 
     when:
-      def mergedFileForApplication = auroraConfig.getMergedFileForApplication(aid)
-      AuroraDeploymentConfig auroraDc = service.
-          createAuroraDcFromMergedFileForApplication(mergedFileForApplication, [:])
+      AuroraDeploymentConfig auroraDc = service.createAuroraDcForApplication(auroraConfig, aid)
 
     then:
       with(auroraDc) {
@@ -80,9 +78,7 @@ class AuroraConfigParserServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files, [:])
 
     when:
-      def mergedFileForApplication = auroraConfig.getMergedFileForApplication(aid)
-      AuroraDeploymentConfig auroraDc = service.
-          createAuroraDcFromMergedFileForApplication(mergedFileForApplication, [:])
+      AuroraDeploymentConfig auroraDc = service.createAuroraDcForApplication(auroraConfig, aid)
 
     then:
       auroraDc.name == "awesome-app"

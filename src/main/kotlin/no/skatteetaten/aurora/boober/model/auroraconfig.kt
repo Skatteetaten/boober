@@ -24,7 +24,6 @@ class AuroraConfig(
         val filesForApplication = getFilesForApplication(aid)
         val mergedJson = mergeAocConfigFiles(filesForApplication)
 
-
         mergedJson.apply {
             putIfAbsent("envName", aid.environmentName)
             putIfAbsent("schemaVersion", "v1")
@@ -57,34 +56,26 @@ class AuroraConfig(
     }
 
 
-    internal fun assertIsValid(mergedJson: Map<String, Any?>?, applicationName: String) {
+    internal fun assertIsValid(mergedJson: Map<String, Any?>, applicationName: String) {
         val validator = Validation.buildDefaultValidatorFactory().validator
 
-        val config = AuroraConfigRequiredV1(mergedJson, mergedJson?.m("build"))
+        val config = AuroraConfigRequiredV1(mergedJson, mergedJson.m("build"))
         val auroraDcErrors = validator.validate(config)
 
-        val errors = auroraDcErrors.map { "${it.propertyPath}: ${it.message}" }
+        val errors = mutableListOf<String>()
+        errors.addAll(auroraDcErrors.map { "Illegal value for property ${it.propertyPath}: ${it.message}" })
+
+        mergedJson.s("secretFolder")?.let {
+            val secrets = getSecrets(it)
+            // TODO: More validation needed here
+            if (secrets.isEmpty()) {
+                errors.add("No secret files with prefix $it")
+            }
+        }
 
         if (errors.isNotEmpty()) {
             throw ApplicationConfigException("Config for application '$applicationName' contains errors", errors = errors)
         }
-
-        //TODO:validate that all users/groups are actually valid groups/users
-/*
-        if (config is TemplateProcessingConfig) {
-
-            if (config.templateFile != null && !res.sources.keys.contains(config.templateFile)) {
-                errors.add("Template file ${config.templateFile} is missing in sources")
-            }
-
-            if (config.template != null && config.templateFile != null) {
-                errors.add("Cannot specify both template and templateFile")
-            }
-
-            if (config.template != null && !openShiftService.templateExist(token, config.template)) {
-                errors.add("Template ${config.template} does not exist in cluster.")
-            }
-*/
     }
 }
 
