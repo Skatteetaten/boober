@@ -3,7 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
-import no.skatteetaten.aurora.boober.utils.Resource
+import no.skatteetaten.aurora.boober.utils.Result
 import no.skatteetaten.aurora.boober.utils.orElseThrow
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -44,13 +44,13 @@ class SetupService(
 
     fun createAuroraDcsForApplications(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>): List<AuroraDeploymentConfig> {
 
-        val result: List<Resource<AuroraDeploymentConfig?, Error?>> = applicationIds.map { aid ->
-            val resource: Resource<AuroraDeploymentConfig?, Error?> = try {
-                Resource(value = createAuroraDcForApplication(auroraConfig, aid))
+        val result: List<Result<AuroraDeploymentConfig?, Error?>> = applicationIds.map { aid ->
+            val result: Result<AuroraDeploymentConfig?, Error?> = try {
+                Result(value = createAuroraDcForApplication(auroraConfig, aid))
             } catch (e: ApplicationConfigException) {
-                Resource(error = Error(aid, e.errors))
+                Result(error = Error(aid, e.errors))
             }
-            resource
+            result
         }
 
         return result.orElseThrow { AuroraConfigException("AuroraConfig contained errors for one or more applications", it) }
