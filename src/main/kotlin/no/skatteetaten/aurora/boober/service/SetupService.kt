@@ -3,6 +3,8 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
+import no.skatteetaten.aurora.boober.utils.Resource
+import no.skatteetaten.aurora.boober.utils.orElseThrow
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -42,11 +44,11 @@ class SetupService(
 
     fun createAuroraDcsForApplications(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>): List<AuroraDeploymentConfig> {
 
-        val result: List<Pair<AuroraDeploymentConfig?, Error?>> = applicationIds.map { aid ->
+        val result: List<Resource<AuroraDeploymentConfig?, Error?>> = applicationIds.map { aid ->
             try {
-                Pair(first = createAuroraDcForApplication(auroraConfig, aid), second = null)
+                Resource(createAuroraDcForApplication(auroraConfig, aid), null)
             } catch (e: ApplicationConfigException) {
-                Pair(first = null, second = Error(aid, e.errors))
+                Resource(null, Error(aid, e.errors))
             }
         }
 
@@ -54,14 +56,6 @@ class SetupService(
 
     }
 
-    fun <T : Any> List<Pair<T?, Error?>>.orElseThrow(block: (List<Error>) -> Exception): List<T> {
-        this.mapNotNull { it.second }
-                .takeIf { it.isNotEmpty() }
-                ?.let { throw block(it) }
-
-        return this.mapNotNull { it.first }
-
-    }
 
     fun createAuroraDcForApplication(auroraConfig: AuroraConfig, aid: ApplicationId): AuroraDeploymentConfig {
         return auroraConfigParserService.createAuroraDcForApplication(auroraConfig, aid)
