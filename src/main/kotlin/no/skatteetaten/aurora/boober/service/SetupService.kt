@@ -42,21 +42,18 @@ class SetupService(
 
     fun createAuroraDcsForApplications(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>): List<AuroraDeploymentConfig> {
 
-        val errors: MutableList<Error> = mutableListOf()
-        val auroraDcs: List<AuroraDeploymentConfig> = applicationIds.mapNotNull { aid ->
+        val result: List<Pair<AuroraDeploymentConfig?, Error?>> = applicationIds.map { aid ->
             try {
-                createAuroraDcForApplication(auroraConfig, aid)
+                Pair(first = createAuroraDcForApplication(auroraConfig, aid), second = null)
             } catch (e: ApplicationConfigException) {
-                errors.add(Error(aid, e.errors))
-                null
+                Pair(first = null, second = Error(aid, e.errors))
             }
         }
+        result.mapNotNull { it.second }
+                .takeIf { it.isNotEmpty() }
+                ?.let { throw AuroraConfigException("AuroraConfig contained errors for one or more applications", it) }
 
-        if (errors.isNotEmpty()) {
-            throw AuroraConfigException("AuroraConfig contained errors for one or more applications", errors)
-        }
-
-        return auroraDcs
+        return result.map { it.first!! }
     }
 
     fun createAuroraDcForApplication(auroraConfig: AuroraConfig, aid: ApplicationId): AuroraDeploymentConfig {
