@@ -44,9 +44,11 @@ apply plugin: 'org.asciidoctor.convert'
 apply plugin: 'kotlin'
 apply plugin: 'kotlin-spring'
 apply plugin: 'org.springframework.boot'
+/*
 apply plugin: 'application'
 
 distZip.classifier = 'Leveransepakke'
+*/
 
 
 compileKotlin {
