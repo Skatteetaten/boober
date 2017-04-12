@@ -38,7 +38,7 @@ apply plugin: 'org.sonarqube'
 apply plugin: 'java'
 apply plugin: 'groovy'
 apply plugin: 'maven'
-apply plugin: "jacoco"
+//apply plugin: "jacoco"
 apply plugin: "info.solidsoft.pitest"
 apply plugin: 'org.asciidoctor.convert'
 apply plugin: 'kotlin'
@@ -119,6 +119,7 @@ jar {
 }
 
 //plugin
+/*
 jacocoTestReport {
   reports {
     xml.enabled false
@@ -126,6 +127,7 @@ jacocoTestReport {
     html.destination "${buildDir}/reports/jacoco"
   }
 }
+*/
 
 task wrapper(type: Wrapper) {
   gradleVersion = '3.4.1'
