@@ -50,19 +50,18 @@ class SetupService(
             }
         }
 
-        result.onError { throw AuroraConfigException("AuroraConfig contained errors for one or more applications", it) }
+        return result.orElse { throw AuroraConfigException("AuroraConfig contained errors for one or more applications", it) }
 
-        return result.success()
     }
 
-    fun List<Pair<AuroraDeploymentConfig?, Error?>>.success(): List<AuroraDeploymentConfig> {
-        return this.mapNotNull { it.first }
-    }
 
-    fun List<Pair<AuroraDeploymentConfig?, Error?>>.onError(block: (List<Error>) -> Nothing) {
+    fun <T : Any> List<Pair<T?, Error?>>.orElse(block: (List<Error>) -> Nothing): List<T> {
         this.mapNotNull { it.second }
                 .takeIf { it.isNotEmpty() }
                 ?.let { block(it) }
+
+        return this.mapNotNull { it.first }
+
     }
 
     fun createAuroraDcForApplication(auroraConfig: AuroraConfig, aid: ApplicationId): AuroraDeploymentConfig {
