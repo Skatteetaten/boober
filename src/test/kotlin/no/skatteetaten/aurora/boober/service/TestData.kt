@@ -15,7 +15,6 @@ val auroraDcDevelopment = AuroraDeploymentConfig(
                 artifactId = "openshift-referanse-springboot-server",
                 groupId = "ske.aurora.openshift.referanse",
                 version = "0.0.89",
-                generateCertificate = true,
                 alarm = false,
                 certificateCn = null,
                 cpuRequest = "100",

@@ -59,11 +59,13 @@ class AuroraConfigParserService {
 
         val name: String? = json.s("name") ?: artifactId
 
-        var certificateCn = deployJson.s("CERTIFICATE_CN")
-        val generateCertificate = json.a("flags")?.contains("cert") ?: false || certificateCn != null
-        if (certificateCn == null) {
-            certificateCn = groupId + "." + name
+
+        val generatedCN = json.a("flags")?.contains("cert")?.let{
+            groupId + "." + name
         }
+
+        val certificateCn = deployJson.s("CERTIFICATE_CN") ?: generatedCN
+
 
         val tag = if (json.s("type") == "development") {
             "latest"
@@ -79,7 +81,6 @@ class AuroraConfigParserService {
                 splunkIndex = deployJson.s("SPLUNK_INDEX") ?: "",
                 maxMemory = deployJson.s("MAX_MEMORY") ?: "256Mi",
                 database = deployJson.s("DATABASE"),
-                generateCertificate = generateCertificate,
                 certificateCn = certificateCn,
                 tag = tag,
                 cpuRequest = deployJson.s("CPU_REQUEST") ?: "0",

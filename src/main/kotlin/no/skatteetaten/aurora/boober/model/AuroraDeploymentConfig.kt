@@ -57,7 +57,6 @@ data class AuroraDeploy(
         val splunkIndex: String?,
         val maxMemory: String?,
         val database: String?,
-        val generateCertificate: Boolean = false,
         val certificateCn: String? = "",
         val tag: String?,
         val cpuRequest: String?,
