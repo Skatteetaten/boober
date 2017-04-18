@@ -1,38 +1,48 @@
 package no.skatteetaten.aurora.boober.service
 
-import static no.skatteetaten.aurora.boober.LoggingUtilsKt.setLogLevels
 import static no.skatteetaten.aurora.boober.utils.SampleFilesCollector.getQaEbsUsersSampleFiles
 
-import org.apache.velocity.app.VelocityEngine
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 
 import groovy.json.JsonOutput
-import no.skatteetaten.aurora.boober.Configuration
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import spock.lang.Specification
+import spock.mock.DetachedMockFactory
 
+@SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration, AuroraConfigParserService, OpenShiftService, Config])
 class OpenShiftServiceTest extends Specification {
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
-  def setupSpec() {
-    setLogLevels()
+  @Configuration
+  static class Config {
+    private DetachedMockFactory factory = new DetachedMockFactory()
+
+    @Bean
+    UserDetailsProvider userDetailsProvider() {
+
+      factory.Mock(UserDetailsProvider)
+    }
   }
 
-  UserDetailsProvider userDetailsProvider = Mock()
-  Configuration configuration = new Configuration()
-  VelocityEngine velocityEngine = configuration.velocity()
-  ObjectMapper mapper = configuration.mapper()
+  @Autowired
+  OpenShiftService openShiftService
 
-  def openShiftService = new OpenShiftService(userDetailsProvider, velocityEngine, mapper)
-  def auroraConfigParserService = new AuroraConfigParserService()
+  @Autowired
+  UserDetailsProvider userDetailsProvider
+
+  @Autowired
+  AuroraConfigParserService auroraConfigParserService
 
   def "Should create OpenShift objects from Velocity templates"() {
     given:

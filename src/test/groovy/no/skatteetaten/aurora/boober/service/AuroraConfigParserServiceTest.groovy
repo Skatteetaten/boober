@@ -3,19 +3,38 @@ package no.skatteetaten.aurora.boober.service
 import static no.skatteetaten.aurora.boober.utils.SampleFilesCollector.getQaEbsUsersSampleFiles
 import static no.skatteetaten.aurora.boober.utils.SampleFilesCollector.jsonToMap
 
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import no.skatteetaten.aurora.boober.model.TemplateType
 import spock.lang.Specification
 
+@SpringBootTest(classes = [AuroraConfigParserService])
 class AuroraConfigParserServiceTest extends Specification {
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
-  AuroraConfigParserService service = new AuroraConfigParserService()
+  @Autowired
+  AuroraConfigParserService service
+
+  def "Should create an AuroraDeploymentConfig with default tag when type is deploy"() {
+    given:
+      Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
+      files.put("booberdev/about.json", ["type": "deploy", "cluster": "utv"])
+
+    when:
+      def auroraConfig = new AuroraConfig(files, [:])
+      AuroraDeploymentConfig auroraDc = service.createAuroraDcForApplication(auroraConfig, aid)
+      def auroraDeployDescriptor = (AuroraDeploy) auroraDc.deployDescriptor
+
+    then:
+      auroraDeployDescriptor.tag == "default"
+  }
 
   def "Should fail due to missing config file"() {
 
@@ -25,8 +44,7 @@ class AuroraConfigParserServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files, [:])
 
     when:
-      def mergedFileForApplication = auroraConfig.getMergedFileForApplication(aid)
-      service.createAuroraDcFromMergedFileForApplication(mergedFileForApplication)
+      service.createAuroraDcForApplication(auroraConfig, aid)
 
     then:
       thrown(IllegalArgumentException)
@@ -108,9 +126,7 @@ class AuroraConfigParserServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files, [:])
 
     when:
-      def mergedFileForApplication = auroraConfig.getMergedFileForApplication(aid)
-      service.createAuroraDcFromMergedFileForApplication(mergedFileForApplication)
-
+      service.createAuroraDcForApplication(auroraConfig, aid)
 
     then:
       def ex = thrown(ApplicationConfigException)
