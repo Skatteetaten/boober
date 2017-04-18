@@ -1,0 +1,65 @@
+{
+  "kind": "BuildConfig",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "referanse",
+    "namespace": "foobar",
+    "labels": {
+      "affiliation": "paas",
+      "app": "referanse",
+      "updatedBy": "m89870"
+    }
+  },
+  "spec": {
+    "runPolicy": "Serial",
+    "source": {
+      "type": "None"
+    },
+    "strategy": {
+      "type": "Custom",
+      "customStrategy": {
+        "from": {
+          "kind": "ImageStreamTag",
+          "namespace": "openshift",
+          "name": "leveransepakkebygger:prod"
+        },
+        "env": [
+          {
+            "name": "ARTIFACT_ID",
+            "value": "openshift-referanse-springboot-server"
+          },
+          {
+            "name": "GROUP_ID",
+            "value": "ske.aurora.openshift.referanse"
+          },
+          {
+            "name": "VERSION",
+            "value": "0.0.95"
+          },
+          {
+            "name": "DOCKER_BASE_VERSION",
+            "value": "1"
+          },
+          {
+            "name": "DOCKER_BASE_IMAGE",
+            "value": "aurora/oracle8"
+          },
+          {
+            "name": "PUSH_EXTRA_TAGS",
+            "value": "latest,major,minor,patch"
+          }
+        ],
+        "exposeDockerSocket": true
+      }
+    },
+    "output": {
+      "to": {
+        "kind": "ImageStreamTag",
+        "name": "referansedev:latest"
+      }
+    },
+    "resources": {},
+    "postCommit": {},
+    "nodeSelector": null
+  }
+}

@@ -1,0 +1,276 @@
+{
+  "kind": "DeploymentConfig",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "referanse",
+    "namespace": "paas-boober2",
+    "selfLink": "/oapi/v1/namespaces/paas-boober2/deploymentconfigs/referanse",
+    "uid": "f12164e4-1eb0-11e7-8cd7-00505683244e",
+    "resourceVersion": "48728326",
+    "generation": 15,
+    "creationTimestamp": "2017-04-11T12:18:16Z",
+    "labels": {
+      "affiliation": "paas",
+      "app": "referanse",
+      "updatedBy": "m89870"
+    },
+    "annotations": {
+      "marjory.skatteetaten.no/alarm": "true",
+      "marjory.skatteetaten.no/management-path": ":8081/actuator",
+      "sprocket.sits.no-deployment-config.done": "2017-04-12T21:47:28.33+02:00",
+      "sprocket.sits.no/deployment-config.certificate": "ske.aurora.openshift.referanse.referanse",
+      "sprocket.sits.no/deployment-config.database": "referanseapp"
+    }
+  },
+  "spec": {
+    "strategy": {
+      "type": "Rolling",
+      "rollingParams": {
+        "updatePeriodSeconds": 1,
+        "intervalSeconds": 1,
+        "timeoutSeconds": 120,
+        "maxUnavailable": 0,
+        "maxSurge": "25%"
+      },
+      "resources": {}
+    },
+    "triggers": [
+      {
+        "type": "ImageChange",
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "referanse"
+          ],
+          "from": {
+            "kind": "ImageStreamTag",
+            "namespace": "paas-boober2",
+            "name": "referanse:default"
+          }
+        }
+      }
+    ],
+    "replicas": 1,
+    "test": false,
+    "selector": {
+      "name": "referanse"
+    },
+    "template": {
+      "metadata": {
+        "creationTimestamp": null,
+        "labels": {
+          "affiliation": "paas",
+          "name": "referanse",
+          "updatedBy": "m89870"
+        }
+      },
+      "spec": {
+        "volumes": [
+          {
+            "name": "application-log-volume",
+            "emptyDir": {}
+          },
+          {
+            "name": "config",
+            "configMap": {
+              "name": "referanse",
+              "defaultMode": 420
+            }
+          },
+          {
+            "name": "referanse-cert",
+            "secret": {
+              "secretName": "referanse-cert",
+              "defaultMode": 420
+            }
+          },
+          {
+            "name": "referanseapp-db-2882950f-4958-4acc-a635-8902ef31777f",
+            "secret": {
+              "secretName": "referanseapp-db-2882950f-4958-4acc-a635-8902ef31777f",
+              "defaultMode": 420
+            }
+          }
+        ],
+        "containers": [
+          {
+            "name": "referanse",
+            "image": "docker-registry.aurora.sits.no:5000/ske_aurora_openshift_referanse/openshift-referanse-springboot-server@sha256:17c6bcef62907280cffa8ed96e8ae7daa119aeec42db0c41d29c234c0e0df4fe",
+            "ports": [
+              {
+                "name": "http",
+                "containerPort": 8080,
+                "protocol": "TCP"
+              },
+              {
+                "name": "management",
+                "containerPort": 8081,
+                "protocol": "TCP"
+              },
+              {
+                "name": "jolokia",
+                "containerPort": 8778,
+                "protocol": "TCP"
+              }
+            ],
+            "env": [
+              {
+                "name": "SPLUNK_INDEX",
+                "value": "openshift-test"
+              },
+              {
+                "name": "POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              },
+              {
+                "name": "POD_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "HTTP_PORT",
+                "value": "8080"
+              },
+              {
+                "name": "MANAGEMENT_HTTP_PORT",
+                "value": "8081"
+              },
+              {
+                "name": "APP_NAME",
+                "value": "referanse"
+              },
+              {
+                "name": "STS_CERTIFICATE_URL",
+                "value": "/u01/secrets/app/referanse-cert/certificate.crt"
+              },
+              {
+                "name": "STS_PRIVATE_KEY_URL",
+                "value": "/u01/secrets/app/referanse-cert/privatekey.key"
+              },
+              {
+                "name": "STS_KEYSTORE_DESCRIPTOR",
+                "value": "/u01/secrets/app/referanse-cert/descriptor.properties"
+              },
+              {
+                "name": "REFERANSEAPP_DB",
+                "value": "/u01/secrets/app/referanseapp-db-2882950f-4958-4acc-a635-8902ef31777f/info"
+              },
+              {
+                "name": "REFERANSEAPP_DB_PROPERTIES",
+                "value": "/u01/secrets/app/referanseapp-db-2882950f-4958-4acc-a635-8902ef31777f/db.properties"
+              }
+            ],
+            "resources": {
+              "limits": {
+                "cpu": "2",
+                "memory": "256Mi"
+              },
+              "requests": {
+                "cpu": "0",
+                "memory": "128Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "application-log-volume",
+                "mountPath": "/u01/logs"
+              },
+              {
+                "name": "config",
+                "mountPath": "/u01/config/configmap"
+              },
+              {
+                "name": "referanse-cert",
+                "mountPath": "/u01/secrets/app/referanse-cert"
+              },
+              {
+                "name": "referanseapp-db-2882950f-4958-4acc-a635-8902ef31777f",
+                "mountPath": "/u01/secrets/app/referanseapp-db-2882950f-4958-4acc-a635-8902ef31777f"
+              }
+            ],
+            "livenessProbe": {
+              "exec": {
+                "command": [
+                  "/u01/application/bin/liveness.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 1,
+              "periodSeconds": 10,
+              "successThreshold": 1,
+              "failureThreshold": 3
+            },
+            "readinessProbe": {
+              "exec": {
+                "command": [
+                  "/u01/application/bin/readiness.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 1,
+              "periodSeconds": 10,
+              "successThreshold": 1,
+              "failureThreshold": 3
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "imagePullPolicy": "IfNotPresent",
+            "securityContext": {
+              "capabilities": {},
+              "privileged": false
+            }
+          }
+        ],
+        "restartPolicy": "Always",
+        "terminationGracePeriodSeconds": 30,
+        "dnsPolicy": "ClusterFirst",
+        "securityContext": {}
+      }
+    }
+  },
+  "status": {
+    "latestVersion": 1,
+    "observedGeneration": 15,
+    "replicas": 1,
+    "updatedReplicas": 1,
+    "availableReplicas": 1,
+    "details": {
+      "message": "image change",
+      "causes": [
+        {
+          "type": "ImageChange",
+          "imageTrigger": {
+            "from": {
+              "kind": "ImageStreamTag",
+              "namespace": "paas-boober2",
+              "name": "referanse:default"
+            }
+          }
+        }
+      ]
+    },
+    "conditions": [
+      {
+        "type": "Available",
+        "status": "True",
+        "lastTransitionTime": "2017-04-11T12:19:37Z",
+        "message": "Deployment config has minimum availability."
+      },
+      {
+        "type": "Progressing",
+        "status": "True",
+        "lastTransitionTime": "2017-04-11T12:18:37Z",
+        "reason": "NewReplicationControllerAvailable",
+        "message": "Replication controller \"referanse-1\" has completed progressing"
+      }
+    ]
+  }
+}

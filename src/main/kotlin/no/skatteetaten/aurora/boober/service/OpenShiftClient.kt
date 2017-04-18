@@ -34,7 +34,7 @@ class OpenShiftClient(
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftClient::class.java)
 
-    fun applyMany(namespace: String, openShiftObjects: List<JsonNode>, dryRun: Boolean = false): List<OpenShiftResponse> {
+    fun applyMany(namespace: String, openShiftObjects: List<JsonNode>): List<OpenShiftResponse> {
 
         val responses = openShiftObjects.map {
 
@@ -56,15 +56,13 @@ class OpenShiftClient(
         val name = json.get("metadata")?.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource")
 
         //I do not like code like this.
-        val existingResource = try {
-            resource.get(kind, name, namespace)
-        } catch(e: OpenShiftException) {
-            if (e.cause is HttpClientErrorException && e.cause.statusCode == HttpStatus.NOT_FOUND) {
-                val createdResource = resource.post(kind, name, namespace, json)
-                return OpenShiftResponse(kind, OperationType.CREATED, null, json, createdResource.body)
-            }
-            throw e
+        val existingResource = resource.get(kind, name, namespace)
+
+        if (existingResource == null) {
+            val createdResource = resource.post(kind, name, namespace, json)
+            return OpenShiftResponse(kind, OperationType.CREATED, null, json, createdResource.body)
         }
+
 
         val existing = existingResource.body
         if (kind == "projectrequest") {

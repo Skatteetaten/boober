@@ -25,11 +25,18 @@ class OpenshiftResourceClient(@Value("\${openshift.url}") val baseUrl: String,
     }
 
 
-    fun get(kind: String, name: String, namespace: String): ResponseEntity<JsonNode> {
+    fun get(kind: String, name: String, namespace: String): ResponseEntity<JsonNode>? {
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, name, namespace)
         val headers: HttpHeaders = createHeaders(userDetailsProvider.getAuthenticatedUser().token)
-        return exchange(RequestEntity<Any>(headers, HttpMethod.GET, URI(urls.get)))
 
+        try {
+            return exchange(RequestEntity<Any>(headers, HttpMethod.GET, URI(urls.get)))
+        } catch(e: OpenShiftException) {
+            if (e.cause is HttpClientErrorException && e.cause.statusCode == HttpStatus.NOT_FOUND) {
+                return null
+            }
+            throw e
+        }
     }
 
     fun post(kind: String, name: String, namespace: String, payload: JsonNode): ResponseEntity<JsonNode> {

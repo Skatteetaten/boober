@@ -88,7 +88,7 @@ class SetupService(
 
         logger.info("Creating OpenShift objects for application ${adc.name} in namespace ${adc.namespace}")
         val openShiftObjects: List<JsonNode> = openShiftService.generateObjects(adc)
-        val openShiftResponses: List<OpenShiftResponse> = openShiftClient.applyMany(adc.namespace, openShiftObjects, dryRun)
+        val openShiftResponses: List<OpenShiftResponse> = openShiftClient.applyMany(adc.namespace, openShiftObjects)
 
         return ApplicationResult(
                 applicationId = ApplicationId(adc.envName, adc.name),
