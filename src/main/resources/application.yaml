@@ -9,7 +9,7 @@ openshift:
 
 boober:
   git:
-    url: "https://git.aurora.skead.no/scm/oc/"
+    url: "https://git.aurora.skead.no/scm/oc"
     username: "boober"
     password: "komogsyngensang"
 

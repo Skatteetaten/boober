@@ -1,14 +1,21 @@
 package no.skatteetaten.aurora.boober.service
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.revwalk.RevCommit
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 import java.io.File
+import java.io.FileWriter
 
 
-//@Service
+@Service
 class GitService(
+        val mapper: ObjectMapper,
+        val userDetails: UserDetailsProvider,
         @Value("\${boober.git.url}") val url: String,
         @Value("\${boober.git.username}") val username: String,
         @Value("\${boober.git.password}") val password: String) {
@@ -38,8 +45,24 @@ class GitService(
 
         val tag = "$namespace-$name-$resourceVersion"
         git.tag().setAnnotated(true).setName(tag).setMessage(tag).call()
+    }
 
+    fun saveFiles(affiliation: String, dir: File, files: Map<String, Any>) {
+        val git = get(affiliation, dir)
 
+        files.forEach {
+            val file = File(git.repository.directory.parent, it.key)
+            val created = file.createNewFile()
+
+            val writer = FileWriter(file, false)
+            val node: JsonNode = mapper.valueToTree(it.value)
+            writer.write(node.asText())
+            writer.close()
+
+            git.add().addFilepattern(it.key).call()
+        }
+
+        git.commit().setAuthor(userDetails.getPersonIdent()).setMessage("Boober update").call()
     }
 
     fun get(affiliation: String, dir: File): Git {
@@ -56,9 +79,10 @@ class GitService(
         val git = if (!dir.exists()) {
             dir.mkdir()
 
+            println("$url/$affiliation.git")
 
             Git.cloneRepository()
-                    .setURI("$url/aot.git")
+                    .setURI("$url/$affiliation.git")
                     .setCredentialsProvider(cp)
                     .setDirectory(dir)
                     .call()
