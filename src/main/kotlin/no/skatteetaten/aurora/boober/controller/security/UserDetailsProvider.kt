@@ -15,7 +15,7 @@ class UserDetailsProvider {
     }
 
     fun getPersonIdent(): PersonIdent {
-        val user = User("m007", "", "Some Guy")
+        val user = getAuthenticatedUser()
         return PersonIdent(user.fullName, user.username)
     }
 }
