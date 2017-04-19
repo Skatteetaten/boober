@@ -100,4 +100,12 @@ class OpenShiftClient(
         val existingResource = resource.getExistingResource(headers, url)
         return existingResource != null
     }
+
+    fun findTemplate(template: String): ResponseEntity<JsonNode>? {
+        val url = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, "template", template, "openshift")
+        val headers: HttpHeaders = createHeaders(userDetailsProvider.getAuthenticatedUser().token)
+
+        return getExistingResource(headers, url.get)
+
+    }
 }
