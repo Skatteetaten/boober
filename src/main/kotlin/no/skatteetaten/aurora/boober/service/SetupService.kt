@@ -12,7 +12,11 @@ import org.springframework.stereotype.Service
 data class ApplicationId(
         val environmentName: String,
         val applicationName: String
-)
+) {
+    override fun toString(): String {
+        return "$environmentName-$applicationName"
+    }
+}
 
 data class ApplicationResult(
         val applicationId: ApplicationId,

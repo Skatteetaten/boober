@@ -22,7 +22,7 @@ class AuroraConfig(
 
     fun getMergedFileForApplication(aid: ApplicationId): Map<String, Any?> {
         val filesForApplication = getFilesForApplication(aid)
-        val mergedJson = mergeAocConfigFiles(filesForApplication)
+        val mergedJson = mergeAocConfigFiles(filesForApplication.map { it.value })
 
         mergedJson.apply {
             putIfAbsent("envName", aid.environmentName)
@@ -34,7 +34,7 @@ class AuroraConfig(
         return mergedJson
     }
 
-    fun getFilesForApplication(aid: ApplicationId): List<Map<String, Any?>> {
+    fun getFilesForApplication(aid: ApplicationId): Map<String, Map<String, Any?>> {
 
         val requiredFilesForApplication = setOf(
                 "about.json",
@@ -42,11 +42,16 @@ class AuroraConfig(
                 "${aid.environmentName}/about.json",
                 "${aid.environmentName}/${aid.applicationName}.json")
 
-        val filesForApplication: List<Map<String, Any?>> = requiredFilesForApplication.mapNotNull { aocConfigFiles[it] }
+        val filesForApplication: Map<String, Map<String, Any?>> = requiredFilesForApplication
+                .filter { aocConfigFiles[it] != null }
+                .map { it to aocConfigFiles[it]!! }
+                .toMap()
+
         if (filesForApplication.size != requiredFilesForApplication.size) {
             val missingFiles = requiredFilesForApplication.filter { it !in aocConfigFiles.keys }
             throw IllegalArgumentException("Unable to execute setup command. Required files missing => $missingFiles")
         }
+
         return filesForApplication
     }
 

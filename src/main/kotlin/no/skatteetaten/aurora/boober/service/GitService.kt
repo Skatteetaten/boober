@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
 import java.io.FileWriter
+import java.util.UUID
 
 @Service
 class GitService(
@@ -25,43 +26,38 @@ class GitService(
 
     val cp = UsernamePasswordCredentialsProvider(username, password)
 
-    // Token som url
     fun saveFiles(affiliation: String, branchName: String, files: Map<String, Map<String, Any?>>) {
 
-        val git = initGit(affiliation, "token")
+        val git = initGit(affiliation)
+        try {
+            writeAndAddChanges(git, files)
+            val status = git.status().call()
 
-        writeAndAddChanges(git, files)
-        val status = git.status().call()
+            commitAllChanges(git, "$branchName: added ${status.added.size} files, changed ${status.changed.size} files")
+            push(git)
+        } catch (ex: Exception) {
+            throw ex
+        } finally {
+            File(git.repository.directory.parent).deleteRecursively()
+            git.close()
+        }
 
-        val revCommit = commitAllChanges(git, "$branchName: added ${status.added.size} files, changed ${status.changed.size} files")
-
-        pushAsBoober(git)
-
-        createBranch(git, branchName, revCommit)
-        git.checkout().setName(branchName).call()
-
-        pushAsBoober(git)
-
-        git.close()
     }
 
-    // TODO:Hvis konflikt må vi gjøre noe, skal ikke skje men du vet aldri
-    fun initGit(affiliation: String, token: String): Git {
+    fun initGit(affiliation: String): Git {
 
-        val dir = File("$dirPath/$token/$affiliation")
-        dir.mkdir()
+        val dir = File("$dirPath/${UUID.randomUUID()}").apply { mkdirs() }
+        val uri = "$url/$affiliation.git"
 
-        return if (!dir.resolve(".git").exists()) {
+        return try {
             Git.cloneRepository()
-                    .setURI("$url/$affiliation.git")
+                    .setURI(uri)
                     .setCredentialsProvider(cp)
                     .setDirectory(dir)
                     .call()
-        } else {
-            val git = Git.open(dir)
-            git.checkout().setName("master").call()
-            git.pull().setCredentialsProvider(cp).call()
-            git
+        } catch (ex: Exception) {
+            dir.deleteRecursively()
+            throw ex
         }
     }
 
@@ -70,10 +66,9 @@ class GitService(
         files.forEach { (fileName, value) ->
             fileName.split("/")
                     .takeIf { it.size == 2 }
-                    ?.let { File(git.repository.directory.parent, it[0]).mkdir() }
+                    ?.let { File(git.repository.directory.parent, it[0]).mkdirs() }
 
-            val file = File(git.repository.directory.parent, fileName)
-            file.createNewFile()
+            val file = File(git.repository.directory.parent, fileName).apply { createNewFile() }
 
             val node: JsonNode = mapper.valueToTree(value)
             FileWriter(file, false).use { it.write(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(node)) }
@@ -102,22 +97,24 @@ class GitService(
                 .call()
     }
 
-    fun pushAsBoober(git: Git) {
+    fun push(git: Git) {
         git.push()
                 .setCredentialsProvider(cp)
+                .setPushAll()
+                .setPushTags()
                 .call()
     }
 
-    //dette er Det vi skal gjøre når det blir kjørt en setup kommando. resourceVersion får vi først etter at kommando er kjørt
-//så dette må gjøres etter at vi har installert objektene. Det er resourceVersion i DC vi hovedsakelig bryr oss om.
-//men hva med de tilfellene hvor vi ikke endrer dc men f.eks bare endrer en configMap? Da vil vi jo ikke ha resourceVersion på dc være endret.
-//må vi faktisk ha med en annotated tag for hver ressurstype vi endrer?
-/*
+    /*
+    dette er Det vi skal gjøre når det blir kjørt en setup kommando. resourceVersion får vi først etter at kommando er kjørt
+    så dette må gjøres etter at vi har installert objektene. Det er resourceVersion i DC vi hovedsakelig bryr oss om.
+    men hva med de tilfellene hvor vi ikke endrer dc men f.eks bare endrer en configMap? Da vil vi jo ikke ha resourceVersion på dc være endret.
+    må vi faktisk ha med en annotated tag for hver ressurstype vi endrer?
 
-så f.eks hvis en boober setup endrer en configMap så må vi hente ned resourceVersion etterpå og tagge med namespace-name-resourcetype-resourceVersion?
-Vi har jo sagt at dette apiet kun skal applye det som faktisk er endret. så hvis vi applyer en configmap og den ikke endret så får vi vel samme resourceVersion og da skal jo
-ikke denne taggen flyttes?
- */
+    så f.eks hvis en boober setup endrer en configMap så må vi hente ned resourceVersion etterpå og tagge med namespace-name-resourcetype-resourceVersion?
+    Vi har jo sagt at dette apiet kun skal applye det som faktisk er endret. så hvis vi applyer en configmap og den ikke endret så får vi vel samme resourceVersion og da skal jo
+    ikke denne taggen flyttes?
+     */
     fun markRelease(git: Git, namespace: String, name: String, resourceVersion: Int, commit: RevCommit) {
 
         createBranch(git, "$namespace-$name", commit)
