@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.utils.use
 import org.eclipse.jgit.api.CreateBranchCommand
 import org.eclipse.jgit.api.Git
@@ -15,8 +16,14 @@ import java.io.File
 import java.io.FileWriter
 import java.util.UUID
 
+fun Git.deleteCloneAndClose() {
+    File(this.repository.directory.parent).deleteRecursively()
+    this.close()
+}
+
 @Service
 class GitService(
+        val setupService: SetupService,
         val mapper: ObjectMapper,
         val userDetails: UserDetailsProvider,
         @Value("\${boober.git.url}") val url: String,
@@ -26,22 +33,51 @@ class GitService(
 
     val cp = UsernamePasswordCredentialsProvider(username, password)
 
-    fun saveFiles(affiliation: String, branchName: String, files: Map<String, Map<String, Any?>>) {
+    // Delete folder on failure?
+    fun saveFiles(affiliation: String, auroraConfig: AuroraConfig) {
 
         val git = initGit(affiliation)
-        try {
-            writeAndAddChanges(git, files)
-            val status = git.status().call()
 
-            commitAllChanges(git, "$branchName: added ${status.added.size} files, changed ${status.changed.size} files")
-            push(git)
-        } catch (ex: Exception) {
-            throw ex
-        } finally {
-            File(git.repository.directory.parent).deleteRecursively()
-            git.close()
-        }
+        writeAndAddChanges(git, auroraConfig.aocConfigFiles)
+        val status = git.status().call()
 
+        val files = getAllFilesInRepo(git.repository.directory.parentFile)
+                .map {
+                    val name = it.toRelativeString(git.repository.directory.parentFile)
+                    val conf = mapper.readValue(it, Map::class.java)
+                    name to conf as Map<String, Any?>
+                }.toMap()
+
+        val configToValidation = AuroraConfig(files)
+        val appids = configToValidation.getApplicationIds()
+
+        val result = setupService.createAuroraDcsForApplications(configToValidation, appids)
+
+        commitAllChanges(git, "added ${status.added.size} files, changed ${status.changed.size} files")
+
+        git.deleteCloneAndClose()
+    }
+
+    private fun getAllFilesInRepo(folder: File): List<File> = folder.listFiles()
+            .filter { !it.name.contains(".git") }
+            .flatMap {
+                if(it.isDirectory) getAllFilesInRepo(it)
+                else listOf(it)
+            }
+
+    fun getFiles(git: Git, aid: ApplicationId): Map<String, Map<String, Any?>> {
+
+        val requiredFilesForApplication = setOf(
+                "about.json",
+                "${aid.applicationName}.json",
+                "${aid.environmentName}/about.json",
+                "${aid.environmentName}/${aid.applicationName}.json")
+
+        return requiredFilesForApplication.map {
+            val file = File(git.repository.directory.parent).resolve(it)
+            val conf = mapper.readValue(file, Map::class.java)
+            it to conf as Map<String, Any?>
+        }.toMap()
     }
 
     fun initGit(affiliation: String): Git {
@@ -61,7 +97,7 @@ class GitService(
         }
     }
 
-    private fun writeAndAddChanges(git: Git, files: Map<String, Map<String, Any?>>) {
+    fun writeAndAddChanges(git: Git, files: Map<String, Map<String, Any?>>) {
 
         files.forEach { (fileName, value) ->
             fileName.split("/")
@@ -70,14 +106,13 @@ class GitService(
 
             val file = File(git.repository.directory.parent, fileName).apply { createNewFile() }
 
-            val node: JsonNode = mapper.valueToTree(value)
-            FileWriter(file, false).use { it.write(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(node)) }
+            FileWriter(file, false).use { it.write(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(value)) }
 
             git.add().addFilepattern(fileName).call()
         }
     }
 
-    private fun commitAllChanges(git: Git, message: String): RevCommit {
+    fun commitAllChanges(git: Git, message: String): RevCommit {
 
         return git.commit()
                 .setAll(true)

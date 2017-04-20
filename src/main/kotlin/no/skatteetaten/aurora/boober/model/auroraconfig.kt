@@ -14,6 +14,16 @@ class AuroraConfig(
         val aocConfigFiles: Map<String, Map<String, Any?>>,
         val secrets: Map<String, String> = mapOf()
 ) {
+    fun getApplicationIds(env: String = "", app: String = ""): List<ApplicationId> {
+
+        return aocConfigFiles
+                .map { it.key.removeSuffix(".json") }
+                .filter { it.contains("/") && !it.contains("about") }
+                .filter { if (env.isNullOrBlank()) true else it.startsWith(env) }
+                .filter { if (app.isNullOrBlank()) true else it.endsWith(app) }
+                .map { val (environment, application) = it.split("/"); ApplicationId(environment, application) }
+    }
+
     fun getSecrets(secretFolder: String): Map<String, String> {
 
         val prefix = if (secretFolder.endsWith("/")) secretFolder else "$secretFolder/"
@@ -54,6 +64,7 @@ class AuroraConfig(
 
         return filesForApplication
     }
+
 
     private fun mergeAocConfigFiles(filesForApplication: List<Map<String, Any?>>): MutableMap<String, Any?> {
 

@@ -1,22 +1,21 @@
 package no.skatteetaten.aurora.boober.controller
 
+import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.SetupCommand
 import no.skatteetaten.aurora.boober.service.GitService
-import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class GitController(val service: GitService) {
+class GitController(val gitService: GitService) {
 
-    @GetMapping("/gitgud")
-    fun git(): String {
-        val files: Map<String, Map<String, Any?>> = mapOf(
-            "console.json" to
-            mapOf("name" to "console", "type" to "deploy"),
-            "utv2/console.json" to
-                    mapOf("build" to mapOf("VERSION" to "2"))
-        )
+    @PutMapping("/save")
+    fun gitSave(@RequestBody cmd: SetupCommand) {
 
-        service.saveFiles("paas", "utv-boober", files)
-        return "OK"
+        val auroraConfig = AuroraConfig(cmd.files, cmd.secretFiles)
+        gitService.saveFiles(cmd.affiliation, auroraConfig)
     }
 }
+
+

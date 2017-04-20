@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.controller
 
 
 import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.SetupCommand
 import no.skatteetaten.aurora.boober.service.ApplicationResult
 import no.skatteetaten.aurora.boober.service.SetupService
 import org.springframework.web.bind.annotation.PutMapping
@@ -30,10 +31,3 @@ class SetupController(val setupService: SetupService) {
         return Response(items = applicationResults)
     }
 }
-
-data class SetupCommand(val affiliation: String,
-                        val envs: List<String> = listOf(),
-                        val apps: List<String> = listOf(),
-                        val files: Map<String, Map<String, Any?>>,
-                        val secretFiles: Map<String, String> = mapOf(),
-                        val overrides: Map<String, Map<String, Any?>>?)

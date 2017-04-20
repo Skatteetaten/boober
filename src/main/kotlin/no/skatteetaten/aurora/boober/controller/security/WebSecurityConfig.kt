@@ -21,7 +21,6 @@ class WebSecurityConfig(
         http.authenticationProvider(preAuthenticationProvider())
                 .addFilter(requestHeaderAuthenticationFilter())
                 .authorizeRequests()
-                .antMatchers("/gitgud").permitAll()
                 .antMatchers("/health").permitAll()
                 .anyRequest().authenticated()
     }
