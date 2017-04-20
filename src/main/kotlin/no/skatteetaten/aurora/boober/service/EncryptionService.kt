@@ -28,6 +28,7 @@ $encoded
     fun decrypt(source: File): String {
         val content = source.readText()
         val split = content.split("\n")
+        //If/when we use new versions of encryption here we can use an encryptor for that specific version when we decode.
         return String(encryptor.decrypt(Base64.getDecoder().decode(split[1])))
 
     }
