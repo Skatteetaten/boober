@@ -31,7 +31,7 @@ class EncryptionServiceTest extends Specification {
 
   def "test decrypt"() {
     when:
-      def file = new File(this.getClass().getResource("/samples/config/.secretv1/latest.properties").path)
+      def file = new File(this.getClass().getResource("/samples/config/.secret/latest.properties").path)
       def result = service.decrypt(file)
 
     then:
