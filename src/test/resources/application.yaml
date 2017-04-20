@@ -1,5 +1,15 @@
 spring:
     main:
         banner-mode: "off"
+
+boober:
+  encrypt:
+    key: "komogsyngensang"
+
+  git:
+    url: "/tmp/boobertest"
+    username: "boober"
+    password: "komogsyngensang"
+
 openshift:
     url: https://utv-master.paas.skead.no:8443
