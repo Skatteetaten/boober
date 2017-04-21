@@ -1,22 +1,27 @@
 package no.skatteetaten.aurora.boober.controller
 
 import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.controller.SetupCommand
-import no.skatteetaten.aurora.boober.service.GitService
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import no.skatteetaten.aurora.boober.service.AuroraConfigService
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/auroraconfig")
-class AuroraConfigController(val gitService: GitService) {
+class AuroraConfigController(val auroraConfigService: AuroraConfigService) {
 
-    @PutMapping("/")
-    fun gitSave(@RequestBody cmd: SetupCommand) {
+    @PutMapping("/{affiliation}")
+    fun save(@PathVariable affiliation: String, @RequestBody auroraConfig: AuroraConfig) {
 
-        val auroraConfig = AuroraConfig(cmd.files, cmd.secretFiles)
-        gitService.saveFiles(cmd.affiliation, auroraConfig)
+        auroraConfigService.save(affiliation, auroraConfig)
+    }
+
+
+    @PutMapping("/{affiliation}/{fileName}")
+    fun updateAuroraConfigFile(@PathVariable affiliation: String, @PathVariable fileName: String,
+                               @RequestBody fileContents: Map<String, Any?>) {
+
+        val auroraConfig = auroraConfigService.findAuroraConfigForAffiliation(affiliation)
+        auroraConfig.updateFile(fileName, fileContents)
+        auroraConfigService.save(affiliation, auroraConfig)
     }
 }
 

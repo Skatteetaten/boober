@@ -13,9 +13,4 @@ class UserDetailsProvider {
         val user: User = authentication.principal as User
         return user
     }
-
-    fun getPersonIdent(): PersonIdent {
-        val user = getAuthenticatedUser()
-        return PersonIdent(user.fullName, "${user.username}@skatteetaten.no")
-    }
 }

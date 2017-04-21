@@ -10,10 +10,14 @@ import javax.validation.constraints.NotNull
 import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
 
-class AuroraConfig(
-        val auroraConfigFiles: Map<String, Map<String, Any?>>,
-        val secrets: Map<String, String> = mapOf()
-) {
+class AuroraConfig(auroraConfigFiles: Map<String, Map<String, Any?>>, val secrets: Map<String, String> = mapOf()) {
+
+    val auroraConfigFiles: MutableMap<String, Map<String, Any?>>
+
+    init {
+        this.auroraConfigFiles = HashMap(auroraConfigFiles)
+    }
+
     fun getApplicationIds(env: String = "", app: String = ""): List<ApplicationId> {
 
         return auroraConfigFiles
@@ -65,12 +69,15 @@ class AuroraConfig(
         return filesForApplication
     }
 
+    fun updateFile(fileName: String, fileContents: Map<String, Any?>) {
+
+        auroraConfigFiles[fileName] = fileContents
+    }
 
     private fun mergeAocConfigFiles(filesForApplication: List<Map<String, Any?>>): MutableMap<String, Any?> {
 
         return filesForApplication.reduce(::createMergeCopy).toMutableMap()
     }
-
 
     internal fun assertIsValid(mergedJson: Map<String, Any?>, applicationName: String) {
         val validator = Validation.buildDefaultValidatorFactory().validator

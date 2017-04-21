@@ -2,10 +2,10 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.utils.use
 import org.eclipse.jgit.api.CreateBranchCommand
 import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.lib.PersonIdent
 import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.revwalk.RevCommit
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
@@ -22,7 +22,6 @@ fun Git.deleteCloneAndClose() {
 
 @Service
 class GitService(
-        val setupService: SetupService,
         val mapper: ObjectMapper,
         val userDetails: UserDetailsProvider,
         @Value("\${boober.git.url}") val url: String,
@@ -33,28 +32,29 @@ class GitService(
     val cp = UsernamePasswordCredentialsProvider(username, password)
 
     // Delete folder on failure?
-    fun saveFiles(affiliation: String, auroraConfig: AuroraConfig) {
+    fun saveFiles(affiliation: String, files: Map<String, Map<String, Any?>>) {
 
-        val git = initGit(affiliation)
+        val git = checkoutRepoForAffiliation(affiliation)
 
-        writeAndAddChanges(git, auroraConfig.auroraConfigFiles)
+        writeAndAddChanges(git, files)
+
         val status = git.status().call()
-
-        val files = getAllFilesInRepo(git.repository.directory.parentFile)
-                .map {
-                    val name = it.toRelativeString(git.repository.directory.parentFile)
-                    val conf = mapper.readValue(it, Map::class.java)
-                    name to conf as Map<String, Any?>
-                }.toMap()
-
-        val configToValidation = AuroraConfig(files)
-        val appids = configToValidation.getApplicationIds()
-
-        val result = setupService.createAuroraDcsForApplications(configToValidation, appids)
-
         commitAllChanges(git, "added ${status.added.size} files, changed ${status.changed.size} files")
 
         git.deleteCloneAndClose()
+    }
+
+    fun getAllFilesForAffiliation(affiliation: String): Map<String, Map<String, Any?>> {
+
+        val git = checkoutRepoForAffiliation(affiliation)
+
+        val folder = git.repository.directory.parentFile
+        val allFilesInRepo = getAllFilesInRepo(folder)
+        return allFilesInRepo.map {
+            val conf: Map<*, *> = mapper.readValue(it, Map::class.java)
+            val fileName = it.absoluteFile.absolutePath.replaceFirst(folder.absoluteFile.absolutePath, "")
+            fileName to conf as Map<String, Any?>
+        }.toMap()
     }
 
     private fun getAllFilesInRepo(folder: File): List<File> = folder.listFiles()
@@ -64,22 +64,7 @@ class GitService(
                 else listOf(it)
             }
 
-    fun getFiles(git: Git, aid: ApplicationId): Map<String, Map<String, Any?>> {
-
-        val requiredFilesForApplication = setOf(
-                "about.json",
-                "${aid.applicationName}.json",
-                "${aid.environmentName}/about.json",
-                "${aid.environmentName}/${aid.applicationName}.json")
-
-        return requiredFilesForApplication.map {
-            val file = File(git.repository.directory.parent).resolve(it)
-            val conf = mapper.readValue(file, Map::class.java)
-            it to conf as Map<String, Any?>
-        }.toMap()
-    }
-
-    fun initGit(affiliation: String): Git {
+    private fun checkoutRepoForAffiliation(affiliation: String): Git {
 
         val dir = File("$dirPath/${UUID.randomUUID()}").apply { mkdirs() }
         val uri = "$url/$affiliation.git"
@@ -96,7 +81,7 @@ class GitService(
         }
     }
 
-    fun writeAndAddChanges(git: Git, files: Map<String, Map<String, Any?>>) {
+    private fun writeAndAddChanges(git: Git, files: Map<String, Map<String, Any?>>) {
 
         files.forEach { (fileName, value) ->
             fileName.split("/")
@@ -111,17 +96,19 @@ class GitService(
         }
     }
 
-    fun commitAllChanges(git: Git, message: String): RevCommit {
+    private fun commitAllChanges(git: Git, message: String): RevCommit {
 
+
+        val user = userDetails.getAuthenticatedUser().let { PersonIdent(it.fullName, "${it.username}@skatteetaten.no") }
         return git.commit()
                 .setAll(true)
                 .setAllowEmpty(false)
-                .setAuthor(userDetails.getPersonIdent())
+                .setAuthor(user)
                 .setMessage(message)
                 .call()
     }
 
-    fun createBranch(git: Git, branchName: String, commit: RevCommit): Ref {
+    private fun createBranch(git: Git, branchName: String, commit: RevCommit): Ref {
 
         return git.branchCreate()
                 .setForce(true)
@@ -131,7 +118,7 @@ class GitService(
                 .call()
     }
 
-    fun push(git: Git) {
+    private fun push(git: Git) {
         git.push()
                 .setCredentialsProvider(cp)
                 .setPushAll()
@@ -149,7 +136,7 @@ class GitService(
     Vi har jo sagt at dette apiet kun skal applye det som faktisk er endret. så hvis vi applyer en configmap og den ikke endret så får vi vel samme resourceVersion og da skal jo
     ikke denne taggen flyttes?
      */
-    fun markRelease(git: Git, namespace: String, name: String, resourceVersion: Int, commit: RevCommit) {
+    private fun markRelease(git: Git, namespace: String, name: String, resourceVersion: Int, commit: RevCommit) {
 
         createBranch(git, "$namespace-$name", commit)
 

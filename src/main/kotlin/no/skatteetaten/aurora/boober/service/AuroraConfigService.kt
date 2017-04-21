@@ -4,10 +4,43 @@ import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.AuroraDeploy.Prometheus
 import no.skatteetaten.aurora.boober.model.DeploymentStrategy.recreate
 import no.skatteetaten.aurora.boober.model.DeploymentStrategy.rolling
+import no.skatteetaten.aurora.boober.utils.Result
+import no.skatteetaten.aurora.boober.utils.orElseThrow
 import org.springframework.stereotype.Service
 
 @Service
-class AuroraConfigParserService {
+class AuroraConfigService(
+        val gitService: GitService,
+        val openShiftClient: OpenShiftClient) {
+
+    fun findAuroraConfigForAffiliation(affiliation: String): AuroraConfig {
+
+        val filesForAffiliation = gitService.getAllFilesForAffiliation(affiliation)
+        return AuroraConfig(auroraConfigFiles = filesForAffiliation)
+    }
+
+    fun save(affiliation: String, auroraConfig: AuroraConfig) {
+
+        val appIds = auroraConfig.getApplicationIds()
+        // Verify that all AuroraDeploymentConfigs represented by the AuroraConfig are valid
+        createAuroraDcsForApplications(auroraConfig, appIds)
+
+        gitService.saveFiles(affiliation, auroraConfig.auroraConfigFiles)
+    }
+
+    fun createAuroraDcsForApplications(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>): List<AuroraDeploymentConfig> {
+
+        return applicationIds.map { aid ->
+            val result: Result<AuroraDeploymentConfig?, Error?> = try {
+                Result(value = createAuroraDcForApplication(auroraConfig, aid))
+            } catch (e: ApplicationConfigException) {
+                Result(error = Error(aid, e.errors))
+            }
+            result
+        }.orElseThrow {
+            AuroraConfigException("AuroraConfig contained errors for one or more applications", it)
+        }
+    }
 
     fun createAuroraDcForApplication(auroraConfig: AuroraConfig, aid: ApplicationId): AuroraDeploymentConfig {
 
@@ -46,10 +79,41 @@ class AuroraConfigParserService {
                 deployDescriptor = deployDescriptor
         )
 
-        return auroraDeploymentConfig
+        return auroraDeploymentConfig.apply { validateOpenShiftReferences(this) }
+    }
+
+
+    /**
+     * Validates that references to objects on OpenShift in the configuration are valid.
+     *
+     * This method should probably be extracted into its own class at some point when we add more validation,
+     * like references to templates, etc.
+     */
+    private fun validateOpenShiftReferences(auroraDc: AuroraDeploymentConfig) {
+        val errors: MutableList<String> = mutableListOf()
+        auroraDc.groups
+                .filter { !openShiftClient.isValidGroup(it) }
+                .takeIf { it.isNotEmpty() }
+                ?.let { errors.add("The following groups are not valid=${it.joinToString()}") }
+
+        auroraDc.users
+                .filter { !openShiftClient.isValidUser(it) }
+                .takeIf { it.isNotEmpty() }
+                ?.let { errors.add("The following users are not valid=${it.joinToString()}") }
+
+        if (errors.isNotEmpty()) {
+            throw ApplicationConfigException("Configuration contained references to one or more objects on OpenShift that does not exist", errors = errors)
+        }
     }
 
     private fun createAuroraDeploy(json: Map<String, Any?>): AuroraDeploy {
+
+        fun createPrometheus(deployJson: Map<String, Any?>): Prometheus? {
+            return if (deployJson.b("PROMETHEUS_ENABLED") ?: true) Prometheus(
+                    deployJson.s("PROMETHEUS_PORT")?.toInt() ?: 8080,
+                    deployJson.s("PROMETHEUS_PATH") ?: "/prometheus"
+            ) else null
+        }
 
         val buildJson = json.m("build") ?: mapOf()
         val deployJson = json.m("deploy") ?: mapOf()
@@ -60,19 +124,17 @@ class AuroraConfigParserService {
         val name: String? = json.s("name") ?: artifactId
 
 
-        val generatedCN = json.a("flags")?.contains("cert")?.let{
+        val generatedCN = json.a("flags")?.contains("cert")?.let {
             groupId + "." + name
         }
 
         val certificateCn = deployJson.s("CERTIFICATE_CN") ?: generatedCN
-
 
         val tag = if (json.s("type") == "development") {
             "latest"
         } else {
             deployJson.s("TAG") ?: "default"
         }
-
 
         return AuroraDeploy(
                 artifactId = artifactId!!,
@@ -91,13 +153,6 @@ class AuroraConfigParserService {
                 debug = deployJson.b("DEBUG") ?: false,
                 alarm = deployJson.b("ALARM") ?: true
         )
-    }
-
-    private fun createPrometheus(deployJson: Map<String, Any?>): Prometheus? {
-        return if (deployJson.b("PROMETHEUS_ENABLED") ?: true) Prometheus(
-                deployJson.s("PROMETHEUS_PORT")?.toInt() ?: 8080,
-                deployJson.s("PROMETHEUS_PATH") ?: "/prometheus"
-        ) else null
     }
 }
 

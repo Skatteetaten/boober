@@ -17,7 +17,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
-@SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration, AuroraConfigParserService, OpenShiftService, Config])
+@SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration, AuroraConfigService, OpenShiftService, Config])
 class OpenShiftServiceTest extends Specification {
 
   public static final String ENV_NAME = "booberdev"
@@ -42,7 +42,7 @@ class OpenShiftServiceTest extends Specification {
   UserDetailsProvider userDetailsProvider
 
   @Autowired
-  AuroraConfigParserService auroraConfigParserService
+  AuroraConfigService auroraConfigParserService
 
   def "Should create OpenShift objects from Velocity templates"() {
     given:

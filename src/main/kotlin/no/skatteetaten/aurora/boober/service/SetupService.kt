@@ -31,7 +31,7 @@ data class Error(
 
 @Service
 class SetupService(
-        val auroraConfigParserService: AuroraConfigParserService,
+        val auroraConfigService: AuroraConfigService,
         val openShiftService: OpenShiftService,
         val openShiftClient: OpenShiftClient) {
 
@@ -41,51 +41,9 @@ class SetupService(
 
         //∕TODO: Need to filter this somewhere on cluster
         val applicationIds: List<ApplicationId> = envs.flatMap { env -> apps.map { app -> ApplicationId(env, app) } }
-        val auroraDcs: List<AuroraDeploymentConfig> = createAuroraDcsForApplications(auroraConfig, applicationIds)
+        val auroraDcs: List<AuroraDeploymentConfig> = auroraConfigService.createAuroraDcsForApplications(auroraConfig, applicationIds)
 
         return auroraDcs.map { applyDeploymentConfig(it, dryRun) }
-    }
-
-    fun createAuroraDcsForApplications(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>): List<AuroraDeploymentConfig> {
-
-        return applicationIds.map { aid ->
-            val result: Result<AuroraDeploymentConfig?, Error?> = try {
-                Result(value = createAuroraDcForApplication(auroraConfig, aid))
-            } catch (e: ApplicationConfigException) {
-                Result(error = Error(aid, e.errors))
-            }
-            result
-        }.orElseThrow {
-            AuroraConfigException("AuroraConfig contained errors for one or more applications", it)
-        }
-    }
-
-    fun createAuroraDcForApplication(auroraConfig: AuroraConfig, aid: ApplicationId): AuroraDeploymentConfig {
-        return auroraConfigParserService.createAuroraDcForApplication(auroraConfig, aid)
-                .apply { validateOpenShiftReferences(this) }
-    }
-
-    /**
-     * Validates that references to objects on OpenShift in the configuration are valid.
-     *
-     * This method should probably be extracted into its own class at some point when we add more validation,
-     * like references to templates, etc.
-     */
-    private fun validateOpenShiftReferences(auroraDc: AuroraDeploymentConfig) {
-        val errors: MutableList<String> = mutableListOf()
-        auroraDc.groups
-                .filter { !openShiftClient.isValidGroup(it) }
-                .takeIf { it.isNotEmpty() }
-                ?.let { errors.add("The following groups are not valid=${it.joinToString()}") }
-
-        auroraDc.users
-                .filter { !openShiftClient.isValidUser(it) }
-                .takeIf { it.isNotEmpty() }
-                ?.let { errors.add("The following users are not valid=${it.joinToString()}") }
-
-        if (errors.isNotEmpty()) {
-            throw ApplicationConfigException("Configuration contained references to one or more objects on OpenShift that does not exist", errors = errors)
-        }
     }
 
     private fun applyDeploymentConfig(adc: AuroraDeploymentConfig, dryRun: Boolean = false): ApplicationResult {
