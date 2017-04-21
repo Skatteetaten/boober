@@ -54,9 +54,10 @@ class GitService(
     fun saveFilesAndClose(git: Git, files: Map<String, Map<String, Any?>>) {
         try {
             writeAndAddChanges(git, files)
+            deleteMissingFiles(git, files)
 
             val status = git.status().call()
-            commitAllChanges(git, "added ${status.added.size} files, changed ${status.changed.size} files")
+            commitAllChanges(git, "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}")
             push(git)
         } catch(ex: GitAPIException) {
             throw AuroraConfigException("Could not save because; '${ex.message}'")
@@ -78,7 +79,7 @@ class GitService(
         val allFilesInRepo = getAllFilesInFolder(folder)
         return allFilesInRepo.map {
             val conf: Map<*, *> = mapper.readValue(it, Map::class.java)
-            val fileName = it.absoluteFile.absolutePath.replaceFirst(folder.absoluteFile.absolutePath, "")
+            val fileName = it.relativeTo(folder).path
             fileName to conf as Map<String, Any?>
         }.toMap()
     }
@@ -102,6 +103,16 @@ class GitService(
             FileWriter(file, false).use { it.write(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(value)) }
 
             git.add().addFilepattern(fileName).call()
+        }
+    }
+
+    private fun deleteMissingFiles(git: Git, files: Map<String, Map<String, Any?>>) {
+
+        val repo = git.repository.directory.parentFile
+
+        getAllFilesInFolder(repo).forEach { file ->
+            val fileName = file.relativeTo(repo).path
+            if (!files.containsKey(fileName)) git.rm().addFilepattern(fileName).call()
         }
     }
 
