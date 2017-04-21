@@ -27,10 +27,31 @@ class GitService(
 
     val cp = UsernamePasswordCredentialsProvider(username, password)
 
-    fun saveFiles(affiliation: String, files: Map<String, Map<String, Any?>>) {
+    fun checkoutRepoForAffiliation(affiliation: String): Git {
+
+        val dir = File("$checkoutPath/${UUID.randomUUID()}").apply { mkdirs() }
+        val uri = "$url/$affiliation.git"
+
+        return try {
+            Git.cloneRepository()
+                    .setURI(uri)
+                    .setCredentialsProvider(cp)
+                    .setDirectory(dir)
+                    .call()
+        } catch (ex: Exception) {
+            dir.deleteRecursively()
+            throw ex
+        }
+    }
+
+    fun saveFilesAndClose(affiliation: String, files: Map<String, Map<String, Any?>>) {
 
         val git = checkoutRepoForAffiliation(affiliation)
 
+        saveFilesAndClose(git, files)
+    }
+
+    fun saveFilesAndClose(git: Git, files: Map<String, Map<String, Any?>>) {
         try {
             writeAndAddChanges(git, files)
 
@@ -49,8 +70,12 @@ class GitService(
 
         val git = checkoutRepoForAffiliation(affiliation)
 
+        return getAllFilesInRepo(git)
+    }
+
+    fun getAllFilesInRepo(git: Git): Map<String, Map<String, Any?>> {
         val folder = git.repository.directory.parentFile
-        val allFilesInRepo = getAllFilesInRepo(folder)
+        val allFilesInRepo = getAllFilesInFolder(folder)
         return allFilesInRepo.map {
             val conf: Map<*, *> = mapper.readValue(it, Map::class.java)
             val fileName = it.absoluteFile.absolutePath.replaceFirst(folder.absoluteFile.absolutePath, "")
@@ -58,29 +83,12 @@ class GitService(
         }.toMap()
     }
 
-    private fun getAllFilesInRepo(folder: File): List<File> = folder.listFiles()
+    private fun getAllFilesInFolder(folder: File): List<File> = folder.listFiles()
             .filter { !it.name.contains(".git") }
             .flatMap {
-                if (it.isDirectory) getAllFilesInRepo(it)
+                if (it.isDirectory) getAllFilesInFolder(it)
                 else listOf(it)
             }
-
-    private fun checkoutRepoForAffiliation(affiliation: String): Git {
-
-        val dir = File("$checkoutPath/${UUID.randomUUID()}").apply { mkdirs() }
-        val uri = "$url/$affiliation.git"
-
-        return try {
-            Git.cloneRepository()
-                    .setURI(uri)
-                    .setCredentialsProvider(cp)
-                    .setDirectory(dir)
-                    .call()
-        } catch (ex: Exception) {
-            dir.deleteRecursively()
-            throw ex
-        }
-    }
 
     private fun writeAndAddChanges(git: Git, files: Map<String, Map<String, Any?>>) {
 

@@ -13,19 +13,25 @@ class AuroraConfigService(
         val gitService: GitService,
         val openShiftClient: OpenShiftClient) {
 
-    fun findAuroraConfigForAffiliation(affiliation: String): AuroraConfig {
-
-        val filesForAffiliation = gitService.getAllFilesForAffiliation(affiliation)
-        return AuroraConfig(auroraConfigFiles = filesForAffiliation)
-    }
-
     fun save(affiliation: String, auroraConfig: AuroraConfig) {
 
-        val appIds = auroraConfig.getApplicationIds()
-        // Verify that all AuroraDeploymentConfigs represented by the AuroraConfig are valid
-        createAuroraDcsForApplications(auroraConfig, appIds)
+        validate(auroraConfig)
+        gitService.saveFilesAndClose(affiliation, auroraConfig.auroraConfigFiles)
+    }
 
-        gitService.saveFiles(affiliation, auroraConfig.auroraConfigFiles)
+    fun findAuroraConfigForAffiliationForUpdate(affiliation: String, function: (AuroraConfig) -> Unit): AuroraConfig {
+
+        val repo = gitService.checkoutRepoForAffiliation(affiliation)
+        val filesForAffiliation = gitService.getAllFilesInRepo(repo)
+        val auroraConfig = AuroraConfig(auroraConfigFiles = filesForAffiliation)
+
+        function(auroraConfig)
+
+        validate(auroraConfig)
+
+        gitService.saveFilesAndClose(repo, auroraConfig.auroraConfigFiles)
+
+        return auroraConfig
     }
 
     fun createAuroraDcsForApplications(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>): List<AuroraDeploymentConfig> {
@@ -153,6 +159,12 @@ class AuroraConfigService(
                 debug = deployJson.b("DEBUG") ?: false,
                 alarm = deployJson.b("ALARM") ?: true
         )
+    }
+
+    private fun validate(auroraConfig: AuroraConfig) {
+        val appIds = auroraConfig.getApplicationIds()
+        // Verify that all AuroraDeploymentConfigs represented by the AuroraConfig are valid
+        createAuroraDcsForApplications(auroraConfig, appIds)
     }
 }
 
