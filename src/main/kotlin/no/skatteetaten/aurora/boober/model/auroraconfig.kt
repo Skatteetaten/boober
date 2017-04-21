@@ -11,12 +11,12 @@ import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
 
 class AuroraConfig(
-        val aocConfigFiles: Map<String, Map<String, Any?>>,
+        val auroraConfigFiles: Map<String, Map<String, Any?>>,
         val secrets: Map<String, String> = mapOf()
 ) {
     fun getApplicationIds(env: String = "", app: String = ""): List<ApplicationId> {
 
-        return aocConfigFiles
+        return auroraConfigFiles
                 .map { it.key.removeSuffix(".json") }
                 .filter { it.contains("/") && !it.contains("about") }
                 .filter { if (env.isNullOrBlank()) true else it.startsWith(env) }
@@ -53,12 +53,12 @@ class AuroraConfig(
                 "${aid.environmentName}/${aid.applicationName}.json")
 
         val filesForApplication: Map<String, Map<String, Any?>> = requiredFilesForApplication
-                .filter { aocConfigFiles[it] != null }
-                .map { it to aocConfigFiles[it]!! }
+                .filter { auroraConfigFiles[it] != null }
+                .map { it to auroraConfigFiles[it]!! }
                 .toMap()
 
         if (filesForApplication.size != requiredFilesForApplication.size) {
-            val missingFiles = requiredFilesForApplication.filter { it !in aocConfigFiles.keys }
+            val missingFiles = requiredFilesForApplication.filter { it !in auroraConfigFiles.keys }
             throw IllegalArgumentException("Unable to execute setup command. Required files missing => $missingFiles")
         }
 

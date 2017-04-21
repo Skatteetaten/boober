@@ -37,7 +37,7 @@ class GitService(
 
         val git = initGit(affiliation)
 
-        writeAndAddChanges(git, auroraConfig.aocConfigFiles)
+        writeAndAddChanges(git, auroraConfig.auroraConfigFiles)
         val status = git.status().call()
 
         val files = getAllFilesInRepo(git.repository.directory.parentFile)
