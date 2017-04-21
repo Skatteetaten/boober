@@ -5,6 +5,7 @@ import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.utils.use
 import org.eclipse.jgit.api.CreateBranchCommand
 import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.api.errors.GitAPIException
 import org.eclipse.jgit.lib.PersonIdent
 import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.revwalk.RevCommit
@@ -15,33 +16,33 @@ import java.io.File
 import java.io.FileWriter
 import java.util.*
 
-fun Git.deleteCloneAndClose() {
-    File(this.repository.directory.parent).deleteRecursively()
-    this.close()
-}
-
 @Service
 class GitService(
         val mapper: ObjectMapper,
         val userDetails: UserDetailsProvider,
         @Value("\${boober.git.url}") val url: String,
-        @Value("\${boober.git.dirPath}") val dirPath: String,
+        @Value("\${boober.git.checkoutPath}") val checkoutPath: String,
         @Value("\${boober.git.username}") val username: String,
         @Value("\${boober.git.password}") val password: String) {
 
     val cp = UsernamePasswordCredentialsProvider(username, password)
 
-    // Delete folder on failure?
     fun saveFiles(affiliation: String, files: Map<String, Map<String, Any?>>) {
 
         val git = checkoutRepoForAffiliation(affiliation)
 
-        writeAndAddChanges(git, files)
+        try {
+            writeAndAddChanges(git, files)
 
-        val status = git.status().call()
-        commitAllChanges(git, "added ${status.added.size} files, changed ${status.changed.size} files")
-
-        git.deleteCloneAndClose()
+            val status = git.status().call()
+            commitAllChanges(git, "added ${status.added.size} files, changed ${status.changed.size} files")
+            push(git)
+        } catch(ex: GitAPIException) {
+            throw AuroraConfigException("Could not save because; '${ex.message}'")
+        } finally {
+            File(git.repository.directory.parent).deleteRecursively()
+            git.close()
+        }
     }
 
     fun getAllFilesForAffiliation(affiliation: String): Map<String, Map<String, Any?>> {
@@ -66,7 +67,7 @@ class GitService(
 
     private fun checkoutRepoForAffiliation(affiliation: String): Git {
 
-        val dir = File("$dirPath/${UUID.randomUUID()}").apply { mkdirs() }
+        val dir = File("$checkoutPath/${UUID.randomUUID()}").apply { mkdirs() }
         val uri = "$url/$affiliation.git"
 
         return try {
@@ -98,7 +99,6 @@ class GitService(
 
     private fun commitAllChanges(git: Git, message: String): RevCommit {
 
-
         val user = userDetails.getAuthenticatedUser().let { PersonIdent(it.fullName, "${it.username}@skatteetaten.no") }
         return git.commit()
                 .setAll(true)
@@ -119,6 +119,7 @@ class GitService(
     }
 
     private fun push(git: Git) {
+
         git.push()
                 .setCredentialsProvider(cp)
                 .setPushAll()

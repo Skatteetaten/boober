@@ -36,7 +36,7 @@ class AuroraConfig(auroraConfigFiles: Map<String, Map<String, Any?>>, val secret
 
     fun getMergedFileForApplication(aid: ApplicationId): Map<String, Any?> {
         val filesForApplication = getFilesForApplication(aid)
-        val mergedJson = mergeAocConfigFiles(filesForApplication.map { it.value })
+        val mergedJson = mergeAocConfigFiles(filesForApplication)
 
         mergedJson.apply {
             putIfAbsent("envName", aid.environmentName)
@@ -48,7 +48,7 @@ class AuroraConfig(auroraConfigFiles: Map<String, Map<String, Any?>>, val secret
         return mergedJson
     }
 
-    fun getFilesForApplication(aid: ApplicationId): Map<String, Map<String, Any?>> {
+    fun getFilesForApplication(aid: ApplicationId): List<Map<String, Any?>> {
 
         val requiredFilesForApplication = setOf(
                 "about.json",
@@ -56,10 +56,7 @@ class AuroraConfig(auroraConfigFiles: Map<String, Map<String, Any?>>, val secret
                 "${aid.environmentName}/about.json",
                 "${aid.environmentName}/${aid.applicationName}.json")
 
-        val filesForApplication: Map<String, Map<String, Any?>> = requiredFilesForApplication
-                .filter { auroraConfigFiles[it] != null }
-                .map { it to auroraConfigFiles[it]!! }
-                .toMap()
+        val filesForApplication: List<Map<String, Any?>> = requiredFilesForApplication.mapNotNull { auroraConfigFiles[it] }
 
         if (filesForApplication.size != requiredFilesForApplication.size) {
             val missingFiles = requiredFilesForApplication.filter { it !in auroraConfigFiles.keys }

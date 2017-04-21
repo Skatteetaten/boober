@@ -10,7 +10,7 @@ openshift:
 boober:
   git:
     url: "https://git.aurora.skead.no/scm/oc"
-    dirPath: "/tmp/boober"
+    checkoutPath: "/tmp/boober"
     username: "boober"
     password: "komogsyngensang"
 

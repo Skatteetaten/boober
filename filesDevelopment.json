@@ -1,8 +1,5 @@
 {
-  "apps": ["referanse"],
-  "envs": ["boober"],
-  "affiliation": "paas",
-  "files": {
+  "auroraConfigFiles": {
     "about.json": {
       "groups": "APP_PaaS_drift APP_PaaS_utv",
       "affiliation": "paas",
