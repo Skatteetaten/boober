@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraConfig
@@ -14,7 +13,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
 import java.io.FileWriter
-import java.util.UUID
+import java.util.*
 
 fun Git.deleteCloneAndClose() {
     File(this.repository.directory.parent).deleteRecursively()
@@ -61,7 +60,7 @@ class GitService(
     private fun getAllFilesInRepo(folder: File): List<File> = folder.listFiles()
             .filter { !it.name.contains(".git") }
             .flatMap {
-                if(it.isDirectory) getAllFilesInRepo(it)
+                if (it.isDirectory) getAllFilesInRepo(it)
                 else listOf(it)
             }
 

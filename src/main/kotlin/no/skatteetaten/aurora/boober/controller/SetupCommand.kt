@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.model
+package no.skatteetaten.aurora.boober.controller
 
 data class SetupCommand(val affiliation: String,
                         val envs: List<String> = listOf(),

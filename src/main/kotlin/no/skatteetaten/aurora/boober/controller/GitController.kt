@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.controller
 
 import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.SetupCommand
+import no.skatteetaten.aurora.boober.controller.SetupCommand
 import no.skatteetaten.aurora.boober.service.GitService
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody

@@ -10,7 +10,6 @@ import org.springframework.http.MediaType
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.model.SetupCommand
 import no.skatteetaten.aurora.boober.service.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.SampleFilesCollector
 
