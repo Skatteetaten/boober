@@ -16,6 +16,6 @@ class UserDetailsProvider {
 
     fun getPersonIdent(): PersonIdent {
         val user = getAuthenticatedUser()
-        return PersonIdent(user.fullName, user.username)
+        return PersonIdent(user.fullName, "${user.username}@skatteetaten.no")
     }
 }
