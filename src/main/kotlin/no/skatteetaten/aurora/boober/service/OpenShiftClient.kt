@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.utils.updateField
 import org.slf4j.Logger
@@ -22,14 +23,19 @@ data class OpenShiftResponse(
         val previous: JsonNode? = null,
         val payload: JsonNode? = null,
         val responseBody: JsonNode?
-)
+) {
+    val changed: Boolean
+        get() = previous?.at("/metadata/resourceVersion") == responseBody?.at("/metadata/resourceVersion")
+
+}
 
 @Service
 class OpenShiftClient(
         @Value("\${openshift.url}") val baseUrl: String,
         val userDetailsProvider: UserDetailsProvider,
         val restTemplate: RestTemplate,
-        val resource: OpenshiftResourceClient
+        val resource: OpenshiftResourceClient,
+        val mapper: ObjectMapper
 ) {
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftClient::class.java)
@@ -55,7 +61,6 @@ class OpenShiftClient(
         val kind = json.get("kind")?.asText()?.toLowerCase() ?: throw IllegalArgumentException("Kind must be set")
         val name = json.get("metadata")?.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource")
 
-        //I do not like code like this.
         val existingResource = resource.get(kind, name, namespace)
 
         if (existingResource == null) {
@@ -91,7 +96,7 @@ class OpenShiftClient(
 
     fun findCurrentUser(token: String): OpenShiftResponse {
 
-        val url = OpenShiftApiUrls.getCurrentUserPath(baseUrl)
+        val url = "$baseUrl/oapi/v1/users/~"
         val headers: HttpHeaders = createHeaders(token)
 
         val currentUser = getExistingResource(headers, url)
@@ -117,20 +122,23 @@ class OpenShiftClient(
         return headers
     }
 
+
     fun isValidUser(user: String): Boolean {
-        val url = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, "user", user)
+        val url = "$baseUrl/oapi/v1/users/$user"
         val headers: HttpHeaders = createHeaders(userDetailsProvider.getAuthenticatedUser().token)
 
-        val existingResource = getExistingResource(headers, url.get)
+        val existingResource = getExistingResource(headers, url)
         return existingResource != null
 
     }
 
     fun isValidGroup(group: String): Boolean {
-        val url = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, "group", group)
+
+        val url = "$baseUrl/oapi/v1/groups/$group"
+
         val headers: HttpHeaders = createHeaders(userDetailsProvider.getAuthenticatedUser().token)
 
-        val existingResource = getExistingResource(headers, url.get)
+        val existingResource = getExistingResource(headers, url)
         return existingResource != null
     }
 }

@@ -1,0 +1,13 @@
+{
+  "kind": "BuildRequest",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "${adc.name}",
+  },
+  "triggeredBy": [
+    {
+      "message": "Manually triggered by Boober"
+    }
+  ]
+}
+  
