@@ -25,7 +25,7 @@ data class OpenShiftResponse(
         val responseBody: JsonNode?
 ) {
     val changed: Boolean
-        get() = previous?.at("/metadata/resourceVersion") == responseBody?.at("/metadata/resourceVersion")
+        get() = operationType == OperationType.UPDATE && previous?.at("/metadata/resourceVersion") != responseBody?.at("/metadata/resourceVersion")
 
 }
 
