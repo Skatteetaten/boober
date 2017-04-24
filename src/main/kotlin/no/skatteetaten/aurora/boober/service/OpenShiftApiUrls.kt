@@ -1,32 +1,38 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.databind.JsonNode
-
 class OpenShiftApiUrls(
         val create: String,
-        val get: String,
-        val update: String
+        val get: String? = null,
+        val update: String? = null
 ) {
     companion object Factory {
-        fun createUrlsForResource(baseUrl: String, namespace: String, json: JsonNode): OpenShiftApiUrls {
 
-            val kind = json.get("kind")?.asText() ?: throw IllegalArgumentException("kind not specified for resource")
-            val name = json.get("metadata")?.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource")
 
-            return createOpenShiftApiUrls(baseUrl, kind, name, namespace)
-        }
-
+        @JvmStatic
+        @JvmOverloads
         fun createOpenShiftApiUrls(baseUrl: String, kind: String, name: String, namespace: String? = null): OpenShiftApiUrls {
 
+            if (kind == "buildrequest") {
+                val bcBaseUrl = getCollectionPathForResource(baseUrl, "buildconfig", namespace)
+                return OpenShiftApiUrls(
+                        create = "$bcBaseUrl/$name/instantiate"
+                )
+            }
+            if (kind == "deploymentrequest") {
+                val dcBaseUrl = getCollectionPathForResource(baseUrl, "deploymentconfig", namespace)
+                return OpenShiftApiUrls(
+                        create = "$dcBaseUrl/$name/instantiate"
+                )
+            }
             val createUrl = getCollectionPathForResource(baseUrl, kind, namespace)
+
+
             val getUrl = if (kind == "projectrequest") {
                 // Nasty business; for ProjectRequest we need to use the Project kind when checking if the resource
                 // exists. So we need to switch here...
                 val collectionPathForProject = getCollectionPathForResource(baseUrl, "project", namespace)
                 "$collectionPathForProject/$name"
-            } else {
-                "$createUrl/$name"
-            }
+            } else "$createUrl/$name"
 
             return OpenShiftApiUrls(
                     create = createUrl,
@@ -39,7 +45,7 @@ class OpenShiftApiUrls(
             val endpointKey = kind.toLowerCase() + "s"
 
             val apiType = if (endpointKey in listOf("services", "configmaps", "secrets")) "api" else "oapi"
-            val namespacePrefix = if (endpointKey !in listOf("projects", "projectrequests", "users", "groups")) {
+            val namespacePrefix = if (endpointKey !in listOf("projects", "projectrequests", "buildrequests", "deploymentreqeusts", "users", "groups")) {
                 namespace ?: throw IllegalArgumentException("namespace required for resource kind ${kind}")
                 "/namespaces/$namespace"
             } else ""
@@ -48,10 +54,5 @@ class OpenShiftApiUrls(
             return resourceBasePath
         }
 
-        fun getCurrentUserPath(baseUrl: String): String {
-
-            val collectionPathForResource = getCollectionPathForResource(baseUrl, "user")
-            return "$collectionPathForResource/~"
-        }
     }
 }
