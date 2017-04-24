@@ -91,8 +91,8 @@
     "boober3/referanse2.json": {
     }
   },
-  "secretFiles": {
-    "/tmp/foo/latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg==",
-    "/tmp/foo/1.2.3.properties": "Rk9PPU9IWUVBSApCQVI9Rk9PQkFSCg=="
+  "secrets": {
+    "latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg==",
+    "1.2.3.properties": "Rk9PPU9IWUVBSApCQVI9Rk9PQkFSCg=="
   }
 }

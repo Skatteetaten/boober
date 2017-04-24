@@ -2,21 +2,30 @@ package no.skatteetaten.aurora.boober.controller
 
 
 import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.controller.SetupCommand
 import no.skatteetaten.aurora.boober.service.ApplicationResult
+import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.SetupService
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class SetupController(val setupService: SetupService) {
+class SetupController(val setupService: SetupService, val auroraConfigService: AuroraConfigService) {
+
+    @PutMapping("/deploy")
+    fun deploy(@RequestBody cmd: SetupCommand): Response {
+
+        val auroraConfig = auroraConfigService.findAuroraConfigForAffiliation(cmd.affiliation)
+        val applicationResults: List<ApplicationResult> = setupService.executeSetup(auroraConfig, cmd.envs, cmd.apps)
+        return Response(items = applicationResults)
+    }
 
     @PutMapping("/setup")
     fun setup(@RequestBody cmd: SetupCommand): Response {
 
         return executeSetup(cmd)
     }
+
 
     @PutMapping("/setup-dryrun")
     fun setupDryRun(@RequestBody cmd: SetupCommand): Response {

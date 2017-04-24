@@ -5,6 +5,7 @@ abstract class ServiceException(message: String?, cause: Throwable?) : RuntimeEx
 }
 
 class OpenShiftException(messages: String?, cause: Throwable?) : ServiceException(messages, cause)
+class GitException(messages: String?, cause: Throwable?) : ServiceException(messages, cause)
 
 class ApplicationConfigException(
         messages: String,

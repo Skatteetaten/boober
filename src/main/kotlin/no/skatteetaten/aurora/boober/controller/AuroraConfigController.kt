@@ -11,15 +11,23 @@ class AuroraConfigController(val auroraConfigService: AuroraConfigService) {
     @PutMapping("/{affiliation}")
     fun save(@PathVariable affiliation: String, @RequestBody auroraConfig: AuroraConfig) {
 
-        auroraConfigService.save(affiliation, auroraConfig)
+        auroraConfigService.withAuroraConfigForAffiliation(affiliation, true, {
+            it.replaceFiles(auroraConfig.auroraConfigFiles)
+            it.replaceSecrets(auroraConfig.secrets)
+        })
     }
 
+    @GetMapping("/{affiliation}")
+    fun get(@PathVariable affiliation: String): Response {
+
+        return Response(items = listOf(auroraConfigService.findAuroraConfigForAffiliation(affiliation)))
+    }
 
     @PutMapping("/{affiliation}/{fileName}")
     fun updateAuroraConfigFile(@PathVariable affiliation: String, @PathVariable fileName: String,
                                @RequestBody fileContents: Map<String, Any?>) {
 
-        auroraConfigService.findAuroraConfigForAffiliationForUpdate(affiliation, { auroraConfig: AuroraConfig ->
+        auroraConfigService.withAuroraConfigForAffiliation(affiliation, true, { auroraConfig: AuroraConfig ->
             auroraConfig.updateFile(fileName, fileContents)
         })
     }

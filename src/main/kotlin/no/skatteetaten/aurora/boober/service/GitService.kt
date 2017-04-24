@@ -1,10 +1,10 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.utils.use
 import org.eclipse.jgit.api.CreateBranchCommand
 import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.api.errors.EmtpyCommitException
 import org.eclipse.jgit.api.errors.GitAPIException
 import org.eclipse.jgit.lib.PersonIdent
 import org.eclipse.jgit.lib.Ref
@@ -18,7 +18,6 @@ import java.util.*
 
 @Service
 class GitService(
-        val mapper: ObjectMapper,
         val userDetails: UserDetailsProvider,
         @Value("\${boober.git.url}") val url: String,
         @Value("\${boober.git.checkoutPath}") val checkoutPath: String,
@@ -44,54 +43,44 @@ class GitService(
         }
     }
 
-    fun saveFilesAndClose(affiliation: String, files: Map<String, Map<String, Any?>>) {
+    fun saveFilesAndClose(affiliation: String, files: Map<String, String>) {
 
         val git = checkoutRepoForAffiliation(affiliation)
 
         saveFilesAndClose(git, files)
     }
 
-    fun saveFilesAndClose(git: Git, files: Map<String, Map<String, Any?>>) {
+    fun saveFilesAndClose(git: Git, files: Map<String, String>) {
         try {
             writeAndAddChanges(git, files)
-            deleteMissingFiles(git, files)
+            deleteMissingFiles(git, files.keys)
 
             val status = git.status().call()
             commitAllChanges(git, "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}")
             push(git)
+        } catch(ex: EmtpyCommitException) {
         } catch(ex: GitAPIException) {
-            throw AuroraConfigException("Could not save because; '${ex.message}'")
+            throw GitException("Unexpected error committing changes", ex)
         } finally {
-            File(git.repository.directory.parent).deleteRecursively()
-            git.close()
+            closeRepository(git)
         }
     }
 
-    fun getAllFilesForAffiliation(affiliation: String): Map<String, Map<String, Any?>> {
-
-        val git = checkoutRepoForAffiliation(affiliation)
-
-        return getAllFilesInRepo(git)
+    fun closeRepository(repo: Git) {
+        File(repo.repository.directory.parent).deleteRecursively()
+        repo.close()
     }
 
-    fun getAllFilesInRepo(git: Git): Map<String, Map<String, Any?>> {
+    fun getAllFilesInRepo(git: Git): Map<String, File> {
         val folder = git.repository.directory.parentFile
-        val allFilesInRepo = getAllFilesInFolder(folder)
-        return allFilesInRepo.map {
-            val conf: Map<*, *> = mapper.readValue(it, Map::class.java)
-            val fileName = it.relativeTo(folder).path
-            fileName to conf as Map<String, Any?>
-        }.toMap()
+        return folder.walkBottomUp()
+                .onEnter { !it.name.startsWith(".git") }
+                .filter { it.isFile }
+                .associate { it.relativeTo(folder).path to it }
     }
 
-    private fun getAllFilesInFolder(folder: File): List<File> = folder.listFiles()
-            .filter { !it.name.contains(".git") }
-            .flatMap {
-                if (it.isDirectory) getAllFilesInFolder(it)
-                else listOf(it)
-            }
 
-    private fun writeAndAddChanges(git: Git, files: Map<String, Map<String, Any?>>) {
+    private fun writeAndAddChanges(git: Git, files: Map<String, String>) {
 
         files.forEach { (fileName, value) ->
             fileName.split("/")
@@ -100,20 +89,18 @@ class GitService(
 
             val file = File(git.repository.directory.parent, fileName).apply { createNewFile() }
 
-            FileWriter(file, false).use { it.write(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(value)) }
+            FileWriter(file, false).use { it.write(value) }
 
             git.add().addFilepattern(fileName).call()
         }
     }
 
-    private fun deleteMissingFiles(git: Git, files: Map<String, Map<String, Any?>>) {
+    private fun deleteMissingFiles(git: Git, files: Set<String>) {
 
-        val repo = git.repository.directory.parentFile
-
-        getAllFilesInFolder(repo).forEach { file ->
-            val fileName = file.relativeTo(repo).path
-            if (!files.containsKey(fileName)) git.rm().addFilepattern(fileName).call()
-        }
+        getAllFilesInRepo(git)
+                .map { it.key }
+                .filter { !files.contains(it) }
+                .forEach { git.rm().addFilepattern(it).call() }
     }
 
     private fun commitAllChanges(git: Git, message: String): RevCommit {

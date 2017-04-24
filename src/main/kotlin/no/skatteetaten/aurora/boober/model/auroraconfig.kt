@@ -10,12 +10,14 @@ import javax.validation.constraints.NotNull
 import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
 
-class AuroraConfig(auroraConfigFiles: Map<String, Map<String, Any?>>, val secrets: Map<String, String> = mapOf()) {
+class AuroraConfig(auroraConfigFiles: Map<String, Map<String, Any?>>, secrets: Map<String, String> = mapOf()) {
 
     val auroraConfigFiles: MutableMap<String, Map<String, Any?>>
+    val secrets: MutableMap<String, String>
 
     init {
         this.auroraConfigFiles = HashMap(auroraConfigFiles)
+        this.secrets = HashMap(secrets)
     }
 
     fun getApplicationIds(env: String = "", app: String = ""): List<ApplicationId> {
@@ -71,6 +73,9 @@ class AuroraConfig(auroraConfigFiles: Map<String, Map<String, Any?>>, val secret
         auroraConfigFiles[fileName] = fileContents
     }
 
+
+
+
     private fun mergeAocConfigFiles(filesForApplication: List<Map<String, Any?>>): MutableMap<String, Any?> {
 
         return filesForApplication.reduce(::createMergeCopy).toMutableMap()
@@ -97,6 +102,18 @@ class AuroraConfig(auroraConfigFiles: Map<String, Map<String, Any?>>, val secret
             throw ApplicationConfigException("Config for application '$applicationName' contains errors", errors = errors)
         }
     }
+
+    fun replaceFiles(auroraConfigfiles: MutableMap<String, Map<String, Any?>>) {
+        this.auroraConfigFiles.clear()
+        this.auroraConfigFiles.putAll(auroraConfigfiles)
+    }
+
+
+    fun  replaceSecrets(secrets: Map<String, String>) {
+        this.secrets.clear()
+        this.secrets.putAll(secrets)
+    }
+
 }
 
 class AuroraConfigRequiredV1(val config: Map<String, Any?>?, val build: Map<String, Any?>?) {
