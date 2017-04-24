@@ -17,7 +17,11 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
-@SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration, OpenshiftResourceClient, OpenShiftClient, AuroraConfigService, GitService, OpenShiftService, Config])
+@SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration,
+    OpenshiftResourceClient,
+    OpenShiftClient,
+    EncryptionService,
+    AuroraConfigService, GitService, OpenShiftService, Config])
 class OpenShiftServiceTest extends Specification {
 
   public static final String ENV_NAME = "booberdev"

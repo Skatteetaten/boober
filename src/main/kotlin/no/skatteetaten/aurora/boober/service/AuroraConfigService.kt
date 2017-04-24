@@ -7,7 +7,6 @@ import no.skatteetaten.aurora.boober.model.DeploymentStrategy.recreate
 import no.skatteetaten.aurora.boober.model.DeploymentStrategy.rolling
 import no.skatteetaten.aurora.boober.utils.Result
 import no.skatteetaten.aurora.boober.utils.orElseThrow
-import org.eclipse.jgit.api.Git
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
@@ -41,6 +40,7 @@ class AuroraConfigService(
 
         return withAuroraConfigForAffiliation(affiliation, false)
     }
+
 
     fun withAuroraConfigForAffiliation(affiliation: String, commitChanges: Boolean = true, function: (AuroraConfig) -> Unit = {}): AuroraConfig {
 

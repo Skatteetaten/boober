@@ -8,6 +8,8 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import no.skatteetaten.aurora.boober.model.TemplateType
 import org.apache.velocity.VelocityContext
 import org.apache.velocity.app.VelocityEngine
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.StringWriter
 
@@ -18,12 +20,16 @@ class OpenShiftService(
         val mapper: ObjectMapper
 ) {
 
+    val logger: Logger = LoggerFactory.getLogger(OpenShiftService::class.java)
+
     fun generateBuildRequest(auroraDc: AuroraDeploymentConfig): JsonNode {
+        logger.debug("Generating build request for name ${auroraDc.name}")
         return mergeVelocityTemplate("buildrequest.json", mapOf("adc" to auroraDc))
 
     }
 
     fun generateDeploymentRequest(auroraDc: AuroraDeploymentConfig): JsonNode {
+        logger.debug("Generating deploy request for name ${auroraDc.name}")
         return mergeVelocityTemplate("deploymentrequest.json", mapOf("adc" to auroraDc))
 
     }

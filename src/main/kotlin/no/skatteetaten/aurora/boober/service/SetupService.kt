@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
-import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.model.TemplateType.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -53,15 +52,16 @@ class SetupService(
         val openShiftResponses: List<OpenShiftResponse> = openShiftClient.applyMany(adc.namespace, openShiftObjects)
 
         val deployResource: JsonNode? = when (adc.type) {
-            development -> openShiftService.generateBuildRequest(adc)
+            development -> openShiftResponses
+                    .filter { it.changed }
+                    .firstOrNull()?.let { openShiftService.generateBuildRequest(adc) }
             process -> openShiftService.generateDeploymentRequest(adc)
             deploy -> openShiftResponses
-                    .filter { it.kind == "imagestream" }
-                    .filter { !it.changed }
+                    .filter { it.kind == "imagestream" && !it.changed && it.operationType == OperationType.UPDATE }
                     .map { openShiftService.generateDeploymentRequest(adc) }
                     .firstOrNull()
-
         }
+
 
         val finalResponse = deployResource?.let {
             openShiftResponses + openShiftClient.apply(adc.namespace, it)

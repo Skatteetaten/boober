@@ -1,0 +1,5 @@
+{
+  "apps": ["referanse"],
+  "envs": ["boober"],
+  "affiliation": "paas"
+}

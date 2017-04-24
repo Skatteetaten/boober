@@ -16,26 +16,13 @@ class EncryptionServiceTest extends Specification {
   EncryptionService service
 
   def "test encrypt and decrypt"() {
-    given:
-      def file = File.createTempFile("booberencrypt", ".tmp")
-      def message = Base64.getEncoder().encodeToString("FOO=BAR".bytes)
+    def message = "FOO=BAR"
     when:
-      service.encrypt(message, file)
+      def encrypted = service.encrypt(message)
 
     then:
-      def result = service.decrypt(file)
+      def result = service.decrypt(encrypted)
       result == message
-      file.deleteOnExit()
-
-  }
-
-  def "test decrypt"() {
-    when:
-      def file = new File(this.getClass().getResource("/samples/config/.secret/latest.properties").path)
-      def result = service.decrypt(file)
-
-    then:
-      "FOO=BAR".bytes == Base64.getDecoder().decode(result)
 
   }
 }

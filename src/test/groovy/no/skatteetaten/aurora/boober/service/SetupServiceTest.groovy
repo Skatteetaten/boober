@@ -19,12 +19,10 @@ import spock.mock.DetachedMockFactory
     GitService,
     AuroraConfigService,
     OpenShiftService,
+    EncryptionService,
     Config])
 class SetupServiceTest extends Specification {
 
-  def setupSpec() {
-    setLogLevels()
-  }
 
   @Configuration
   static class Config {
@@ -127,7 +125,8 @@ class SetupServiceTest extends Specification {
 
     when:
 
-      def result = auroraConfigService.createAuroraDcsForApplications(auroraConfig, [new ApplicationId(envName, APP_NAME)], false)
+      def result = auroraConfigService.
+          createAuroraDcsForApplications(auroraConfig, [new ApplicationId(envName, APP_NAME)], false)
 
     then:
       result[0].secrets.containsKey("latest.properties")
