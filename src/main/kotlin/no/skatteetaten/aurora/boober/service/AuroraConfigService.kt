@@ -7,8 +7,11 @@ import no.skatteetaten.aurora.boober.model.DeploymentStrategy.recreate
 import no.skatteetaten.aurora.boober.model.DeploymentStrategy.rolling
 import no.skatteetaten.aurora.boober.utils.Result
 import no.skatteetaten.aurora.boober.utils.orElseThrow
+import org.eclipse.jgit.api.Git
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
+import kotlin.system.measureTimeMillis
 
 @Service
 class AuroraConfigService(
@@ -18,6 +21,7 @@ class AuroraConfigService(
         val encryptionService: EncryptionService) {
 
     private val SECRET_FOLDER = ".secret"
+    private val logger = LoggerFactory.getLogger(AuroraConfigService::class.java)
 
     fun save(affiliation: String, auroraConfig: AuroraConfig) {
 
@@ -40,16 +44,23 @@ class AuroraConfigService(
 
     fun withAuroraConfigForAffiliation(affiliation: String, commitChanges: Boolean = true, function: (AuroraConfig) -> Unit = {}): AuroraConfig {
 
+        val startCheckout = System.currentTimeMillis()
         val repo = gitService.checkoutRepoForAffiliation(affiliation)
+        logger.debug("Spent {} millis checkouting out gir repository", System.currentTimeMillis() - startCheckout)
+
         val filesForAffiliation: Map<String, File> = gitService.getAllFilesInRepo(repo)
         val auroraConfig = createAuroraConfigFromFiles(filesForAffiliation)
 
         function(auroraConfig)
 
         if (commitChanges) {
-            save(affiliation, auroraConfig)
+            measureTimeMillis {
+                save(affiliation, auroraConfig)
+            }.let { logger.debug("Spent {} millis committing and pushing to git", it) }
         } else {
-            gitService.closeRepository(repo)
+            measureTimeMillis {
+                gitService.closeRepository(repo)
+            }.let { logger.debug("Spent {} millis closing git repository", it) }
         }
 
         return auroraConfig
@@ -73,7 +84,7 @@ class AuroraConfigService(
 
         val secretFiles: Map<String, String> = filesForAffiliation
                 .filter { it.key.startsWith(SECRET_FOLDER) }
-                .map { it.key to encryptionService.decrypt(it.value.readText()) }.toMap()
+                .map { it.key.removePrefix("$SECRET_FOLDER/") to encryptionService.decrypt(it.value.readText()) }.toMap()
 
         val auroraConfigFiles: Map<String, Map<String, Any?>> = filesForAffiliation
                 .filter { !it.key.startsWith(SECRET_FOLDER) }
