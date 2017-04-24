@@ -69,8 +69,8 @@ class AuroraConfigServiceTest extends Specification {
       files.put("booberdev/about.json", ["type": "deploy", "cluster": "utv"])
 
     when:
-      def auroraConfig = new AuroraConfig(files, [:])
-      AuroraDeploymentConfig auroraDc = service.createAuroraDcForApplication(auroraConfig, aid, false, [:])
+      def auroraConfig = new AuroraConfig(files, [:], [:])
+      AuroraDeploymentConfig auroraDc = service.createAuroraDcForApplication(auroraConfig, aid, false)
       def auroraDeployDescriptor = (AuroraDeploy) auroraDc.deployDescriptor
 
     then:
@@ -82,10 +82,10 @@ class AuroraConfigServiceTest extends Specification {
     given:
       Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
       files.remove("${APP_NAME}.json" as String)
-      def auroraConfig = new AuroraConfig(files, [:])
+      def auroraConfig = new AuroraConfig(files, [:], [:])
 
     when:
-      service.createAuroraDcForApplication(auroraConfig, aid, false, [:])
+      service.createAuroraDcForApplication(auroraConfig, aid, false)
 
     then:
       thrown(IllegalArgumentException)
@@ -95,10 +95,10 @@ class AuroraConfigServiceTest extends Specification {
 
     given:
       Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
-      def auroraConfig = new AuroraConfig(files, [:])
+      def auroraConfig = new AuroraConfig(files, [:], [:])
 
     when:
-      AuroraDeploymentConfig auroraDc = service.createAuroraDcForApplication(auroraConfig, aid, false, [:])
+      AuroraDeploymentConfig auroraDc = service.createAuroraDcForApplication(auroraConfig, aid, false)
 
     then:
       with(auroraDc) {
@@ -134,11 +134,11 @@ class AuroraConfigServiceTest extends Specification {
 
       files.put("${ENV_NAME}/${APP_NAME}.json" as String, jsonToMap(envAppOverride))
 
-      def auroraConfig = new AuroraConfig(files, [:])
+      def auroraConfig = new AuroraConfig(files, [:], ["about.json": ["name": "foobar"]])
 
     when:
       AuroraDeploymentConfig auroraDc = service.
-          createAuroraDcForApplication(auroraConfig, aid, false, ["about.json": ["name": "foobar"]])
+          createAuroraDcForApplication(auroraConfig, aid, false,)
 
     then:
       auroraDc.name == "foobar"
@@ -157,10 +157,10 @@ class AuroraConfigServiceTest extends Specification {
 
       files.put("${ENV_NAME}/${APP_NAME}.json" as String, jsonToMap(envAppOverride))
 
-      def auroraConfig = new AuroraConfig(files, [:])
+      def auroraConfig = new AuroraConfig(files, [:], [:])
 
     when:
-      AuroraDeploymentConfig auroraDc = service.createAuroraDcForApplication(auroraConfig, aid, false, [:])
+      AuroraDeploymentConfig auroraDc = service.createAuroraDcForApplication(auroraConfig, aid, false)
 
     then:
       auroraDc.name == "awesome-app"
@@ -187,10 +187,10 @@ class AuroraConfigServiceTest extends Specification {
       files.put("${APP_NAME}.json" as String, jsonToMap(appOverride))
       files.put("${ENV_NAME}/${APP_NAME}.json" as String, [:])
 
-      def auroraConfig = new AuroraConfig(files, [:])
+      def auroraConfig = new AuroraConfig(files, [:], [:])
 
     when:
-      service.createAuroraDcForApplication(auroraConfig, aid, false, [:])
+      service.createAuroraDcForApplication(auroraConfig, aid, false)
 
     then:
       def ex = thrown(ApplicationConfigException)

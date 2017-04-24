@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.controller.Overrides
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import no.skatteetaten.aurora.boober.model.TemplateType.*
@@ -41,10 +40,10 @@ class SetupService(
     val logger: Logger = LoggerFactory.getLogger(SetupService::class.java)
 
     //TODO: test
-    fun executeSetup(auroraConfig: AuroraConfig, overrides: Overrides, envs: List<String>, apps: List<String>, dryRun: Boolean = false): List<ApplicationResult> {
+    fun executeSetup(auroraConfig: AuroraConfig, envs: List<String>, apps: List<String>, dryRun: Boolean = false): List<ApplicationResult> {
 
         val applicationIds: List<ApplicationId> = envs.flatMap { env -> apps.map { app -> ApplicationId(env, app) } }
-        val auroraDcs: List<AuroraDeploymentConfig> = auroraConfigService.createAuroraDcsForApplications(auroraConfig, applicationIds, overrides)
+        val auroraDcs: List<AuroraDeploymentConfig> = auroraConfigService.createAuroraDcsForApplications(auroraConfig, applicationIds)
 
         return auroraDcs.filter { it.cluster == cluster }
                 .map { applyDeploymentConfig(it, dryRun) }

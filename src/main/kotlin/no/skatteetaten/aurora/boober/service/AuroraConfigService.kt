@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.controller.Overrides
+import no.skatteetaten.aurora.boober.controller.AuroraConfigSources
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.AuroraDeploy.Prometheus
 import no.skatteetaten.aurora.boober.model.DeploymentStrategy.recreate
@@ -37,13 +37,16 @@ class AuroraConfigService(
         gitService.saveFilesAndClose(affiliation, jsonFiles + encryptedSecrets)
     }
 
-    fun findAuroraConfigForAffiliation(affiliation: String): AuroraConfig {
+    fun findAuroraConfigForAffiliation(affiliation: String, overrides: AuroraConfigSources = mapOf()): AuroraConfig {
 
-        return withAuroraConfigForAffiliation(affiliation, false)
+        return withAuroraConfigForAffiliation(affiliation, function = {
+            it.copy(overrides = overrides)
+        })
     }
 
-
-    fun withAuroraConfigForAffiliation(affiliation: String, commitChanges: Boolean = true, function: (AuroraConfig) -> Unit = {}): AuroraConfig {
+    fun withAuroraConfigForAffiliation(affiliation: String,
+                                       commitChanges: Boolean = true,
+                                       function: (AuroraConfig) -> AuroraConfig = { it -> it }): AuroraConfig {
 
         val startCheckout = System.currentTimeMillis()
         val repo = gitService.checkoutRepoForAffiliation(affiliation)
@@ -52,11 +55,11 @@ class AuroraConfigService(
         val filesForAffiliation: Map<String, File> = gitService.getAllFilesInRepo(repo)
         val auroraConfig = createAuroraConfigFromFiles(filesForAffiliation)
 
-        function(auroraConfig)
+        val newAuroraConfig = function(auroraConfig)
 
         if (commitChanges) {
             measureTimeMillis {
-                save(affiliation, auroraConfig)
+                save(affiliation, newAuroraConfig)
             }.let { logger.debug("Spent {} millis committing and pushing to git", it) }
         } else {
             measureTimeMillis {
@@ -64,17 +67,16 @@ class AuroraConfigService(
             }.let { logger.debug("Spent {} millis closing git repository", it) }
         }
 
-        return auroraConfig
+        return newAuroraConfig
     }
 
     fun createAuroraDcsForApplications(auroraConfig: AuroraConfig,
                                        applicationIds: List<ApplicationId>,
-                                       overrides: Overrides = mapOf(),
                                        validateOpenShiftReferences: Boolean = true): List<AuroraDeploymentConfig> {
 
         return applicationIds.map { aid ->
             val result: Result<AuroraDeploymentConfig?, Error?> = try {
-                Result(value = createAuroraDcForApplication(auroraConfig, aid, validateOpenShiftReferences, overrides))
+                Result(value = createAuroraDcForApplication(auroraConfig, aid, validateOpenShiftReferences))
             } catch (e: ApplicationConfigException) {
                 Result(error = Error(aid, e.errors))
             }
@@ -99,10 +101,9 @@ class AuroraConfigService(
 
     fun createAuroraDcForApplication(auroraConfig: AuroraConfig,
                                      aid: ApplicationId,
-                                     validateOpenShiftReferences: Boolean = true,
-                                     overrides: Overrides): AuroraDeploymentConfig {
+                                     validateOpenShiftReferences: Boolean = true): AuroraDeploymentConfig {
 
-        val mergedFile: Map<String, Any?> = auroraConfig.getMergedFileForApplication(aid, overrides)
+        val mergedFile: Map<String, Any?> = auroraConfig.getMergedFileForApplication(aid)
         val secrets: Map<String, String>? = mergedFile.s("secretFolder")?.let { auroraConfig.getSecrets(it) }
 
         val type = mergedFile.s("type").let { TemplateType.valueOf(it!!) }

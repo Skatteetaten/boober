@@ -12,8 +12,7 @@ class AuroraConfigController(val auroraConfigService: AuroraConfigService) {
     fun save(@PathVariable affiliation: String, @RequestBody auroraConfig: AuroraConfig) {
 
         auroraConfigService.withAuroraConfigForAffiliation(affiliation, true, {
-            it.replaceFiles(auroraConfig.auroraConfigFiles)
-            it.replaceSecrets(auroraConfig.secrets)
+            auroraConfig
         })
     }
 

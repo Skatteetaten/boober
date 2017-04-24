@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.boober.model
 
-import no.skatteetaten.aurora.boober.controller.Overrides
+import no.skatteetaten.aurora.boober.controller.AuroraConfigSources
 import no.skatteetaten.aurora.boober.service.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.ApplicationId
 import no.skatteetaten.aurora.boober.service.m
@@ -11,15 +11,12 @@ import javax.validation.constraints.NotNull
 import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
 
-class AuroraConfig(auroraConfigFiles: Map<String, Map<String, Any?>>, secrets: Map<String, String> = mapOf()) {
+//jeg liker ikke at overrides er her, for de er jo ikke noe vi skal lagre ned.
+//kan vi lage et lag til med abstraksjon som har en AuroraConfig og overrides og at den har relevante metoder?
+data class AuroraConfig(val auroraConfigFiles: AuroraConfigSources,
+                        val secrets: Map<String, String> = mapOf(),
+                        val overrides: AuroraConfigSources = mapOf()) {
 
-    val auroraConfigFiles: MutableMap<String, Map<String, Any?>>
-    val secrets: MutableMap<String, String>
-
-    init {
-        this.auroraConfigFiles = HashMap(auroraConfigFiles)
-        this.secrets = HashMap(secrets)
-    }
 
     fun getApplicationIds(env: String = "", app: String = ""): List<ApplicationId> {
 
@@ -37,8 +34,8 @@ class AuroraConfig(auroraConfigFiles: Map<String, Map<String, Any?>>, secrets: M
         return secrets.filter { it.key.startsWith(prefix) }.mapKeys { it.key.removePrefix(prefix) }
     }
 
-    fun getMergedFileForApplication(aid: ApplicationId, overrides: Overrides): Map<String, Any?> {
-        val filesForApplication = getFilesForApplication(aid, overrides)
+    fun getMergedFileForApplication(aid: ApplicationId): Map<String, Any?> {
+        val filesForApplication = getFilesForApplication(aid)
         val mergedJson = mergeAocConfigFiles(filesForApplication)
 
         mergedJson.apply {
@@ -51,7 +48,7 @@ class AuroraConfig(auroraConfigFiles: Map<String, Map<String, Any?>>, secrets: M
         return mergedJson
     }
 
-    fun getFilesForApplication(aid: ApplicationId, overrides: Overrides): List<Map<String, Any?>> {
+    fun getFilesForApplication(aid: ApplicationId): List<Map<String, Any?>> {
 
         val requiredFilesForApplication = setOf(
                 "about.json",
@@ -70,9 +67,10 @@ class AuroraConfig(auroraConfigFiles: Map<String, Map<String, Any?>>, secrets: M
         return filesForApplication + overridedFiles
     }
 
-    fun updateFile(fileName: String, fileContents: Map<String, Any?>) {
-
-        auroraConfigFiles[fileName] = fileContents
+    fun updateFile(fileName: String, fileContents: Map<String, Any?>): AuroraConfig {
+        val files = auroraConfigFiles.toMutableMap()
+        files[fileName] = fileContents
+        return this.copy(auroraConfigFiles = files)
     }
 
 
@@ -102,18 +100,6 @@ class AuroraConfig(auroraConfigFiles: Map<String, Map<String, Any?>>, secrets: M
             throw ApplicationConfigException("Config for application '$applicationName' contains errors", errors = errors)
         }
     }
-
-    fun replaceFiles(auroraConfigfiles: MutableMap<String, Map<String, Any?>>) {
-        this.auroraConfigFiles.clear()
-        this.auroraConfigFiles.putAll(auroraConfigfiles)
-    }
-
-
-    fun  replaceSecrets(secrets: Map<String, String>) {
-        this.secrets.clear()
-        this.secrets.putAll(secrets)
-    }
-
 }
 
 class AuroraConfigRequiredV1(val config: Map<String, Any?>?, val build: Map<String, Any?>?) {

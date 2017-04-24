@@ -15,8 +15,8 @@ class SetupController(val setupService: SetupService, val auroraConfigService: A
     @PutMapping("/deploy")
     fun deploy(@RequestBody cmd: SetupCommand): Response {
 
-        val auroraConfig = auroraConfigService.findAuroraConfigForAffiliation(cmd.affiliation)
-        val applicationResults: List<ApplicationResult> = setupService.executeSetup(auroraConfig, cmd.overrides, cmd.envs, cmd.apps)
+        val auroraConfig = auroraConfigService.findAuroraConfigForAffiliation(cmd.affiliation, cmd.overrides)
+        val applicationResults: List<ApplicationResult> = setupService.executeSetup(auroraConfig, cmd.envs, cmd.apps)
         return Response(items = applicationResults)
     }
 
@@ -35,8 +35,8 @@ class SetupController(val setupService: SetupService, val auroraConfigService: A
 
     private fun executeSetup(cmd: SetupCommand, dryRun: Boolean = false): Response {
 
-        val auroraConfig = AuroraConfig(cmd.files, cmd.secretFiles)
-        val applicationResults: List<ApplicationResult> = setupService.executeSetup(auroraConfig, cmd.overrides, cmd.envs, cmd.apps)
+        val auroraConfig = AuroraConfig(cmd.files, cmd.secretFiles, cmd.overrides)
+        val applicationResults: List<ApplicationResult> = setupService.executeSetup(auroraConfig, cmd.envs, cmd.apps)
         return Response(items = applicationResults)
     }
 }

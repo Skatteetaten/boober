@@ -64,10 +64,10 @@ class SetupServiceTest extends Specification {
       openShiftClient.isValidUser(_) >> true
 
       Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
-      def auroraConfig = new AuroraConfig(files, [:])
+      def auroraConfig = new AuroraConfig(files, [:], [:])
 
     when:
-      def result = auroraConfigService.createAuroraDcsForApplications(auroraConfig, [aid], [:], false)
+      def result = auroraConfigService.createAuroraDcsForApplications(auroraConfig, [aid], false)
 
     then:
       result != null
@@ -81,10 +81,10 @@ class SetupServiceTest extends Specification {
       openShiftClient.isValidUser(_) >> false
 
       Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
-      def auroraConfig = new AuroraConfig(files, [:])
+      def auroraConfig = new AuroraConfig(files, [:], [:])
 
     when:
-      auroraConfigService.createAuroraDcsForApplications(auroraConfig, [aid], [:], true)
+      auroraConfigService.createAuroraDcsForApplications(auroraConfig, [aid], true)
 
     then:
       AuroraConfigException e = thrown()
@@ -100,10 +100,10 @@ class SetupServiceTest extends Specification {
       openShiftClient.isValidUser(_) >> true
 
       Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
-      def auroraConfig = new AuroraConfig(files, [:])
+      def auroraConfig = new AuroraConfig(files, [:], [:])
 
     when:
-      auroraConfigService.createAuroraDcsForApplications(auroraConfig, [aid], [:], true)
+      auroraConfigService.createAuroraDcsForApplications(auroraConfig, [aid], true)
 
     then:
       AuroraConfigException e = thrown()
@@ -120,12 +120,12 @@ class SetupServiceTest extends Specification {
 
       def envName = "secrettest"
       Map<String, Map<String, Object>> files = getQaEbsUsersSampleFilesForEnv(envName)
-      def auroraConfig = new AuroraConfig(files, ["/tmp/foo/latest.properties": "FOO=BAR"])
+      def auroraConfig = new AuroraConfig(files, ["/tmp/foo/latest.properties": "FOO=BAR"], [:])
 
     when:
 
       def result = auroraConfigService.
-          createAuroraDcsForApplications(auroraConfig, [new ApplicationId(envName, APP_NAME)], [:], false)
+          createAuroraDcsForApplications(auroraConfig, [new ApplicationId(envName, APP_NAME)], false)
 
     then:
       result[0].secrets.containsKey("latest.properties")
@@ -140,12 +140,12 @@ class SetupServiceTest extends Specification {
 
       def envName = "secrettest"
       Map<String, Map<String, Object>> files = getQaEbsUsersSampleFilesForEnv(envName)
-      def auroraConfig = new AuroraConfig(files, [:])
+      def auroraConfig = new AuroraConfig(files, [:], [:])
 
     when:
 
       auroraConfigService.
-          createAuroraDcsForApplications(auroraConfig, [new ApplicationId(envName, APP_NAME)], [:], false)
+          createAuroraDcsForApplications(auroraConfig, [new ApplicationId(envName, APP_NAME)], false)
 
 
     then:
