@@ -23,6 +23,7 @@ class OpenshiftApiUrlsTest extends Specification {
       "deploymentrequest" | "foo" | "bar"     | "/oapi/v1/namespaces/bar/deploymentconfigs/foo/instantiate"
       "user"              | "foo" | null      | "/oapi/v1/users"
       "projectrequest"    | "foo" | null      | "/oapi/v1/projectrequests"
+      "processedtemplate" | "foo" | "bar"     | "/oapi/v1/namespaces/bar/processedtemplates"
 
   }
 
