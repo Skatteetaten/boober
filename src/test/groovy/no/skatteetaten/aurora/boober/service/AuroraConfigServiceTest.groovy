@@ -12,15 +12,15 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import no.skatteetaten.aurora.boober.model.TemplateType
 import spock.lang.Specification
 
-@SpringBootTest(classes = [AuroraConfigParserService])
-class AuroraConfigParserServiceTest extends Specification {
+@SpringBootTest(classes = [AuroraConfigService])
+class AuroraConfigServiceTest extends Specification {
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
   @Autowired
-  AuroraConfigParserService service
+  AuroraConfigService service
 
   def "Should create an AuroraDeploymentConfig with default tag when type is deploy"() {
     given:

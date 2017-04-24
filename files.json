@@ -3,6 +3,22 @@
   "envs": ["boober2", "boober3"],
   "affiliation": "paas",
   "files": {
+    "console.json": {
+      "build": {
+        "GROUP_ID": "ske.aurora.openshift.console",
+        "ARTIFACT_ID": "openshift-console",
+        "VERSION": "0"
+      }
+    },
+    "utv2/about.json": {
+      "cluster": "utv"
+    },
+    "utv3/about.json": {
+      "cluster": "utv"
+    },
+    "boober/about.json": {
+      "cluster": "utv"
+    },
     "about.json": {
       "groups": "APP_PaaS_drift APP_PaaS_utv",
       "affiliation": "paas",
@@ -57,8 +73,7 @@
       },
       "config": {
         "foo2": "bar"
-      },
-      "secretFolder": "/tmp/foo/"
+      }
     },
 
     "boober2/about.json": {

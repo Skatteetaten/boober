@@ -10,10 +10,24 @@ import javax.validation.constraints.NotNull
 import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
 
-class AuroraConfig(
-        val aocConfigFiles: Map<String, Map<String, Any?>>,
-        val secrets: Map<String, String> = mapOf()
-) {
+class AuroraConfig(auroraConfigFiles: Map<String, Map<String, Any?>>, val secrets: Map<String, String> = mapOf()) {
+
+    val auroraConfigFiles: MutableMap<String, Map<String, Any?>>
+
+    init {
+        this.auroraConfigFiles = HashMap(auroraConfigFiles)
+    }
+
+    fun getApplicationIds(env: String = "", app: String = ""): List<ApplicationId> {
+
+        return auroraConfigFiles
+                .map { it.key.removeSuffix(".json") }
+                .filter { it.contains("/") && !it.contains("about") }
+                .filter { if (env.isNullOrBlank()) true else it.startsWith(env) }
+                .filter { if (app.isNullOrBlank()) true else it.endsWith(app) }
+                .map { val (environment, application) = it.split("/"); ApplicationId(environment, application) }
+    }
+
     fun getSecrets(secretFolder: String): Map<String, String> {
 
         val prefix = if (secretFolder.endsWith("/")) secretFolder else "$secretFolder/"
@@ -42,19 +56,25 @@ class AuroraConfig(
                 "${aid.environmentName}/about.json",
                 "${aid.environmentName}/${aid.applicationName}.json")
 
-        val filesForApplication: List<Map<String, Any?>> = requiredFilesForApplication.mapNotNull { aocConfigFiles[it] }
+        val filesForApplication: List<Map<String, Any?>> = requiredFilesForApplication.mapNotNull { auroraConfigFiles[it] }
+
         if (filesForApplication.size != requiredFilesForApplication.size) {
-            val missingFiles = requiredFilesForApplication.filter { it !in aocConfigFiles.keys }
+            val missingFiles = requiredFilesForApplication.filter { it !in auroraConfigFiles.keys }
             throw IllegalArgumentException("Unable to execute setup command. Required files missing => $missingFiles")
         }
+
         return filesForApplication
+    }
+
+    fun updateFile(fileName: String, fileContents: Map<String, Any?>) {
+
+        auroraConfigFiles[fileName] = fileContents
     }
 
     private fun mergeAocConfigFiles(filesForApplication: List<Map<String, Any?>>): MutableMap<String, Any?> {
 
         return filesForApplication.reduce(::createMergeCopy).toMutableMap()
     }
-
 
     internal fun assertIsValid(mergedJson: Map<String, Any?>, applicationName: String) {
         val validator = Validation.buildDefaultValidatorFactory().validator
