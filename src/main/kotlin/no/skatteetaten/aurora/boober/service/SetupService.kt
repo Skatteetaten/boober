@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.model.TemplateType.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -51,15 +52,14 @@ class SetupService(
         val openShiftObjects: List<JsonNode> = openShiftService.generateObjects(adc)
         val openShiftResponses: List<OpenShiftResponse> = openShiftClient.applyMany(adc.namespace, openShiftObjects)
 
-        val deployResource: JsonNode? = when {
-            adc.type == TemplateType.development -> openShiftService.generateBuildRequest(adc)
-            adc.type == TemplateType.process -> openShiftService.generateDeploymentRequest(adc)
-            adc.type == TemplateType.deploy -> openShiftResponses
+        val deployResource: JsonNode? = when (adc.type) {
+            development -> openShiftService.generateBuildRequest(adc)
+            process -> openShiftService.generateDeploymentRequest(adc)
+            deploy -> openShiftResponses
                     .filter { it.kind == "imagestream" }
                     .filter { !it.changed }
                     .map { openShiftService.generateDeploymentRequest(adc) }
                     .firstOrNull()
-            else -> null
 
         }
 
