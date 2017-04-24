@@ -107,4 +107,6 @@ class OpenShiftClient(
         return getExistingResource(headers, url)
 
     }
+
+    fun processTemplate(jsonNode: JsonNode) {}
 }

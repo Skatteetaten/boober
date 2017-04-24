@@ -10,8 +10,14 @@ class OpenShiftApiUrls(
 
         @JvmStatic
         @JvmOverloads
-        fun createOpenShiftApiUrls(baseUrl: String, kind: String, name: String, namespace: String? = null): OpenShiftApiUrls {
+        fun createOpenShiftApiUrls(baseUrl: String, kind: String, name: String?, namespace: String? = null): OpenShiftApiUrls {
 
+            if (kind == "processedtemplate") {
+                val bcBaseUrl = getCollectionPathForResource(baseUrl, "processedtemplate", namespace)
+                return OpenShiftApiUrls(
+                        create = "$bcBaseUrl"
+                )
+            }
             if (kind == "buildrequest") {
                 val bcBaseUrl = getCollectionPathForResource(baseUrl, "buildconfig", namespace)
                 return OpenShiftApiUrls(

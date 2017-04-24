@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import no.skatteetaten.aurora.boober.model.TemplateDeploy
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class ProcessService(
-        val openShiftClient: OpenShiftClient,
+        val openShiftClient: OpenshiftResourceClient,
         val mapper: ObjectMapper) {
 
 
@@ -17,19 +18,28 @@ class ProcessService(
 
         val deployDescriptor = adc.deployDescriptor as TemplateDeploy
 
-        val template: JsonNode = if (deployDescriptor.template != null) {
-            openShiftClient.findTemplate(deployDescriptor.template)?.body ?:
-                    throw IllegalArgumentException("Template with name ${deployDescriptor.template} does not exist")
+        val template: ObjectNode = if (deployDescriptor.template != null) {
+            openShiftClient.get("template", "openshift", deployDescriptor.template)?.body as ObjectNode
         } else if (deployDescriptor.templateFile != null) {
-            mapper.convertValue<JsonNode>(deployDescriptor.templateFile)
+            mapper.convertValue<ObjectNode>(deployDescriptor.templateFile)
         } else {
             throw IllegalArgumentException("Template or templateFile should be specified")
         }
 
+        val adcParameters = deployDescriptor.parameters ?: emptyMap()
+        val adcParameterKeys = adcParameters.keys
 
-        //need to set params from adc into template
+        val parameters = template["parameters"]
 
-        //need to process template and return list of items
+        //mutation in progress. stay away.
+        parameters
+                .filter { adcParameterKeys.contains(it["name"].textValue()) }
+                .forEach {
+                    val node = it as ObjectNode
+                    node.put("value", adcParameters[it["name"].textValue()] as String)
+                }
+        val result = openShiftClient.post("processtemplate", namespace = adc.namespace, payload = template)
 
+        return result.body["objects"].asSequence().toList()
     }
 }
