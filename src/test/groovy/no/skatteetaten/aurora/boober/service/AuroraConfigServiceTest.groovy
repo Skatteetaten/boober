@@ -5,19 +5,59 @@ import static no.skatteetaten.aurora.boober.utils.SampleFilesCollector.jsonToMap
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
+import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import no.skatteetaten.aurora.boober.model.TemplateType
 import spock.lang.Specification
+import spock.mock.DetachedMockFactory
 
-@SpringBootTest(classes = [AuroraConfigService])
+@SpringBootTest(classes = [
+    no.skatteetaten.aurora.boober.Configuration,
+    UserDetailsProvider,
+    AuroraConfigService,
+    GitService,
+    OpenShiftClient,
+    OpenshiftResourceClient
+])
 class AuroraConfigServiceTest extends Specification {
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
+
+  @Configuration
+  static class Config {
+    private DetachedMockFactory factory = new DetachedMockFactory()
+
+    @Bean
+    OpenShiftClient openShiftClient() {
+      factory.Mock(OpenShiftClient)
+    }
+
+    @Bean
+    OpenshiftResourceClient openshiftResourceClient() {
+      factory.Mock(OpenshiftResourceClient)
+    }
+
+    @Bean
+    UserDetailsProvider userDetailsProvider() {
+
+      factory.Stub(UserDetailsProvider)
+    }
+
+    @Bean
+    GitService gitService() {
+      factory.Mock(GitService)
+    }
+  }
+
+  @Autowired
+  UserDetailsProvider userDetailsProvider
 
   @Autowired
   AuroraConfigService service
@@ -29,7 +69,7 @@ class AuroraConfigServiceTest extends Specification {
 
     when:
       def auroraConfig = new AuroraConfig(files, [:])
-      AuroraDeploymentConfig auroraDc = service.createAuroraDcForApplication(auroraConfig, aid)
+      AuroraDeploymentConfig auroraDc = service.createAuroraDcForApplication(auroraConfig, aid, false)
       def auroraDeployDescriptor = (AuroraDeploy) auroraDc.deployDescriptor
 
     then:
@@ -44,7 +84,7 @@ class AuroraConfigServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files, [:])
 
     when:
-      service.createAuroraDcForApplication(auroraConfig, aid)
+      service.createAuroraDcForApplication(auroraConfig, aid, false)
 
     then:
       thrown(IllegalArgumentException)
@@ -57,7 +97,7 @@ class AuroraConfigServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files, [:])
 
     when:
-      AuroraDeploymentConfig auroraDc = service.createAuroraDcForApplication(auroraConfig, aid)
+      AuroraDeploymentConfig auroraDc = service.createAuroraDcForApplication(auroraConfig, aid, false)
 
     then:
       with(auroraDc) {
@@ -96,7 +136,7 @@ class AuroraConfigServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files, [:])
 
     when:
-      AuroraDeploymentConfig auroraDc = service.createAuroraDcForApplication(auroraConfig, aid)
+      AuroraDeploymentConfig auroraDc = service.createAuroraDcForApplication(auroraConfig, aid, false)
 
     then:
       auroraDc.name == "awesome-app"
@@ -126,7 +166,7 @@ class AuroraConfigServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files, [:])
 
     when:
-      service.createAuroraDcForApplication(auroraConfig, aid)
+      service.createAuroraDcForApplication(auroraConfig, aid, false)
 
     then:
       def ex = thrown(ApplicationConfigException)

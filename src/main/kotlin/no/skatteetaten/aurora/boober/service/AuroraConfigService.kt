@@ -34,11 +34,11 @@ class AuroraConfigService(
         return auroraConfig
     }
 
-    fun createAuroraDcsForApplications(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>): List<AuroraDeploymentConfig> {
+    fun createAuroraDcsForApplications(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>, validateOpenShiftReferences: Boolean = true): List<AuroraDeploymentConfig> {
 
         return applicationIds.map { aid ->
             val result: Result<AuroraDeploymentConfig?, Error?> = try {
-                Result(value = createAuroraDcForApplication(auroraConfig, aid))
+                Result(value = createAuroraDcForApplication(auroraConfig, aid, validateOpenShiftReferences))
             } catch (e: ApplicationConfigException) {
                 Result(error = Error(aid, e.errors))
             }
@@ -48,7 +48,7 @@ class AuroraConfigService(
         }
     }
 
-    fun createAuroraDcForApplication(auroraConfig: AuroraConfig, aid: ApplicationId): AuroraDeploymentConfig {
+    fun createAuroraDcForApplication(auroraConfig: AuroraConfig, aid: ApplicationId, validateOpenShiftReferences: Boolean = true): AuroraDeploymentConfig {
 
         val mergedFile: Map<String, Any?> = auroraConfig.getMergedFileForApplication(aid)
         val secrets: Map<String, String>? = mergedFile.s("secretFolder")?.let { auroraConfig.getSecrets(it) }
@@ -85,7 +85,7 @@ class AuroraConfigService(
                 deployDescriptor = deployDescriptor
         )
 
-        return auroraDeploymentConfig.apply { validateOpenShiftReferences(this) }
+        return auroraDeploymentConfig.apply { if(validateOpenShiftReferences) validateOpenShiftReferences(this) }
     }
 
 

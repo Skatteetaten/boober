@@ -17,7 +17,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
-@SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration, AuroraConfigService, OpenShiftService, Config])
+@SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration, OpenshiftResourceClient, OpenShiftClient, AuroraConfigService, GitService, OpenShiftService, Config])
 class OpenShiftServiceTest extends Specification {
 
   public static final String ENV_NAME = "booberdev"
@@ -30,8 +30,17 @@ class OpenShiftServiceTest extends Specification {
 
     @Bean
     UserDetailsProvider userDetailsProvider() {
-
       factory.Mock(UserDetailsProvider)
+    }
+
+    @Bean
+    GitService gitService() {
+      factory.Mock(GitService)
+    }
+
+    @Bean
+    OpenShiftClient openshiftClient() {
+      factory.Mock(OpenShiftClient)
     }
   }
 
@@ -51,7 +60,7 @@ class OpenShiftServiceTest extends Specification {
 
     when:
       def auroraConfig = new AuroraConfig(files, [:])
-      AuroraDeploymentConfig auroraDc = auroraConfigParserService.createAuroraDcForApplication(auroraConfig, aid)
+      AuroraDeploymentConfig auroraDc = auroraConfigParserService.createAuroraDcForApplication(auroraConfig, aid, false)
       List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc)
 
       def configMap = generatedObjects.find { it.get("kind").asText() == "ConfigMap" }
