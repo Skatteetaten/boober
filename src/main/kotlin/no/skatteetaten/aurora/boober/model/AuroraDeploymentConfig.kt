@@ -24,7 +24,7 @@ data class AuroraDeploymentConfig(
         val deployDescriptor: DeployDescriptor?
 ) {
     val namespace: String
-        get() = "$affiliation-$envName"
+        get() = "$affiliation$envName"
 
     val routeName: String?
         get() = "http://$name-$namespace.$cluster.paas.skead.no"

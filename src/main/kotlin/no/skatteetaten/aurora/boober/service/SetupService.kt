@@ -1,11 +1,13 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
+import no.skatteetaten.aurora.boober.controller.Overrides
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import no.skatteetaten.aurora.boober.model.TemplateType.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 data class ApplicationId(
@@ -32,17 +34,19 @@ data class Error(
 class SetupService(
         val auroraConfigService: AuroraConfigService,
         val openShiftService: OpenShiftService,
-        val openShiftClient: OpenShiftClient) {
+        val openShiftClient: OpenShiftClient,
+        @Value("\${openshift.cluster}") val cluster: String
+) {
 
     val logger: Logger = LoggerFactory.getLogger(SetupService::class.java)
 
-    fun executeSetup(auroraConfig: AuroraConfig, envs: List<String>, apps: List<String>, dryRun: Boolean = false): List<ApplicationResult> {
+    fun executeSetup(auroraConfig: AuroraConfig, overrides: Overrides, envs: List<String>, apps: List<String>, dryRun: Boolean = false): List<ApplicationResult> {
 
-        //∕TODO: Need to filter this somewhere on cluster
         val applicationIds: List<ApplicationId> = envs.flatMap { env -> apps.map { app -> ApplicationId(env, app) } }
-        val auroraDcs: List<AuroraDeploymentConfig> = auroraConfigService.createAuroraDcsForApplications(auroraConfig, applicationIds)
+        val auroraDcs: List<AuroraDeploymentConfig> = auroraConfigService.createAuroraDcsForApplications(auroraConfig, applicationIds, overrides)
 
-        return auroraDcs.map { applyDeploymentConfig(it, dryRun) }
+        return auroraDcs.filter { it.cluster == cluster }
+                .map { applyDeploymentConfig(it, dryRun) }
     }
 
     private fun applyDeploymentConfig(adc: AuroraDeploymentConfig, dryRun: Boolean = false): ApplicationResult {

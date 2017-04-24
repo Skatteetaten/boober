@@ -70,7 +70,7 @@ class AuroraConfigServiceTest extends Specification {
 
     when:
       def auroraConfig = new AuroraConfig(files, [:])
-      AuroraDeploymentConfig auroraDc = service.createAuroraDcForApplication(auroraConfig, aid, false)
+      AuroraDeploymentConfig auroraDc = service.createAuroraDcForApplication(auroraConfig, aid, false, [:])
       def auroraDeployDescriptor = (AuroraDeploy) auroraDc.deployDescriptor
 
     then:
@@ -85,7 +85,7 @@ class AuroraConfigServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files, [:])
 
     when:
-      service.createAuroraDcForApplication(auroraConfig, aid, false)
+      service.createAuroraDcForApplication(auroraConfig, aid, false, [:])
 
     then:
       thrown(IllegalArgumentException)
@@ -98,7 +98,7 @@ class AuroraConfigServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files, [:])
 
     when:
-      AuroraDeploymentConfig auroraDc = service.createAuroraDcForApplication(auroraConfig, aid, false)
+      AuroraDeploymentConfig auroraDc = service.createAuroraDcForApplication(auroraConfig, aid, false, [:])
 
     then:
       with(auroraDc) {
@@ -137,7 +137,7 @@ class AuroraConfigServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files, [:])
 
     when:
-      AuroraDeploymentConfig auroraDc = service.createAuroraDcForApplication(auroraConfig, aid, false)
+      AuroraDeploymentConfig auroraDc = service.createAuroraDcForApplication(auroraConfig, aid, false, [:])
 
     then:
       auroraDc.name == "awesome-app"
@@ -167,7 +167,7 @@ class AuroraConfigServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files, [:])
 
     when:
-      service.createAuroraDcForApplication(auroraConfig, aid, false)
+      service.createAuroraDcForApplication(auroraConfig, aid, false, [:])
 
     then:
       def ex = thrown(ApplicationConfigException)

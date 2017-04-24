@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import static no.skatteetaten.aurora.boober.LoggingUtilsKt.setLogLevels
 import static no.skatteetaten.aurora.boober.utils.SampleFilesCollector.getQaEbsUsersSampleFiles
 import static no.skatteetaten.aurora.boober.utils.SampleFilesCollector.getQaEbsUsersSampleFilesForEnv
 
@@ -68,7 +67,7 @@ class SetupServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files, [:])
 
     when:
-      def result = auroraConfigService.createAuroraDcsForApplications(auroraConfig, [aid], false)
+      def result = auroraConfigService.createAuroraDcsForApplications(auroraConfig, [aid], [:], false)
 
     then:
       result != null
@@ -85,7 +84,7 @@ class SetupServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files, [:])
 
     when:
-      auroraConfigService.createAuroraDcsForApplications(auroraConfig, [aid], true)
+      auroraConfigService.createAuroraDcsForApplications(auroraConfig, [aid], [:], true)
 
     then:
       AuroraConfigException e = thrown()
@@ -104,7 +103,7 @@ class SetupServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files, [:])
 
     when:
-      auroraConfigService.createAuroraDcsForApplications(auroraConfig, [aid], true)
+      auroraConfigService.createAuroraDcsForApplications(auroraConfig, [aid], [:], true)
 
     then:
       AuroraConfigException e = thrown()
@@ -126,7 +125,7 @@ class SetupServiceTest extends Specification {
     when:
 
       def result = auroraConfigService.
-          createAuroraDcsForApplications(auroraConfig, [new ApplicationId(envName, APP_NAME)], false)
+          createAuroraDcsForApplications(auroraConfig, [new ApplicationId(envName, APP_NAME)], [:], false)
 
     then:
       result[0].secrets.containsKey("latest.properties")
@@ -145,7 +144,8 @@ class SetupServiceTest extends Specification {
 
     when:
 
-      auroraConfigService.createAuroraDcsForApplications(auroraConfig, [new ApplicationId(envName, APP_NAME)], false)
+      auroraConfigService.
+          createAuroraDcsForApplications(auroraConfig, [new ApplicationId(envName, APP_NAME)], [:], false)
 
 
     then:

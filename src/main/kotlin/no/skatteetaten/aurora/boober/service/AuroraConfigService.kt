@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import no.skatteetaten.aurora.boober.controller.Overrides
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.AuroraDeploy.Prometheus
 import no.skatteetaten.aurora.boober.model.DeploymentStrategy.recreate
@@ -66,11 +67,14 @@ class AuroraConfigService(
         return auroraConfig
     }
 
-    fun createAuroraDcsForApplications(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>, validateOpenShiftReferences: Boolean = true): List<AuroraDeploymentConfig> {
+    fun createAuroraDcsForApplications(auroraConfig: AuroraConfig,
+                                       applicationIds: List<ApplicationId>,
+                                       overrides: Overrides = mapOf(),
+                                       validateOpenShiftReferences: Boolean = true): List<AuroraDeploymentConfig> {
 
         return applicationIds.map { aid ->
             val result: Result<AuroraDeploymentConfig?, Error?> = try {
-                Result(value = createAuroraDcForApplication(auroraConfig, aid, validateOpenShiftReferences))
+                Result(value = createAuroraDcForApplication(auroraConfig, aid, validateOpenShiftReferences, overrides))
             } catch (e: ApplicationConfigException) {
                 Result(error = Error(aid, e.errors))
             }
@@ -93,9 +97,12 @@ class AuroraConfigService(
         return AuroraConfig(auroraConfigFiles = auroraConfigFiles, secrets = secretFiles)
     }
 
-    fun createAuroraDcForApplication(auroraConfig: AuroraConfig, aid: ApplicationId, validateOpenShiftReferences: Boolean = true): AuroraDeploymentConfig {
+    fun createAuroraDcForApplication(auroraConfig: AuroraConfig,
+                                     aid: ApplicationId,
+                                     validateOpenShiftReferences: Boolean = true,
+                                     overrides: Overrides): AuroraDeploymentConfig {
 
-        val mergedFile: Map<String, Any?> = auroraConfig.getMergedFileForApplication(aid)
+        val mergedFile: Map<String, Any?> = auroraConfig.getMergedFileForApplication(aid, overrides)
         val secrets: Map<String, String>? = mergedFile.s("secretFolder")?.let { auroraConfig.getSecrets(it) }
 
         val type = mergedFile.s("type").let { TemplateType.valueOf(it!!) }

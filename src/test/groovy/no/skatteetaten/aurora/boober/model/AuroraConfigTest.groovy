@@ -35,7 +35,7 @@ class AuroraConfigTest extends Specification {
       def auroraConfig = new AuroraConfig(files, [:])
 
     when:
-      def filesForApplication = auroraConfig.getFilesForApplication(new ApplicationId("utv", "referanse"))
+      def filesForApplication = auroraConfig.getFilesForApplication(new ApplicationId("utv", "referanse"), [:])
 
     then:
       filesForApplication.size() == 4
@@ -47,7 +47,7 @@ class AuroraConfigTest extends Specification {
       def auroraConfig = new AuroraConfig(files, [:])
 
     when:
-      auroraConfig.getFilesForApplication(new ApplicationId("utv", "referanse"))
+      auroraConfig.getFilesForApplication(new ApplicationId("utv", "referanse"), [:])
 
     then: "Should be missing utv/referanse.json"
       def ex = thrown(IllegalArgumentException)

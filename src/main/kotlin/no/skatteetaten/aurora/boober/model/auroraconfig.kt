@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.model
 
+import no.skatteetaten.aurora.boober.controller.Overrides
 import no.skatteetaten.aurora.boober.service.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.ApplicationId
 import no.skatteetaten.aurora.boober.service.m
@@ -36,12 +37,12 @@ class AuroraConfig(auroraConfigFiles: Map<String, Map<String, Any?>>, secrets: M
         return secrets.filter { it.key.startsWith(prefix) }.mapKeys { it.key.removePrefix(prefix) }
     }
 
-    fun getMergedFileForApplication(aid: ApplicationId): Map<String, Any?> {
-        val filesForApplication = getFilesForApplication(aid)
+    fun getMergedFileForApplication(aid: ApplicationId, overrides: Overrides): Map<String, Any?> {
+        val filesForApplication = getFilesForApplication(aid, overrides)
         val mergedJson = mergeAocConfigFiles(filesForApplication)
 
         mergedJson.apply {
-            putIfAbsent("envName", aid.environmentName)
+            putIfAbsent("envName", "-${aid.environmentName}")
             putIfAbsent("schemaVersion", "v1")
         }
 
@@ -50,7 +51,7 @@ class AuroraConfig(auroraConfigFiles: Map<String, Map<String, Any?>>, secrets: M
         return mergedJson
     }
 
-    fun getFilesForApplication(aid: ApplicationId): List<Map<String, Any?>> {
+    fun getFilesForApplication(aid: ApplicationId, overrides: Overrides): List<Map<String, Any?>> {
 
         val requiredFilesForApplication = setOf(
                 "about.json",
@@ -65,15 +66,14 @@ class AuroraConfig(auroraConfigFiles: Map<String, Map<String, Any?>>, secrets: M
             throw IllegalArgumentException("Unable to execute setup command. Required files missing => $missingFiles")
         }
 
-        return filesForApplication
+        val overridedFiles = requiredFilesForApplication.mapNotNull { overrides[it] }
+        return filesForApplication + overridedFiles
     }
 
     fun updateFile(fileName: String, fileContents: Map<String, Any?>) {
 
         auroraConfigFiles[fileName] = fileContents
     }
-
-
 
 
     private fun mergeAocConfigFiles(filesForApplication: List<Map<String, Any?>>): MutableMap<String, Any?> {
@@ -151,5 +151,5 @@ class AuroraConfigRequiredV1(val config: Map<String, Any?>?, val build: Map<Stri
     val version = build?.s("VERSION")
 
     @get:Pattern(message = "Alphanumeric and dashes. Cannot end or start with dash", regexp = "^[a-z0-9][-a-z0-9]*[a-z0-9]$")
-    val namespace = "$affiliation-$envName"
+    val namespace = "$affiliation$envName"
 }

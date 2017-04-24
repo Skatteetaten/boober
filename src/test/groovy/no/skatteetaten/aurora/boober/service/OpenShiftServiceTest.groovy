@@ -64,7 +64,8 @@ class OpenShiftServiceTest extends Specification {
 
     when:
       def auroraConfig = new AuroraConfig(files, [:])
-      AuroraDeploymentConfig auroraDc = auroraConfigParserService.createAuroraDcForApplication(auroraConfig, aid, false)
+      AuroraDeploymentConfig auroraDc = auroraConfigParserService.
+          createAuroraDcForApplication(auroraConfig, aid, false, [:])
       List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc)
 
       def configMap = generatedObjects.find { it.get("kind").asText() == "ConfigMap" }

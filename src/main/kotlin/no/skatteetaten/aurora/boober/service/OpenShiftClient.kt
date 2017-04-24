@@ -42,17 +42,7 @@ class OpenShiftClient(
 
     fun applyMany(namespace: String, openShiftObjects: List<JsonNode>): List<OpenShiftResponse> {
 
-        val responses = openShiftObjects.map {
-
-            apply(namespace, it)
-        }
-
-
-        //TODO:Do we need a manual deploy?
-        //If the build.version is changed we do not need to deploy. Otherwise we do.
-        //That is start build for deployment or start deploy for others
-        return responses
-
+        return openShiftObjects.map { apply(namespace, it) }
     }
 
 
