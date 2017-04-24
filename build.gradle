@@ -14,7 +14,7 @@ buildscript {
         "org.jetbrains.kotlin:kotlin-noarg:$kotlin_version",
         "org.jetbrains.kotlin:kotlin-allopen:$kotlin_version",
         "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion",
-        'no.skatteetaten.aurora.gradle.plugins:aurora-gradle-plugin:feature_AOS_1064_opensource_gradle_plugins-SNAPSHOT',
+        'no.skatteetaten.aurora.gradle.plugins:aurora-gradle-plugin:1.0.4',
     )
   }
 }
