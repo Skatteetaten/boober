@@ -41,6 +41,58 @@ class AuroraConfigTest extends Specification {
       filesForApplication.size() == 4
   }
 
+  def "Returns files for application with about override"() {
+    given:
+      def files = createMockFiles("about.json", "referanse.json", "utv/about.json", "utv/referanse.json")
+      def auroraConfig = new AuroraConfig(files, [:])
+
+    when:
+      def filesForApplication = auroraConfig.
+          getFilesForApplication(new ApplicationId("utv", "referanse"), ["about.json": [:]])
+
+    then:
+      filesForApplication.size() == 5
+  }
+
+  def "Returns files for application with app override"() {
+    given:
+      def files = createMockFiles("about.json", "referanse.json", "utv/about.json", "utv/referanse.json")
+      def auroraConfig = new AuroraConfig(files, [:])
+
+    when:
+      def filesForApplication = auroraConfig.
+          getFilesForApplication(new ApplicationId("utv", "referanse"), ["referanse.json": [:]])
+
+    then:
+      filesForApplication.size() == 5
+  }
+
+  def "Returns files for application with app for env override"() {
+    given:
+      def files = createMockFiles("about.json", "referanse.json", "utv/about.json", "utv/referanse.json")
+      def auroraConfig = new AuroraConfig(files, [:])
+
+    when:
+      def filesForApplication = auroraConfig.
+          getFilesForApplication(new ApplicationId("utv", "referanse"), ["utv/referanse.json": [:]])
+
+    then:
+      filesForApplication.size() == 5
+  }
+
+  def "Returns files for application with app for not valid override"() {
+    given:
+      def files = createMockFiles("about.json", "referanse.json", "utv/about.json", "utv/referanse.json")
+      def auroraConfig = new AuroraConfig(files, [:])
+
+    when:
+      def filesForApplication = auroraConfig.
+          getFilesForApplication(new ApplicationId("utv", "referanse"), ["utv/referanse2.json": [:]])
+
+    then:
+      filesForApplication.size() == 4
+  }
+
   def "Fails when some files for application are missing"() {
     given:
       def files = createMockFiles("about.json", "referanse.json", "utv/about.json")

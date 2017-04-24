@@ -121,6 +121,29 @@ class AuroraConfigServiceTest extends Specification {
       }
   }
 
+  def "Should override name property in 'app'.json with name in override"() {
+
+    given:
+      Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
+
+      def envAppOverride = """
+        {
+          "name": "awesome-app"
+        }
+      """
+
+      files.put("${ENV_NAME}/${APP_NAME}.json" as String, jsonToMap(envAppOverride))
+
+      def auroraConfig = new AuroraConfig(files, [:])
+
+    when:
+      AuroraDeploymentConfig auroraDc = service.
+          createAuroraDcForApplication(auroraConfig, aid, false, ["about.json": ["name": "foobar"]])
+
+    then:
+      auroraDc.name == "foobar"
+  }
+
   def "Should override name property in 'app'.json with name in 'env'/'app'.json"() {
 
     given:

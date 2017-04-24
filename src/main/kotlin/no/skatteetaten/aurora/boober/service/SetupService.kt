@@ -40,6 +40,7 @@ class SetupService(
 
     val logger: Logger = LoggerFactory.getLogger(SetupService::class.java)
 
+    //TODO: test
     fun executeSetup(auroraConfig: AuroraConfig, overrides: Overrides, envs: List<String>, apps: List<String>, dryRun: Boolean = false): List<ApplicationResult> {
 
         val applicationIds: List<ApplicationId> = envs.flatMap { env -> apps.map { app -> ApplicationId(env, app) } }
