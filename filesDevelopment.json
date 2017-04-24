@@ -37,5 +37,9 @@
     },
     "boober/referanse.json": {
     }
+  },
+  "secrets": {
+    "latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg==",
+    "1.2.3.properties": "Rk9PPU9IWUVBSApCQVI9Rk9PQkFSCg=="
   }
 }

@@ -19,7 +19,7 @@ class AuroraConfigController(val auroraConfigService: AuroraConfigService) {
     fun updateAuroraConfigFile(@PathVariable affiliation: String, @PathVariable fileName: String,
                                @RequestBody fileContents: Map<String, Any?>) {
 
-        auroraConfigService.findAuroraConfigForAffiliationForUpdate(affiliation, { auroraConfig: AuroraConfig ->
+        auroraConfigService.withAuroraConfigForAffiliation(affiliation, true, { auroraConfig: AuroraConfig ->
             auroraConfig.updateFile(fileName, fileContents)
         })
     }

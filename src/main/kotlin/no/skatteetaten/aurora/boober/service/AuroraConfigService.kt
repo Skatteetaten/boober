@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.AuroraDeploy.Prometheus
 import no.skatteetaten.aurora.boober.model.DeploymentStrategy.recreate
@@ -7,29 +8,49 @@ import no.skatteetaten.aurora.boober.model.DeploymentStrategy.rolling
 import no.skatteetaten.aurora.boober.utils.Result
 import no.skatteetaten.aurora.boober.utils.orElseThrow
 import org.springframework.stereotype.Service
+import java.io.File
 
 @Service
 class AuroraConfigService(
         val gitService: GitService,
-        val openShiftClient: OpenShiftClient) {
+        val openShiftClient: OpenShiftClient,
+        val mapper: ObjectMapper,
+        val encryptionService: EncryptionService) {
+
+    private val SECRET_FOLDER = ".secret"
 
     fun save(affiliation: String, auroraConfig: AuroraConfig) {
 
         validate(auroraConfig)
-        gitService.saveFilesAndClose(affiliation, auroraConfig.auroraConfigFiles)
+        val jsonFiles: Map<String, String> = auroraConfig.auroraConfigFiles.map {
+            it.key to mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it.value)
+        }.toMap()
+
+        val encryptedSecrets = auroraConfig.secrets.map {
+            "$SECRET_FOLDER/${it.key}" to encryptionService.encrypt(it.value)
+        }.toMap()
+
+        gitService.saveFilesAndClose(affiliation, jsonFiles + encryptedSecrets)
     }
 
-    fun findAuroraConfigForAffiliationForUpdate(affiliation: String, function: (AuroraConfig) -> Unit): AuroraConfig {
+    fun findAuroraConfigForAffiliation(affiliation: String): AuroraConfig {
+
+        return withAuroraConfigForAffiliation(affiliation, false)
+    }
+
+    fun withAuroraConfigForAffiliation(affiliation: String, commitChanges: Boolean = true, function: (AuroraConfig) -> Unit = {}): AuroraConfig {
 
         val repo = gitService.checkoutRepoForAffiliation(affiliation)
-        val filesForAffiliation = gitService.getAllFilesInRepo(repo)
-        val auroraConfig = AuroraConfig(auroraConfigFiles = filesForAffiliation)
+        val filesForAffiliation: Map<String, File> = gitService.getAllFilesInRepo(repo)
+        val auroraConfig = createAuroraConfigFromFiles(filesForAffiliation)
 
         function(auroraConfig)
 
-        validate(auroraConfig)
-
-        gitService.saveFilesAndClose(repo, auroraConfig.auroraConfigFiles)
+        if (commitChanges) {
+            save(affiliation, auroraConfig)
+        } else {
+            gitService.closeRepository(repo)
+        }
 
         return auroraConfig
     }
@@ -46,6 +67,19 @@ class AuroraConfigService(
         }.orElseThrow {
             AuroraConfigException("AuroraConfig contained errors for one or more applications", it)
         }
+    }
+
+    fun createAuroraConfigFromFiles(filesForAffiliation: Map<String, File>): AuroraConfig {
+
+        val secretFiles: Map<String, String> = filesForAffiliation
+                .filter { it.key.startsWith(SECRET_FOLDER) }
+                .map { it.key to encryptionService.decrypt(it.value.readText()) }.toMap()
+
+        val auroraConfigFiles: Map<String, Map<String, Any?>> = filesForAffiliation
+                .filter { !it.key.startsWith(SECRET_FOLDER) }
+                .map { it.key to mapper.readValue(it.value, Map::class.java) as Map<String, Any?> }.toMap()
+
+        return AuroraConfig(auroraConfigFiles = auroraConfigFiles, secrets = secretFiles)
     }
 
     fun createAuroraDcForApplication(auroraConfig: AuroraConfig, aid: ApplicationId, validateOpenShiftReferences: Boolean = true): AuroraDeploymentConfig {
@@ -85,7 +119,7 @@ class AuroraConfigService(
                 deployDescriptor = deployDescriptor
         )
 
-        return auroraDeploymentConfig.apply { if(validateOpenShiftReferences) validateOpenShiftReferences(this) }
+        return auroraDeploymentConfig.apply { if (validateOpenShiftReferences) validateOpenShiftReferences(this) }
     }
 
 

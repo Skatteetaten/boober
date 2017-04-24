@@ -11,25 +11,21 @@ import java.util.*
 @Service
 class EncryptionService(@Value("\${boober.encrypt.key}") val key: String) {
 
-
+    val LINE_SEPERATOR = "\n"
     val version = "Boober:1"
     val encryptor = Encryptor(KeyFactory.AES.keyFromPassword(key.toCharArray()), "AES/GCM/PKCS5Padding", 16, 128)
 
-    fun encrypt(message: String, target: File) {
+    fun encrypt(message: String): String {
         val result = encryptor.encrypt(message.toByteArray())
         val encoded = Base64.getEncoder().encodeToString(result)
 
-        val body = """$version
-$encoded
-"""
-        target.writeBytes(body.toByteArray())
+        val body = "$version$LINE_SEPERATOR$encoded"
+        return body
     }
 
-    fun decrypt(source: File): String {
-        val content = source.readText()
-        val split = content.split("\n")
+    fun decrypt(source: String): String {
+        val split = source.split(LINE_SEPERATOR)
         //If/when we use new versions of encryption here we can use an encryptor for that specific version when we decode.
         return String(encryptor.decrypt(Base64.getDecoder().decode(split[1])))
-
     }
 }
