@@ -18,11 +18,16 @@ class OpenShiftService(
         val mapper: ObjectMapper
 ) {
 
-    fun generateObjects(auroraDc: AuroraDeploymentConfig): List<JsonNode> {
+    fun generateBuildRequest(auroraDc: AuroraDeploymentConfig): JsonNode {
+        return mergeVelocityTemplate("buildrequest.json", mapOf("adc" to auroraDc))
 
-        //TODO This is the code that uses the default that was set in the old AOC, that is the template.
-        //TODO If we get an unified interface in here we do not have to do this here. We can always move it out.
-        //TODO What should we store in git?
+    }
+
+    fun generateDeploymentRequest(auroraDc: AuroraDeploymentConfig): JsonNode {
+        return mergeVelocityTemplate("deploymentrequest.json", mapOf("adc" to auroraDc))
+
+    }
+    fun generateObjects(auroraDc: AuroraDeploymentConfig): List<JsonNode> {
 
         val deployDescriptor = auroraDc.deployDescriptor as AuroraDeploy
 
