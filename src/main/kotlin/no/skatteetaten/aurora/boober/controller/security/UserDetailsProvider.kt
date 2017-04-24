@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.controller.security
 
-import org.eclipse.jgit.lib.PersonIdent
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 

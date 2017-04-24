@@ -16,8 +16,8 @@ import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration,
+    GitService,
     AuroraConfigService,
-    SetupService,
     OpenShiftService,
     Config])
 class SetupServiceTest extends Specification {
@@ -40,6 +40,11 @@ class SetupServiceTest extends Specification {
     OpenShiftClient openshiftClient() {
       factory.Mock(OpenShiftClient)
     }
+
+    @Bean
+    GitService gitService() {
+      factory.Mock(GitService)
+    }
   }
 
   @Autowired
@@ -48,7 +53,7 @@ class SetupServiceTest extends Specification {
   @Autowired
   UserDetailsProvider userDetailsProvider
   @Autowired
-  SetupService setupService
+  AuroraConfigService auroraConfigService
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
@@ -65,7 +70,7 @@ class SetupServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files, [:])
 
     when:
-      def result = setupService.createAuroraDcsForApplications(auroraConfig, [aid])
+      def result = auroraConfigService.createAuroraDcsForApplications(auroraConfig, [aid], false)
 
     then:
       result != null
@@ -82,7 +87,7 @@ class SetupServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files, [:])
 
     when:
-      setupService.createAuroraDcsForApplications(auroraConfig, [aid])
+      auroraConfigService.createAuroraDcsForApplications(auroraConfig, [aid], true)
 
     then:
       AuroraConfigException e = thrown()
@@ -101,7 +106,7 @@ class SetupServiceTest extends Specification {
       def auroraConfig = new AuroraConfig(files, [:])
 
     when:
-      setupService.createAuroraDcsForApplications(auroraConfig, [aid])
+      auroraConfigService.createAuroraDcsForApplications(auroraConfig, [aid], true)
 
     then:
       AuroraConfigException e = thrown()
@@ -122,7 +127,7 @@ class SetupServiceTest extends Specification {
 
     when:
 
-      def result = setupService.createAuroraDcsForApplications(auroraConfig, [new ApplicationId(envName, APP_NAME)])
+      def result = auroraConfigService.createAuroraDcsForApplications(auroraConfig, [new ApplicationId(envName, APP_NAME)], false)
 
     then:
       result[0].secrets.containsKey("latest.properties")
@@ -141,7 +146,7 @@ class SetupServiceTest extends Specification {
 
     when:
 
-      setupService.createAuroraDcsForApplications(auroraConfig, [new ApplicationId(envName, APP_NAME)])
+      auroraConfigService.createAuroraDcsForApplications(auroraConfig, [new ApplicationId(envName, APP_NAME)], false)
 
 
     then:
