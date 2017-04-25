@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import static no.skatteetaten.aurora.boober.utils.SampleFilesCollector.getQaEbsUsersSampleFiles
 import static no.skatteetaten.aurora.boober.utils.SampleFilesCollector.getQaEbsUsersSampleFilesForEnv
 
 import org.springframework.beans.factory.annotation.Autowired
@@ -11,6 +10,8 @@ import org.springframework.context.annotation.Configuration
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.utils.SampleFilesCollector
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -21,7 +22,6 @@ import spock.mock.DetachedMockFactory
     EncryptionService,
     Config])
 class SetupServiceTest extends Specification {
-
 
   @Configuration
   static class Config {
@@ -56,6 +56,13 @@ class SetupServiceTest extends Specification {
   public static final String APP_NAME = "verify-ebs-users"
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
+  private static AuroraConfig createAuroraConfig(String envName = SampleFilesCollector.ENV_NAME,
+      Map<String, String> secrets = [:]) {
+
+    Map<String, Map<String, Object>> files = getQaEbsUsersSampleFilesForEnv(envName)
+    new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value) }, secrets)
+  }
+
   def "Should create aurora dc for application"() {
 
     given:
@@ -63,11 +70,10 @@ class SetupServiceTest extends Specification {
       openShiftClient.isValidGroup(_) >> true
       openShiftClient.isValidUser(_) >> true
 
-      Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
-      def auroraConfig = new AuroraConfig(files, [:], [:])
+      AuroraConfig auroraConfig = createAuroraConfig()
 
     when:
-      def result = auroraConfigService.createAuroraDcs(auroraConfig, [aid], false)
+      def result = auroraConfigService.createAuroraDcs(auroraConfig, [aid], [], false)
 
     then:
       result != null
@@ -80,11 +86,10 @@ class SetupServiceTest extends Specification {
       openShiftClient.isValidGroup(_) >> true
       openShiftClient.isValidUser(_) >> false
 
-      Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
-      def auroraConfig = new AuroraConfig(files, [:], [:])
+      AuroraConfig auroraConfig = createAuroraConfig()
 
     when:
-      auroraConfigService.createAuroraDcs(auroraConfig, [aid], true)
+      auroraConfigService.createAuroraDcs(auroraConfig, [aid], [], true)
 
     then:
       AuroraConfigException e = thrown()
@@ -99,11 +104,10 @@ class SetupServiceTest extends Specification {
       openShiftClient.isValidGroup(_) >> false
       openShiftClient.isValidUser(_) >> true
 
-      Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
-      def auroraConfig = new AuroraConfig(files, [:], [:])
+      AuroraConfig auroraConfig = createAuroraConfig()
 
     when:
-      auroraConfigService.createAuroraDcs(auroraConfig, [aid], true)
+      auroraConfigService.createAuroraDcs(auroraConfig, [aid], [], true)
 
     then:
       AuroraConfigException e = thrown()
@@ -119,13 +123,12 @@ class SetupServiceTest extends Specification {
       openShiftClient.isValidUser(_) >> true
 
       def envName = "secrettest"
-      Map<String, Map<String, Object>> files = getQaEbsUsersSampleFilesForEnv(envName)
-      def auroraConfig = new AuroraConfig(files, ["/tmp/foo/latest.properties": "FOO=BAR"], [:])
+      AuroraConfig auroraConfig = createAuroraConfig(envName, ["/tmp/foo/latest.properties": "FOO=BAR"])
 
     when:
 
       def result = auroraConfigService.
-          createAuroraDcs(auroraConfig, [new ApplicationId(envName, APP_NAME)], false)
+          createAuroraDcs(auroraConfig, [new ApplicationId(envName, APP_NAME)], [], false)
 
     then:
       result[0].secrets.containsKey("latest.properties")
@@ -139,13 +142,11 @@ class SetupServiceTest extends Specification {
       openShiftClient.isValidUser(_) >> true
 
       def envName = "secrettest"
-      Map<String, Map<String, Object>> files = getQaEbsUsersSampleFilesForEnv(envName)
-      def auroraConfig = new AuroraConfig(files, [:], [:])
+      AuroraConfig auroraConfig = createAuroraConfig(envName)
 
     when:
 
-      auroraConfigService.
-          createAuroraDcs(auroraConfig, [new ApplicationId(envName, APP_NAME)], false)
+      auroraConfigService.createAuroraDcs(auroraConfig, [new ApplicationId(envName, APP_NAME)], [], false)
 
 
     then:

@@ -13,6 +13,7 @@ import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
@@ -63,9 +64,8 @@ class OpenShiftServiceTest extends Specification {
       Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
 
     when:
-      def auroraConfig = new AuroraConfig(files, [:], [:])
-      AuroraDeploymentConfig auroraDc = auroraConfigParserService.
-          createAuroraDc(auroraConfig, aid, false)
+      def auroraConfig = new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value) }, [:])
+      AuroraDeploymentConfig auroraDc = auroraConfigParserService.createAuroraDc(auroraConfig, aid, [], false)
       List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc)
 
       def configMap = generatedObjects.find { it.get("kind").asText() == "ConfigMap" }

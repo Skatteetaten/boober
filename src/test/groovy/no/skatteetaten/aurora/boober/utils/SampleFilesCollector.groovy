@@ -15,8 +15,7 @@ class SampleFilesCollector {
   }
 
   static Map<String, Map<String, Object>> getQaEbsUsersSampleFilesForEnv(String envName) {
-    return collectFilesToMapOfJsonNode("about.json", "${APP_NAME}.json", "${envName}/about.json",
-        "${envName}/${APP_NAME}.json")
+    return collectFilesToMapOfJsonNode("about.json", "${APP_NAME}.json", "${envName}/about.json", "${envName}/${APP_NAME}.json")
   }
 
   static Map<String, Map<String, Object>> collectFilesToMapOfJsonNode(String... fileNames) {

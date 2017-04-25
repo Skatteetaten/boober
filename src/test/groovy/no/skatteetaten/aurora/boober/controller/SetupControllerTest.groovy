@@ -10,6 +10,7 @@ import org.springframework.http.MediaType
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import no.skatteetaten.aurora.boober.controller.security.User
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.SampleFilesCollector
 
@@ -26,7 +27,7 @@ class SetupControllerTest extends AbstractControllerTest {
     given:
       def files = SampleFilesCollector.qaEbsUsersSampleFiles
       files.put("about.json", [:])
-      SetupCommand cmd = new SetupCommand(AFFILIATION, [ENV_NAME], [APP_NAME], files, [:], [:])
+      SetupCommand cmd = new SetupCommand(AFFILIATION, new AuroraConfigPayload(files, [:]), new SetupParamsPayload([ENV_NAME], [APP_NAME], [:], false))
       def json = JsonOutput.toJson(cmd)
 
     when:

@@ -37,20 +37,7 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>,
 
     fun getMergedFileForApplication(aid: ApplicationId, overrides: List<AuroraConfigFile>): Map<String, Any?> {
 
-        val requiredFilesForApplication = setOf(
-                "about.json",
-                "${aid.applicationName}.json",
-                "${aid.environmentName}/about.json",
-                "${aid.environmentName}/${aid.applicationName}.json")
-
-        val filesForApplication = requiredFilesForApplication.mapNotNull { fileName -> auroraConfigFiles.find { it.name == fileName } }
-        val overrideFiles = requiredFilesForApplication.mapNotNull { fileName -> overrides.find { it.name == fileName } }
-        val allFiles = filesForApplication + overrideFiles
-
-        val uniqueFileNames = HashSet(allFiles.map { it.name })
-        if (uniqueFileNames.size != requiredFilesForApplication.size) {
-            throw IllegalArgumentException("Unable to merge files because some required files are missing. Provided only ${uniqueFileNames}.")
-        }
+        val allFiles = getFilesForApplication(aid, overrides)
 
         val mergedJson = mergeAocConfigFiles(allFiles.map { it.contents })
 
@@ -64,6 +51,26 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>,
         }
 
         return mergedJson
+    }
+
+    fun getFilesForApplication(aid: ApplicationId, overrides: List<AuroraConfigFile> = listOf()): List<AuroraConfigFile> {
+
+        val requiredFilesForApplication = setOf(
+                "about.json",
+                "${aid.applicationName}.json",
+                "${aid.environmentName}/about.json",
+                "${aid.environmentName}/${aid.applicationName}.json")
+
+        val filesForApplication = requiredFilesForApplication.mapNotNull { fileName -> auroraConfigFiles.find { it.name == fileName } }
+        val overrideFiles = requiredFilesForApplication.mapNotNull { fileName -> overrides.find { it.name == fileName } }
+        val allFiles = filesForApplication + overrideFiles
+
+        val uniqueFileNames = HashSet(allFiles.map { it.name })
+        if (uniqueFileNames.size != requiredFilesForApplication.size) {
+            val missingFiles = requiredFilesForApplication.filter { it !in uniqueFileNames }
+            throw IllegalArgumentException("Unable to merge files because some required files are missing. Missing ${missingFiles}.")
+        }
+        return allFiles
     }
 
     fun updateFile(name: String, contents: Map<String, Any?>): AuroraConfig {

@@ -64,14 +64,18 @@ class AuroraConfigServiceTest extends Specification {
   @Autowired
   AuroraConfigService service
 
+  private static AuroraConfig createAuroraConfig(Map<String, Map<String, Object>> files, Map<String, String> secrets = [:]) {
+    new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value) }, secrets)
+  }
+
   def "Should create an AuroraDeploymentConfig with default tag when type is deploy"() {
     given:
-      List<AuroraConfigFile> files = getQaEbsUsersSampleFiles()
-      files.a("booberdev/about.json", ["type": "deploy", "cluster": "utv"])
+      Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
+      files.put("booberdev/about.json", ["type": "deploy", "cluster": "utv"])
+      AuroraConfig auroraConfig = createAuroraConfig(files)
 
     when:
-      def auroraConfig = new AuroraConfig(files, [:])
-      AuroraDeploymentConfig auroraDc = service.createAuroraDc(auroraConfig, aid, false)
+      AuroraDeploymentConfig auroraDc = service.createAuroraDc(auroraConfig, aid, [], false)
       def auroraDeployDescriptor = (AuroraDeploy) auroraDc.deployDescriptor
 
     then:
@@ -83,10 +87,10 @@ class AuroraConfigServiceTest extends Specification {
     given:
       Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
       files.remove("${APP_NAME}.json" as String)
-      def auroraConfig = new AuroraConfig(files, [:], [:])
+      def auroraConfig = createAuroraConfig(files)
 
     when:
-      service.createAuroraDc(auroraConfig, aid, false)
+      service.createAuroraDc(auroraConfig, aid, [], false)
 
     then:
       thrown(IllegalArgumentException)
@@ -96,10 +100,10 @@ class AuroraConfigServiceTest extends Specification {
 
     given:
       Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
-      def auroraConfig = new AuroraConfig(files, [:], [:])
+      def auroraConfig = createAuroraConfig(files)
 
     when:
-      AuroraDeploymentConfig auroraDc = service.createAuroraDc(auroraConfig, aid, false)
+      AuroraDeploymentConfig auroraDc = service.createAuroraDc(auroraConfig, aid, [], false)
 
     then:
       with(auroraDc) {
@@ -135,11 +139,11 @@ class AuroraConfigServiceTest extends Specification {
 
       files.put("${ENV_NAME}/${APP_NAME}.json" as String, jsonToMap(envAppOverride))
 
-      def auroraConfig = new AuroraConfig(files, [:], ["about.json": ["name": "foobar"]])
+      def auroraConfig = createAuroraConfig(files)
 
     when:
       AuroraDeploymentConfig auroraDc = service.
-          createAuroraDc(auroraConfig, aid, false,)
+          createAuroraDc(auroraConfig, aid, [new AuroraConfigFile("about.json", ["name": "foobar"])], false)
 
     then:
       auroraDc.name == "foobar"
@@ -158,10 +162,10 @@ class AuroraConfigServiceTest extends Specification {
 
       files.put("${ENV_NAME}/${APP_NAME}.json" as String, jsonToMap(envAppOverride))
 
-      def auroraConfig = new AuroraConfig(files, [:], [:])
+      def auroraConfig = createAuroraConfig(files)
 
     when:
-      AuroraDeploymentConfig auroraDc = service.createAuroraDc(auroraConfig, aid, false)
+      AuroraDeploymentConfig auroraDc = service.createAuroraDc(auroraConfig, aid, [], false)
 
     then:
       auroraDc.name == "awesome-app"
@@ -188,10 +192,10 @@ class AuroraConfigServiceTest extends Specification {
       files.put("${APP_NAME}.json" as String, jsonToMap(appOverride))
       files.put("${ENV_NAME}/${APP_NAME}.json" as String, [:])
 
-      def auroraConfig = new AuroraConfig(files, [:], [:])
+      def auroraConfig = createAuroraConfig(files)
 
     when:
-      service.createAuroraDc(auroraConfig, aid, false)
+      service.createAuroraDc(auroraConfig, aid, [], false)
 
     then:
       def ex = thrown(ApplicationConfigException)
