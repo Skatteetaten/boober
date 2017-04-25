@@ -38,7 +38,7 @@ class ProcessService(
                     val node = it as ObjectNode
                     node.put("value", adcParameters[it["name"].textValue()] as String)
                 }
-        val result = openShiftClient.post("processtemplate", namespace = adc.namespace, payload = template)
+        val result = openShiftClient.post("processedtemplate", namespace = adc.namespace, payload = template)
 
         return result.body["objects"].asSequence().toList()
     }
