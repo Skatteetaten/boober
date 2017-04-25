@@ -9,6 +9,7 @@ enum class DeploymentStrategy {
 }
 
 data class AuroraDeploymentConfig(
+        val schemaVersion: String = "v1",
         val affiliation: String,
         val cluster: String,
         val type: TemplateType,
@@ -23,14 +24,15 @@ data class AuroraDeploymentConfig(
         val deploymentStrategy: DeploymentStrategy?,
         val deployDescriptor: DeployDescriptor?
 ) {
+    /**
+     * All the following properties should probably be derived where the OpenShift templates are evaluated.
+     */
     val namespace: String
-        get() = "$affiliation$envName"
+        get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"
 
     val routeName: String?
         get() = "http://$name-$namespace.$cluster.paas.skead.no"
 
-    val schemaVersion: String?
-        get() = "v1"
     val rolebindings: Map<String, String>
         get(): Map<String, String> {
             val userPart = users.map { Pair(it, "User") }.toMap()

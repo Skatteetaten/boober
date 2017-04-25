@@ -55,7 +55,7 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>,
         val mergedJson = mergeAocConfigFiles(allFiles.map { it.contents })
 
         mergedJson.apply {
-            putIfAbsent("envName", "-${aid.environmentName}")
+            putIfAbsent("envName", aid.environmentName)
             putIfAbsent("schemaVersion", "v1")
         }
 
@@ -136,7 +136,4 @@ class AuroraConfigRequiredV1(val config: Map<String, Any?>?, val build: Map<Stri
     @get:NotNull
     @get:Size(min = 1)
     val version = build?.s("VERSION")
-
-    @get:Pattern(message = "Alphanumeric and dashes. Cannot end or start with dash", regexp = "^[a-z0-9][-a-z0-9]*[a-z0-9]$")
-    val namespace = "$affiliation$envName"
 }
