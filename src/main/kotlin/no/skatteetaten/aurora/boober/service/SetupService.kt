@@ -43,7 +43,7 @@ class SetupService(
     fun executeSetup(auroraConfig: AuroraConfig, envs: List<String>, apps: List<String>, dryRun: Boolean = false): List<ApplicationResult> {
 
         val applicationIds: List<ApplicationId> = envs.flatMap { env -> apps.map { app -> ApplicationId(env, app) } }
-        val auroraDcs: List<AuroraDeploymentConfig> = auroraConfigService.createAuroraDcsForApplications(auroraConfig, applicationIds)
+        val auroraDcs: List<AuroraDeploymentConfig> = auroraConfigService.createAuroraDcs(auroraConfig, applicationIds)
 
         return auroraDcs.filter { it.cluster == cluster }
                 .map { applyDeploymentConfig(it, dryRun) }

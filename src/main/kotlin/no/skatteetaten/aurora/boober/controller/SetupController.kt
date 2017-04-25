@@ -15,7 +15,7 @@ class SetupController(val setupService: SetupService, val auroraConfigService: A
     @PutMapping("/deploy")
     fun deploy(@RequestBody cmd: SetupCommand): Response {
 
-        val auroraConfig = auroraConfigService.findAuroraConfigForAffiliation(cmd.affiliation, cmd.overrides)
+        val auroraConfig = auroraConfigService.findAuroraConfig(cmd.affiliation, cmd.overrides)
         val applicationResults: List<ApplicationResult> = setupService.executeSetup(auroraConfig, cmd.envs, cmd.apps)
         return Response(items = applicationResults)
     }

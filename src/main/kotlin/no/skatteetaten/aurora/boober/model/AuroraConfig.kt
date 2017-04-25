@@ -73,7 +73,6 @@ data class AuroraConfig(val auroraConfigFiles: AuroraConfigSources,
         return this.copy(auroraConfigFiles = files)
     }
 
-
     private fun mergeAocConfigFiles(filesForApplication: List<Map<String, Any?>>): MutableMap<String, Any?> {
 
         return filesForApplication.reduce(::createMergeCopy).toMutableMap()
