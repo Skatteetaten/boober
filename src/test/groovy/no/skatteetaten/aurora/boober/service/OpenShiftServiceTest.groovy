@@ -68,7 +68,6 @@ class OpenShiftServiceTest extends Specification {
       AuroraDeploymentConfig auroraDc = auroraConfigParserService.createAuroraDc(auroraConfig, aid, [], false)
       List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc)
 
-      def configMap = generatedObjects.find { it.get("kind").asText() == "ConfigMap" }
       def service = generatedObjects.find { it.get("kind").asText() == "Service" }
       def imageStream = generatedObjects.find { it.get("kind").asText() == "ImageStream" }
       def deploymentConfig = generatedObjects.find { it.get("kind").asText() == "DeploymentConfig" }
@@ -78,7 +77,7 @@ class OpenShiftServiceTest extends Specification {
       def rolebindings = generatedObjects.find { it.get("kind").asText() == "RoleBinding" }
 
     then:
-      generatedObjects.size() == 8
+      generatedObjects.size() == 7
 
 
       compareJson(rolebindings, """
@@ -147,20 +146,6 @@ class OpenShiftServiceTest extends Specification {
         }
       """)
 
-      compareJson(configMap, """
-        {
-          "kind": "ConfigMap",
-          "apiVersion": "v1",
-          "metadata": {
-            "name": "verify-ebs-users",
-            "labels": {
-              "app": "verify-ebs-users",
-              "updatedBy" : "hero",
-              "affiliation": "aos"
-            }
-          }
-        }
-      """)
 
       compareJson(service, """
         {
@@ -277,12 +262,6 @@ class OpenShiftServiceTest extends Specification {
                   {
                     "name": "application-log-volume",
                     "emptyDir": {}
-                  },
-                  {
-                    "name": "config",
-                    "configMap": {
-                      "name": "verify-ebs-users"
-                    }
                   }
                 ],
                 "containers": [
@@ -358,10 +337,6 @@ class OpenShiftServiceTest extends Specification {
                       {
                         "name": "application-log-volume",
                         "mountPath": "/u01/logs"
-                      },
-                      {
-                        "name": "config",
-                        "mountPath": "/u01/config/configmap"
                       }
                     ],
                     "terminationMessagePath": "/dev/termination-log",

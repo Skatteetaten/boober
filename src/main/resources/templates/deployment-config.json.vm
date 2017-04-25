@@ -69,13 +69,16 @@
           {
             "name": "application-log-volume",
             "emptyDir": {}
-          },
+          }
+          #if(${adc.config})
+          ,
           {
             "name": "config",
             "configMap": {
               "name": "${adc.name}"
             }
           }
+          #end
           #if(${adc.secrets})
           ,
             {
@@ -173,11 +176,14 @@
               {
                 "name": "application-log-volume",
                 "mountPath": "/u01/logs"
-              },
+              }
+              #if(${adc.config})
+              ,
               {
                 "name": "config",
                 "mountPath": "/u01/config/configmap"
               }
+              #end
               #if(${adc.secrets})
               ,
                 {

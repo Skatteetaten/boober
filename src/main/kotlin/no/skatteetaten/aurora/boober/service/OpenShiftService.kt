@@ -38,6 +38,7 @@ class OpenShiftService(
         val deployDescriptor = auroraDc.deployDescriptor as AuroraDeploy
 
         val configMap = auroraDc.config?.map { "${it.key}=${it.value}" }?.joinToString(separator = "\\n")
+
         val params = mapOf(
                 "adc" to auroraDc,
                 "configMap" to configMap,
@@ -56,13 +57,13 @@ class OpenShiftService(
                 // ImageStream has been created, by an ImageChangeTrigger. Case in point; don't change the order of
                 // these objects unless you really know whats going on.
                 "deployment-config.json",
-                "configmap.json",
                 "service.json",
-                "rolebinding.json",
-                "imagestream.json"
+                "rolebinding.json"
         )
 
-        //TODO:Hvis configmap er tom her så trenger vi ikke parse dette.
+        auroraDc.config?.let {
+            templatesToProcess.add("configmap.json")
+        }
 
         auroraDc.secrets?.let {
             templatesToProcess.add("secret.json")
@@ -75,6 +76,9 @@ class OpenShiftService(
         if (auroraDc.type == TemplateType.development) {
             templatesToProcess.add("build-config.json")
         }
+
+        templatesToProcess.add("imagestream.json")
+
         return templatesToProcess.map { mergeVelocityTemplate(it, params) }
     }
 
