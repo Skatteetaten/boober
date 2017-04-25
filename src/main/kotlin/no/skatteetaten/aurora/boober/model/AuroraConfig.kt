@@ -37,12 +37,18 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>,
 
     fun getMergedFileForApplication(aid: ApplicationId, overrides: List<AuroraConfigFile>): Map<String, Any?> {
 
-        val filesForApplication = getFilesForApplication(aid, auroraConfigFiles)
-        val overrideFiles = getFilesForApplication(aid, overrides)
+        val requiredFilesForApplication = setOf(
+                "about.json",
+                "${aid.applicationName}.json",
+                "${aid.environmentName}/about.json",
+                "${aid.environmentName}/${aid.applicationName}.json")
+
+        val filesForApplication = requiredFilesForApplication.mapNotNull { fileName -> auroraConfigFiles.find { it.name == fileName } }
+        val overrideFiles = requiredFilesForApplication.mapNotNull { fileName -> overrides.find { it.name == fileName } }
         val allFiles = filesForApplication + overrideFiles
 
         val uniqueFileNames = HashSet(allFiles.map { it.name })
-        if (uniqueFileNames.size != 4) {
+        if (uniqueFileNames.size != requiredFilesForApplication.size) {
             throw IllegalArgumentException("Unable to merge files because some required files are missing. Provided only ${uniqueFileNames}.")
         }
 
@@ -53,20 +59,11 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>,
             putIfAbsent("schemaVersion", "v1")
         }
 
-        assertIsValid(mergedJson, aid.applicationName)
+        validate(mergedJson).takeIf { it.isNotEmpty() }?.let {
+            throw ApplicationConfigException("Config for application ${aid.applicationName} in environment ${aid.environmentName} contains errors", errors = it)
+        }
 
         return mergedJson
-    }
-
-    fun getFilesForApplication(aid: ApplicationId, files: List<AuroraConfigFile>): List<AuroraConfigFile> {
-
-        val requiredFilesForApplication = setOf(
-                "about.json",
-                "${aid.applicationName}.json",
-                "${aid.environmentName}/about.json",
-                "${aid.environmentName}/${aid.applicationName}.json")
-
-        return requiredFilesForApplication.mapNotNull { fileName -> files.find { it.name == fileName } }
     }
 
     fun updateFile(name: String, contents: Map<String, Any?>): AuroraConfig {
@@ -86,7 +83,7 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>,
         return filesForApplication.reduce(::createMergeCopy).toMutableMap()
     }
 
-    internal fun assertIsValid(mergedJson: Map<String, Any?>, applicationName: String) {
+    internal fun validate(mergedJson: Map<String, Any?>): List<String> {
         val validator = Validation.buildDefaultValidatorFactory().validator
 
         val config = AuroraConfigRequiredV1(mergedJson, mergedJson.m("build"))
@@ -102,10 +99,7 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>,
                 errors.add("No secret files with prefix $it")
             }
         }
-
-        if (errors.isNotEmpty()) {
-            throw ApplicationConfigException("Config for application '$applicationName' contains errors", errors = errors)
-        }
+        return errors
     }
 }
 
