@@ -10,10 +10,14 @@ import javax.validation.constraints.NotNull
 import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
 
-data class AuroraConfigFile(val name: String, val contents: Map<String, Any?>)
+typealias FileName = String
+typealias JsonData = Map<String, Any?>
+typealias TextFiles = Map<FileName, String>
+
+data class AuroraConfigFile(val name: FileName, val contents: JsonData)
 
 data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>,
-                        val secrets: Map<String, String> = mapOf()) {
+                        val secrets: TextFiles = mapOf()) {
 
     fun getApplicationIds(env: String = "", app: String = ""): List<ApplicationId> {
 

@@ -17,7 +17,7 @@ class AuroraConfigController(val auroraConfigService: AuroraConfigService) {
     @GetMapping("/{affiliation}")
     fun get(@PathVariable affiliation: String): Response {
 
-        return Response(items = listOf(auroraConfigService.findAuroraConfig(affiliation)))
+        return Response(items = listOf(auroraConfigService.findAuroraConfig(affiliation)).map(::fromAuroraConfig))
     }
 
     @PutMapping("/{affiliation}/{fileName}")

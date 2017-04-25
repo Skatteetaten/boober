@@ -1,12 +1,13 @@
 package no.skatteetaten.aurora.boober.controller
 
-import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.SetupParams
 
+typealias JsonDataFiles = Map<FileName, JsonData>
+
 data class AuroraConfigPayload(
-        val files: Map<String, Map<String, Any?>> = mapOf(),
-        val secrets: Map<String, String> = mapOf()
+        val files: JsonDataFiles = mapOf(),
+        val secrets: TextFiles = mapOf()
 ) {
     fun toAuroraConfig(): AuroraConfig {
         val auroraConfigFiles = files.map { AuroraConfigFile(it.key, it.value) }
@@ -14,13 +15,20 @@ data class AuroraConfigPayload(
     }
 }
 
+fun fromAuroraConfig(auroraConfig: AuroraConfig): AuroraConfigPayload {
+
+    val files: JsonDataFiles = auroraConfig.auroraConfigFiles.associate { it.name to it.contents }
+    return AuroraConfigPayload(files, auroraConfig.secrets)
+}
+
 data class SetupParamsPayload(
         val envs: List<String> = listOf(),
         val apps: List<String> = listOf(),
-        val overrides: Map<String, Map<String, Any?>> = mapOf(),
+        val overrides: JsonDataFiles = mapOf(),
         val dryRun: Boolean = false
 ) {
     fun toSetupParams(): SetupParams {
+
         return SetupParams(envs, apps, overrides.map { AuroraConfigFile(it.key, it.value) }, dryRun)
     }
 }
