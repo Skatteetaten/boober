@@ -26,7 +26,7 @@ class AuroraConfigService(
 
         validate(auroraConfig)
         val jsonFiles: Map<String, String> = auroraConfig.auroraConfigFiles.map {
-            it.key to mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it.value)
+            it.name to mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it.contents)
         }.toMap()
 
         val encryptedSecrets = auroraConfig.secrets.map {
@@ -36,26 +36,40 @@ class AuroraConfigService(
         gitService.saveFilesAndClose(affiliation, jsonFiles + encryptedSecrets)
     }
 
-    fun findAuroraConfigForAffiliation(affiliation: String): AuroraConfig {
+    fun findAuroraConfig(affiliation: String): AuroraConfig {
 
-        return withAuroraConfigForAffiliation(affiliation, false)
+        return withAuroraConfig(affiliation, false, function = { it })
     }
 
+    fun createAuroraConfigFromFiles(filesForAffiliation: Map<String, File>): AuroraConfig {
 
-    fun withAuroraConfigForAffiliation(affiliation: String, commitChanges: Boolean = true, function: (AuroraConfig) -> Unit = {}): AuroraConfig {
+        val secretFiles: Map<String, String> = filesForAffiliation
+                .filter { it.key.startsWith(SECRET_FOLDER) }
+                .map { it.key.removePrefix("$SECRET_FOLDER/") to encryptionService.decrypt(it.value.readText()) }.toMap()
+
+        val auroraConfigFiles = filesForAffiliation
+                .filter { !it.key.startsWith(SECRET_FOLDER) }
+                .map { AuroraConfigFile(it.key, mapper.readValue(it.value, Map::class.java) as Map<String, Any?>) }
+
+        return AuroraConfig(auroraConfigFiles = auroraConfigFiles, secrets = secretFiles)
+    }
+
+    fun withAuroraConfig(affiliation: String,
+                         commitChanges: Boolean = true,
+                         function: (AuroraConfig) -> AuroraConfig = { it -> it }): AuroraConfig {
 
         val startCheckout = System.currentTimeMillis()
         val repo = gitService.checkoutRepoForAffiliation(affiliation)
-        logger.debug("Spent {} millis checkouting out gir repository", System.currentTimeMillis() - startCheckout)
+        logger.debug("Spent {} millis checking out gir repository", System.currentTimeMillis() - startCheckout)
 
         val filesForAffiliation: Map<String, File> = gitService.getAllFilesInRepo(repo)
         val auroraConfig = createAuroraConfigFromFiles(filesForAffiliation)
 
-        function(auroraConfig)
+        val newAuroraConfig = function(auroraConfig)
 
         if (commitChanges) {
             measureTimeMillis {
-                save(affiliation, auroraConfig)
+                save(affiliation, newAuroraConfig)
             }.let { logger.debug("Spent {} millis committing and pushing to git", it) }
         } else {
             measureTimeMillis {
@@ -63,14 +77,17 @@ class AuroraConfigService(
             }.let { logger.debug("Spent {} millis closing git repository", it) }
         }
 
-        return auroraConfig
+        return newAuroraConfig
     }
 
-    fun createAuroraDcsForApplications(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>, validateOpenShiftReferences: Boolean = true): List<AuroraDeploymentConfig> {
+    fun createAuroraDcs(auroraConfig: AuroraConfig,
+                        applicationIds: List<ApplicationId>,
+                        overrides: List<AuroraConfigFile> = listOf(),
+                        validateOpenShiftReferences: Boolean = true): List<AuroraDeploymentConfig> {
 
         return applicationIds.map { aid ->
             val result: Result<AuroraDeploymentConfig?, Error?> = try {
-                Result(value = createAuroraDcForApplication(auroraConfig, aid, validateOpenShiftReferences))
+                Result(value = createAuroraDc(auroraConfig, aid, overrides, validateOpenShiftReferences))
             } catch (e: ApplicationConfigException) {
                 Result(error = Error(aid, e.errors))
             }
@@ -80,22 +97,12 @@ class AuroraConfigService(
         }
     }
 
-    fun createAuroraConfigFromFiles(filesForAffiliation: Map<String, File>): AuroraConfig {
+    fun createAuroraDc(auroraConfig: AuroraConfig,
+                       aid: ApplicationId,
+                       overrides: List<AuroraConfigFile> = listOf(),
+                       validateOpenShiftReferences: Boolean = true): AuroraDeploymentConfig {
 
-        val secretFiles: Map<String, String> = filesForAffiliation
-                .filter { it.key.startsWith(SECRET_FOLDER) }
-                .map { it.key.removePrefix("$SECRET_FOLDER/") to encryptionService.decrypt(it.value.readText()) }.toMap()
-
-        val auroraConfigFiles: Map<String, Map<String, Any?>> = filesForAffiliation
-                .filter { !it.key.startsWith(SECRET_FOLDER) }
-                .map { it.key to mapper.readValue(it.value, Map::class.java) as Map<String, Any?> }.toMap()
-
-        return AuroraConfig(auroraConfigFiles = auroraConfigFiles, secrets = secretFiles)
-    }
-
-    fun createAuroraDcForApplication(auroraConfig: AuroraConfig, aid: ApplicationId, validateOpenShiftReferences: Boolean = true): AuroraDeploymentConfig {
-
-        val mergedFile: Map<String, Any?> = auroraConfig.getMergedFileForApplication(aid)
+        val mergedFile: Map<String, Any?> = auroraConfig.getMergedFileForApplication(aid, overrides)
         val secrets: Map<String, String>? = mergedFile.s("secretFolder")?.let { auroraConfig.getSecrets(it) }
 
         val type = mergedFile.s("type").let { TemplateType.valueOf(it!!) }
@@ -209,7 +216,7 @@ class AuroraConfigService(
     private fun validate(auroraConfig: AuroraConfig) {
         val appIds = auroraConfig.getApplicationIds()
         // Verify that all AuroraDeploymentConfigs represented by the AuroraConfig are valid
-        createAuroraDcsForApplications(auroraConfig, appIds)
+        createAuroraDcs(auroraConfig, appIds)
     }
 }
 

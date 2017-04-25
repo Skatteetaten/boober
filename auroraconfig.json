@@ -1,5 +1,5 @@
 {
-  "auroraConfigFiles": {
+  "files": {
     "about.json": {
       "groups": "APP_PaaS_drift APP_PaaS_utv",
       "affiliation": "paas",
@@ -29,7 +29,7 @@
         "DATABASE": "referanseapp"
       },
       "config": {
-        "foo2": "bar"
+        "foo2": "bar2"
       }
     },
     "boober/about.json": {

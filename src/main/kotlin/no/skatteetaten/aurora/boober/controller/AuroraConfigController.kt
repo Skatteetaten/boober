@@ -9,25 +9,22 @@ import org.springframework.web.bind.annotation.*
 class AuroraConfigController(val auroraConfigService: AuroraConfigService) {
 
     @PutMapping("/{affiliation}")
-    fun save(@PathVariable affiliation: String, @RequestBody auroraConfig: AuroraConfig) {
+    fun save(@PathVariable affiliation: String, @RequestBody payload: AuroraConfigPayload) {
 
-        auroraConfigService.withAuroraConfigForAffiliation(affiliation, true, {
-            it.replaceFiles(auroraConfig.auroraConfigFiles)
-            it.replaceSecrets(auroraConfig.secrets)
-        })
+        auroraConfigService.save(affiliation, payload.toAuroraConfig())
     }
 
     @GetMapping("/{affiliation}")
     fun get(@PathVariable affiliation: String): Response {
 
-        return Response(items = listOf(auroraConfigService.findAuroraConfigForAffiliation(affiliation)))
+        return Response(items = listOf(auroraConfigService.findAuroraConfig(affiliation)).map(::fromAuroraConfig))
     }
 
     @PutMapping("/{affiliation}/{fileName}")
     fun updateAuroraConfigFile(@PathVariable affiliation: String, @PathVariable fileName: String,
                                @RequestBody fileContents: Map<String, Any?>) {
 
-        auroraConfigService.withAuroraConfigForAffiliation(affiliation, true, { auroraConfig: AuroraConfig ->
+        auroraConfigService.withAuroraConfig(affiliation, true, { auroraConfig: AuroraConfig ->
             auroraConfig.updateFile(fileName, fileContents)
         })
     }

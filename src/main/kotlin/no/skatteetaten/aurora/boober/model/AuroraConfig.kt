@@ -10,20 +10,19 @@ import javax.validation.constraints.NotNull
 import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
 
-class AuroraConfig(auroraConfigFiles: Map<String, Map<String, Any?>>, secrets: Map<String, String> = mapOf()) {
+typealias FileName = String
+typealias JsonData = Map<String, Any?>
+typealias TextFiles = Map<FileName, String>
 
-    val auroraConfigFiles: MutableMap<String, Map<String, Any?>>
-    val secrets: MutableMap<String, String>
+data class AuroraConfigFile(val name: FileName, val contents: JsonData)
 
-    init {
-        this.auroraConfigFiles = HashMap(auroraConfigFiles)
-        this.secrets = HashMap(secrets)
-    }
+data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>,
+                        val secrets: TextFiles = mapOf()) {
 
     fun getApplicationIds(env: String = "", app: String = ""): List<ApplicationId> {
 
         return auroraConfigFiles
-                .map { it.key.removeSuffix(".json") }
+                .map { it.name.removeSuffix(".json") }
                 .filter { it.contains("/") && !it.contains("about") }
                 .filter { if (env.isNullOrBlank()) true else it.startsWith(env) }
                 .filter { if (app.isNullOrBlank()) true else it.endsWith(app) }
@@ -36,21 +35,25 @@ class AuroraConfig(auroraConfigFiles: Map<String, Map<String, Any?>>, secrets: M
         return secrets.filter { it.key.startsWith(prefix) }.mapKeys { it.key.removePrefix(prefix) }
     }
 
-    fun getMergedFileForApplication(aid: ApplicationId): Map<String, Any?> {
-        val filesForApplication = getFilesForApplication(aid)
-        val mergedJson = mergeAocConfigFiles(filesForApplication)
+    fun getMergedFileForApplication(aid: ApplicationId, overrides: List<AuroraConfigFile>): Map<String, Any?> {
+
+        val allFiles = getFilesForApplication(aid, overrides)
+
+        val mergedJson = mergeAocConfigFiles(allFiles.map { it.contents })
 
         mergedJson.apply {
             putIfAbsent("envName", aid.environmentName)
             putIfAbsent("schemaVersion", "v1")
         }
 
-        assertIsValid(mergedJson, aid.applicationName)
+        validate(mergedJson).takeIf { it.isNotEmpty() }?.let {
+            throw ApplicationConfigException("Config for application ${aid.applicationName} in environment ${aid.environmentName} contains errors", errors = it)
+        }
 
         return mergedJson
     }
 
-    fun getFilesForApplication(aid: ApplicationId): List<Map<String, Any?>> {
+    fun getFilesForApplication(aid: ApplicationId, overrides: List<AuroraConfigFile> = listOf()): List<AuroraConfigFile> {
 
         val requiredFilesForApplication = setOf(
                 "about.json",
@@ -58,30 +61,36 @@ class AuroraConfig(auroraConfigFiles: Map<String, Map<String, Any?>>, secrets: M
                 "${aid.environmentName}/about.json",
                 "${aid.environmentName}/${aid.applicationName}.json")
 
-        val filesForApplication: List<Map<String, Any?>> = requiredFilesForApplication.mapNotNull { auroraConfigFiles[it] }
+        val filesForApplication = requiredFilesForApplication.mapNotNull { fileName -> auroraConfigFiles.find { it.name == fileName } }
+        val overrideFiles = requiredFilesForApplication.mapNotNull { fileName -> overrides.find { it.name == fileName } }
+        val allFiles = filesForApplication + overrideFiles
 
-        if (filesForApplication.size != requiredFilesForApplication.size) {
-            val missingFiles = requiredFilesForApplication.filter { it !in auroraConfigFiles.keys }
-            throw IllegalArgumentException("Unable to execute setup command. Required files missing => $missingFiles")
+        val uniqueFileNames = HashSet(allFiles.map { it.name })
+        if (uniqueFileNames.size != requiredFilesForApplication.size) {
+            val missingFiles = requiredFilesForApplication.filter { it !in uniqueFileNames }
+            throw IllegalArgumentException("Unable to merge files because some required files are missing. Missing ${missingFiles}.")
         }
-
-        return filesForApplication
+        return allFiles
     }
 
-    fun updateFile(fileName: String, fileContents: Map<String, Any?>) {
-
-        auroraConfigFiles[fileName] = fileContents
+    fun updateFile(name: String, contents: Map<String, Any?>): AuroraConfig {
+        val files = auroraConfigFiles.toMutableList()
+        val indexOfFileToUpdate = files.indexOfFirst { it.name == name }
+        val newAuroraConfigFile = AuroraConfigFile(name, contents)
+        if (indexOfFileToUpdate == -1) {
+            files.add(newAuroraConfigFile)
+        } else {
+            files[indexOfFileToUpdate] = newAuroraConfigFile
+        }
+        return this.copy(auroraConfigFiles = files)
     }
-
-
-
 
     private fun mergeAocConfigFiles(filesForApplication: List<Map<String, Any?>>): MutableMap<String, Any?> {
 
         return filesForApplication.reduce(::createMergeCopy).toMutableMap()
     }
 
-    internal fun assertIsValid(mergedJson: Map<String, Any?>, applicationName: String) {
+    internal fun validate(mergedJson: Map<String, Any?>): List<String> {
         val validator = Validation.buildDefaultValidatorFactory().validator
 
         val config = AuroraConfigRequiredV1(mergedJson, mergedJson.m("build"))
@@ -97,23 +106,8 @@ class AuroraConfig(auroraConfigFiles: Map<String, Map<String, Any?>>, secrets: M
                 errors.add("No secret files with prefix $it")
             }
         }
-
-        if (errors.isNotEmpty()) {
-            throw ApplicationConfigException("Config for application '$applicationName' contains errors", errors = errors)
-        }
+        return errors
     }
-
-    fun replaceFiles(auroraConfigfiles: MutableMap<String, Map<String, Any?>>) {
-        this.auroraConfigFiles.clear()
-        this.auroraConfigFiles.putAll(auroraConfigfiles)
-    }
-
-
-    fun  replaceSecrets(secrets: Map<String, String>) {
-        this.secrets.clear()
-        this.secrets.putAll(secrets)
-    }
-
 }
 
 class AuroraConfigRequiredV1(val config: Map<String, Any?>?, val build: Map<String, Any?>?) {
@@ -149,7 +143,4 @@ class AuroraConfigRequiredV1(val config: Map<String, Any?>?, val build: Map<Stri
     @get:NotNull
     @get:Size(min = 1)
     val version = build?.s("VERSION")
-
-    @get:Pattern(message = "Alphanumeric and dashes. Cannot end or start with dash", regexp = "^[a-z0-9][-a-z0-9]*[a-z0-9]$")
-    val namespace = "$affiliation-$envName"
 }

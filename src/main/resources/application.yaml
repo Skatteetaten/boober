@@ -6,8 +6,7 @@ info:
 
 openshift:
     url: https://utv-master.paas.skead.no:8443
-
-
+    cluster: utv
 
 boober:
   encrypt:

@@ -1,5 +1,10 @@
 {
   "apps": ["referanse"],
   "envs": ["boober"],
-  "affiliation": "paas"
+  "affiliation": "paas",
+  "overrides": {
+    "about.json": {
+      "envName": "-boooyaaahh"
+    }
+  }
 }
