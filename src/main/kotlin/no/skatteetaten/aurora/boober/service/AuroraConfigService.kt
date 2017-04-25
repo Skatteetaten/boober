@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.controller.AuroraConfigSources
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.AuroraDeploy.Prometheus
 import no.skatteetaten.aurora.boober.model.DeploymentStrategy.recreate
@@ -27,7 +26,7 @@ class AuroraConfigService(
 
         validate(auroraConfig)
         val jsonFiles: Map<String, String> = auroraConfig.auroraConfigFiles.map {
-            it.key to mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it.value)
+            it.name to mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it.contents)
         }.toMap()
 
         val encryptedSecrets = auroraConfig.secrets.map {
@@ -37,11 +36,9 @@ class AuroraConfigService(
         gitService.saveFilesAndClose(affiliation, jsonFiles + encryptedSecrets)
     }
 
-    fun findAuroraConfig(affiliation: String, overrides: AuroraConfigSources = mapOf()): AuroraConfig {
+    fun findAuroraConfig(affiliation: String): AuroraConfig {
 
-        return withAuroraConfig(affiliation, function = {
-            it.copy(overrides = overrides)
-        })
+        return withAuroraConfig(affiliation, false, function = { it })
     }
 
     fun createAuroraConfigFromFiles(filesForAffiliation: Map<String, File>): AuroraConfig {
@@ -50,9 +47,9 @@ class AuroraConfigService(
                 .filter { it.key.startsWith(SECRET_FOLDER) }
                 .map { it.key.removePrefix("$SECRET_FOLDER/") to encryptionService.decrypt(it.value.readText()) }.toMap()
 
-        val auroraConfigFiles: Map<String, Map<String, Any?>> = filesForAffiliation
+        val auroraConfigFiles = filesForAffiliation
                 .filter { !it.key.startsWith(SECRET_FOLDER) }
-                .map { it.key to mapper.readValue(it.value, Map::class.java) as Map<String, Any?> }.toMap()
+                .map { AuroraConfigFile(it.key, mapper.readValue(it.value, Map::class.java) as Map<String, Any?>) }
 
         return AuroraConfig(auroraConfigFiles = auroraConfigFiles, secrets = secretFiles)
     }
@@ -85,11 +82,12 @@ class AuroraConfigService(
 
     fun createAuroraDcs(auroraConfig: AuroraConfig,
                         applicationIds: List<ApplicationId>,
+                        overrides: List<AuroraConfigFile> = listOf(),
                         validateOpenShiftReferences: Boolean = true): List<AuroraDeploymentConfig> {
 
         return applicationIds.map { aid ->
             val result: Result<AuroraDeploymentConfig?, Error?> = try {
-                Result(value = createAuroraDc(auroraConfig, aid, validateOpenShiftReferences))
+                Result(value = createAuroraDc(auroraConfig, aid, overrides, validateOpenShiftReferences))
             } catch (e: ApplicationConfigException) {
                 Result(error = Error(aid, e.errors))
             }
@@ -101,9 +99,10 @@ class AuroraConfigService(
 
     fun createAuroraDc(auroraConfig: AuroraConfig,
                        aid: ApplicationId,
+                       overrides: List<AuroraConfigFile> = listOf(),
                        validateOpenShiftReferences: Boolean = true): AuroraDeploymentConfig {
 
-        val mergedFile: Map<String, Any?> = auroraConfig.getMergedFileForApplication(aid)
+        val mergedFile: Map<String, Any?> = auroraConfig.getMergedFileForApplication(aid, overrides)
         val secrets: Map<String, String>? = mergedFile.s("secretFolder")?.let { auroraConfig.getSecrets(it) }
 
         val type = mergedFile.s("type").let { TemplateType.valueOf(it!!) }

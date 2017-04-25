@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.model
 
-import no.skatteetaten.aurora.boober.controller.AuroraConfigSources
 import no.skatteetaten.aurora.boober.service.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.ApplicationId
 import no.skatteetaten.aurora.boober.service.m
@@ -11,17 +10,15 @@ import javax.validation.constraints.NotNull
 import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
 
-//jeg liker ikke at overrides er her, for de er jo ikke noe vi skal lagre ned.
-//kan vi lage et lag til med abstraksjon som har en AuroraConfig og overrides og at den har relevante metoder?
-data class AuroraConfig(val auroraConfigFiles: AuroraConfigSources,
-                        val secrets: Map<String, String> = mapOf(),
-                        val overrides: AuroraConfigSources = mapOf()) {
+data class AuroraConfigFile(val name: String, val contents: Map<String, Any?>)
 
+data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>,
+                        val secrets: Map<String, String> = mapOf()) {
 
     fun getApplicationIds(env: String = "", app: String = ""): List<ApplicationId> {
 
         return auroraConfigFiles
-                .map { it.key.removeSuffix(".json") }
+                .map { it.name.removeSuffix(".json") }
                 .filter { it.contains("/") && !it.contains("about") }
                 .filter { if (env.isNullOrBlank()) true else it.startsWith(env) }
                 .filter { if (app.isNullOrBlank()) true else it.endsWith(app) }
@@ -34,9 +31,18 @@ data class AuroraConfig(val auroraConfigFiles: AuroraConfigSources,
         return secrets.filter { it.key.startsWith(prefix) }.mapKeys { it.key.removePrefix(prefix) }
     }
 
-    fun getMergedFileForApplication(aid: ApplicationId): Map<String, Any?> {
-        val filesForApplication = getFilesForApplication(aid)
-        val mergedJson = mergeAocConfigFiles(filesForApplication)
+    fun getMergedFileForApplication(aid: ApplicationId, overrides: List<AuroraConfigFile>): Map<String, Any?> {
+
+        val filesForApplication = getFilesForApplication(aid, auroraConfigFiles)
+        val overrideFiles = getFilesForApplication(aid, overrides)
+        val allFiles = filesForApplication + overrideFiles
+
+        val uniqueFileNames = HashSet(allFiles.map { it.name })
+        if (uniqueFileNames.size != 4) {
+            throw IllegalArgumentException("Unable to merge files because some required files are missing. Provided only ${uniqueFileNames}.")
+        }
+
+        val mergedJson = mergeAocConfigFiles(allFiles.map { it.contents })
 
         mergedJson.apply {
             putIfAbsent("envName", "-${aid.environmentName}")
@@ -48,7 +54,7 @@ data class AuroraConfig(val auroraConfigFiles: AuroraConfigSources,
         return mergedJson
     }
 
-    fun getFilesForApplication(aid: ApplicationId): List<Map<String, Any?>> {
+    fun getFilesForApplication(aid: ApplicationId, files: List<AuroraConfigFile>): List<AuroraConfigFile> {
 
         val requiredFilesForApplication = setOf(
                 "about.json",
@@ -56,20 +62,18 @@ data class AuroraConfig(val auroraConfigFiles: AuroraConfigSources,
                 "${aid.environmentName}/about.json",
                 "${aid.environmentName}/${aid.applicationName}.json")
 
-        val filesForApplication: List<Map<String, Any?>> = requiredFilesForApplication.mapNotNull { auroraConfigFiles[it] }
-
-        if (filesForApplication.size != requiredFilesForApplication.size) {
-            val missingFiles = requiredFilesForApplication.filter { it !in auroraConfigFiles.keys }
-            throw IllegalArgumentException("Unable to execute setup command. Required files missing => $missingFiles")
-        }
-
-        val overridedFiles = requiredFilesForApplication.mapNotNull { overrides[it] }
-        return filesForApplication + overridedFiles
+        return requiredFilesForApplication.mapNotNull { fileName -> files.find { it.name == fileName } }
     }
 
-    fun updateFile(fileName: String, fileContents: Map<String, Any?>): AuroraConfig {
-        val files = auroraConfigFiles.toMutableMap()
-        files[fileName] = fileContents
+    fun updateFile(name: String, contents: Map<String, Any?>): AuroraConfig {
+        val files = auroraConfigFiles.toMutableList()
+        val indexOfFileToUpdate = files.indexOfFirst { it.name == name }
+        val newAuroraConfigFile = AuroraConfigFile(name, contents)
+        if (indexOfFileToUpdate == -1) {
+            files.add(newAuroraConfigFile)
+        } else {
+            files[indexOfFileToUpdate] = newAuroraConfigFile
+        }
         return this.copy(auroraConfigFiles = files)
     }
 

@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.*
 class AuroraConfigController(val auroraConfigService: AuroraConfigService) {
 
     @PutMapping("/{affiliation}")
-    fun save(@PathVariable affiliation: String, @RequestBody auroraConfig: AuroraConfig) {
+    fun save(@PathVariable affiliation: String, @RequestBody payload: AuroraConfigPayload) {
 
-        auroraConfigService.save(affiliation, auroraConfig)
+        auroraConfigService.save(affiliation, payload.toAuroraConfig())
     }
 
     @GetMapping("/{affiliation}")

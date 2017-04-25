@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration
 
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import no.skatteetaten.aurora.boober.model.TemplateType
@@ -65,11 +66,11 @@ class AuroraConfigServiceTest extends Specification {
 
   def "Should create an AuroraDeploymentConfig with default tag when type is deploy"() {
     given:
-      Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
-      files.put("booberdev/about.json", ["type": "deploy", "cluster": "utv"])
+      List<AuroraConfigFile> files = getQaEbsUsersSampleFiles()
+      files.a("booberdev/about.json", ["type": "deploy", "cluster": "utv"])
 
     when:
-      def auroraConfig = new AuroraConfig(files, [:], [:])
+      def auroraConfig = new AuroraConfig(files, [:])
       AuroraDeploymentConfig auroraDc = service.createAuroraDc(auroraConfig, aid, false)
       def auroraDeployDescriptor = (AuroraDeploy) auroraDc.deployDescriptor
 
