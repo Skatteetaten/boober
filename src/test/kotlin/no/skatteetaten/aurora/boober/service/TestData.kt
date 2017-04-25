@@ -32,3 +32,30 @@ val auroraDcDevelopment = AuroraDeploymentConfig(
         secrets = emptyMap(),
         extraTags = ""
 )
+
+/*
+fun generateProccessADC(template: Map<String, Any?>) =
+        AuroraDeploymentConfig(
+                affiliation = "aurora",
+                cluster = "utv",
+                type = TemplateType.process,
+                deployDescriptor = TemplateDeploy(
+                        templateFile = template,
+                        parameters = mapOf(
+                                "SPLUNK_INDEX" to " safir-test",
+                                "APP_NAME" to "tvinn",
+                                "FEED_NAME" to "tolldeklarasjon",
+                                "DOMAIN_NAME" to "localhost",
+                                "DB_NAME" to "tvinn",
+                                "AFFILIATION" to "safir"
+                        )
+                ),
+                envName = "boober-unit-test",
+                groups = setOf("APP_PaaS_drift", "APP_PaaS_utv"),
+                name = "dev-test",
+                users = setOf("foo"),
+                secrets = emptyMap(),
+                config = emptyMap(),
+                deploymentStrategy = DeploymentStrategy.rolling,
+                replicas = 1
+        )*/
