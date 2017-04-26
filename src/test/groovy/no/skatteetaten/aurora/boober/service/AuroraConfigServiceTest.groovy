@@ -23,6 +23,7 @@ import spock.mock.DetachedMockFactory
     AuroraConfigService,
     GitService,
     OpenShiftClient,
+    EncryptionConfig,
     EncryptionService,
     OpenshiftResourceClient
 ])

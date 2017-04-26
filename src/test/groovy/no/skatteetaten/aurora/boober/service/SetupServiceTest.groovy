@@ -19,6 +19,7 @@ import spock.mock.DetachedMockFactory
     GitService,
     AuroraConfigService,
     OpenShiftService,
+    EncryptionConfig,
     EncryptionService,
     Config])
 class SetupServiceTest extends Specification {
