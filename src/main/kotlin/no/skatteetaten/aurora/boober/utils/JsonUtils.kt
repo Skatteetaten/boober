@@ -18,8 +18,14 @@ fun copyJsonProperties(targetNode: MutableMap<String, Any?>, sourceNode: Map<Str
     sourceNode.forEach { (key, value) ->
         when (value) {
             is Map<*, *> -> {
-                val targetProperty = targetNode[key] as MutableMap<String, Any?>?
-                targetProperty?.putAll(value as Map<String, Any?>) ?: targetNode.put(key, value)
+                val targetChildNode = copyChildNode(key, targetNode)
+
+                if (targetChildNode != null) {
+                    targetChildNode.putAll(value as Map<String, Any?>)
+                    targetNode.replace(key, targetChildNode)
+                } else {
+                    targetNode.put(key, value)
+                }
             }
             else -> {
                 targetNode.put(key, value)
@@ -28,6 +34,11 @@ fun copyJsonProperties(targetNode: MutableMap<String, Any?>, sourceNode: Map<Str
     }
 
     return targetNode
+}
+
+private fun copyChildNode(key: String, targetNode: MutableMap<String, Any?>): HashMap<String, Any?>? {
+    return if (targetNode.containsKey(key)) HashMap(targetNode[key] as MutableMap<String, Any?>)
+    else null
 }
 
 fun JsonNode.updateField(source: JsonNode, root: String, field: String, required: Boolean = false) {
