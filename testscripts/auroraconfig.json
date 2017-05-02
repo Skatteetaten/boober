@@ -12,7 +12,7 @@
       }
     },
     "referanse.json": {
-      "name": "referansedev",
+      "name": "referanse",
       "replicas": 1,
       "flags": [
         "cert"
@@ -39,7 +39,7 @@
     }
   },
   "secrets": {
-    "latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg==",
-    "1.2.3.properties": "Rk9PPU9IWUVBSApCQVI9Rk9PQkFSCg=="
+    "/home/user/referanse/latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg==",
+    "/home/user/referanse/1.2.3.properties": "Rk9PPU9IWUVBSApCQVI9Rk9PQkFSCg=="
   }
 }

@@ -30,7 +30,14 @@ class AuroraConfigService(
         }.toMap()
 
         val encryptedSecrets = auroraConfig.secrets.map {
-            "$SECRET_FOLDER/${it.key}" to encryptionService.encrypt(it.value)
+            val secretPath = it.key.split("/")
+                    .takeIf { it.size >= 2 }
+                    ?.let { it.subList(it.size - 2, it.size) }
+                    ?.joinToString("/") ?: it.key
+
+
+            val secretFolder = "$SECRET_FOLDER/$secretPath".replace("//", "/")
+            secretFolder to encryptionService.encrypt(it.value)
         }.toMap()
 
         gitService.saveFilesAndClose(affiliation, jsonFiles + encryptedSecrets)
