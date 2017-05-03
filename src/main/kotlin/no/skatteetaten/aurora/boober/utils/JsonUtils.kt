@@ -2,6 +2,9 @@ package no.skatteetaten.aurora.boober.utils
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import no.skatteetaten.aurora.boober.model.AuroraConfigExtractor
+import no.skatteetaten.aurora.boober.model.AuroraConfigField
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 
 
 /**
@@ -86,3 +89,36 @@ fun JsonNode?.length(length: Int, message: String): Exception? {
     return null
 }
 
+
+fun Map<String, AuroraConfigField>.extract(name: String): String {
+    return this.extract<String>(name, JsonNode::textValue)
+}
+
+fun <T> Map<String, AuroraConfigField>.extract(name: String, mapper: (JsonNode) -> T): T {
+
+    if (!this.containsKey(name)) throw IllegalArgumentException("$name is not set")
+
+    return mapper(this.get(name)!!.value)
+}
+
+fun List<AuroraConfigFile>.findConfigExtractors(): List<AuroraConfigExtractor> {
+
+    //find all config fieldNames in all files
+    val configFiles = this.flatMap {
+        it.contents.fieldNames().asSequence().toList()
+    }.toSet()
+
+
+    val configKeys: Map<String, Set<String>> = configFiles.map { configFileName ->
+        //find all unique keys in a configFile
+        val configKeys = this.flatMap { ac ->
+            ac.contents.get(configFileName)?.fieldNames()?.asSequence()?.toList() ?: emptyList()
+        }.toSet()
+
+        configFileName to configKeys
+    }.toMap()
+
+    return configKeys.map {
+        AuroraConfigExtractor("config/${it.key}/${it.value}", "/config/$it/${it.value}")
+    }
+}

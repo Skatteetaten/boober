@@ -1,12 +1,12 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.model.*
-import no.skatteetaten.aurora.boober.model.DeploymentStrategy.recreate
-import no.skatteetaten.aurora.boober.model.DeploymentStrategy.rolling
-import no.skatteetaten.aurora.boober.utils.*
+import no.skatteetaten.aurora.boober.utils.Result
+import no.skatteetaten.aurora.boober.utils.extract
+import no.skatteetaten.aurora.boober.utils.findConfigExtractors
+import no.skatteetaten.aurora.boober.utils.orElseThrow
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
@@ -49,7 +49,7 @@ class AuroraConfigService(
 
         val auroraConfigFiles = filesForAffiliation
                 .filter { !it.key.startsWith(SECRET_FOLDER) }
-                .map { AuroraConfigFile(it.key, mapper.readValue(it.value, Map::class.java) as Map<String, Any?>) }
+                .map { AuroraConfigFile(it.key, mapper.readValue(it.value)) }
 
         return AuroraConfig(auroraConfigFiles = auroraConfigFiles, secrets = secretFiles)
     }
@@ -98,23 +98,6 @@ class AuroraConfigService(
     }
 
 
-    fun mergeFiles(files: List<AuroraConfigFile>, paths: List<String>): Map<String, AuroraConfigField> {
-
-
-        return paths.map { path ->
-            files.mapNotNull {
-                //TODO:Bort med denne etterhvert
-                val json: JsonNode = mapper.convertValue(it.contents)
-                val value = json.at(path)
-                if (value.isMissingNode) {
-                    null
-                } else {
-                    path to AuroraConfigField(path, value, it.configName)
-                }
-            }.first()
-        }.toMap()
-    }
-
 
     fun createAuroraDc(auroraConfig: AuroraConfig,
                        aid: ApplicationId,
@@ -122,59 +105,107 @@ class AuroraConfigService(
                        validateOpenShiftReferences: Boolean = true): AuroraDeploymentConfig {
         val allFiles = auroraConfig.getFilesForApplication(aid, overrides).reversed()
 
-        val extractors = listOf(
-                AuroraConfigExtractor("/type", { it.required("Type is required") }),
-                AuroraConfigExtractor("/artifactId", { it.length(50, "ArtifactId must be set and be shorter then 50 characters") }),
-                AuroraConfigExtractor("/version", { it.notBlank("Version must be set") }),
-                AuroraConfigExtractor("/groupIp", { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
-                AuroraConfigExtractor("/name"),
-                AuroraConfigExtractor("/cluster", { it.notBlank("Cluster must be set") })
-        )
+        val configExtractors = allFiles.findConfigExtractors()
 
-        val configFields = mergeFiles(allFiles, extractors.map { it.path })
+        val mapper = AuroraDeploymentConfigMapperV1()
 
-        val errors = validate2(configFields, extractors).toMutableList()
+        val extractors = mapper.extractors + configExtractors
+        val fields = extractors.extractFrom(allFiles)
 
+        //here we need to handle more validation rule
+        //if there are no secrets
 
-        val mergedFile: Map<String, Any?> = auroraConfig.getMergedFileForApplication(aid, overrides)
-        val secrets: Map<String, String>? = mergedFile.s("secretFolder")?.let { auroraConfig.getSecrets(it) }
+        extractors.mapNotNull { e ->
+            e.validator(fields[e.path]?.value)
+        }.takeIf { it.isNotEmpty() }?.let {
+            throw ApplicationConfigException("Config for application ${aid.applicationName} in environment ${aid.environmentName} contains errors", errors = it.mapNotNull { it.message })
+        }
 
-        val type = configFields["/type"]?.let { TemplateType.valueOf(it.value.textValue()) } ?: throw IllegalArgumentException("Type is required")
+        //if this is not empty we have to return
+
+        val type = fields.extract("type", { TemplateType.valueOf(it.textValue()) })
 
         if (type == TemplateType.process) throw  IllegalArgumentException("Not handled yet")
 
-        val artifactId = configFields["/artifactId"] ?: throw IllegalArgumentException("artifactId is required")
-        val name = configFields["/name"] ?: artifactId
+
+        //Everything below here is for every version of the schema.
+        val artifactId = fields.extract("artifactId")
+        val name = if (fields.containsKey("name")) {
+            fields.extract("/name")
+        } else {
+            artifactId
+        }
 
 
+        val generatedCert = "" //TODO:fix
 
+        val webseal = if (!fields.containsKey("webseal/path")) {
+            null
+        } else {
+            Webseal(
+                    fields.extract("webseal/path"),
+                    fields["webseal/roles"]?.value?.textValue()
+            )
+        }
 
+        val prometheus = if (!fields.containsKey("prometheus/path")) {
+            null
+        } else {
+            HttpEndpoint(
+                    fields.extract("prometheus/path"),
+                    fields["prometheus/port"]?.value?.intValue()
+            )
+        }
 
-        val flags = mergedFile.a("flags")
         val auroraDeploymentConfig = AuroraDeploymentConfig(
-                affiliation = mergedFile.s("affiliation")!!,
-                cluster = mergedFile.s("cluster")!!,
+                schemaVersion = fields.extract("schemaVersion"),
+                affiliation = fields.extract("affiliation"),
+                cluster = fields.extract("cluster"),
                 type = type,
-                name = name.value.textValue(),
-                config = mergedFile.m("config"),
-                secrets = secrets,
-                envName = mergedFile.s("envName") ?: "",
-                groups = mergedFile.s("groups")?.split(" ")?.toSet() ?: emptySet(),
-                replicas = mergedFile.i("replicas") ?: 1,
-                users = mergedFile.s("users")?.split(" ")?.toSet() ?: emptySet(),
-                route = flags?.contains("route") ?: false,
-                deploymentStrategy = if (flags?.contains("rolling") ?: false) rolling else recreate,
-                deployDescriptor = deployDescriptor
+                name = name,
+                flags = AuroraDeploymentConfigFlags(
+                        fields.extract("flags/route", { it.booleanValue() }),
+                        fields.extract("flags/cert", { it.booleanValue() }),
+                        fields.extract("flags/debug", { it.booleanValue() }),
+                        fields.extract("flags/alarm", { it.booleanValue() }),
+                        fields.extract("flags/rolling", { it.booleanValue() })
+                ),
+                resources = AuroraDeploymentConfigResources(
+                        memory = AuroraDeploymentConfigResource(
+                                min = fields.extract("resources/memory/min"),
+                                max = fields.extract("resources/memory/max")
+                        ),
+                        cpu = AuroraDeploymentConfigResource(
+                                min = fields.extract("resources/cpu/min"),
+                                max = fields.extract("resources/cpu/max")
+                        )
+                ),
+                envName = fields["envName"]?.value?.textValue() ?: aid.environmentName,
+                permissions = Permissions(Permission(
+                        fields.extract("permissions/admin/groups", { it.textValue().split(",").toSet() }),
+                        fields.extract("permissions/admin/users", { it.textValue().split(",").toSet() })
+
+                )),
+                secrets = mapOf(), //TODO handle,
+                config = mapOf(), //TODO handle,
+                replicas = fields["replicas"]?.value?.intValue() ?: 1,
+                artifactId = artifactId,
+                groupId = fields.extract("groupId"),
+                version = fields.extract("version"),
+                extraTags = fields.extract("extraTags"),
+                splunkIndex = fields["splunkIndex"]?.value?.textValue(),
+                database = fields["database"]?.value?.textValue(),
+                certificateCn = fields["certificateCn"]?.value?.textValue() ?: generatedCert,
+                webseal = webseal,
+                prometheus = prometheus,
+                managementPath = fields.extract("managmenetPath")
         )
+
 
         return auroraDeploymentConfig.apply { if (validateOpenShiftReferences) validateOpenShiftReferences(this) }
     }
 
-    private fun validate2(configFields: Map<String, AuroraConfigField>, extractors: List<AuroraConfigExtractor>): List<Exception> {
-        return extractors.mapNotNull { e ->
-            e.validator(configFields[e.path]?.value)
-        }
-    }
+
 
 
     /**
@@ -186,70 +217,21 @@ class AuroraConfigService(
     private fun validateOpenShiftReferences(auroraDc: AuroraDeploymentConfig) {
         val errors: MutableList<String> = mutableListOf()
 
-        auroraDc.permissions.forEach { p ->
-            p.value.groups
-                    .filter { !openShiftClient.isValidGroup(it) }
-                    .takeIf { it.isNotEmpty() }
-                    ?.let { errors.add("The following groups are not valid=${it.joinToString()}") }
+        auroraDc.permissions.admin.groups
+                .filter { !openShiftClient.isValidGroup(it) }
+                .takeIf { it.isNotEmpty() }
+                ?.let { errors.add("The following groups are not valid=${it.joinToString()}") }
 
-            p.value.users
-                    .filter { !openShiftClient.isValidUser(it) }
-                    .takeIf { it.isNotEmpty() }
-                    ?.let { errors.add("The following users are not valid=${it.joinToString()}") }
-        }
+        auroraDc.permissions.admin.users
+                .filter { !openShiftClient.isValidUser(it) }
+                .takeIf { it.isNotEmpty() }
+                ?.let { errors.add("The following users are not valid=${it.joinToString()}") }
+
         if (errors.isNotEmpty()) {
             throw ApplicationConfigException("Configuration contained references to one or more objects on OpenShift that does not exist", errors = errors)
         }
     }
 
-    private fun createAuroraDeploy(json: Map<String, Any?>): AuroraDeploy {
-
-        fun createPrometheus(deployJson: Map<String, Any?>): Prometheus? {
-            return if (deployJson.b("PROMETHEUS_ENABLED") ?: true) Prometheus(
-                    deployJson.s("PROMETHEUS_PORT")?.toInt() ?: 8080,
-                    deployJson.s("PROMETHEUS_PATH") ?: "/prometheus"
-            ) else null
-        }
-
-        val buildJson = json.m("build") ?: mapOf()
-        val deployJson = json.m("deploy") ?: mapOf()
-
-        val artifactId = buildJson.s("ARTIFACT_ID")
-        val groupId = buildJson.s("GROUP_ID")
-
-        val name: String? = json.s("name") ?: artifactId
-
-
-        val generatedCN = json.a("flags")?.contains("cert")?.let {
-            groupId + "." + name
-        }
-
-        val certificateCn = deployJson.s("CERTIFICATE_CN") ?: generatedCN
-
-        val tag = if (json.s("type") == "development") {
-            "latest"
-        } else {
-            deployJson.s("TAG") ?: "default"
-        }
-
-        return AuroraDeploy(
-                artifactId = artifactId!!,
-                groupId = groupId!!,
-                version = buildJson.s("VERSION")!!,
-                splunkIndex = deployJson.s("SPLUNK_INDEX") ?: "",
-                maxMemory = deployJson.s("MAX_MEMORY") ?: "256Mi",
-                database = deployJson.s("DATABASE"),
-                certificateCn = certificateCn,
-                tag = tag,
-                cpuRequest = deployJson.s("CPU_REQUEST") ?: "0",
-                websealRoute = deployJson.s("ROUTE_WEBSEAL"),
-                websealRoles = deployJson.s("ROUTE_WEBSEAL_ROLES"),
-                prometheus = createPrometheus(deployJson),
-                managementPath = deployJson.s("MANAGEMENT_PATH") ?: "",
-                debug = deployJson.b("DEBUG") ?: false,
-                alarm = deployJson.b("ALARM") ?: true
-        )
-    }
 
     private fun validate(auroraConfig: AuroraConfig) {
         val appIds = auroraConfig.getApplicationIds()

@@ -1,9 +1,13 @@
 package no.skatteetaten.aurora.boober.controller
 
-import no.skatteetaten.aurora.boober.model.*
+import com.fasterxml.jackson.databind.JsonNode
+import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.FileName
+import no.skatteetaten.aurora.boober.model.TextFiles
 import no.skatteetaten.aurora.boober.service.SetupParams
 
-typealias JsonDataFiles = Map<FileName, JsonData>
+typealias JsonDataFiles = Map<FileName, JsonNode>
 
 data class AuroraConfigPayload(
         val files: JsonDataFiles = mapOf(),

@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import no.skatteetaten.aurora.boober.model.TemplateType
 import org.apache.velocity.VelocityContext
@@ -35,14 +34,12 @@ class OpenShiftService(
     }
     fun generateObjects(auroraDc: AuroraDeploymentConfig): List<JsonNode> {
 
-        val deployDescriptor = auroraDc.deployDescriptor as AuroraDeploy
 
         val configMap = auroraDc.config?.map { "${it.key}=${it.value}" }?.joinToString(separator = "\\n")
 
         val params = mapOf(
                 "adc" to auroraDc,
                 "configMap" to configMap,
-                "dd" to deployDescriptor,
                 "username" to userDetailsProvider.getAuthenticatedUser().username,
                 "dockerRegistry" to "docker-registry.aurora.sits.no:5000",
                 "builder" to mapOf("name" to "leveransepakkebygger", "version" to "prod"),
@@ -69,7 +66,7 @@ class OpenShiftService(
             templatesToProcess.add("secret.json")
         }
 
-        if (auroraDc.route) {
+        if (auroraDc.flags.route) {
             templatesToProcess.add("route.json")
         }
 

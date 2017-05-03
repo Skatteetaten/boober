@@ -44,8 +44,8 @@ data class AuroraDeploymentConfigResources(
 )
 
 data class HttpEndpoint(
-        val port: Int?,
-        val path: String?
+        val path: String,
+        val port: Int?
 )
 
 
@@ -54,6 +54,10 @@ data class Webseal(
         val roles: String?
 )
 
+
+data class Permissions(
+        val admin: Permission
+)
 
 data class Permission(
         val groups: Set<String>,
@@ -78,10 +82,10 @@ data class AuroraDeploymentConfig(
         val flags: AuroraDeploymentConfigFlags,
         val resources: AuroraDeploymentConfigResources,
         val envName: String,
-        val permissions: Map<String, Permission> = mapOf(),
+        val permissions: Permissions,
         val replicas: Int?,
-        val secrets: Map<String, Map<String, String>> = mapOf(),
-        val config: Map<String, Map<String, String>> = mapOf(),
+        val secrets: Map<String, Map<String, String>>?,
+        val config: Map<String, Map<String, String>>?,
         val artifactId: String,
         val groupId: String,
         val version: String,
