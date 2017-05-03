@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.model
 
+import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.service.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.ApplicationId
 import no.skatteetaten.aurora.boober.service.m
@@ -14,7 +15,26 @@ typealias FileName = String
 typealias JsonData = Map<String, Any?>
 typealias TextFiles = Map<FileName, String>
 
-data class AuroraConfigFile(val name: FileName, val contents: JsonData)
+data class AuroraConfigFile(val name: FileName, val contents: JsonData, val override: Boolean = false) {
+    val configName
+        get() = if (override) "$name.override" else name
+}
+
+
+fun requiredValidator(node: JsonNode?, message: String): Exception? {
+
+    if (node == null) {
+        return IllegalArgumentException(message)
+    }
+    return null
+}
+
+fun emptyValidator(node: JsonNode?) = null
+data class AuroraConfigExtractor(val path: String,
+                                 val validator: (JsonNode?) -> Exception? = ::emptyValidator)
+
+data class AuroraConfigField(val path: String, val value: JsonNode, val source: String)
+
 
 data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>,
                         val secrets: TextFiles = mapOf()) {
@@ -34,6 +54,7 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>,
         val prefix = if (secretFolder.endsWith("/")) secretFolder else "$secretFolder/"
         return secrets.filter { it.key.startsWith(prefix) }.mapKeys { it.key.removePrefix(prefix) }
     }
+
 
     fun getMergedFileForApplication(aid: ApplicationId, overrides: List<AuroraConfigFile>): Map<String, Any?> {
 

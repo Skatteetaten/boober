@@ -8,31 +8,57 @@ enum class DeploymentStrategy {
     rolling, recreate
 }
 
-data class AuroraDeploymentConfig(
+
+data class AuroraProcessConfig(
         val schemaVersion: String = "v1",
         val affiliation: String,
         val cluster: String,
         val type: TemplateType,
         val name: String,
         val envName: String,
-        val groups: Set<String>,
-        val users: Set<String>,
-        val replicas: Int?,
-        val secrets: Map<String, Any?>?,
-        val config: Map<String, Any?>?,
+        val permissions: Map<String, Permission> = mapOf(),
+        val secrets: Map<String, Map<String, String>> = mapOf(),
+        val config: Map<String, Map<String, String>> = mapOf(),
+        val templateFile: String? = null,
+        val template: String? = null,
+        val parameters: Map<String, String>? = mapOf()
+)
+
+
+data class AuroraDeploymentConfigFlags(
         val route: Boolean = false,
-        val deploymentStrategy: DeploymentStrategy?,
-        val deployDescriptor: DeployDescriptor?
+        val cert: Boolean = false,
+        val debug: Boolean = false,
+        val alarm: Boolean = false,
+        val rolling: Boolean = false
+)
+
+data class AuroraDeploymentConfigResource(
+        val min: String,
+        val max: String
+)
+
+data class AuroraDeploymentConfigResources(
+        val memory: AuroraDeploymentConfigResource,
+        val cpu: AuroraDeploymentConfigResource
+)
+
+data class HttpEndpoint(
+        val port: Int?,
+        val path: String?
+)
+
+
+data class Webseal(
+        val path: String,
+        val roles: String?
+)
+
+
+data class Permission(
+        val groups: Set<String>,
+        val users: Set<String>
 ) {
-    /**
-     * All the following properties should probably be derived where the OpenShift templates are evaluated.
-     */
-    val namespace: String
-        get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"
-
-    val routeName: String?
-        get() = "http://$name-$namespace.$cluster.paas.skead.no"
-
     val rolebindings: Map<String, String>
         get(): Map<String, String> {
             val userPart = users.map { Pair(it, "User") }.toMap()
@@ -43,37 +69,40 @@ data class AuroraDeploymentConfig(
         }
 }
 
-interface DeployDescriptor{}
-
-data class TemplateDeploy (
-        val templateFile: String? = null,
-        val template: String? = null,
-        val parameters: Map<String, String>? = mapOf()
-) : DeployDescriptor
-
-data class AuroraDeploy(
+data class AuroraDeploymentConfig(
+        val schemaVersion: String = "v1",
+        val affiliation: String,
+        val cluster: String,
+        val type: TemplateType,
+        val name: String,
+        val flags: AuroraDeploymentConfigFlags,
+        val resources: AuroraDeploymentConfigResources,
+        val envName: String,
+        val permissions: Map<String, Permission> = mapOf(),
+        val replicas: Int?,
+        val secrets: Map<String, Map<String, String>> = mapOf(),
+        val config: Map<String, Map<String, String>> = mapOf(),
         val artifactId: String,
         val groupId: String,
         val version: String,
-        val extraTags: String? = "latest,major,minor,patch",
+        val extraTags: String = "latest,major,minor,patch",
         val splunkIndex: String?,
-        val maxMemory: String?,
         val database: String?,
         val certificateCn: String? = "",
-        val tag: String?,
-        val cpuRequest: String?,
-        val websealRoute: String?,
-        val websealRoles: String?,
-        val prometheus: Prometheus?,
-        val managementPath: String?,
-        val debug: Boolean = false,
-        val alarm: Boolean = true
-) : DeployDescriptor {
-    val dockerGroup: String = groupId.replace(".", "_")
-    val dockerName: String = artifactId
+        val webseal: Webseal?,
+        val prometheus: HttpEndpoint?,
+        val managementPath: String?
+) {
+    /**
+     * All the following properties should probably be derived where the OpenShift templates are evaluated.
+     */
+    val namespace: String
+        get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"
 
-    data class Prometheus(
-            val port: Int?,
-            val path: String?
-    )
+    val routeName: String?
+        get() = "http://$name-$namespace.$cluster.paas.skead.no"
+
+    val dockerGroup: String = groupId.replace(".", "_")
+
+    val dockerName: String = artifactId
 }

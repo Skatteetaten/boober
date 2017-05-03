@@ -36,6 +36,7 @@ fun copyJsonProperties(targetNode: MutableMap<String, Any?>, sourceNode: Map<Str
     return targetNode
 }
 
+
 private fun copyChildNode(key: String, targetNode: MutableMap<String, Any?>): HashMap<String, Any?>? {
     return if (targetNode.containsKey(key)) HashMap(targetNode[key] as MutableMap<String, Any?>)
     else null
@@ -58,3 +59,30 @@ fun JsonNode.updateField(source: JsonNode, root: String, field: String, required
 
     targetRoot.set(field, sourceField)
 }
+
+
+fun JsonNode?.required(message: String): Exception? {
+    if (this == null) {
+        return IllegalArgumentException(message)
+    }
+    return null
+}
+
+fun JsonNode?.notBlank(message: String): Exception? {
+    if (this == null || this.textValue().isBlank()) {
+        return IllegalArgumentException(message)
+    }
+
+    return null
+}
+
+fun JsonNode?.length(length: Int, message: String): Exception? {
+    if (this == null) {
+        return IllegalArgumentException(message)
+    } else if (this.textValue().length > length) {
+        return IllegalArgumentException(message)
+    }
+
+    return null
+}
+

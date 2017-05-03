@@ -66,7 +66,34 @@ class AuroraConfigServiceTest extends Specification {
   AuroraConfigService service
 
   private static AuroraConfig createAuroraConfig(Map<String, Map<String, Object>> files, Map<String, String> secrets = [:]) {
-    new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value) }, secrets)
+    new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, secrets)
+  }
+
+  def "Should create an AuroraConfigFields"() {
+    given:
+      Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
+      files.put("booberdev/about.json", ["type": "deploy", "cluster": "utv"])
+      AuroraConfig auroraConfig = createAuroraConfig(files)
+
+    when:
+      def fields = service.mergeFiles(aid, [], auroraConfig)
+
+    then:
+      fields.size() == 1
+  }
+
+  def "Should create an AuroraConfigFields with overrides"() {
+    given:
+      def overrides = [new AuroraConfigFile("about.json", ["type": "foobar"], true)]
+      Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
+      files.put("booberdev/about.json", ["type": "deploy", "cluster": "utv"])
+      AuroraConfig auroraConfig = createAuroraConfig(files)
+
+    when:
+      def fields = service.mergeFiles(aid, overrides, auroraConfig)
+
+    then:
+      fields.size() == 1
   }
 
   def "Should create an AuroraDeploymentConfig with default tag when type is deploy"() {

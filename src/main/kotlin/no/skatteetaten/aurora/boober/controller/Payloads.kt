@@ -29,7 +29,7 @@ data class SetupParamsPayload(
 ) {
     fun toSetupParams(): SetupParams {
 
-        return SetupParams(envs, apps, overrides.map { AuroraConfigFile(it.key, it.value) }, dryRun)
+        return SetupParams(envs, apps, overrides.map { AuroraConfigFile(it.key, it.value, true) }, dryRun)
     }
 }
 

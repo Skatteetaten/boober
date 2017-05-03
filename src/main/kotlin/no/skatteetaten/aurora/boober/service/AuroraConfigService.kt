@@ -1,12 +1,12 @@
 package no.skatteetaten.aurora.boober.service
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.convertValue
 import no.skatteetaten.aurora.boober.model.*
-import no.skatteetaten.aurora.boober.model.AuroraDeploy.Prometheus
 import no.skatteetaten.aurora.boober.model.DeploymentStrategy.recreate
 import no.skatteetaten.aurora.boober.model.DeploymentStrategy.rolling
-import no.skatteetaten.aurora.boober.utils.Result
-import no.skatteetaten.aurora.boober.utils.orElseThrow
+import no.skatteetaten.aurora.boober.utils.*
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
@@ -97,35 +97,65 @@ class AuroraConfigService(
         }
     }
 
+
+    fun mergeFiles(files: List<AuroraConfigFile>, paths: List<String>): Map<String, AuroraConfigField> {
+
+
+        return paths.map { path ->
+            files.mapNotNull {
+                //TODO:Bort med denne etterhvert
+                val json: JsonNode = mapper.convertValue(it.contents)
+                val value = json.at(path)
+                if (value.isMissingNode) {
+                    null
+                } else {
+                    path to AuroraConfigField(path, value, it.configName)
+                }
+            }.first()
+        }.toMap()
+    }
+
+
     fun createAuroraDc(auroraConfig: AuroraConfig,
                        aid: ApplicationId,
                        overrides: List<AuroraConfigFile> = listOf(),
                        validateOpenShiftReferences: Boolean = true): AuroraDeploymentConfig {
+        val allFiles = auroraConfig.getFilesForApplication(aid, overrides).reversed()
+
+        val extractors = listOf(
+                AuroraConfigExtractor("/type", { it.required("Type is required") }),
+                AuroraConfigExtractor("/artifactId", { it.length(50, "ArtifactId must be set and be shorter then 50 characters") }),
+                AuroraConfigExtractor("/version", { it.notBlank("Version must be set") }),
+                AuroraConfigExtractor("/groupIp", { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
+                AuroraConfigExtractor("/name"),
+                AuroraConfigExtractor("/cluster", { it.notBlank("Cluster must be set") })
+        )
+
+        val configFields = mergeFiles(allFiles, extractors.map { it.path })
+
+        val errors = validate2(configFields, extractors).toMutableList()
+
 
         val mergedFile: Map<String, Any?> = auroraConfig.getMergedFileForApplication(aid, overrides)
         val secrets: Map<String, String>? = mergedFile.s("secretFolder")?.let { auroraConfig.getSecrets(it) }
 
-        val type = mergedFile.s("type").let { TemplateType.valueOf(it!!) }
-        var name = mergedFile.s("name")
+        val type = configFields["/type"]?.let { TemplateType.valueOf(it.value.textValue()) } ?: throw IllegalArgumentException("Type is required")
 
-        val deployDescriptor: DeployDescriptor = when (type) {
-            TemplateType.process -> {
-                TemplateDeploy()
-            }
-            else -> {
-                val auroraDeploy = createAuroraDeploy(mergedFile)
-                // This is kind of messy. Name should probably be required.
-                name = name ?: auroraDeploy.artifactId
-                auroraDeploy
-            }
-        }
+        if (type == TemplateType.process) throw  IllegalArgumentException("Not handled yet")
+
+        val artifactId = configFields["/artifactId"] ?: throw IllegalArgumentException("artifactId is required")
+        val name = configFields["/name"] ?: artifactId
+
+
+
+
 
         val flags = mergedFile.a("flags")
         val auroraDeploymentConfig = AuroraDeploymentConfig(
                 affiliation = mergedFile.s("affiliation")!!,
                 cluster = mergedFile.s("cluster")!!,
                 type = type,
-                name = name!!,
+                name = name.value.textValue(),
                 config = mergedFile.m("config"),
                 secrets = secrets,
                 envName = mergedFile.s("envName") ?: "",
@@ -140,6 +170,12 @@ class AuroraConfigService(
         return auroraDeploymentConfig.apply { if (validateOpenShiftReferences) validateOpenShiftReferences(this) }
     }
 
+    private fun validate2(configFields: Map<String, AuroraConfigField>, extractors: List<AuroraConfigExtractor>): List<Exception> {
+        return extractors.mapNotNull { e ->
+            e.validator(configFields[e.path]?.value)
+        }
+    }
+
 
     /**
      * Validates that references to objects on OpenShift in the configuration are valid.
@@ -149,16 +185,18 @@ class AuroraConfigService(
      */
     private fun validateOpenShiftReferences(auroraDc: AuroraDeploymentConfig) {
         val errors: MutableList<String> = mutableListOf()
-        auroraDc.groups
-                .filter { !openShiftClient.isValidGroup(it) }
-                .takeIf { it.isNotEmpty() }
-                ?.let { errors.add("The following groups are not valid=${it.joinToString()}") }
 
-        auroraDc.users
-                .filter { !openShiftClient.isValidUser(it) }
-                .takeIf { it.isNotEmpty() }
-                ?.let { errors.add("The following users are not valid=${it.joinToString()}") }
+        auroraDc.permissions.forEach { p ->
+            p.value.groups
+                    .filter { !openShiftClient.isValidGroup(it) }
+                    .takeIf { it.isNotEmpty() }
+                    ?.let { errors.add("The following groups are not valid=${it.joinToString()}") }
 
+            p.value.users
+                    .filter { !openShiftClient.isValidUser(it) }
+                    .takeIf { it.isNotEmpty() }
+                    ?.let { errors.add("The following users are not valid=${it.joinToString()}") }
+        }
         if (errors.isNotEmpty()) {
             throw ApplicationConfigException("Configuration contained references to one or more objects on OpenShift that does not exist", errors = errors)
         }
@@ -219,6 +257,7 @@ class AuroraConfigService(
         createAuroraDcs(auroraConfig, appIds)
     }
 }
+
 
 fun Map<String, Any?>.s(field: String) = this[field]?.toString()
 fun Map<String, Any?>.i(field: String) = this[field] as Int?
