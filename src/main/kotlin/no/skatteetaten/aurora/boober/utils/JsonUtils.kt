@@ -2,8 +2,8 @@ package no.skatteetaten.aurora.boober.utils
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
-import no.skatteetaten.aurora.boober.model.AuroraConfigExtractor
 import no.skatteetaten.aurora.boober.model.AuroraConfigField
+import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 
 
@@ -63,6 +63,17 @@ fun JsonNode.updateField(source: JsonNode, root: String, field: String, required
     targetRoot.set(field, sourceField)
 }
 
+fun JsonNode?.pattern(pattern: String, message: String): Exception? {
+    if (this == null) {
+        return IllegalArgumentException(message)
+    }
+    if (!Regex(pattern).matches(this.textValue())) {
+        return IllegalArgumentException(message)
+
+    }
+
+    return null
+}
 
 fun JsonNode?.required(message: String): Exception? {
     if (this == null) {
@@ -101,7 +112,7 @@ fun <T> Map<String, AuroraConfigField>.extract(name: String, mapper: (JsonNode) 
     return mapper(this.get(name)!!.value)
 }
 
-fun List<AuroraConfigFile>.findConfigExtractors(): List<AuroraConfigExtractor> {
+fun List<AuroraConfigFile>.findConfigExtractors(): List<AuroraConfigFieldHandler> {
 
     //find all config fieldNames in all files
     val configFiles = this.flatMap {
@@ -119,6 +130,6 @@ fun List<AuroraConfigFile>.findConfigExtractors(): List<AuroraConfigExtractor> {
     }.toMap()
 
     return configKeys.map {
-        AuroraConfigExtractor("config/${it.key}/${it.value}", "/config/$it/${it.value}")
+        AuroraConfigFieldHandler("config/${it.key}/${it.value}", "/config/$it/${it.value}")
     }
 }

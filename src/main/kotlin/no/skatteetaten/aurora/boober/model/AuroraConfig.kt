@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.TextNode
 import no.skatteetaten.aurora.boober.service.ApplicationId
 
 typealias FileName = String
@@ -22,18 +23,24 @@ fun requiredValidator(node: JsonNode?, message: String): Exception? {
 }
 
 fun emptyValidator(node: JsonNode?) = null
-data class AuroraConfigExtractor(val name: String,
-                                 val path: String, val validator: (JsonNode?) -> Exception? = ::emptyValidator)
+data class AuroraConfigFieldHandler(val name: String,
+                                    val path: String = "/$name",
+                                    val validator: (JsonNode?) -> Exception? = ::emptyValidator,
+                                    val defultValue: String? = "")
 
 
-fun List<AuroraConfigExtractor>.extractFrom(files: List<AuroraConfigFile>): Map<String, AuroraConfigField> {
-    return this.map { (name, path) ->
+fun List<AuroraConfigFieldHandler>.extractFrom(files: List<AuroraConfigFile>): Map<String, AuroraConfigField> {
+    return this.map { handler ->
         files.mapNotNull {
-            val value = it.contents.at(path)
+            val value = it.contents.at(handler.path)
             if (value.isMissingNode) {
-                null
+                if (handler.defultValue != null) {
+                    handler.name to AuroraConfigField(handler.path, TextNode(handler.defultValue), "default")
+                } else {
+                    null
+                }
             } else {
-                name to AuroraConfigField(path, value, it.configName)
+                handler.name to AuroraConfigField(handler.path, value, it.configName)
             }
         }.first()
     }.toMap()
@@ -60,8 +67,6 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>,
         val prefix = if (secretFolder.endsWith("/")) secretFolder else "$secretFolder/"
         return secrets.filter { it.key.startsWith(prefix) }.mapKeys { it.key.removePrefix(prefix) }
     }
-
-
 
 
     fun getFilesForApplication(aid: ApplicationId, overrides: List<AuroraConfigFile> = listOf()): List<AuroraConfigFile> {
@@ -95,7 +100,6 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>,
         }
         return this.copy(auroraConfigFiles = files)
     }
-
 
 
 }

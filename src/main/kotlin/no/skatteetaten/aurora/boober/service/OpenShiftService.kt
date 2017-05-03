@@ -35,6 +35,8 @@ class OpenShiftService(
     fun generateObjects(auroraDc: AuroraDeploymentConfig): List<JsonNode> {
 
 
+        //TODO: tilpasse ny adc struktur
+
         val configMap = auroraDc.config?.map { "${it.key}=${it.value}" }?.joinToString(separator = "\\n")
 
         val params = mapOf(

@@ -114,19 +114,13 @@ class AuroraConfigService(
 
         //here we need to handle more validation rule
         //if there are no secrets
-
-        extractors.mapNotNull { e ->
-            e.validator(fields[e.path]?.value)
-        }.takeIf { it.isNotEmpty() }?.let {
-            throw ApplicationConfigException("Config for application ${aid.applicationName} in environment ${aid.environmentName} contains errors", errors = it.mapNotNull { it.message })
-        }
-
-        //if this is not empty we have to return
-
         val type = fields.extract("type", { TemplateType.valueOf(it.textValue()) })
 
         if (type == TemplateType.process) throw  IllegalArgumentException("Not handled yet")
 
+        val errors = extractors.mapNotNull { e ->
+            e.validator(fields[e.path]?.value)
+        }.toMutableList()
 
         //Everything below here is for every version of the schema.
         val artifactId = fields.extract("artifactId")
@@ -134,6 +128,14 @@ class AuroraConfigService(
             fields.extract("/name")
         } else {
             artifactId
+        }
+
+        if (!Regex("^[a-z][-a-z0-9]{0,23}[a-z0-9]$").matches(name)) {
+            errors + IllegalArgumentException("Name is not valid DNS952 label. 24 length alphanumeric.")
+        }
+
+        errors.takeIf { it.isNotEmpty() }?.let {
+            throw ApplicationConfigException("Config for application ${aid.applicationName} in environment ${aid.environmentName} contains errors", errors = it.mapNotNull { it.message })
         }
 
 

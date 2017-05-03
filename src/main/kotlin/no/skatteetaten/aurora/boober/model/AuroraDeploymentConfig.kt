@@ -26,11 +26,11 @@ data class AuroraProcessConfig(
 
 
 data class AuroraDeploymentConfigFlags(
-        val route: Boolean = false,
-        val cert: Boolean = false,
-        val debug: Boolean = false,
-        val alarm: Boolean = false,
-        val rolling: Boolean = false
+        val route: Boolean,
+        val cert: Boolean,
+        val debug: Boolean,
+        val alarm: Boolean,
+        val rolling: Boolean
 )
 
 data class AuroraDeploymentConfigResource(
@@ -74,7 +74,7 @@ data class Permission(
 }
 
 data class AuroraDeploymentConfig(
-        val schemaVersion: String = "v1",
+        val schemaVersion: String,
         val affiliation: String,
         val cluster: String,
         val type: TemplateType,
@@ -86,16 +86,16 @@ data class AuroraDeploymentConfig(
         val replicas: Int?,
         val secrets: Map<String, Map<String, String>>?,
         val config: Map<String, Map<String, String>>?,
-        val artifactId: String,
         val groupId: String,
+        val artifactId: String,
         val version: String,
-        val extraTags: String = "latest,major,minor,patch",
-        val splunkIndex: String?,
-        val database: String?,
-        val certificateCn: String? = "",
-        val webseal: Webseal?,
-        val prometheus: HttpEndpoint?,
-        val managementPath: String?
+        val extraTags: String,
+        val splunkIndex: String? = null,
+        val database: String? = null,
+        val certificateCn: String? = null,
+        val webseal: Webseal? = null,
+        val prometheus: HttpEndpoint? = null,
+        val managementPath: String? = null
 ) {
     /**
      * All the following properties should probably be derived where the OpenShift templates are evaluated.
