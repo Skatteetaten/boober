@@ -1,15 +1,15 @@
 {
-  "flags": [
-    "rolling",
-    "route"
-  ],
-  "build" : {
-    "GROUP_ID": "ske.admin.lisens",
-    "ARTIFACT_ID": "verify-ebs-users",
-    "VERSION": "1.0.3"
+  "flags": {
+    "rolling": true,
+    "route": true
   },
-  "deploy": {
-    "SPLUNK_INDEX": "openshift-test",
-    "MAX_MEMORY": "128Mi"
+  "groupId": "ske.admin.lisens",
+  "artifactId": "verify-ebs-users",
+  "version": "1.0.3",
+  "splinkIndex": "openshift-test",
+  "resources": {
+    "memory": {
+      "max": "128Mi"
+    }
   }
 }

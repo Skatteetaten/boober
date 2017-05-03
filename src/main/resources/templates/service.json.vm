@@ -4,20 +4,22 @@
   "metadata": {
     "name": "${adc.name}",
     "annotations": {
-      "sprocket.sits.no/service.webseal": "$!{dd.websealRoute}",
-      "sprocket.sits.no/service.webseal-roles": "$!{dd.websealRoles}",
-      "prometheus.io/scheme": "http",
-#if(${dd.prometheus})
-      "prometheus.io/scrape": "true",
-      "prometheus.io/path": "${dd.prometheus.path}",
-      "prometheus.io/port": "${dd.prometheus.port}"
-#else
-      "prometheus.io/scrape": "false"
-#end
+      #if(${adc.webseal})
+        "sprocket.sits.no/service.webseal": "${adc.webseal.route}",
+        "sprocket.sits.no/service.webseal-roles": "${adc.webseal.roles}",
+      #end
+      #if(${adc.prometheus})
+        "prometheus.io/scheme": "http",
+        "prometheus.io/scrape": "true",
+        "prometheus.io/path": "${adc.prometheus.path}",
+        "prometheus.io/port": "$adc.prometheus.port"
+      #else
+        "prometheus.io/scrape": "false"
+      #end
     },
     "labels": {
       "app": "${adc.name}",
-      "updatedBy" : "${username}",
+      "updatedBy": "${username}",
       "affiliation": "${adc.affiliation}"
     }
   },

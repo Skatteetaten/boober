@@ -1,0 +1,5 @@
+{
+  "groups": "APP_PaaS_drift APP_PaaS_utv",
+  "users": "foo",
+  "affiliation": "aos"
+}

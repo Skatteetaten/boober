@@ -9,9 +9,14 @@
       "affiliation": "${adc.affiliation}"
     }
   }
-  #if (${configMap})
-  ,"data": {
-    "latest.properties": "${configMap}"
-  }
+#if (${configs})
+,"data": {
+  #foreach ($config  in $configs.entrySet())
+    #if($velocityCount != 1)
+      ,
+    #end
+    "${config.key}": "${config.value}"
   #end
+}
+#end
 }

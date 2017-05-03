@@ -3,6 +3,8 @@ package no.skatteetaten.aurora.boober.model
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
 import no.skatteetaten.aurora.boober.service.ApplicationId
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 typealias FileName = String
 typealias JsonData = Map<String, Any?>
@@ -26,23 +28,32 @@ fun emptyValidator(node: JsonNode?) = null
 data class AuroraConfigFieldHandler(val name: String,
                                     val path: String = "/$name",
                                     val validator: (JsonNode?) -> Exception? = ::emptyValidator,
-                                    val defultValue: String? = "")
+                                    val defultValue: String? = null)
 
 
 fun List<AuroraConfigFieldHandler>.extractFrom(files: List<AuroraConfigFile>): Map<String, AuroraConfigField> {
-    return this.map { handler ->
-        files.mapNotNull {
+
+    val logger: Logger = LoggerFactory.getLogger(AuroraConfig::class.java)
+    return this.mapNotNull { handler ->
+        val matches = files.mapNotNull {
+            logger.debug("Sjekker om ${handler.path} finnes i fil ${it.contents}")
             val value = it.contents.at(handler.path)
             if (value.isMissingNode) {
-                if (handler.defultValue != null) {
-                    handler.name to AuroraConfigField(handler.path, TextNode(handler.defultValue), "default")
-                } else {
-                    null
-                }
+                null
             } else {
+                logger.debug("Match ${value} i fil ${it.configName}")
+
                 handler.name to AuroraConfigField(handler.path, value, it.configName)
             }
-        }.first()
+        }
+        if (matches.isEmpty() && handler.defultValue != null) {
+            logger.debug("Default match")
+            handler.name to AuroraConfigField(handler.path, TextNode(handler.defultValue), "default")
+        } else if (matches.isEmpty()) {
+            null
+        } else {
+            matches.first()
+        }
     }.toMap()
 }
 

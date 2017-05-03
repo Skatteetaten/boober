@@ -74,6 +74,7 @@ data class Permission(
 }
 
 data class AuroraDeploymentConfig(
+        //TODO: Service account for våre objekter
         val schemaVersion: String,
         val affiliation: String,
         val cluster: String,
@@ -84,8 +85,8 @@ data class AuroraDeploymentConfig(
         val envName: String,
         val permissions: Permissions,
         val replicas: Int?,
-        val secrets: Map<String, Map<String, String>>?,
-        val config: Map<String, Map<String, String>>?,
+        val secrets: Map<String, Map<String, String>>? = null,
+        val config: Map<String, Map<String, String>>? = null,
         val groupId: String,
         val artifactId: String,
         val version: String,

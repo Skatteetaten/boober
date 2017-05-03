@@ -116,7 +116,11 @@ fun List<AuroraConfigFile>.findConfigExtractors(): List<AuroraConfigFieldHandler
 
     //find all config fieldNames in all files
     val configFiles = this.flatMap {
-        it.contents.fieldNames().asSequence().toList()
+        if (it.contents.has("config")) {
+            it.contents["config"].fieldNames().asSequence().toList()
+        } else {
+            emptyList()
+        }
     }.toSet()
 
 
@@ -130,6 +134,6 @@ fun List<AuroraConfigFile>.findConfigExtractors(): List<AuroraConfigFieldHandler
     }.toMap()
 
     return configKeys.map {
-        AuroraConfigFieldHandler("config/${it.key}/${it.value}", "/config/$it/${it.value}")
+        AuroraConfigFieldHandler("config/${it.key}/${it.value}")
     }
 }

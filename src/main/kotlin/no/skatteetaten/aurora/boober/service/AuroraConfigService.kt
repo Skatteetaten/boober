@@ -98,7 +98,6 @@ class AuroraConfigService(
     }
 
 
-
     fun createAuroraDc(auroraConfig: AuroraConfig,
                        aid: ApplicationId,
                        overrides: List<AuroraConfigFile> = listOf(),
@@ -119,13 +118,13 @@ class AuroraConfigService(
         if (type == TemplateType.process) throw  IllegalArgumentException("Not handled yet")
 
         val errors = extractors.mapNotNull { e ->
-            e.validator(fields[e.path]?.value)
+            e.validator(fields[e.name]?.value)
         }.toMutableList()
 
         //Everything below here is for every version of the schema.
         val artifactId = fields.extract("artifactId")
         val name = if (fields.containsKey("name")) {
-            fields.extract("/name")
+            fields.extract("name")
         } else {
             artifactId
         }
@@ -159,6 +158,11 @@ class AuroraConfigService(
             )
         }
 
+        val envName = if (fields.containsKey("envName")) {
+            fields["envName"]!!.value.textValue()
+        } else {
+            aid.environmentName
+        }
         val auroraDeploymentConfig = AuroraDeploymentConfig(
                 schemaVersion = fields.extract("schemaVersion"),
                 affiliation = fields.extract("affiliation"),
@@ -182,14 +186,12 @@ class AuroraConfigService(
                                 max = fields.extract("resources/cpu/max")
                         )
                 ),
-                envName = fields["envName"]?.value?.textValue() ?: aid.environmentName,
+                envName = envName,
                 permissions = Permissions(Permission(
-                        fields.extract("permissions/admin/groups", { it.textValue().split(",").toSet() }),
-                        fields.extract("permissions/admin/users", { it.textValue().split(",").toSet() })
+                        fields.extract("permissions/admin/groups", { it.textValue().split(" ").toSet() }),
+                        fields.extract("permissions/admin/users", { it.textValue().split(" ").toSet() })
 
                 )),
-                secrets = mapOf(), //TODO handle,
-                config = mapOf(), //TODO handle,
                 replicas = fields["replicas"]?.value?.intValue() ?: 1,
                 artifactId = artifactId,
                 groupId = fields.extract("groupId"),
@@ -200,14 +202,12 @@ class AuroraConfigService(
                 certificateCn = fields["certificateCn"]?.value?.textValue() ?: generatedCert,
                 webseal = webseal,
                 prometheus = prometheus,
-                managementPath = fields.extract("managmenetPath")
+                managementPath = fields["managementPath"]?.value?.textValue()
         )
 
 
         return auroraDeploymentConfig.apply { if (validateOpenShiftReferences) validateOpenShiftReferences(this) }
     }
-
-
 
 
     /**

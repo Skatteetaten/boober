@@ -32,16 +32,16 @@ class OpenShiftService(
         return mergeVelocityTemplate("deploymentrequest.json", mapOf("adc" to auroraDc))
 
     }
+
     fun generateObjects(auroraDc: AuroraDeploymentConfig): List<JsonNode> {
 
-
-        //TODO: tilpasse ny adc struktur
-
-        val configMap = auroraDc.config?.map { "${it.key}=${it.value}" }?.joinToString(separator = "\\n")
+        val configs = auroraDc.config?.map { (key, value) ->
+            key to value.map { "${it.key}=${it.value}" }.joinToString(separator = "\\n")
+        }
 
         val params = mapOf(
                 "adc" to auroraDc,
-                "configMap" to configMap,
+                "configs" to configs,
                 "username" to userDetailsProvider.getAuthenticatedUser().username,
                 "dockerRegistry" to "docker-registry.aurora.sits.no:5000",
                 "builder" to mapOf("name" to "leveransepakkebygger", "version" to "prod"),
@@ -80,6 +80,7 @@ class OpenShiftService(
 
         return templatesToProcess.map { mergeVelocityTemplate(it, params) }
     }
+
 
     private fun mergeVelocityTemplate(template: String, content: Map<String, Any?>): JsonNode {
         val context = VelocityContext()

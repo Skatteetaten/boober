@@ -59,13 +59,14 @@ class OpenShiftServiceTest extends Specification {
   @Autowired
   AuroraConfigService auroraConfigParserService
 
+
   def "Should create OpenShift objects from Velocity templates"() {
     given:
       userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User")
-      Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
+      Map<String, JsonNode> files = getQaEbsUsersSampleFiles()
 
     when:
-      def auroraConfig = new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value) }, [:])
+      def auroraConfig = new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])
       AuroraDeploymentConfig auroraDc = auroraConfigParserService.createAuroraDc(auroraConfig, aid, [], false)
       List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc)
 
@@ -155,13 +156,7 @@ class OpenShiftServiceTest extends Specification {
           "metadata": {
             "name": "verify-ebs-users",
             "annotations": {
-              "sprocket.sits.no/service.webseal": "",
-              "sprocket.sits.no/service.webseal-roles": "",
-              "prometheus.io/scheme": "http",
-              "prometheus.io/scrape": "true",
-              "prometheus.io/path": "/prometheus",
-              "prometheus.io/port": "8080"
-        
+              "prometheus.io/scrape": "false"
             },
             "labels": {
               "app": "verify-ebs-users",
