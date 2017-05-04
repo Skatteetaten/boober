@@ -1,6 +1,8 @@
 package no.skatteetaten.aurora.boober.service
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.fge.jsonpatch.JsonPatch
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.AuroraDeploy.Prometheus
 import no.skatteetaten.aurora.boober.model.DeploymentStrategy.recreate
@@ -65,9 +67,21 @@ class AuroraConfigService(
 
         val auroraConfigFiles = filesForAffiliation
                 .filter { !it.key.startsWith(SECRET_FOLDER) }
-                .map { AuroraConfigFile(it.key, mapper.readValue(it.value, Map::class.java) as Map<String, Any?>) }
+                .map { AuroraConfigFile(it.key, mapper.readValue(it.value, Map::class.java) as JsonData) }
 
         return AuroraConfig(auroraConfigFiles = auroraConfigFiles, secrets = secretFiles)
+    }
+
+    fun patchAuroraConfigFileContents(name: String, auroraConfig: AuroraConfig, jsonPatchOp: String): JsonData {
+
+        val patch: JsonPatch = mapper.readValue(jsonPatchOp, JsonPatch::class.java)
+
+        val auroraConfigFile = auroraConfig.auroraConfigFiles.filter { it.name == name }.first()
+        val originalContentsNode = mapper.convertValue(auroraConfigFile.contents, JsonNode::class.java)
+
+        val patchedContentsNode = patch.apply(originalContentsNode)
+
+        return mapper.treeToValue(patchedContentsNode, Map::class.java) as JsonData
     }
 
     fun withAuroraConfig(affiliation: String,
