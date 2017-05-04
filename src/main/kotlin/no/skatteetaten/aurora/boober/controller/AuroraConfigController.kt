@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.controller
 
 import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.service.ApplicationId
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.bind.annotation.*
@@ -30,7 +29,21 @@ class AuroraConfigController(val auroraConfigService: AuroraConfigService) {
 
         val path = "affiliation/$affiliation/auroraconfig/**"
         val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
+
         auroraConfigService.withAuroraConfig(affiliation, true, { auroraConfig: AuroraConfig ->
+            auroraConfig.updateFile(fileName, fileContents)
+        })
+    }
+
+    @PatchMapping("/{affiliation}/auroraconfig/**")
+    fun patchAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest,
+                              @RequestBody jsonPatchOp: String) {
+
+        val path = "affiliation/$affiliation/auroraconfig/**"
+        val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
+
+        auroraConfigService.withAuroraConfig(affiliation, true, { auroraConfig: AuroraConfig ->
+            val fileContents = auroraConfigService.patchAuroraConfigFileContents(fileName, auroraConfig, jsonPatchOp)
             auroraConfig.updateFile(fileName, fileContents)
         })
     }
