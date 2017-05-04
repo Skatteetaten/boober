@@ -7,6 +7,7 @@ import no.skatteetaten.aurora.boober.model.DeploymentStrategy.recreate
 import no.skatteetaten.aurora.boober.model.DeploymentStrategy.rolling
 import no.skatteetaten.aurora.boober.utils.Result
 import no.skatteetaten.aurora.boober.utils.orElseThrow
+import org.eclipse.jgit.api.Git
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
@@ -24,6 +25,15 @@ class AuroraConfigService(
 
     fun save(affiliation: String, auroraConfig: AuroraConfig) {
 
+        gitService.saveFilesAndClose(affiliation, validateAndPrepareForSave(auroraConfig))
+    }
+
+    fun save(repo: Git, auroraConfig: AuroraConfig) {
+
+        gitService.saveFilesAndClose(repo, validateAndPrepareForSave(auroraConfig))
+    }
+
+    private fun validateAndPrepareForSave(auroraConfig: AuroraConfig): Map<String, String> {
         validate(auroraConfig)
         val jsonFiles: Map<String, String> = auroraConfig.auroraConfigFiles.map {
             it.name to mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it.contents)
@@ -35,12 +45,11 @@ class AuroraConfigService(
                     ?.let { it.subList(it.size - 2, it.size) }
                     ?.joinToString("/") ?: it.key
 
-
             val secretFolder = "$SECRET_FOLDER/$secretPath".replace("//", "/")
             secretFolder to encryptionService.encrypt(it.value)
         }.toMap()
 
-        gitService.saveFilesAndClose(affiliation, jsonFiles + encryptedSecrets)
+        return jsonFiles + encryptedSecrets
     }
 
     fun findAuroraConfig(affiliation: String): AuroraConfig {
@@ -76,7 +85,7 @@ class AuroraConfigService(
 
         if (commitChanges) {
             measureTimeMillis {
-                save(affiliation, newAuroraConfig)
+                save(repo, newAuroraConfig)
             }.let { logger.debug("Spent {} millis committing and pushing to git", it) }
         } else {
             measureTimeMillis {
