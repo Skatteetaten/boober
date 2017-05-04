@@ -35,7 +35,7 @@ class AuroraConfigController(val auroraConfigService: AuroraConfigService) {
         })
     }
 
-    @PatchMapping("/{affiliation}/auroraconfig/**")
+    @PatchMapping(value = "/{affiliation}/auroraconfig/**", consumes = arrayOf("application/json-patch+json"))
     fun patchAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest,
                               @RequestBody jsonPatchOp: String) {
 
