@@ -1,9 +1,14 @@
 package no.skatteetaten.aurora.boober.model
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+
 import no.skatteetaten.aurora.boober.service.ApplicationId
 import spock.lang.Specification
 
 class AuroraConfigTest extends Specification {
+
+  def mapper = new ObjectMapper()
 
   def "Should fetch secrets"() {
     given:
@@ -48,7 +53,8 @@ class AuroraConfigTest extends Specification {
 
     when:
       def filesForApplication = auroraConfig.
-          getFilesForApplication(new ApplicationId("utv", "referanse"), [new AuroraConfigFile("about.json", [:])])
+          getFilesForApplication(new ApplicationId("utv", "referanse"), [
+              overrideFile("about.json")])
 
     then:
       filesForApplication.size() == 5
@@ -61,7 +67,8 @@ class AuroraConfigTest extends Specification {
 
     when:
       def filesForApplication = auroraConfig.
-          getFilesForApplication(new ApplicationId("utv", "referanse"), [new AuroraConfigFile("referanse.json", [:])])
+          getFilesForApplication(new ApplicationId("utv", "referanse"),
+              [overrideFile("referanse.json")])
 
     then:
       filesForApplication.size() == 5
@@ -75,7 +82,7 @@ class AuroraConfigTest extends Specification {
     when:
       def filesForApplication = auroraConfig.
           getFilesForApplication(new ApplicationId("utv", "referanse"),
-              [new AuroraConfigFile("utv/referanse.json", [:])])
+              [overrideFile("utv/referanse.json")])
 
     then:
       filesForApplication.size() == 5
@@ -95,6 +102,10 @@ class AuroraConfigTest extends Specification {
   }
 
   List<AuroraConfigFile> createMockFiles(String... files) {
-    files.collect { new AuroraConfigFile(it, [:]) }
+    files.collect { new AuroraConfigFile(it, mapper.readValue("{}", JsonNode.class), false) }
+  }
+
+  def overrideFile(String fileName) {
+    new AuroraConfigFile(fileName, mapper.readValue("{}", JsonNode.class), true)
   }
 }

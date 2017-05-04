@@ -7,6 +7,9 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraConfig
@@ -46,6 +49,9 @@ class SetupServiceTest extends Specification {
   }
 
   @Autowired
+  ObjectMapper mapper
+
+  @Autowired
   OpenShiftClient openShiftClient
 
   @Autowired
@@ -60,8 +66,8 @@ class SetupServiceTest extends Specification {
   private static AuroraConfig createAuroraConfig(String envName = SampleFilesCollector.ENV_NAME,
       Map<String, String> secrets = [:]) {
 
-    Map<String, Map<String, Object>> files = getQaEbsUsersSampleFilesForEnv(envName)
-    new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value) }, secrets)
+    Map<String, JsonNode> files = getQaEbsUsersSampleFilesForEnv(envName)
+    new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, secrets)
   }
 
   def "Should create aurora dc for application"() {
