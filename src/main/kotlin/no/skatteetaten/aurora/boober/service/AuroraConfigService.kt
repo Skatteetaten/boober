@@ -136,10 +136,10 @@ class AuroraConfigService(
         errors.takeIf { it.isNotEmpty() }?.let {
             throw ApplicationConfigException("Config for application ${aid.applicationName} in environment ${aid.environmentName} contains errors", errors = it.mapNotNull { it.message })
         }
+        val groupId = fields.extract("groupId")
 
 
-        val generatedCert = "" //TODO:fix
-
+        val generatedCert =
         val webseal = if (!fields.containsKey("webseal/path")) {
             null
         } else {
@@ -194,7 +194,7 @@ class AuroraConfigService(
                 )),
                 replicas = fields["replicas"]?.value?.intValue() ?: 1,
                 artifactId = artifactId,
-                groupId = fields.extract("groupId"),
+                groupId = groupId,
                 version = fields.extract("version"),
                 extraTags = fields.extract("extraTags"),
                 splunkIndex = fields["splunkIndex"]?.value?.textValue(),
