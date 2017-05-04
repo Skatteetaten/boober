@@ -47,7 +47,7 @@ fun List<AuroraConfigFieldHandler>.extractFrom(files: List<AuroraConfigFile>): M
             }
         }
         if (matches.isEmpty() && handler.defultValue != null) {
-            logger.debug("Default match")
+            logger.debug("Default match ${handler.defultValue}")
             handler.name to AuroraConfigField(handler.path, TextNode(handler.defultValue), "default")
         } else if (matches.isEmpty()) {
             null

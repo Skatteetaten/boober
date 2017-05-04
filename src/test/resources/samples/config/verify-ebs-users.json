@@ -6,7 +6,7 @@
   "groupId": "ske.admin.lisens",
   "artifactId": "verify-ebs-users",
   "version": "1.0.3",
-  "splinkIndex": "openshift-test",
+  "splunkIndex": "openshift-test",
   "resources": {
     "memory": {
       "max": "128Mi"

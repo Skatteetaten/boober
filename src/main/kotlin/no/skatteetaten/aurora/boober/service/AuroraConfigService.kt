@@ -139,7 +139,8 @@ class AuroraConfigService(
         val groupId = fields.extract("groupId")
 
 
-        val generatedCert =
+        val generatedCert = groupId + "." + name
+
         val webseal = if (!fields.containsKey("webseal/path")) {
             null
         } else {
@@ -170,11 +171,11 @@ class AuroraConfigService(
                 type = type,
                 name = name,
                 flags = AuroraDeploymentConfigFlags(
-                        fields.extract("flags/route", { it.booleanValue() }),
-                        fields.extract("flags/cert", { it.booleanValue() }),
-                        fields.extract("flags/debug", { it.booleanValue() }),
-                        fields.extract("flags/alarm", { it.booleanValue() }),
-                        fields.extract("flags/rolling", { it.booleanValue() })
+                        fields.extract("flags/route", { it.asText() == "true" }),
+                        fields.extract("flags/cert", { it.asText() == "true" }),
+                        fields.extract("flags/debug", { it.asText() == "true" }),
+                        fields.extract("flags/alarm", { it.asText() == "true" }),
+                        fields.extract("flags/rolling", { it.asText() == "true" })
                 ),
                 resources = AuroraDeploymentConfigResources(
                         memory = AuroraDeploymentConfigResource(
@@ -192,7 +193,7 @@ class AuroraConfigService(
                         fields.extract("permissions/admin/users", { it.textValue().split(" ").toSet() })
 
                 )),
-                replicas = fields["replicas"]?.value?.intValue() ?: 1,
+                replicas = fields.extract("replicas").toInt(),
                 artifactId = artifactId,
                 groupId = groupId,
                 version = fields.extract("version"),

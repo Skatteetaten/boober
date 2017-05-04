@@ -3,13 +3,15 @@
   "apiVersion": "v1",
   "metadata": {
     "annotations": {
-      "marjory.skatteetaten.no/management-path": "$!{dd.managementPath}",
-      "marjory.skatteetaten.no/alarm": "${dd.alarm}"
-    #if(${dd.certificateCn})
-      ,"sprocket.sits.no/deployment-config.certificate": "${dd.certificateCn}"
+      "marjory.skatteetaten.no/management-path": "$!{adc.managementPath}",
+      "marjory.skatteetaten.no/alarm": "${adc.flags.alarm}"
+      #if(${adc.certificateCn})
+      ,
+        "sprocket.sits.no/deployment-config.certificate": "${adc.certificateCn}"
     #end
-    #if(${dd.database})
-      ,"sprocket.sits.no/deployment-config.database": "$!{dd.database}"
+      #if(${adc.database})
+      ,
+        "sprocket.sits.no/deployment-config.database": "$!{adc.database}"
     #end
     },
     "labels": {
@@ -20,7 +22,7 @@
     "name": "${adc.name}"
   },
   "spec": {
-    #if(${adc.deploymentStrategy} == "rolling")
+    #if(${adc.flags.rolling})
       "strategy": {
         "type": "Rolling",
         "rollingParams": {
