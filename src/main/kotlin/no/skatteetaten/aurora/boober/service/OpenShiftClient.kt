@@ -71,6 +71,7 @@ class OpenShiftClient(
         }
 
         if (kind == "deploymentconfig") {
+            json.updateField(existing, "/spec/triggers/0/imageChangeParams", "lastTriggeredImage")
             json.updateField(existing, "/spec/template/spec/containers/0", "image")
             //TODO:Handle sprocket done?
         }

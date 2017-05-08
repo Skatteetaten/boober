@@ -10,6 +10,45 @@ class AuroraConfigTest extends Specification {
 
   def mapper = new ObjectMapper()
 
+  def "url parse test"() {
+    given:
+      def stringUrl = "http://www.vg.no/"
+
+      URL url = new URL(stringUrl)
+
+    when:
+
+      def key = stringUrl
+      key = key.replace("https://", "")
+      key = key.replace("http://", "")
+      if (key.startsWith("/")) {
+        key = key.substring(1)
+      }
+      if (key.endsWith("/")) {
+        key = key.substring(0, key.length() - 1)
+      }
+      key = key.replaceAll(":", "_")
+      key = key.replaceAll("/", "_")
+      key = key.replaceAll("-", "_")
+
+      url.toExternalForm()
+      def portSegment = "_" + url.port
+      if (url.port == -1) {
+        portSegment = ""
+      }
+
+      def pathSegment = url.path
+      if (pathSegment.equalsIgnoreCase("/")) {
+        pathSegment = ""
+      }
+
+      def normalizedUrl = (url.host + portSegment + pathSegment).replaceAll(":|-|/", "_")
+
+    then:
+      normalizedUrl == "www.vg.no"
+      // key == "www.vg.no_index.html"
+  }
+
   def "Should fetch secrets"() {
     given:
       def auroraConfig = new AuroraConfig([], ["/tmp/foo/bar/secret1.properties": "Secret stuff"])
