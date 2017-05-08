@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.utils
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import groovy.json.JsonSlurper
 import no.skatteetaten.aurora.boober.Configuration
 
 class SampleFilesCollector {
@@ -15,7 +14,7 @@ class SampleFilesCollector {
     return collectFilesToMapOfJsonNode("about.json", "${APP_NAME}.json", "${ENV_NAME}/about.json", "${ENV_NAME}/${APP_NAME}.json")
   }
 
-  static Map<String, Map<String, Object>> getQaEbsUsersSampleFilesForEnv(String envName) {
+  static Map<String, JsonNode> getQaEbsUsersSampleFilesForEnv(String envName) {
     return collectFilesToMapOfJsonNode("about.json", "${APP_NAME}.json", "${envName}/about.json", "${envName}/${APP_NAME}.json")
   }
 
@@ -28,11 +27,10 @@ class SampleFilesCollector {
   static JsonNode collectFile(File dirName, String name) {
     ObjectMapper mapper = new Configuration().mapper()
 
-    return mapper.readValue(new File(dirName, name), JsonNode.class)
+    def json = mapper.readValue(new File(dirName, name), JsonNode.class)
+
+    return json
 
   }
 
-  static Map<String, Object> jsonToMap(String json) {
-    return new JsonSlurper().parseText(json) as Map<String, Object>
-  }
 }

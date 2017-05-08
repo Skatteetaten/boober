@@ -9,7 +9,6 @@ import org.springframework.http.MediaType
 
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.service.OpenShiftClient
@@ -32,7 +31,7 @@ class SetupControllerTest extends AbstractControllerTest {
       def files = SampleFilesCollector.qaEbsUsersSampleFiles
       files.put("about.json", mapper.readTree("{}"))
       SetupCommand cmd = new SetupCommand(AFFILIATION, new AuroraConfigPayload(files, [:]), new SetupParamsPayload([ENV_NAME], [APP_NAME], [:], false))
-      def json = JsonOutput.toJson(cmd)
+      def json = mapper.writeValueAsString(cmd)
 
     when:
       def response = mockMvc
@@ -43,7 +42,7 @@ class SetupControllerTest extends AbstractControllerTest {
       def body = new JsonSlurper().parseText(response.andReturn().response.getContentAsString())
 
     then:
-      body.items[0]["messages"].size() == 1
+      body.items[0]["messages"].size() == 2
       response.andExpect(status().is4xxClientError())
   }
 }
