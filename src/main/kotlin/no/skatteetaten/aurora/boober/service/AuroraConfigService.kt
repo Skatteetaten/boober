@@ -164,6 +164,8 @@ class AuroraConfigService(
         } else {
             aid.environmentName
         }
+        //TODO: handle secrets
+        //TODO:handle config
         val auroraDeploymentConfig = AuroraDeploymentConfig(
                 schemaVersion = fields.extract("schemaVersion"),
                 affiliation = fields.extract("affiliation"),
