@@ -43,7 +43,8 @@ class AuroraDeploymentConfigMapperV1 : AuroraDeploymentConfigMapper {
             AuroraConfigFieldHandler("webseal/roles"),
             AuroraConfigFieldHandler("prometheus/path"),
             AuroraConfigFieldHandler("prometheus/port"),
-            AuroraConfigFieldHandler("managementPath")
+            AuroraConfigFieldHandler("managementPath"),
+            AuroraConfigFieldHandler("secretFolder")
     )
 
 

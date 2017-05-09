@@ -102,6 +102,7 @@ class AuroraConfigService(
                        aid: ApplicationId,
                        overrides: List<AuroraConfigFile> = listOf(),
                        validateOpenShiftReferences: Boolean = true): AuroraDeploymentConfig {
+
         val allFiles = auroraConfig.getFilesForApplication(aid, overrides).reversed()
 
         val configExtractors = allFiles.findConfigExtractors()
@@ -110,6 +111,17 @@ class AuroraConfigService(
 
         val extractors = mapper.extractors + configExtractors
         val fields = extractors.extractFrom(allFiles)
+
+
+        val secrets = if (fields.containsKey("secretFolder")) {
+            auroraConfig.getSecrets(fields.extract("secretFolder"))
+        } else null
+
+        if (secrets != null && secrets.isEmpty()) {
+            val error = Error(aid, listOf("No secret files with prefix ${fields.extract("secretFolder")}"))
+            throw AuroraConfigException("Missing secret files",
+                                        errors = listOf(error))
+        }
 
         //here we need to handle more validation rule
         //if there are no secrets
@@ -205,7 +217,8 @@ class AuroraConfigService(
                 certificateCn = fields["certificateCn"]?.value?.textValue() ?: generatedCert,
                 webseal = webseal,
                 prometheus = prometheus,
-                managementPath = fields["managementPath"]?.value?.textValue()
+                managementPath = fields["managementPath"]?.value?.textValue(),
+                secrets = secrets
         )
 
 
@@ -244,10 +257,3 @@ class AuroraConfigService(
         createAuroraDcs(auroraConfig, appIds)
     }
 }
-
-
-fun Map<String, Any?>.s(field: String) = this[field]?.toString()
-fun Map<String, Any?>.i(field: String) = this[field] as Int?
-fun Map<String, Any?>.m(field: String) = this[field] as Map<String, Any?>?
-fun Map<String, Any?>.b(field: String) = this[field] as Boolean?
-fun Map<String, Any?>.a(field: String) = this[field] as List<String>?
