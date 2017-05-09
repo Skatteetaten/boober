@@ -84,6 +84,12 @@ class AuroraConfigService(
         return mapper.treeToValue(patchedContentsNode, Map::class.java) as JsonData
     }
 
+    fun updateFile(affiliation: String, filename: String, fileContents: Map<String, Any?>) {
+        withAuroraConfig(affiliation, true, { auroraConfig: AuroraConfig ->
+            auroraConfig.updateFile(filename, fileContents)
+        })
+    }
+
     fun withAuroraConfig(affiliation: String,
                          commitChanges: Boolean = true,
                          function: (AuroraConfig) -> AuroraConfig = { it -> it }): AuroraConfig {

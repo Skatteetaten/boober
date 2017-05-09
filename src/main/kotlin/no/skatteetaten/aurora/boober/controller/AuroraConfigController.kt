@@ -11,28 +11,30 @@ import javax.servlet.http.HttpServletRequest
 @RequestMapping("/affiliation")
 class AuroraConfigController(val auroraConfigService: AuroraConfigService) {
 
-    @PutMapping("/{affiliation}/auroraconfig/")
+    @PutMapping("/{affiliation}/auroraconfig")
     fun save(@PathVariable affiliation: String, @RequestBody payload: AuroraConfigPayload) {
 
         auroraConfigService.save(affiliation, payload.toAuroraConfig())
     }
 
-    @GetMapping("/{affiliation}/auroraconfig/")
+    @GetMapping("/{affiliation}/auroraconfig")
     fun get(@PathVariable affiliation: String): Response {
 
         return Response(items = listOf(auroraConfigService.findAuroraConfig(affiliation)).map(::fromAuroraConfig))
     }
 
-    @PutMapping("/{affiliation}/auroraconfig/**")
-    fun updateAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest,
+    @PutMapping("/{affiliation}/auroraconfig/{environment}/{filename:\\w+}.json")
+    fun updateAuroraConfigFile(@PathVariable affiliation: String, @PathVariable environment: String,
+                                  @PathVariable filename: String, @RequestBody fileContents: Map<String, Any?>) {
+
+        auroraConfigService.updateFile(affiliation, "$environment/$filename.json", fileContents)
+    }
+
+    @PutMapping("/{affiliation}/auroraconfig/{filename:\\w+}.json")
+    fun updateAuroraConfigFile(@PathVariable affiliation: String, @PathVariable filename: String,
                                @RequestBody fileContents: Map<String, Any?>) {
 
-        val path = "affiliation/$affiliation/auroraconfig/**"
-        val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
-
-        auroraConfigService.withAuroraConfig(affiliation, true, { auroraConfig: AuroraConfig ->
-            auroraConfig.updateFile(fileName, fileContents)
-        })
+        auroraConfigService.updateFile(affiliation, "$filename.json", fileContents)
     }
 
     @PatchMapping(value = "/{affiliation}/auroraconfig/**", consumes = arrayOf("application/json-patch+json"))
@@ -47,6 +49,7 @@ class AuroraConfigController(val auroraConfigService: AuroraConfigService) {
             auroraConfig.updateFile(fileName, fileContents)
         })
     }
+
 }
 
 
