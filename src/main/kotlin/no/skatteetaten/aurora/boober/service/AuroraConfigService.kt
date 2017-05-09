@@ -176,8 +176,19 @@ class AuroraConfigService(
         } else {
             aid.environmentName
         }
-        //TODO: handle secrets
-        //TODO:handle config
+
+        val configMap: MutableMap<String, MutableMap<String, String>> = mutableMapOf()
+
+        configExtractors.forEach {
+            val (_, configFile, field) = it.name.split("/")
+
+            val value = fields.extract(it.name)
+            val keyValue = mutableMapOf(field to value)
+
+            if (configMap.containsKey(configFile)) configMap[configFile]?.putAll(keyValue)
+            else configMap.put(configFile, keyValue)
+        }
+
         val auroraDeploymentConfig = AuroraDeploymentConfig(
                 schemaVersion = fields.extract("schemaVersion"),
                 affiliation = fields.extract("affiliation"),
@@ -218,7 +229,8 @@ class AuroraConfigService(
                 webseal = webseal,
                 prometheus = prometheus,
                 managementPath = fields["managementPath"]?.value?.textValue(),
-                secrets = secrets
+                secrets = secrets,
+                config = if (configMap.isNotEmpty()) configMap else null
         )
 
 

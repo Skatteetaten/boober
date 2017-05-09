@@ -12,7 +12,7 @@
     #if (${adc.type} == "deploy")
     ,
       "spec": {
-        "dockerImageRepository": "${dockerRegistry}/${dd.dockerGroup}/${adc.dockerName}",
+        "dockerImageRepository": "${dockerRegistry}/${adc.dockerGroup}/${adc.dockerName}",
         "tags": [
           {
             "name": "default",

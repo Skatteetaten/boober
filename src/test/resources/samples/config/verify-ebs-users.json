@@ -11,5 +11,10 @@
     "memory": {
       "max": "128Mi"
     }
+  },
+  "config": {
+    "latest.properties" : {
+      "Baz": "Bar"
+    }
   }
 }
