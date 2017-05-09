@@ -28,7 +28,7 @@ fun emptyValidator(node: JsonNode?) = null
 data class AuroraConfigFieldHandler(val name: String,
                                     val path: String = "/$name",
                                     val validator: (JsonNode?) -> Exception? = ::emptyValidator,
-                                    val defultValue: String? = null)
+                                    val defaultValue: String? = null)
 
 
 fun List<AuroraConfigFieldHandler>.extractFrom(files: List<AuroraConfigFile>): Map<String, AuroraConfigField> {
@@ -46,9 +46,9 @@ fun List<AuroraConfigFieldHandler>.extractFrom(files: List<AuroraConfigFile>): M
                 handler.name to AuroraConfigField(handler.path, value, it.configName)
             }
         }
-        if (matches.isEmpty() && handler.defultValue != null) {
-            logger.debug("Default match ${handler.defultValue}")
-            handler.name to AuroraConfigField(handler.path, TextNode(handler.defultValue), "default")
+        if (matches.isEmpty() && handler.defaultValue != null) {
+            logger.debug("Default match ${handler.defaultValue}")
+            handler.name to AuroraConfigField(handler.path, TextNode(handler.defaultValue), "default")
         } else if (matches.isEmpty()) {
             null
         } else {
