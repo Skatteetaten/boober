@@ -39,7 +39,7 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val secre
         val uniqueFileNames = HashSet(allFiles.map { it.name })
         if (uniqueFileNames.size != requiredFilesForApplication.size) {
             val missingFiles = requiredFilesForApplication.filter { it !in uniqueFileNames }
-            throw IllegalArgumentException("Unable to merge files because some required files are missing. Missing ${missingFiles}.")
+            throw IllegalArgumentException("Unable to merge files because some required files are missing. Missing $missingFiles.")
         }
 
         return allFiles

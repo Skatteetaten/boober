@@ -152,13 +152,10 @@ class SetupServiceTest extends Specification {
       AuroraConfig auroraConfig = createAuroraConfig(envName)
 
     when:
-
       auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [new ApplicationId(envName, APP_NAME)], [], false)
 
 
     then:
-      AuroraConfigException e = thrown()
-      e.errors.size() == 1
-      e.errors[0].messages[0] == "No secret files with prefix /tmp/foo"
+      thrown(AuroraConfigException)
   }
 }

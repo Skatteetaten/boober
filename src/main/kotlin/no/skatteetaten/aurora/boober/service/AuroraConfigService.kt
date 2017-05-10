@@ -24,6 +24,7 @@ class AuroraConfigService(
     fun save(affiliation: String, auroraConfig: AuroraConfig) {
 
         auroraDeploymentConfigService.validate(auroraConfig)
+
         val jsonFiles: Map<String, String> = auroraConfig.auroraConfigFiles.map {
             it.name to mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it.contents)
         }.toMap()
