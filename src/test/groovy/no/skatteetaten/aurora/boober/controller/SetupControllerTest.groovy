@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import groovy.json.JsonSlurper
 import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.service.OpenShiftClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.SampleFilesCollector
 
 class SetupControllerTest extends AbstractControllerTest {

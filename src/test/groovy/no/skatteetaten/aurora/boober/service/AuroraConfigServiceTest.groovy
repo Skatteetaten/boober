@@ -12,9 +12,13 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
+import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import spock.lang.Ignore
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
@@ -27,9 +31,8 @@ import spock.mock.DetachedMockFactory
     AuroraConfigService,
     GitService,
     OpenShiftClient,
-    EncryptionConfig,
     EncryptionService,
-    OpenshiftResourceClient
+    OpenShiftResourceClient
 ])
 class AuroraConfigServiceTest extends Specification {
 
@@ -47,8 +50,8 @@ class AuroraConfigServiceTest extends Specification {
     }
 
     @Bean
-    OpenshiftResourceClient openshiftResourceClient() {
-      factory.Mock(OpenshiftResourceClient)
+    OpenShiftResourceClient openshiftResourceClient() {
+      factory.Mock(OpenShiftResourceClient)
     }
 
     @Bean

@@ -12,17 +12,20 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+
 import no.skatteetaten.aurora.boober.utils.SampleFilesCollector
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration,
     GitService,
-    AuroraConfigService,
+    AuroraDeploymentConfigService,
     OpenShiftService,
-    EncryptionConfig,
     EncryptionService,
     Config])
 class SetupServiceTest extends Specification {
@@ -49,15 +52,12 @@ class SetupServiceTest extends Specification {
   }
 
   @Autowired
-  ObjectMapper mapper
-
-  @Autowired
   OpenShiftClient openShiftClient
 
   @Autowired
   UserDetailsProvider userDetailsProvider
   @Autowired
-  AuroraConfigService auroraConfigService
+  AuroraDeploymentConfigService auroraDeploymentConfigService
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
@@ -80,7 +80,7 @@ class SetupServiceTest extends Specification {
       AuroraConfig auroraConfig = createAuroraConfig()
 
     when:
-      def result = auroraConfigService.createAuroraDcs(auroraConfig, [aid], [], false)
+      def result = auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [aid], [], false)
 
     then:
       result != null
@@ -96,7 +96,7 @@ class SetupServiceTest extends Specification {
       AuroraConfig auroraConfig = createAuroraConfig()
 
     when:
-      auroraConfigService.createAuroraDcs(auroraConfig, [aid], [], true)
+      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [aid], [], true)
 
     then:
       AuroraConfigException e = thrown()
@@ -114,7 +114,7 @@ class SetupServiceTest extends Specification {
       AuroraConfig auroraConfig = createAuroraConfig()
 
     when:
-      auroraConfigService.createAuroraDcs(auroraConfig, [aid], [], true)
+      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [aid], [], true)
 
     then:
       AuroraConfigException e = thrown()
@@ -134,7 +134,7 @@ class SetupServiceTest extends Specification {
 
     when:
 
-      def result = auroraConfigService.
+      def result = auroraDeploymentConfigService.
           createAuroraDcs(auroraConfig, [new ApplicationId(envName, APP_NAME)], [], false)
 
     then:
@@ -153,7 +153,7 @@ class SetupServiceTest extends Specification {
 
     when:
 
-      auroraConfigService.createAuroraDcs(auroraConfig, [new ApplicationId(envName, APP_NAME)], [], false)
+      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [new ApplicationId(envName, APP_NAME)], [], false)
 
 
     then:

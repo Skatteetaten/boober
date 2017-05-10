@@ -1,67 +1,43 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
+import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import no.skatteetaten.aurora.boober.model.TemplateType.*
+import no.skatteetaten.aurora.boober.service.internal.ApplicationResult
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
+import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
-data class ApplicationId(
-        val environmentName: String,
-        val applicationName: String
-) {
-    override fun toString(): String {
-        return "$environmentName-$applicationName"
-    }
-}
-
-data class ApplicationResult(
-        val applicationId: ApplicationId,
-        val auroraDc: AuroraDeploymentConfig,
-        val openShiftResponses: List<OpenShiftResponse> = listOf()
-)
-
-data class Error(
-        val applicationId: ApplicationId,
-        val messages: List<String> = listOf()
-)
-
-data class SetupParams(
-        val envs: List<String> = listOf(),
-        val apps: List<String> = listOf(),
-        val overrides: List<AuroraConfigFile> = listOf(),
-        val dryRun: Boolean = false
-) {
-    val applicationIds: List<ApplicationId>
-        get() = envs.flatMap { env -> apps.map { app -> ApplicationId(env, app) } }
-}
-
 @Service
 class SetupService(
-        val auroraConfigService: AuroraConfigService,
+        val auroraDeploymentConfigService: AuroraDeploymentConfigService,
         val openShiftService: OpenShiftService,
         val openShiftClient: OpenShiftClient,
-        @Value("\${openshift.cluster}") val cluster: String
-) {
+        @Value("\${openshift.cluster}") val cluster: String) {
 
     val logger: Logger = LoggerFactory.getLogger(SetupService::class.java)
 
     //TODO: test
-    fun executeSetup(auroraConfig: AuroraConfig, setupParams: SetupParams): List<ApplicationResult> {
+    fun executeSetup(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>,
+                     overrides: List<AuroraConfigFile>): List<ApplicationResult> {
 
-        val applicationIds: List<ApplicationId> = setupParams.applicationIds
+        val appIds: List<ApplicationId> = applicationIds
                 .takeIf { it.isNotEmpty() } ?: auroraConfig.getApplicationIds()
-        val auroraDcs = auroraConfigService.createAuroraDcs(auroraConfig, applicationIds, setupParams.overrides)
+
+        val auroraDcs = auroraDeploymentConfigService.createAuroraDcs(auroraConfig, appIds, overrides)
 
         return auroraDcs.filter { it.cluster == cluster }
-                .map { applyDeploymentConfig(it, setupParams.dryRun) }
+                .map { applyDeploymentConfig(it) }
     }
 
-    private fun applyDeploymentConfig(adc: AuroraDeploymentConfig, dryRun: Boolean = false): ApplicationResult {
+    private fun applyDeploymentConfig(adc: AuroraDeploymentConfig): ApplicationResult {
 
         logger.info("Creating OpenShift objects for application ${adc.name} in namespace ${adc.namespace}")
         val openShiftObjects: List<JsonNode> = openShiftService.generateObjects(adc)
@@ -77,7 +53,6 @@ class SetupService(
                     .map { openShiftService.generateDeploymentRequest(adc) }
                     .firstOrNull()
         }
-
 
         val finalResponse = deployResource?.let {
             openShiftResponses + openShiftClient.apply(adc.namespace, it)

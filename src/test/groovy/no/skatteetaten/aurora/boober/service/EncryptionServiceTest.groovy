@@ -8,7 +8,6 @@ import spock.lang.Specification
 
 @SpringBootTest(classes = [
     Configuration,
-    EncryptionConfig,
     EncryptionService
 ])
 class EncryptionServiceTest extends Specification {

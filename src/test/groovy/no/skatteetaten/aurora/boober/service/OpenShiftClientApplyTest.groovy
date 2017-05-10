@@ -11,6 +11,10 @@ import org.springframework.web.client.HttpClientErrorException
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.service.internal.OpenShiftException
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import spock.lang.Specification
 import spock.lang.Unroll
 import spock.mock.DetachedMockFactory
@@ -28,9 +32,9 @@ class OpenShiftClientApplyTest extends Specification {
     private DetachedMockFactory factory = new DetachedMockFactory()
 
     @Bean
-    OpenshiftResourceClient resourceClient() {
+    OpenShiftResourceClient resourceClient() {
 
-      factory.Mock(OpenshiftResourceClient)
+      factory.Mock(OpenShiftResourceClient)
     }
   }
 
@@ -38,7 +42,7 @@ class OpenShiftClientApplyTest extends Specification {
   OpenShiftClient openShiftClient
 
   @Autowired
-  OpenshiftResourceClient resource
+  OpenShiftResourceClient resource
 
   @Autowired
   ObjectMapper mapper

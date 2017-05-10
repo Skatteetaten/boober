@@ -12,18 +12,22 @@ import com.fasterxml.jackson.databind.JsonNode
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration,
-    OpenshiftResourceClient,
+    OpenShiftResourceClient,
     OpenShiftClient,
-    EncryptionConfig,
     EncryptionService,
-    AuroraConfigService, GitService, OpenShiftService, Config])
+    AuroraDeploymentConfigService,
+    GitService, OpenShiftService, Config])
 class OpenShiftServiceTest extends Specification {
 
   public static final String ENV_NAME = "booberdev"
@@ -57,7 +61,7 @@ class OpenShiftServiceTest extends Specification {
   UserDetailsProvider userDetailsProvider
 
   @Autowired
-  AuroraConfigService auroraConfigParserService
+  AuroraDeploymentConfigService auroraDeploymentConfigService
 
 
   def "Should create OpenShift objects from Velocity templates"() {
@@ -67,7 +71,7 @@ class OpenShiftServiceTest extends Specification {
 
     when:
       def auroraConfig = new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])
-      AuroraDeploymentConfig auroraDc = auroraConfigParserService.createAuroraDc(auroraConfig, aid, [], false)
+      AuroraDeploymentConfig auroraDc = auroraDeploymentConfigService.createAuroraDc(auroraConfig, aid, [], false)
       List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc)
 
       def service = generatedObjects.find { it.get("kind").asText() == "Service" }

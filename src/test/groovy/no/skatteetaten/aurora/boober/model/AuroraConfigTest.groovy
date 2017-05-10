@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.model
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import no.skatteetaten.aurora.boober.service.ApplicationId
 import spock.lang.Specification
 
 class AuroraConfigTest extends Specification {

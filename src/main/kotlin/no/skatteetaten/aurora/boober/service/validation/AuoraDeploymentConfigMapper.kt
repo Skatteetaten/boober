@@ -1,6 +1,5 @@
-package no.skatteetaten.aurora.boober.service
+package no.skatteetaten.aurora.boober.service.validation
 
-import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.utils.length
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.pattern
@@ -19,6 +18,7 @@ class AuroraDeploymentConfigMapperV1 : AuroraDeploymentConfigMapper {
             AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
             AuroraConfigFieldHandler("type", validator = { it.required("Type is required") }),
             AuroraConfigFieldHandler("name"),
+            AuroraConfigFieldHandler("envName"),
             AuroraConfigFieldHandler("flags/route", defaultValue = "false"),
             AuroraConfigFieldHandler("flags/cert", defaultValue = "false"),
             AuroraConfigFieldHandler("flags/debug", defaultValue = "false"),
@@ -28,7 +28,6 @@ class AuroraDeploymentConfigMapperV1 : AuroraDeploymentConfigMapper {
             AuroraConfigFieldHandler("resources/cpu/max", defaultValue = "2000m"),
             AuroraConfigFieldHandler("resources/memory/min", defaultValue = "128Mi"),
             AuroraConfigFieldHandler("resources/memory/max", defaultValue = "256Mi"),
-            AuroraConfigFieldHandler("envName"),
             AuroraConfigFieldHandler("permissions/admin/groups", validator = { it.notBlank("Groups must be set.") }),
             AuroraConfigFieldHandler("permissions/admin/users"),
             AuroraConfigFieldHandler("replicas", defaultValue = "1"),
@@ -46,6 +45,4 @@ class AuroraDeploymentConfigMapperV1 : AuroraDeploymentConfigMapper {
             AuroraConfigFieldHandler("managementPath"),
             AuroraConfigFieldHandler("secretFolder")
     )
-
-
 }
