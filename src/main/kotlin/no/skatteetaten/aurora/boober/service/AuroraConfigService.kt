@@ -22,7 +22,7 @@ class AuroraConfigService(
         val auroraDeploymentConfigService: AuroraDeploymentConfigService,
         val encryptionService: EncryptionService) {
 
-    private val SECRET_FOLDER = ".secret"
+    private val GIT_SECRET_FOLDER = ".secret"
     private val logger = LoggerFactory.getLogger(AuroraConfigService::class.java)
 
     fun save(affiliation: String, auroraConfig: AuroraConfig) {
@@ -45,16 +45,18 @@ class AuroraConfigService(
                     ?.let { it.subList(it.size - 2, it.size) }
                     ?.joinToString("/") ?: it.key
 
-            val secretFolder = "$SECRET_FOLDER/$secretPath".replace("//", "/")
+            val secretFolder = secretPath.split("/")[0]
+            val gitSecretFolder = "$GIT_SECRET_FOLDER/$secretPath".replace("//", "/")
 
             auroraConfig.auroraConfigFiles
                     .filter { it.contents.has("secretFolder") }
+                    .filter { it.contents.get("secretFolder").asText().contains(secretFolder) }
                     .forEach {
                         val folder = secretPath.split("/")[0]
-                        (it.contents as ObjectNode).put("secretFolder", "$SECRET_FOLDER/$folder")
+                        (it.contents as ObjectNode).put("secretFolder", "$GIT_SECRET_FOLDER/$folder")
                     }
 
-            secretFolder to encryptionService.encrypt(it.value)
+            gitSecretFolder to encryptionService.encrypt(it.value)
 
         }.toMap()
 
@@ -73,11 +75,11 @@ class AuroraConfigService(
     fun createAuroraConfigFromFiles(filesForAffiliation: Map<String, File>): AuroraConfig {
 
         val secretFiles: Map<String, String> = filesForAffiliation
-                .filter { it.key.startsWith(SECRET_FOLDER) }
+                .filter { it.key.startsWith(GIT_SECRET_FOLDER) }
                 .map { it.key to encryptionService.decrypt(it.value.readText()) }.toMap()
 
         val auroraConfigFiles = filesForAffiliation
-                .filter { !it.key.startsWith(SECRET_FOLDER) }
+                .filter { !it.key.startsWith(GIT_SECRET_FOLDER) }
                 .map { AuroraConfigFile(it.key, mapper.readValue(it.value)) }
 
         return AuroraConfig(auroraConfigFiles = auroraConfigFiles, secrets = secretFiles)
