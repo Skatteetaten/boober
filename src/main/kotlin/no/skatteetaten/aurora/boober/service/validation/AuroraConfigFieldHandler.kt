@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.service.validation
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
-import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigField
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import org.slf4j.Logger
@@ -40,20 +39,6 @@ fun List<AuroraConfigFieldHandler>.extractFrom(files: List<AuroraConfigFile>): M
             else -> null
         }
     }.toMap()
-}
-
-fun List<AuroraConfigFile>.findSecretExtractors(): List<AuroraConfigFieldHandler> {
-    return listOf()
-}
-
-fun List<AuroraConfigFile>.findApplicationId(): ApplicationId {
-
-    return this.map { it.name.removeSuffix(".json") }
-            .map { it.split("/") }
-            .filter { it.size > 1 }
-            .filter { it[1] != "about" }
-            .map { (env, app) -> ApplicationId(env, app) }
-            .first()
 }
 
 fun List<AuroraConfigFile>.findConfigExtractors(): List<AuroraConfigFieldHandler> {

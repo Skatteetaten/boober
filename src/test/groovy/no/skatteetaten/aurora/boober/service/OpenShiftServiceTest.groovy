@@ -18,7 +18,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
-
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -63,7 +62,6 @@ class OpenShiftServiceTest extends Specification {
   @Autowired
   AuroraDeploymentConfigService auroraDeploymentConfigService
 
-
   def "Should create OpenShift objects from Velocity templates"() {
     given:
       userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User")
@@ -71,7 +69,7 @@ class OpenShiftServiceTest extends Specification {
 
     when:
       def auroraConfig = new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])
-      AuroraDeploymentConfig auroraDc = auroraDeploymentConfigService.createAuroraDc(auroraConfig, aid, [], false)
+      AuroraDeploymentConfig auroraDc = auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig, [])
       List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc)
 
       def service = generatedObjects.find { it.get("kind").asText() == "Service" }

@@ -22,30 +22,25 @@ class AuroraDeploymentConfigService(val openShiftClient: OpenShiftClient) {
                         validateOpenShiftReferences: Boolean = true): List<AuroraDeploymentConfig> {
 
         return applicationIds.map { aid ->
-            val result: Result<AuroraDeploymentConfig, Error?> = try {
-
-                val allFiles: List<AuroraConfigFile> = auroraConfig.getFilesForApplication(aid, overrides).reversed()
-                val auroraDc = createAuroraDc(allFiles)
-
+            try {
+                val auroraDc = createAuroraDc(aid, auroraConfig, overrides)
                 validateAuroraDc(aid, auroraDc, validateOpenShiftReferences)
 
-                Result(value = auroraDc)
+                Result<AuroraDeploymentConfig, Error?>(value = auroraDc)
             } catch (e: ApplicationConfigException) {
-                Result(error = Error(aid, e.errors))
+                Result<AuroraDeploymentConfig, Error?>(error = Error(aid, e.errors))
             }
-            result
         }.orElseThrow {
             AuroraConfigException("AuroraConfig contained errors for one or more applications", it)
         }
     }
 
-    fun getFields(aid: ApplicationId, allFiles: List<AuroraConfigFile>): Map<String, AuroraConfigField> {
+    fun getAuroraConfigFields(aid: ApplicationId, allFiles: List<AuroraConfigFile>): Map<String, AuroraConfigField> {
 
         val configExtractors = allFiles.findConfigExtractors()
-        val secretExtractors = allFiles.findSecretExtractors()
 
         val mapper = AuroraDeploymentConfigMapperV1()
-        val extractors = mapper.extractors + configExtractors + secretExtractors
+        val extractors = mapper.extractors + configExtractors
         val fields = extractors.extractFrom(allFiles)
 
         extractors.mapNotNull { e -> e.validator(fields[e.name]?.value) }
@@ -59,10 +54,10 @@ class AuroraDeploymentConfigService(val openShiftClient: OpenShiftClient) {
         return fields
     }
 
-    fun createAuroraDc(allFiles: List<AuroraConfigFile>): AuroraDeploymentConfig {
+    fun createAuroraDc(aid: ApplicationId, auroraConfig: AuroraConfig, overrides: List<AuroraConfigFile>): AuroraDeploymentConfig {
 
-        val aid = allFiles.findApplicationId()
-        val fields = getFields(aid, allFiles)
+        val allFiles: List<AuroraConfigFile> = auroraConfig.getFilesForApplication(aid, overrides).reversed()
+        val fields: Map<String, AuroraConfigField> = getAuroraConfigFields(aid, allFiles)
 
         val groupId = fields.extract("groupId")
         val artifactId = fields.extract("artifactId")
@@ -116,22 +111,49 @@ class AuroraDeploymentConfigService(val openShiftClient: OpenShiftClient) {
                 webseal = getWebSEAL(fields),
                 prometheus = getPrometheus(fields),
 
-                // TODO: Fix secrets
-//                secrets = getSecrets(fields, allFiles.findSecretExtractors()),
+                secrets = getSecrets(fields, auroraConfig),
                 config = getConfigMap(fields, allFiles.findConfigExtractors())
         )
     }
 
-    private fun getSecrets(fields: Map<String, AuroraConfigField>,
-                           secretExtractors: List<AuroraConfigFieldHandler>): Map<String, String>? {
+    private fun validateAuroraDc(aid: ApplicationId, auroraDc: AuroraDeploymentConfig, validateOpenShiftReferences: Boolean) {
 
-        val secrets: MutableMap<String, String> = mutableMapOf()
+        val errors = mutableListOf<Exception>()
 
-//        return if (fields.containsKey("secretFolder")) {
-//            auroraConfig.getSecrets(fields.extract("secretFolder"))
-//        } else null
+        if (auroraDc.secrets != null && auroraDc.secrets.isEmpty()) {
+            errors.add(IllegalArgumentException("Missing secret files"))
+        }
 
-        return secrets
+        if (auroraDc.type == TemplateType.process) {
+            errors.add(IllegalArgumentException("Not handled yet"))
+        }
+
+        if (!Regex("^[a-z][-a-z0-9]{0,23}[a-z0-9]$").matches(auroraDc.name)) {
+            errors.add(IllegalArgumentException("Name is not valid DNS952 label. 24 length alphanumeric."))
+        }
+
+        if (validateOpenShiftReferences) {
+            auroraDc.permissions.admin.groups
+                    .filter { !openShiftClient.isValidGroup(it) }
+                    .takeIf { it.isNotEmpty() }
+                    ?.let { errors.add(AuroraConfigException("The following groups are not valid=${it.joinToString()}")) }
+
+            auroraDc.permissions.admin.users
+                    .filter { !openShiftClient.isValidUser(it) }
+                    .takeIf { it.isNotEmpty() }
+                    ?.let { errors.add(AuroraConfigException("The following users are not valid=${it.joinToString()}")) }
+        }
+
+        errors.takeIf { it.isNotEmpty() }?.let {
+            throw ApplicationConfigException("Config for application ${aid.applicationName} in environment ${aid.environmentName} contains errors", errors = it.mapNotNull { it.message })
+        }
+    }
+
+    private fun getSecrets(fields: Map<String, AuroraConfigField>, auroraConfig: AuroraConfig): Map<String, String>? {
+
+        return if (fields.containsKey("secretFolder")) {
+            auroraConfig.getSecrets(fields.extract("secretFolder"))
+        } else null
     }
 
     private fun getConfigMap(fields: Map<String, AuroraConfigField>,
@@ -169,42 +191,5 @@ class AuroraDeploymentConfigService(val openShiftClient: OpenShiftClient) {
                     fields.extract("prometheus/port", JsonNode::asInt)
             )
         } else null
-    }
-
-    private fun validateAuroraDc(aid: ApplicationId, auroraDc: AuroraDeploymentConfig, validateOpenShiftReferences: Boolean) {
-
-        val errors = mutableListOf<Exception>()
-
-        if (auroraDc.secrets != null && auroraDc.secrets.isEmpty()) {
-            errors.add(IllegalArgumentException("Missing secret files"))
-        }
-
-        if (auroraDc.type == TemplateType.process) {
-            errors.add(IllegalArgumentException("Not handled yet"))
-        }
-
-        if (!Regex("^[a-z][-a-z0-9]{0,23}[a-z0-9]$").matches(auroraDc.name)) {
-            errors.add(IllegalArgumentException("Name is not valid DNS952 label. 24 length alphanumeric."))
-        }
-
-        if (validateOpenShiftReferences) {
-            val errorMessages: MutableList<String> = mutableListOf()
-
-            auroraDc.permissions.admin.groups
-                    .filter { !openShiftClient.isValidGroup(it) }
-                    .takeIf { it.isNotEmpty() }
-                    ?.let { errorMessages.add("The following groups are not valid=${it.joinToString()}") }
-
-            auroraDc.permissions.admin.users
-                    .filter { !openShiftClient.isValidUser(it) }
-                    .takeIf { it.isNotEmpty() }
-                    ?.let { errorMessages.add("The following users are not valid=${it.joinToString()}") }
-
-            errors.add(ApplicationConfigException("Configuration contained references to one or more objects on OpenShift that does not exist", errors = errorMessages))
-        }
-
-        errors.takeIf { it.isNotEmpty() }?.let {
-            throw ApplicationConfigException("Config for application ${aid.applicationName} in environment ${aid.environmentName} contains errors", errors = it.mapNotNull { it.message })
-        }
     }
 }
