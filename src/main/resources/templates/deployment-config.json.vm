@@ -48,7 +48,11 @@
                 "${adc.name}"
               ],
               "from": {
+              #if(${adc.type} == "development")
+                "name": "${adc.name}:latest",
+              #else
                 "name": "${adc.name}:default",
+              #end
                 "kind": "ImageStreamTag"
               }
             }
