@@ -85,8 +85,11 @@ class GitService(
 
         files.forEach { (fileName, value) ->
             fileName.split("/")
-                    .takeIf { it.size == 2 }
-                    ?.let { File(git.repository.directory.parent, it[0]).mkdirs() }
+                    .takeIf { it.size >= 2 }
+                    ?.let {
+                        val subFolder = it.dropLast(1).joinToString("/")
+                        File(git.repository.directory.parent, subFolder).mkdirs()
+                    }
 
             val file = File(git.repository.directory.parent, fileName).apply { createNewFile() }
 

@@ -25,15 +25,31 @@ class AuroraConfigService(
 
         auroraDeploymentConfigService.validate(auroraConfig)
 
+        gitService.saveFilesAndClose(affiliation, validateAndPrepareForSave(auroraConfig))
+    }
+
+    fun save(repo: Git, auroraConfig: AuroraConfig) {
+
+        gitService.saveFilesAndClose(repo, validateAndPrepareForSave(auroraConfig))
+    }
+
+    private fun validateAndPrepareForSave(auroraConfig: AuroraConfig): Map<String, String> {
+        validate(auroraConfig)
         val jsonFiles: Map<String, String> = auroraConfig.auroraConfigFiles.map {
             it.name to mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it.contents)
         }.toMap()
 
         val encryptedSecrets = auroraConfig.secrets.map {
-            "$SECRET_FOLDER/${it.key}" to encryptionService.encrypt(it.value)
+            val secretPath = it.key.split("/")
+                    .takeIf { it.size >= 2 }
+                    ?.let { it.subList(it.size - 2, it.size) }
+                    ?.joinToString("/") ?: it.key
+
+            val secretFolder = "$SECRET_FOLDER/$secretPath".replace("//", "/")
+            secretFolder to encryptionService.encrypt(it.value)
         }.toMap()
 
-        gitService.saveFilesAndClose(affiliation, jsonFiles + encryptedSecrets)
+        return jsonFiles + encryptedSecrets
     }
 
     fun findAuroraConfig(affiliation: String): AuroraConfig {
@@ -49,9 +65,21 @@ class AuroraConfigService(
 
         val auroraConfigFiles = filesForAffiliation
                 .filter { !it.key.startsWith(SECRET_FOLDER) }
-                .map { AuroraConfigFile(it.key, mapper.readValue(it.value)) }
+                .map { AuroraConfigFile(it.key, mapper.readValue(it.value, Map::class.java) as JsonData) }
 
         return AuroraConfig(auroraConfigFiles = auroraConfigFiles, secrets = secretFiles)
+    }
+
+    fun patchAuroraConfigFileContents(name: String, auroraConfig: AuroraConfig, jsonPatchOp: String): JsonData {
+
+        val patch: JsonPatch = mapper.readValue(jsonPatchOp, JsonPatch::class.java)
+
+        val auroraConfigFile = auroraConfig.auroraConfigFiles.filter { it.name == name }.first()
+        val originalContentsNode = mapper.convertValue(auroraConfigFile.contents, JsonNode::class.java)
+
+        val patchedContentsNode = patch.apply(originalContentsNode)
+
+        return mapper.treeToValue(patchedContentsNode, Map::class.java) as JsonData
     }
 
     fun withAuroraConfig(affiliation: String,
@@ -69,7 +97,7 @@ class AuroraConfigService(
 
         if (commitChanges) {
             measureTimeMillis {
-                save(affiliation, newAuroraConfig)
+                save(repo, newAuroraConfig)
             }.let { logger.debug("Spent {} millis committing and pushing to git", it) }
         } else {
             measureTimeMillis {

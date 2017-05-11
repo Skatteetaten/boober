@@ -35,7 +35,7 @@ class SetupControllerTest extends AbstractControllerTest {
 
     when:
       def response = mockMvc
-          .perform(put('/setup')
+          .perform(put("/affiliation/${AFFILIATION}/setup")
           .with(user(new User("test", "test", "Test User")))
           .contentType(MediaType.APPLICATION_JSON)
           .content(json))

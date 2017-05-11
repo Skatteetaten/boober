@@ -1,37 +1,34 @@
 package no.skatteetaten.aurora.boober.controller
 
-
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.internal.ApplicationResult
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.SetupService
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RestController
-
+import org.springframework.web.bind.annotation.*
 
 @RestController
+@RequestMapping("/affiliation")
 class SetupController(val setupService: SetupService, val auroraConfigService: AuroraConfigService) {
 
-    @PutMapping("/deploy")
-    fun deploy(@RequestBody cmd: SetupCommand): Response {
+    @PutMapping("/{affiliation}/deploy")
+    fun deploy(@PathVariable affiliation: String, @RequestBody cmd: SetupCommand): Response {
 
-        val auroraConfig = auroraConfigService.findAuroraConfig(cmd.affiliation)
+        val auroraConfig = auroraConfigService.findAuroraConfig(affiliation)
         return executeSetup(auroraConfig, cmd.setupParams.toSetupParams())
     }
 
-    @PutMapping("/setup")
-    fun setup(@RequestBody cmd: SetupCommand): Response {
+    @PutMapping("/{affiliation}/setup")
+    fun setup(@PathVariable affiliation: String, @RequestBody cmd: SetupCommand): Response {
 
         val auroraConfig: AuroraConfig = cmd.auroraConfig!!.toAuroraConfig()
         return executeSetup(auroraConfig, cmd.setupParams.toSetupParams())
     }
 
-    @PutMapping("/setup-dryrun")
-    fun setupDryRun(@RequestBody cmd: SetupCommand): Response {
+    @PutMapping("/{affiliation}/validate")
+    fun setupDryRun(@PathVariable affiliation: String, @RequestBody cmd: SetupCommand): Response {
 
         val dryRunCmd = cmd.copy(setupParams = cmd.setupParams.copy(dryRun = true))
-        return setup(dryRunCmd)
+        return setup(affiliation, dryRunCmd)
     }
 
     private fun executeSetup(auroraConfig: AuroraConfig, setupParams: SetupParams): Response {
