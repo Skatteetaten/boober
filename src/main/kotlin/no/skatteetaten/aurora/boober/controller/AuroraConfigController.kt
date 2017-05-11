@@ -26,14 +26,14 @@ class AuroraConfigController(val auroraConfigService: AuroraConfigService) {
 
     @PutMapping("/{affiliation}/auroraconfig/{environment}/{filename:\\w+}.json")
     fun updateAuroraConfigFile(@PathVariable affiliation: String, @PathVariable environment: String,
-                                  @PathVariable filename: String, @RequestBody fileContents: Map<String, Any?>) {
+                                  @PathVariable filename: String, @RequestBody fileContents: JsonNode) {
 
         auroraConfigService.updateFile(affiliation, "$environment/$filename.json", fileContents)
     }
 
     @PutMapping("/{affiliation}/auroraconfig/{filename:\\w+}.json")
     fun updateAuroraConfigFile(@PathVariable affiliation: String, @PathVariable filename: String,
-                               @RequestBody fileContents: Map<String, Any?>) {
+                               @RequestBody fileContents: JsonNode) {
 
         auroraConfigService.updateFile(affiliation, "$filename.json", fileContents)
     }

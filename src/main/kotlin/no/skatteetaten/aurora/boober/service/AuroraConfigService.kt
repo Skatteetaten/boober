@@ -1,10 +1,14 @@
 package no.skatteetaten.aurora.boober.service
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.github.fge.jsonpatch.JsonPatch
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import org.eclipse.jgit.api.Git
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
@@ -34,10 +38,6 @@ class AuroraConfigService(
     }
 
     private fun validateAndPrepareForSave(auroraConfig: AuroraConfig): Map<String, String> {
-        validate(auroraConfig)
-        val jsonFiles: Map<String, String> = auroraConfig.auroraConfigFiles.map {
-            it.name to mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it.contents)
-        }.toMap()
 
         val encryptedSecrets = auroraConfig.secrets.map {
             val secretPath = it.key.split("/")
@@ -46,7 +46,20 @@ class AuroraConfigService(
                     ?.joinToString("/") ?: it.key
 
             val secretFolder = "$SECRET_FOLDER/$secretPath".replace("//", "/")
+
+            auroraConfig.auroraConfigFiles
+                    .filter { it.contents.has("secretFolder") }
+                    .forEach {
+                        val folder = secretPath.split("/")[0]
+                        (it.contents as ObjectNode).put("secretFolder", "$SECRET_FOLDER/$folder")
+                    }
+
             secretFolder to encryptionService.encrypt(it.value)
+
+        }.toMap()
+
+        val jsonFiles: Map<String, String> = auroraConfig.auroraConfigFiles.map {
+            it.name to mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it.contents)
         }.toMap()
 
         return jsonFiles + encryptedSecrets
@@ -61,28 +74,26 @@ class AuroraConfigService(
 
         val secretFiles: Map<String, String> = filesForAffiliation
                 .filter { it.key.startsWith(SECRET_FOLDER) }
-                .map { it.key.removePrefix("$SECRET_FOLDER/") to encryptionService.decrypt(it.value.readText()) }.toMap()
+                .map { it.key to encryptionService.decrypt(it.value.readText()) }.toMap()
 
         val auroraConfigFiles = filesForAffiliation
                 .filter { !it.key.startsWith(SECRET_FOLDER) }
-                .map { AuroraConfigFile(it.key, mapper.readValue(it.value, Map::class.java) as JsonData) }
+                .map { AuroraConfigFile(it.key, mapper.readValue(it.value)) }
 
         return AuroraConfig(auroraConfigFiles = auroraConfigFiles, secrets = secretFiles)
     }
 
-    fun patchAuroraConfigFileContents(name: String, auroraConfig: AuroraConfig, jsonPatchOp: String): JsonData {
+    fun patchAuroraConfigFileContents(name: String, auroraConfig: AuroraConfig, jsonPatchOp: String): JsonNode {
 
         val patch: JsonPatch = mapper.readValue(jsonPatchOp, JsonPatch::class.java)
 
         val auroraConfigFile = auroraConfig.auroraConfigFiles.filter { it.name == name }.first()
         val originalContentsNode = mapper.convertValue(auroraConfigFile.contents, JsonNode::class.java)
 
-        val patchedContentsNode = patch.apply(originalContentsNode)
-
-        return mapper.treeToValue(patchedContentsNode, Map::class.java) as JsonData
+        return patch.apply(originalContentsNode)
     }
 
-    fun updateFile(affiliation: String, filename: String, fileContents: Map<String, Any?>) {
+    fun updateFile(affiliation: String, filename: String, fileContents: JsonNode) {
         withAuroraConfig(affiliation, true, { auroraConfig: AuroraConfig ->
             auroraConfig.updateFile(filename, fileContents)
         })
