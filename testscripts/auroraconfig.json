@@ -10,7 +10,9 @@
         }
       },
       "config": {
-        "foo": "bar"
+        "latest.properties": {
+          "foo": "bar"
+        }
       }
     },
     "referanse.json": {
@@ -31,17 +33,28 @@
       "managementPath": ":8081/actuator",
       "database": "referanseapp",
       "config": {
-        "foo2": "bar2"
+        "latest.properties": {
+          "foo2": "baz"
+        }
       }
     },
     "boober/about.json": {
       "cluster": "utv"
     },
     "boober/referanse.json": {
+    },
+    "espen-dev/about.json": {
+      "cluster": "utv",
+      "secretFolder": "/tmp/utv"
+    },
+    "espen-dev/referanse.json": {
+
     }
   },
   "secrets": {
     "/tmp/test/latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg==",
-    "/tmp/test/1.2.3.properties": "Rk9PPU9IWUVBSApCQVI9Rk9PQkFSCg=="
+    "/tmp/test/1.2.3.properties": "Rk9PPU9IWUVBSApCQVI9Rk9PQkFSCg==",
+    "/tmp/utv/latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg==",
+    "/tmp/utv/1.2.3.properties": "Rk9PPU9IWUVBSApCQVI9Rk9PQkFSCg=="
   }
 }

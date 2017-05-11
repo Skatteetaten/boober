@@ -35,9 +35,9 @@ class OpenShiftService(
 
     fun generateObjects(auroraDc: AuroraDeploymentConfig): List<JsonNode> {
 
-        val configs = auroraDc.config?.map { (key, value) ->
+        val configs: Map<String, String> = auroraDc.config?.map { (key, value) ->
             key to value.map { "${it.key}=${it.value}" }.joinToString(separator = "\\n")
-        }
+        }?.toMap() ?: mapOf()
 
         val params = mapOf(
                 "adc" to auroraDc,
@@ -60,7 +60,7 @@ class OpenShiftService(
                 "rolebinding.json"
         )
 
-        auroraDc.config?.let {
+        if (configs.isNotEmpty()) {
             templatesToProcess.add("configmap.json")
         }
 
