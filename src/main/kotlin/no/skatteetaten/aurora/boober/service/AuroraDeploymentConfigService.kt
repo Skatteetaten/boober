@@ -98,8 +98,8 @@ class AuroraDeploymentConfigService(val openShiftClient: OpenShiftClient) {
                         )
                 ),
                 permissions = Permissions(Permission(
-                        fields.extract("permissions/admin/groups", { it.textValue().split(" ").toSet() }),
-                        fields.extract("permissions/admin/users", { it.textValue().split(" ").toSet() })
+                        fields.extractOrNull("permissions/admin/groups", { it.textValue().split(" ").toSet() }),
+                        fields.extractOrNull("permissions/admin/users", { it.textValue().split(" ").toSet() })
                 )),
 
                 splunkIndex = fields.extractOrNull("splunkIndex"),
@@ -129,18 +129,18 @@ class AuroraDeploymentConfigService(val openShiftClient: OpenShiftClient) {
         }
 
         if (!Regex("^[a-z][-a-z0-9]{0,23}[a-z0-9]$").matches(auroraDc.name)) {
-            errors.add(IllegalArgumentException("Name is not valid DNS952 label. 24 length alphanumeric."))
+            errors.add(IllegalArgumentException("Name [${auroraDc.name}] is not valid DNS952 label. 24 length alphanumeric."))
         }
 
         if (validateOpenShiftReferences) {
             auroraDc.permissions.admin.groups
-                    .filter { !openShiftClient.isValidGroup(it) }
-                    .takeIf { it.isNotEmpty() }
+                    ?.filter { !openShiftClient.isValidGroup(it) }
+                    .takeIf { it != null && it.isNotEmpty() }
                     ?.let { errors.add(AuroraConfigException("The following groups are not valid=${it.joinToString()}")) }
 
             auroraDc.permissions.admin.users
-                    .filter { !openShiftClient.isValidUser(it) }
-                    .takeIf { it.isNotEmpty() }
+                    ?.filter { !openShiftClient.isValidUser(it) }
+                    .takeIf { it != null && it.isNotEmpty() }
                     ?.let { errors.add(AuroraConfigException("The following users are not valid=${it.joinToString()}")) }
         }
 

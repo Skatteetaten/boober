@@ -72,6 +72,11 @@ fun Map<String, AuroraConfigField>.extractOrNull(name: String): String? {
     else null
 }
 
+fun <T> Map<String, AuroraConfigField>.extractOrNull(name: String, mapper: (JsonNode) -> T): T? {
+    return if (this.containsKey(name)) this.extract(name, mapper)
+    else null
+}
+
 fun <T> Map<String, AuroraConfigField>.extractOrDefault(name: String, default: T): T {
     return if (this.containsKey(name)) this.extract(name) as T
     else default

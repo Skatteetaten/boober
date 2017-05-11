@@ -93,15 +93,13 @@ data class Permissions(
 )
 
 data class Permission(
-        val groups: Set<String>,
-        val users: Set<String>
+        val groups: Set<String>?,
+        val users: Set<String>?
 ) {
     val rolebindings: Map<String, String>
         get(): Map<String, String> {
-            val userPart = users.map { Pair(it, "User") }.toMap()
-            val groupPart = groups.map { Pair(it, "Group") }.toMap()
-            val map = userPart.toMutableMap()
-            map.putAll(groupPart)
-            return map
+            val userPart = users?.map { Pair(it, "User") }?.toMap() ?: mapOf()
+            val groupPart = groups?.map { Pair(it, "Group") }?.toMap() ?: mapOf()
+            return userPart + groupPart
         }
 }
