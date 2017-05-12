@@ -19,12 +19,11 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
-import spock.lang.Ignore
+import no.skatteetaten.aurora.boober.service.validation.AuroraConfigFieldHandlerKt
+import no.skatteetaten.aurora.boober.service.validation.AuroraDeploymentConfigMapperV1
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
-@Ignore
-//mergefiles er bort fiks senere TODO
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
     UserDetailsProvider,
@@ -32,6 +31,8 @@ import spock.mock.DetachedMockFactory
     GitService,
     OpenShiftClient,
     EncryptionService,
+    AuroraDeploymentConfigService,
+  AuroraDeploymentConfigMapperV1,
     OpenShiftResourceClient
 ])
 class AuroraConfigServiceTest extends Specification {
@@ -70,10 +71,10 @@ class AuroraConfigServiceTest extends Specification {
   ObjectMapper mapper
 
   @Autowired
-  UserDetailsProvider userDetailsProvider
+  AuroraConfigService service
 
   @Autowired
-  AuroraConfigService service
+  AuroraDeploymentConfigMapperV1 mapperV1
 
   private static AuroraConfig createAuroraConfig(Map<String, JsonNode> files, Map<String, String> secrets = [:]) {
     new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, secrets)
@@ -82,25 +83,25 @@ class AuroraConfigServiceTest extends Specification {
   def "Should create an AuroraConfigFields"() {
     given:
       Map<String, JsonNode> files = getQaEbsUsersSampleFiles()
-      files.put("booberdev/about.json", mapper.convertValue(["type": "deploy", "cluster": "utv"], JsonNode.class))
       AuroraConfig auroraConfig = createAuroraConfig(files)
 
     when:
-      def fields = service.mergeFiles(aid, [], auroraConfig)
+      def fields = AuroraConfigFieldHandlerKt.extractFrom(mapperV1.extractors, auroraConfig.auroraConfigFiles)
 
     then:
-      fields.size() == 1
+      fields.size() == 21
   }
 
   def "Should create an AuroraConfigFields with overrides"() {
     given:
-      def overrides = [new AuroraConfigFile("about.json", ["type": "foobar"], true)]
-      Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
-      files.put("booberdev/about.json", ["type": "deploy", "cluster": "utv"])
+      def overrideNode = mapper.convertValue(["type": "deploy", "cluster": "utv"], JsonNode.class)
+      def overrides = [new AuroraConfigFile("booberdev/about.json", overrideNode, true)]
+      Map<String, JsonNode> files = getQaEbsUsersSampleFiles()
       AuroraConfig auroraConfig = createAuroraConfig(files)
+      def auroraConfigFiles = auroraConfig.getFilesForApplication(new ApplicationId(ENV_NAME, APP_NAME), overrides)
 
     when:
-      def fields = service.mergeFiles(aid, overrides, auroraConfig)
+      def fields = AuroraConfigFieldHandlerKt.extractFrom(mapperV1.extractors, auroraConfigFiles)
 
     then:
       fields.size() == 1

@@ -20,7 +20,7 @@ fun List<AuroraConfigFieldHandler>.extractFrom(files: List<AuroraConfigFile>): M
 
     return this.mapNotNull { (name, path, _, defaultValue) ->
 
-        val matches = files.mapNotNull {
+        val matches = files.reversed().mapNotNull {
             logger.debug("Sjekker om $path finnes i fil ${it.contents}")
             val value = it.contents.at(path)
 

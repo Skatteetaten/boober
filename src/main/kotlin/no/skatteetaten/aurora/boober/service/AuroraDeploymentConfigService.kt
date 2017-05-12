@@ -56,7 +56,7 @@ class AuroraDeploymentConfigService(val openShiftClient: OpenShiftClient) {
 
     fun createAuroraDc(aid: ApplicationId, auroraConfig: AuroraConfig, overrides: List<AuroraConfigFile>): AuroraDeploymentConfig {
 
-        val allFiles: List<AuroraConfigFile> = auroraConfig.getFilesForApplication(aid, overrides).reversed()
+        val allFiles: List<AuroraConfigFile> = auroraConfig.getFilesForApplication(aid, overrides)
         val fields: Map<String, AuroraConfigField> = getAuroraConfigFields(aid, allFiles)
 
         val groupId = fields.extract("groupId")
