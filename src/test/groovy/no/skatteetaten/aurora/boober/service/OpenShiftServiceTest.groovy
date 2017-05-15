@@ -79,9 +79,10 @@ class OpenShiftServiceTest extends Specification {
       def project = generatedObjects.find { it.get("kind").asText() == "ProjectRequest" }
       def buildConfig = generatedObjects.find { it.get("kind").asText() == "BuildConfig" }
       def rolebindings = generatedObjects.find { it.get("kind").asText() == "RoleBinding" }
+      def configMap = generatedObjects.find { it.get("kind").asText() == "ConfigMap" }
 
     then:
-      generatedObjects.size() == 7
+      generatedObjects.size() == 8
 
 
       compareJson(rolebindings, """
@@ -200,6 +201,24 @@ class OpenShiftServiceTest extends Specification {
         }
       """)
 
+      compareJson(configMap, """
+        {
+          "kind": "ConfigMap",
+          "apiVersion": "v1",
+          "metadata": {
+            "name": "verify-ebs-users",
+            "labels": {
+              "app": "verify-ebs-users",
+              "updatedBy" : "hero",
+              "affiliation": "aos"
+            }
+          },
+          "data": {
+            "latest.properties": "foo=baaaar"
+          }
+        }
+      """)
+
       compareJson(deploymentConfig, """
         {
           "kind": "DeploymentConfig",
@@ -260,6 +279,12 @@ class OpenShiftServiceTest extends Specification {
                   {
                     "name": "application-log-volume",
                     "emptyDir": {}
+                  },
+                  {
+                    "name": "config",
+                    "configMap": {
+                      "name": "verify-ebs-users"
+                    }
                   }
                 ],
                 "containers": [
@@ -335,6 +360,10 @@ class OpenShiftServiceTest extends Specification {
                       {
                         "name": "application-log-volume",
                         "mountPath": "/u01/logs"
+                      },
+                      {
+                        "name": "config",
+                        "mountPath": "/u01/config/configmap"
                       }
                     ],
                     "terminationMessagePath": "/dev/termination-log",

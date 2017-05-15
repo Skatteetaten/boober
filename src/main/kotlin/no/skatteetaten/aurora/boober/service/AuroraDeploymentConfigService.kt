@@ -108,10 +108,24 @@ class AuroraDeploymentConfigService(val openShiftClient: OpenShiftClient) {
 
                 certificateCn = fields.extractOrDefault("certificateCn", "$groupId.$name"),
 
-                webseal = getWebSEAL(fields),
-                prometheus = getPrometheus(fields),
+                webseal = fields.findAll("webseal", {
+                    Webseal(
+                            it.extract("webseal/path"),
+                            it.extractOrNull("webseal/roles")
+                    )
+                }),
 
-                secrets = getSecrets(fields, auroraConfig),
+                prometheus = fields.findAll("prometheus", {
+                    HttpEndpoint(
+                            it.extract("prometheus/path"),
+                            it.extractOrNull("prometheus/port", JsonNode::asInt)
+                    )
+                }),
+
+                secrets = fields.extractOrNull("secretFolder", {
+                    auroraConfig.getSecrets(it.asText())
+                }),
+
                 config = getConfigMap(fields, allFiles.findConfigExtractors())
         )
     }
@@ -149,13 +163,6 @@ class AuroraDeploymentConfigService(val openShiftClient: OpenShiftClient) {
         }
     }
 
-    private fun getSecrets(fields: Map<String, AuroraConfigField>, auroraConfig: AuroraConfig): Map<String, String>? {
-
-        return if (fields.containsKey("secretFolder")) {
-            auroraConfig.getSecrets(fields.extract("secretFolder"))
-        } else null
-    }
-
     private fun getConfigMap(fields: Map<String, AuroraConfigField>,
                              configExtractors: List<AuroraConfigFieldHandler>): Map<String, Map<String, String>>? {
 
@@ -172,24 +179,5 @@ class AuroraDeploymentConfigService(val openShiftClient: OpenShiftClient) {
         }
 
         return if (configMap.isNotEmpty()) configMap else null
-    }
-
-    private fun getWebSEAL(fields: Map<String, AuroraConfigField>): Webseal? {
-
-        return if (fields.containsKey("webseal/path")) {
-            Webseal(
-                    fields.extract("webseal/path"),
-                    fields.extractOrNull("webseal/roles")
-            )
-        } else null
-    }
-
-    private fun getPrometheus(fields: Map<String, AuroraConfigField>): HttpEndpoint? {
-        return if (fields.containsKey("prometheus/path")) {
-            HttpEndpoint(
-                    fields.extract("prometheus/path"),
-                    fields.extract("prometheus/port", JsonNode::asInt)
-            )
-        } else null
     }
 }

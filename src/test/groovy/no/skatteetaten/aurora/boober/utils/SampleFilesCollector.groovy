@@ -4,12 +4,21 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.Configuration
+import no.skatteetaten.aurora.boober.model.ApplicationId
 
 class SampleFilesCollector {
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
 
+    static Map<String, JsonNode> getSampleFiles(ApplicationId aid) {
+      return collectFilesToMapOfJsonNode(
+          "about.json",
+          "${aid.applicationName}.json",
+          "${aid.environmentName}/about.json",
+          "${aid.environmentName}/${aid.applicationName}.json"
+      )
+    }
   static Map<String, JsonNode> getQaEbsUsersSampleFiles() {
     return collectFilesToMapOfJsonNode("about.json", "${APP_NAME}.json", "${ENV_NAME}/about.json", "${ENV_NAME}/${APP_NAME}.json")
   }

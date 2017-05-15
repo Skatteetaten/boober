@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "admin": {
+      "groups": "APP_PaaS_drift APP_PaaS_utv"
+    }
+  },
+  "flags": {
+    "rolling": true,
+    "route": true
+  },
+  "groupId": "ske.openshift.aurora",
+  "artifactId": "openshift-console-api",
+  "version": "3",
+  "splunkIndex": "openshift-test",
+  "resources": {
+    "memory": {
+      "max": "128Mi"
+    }
+  },
+  "prometheus": {
+    "path": "/prometheus",
+    "port": "8081"
+  },
+  "webseal": {
+    "path": "/webseal"
+  }
+}

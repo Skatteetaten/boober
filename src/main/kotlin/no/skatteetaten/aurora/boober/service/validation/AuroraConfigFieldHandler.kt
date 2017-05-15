@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service.validation
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.model.AuroraConfigField
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import org.slf4j.Logger
@@ -67,6 +68,15 @@ fun List<AuroraConfigFile>.findConfigExtractors(): List<AuroraConfigFieldHandler
     }
 }
 
+fun <T> Map<String, AuroraConfigField>.findAll(name: String, mapper: (Map<String, AuroraConfigField>) -> T): T? {
+
+    val fields = this.entries.filter { it.key.contains(name) }.map { it.key to it.value }.toMap()
+
+    if (fields.isEmpty()) return null
+
+    return mapper(fields)
+}
+
 fun Map<String, AuroraConfigField>.extractOrNull(name: String): String? {
     return if (this.containsKey(name)) this.extract(name)
     else null
@@ -77,8 +87,8 @@ fun <T> Map<String, AuroraConfigField>.extractOrNull(name: String, mapper: (Json
     else null
 }
 
-fun <T> Map<String, AuroraConfigField>.extractOrDefault(name: String, default: T): T {
-    return if (this.containsKey(name)) this.extract(name) as T
+inline fun <reified T> Map<String, AuroraConfigField>.extractOrDefault(name: String, default: T): T {
+    return if (this.containsKey(name)) jacksonObjectMapper().convertValue(this[name]!!.value, T::class.java)
     else default
 }
 

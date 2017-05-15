@@ -58,7 +58,6 @@ class SetupService(
             openShiftResponses + openShiftClient.apply(adc.namespace, it)
         } ?: openShiftResponses
 
-
         return ApplicationResult(
                 applicationId = ApplicationId(adc.envName, adc.name),
                 auroraDc = adc,
