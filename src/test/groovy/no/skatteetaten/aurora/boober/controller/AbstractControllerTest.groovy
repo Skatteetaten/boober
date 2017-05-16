@@ -28,7 +28,7 @@ abstract class AbstractControllerTest extends Specification {
   MockMvc mockMvc
 
   @Autowired
-  WebApplicationContext wac;
+  WebApplicationContext wac
 
   def setup() {
 

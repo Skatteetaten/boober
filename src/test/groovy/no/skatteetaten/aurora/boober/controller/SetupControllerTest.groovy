@@ -13,7 +13,9 @@ import groovy.json.JsonSlurper
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.SampleFilesCollector
+import spock.lang.Ignore
 
+@Ignore
 class SetupControllerTest extends AbstractControllerTest {
 
   public static final String AFFILIATION = "aos"
@@ -21,15 +23,12 @@ class SetupControllerTest extends AbstractControllerTest {
   public static final String APP_NAME = "verify-ebs-users"
 
   @Autowired
-  OpenShiftClient openShiftClient
-
-  @Autowired
   ObjectMapper mapper
 
   def "Should fail when Aurora Config contains errors"() {
     given:
       def files = SampleFilesCollector.qaEbsUsersSampleFiles
-      files.put("about.json", mapper.readTree("{}"))
+      files.put("verify-ebs-users.json", mapper.readTree("{}"))
       SetupCommand cmd = new SetupCommand(AFFILIATION, new AuroraConfigPayload(files, [:]), new SetupParamsPayload([ENV_NAME], [APP_NAME], [:], false))
       def json = mapper.writeValueAsString(cmd)
 
