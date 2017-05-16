@@ -1,6 +1,8 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ObjectNode
 
 typealias FileName = String
 typealias JsonData = Map<String, Any?>
@@ -58,6 +60,36 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val secre
         }
 
         return this.copy(auroraConfigFiles = files)
+    }
+
+    fun convertFilesToString(mapper: ObjectMapper): Map<String, String> {
+
+        return auroraConfigFiles.map {
+            it.name to mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it.contents)
+        }.toMap()
+    }
+
+    fun convertSecretFilesToString(newSecretPath: String = ""): Map<String, String> {
+
+        return secrets.map {
+            val applicationSecretPath = it.key.split("/")
+                    .takeIf { it.size >= 2 }
+                    ?.let { it.subList(it.size - 2, it.size) }
+                    ?.joinToString("/") ?: it.key
+
+            val secretFolder = applicationSecretPath.split("/")[0]
+            val gitSecretFolder = "$newSecretPath/$applicationSecretPath".replace("//", "/")
+
+            auroraConfigFiles
+                    .filter { it.contents.has("secretFolder") }
+                    .filter { it.contents.get("secretFolder").asText().contains(secretFolder) }
+                    .forEach {
+                        val folder = applicationSecretPath.split("/")[0]
+                        (it.contents as ObjectNode).put("secretFolder", "$newSecretPath/$folder")
+                    }
+
+            gitSecretFolder to it.value
+        }.toMap()
     }
 }
 

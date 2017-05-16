@@ -263,7 +263,8 @@ class AuroraDeploymentConfigServiceTest extends Specification {
       openShiftClient.isValidGroup(_) >> true
       openShiftClient.isValidUser(_) >> true
 
-      AuroraConfig auroraConfig = AuroraConfigHelper.createAuroraConfig(secretAId, ["/tmp/foo/latest.properties" : "FOO=BAR"])
+      AuroraConfig auroraConfig = AuroraConfigHelper.
+          createAuroraConfig(secretAId, ["/tmp/foo/latest.properties": "FOO=BAR"])
 
     when:
 

@@ -8,7 +8,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 
 class AuroraConfigHelper {
 
-  private static AuroraConfig createAuroraConfig(ApplicationId aid, Map<String, String> secrets = [:]) {
+  static AuroraConfig createAuroraConfig(ApplicationId aid, Map<String, String> secrets = [:]) {
     Map<String, JsonNode> files = SampleFilesCollector.getSampleFiles(aid)
     new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, secrets)
   }
