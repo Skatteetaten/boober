@@ -24,7 +24,6 @@ class SetupService(
 
     val logger: Logger = LoggerFactory.getLogger(SetupService::class.java)
 
-    //TODO: test
     fun executeSetup(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>,
                      overrides: List<AuroraConfigFile>): List<ApplicationResult> {
 
