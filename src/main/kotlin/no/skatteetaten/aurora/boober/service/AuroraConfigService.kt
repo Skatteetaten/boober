@@ -8,7 +8,6 @@ import com.github.fge.jsonpatch.JsonPatch
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import org.eclipse.jgit.api.Git
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
@@ -18,20 +17,16 @@ import kotlin.system.measureTimeMillis
 class AuroraConfigService(
         val gitService: GitService,
         val openShiftClient: OpenShiftClient,
+        val auroraDeploymentConfigService: AuroraDeploymentConfigService,
         val mapper: ObjectMapper,
         val encryptionService: EncryptionService) {
 
     private val GIT_SECRET_FOLDER = ".secret"
     private val logger = LoggerFactory.getLogger(AuroraConfigService::class.java)
 
-    fun save(affiliation: String, auroraConfig: AuroraConfig) {
+    fun saveAuroraConfig(affiliation: String, auroraConfig: AuroraConfig) {
 
-        gitService.saveFilesAndClose(affiliation, prepareFilesForSave(auroraConfig))
-    }
-
-    fun save(repo: Git, auroraConfig: AuroraConfig) {
-
-        gitService.saveFilesAndClose(repo, prepareFilesForSave(auroraConfig))
+        withAuroraConfig(affiliation, mapper = { auroraConfig })
     }
 
     fun patchAuroraConfigFile(filename: String, auroraConfig: AuroraConfig, jsonPatchOp: String): JsonNode {
@@ -44,7 +39,6 @@ class AuroraConfigService(
         return patch.apply(originalContentsNode)
     }
 
-
     fun updateAuroraConfigFile(affiliation: String, filename: String, fileContents: JsonNode) {
         withAuroraConfig(affiliation, true, { auroraConfig: AuroraConfig ->
             auroraConfig.updateFile(filename, fileContents)
@@ -53,12 +47,12 @@ class AuroraConfigService(
 
     fun findAuroraConfig(affiliation: String): AuroraConfig {
 
-        return withAuroraConfig(affiliation, false, function = { it })
+        return withAuroraConfig(affiliation, false)
     }
 
     fun withAuroraConfig(affiliation: String,
                          commitChanges: Boolean = true,
-                         function: (AuroraConfig) -> AuroraConfig = { it -> it }): AuroraConfig {
+                         mapper: (AuroraConfig) -> AuroraConfig = { it -> it }): AuroraConfig {
 
         val startCheckout = System.currentTimeMillis()
         val repo = gitService.checkoutRepoForAffiliation(affiliation)
@@ -67,11 +61,12 @@ class AuroraConfigService(
         val filesForAffiliation: Map<String, File> = gitService.getAllFilesInRepo(repo)
         val auroraConfig = createAuroraConfigFromFiles(filesForAffiliation)
 
-        val newAuroraConfig = function(auroraConfig)
+        val newAuroraConfig = mapper(auroraConfig)
+        auroraDeploymentConfigService.validate(newAuroraConfig)
 
         if (commitChanges) {
             measureTimeMillis {
-                save(repo, newAuroraConfig)
+                gitService.saveFilesAndClose(repo, prepareFilesForSave(newAuroraConfig))
             }.let { logger.debug("Spent {} millis committing and pushing to git", it) }
         } else {
             measureTimeMillis {
@@ -98,7 +93,6 @@ class AuroraConfigService(
     private fun prepareFilesForSave(auroraConfig: AuroraConfig): Map<String, String> {
 
         val secrets = convertSecretFilesToString(auroraConfig)
-
         val encryptedSecrets = secrets.map { it.key to encryptionService.encrypt(it.value) }.toMap()
 
         return convertFilesToString(auroraConfig) + encryptedSecrets

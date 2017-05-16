@@ -1,23 +1,16 @@
 package no.skatteetaten.aurora.boober.service
 
-import static no.skatteetaten.aurora.boober.utils.SampleFilesCollector.getQaEbsUsersSampleFilesForEnv
-
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
-import com.fasterxml.jackson.databind.JsonNode
-
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
+import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.AuroraConfigHelper
-import no.skatteetaten.aurora.boober.utils.SampleFilesCollector
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -57,18 +50,36 @@ class SetupServiceTest extends Specification {
   public static final String APP_NAME = "verify-ebs-users"
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
-  def "Should execute setup"() {
+  def setup() {
+    userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
+    openShiftClient.isValidUser(_) >> true
+    openShiftClient.isValidGroup(_) >> true
+    openShiftClient.applyMany(_, _) >> []
+  }
+
+  def "Should setup development for application"() {
     given:
-      userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
-      openShiftClient.isValidUser(_) >> true
-      openShiftClient.isValidGroup(_) >> true
-      openShiftClient.applyMany(_, _) >> []
       def auroraConfig = AuroraConfigHelper.createAuroraConfig(aid)
 
     when:
-      def results = setupService.executeSetup(auroraConfig, [aid], [])
+      def result = setupService.executeSetup(auroraConfig, [aid], [])
 
     then:
-      results.size() == 1
+      result.size() == 1
+      result.get(0).auroraDc.type == TemplateType.development
+
+  }
+
+  def "Should setup deploy for application"() {
+    given:
+      def consoleAid = new ApplicationId(ENV_NAME, "console")
+      def auroraConfig = AuroraConfigHelper.createAuroraConfig(consoleAid)
+
+    when:
+      def result = setupService.executeSetup(auroraConfig, [consoleAid], [])
+
+    then:
+      result.size() == 1
+      result.get(0).auroraDc.type == TemplateType.deploy
   }
 }

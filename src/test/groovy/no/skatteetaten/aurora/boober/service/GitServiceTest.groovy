@@ -66,7 +66,7 @@ class GitServiceTest extends Specification{
     GitServiceHelperKt.createInitRepo(affiliation)
     userDetailsProvider.authenticatedUser >> new User("test", "", "Test Foo")
     def auroraConfig = AuroraConfigHelper.createAuroraConfig(aid)
-    auroraConfigService.save(affiliation, auroraConfig)
+    auroraConfigService.saveAuroraConfig(affiliation, auroraConfig)
   }
 
   def "Should checkout repo"() {

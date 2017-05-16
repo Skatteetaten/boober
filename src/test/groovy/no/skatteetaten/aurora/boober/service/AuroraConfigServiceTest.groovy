@@ -62,7 +62,7 @@ class AuroraConfigServiceTest extends Specification {
   private void createRepoAndSaveFiles(String affiliation, AuroraConfig auroraConfig) {
     GitServiceHelperKt.createInitRepo(affiliation)
     userDetailsProvider.authenticatedUser >> new User("test", "", "Test Foo")
-    service.save(affiliation, auroraConfig)
+    service.saveAuroraConfig(affiliation, auroraConfig)
   }
 
   def "Should successfully save AuroraConfig and secrets to git"() {
@@ -72,7 +72,7 @@ class AuroraConfigServiceTest extends Specification {
       userDetailsProvider.authenticatedUser >> new User("foobar", "", "Foo Bar")
 
     when:
-      service.save("aos", auroraConfig)
+      service.saveAuroraConfig("aos", auroraConfig)
       def git = gitService.checkoutRepoForAffiliation("aos")
       def gitLog = git.log().call().head()
       gitService.closeRepository(git)

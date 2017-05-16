@@ -3,24 +3,18 @@ package no.skatteetaten.aurora.boober.controller
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
-import no.skatteetaten.aurora.boober.service.AuroraDeploymentConfigService
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.bind.annotation.*
 import javax.servlet.http.HttpServletRequest
 
-
 @RestController
 @RequestMapping("/affiliation")
-class AuroraConfigController(val auroraConfigService: AuroraConfigService,
-                             val auroraDeploymentConfigService: AuroraDeploymentConfigService) {
+class AuroraConfigController(val auroraConfigService: AuroraConfigService) {
 
     @PutMapping("/{affiliation}/auroraconfig")
     fun save(@PathVariable affiliation: String, @RequestBody payload: AuroraConfigPayload) {
 
-        val auroraConfig = payload.toAuroraConfig()
-
-        auroraDeploymentConfigService.validate(auroraConfig)
-        auroraConfigService.save(affiliation, auroraConfig)
+        auroraConfigService.saveAuroraConfig(affiliation, payload.toAuroraConfig())
     }
 
     @GetMapping("/{affiliation}/auroraconfig")
@@ -31,7 +25,7 @@ class AuroraConfigController(val auroraConfigService: AuroraConfigService,
 
     @PutMapping("/{affiliation}/auroraconfig/{environment}/{filename:\\w+}.json")
     fun updateAuroraConfigFile(@PathVariable affiliation: String, @PathVariable environment: String,
-                                  @PathVariable filename: String, @RequestBody fileContents: JsonNode) {
+                               @PathVariable filename: String, @RequestBody fileContents: JsonNode) {
 
         auroraConfigService.updateAuroraConfigFile(affiliation, "$environment/$filename.json", fileContents)
     }

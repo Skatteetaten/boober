@@ -44,13 +44,6 @@ class GitService(
         }
     }
 
-    fun saveFilesAndClose(affiliation: String, files: Map<String, String>) {
-
-        val git = checkoutRepoForAffiliation(affiliation)
-
-        saveFilesAndClose(git, files)
-    }
-
     fun saveFilesAndClose(git: Git, files: Map<String, String>) {
         try {
             writeAndAddChanges(git, files)
