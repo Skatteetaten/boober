@@ -1,28 +1,42 @@
 package no.skatteetaten.aurora.boober.controller.internal
 
-@org.springframework.web.bind.annotation.ControllerAdvice
-class ErrorHandler : org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler() {
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
+import no.skatteetaten.aurora.boober.service.internal.OpenShiftException
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatus.BAD_REQUEST
+import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.ControllerAdvice
+import org.springframework.web.bind.annotation.ExceptionHandler
+import org.springframework.web.context.request.WebRequest
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(no.skatteetaten.aurora.boober.service.internal.AuroraConfigException::class)
-    fun handleValidationErrors(ex: no.skatteetaten.aurora.boober.service.internal.AuroraConfigException, req: org.springframework.web.context.request.WebRequest) = handleException(ex, req, org.springframework.http.HttpStatus.BAD_REQUEST)
+@ControllerAdvice
+class ErrorHandler : ResponseEntityExceptionHandler() {
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(no.skatteetaten.aurora.boober.service.internal.OpenShiftException::class)
-    fun handleOpenShiftErrors(ex: no.skatteetaten.aurora.boober.service.internal.OpenShiftException, req: org.springframework.web.context.request.WebRequest) = handleException(ex, req, org.springframework.http.HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(AuroraConfigException::class)
+    fun handleValidationErrors(ex: AuroraConfigException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(IllegalArgumentException::class)
-    fun handleBadRequest(ex: IllegalArgumentException, req: org.springframework.web.context.request.WebRequest) = handleException(ex, req, org.springframework.http.HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(OpenShiftException::class)
+    fun handleOpenShiftErrors(ex: OpenShiftException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(RuntimeException::class)
-    fun handleGenericErrors(ex: RuntimeException, req: org.springframework.web.context.request.WebRequest) = handleException(ex, req, org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(IllegalArgumentException::class)
+    fun handleBadRequest(ex: IllegalArgumentException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
+
+    @ExceptionHandler(RuntimeException::class)
+    fun handleGenericErrors(ex: RuntimeException, req: WebRequest) = handleException(ex, req, INTERNAL_SERVER_ERROR)
 
 
-    private fun handleException(e: Exception, request: org.springframework.web.context.request.WebRequest, httpStatus: org.springframework.http.HttpStatus): org.springframework.http.ResponseEntity<*> {
+    private fun handleException(e: Exception, request: WebRequest, httpStatus: HttpStatus): ResponseEntity<*> {
 
-        val headers = org.springframework.http.HttpHeaders().apply { contentType = org.springframework.http.MediaType.APPLICATION_JSON }
+        val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
         val message = createErrorMessage(e)
 
         val items = when (e) {
-            is no.skatteetaten.aurora.boober.service.internal.AuroraConfigException -> e.errors
+            is AuroraConfigException -> e.errors
             else -> listOf()
         }
 
@@ -39,7 +53,7 @@ class ErrorHandler : org.springframework.web.servlet.mvc.method.annotation.Respo
 
         val cause = e.cause
         val openShiftMessage = if (cause is org.springframework.web.client.HttpClientErrorException) {
-            val json: Map<*, *>? = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper().readValue(cause.responseBodyAsString, Map::class.java)
+            val json: Map<*, *>? = jacksonObjectMapper().readValue(cause.responseBodyAsString, Map::class.java)
             if (json?.get("kind")!! == "Status") json["message"] as String? else null
         } else null
 
