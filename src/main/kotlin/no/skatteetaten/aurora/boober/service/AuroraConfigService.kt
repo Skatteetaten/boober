@@ -79,7 +79,7 @@ class AuroraConfigService(
         return newAuroraConfig
     }
 
-    private fun encryptSecrets(oldAuroraConfig: AuroraConfig, newAuroraConfig: AuroraConfig, filesForAffiliation: Map<String, File>): Map<String, String> {
+    private fun encryptSecrets(oldAuroraConfig: AuroraConfig, newAuroraConfig: AuroraConfig, filesFromGit: Map<String, File>): Map<String, String> {
 
         val oldSecrets = oldAuroraConfig.convertSecretFilesToString(GIT_SECRET_FOLDER)
         val newSecrets = newAuroraConfig.convertSecretFilesToString(GIT_SECRET_FOLDER)
@@ -95,7 +95,7 @@ class AuroraConfigService(
 
         val encryptedSecrets = encryptedNewSecrets + encryptedChangedSecrets
 
-        val encryptedOldSecrets = filesForAffiliation
+        val encryptedOldSecrets = filesFromGit
                 .filter { it.key.startsWith(GIT_SECRET_FOLDER) }
                 .filter { !encryptedSecrets.containsKey(it.key) }
                 .map { it.key to it.value.readText() }.toMap()
