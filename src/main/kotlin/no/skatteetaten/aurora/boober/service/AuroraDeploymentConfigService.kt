@@ -29,6 +29,8 @@ class AuroraDeploymentConfigService(val openShiftClient: OpenShiftClient) {
                 Result<AuroraDeploymentConfig, Error?>(value = auroraDc)
             } catch (e: ApplicationConfigException) {
                 Result<AuroraDeploymentConfig, Error?>(error = Error(aid, e.errors))
+            } catch (e: IllegalArgumentException) {
+                Result<AuroraDeploymentConfig, Error?>(error = Error(aid, listOf(e.message!!)))
             }
         }.orElseThrow {
             AuroraConfigException("AuroraConfig contained errors for one or more applications", it)
