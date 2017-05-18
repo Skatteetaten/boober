@@ -26,7 +26,7 @@ import spock.mock.DetachedMockFactory
     OpenShiftClient,
     EncryptionService,
     AuroraDeploymentConfigService,
-    GitService, OpenShiftService, Config])
+    GitService, OpenShiftObjectGenerator, Config])
 class OpenShiftServiceTest extends Specification {
 
   public static final String ENV_NAME = "booberdev"
@@ -54,7 +54,7 @@ class OpenShiftServiceTest extends Specification {
   }
 
   @Autowired
-  OpenShiftService openShiftService
+  OpenShiftObjectGenerator openShiftService
 
   @Autowired
   UserDetailsProvider userDetailsProvider

@@ -93,7 +93,6 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val secre
     }
 }
 
-data class AuroraConfigField(val path: String, val value: JsonNode, val source: String)
 
 data class AuroraConfigFile(val name: FileName, val contents: JsonNode, val override: Boolean = false) {
     val configName

@@ -1,9 +1,12 @@
 package no.skatteetaten.aurora.boober.controller
 
+import no.skatteetaten.aurora.boober.controller.internal.Response
+import no.skatteetaten.aurora.boober.controller.internal.SetupCommand
+import no.skatteetaten.aurora.boober.controller.internal.SetupParams
 import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.service.internal.ApplicationResult
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.SetupService
+import no.skatteetaten.aurora.boober.service.internal.ApplicationResult
 import org.springframework.web.bind.annotation.*
 
 @RestController

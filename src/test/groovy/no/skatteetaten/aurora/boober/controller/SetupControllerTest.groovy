@@ -10,12 +10,15 @@ import org.springframework.http.MediaType
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import groovy.json.JsonSlurper
+import no.skatteetaten.aurora.boober.controller.internal.AuroraConfigPayload
+import no.skatteetaten.aurora.boober.controller.internal.SetupCommand
+import no.skatteetaten.aurora.boober.controller.internal.SetupParamsPayload
 import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.SampleFilesCollector
 import spock.lang.Ignore
 
 @Ignore
+//move to test save in AuroraConfigController
 class SetupControllerTest extends AbstractControllerTest {
 
   public static final String AFFILIATION = "aos"

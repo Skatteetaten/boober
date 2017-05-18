@@ -95,16 +95,15 @@ class AuroraConfigServiceTest extends Specification {
 
     when:
       def filename = "${aid.environmentName}/${aid.applicationName}.json"
-      def jsonNode = service.patchAuroraConfigFile(filename, auroraConfig, jsonOp)
-      service.updateAuroraConfigFile("aos", filename, jsonNode)
+      def patchedAuroraConfig = service.patchAuroraConfigFile("aos", filename, jsonOp)
       def git = gitService.checkoutRepoForAffiliation("aos")
       def gitLog = git.log().call().head()
       gitService.closeRepository(git)
 
     then:
-      jsonNode.has("version")
-      jsonNode.get("version").asText() == "3"
       gitLog.fullMessage == "Added: 0, Modified: 1, Deleted: 0"
+      def patchedFile = patchedAuroraConfig.auroraConfigFiles.find { it.name == filename }
+      patchedFile.contents.at("/version").textValue() == "3"
   }
 
 }

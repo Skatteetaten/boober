@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.service.validation
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.model.AuroraConfigField
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -16,6 +15,8 @@ data class AuroraConfigFieldHandler(val name: String,
                                     val validator: (JsonNode?) -> Exception? = { _ -> null },
                                     val defaultValue: String? = null)
 
+
+data class AuroraConfigField(val path: String, val value: JsonNode, val source: String)
 
 fun List<AuroraConfigFieldHandler>.extractFrom(files: List<AuroraConfigFile>): Map<String, AuroraConfigField> {
 

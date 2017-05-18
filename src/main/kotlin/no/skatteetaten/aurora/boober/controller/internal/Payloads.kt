@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.controller
+package no.skatteetaten.aurora.boober.controller.internal
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.*

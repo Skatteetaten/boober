@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.controller
+package no.skatteetaten.aurora.boober.controller.internal
 
 data class Response(
         val success: Boolean = true,

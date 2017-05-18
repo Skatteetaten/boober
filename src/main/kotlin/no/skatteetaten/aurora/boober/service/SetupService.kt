@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service
 @Service
 class SetupService(
         val auroraDeploymentConfigService: AuroraDeploymentConfigService,
-        val openShiftService: OpenShiftService,
+        val openShiftService: OpenShiftObjectGenerator,
         val openShiftClient: OpenShiftClient,
         @Value("\${openshift.cluster}") val cluster: String) {
 

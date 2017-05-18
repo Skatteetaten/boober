@@ -13,13 +13,13 @@ import org.springframework.stereotype.Service
 import java.io.StringWriter
 
 @Service
-class OpenShiftService(
+class OpenShiftObjectGenerator(
         val userDetailsProvider: UserDetailsProvider,
         val ve: VelocityEngine,
         val mapper: ObjectMapper
 ) {
 
-    val logger: Logger = LoggerFactory.getLogger(OpenShiftService::class.java)
+    val logger: Logger = LoggerFactory.getLogger(OpenShiftObjectGenerator::class.java)
 
     fun generateBuildRequest(auroraDc: AuroraDeploymentConfig): JsonNode {
         logger.debug("Generating build request for name ${auroraDc.name}")

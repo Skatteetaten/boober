@@ -16,7 +16,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
-@SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration, OpenShiftResourceClient, OpenShiftClient, OpenShiftService, Config])
+@SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration, OpenShiftResourceClient, OpenShiftClient, OpenShiftObjectGenerator, Config])
 class OpenShiftClientTest extends Specification {
 
   @Configuration
@@ -34,7 +34,7 @@ class OpenShiftClientTest extends Specification {
   OpenShiftClient openShiftClient
 
   @Autowired
-  OpenShiftService openShiftService
+  OpenShiftObjectGenerator openShiftService
 
   @Autowired
   UserDetailsProvider userDetailsProvider

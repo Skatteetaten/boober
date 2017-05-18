@@ -21,35 +21,38 @@ class AuroraConfigService(
     private val GIT_SECRET_FOLDER = ".secret"
     private val logger = LoggerFactory.getLogger(AuroraConfigService::class.java)
 
-    fun saveAuroraConfig(affiliation: String, auroraConfig: AuroraConfig) {
-
-        withAuroraConfig(affiliation, function = { auroraConfig })
-    }
-
-    fun patchAuroraConfigFile(filename: String, auroraConfig: AuroraConfig, jsonPatchOp: String): JsonNode {
-
-        val patch: JsonPatch = mapper.readValue(jsonPatchOp, JsonPatch::class.java)
-
-        val auroraConfigFile = auroraConfig.auroraConfigFiles.filter { it.name == filename }.first()
-        val originalContentsNode = mapper.convertValue(auroraConfigFile.contents, JsonNode::class.java)
-
-        return patch.apply(originalContentsNode)
-    }
-
-    fun updateAuroraConfigFile(affiliation: String, filename: String, fileContents: JsonNode) {
-        withAuroraConfig(affiliation, true, { auroraConfig: AuroraConfig ->
-            auroraConfig.updateFile(filename, fileContents)
-        })
-    }
-
     fun findAuroraConfig(affiliation: String): AuroraConfig {
 
         return withAuroraConfig(affiliation, false)
     }
 
-    fun withAuroraConfig(affiliation: String,
-                         commitChanges: Boolean = true,
-                         function: (AuroraConfig) -> AuroraConfig = { it -> it }): AuroraConfig {
+    fun saveAuroraConfig(affiliation: String, auroraConfig: AuroraConfig): AuroraConfig {
+
+        return withAuroraConfig(affiliation, function = { auroraConfig })
+    }
+
+    fun patchAuroraConfigFile(affiliation: String, filename: String, jsonPatchOp: String): AuroraConfig {
+
+        return withAuroraConfig(affiliation, true, { auroraConfig: AuroraConfig ->
+            val patch: JsonPatch = mapper.readValue(jsonPatchOp, JsonPatch::class.java)
+
+            val auroraConfigFile = auroraConfig.auroraConfigFiles.filter { it.name == filename }.first()
+            val originalContentsNode = mapper.convertValue(auroraConfigFile.contents, JsonNode::class.java)
+
+            val fileContents = patch.apply(originalContentsNode)
+            auroraConfig.updateFile(filename, fileContents)
+        })
+    }
+
+    fun updateAuroraConfigFile(affiliation: String, filename: String, fileContents: JsonNode): AuroraConfig {
+        return withAuroraConfig(affiliation, true, { auroraConfig: AuroraConfig ->
+            auroraConfig.updateFile(filename, fileContents)
+        })
+    }
+
+    private fun withAuroraConfig(affiliation: String,
+                                 commitChanges: Boolean = true,
+                                 function: (AuroraConfig) -> AuroraConfig = { it -> it }): AuroraConfig {
 
         val startCheckout = System.currentTimeMillis()
         val repo = gitService.checkoutRepoForAffiliation(affiliation)
