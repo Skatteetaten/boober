@@ -1,38 +1,45 @@
 package no.skatteetaten.aurora.boober.utils
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import groovy.json.JsonSlurper
 import no.skatteetaten.aurora.boober.Configuration
+import no.skatteetaten.aurora.boober.model.ApplicationId
 
 class SampleFilesCollector {
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
 
-  static Map<String, Map<String, Object>> getQaEbsUsersSampleFiles() {
+    static Map<String, JsonNode> getSampleFiles(ApplicationId aid) {
+      return collectFilesToMapOfJsonNode(
+          "about.json",
+          "${aid.applicationName}.json",
+          "${aid.environmentName}/about.json",
+          "${aid.environmentName}/${aid.applicationName}.json"
+      )
+    }
+  static Map<String, JsonNode> getQaEbsUsersSampleFiles() {
     return collectFilesToMapOfJsonNode("about.json", "${APP_NAME}.json", "${ENV_NAME}/about.json", "${ENV_NAME}/${APP_NAME}.json")
   }
 
-  static Map<String, Map<String, Object>> getQaEbsUsersSampleFilesForEnv(String envName) {
+  static Map<String, JsonNode> getQaEbsUsersSampleFilesForEnv(String envName) {
     return collectFilesToMapOfJsonNode("about.json", "${APP_NAME}.json", "${envName}/about.json", "${envName}/${APP_NAME}.json")
   }
 
-  static Map<String, Map<String, Object>> collectFilesToMapOfJsonNode(String... fileNames) {
+  static Map<String, JsonNode> collectFilesToMapOfJsonNode(String... fileNames) {
     File configDir = new File(SampleFilesCollector.getResource("/samples/config").path)
 
     return fileNames.collectEntries { [(it), collectFile(configDir, it)]}
   }
 
-  static Map<String, Object> collectFile(File dirName, String name) {
+  static JsonNode collectFile(File dirName, String name) {
     ObjectMapper mapper = new Configuration().mapper()
 
-    def file = mapper.readTree(new File(dirName, name))
+    def json = mapper.readValue(new File(dirName, name), JsonNode.class)
 
-    return mapper.treeToValue(file, Map.class)
+    return json
+
   }
 
-  static Map<String, Object> jsonToMap(String json) {
-    return new JsonSlurper().parseText(json) as Map<String, Object>
-  }
 }

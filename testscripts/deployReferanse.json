@@ -2,6 +2,6 @@
     "affiliation": "paas",
     "setupParams": {
         "apps": ["referanse"],
-        "envs": ["boober"]
+        "envs": ["espen-dev"]
     }
 }

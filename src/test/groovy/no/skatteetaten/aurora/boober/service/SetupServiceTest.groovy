@@ -1,7 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import static no.skatteetaten.aurora.boober.utils.SampleFilesCollector.getQaEbsUsersSampleFilesForEnv
-
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
@@ -9,18 +7,17 @@ import org.springframework.context.annotation.Configuration
 
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.utils.SampleFilesCollector
+import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.utils.AuroraConfigHelper
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration,
-    GitService,
-    AuroraConfigService,
-    OpenShiftService,
-    EncryptionConfig,
-    EncryptionService,
+    SetupService,
+    AuroraDeploymentConfigService,
+    OpenShiftObjectGenerator,
     Config])
 class SetupServiceTest extends Specification {
 
@@ -38,11 +35,6 @@ class SetupServiceTest extends Specification {
     OpenShiftClient openshiftClient() {
       factory.Mock(OpenShiftClient)
     }
-
-    @Bean
-    GitService gitService() {
-      factory.Mock(GitService)
-    }
   }
 
   @Autowired
@@ -50,109 +42,44 @@ class SetupServiceTest extends Specification {
 
   @Autowired
   UserDetailsProvider userDetailsProvider
+
   @Autowired
-  AuroraConfigService auroraConfigService
+  SetupService setupService
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
-  private static AuroraConfig createAuroraConfig(String envName = SampleFilesCollector.ENV_NAME,
-      Map<String, String> secrets = [:]) {
-
-    Map<String, Map<String, Object>> files = getQaEbsUsersSampleFilesForEnv(envName)
-    new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value) }, secrets)
+  def setup() {
+    userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
+    openShiftClient.isValidUser(_) >> true
+    openShiftClient.isValidGroup(_) >> true
+    openShiftClient.applyMany(_, _) >> []
   }
 
-  def "Should create aurora dc for application"() {
-
+  def "Should setup development for application"() {
     given:
-      userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
-      openShiftClient.isValidGroup(_) >> true
-      openShiftClient.isValidUser(_) >> true
-
-      AuroraConfig auroraConfig = createAuroraConfig()
+      def auroraConfig = AuroraConfigHelper.createAuroraConfig(aid)
 
     when:
-      def result = auroraConfigService.createAuroraDcs(auroraConfig, [aid], [], false)
+      def result = setupService.executeSetup(auroraConfig, [aid], [])
 
     then:
-      result != null
+      result.size() == 1
+      result.get(0).auroraDc.type == TemplateType.development
+
   }
 
-  def "Should get error if user is not valid"() {
-
+  def "Should setup deploy for application"() {
     given:
-      userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
-      openShiftClient.isValidGroup(_) >> true
-      openShiftClient.isValidUser(_) >> false
-
-      AuroraConfig auroraConfig = createAuroraConfig()
+      def consoleAid = new ApplicationId(ENV_NAME, "console")
+      def auroraConfig = AuroraConfigHelper.createAuroraConfig(consoleAid)
 
     when:
-      auroraConfigService.createAuroraDcs(auroraConfig, [aid], [], true)
+      def result = setupService.executeSetup(auroraConfig, [consoleAid], [])
 
     then:
-      AuroraConfigException e = thrown()
-      e.errors.size() == 1
-      e.errors[0].messages[0] == "The following users are not valid=foo"
-  }
-
-  def "Should get error if group is not valid"() {
-
-    given:
-      userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
-      openShiftClient.isValidGroup(_) >> false
-      openShiftClient.isValidUser(_) >> true
-
-      AuroraConfig auroraConfig = createAuroraConfig()
-
-    when:
-      auroraConfigService.createAuroraDcs(auroraConfig, [aid], [], true)
-
-    then:
-      AuroraConfigException e = thrown()
-      e.errors.size() == 1
-      e.errors[0].messages[0] == "The following groups are not valid=APP_PaaS_drift, APP_PaaS_utv"
-  }
-
-  def "Should collect secrets"() {
-
-    given:
-      userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
-      openShiftClient.isValidGroup(_) >> true
-      openShiftClient.isValidUser(_) >> true
-
-      def envName = "secrettest"
-      AuroraConfig auroraConfig = createAuroraConfig(envName, ["/tmp/foo/latest.properties": "FOO=BAR"])
-
-    when:
-
-      def result = auroraConfigService.
-          createAuroraDcs(auroraConfig, [new ApplicationId(envName, APP_NAME)], [], false)
-
-    then:
-      result[0].secrets.containsKey("latest.properties")
-  }
-
-  def "Should get error if we want secrets but there are none "() {
-
-    given:
-      userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
-      openShiftClient.isValidGroup(_) >> true
-      openShiftClient.isValidUser(_) >> true
-
-      def envName = "secrettest"
-      AuroraConfig auroraConfig = createAuroraConfig(envName)
-
-    when:
-
-      auroraConfigService.createAuroraDcs(auroraConfig, [new ApplicationId(envName, APP_NAME)], [], false)
-
-
-    then:
-      AuroraConfigException e = thrown()
-      e.errors.size() == 1
-      e.errors[0].messages[0] == "No secret files with prefix /tmp/foo"
+      result.size() == 1
+      result.get(0).auroraDc.type == TemplateType.deploy
   }
 }

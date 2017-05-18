@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftApiUrls
 import spock.lang.Specification
 import spock.lang.Unroll
 

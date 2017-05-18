@@ -12,18 +12,21 @@ import com.fasterxml.jackson.databind.JsonNode
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration,
-    OpenshiftResourceClient,
+    OpenShiftResourceClient,
     OpenShiftClient,
-    EncryptionConfig,
     EncryptionService,
-    AuroraConfigService, GitService, OpenShiftService, Config])
+    AuroraDeploymentConfigService,
+    GitService, OpenShiftObjectGenerator, Config])
 class OpenShiftServiceTest extends Specification {
 
   public static final String ENV_NAME = "booberdev"
@@ -51,22 +54,22 @@ class OpenShiftServiceTest extends Specification {
   }
 
   @Autowired
-  OpenShiftService openShiftService
+  OpenShiftObjectGenerator openShiftService
 
   @Autowired
   UserDetailsProvider userDetailsProvider
 
   @Autowired
-  AuroraConfigService auroraConfigParserService
+  AuroraDeploymentConfigService auroraDeploymentConfigService
 
   def "Should create OpenShift objects from Velocity templates"() {
     given:
       userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User")
-      Map<String, Map<String, Object>> files = getQaEbsUsersSampleFiles()
+      Map<String, JsonNode> files = getQaEbsUsersSampleFiles()
 
     when:
-      def auroraConfig = new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value) }, [:])
-      AuroraDeploymentConfig auroraDc = auroraConfigParserService.createAuroraDc(auroraConfig, aid, [], false)
+      def auroraConfig = new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])
+      AuroraDeploymentConfig auroraDc = auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig, [])
       List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc)
 
       def service = generatedObjects.find { it.get("kind").asText() == "Service" }
@@ -76,9 +79,10 @@ class OpenShiftServiceTest extends Specification {
       def project = generatedObjects.find { it.get("kind").asText() == "ProjectRequest" }
       def buildConfig = generatedObjects.find { it.get("kind").asText() == "BuildConfig" }
       def rolebindings = generatedObjects.find { it.get("kind").asText() == "RoleBinding" }
+      def configMap = generatedObjects.find { it.get("kind").asText() == "ConfigMap" }
 
     then:
-      generatedObjects.size() == 7
+      generatedObjects.size() == 8
 
 
       compareJson(rolebindings, """
@@ -155,13 +159,7 @@ class OpenShiftServiceTest extends Specification {
           "metadata": {
             "name": "verify-ebs-users",
             "annotations": {
-              "sprocket.sits.no/service.webseal": "",
-              "sprocket.sits.no/service.webseal-roles": "",
-              "prometheus.io/scheme": "http",
-              "prometheus.io/scrape": "true",
-              "prometheus.io/path": "/prometheus",
-              "prometheus.io/port": "8080"
-        
+              "prometheus.io/scrape": "false"
             },
             "labels": {
               "app": "verify-ebs-users",
@@ -199,6 +197,24 @@ class OpenShiftServiceTest extends Specification {
               "updatedBy" : "hero",
               "affiliation": "aos"
             }
+          }
+        }
+      """)
+
+      compareJson(configMap, """
+        {
+          "kind": "ConfigMap",
+          "apiVersion": "v1",
+          "metadata": {
+            "name": "verify-ebs-users",
+            "labels": {
+              "app": "verify-ebs-users",
+              "updatedBy" : "hero",
+              "affiliation": "aos"
+            }
+          },
+          "data": {
+            "latest.properties": "foo=baaaar"
           }
         }
       """)
@@ -263,6 +279,12 @@ class OpenShiftServiceTest extends Specification {
                   {
                     "name": "application-log-volume",
                     "emptyDir": {}
+                  },
+                  {
+                    "name": "config",
+                    "configMap": {
+                      "name": "verify-ebs-users"
+                    }
                   }
                 ],
                 "containers": [
@@ -338,6 +360,10 @@ class OpenShiftServiceTest extends Specification {
                       {
                         "name": "application-log-volume",
                         "mountPath": "/u01/logs"
+                      },
+                      {
+                        "name": "config",
+                        "mountPath": "/u01/config/configmap"
                       }
                     ],
                     "terminationMessagePath": "/dev/termination-log",

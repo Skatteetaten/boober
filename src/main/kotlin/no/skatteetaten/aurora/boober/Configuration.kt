@@ -10,6 +10,8 @@ import org.apache.http.ssl.SSLContexts
 import org.apache.velocity.app.VelocityEngine
 import org.apache.velocity.runtime.RuntimeConstants
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader
+import org.encryptor4j.factory.AbsKeyFactory
+import org.encryptor4j.factory.KeyFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Primary
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory
@@ -33,6 +35,9 @@ class Configuration {
             init()
         }
     }
+
+    @Bean
+    fun keyFactory(): KeyFactory = object : AbsKeyFactory("AES", 128) {}
 
     @Bean
     @Primary

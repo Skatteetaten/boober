@@ -1,25 +1,17 @@
 package no.skatteetaten.aurora.boober.service
 
 import org.encryptor4j.Encryptor
-import org.encryptor4j.factory.AbsKeyFactory
 import org.encryptor4j.factory.KeyFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
 import org.springframework.stereotype.Service
 import java.security.Security
 import java.util.*
 
-
-@Configuration
-class EncryptionConfig {
-
-    @Bean
-    fun keyFactory(): KeyFactory = object : AbsKeyFactory("AES", 128) {}
-}
-
 @Service
 class EncryptionService(@Value("\${boober.encrypt.key}") val key: String, keyFactory: KeyFactory) {
+
+    val version = "Boober:1"
+    val LINE_SEPERATOR = "\n"
 
     final val providerName: String
 
@@ -28,10 +20,6 @@ class EncryptionService(@Value("\${boober.encrypt.key}") val key: String, keyFac
         providerName = bouncyCastleProvider.name
         Security.getProvider(providerName) ?: Security.addProvider(bouncyCastleProvider)
     }
-
-    val LINE_SEPERATOR = "\n"
-
-    val version = "Boober:1"
 
     val encryptor = Encryptor(keyFactory.keyFromPassword(key.toCharArray())).apply {
         setAlgorithmProvider(providerName)

@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.service.internal.GitException
 import no.skatteetaten.aurora.boober.utils.use
 import org.eclipse.jgit.api.CreateBranchCommand
 import org.eclipse.jgit.api.Git
@@ -41,13 +42,6 @@ class GitService(
             dir.deleteRecursively()
             throw ex
         }
-    }
-
-    fun saveFilesAndClose(affiliation: String, files: Map<String, String>) {
-
-        val git = checkoutRepoForAffiliation(affiliation)
-
-        saveFilesAndClose(git, files)
     }
 
     fun saveFilesAndClose(git: Git, files: Map<String, String>) {

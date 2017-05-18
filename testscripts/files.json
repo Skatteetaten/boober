@@ -2,114 +2,53 @@
   "affiliation": "paas",
   "setupParams": {
     "apps": [
-      "referanse",
-      "referanse2"
+      "referanse"
     ],
     "envs": [
-      "boober2",
-      "boober3"
+      "espen-dev"
     ],
-    "overrides": {
-      "boober3/referanse2.json": {
-        "build": {
-          "VERSION": "0.0.94"
-        }
-      }
-    },
+    "overrides": {},
     "dryRun": false
   },
   "auroraConfig": {
     "files": {
-      "console.json": {
-        "build": {
-          "GROUP_ID": "ske.aurora.openshift.console",
-          "ARTIFACT_ID": "openshift-console",
-          "VERSION": "0"
-        }
-      },
-      "utv2/about.json": {
-        "cluster": "utv"
-      },
-      "utv3/about.json": {
-        "cluster": "utv"
-      },
-      "boober/about.json": {
-        "cluster": "utv"
-      },
       "about.json": {
-        "groups": "APP_PaaS_drift APP_PaaS_utv",
         "affiliation": "paas",
         "type": "deploy",
-        "deploy": {
-          "SPLUNK_INDEX": "openshift-test"
-        },
-        "config": {
-          "foo": "bar"
+        "permissions" : {
+          "admin" : {
+            "groups": "APP_PaaS_drift APP_PaaS_utv",
+            "users": "m86862"
+          }
         }
       },
       "referanse.json": {
         "name": "referanse",
-        "replicas": 1,
-        "flags": [
-          "rolling",
-          "cert"
-        ],
-        "build": {
-          "GROUP_ID": "ske.aurora.openshift.referanse",
-          "ARTIFACT_ID": "openshift-referanse-springboot-server",
-          "VERSION": "0"
+        "replicas": "1",
+        "flags": {
+          "rolling": true,
+          "cert": true,
+          "route": true
         },
-        "deploy": {
-          "PROMETHEUS_ENABLED": true,
-          "PROMETHEUS_PORT": "8082",
-          "MANAGEMENT_PATH": ":8081/actuator",
-          "DATABASE": "referanseapp"
-        },
-        "config": {
-          "foo2": "bar"
+        "groupId": "ske.aurora.openshift.referanse",
+        "artifactId": "openshift-referanse-springboot-server",
+        "version": "0.0.95",
+        "managementPath": ":8081/actuator",
+        "database": "referanseapp",
+        "prometheus" : {
+          "port": "8082"
         }
       },
-      "referanse2.json": {
-        "name": "referanse2",
-        "replicas": 1,
-        "flags": [
-          "rolling",
-          "cert",
-          "route"
-        ],
-        "build": {
-          "GROUP_ID": "ske.aurora.openshift.referanse",
-          "ARTIFACT_ID": "openshift-referanse-springboot-server",
-          "VERSION": "0.0.95"
-        },
-        "deploy": {
-          "PROMETHEUS_ENABLED": true,
-          "PROMETHEUS_PORT": "8081",
-          "MANAGEMENT_PATH": ":8081/actuator",
-          "DATABASE": "referanseapp"
-        },
-        "config": {
-          "foo2": "bar"
+      "espen-dev/about.json": {
+        "cluster": "utv",
+        "config" : {
+          "latest.properties" : {
+            "Foo": "Fighters"
+          }
         }
       },
-      "boober2/about.json": {
-        "cluster": "utv"
-      },
-      "boober2/referanse.json": {
-      },
-      "boober2/referanse2.json": {
-      },
-      "boober3/about.json": {
-        "cluster": "utv"
-      },
-      "boober3/referanse.json": {
-      },
-      "boober3/referanse2.json": {
+      "espen-dev/referanse.json": {
       }
-    },
-    "secrets": {
-      "latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg==",
-      "1.2.3.properties": "Rk9PPU9IWUVBSApCQVI9Rk9PQkFSCg=="
     }
   }
 }

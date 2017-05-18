@@ -1,10 +1,12 @@
 package no.skatteetaten.aurora.boober.controller
 
+import no.skatteetaten.aurora.boober.controller.internal.Response
+import no.skatteetaten.aurora.boober.controller.internal.SetupCommand
+import no.skatteetaten.aurora.boober.controller.internal.SetupParams
 import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.service.ApplicationResult
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
-import no.skatteetaten.aurora.boober.service.SetupParams
 import no.skatteetaten.aurora.boober.service.SetupService
+import no.skatteetaten.aurora.boober.service.internal.ApplicationResult
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -33,7 +35,9 @@ class SetupController(val setupService: SetupService, val auroraConfigService: A
     }
 
     private fun executeSetup(auroraConfig: AuroraConfig, setupParams: SetupParams): Response {
-        val applicationResults: List<ApplicationResult> = setupService.executeSetup(auroraConfig, setupParams)
+
+        val applicationResults: List<ApplicationResult> =
+                setupService.executeSetup(auroraConfig, setupParams.applicationIds, setupParams.overrides)
         return Response(items = applicationResults)
     }
 }

@@ -1,9 +1,51 @@
 package no.skatteetaten.aurora.boober.model
 
-import no.skatteetaten.aurora.boober.service.ApplicationId
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+
+import no.skatteetaten.aurora.boober.utils.SampleFilesCollector
 import spock.lang.Specification
 
 class AuroraConfigTest extends Specification {
+
+  def mapper = new ObjectMapper()
+
+  def "Should get all application ids for AuroraConfig"() {
+    given:
+      def files = SampleFilesCollector.getSampleFiles(new ApplicationId("booberdev", "console"))
+      def auroraConfig =
+          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])
+
+    when:
+      def applicationIds = auroraConfig.getApplicationIds("", "")
+
+    then:
+      def console = applicationIds.get(0)
+      console.applicationName == "console"
+      console.environmentName == "booberdev"
+  }
+
+  def "Should update file"() {
+
+    given:
+      def files = SampleFilesCollector.getSampleFiles(new ApplicationId("booberdev", "console"))
+      def auroraConfig =
+          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])
+
+      def updates = mapper.convertValue(["version": "4"], JsonNode.class)
+
+    when:
+      def updatedAuroraConfig = auroraConfig.updateFile("booberdev/console.json", updates)
+
+    then:
+      def version = updatedAuroraConfig.getAuroraConfigFiles().stream()
+          .filter({ it.configName == "booberdev/console.json" })
+          .map({ it.contents.get("version").asText() })
+          .findFirst()
+
+      version.isPresent()
+      "4" == version.get()
+  }
 
   def "Should fetch secrets"() {
     given:
@@ -48,7 +90,8 @@ class AuroraConfigTest extends Specification {
 
     when:
       def filesForApplication = auroraConfig.
-          getFilesForApplication(new ApplicationId("utv", "referanse"), [new AuroraConfigFile("about.json", [:])])
+          getFilesForApplication(new ApplicationId("utv", "referanse"), [
+              overrideFile("about.json")])
 
     then:
       filesForApplication.size() == 5
@@ -61,7 +104,8 @@ class AuroraConfigTest extends Specification {
 
     when:
       def filesForApplication = auroraConfig.
-          getFilesForApplication(new ApplicationId("utv", "referanse"), [new AuroraConfigFile("referanse.json", [:])])
+          getFilesForApplication(new ApplicationId("utv", "referanse"),
+              [overrideFile("referanse.json")])
 
     then:
       filesForApplication.size() == 5
@@ -75,7 +119,7 @@ class AuroraConfigTest extends Specification {
     when:
       def filesForApplication = auroraConfig.
           getFilesForApplication(new ApplicationId("utv", "referanse"),
-              [new AuroraConfigFile("utv/referanse.json", [:])])
+              [overrideFile("utv/referanse.json")])
 
     then:
       filesForApplication.size() == 5
@@ -95,6 +139,10 @@ class AuroraConfigTest extends Specification {
   }
 
   List<AuroraConfigFile> createMockFiles(String... files) {
-    files.collect { new AuroraConfigFile(it, [:]) }
+    files.collect { new AuroraConfigFile(it, mapper.readValue("{}", JsonNode.class), false) }
+  }
+
+  def overrideFile(String fileName) {
+    new AuroraConfigFile(fileName, mapper.readValue("{}", JsonNode.class), true)
   }
 }

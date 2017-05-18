@@ -1,45 +1,60 @@
 {
   "files": {
     "about.json": {
-      "groups": "APP_PaaS_drift APP_PaaS_utv",
       "affiliation": "paas",
       "type": "deploy",
-      "deploy": {
-        "SPLUNK_INDEX": "openshift-test"
+      "splunkIndex": "openshift-test",
+      "permissions": {
+        "admin": {
+          "groups": "APP_PaaS_drift APP_PaaS_utv"
+        }
       },
       "config": {
-        "foo": "bar"
+        "latest.properties": {
+          "foo": "bar"
+        }
       }
     },
     "referanse.json": {
       "name": "referanse",
       "replicas": 1,
-      "flags": [
-        "cert"
-      ],
-      "build": {
-        "GROUP_ID": "ske.aurora.openshift.referanse",
-        "ARTIFACT_ID": "openshift-referanse-springboot-server",
-        "VERSION": "0"
+      "secretFolder": "/tmp/test",
+      "flags": {
+        "cert": true,
+        "route": true,
+        "rolling": true
       },
-      "deploy": {
-        "PROMETHEUS_ENABLED": true,
-        "PROMETHEUS_PORT": "8081",
-        "MANAGEMENT_PATH": ":8081/actuator",
-        "DATABASE": "referanseapp"
+      "groupId": "ske.aurora.openshift.referanse",
+      "artifactId": "openshift-referanse-springboot-server",
+      "version": "0",
+      "prometheus": {
+        "port": "8081"
       },
+      "managementPath": ":8081/actuator",
+      "database": "referanseapp",
       "config": {
-        "foo2": "bar2"
+        "latest.properties": {
+          "foo2": "baz"
+        }
       }
     },
     "boober/about.json": {
       "cluster": "utv"
     },
     "boober/referanse.json": {
+    },
+    "espen-dev/about.json": {
+      "cluster": "utv",
+      "secretFolder": "/tmp/utv"
+    },
+    "espen-dev/referanse.json": {
+
     }
   },
   "secrets": {
-    "/home/user/referanse/latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg==",
-    "/home/user/referanse/1.2.3.properties": "Rk9PPU9IWUVBSApCQVI9Rk9PQkFSCg=="
+    "/tmp/test/latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg==",
+    "/tmp/test/1.2.3.properties": "Rk9PPU9IWUVBSApCQVI9Rk9PQkFSCg==",
+    "/tmp/utv/latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg==",
+    "/tmp/utv/1.2.3.properties": "Rk9PPU9IWUVBSApCQVI9Rk9PQkFSCg=="
   }
 }

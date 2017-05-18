@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.service
+package no.skatteetaten.aurora.boober.service.openshift
 
 class OpenShiftApiUrls(
         val create: String,

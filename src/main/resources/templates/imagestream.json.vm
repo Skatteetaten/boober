@@ -12,13 +12,13 @@
     #if (${adc.type} == "deploy")
     ,
       "spec": {
-        "dockerImageRepository": "${dockerRegistry}/${dd.dockerGroup}/${dd.dockerName}",
+        "dockerImageRepository": "${dockerRegistry}/${adc.dockerGroup}/${adc.dockerName}",
         "tags": [
           {
-              "name": "${dd.tag}",
+            "name": "default",
               "from": {
                 "kind": "DockerImage",
-                "name": "${dockerRegistry}/${dd.dockerGroup}/${dd.dockerName}:${dd.version}"
+                "name": "${dockerRegistry}/${adc.dockerGroup}/${adc.dockerName}:${adc.version}"
               },
               "importPolicy": {
                 "scheduled": true

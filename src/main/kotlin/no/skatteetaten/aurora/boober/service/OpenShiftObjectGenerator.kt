@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import no.skatteetaten.aurora.boober.model.TemplateType
 import org.apache.velocity.VelocityContext
@@ -14,13 +13,13 @@ import org.springframework.stereotype.Service
 import java.io.StringWriter
 
 @Service
-class OpenShiftService(
+class OpenShiftObjectGenerator(
         val userDetailsProvider: UserDetailsProvider,
         val ve: VelocityEngine,
         val mapper: ObjectMapper
 ) {
 
-    val logger: Logger = LoggerFactory.getLogger(OpenShiftService::class.java)
+    val logger: Logger = LoggerFactory.getLogger(OpenShiftObjectGenerator::class.java)
 
     fun generateBuildRequest(auroraDc: AuroraDeploymentConfig): JsonNode {
         logger.debug("Generating build request for name ${auroraDc.name}")
@@ -33,16 +32,16 @@ class OpenShiftService(
         return mergeVelocityTemplate("deploymentrequest.json", mapOf("adc" to auroraDc))
 
     }
+
     fun generateObjects(auroraDc: AuroraDeploymentConfig): List<JsonNode> {
 
-        val deployDescriptor = auroraDc.deployDescriptor as AuroraDeploy
-
-        val configMap = auroraDc.config?.map { "${it.key}=${it.value}" }?.joinToString(separator = "\\n")
+        val configs: Map<String, String> = auroraDc.config?.map { (key, value) ->
+            key to value.map { "${it.key}=${it.value}" }.joinToString(separator = "\\n")
+        }?.toMap() ?: mapOf()
 
         val params = mapOf(
                 "adc" to auroraDc,
-                "configMap" to configMap,
-                "dd" to deployDescriptor,
+                "configs" to configs,
                 "username" to userDetailsProvider.getAuthenticatedUser().username,
                 "dockerRegistry" to "docker-registry.aurora.sits.no:5000",
                 "builder" to mapOf("name" to "leveransepakkebygger", "version" to "prod"),
@@ -61,7 +60,7 @@ class OpenShiftService(
                 "rolebinding.json"
         )
 
-        auroraDc.config?.let {
+        if (configs.isNotEmpty()) {
             templatesToProcess.add("configmap.json")
         }
 
@@ -69,7 +68,7 @@ class OpenShiftService(
             templatesToProcess.add("secret.json")
         }
 
-        if (auroraDc.route) {
+        if (auroraDc.flags.route) {
             templatesToProcess.add("route.json")
         }
 
@@ -81,6 +80,7 @@ class OpenShiftService(
 
         return templatesToProcess.map { mergeVelocityTemplate(it, params) }
     }
+
 
     private fun mergeVelocityTemplate(template: String, content: Map<String, Any?>): JsonNode {
         val context = VelocityContext()

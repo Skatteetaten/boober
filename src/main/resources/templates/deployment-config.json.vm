@@ -3,13 +3,15 @@
   "apiVersion": "v1",
   "metadata": {
     "annotations": {
-      "marjory.skatteetaten.no/management-path": "$!{dd.managementPath}",
-      "marjory.skatteetaten.no/alarm": "${dd.alarm}"
-    #if(${dd.certificateCn})
-      ,"sprocket.sits.no/deployment-config.certificate": "${dd.certificateCn}"
+      "marjory.skatteetaten.no/management-path": "$!{adc.managementPath}",
+      "marjory.skatteetaten.no/alarm": "${adc.flags.alarm}"
+      #if(${adc.certificateCn})
+      ,
+        "sprocket.sits.no/deployment-config.certificate": "${adc.certificateCn}"
     #end
-    #if(${dd.database})
-      ,"sprocket.sits.no/deployment-config.database": "$!{dd.database}"
+      #if(${adc.database})
+      ,
+        "sprocket.sits.no/deployment-config.database": "$!{adc.database}"
     #end
     },
     "labels": {
@@ -20,7 +22,7 @@
     "name": "${adc.name}"
   },
   "spec": {
-    #if(${adc.deploymentStrategy} == "rolling")
+    #if(${adc.flags.rolling})
       "strategy": {
         "type": "Rolling",
         "rollingParams": {
@@ -46,7 +48,11 @@
                 "${adc.name}"
               ],
               "from": {
-                "name": "${adc.name}:${dd.tag}",
+              #if(${adc.type} == "development")
+                "name": "${adc.name}:latest",
+              #else
+                "name": "${adc.name}:default",
+              #end
                 "kind": "ImageStreamTag"
               }
             }
@@ -111,7 +117,7 @@
             "env": [
               {
                 "name": "SPLUNK_INDEX",
-                "value": "${dd.splunkIndex}"
+                "value": "${adc.splunkIndex}"
               },
               {
                 "name": "POD_NAME",
@@ -143,7 +149,7 @@
                 "name": "APP_NAME",
                 "value": "${adc.name}"
               }
-              #if (${dd.debug})
+              #if (${adc.flags.debug})
               ,
                 {
                   "name": "REMOTE_DEBUG",
@@ -155,7 +161,7 @@
                 }
               #end
 
-              #if (${adc.route})
+              #if (${adc.flags.route})
                   ,{
                     "name": "ROUTE_NAME",
                     "value": "${adc.routeName}"
@@ -164,12 +170,12 @@
             ],
             "resources": {
               "limits": {
-                "cpu": "2000m",
-                "memory": "${dd.maxMemory}"
+                "cpu": "${adc.resources.cpu.max}",
+                "memory": "${adc.resources.memory.max}"
               },
               "requests": {
-                "cpu": "${dd.cpuRequest}",
-                "memory": "128Mi"
+                "cpu": "${adc.resources.cpu.min}",
+                "memory": "${adc.resources.memory.min}"
               }
             },
             "volumeMounts": [

@@ -1,7 +1,8 @@
-package no.skatteetaten.aurora.boober.service
+package no.skatteetaten.aurora.boober.service.openshift
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.service.internal.OpenShiftException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -12,25 +13,24 @@ import org.springframework.web.client.RestTemplate
 import java.net.URI
 
 @Service
-class OpenshiftResourceClient(@Value("\${openshift.url}") val baseUrl: String,
+class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: String,
                               val userDetailsProvider: UserDetailsProvider,
                               val restTemplate: RestTemplate) {
 
-    val logger: Logger = LoggerFactory.getLogger(OpenshiftResourceClient::class.java)
+    val logger: Logger = LoggerFactory.getLogger(OpenShiftResourceClient::class.java)
 
     fun put(kind: String, name: String, namespace: String, payload: JsonNode): ResponseEntity<JsonNode> {
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, name, namespace)
-        val headers: HttpHeaders = createHeaders(userDetailsProvider.getAuthenticatedUser().token)
+        val headers: HttpHeaders = getAuthorizationHeaders()
         return exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.PUT, URI(urls.update)))
     }
-
 
     fun get(kind: String, name: String, namespace: String): ResponseEntity<JsonNode>? {
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, name, namespace)
         if (urls.get == null) {
             return null
         }
-        val headers: HttpHeaders = createHeaders(userDetailsProvider.getAuthenticatedUser().token)
+        val headers: HttpHeaders = getAuthorizationHeaders()
 
         try {
             return exchange(RequestEntity<Any>(headers, HttpMethod.GET, URI(urls.get)))
@@ -45,8 +45,31 @@ class OpenshiftResourceClient(@Value("\${openshift.url}") val baseUrl: String,
     fun post(kind: String, name: String, namespace: String, payload: JsonNode): ResponseEntity<JsonNode> {
 
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, name, namespace)
-        val headers: HttpHeaders = createHeaders(userDetailsProvider.getAuthenticatedUser().token)
+        val headers: HttpHeaders = getAuthorizationHeaders()
         return exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.POST, URI(urls.create)))
+    }
+
+    fun getExistingResource(headers: HttpHeaders, url: String): ResponseEntity<JsonNode>? {
+        return try {
+            val requestEntity = RequestEntity<Any>(headers, HttpMethod.GET, URI(url))
+            restTemplate.exchange(requestEntity, JsonNode::class.java)
+        } catch(e: Exception) {
+            if (e is HttpClientErrorException && e.statusCode != HttpStatus.NOT_FOUND) {
+                throw OpenShiftException("An unexpected error occurred when getting resource $url", e)
+            }
+            null
+        }
+    }
+
+    fun getAuthorizationHeaders(): HttpHeaders {
+        return createHeaders(userDetailsProvider.getAuthenticatedUser().token)
+    }
+
+    fun createHeaders(token: String): HttpHeaders {
+        val headers = HttpHeaders()
+        headers.contentType = MediaType.APPLICATION_JSON
+        headers.set("Authorization", "Bearer " + token)
+        return headers
     }
 
     private fun <T> exchange(requestEntity: RequestEntity<T>): ResponseEntity<JsonNode> {
@@ -60,12 +83,4 @@ class OpenshiftResourceClient(@Value("\${openshift.url}") val baseUrl: String,
         logger.debug("Body=${createResponse.body}")
         return createResponse
     }
-
-    private fun createHeaders(token: String): HttpHeaders {
-        val headers = HttpHeaders()
-        headers.contentType = MediaType.APPLICATION_JSON
-        headers.set("Authorization", "Bearer " + token)
-        return headers
-    }
-
 }

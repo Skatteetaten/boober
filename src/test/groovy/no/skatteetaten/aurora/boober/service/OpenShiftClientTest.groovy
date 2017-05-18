@@ -11,10 +11,12 @@ import com.fasterxml.jackson.databind.JsonNode
 
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
-@SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration, OpenshiftResourceClient, OpenShiftClient, OpenShiftService, Config])
+@SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration, OpenShiftResourceClient, OpenShiftClient, OpenShiftObjectGenerator, Config])
 class OpenShiftClientTest extends Specification {
 
   @Configuration
@@ -32,7 +34,7 @@ class OpenShiftClientTest extends Specification {
   OpenShiftClient openShiftClient
 
   @Autowired
-  OpenShiftService openShiftService
+  OpenShiftObjectGenerator openShiftService
 
   @Autowired
   UserDetailsProvider userDetailsProvider

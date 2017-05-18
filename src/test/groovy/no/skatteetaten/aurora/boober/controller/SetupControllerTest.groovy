@@ -7,13 +7,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 
-import groovy.json.JsonOutput
-import groovy.json.JsonSlurper
-import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.service.OpenShiftClient
-import no.skatteetaten.aurora.boober.utils.SampleFilesCollector
+import com.fasterxml.jackson.databind.ObjectMapper
 
+import groovy.json.JsonSlurper
+import no.skatteetaten.aurora.boober.controller.internal.AuroraConfigPayload
+import no.skatteetaten.aurora.boober.controller.internal.SetupCommand
+import no.skatteetaten.aurora.boober.controller.internal.SetupParamsPayload
+import no.skatteetaten.aurora.boober.controller.security.User
+import no.skatteetaten.aurora.boober.utils.SampleFilesCollector
+import spock.lang.Ignore
+
+@Ignore
+//move to test save in AuroraConfigController
 class SetupControllerTest extends AbstractControllerTest {
 
   public static final String AFFILIATION = "aos"
@@ -21,14 +26,14 @@ class SetupControllerTest extends AbstractControllerTest {
   public static final String APP_NAME = "verify-ebs-users"
 
   @Autowired
-  OpenShiftClient openShiftClient
+  ObjectMapper mapper
 
   def "Should fail when Aurora Config contains errors"() {
     given:
       def files = SampleFilesCollector.qaEbsUsersSampleFiles
-      files.put("about.json", [:])
+      files.put("verify-ebs-users.json", mapper.readTree("{}"))
       SetupCommand cmd = new SetupCommand(AFFILIATION, new AuroraConfigPayload(files, [:]), new SetupParamsPayload([ENV_NAME], [APP_NAME], [:], false))
-      def json = JsonOutput.toJson(cmd)
+      def json = mapper.writeValueAsString(cmd)
 
     when:
       def response = mockMvc
@@ -39,7 +44,7 @@ class SetupControllerTest extends AbstractControllerTest {
       def body = new JsonSlurper().parseText(response.andReturn().response.getContentAsString())
 
     then:
-      body.items[0]["messages"].size() == 1
+      body.items[0]["messages"].size() == 2
       response.andExpect(status().is4xxClientError())
   }
 }
