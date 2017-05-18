@@ -66,7 +66,9 @@ class AuroraConfigService(
 
         if (commitChanges) {
             measureTimeMillis {
-                gitService.saveFilesAndClose(repo, prepareFilesForSave(newAuroraConfig))
+                val encryptedSecretsFiles = encryptSecrets(auroraConfig, newAuroraConfig, filesForAffiliation)
+                val configFiles = newAuroraConfig.convertFilesToString(mapper)
+                gitService.saveFilesAndClose(repo, configFiles + encryptedSecretsFiles)
             }.let { logger.debug("Spent {} millis committing and pushing to git", it) }
         } else {
             measureTimeMillis {
@@ -77,11 +79,38 @@ class AuroraConfigService(
         return newAuroraConfig
     }
 
-    private fun createAuroraConfigFromFiles(filesForAffiliation: Map<String, File>): AuroraConfig {
+    private fun encryptSecrets(oldAuroraConfig: AuroraConfig, newAuroraConfig: AuroraConfig, filesForAffiliation: Map<String, File>): Map<String, String> {
+
+        val oldSecrets = oldAuroraConfig.convertSecretFilesToString(GIT_SECRET_FOLDER)
+        val newSecrets = newAuroraConfig.convertSecretFilesToString(GIT_SECRET_FOLDER)
+
+        val encryptedChangedSecrets = newSecrets
+                .filter { oldSecrets.containsKey(it.key) }
+                .filter { it.value != oldSecrets[it.key] }
+                .map { it.key to encryptionService.encrypt(it.value) }.toMap()
+
+        val encryptedNewSecrets = newSecrets
+                .filter { !oldSecrets.containsKey(it.key) }
+                .map { it.key to encryptionService.encrypt(it.value) }.toMap()
+
+        val encryptedSecrets = encryptedNewSecrets + encryptedChangedSecrets
+
+        val encryptedOldSecrets = filesForAffiliation
+                .filter { it.key.startsWith(GIT_SECRET_FOLDER) }
+                .filter { !encryptedSecrets.containsKey(it.key) }
+                .map { it.key to it.value.readText() }.toMap()
+
+        return encryptedSecrets + encryptedOldSecrets
+    }
+
+    private fun createAuroraConfigFromFiles(filesForAffiliation: Map<String, File>, decryptSecrets: Boolean = true): AuroraConfig {
 
         val secretFiles: Map<String, String> = filesForAffiliation
                 .filter { it.key.startsWith(GIT_SECRET_FOLDER) }
-                .map { it.key to encryptionService.decrypt(it.value.readText()) }.toMap()
+                .map { (key, value) ->
+                    if (decryptSecrets) key to encryptionService.decrypt(value.readText())
+                    else key to value.readText()
+                }.toMap()
 
         val auroraConfigFiles = filesForAffiliation
                 .filter { !it.key.startsWith(GIT_SECRET_FOLDER) }
@@ -89,13 +118,4 @@ class AuroraConfigService(
 
         return AuroraConfig(auroraConfigFiles = auroraConfigFiles, secrets = secretFiles)
     }
-
-    private fun prepareFilesForSave(auroraConfig: AuroraConfig): Map<String, String> {
-
-        val secrets = auroraConfig.convertSecretFilesToString(GIT_SECRET_FOLDER)
-        val encryptedSecrets = secrets.map { it.key to encryptionService.encrypt(it.value) }.toMap()
-
-        return auroraConfig.convertFilesToString(mapper) + encryptedSecrets
-    }
-
 }
