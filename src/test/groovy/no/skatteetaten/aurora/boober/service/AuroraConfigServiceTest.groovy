@@ -65,6 +65,32 @@ class AuroraConfigServiceTest extends Specification {
     service.saveAuroraConfig(affiliation, auroraConfig)
   }
 
+  private AuroraConfig getAuroraConfigFromGit(String affiliation, boolean decryptSecrets) {
+
+    def git = gitService.checkoutRepoForAffiliation(affiliation)
+    def files = gitService.getAllFilesInRepo(git)
+    def auroraConfig = service.createAuroraConfigFromFiles(files, decryptSecrets)
+    gitService.closeRepository(git)
+
+    return auroraConfig
+  }
+
+  def "Should not encrypt unchanged secrets"() {
+    given:
+      def affiliation = "aos"
+      def auroraConfig = AuroraConfigHelper.createAuroraConfig(aid, ["/tmp/foo/latest.properties": "FOO=BAR"])
+      createRepoAndSaveFiles(affiliation, auroraConfig)
+      def gitAuroraConfig = getAuroraConfigFromGit(affiliation, false)
+
+    when:
+      service.saveAuroraConfig(affiliation, auroraConfig)
+      def updatedAuroraConfig = getAuroraConfigFromGit(affiliation, false)
+
+    then:
+      def secretFile = ".config/foo/latest.properties"
+      gitAuroraConfig.secrets.get(secretFile) == updatedAuroraConfig.secrets.get(secretFile)
+  }
+
   def "Should successfully save AuroraConfig and secrets to git"() {
     given:
       GitServiceHelperKt.createInitRepo("aos")
