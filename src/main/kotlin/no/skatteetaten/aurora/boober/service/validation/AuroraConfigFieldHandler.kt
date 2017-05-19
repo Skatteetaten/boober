@@ -18,6 +18,34 @@ data class AuroraConfigFieldHandler(val name: String,
 
 data class AuroraConfigField(val path: String, val value: JsonNode, val source: String)
 
+fun Map<String, AuroraConfigField>.getConfigMap(configExtractors: List<AuroraConfigFieldHandler>): Map<String, Map<String, String>>? {
+
+    val configMap: MutableMap<String, MutableMap<String, String>> = mutableMapOf()
+
+    configExtractors.forEach {
+        val (_, configFile, field) = it.name.split("/", limit = 3)
+
+        val value = this.extract(it.name)
+        val keyValue = mutableMapOf(field to value)
+
+        if (configMap.containsKey(configFile)) configMap[configFile]?.putAll(keyValue)
+        else configMap.put(configFile, keyValue)
+    }
+
+    return if (configMap.isNotEmpty()) configMap else null
+}
+
+
+fun Map<String, AuroraConfigField>.getParameters(parameterExtractors: List<AuroraConfigFieldHandler>): Map<String, String>? {
+    return parameterExtractors.map {
+        val (_, field) = it.name.split("/", limit = 2)
+
+        val value = this.extract(it.name)
+        field to value
+    }.toMap()
+
+}
+
 fun List<AuroraConfigFieldHandler>.extractFrom(files: List<AuroraConfigFile>): Map<String, AuroraConfigField> {
 
     return this.mapNotNull { (name, path, _, defaultValue) ->
@@ -42,6 +70,7 @@ fun List<AuroraConfigFieldHandler>.extractFrom(files: List<AuroraConfigFile>): M
         }
     }.toMap()
 }
+
 
 fun List<AuroraConfigFile>.findExtractors(name: String): List<AuroraConfigFieldHandler> {
 

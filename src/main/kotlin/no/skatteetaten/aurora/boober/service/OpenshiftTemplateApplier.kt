@@ -8,7 +8,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import org.springframework.stereotype.Service
 
 @Service
-class ProcessService(
+class OpenshiftTemplateApplier(
         val openShiftClient: OpenShiftResourceClient,
         val mapper: ObjectMapper) {
 
@@ -17,8 +17,8 @@ class ProcessService(
 
         val template: ObjectNode = if (apc.template != null) {
             openShiftClient.get("template", "openshift", apc.template)?.body as ObjectNode
-        } else if (apc.templateFile != null) {
-            apc.templateFile as ObjectNode
+        } else if (apc.templateJson != null) {
+            apc.templateJson as ObjectNode
         } else {
             throw IllegalArgumentException("Template or templateFile should be specified")
         }

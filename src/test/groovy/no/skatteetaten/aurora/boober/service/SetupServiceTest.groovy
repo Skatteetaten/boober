@@ -4,12 +4,18 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
+
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -17,6 +23,7 @@ import spock.mock.DetachedMockFactory
     SetupService,
     AuroraDeploymentConfigService,
     OpenShiftObjectGenerator,
+    OpenshiftTemplateApplier,
     Config])
 class SetupServiceTest extends Specification {
 
@@ -36,8 +43,8 @@ class SetupServiceTest extends Specification {
     }
 
     @Bean
-    ProcessService processService() {
-      factory.Mock(ProcessService)
+    OpenShiftResourceClient resourceClient() {
+      factory.Mock(OpenShiftResourceClient)
     }
   }
 
@@ -45,10 +52,16 @@ class SetupServiceTest extends Specification {
   OpenShiftClient openShiftClient
 
   @Autowired
+  OpenShiftResourceClient resourceClient
+
+  @Autowired
   UserDetailsProvider userDetailsProvider
 
   @Autowired
   SetupService setupService
+
+  @Autowired
+  ObjectMapper mapper
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
@@ -63,9 +76,13 @@ class SetupServiceTest extends Specification {
 
   def "Should setup process for application"() {
     def processAid = new ApplicationId("booberdev", "tvinn")
-    given:
 
-      //TODO: we need to get the template into auroraConfig.
+    given:
+      def templateResult = this.getClass().getResource("/openshift-objects/atomhopper-new.json")
+      JsonNode jsonResult = mapper.readTree(templateResult)
+      resourceClient.post("processedtemplate", null, _, _) >>
+          new ResponseEntity<JsonNode>(jsonResult, HttpStatus.OK)
+
       def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
