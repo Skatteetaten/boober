@@ -17,7 +17,7 @@ class SetupService(
         val auroraDeploymentConfigService: AuroraDeploymentConfigService,
         val openShiftService: OpenShiftObjectGenerator,
         val openShiftClient: OpenShiftClient,
-        val processService: ProcessService,
+        val openshiftTemplateApplier: OpenshiftTemplateApplier,
         @Value("\${openshift.cluster}") val cluster: String) {
 
     val logger: Logger = LoggerFactory.getLogger(SetupService::class.java)
@@ -40,7 +40,8 @@ class SetupService(
 
         var openShiftObjects = openShiftService.generateObjects(adc)
         if (adc is AuroraProcessConfig) {
-            openShiftObjects += processService.generateObjects(adc)
+            val generateObjects = openshiftTemplateApplier.generateObjects(adc)
+            openShiftObjects += generateObjects
         }
 
         val openShiftResponses: List<OpenShiftResponse> = openShiftClient.applyMany(adc.namespace, openShiftObjects)

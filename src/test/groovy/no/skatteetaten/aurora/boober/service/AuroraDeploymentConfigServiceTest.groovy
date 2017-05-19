@@ -23,8 +23,6 @@ import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
-import no.skatteetaten.aurora.boober.service.validation.AuroraConfigFieldHandlerKt
-import no.skatteetaten.aurora.boober.service.validation.AuroraDeploymentConfigMapperV1
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -34,7 +32,6 @@ import spock.mock.DetachedMockFactory
     EncryptionService,
     AuroraDeploymentConfigService,
     OpenShiftResourceClient,
-    AuroraDeploymentConfigMapperV1,
     Config
 ])
 class AuroraDeploymentConfigServiceTest extends Specification {
@@ -77,11 +74,11 @@ class AuroraDeploymentConfigServiceTest extends Specification {
   @Autowired
   AuroraDeploymentConfigService auroraDeploymentConfigService
 
-  @Autowired
-  AuroraDeploymentConfigMapperV1 mapperV1
-
   def setup() {
     userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
+    openShiftClient.isValidUser(_) >> true
+    openShiftClient.isValidGroup(_) >> true
+    openShiftClient.applyMany(_, _) >> []
   }
 
   def "Should return error when name is not valid DNS952 label"() {
@@ -89,11 +86,11 @@ class AuroraDeploymentConfigServiceTest extends Specification {
     given:
       def overrideFile = mapper.convertValue(["name": "test%qwe)"], JsonNode.class)
       def overrides = [new AuroraConfigFile("${aid.environmentName}/${aid.applicationName}.json", overrideFile, true)]
-      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
+      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
     when:
-      def auroraDc = auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig, overrides)
-      auroraDeploymentConfigService.validateAuroraDc(aid, auroraDc, false)
+      auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig, overrides)
+
     then:
       thrown(ApplicationConfigException)
 
@@ -105,22 +102,11 @@ class AuroraDeploymentConfigServiceTest extends Specification {
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def auroraDc = auroraDeploymentConfigService.createAuroraDc(consoleAid, auroraConfig, [])
+      def auroraDc = auroraDeploymentConfigService.createAuroraDc(consoleAid, auroraConfig)
 
     then:
       auroraDc.prometheus.port == 8081
       auroraDc.webseal.path == "/webseal"
-  }
-
-  def "Should create AuroraConfigFields"() {
-    given:
-      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-
-    when:
-      def fields = AuroraConfigFieldHandlerKt.extractFrom(mapperV1.extractors, auroraConfig.auroraConfigFiles)
-
-    then:
-      fields.size() == 26
   }
 
   def "Should create AuroraConfigFields with overrides"() {
@@ -128,11 +114,11 @@ class AuroraDeploymentConfigServiceTest extends Specification {
       def overrideFile = mapper.convertValue(["type": "deploy", "cluster": "utv"], JsonNode.class)
       def overrides = [new AuroraConfigFile("booberdev/about.json", overrideFile, true)]
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-      def auroraConfigFiles = auroraConfig.getFilesForApplication(aid, overrides)
 
     when:
-      def fields = AuroraConfigFieldHandlerKt.extractFrom(mapperV1.extractors, auroraConfigFiles)
+      def auroraDc = auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig, overrides)
 
+      def fields = auroraDc.fields
     then:
       fields['cluster'].source == "booberdev/about.json.override"
       fields['cluster'].value.asText() == "utv"
@@ -161,7 +147,8 @@ class AuroraDeploymentConfigServiceTest extends Specification {
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      AuroraDeploymentConfig auroraDc = auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig, [])
+      AuroraDeploymentConfig auroraDc = auroraDeploymentConfigService.
+          createAuroraDc(aid, auroraConfig) as AuroraDeploymentConfig
 
     then:
       with(auroraDc) {
@@ -210,65 +197,25 @@ class AuroraDeploymentConfigServiceTest extends Specification {
   def "Should create aurora dc for application"() {
 
     given:
-      openShiftClient.isValidGroup(_) >> true
-      openShiftClient.isValidUser(_) >> true
-
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def result = auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [aid], [], false)
+      def result = auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [aid])
 
     then:
       result != null
   }
-
-  def "Should get error if user is not valid"() {
-
-    given:
-      openShiftClient.isValidGroup(_) >> true
-      openShiftClient.isValidUser(_) >> false
-
-      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-
-    when:
-      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [aid], [], true)
-
-    then:
-      def e = thrown(AuroraConfigException)
-      e.errors.size() == 1
-      e.errors[0].messages[0] == "The following users are not valid=foo"
-  }
-
-  def "Should get error if group is not valid"() {
-
-    given:
-      openShiftClient.isValidGroup(_) >> false
-      openShiftClient.isValidUser(_) >> true
-
-      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-
-    when:
-      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [aid], [], true)
-
-    then:
-      AuroraConfigException e = thrown()
-      e.errors.size() == 1
-      e.errors[0].messages[0] == "The following groups are not valid=APP_PaaS_drift, APP_PaaS_utv"
-  }
-
   def "Should collect secrets"() {
 
     given:
-      openShiftClient.isValidGroup(_) >> true
-      openShiftClient.isValidUser(_) >> true
+
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.
           createAuroraConfig(secretAId, ["/tmp/foo/latest.properties": "FOO=BAR"])
 
     when:
 
-      def result = auroraDeploymentConfigService.
-          createAuroraDcs(auroraConfig, [secretAId], [], false)
+      def result = auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [secretAId])
 
     then:
       result[0].secrets.containsKey("latest.properties")
@@ -277,13 +224,10 @@ class AuroraDeploymentConfigServiceTest extends Specification {
   def "Should get error if we want secrets but there are none "() {
 
     given:
-      openShiftClient.isValidGroup(_) >> true
-      openShiftClient.isValidUser(_) >> true
-
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [secretAId], [], false)
+      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [secretAId])
 
     then:
       thrown(AuroraConfigException)

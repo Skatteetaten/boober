@@ -72,6 +72,11 @@ class OpenShiftObjectGenerator(
             templatesToProcess.add("route.json")
         }
 
+        if (auroraDc is AuroraProcessConfig && auroraDc.flags.route) {
+            templatesToProcess.add("route.json")
+        }
+
+
         if (auroraDc.type == TemplateType.development) {
             templatesToProcess.add("build-config.json")
         }

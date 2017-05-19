@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
+import no.skatteetaten.aurora.boober.service.validation.AuroraConfigField
 
 data class AuroraDeploymentConfig(
         //TODO: Service account for våre objekter
@@ -25,7 +26,8 @@ data class AuroraDeploymentConfig(
         val certificateCn: String? = null,
         val webseal: Webseal? = null,
         val prometheus: HttpEndpoint? = null,
-        val managementPath: String? = null
+        val managementPath: String? = null,
+        override val fields: Map<String, AuroraConfigField>
 ) : AuroraObjectsConfig {
 
     val dockerGroup: String = groupId.replace(".", "_")
@@ -43,6 +45,7 @@ interface AuroraObjectsConfig {
     val permissions: Permissions
     val secrets: Map<String, String>?
     val config: Map<String, Map<String, String>>?
+    val fields: Map<String, AuroraConfigField>
 
     val namespace: String
         get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"
@@ -66,10 +69,12 @@ data class AuroraProcessConfig(
         override val permissions: Permissions,
         override val secrets: Map<String, String>? = null,
         override val config: Map<String, Map<String, String>>? = null,
-        val templateFile: JsonNode? = null,
+        val templateFile: String? = null,
+        val templateJson: JsonNode? = null,
         val template: String? = null,
         val parameters: Map<String, String>? = mapOf(),
-        val flags: AuroraProcessConfigFlags
+        val flags: AuroraProcessConfigFlags,
+        override val fields: Map<String, AuroraConfigField>
 ) : AuroraObjectsConfig
 
 data class AuroraDeploymentConfigFlags(

@@ -16,9 +16,9 @@ import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration,
-    ProcessService,
+    OpenshiftTemplateApplier,
     Config])
-class ProcessServiceTest extends Specification {
+class OpenshiftTemplateApplierTest extends Specification {
 
   public static final String APP_NAME = "verify-ebs-users"
 
@@ -37,7 +37,7 @@ class ProcessServiceTest extends Specification {
   OpenShiftResourceClient client
 
   @Autowired
-  ProcessService service
+  OpenshiftTemplateApplier service
 
   @Autowired
   ObjectMapper mapper
@@ -48,7 +48,7 @@ class ProcessServiceTest extends Specification {
       def templateResult = this.getClass().getResource("/openshift-objects/atomhopper-new.json")
       JsonNode jsonResult = mapper.readTree(templateResult)
 
-      def adc = TestDataKt.generateProccessADC(mapper.readTree(template))
+      def adc = TestDataKt.generateProccessADC("openshift-objects/atomhopper.json", mapper.readTree(template))
 
     when:
 

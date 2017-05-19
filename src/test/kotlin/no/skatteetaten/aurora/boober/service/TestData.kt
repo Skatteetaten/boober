@@ -31,11 +31,12 @@ val auroraDcDevelopment = AuroraDeploymentConfig(
         name = "dev-test",
         replicas = 1,
         secrets = emptyMap(),
-        extraTags = ""
+        extraTags = "",
+        fields = emptyMap()
 )
 
 
-fun generateProccessADC(template: JsonNode) =
+fun generateProccessADC(templateFile: String, template: JsonNode) =
         AuroraProcessConfig(
                 affiliation = "aurora",
                 cluster = "utv",
@@ -45,7 +46,8 @@ fun generateProccessADC(template: JsonNode) =
                                 groups = setOf("APP_PaaS_drift", "APP_PaaS_utv"),
                                 users = setOf("foo"))),
 
-                templateFile = template,
+                templateFile = templateFile,
+                templateJson = template,
                 parameters = mapOf(
                         "SPLUNK_INDEX" to " safir-test",
                         "APP_NAME" to "tvinn",
@@ -59,4 +61,5 @@ fun generateProccessADC(template: JsonNode) =
                 name = "dev-test",
                 secrets = emptyMap(),
                 config = emptyMap(),
-                flags = AuroraProcessConfigFlags(route = true))
+                flags = AuroraProcessConfigFlags(route = true),
+                fields = emptyMap())

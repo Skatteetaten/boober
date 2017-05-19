@@ -2,7 +2,7 @@
   "flags": {
     "route": true
   },
-  "type": "process",
+  "name": "tvinn",
   "templateFile": "templates/atomhopper.json",
   "parameters": {
     "SPLUNK_INDEX": "safir-test",

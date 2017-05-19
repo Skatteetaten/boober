@@ -1,5 +1,6 @@
 {
   "parameters": {
     "DATABASE": "tvinn"
-  }
+  },
+  "type": "process"
 }

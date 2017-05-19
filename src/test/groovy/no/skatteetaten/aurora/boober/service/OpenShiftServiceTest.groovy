@@ -23,7 +23,6 @@ import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration,
     OpenShiftResourceClient,
-    OpenShiftClient,
     EncryptionService,
     AuroraDeploymentConfigService,
     GitService, OpenShiftObjectGenerator, Config])
@@ -62,14 +61,23 @@ class OpenShiftServiceTest extends Specification {
   @Autowired
   AuroraDeploymentConfigService auroraDeploymentConfigService
 
+  @Autowired
+  OpenShiftClient openShiftClient
+
+  def setup() {
+    userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User")
+    openShiftClient.isValidGroup(_) >> true
+    openShiftClient.isValidUser(_) >> true
+  }
+
   def "Should create OpenShift objects from Velocity templates"() {
     given:
-      userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User")
+
       Map<String, JsonNode> files = getQaEbsUsersSampleFiles()
 
     when:
       def auroraConfig = new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])
-      AuroraDeploymentConfig auroraDc = auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig, [])
+      AuroraDeploymentConfig auroraDc = auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig)
       List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc)
 
       def service = generatedObjects.find { it.get("kind").asText() == "Service" }
@@ -80,6 +88,7 @@ class OpenShiftServiceTest extends Specification {
       def buildConfig = generatedObjects.find { it.get("kind").asText() == "BuildConfig" }
       def rolebindings = generatedObjects.find { it.get("kind").asText() == "RoleBinding" }
       def configMap = generatedObjects.find { it.get("kind").asText() == "ConfigMap" }
+
 
     then:
       generatedObjects.size() == 8
