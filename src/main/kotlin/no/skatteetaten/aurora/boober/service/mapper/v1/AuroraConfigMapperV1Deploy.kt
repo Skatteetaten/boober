@@ -3,9 +3,11 @@ package no.skatteetaten.aurora.boober.service.mapper.v1
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
+import no.skatteetaten.aurora.boober.service.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.service.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.service.mapper.AuroraConfigMapper
+import no.skatteetaten.aurora.boober.service.mapper.findExtractors
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.validation.*
 import no.skatteetaten.aurora.boober.utils.length
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.pattern
@@ -13,80 +15,81 @@ import no.skatteetaten.aurora.boober.utils.required
 
 class AuroraConfigMapperV1Deploy(aid: ApplicationId, auroraConfig: AuroraConfig, allFiles: List<AuroraConfigFile>) : AuroraConfigMapper(aid, auroraConfig, allFiles) {
 
-    override fun transform(fields: Map<String, AuroraConfigField>): AuroraObjectsConfig {
 
-        val type = fields.extract("type", { TemplateType.valueOf(it.textValue()) })
+    override fun createAuroraDc(): AuroraObjectsConfig {
 
-        val groupId = fields.extract("groupId")
-        val artifactId = fields.extract("artifactId")
-        val name = fields.extractOrDefault("name", artifactId)
+        val type = auroraConfigFields.extract("type", { TemplateType.valueOf(it.textValue()) })
+
+        val groupId = auroraConfigFields.extract("groupId")
+        val artifactId = auroraConfigFields.extract("artifactId")
+        val name = auroraConfigFields.extractOrDefault("name", artifactId)
 
 
         return AuroraDeploymentConfig(
-                schemaVersion = fields.extract("schemaVersion"),
+                schemaVersion = auroraConfigFields.extract("schemaVersion"),
 
-                affiliation = fields.extract("affiliation"),
-                cluster = fields.extract("cluster"),
+                affiliation = auroraConfigFields.extract("affiliation"),
+                cluster = auroraConfigFields.extract("cluster"),
                 type = type,
                 name = name,
-                envName = fields.extractOrDefault("envName", aid.environmentName),
+                envName = auroraConfigFields.extractOrDefault("envName", aid.environmentName),
 
                 groupId = groupId,
                 artifactId = artifactId,
-                version = fields.extract("version"),
+                version = auroraConfigFields.extract("version"),
 
-                replicas = fields.extract("replicas", JsonNode::asInt),
-                extraTags = fields.extract("extraTags"),
+                replicas = auroraConfigFields.extract("replicas", JsonNode::asInt),
+                extraTags = auroraConfigFields.extract("extraTags"),
 
                 flags = AuroraDeploymentConfigFlags(
-                        fields.extract("flags/route", { it.asText() == "true" }),
-                        fields.extract("flags/cert", { it.asText() == "true" }),
-                        fields.extract("flags/debug", { it.asText() == "true" }),
-                        fields.extract("flags/alarm", { it.asText() == "true" }),
-                        fields.extract("flags/rolling", { it.asText() == "true" })
+                        auroraConfigFields.extract("flags/route", { it.asText() == "true" }),
+                        auroraConfigFields.extract("flags/cert", { it.asText() == "true" }),
+                        auroraConfigFields.extract("flags/debug", { it.asText() == "true" }),
+                        auroraConfigFields.extract("flags/alarm", { it.asText() == "true" }),
+                        auroraConfigFields.extract("flags/rolling", { it.asText() == "true" })
                 ),
                 resources = AuroraDeploymentConfigResources(
                         memory = AuroraDeploymentConfigResource(
-                                min = fields.extract("resources/memory/min"),
-                                max = fields.extract("resources/memory/max")
+                                min = auroraConfigFields.extract("resources/memory/min"),
+                                max = auroraConfigFields.extract("resources/memory/max")
                         ),
                         cpu = AuroraDeploymentConfigResource(
-                                min = fields.extract("resources/cpu/min"),
-                                max = fields.extract("resources/cpu/max")
+                                min = auroraConfigFields.extract("resources/cpu/min"),
+                                max = auroraConfigFields.extract("resources/cpu/max")
                         )
                 ),
-                permissions = extractPermissions(fields),
-                splunkIndex = fields.extractOrNull("splunkIndex"),
-                database = fields.extractOrNull("database"),
-                managementPath = fields.extractOrNull("managementPath"),
+                permissions = extractPermissions(),
+                splunkIndex = auroraConfigFields.extractOrNull("splunkIndex"),
+                database = auroraConfigFields.extractOrNull("database"),
+                managementPath = auroraConfigFields.extractOrNull("managementPath"),
 
-                certificateCn = fields.extractOrDefault("certificateCn", "$groupId.$name"),
+                certificateCn = auroraConfigFields.extractOrDefault("certificateCn", "$groupId.$name"),
 
-                webseal = fields.findAll("webseal", {
+                webseal = auroraConfigFields.findAll("webseal", {
                     Webseal(
-                            it.extract("webseal/path"),
-                            it.extractOrNull("webseal/roles")
+                            auroraConfigFields.extract("webseal/path"),
+                            auroraConfigFields.extractOrNull("webseal/roles")
                     )
                 }),
 
-                prometheus = fields.findAll("prometheus", {
+                prometheus = auroraConfigFields.findAll("prometheus", {
                     HttpEndpoint(
-                            it.extract("prometheus/path"),
-                            it.extractOrNull("prometheus/port", JsonNode::asInt)
+                            auroraConfigFields.extract("prometheus/path"),
+                            auroraConfigFields.extractOrNull("prometheus/port", JsonNode::asInt)
                     )
                 }),
 
-                secrets = fields.extractOrNull("secretFolder", {
+                secrets = auroraConfigFields.extractOrNull("secretFolder", {
                     auroraConfig.getSecrets(it.asText())
                 }),
 
-                config = fields.getConfigMap(allFiles.findExtractors("config")),
-                fields = fields
+                config = auroraConfigFields.getConfigMap(allFiles.findExtractors("config")),
+                fields = auroraConfigFields.fields
         )
     }
 
 
-    override fun typeValidation(fields: Map<String, AuroraConfigField>, openShiftClient: OpenShiftClient): List<Exception> {
+    override fun typeValidation(fields: AuroraConfigFields, openShiftClient: OpenShiftClient): List<Exception> {
         val errors = mutableListOf<Exception>()
 
         val artifactId = fields.extract("artifactId")
@@ -97,13 +100,13 @@ class AuroraConfigMapperV1Deploy(aid: ApplicationId, auroraConfig: AuroraConfig,
             errors.add(IllegalArgumentException("Name [$name] is not valid DNS952 label. 24 length alphanumeric."))
         }
 
-        val secrets = extractSecret(fields)
+        val secrets = extractSecret()
 
         if (secrets != null && secrets.isEmpty()) {
             errors.add(IllegalArgumentException("Missing secret files"))
         }
 
-        val permissions = extractPermissions(fields)
+        val permissions = extractPermissions()
 
         permissions.admin.groups
                 ?.filter { !openShiftClient.isValidGroup(it) }
@@ -158,5 +161,7 @@ class AuroraConfigMapperV1Deploy(aid: ApplicationId, auroraConfig: AuroraConfig,
     )
 
     override val fieldHandlers = handlers + allFiles.findExtractors("config")
+
+    override val auroraConfigFields = AuroraConfigFields.create(fieldHandlers, allFiles)
 
 }

@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.service.validation.AuroraConfigField
+import no.skatteetaten.aurora.boober.service.mapper.AuroraConfigField
 
 data class AuroraDeploymentConfig(
         //TODO: Service account for våre objekter
