@@ -43,11 +43,11 @@ fun List<AuroraConfigFieldHandler>.extractFrom(files: List<AuroraConfigFile>): M
     }.toMap()
 }
 
-fun List<AuroraConfigFile>.findConfigExtractors(): List<AuroraConfigFieldHandler> {
+fun List<AuroraConfigFile>.findExtractors(name: String): List<AuroraConfigFieldHandler> {
 
     val configFiles = this.flatMap {
-        if (it.contents.has("config")) {
-            it.contents["config"].fieldNames().asSequence().toList()
+        if (it.contents.has(name)) {
+            it.contents[name].fieldNames().asSequence().toList()
         } else {
             emptyList()
         }
@@ -56,7 +56,7 @@ fun List<AuroraConfigFile>.findConfigExtractors(): List<AuroraConfigFieldHandler
     val configKeys: Map<String, Set<String>> = configFiles.map { configFileName ->
         //find all unique keys in a configFile
         val keys = this.flatMap { ac ->
-            ac.contents.at("/config/$configFileName")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
+            ac.contents.at("/$name/$configFileName")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
         }.toSet()
 
         configFileName to keys
@@ -64,7 +64,7 @@ fun List<AuroraConfigFile>.findConfigExtractors(): List<AuroraConfigFieldHandler
 
     return configKeys.flatMap { configFile ->
         configFile.value.map { field ->
-            AuroraConfigFieldHandler("config/${configFile.key}/$field")
+            AuroraConfigFieldHandler("$name/${configFile.key}/$field")
         }
     }
 }

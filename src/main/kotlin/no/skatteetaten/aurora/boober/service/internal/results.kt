@@ -1,14 +1,14 @@
 package no.skatteetaten.aurora.boober.service.internal
 
 import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
+import no.skatteetaten.aurora.boober.model.AuroraObjectsConfig
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 
 data class Result<out V, out E>(val value: V? = null, val error: E? = null)
 
 data class ApplicationResult(
         val applicationId: ApplicationId,
-        val auroraDc: AuroraDeploymentConfig,
+        val auroraDc: AuroraObjectsConfig,
         val openShiftResponses: List<OpenShiftResponse> = listOf()
 )
 

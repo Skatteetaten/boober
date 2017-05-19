@@ -35,6 +35,11 @@ class SetupServiceTest extends Specification {
     OpenShiftClient openshiftClient() {
       factory.Mock(OpenShiftClient)
     }
+
+    @Bean
+    ProcessService processService() {
+      factory.Mock(ProcessService)
+    }
   }
 
   @Autowired
@@ -55,6 +60,22 @@ class SetupServiceTest extends Specification {
     openShiftClient.isValidUser(_) >> true
     openShiftClient.isValidGroup(_) >> true
     openShiftClient.applyMany(_, _) >> []
+  }
+
+  def "Should setup process for application"() {
+    def processAid = new ApplicationId("booberdev", "tvinn")
+    given:
+
+      //TODO: we need to get the template into auroraConfig.
+      def auroraConfig = AuroraConfigHelper.createAuroraConfig(processAid)
+
+    when:
+      def result = setupService.executeSetup(auroraConfig, [processAid], [])
+
+    then:
+      result.size() == 1
+      result.get(0).auroraDc.type == TemplateType.process
+
   }
 
   def "Should setup development for application"() {

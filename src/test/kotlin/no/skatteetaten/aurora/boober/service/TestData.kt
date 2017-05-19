@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
+import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.*
 
 val auroraDcDevelopment = AuroraDeploymentConfig(
@@ -33,29 +34,29 @@ val auroraDcDevelopment = AuroraDeploymentConfig(
         extraTags = ""
 )
 
-/*
-fun generateProccessADC(template: Map<String, Any?>) =
-        AuroraDeploymentConfig(
+
+fun generateProccessADC(template: JsonNode) =
+        AuroraProcessConfig(
                 affiliation = "aurora",
                 cluster = "utv",
                 type = TemplateType.process,
-                deployDescriptor = TemplateDeploy(
-                        templateFile = template,
-                        parameters = mapOf(
-                                "SPLUNK_INDEX" to " safir-test",
-                                "APP_NAME" to "tvinn",
-                                "FEED_NAME" to "tolldeklarasjon",
-                                "DOMAIN_NAME" to "localhost",
-                                "DB_NAME" to "tvinn",
-                                "AFFILIATION" to "safir"
-                        )
-                ),
+                permissions = Permissions(
+                        admin = Permission(
+                                groups = setOf("APP_PaaS_drift", "APP_PaaS_utv"),
+                                users = setOf("foo"))),
+
+                templateFile = template,
+                parameters = mapOf(
+                        "SPLUNK_INDEX" to " safir-test",
+                        "APP_NAME" to "tvinn",
+                        "FEED_NAME" to "tolldeklarasjon",
+                        "DOMAIN_NAME" to "localhost",
+                        "DB_NAME" to "tvinn",
+                        "AFFILIATION" to "safir"
+                )
+                ,
                 envName = "boober-unit-test",
-                groups = setOf("APP_PaaS_drift", "APP_PaaS_utv"),
                 name = "dev-test",
-                users = setOf("foo"),
                 secrets = emptyMap(),
                 config = emptyMap(),
-                deploymentStrategy = DeploymentStrategy.rolling,
-                replicas = 1
-        )*/
+                flags = AuroraProcessConfigFlags(route = true))

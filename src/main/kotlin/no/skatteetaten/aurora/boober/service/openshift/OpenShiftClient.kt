@@ -83,30 +83,24 @@ class OpenShiftClient(
     }
 
     fun isValidUser(user: String): Boolean {
-
-        val url = "$baseUrl/oapi/v1/users/$user"
-        val headers: HttpHeaders = resource.getAuthorizationHeaders()
-
-        val existingResource = resource.getExistingResource(headers, url)
-        return existingResource != null
-
+        return exist("$baseUrl/oapi/v1/users/$user")
     }
 
     fun isValidGroup(group: String): Boolean {
 
-        val url = "$baseUrl/oapi/v1/groups/$group"
+        return exist("$baseUrl/oapi/v1/groups/$group")
+    }
+
+    fun templateExist(template: String): Boolean {
+
+        return exist("$baseUrl/oapi/v1/namespaces/default/templates/$template")
+    }
+
+    private fun exist(url: String): Boolean {
         val headers: HttpHeaders = resource.getAuthorizationHeaders()
 
         val existingResource = resource.getExistingResource(headers, url)
         return existingResource != null
     }
 
-    fun findTemplate(template: String): ResponseEntity<JsonNode>? {
-        val url = "$baseUrl/oapi/v1/namespaces/openshift/templates/$template"
-        val headers: HttpHeaders = createHeaders(userDetailsProvider.getAuthenticatedUser().token)
-        return getExistingResource(headers, url)
-
-    }
-
-    fun processTemplate(jsonNode: JsonNode) {}
 }

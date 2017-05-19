@@ -43,6 +43,10 @@ class AuroraDeploymentConfigMapperV1 : AuroraDeploymentConfigMapper {
             AuroraConfigFieldHandler("prometheus/path"),
             AuroraConfigFieldHandler("prometheus/port"),
             AuroraConfigFieldHandler("managementPath"),
-            AuroraConfigFieldHandler("secretFolder")
+            AuroraConfigFieldHandler("secretFolder"),
+            AuroraConfigFieldHandler("template"),
+            AuroraConfigFieldHandler("templateFile")
+
+
     )
 }
