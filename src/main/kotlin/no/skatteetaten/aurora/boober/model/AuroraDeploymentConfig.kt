@@ -1,19 +1,21 @@
 package no.skatteetaten.aurora.boober.model
 
+import com.fasterxml.jackson.databind.JsonNode
+
 data class AuroraDeploymentConfig(
         //TODO: Service account for våre objekter
-        val schemaVersion: String,
-        val affiliation: String,
-        val cluster: String,
-        val type: TemplateType,
-        val name: String,
+        override val schemaVersion: String = "v1",
+        override val affiliation: String,
+        override val cluster: String,
+        override val type: TemplateType,
+        override val name: String,
         val flags: AuroraDeploymentConfigFlags,
         val resources: AuroraDeploymentConfigResources,
-        val envName: String,
-        val permissions: Permissions,
+        override val envName: String,
+        override val permissions: Permissions,
         val replicas: Int?,
-        val secrets: Map<String, String>? = null,
-        val config: Map<String, Map<String, String>>? = null,
+        override val secrets: Map<String, String>? = null,
+        override val config: Map<String, Map<String, String>>? = null,
         val groupId: String,
         val artifactId: String,
         val version: String,
@@ -24,19 +26,30 @@ data class AuroraDeploymentConfig(
         val webseal: Webseal? = null,
         val prometheus: HttpEndpoint? = null,
         val managementPath: String? = null
-) {
-    /**
-     * All the following properties should probably be derived where the OpenShift templates are evaluated.
-     */
+) : AuroraObjectsConfig {
+
+    val dockerGroup: String = groupId.replace(".", "_")
+
+    val dockerName: String = artifactId
+}
+
+interface AuroraObjectsConfig {
+    val schemaVersion: String
+    val affiliation: String
+    val cluster: String
+    val type: TemplateType
+    val name: String
+    val envName: String
+    val permissions: Permissions
+    val secrets: Map<String, String>?
+    val config: Map<String, Map<String, String>>?
+
     val namespace: String
         get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"
 
     val routeName: String?
         get() = "http://$name-$namespace.$cluster.paas.skead.no"
 
-    val dockerGroup: String = groupId.replace(".", "_")
-
-    val dockerName: String = artifactId
 }
 
 enum class TemplateType {
@@ -44,19 +57,20 @@ enum class TemplateType {
 }
 
 data class AuroraProcessConfig(
-        val schemaVersion: String = "v1",
-        val affiliation: String,
-        val cluster: String,
-        val type: TemplateType,
-        val name: String,
-        val envName: String,
-        val permissions: Map<String, Permission> = mapOf(),
-        val secrets: Map<String, Map<String, String>> = mapOf(),
-        val config: Map<String, Map<String, String>> = mapOf(),
-        val templateFile: String? = null,
+        override val schemaVersion: String = "v1",
+        override val affiliation: String,
+        override val cluster: String,
+        override val type: TemplateType,
+        override val name: String,
+        override val envName: String,
+        override val permissions: Permissions,
+        override val secrets: Map<String, String>? = null,
+        override val config: Map<String, Map<String, String>>? = null,
+        val templateFile: JsonNode? = null,
         val template: String? = null,
-        val parameters: Map<String, String>? = mapOf()
-)
+        val parameters: Map<String, String>? = mapOf(),
+        val flags: AuroraProcessConfigFlags
+) : AuroraObjectsConfig
 
 data class AuroraDeploymentConfigFlags(
         val route: Boolean,
@@ -64,6 +78,10 @@ data class AuroraDeploymentConfigFlags(
         val debug: Boolean,
         val alarm: Boolean,
         val rolling: Boolean
+)
+
+data class AuroraProcessConfigFlags(
+        val route: Boolean
 )
 
 data class AuroraDeploymentConfigResource(

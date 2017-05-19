@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import groovy.json.JsonOutput
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -26,14 +27,14 @@ class ProcessServiceTest extends Specification {
     private DetachedMockFactory factory = new DetachedMockFactory()
 
     @Bean
-    OpenshiftResourceClient client() {
-      factory.Mock(OpenshiftResourceClient)
+    OpenShiftResourceClient client() {
+      factory.Mock(OpenShiftResourceClient)
     }
 
   }
 
   @Autowired
-  OpenshiftResourceClient client
+  OpenShiftResourceClient client
 
   @Autowired
   ProcessService service
@@ -47,7 +48,7 @@ class ProcessServiceTest extends Specification {
       def templateResult = this.getClass().getResource("/openshift-objects/atomhopper-new.json")
       JsonNode jsonResult = mapper.readTree(templateResult)
 
-      def adc = TestDataKt.generateProccessADC(mapper.readValue(template, Map.class))
+      def adc = TestDataKt.generateProccessADC(mapper.readTree(template))
 
     when:
 

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
+import no.skatteetaten.aurora.boober.model.AuroraObjectsConfig
+import no.skatteetaten.aurora.boober.model.AuroraProcessConfig
 import no.skatteetaten.aurora.boober.model.TemplateType
 import org.apache.velocity.VelocityContext
 import org.apache.velocity.app.VelocityEngine
@@ -27,20 +29,20 @@ class OpenShiftObjectGenerator(
 
     }
 
-    fun generateDeploymentRequest(auroraDc: AuroraDeploymentConfig): JsonNode {
+    fun generateDeploymentRequest(auroraDc: AuroraObjectsConfig): JsonNode {
         logger.debug("Generating deploy request for name ${auroraDc.name}")
         return mergeVelocityTemplate("deploymentrequest.json", mapOf("adc" to auroraDc))
 
     }
 
-    fun generateObjects(auroraDc: AuroraDeploymentConfig): List<JsonNode> {
+    fun generateObjects(auroraDc: AuroraObjectsConfig): List<JsonNode> {
 
         val configs: Map<String, String> = auroraDc.config?.map { (key, value) ->
             key to value.map { "${it.key}=${it.value}" }.joinToString(separator = "\\n")
         }?.toMap() ?: mapOf()
 
         val params = mapOf(
-                "adc" to auroraDc,
+                "adc" to (auroraDc as? AuroraDeploymentConfig ?: auroraDc as AuroraProcessConfig),
                 "configs" to configs,
                 "username" to userDetailsProvider.getAuthenticatedUser().username,
                 "dockerRegistry" to "docker-registry.aurora.sits.no:5000",
@@ -50,15 +52,13 @@ class OpenShiftObjectGenerator(
 
         val templatesToProcess = mutableListOf(
                 "project.json",
-                // It is important that the DeploymentConfig is created before the ImageStream (preferably several
-                // seconds earlier - just in case), because Sprocket needs to have time to update the dc with its
-                // modifications before a deployment is started. The first deployment will start as soon as the
-                // ImageStream has been created, by an ImageChangeTrigger. Case in point; don't change the order of
-                // these objects unless you really know whats going on.
-                "deployment-config.json",
-                "service.json",
                 "rolebinding.json"
         )
+
+        if (auroraDc.type != TemplateType.process) {
+            templatesToProcess.add("deployment-config.json")
+            templatesToProcess.add("service.json")
+        }
 
         if (configs.isNotEmpty()) {
             templatesToProcess.add("configmap.json")
@@ -68,7 +68,7 @@ class OpenShiftObjectGenerator(
             templatesToProcess.add("secret.json")
         }
 
-        if (auroraDc.flags.route) {
+        if (auroraDc is AuroraDeploymentConfig && auroraDc.flags.route) {
             templatesToProcess.add("route.json")
         }
 
@@ -76,7 +76,9 @@ class OpenShiftObjectGenerator(
             templatesToProcess.add("build-config.json")
         }
 
-        templatesToProcess.add("imagestream.json")
+        if (auroraDc.type != TemplateType.process) {
+            templatesToProcess.add("imagestream.json")
+        }
 
         return templatesToProcess.map { mergeVelocityTemplate(it, params) }
     }

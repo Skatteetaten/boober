@@ -19,15 +19,20 @@ class AuroraDeploymentConfigService(val openShiftClient: OpenShiftClient) {
     fun createAuroraDcs(auroraConfig: AuroraConfig,
                         applicationIds: List<ApplicationId>,
                         overrides: List<AuroraConfigFile> = listOf(),
-                        validateOpenShiftReferences: Boolean = true): List<AuroraDeploymentConfig> {
+                        validateOpenShiftReferences: Boolean = true): List<AuroraObjectsConfig> {
 
         return applicationIds.map { aid ->
             try {
+
+                //for process flow some of the validation needs auroraConfig.
+                //that is if the templateFile name is set in auroraConfig and does not exist in auroraConfig.
+
                 val auroraDc = createAuroraDc(aid, auroraConfig, overrides)
                 validateAuroraDc(aid, auroraDc, validateOpenShiftReferences)
 
-                Result<AuroraDeploymentConfig, Error?>(value = auroraDc)
+                Result<AuroraObjectsConfig, Error?>(value = auroraDc)
             } catch (e: ApplicationConfigException) {
+                Result<AuroraObjectsConfig, Error?>(error = Error(aid, e.errors))
                 Result<AuroraDeploymentConfig, Error?>(error = Error(aid, e.errors))
             } catch (e: IllegalArgumentException) {
                 Result<AuroraDeploymentConfig, Error?>(error = Error(aid, listOf(e.message!!)))
@@ -39,10 +44,11 @@ class AuroraDeploymentConfigService(val openShiftClient: OpenShiftClient) {
 
     fun getAuroraConfigFields(aid: ApplicationId, allFiles: List<AuroraConfigFile>): Map<String, AuroraConfigField> {
 
-        val configExtractors = allFiles.findConfigExtractors()
+        val configExtractors = allFiles.findExtractors("config")
+        val parametersExtractors = allFiles.findExtractors("parameters")
 
         val mapper = AuroraDeploymentConfigMapperV1()
-        val extractors = mapper.extractors + configExtractors
+        val extractors = mapper.extractors + configExtractors + parametersExtractors
         val fields = extractors.extractFrom(allFiles)
 
         extractors.mapNotNull { e -> e.validator(fields[e.name]?.value) }
@@ -56,98 +62,137 @@ class AuroraDeploymentConfigService(val openShiftClient: OpenShiftClient) {
         return fields
     }
 
-    fun createAuroraDc(aid: ApplicationId, auroraConfig: AuroraConfig, overrides: List<AuroraConfigFile>): AuroraDeploymentConfig {
+    fun createAuroraDc(aid: ApplicationId, auroraConfig: AuroraConfig, overrides: List<AuroraConfigFile>): AuroraObjectsConfig {
 
         val allFiles: List<AuroraConfigFile> = auroraConfig.getFilesForApplication(aid, overrides)
         val fields: Map<String, AuroraConfigField> = getAuroraConfigFields(aid, allFiles)
+        val type = fields.extract("type", { TemplateType.valueOf(it.textValue()) })
 
         val groupId = fields.extract("groupId")
         val artifactId = fields.extract("artifactId")
         val name = fields.extractOrDefault("name", artifactId)
 
-        return AuroraDeploymentConfig(
-                schemaVersion = fields.extract("schemaVersion"),
+        if (type == TemplateType.process) {
 
-                affiliation = fields.extract("affiliation"),
-                cluster = fields.extract("cluster"),
-                type = fields.extract("type", { TemplateType.valueOf(it.textValue()) }),
+            val templateFile = fields.extractOrNull("templateFile")?.let { fileName ->
+                auroraConfig.auroraConfigFiles.find { it.name == fileName }?.contents
+            }
 
-                name = name,
-                envName = fields.extractOrDefault("envName", aid.environmentName),
+            return AuroraProcessConfig(
+                    schemaVersion = fields.extract("schemaVersion"),
+                    affiliation = fields.extract("affiliation"),
+                    cluster = fields.extract("cluster"),
+                    type = type,
+                    name = name,
+                    envName = fields.extractOrDefault("envName", aid.environmentName),
+                    permissions = Permissions(Permission(
+                            fields.extractOrNull("permissions/admin/groups", { it.textValue().split(" ").toSet() }),
+                            fields.extractOrNull("permissions/admin/users", { it.textValue().split(" ").toSet() })
+                    )),
+                    secrets = fields.extractOrNull("secretFolder", {
+                        auroraConfig.getSecrets(it.asText())
+                    }),
 
-                groupId = groupId,
-                artifactId = artifactId,
-                version = fields.extract("version"),
+                    config = getConfigMap(fields, allFiles.findExtractors("config")),
+                    template = fields.extractOrNull("template"),
+                    templateFile = templateFile,
+                    parameters = getParameters(fields, allFiles.findExtractors("parameters")),
+                    flags = AuroraProcessConfigFlags(
+                            fields.extract("flags/route", { it.asText() == "true" })
+                    )
+            )
 
-                replicas = fields.extract("replicas", JsonNode::asInt),
-                extraTags = fields.extract("extraTags"),
+        } else {
 
-                flags = AuroraDeploymentConfigFlags(
-                        fields.extract("flags/route", { it.asText() == "true" }),
-                        fields.extract("flags/cert", { it.asText() == "true" }),
-                        fields.extract("flags/debug", { it.asText() == "true" }),
-                        fields.extract("flags/alarm", { it.asText() == "true" }),
-                        fields.extract("flags/rolling", { it.asText() == "true" })
-                ),
-                resources = AuroraDeploymentConfigResources(
-                        memory = AuroraDeploymentConfigResource(
-                                min = fields.extract("resources/memory/min"),
-                                max = fields.extract("resources/memory/max")
-                        ),
-                        cpu = AuroraDeploymentConfigResource(
-                                min = fields.extract("resources/cpu/min"),
-                                max = fields.extract("resources/cpu/max")
+            return AuroraDeploymentConfig(
+                    schemaVersion = fields.extract("schemaVersion"),
+
+                    affiliation = fields.extract("affiliation"),
+                    cluster = fields.extract("cluster"),
+                    type = type,
+                    name = name,
+                    envName = fields.extractOrDefault("envName", aid.environmentName),
+
+                    groupId = groupId,
+                    artifactId = artifactId,
+                    version = fields.extract("version"),
+
+                    replicas = fields.extract("replicas", JsonNode::asInt),
+                    extraTags = fields.extract("extraTags"),
+
+                    flags = AuroraDeploymentConfigFlags(
+                            fields.extract("flags/route", { it.asText() == "true" }),
+                            fields.extract("flags/cert", { it.asText() == "true" }),
+                            fields.extract("flags/debug", { it.asText() == "true" }),
+                            fields.extract("flags/alarm", { it.asText() == "true" }),
+                            fields.extract("flags/rolling", { it.asText() == "true" })
+                    ),
+                    resources = AuroraDeploymentConfigResources(
+                            memory = AuroraDeploymentConfigResource(
+                                    min = fields.extract("resources/memory/min"),
+                                    max = fields.extract("resources/memory/max")
+                            ),
+                            cpu = AuroraDeploymentConfigResource(
+                                    min = fields.extract("resources/cpu/min"),
+                                    max = fields.extract("resources/cpu/max")
+                            )
+                    ),
+                    permissions = Permissions(Permission(
+                            fields.extractOrNull("permissions/admin/groups", { it.textValue().split(" ").toSet() }),
+                            fields.extractOrNull("permissions/admin/users", { it.textValue().split(" ").toSet() })
+                    )),
+
+                    splunkIndex = fields.extractOrNull("splunkIndex"),
+                    database = fields.extractOrNull("database"),
+                    managementPath = fields.extractOrNull("managementPath"),
+
+                    certificateCn = fields.extractOrDefault("certificateCn", "$groupId.$name"),
+
+                    webseal = fields.findAll("webseal", {
+                        Webseal(
+                                it.extract("webseal/path"),
+                                it.extractOrNull("webseal/roles")
                         )
-                ),
-                permissions = Permissions(Permission(
-                        fields.extractOrNull("permissions/admin/groups", { it.textValue().split(" ").toSet() }),
-                        fields.extractOrNull("permissions/admin/users", { it.textValue().split(" ").toSet() })
-                )),
+                    }),
 
-                splunkIndex = fields.extractOrNull("splunkIndex"),
-                database = fields.extractOrNull("database"),
-                managementPath = fields.extractOrNull("managementPath"),
+                    prometheus = fields.findAll("prometheus", {
+                        HttpEndpoint(
+                                it.extract("prometheus/path"),
+                                it.extractOrNull("prometheus/port", JsonNode::asInt)
+                        )
+                    }),
 
-                certificateCn = fields.extractOrDefault("certificateCn", "$groupId.$name"),
+                    secrets = fields.extractOrNull("secretFolder", {
+                        auroraConfig.getSecrets(it.asText())
+                    }),
 
-                webseal = fields.findAll("webseal", {
-                    Webseal(
-                            it.extract("webseal/path"),
-                            it.extractOrNull("webseal/roles")
-                    )
-                }),
-
-                prometheus = fields.findAll("prometheus", {
-                    HttpEndpoint(
-                            it.extract("prometheus/path"),
-                            it.extractOrNull("prometheus/port", JsonNode::asInt)
-                    )
-                }),
-
-                secrets = fields.extractOrNull("secretFolder", {
-                    auroraConfig.getSecrets(it.asText())
-                }),
-
-                config = getConfigMap(fields, allFiles.findConfigExtractors())
-        )
+                    config = getConfigMap(fields, allFiles.findExtractors("config"))
+            )
+        }
     }
 
-    private fun validateAuroraDc(aid: ApplicationId, auroraDc: AuroraDeploymentConfig, validateOpenShiftReferences: Boolean) {
+    private fun validateAuroraDc(aid: ApplicationId, auroraDc: AuroraObjectsConfig, validateOpenShiftReferences: Boolean) {
 
         val errors = mutableListOf<Exception>()
 
-        if (auroraDc.secrets != null && auroraDc.secrets.isEmpty()) {
+        if (auroraDc.secrets != null && (auroraDc.secrets as Map<String, String>).isEmpty()) {
             errors.add(IllegalArgumentException("Missing secret files"))
-        }
-
-        if (auroraDc.type == TemplateType.process) {
-            errors.add(IllegalArgumentException("Not handled yet"))
         }
 
         if (!Regex("^[a-z][-a-z0-9]{0,23}[a-z0-9]$").matches(auroraDc.name)) {
             errors.add(IllegalArgumentException("Name [${auroraDc.name}] is not valid DNS952 label. 24 length alphanumeric."))
         }
 
+        if (auroraDc is AuroraProcessConfig) {
+
+            if (auroraDc.template == null && auroraDc.templateFile == null) {
+                errors.add(IllegalArgumentException("Specify either template or templateFile"))
+            } else if (auroraDc.template != null && !openShiftClient.templateExist(auroraDc.template)) {
+                errors.add(IllegalArgumentException("Template ${auroraDc.template} does not exist in openshift namespace"))
+            }
+        }
+
+        //TODO i do not like this. If you want to test this just mock it.
         if (validateOpenShiftReferences) {
             auroraDc.permissions.admin.groups
                     ?.filter { !openShiftClient.isValidGroup(it) }
@@ -181,5 +226,17 @@ class AuroraDeploymentConfigService(val openShiftClient: OpenShiftClient) {
         }
 
         return if (configMap.isNotEmpty()) configMap else null
+    }
+
+    private fun getParameters(fields: Map<String, AuroraConfigField>,
+                              parameterExtractors: List<AuroraConfigFieldHandler>): Map<String, String>? {
+
+        return parameterExtractors.map {
+            val (_, field) = it.name.split("/")
+
+            val value = fields.extract(it.name)
+            field to value
+        }.toMap()
+
     }
 }

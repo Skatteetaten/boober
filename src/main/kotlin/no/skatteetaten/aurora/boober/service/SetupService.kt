@@ -1,10 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.TemplateType.*
 import no.skatteetaten.aurora.boober.service.internal.ApplicationResult
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -20,6 +17,7 @@ class SetupService(
         val auroraDeploymentConfigService: AuroraDeploymentConfigService,
         val openShiftService: OpenShiftObjectGenerator,
         val openShiftClient: OpenShiftClient,
+        val processService: ProcessService,
         @Value("\${openshift.cluster}") val cluster: String) {
 
     val logger: Logger = LoggerFactory.getLogger(SetupService::class.java)
@@ -34,18 +32,23 @@ class SetupService(
 
         return auroraDcs.filter { it.cluster == cluster }
                 .map { applyDeploymentConfig(it) }
+
     }
 
-    private fun applyDeploymentConfig(adc: AuroraDeploymentConfig): ApplicationResult {
-
+    private fun applyDeploymentConfig(adc: AuroraObjectsConfig): ApplicationResult {
         logger.info("Creating OpenShift objects for application ${adc.name} in namespace ${adc.namespace}")
-        val openShiftObjects: List<JsonNode> = openShiftService.generateObjects(adc)
+
+        var openShiftObjects = openShiftService.generateObjects(adc)
+        if (adc is AuroraProcessConfig) {
+            openShiftObjects += processService.generateObjects(adc)
+        }
+
         val openShiftResponses: List<OpenShiftResponse> = openShiftClient.applyMany(adc.namespace, openShiftObjects)
 
         val deployResource: JsonNode? = when (adc.type) {
             development -> openShiftResponses
                     .filter { it.changed }
-                    .firstOrNull()?.let { openShiftService.generateBuildRequest(adc) }
+                    .firstOrNull()?.let { openShiftService.generateBuildRequest(adc as AuroraDeploymentConfig) }
             process -> openShiftService.generateDeploymentRequest(adc)
             deploy -> openShiftResponses
                     .filter { it.kind == "imagestream" && !it.changed && it.operationType == OperationType.UPDATE }
