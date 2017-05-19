@@ -25,7 +25,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.validation.AuroraConfigFieldHandlerKt
 import no.skatteetaten.aurora.boober.service.validation.AuroraDeploymentConfigMapperV1
-import no.skatteetaten.aurora.boober.utils.AuroraConfigHelper
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -90,7 +89,7 @@ class AuroraDeploymentConfigServiceTest extends Specification {
     given:
       def overrideFile = mapper.convertValue(["name": "test%qwe)"], JsonNode.class)
       def overrides = [new AuroraConfigFile("${aid.environmentName}/${aid.applicationName}.json", overrideFile, true)]
-      AuroraConfig auroraConfig = AuroraConfigHelper.createAuroraConfig(aid)
+      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
       def auroraDc = auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig, overrides)
@@ -103,7 +102,7 @@ class AuroraDeploymentConfigServiceTest extends Specification {
   def "Should create AuroraDC for Console"() {
     given:
       def consoleAid = new ApplicationId("booberdev", "console")
-      AuroraConfig auroraConfig = AuroraConfigHelper.createAuroraConfig(consoleAid)
+      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
       def auroraDc = auroraDeploymentConfigService.createAuroraDc(consoleAid, auroraConfig, [])
@@ -115,20 +114,20 @@ class AuroraDeploymentConfigServiceTest extends Specification {
 
   def "Should create AuroraConfigFields"() {
     given:
-      AuroraConfig auroraConfig = AuroraConfigHelper.createAuroraConfig(aid)
+      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
       def fields = AuroraConfigFieldHandlerKt.extractFrom(mapperV1.extractors, auroraConfig.auroraConfigFiles)
 
     then:
-      fields.size() == 23
+      fields.size() == 26
   }
 
   def "Should create AuroraConfigFields with overrides"() {
     given:
       def overrideFile = mapper.convertValue(["type": "deploy", "cluster": "utv"], JsonNode.class)
       def overrides = [new AuroraConfigFile("booberdev/about.json", overrideFile, true)]
-      AuroraConfig auroraConfig = AuroraConfigHelper.createAuroraConfig(aid)
+      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
       def auroraConfigFiles = auroraConfig.getFilesForApplication(aid, overrides)
 
     when:
@@ -159,7 +158,7 @@ class AuroraDeploymentConfigServiceTest extends Specification {
   def "Should successfully merge all config files"() {
 
     given:
-      AuroraConfig auroraConfig = AuroraConfigHelper.createAuroraConfig(aid)
+      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
       AuroraDeploymentConfig auroraDc = auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig, [])
@@ -181,7 +180,7 @@ class AuroraDeploymentConfigServiceTest extends Specification {
     given:
       def overrideFile = mapper.convertValue(["name": "awesome-app"], JsonNode.class)
       def overrides = [new AuroraConfigFile("booberdev/about.json", overrideFile, true)]
-      AuroraConfig auroraConfig = AuroraConfigHelper.createAuroraConfig(aid)
+      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
       AuroraDeploymentConfig auroraDc = auroraDeploymentConfigService.
@@ -214,7 +213,7 @@ class AuroraDeploymentConfigServiceTest extends Specification {
       openShiftClient.isValidGroup(_) >> true
       openShiftClient.isValidUser(_) >> true
 
-      AuroraConfig auroraConfig = AuroraConfigHelper.createAuroraConfig(aid)
+      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
       def result = auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [aid], [], false)
@@ -229,7 +228,7 @@ class AuroraDeploymentConfigServiceTest extends Specification {
       openShiftClient.isValidGroup(_) >> true
       openShiftClient.isValidUser(_) >> false
 
-      AuroraConfig auroraConfig = AuroraConfigHelper.createAuroraConfig(aid)
+      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
       auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [aid], [], true)
@@ -246,7 +245,7 @@ class AuroraDeploymentConfigServiceTest extends Specification {
       openShiftClient.isValidGroup(_) >> false
       openShiftClient.isValidUser(_) >> true
 
-      AuroraConfig auroraConfig = AuroraConfigHelper.createAuroraConfig(aid)
+      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
       auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [aid], [], true)
@@ -263,7 +262,7 @@ class AuroraDeploymentConfigServiceTest extends Specification {
       openShiftClient.isValidGroup(_) >> true
       openShiftClient.isValidUser(_) >> true
 
-      AuroraConfig auroraConfig = AuroraConfigHelper.
+      AuroraConfig auroraConfig = AuroraConfigHelperKt.
           createAuroraConfig(secretAId, ["/tmp/foo/latest.properties": "FOO=BAR"])
 
     when:
@@ -281,7 +280,7 @@ class AuroraDeploymentConfigServiceTest extends Specification {
       openShiftClient.isValidGroup(_) >> true
       openShiftClient.isValidUser(_) >> true
 
-      AuroraConfig auroraConfig = AuroraConfigHelper.createAuroraConfig(secretAId)
+      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
       auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [secretAId], [], false)

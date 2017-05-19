@@ -3,7 +3,7 @@
     "route": true
   },
   "type": "process",
-  "templateFile": "tempalte/atomhopper.json",
+  "templateFile": "templates/atomhopper.json",
   "parameters": {
     "SPLUNK_INDEX": "safir-test",
     "APP_NAME": "tvinn",
