@@ -216,7 +216,7 @@ class AuroraDeploymentConfigService(val openShiftClient: OpenShiftClient) {
         val configMap: MutableMap<String, MutableMap<String, String>> = mutableMapOf()
 
         configExtractors.forEach {
-            val (_, configFile, field) = it.name.split("/")
+            val (_, configFile, field) = it.name.split("/", limit = 3)
 
             val value = fields.extract(it.name)
             val keyValue = mutableMapOf(field to value)
@@ -232,7 +232,7 @@ class AuroraDeploymentConfigService(val openShiftClient: OpenShiftClient) {
                               parameterExtractors: List<AuroraConfigFieldHandler>): Map<String, String>? {
 
         return parameterExtractors.map {
-            val (_, field) = it.name.split("/")
+            val (_, field) = it.name.split("/", limit = 2)
 
             val value = fields.extract(it.name)
             field to value

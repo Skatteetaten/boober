@@ -10,7 +10,6 @@ import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.utils.AuroraConfigHelper
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -67,7 +66,7 @@ class SetupServiceTest extends Specification {
     given:
 
       //TODO: we need to get the template into auroraConfig.
-      def auroraConfig = AuroraConfigHelper.createAuroraConfig(processAid)
+      def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
       def result = setupService.executeSetup(auroraConfig, [processAid], [])
@@ -75,12 +74,11 @@ class SetupServiceTest extends Specification {
     then:
       result.size() == 1
       result.get(0).auroraDc.type == TemplateType.process
-
   }
 
   def "Should setup development for application"() {
     given:
-      def auroraConfig = AuroraConfigHelper.createAuroraConfig(aid)
+      def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
       def result = setupService.executeSetup(auroraConfig, [aid], [])
@@ -94,7 +92,7 @@ class SetupServiceTest extends Specification {
   def "Should setup deploy for application"() {
     given:
       def consoleAid = new ApplicationId(ENV_NAME, "console")
-      def auroraConfig = AuroraConfigHelper.createAuroraConfig(consoleAid)
+      def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
       def result = setupService.executeSetup(auroraConfig, [consoleAid], [])

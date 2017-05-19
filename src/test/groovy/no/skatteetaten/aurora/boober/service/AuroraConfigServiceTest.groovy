@@ -11,7 +11,6 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
-import no.skatteetaten.aurora.boober.utils.AuroraConfigHelper
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -94,7 +93,7 @@ class AuroraConfigServiceTest extends Specification {
   def "Should successfully save AuroraConfig and secrets to git"() {
     given:
       GitServiceHelperKt.createInitRepo("aos")
-      def auroraConfig = AuroraConfigHelper.createAuroraConfig(aid, ["/tmp/foo/latest.properties": "FOO=BAR"])
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, ["/tmp/foo/latest.properties": "FOO=BAR"])
       userDetailsProvider.authenticatedUser >> new User("foobar", "", "Foo Bar")
 
     when:
@@ -110,7 +109,7 @@ class AuroraConfigServiceTest extends Specification {
 
   def "Should patch AuroraConfigFile and push changes to git"() {
     given:
-      def auroraConfig = AuroraConfigHelper.createAuroraConfig(aid, ["/tmp/foo/latest.properties": "FOO=BAR"])
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, ["/tmp/foo/latest.properties": "FOO=BAR"])
       createRepoAndSaveFiles("aos", auroraConfig)
       def jsonOp = """[{
   "op": "replace",
@@ -131,5 +130,4 @@ class AuroraConfigServiceTest extends Specification {
       def patchedFile = patchedAuroraConfig.auroraConfigFiles.find { it.name == filename }
       patchedFile.contents.at("/version").textValue() == "3"
   }
-
 }

@@ -27,6 +27,11 @@ class SampleFilesCollector {
     return collectFilesToMapOfJsonNode("about.json", "${APP_NAME}.json", "${envName}/about.json", "${envName}/${APP_NAME}.json")
   }
 
+  static File sampleConfigDir() {
+
+    return new File(SampleFilesCollector.getResource("/samples/config").path)
+  }
+
   static Map<String, JsonNode> collectFilesToMapOfJsonNode(String... fileNames) {
     File configDir = new File(SampleFilesCollector.getResource("/samples/config").path)
 
@@ -34,12 +39,14 @@ class SampleFilesCollector {
   }
 
   static JsonNode collectFile(File dirName, String name) {
+
+    return convertFileToJsonNode(new File(dirName, name))
+  }
+
+  static JsonNode convertFileToJsonNode(File file) {
     ObjectMapper mapper = new Configuration().mapper()
 
-    def json = mapper.readValue(new File(dirName, name), JsonNode.class)
-
-    return json
-
+    return mapper.readValue(file, JsonNode.class)
   }
 
 }
