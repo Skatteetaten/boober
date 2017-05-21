@@ -44,11 +44,8 @@ class AuroraConfigMapperV1Deploy(aid: ApplicationId,
 
     override fun createAuroraDc(): AuroraObjectsConfig {
 
-        val type = auroraConfigFields.extract("type", { TemplateType.valueOf(it.textValue()) })
-
         val groupId = auroraConfigFields.extract("groupId")
-        val artifactId = auroraConfigFields.extract("artifactId")
-        val name = auroraConfigFields.extractOrDefault("name", artifactId)
+        val name = auroraConfigFields.extract("name")
 
 
         return AuroraDeploymentConfig(
@@ -56,12 +53,12 @@ class AuroraConfigMapperV1Deploy(aid: ApplicationId,
 
                 affiliation = auroraConfigFields.extract("affiliation"),
                 cluster = auroraConfigFields.extract("cluster"),
-                type = type,
+                type = auroraConfigFields.extract("type", { TemplateType.valueOf(it.textValue()) }),
                 name = name,
                 envName = auroraConfigFields.extractOrDefault("envName", aid.environmentName),
 
                 groupId = groupId,
-                artifactId = artifactId,
+                artifactId = auroraConfigFields.extract("artifactId"),
                 version = auroraConfigFields.extract("version"),
 
                 replicas = auroraConfigFields.extract("replicas", JsonNode::asInt),

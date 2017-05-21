@@ -1,10 +1,11 @@
 package no.skatteetaten.aurora.boober.service.internal
 
 import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.service.mapper.AuroraConfigField
 
 data class Error(
         val applicationId: ApplicationId,
-        val messages: List<String> = listOf()
+        val messages: List<ValidatonError> = listOf()
 )
 
 abstract class ServiceException(message: String?, cause: Throwable?) : RuntimeException(message, cause) {
@@ -18,10 +19,13 @@ class GitException(messages: String?, cause: Throwable?) : ServiceException(mess
 class ApplicationConfigException(
         messages: String,
         cause: Throwable? = null,
-        val errors: List<String> = listOf()
+        val errors: List<ValidatonError> = listOf()
 ) : ServiceException(messages, cause)
+
 
 class AuroraConfigException(
         message: String,
         val errors: List<Error> = listOf()
 ) : ServiceException(message)
+
+data class ValidatonError(val message: String, val cause: Throwable, val field: AuroraConfigField? = null)

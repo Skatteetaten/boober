@@ -191,7 +191,7 @@ class AuroraDeploymentConfigServiceTest extends Specification {
 
     then:
       def ex = thrown(ApplicationConfigException)
-      ex.errors[0] == "Version must be set"
+      ex.errors[0].message == "Version must be set"
   }
 
   def "Should create aurora dc for application"() {
