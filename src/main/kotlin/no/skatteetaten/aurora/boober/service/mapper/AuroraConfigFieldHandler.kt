@@ -2,17 +2,12 @@ package no.skatteetaten.aurora.boober.service.mapper
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-
-val logger: Logger = LoggerFactory.getLogger(AuroraConfigFieldHandler::class.java)
 
 
-data class AuroraConfigFieldHandler(val name: String,
-                                    val path: String = "/$name",
-                                    val validator: (JsonNode?) -> Exception? = { _ -> null },
-                                    val defaultValue: String? = null)
-
+class AuroraConfigFieldHandler(val name: String,
+                               val path: String = "/$name",
+                               val validator: (JsonNode?) -> Exception? = { _ -> null },
+                               val defaultValue: String? = null)
 
 fun List<AuroraConfigFile>.findExtractors(name: String): List<AuroraConfigFieldHandler> {
 

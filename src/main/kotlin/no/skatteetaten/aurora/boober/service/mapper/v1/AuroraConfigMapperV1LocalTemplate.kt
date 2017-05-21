@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.service.mapper.v1
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.*
-import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.service.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.service.mapper.findExtractors
@@ -47,41 +46,15 @@ class AuroraConfigMapperV1LocalTemplate(aid: ApplicationId,
         return templateFile ?: throw IllegalArgumentException("templateFile is required")
     }
 
-    override fun typeValidation(fields: AuroraConfigFields): List<Exception> {
-        val errors = mutableListOf<Exception>()
-
-        val templateFile = fields.extractOrNull("templateFile")
-
-
-        if (auroraConfig.auroraConfigFiles.none { it.name == templateFile }) {
-            errors.add(IllegalArgumentException("The file named $templateFile does not exist in AuroraConfig"))
-        }
-
-        val secrets = extractSecret()
-
-        if (secrets != null && secrets.isEmpty()) {
-            errors.add(IllegalArgumentException("Missing secret files"))
-        }
-
-        val permissions = extractPermissions()
-
-        permissions.admin.groups
-                ?.filter { !openShiftClient.isValidGroup(it) }
-                .takeIf { it != null && it.isNotEmpty() }
-                ?.let { errors.add(AuroraConfigException("The following groups are not valid=${it.joinToString()}")) }
-
-        permissions.admin.users
-                ?.filter { !openShiftClient.isValidUser(it) }
-                .takeIf { it != null && it.isNotEmpty() }
-                ?.let { errors.add(AuroraConfigException("The following users are not valid=${it.joinToString()}")) }
-
-
-        return errors
-
-    }
-
     val handlers = listOf(
-            AuroraConfigFieldHandler("templateFile")
+            AuroraConfigFieldHandler("templateFile", validator = { json ->
+                val fileName = json?.textValue()
+                if (auroraConfig.auroraConfigFiles.none { it.name == fileName }) {
+                    IllegalArgumentException("The file named $fileName does not exist in AuroraConfig")
+                } else {
+                    null
+                }
+            })
     )
 
     override val fieldHandlers = v1Handlers + handlers + allFiles.findExtractors("parameters")
