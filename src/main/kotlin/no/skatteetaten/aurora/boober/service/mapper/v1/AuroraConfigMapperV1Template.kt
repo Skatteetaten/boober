@@ -6,9 +6,6 @@ import no.skatteetaten.aurora.boober.service.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.service.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.service.mapper.findExtractors
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.utils.notBlank
-import no.skatteetaten.aurora.boober.utils.pattern
-import no.skatteetaten.aurora.boober.utils.required
 
 class AuroraConfigMapperV1Template(aid: ApplicationId,
                                    auroraConfig: AuroraConfig,
@@ -77,25 +74,10 @@ class AuroraConfigMapperV1Template(aid: ApplicationId,
     }
 
     val handlers = listOf(
-            AuroraConfigFieldHandler("schemaVersion", defaultValue = "v1"),
-            AuroraConfigFieldHandler("affiliation", validator = { it.pattern("^[a-z]{0,23}[a-z]$", "Affiliation is must be alphanumeric and under 24 characters") }),
-            AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
-            AuroraConfigFieldHandler("type", validator = { it.required("Type is required") }),
-            AuroraConfigFieldHandler("name", validator = { it.pattern("^[a-z][-a-z0-9]{0,23}[a-z0-9]$", "Name must be alphanumeric and under 24 characters") }),
-            AuroraConfigFieldHandler("envName"),
-            AuroraConfigFieldHandler("flags/route", defaultValue = "false"),
-            AuroraConfigFieldHandler("permissions/admin/groups", validator = { it.notBlank("Groups must be set.") }),
-            AuroraConfigFieldHandler("permissions/admin/users"),
-            AuroraConfigFieldHandler("splunkIndex"),
-            AuroraConfigFieldHandler("database"),
-            AuroraConfigFieldHandler("certificateCn"),
-            AuroraConfigFieldHandler("webseal/path"),
-            AuroraConfigFieldHandler("webseal/roles"),
-            AuroraConfigFieldHandler("secretFolder"),
             AuroraConfigFieldHandler("template")
     )
 
-    override val fieldHandlers = handlers + allFiles.findExtractors("config") + allFiles.findExtractors("parameters")
+    override val fieldHandlers = v1Handlers + handlers + allFiles.findExtractors("parameters")
     override val auroraConfigFields = AuroraConfigFields.create(fieldHandlers, allFiles)
 
 }

@@ -15,6 +15,7 @@ abstract class AuroraConfigMapper(val aid: ApplicationId,
                                   val allFiles: List<AuroraConfigFile>,
                                   val openShiftClient: OpenShiftClient) {
 
+
     abstract val auroraConfigFields: AuroraConfigFields
     abstract val fieldHandlers: List<AuroraConfigFieldHandler>
 
