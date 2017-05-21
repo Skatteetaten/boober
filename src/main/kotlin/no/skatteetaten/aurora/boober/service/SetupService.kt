@@ -51,6 +51,7 @@ class SetupService(
                     .filter { it.changed }
                     .firstOrNull()?.let { openShiftService.generateBuildRequest(adc as AuroraDeploymentConfig) }
             process -> openShiftService.generateDeploymentRequest(adc)
+            template -> openShiftService.generateDeploymentRequest(adc)
             deploy -> openShiftResponses
                     .filter { it.kind == "imagestream" && !it.changed && it.operationType == OperationType.UPDATE }
                     .map { openShiftService.generateDeploymentRequest(adc) }

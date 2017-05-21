@@ -37,7 +37,7 @@ val auroraDcDevelopment = AuroraDeploymentConfig(
 
 
 fun generateProccessADC(templateFile: String, template: JsonNode) =
-        AuroraProcessConfig(
+        AuroraLocalTemplateConfig(
                 affiliation = "aurora",
                 cluster = "utv",
                 type = TemplateType.process,
@@ -45,8 +45,6 @@ fun generateProccessADC(templateFile: String, template: JsonNode) =
                         admin = Permission(
                                 groups = setOf("APP_PaaS_drift", "APP_PaaS_utv"),
                                 users = setOf("foo"))),
-
-                templateFile = templateFile,
                 templateJson = template,
                 parameters = mapOf(
                         "SPLUNK_INDEX" to " safir-test",

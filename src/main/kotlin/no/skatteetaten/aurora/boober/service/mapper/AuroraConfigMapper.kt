@@ -3,25 +3,29 @@ package no.skatteetaten.aurora.boober.service.mapper
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.mapper.v1.AuroraConfigMapperV1Deploy
-import no.skatteetaten.aurora.boober.service.mapper.v1.AuroraConfigMapperV1Process
+import no.skatteetaten.aurora.boober.service.mapper.v1.AuroraConfigMapperV1LocalTemplate
+import no.skatteetaten.aurora.boober.service.mapper.v1.AuroraConfigMapperV1Template
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 
 /*
  This class maps a verisioned AuroraConfig into a AuroraDeploymentConfig
  */
-abstract class AuroraConfigMapper(val aid: ApplicationId, val auroraConfig: AuroraConfig, val allFiles: List<AuroraConfigFile>) {
+abstract class AuroraConfigMapper(val aid: ApplicationId,
+                                  val auroraConfig: AuroraConfig,
+                                  val allFiles: List<AuroraConfigFile>,
+                                  val openShiftClient: OpenShiftClient) {
 
     abstract val auroraConfigFields: AuroraConfigFields
     abstract val fieldHandlers: List<AuroraConfigFieldHandler>
 
-    abstract fun typeValidation(fields: AuroraConfigFields, openShiftClient: OpenShiftClient): List<Exception>
+    abstract fun typeValidation(fields: AuroraConfigFields): List<Exception>
 
     abstract fun createAuroraDc(): AuroraObjectsConfig
 
-    fun validate(openShiftClient: OpenShiftClient) {
+    fun validate() {
         val fieldMappingErrors = fieldHandlers.mapNotNull { e -> e.validator(auroraConfigFields.fields[e.name]?.value) }
 
-        val typeValidationErrors = typeValidation(auroraConfigFields, openShiftClient)
+        val typeValidationErrors = typeValidation(auroraConfigFields)
 
         val errors = fieldMappingErrors + typeValidationErrors;
 
@@ -47,7 +51,7 @@ abstract class AuroraConfigMapper(val aid: ApplicationId, val auroraConfig: Auro
 
     companion object {
         @JvmStatic
-        fun createMapper(aid: ApplicationId, auroraConfig: AuroraConfig, files: List<AuroraConfigFile>): AuroraConfigMapper {
+        fun createMapper(aid: ApplicationId, auroraConfig: AuroraConfig, files: List<AuroraConfigFile>, openShiftClient: OpenShiftClient): AuroraConfigMapper {
 
             val handlers = listOf(AuroraConfigFieldHandler("type"), AuroraConfigFieldHandler("schemaVersion"))
 
@@ -61,10 +65,15 @@ abstract class AuroraConfigMapper(val aid: ApplicationId, val auroraConfig: Auro
             }
 
             if (type == TemplateType.process) {
-                return AuroraConfigMapperV1Process(aid, auroraConfig, files)
+                return AuroraConfigMapperV1LocalTemplate(aid, auroraConfig, files, openShiftClient)
             }
 
-            return AuroraConfigMapperV1Deploy(aid, auroraConfig, files)
+            if (type == TemplateType.template) {
+                return AuroraConfigMapperV1Template(aid, auroraConfig, files, openShiftClient)
+
+            }
+
+            return AuroraConfigMapperV1Deploy(aid, auroraConfig, files, openShiftClient)
         }
     }
 

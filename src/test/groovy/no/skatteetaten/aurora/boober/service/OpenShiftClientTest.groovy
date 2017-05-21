@@ -13,6 +13,7 @@ import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import spock.lang.Ignore
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -41,6 +42,8 @@ class OpenShiftClientTest extends Specification {
 
   def auroraDc = TestDataKt.auroraDcDevelopment
 
+  @Ignore
+  //denne kreer at vi har et cluster oppe. Trenger vi det nå?
   def "Smoke test"() {
 
     given:
