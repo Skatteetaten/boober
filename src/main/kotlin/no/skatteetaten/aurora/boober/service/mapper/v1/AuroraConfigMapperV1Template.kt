@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.service.mapper.v1
 
 import no.skatteetaten.aurora.boober.model.*
-import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.service.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.service.mapper.findExtractors
@@ -38,43 +37,21 @@ class AuroraConfigMapperV1Template(aid: ApplicationId,
     }
 
 
-    override fun typeValidation(fields: AuroraConfigFields): List<Exception> {
-        val errors = mutableListOf<Exception>()
 
-
-        val template = fields.extractOrNull("template")
-
-        if (template == null) {
-            errors.add(IllegalArgumentException("Template is required"))
-        } else if (!openShiftClient.templateExist(template)) {
-            errors.add(IllegalArgumentException("Template $template does not exist in openshift namespace"))
-        }
-
-        val secrets = extractSecret()
-
-        if (secrets != null && secrets.isEmpty()) {
-            errors.add(IllegalArgumentException("Missing secret files"))
-        }
-
-        val permissions = extractPermissions()
-
-        permissions.admin.groups
-                ?.filter { !openShiftClient.isValidGroup(it) }
-                .takeIf { it != null && it.isNotEmpty() }
-                ?.let { errors.add(AuroraConfigException("The following groups are not valid=${it.joinToString()}")) }
-
-        permissions.admin.users
-                ?.filter { !openShiftClient.isValidUser(it) }
-                .takeIf { it != null && it.isNotEmpty() }
-                ?.let { errors.add(AuroraConfigException("The following users are not valid=${it.joinToString()}")) }
-
-
-        return errors
-
-    }
 
     val handlers = listOf(
-            AuroraConfigFieldHandler("template")
+            AuroraConfigFieldHandler("template", validator = { json ->
+
+                val template = json?.textValue()
+
+                if (template == null) {
+                    IllegalArgumentException("Template is required")
+                } else if (!openShiftClient.templateExist(template)) {
+                    IllegalArgumentException("Template $template does not exist in openshift namespace")
+                } else {
+                    null
+                }
+            })
     )
 
     override val fieldHandlers = v1Handlers + handlers + allFiles.findExtractors("parameters")

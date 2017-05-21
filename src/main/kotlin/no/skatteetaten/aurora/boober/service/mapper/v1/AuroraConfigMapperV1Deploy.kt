@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.service.mapper.v1
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.*
-import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.service.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.service.mapper.findExtractors
@@ -116,38 +115,5 @@ class AuroraConfigMapperV1Deploy(aid: ApplicationId,
     }
 
 
-    override fun typeValidation(fields: AuroraConfigFields): List<Exception> {
-        val errors = mutableListOf<Exception>()
-
-        val artifactId = fields.extract("artifactId")
-        val name = fields.extractOrDefault("name", artifactId)
-
-
-        if (!Regex("^[a-z][-a-z0-9]{0,23}[a-z0-9]$").matches(name)) {
-            errors.add(IllegalArgumentException("Name [$name] is not valid DNS952 label. 24 length alphanumeric."))
-        }
-
-        val secrets = extractSecret()
-
-        if (secrets != null && secrets.isEmpty()) {
-            errors.add(IllegalArgumentException("Missing secret files"))
-        }
-
-        val permissions = extractPermissions()
-
-        permissions.admin.groups
-                ?.filter { !openShiftClient.isValidGroup(it) }
-                .takeIf { it != null && it.isNotEmpty() }
-                ?.let { errors.add(AuroraConfigException("The following groups are not valid=${it.joinToString()}")) }
-
-        permissions.admin.users
-                ?.filter { !openShiftClient.isValidUser(it) }
-                .takeIf { it != null && it.isNotEmpty() }
-                ?.let { errors.add(AuroraConfigException("The following users are not valid=${it.joinToString()}")) }
-
-        return errors
-
-
-    }
 
 }

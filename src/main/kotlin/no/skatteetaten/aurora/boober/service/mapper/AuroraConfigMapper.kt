@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.boober.service.mapper.v1.AuroraConfigMapperV1Deplo
 import no.skatteetaten.aurora.boober.service.mapper.v1.AuroraConfigMapperV1LocalTemplate
 import no.skatteetaten.aurora.boober.service.mapper.v1.AuroraConfigMapperV1Template
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.utils.required
 
 /*
  This class maps a verisioned AuroraConfig into a AuroraDeploymentConfig
@@ -15,20 +16,14 @@ abstract class AuroraConfigMapper(val aid: ApplicationId,
                                   val allFiles: List<AuroraConfigFile>,
                                   val openShiftClient: OpenShiftClient) {
 
-
     abstract val auroraConfigFields: AuroraConfigFields
     abstract val fieldHandlers: List<AuroraConfigFieldHandler>
 
-    abstract fun typeValidation(fields: AuroraConfigFields): List<Exception>
 
     abstract fun createAuroraDc(): AuroraObjectsConfig
 
     fun validate() {
-        val fieldMappingErrors = fieldHandlers.mapNotNull { e -> e.validator(auroraConfigFields.fields[e.name]?.value) }
-
-        val typeValidationErrors = typeValidation(auroraConfigFields)
-
-        val errors = fieldMappingErrors + typeValidationErrors;
+        val errors = fieldHandlers.mapNotNull { e -> e.validator(auroraConfigFields.fields[e.name]?.value) }
 
         errors.takeIf { it.isNotEmpty() }?.let {
             throw ApplicationConfigException(
@@ -39,7 +34,7 @@ abstract class AuroraConfigMapper(val aid: ApplicationId,
 
     protected fun extractPermissions(): Permissions {
         return Permissions(Permission(
-                auroraConfigFields.extractOrNull("permissions/admin/groups", { it.textValue().split(" ").toSet() }),
+                auroraConfigFields.extract("permissions/admin/groups", { it.textValue().split(" ").toSet() }),
                 auroraConfigFields.extractOrNull("permissions/admin/users", { it.textValue().split(" ").toSet() })
         ))
     }
@@ -51,14 +46,17 @@ abstract class AuroraConfigMapper(val aid: ApplicationId,
     }
 
     companion object {
+        val baseHandlers = listOf(
+                AuroraConfigFieldHandler("schemaVersion"),
+                AuroraConfigFieldHandler("type", validator = { it.required("Type is required") }))
+
         @JvmStatic
         fun createMapper(aid: ApplicationId, auroraConfig: AuroraConfig, files: List<AuroraConfigFile>, openShiftClient: OpenShiftClient): AuroraConfigMapper {
 
-            val handlers = listOf(AuroraConfigFieldHandler("type"), AuroraConfigFieldHandler("schemaVersion"))
-
-            val fields = AuroraConfigFields.create(handlers, files)
+            val fields = AuroraConfigFields.create(baseHandlers, files)
 
             val type = fields.extract("type", { TemplateType.valueOf(it.textValue()) })
+
             val schemaVersion = fields.extract("schemaVersion")
 
             if (schemaVersion != "v1") {
