@@ -41,8 +41,8 @@ class AuroraDeploymentConfigService(val openShiftClient: OpenShiftClient) {
     @JvmOverloads
     fun createAuroraDc(aid: ApplicationId, auroraConfig: AuroraConfig, overrides: List<AuroraConfigFile> = emptyList()): AuroraObjectsConfig {
         val allFiles: List<AuroraConfigFile> = auroraConfig.getFilesForApplication(aid, overrides)
-        val mapper = AuroraConfigMapper.createMapper(aid, auroraConfig, allFiles)
-        mapper.validate(openShiftClient)
+        val mapper = AuroraConfigMapper.createMapper(aid, auroraConfig, allFiles, openShiftClient)
+        mapper.validate()
         val adc = mapper.createAuroraDc()
         return adc
     }

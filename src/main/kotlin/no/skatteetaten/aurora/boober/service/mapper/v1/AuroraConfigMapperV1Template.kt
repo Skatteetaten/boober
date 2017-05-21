@@ -1,29 +1,26 @@
 package no.skatteetaten.aurora.boober.service.mapper.v1
 
-import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.service.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.service.mapper.AuroraConfigMapper
 import no.skatteetaten.aurora.boober.service.mapper.findExtractors
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.pattern
 import no.skatteetaten.aurora.boober.utils.required
 
-class AuroraConfigMapperV1Process(aid: ApplicationId, auroraConfig: AuroraConfig, allFiles: List<AuroraConfigFile>) :
-        AuroraConfigMapper(aid, auroraConfig, allFiles) {
+class AuroraConfigMapperV1Template(aid: ApplicationId,
+                                   auroraConfig: AuroraConfig,
+                                   allFiles: List<AuroraConfigFile>,
+                                   openShiftClient: OpenShiftClient) :
+        AuroraConfigMapperV1(aid, auroraConfig, allFiles, openShiftClient) {
 
     override fun createAuroraDc(): AuroraObjectsConfig {
 
         val type = auroraConfigFields.extract("type", { TemplateType.valueOf(it.textValue()) })
 
-        val templateFile = auroraConfigFields.extractOrNull("templateFile")
-
-        val templateJson = extractTemplateJson();
-
-        return AuroraProcessConfig(
+        return AuroraTemplateConfig(
                 schemaVersion = auroraConfigFields.extract("schemaVersion"),
                 affiliation = auroraConfigFields.extract("affiliation"),
                 cluster = auroraConfigFields.extract("cluster"),
@@ -33,9 +30,7 @@ class AuroraConfigMapperV1Process(aid: ApplicationId, auroraConfig: AuroraConfig
                 permissions = extractPermissions(),
                 secrets = extractSecret(),
                 config = auroraConfigFields.getConfigMap(allFiles.findExtractors("config")),
-                template = auroraConfigFields.extractOrNull("template"),
-                templateFile = templateFile,
-                templateJson = templateJson,
+                template = auroraConfigFields.extract("template"),
                 parameters = auroraConfigFields.getParameters(allFiles.findExtractors("parameters")),
                 flags = AuroraProcessConfigFlags(
                         auroraConfigFields.extract("flags/route", { it.asText() == "true" })
@@ -45,26 +40,17 @@ class AuroraConfigMapperV1Process(aid: ApplicationId, auroraConfig: AuroraConfig
 
     }
 
-    private fun extractTemplateJson(): JsonNode? {
-        val templateFile = auroraConfigFields.extractOrNull("templateFile")?.let { fileName ->
-            auroraConfig.auroraConfigFiles.find { it.name == fileName }?.contents
-        }
-        return templateFile
-    }
 
-    override fun typeValidation(fields: AuroraConfigFields, openShiftClient: OpenShiftClient): List<Exception> {
+    override fun typeValidation(fields: AuroraConfigFields): List<Exception> {
         val errors = mutableListOf<Exception>()
 
 
         val template = fields.extractOrNull("template")
-        val templateFile = fields.extractOrNull("templateFile")
 
-        if (template == null && templateFile == null) {
-            errors.add(IllegalArgumentException("Specify either template or templateFile"))
-        } else if (template != null && !openShiftClient.templateExist(template)) {
+        if (template == null) {
+            errors.add(IllegalArgumentException("Template is required"))
+        } else if (!openShiftClient.templateExist(template)) {
             errors.add(IllegalArgumentException("Template $template does not exist in openshift namespace"))
-        } else if (templateFile != null && auroraConfig.auroraConfigFiles.none { it.name == templateFile }) {
-            errors.add(IllegalArgumentException("The file named $templateFile does not exist in AuroraConfig"))
         }
 
         val secrets = extractSecret()
@@ -106,9 +92,7 @@ class AuroraConfigMapperV1Process(aid: ApplicationId, auroraConfig: AuroraConfig
             AuroraConfigFieldHandler("webseal/path"),
             AuroraConfigFieldHandler("webseal/roles"),
             AuroraConfigFieldHandler("secretFolder"),
-            AuroraConfigFieldHandler("template"),
-            AuroraConfigFieldHandler("templateFile")
-
+            AuroraConfigFieldHandler("template")
     )
 
     override val fieldHandlers = handlers + allFiles.findExtractors("config") + allFiles.findExtractors("parameters")

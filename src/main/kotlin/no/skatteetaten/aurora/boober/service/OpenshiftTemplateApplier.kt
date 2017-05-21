@@ -3,7 +3,10 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
+import no.skatteetaten.aurora.boober.model.AuroraLocalTemplateConfig
+import no.skatteetaten.aurora.boober.model.AuroraObjectsConfig
 import no.skatteetaten.aurora.boober.model.AuroraProcessConfig
+import no.skatteetaten.aurora.boober.model.AuroraTemplateConfig
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import org.springframework.stereotype.Service
 
@@ -15,9 +18,10 @@ class OpenshiftTemplateApplier(
 
     fun generateObjects(apc: AuroraProcessConfig): List<JsonNode> {
 
-        val template: ObjectNode = if (apc.template != null) {
+
+        val template = if (apc is AuroraTemplateConfig) {
             openShiftClient.get("template", "openshift", apc.template)?.body as ObjectNode
-        } else if (apc.templateJson != null) {
+        } else if (apc is AuroraLocalTemplateConfig) {
             apc.templateJson as ObjectNode
         } else {
             throw IllegalArgumentException("Template or templateFile should be specified")
@@ -37,17 +41,20 @@ class OpenshiftTemplateApplier(
                 }
 
 
+
         if (!template.has("labels")) {
             template.replace("labels", mapper.createObjectNode())
         }
 
+
         val labels = template["labels"] as ObjectNode
 
+        val base = apc as AuroraObjectsConfig
         if (!labels.has("affiliation")) {
-            labels.put("affiliation", apc.affiliation)
+            labels.put("affiliation", base.affiliation)
         }
 
-        val result = openShiftClient.post("processedtemplate", namespace = apc.namespace, payload = template)
+        val result = openShiftClient.post("processedtemplate", namespace = base.namespace, payload = template)
 
         return result.body["objects"].asSequence().toList()
     }

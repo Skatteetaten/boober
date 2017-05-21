@@ -5,6 +5,8 @@
   },
   "groupId": "ske.admin.lisens",
   "artifactId": "verify-ebs-users",
+  "name": "verify-ebs-users",
+
   "version": "1.0.3",
   "splunkIndex": "openshift-test",
   "resources": {

@@ -56,10 +56,17 @@ interface AuroraObjectsConfig {
 }
 
 enum class TemplateType {
-    deploy, development, process,
+    deploy, development, process, template
 }
 
-data class AuroraProcessConfig(
+
+interface AuroraProcessConfig {
+    val parameters: Map<String, String>?
+    val flags: AuroraProcessConfigFlags
+}
+
+
+data class AuroraLocalTemplateConfig(
         override val schemaVersion: String = "v1",
         override val affiliation: String,
         override val cluster: String,
@@ -69,13 +76,28 @@ data class AuroraProcessConfig(
         override val permissions: Permissions,
         override val secrets: Map<String, String>? = null,
         override val config: Map<String, Map<String, String>>? = null,
-        val templateFile: String? = null,
-        val templateJson: JsonNode? = null,
-        val template: String? = null,
-        val parameters: Map<String, String>? = mapOf(),
-        val flags: AuroraProcessConfigFlags,
-        override val fields: Map<String, AuroraConfigField>
-) : AuroraObjectsConfig
+        override val parameters: Map<String, String>? = mapOf(),
+        override val flags: AuroraProcessConfigFlags,
+        override val fields: Map<String, AuroraConfigField>,
+        val templateJson: JsonNode
+) : AuroraProcessConfig, AuroraObjectsConfig
+
+data class AuroraTemplateConfig(
+        override val schemaVersion: String = "v1",
+        override val affiliation: String,
+        override val cluster: String,
+        override val type: TemplateType,
+        override val name: String,
+        override val envName: String,
+        override val permissions: Permissions,
+        override val secrets: Map<String, String>? = null,
+        override val config: Map<String, Map<String, String>>? = null,
+        override val parameters: Map<String, String>? = mapOf(),
+        override val flags: AuroraProcessConfigFlags,
+        override val fields: Map<String, AuroraConfigField>,
+        val template: String
+
+) : AuroraProcessConfig, AuroraObjectsConfig
 
 data class AuroraDeploymentConfigFlags(
         val route: Boolean,
