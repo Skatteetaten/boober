@@ -77,7 +77,9 @@ class AuroraDeploymentConfigServiceUserValidationTest extends Specification {
     then:
       def e = thrown(AuroraConfigException)
       e.errors.size() == 1
-      e.errors[0].messages[0] == "The following users are not valid=foo"
+      e.errors[0].messages[0].message == "The following users are not valid=foo"
+      e.errors[0].messages[0].field.source == "about.json"
+
   }
 
   def "Should get error if group is not valid"() {
@@ -95,7 +97,9 @@ class AuroraDeploymentConfigServiceUserValidationTest extends Specification {
     then:
       AuroraConfigException e = thrown()
       e.errors.size() == 1
-      e.errors[0].messages[0] == "The following groups are not valid=APP_PaaS_drift, APP_PaaS_utv"
+      e.errors[0].messages[0].message == "The following groups are not valid=APP_PaaS_drift, APP_PaaS_utv"
+      e.errors[0].messages[0].field.source == "about.json"
+
   }
 
 }

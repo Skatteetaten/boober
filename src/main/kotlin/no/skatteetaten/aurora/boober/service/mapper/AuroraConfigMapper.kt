@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service.mapper
 
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
+import no.skatteetaten.aurora.boober.service.internal.ValidatonError
 import no.skatteetaten.aurora.boober.service.mapper.v1.AuroraConfigMapperV1Deploy
 import no.skatteetaten.aurora.boober.service.mapper.v1.AuroraConfigMapperV1LocalTemplate
 import no.skatteetaten.aurora.boober.service.mapper.v1.AuroraConfigMapperV1Template
@@ -23,12 +24,18 @@ abstract class AuroraConfigMapper(val aid: ApplicationId,
     abstract fun createAuroraDc(): AuroraObjectsConfig
 
     fun validate() {
-        val errors = fieldHandlers.mapNotNull { e -> e.validator(auroraConfigFields.fields[e.name]?.value) }
+        val errors = fieldHandlers.mapNotNull { e ->
+            val auroraConfigField = auroraConfigFields.fields[e.name]
+
+            e.validator(auroraConfigField?.value)?.let {
+                ValidatonError(it.localizedMessage, it, auroraConfigField)
+            }
+        }
 
         errors.takeIf { it.isNotEmpty() }?.let {
             throw ApplicationConfigException(
                     "Config for application ${aid.applicationName} in environment ${aid.environmentName} contains errors",
-                    errors = it.mapNotNull { it.message })
+                    errors = it.mapNotNull { it })
         }
     }
 
