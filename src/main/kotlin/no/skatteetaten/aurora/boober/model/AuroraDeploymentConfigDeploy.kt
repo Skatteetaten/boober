@@ -1,16 +1,15 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.service.mapper.AuroraConfigField
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
 
-data class AuroraDeploymentConfig(
-        //TODO: Service account for våre objekter
+data class AuroraDeploymentConfigDeploy(
         override val schemaVersion: String = "v1",
         override val affiliation: String,
         override val cluster: String,
         override val type: TemplateType,
         override val name: String,
-        val flags: AuroraDeploymentConfigFlags,
+        override val flags: AuroraDeploymentConfigFlags,
         val resources: AuroraDeploymentConfigResources,
         override val envName: String,
         override val permissions: Permissions,
@@ -28,14 +27,16 @@ data class AuroraDeploymentConfig(
         val prometheus: HttpEndpoint? = null,
         val managementPath: String? = null,
         override val fields: Map<String, AuroraConfigField>
-) : AuroraObjectsConfig {
+) : AuroraDeploymentConfig {
 
+    //In use in velocity template
     val dockerGroup: String = groupId.replace(".", "_")
 
+    //In use in velocity template
     val dockerName: String = artifactId
 }
 
-interface AuroraObjectsConfig {
+interface AuroraDeploymentConfig {
     val schemaVersion: String
     val affiliation: String
     val cluster: String
@@ -46,27 +47,27 @@ interface AuroraObjectsConfig {
     val secrets: Map<String, String>?
     val config: Map<String, Map<String, String>>?
     val fields: Map<String, AuroraConfigField>
-
+    val flags: AuroraDeploymentConfigFlags
     val namespace: String
         get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"
 
+    //In use in velocity template
     val routeName: String?
         get() = "http://$name-$namespace.$cluster.paas.skead.no"
 
 }
 
 enum class TemplateType {
-    deploy, development, process, template
+    deploy, development, localTemplate, template
 }
 
 
-interface AuroraProcessConfig {
+interface AuroraDeploymentConfigProcess {
     val parameters: Map<String, String>?
-    val flags: AuroraProcessConfigFlags
 }
 
 
-data class AuroraLocalTemplateConfig(
+data class AuroraDeploymentConfigProcessLocalTemplate(
         override val schemaVersion: String = "v1",
         override val affiliation: String,
         override val cluster: String,
@@ -77,12 +78,12 @@ data class AuroraLocalTemplateConfig(
         override val secrets: Map<String, String>? = null,
         override val config: Map<String, Map<String, String>>? = null,
         override val parameters: Map<String, String>? = mapOf(),
-        override val flags: AuroraProcessConfigFlags,
+        override val flags: AuroraDeploymentConfigFlags,
         override val fields: Map<String, AuroraConfigField>,
         val templateJson: JsonNode
-) : AuroraProcessConfig, AuroraObjectsConfig
+) : AuroraDeploymentConfigProcess, AuroraDeploymentConfig
 
-data class AuroraTemplateConfig(
+data class AuroraDeploymentConfigProcessTemplate(
         override val schemaVersion: String = "v1",
         override val affiliation: String,
         override val cluster: String,
@@ -93,22 +94,19 @@ data class AuroraTemplateConfig(
         override val secrets: Map<String, String>? = null,
         override val config: Map<String, Map<String, String>>? = null,
         override val parameters: Map<String, String>? = mapOf(),
-        override val flags: AuroraProcessConfigFlags,
+        override val flags: AuroraDeploymentConfigFlags,
         override val fields: Map<String, AuroraConfigField>,
         val template: String
 
-) : AuroraProcessConfig, AuroraObjectsConfig
+) : AuroraDeploymentConfigProcess, AuroraDeploymentConfig
+
 
 data class AuroraDeploymentConfigFlags(
         val route: Boolean,
-        val cert: Boolean,
-        val debug: Boolean,
-        val alarm: Boolean,
-        val rolling: Boolean
-)
-
-data class AuroraProcessConfigFlags(
-        val route: Boolean
+        val cert: Boolean = false,
+        val debug: Boolean = false,
+        val alarm: Boolean = false,
+        val rolling: Boolean = false
 )
 
 data class AuroraDeploymentConfigResource(

@@ -1,9 +1,9 @@
-package no.skatteetaten.aurora.boober.service.mapper.v1
+package no.skatteetaten.aurora.boober.mapper.v1
 
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
+import no.skatteetaten.aurora.boober.mapper.findExtractors
 import no.skatteetaten.aurora.boober.model.*
-import no.skatteetaten.aurora.boober.service.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.service.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.service.mapper.findExtractors
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 
 class AuroraConfigMapperV1Template(aid: ApplicationId,
@@ -12,11 +12,11 @@ class AuroraConfigMapperV1Template(aid: ApplicationId,
                                    openShiftClient: OpenShiftClient) :
         AuroraConfigMapperV1(aid, auroraConfig, allFiles, openShiftClient) {
 
-    override fun createAuroraDc(): AuroraObjectsConfig {
+    override fun toAuroraDeploymentConfig(): AuroraDeploymentConfig {
 
         val type = auroraConfigFields.extract("type", { TemplateType.valueOf(it.textValue()) })
 
-        return AuroraTemplateConfig(
+        return AuroraDeploymentConfigProcessTemplate(
                 schemaVersion = auroraConfigFields.extract("schemaVersion"),
                 affiliation = auroraConfigFields.extract("affiliation"),
                 cluster = auroraConfigFields.extract("cluster"),
@@ -28,7 +28,7 @@ class AuroraConfigMapperV1Template(aid: ApplicationId,
                 config = auroraConfigFields.getConfigMap(allFiles.findExtractors("config")),
                 template = auroraConfigFields.extract("template"),
                 parameters = auroraConfigFields.getParameters(allFiles.findExtractors("parameters")),
-                flags = AuroraProcessConfigFlags(
+                flags = AuroraDeploymentConfigFlags(
                         auroraConfigFields.extract("flags/route", { it.asText() == "true" })
                 ),
                 fields = auroraConfigFields.fields

@@ -3,7 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.*
 
-val auroraDcDevelopment = AuroraDeploymentConfig(
+val auroraDcDevelopment = AuroraDeploymentConfigDeploy(
         schemaVersion = "v1",
         affiliation = "aurora",
         cluster = "utv",
@@ -37,10 +37,10 @@ val auroraDcDevelopment = AuroraDeploymentConfig(
 
 
 fun generateProccessADC(templateFile: String, template: JsonNode) =
-        AuroraLocalTemplateConfig(
+        AuroraDeploymentConfigProcessLocalTemplate(
                 affiliation = "aurora",
                 cluster = "utv",
-                type = TemplateType.process,
+                type = TemplateType.localTemplate,
                 permissions = Permissions(
                         admin = Permission(
                                 groups = setOf("APP_PaaS_drift", "APP_PaaS_utv"),
@@ -59,5 +59,5 @@ fun generateProccessADC(templateFile: String, template: JsonNode) =
                 name = "dev-test",
                 secrets = emptyMap(),
                 config = emptyMap(),
-                flags = AuroraProcessConfigFlags(route = true),
+                flags = AuroraDeploymentConfigFlags(route = true),
                 fields = emptyMap())

@@ -23,6 +23,7 @@ import spock.mock.DetachedMockFactory
     no.skatteetaten.aurora.boober.Configuration,
     OpenShiftClient,
     OpenShiftObjectGenerator,
+    OpenShiftTemplateProcessor,
     Config,
     UserDetailsProvider])
 class OpenShiftClientApplyTest extends Specification {
