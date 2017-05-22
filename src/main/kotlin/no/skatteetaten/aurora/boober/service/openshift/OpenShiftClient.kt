@@ -64,6 +64,9 @@ class OpenShiftClient(
             json.updateField(existing, "/spec", "clusterIP")
         }
 
+        if (kind == "persistentvolumeclaim") {
+            json.updateField(existing, "/spec", "volumeName")
+        }
         if (kind == "deploymentconfig") {
             json.updateField(existing, "/spec/triggers/0/imageChangeParams", "lastTriggeredImage")
             json.updateField(existing, "/spec/template/spec/containers/0", "image")
@@ -98,7 +101,7 @@ class OpenShiftClient(
 
     fun templateExist(template: String): Boolean {
 
-        return exist("$baseUrl/oapi/v1/namespaces/default/templates/$template")
+        return exist("$baseUrl/oapi/v1/namespaces/openshift/templates/$template")
     }
 
     private fun exist(url: String): Boolean {

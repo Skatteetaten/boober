@@ -20,7 +20,7 @@ class OpenShiftTemplateProcessor(
 
 
         val template = if (apc is AuroraDeploymentConfigProcessTemplate) {
-            openShiftClient.get("template", "openshift", apc.template)?.body as ObjectNode
+            openShiftClient.get("template", apc.template, "openshift")?.body as ObjectNode
         } else if (apc is AuroraDeploymentConfigProcessLocalTemplate) {
             apc.templateJson as ObjectNode
         } else {
@@ -30,15 +30,17 @@ class OpenShiftTemplateProcessor(
         val adcParameters = apc.parameters ?: emptyMap()
         val adcParameterKeys = adcParameters.keys
 
-        val parameters = template["parameters"]
+        if (template.has("parameters")) {
+            val parameters = template["parameters"]
 
-        //mutation in progress. stay away.
-        parameters
-                .filter { adcParameterKeys.contains(it["name"].textValue()) }
-                .forEach {
-                    val node = it as ObjectNode
-                    node.put("value", adcParameters[it["name"].textValue()] as String)
-                }
+            //mutation in progress. stay away.
+            parameters
+                    .filter { adcParameterKeys.contains(it["name"].textValue()) }
+                    .forEach {
+                        val node = it as ObjectNode
+                        node.put("value", adcParameters[it["name"].textValue()] as String)
+                    }
+        }
 
         if (!template.has("labels")) {
             template.replace("labels", mapper.createObjectNode())

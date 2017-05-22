@@ -1,0 +1,44 @@
+{
+  "affiliation": "paas",
+  "setupParams": {
+    "apps": [
+      "pgadmin"
+    ],
+    "envs": [
+      "espen-dev"
+    ]
+  },
+  "auroraConfig": {
+    "files": {
+      "about.json": {
+        "schemaVersion": "v1",
+        "affiliation": "paas",
+        "cluster": "utv",
+        "permissions": {
+          "admin": {
+            "groups": "APP_PaaS_drift APP_PaaS_utv"
+          }
+        }
+      },
+      "postgresql-pvc.json": {
+        "name": "postgresql-pvc",
+        "type": "template",
+        "template": "aurora-postgresql-basic-pvc-10"
+      },
+      "postgresql.json": {
+        "name": "postgresql",
+        "type": "template",
+        "template": "aurora-postgresql-basic-10"
+      },
+      "pgadmin.json": {
+        "name": "pgadmin",
+        "type": "template",
+        "template": "aurora-pgadmin-10"
+      },
+      "espen-dev/about.json": {},
+      "espen-dev/postgresql-pvc.json": {},
+      "espen-dev/postgresql.json": {},
+      "espen-dev/pgadmin.json": {}
+    }
+  }
+}
