@@ -3,7 +3,8 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.mapper.findExtractors
+import no.skatteetaten.aurora.boober.mapper.findConfig
+import no.skatteetaten.aurora.boober.mapper.findParameters
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 
@@ -12,6 +13,20 @@ class AuroraConfigMapperV1LocalTemplate(aid: ApplicationId,
                                         allFiles: List<AuroraConfigFile>,
                                         openShiftClient: OpenShiftClient) :
         AuroraConfigMapperV1(aid, auroraConfig, allFiles, openShiftClient) {
+
+    val handlers = listOf(
+            AuroraConfigFieldHandler("templateFile", validator = { json ->
+                val fileName = json?.textValue()
+                if (auroraConfig.auroraConfigFiles.none { it.name == fileName }) {
+                    IllegalArgumentException("The file named $fileName does not exist in AuroraConfig")
+                } else {
+                    null
+                }
+            })
+    )
+
+    override val fieldHandlers = v1Handlers + handlers + allFiles.findParameters()
+    override val auroraConfigFields = AuroraConfigFields.create(fieldHandlers, allFiles)
 
     override fun toAuroraDeploymentConfig(): AuroraDeploymentConfig {
 
@@ -28,9 +43,9 @@ class AuroraConfigMapperV1LocalTemplate(aid: ApplicationId,
                 envName = auroraConfigFields.extractOrDefault("envName", aid.environmentName),
                 permissions = extractPermissions(),
                 secrets = extractSecret(),
-                config = auroraConfigFields.getConfigMap(allFiles.findExtractors("config")),
+                config = auroraConfigFields.getConfigMap(allFiles.findConfig()),
                 templateJson = templateJson,
-                parameters = auroraConfigFields.getParameters(allFiles.findExtractors("parameters")),
+                parameters = auroraConfigFields.getParameters(allFiles.findParameters()),
                 flags = AuroraDeploymentConfigFlags(
                         auroraConfigFields.extract("flags/route", { it.asText() == "true" })
                 ),
@@ -46,18 +61,5 @@ class AuroraConfigMapperV1LocalTemplate(aid: ApplicationId,
         return templateFile ?: throw IllegalArgumentException("templateFile is required")
     }
 
-    val handlers = listOf(
-            AuroraConfigFieldHandler("templateFile", validator = { json ->
-                val fileName = json?.textValue()
-                if (auroraConfig.auroraConfigFiles.none { it.name == fileName }) {
-                    IllegalArgumentException("The file named $fileName does not exist in AuroraConfig")
-                } else {
-                    null
-                }
-            })
-    )
-
-    override val fieldHandlers = v1Handlers + handlers + allFiles.findExtractors("parameters")
-    override val auroraConfigFields = AuroraConfigFields.create(fieldHandlers, allFiles)
 
 }

@@ -238,7 +238,7 @@
               ],
               "from": {
                 "kind": "ImageStreamTag",
-                "name": "atomhopper:1.2.0"
+                "name": "atomhopper:1.3.0"
               },
               "lastTriggeredImage": ""
             },

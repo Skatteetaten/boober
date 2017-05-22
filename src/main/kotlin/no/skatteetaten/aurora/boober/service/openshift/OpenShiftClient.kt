@@ -38,8 +38,13 @@ class OpenShiftClient(
 
     fun apply(namespace: String, json: JsonNode): OpenShiftResponse {
 
-        val kind = json.get("kind")?.asText()?.toLowerCase() ?: throw IllegalArgumentException("Kind must be set")
-        val name = json.get("metadata")?.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource")
+        val kind = json.get("kind")?.asText()?.toLowerCase() ?: throw IllegalArgumentException("Kind must be set in file=$json")
+
+        val name = if (kind.equals("deploymentrequest")) {
+            json.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource kind=$kind")
+        } else {
+            json.get("metadata")?.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource kind=$kind")
+        }
 
         val existingResource = resource.get(kind, name, namespace)
 

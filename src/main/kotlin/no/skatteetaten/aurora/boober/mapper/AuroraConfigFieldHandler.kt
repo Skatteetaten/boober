@@ -9,15 +9,10 @@ class AuroraConfigFieldHandler(val name: String,
                                val validator: (JsonNode?) -> Exception? = { _ -> null },
                                val defaultValue: String? = null)
 
-fun List<AuroraConfigFile>.findExtractors(name: String): List<AuroraConfigFieldHandler> {
+fun List<AuroraConfigFile>.findConfig(): List<AuroraConfigFieldHandler> {
 
-    val configFiles = this.flatMap {
-        if (it.contents.has(name)) {
-            it.contents[name].fieldNames().asSequence().toList()
-        } else {
-            emptyList()
-        }
-    }.toSet()
+    val name = "config"
+    val configFiles = findSubKeys(name)
 
     val configKeys: Map<String, Set<String>> = configFiles.map { configFileName ->
         //find all unique keys in a configFile
@@ -28,10 +23,31 @@ fun List<AuroraConfigFile>.findExtractors(name: String): List<AuroraConfigFieldH
         configFileName to keys
     }.toMap()
 
-    return configKeys.flatMap { configFile ->
+    val result = configKeys.flatMap { configFile ->
         configFile.value.map { field ->
             AuroraConfigFieldHandler("$name/${configFile.key}/$field")
         }
     }
+    return result
+}
+
+fun List<AuroraConfigFile>.findParameters(): List<AuroraConfigFieldHandler> {
+
+    val parameterKeys = findSubKeys("parameters")
+
+    val result = parameterKeys.map { parameter ->
+        AuroraConfigFieldHandler("parameters/$parameter")
+    }
+    return result
+}
+
+fun List<AuroraConfigFile>.findSubKeys(name: String): Set<String> {
+    return this.flatMap {
+        if (it.contents.has(name)) {
+            it.contents[name].fieldNames().asSequence().toList()
+        } else {
+            emptyList()
+        }
+    }.toSet()
 }
 

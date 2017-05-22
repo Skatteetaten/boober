@@ -5,7 +5,7 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 
 data class Error(
         val applicationId: ApplicationId,
-        val messages: List<ValidatonError> = listOf()
+        val messages: List<ValidationError> = listOf()
 )
 
 abstract class ServiceException(message: String?, cause: Throwable?) : RuntimeException(message, cause) {
@@ -19,7 +19,7 @@ class GitException(messages: String?, cause: Throwable?) : ServiceException(mess
 class ApplicationConfigException(
         messages: String,
         cause: Throwable? = null,
-        val errors: List<ValidatonError> = listOf()
+        val errors: List<ValidationError> = listOf()
 ) : ServiceException(messages, cause)
 
 
@@ -28,4 +28,4 @@ class AuroraConfigException(
         val errors: List<Error> = listOf()
 ) : ServiceException(message)
 
-data class ValidatonError(val message: String, val field: AuroraConfigField? = null)
+data class ValidationError(val message: String, val field: AuroraConfigField? = null)

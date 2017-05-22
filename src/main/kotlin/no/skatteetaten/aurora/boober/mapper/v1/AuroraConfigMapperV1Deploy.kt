@@ -3,7 +3,7 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.mapper.findExtractors
+import no.skatteetaten.aurora.boober.mapper.findConfig
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.length
@@ -107,7 +107,7 @@ class AuroraConfigMapperV1Deploy(aid: ApplicationId,
                     auroraConfig.getSecrets(it.asText())
                 }),
 
-                config = auroraConfigFields.getConfigMap(allFiles.findExtractors("config")),
+                config = auroraConfigFields.getConfigMap(allFiles.findConfig()),
                 fields = auroraConfigFields.fields
         )
     }

@@ -78,7 +78,7 @@ class AuroraConfigServiceTest extends Specification {
   def "Should not encrypt unchanged secrets"() {
     given:
       def affiliation = "aos"
-      def auroraConfig = AuroraConfigHelper.createAuroraConfig(aid, ["/tmp/foo/latest.properties": "FOO=BAR"])
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, ["/tmp/foo/latest.properties": "FOO=BAR"])
       createRepoAndSaveFiles(affiliation, auroraConfig)
       def gitAuroraConfig = getAuroraConfigFromGit(affiliation, false)
 

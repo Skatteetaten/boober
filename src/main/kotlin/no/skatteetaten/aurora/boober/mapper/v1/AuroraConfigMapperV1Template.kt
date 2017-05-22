@@ -2,7 +2,8 @@ package no.skatteetaten.aurora.boober.mapper.v1
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.mapper.findExtractors
+import no.skatteetaten.aurora.boober.mapper.findConfig
+import no.skatteetaten.aurora.boober.mapper.findParameters
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 
@@ -25,9 +26,9 @@ class AuroraConfigMapperV1Template(aid: ApplicationId,
                 envName = auroraConfigFields.extractOrDefault("envName", aid.environmentName),
                 permissions = extractPermissions(),
                 secrets = extractSecret(),
-                config = auroraConfigFields.getConfigMap(allFiles.findExtractors("config")),
+                config = auroraConfigFields.getConfigMap(allFiles.findConfig()),
                 template = auroraConfigFields.extract("template"),
-                parameters = auroraConfigFields.getParameters(allFiles.findExtractors("parameters")),
+                parameters = auroraConfigFields.getParameters(allFiles.findParameters()),
                 flags = AuroraDeploymentConfigFlags(
                         auroraConfigFields.extract("flags/route", { it.asText() == "true" })
                 ),
@@ -54,7 +55,7 @@ class AuroraConfigMapperV1Template(aid: ApplicationId,
             })
     )
 
-    override val fieldHandlers = v1Handlers + handlers + allFiles.findExtractors("parameters")
+    override val fieldHandlers = v1Handlers + handlers + allFiles.findParameters()
     override val auroraConfigFields = AuroraConfigFields.create(fieldHandlers, allFiles)
 
 }

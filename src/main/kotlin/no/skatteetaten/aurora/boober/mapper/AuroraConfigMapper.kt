@@ -5,7 +5,7 @@ import no.skatteetaten.aurora.boober.mapper.v1.AuroraConfigMapperV1LocalTemplate
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraConfigMapperV1Template
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
-import no.skatteetaten.aurora.boober.service.internal.ValidatonError
+import no.skatteetaten.aurora.boober.service.internal.ValidationError
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.required
 
@@ -27,7 +27,7 @@ abstract class AuroraConfigMapper(val aid: ApplicationId,
             val auroraConfigField = auroraConfigFields.fields[e.name]
 
             e.validator(auroraConfigField?.value)?.let {
-                ValidatonError(it.localizedMessage, auroraConfigField)
+                ValidationError(it.localizedMessage, auroraConfigField)
             }
         }
 
