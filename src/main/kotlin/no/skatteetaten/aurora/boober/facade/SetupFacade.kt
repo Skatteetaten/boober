@@ -60,6 +60,7 @@ class SetupFacade(
 
     fun generateRedeployResource(openShiftResponses: List<OpenShiftResponse>, adc: AuroraDeploymentConfig): JsonNode? {
         val imageStream = openShiftResponses.find { it.kind == "imagestream" }
+        val deployment = openShiftResponses.find { it.kind == "deploymentconfig" }
 
         val deployResource: JsonNode? =
                 if (adc.type == development) {
@@ -67,7 +68,11 @@ class SetupFacade(
                         openShiftObjectGenerator.generateBuildRequest(adc as AuroraDeploymentConfigDeploy)
                     }
                 } else if (imageStream == null) {
-                    openShiftObjectGenerator.generateDeploymentRequest(adc)
+                    if (deployment != null) {
+                        openShiftObjectGenerator.generateDeploymentRequest(adc)
+                    } else {
+                        null
+                    }
                 } else if (!imageStream.changed && imageStream.operationType == OperationType.UPDATE) {
                     openShiftObjectGenerator.generateDeploymentRequest(adc)
                 } else {

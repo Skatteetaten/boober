@@ -55,7 +55,7 @@ class OpenShiftObjectGenerator(
                 "rolebinding.json"
         )
 
-        if (auroraDc.type != TemplateType.localTemplate) {
+        if (auroraDc.type in listOf(TemplateType.deploy, TemplateType.development)) {
             templatesToProcess.add("deployment-config.json")
             templatesToProcess.add("service.json")
         }
@@ -76,7 +76,7 @@ class OpenShiftObjectGenerator(
             templatesToProcess.add("build-config.json")
         }
 
-        if (auroraDc.type != TemplateType.localTemplate) {
+        if (auroraDc.type in listOf(TemplateType.deploy, TemplateType.development)) {
             templatesToProcess.add("imagestream.json")
         }
 
