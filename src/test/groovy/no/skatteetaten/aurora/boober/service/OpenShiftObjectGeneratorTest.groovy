@@ -27,7 +27,7 @@ import spock.mock.DetachedMockFactory
     AuroraConfigValidationService,
     OpenShiftTemplateProcessor,
     GitService, OpenShiftObjectGenerator, Config])
-class OpenShiftServiceTest extends Specification {
+class OpenShiftObjectGeneratorTest extends Specification {
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
@@ -78,7 +78,8 @@ class OpenShiftServiceTest extends Specification {
 
     when:
       def auroraConfig = new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])
-      AuroraDeploymentConfigDeploy auroraDc = auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig)
+      AuroraDeploymentConfigDeploy auroraDc = auroraDeploymentConfigService.
+          createAuroraDc(aid, auroraConfig) as AuroraDeploymentConfigDeploy
       List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc)
 
       def service = generatedObjects.find { it.get("kind").asText() == "Service" }

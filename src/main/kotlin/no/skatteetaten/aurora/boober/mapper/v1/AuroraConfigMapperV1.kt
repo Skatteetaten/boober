@@ -2,7 +2,7 @@ package no.skatteetaten.aurora.boober.mapper.v1
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigMapper
-import no.skatteetaten.aurora.boober.mapper.findExtractors
+import no.skatteetaten.aurora.boober.mapper.findConfig
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -54,5 +54,5 @@ abstract class AuroraConfigMapperV1(aid: ApplicationId, auroraConfig: AuroraConf
                 } else {
                     null
                 }
-            })) + allFiles.findExtractors("config")
+            })) + allFiles.findConfig()
 }

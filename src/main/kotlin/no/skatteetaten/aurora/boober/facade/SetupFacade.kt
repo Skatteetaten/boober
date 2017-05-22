@@ -2,7 +2,7 @@ package no.skatteetaten.aurora.boober.facade
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.*
-import no.skatteetaten.aurora.boober.model.TemplateType.*
+import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.AuroraConfigValidationService
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 import no.skatteetaten.aurora.boober.service.internal.ApplicationResult
@@ -44,17 +44,8 @@ class SetupFacade(
 
         val openShiftResponses: List<OpenShiftResponse> = openShiftClient.applyMany(adc.namespace, openShiftObjects)
 
-        val deployResource: JsonNode? = when (adc.type) {
-            development -> openShiftResponses
-                    .filter { it.changed }
-                    .firstOrNull()?.let { openShiftObjectGenerator.generateBuildRequest(adc as AuroraDeploymentConfigDeploy) }
-            localTemplate -> openShiftObjectGenerator.generateDeploymentRequest(adc)
-            template -> openShiftObjectGenerator.generateDeploymentRequest(adc)
-            deploy -> openShiftResponses
-                    .filter { it.kind == "imagestream" && !it.changed && it.operationType == OperationType.UPDATE }
-                    .map { openShiftObjectGenerator.generateDeploymentRequest(adc) }
-                    .firstOrNull()
-        }
+        val deployResource: JsonNode? =
+                generateRedeployResource(openShiftResponses, adc)
 
         val finalResponse = deployResource?.let {
             openShiftResponses + openShiftClient.apply(adc.namespace, it)
@@ -65,5 +56,23 @@ class SetupFacade(
                 auroraDc = adc,
                 openShiftResponses = finalResponse
         )
+    }
+
+    fun generateRedeployResource(openShiftResponses: List<OpenShiftResponse>, adc: AuroraDeploymentConfig): JsonNode? {
+        val imageStream = openShiftResponses.find { it.kind == "imagestream" }
+
+        val deployResource: JsonNode? =
+                if (adc.type == development) {
+                    openShiftResponses.filter { it.changed }.firstOrNull()?.let {
+                        openShiftObjectGenerator.generateBuildRequest(adc as AuroraDeploymentConfigDeploy)
+                    }
+                } else if (imageStream == null) {
+                    openShiftObjectGenerator.generateDeploymentRequest(adc)
+                } else if (!imageStream.changed && imageStream.operationType == OperationType.UPDATE) {
+                    openShiftObjectGenerator.generateDeploymentRequest(adc)
+                } else {
+                    null
+                }
+        return deployResource
     }
 }

@@ -5,7 +5,7 @@
       "tvinn"
     ],
     "envs": [
-      "boober"
+      "espen-dev"
     ]
   },
   "auroraConfig": {
@@ -17,6 +17,7 @@
           "name": "atomhopper",
           "creationTimestamp": null,
           "labels": {
+            "app": "${APP_NAME}",
             "aurora-objects-version": "3.1.6"
           },
           "annotations": {
@@ -28,92 +29,13 @@
         "objects": [
           {
             "apiVersion": "v1",
-            "kind": "ImageStream",
-            "metadata": {
-              "name": "atomhopper",
-              "labels": {
-                "affiliation": "${AFFILIATION}"
-              }
-            },
-            "spec": {
-              "dockerImageRepository": "docker-registry.aurora.sits.no:5000/aurora/atomhopper",
-              "tags": [
-                {
-                  "from": {
-                    "kind": "DockerImage",
-                    "name": "docker-registry.aurora.sits.no:5000/aurora/atomhopper:1.3.0"
-                  },
-                  "importPolicy": {
-                    "scheduled": true
-                  },
-                  "name": "1.3.0"
-                }
-              ]
-            },
-            "status": {
-              "dockerImageRepository": ""
-            }
-          },
-          {
-            "apiVersion": "v1",
-            "kind": "Service",
-            "metadata": {
-              "annotations": {
-                "prometheus.io/path": "/metrics",
-                "prometheus.io/scheme": "http",
-                "prometheus.io/scrape": "false"
-              },
-              "labels": {
-                "affiliation": "${AFFILIATION}"
-              },
-              "name": "${APP_NAME}"
-            },
-            "spec": {
-              "portalIP": "",
-              "ports": [
-                {
-                  "name": "http",
-                  "nodePort": 0,
-                  "port": 80,
-                  "protocol": "TCP",
-                  "targetPort": 8080
-                }
-              ],
-              "selector": {
-                "name": "${APP_NAME}"
-              },
-              "sessionAffinity": "None",
-              "type": "ClusterIP"
-            },
-            "status": {
-              "loadBalancer": {}
-            }
-          },
-          {
-            "apiVersion": "v1",
-            "kind": "Route",
-            "metadata": {
-              "name": "${APP_NAME}",
-              "labels": {
-                "affiliation": "${AFFILIATION}"
-              }
-            },
-            "spec": {
-              "to": {
-                "kind": "Service",
-                "name": "${APP_NAME}"
-              }
-            },
-            "status": {}
-          },
-          {
-            "apiVersion": "v1",
             "kind": "DeploymentConfig",
             "metadata": {
               "annotations": {
                 "sprocket.sits.no/deployment-config.database": "${DATABASE}"
               },
               "labels": {
+                "app": "${APP_NAME}",
                 "name": "${APP_NAME}",
                 "affiliation": "${AFFILIATION}"
               },
@@ -138,6 +60,7 @@
               "template": {
                 "metadata": {
                   "labels": {
+                    "app": "${APP_NAME}",
                     "name": "${APP_NAME}"
                   }
                 },
@@ -250,23 +173,105 @@
                     ],
                     "from": {
                       "kind": "ImageStreamTag",
-                      "name": "atomhopper:1.2.0"
-                    },
-                    "lastTriggeredImage": ""
+                      "name": "atomhopper:default"
+                    }
                   },
                   "type": "ImageChange"
                 }
               ]
             },
             "status": {}
+          },
+          {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+              "annotations": {
+                "prometheus.io/path": "/metrics",
+                "prometheus.io/scheme": "http",
+                "prometheus.io/scrape": "false"
+              },
+              "labels": {
+                "app": "${APP_NAME}",
+                "affiliation": "${AFFILIATION}"
+              },
+              "name": "${APP_NAME}"
+            },
+            "spec": {
+              "portalIP": "",
+              "ports": [
+                {
+                  "name": "http",
+                  "nodePort": 0,
+                  "port": 80,
+                  "protocol": "TCP",
+                  "targetPort": 8080
+                }
+              ],
+              "selector": {
+                "name": "${APP_NAME}"
+              },
+              "sessionAffinity": "None",
+              "type": "ClusterIP"
+            },
+            "status": {
+              "loadBalancer": {}
+            }
+          },
+          {
+            "apiVersion": "v1",
+            "kind": "Route",
+            "metadata": {
+              "name": "${APP_NAME}",
+              "labels": {
+                "app": "${APP_NAME}",
+                "affiliation": "${AFFILIATION}"
+              }
+            },
+            "spec": {
+              "to": {
+                "kind": "Service",
+                "name": "${APP_NAME}"
+              }
+            },
+            "status": {}
+          },
+          {
+            "apiVersion": "v1",
+            "kind": "ImageStream",
+            "metadata": {
+              "name": "atomhopper",
+              "labels": {
+                "app": "${APP_NAME}",
+                "affiliation": "${AFFILIATION}"
+              }
+            },
+            "spec": {
+              "dockerImageRepository": "docker-registry.aurora.sits.no:5000/aurora/atomhopper",
+              "tags": [
+                {
+                  "from": {
+                    "kind": "DockerImage",
+                    "name": "docker-registry.aurora.sits.no:5000/aurora/atomhopper:1"
+                  },
+                  "importPolicy": {
+                    "scheduled": true
+                  },
+                  "name": "default"
+                }
+              ]
+            },
+            "status": {
+              "dockerImageRepository": ""
+            }
           }
         ],
         "parameters": [
           {
             "name": "APP_NAME",
             "description": "Unique name for this app. Route will be APP_NAME.cluster_prefix_url",
-            "generate": "expression",
-            "from": "[a-z]{6}"
+            "value": "atomhopper",
+            "required": true
           },
           {
             "name": "FEED_NAME",
@@ -309,30 +314,36 @@
         }
       },
       "tvinn.json": {
-        "name": "tvinn",
+        "name": "atomhopper",
         "flags": [
           "route"
         ],
-        "type": "process",
+        "type": "localTemplate",
         "templateFile": "template/atomhopper.json",
         "parameters": {
           "SPLUNK_INDEX": "openshift-test",
-          "APP_NAME": "tvinn",
+          "APP_NAME": "atomhopper",
           "FEED_NAME": "tolldeklarasjon",
+          "HOST_NAME": "tvinn",
           "DOMAIN_NAME": "localhost",
           "SCHEME": "http",
           "DB_NAME": "tvinn",
-          "AFFILIATION": "safir"
+          "AFFILIATION": "paas"
         }
       },
       "about.json": {
-        "groups": "APP_PaaS_drift APP_PaaS_utv",
+        "schemaVersion": "v1",
+        "permissions": {
+          "admin": {
+            "groups": "APP_PaaS_drift APP_PaaS_utv"
+          }
+        },
         "affiliation": "paas"
       },
-      "boober/about.json": {
+      "espen-dev/about.json": {
         "cluster": "utv"
       },
-      "boober/tvinn.json": {}
+      "espen-dev/tvinn.json": {}
     }
   }
 }
