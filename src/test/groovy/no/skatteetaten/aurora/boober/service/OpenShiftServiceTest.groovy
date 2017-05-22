@@ -159,6 +159,8 @@ class OpenShiftServiceTest extends Specification {
           "metadata": {
             "name": "verify-ebs-users",
             "annotations": {
+              "sprocket.sits.no/service.webseal": "/test",
+              "sprocket.sits.no/service.webseal-roles": "admin dev",
               "prometheus.io/scrape": "false"
             },
             "labels": {

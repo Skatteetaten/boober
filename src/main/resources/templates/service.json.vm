@@ -5,8 +5,10 @@
     "name": "${adc.name}",
     "annotations": {
       #if(${adc.webseal})
-        "sprocket.sits.no/service.webseal": "${adc.webseal.route}",
-        "sprocket.sits.no/service.webseal-roles": "${adc.webseal.roles}",
+        "sprocket.sits.no/service.webseal": "${adc.webseal.path}",
+        #if(${adc.webseal.roles})
+          "sprocket.sits.no/service.webseal-roles": "${adc.webseal.roles}",
+        #end
       #end
       #if(${adc.prometheus})
         "prometheus.io/scheme": "http",

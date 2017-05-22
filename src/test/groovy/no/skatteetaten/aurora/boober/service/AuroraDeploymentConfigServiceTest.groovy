@@ -121,7 +121,7 @@ class AuroraDeploymentConfigServiceTest extends Specification {
       def fields = AuroraConfigFieldHandlerKt.extractFrom(mapperV1.extractors, auroraConfig.auroraConfigFiles)
 
     then:
-      fields.size() == 21
+      fields.size() == 23
   }
 
   def "Should create AuroraConfigFields with overrides"() {

@@ -11,5 +11,9 @@
     "memory": {
       "max": "128Mi"
     }
+  },
+  "webseal": {
+    "path": "/test",
+    "roles": "admin dev"
   }
 }
