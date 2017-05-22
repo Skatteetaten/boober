@@ -16,9 +16,9 @@ import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration,
-    OpenshiftTemplateApplier,
+    OpenShiftTemplateProcessor,
     Config])
-class OpenshiftTemplateApplierTest extends Specification {
+class OpenShiftTemplateProcessorTest extends Specification {
 
   public static final String APP_NAME = "verify-ebs-users"
 
@@ -37,7 +37,7 @@ class OpenshiftTemplateApplierTest extends Specification {
   OpenShiftResourceClient client
 
   @Autowired
-  OpenshiftTemplateApplier service
+  OpenShiftTemplateProcessor service
 
   @Autowired
   ObjectMapper mapper

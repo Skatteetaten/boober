@@ -1,10 +1,10 @@
-package no.skatteetaten.aurora.boober.service.mapper.v1
+package no.skatteetaten.aurora.boober.mapper.v1
 
 import com.fasterxml.jackson.databind.JsonNode
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
+import no.skatteetaten.aurora.boober.mapper.findExtractors
 import no.skatteetaten.aurora.boober.model.*
-import no.skatteetaten.aurora.boober.service.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.service.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.service.mapper.findExtractors
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.length
 import no.skatteetaten.aurora.boober.utils.notBlank
@@ -34,7 +34,8 @@ class AuroraConfigMapperV1Deploy(aid: ApplicationId,
             AuroraConfigFieldHandler("splunkIndex"),
             AuroraConfigFieldHandler("prometheus/path"),
             AuroraConfigFieldHandler("prometheus/port"),
-            AuroraConfigFieldHandler("managementPath")
+            AuroraConfigFieldHandler("managementPath"),
+            AuroraConfigFieldHandler("certificateCn")
     )
 
     override val fieldHandlers = v1Handlers + handlers
@@ -42,13 +43,13 @@ class AuroraConfigMapperV1Deploy(aid: ApplicationId,
     override val auroraConfigFields = AuroraConfigFields.create(fieldHandlers, allFiles)
 
 
-    override fun createAuroraDc(): AuroraObjectsConfig {
+    override fun toAuroraDeploymentConfig(): AuroraDeploymentConfig {
 
         val groupId = auroraConfigFields.extract("groupId")
         val name = auroraConfigFields.extract("name")
 
 
-        return AuroraDeploymentConfig(
+        return AuroraDeploymentConfigDeploy(
                 schemaVersion = auroraConfigFields.extract("schemaVersion"),
 
                 affiliation = auroraConfigFields.extract("affiliation"),
@@ -110,7 +111,6 @@ class AuroraConfigMapperV1Deploy(aid: ApplicationId,
                 fields = auroraConfigFields.fields
         )
     }
-
 
 
 }

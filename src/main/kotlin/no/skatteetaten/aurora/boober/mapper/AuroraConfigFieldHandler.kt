@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.service.mapper
+package no.skatteetaten.aurora.boober.mapper
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile

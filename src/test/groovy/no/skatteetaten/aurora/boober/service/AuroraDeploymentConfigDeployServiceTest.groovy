@@ -14,10 +14,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigDeploy
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
@@ -28,13 +29,13 @@ import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
-    AuroraConfigService,
+    AuroraConfigFacade,
     EncryptionService,
-    AuroraDeploymentConfigService,
+    AuroraConfigValidationService,
     OpenShiftResourceClient,
     Config
 ])
-class AuroraDeploymentConfigServiceTest extends Specification {
+class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
@@ -72,7 +73,7 @@ class AuroraDeploymentConfigServiceTest extends Specification {
   ObjectMapper mapper
 
   @Autowired
-  AuroraDeploymentConfigService auroraDeploymentConfigService
+  AuroraConfigValidationService auroraDeploymentConfigService
 
   def setup() {
     userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
@@ -147,8 +148,8 @@ class AuroraDeploymentConfigServiceTest extends Specification {
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      AuroraDeploymentConfig auroraDc = auroraDeploymentConfigService.
-          createAuroraDc(aid, auroraConfig) as AuroraDeploymentConfig
+      AuroraDeploymentConfigDeploy auroraDc = auroraDeploymentConfigService.
+          createAuroraDc(aid, auroraConfig) as AuroraDeploymentConfigDeploy
 
     then:
       with(auroraDc) {
@@ -170,7 +171,7 @@ class AuroraDeploymentConfigServiceTest extends Specification {
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      AuroraDeploymentConfig auroraDc = auroraDeploymentConfigService.
+      AuroraDeploymentConfigDeploy auroraDc = auroraDeploymentConfigService.
           createAuroraDc(aid, auroraConfig, overrides)
 
     then:

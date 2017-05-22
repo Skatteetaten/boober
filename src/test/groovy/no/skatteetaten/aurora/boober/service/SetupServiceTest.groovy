@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.facade.SetupFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -20,10 +21,10 @@ import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration,
-    SetupService,
-    AuroraDeploymentConfigService,
+    SetupFacade,
+    AuroraConfigValidationService,
     OpenShiftObjectGenerator,
-    OpenshiftTemplateApplier,
+    OpenShiftTemplateProcessor,
     Config])
 class SetupServiceTest extends Specification {
 
@@ -58,7 +59,7 @@ class SetupServiceTest extends Specification {
   UserDetailsProvider userDetailsProvider
 
   @Autowired
-  SetupService setupService
+  SetupFacade setupService
 
   @Autowired
   ObjectMapper mapper
@@ -90,7 +91,7 @@ class SetupServiceTest extends Specification {
 
     then:
       result.size() == 1
-      result.get(0).auroraDc.type == TemplateType.process
+      result.get(0).auroraDc.type == TemplateType.localTemplate
   }
 
   def "Should setup development for application"() {

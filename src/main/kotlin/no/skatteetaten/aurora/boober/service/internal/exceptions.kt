@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.service.internal
 
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
 import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.service.mapper.AuroraConfigField
 
 data class Error(
         val applicationId: ApplicationId,
@@ -28,4 +28,4 @@ class AuroraConfigException(
         val errors: List<Error> = listOf()
 ) : ServiceException(message)
 
-data class ValidatonError(val message: String, val cause: Throwable, val field: AuroraConfigField? = null)
+data class ValidatonError(val message: String, val field: AuroraConfigField? = null)

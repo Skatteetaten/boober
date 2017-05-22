@@ -1,16 +1,16 @@
-package no.skatteetaten.aurora.boober.service.mapper
+package no.skatteetaten.aurora.boober.mapper
 
+import no.skatteetaten.aurora.boober.mapper.v1.AuroraConfigMapperV1Deploy
+import no.skatteetaten.aurora.boober.mapper.v1.AuroraConfigMapperV1LocalTemplate
+import no.skatteetaten.aurora.boober.mapper.v1.AuroraConfigMapperV1Template
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.internal.ValidatonError
-import no.skatteetaten.aurora.boober.service.mapper.v1.AuroraConfigMapperV1Deploy
-import no.skatteetaten.aurora.boober.service.mapper.v1.AuroraConfigMapperV1LocalTemplate
-import no.skatteetaten.aurora.boober.service.mapper.v1.AuroraConfigMapperV1Template
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.required
 
 /*
- This class maps a verisioned AuroraConfig into a AuroraDeploymentConfig
+ This class maps a verisioned AuroraConfig into a AuroraDeploymentConfigDeploy
  */
 abstract class AuroraConfigMapper(val aid: ApplicationId,
                                   val auroraConfig: AuroraConfig,
@@ -20,15 +20,14 @@ abstract class AuroraConfigMapper(val aid: ApplicationId,
     abstract val auroraConfigFields: AuroraConfigFields
     abstract val fieldHandlers: List<AuroraConfigFieldHandler>
 
-
-    abstract fun createAuroraDc(): AuroraObjectsConfig
+    abstract fun toAuroraDeploymentConfig(): AuroraDeploymentConfig
 
     fun validate() {
         val errors = fieldHandlers.mapNotNull { e ->
             val auroraConfigField = auroraConfigFields.fields[e.name]
 
             e.validator(auroraConfigField?.value)?.let {
-                ValidatonError(it.localizedMessage, it, auroraConfigField)
+                ValidatonError(it.localizedMessage, auroraConfigField)
             }
         }
 
@@ -70,7 +69,7 @@ abstract class AuroraConfigMapper(val aid: ApplicationId,
                 throw IllegalArgumentException("Only v1 of schema is supported")
             }
 
-            if (type == TemplateType.process) {
+            if (type == TemplateType.localTemplate) {
                 return AuroraConfigMapperV1LocalTemplate(aid, auroraConfig, files, openShiftClient)
             }
 

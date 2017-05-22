@@ -3,25 +3,25 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
-import no.skatteetaten.aurora.boober.model.AuroraLocalTemplateConfig
-import no.skatteetaten.aurora.boober.model.AuroraObjectsConfig
-import no.skatteetaten.aurora.boober.model.AuroraProcessConfig
-import no.skatteetaten.aurora.boober.model.AuroraTemplateConfig
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigProcess
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigProcessLocalTemplate
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigProcessTemplate
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import org.springframework.stereotype.Service
 
 @Service
-class OpenshiftTemplateApplier(
+class OpenShiftTemplateProcessor(
         val openShiftClient: OpenShiftResourceClient,
         val mapper: ObjectMapper) {
 
 
-    fun generateObjects(apc: AuroraProcessConfig): List<JsonNode> {
+    fun generateObjects(apc: AuroraDeploymentConfigProcess): List<JsonNode> {
 
 
-        val template = if (apc is AuroraTemplateConfig) {
+        val template = if (apc is AuroraDeploymentConfigProcessTemplate) {
             openShiftClient.get("template", "openshift", apc.template)?.body as ObjectNode
-        } else if (apc is AuroraLocalTemplateConfig) {
+        } else if (apc is AuroraDeploymentConfigProcessLocalTemplate) {
             apc.templateJson as ObjectNode
         } else {
             throw IllegalArgumentException("Template or templateFile should be specified")
@@ -40,16 +40,13 @@ class OpenshiftTemplateApplier(
                     node.put("value", adcParameters[it["name"].textValue()] as String)
                 }
 
-
-
         if (!template.has("labels")) {
             template.replace("labels", mapper.createObjectNode())
         }
 
-
         val labels = template["labels"] as ObjectNode
 
-        val base = apc as AuroraObjectsConfig
+        val base = apc as AuroraDeploymentConfig
         if (!labels.has("affiliation")) {
             labels.put("affiliation", base.affiliation)
         }

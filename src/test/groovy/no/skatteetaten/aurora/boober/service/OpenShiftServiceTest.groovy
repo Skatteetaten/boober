@@ -15,7 +15,7 @@ import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigDeploy
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import spock.lang.Specification
@@ -24,7 +24,8 @@ import spock.mock.DetachedMockFactory
 @SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration,
     OpenShiftResourceClient,
     EncryptionService,
-    AuroraDeploymentConfigService,
+    AuroraConfigValidationService,
+    OpenShiftTemplateProcessor,
     GitService, OpenShiftObjectGenerator, Config])
 class OpenShiftServiceTest extends Specification {
 
@@ -59,7 +60,7 @@ class OpenShiftServiceTest extends Specification {
   UserDetailsProvider userDetailsProvider
 
   @Autowired
-  AuroraDeploymentConfigService auroraDeploymentConfigService
+  AuroraConfigValidationService auroraDeploymentConfigService
 
   @Autowired
   OpenShiftClient openShiftClient
@@ -77,7 +78,7 @@ class OpenShiftServiceTest extends Specification {
 
     when:
       def auroraConfig = new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])
-      AuroraDeploymentConfig auroraDc = auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig)
+      AuroraDeploymentConfigDeploy auroraDc = auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig)
       List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc)
 
       def service = generatedObjects.find { it.get("kind").asText() == "Service" }

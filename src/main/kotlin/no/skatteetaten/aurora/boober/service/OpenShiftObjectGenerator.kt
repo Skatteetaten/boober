@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
-import no.skatteetaten.aurora.boober.model.AuroraObjectsConfig
-import no.skatteetaten.aurora.boober.model.AuroraProcessConfig
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigDeploy
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigProcess
 import no.skatteetaten.aurora.boober.model.TemplateType
 import org.apache.velocity.VelocityContext
 import org.apache.velocity.app.VelocityEngine
@@ -18,31 +18,31 @@ import java.io.StringWriter
 class OpenShiftObjectGenerator(
         val userDetailsProvider: UserDetailsProvider,
         val ve: VelocityEngine,
-        val mapper: ObjectMapper
-) {
+        val mapper: ObjectMapper,
+        val openShiftTemplateProcessor: OpenShiftTemplateProcessor) {
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftObjectGenerator::class.java)
 
-    fun generateBuildRequest(auroraDc: AuroraDeploymentConfig): JsonNode {
+    fun generateBuildRequest(auroraDc: AuroraDeploymentConfigDeploy): JsonNode {
         logger.debug("Generating build request for name ${auroraDc.name}")
         return mergeVelocityTemplate("buildrequest.json", mapOf("adc" to auroraDc))
 
     }
 
-    fun generateDeploymentRequest(auroraDc: AuroraObjectsConfig): JsonNode {
+    fun generateDeploymentRequest(auroraDc: AuroraDeploymentConfig): JsonNode {
         logger.debug("Generating deploy request for name ${auroraDc.name}")
         return mergeVelocityTemplate("deploymentrequest.json", mapOf("adc" to auroraDc))
 
     }
 
-    fun generateObjects(auroraDc: AuroraObjectsConfig): List<JsonNode> {
+    fun generateObjects(auroraDc: AuroraDeploymentConfig): List<JsonNode> {
 
         val configs: Map<String, String> = auroraDc.config?.map { (key, value) ->
             key to value.map { "${it.key}=${it.value}" }.joinToString(separator = "\\n")
         }?.toMap() ?: mapOf()
 
         val params = mapOf(
-                "adc" to (auroraDc as? AuroraDeploymentConfig ?: auroraDc as AuroraProcessConfig),
+                "adc" to (auroraDc as? AuroraDeploymentConfigDeploy ?: auroraDc as AuroraDeploymentConfigProcess),
                 "configs" to configs,
                 "username" to userDetailsProvider.getAuthenticatedUser().username,
                 "dockerRegistry" to "docker-registry.aurora.sits.no:5000",
@@ -55,7 +55,7 @@ class OpenShiftObjectGenerator(
                 "rolebinding.json"
         )
 
-        if (auroraDc.type != TemplateType.process) {
+        if (auroraDc.type != TemplateType.localTemplate) {
             templatesToProcess.add("deployment-config.json")
             templatesToProcess.add("service.json")
         }
@@ -68,24 +68,26 @@ class OpenShiftObjectGenerator(
             templatesToProcess.add("secret.json")
         }
 
-        if (auroraDc is AuroraDeploymentConfig && auroraDc.flags.route) {
+        if (auroraDc.flags.route) {
             templatesToProcess.add("route.json")
         }
-
-        if (auroraDc is AuroraProcessConfig && auroraDc.flags.route) {
-            templatesToProcess.add("route.json")
-        }
-
 
         if (auroraDc.type == TemplateType.development) {
             templatesToProcess.add("build-config.json")
         }
 
-        if (auroraDc.type != TemplateType.process) {
+        if (auroraDc.type != TemplateType.localTemplate) {
             templatesToProcess.add("imagestream.json")
         }
 
-        return templatesToProcess.map { mergeVelocityTemplate(it, params) }
+        var openShiftObjects = templatesToProcess.map { mergeVelocityTemplate(it, params) }
+
+        if (auroraDc is AuroraDeploymentConfigProcess) {
+            val generateObjects = openShiftTemplateProcessor.generateObjects(auroraDc)
+            openShiftObjects += generateObjects
+        }
+
+        return openShiftObjects
     }
 
 

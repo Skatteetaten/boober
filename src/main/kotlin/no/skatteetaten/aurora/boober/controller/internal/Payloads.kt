@@ -24,12 +24,11 @@ fun fromAuroraConfig(auroraConfig: AuroraConfig): AuroraConfigPayload {
 data class SetupParamsPayload(
         val envs: List<String> = listOf(),
         val apps: List<String> = listOf(),
-        val overrides: JsonDataFiles = mapOf(),
-        val dryRun: Boolean = false
+        val overrides: JsonDataFiles = mapOf()
 ) {
     fun toSetupParams(): SetupParams {
 
-        return SetupParams(envs, apps, overrides.map { AuroraConfigFile(it.key, it.value, true) }, dryRun)
+        return SetupParams(envs, apps, overrides.map { AuroraConfigFile(it.key, it.value, true) })
     }
 }
 
@@ -41,8 +40,7 @@ data class SetupCommand(val affiliation: String,
 data class SetupParams(
         val envs: List<String> = listOf(),
         val apps: List<String> = listOf(),
-        val overrides: List<AuroraConfigFile> = listOf(),
-        val dryRun: Boolean = false
+        val overrides: List<AuroraConfigFile> = listOf()
 ) {
     val applicationIds: List<ApplicationId>
         get() = envs.flatMap { env -> apps.map { app -> ApplicationId(env, app) } }

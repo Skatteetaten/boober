@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration
 
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -16,7 +17,7 @@ import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
-    AuroraConfigService,
+    AuroraConfigFacade,
     GitService,
     OpenShiftClient,
     EncryptionService,
@@ -39,8 +40,8 @@ class AuroraConfigServiceTest extends Specification {
     private DetachedMockFactory factory = new DetachedMockFactory()
 
     @Bean
-    AuroraDeploymentConfigService auroraDeploymentConfigService() {
-      factory.Mock(AuroraDeploymentConfigService)
+    AuroraConfigValidationService auroraDeploymentConfigService() {
+      factory.Mock(AuroraConfigValidationService)
     }
 
     @Bean
@@ -50,7 +51,7 @@ class AuroraConfigServiceTest extends Specification {
   }
 
   @Autowired
-  AuroraConfigService service
+  AuroraConfigFacade service
 
   @Autowired
   UserDetailsProvider userDetailsProvider

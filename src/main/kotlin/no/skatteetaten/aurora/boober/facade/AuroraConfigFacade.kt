@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.service
+package no.skatteetaten.aurora.boober.facade
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -6,20 +6,23 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.fge.jsonpatch.JsonPatch
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.service.AuroraConfigValidationService
+import no.skatteetaten.aurora.boober.service.EncryptionService
+import no.skatteetaten.aurora.boober.service.GitService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
 import kotlin.system.measureTimeMillis
 
 @Service
-class AuroraConfigService(
+class AuroraConfigFacade(
         val gitService: GitService,
-        val auroraDeploymentConfigService: AuroraDeploymentConfigService,
         val mapper: ObjectMapper,
-        val encryptionService: EncryptionService) {
+        val encryptionService: EncryptionService,
+        val auroraConfigValidationService: AuroraConfigValidationService) {
 
     private val GIT_SECRET_FOLDER = ".secret"
-    private val logger = LoggerFactory.getLogger(AuroraConfigService::class.java)
+    private val logger = LoggerFactory.getLogger(AuroraConfigFacade::class.java)
 
     fun findAuroraConfig(affiliation: String): AuroraConfig {
 
@@ -62,7 +65,7 @@ class AuroraConfigService(
         val auroraConfig = createAuroraConfigFromFiles(filesForAffiliation)
 
         val newAuroraConfig = function(auroraConfig)
-        auroraDeploymentConfigService.validate(newAuroraConfig)
+        auroraConfigValidationService.validate(newAuroraConfig)
 
         if (commitChanges) {
             measureTimeMillis {
