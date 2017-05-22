@@ -17,7 +17,6 @@
           "name": "atomhopper",
           "creationTimestamp": null,
           "labels": {
-            "app": "${APP_NAME}",
             "aurora-objects-version": "3.1.6"
           },
           "annotations": {
@@ -35,7 +34,6 @@
                 "sprocket.sits.no/deployment-config.database": "${DATABASE}"
               },
               "labels": {
-                "app": "${APP_NAME}",
                 "name": "${APP_NAME}",
                 "affiliation": "${AFFILIATION}"
               },
@@ -60,7 +58,6 @@
               "template": {
                 "metadata": {
                   "labels": {
-                    "app": "${APP_NAME}",
                     "name": "${APP_NAME}"
                   }
                 },
@@ -192,7 +189,6 @@
                 "prometheus.io/scrape": "false"
               },
               "labels": {
-                "app": "${APP_NAME}",
                 "affiliation": "${AFFILIATION}"
               },
               "name": "${APP_NAME}"
@@ -224,7 +220,6 @@
             "metadata": {
               "name": "${APP_NAME}",
               "labels": {
-                "app": "${APP_NAME}",
                 "affiliation": "${AFFILIATION}"
               }
             },
@@ -242,7 +237,6 @@
             "metadata": {
               "name": "atomhopper",
               "labels": {
-                "app": "${APP_NAME}",
                 "affiliation": "${AFFILIATION}"
               }
             },

@@ -51,6 +51,10 @@ class OpenShiftTemplateProcessor(
             labels.put("affiliation", base.affiliation)
         }
 
+        if (!labels.has("app")) {
+            labels.put("app", base.name)
+        }
+
         val result = openShiftClient.post("processedtemplate", namespace = base.namespace, payload = template)
 
         return result.body["objects"].asSequence().toList()
