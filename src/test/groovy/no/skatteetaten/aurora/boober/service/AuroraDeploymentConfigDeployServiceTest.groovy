@@ -89,8 +89,9 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       def overrides = [new AuroraConfigFile("${aid.environmentName}/${aid.applicationName}.json", overrideFile, true)]
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
+      auroraConfig.addOverrides(overrides)
     when:
-      auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig, overrides)
+      auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig)
 
     then:
       thrown(ApplicationConfigException)
@@ -115,9 +116,10 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       def overrideFile = mapper.convertValue(["type": "deploy", "cluster": "utv"], JsonNode.class)
       def overrides = [new AuroraConfigFile("booberdev/about.json", overrideFile, true)]
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
+      auroraConfig.addOverrides(overrides)
 
     when:
-      def auroraDc = auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig, overrides)
+      def auroraDc = auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig)
 
       def fields = auroraDc.fields
     then:
@@ -133,10 +135,10 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       Map<String, JsonNode> files = getQaEbsUsersSampleFiles()
       files.remove("${APP_NAME}.json" as String)
       def auroraConfig =
-          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])
+          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:], [])
 
     when:
-      auroraConfig.getFilesForApplication(aid, [])
+      auroraConfig.getFilesForApplication(aid)
 
     then:
       thrown(IllegalArgumentException)
@@ -169,10 +171,10 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       def overrideFile = mapper.convertValue(["name": "awesome-app"], JsonNode.class)
       def overrides = [new AuroraConfigFile("booberdev/about.json", overrideFile, true)]
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
+      auroraConfig.addOverrides(overrides)
 
     when:
-      AuroraDeploymentConfigDeploy auroraDc = auroraDeploymentConfigService.
-          createAuroraDc(aid, auroraConfig, overrides)
+      AuroraDeploymentConfigDeploy auroraDc = auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig)
 
     then:
       auroraDc.name == "awesome-app"
@@ -185,10 +187,10 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       (files.get("verify-ebs-users.json") as ObjectNode).remove("version")
       (files.get("booberdev/verify-ebs-users.json") as ObjectNode).remove("version")
       AuroraConfig auroraConfig =
-          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])
+          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:], [])
 
     when:
-      auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig, [])
+      auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig)
 
     then:
       def ex = thrown(ApplicationConfigException)

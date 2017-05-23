@@ -2,19 +2,23 @@ package no.skatteetaten.aurora.boober.mapper.v1
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigMapper
-import no.skatteetaten.aurora.boober.mapper.findConfig
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.pattern
 
-abstract class AuroraConfigMapperV1(aid: ApplicationId, auroraConfig: AuroraConfig, allFiles: List<AuroraConfigFile>, openShiftClient: OpenShiftClient) :
-        AuroraConfigMapper(aid, auroraConfig, allFiles, openShiftClient) {
+abstract class AuroraConfigMapperV1(
+        aid: ApplicationId,
+        auroraConfig: AuroraConfig,
+        openShiftClient: OpenShiftClient
+) : AuroraConfigMapper(aid, auroraConfig, openShiftClient) {
 
-    val v1Handlers = baseHandlers + listOf(
+    val configHandlers = auroraConfig.findConfigFieldHandlers(aid)
+    val parameterHandlers = auroraConfig.findParametersFieldHandlers(aid)
+
+    val v1Handlers = baseHandlers + configHandlers + parameterHandlers + listOf(
             AuroraConfigFieldHandler("affiliation", validator = { it.pattern("^[a-z]{0,23}[a-z]$", "Affiliation is must be alphanumeric and under 24 characters") }),
             AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
             AuroraConfigFieldHandler("name", validator = { it.pattern("^[a-z][-a-z0-9]{0,23}[a-z0-9]$", "Name must be alphanumeric and under 24 characters") }),
@@ -54,5 +58,6 @@ abstract class AuroraConfigMapperV1(aid: ApplicationId, auroraConfig: AuroraConf
                 } else {
                     null
                 }
-            })) + allFiles.findConfig()
+            })
+    )
 }

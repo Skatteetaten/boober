@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.facade
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.fge.jsonpatch.JsonPatch
 import no.skatteetaten.aurora.boober.model.AuroraConfig
@@ -70,7 +71,7 @@ class AuroraConfigFacade(
         if (commitChanges) {
             measureTimeMillis {
                 val encryptedSecretsFiles = encryptSecrets(auroraConfig, newAuroraConfig, filesForAffiliation)
-                val configFiles = newAuroraConfig.convertFilesToString(mapper)
+                val configFiles = convertFilesToString(newAuroraConfig.auroraConfigFiles)
                 gitService.saveFilesAndClose(repo, configFiles + encryptedSecretsFiles)
             }.let { logger.debug("Spent {} millis committing and pushing to git", it) }
         } else {
@@ -84,8 +85,8 @@ class AuroraConfigFacade(
 
     private fun encryptSecrets(oldAuroraConfig: AuroraConfig, newAuroraConfig: AuroraConfig, filesFromGit: Map<String, File>): Map<String, String> {
 
-        val oldSecrets = oldAuroraConfig.convertSecretFilesToString(GIT_SECRET_FOLDER)
-        val newSecrets = newAuroraConfig.convertSecretFilesToString(GIT_SECRET_FOLDER)
+        val oldSecrets = convertSecretFilesToString(oldAuroraConfig)
+        val newSecrets = convertSecretFilesToString(newAuroraConfig)
 
         val encryptedChangedSecrets = newSecrets
                 .filter { oldSecrets.containsKey(it.key) }
@@ -104,6 +105,36 @@ class AuroraConfigFacade(
                 .map { it.key to it.value.readText() }.toMap()
 
         return encryptedSecrets + encryptedOldSecrets
+    }
+
+    private fun convertFilesToString(auroraConfigFiles: List<AuroraConfigFile>): Map<String, String> {
+
+        return auroraConfigFiles.map {
+            it.name to mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it.contents)
+        }.toMap()
+    }
+
+    private fun convertSecretFilesToString(auroraConfig: AuroraConfig): Map<String, String> {
+
+        return auroraConfig.secrets.map {
+            val applicationSecretPath = it.key.split("/")
+                    .takeIf { it.size >= 2 }
+                    ?.let { it.subList(it.size - 2, it.size) }
+                    ?.joinToString("/") ?: it.key
+
+            val secretFolder = applicationSecretPath.split("/")[0]
+            val gitSecretFolder = "$GIT_SECRET_FOLDER/$applicationSecretPath".replace("//", "/")
+
+            auroraConfig.auroraConfigFiles
+                    .filter { it.contents.has("secretFolder") }
+                    .filter { it.contents.get("secretFolder").asText().contains(secretFolder) }
+                    .forEach {
+                        val folder = applicationSecretPath.split("/")[0]
+                        (it.contents as ObjectNode).put("secretFolder", "$GIT_SECRET_FOLDER/$folder")
+                    }
+
+            gitSecretFolder to it.value
+        }.toMap()
     }
 
     private fun createAuroraConfigFromFiles(filesForAffiliation: Map<String, File>, decryptSecrets: Boolean = true): AuroraConfig {
