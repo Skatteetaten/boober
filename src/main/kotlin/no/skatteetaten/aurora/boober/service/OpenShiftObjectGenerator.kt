@@ -23,15 +23,15 @@ class OpenShiftObjectGenerator(
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftObjectGenerator::class.java)
 
-    fun generateBuildRequest(auroraDc: AuroraDeploymentConfigDeploy): JsonNode {
-        logger.debug("Generating build request for name ${auroraDc.name}")
-        return mergeVelocityTemplate("buildrequest.json", mapOf("adc" to auroraDc))
+    fun generateBuildRequest(name: String): JsonNode {
+        logger.debug("Generating build request for name $name")
+        return mergeVelocityTemplate("buildrequest.json", mapOf("name" to name))
 
     }
 
-    fun generateDeploymentRequest(auroraDc: AuroraDeploymentConfig): JsonNode {
-        logger.debug("Generating deploy request for name ${auroraDc.name}")
-        return mergeVelocityTemplate("deploymentrequest.json", mapOf("adc" to auroraDc))
+    fun generateDeploymentRequest(name: String): JsonNode {
+        logger.debug("Generating deploy request for name $name")
+        return mergeVelocityTemplate("deploymentrequest.json", mapOf("name" to name))
 
     }
 
