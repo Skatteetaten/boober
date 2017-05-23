@@ -16,7 +16,7 @@ class AuroraConfigController(val auroraConfigFacade: AuroraConfigFacade) {
     @PutMapping("/{affiliation}/auroraconfig")
     fun save(@PathVariable affiliation: String, @RequestBody payload: AuroraConfigPayload): Response {
 
-        val auroraConfig = auroraConfigFacade.saveAuroraConfig(affiliation, payload.toAuroraConfig(mutableListOf()))
+        val auroraConfig = auroraConfigFacade.saveAuroraConfig(affiliation, payload.toAuroraConfig())
         return Response(items = listOf(auroraConfig).map(::fromAuroraConfig))
     }
 

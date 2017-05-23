@@ -11,9 +11,9 @@ data class AuroraConfigPayload(
         val files: JsonDataFiles = mapOf(),
         val secrets: Map<String, String> = mapOf()
 ) {
-    fun toAuroraConfig(overrides: MutableList<AuroraConfigFile>): AuroraConfig {
+    fun toAuroraConfig(): AuroraConfig {
         val auroraConfigFiles = files.map { AuroraConfigFile(it.key, it.value) }
-        return AuroraConfig(auroraConfigFiles, secrets, overrides)
+        return AuroraConfig(auroraConfigFiles, secrets)
     }
 }
 

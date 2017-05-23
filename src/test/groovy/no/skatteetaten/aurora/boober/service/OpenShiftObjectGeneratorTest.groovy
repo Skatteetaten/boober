@@ -77,7 +77,7 @@ class OpenShiftObjectGeneratorTest extends Specification {
       Map<String, JsonNode> files = getQaEbsUsersSampleFiles()
 
     when:
-      def auroraConfig = new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:], [])
+      def auroraConfig = new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])
       AuroraDeploymentConfigDeploy auroraDc = auroraDeploymentConfigService.
           createAuroraDc(aid, auroraConfig) as AuroraDeploymentConfigDeploy
       List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc)

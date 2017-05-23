@@ -1,13 +1,10 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 
-data class AuroraConfig(
-        val auroraConfigFiles: List<AuroraConfigFile>,
-        val secrets: Map<String, String> = mapOf(),
-        val overrides: MutableList<AuroraConfigFile> = mutableListOf()
-) {
+data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val secrets: Map<String, String> = mapOf()) {
+
+    val overrides: MutableList<AuroraConfigFile> = mutableListOf()
 
     fun addOverrides(overrides: List<AuroraConfigFile>) {
         this.overrides.addAll(overrides)
@@ -63,49 +60,5 @@ data class AuroraConfig(
         }
 
         return this.copy(auroraConfigFiles = files)
-    }
-
-    fun findConfigFieldHandlers(aid: ApplicationId): List<AuroraConfigFieldHandler> {
-
-        val name = "config"
-        val configFiles = findSubKeys(aid, name)
-
-        val configKeys: Map<String, Set<String>> = configFiles.map { configFileName ->
-            //find all unique keys in a configFile
-            val keys = getFilesForApplication(aid).flatMap { ac ->
-                ac.contents.at("/$name/$configFileName")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
-            }.toSet()
-
-            configFileName to keys
-        }.toMap()
-
-        val result = configKeys.flatMap { configFile ->
-            configFile.value.map { field ->
-                AuroraConfigFieldHandler("$name/${configFile.key}/$field")
-            }
-        }
-
-        return result
-    }
-
-    fun findParametersFieldHandlers(aid: ApplicationId): List<AuroraConfigFieldHandler> {
-
-        val parameterKeys = findSubKeys(aid, "parameters")
-
-        val result = parameterKeys.map { parameter ->
-            AuroraConfigFieldHandler("parameters/$parameter")
-        }
-
-        return result
-    }
-
-    private fun findSubKeys(aid: ApplicationId, name: String): Set<String> {
-        return getFilesForApplication(aid).flatMap {
-            if (it.contents.has(name)) {
-                it.contents[name].fieldNames().asSequence().toList()
-            } else {
-                emptyList()
-            }
-        }.toSet()
     }
 }

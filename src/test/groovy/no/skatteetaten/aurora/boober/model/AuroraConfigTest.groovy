@@ -57,7 +57,7 @@ class AuroraConfigTest extends Specification {
 
   def "Should fetch secrets with trailing slash"() {
     given:
-      def auroraConfig = new AuroraConfig([], ["/tmp/foo/bar/secret1.properties": "Secret stuff"], [])
+      def auroraConfig = new AuroraConfig([], ["/tmp/foo/bar/secret1.properties": "Secret stuff"])
 
     when:
       def secretsForFolder = auroraConfig.getSecrets("/tmp/foo/bar/")
@@ -117,7 +117,7 @@ class AuroraConfigTest extends Specification {
   def "Fails when some files for application are missing"() {
     given:
       def files = createMockFiles("about.json", "referanse.json", "utv/about.json")
-      def auroraConfig = new AuroraConfig(files, [:], [])
+      def auroraConfig = new AuroraConfig(files, [:])
 
     when:
       auroraConfig.getFilesForApplication(new ApplicationId("utv", "referanse"))

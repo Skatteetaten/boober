@@ -1,9 +1,11 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
+import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigMapper
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.notBlank
@@ -13,10 +15,11 @@ abstract class AuroraConfigMapperV1(
         aid: ApplicationId,
         auroraConfig: AuroraConfig,
         openShiftClient: OpenShiftClient
-) : AuroraConfigMapper(aid, auroraConfig, openShiftClient) {
+) : AuroraConfigMapper(aid, auroraConfig) {
 
-    val configHandlers = auroraConfig.findConfigFieldHandlers(aid)
-    val parameterHandlers = auroraConfig.findParametersFieldHandlers(aid)
+    val applicationFiles = auroraConfig.getFilesForApplication(aid)
+    val configHandlers = findConfigFieldHandlers(applicationFiles)
+    val parameterHandlers = findParametersFieldHandlers(applicationFiles)
 
     val v1Handlers = baseHandlers + configHandlers + parameterHandlers + listOf(
             AuroraConfigFieldHandler("affiliation", validator = { it.pattern("^[a-z]{0,23}[a-z]$", "Affiliation is must be alphanumeric and under 24 characters") }),
@@ -24,40 +27,90 @@ abstract class AuroraConfigMapperV1(
             AuroraConfigFieldHandler("name", validator = { it.pattern("^[a-z][-a-z0-9]{0,23}[a-z0-9]$", "Name must be alphanumeric and under 24 characters") }),
             AuroraConfigFieldHandler("envName"),
             AuroraConfigFieldHandler("flags/route", defaultValue = "false"),
-            AuroraConfigFieldHandler("permissions/admin/groups", validator = { json ->
-                if (json == null || json.textValue().isBlank()) {
-                    IllegalArgumentException("Groups must be set")
-                } else {
-                    val groups = json.textValue().split(" ").toSet()
-                    groups.filter { !openShiftClient.isValidGroup(it) }
-                            .takeIf { it.isNotEmpty() }
-                            ?.let { AuroraConfigException("The following groups are not valid=${it.joinToString()}") }
-                }
-            }),
-            AuroraConfigFieldHandler("permissions/admin/users", validator = { json ->
-
-                val users = json?.textValue()?.split(" ")?.toSet()
-                users?.filter { !openShiftClient.isValidUser(it) }
-                        .takeIf { it != null && it.isNotEmpty() }
-                        ?.let { AuroraConfigException("The following users are not valid=${it.joinToString()}") }
-
-
-            }),
+            AuroraConfigFieldHandler("permissions/admin/groups", validator = validateGroups(openShiftClient)),
+            AuroraConfigFieldHandler("permissions/admin/users", validator = validateUsers(openShiftClient)),
             AuroraConfigFieldHandler("database"),
             AuroraConfigFieldHandler("webseal/path"),
             AuroraConfigFieldHandler("webseal/roles"),
-            AuroraConfigFieldHandler("secretFolder", validator = { json ->
-
-                val secretFolder = json?.textValue()
-                val secrets = secretFolder?.let {
-                    auroraConfig.getSecrets(it)
-                }
-
-                if (secrets != null && secrets.isEmpty()) {
-                    IllegalArgumentException("No secrets in folder=$secretFolder")
-                } else {
-                    null
-                }
-            })
+            AuroraConfigFieldHandler("secretFolder", validator = validateSecrets(auroraConfig))
     )
+
+    fun findConfigFieldHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
+
+        val name = "config"
+        val configFiles = findSubKeys(applicationFiles, name)
+
+        val configKeys: Map<String, Set<String>> = configFiles.map { configFileName ->
+            //find all unique keys in a configFile
+            val keys = applicationFiles.flatMap { ac ->
+                ac.contents.at("/$name/$configFileName")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
+            }.toSet()
+
+            configFileName to keys
+        }.toMap()
+
+        return configKeys.flatMap { configFile ->
+            configFile.value.map { field ->
+                AuroraConfigFieldHandler("$name/${configFile.key}/$field")
+            }
+        }
+    }
+
+    fun findParametersFieldHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
+
+        val parameterKeys = findSubKeys(applicationFiles, "parameters")
+
+        return parameterKeys.map { parameter ->
+            AuroraConfigFieldHandler("parameters/$parameter")
+        }
+    }
+
+    private fun findSubKeys(applicationFiles: List<AuroraConfigFile>, name: String): Set<String> {
+
+        return applicationFiles.flatMap {
+            if (it.contents.has(name)) {
+                it.contents[name].fieldNames().asSequence().toList()
+            } else {
+                emptyList()
+            }
+        }.toSet()
+    }
+
+    private fun validateGroups(openShiftClient: OpenShiftClient): (JsonNode?) -> Exception? {
+        return { json ->
+            if (json == null || json.textValue().isBlank()) {
+                IllegalArgumentException("Groups must be set")
+            } else {
+                val groups = json.textValue().split(" ").toSet()
+                groups.filter { !openShiftClient.isValidGroup(it) }
+                        .takeIf { it.isNotEmpty() }
+                        ?.let { AuroraConfigException("The following groups are not valid=${it.joinToString()}") }
+            }
+        }
+    }
+
+    private fun validateUsers(openShiftClient: OpenShiftClient): (JsonNode?) -> AuroraConfigException? {
+        return { json ->
+            val users = json?.textValue()?.split(" ")?.toSet()
+            users?.filter { !openShiftClient.isValidUser(it) }
+                    .takeIf { it != null && it.isNotEmpty() }
+                    ?.let { AuroraConfigException("The following users are not valid=${it.joinToString()}") }
+        }
+    }
+
+    private fun validateSecrets(auroraConfig: AuroraConfig): (JsonNode?) -> Exception? {
+        return { json ->
+
+            val secretFolder = json?.textValue()
+            val secrets = secretFolder?.let {
+                auroraConfig.getSecrets(it)
+            }
+
+            if (secrets != null && secrets.isEmpty()) {
+                IllegalArgumentException("No secrets in folder=$secretFolder")
+            } else {
+                null
+            }
+        }
+    }
 }

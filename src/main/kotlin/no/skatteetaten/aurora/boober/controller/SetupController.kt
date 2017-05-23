@@ -17,6 +17,7 @@ class SetupController(val setupFacade: SetupFacade, val auroraConfigFacade: Auro
     fun deploy(@PathVariable affiliation: String, @RequestBody cmd: SetupCommand): Response {
 
         val setupParams = cmd.setupParams.toSetupParams()
+
         val auroraConfig = auroraConfigFacade.findAuroraConfig(affiliation)
         auroraConfig.addOverrides(setupParams.overrides)
 
@@ -27,10 +28,12 @@ class SetupController(val setupFacade: SetupFacade, val auroraConfigFacade: Auro
     fun setup(@PathVariable affiliation: String, @RequestBody cmd: SetupCommand): Response {
 
         val setupParams = cmd.setupParams.toSetupParams()
-        val auroraConfig: AuroraConfig = cmd.auroraConfig!!.toAuroraConfig(setupParams.overrides)
+
+        val auroraConfig: AuroraConfig = cmd.auroraConfig!!.toAuroraConfig()
+        auroraConfig.addOverrides(setupParams.overrides)
+
         return executeSetup(auroraConfig, setupParams.applicationIds)
     }
-
 
     private fun executeSetup(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>): Response {
 

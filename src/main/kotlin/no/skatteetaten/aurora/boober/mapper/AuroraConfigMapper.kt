@@ -12,9 +12,7 @@ import no.skatteetaten.aurora.boober.utils.required
 /*
  This class maps a verisioned AuroraConfig into a AuroraDeploymentConfigDeploy
  */
-abstract class AuroraConfigMapper(val aid: ApplicationId,
-                                  val auroraConfig: AuroraConfig,
-                                  val openShiftClient: OpenShiftClient) {
+abstract class AuroraConfigMapper(val aid: ApplicationId, val auroraConfig: AuroraConfig) {
 
     abstract val auroraConfigFields: AuroraConfigFields
     abstract val fieldHandlers: List<AuroraConfigFieldHandler>
@@ -58,8 +56,7 @@ abstract class AuroraConfigMapper(val aid: ApplicationId,
         @JvmStatic
         fun createMapper(aid: ApplicationId, auroraConfig: AuroraConfig, openShiftClient: OpenShiftClient): AuroraConfigMapper {
 
-            val files = auroraConfig.getFilesForApplication(aid)
-            val fields = AuroraConfigFields.create(baseHandlers, files)
+            val fields = AuroraConfigFields.create(baseHandlers, auroraConfig.getFilesForApplication(aid))
 
             val type = fields.extract("type", { TemplateType.valueOf(it.textValue()) })
 

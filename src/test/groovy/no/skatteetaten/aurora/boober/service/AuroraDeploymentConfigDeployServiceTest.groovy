@@ -135,7 +135,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       Map<String, JsonNode> files = getQaEbsUsersSampleFiles()
       files.remove("${APP_NAME}.json" as String)
       def auroraConfig =
-          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:], [])
+          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])
 
     when:
       auroraConfig.getFilesForApplication(aid)
@@ -187,7 +187,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       (files.get("verify-ebs-users.json") as ObjectNode).remove("version")
       (files.get("booberdev/verify-ebs-users.json") as ObjectNode).remove("version")
       AuroraConfig auroraConfig =
-          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:], [])
+          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])
 
     when:
       auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig)
