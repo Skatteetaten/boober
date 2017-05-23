@@ -19,7 +19,12 @@ data class OpenShiftResponse(
         val responseBody: JsonNode?
 ) {
     val changed: Boolean
-        get() = operationType == OperationType.UPDATE && previous?.at("/metadata/resourceVersion") != responseBody?.at("/metadata/resourceVersion")
+        get() {
+            val previousVersion = previous?.at("/metadata/resourceVersion")?.asLong()
+            val currentVersion = responseBody?.at("/metadata/resourceVersion")?.asLong()
+
+            return operationType == OperationType.UPDATE && previousVersion != currentVersion
+        }
 }
 
 @Service
@@ -40,7 +45,7 @@ class OpenShiftClient(
 
         val kind = json.get("kind")?.asText()?.toLowerCase() ?: throw IllegalArgumentException("Kind must be set in file=$json")
 
-        val name = if (kind.equals("deploymentrequest")) {
+        val name = if (kind == "deploymentrequest") {
             json.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource kind=$kind")
         } else {
             json.get("metadata")?.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource kind=$kind")
@@ -54,6 +59,7 @@ class OpenShiftClient(
         }
 
         val existing = existingResource.body
+
         if (kind == "projectrequest") {
             return OpenShiftResponse(kind, OperationType.NONE, existing, json, null)
         }
@@ -67,6 +73,7 @@ class OpenShiftClient(
         if (kind == "persistentvolumeclaim") {
             json.updateField(existing, "/spec", "volumeName")
         }
+
         if (kind == "deploymentconfig") {
             json.updateField(existing, "/spec/triggers/0/imageChangeParams", "lastTriggeredImage")
             json.updateField(existing, "/spec/template/spec/containers/0", "image")
@@ -76,7 +83,9 @@ class OpenShiftClient(
         if (kind == "buildconfig") {
             json.updateField(existing, "/spec", "triggers")
         }
+
         val updated = resource.put(kind, name, namespace, json)
+
         return OpenShiftResponse(kind, OperationType.UPDATE, existing, json, updated.body)
 
     }

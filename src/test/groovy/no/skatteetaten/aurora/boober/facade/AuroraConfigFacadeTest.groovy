@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.service
+package no.skatteetaten.aurora.boober.facade
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -7,9 +7,13 @@ import org.springframework.context.annotation.Configuration
 
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
+import no.skatteetaten.aurora.boober.service.AuroraConfigValidationService
+import no.skatteetaten.aurora.boober.service.EncryptionService
+import no.skatteetaten.aurora.boober.service.GitService
+import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import spock.lang.Specification
@@ -29,7 +33,7 @@ import spock.mock.DetachedMockFactory
     "boober.git.username=",
     "boober.git.password="
 ])
-class AuroraConfigServiceTest extends Specification {
+class AuroraConfigFacadeTest extends Specification {
 
   public static final String ENV_NAME = "secrettest"
   public static final String APP_NAME = "verify-ebs-users"

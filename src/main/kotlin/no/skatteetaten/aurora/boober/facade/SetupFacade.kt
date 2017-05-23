@@ -45,7 +45,7 @@ class SetupFacade(
         val openShiftResponses: List<OpenShiftResponse> = openShiftClient.applyMany(adc.namespace, openShiftObjects)
 
         val deployResource: JsonNode? =
-                generateRedeployResource(openShiftResponses, adc)
+                generateRedeployResource(openShiftResponses, adc.type, adc.name)
 
         val finalResponse = deployResource?.let {
             openShiftResponses + openShiftClient.apply(adc.namespace, it)
@@ -58,26 +58,28 @@ class SetupFacade(
         )
     }
 
-    fun generateRedeployResource(openShiftResponses: List<OpenShiftResponse>, adc: AuroraDeploymentConfig): JsonNode? {
+    fun generateRedeployResource(openShiftResponses: List<OpenShiftResponse>, type: TemplateType, name: String): JsonNode? {
+
         val imageStream = openShiftResponses.find { it.kind == "imagestream" }
         val deployment = openShiftResponses.find { it.kind == "deploymentconfig" }
 
         val deployResource: JsonNode? =
-                if (adc.type == development) {
+                if (type == development) {
                     openShiftResponses.filter { it.changed }.firstOrNull()?.let {
-                        openShiftObjectGenerator.generateBuildRequest(adc as AuroraDeploymentConfigDeploy)
+                        openShiftObjectGenerator.generateBuildRequest(name)
                     }
                 } else if (imageStream == null) {
                     if (deployment != null) {
-                        openShiftObjectGenerator.generateDeploymentRequest(adc)
+                        openShiftObjectGenerator.generateDeploymentRequest(name)
                     } else {
                         null
                     }
                 } else if (!imageStream.changed && imageStream.operationType == OperationType.UPDATE) {
-                    openShiftObjectGenerator.generateDeploymentRequest(adc)
+                    openShiftObjectGenerator.generateDeploymentRequest(name)
                 } else {
                     null
                 }
+
         return deployResource
     }
 }

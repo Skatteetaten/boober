@@ -1,7 +1,7 @@
 {
   "kind": "DeploymentRequest",
   "apiVersion": "v1",
-  "name": "${adc.name}",
+  "name": "${name}",
   "latest": true,
   "force": true
 }

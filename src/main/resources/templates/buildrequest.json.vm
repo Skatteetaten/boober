@@ -2,7 +2,7 @@
   "kind": "BuildRequest",
   "apiVersion": "v1",
   "metadata": {
-    "name": "${adc.name}"
+    "name": "${name}"
   },
   "triggeredBy": [
     {
