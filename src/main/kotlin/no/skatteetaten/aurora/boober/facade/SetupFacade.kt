@@ -1,7 +1,10 @@
 package no.skatteetaten.aurora.boober.facade
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
+import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.AuroraConfigValidationService
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
@@ -23,13 +26,12 @@ class SetupFacade(
 
     val logger: Logger = LoggerFactory.getLogger(SetupFacade::class.java)
 
-    fun executeSetup(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>,
-                     overrides: List<AuroraConfigFile>): List<ApplicationResult> {
+    fun executeSetup(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>): List<ApplicationResult> {
 
         val appIds: List<ApplicationId> = applicationIds
                 .takeIf { it.isNotEmpty() } ?: auroraConfig.getApplicationIds()
 
-        val auroraDcs = auroraConfigValidationService.createAuroraDcs(auroraConfig, appIds, overrides)
+        val auroraDcs = auroraConfigValidationService.createAuroraDcs(auroraConfig, appIds)
 
         return auroraDcs
                 .filter { it.cluster == cluster }

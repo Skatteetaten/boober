@@ -2,6 +2,8 @@
   "affiliation": "paas",
   "setupParams": {
     "apps": [
+      "postgresql-pvc",
+      "postgresql",
       "pgadmin"
     ],
     "envs": [

@@ -18,7 +18,6 @@ class AuroraConfigController(val auroraConfigFacade: AuroraConfigFacade) {
 
         val auroraConfig = auroraConfigFacade.saveAuroraConfig(affiliation, payload.toAuroraConfig())
         return Response(items = listOf(auroraConfig).map(::fromAuroraConfig))
-
     }
 
     @GetMapping("/{affiliation}/auroraconfig")
@@ -33,7 +32,6 @@ class AuroraConfigController(val auroraConfigFacade: AuroraConfigFacade) {
 
         val auroraConfig=auroraConfigFacade.updateAuroraConfigFile(affiliation, "$environment/$filename.json", fileContents)
         return Response(items = listOf(auroraConfig).map(::fromAuroraConfig))
-
     }
 
     @PutMapping("/{affiliation}/auroraconfig/{filename:\\w+}.json")
@@ -42,7 +40,6 @@ class AuroraConfigController(val auroraConfigFacade: AuroraConfigFacade) {
 
         val auroraConfig =auroraConfigFacade.updateAuroraConfigFile(affiliation, "$filename.json", fileContents)
         return Response(items = listOf(auroraConfig).map(::fromAuroraConfig))
-
     }
 
     @PatchMapping(value = "/{affiliation}/auroraconfig/**", consumes = arrayOf("application/json-patch+json"))
@@ -54,9 +51,7 @@ class AuroraConfigController(val auroraConfigFacade: AuroraConfigFacade) {
 
         val auroraConfig = auroraConfigFacade.patchAuroraConfigFile(affiliation, fileName, jsonPatchOp)
         return Response(items = listOf(auroraConfig).map(::fromAuroraConfig))
-
     }
-
 }
 
 

@@ -3,19 +3,18 @@ package no.skatteetaten.aurora.boober.model
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import no.skatteetaten.aurora.boober.utils.SampleFilesCollector
+import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
 import spock.lang.Specification
 
 class AuroraConfigTest extends Specification {
 
   def mapper = new ObjectMapper()
 
+  def aid = new ApplicationId("booberdev", "console")
+
   def "Should get all application ids for AuroraConfig"() {
     given:
-      def files = SampleFilesCollector.getSampleFiles(new ApplicationId("booberdev", "console"))
-      def auroraConfig =
-          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])
-
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
     when:
       def applicationIds = auroraConfig.getApplicationIds("", "")
 
@@ -26,12 +25,8 @@ class AuroraConfigTest extends Specification {
   }
 
   def "Should update file"() {
-
     given:
-      def files = SampleFilesCollector.getSampleFiles(new ApplicationId("booberdev", "console"))
-      def auroraConfig =
-          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])
-
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
       def updates = mapper.convertValue(["version": "4"], JsonNode.class)
 
     when:
@@ -49,7 +44,8 @@ class AuroraConfigTest extends Specification {
 
   def "Should fetch secrets"() {
     given:
-      def auroraConfig = new AuroraConfig([], ["/tmp/foo/bar/secret1.properties": "Secret stuff"])
+      def auroraConfig = AuroraConfigHelperKt.
+          createAuroraConfig(aid, ["/tmp/foo/bar/secret1.properties": "Secret stuff"])
 
     when:
       def secretsForFolder = auroraConfig.getSecrets("/tmp/foo/bar")
@@ -73,11 +69,10 @@ class AuroraConfigTest extends Specification {
 
   def "Returns files for application"() {
     given:
-      def files = createMockFiles("about.json", "referanse.json", "utv/about.json", "utv/referanse.json")
-      def auroraConfig = new AuroraConfig(files, [:])
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
 
     when:
-      def filesForApplication = auroraConfig.getFilesForApplication(new ApplicationId("utv", "referanse"), [])
+      def filesForApplication = auroraConfig.getFilesForApplication(aid)
 
     then:
       filesForApplication.size() == 4
@@ -85,13 +80,11 @@ class AuroraConfigTest extends Specification {
 
   def "Returns files for application with about override"() {
     given:
-      def files = createMockFiles("about.json", "referanse.json", "utv/about.json", "utv/referanse.json")
-      def auroraConfig = new AuroraConfig(files, [:])
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
+      auroraConfig.addOverrides([overrideFile("about.json")])
 
     when:
-      def filesForApplication = auroraConfig.
-          getFilesForApplication(new ApplicationId("utv", "referanse"), [
-              overrideFile("about.json")])
+      def filesForApplication = auroraConfig.getFilesForApplication(aid)
 
     then:
       filesForApplication.size() == 5
@@ -99,13 +92,11 @@ class AuroraConfigTest extends Specification {
 
   def "Returns files for application with app override"() {
     given:
-      def files = createMockFiles("about.json", "referanse.json", "utv/about.json", "utv/referanse.json")
-      def auroraConfig = new AuroraConfig(files, [:])
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
+      auroraConfig.addOverrides([overrideFile("console.json")])
 
     when:
-      def filesForApplication = auroraConfig.
-          getFilesForApplication(new ApplicationId("utv", "referanse"),
-              [overrideFile("referanse.json")])
+      def filesForApplication = auroraConfig.getFilesForApplication(aid)
 
     then:
       filesForApplication.size() == 5
@@ -113,13 +104,11 @@ class AuroraConfigTest extends Specification {
 
   def "Returns files for application with app for env override"() {
     given:
-      def files = createMockFiles("about.json", "referanse.json", "utv/about.json", "utv/referanse.json")
-      def auroraConfig = new AuroraConfig(files, [:])
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
+      auroraConfig.addOverrides([overrideFile("${aid.environmentName}/${aid.applicationName}.json")])
 
     when:
-      def filesForApplication = auroraConfig.
-          getFilesForApplication(new ApplicationId("utv", "referanse"),
-              [overrideFile("utv/referanse.json")])
+      def filesForApplication = auroraConfig.getFilesForApplication(aid)
 
     then:
       filesForApplication.size() == 5
@@ -131,7 +120,7 @@ class AuroraConfigTest extends Specification {
       def auroraConfig = new AuroraConfig(files, [:])
 
     when:
-      auroraConfig.getFilesForApplication(new ApplicationId("utv", "referanse"), [])
+      auroraConfig.getFilesForApplication(new ApplicationId("utv", "referanse"))
 
     then: "Should be missing utv/referanse.json"
       def ex = thrown(IllegalArgumentException)

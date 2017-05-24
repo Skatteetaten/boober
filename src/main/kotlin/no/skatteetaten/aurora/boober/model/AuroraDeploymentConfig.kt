@@ -1,7 +1,33 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
+
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
+
+enum class TemplateType {
+    deploy, development, localTemplate, template
+}
+
+interface AuroraDeploymentConfig {
+    val schemaVersion: String
+    val affiliation: String
+    val cluster: String
+    val type: TemplateType
+    val name: String
+    val envName: String
+    val permissions: Permissions
+    val secrets: Map<String, String>?
+    val config: Map<String, Map<String, String>>?
+    val fields: Map<String, AuroraConfigField>
+    val flags: AuroraDeploymentConfigFlags
+    val namespace: String
+        get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"
+
+    //In use in velocity template
+    val routeName: String?
+        get() = "http://$name-$namespace.$cluster.paas.skead.no"
+
+}
 
 data class AuroraDeploymentConfigDeploy(
         override val schemaVersion: String = "v1",
@@ -31,41 +57,14 @@ data class AuroraDeploymentConfigDeploy(
 
     //In use in velocity template
     val dockerGroup: String = groupId.replace(".", "_")
-
     //In use in velocity template
     val dockerName: String = artifactId
-}
-
-interface AuroraDeploymentConfig {
-    val schemaVersion: String
-    val affiliation: String
-    val cluster: String
-    val type: TemplateType
-    val name: String
-    val envName: String
-    val permissions: Permissions
-    val secrets: Map<String, String>?
-    val config: Map<String, Map<String, String>>?
-    val fields: Map<String, AuroraConfigField>
-    val flags: AuroraDeploymentConfigFlags
-    val namespace: String
-        get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"
-
-    //In use in velocity template
-    val routeName: String?
-        get() = "http://$name-$namespace.$cluster.paas.skead.no"
-
-}
-
-enum class TemplateType {
-    deploy, development, localTemplate, template
 }
 
 
 interface AuroraDeploymentConfigProcess {
     val parameters: Map<String, String>?
 }
-
 
 data class AuroraDeploymentConfigProcessLocalTemplate(
         override val schemaVersion: String = "v1",
@@ -124,7 +123,6 @@ data class HttpEndpoint(
         val port: Int?
 )
 
-
 data class Webseal(
         val path: String,
         val roles: String?
@@ -139,6 +137,7 @@ data class Permission(
         val groups: Set<String>?,
         val users: Set<String>?
 ) {
+    //In use in velocity template
     val rolebindings: Map<String, String>
         get(): Map<String, String> {
             val userPart = users?.map { Pair(it, "User") }?.toMap() ?: mapOf()

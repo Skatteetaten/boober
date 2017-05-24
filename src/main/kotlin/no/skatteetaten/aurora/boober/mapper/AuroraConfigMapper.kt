@@ -12,10 +12,7 @@ import no.skatteetaten.aurora.boober.utils.required
 /*
  This class maps a verisioned AuroraConfig into a AuroraDeploymentConfigDeploy
  */
-abstract class AuroraConfigMapper(val aid: ApplicationId,
-                                  val auroraConfig: AuroraConfig,
-                                  val allFiles: List<AuroraConfigFile>,
-                                  val openShiftClient: OpenShiftClient) {
+abstract class AuroraConfigMapper(val aid: ApplicationId, val auroraConfig: AuroraConfig) {
 
     abstract val auroraConfigFields: AuroraConfigFields
     abstract val fieldHandlers: List<AuroraConfigFieldHandler>
@@ -57,9 +54,9 @@ abstract class AuroraConfigMapper(val aid: ApplicationId,
                 AuroraConfigFieldHandler("type", validator = { it.required("Type is required") }))
 
         @JvmStatic
-        fun createMapper(aid: ApplicationId, auroraConfig: AuroraConfig, files: List<AuroraConfigFile>, openShiftClient: OpenShiftClient): AuroraConfigMapper {
+        fun createMapper(aid: ApplicationId, auroraConfig: AuroraConfig, openShiftClient: OpenShiftClient): AuroraConfigMapper {
 
-            val fields = AuroraConfigFields.create(baseHandlers, files)
+            val fields = AuroraConfigFields.create(baseHandlers, auroraConfig.getFilesForApplication(aid))
 
             val type = fields.extract("type", { TemplateType.valueOf(it.textValue()) })
 
@@ -70,15 +67,15 @@ abstract class AuroraConfigMapper(val aid: ApplicationId,
             }
 
             if (type == TemplateType.localTemplate) {
-                return AuroraConfigMapperV1LocalTemplate(aid, auroraConfig, files, openShiftClient)
+                return AuroraConfigMapperV1LocalTemplate(aid, auroraConfig, openShiftClient)
             }
 
             if (type == TemplateType.template) {
-                return AuroraConfigMapperV1Template(aid, auroraConfig, files, openShiftClient)
+                return AuroraConfigMapperV1Template(aid, auroraConfig, openShiftClient)
 
             }
 
-            return AuroraConfigMapperV1Deploy(aid, auroraConfig, files, openShiftClient)
+            return AuroraConfigMapperV1Deploy(aid, auroraConfig, openShiftClient)
         }
     }
 

@@ -106,7 +106,7 @@ class SetupFacadeTest extends Specification {
       def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def result = setupFacade.executeSetup(auroraConfig, [processAid], [])
+      def result = setupFacade.executeSetup(auroraConfig, [processAid])
 
     then:
       result.size() == 1
@@ -118,7 +118,7 @@ class SetupFacadeTest extends Specification {
       def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def result = setupFacade.executeSetup(auroraConfig, [aid], [])
+      def result = setupFacade.executeSetup(auroraConfig, [aid])
 
     then:
       result.size() == 1
@@ -205,7 +205,7 @@ class SetupFacadeTest extends Specification {
       def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def result = setupFacade.executeSetup(auroraConfig, [consoleAid], [])
+      def result = setupFacade.executeSetup(auroraConfig, [consoleAid])
 
     then:
       result.size() == 1
