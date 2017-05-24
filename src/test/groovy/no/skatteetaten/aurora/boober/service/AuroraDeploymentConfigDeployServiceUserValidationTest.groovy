@@ -7,8 +7,8 @@ import org.springframework.context.annotation.Configuration
 
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
@@ -17,7 +17,7 @@ import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
-    AuroraConfigValidationService,
+    AuroraConfigService,
     OpenShiftResourceClient,
     Config
 ])
@@ -25,7 +25,7 @@ class AuroraDeploymentConfigDeployServiceUserValidationTest extends Specificatio
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
-  final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
+  final DeployCommand aid = new DeployCommand(ENV_NAME, APP_NAME)
 
   @Configuration
   static class Config {
@@ -55,7 +55,7 @@ class AuroraDeploymentConfigDeployServiceUserValidationTest extends Specificatio
   OpenShiftClient openShiftClient
 
   @Autowired
-  AuroraConfigValidationService auroraDeploymentConfigService
+  AuroraConfigService auroraDeploymentConfigService
 
   def setup() {
     userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")

@@ -1,8 +1,8 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.utils.SampleFilesCollector
 
 fun getAuroraConfigSamples(secrets: Map<String, String>): AuroraConfig {
@@ -24,11 +24,11 @@ fun getAuroraConfigSamples(): AuroraConfig {
     return getAuroraConfigSamples(mapOf())
 }
 
-fun createAuroraConfig(aid: ApplicationId, secrets: Map<String, String>): AuroraConfig {
+fun createAuroraConfig(aid: DeployCommand, secrets: Map<String, String>): AuroraConfig {
     val files = SampleFilesCollector.getSampleFiles(aid)
     return AuroraConfig(files.map { AuroraConfigFile(it.key, it.value, false) }, secrets)
 }
 
-fun createAuroraConfig(aid: ApplicationId): AuroraConfig {
+fun createAuroraConfig(aid: DeployCommand): AuroraConfig {
     return createAuroraConfig(aid, mapOf())
 }
