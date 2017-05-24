@@ -19,14 +19,16 @@ interface AuroraDeploymentConfig {
     val secrets: Map<String, String>?
     val config: Map<String, Map<String, String>>?
     val fields: Map<String, AuroraConfigField>
-    val flags: AuroraDeploymentConfigFlags
+    val route: Route?
     val namespace: String
         get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"
 
     //In use in velocity template
     val routeName: String?
-        get() = "http://$name-$namespace.$cluster.paas.skead.no"
-
+        get() = route?.let {
+            val host = it.host ?: "$name-$namespace"
+            "http://$host.$cluster.paas.skead.no${it.path}"
+        }
 }
 
 data class AuroraDeploymentConfigDeploy(
@@ -35,13 +37,14 @@ data class AuroraDeploymentConfigDeploy(
         override val cluster: String,
         override val type: TemplateType,
         override val name: String,
-        override val flags: AuroraDeploymentConfigFlags,
+        val flags: AuroraDeploymentConfigFlags,
         val resources: AuroraDeploymentConfigResources,
         override val envName: String,
         override val permissions: Permissions,
         val replicas: Int?,
         override val secrets: Map<String, String>? = null,
         override val config: Map<String, Map<String, String>>? = null,
+        override val route: Route? = null,
         val groupId: String,
         val artifactId: String,
         val version: String,
@@ -77,8 +80,8 @@ data class AuroraDeploymentConfigProcessLocalTemplate(
         override val secrets: Map<String, String>? = null,
         override val config: Map<String, Map<String, String>>? = null,
         override val parameters: Map<String, String>? = mapOf(),
-        override val flags: AuroraDeploymentConfigFlags,
         override val fields: Map<String, AuroraConfigField>,
+        override val route: Route? = null,
         val templateJson: JsonNode
 ) : AuroraDeploymentConfigProcess, AuroraDeploymentConfig
 
@@ -93,15 +96,21 @@ data class AuroraDeploymentConfigProcessTemplate(
         override val secrets: Map<String, String>? = null,
         override val config: Map<String, Map<String, String>>? = null,
         override val parameters: Map<String, String>? = mapOf(),
-        override val flags: AuroraDeploymentConfigFlags,
         override val fields: Map<String, AuroraConfigField>,
+        override val route: Route? = null,
+
         val template: String
 
 ) : AuroraDeploymentConfigProcess, AuroraDeploymentConfig
 
 
+data class Route(
+        val host: String? = null,
+        val path: String? = null,
+        val annotations: Map<String, String>? = null
+)
+
 data class AuroraDeploymentConfigFlags(
-        val route: Boolean,
         val cert: Boolean = false,
         val debug: Boolean = false,
         val alarm: Boolean = false,

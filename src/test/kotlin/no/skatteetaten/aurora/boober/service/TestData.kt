@@ -9,7 +9,7 @@ val auroraDcDevelopment = AuroraDeploymentConfigDeploy(
         cluster = "utv",
         type = TemplateType.development,
         config = mapOf(),
-        flags = AuroraDeploymentConfigFlags(route = true,
+        flags = AuroraDeploymentConfigFlags(
                 alarm = false,
                 debug = false,
                 rolling = true,
@@ -32,6 +32,7 @@ val auroraDcDevelopment = AuroraDeploymentConfigDeploy(
         replicas = 1,
         secrets = emptyMap(),
         extraTags = "",
+        route = Route(),
         fields = emptyMap()
 )
 
@@ -59,5 +60,5 @@ fun generateProccessADC(templateFile: String, template: JsonNode) =
                 name = "dev-test",
                 secrets = emptyMap(),
                 config = emptyMap(),
-                flags = AuroraDeploymentConfigFlags(route = true),
+                route = Route(),
                 fields = emptyMap())

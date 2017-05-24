@@ -8,11 +8,27 @@
       "updatedBy" : "${username}",
       "affiliation": "${adc.affiliation}"
     }
+  #if (${adc.route.annotations})
+  ,"annotations": {
+    #foreach ($annotation  in $adc.route.annotations.entrySet())
+      #if($velocityCount != 1)
+        ,
+      #end
+      "haproxy.router.openshift.io/${annotation.key}": "${annotation.value}"
+    #end
+  }
+  #end
   },
   "spec": {
     "to": {
       "kind": "Service",
       "name": "${adc.name}"
     }
+#if (${adc.route.host})
+, "host": "${adc.route.host}"
+#end
+#if (${adc.route.path})
+, "path": "${adc.route.path}"
+#end
   }
 }

@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.service
 
+import static no.skatteetaten.aurora.boober.utils.SampleFilesCollector.getQaEbsUsersSampleFiles
+
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
@@ -26,6 +29,8 @@ import spock.mock.DetachedMockFactory
     OpenShiftTemplateProcessor,
     GitService, OpenShiftObjectGenerator, Config])
 class OpenShiftObjectGeneratorTest extends Specification {
+
+  def logger = LoggerFactory.getLogger(OpenShiftObjectGeneratorTest)
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
@@ -141,23 +146,27 @@ class OpenShiftObjectGeneratorTest extends Specification {
 
       compareJson(route, """
         {
-          "kind": "Route",
-          "apiVersion": "v1",
-          "metadata": {
-            "name": "verify-ebs-users",
-            "labels": {
-              "app": "verify-ebs-users",
-              "updatedBy" : "hero",
-              "affiliation": "aos"
-            }
-          },
-          "spec": {
-            "to": {
-              "kind": "Service",
-              "name": "verify-ebs-users"
-            }
-          }
-        }
+               "kind": "Route",
+               "apiVersion": "v1",
+               "metadata": {
+                   "name": "verify-ebs-users",
+                   "labels": {
+                       "app": "verify-ebs-users",
+                       "updatedBy": "hero",
+                       "affiliation": "aos"
+                   },
+                   "annotations": {
+                       "haproxy.router.openshift.io/timeout": "30s"
+                   }
+               },
+               "spec": {
+                   "to": {
+                       "kind": "Service",
+                       "name": "verify-ebs-users"
+                   },
+                   "path": "/foo"
+               }
+           }
       """)
 
 
@@ -354,7 +363,7 @@ class OpenShiftObjectGeneratorTest extends Specification {
                       },        
                       {
                         "name": "ROUTE_NAME",
-                        "value": "http://verify-ebs-users-aos-booberdev.utv.paas.skead.no"
+                        "value": "http://verify-ebs-users-aos-booberdev.utv.paas.skead.no/foo"
                       }
                     ],
                     "resources": {
