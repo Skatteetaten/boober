@@ -1,13 +1,15 @@
 package no.skatteetaten.aurora.boober.controller.internal
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.DeployCommand
 
-typealias JsonDataFiles = Map<FileName, JsonNode>
+typealias JsonDataFiles = Map<String, JsonNode>
 
 data class AuroraConfigPayload(
         val files: JsonDataFiles = mapOf(),
-        val secrets: TextFiles = mapOf()
+        val secrets: Map<String, String> = mapOf()
 ) {
     fun toAuroraConfig(): AuroraConfig {
         val auroraConfigFiles = files.map { AuroraConfigFile(it.key, it.value) }
@@ -28,7 +30,8 @@ data class SetupParamsPayload(
 ) {
     fun toSetupParams(): SetupParams {
 
-        return SetupParams(envs, apps, overrides.map { AuroraConfigFile(it.key, it.value, true) })
+        val overrideFiles = overrides.map { AuroraConfigFile(it.key, it.value, true) }.toMutableList()
+        return SetupParams(envs, apps, overrideFiles)
     }
 }
 
@@ -40,8 +43,8 @@ data class SetupCommand(val affiliation: String,
 data class SetupParams(
         val envs: List<String> = listOf(),
         val apps: List<String> = listOf(),
-        val overrides: List<AuroraConfigFile> = listOf()
+        val overrides: MutableList<AuroraConfigFile> = mutableListOf()
 ) {
-    val applicationIds: List<ApplicationId>
-        get() = envs.flatMap { env -> apps.map { app -> ApplicationId(env, app) } }
+    val applicationIds: List<DeployCommand>
+        get() = envs.flatMap { env -> apps.map { app -> DeployCommand(env, app, overrides) } }
 }

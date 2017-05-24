@@ -1,10 +1,10 @@
 package no.skatteetaten.aurora.boober.service.internal
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
-import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.DeployCommand
 
 data class Error(
-        val applicationId: ApplicationId,
+        val applicationId: DeployCommand,
         val messages: List<ValidationError> = listOf()
 )
 

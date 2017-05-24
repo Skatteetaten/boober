@@ -3,19 +3,17 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.mapper.findConfig
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.length
 import no.skatteetaten.aurora.boober.utils.notBlank
 
 
-class AuroraConfigMapperV1Deploy(aid: ApplicationId,
-                                 auroraConfig: AuroraConfig,
-                                 allFiles: List<AuroraConfigFile>,
-                                 openShiftClient: OpenShiftClient) :
-        AuroraConfigMapperV1(aid, auroraConfig, allFiles, openShiftClient) {
-
+class AuroraConfigMapperV1Deploy(
+        aid: DeployCommand,
+        auroraConfig: AuroraConfig,
+        openShiftClient: OpenShiftClient
+) : AuroraConfigMapperV1(aid, auroraConfig, openShiftClient) {
 
     val handlers = listOf(
             AuroraConfigFieldHandler("flags/cert", defaultValue = "false"),
@@ -39,15 +37,12 @@ class AuroraConfigMapperV1Deploy(aid: ApplicationId,
     )
 
     override val fieldHandlers = v1Handlers + handlers
-
-    override val auroraConfigFields = AuroraConfigFields.create(fieldHandlers, allFiles)
-
+    override val auroraConfigFields = AuroraConfigFields.create(fieldHandlers, applicationFiles)
 
     override fun toAuroraDeploymentConfig(): AuroraDeploymentConfig {
 
         val groupId = auroraConfigFields.extract("groupId")
         val name = auroraConfigFields.extract("name")
-
 
         return AuroraDeploymentConfigDeploy(
                 schemaVersion = auroraConfigFields.extract("schemaVersion"),
@@ -107,10 +102,8 @@ class AuroraConfigMapperV1Deploy(aid: ApplicationId,
                     auroraConfig.getSecrets(it.asText())
                 }),
 
-                config = auroraConfigFields.getConfigMap(allFiles.findConfig()),
+                config = auroraConfigFields.getConfigMap(configHandlers),
                 fields = auroraConfigFields.fields
         )
     }
-
-
 }

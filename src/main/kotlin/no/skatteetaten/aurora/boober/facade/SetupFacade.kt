@@ -1,9 +1,12 @@
 package no.skatteetaten.aurora.boober.facade
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
+import no.skatteetaten.aurora.boober.model.DeployCommand
+import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.model.TemplateType.development
-import no.skatteetaten.aurora.boober.service.AuroraConfigValidationService
+import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 import no.skatteetaten.aurora.boober.service.internal.ApplicationResult
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -16,20 +19,19 @@ import org.springframework.stereotype.Service
 
 @Service
 class SetupFacade(
-        val auroraConfigValidationService: AuroraConfigValidationService,
+        val auroraConfigValidationService: AuroraConfigService,
         val openShiftObjectGenerator: OpenShiftObjectGenerator,
         val openShiftClient: OpenShiftClient,
         @Value("\${openshift.cluster}") val cluster: String) {
 
     val logger: Logger = LoggerFactory.getLogger(SetupFacade::class.java)
 
-    fun executeSetup(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>,
-                     overrides: List<AuroraConfigFile>): List<ApplicationResult> {
+    fun executeSetup(auroraConfig: AuroraConfig, applicationIds: List<DeployCommand>): List<ApplicationResult> {
 
-        val appIds: List<ApplicationId> = applicationIds
-                .takeIf { it.isNotEmpty() } ?: auroraConfig.getApplicationIds()
+        val appIds: List<DeployCommand> = applicationIds
+                .takeIf { it.isNotEmpty() } ?: throw IllegalArgumentException("Specify applicationId")
 
-        val auroraDcs = auroraConfigValidationService.createAuroraDcs(auroraConfig, appIds, overrides)
+        val auroraDcs = auroraConfigValidationService.createAuroraDcs(auroraConfig, appIds)
 
         return auroraDcs
                 .filter { it.cluster == cluster }
@@ -52,7 +54,7 @@ class SetupFacade(
         } ?: openShiftResponses
 
         return ApplicationResult(
-                applicationId = ApplicationId(adc.envName, adc.name),
+                applicationId = DeployCommand(adc.envName, adc.name),
                 auroraDc = adc,
                 openShiftResponses = finalResponse
         )
