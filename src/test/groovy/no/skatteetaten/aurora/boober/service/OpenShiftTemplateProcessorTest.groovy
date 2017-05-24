@@ -223,7 +223,6 @@ class OpenShiftTemplateProcessorTest extends Specification {
         }
       }""")
 
-
   }
 
   def compareJson(JsonNode jsonNode, String jsonString) {

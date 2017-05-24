@@ -1,8 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import static no.skatteetaten.aurora.boober.utils.SampleFilesCollector.getQaEbsUsersSampleFiles
-import static no.skatteetaten.aurora.boober.utils.SampleFilesCollector.getSampleFiles
-
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
@@ -134,7 +131,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
   def "Should fail due to missing config file"() {
 
     given:
-      Map<String, JsonNode> files = getQaEbsUsersSampleFiles()
+      Map<String, JsonNode> files = AuroraConfigHelperKt.getSampleFiles(aid)
       files.remove("${APP_NAME}.json" as String)
       def auroraConfig =
           new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])
@@ -186,7 +183,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
   def "Should throw ValidationException due to missing required properties"() {
 
     given: "AuroraConfig without build properties"
-      Map<String, JsonNode> files = getSampleFiles(aid)
+      Map<String, JsonNode> files = AuroraConfigHelperKt.getSampleFiles(aid)
       (files.get("verify-ebs-users.json") as ObjectNode).remove("version")
       (files.get("booberdev/verify-ebs-users.json") as ObjectNode).remove("version")
       AuroraConfig auroraConfig =
@@ -211,10 +208,10 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
     then:
       result != null
   }
+
   def "Should collect secrets"() {
 
     given:
-
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.
           createAuroraConfig(secretAId, ["/tmp/foo/latest.properties": "FOO=BAR"])

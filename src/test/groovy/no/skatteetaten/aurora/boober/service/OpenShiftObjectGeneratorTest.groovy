@@ -1,7 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import static no.skatteetaten.aurora.boober.utils.SampleFilesCollector.getQaEbsUsersSampleFiles
-
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
@@ -73,8 +71,8 @@ class OpenShiftObjectGeneratorTest extends Specification {
 
   def "Should create OpenShift objects from Velocity templates"() {
     given:
-
-      Map<String, JsonNode> files = getQaEbsUsersSampleFiles()
+      DeployCommand deployCommand = new DeployCommand("booberdev", "verify-ebs-users")
+      Map<String, JsonNode> files = AuroraConfigHelperKt.getSampleFiles(deployCommand)
 
     when:
       def auroraConfig = new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])

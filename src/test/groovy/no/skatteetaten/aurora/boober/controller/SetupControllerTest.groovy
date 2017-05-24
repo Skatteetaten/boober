@@ -14,7 +14,8 @@ import no.skatteetaten.aurora.boober.controller.internal.AuroraConfigPayload
 import no.skatteetaten.aurora.boober.controller.internal.SetupCommand
 import no.skatteetaten.aurora.boober.controller.internal.SetupParamsPayload
 import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.utils.SampleFilesCollector
+import no.skatteetaten.aurora.boober.model.DeployCommand
+import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
 import spock.lang.Ignore
 
 @Ignore
@@ -30,9 +31,10 @@ class SetupControllerTest extends AbstractControllerTest {
 
   def "Should fail when Aurora Config contains errors"() {
     given:
-      def files = SampleFilesCollector.qaEbsUsersSampleFiles
+      def files = AuroraConfigHelperKt.getSampleFiles(new DeployCommand(ENV_NAME, APP_NAME))
       files.put("verify-ebs-users.json", mapper.readTree("{}"))
-      SetupCommand cmd = new SetupCommand(AFFILIATION, new AuroraConfigPayload(files, [:]), new SetupParamsPayload([ENV_NAME], [APP_NAME], [:], false))
+      SetupCommand cmd = new SetupCommand(AFFILIATION, new AuroraConfigPayload(files, [:]),
+          new SetupParamsPayload([ENV_NAME], [APP_NAME], [:]))
       def json = mapper.writeValueAsString(cmd)
 
     when:
