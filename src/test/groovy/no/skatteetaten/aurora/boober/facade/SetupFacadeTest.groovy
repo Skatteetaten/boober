@@ -16,10 +16,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
-import no.skatteetaten.aurora.boober.service.AuroraConfigValidationService
+import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 import no.skatteetaten.aurora.boober.service.OpenShiftTemplateProcessor
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -32,7 +32,7 @@ import spock.mock.DetachedMockFactory
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
     SetupFacade,
-    AuroraConfigValidationService,
+    AuroraConfigService,
     OpenShiftObjectGenerator,
     OpenShiftTemplateProcessor,
     Config
@@ -77,7 +77,7 @@ class SetupFacadeTest extends Specification {
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
-  final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
+  final DeployCommand aid = new DeployCommand(ENV_NAME, APP_NAME)
 
   def setup() {
     userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
@@ -95,7 +95,7 @@ class SetupFacadeTest extends Specification {
   }
 
   def "Should setup process for application"() {
-    def processAid = new ApplicationId("booberdev", "tvinn")
+    def processAid = new DeployCommand("booberdev", "tvinn")
 
     given:
       def templateResult = this.getClass().getResource("/openshift-objects/atomhopper-new.json")
@@ -201,7 +201,7 @@ class SetupFacadeTest extends Specification {
 
   def "Should setup deploy for application"() {
     given:
-      def consoleAid = new ApplicationId(ENV_NAME, "console")
+      def consoleAid = new DeployCommand(ENV_NAME, "console")
       def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:

@@ -7,10 +7,10 @@ import org.springframework.context.annotation.Configuration
 
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
-import no.skatteetaten.aurora.boober.service.AuroraConfigValidationService
+import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
@@ -37,15 +37,15 @@ class AuroraConfigFacadeTest extends Specification {
 
   public static final String ENV_NAME = "secrettest"
   public static final String APP_NAME = "verify-ebs-users"
-  final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
+  final DeployCommand aid = new DeployCommand(ENV_NAME, APP_NAME)
 
   @Configuration
   static class Config {
     private DetachedMockFactory factory = new DetachedMockFactory()
 
     @Bean
-    AuroraConfigValidationService auroraDeploymentConfigService() {
-      factory.Mock(AuroraConfigValidationService)
+    AuroraConfigService auroraDeploymentConfigService() {
+      factory.Mock(AuroraConfigService)
     }
 
     @Bean

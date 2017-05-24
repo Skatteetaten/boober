@@ -4,14 +4,14 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.Configuration
-import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.DeployCommand
 
 class SampleFilesCollector {
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
 
-  static Map<String, JsonNode> getSampleFiles(ApplicationId aid) {
+  static Map<String, JsonNode> getSampleFiles(DeployCommand aid) {
     return collectFilesToMapOfJsonNode(
         "about.json",
         "${aid.applicationName}.json",

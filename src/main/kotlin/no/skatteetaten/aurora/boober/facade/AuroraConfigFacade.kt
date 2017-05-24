@@ -7,7 +7,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.fge.jsonpatch.JsonPatch
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.service.AuroraConfigValidationService
+import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
 import org.slf4j.LoggerFactory
@@ -20,7 +20,7 @@ class AuroraConfigFacade(
         val gitService: GitService,
         val mapper: ObjectMapper,
         val encryptionService: EncryptionService,
-        val auroraConfigValidationService: AuroraConfigValidationService) {
+        val auroraConfigValidationService: AuroraConfigService) {
 
     private val GIT_SECRET_FOLDER = ".secret"
     private val logger = LoggerFactory.getLogger(AuroraConfigFacade::class.java)
@@ -66,9 +66,9 @@ class AuroraConfigFacade(
         val auroraConfig = createAuroraConfigFromFiles(filesForAffiliation)
 
         val newAuroraConfig = function(auroraConfig)
-        auroraConfigValidationService.validate(newAuroraConfig)
 
         if (commitChanges) {
+            auroraConfigValidationService.validate(newAuroraConfig)
             measureTimeMillis {
                 val encryptedSecretsFiles = encryptSecrets(auroraConfig, newAuroraConfig, filesForAffiliation)
                 val configFiles = convertFilesToString(newAuroraConfig.auroraConfigFiles)

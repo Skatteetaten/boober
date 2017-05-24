@@ -6,7 +6,7 @@ import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 
 class AuroraConfigMapperV1Template(
-        aid: ApplicationId,
+        aid: DeployCommand,
         auroraConfig: AuroraConfig,
         openShiftClient: OpenShiftClient
 ) : AuroraConfigMapperV1(aid, auroraConfig, openShiftClient) {

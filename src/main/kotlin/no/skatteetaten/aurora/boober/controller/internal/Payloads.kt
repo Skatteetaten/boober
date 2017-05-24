@@ -1,9 +1,9 @@
 package no.skatteetaten.aurora.boober.controller.internal
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.DeployCommand
 
 typealias JsonDataFiles = Map<String, JsonNode>
 
@@ -45,6 +45,6 @@ data class SetupParams(
         val apps: List<String> = listOf(),
         val overrides: MutableList<AuroraConfigFile> = mutableListOf()
 ) {
-    val applicationIds: List<ApplicationId>
-        get() = envs.flatMap { env -> apps.map { app -> ApplicationId(env, app) } }
+    val applicationIds: List<DeployCommand>
+        get() = envs.flatMap { env -> apps.map { app -> DeployCommand(env, app, overrides) } }
 }

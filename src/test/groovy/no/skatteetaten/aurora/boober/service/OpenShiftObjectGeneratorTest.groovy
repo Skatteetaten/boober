@@ -12,10 +12,10 @@ import com.fasterxml.jackson.databind.JsonNode
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigDeploy
+import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import spock.lang.Specification
@@ -24,14 +24,14 @@ import spock.mock.DetachedMockFactory
 @SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration,
     OpenShiftResourceClient,
     EncryptionService,
-    AuroraConfigValidationService,
+    AuroraConfigService,
     OpenShiftTemplateProcessor,
     GitService, OpenShiftObjectGenerator, Config])
 class OpenShiftObjectGeneratorTest extends Specification {
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
-  final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
+  final DeployCommand aid = new DeployCommand(ENV_NAME, APP_NAME)
 
   @Configuration
   static class Config {
@@ -60,7 +60,7 @@ class OpenShiftObjectGeneratorTest extends Specification {
   UserDetailsProvider userDetailsProvider
 
   @Autowired
-  AuroraConfigValidationService auroraDeploymentConfigService
+  AuroraConfigService auroraDeploymentConfigService
 
   @Autowired
   OpenShiftClient openShiftClient

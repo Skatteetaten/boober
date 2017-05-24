@@ -15,10 +15,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
-import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigDeploy
+import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
@@ -31,7 +31,7 @@ import spock.mock.DetachedMockFactory
     no.skatteetaten.aurora.boober.Configuration,
     AuroraConfigFacade,
     EncryptionService,
-    AuroraConfigValidationService,
+    AuroraConfigService,
     OpenShiftResourceClient,
     Config
 ])
@@ -39,8 +39,8 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
-  final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
-  final ApplicationId secretAId = new ApplicationId("secrettest", APP_NAME)
+  final DeployCommand aid = new DeployCommand(ENV_NAME, APP_NAME)
+  final DeployCommand secretAId = new DeployCommand("secrettest", APP_NAME)
 
   @Configuration
   static class Config {
@@ -73,7 +73,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
   ObjectMapper mapper
 
   @Autowired
-  AuroraConfigValidationService auroraDeploymentConfigService
+  AuroraConfigService auroraDeploymentConfigService
 
   def setup() {
     userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
@@ -85,11 +85,12 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
   def "Should return error when name is not valid DNS952 label"() {
 
     given:
+
       def overrideFile = mapper.convertValue(["name": "test%qwe)"], JsonNode.class)
       def overrides = [new AuroraConfigFile("${aid.environmentName}/${aid.applicationName}.json", overrideFile, true)]
+      final DeployCommand aid = new DeployCommand(ENV_NAME, APP_NAME, overrides)
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-      auroraConfig.addOverrides(overrides)
     when:
       auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig)
 
@@ -100,7 +101,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
   def "Should create AuroraDC for Console"() {
     given:
-      def consoleAid = new ApplicationId("booberdev", "console")
+      def consoleAid = new DeployCommand("booberdev", "console")
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
@@ -113,10 +114,11 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
   def "Should create AuroraConfigFields with overrides"() {
     given:
+
       def overrideFile = mapper.convertValue(["type": "deploy", "cluster": "utv"], JsonNode.class)
       def overrides = [new AuroraConfigFile("booberdev/about.json", overrideFile, true)]
+      final DeployCommand aid = new DeployCommand(ENV_NAME, APP_NAME, overrides)
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-      auroraConfig.addOverrides(overrides)
 
     when:
       def auroraDc = auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig)
@@ -170,8 +172,9 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
     given:
       def overrideFile = mapper.convertValue(["name": "awesome-app"], JsonNode.class)
       def overrides = [new AuroraConfigFile("booberdev/about.json", overrideFile, true)]
+
+      final DeployCommand aid = new DeployCommand(ENV_NAME, APP_NAME, overrides)
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-      auroraConfig.addOverrides(overrides)
 
     when:
       AuroraDeploymentConfigDeploy auroraDc = auroraDeploymentConfigService.createAuroraDc(aid, auroraConfig)

@@ -1,18 +1,14 @@
 package no.skatteetaten.aurora.boober.mapper
 
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraConfigMapperV1Deploy
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraConfigMapperV1LocalTemplate
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraConfigMapperV1Template
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.internal.ValidationError
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.required
 
 /*
  This class maps a verisioned AuroraConfig into a AuroraDeploymentConfigDeploy
  */
-abstract class AuroraConfigMapper(val aid: ApplicationId, val auroraConfig: AuroraConfig) {
+abstract class AuroraConfigMapper(val aid: DeployCommand, val auroraConfig: AuroraConfig) {
 
     abstract val auroraConfigFields: AuroraConfigFields
     abstract val fieldHandlers: List<AuroraConfigFieldHandler>
@@ -52,31 +48,6 @@ abstract class AuroraConfigMapper(val aid: ApplicationId, val auroraConfig: Auro
         val baseHandlers = listOf(
                 AuroraConfigFieldHandler("schemaVersion"),
                 AuroraConfigFieldHandler("type", validator = { it.required("Type is required") }))
-
-        @JvmStatic
-        fun createMapper(aid: ApplicationId, auroraConfig: AuroraConfig, openShiftClient: OpenShiftClient): AuroraConfigMapper {
-
-            val fields = AuroraConfigFields.create(baseHandlers, auroraConfig.getFilesForApplication(aid))
-
-            val type = fields.extract("type", { TemplateType.valueOf(it.textValue()) })
-
-            val schemaVersion = fields.extract("schemaVersion")
-
-            if (schemaVersion != "v1") {
-                throw IllegalArgumentException("Only v1 of schema is supported")
-            }
-
-            if (type == TemplateType.localTemplate) {
-                return AuroraConfigMapperV1LocalTemplate(aid, auroraConfig, openShiftClient)
-            }
-
-            if (type == TemplateType.template) {
-                return AuroraConfigMapperV1Template(aid, auroraConfig, openShiftClient)
-
-            }
-
-            return AuroraConfigMapperV1Deploy(aid, auroraConfig, openShiftClient)
-        }
     }
 
 }

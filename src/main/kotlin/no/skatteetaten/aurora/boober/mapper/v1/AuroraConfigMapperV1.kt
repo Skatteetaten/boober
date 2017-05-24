@@ -3,16 +3,16 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigMapper
-import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.pattern
 
 abstract class AuroraConfigMapperV1(
-        aid: ApplicationId,
+        aid: DeployCommand,
         auroraConfig: AuroraConfig,
         openShiftClient: OpenShiftClient
 ) : AuroraConfigMapper(aid, auroraConfig) {

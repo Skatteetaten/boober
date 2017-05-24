@@ -10,7 +10,7 @@ import no.skatteetaten.aurora.boober.utils.notBlank
 
 
 class AuroraConfigMapperV1Deploy(
-        aid: ApplicationId,
+        aid: DeployCommand,
         auroraConfig: AuroraConfig,
         openShiftClient: OpenShiftClient
 ) : AuroraConfigMapperV1(aid, auroraConfig, openShiftClient) {

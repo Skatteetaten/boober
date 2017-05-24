@@ -10,7 +10,7 @@ class AuroraConfigTest extends Specification {
 
   def mapper = new ObjectMapper()
 
-  def aid = new ApplicationId("booberdev", "console")
+  def aid = new DeployCommand("booberdev", "console")
 
   def "Should get all application ids for AuroraConfig"() {
     given:
@@ -80,8 +80,9 @@ class AuroraConfigTest extends Specification {
 
   def "Returns files for application with about override"() {
     given:
+
+      def aid = new DeployCommand("booberdev", "console", [overrideFile("about.json")])
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
-      auroraConfig.addOverrides([overrideFile("about.json")])
 
     when:
       def filesForApplication = auroraConfig.getFilesForApplication(aid)
@@ -92,8 +93,8 @@ class AuroraConfigTest extends Specification {
 
   def "Returns files for application with app override"() {
     given:
+      def aid = new DeployCommand("booberdev", "console", [overrideFile("console.json")])
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
-      auroraConfig.addOverrides([overrideFile("console.json")])
 
     when:
       def filesForApplication = auroraConfig.getFilesForApplication(aid)
@@ -104,8 +105,10 @@ class AuroraConfigTest extends Specification {
 
   def "Returns files for application with app for env override"() {
     given:
+
+      def aid = new DeployCommand("booberdev", "console",
+          [overrideFile("${aid.environmentName}/${aid.applicationName}.json")])
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
-      auroraConfig.addOverrides([overrideFile("${aid.environmentName}/${aid.applicationName}.json")])
 
     when:
       def filesForApplication = auroraConfig.getFilesForApplication(aid)
@@ -120,7 +123,7 @@ class AuroraConfigTest extends Specification {
       def auroraConfig = new AuroraConfig(files, [:])
 
     when:
-      auroraConfig.getFilesForApplication(new ApplicationId("utv", "referanse"))
+      auroraConfig.getFilesForApplication(new DeployCommand("utv", "referanse"))
 
     then: "Should be missing utv/referanse.json"
       def ex = thrown(IllegalArgumentException)
