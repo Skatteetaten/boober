@@ -19,32 +19,31 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient) {
 
 
     fun validate(auroraConfig: AuroraConfig) {
-        val appIds = auroraConfig.getApplicationIds()
-        appIds.map { aid ->
-            try {
-                val mapper = createMapper(aid, auroraConfig)
-                mapper.validate()
-                Result<Boolean, Error?>(value = true)
-            } catch (e: ApplicationConfigException) {
-                Result<AuroraDeploymentConfig, Error?>(error = Error(aid, e.errors))
-            } catch (e: IllegalArgumentException) {
-                Result<AuroraDeploymentConfig, Error?>(error = Error(aid, listOf(ValidationError(e.message!!))))
-            }
-        }.orElseThrow {
-            AuroraConfigException("AuroraConfig contained errors for one or more applications", it)
-        }
+
+        processDeployCommands(auroraConfig.getApplicationIds(), {
+            createMapper(it, auroraConfig).validate()
+            true
+        })
     }
 
-    fun createAuroraDcs(auroraConfig: AuroraConfig, applicationIds: List<DeployCommand>): List<AuroraDeploymentConfig> {
+    fun createAuroraDcs(auroraConfig: AuroraConfig, deployCommands: List<DeployCommand>): List<AuroraDeploymentConfig> {
 
-        return applicationIds.map { aid ->
+        return processDeployCommands(deployCommands, { createAuroraDc(it, auroraConfig) })
+    }
+
+    private fun <T : Any> processDeployCommands(deployCommands: List<DeployCommand>, operation: (DeployCommand) -> T): List<T> {
+
+        return deployCommands.map { deployCommand ->
+            val appName = deployCommand.applicationName
+            val envName = deployCommand.environmentName
+
             try {
-                val adc = createAuroraDc(aid, auroraConfig)
-                Result<AuroraDeploymentConfig, Error?>(value = adc)
+                val value = operation(deployCommand)
+                Result<T, Error?>(value = value)
             } catch (e: ApplicationConfigException) {
-                Result<AuroraDeploymentConfig, Error?>(error = Error(aid, e.errors))
+                Result<T, Error?>(error = Error(appName, envName, e.errors))
             } catch (e: IllegalArgumentException) {
-                Result<AuroraDeploymentConfig, Error?>(error = Error(aid, listOf(ValidationError(e.message!!))))
+                Result<T, Error?>(error = Error(appName, envName, listOf(ValidationError(e.message!!))))
             }
         }.orElseThrow {
             AuroraConfigException("AuroraConfig contained errors for one or more applications", it)
@@ -82,5 +81,4 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient) {
 
         return AuroraConfigMapperV1Deploy(aid, auroraConfig, openShiftClient)
     }
-
 }
