@@ -28,6 +28,7 @@ class SetupController(val setupFacade: SetupFacade, val auroraConfigFacade: Auro
 
         val setupParams = cmd.setupParams.toSetupParams()
 
+        //TODO: Her må vi gi bedre feilmelding hvis det smeller.
         val auroraConfig: AuroraConfig = cmd.auroraConfig!!.toAuroraConfig()
 
         return executeSetup(auroraConfig, setupParams.applicationIds)

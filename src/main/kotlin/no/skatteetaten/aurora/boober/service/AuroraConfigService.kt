@@ -12,10 +12,13 @@ import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.internal.*
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class AuroraConfigService(val openShiftClient: OpenShiftClient) {
+    val logger: Logger = LoggerFactory.getLogger(AuroraConfigService::class.java)
 
 
     fun validate(auroraConfig: AuroraConfig) {
@@ -41,8 +44,10 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient) {
                 val value = operation(deployCommand)
                 Result<T, Error?>(value = value)
             } catch (e: ApplicationConfigException) {
+                logger.debug("ACE {}", e.errors)
                 Result<T, Error?>(error = Error(appName, envName, e.errors))
             } catch (e: IllegalArgumentException) {
+                logger.debug("IAE {}", e.message)
                 Result<T, Error?>(error = Error(appName, envName, listOf(ValidationError(e.message!!))))
             }
         }.orElseThrow {

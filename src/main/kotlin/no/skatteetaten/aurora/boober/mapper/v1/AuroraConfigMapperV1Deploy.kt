@@ -61,11 +61,11 @@ class AuroraConfigMapperV1Deploy(
                 extraTags = auroraConfigFields.extract("extraTags"),
 
                 flags = AuroraDeploymentConfigFlags(
-                        auroraConfigFields.extract("flags/route", { it.asText() == "true" }),
                         auroraConfigFields.extract("flags/cert", { it.asText() == "true" }),
                         auroraConfigFields.extract("flags/debug", { it.asText() == "true" }),
                         auroraConfigFields.extract("flags/alarm", { it.asText() == "true" }),
                         auroraConfigFields.extract("flags/rolling", { it.asText() == "true" })
+
                 ),
                 resources = AuroraDeploymentConfigResources(
                         memory = AuroraDeploymentConfigResource(
@@ -103,7 +103,10 @@ class AuroraConfigMapperV1Deploy(
                 }),
 
                 config = auroraConfigFields.getConfigMap(configHandlers),
+                route = getRoute(),
                 fields = auroraConfigFields.fields
         )
     }
+
+
 }

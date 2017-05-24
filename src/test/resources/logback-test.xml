@@ -2,5 +2,5 @@
 <configuration>
   <include resource="org/springframework/boot/logging/logback/base.xml" />
   <logger name="ROOT" level="WARN" />
-  <logger name="no.skatteetaten" level="INFO" />
+  <logger name="no.skatteetaten" level="DEBUG" />
 </configuration>

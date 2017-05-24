@@ -1,7 +1,6 @@
 {
   "flags": {
-    "rolling": true,
-    "route": true
+    "rolling": true
   },
   "groupId": "ske.admin.lisens",
   "artifactId": "verify-ebs-users",
@@ -17,5 +16,11 @@
   "webseal": {
     "path": "/test",
     "roles": "admin dev"
+  },
+  "route": {
+    "path": "/foo",
+    "annotations": {
+      "timeout": "30s"
+    }
   }
 }

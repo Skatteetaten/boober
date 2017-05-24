@@ -43,9 +43,7 @@ class AuroraConfigMapperV1LocalTemplate(
                 config = auroraConfigFields.getConfigMap(configHandlers),
                 templateJson = templateJson,
                 parameters = auroraConfigFields.getParameters(parameterHandlers),
-                flags = AuroraDeploymentConfigFlags(
-                        auroraConfigFields.extract("flags/route", { it.asText() == "true" })
-                ),
+                route = getRoute(),
                 fields = auroraConfigFields.fields
         )
     }

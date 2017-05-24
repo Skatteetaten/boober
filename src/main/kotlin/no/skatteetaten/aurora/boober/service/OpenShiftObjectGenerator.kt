@@ -68,7 +68,7 @@ class OpenShiftObjectGenerator(
             templatesToProcess.add("secret.json")
         }
 
-        if (auroraDc.flags.route) {
+        if (auroraDc.route != null) {
             templatesToProcess.add("route.json")
         }
 

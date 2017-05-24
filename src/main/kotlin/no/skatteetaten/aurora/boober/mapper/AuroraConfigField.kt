@@ -30,6 +30,16 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         return if (configMap.isNotEmpty()) configMap else null
     }
 
+    fun getRouteAnnotations(extractors: List<AuroraConfigFieldHandler>): Map<String, String>? {
+        return extractors.map {
+            val (_, _, field) = it.name.split("/", limit = 3)
+
+            val value = extract(it.name)
+            field to value
+        }.toMap()
+
+    }
+
     fun getParameters(parameterExtractors: List<AuroraConfigFieldHandler>): Map<String, String>? {
         return parameterExtractors.map {
             val (_, field) = it.name.split("/", limit = 2)
@@ -37,7 +47,6 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
             val value = extract(it.name)
             field to value
         }.toMap()
-
     }
 
 

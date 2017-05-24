@@ -161,7 +161,7 @@
                 }
               #end
 
-              #if (${adc.flags.route})
+              #if (${adc.route})
                   ,{
                     "name": "ROUTE_NAME",
                     "value": "${adc.routeName}"

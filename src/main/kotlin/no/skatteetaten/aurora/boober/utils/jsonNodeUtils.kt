@@ -21,6 +21,17 @@ fun JsonNode.updateField(source: JsonNode, root: String, field: String, required
     targetRoot.set(field, sourceField)
 }
 
+fun JsonNode?.startsWith(pattern: String, message: String): Exception? {
+    if (this == null) {
+        return IllegalArgumentException(message)
+    }
+    if (!this.textValue().startsWith(pattern)) {
+        return IllegalArgumentException(message)
+
+    }
+
+    return null
+}
 fun JsonNode?.pattern(pattern: String, message: String): Exception? {
     if (this == null) {
         return IllegalArgumentException(message)
