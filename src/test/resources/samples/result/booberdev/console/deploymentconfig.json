@@ -3,26 +3,21 @@
   "apiVersion": "v1",
   "metadata": {
     "annotations": {
+      "console.skatteetaten.no/management-path": ":8081/actuator",
       "console.skatteetaten.no/alarm": "true",
-      "sprocket.sits.no/deployment-config.certificate": "ske.admin.lisens.verify-ebs-users"
+      "sprocket.sits.no/deployment-config.certificate": "ske.openshift.aurora.openshift-console-api"
     },
     "labels": {
-      "app": "verify-ebs-users",
+      "app": "openshift-console-api",
       "updatedBy": "hero",
       "affiliation": "aos"
     },
-    "name": "verify-ebs-users"
+    "name": "openshift-console-api"
   },
   "spec": {
     "strategy": {
-      "type": "Rolling",
-      "rollingParams": {
-        "intervalSeconds": 1,
-        "maxSurge": "25%",
-        "maxUnavailable": 0,
-        "timeoutSeconds": 120,
-        "updatePeriodSeconds": 1
-      }
+      "type": "Recreate",
+      "resources": {}
     },
     "triggers": [
       {
@@ -30,10 +25,10 @@
         "imageChangeParams": {
           "automatic": true,
           "containerNames": [
-            "verify-ebs-users"
+            "openshift-console-api"
           ],
           "from": {
-            "name": "verify-ebs-users:latest",
+            "name": "openshift-console-api:default",
             "kind": "ImageStreamTag"
           }
         }
@@ -41,12 +36,12 @@
     ],
     "replicas": 1,
     "selector": {
-      "name": "verify-ebs-users"
+      "name": "openshift-console-api"
     },
     "template": {
       "metadata": {
         "labels": {
-          "name": "verify-ebs-users",
+          "name": "openshift-console-api",
           "updatedBy": "hero",
           "affiliation": "aos"
         }
@@ -55,18 +50,13 @@
         "volumes": [
           {
             "name": "application-log-volume",
-            "emptyDir": {}
-          },
-          {
-            "name": "config",
-            "configMap": {
-              "name": "verify-ebs-users"
+            "emptyDir": {
             }
           }
         ],
         "containers": [
           {
-            "name": "verify-ebs-users",
+            "name": "openshift-console-api",
             "ports": [
               {
                 "containerPort": 8080,
@@ -116,11 +106,19 @@
               },
               {
                 "name": "APP_NAME",
-                "value": "verify-ebs-users"
+                "value": "openshift-console-api"
+              },
+              {
+                "name": "REMOTE_DEBUG",
+                "value": "true"
+              },
+              {
+                "name": "DEBUG_PORT",
+                "value": "5005"
               },
               {
                 "name": "ROUTE_NAME",
-                "value": "http://verify-ebs-users-aos-booberdev.utv.paas.skead.no/foo"
+                "value": "http://openshift-console-api-aos-booberdev.utv.paas.skead.nonull"
               }
             ],
             "resources": {
@@ -137,17 +135,15 @@
               {
                 "name": "application-log-volume",
                 "mountPath": "/u01/logs"
-              },
-              {
-                "name": "config",
-                "mountPath": "/u01/config/configmap"
               }
             ],
             "terminationMessagePath": "/dev/termination-log",
             "imagePullPolicy": "IfNotPresent",
-            "capabilities": {},
+            "capabilities": {
+            },
             "securityContext": {
-              "capabilities": {},
+              "capabilities": {
+              },
               "privileged": false
             },
             "livenessProbe": {

@@ -96,7 +96,7 @@ class OpenShiftObjectGeneratorTest extends Specification {
 
     expect:
 
-      def auroraConfig = new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])
+      def auroraConfig = new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, secret)
       def auroraDc = auroraDeploymentConfigService.createAuroraDeploymentConfigs(deployCommand, auroraConfig)
 
       List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc)
@@ -109,18 +109,21 @@ class OpenShiftObjectGeneratorTest extends Specification {
         compareJson(resultFiles[kind], it)
       }
 
-      generatedObjects.size() == resultFiles.size()
+      generatedObjects.collect { it.get("kind").asText().toLowerCase() } as Set == resultFiles.keySet()
 
     when:
 
     where:
-      env         | name               | templateFile
-      "booberdev" | "verify-ebs-users" | null
-      "booberdev" | "tvinn"            | "atomhopper.json"
+      env          | name               | secret                                                     | templateFile
+      "booberdev"  | "console"          | [:]                                                        | null
+      "booberdev"  | "verify-ebs-users" | [:]                                                        | null
+      "booberdev"  | "tvinn"            | [:]                                                        | "atomhopper.json"
+      "secrettest" | "verify-ebs-users" | ["/tmp/foo/latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="] | null
+
   }
 
   def compareJson(JsonNode jsonNode, JsonNode target) {
-    assert JsonOutput.prettyPrint(jsonNode.toString()) == JsonOutput.prettyPrint(target.toString())
+    assert JsonOutput.prettyPrint(target.toString()) == JsonOutput.prettyPrint(jsonNode.toString())
     true
   }
 

@@ -1,7 +1,4 @@
 {
-  "route": {
-    "generate": true
-  },
   "name": "tvinn",
   "templateFile": "templates/atomhopper.json",
   "parameters": {

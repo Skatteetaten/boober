@@ -69,6 +69,7 @@ class OpenShiftObjectGenerator(
         }
 
         if (auroraDc.route != null) {
+            logger.debug("Route is {}", auroraDc.route)
             templatesToProcess.add("route.json")
         }
 
