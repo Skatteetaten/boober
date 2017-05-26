@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.controller.security
 
 import com.fasterxml.jackson.databind.JsonNode
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
@@ -8,11 +9,15 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter
+import org.springframework.security.web.util.matcher.RequestMatcher
+import javax.servlet.http.HttpServletRequest
 
 @EnableWebSecurity
 class WebSecurityConfig(
-        val authenticationManager: BearerAuthenticationManager
+        val authenticationManager: BearerAuthenticationManager,
+        @Value("\${management.port}") val managementPort: Int
 ) : WebSecurityConfigurerAdapter() {
+
 
     override fun configure(http: HttpSecurity) {
 
@@ -21,9 +26,11 @@ class WebSecurityConfig(
         http.authenticationProvider(preAuthenticationProvider())
                 .addFilter(requestHeaderAuthenticationFilter())
                 .authorizeRequests()
-                .antMatchers("/health").permitAll()
+                .requestMatchers(forPort(managementPort)).permitAll()
                 .anyRequest().authenticated()
     }
+
+    private fun forPort(port: Int) = RequestMatcher { request: HttpServletRequest -> port == request.localPort }
 
     @Bean
     internal fun preAuthenticationProvider() = PreAuthenticatedAuthenticationProvider().apply {
