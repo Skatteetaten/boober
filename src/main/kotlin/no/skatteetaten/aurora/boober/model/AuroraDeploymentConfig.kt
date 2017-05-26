@@ -133,7 +133,7 @@ data class HttpEndpoint(
 )
 
 data class Webseal(
-        val path: String,
+        val host: String,
         val roles: String?
 )
 

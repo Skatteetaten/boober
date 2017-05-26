@@ -4,7 +4,7 @@
   "metadata": {
     "name": "openshift-console-api",
     "annotations": {
-      "sprocket.sits.no/service.webseal": "/webseal",
+      "sprocket.sits.no/service.webseal": "webseal",
       "prometheus.io/scheme": "http",
       "prometheus.io/scrape": "true",
       "prometheus.io/path": "/prometheus",

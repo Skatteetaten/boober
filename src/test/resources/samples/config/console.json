@@ -25,7 +25,7 @@
     "port": "8081"
   },
   "webseal": {
-    "path": "/webseal"
+    "host": "webseal"
   },
   "managementPath": ":8081/actuator"
 }

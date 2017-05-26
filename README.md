@@ -94,7 +94,7 @@ Below is an json with all possible values ( and some comments)
     "path": "/prometheus" 
   },
   "webseal": { //open up firewall with webseal
-    "path": "webseal-path", 
+    "host": "webseal-hostprefix", 
     "roles": "role1, role2"
   },
   "managementPath": ":8081/actuator", //where is the management interface located

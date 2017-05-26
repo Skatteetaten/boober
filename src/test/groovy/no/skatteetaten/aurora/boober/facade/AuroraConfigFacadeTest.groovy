@@ -28,7 +28,7 @@ import spock.mock.DetachedMockFactory
     OpenShiftResourceClient,
     Config
 ], properties = [
-    "boober.git.url=/tmp/boober-test",
+    "boober.git.urlPattern=/tmp/boober-test/%s",
     "boober.git.checkoutPath=/tmp/boober",
     "boober.git.username=",
     "boober.git.password="

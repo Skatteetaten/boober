@@ -7,7 +7,7 @@ boober:
     key: "komogsyngensang"
 
   git:
-    url: "/tmp/boobertest"
+    urlPattern: "/tmp/boobertest/%s"
     username: "boober"
     password: "komogsyngensang"
 
