@@ -14,7 +14,7 @@
     }
   },
   "webseal": {
-    "path": "/test",
+    "host": "test",
     "roles": "admin dev"
   },
   "route": {

@@ -106,7 +106,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
     then:
       auroraDc.prometheus.port == 8081
-      auroraDc.webseal.path == "/webseal"
+      auroraDc.webseal.host == "webseal"
   }
 
   def "Should create AuroraConfigFields with overrides"() {

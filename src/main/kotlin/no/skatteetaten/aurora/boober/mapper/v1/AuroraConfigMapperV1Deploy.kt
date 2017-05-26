@@ -86,7 +86,7 @@ class AuroraConfigMapperV1Deploy(
 
                 webseal = auroraConfigFields.findAll("webseal", {
                     Webseal(
-                            auroraConfigFields.extract("webseal/path"),
+                            auroraConfigFields.extract("webseal/host"),
                             auroraConfigFields.extractOrNull("webseal/roles")
                     )
                 }),

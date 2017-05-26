@@ -5,7 +5,7 @@
     "name": "${adc.name}",
     "annotations": {
       #if(${adc.webseal})
-        "sprocket.sits.no/service.webseal": "${adc.webseal.path}",
+        "sprocket.sits.no/service.webseal": "${adc.webseal.host}",
         #if(${adc.webseal.roles})
           "sprocket.sits.no/service.webseal-roles": "${adc.webseal.roles}",
         #end
