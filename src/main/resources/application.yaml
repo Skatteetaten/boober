@@ -8,14 +8,6 @@ openshift:
     url: https://utv-master.paas.skead.no:8443
     cluster: utv
 
-boober:
-  encrypt:
-    key: "komogsyngensang"
-  git:
-    url: "https://git.aurora.skead.no/scm/oc"
-    checkoutPath: "/tmp/boober"
-    username: "boober"
-    password: "komogsyngensang"
 
 management:
     health.status.order: DOWN, OUT_OF_SERVICE, UNKNOWN, COMMENT, UP
@@ -47,7 +39,7 @@ endpoints:
         enabled: false
 spring:
   profiles:
-    active: development
+    active: local
 
 logging:
   level:
@@ -60,11 +52,17 @@ logging:
       apache:
         catalina: INFO
         velocity: INFO
-
 ---
-spring:
-  profiles: development
+profiles: local
 
+boober:
+  encrypt:
+    key: "password"
+  git:
+    urlPattern: "/tmp/boobergit/%s"
+    checkoutPath: "/tmp/boober"
+    username: "boober"
+    password: "password"
 
 ---
 spring:

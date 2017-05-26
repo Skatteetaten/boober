@@ -20,7 +20,7 @@ class AuroraConfigFacade(
         val gitService: GitService,
         val mapper: ObjectMapper,
         val encryptionService: EncryptionService,
-        val auroraConfigValidationService: AuroraConfigService) {
+        val auroraConfigService: AuroraConfigService) {
 
     private val GIT_SECRET_FOLDER = ".secret"
     private val logger = LoggerFactory.getLogger(AuroraConfigFacade::class.java)
@@ -68,7 +68,7 @@ class AuroraConfigFacade(
         val newAuroraConfig = function(auroraConfig)
 
         if (commitChanges) {
-            auroraConfigValidationService.validate(newAuroraConfig)
+            auroraConfigService.validate(newAuroraConfig)
             measureTimeMillis {
                 val encryptedSecretsFiles = encryptSecrets(auroraConfig, newAuroraConfig, filesForAffiliation)
                 val configFiles = convertFilesToString(newAuroraConfig.auroraConfigFiles)

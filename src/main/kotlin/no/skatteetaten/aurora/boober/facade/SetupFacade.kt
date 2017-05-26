@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class SetupFacade(
-        val auroraConfigValidationService: AuroraConfigService,
+        val auroraConfigService: AuroraConfigService,
         val openShiftObjectGenerator: OpenShiftObjectGenerator,
         val openShiftClient: OpenShiftClient,
         @Value("\${openshift.cluster}") val cluster: String) {
@@ -31,7 +31,7 @@ class SetupFacade(
         val appIds: List<DeployCommand> = applicationIds
                 .takeIf { it.isNotEmpty() } ?: throw IllegalArgumentException("Specify applicationId")
 
-        val auroraDcs = auroraConfigValidationService.createAuroraDcs(auroraConfig, appIds)
+        val auroraDcs = auroraConfigService.createAuroraDcs(auroraConfig, appIds)
 
         return auroraDcs
                 .filter { it.cluster == cluster }
