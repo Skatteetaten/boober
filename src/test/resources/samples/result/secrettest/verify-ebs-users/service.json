@@ -1,0 +1,33 @@
+{
+  "kind": "Service",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "verify-ebs-users",
+    "annotations": {
+      "sprocket.sits.no/service.webseal": "/test",
+      "sprocket.sits.no/service.webseal-roles": "admin dev",
+      "prometheus.io/scrape": "false"
+    },
+    "labels": {
+      "app": "verify-ebs-users",
+      "updatedBy": "hero",
+      "affiliation": "aos"
+    }
+  },
+  "spec": {
+    "ports": [
+      {
+        "name": "http",
+        "protocol": "TCP",
+        "port": 80,
+        "targetPort": 8080,
+        "nodePort": 0
+      }
+    ],
+    "selector": {
+      "name": "verify-ebs-users"
+    },
+    "type": "ClusterIP",
+    "sessionAffinity": "None"
+  }
+}

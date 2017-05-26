@@ -5,8 +5,10 @@
     }
   },
   "flags": {
-    "rolling": true,
-    "route": true
+    "debug": true
+  },
+  "route": {
+    "generate": true
   },
   "name": "openshift-console-api",
   "groupId": "ske.openshift.aurora",
@@ -24,5 +26,6 @@
   },
   "webseal": {
     "path": "/webseal"
-  }
+  },
+  "managementPath": ":8081/actuator"
 }

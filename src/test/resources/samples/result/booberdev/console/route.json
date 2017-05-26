@@ -1,0 +1,18 @@
+{
+  "kind": "Route",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "openshift-console-api",
+    "labels": {
+      "app": "openshift-console-api",
+      "updatedBy": "hero",
+      "affiliation": "aos"
+    }
+  },
+  "spec": {
+    "to": {
+      "kind": "Service",
+      "name": "openshift-console-api"
+    }
+  }
+}

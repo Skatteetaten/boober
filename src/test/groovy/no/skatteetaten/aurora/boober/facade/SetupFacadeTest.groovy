@@ -98,7 +98,7 @@ class SetupFacadeTest extends Specification {
     def processAid = new DeployCommand("booberdev", "tvinn")
 
     given:
-      def templateResult = this.getClass().getResource("/openshift-objects/atomhopper-new.json")
+      def templateResult = this.getClass().getResource("/samples/processedtemplate/booberdev/tvinn/atomhopper.json")
       JsonNode jsonResult = mapper.readTree(templateResult)
       resourceClient.post("processedtemplate", null, _, _) >>
           new ResponseEntity<JsonNode>(jsonResult, HttpStatus.OK)

@@ -38,17 +38,19 @@ abstract class AuroraConfigMapperV1(
             AuroraConfigFieldHandler("database"),
             AuroraConfigFieldHandler("route/host"),
             AuroraConfigFieldHandler("route/path", validator = { it?.startsWith("/", "Path must start with /") }),
-            AuroraConfigFieldHandler("route/generate"),
+            AuroraConfigFieldHandler("route/generate", defaultValue = "false"),
             AuroraConfigFieldHandler("webseal/path"),
             AuroraConfigFieldHandler("webseal/roles"),
             AuroraConfigFieldHandler("secretFolder", validator = validateSecrets(auroraConfig))
     )
 
     fun getRoute(): Route? {
-        val generateRoute = auroraConfigFields.extractOrNull("route/generate")?.let { it == "true" } ?: false
+
+        val generateRoute = auroraConfigFields.extract("route/generate", { it.asText() == "true" })
+        logger.debug("Route generate, {}", generateRoute)
         val routePath = auroraConfigFields.extractOrNull("route/path")
         val routeHost = auroraConfigFields.extractOrNull("route/host")
-        routeHandlers.forEach { it -> logger.info("{}", it.toString()) }
+        routeHandlers.forEach { it -> logger.debug("{}", it.toString()) }
 
         return if (generateRoute || routeHost != null || routePath != null || !routeHandlers.isEmpty()) {
             Route(routeHost, routePath, auroraConfigFields.getRouteAnnotations(routeHandlers))

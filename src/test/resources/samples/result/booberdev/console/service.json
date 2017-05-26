@@ -1,0 +1,35 @@
+{
+  "kind": "Service",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "openshift-console-api",
+    "annotations": {
+      "sprocket.sits.no/service.webseal": "/webseal",
+      "prometheus.io/scheme": "http",
+      "prometheus.io/scrape": "true",
+      "prometheus.io/path": "/prometheus",
+      "prometheus.io/port": "8081"
+    },
+    "labels": {
+      "app": "openshift-console-api",
+      "updatedBy": "hero",
+      "affiliation": "aos"
+    }
+  },
+  "spec": {
+    "ports": [
+      {
+        "name": "http",
+        "protocol": "TCP",
+        "port": 80,
+        "targetPort": 8080,
+        "nodePort": 0
+      }
+    ],
+    "selector": {
+      "name": "openshift-console-api"
+    },
+    "type": "ClusterIP",
+    "sessionAffinity": "None"
+  }
+}

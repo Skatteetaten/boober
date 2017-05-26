@@ -3,8 +3,10 @@
   "apiVersion": "v1",
   "metadata": {
     "annotations": {
-      "marjory.skatteetaten.no/management-path": "$!{adc.managementPath}",
-      "marjory.skatteetaten.no/alarm": "${adc.flags.alarm}"
+      #if(${adc.managementPath})
+        "console.skatteetaten.no/management-path": "${adc.managementPath}",
+      #end
+      "console.skatteetaten.no/alarm": "${adc.flags.alarm}"
       #if(${adc.certificateCn})
       ,
         "sprocket.sits.no/deployment-config.certificate": "${adc.certificateCn}"

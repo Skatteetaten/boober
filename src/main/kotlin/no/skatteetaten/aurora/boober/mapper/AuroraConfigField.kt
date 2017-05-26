@@ -31,6 +31,9 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
     }
 
     fun getRouteAnnotations(extractors: List<AuroraConfigFieldHandler>): Map<String, String>? {
+        if (extractors.isEmpty()) {
+            return null
+        }
         return extractors.map {
             val (_, _, field) = it.name.split("/", limit = 3)
 

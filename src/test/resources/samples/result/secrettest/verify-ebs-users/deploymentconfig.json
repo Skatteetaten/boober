@@ -58,9 +58,9 @@
             "emptyDir": {}
           },
           {
-            "name": "config",
-            "configMap": {
-              "name": "verify-ebs-users"
+            "name": "secrets",
+            "secret": {
+              "secretName": "verify-ebs-users"
             }
           }
         ],
@@ -120,7 +120,7 @@
               },
               {
                 "name": "ROUTE_NAME",
-                "value": "http://verify-ebs-users-aos-booberdev.utv.paas.skead.no/foo"
+                "value": "http://verify-ebs-users-aos-secrettest.utv.paas.skead.no/foo"
               }
             ],
             "resources": {
@@ -139,8 +139,8 @@
                 "mountPath": "/u01/logs"
               },
               {
-                "name": "config",
-                "mountPath": "/u01/config/configmap"
+                "name": "secrets",
+                "mountPath": "/u01/config/secret"
               }
             ],
             "terminationMessagePath": "/dev/termination-log",
