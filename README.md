@@ -50,7 +50,7 @@ utv/refernce.json  | override      | Configuration specific to one application i
 All properties in AuroraConfig can be set inn all files.
  
 Below is an json with all possible values ( and some comments)
-```json
+```
 {
   "schemaVersion" : "v1", //only supported version for now. Will get bumped if/when breaking changes occur
   "type" : "deploy",  //valid types are deploy,development,localTemplate, template
