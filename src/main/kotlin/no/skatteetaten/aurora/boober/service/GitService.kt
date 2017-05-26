@@ -20,7 +20,7 @@ import java.util.*
 @Service
 class GitService(
         val userDetails: UserDetailsProvider,
-        @Value("\${boober.git.url}") val url: String,
+        @Value("\${boober.git.urlPattern}") val url: String,
         @Value("\${boober.git.checkoutPath}") val checkoutPath: String,
         @Value("\${boober.git.username}") val username: String,
         @Value("\${boober.git.password}") val password: String) {
