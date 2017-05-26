@@ -25,7 +25,7 @@
       },
       "route": {
         "generate": true
-      }
+      },
       "groupId": "ske.aurora.openshift.referanse",
       "artifactId": "openshift-referanse-springboot-server",
       "version": "0",
