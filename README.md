@@ -4,7 +4,7 @@ Boober is our take on how to handle the `wall of yaml` challenge of Kubernetes. 
 schemaVersion from a git repo (AuroraConfig) and transforms it into Openshift Objects via a AuroraDeploymentConfiguration.
 
 ## How to run locally
-First start up a local version of boober. Eihter in you ide or by running
+First start up a local version of boober. Either in you ide or by running
 
       ./gradlew run 
       
