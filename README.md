@@ -69,9 +69,12 @@ Below is an json with all possible values ( and some comments)
      }
   },
   "route": {
-    "generate": true, //will set host to $name-$namespace
+    "generate": true, //will set host to $name-$namespace. 
     "path" : "/foo",
-    "host" : "custom-host" //will get cluster prefix added
+    "host" : "custom-host", //will get cluster prefix added
+    "annotations" : {
+       "balance" : "lastconn" //set haproxy annotations. https://docs.openshift.com/container-platform/3.5/architecture/core_concepts/routes.html#route-specific-annotations
+     }
   },
   "resources" : { //set memory/cpu request and limit
     "cpu": {
