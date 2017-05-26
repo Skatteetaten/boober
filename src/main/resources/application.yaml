@@ -43,7 +43,7 @@ spring:
 
 logging:
   level:
-    no.skatteetaten: DEBUG
+    no.skatteetaten: INFO
     ske.aurora.filter: INFO
     org:
       jboss: INFO

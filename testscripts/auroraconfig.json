@@ -21,9 +21,11 @@
       "secretFolder": "/tmp/test",
       "flags": {
         "cert": true,
-        "route": true,
         "rolling": true
       },
+      "route": {
+        "generate": true
+      }
       "groupId": "ske.aurora.openshift.referanse",
       "artifactId": "openshift-referanse-springboot-server",
       "version": "0",
