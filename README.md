@@ -16,6 +16,18 @@ Then run the script `testscripts/setup-local.sh`
  
 ## Architecture
   
+Boober uses Git as a storage mechanism for its config files. Boober owns this repository and it should be the only
+component writing to it. It will ensure that the files written are valid and that secrets are encrypted.
+
+### How AuroraConfig is aved into git
+![save](docs/images/boober.png "Save AuroraConfig")
+
+
+### How objects in OpenShift are created
+![deploy](docs/images/boober-deploy.png "Deploy application")
+
+## Concepts
+
 ### AuroraConfig
 A set of versioned files (all files in one affiliation must have the same version) to express how to create projects
 and deploy applications on openshift
