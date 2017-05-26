@@ -1,0 +1,22 @@
+{
+  "kind": "Route",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "verify-ebs-users",
+    "labels": {
+      "app": "verify-ebs-users",
+      "updatedBy": "hero",
+      "affiliation": "aos"
+    },
+    "annotations": {
+      "haproxy.router.openshift.io/timeout": "30s"
+    }
+  },
+  "spec": {
+    "to": {
+      "kind": "Service",
+      "name": "verify-ebs-users"
+    },
+    "path": "/foo"
+  }
+}

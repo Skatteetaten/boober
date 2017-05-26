@@ -31,7 +31,7 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient) {
 
     fun createAuroraDcs(auroraConfig: AuroraConfig, deployCommands: List<DeployCommand>): List<AuroraDeploymentConfig> {
 
-        return processDeployCommands(deployCommands, { createAuroraDc(it, auroraConfig) })
+        return processDeployCommands(deployCommands, { createAuroraDeploymentConfigs(it, auroraConfig) })
     }
 
     private fun <T : Any> processDeployCommands(deployCommands: List<DeployCommand>, operation: (DeployCommand) -> T): List<T> {
@@ -55,7 +55,7 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient) {
         }
     }
 
-    fun createAuroraDc(aid: DeployCommand, auroraConfig: AuroraConfig): AuroraDeploymentConfig {
+    fun createAuroraDeploymentConfigs(aid: DeployCommand, auroraConfig: AuroraConfig): AuroraDeploymentConfig {
         val mapper = createMapper(aid, auroraConfig)
         mapper.validate()
         val adc = mapper.toAuroraDeploymentConfig()
