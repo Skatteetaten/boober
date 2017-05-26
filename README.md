@@ -58,7 +58,7 @@ Below is an json with all possible values ( and some comments)
   "cluster" : "utv", //what cluster to run on. We have 6 clusters utv,test,prod and utv-relay, test-relay, prod-relay
   "replicas": 3, //run application in 3 replicas
   "flags": {
-    "cert": true, //generate security token with name $groupId.$artifactId
+    "cert": true, //generate keystore with cn=$groupId.$artifactId
     "rolling": true, //we want rolling upgrade
     "debug" : true, //turn on remote debugging. NB Should only be used in development
     "alarm" : true //should this installation trigger alarms. Set to false to avoid alarms when setting up. In Prod it is always on
