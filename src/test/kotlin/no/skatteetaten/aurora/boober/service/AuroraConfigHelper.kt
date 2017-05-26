@@ -33,21 +33,32 @@ fun createAuroraConfig(aid: DeployCommand, secrets: Map<String, String> = mapOf(
     return AuroraConfig(files.map { AuroraConfigFile(it.key, it.value!!, false) }, secrets)
 }
 
-fun getSampleFiles(deployCommand: DeployCommand): Map<String, JsonNode?> {
+@JvmOverloads
+fun getSampleFiles(deployCommand: DeployCommand, template: String? = null): Map<String, JsonNode?> {
     val applicationName = deployCommand.applicationName
     val environmentName = deployCommand.environmentName
+
 
     return collectFilesToMapOfJsonNode(
             "about.json",
             "$applicationName.json",
             "$environmentName/about.json",
-            "$environmentName/$applicationName.json"
+            "$environmentName/$applicationName.json",
+            template?.let { "templates/$it" } ?: ""
     )
+}
+
+fun getResultFiles(aid: DeployCommand): Map<String, JsonNode?> {
+    val baseFolder = File(AuroraConfigHelper::class.java.getResource("/samples/result/${aid.environmentName}/${aid.applicationName}").file)
+
+    return baseFolder.listFiles().toHashSet().map {
+        it.nameWithoutExtension to convertFileToJsonNode(it)
+    }.toMap()
 }
 
 private fun collectFilesToMapOfJsonNode(vararg fileNames: String): Map<String, JsonNode?> {
 
-    return fileNames.map { it to convertFileToJsonNode(File(folder, it)) }.toMap()
+    return fileNames.filter { !it.isBlank() }.map { it to convertFileToJsonNode(File(folder, it)) }.toMap()
 }
 
 private fun convertFileToJsonNode(file: File): JsonNode? {

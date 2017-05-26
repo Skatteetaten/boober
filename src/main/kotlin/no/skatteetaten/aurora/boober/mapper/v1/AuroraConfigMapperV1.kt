@@ -21,7 +21,7 @@ abstract class AuroraConfigMapperV1(
         openShiftClient: OpenShiftClient
 ) : AuroraConfigMapper(aid, auroraConfig) {
 
-    val logger: Logger = LoggerFactory.getLogger(AuroraConfigMapperV1::class.java)
+    override val logger: Logger = LoggerFactory.getLogger(AuroraConfigMapperV1::class.java)
 
     val applicationFiles = auroraConfig.getFilesForApplication(aid)
     val configHandlers = findConfigFieldHandlers(applicationFiles)
