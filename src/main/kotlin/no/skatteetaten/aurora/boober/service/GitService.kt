@@ -30,7 +30,7 @@ class GitService(
     fun checkoutRepoForAffiliation(affiliation: String): Git {
 
         val dir = File("$checkoutPath/${UUID.randomUUID()}").apply { mkdirs() }
-        val uri = "$url/$affiliation.git"
+        val uri = url.format(affiliation)
 
         return try {
             Git.cloneRepository()

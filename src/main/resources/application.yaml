@@ -57,9 +57,9 @@ profiles: local
 
 boober:
   encrypt:
-    key: "password"
+    key: "komogsyngensang"
   git:
-    urlPattern: "/tmp/boobergit/%s"
+    urlPattern: "file:///tmp/boobergit/%s"
     checkoutPath: "/tmp/boober"
     username: "boober"
     password: "password"
