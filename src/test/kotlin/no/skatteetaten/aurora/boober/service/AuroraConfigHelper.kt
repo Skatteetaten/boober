@@ -2,9 +2,9 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.Configuration
+import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.DeployCommand
 import java.io.File
 
 class AuroraConfigHelper
@@ -27,29 +27,26 @@ fun getAuroraConfigSamples(secrets: Map<String, String> = mapOf()): AuroraConfig
 
 
 @JvmOverloads
-fun createAuroraConfig(aid: DeployCommand, secrets: Map<String, String> = mapOf()): AuroraConfig {
+fun createAuroraConfig(aid: ApplicationId, secrets: Map<String, String> = mapOf()): AuroraConfig {
     val files = getSampleFiles(aid)
 
     return AuroraConfig(files.map { AuroraConfigFile(it.key, it.value!!, false) }, secrets)
 }
 
 @JvmOverloads
-fun getSampleFiles(deployCommand: DeployCommand, template: String? = null): Map<String, JsonNode?> {
-    val applicationName = deployCommand.applicationName
-    val environmentName = deployCommand.environmentName
-
+fun getSampleFiles(aid: ApplicationId, template: String? = null): Map<String, JsonNode?> {
 
     return collectFilesToMapOfJsonNode(
             "about.json",
-            "$applicationName.json",
-            "$environmentName/about.json",
-            "$environmentName/$applicationName.json",
+            "${aid.application}.json",
+            "${aid.environment}/about.json",
+            "${aid.environment}/${aid.application}.json",
             template?.let { "templates/$it" } ?: ""
     )
 }
 
-fun getResultFiles(aid: DeployCommand): Map<String, JsonNode?> {
-    val baseFolder = File(AuroraConfigHelper::class.java.getResource("/samples/result/${aid.environmentName}/${aid.applicationName}").file)
+fun getResultFiles(aid: ApplicationId): Map<String, JsonNode?> {
+    val baseFolder = File(AuroraConfigHelper::class.java.getResource("/samples/result/${aid.environment}/${aid.application}").file)
 
     return baseFolder.listFiles().toHashSet().map {
         it.nameWithoutExtension to convertFileToJsonNode(it)

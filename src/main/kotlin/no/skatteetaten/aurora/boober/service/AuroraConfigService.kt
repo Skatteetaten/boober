@@ -23,7 +23,8 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient) {
 
     fun validate(auroraConfig: AuroraConfig) {
 
-        processDeployCommands(auroraConfig.getApplicationIds(), {
+        val deployCommands = auroraConfig.getApplicationIds().map { DeployCommand(it) }
+        processDeployCommands(deployCommands, {
             createMapper(it, auroraConfig).validate()
             true
         })
@@ -37,35 +38,33 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient) {
     private fun <T : Any> processDeployCommands(deployCommands: List<DeployCommand>, operation: (DeployCommand) -> T): List<T> {
 
         return deployCommands.map { deployCommand ->
-            val appName = deployCommand.applicationName
-            val envName = deployCommand.environmentName
-
+            val aid = deployCommand.applicationId
             try {
                 val value = operation(deployCommand)
                 Result<T, Error?>(value = value)
             } catch (e: ApplicationConfigException) {
                 logger.debug("ACE {}", e.errors)
-                Result<T, Error?>(error = Error(appName, envName, e.errors))
+                Result<T, Error?>(error = Error(aid.application, aid.environment, e.errors))
             } catch (e: IllegalArgumentException) {
                 logger.debug("IAE {}", e.message)
-                Result<T, Error?>(error = Error(appName, envName, listOf(ValidationError(e.message!!))))
+                Result<T, Error?>(error = Error(aid.application, aid.environment, listOf(ValidationError(e.message!!))))
             }
         }.orElseThrow {
             AuroraConfigException("AuroraConfig contained errors for one or more applications", it)
         }
     }
 
-    fun createAuroraDeploymentConfigs(aid: DeployCommand, auroraConfig: AuroraConfig): AuroraDeploymentConfig {
-        val mapper = createMapper(aid, auroraConfig)
+    fun createAuroraDeploymentConfigs(deployCommand: DeployCommand, auroraConfig: AuroraConfig): AuroraDeploymentConfig {
+        val mapper = createMapper(deployCommand, auroraConfig)
         mapper.validate()
         val adc = mapper.toAuroraDeploymentConfig()
         return adc
     }
 
 
-    fun createMapper(aid: DeployCommand, auroraConfig: AuroraConfig): AuroraConfigMapper {
+    fun createMapper(deployCommand: DeployCommand, auroraConfig: AuroraConfig): AuroraConfigMapper {
 
-        val fields = AuroraConfigFields.create(baseHandlers, auroraConfig.getFilesForApplication(aid))
+        val fields = AuroraConfigFields.create(baseHandlers, auroraConfig.getFilesForApplication(deployCommand))
 
         val type = fields.extract("type", { TemplateType.valueOf(it.textValue()) })
 
@@ -76,14 +75,14 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient) {
         }
 
         if (type == TemplateType.localTemplate) {
-            return AuroraConfigMapperV1LocalTemplate(aid, auroraConfig, openShiftClient)
+            return AuroraConfigMapperV1LocalTemplate(deployCommand, auroraConfig, openShiftClient)
         }
 
         if (type == TemplateType.template) {
-            return AuroraConfigMapperV1Template(aid, auroraConfig, openShiftClient)
+            return AuroraConfigMapperV1Template(deployCommand, auroraConfig, openShiftClient)
 
         }
 
-        return AuroraConfigMapperV1Deploy(aid, auroraConfig, openShiftClient)
+        return AuroraConfigMapperV1Deploy(deployCommand, auroraConfig, openShiftClient)
     }
 }

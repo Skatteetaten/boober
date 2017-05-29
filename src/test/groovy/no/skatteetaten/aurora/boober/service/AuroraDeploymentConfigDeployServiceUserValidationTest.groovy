@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration
 
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
@@ -25,7 +26,7 @@ class AuroraDeploymentConfigDeployServiceUserValidationTest extends Specificatio
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
-  final DeployCommand aid = new DeployCommand(ENV_NAME, APP_NAME)
+  final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
   @Configuration
   static class Config {
@@ -66,13 +67,14 @@ class AuroraDeploymentConfigDeployServiceUserValidationTest extends Specificatio
   def "Should get error if user is not valid"() {
 
     given:
+      def deployCommand = new DeployCommand(aid)
       openShiftClient.isValidUser("foo") >> false
       openShiftClient.isValidGroup(_) >> true
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [aid])
+      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [deployCommand])
 
     then:
       def e = thrown(AuroraConfigException)
@@ -85,21 +87,20 @@ class AuroraDeploymentConfigDeployServiceUserValidationTest extends Specificatio
   def "Should get error if group is not valid"() {
 
     given:
+      def deployCommand = new DeployCommand(aid)
       openShiftClient.isValidUser(_) >> true
-
       openShiftClient.isValidGroup(_) >> false
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [aid])
+      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [deployCommand])
 
     then:
       AuroraConfigException e = thrown()
       e.errors.size() == 1
       e.errors[0].messages[0].message == "The following groups are not valid=APP_PaaS_drift, APP_PaaS_utv"
       e.errors[0].messages[0].field.source == "about.json"
-
   }
 
 }

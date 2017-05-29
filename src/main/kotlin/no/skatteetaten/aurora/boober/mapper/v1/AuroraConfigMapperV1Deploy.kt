@@ -51,7 +51,7 @@ class AuroraConfigMapperV1Deploy(
                 cluster = auroraConfigFields.extract("cluster"),
                 type = auroraConfigFields.extract("type", { TemplateType.valueOf(it.textValue()) }),
                 name = name,
-                envName = auroraConfigFields.extractOrDefault("envName", aid.environmentName),
+                envName = auroraConfigFields.extractOrDefault("envName", deployCommand.applicationId.environment),
 
                 groupId = groupId,
                 artifactId = auroraConfigFields.extract("artifactId"),
