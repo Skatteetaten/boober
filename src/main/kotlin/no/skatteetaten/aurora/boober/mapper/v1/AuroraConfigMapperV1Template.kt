@@ -39,7 +39,7 @@ class AuroraConfigMapperV1Template(
                 cluster = auroraConfigFields.extract("cluster"),
                 type = type,
                 name = auroraConfigFields.extract("name"),
-                envName = auroraConfigFields.extractOrDefault("envName", aid.environmentName),
+                envName = auroraConfigFields.extractOrDefault("envName", deployCommand.applicationId.environment),
                 permissions = extractPermissions(),
                 secrets = extractSecret(),
                 config = auroraConfigFields.getConfigMap(configHandlers),

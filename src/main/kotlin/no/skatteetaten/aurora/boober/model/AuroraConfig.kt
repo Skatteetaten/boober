@@ -4,14 +4,14 @@ import com.fasterxml.jackson.databind.JsonNode
 
 data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val secrets: Map<String, String> = mapOf()) {
 
-    fun getApplicationIds(env: String = "", app: String = ""): List<DeployCommand> {
+    fun getApplicationIds(env: String = "", app: String = ""): List<ApplicationId> {
 
         return auroraConfigFiles
                 .map { it.name.removeSuffix(".json") }
                 .filter { it.contains("/") && !it.contains("about") }
                 .filter { if (env.isNullOrBlank()) true else it.startsWith(env) }
                 .filter { if (app.isNullOrBlank()) true else it.endsWith(app) }
-                .map { val (environment, application) = it.split("/"); DeployCommand(environment, application) }
+                .map { val (environment, application) = it.split("/"); ApplicationId(environment, application) }
     }
 
     fun getSecrets(secretFolder: String): Map<String, String> {
@@ -20,14 +20,14 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val secre
         return secrets.filter { it.key.startsWith(prefix) }.mapKeys { it.key.removePrefix(prefix) }
     }
 
-    fun getFilesForApplication(aid: DeployCommand): List<AuroraConfigFile> {
+    fun getFilesForApplication(deployCommand: DeployCommand): List<AuroraConfigFile> {
 
-        val filesForApplication = aid.requiredFilesForApplication.mapNotNull { fileName -> auroraConfigFiles.find { it.name == fileName } }
-        val allFiles = filesForApplication + aid.overrides
+        val filesForApplication = deployCommand.requiredFilesForApplication.mapNotNull { fileName -> auroraConfigFiles.find { it.name == fileName } }
+        val allFiles = filesForApplication + deployCommand.overrides
 
         val uniqueFileNames = HashSet(allFiles.map { it.name })
-        if (uniqueFileNames.size != aid.requiredFilesForApplication.size) {
-            val missingFiles = aid.requiredFilesForApplication.filter { it !in uniqueFileNames }
+        if (uniqueFileNames.size != deployCommand.requiredFilesForApplication.size) {
+            val missingFiles = deployCommand.requiredFilesForApplication.filter { it !in uniqueFileNames }
             throw IllegalArgumentException("Unable to merge files because some required files are missing. Missing $missingFiles.")
         }
 

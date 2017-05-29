@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory
 /*
  This class maps a verisioned AuroraConfig into a AuroraDeploymentConfigDeploy
  */
-abstract class AuroraConfigMapper(val aid: DeployCommand, val auroraConfig: AuroraConfig) {
+abstract class AuroraConfigMapper(val deployCommand: DeployCommand, val auroraConfig: AuroraConfig) {
 
     open val logger: Logger = LoggerFactory.getLogger(AuroraConfigMapper::class.java)
 
@@ -30,8 +30,9 @@ abstract class AuroraConfigMapper(val aid: DeployCommand, val auroraConfig: Auro
 
         errors.takeIf { it.isNotEmpty() }?.let {
             logger.debug("{}", it)
+            val aid = deployCommand.applicationId
             throw ApplicationConfigException(
-                    "Config for application ${aid.applicationName} in environment ${aid.environmentName} contains errors",
+                    "Config for application ${aid.application} in environment ${aid.environment} contains errors",
                     errors = it.mapNotNull { it })
         }
     }

@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
+import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigDeploy
@@ -36,8 +37,8 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
-  final DeployCommand aid = new DeployCommand(ENV_NAME, APP_NAME)
-  final DeployCommand secretAId = new DeployCommand("secrettest", APP_NAME)
+  final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
+  final ApplicationId secretAId = new ApplicationId("secrettest", APP_NAME)
 
   @Configuration
   static class Config {
@@ -84,12 +85,12 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
     given:
 
       def overrideFile = mapper.convertValue(["name": "test%qwe)"], JsonNode.class)
-      def overrides = [new AuroraConfigFile("${aid.environmentName}/${aid.applicationName}.json", overrideFile, true)]
-      final DeployCommand aid = new DeployCommand(ENV_NAME, APP_NAME, overrides)
+      def overrides = [new AuroraConfigFile("${aid.environment}/${aid.application}.json", overrideFile, true)]
+      final DeployCommand deployCommand = new DeployCommand(aid, overrides)
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
     when:
-      auroraDeploymentConfigService.createAuroraDeploymentConfigs(aid, auroraConfig)
+      auroraDeploymentConfigService.createAuroraDeploymentConfigs(deployCommand, auroraConfig)
 
     then:
       thrown(ApplicationConfigException)
@@ -98,11 +99,14 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
   def "Should create AuroraDC for Console"() {
     given:
-      def consoleAid = new DeployCommand("booberdev", "console")
+      def consoleAid = new ApplicationId("booberdev", "console")
+      def deployCommand = new DeployCommand(consoleAid)
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def auroraDc = auroraDeploymentConfigService.createAuroraDeploymentConfigs(consoleAid, auroraConfig)
+      def auroraDc =
+          (AuroraDeploymentConfigDeploy) auroraDeploymentConfigService.
+              createAuroraDeploymentConfigs(deployCommand, auroraConfig)
 
     then:
       auroraDc.prometheus.port == 8081
@@ -111,14 +115,14 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
   def "Should create AuroraConfigFields with overrides"() {
     given:
-
       def overrideFile = mapper.convertValue(["type": "deploy", "cluster": "utv"], JsonNode.class)
       def overrides = [new AuroraConfigFile("booberdev/about.json", overrideFile, true)]
-      final DeployCommand aid = new DeployCommand(ENV_NAME, APP_NAME, overrides)
+
+      final DeployCommand deployCommand = new DeployCommand(aid, overrides)
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def auroraDc = auroraDeploymentConfigService.createAuroraDeploymentConfigs(aid, auroraConfig)
+      def auroraDc = auroraDeploymentConfigService.createAuroraDeploymentConfigs(deployCommand, auroraConfig)
 
       def fields = auroraDc.fields
     then:
@@ -131,13 +135,14 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
   def "Should fail due to missing config file"() {
 
     given:
+      def deployCommand = new DeployCommand(aid)
       Map<String, JsonNode> files = AuroraConfigHelperKt.getSampleFiles(aid)
       files.remove("${APP_NAME}.json" as String)
       def auroraConfig =
           new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])
 
     when:
-      auroraConfig.getFilesForApplication(aid)
+      auroraConfig.getFilesForApplication(deployCommand)
 
     then:
       thrown(IllegalArgumentException)
@@ -146,11 +151,12 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
   def "Should successfully merge all config files"() {
 
     given:
+      def deployCommand = new DeployCommand(aid)
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      AuroraDeploymentConfigDeploy auroraDc = auroraDeploymentConfigService.
-          createAuroraDeploymentConfigs(aid, auroraConfig) as AuroraDeploymentConfigDeploy
+      def auroraDc = auroraDeploymentConfigService.
+          createAuroraDeploymentConfigs(deployCommand, auroraConfig) as AuroraDeploymentConfigDeploy
 
     then:
       with(auroraDc) {
@@ -170,12 +176,12 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       def overrideFile = mapper.convertValue(["name": "awesome-app"], JsonNode.class)
       def overrides = [new AuroraConfigFile("booberdev/about.json", overrideFile, true)]
 
-      final DeployCommand aid = new DeployCommand(ENV_NAME, APP_NAME, overrides)
+      final DeployCommand deployCommand = new DeployCommand(aid, overrides)
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      AuroraDeploymentConfigDeploy auroraDc = auroraDeploymentConfigService.
-          createAuroraDeploymentConfigs(aid, auroraConfig)
+      def auroraDc = auroraDeploymentConfigService.
+          createAuroraDeploymentConfigs(deployCommand, auroraConfig) as AuroraDeploymentConfigDeploy
 
     then:
       auroraDc.name == "awesome-app"
@@ -184,6 +190,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
   def "Should throw ValidationException due to missing required properties"() {
 
     given: "AuroraConfig without build properties"
+      def deployCommand = new DeployCommand(aid)
       Map<String, JsonNode> files = AuroraConfigHelperKt.getSampleFiles(aid)
       (files.get("verify-ebs-users.json") as ObjectNode).remove("version")
       (files.get("booberdev/verify-ebs-users.json") as ObjectNode).remove("version")
@@ -191,7 +198,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
           new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])
 
     when:
-      auroraDeploymentConfigService.createAuroraDeploymentConfigs(aid, auroraConfig)
+      auroraDeploymentConfigService.createAuroraDeploymentConfigs(deployCommand, auroraConfig)
 
     then:
       def ex = thrown(ApplicationConfigException)
@@ -201,10 +208,11 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
   def "Should create aurora dc for application"() {
 
     given:
+      def deployCommand = new DeployCommand(aid)
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def result = auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [aid])
+      def result = auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [deployCommand])
 
     then:
       result != null
@@ -213,13 +221,12 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
   def "Should collect secrets"() {
 
     given:
-
+      def deployCommmand = new DeployCommand(secretAId)
       AuroraConfig auroraConfig = AuroraConfigHelperKt.
           createAuroraConfig(secretAId, ["/tmp/foo/latest.properties": "FOO=BAR"])
 
     when:
-
-      def result = auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [secretAId])
+      def result = auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [deployCommmand])
 
     then:
       result[0].secrets.containsKey("latest.properties")
@@ -228,10 +235,11 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
   def "Should get error if we want secrets but there are none "() {
 
     given:
+      def deployCommand = new DeployCommand(secretAId)
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [secretAId])
+      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [deployCommand])
 
     then:
       thrown(AuroraConfigException)

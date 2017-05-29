@@ -7,8 +7,8 @@ import org.springframework.context.annotation.Configuration
 
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.EncryptionService
@@ -37,7 +37,7 @@ class AuroraConfigFacadeTest extends Specification {
 
   public static final String ENV_NAME = "secrettest"
   public static final String APP_NAME = "verify-ebs-users"
-  final DeployCommand aid = new DeployCommand(ENV_NAME, APP_NAME)
+  final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
   @Configuration
   static class Config {
@@ -124,7 +124,7 @@ class AuroraConfigFacadeTest extends Specification {
 """
 
     when:
-      def filename = "${aid.environmentName}/${aid.applicationName}.json"
+      def filename = "${aid.environment}/${aid.application}.json"
       def patchedAuroraConfig = service.patchAuroraConfigFile("aos", filename, jsonOp)
       def git = gitService.checkoutRepoForAffiliation("aos")
       def gitLog = git.log().call().head()

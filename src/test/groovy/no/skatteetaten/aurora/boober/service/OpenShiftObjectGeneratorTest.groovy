@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.DeployCommand
@@ -82,11 +83,12 @@ class OpenShiftObjectGeneratorTest extends Specification {
   def "should create openshift objects for #env/#name"() {
 
     given:
-      DeployCommand deployCommand = new DeployCommand(env, name)
-      Map<String, JsonNode> files = AuroraConfigHelperKt.getSampleFiles(deployCommand, templateFile)
+      ApplicationId aid = new ApplicationId(env, name)
+      DeployCommand deployCommand = new DeployCommand(aid)
+      Map<String, JsonNode> files = AuroraConfigHelperKt.getSampleFiles(aid, templateFile)
 
       if (templateFile != null) {
-        def templateFileName = "/samples/processedtemplate/${deployCommand.environmentName}/${deployCommand.applicationName}/$templateFile"
+        def templateFileName = "/samples/processedtemplate/${aid.environment}/${aid.application}/$templateFile"
         def templateResult = this.getClass().getResource(templateFileName)
         JsonNode jsonResult = mapper.readTree(templateResult)
 
@@ -101,7 +103,7 @@ class OpenShiftObjectGeneratorTest extends Specification {
 
       List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc)
 
-      def resultFiles = AuroraConfigHelperKt.getResultFiles(deployCommand)
+      def resultFiles = AuroraConfigHelperKt.getResultFiles(aid)
 
       generatedObjects.forEach {
         def kind = it.get("kind").asText().toLowerCase()

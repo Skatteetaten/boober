@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
@@ -77,7 +78,7 @@ class SetupFacadeTest extends Specification {
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "verify-ebs-users"
-  final DeployCommand aid = new DeployCommand(ENV_NAME, APP_NAME)
+  final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
   def setup() {
     userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
@@ -95,7 +96,8 @@ class SetupFacadeTest extends Specification {
   }
 
   def "Should setup process for application"() {
-    def processAid = new DeployCommand("booberdev", "tvinn")
+    def processAid = new ApplicationId("booberdev", "tvinn")
+    def deployCommand = new DeployCommand(processAid)
 
     given:
       def templateResult = this.getClass().getResource("/samples/processedtemplate/booberdev/tvinn/atomhopper.json")
@@ -106,7 +108,7 @@ class SetupFacadeTest extends Specification {
       def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def result = setupFacade.executeSetup(auroraConfig, [processAid])
+      def result = setupFacade.executeSetup(auroraConfig, [deployCommand])
 
     then:
       result.size() == 1
@@ -115,10 +117,11 @@ class SetupFacadeTest extends Specification {
 
   def "Should setup development for application"() {
     given:
+      def deployCommand = new DeployCommand(aid)
       def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def result = setupFacade.executeSetup(auroraConfig, [aid])
+      def result = setupFacade.executeSetup(auroraConfig, [deployCommand])
 
     then:
       result.size() == 1
@@ -201,11 +204,12 @@ class SetupFacadeTest extends Specification {
 
   def "Should setup deploy for application"() {
     given:
-      def consoleAid = new DeployCommand(ENV_NAME, "console")
+      def consoleAid = new ApplicationId(ENV_NAME, "console")
+      def deployCommand = new DeployCommand(consoleAid)
       def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def result = setupFacade.executeSetup(auroraConfig, [consoleAid])
+      def result = setupFacade.executeSetup(auroraConfig, [deployCommand])
 
     then:
       result.size() == 1
