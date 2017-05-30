@@ -1,6 +1,7 @@
 buildscript {
-  ext.kotlin_version = '1.1.2'
-  ext.springBootVersion = '1.5.2.RELEASE'
+  ext.kotlin_version = '1.1.2-2'
+  ext.springBootVersion = '1.5.3.RELEASE'
+  ext.auroraStartersVersion = '1.0.7'
 
   repositories {
     mavenCentral()
@@ -14,7 +15,7 @@ buildscript {
         "org.jetbrains.kotlin:kotlin-noarg:$kotlin_version",
         "org.jetbrains.kotlin:kotlin-allopen:$kotlin_version",
         "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion",
-        'no.skatteetaten.aurora.gradle.plugins:aurora-gradle-plugin:1.0.5',
+        'no.skatteetaten.aurora.gradle.plugins:aurora-gradle-plugin:1.0.5'
     )
   }
 }
@@ -24,7 +25,7 @@ repositories {
 }
 
 ext.aurora = [
-    applyNexusRepositories: false
+    applyNexusRepositories: true
 ]
 
 apply plugin: 'no.skatteetaten.plugins.aurora'
@@ -34,25 +35,25 @@ apply plugin: 'org.springframework.boot'
 
 group = 'no.skatteetaten.aurora'
 
+ext['spock.version'] = '1.1-groovy-2.4-rc-3'
+ext['logback.version'] = '1.2.3'
+
 dependencies {
   compile(
       "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version",
       "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version",
-      "org.springframework.boot:spring-boot-starter-web",
-      "org.springframework.boot:spring-boot-starter-actuator",
-      "org.springframework.boot:spring-boot-starter-hateoas",
+      "ske.aurora.springboot:aurora-spring-boot-starter:$auroraStartersVersion",
       "org.springframework.boot:spring-boot-starter-security",
       "com.fasterxml.jackson.module:jackson-module-kotlin:2.8.7",
       'org.eclipse.jgit:org.eclipse.jgit:4.6.1.201703071140-r',
       'org.apache.velocity:velocity:1.7',
       'com.github.fge:json-patch:1.9',
-      'com.github.martinwithaar:encryptor4j:0.1')
+      'com.github.martinwithaar:encryptor4j:0.1'
+  )
 
   testCompile(
-      "org.springframework.boot:spring-boot-starter-test",
-      "org.spockframework:spock-spring:1.1-groovy-2.4-rc-3",
-      "org.springframework.restdocs:spring-restdocs-mockmvc:1.1.0.RELEASE",
-      "org.springframework.security:spring-security-test",
+      "ske.aurora.springboot:aurora-spock-spring-boot-starter:$auroraStartersVersion",
+      "org.springframework.security:spring-security-test"
   )
 }
 

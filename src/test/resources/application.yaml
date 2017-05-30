@@ -1,6 +1,8 @@
 spring:
     main:
         banner-mode: "off"
+    application:
+        name: boober
 
 boober:
   encrypt:
@@ -11,6 +13,9 @@ boober:
     username: "boober"
     password: "komogsyngensang"
 
+management:
+    port: 0
+
 openshift:
-    url: https://utv-master.paas.skead.no:8443
     cluster: utv
+    url: https://${openshift.cluster}-master.paas.skead.no:8443
