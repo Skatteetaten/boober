@@ -1,6 +1,7 @@
 {
   "flags": {
-    "rolling": true
+    "rolling": true,
+    "cert": true
   },
   "groupId": "ske.admin.lisens",
   "artifactId": "verify-ebs-users",

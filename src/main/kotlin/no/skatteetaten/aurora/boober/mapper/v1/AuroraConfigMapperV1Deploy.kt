@@ -44,6 +44,9 @@ class AuroraConfigMapperV1Deploy(
         val groupId = auroraConfigFields.extract("groupId")
         val name = auroraConfigFields.extract("name")
 
+        val certFlag = auroraConfigFields.extract("flags/cert", { it.asText() == "true" })
+        val certificateCnDefault = if (certFlag) "$groupId.$name" else null
+
         return AuroraDeploymentConfigDeploy(
                 schemaVersion = auroraConfigFields.extract("schemaVersion"),
 
@@ -61,7 +64,7 @@ class AuroraConfigMapperV1Deploy(
                 extraTags = auroraConfigFields.extract("extraTags"),
 
                 flags = AuroraDeploymentConfigFlags(
-                        auroraConfigFields.extract("flags/cert", { it.asText() == "true" }),
+                        certFlag,
                         auroraConfigFields.extract("flags/debug", { it.asText() == "true" }),
                         auroraConfigFields.extract("flags/alarm", { it.asText() == "true" }),
                         auroraConfigFields.extract("flags/rolling", { it.asText() == "true" })
@@ -82,7 +85,7 @@ class AuroraConfigMapperV1Deploy(
                 database = auroraConfigFields.extractOrNull("database"),
                 managementPath = auroraConfigFields.extractOrNull("managementPath"),
 
-                certificateCn = auroraConfigFields.extractOrDefault("certificateCn", "$groupId.$name"),
+                certificateCn = auroraConfigFields.extractOrDefault("certificateCn", certificateCnDefault),
 
                 webseal = auroraConfigFields.findAll("webseal", {
                     Webseal(

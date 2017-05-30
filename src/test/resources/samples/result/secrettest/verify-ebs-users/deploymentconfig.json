@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "console.skatteetaten.no/alarm": "true",
-      "sprocket.sits.no/deployment-config.certificate": "ske.admin.lisens.verify-ebs-users"
+      "sprocket.sits.no/deployment-config.certificate": "tullball"
     },
     "labels": {
       "app": "verify-ebs-users",

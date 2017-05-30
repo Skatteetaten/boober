@@ -4,8 +4,7 @@
   "metadata": {
     "annotations": {
       "console.skatteetaten.no/management-path": ":8081/actuator",
-      "console.skatteetaten.no/alarm": "true",
-      "sprocket.sits.no/deployment-config.certificate": "ske.openshift.aurora.openshift-console-api"
+      "console.skatteetaten.no/alarm": "true"
     },
     "labels": {
       "app": "openshift-console-api",
