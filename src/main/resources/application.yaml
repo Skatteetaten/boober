@@ -5,42 +5,17 @@ info:
         metrics: "{metricsHostname}/dashboard/db/openshift-project-spring-actuator-view-instance?var-ds=openshift-{cluster}-ose&var-namespace={namespace}&var-app={name}&var-instance={podName}"
 
 openshift:
-    url: https://utv-master.paas.skead.no:8443
     cluster: utv
+    url: https://${openshift.cluster}-master.paas.skead.no:8443
 
-
-management:
-    health.status.order: DOWN, OUT_OF_SERVICE, UNKNOWN, COMMENT, UP
-    security:
-        enabled: false
-    port: 8081
-
-endpoints:
-    health:
-        mapping:
-            COMMENT: OK
-    metrics:
-        enabled: false
-    logfile:
-        enabled: false
-    autoconfig:
-        enabled: false
-    heapdump:
-        enabled: false
-    configprops:
-        enabled: false
-    mappings:
-        enabled: false
-    beans:
-        enabled: false
-    dump:
-        enabled: false
-    jolokia:
-        enabled: false
 spring:
   profiles:
     active: local
 
+aurora:
+    client:
+        metricsPathLabelGroupings:
+            httpbin: ".*httpbin.org.*"
 logging:
   level:
     no.skatteetaten: INFO
@@ -63,6 +38,13 @@ boober:
     checkoutPath: "/tmp/boober"
     username: "boober"
     password: "password"
+
+spring:
+    application:
+        name: boober
+
+management:
+    port: 8081
 
 ---
 spring:
