@@ -95,6 +95,24 @@ class AuroraConfigFacadeTest extends Specification {
       gitAuroraConfig.secrets.get(secretFile) == updatedAuroraConfig.secrets.get(secretFile)
   }
 
+  def "Should remove secrets"() {
+    given:
+      def affiliation = "aos"
+      def secrets = [
+          "/tmp/foo/latest.properties": "FOO=BAR",
+          "/tmp/foo/token"            : "test",
+      ]
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, secrets)
+      createRepoAndSaveFiles(affiliation, auroraConfig)
+
+    when:
+      service.deleteSecrets(affiliation, [".secret/foo/latest.properties"])
+      def updatedAuroraConfig = getAuroraConfigFromGit(affiliation, true)
+
+    then:
+      updatedAuroraConfig.secrets.keySet() == new HashSet([".secret/foo/token"])
+  }
+
   def "Should successfully save AuroraConfig and secrets to git"() {
     given:
       GitServiceHelperKt.createInitRepo("aos")
