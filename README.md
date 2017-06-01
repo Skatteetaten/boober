@@ -6,20 +6,20 @@ schemaVersion from a git repo (AuroraConfig) and transforms it into Openshift Ob
 ## How to run locally
 First start up a local version of boober. Either in you ide or by running
 
-      ./gradlew run 
-      
-Then run the script `testscripts/setup-local.sh` 
+      ./gradlew run
+
+Then run the script `testscripts/setup-local.sh`
  - import configuration into your local git repo in `/tmp/boobergit/paas`
  - see the configuration
  - deploy an application
- 
- 
+
+
 ## Architecture
-  
+
 Boober uses Git as a storage mechanism for its config files. Boober owns this repository and it should be the only
 component writing to it. It will ensure that the files written are valid and that secrets are encrypted.
 
-### How AuroraConfig is aved into git
+### How AuroraConfig is saved into git
 ![save](docs/images/boober.png "Save AuroraConfig")
 
 
@@ -29,10 +29,10 @@ component writing to it. It will ensure that the files written are valid and tha
 ## Concepts
 
 ### Affiliation
-An affiliation is a group of projects and environments that are managed by the same team. Each affiliation has a 
-seperate git repo where their configuration is stored. 
+An affiliation is a group of projects and environments that are managed by the same team. Each affiliation has a
+seperate git repo where their configuration is stored.
 
-All projects created in openshift start with the name of the affiliation. 
+All projects created in openshift start with the name of the affiliation.
 
 The affiliation project (has the same name as affiliation) is set up when a project has its Onboarding.
 
@@ -42,13 +42,13 @@ and deploy applications on OpenShift
 
 filename           | name          | description  
 -------------------|---------------|:-----------------------------------------------------------------
-about.json         | global        | Global configuration for all applications in an affiliation 
+about.json         | global        | Global configuration for all applications in an affiliation
 utv/about.json     | environment   | Environment configuration that is shared by all applications in an openshift project
 reference.json     | application   | Configuration shared by all instances of an application in all projects
 utv/refernce.json  | override      | Configuration specific to one application in one openshift project
 
 All properties in AuroraConfig can be set inn all files.
- 
+
 Below is an json with all possible values ( and some comments)
 ```
 {
@@ -69,7 +69,7 @@ Below is an json with all possible values ( and some comments)
      }
   },
   "route": {
-    "generate": true, //will set host to $name-$namespace. 
+    "generate": true, //will set host to $name-$namespace.
     "path" : "/foo",
     "host" : "custom-host", //will get cluster prefix added
     "annotations" : {
@@ -91,10 +91,10 @@ Below is an json with all possible values ( and some comments)
   "version": "0", //version to follow
   "prometheus": { //where is prometheus located
     "port": "8081",
-    "path": "/prometheus" 
+    "path": "/prometheus"
   },
   "webseal": { //open up firewall with webseal
-    "host": "webseal-hostprefix", 
+    "host": "webseal-hostprefix",
     "roles": "role1, role2"
   },
   "managementPath": ":8081/actuator", //where is the management interface located
@@ -106,7 +106,7 @@ Below is an json with all possible values ( and some comments)
     "latest.properties": { //all other applications will get this
       "FOO": "baz"  //this will be an ENV var
     }
-  
+
   },
   "secretFolder": "/tmp/test" //all files inside this dir is added in a secret.
 }
@@ -115,6 +115,6 @@ Below is an json with all possible values ( and some comments)
 
 ### AuroraDeploymentConfiguration
 An internal represetantion of AuroraConfig that is normalized from an AuroraConfig via a AuroraConfigMapper abstraction.
-The mapping process knows which part of the AuroraConfig a given property is from. 
+The mapping process knows which part of the AuroraConfig a given property is from.
 
-Knowing the source off all properties makes it easy to create good UI experience on top of the API. 
+Knowing the source off all properties makes it easy to create good UI experience on top of the API.
