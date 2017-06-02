@@ -1,7 +1,7 @@
 buildscript {
   ext.kotlin_version = '1.1.2-2'
   ext.springBootVersion = '1.5.3.RELEASE'
-  ext.auroraStartersVersion = '1.0.7'
+  ext.auroraStartersVersion = '1.1.0'
 
   repositories {
     mavenCentral()
@@ -25,7 +25,7 @@ repositories {
 }
 
 ext.aurora = [
-    applyNexusRepositories: true
+    applyNexusRepositories: false
 ]
 
 apply plugin: 'no.skatteetaten.plugins.aurora'
@@ -42,7 +42,7 @@ dependencies {
   compile(
       "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version",
       "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version",
-      "ske.aurora.springboot:aurora-spring-boot-starter:$auroraStartersVersion",
+      "no.skatteetaten.aurora.springboot:aurora-spring-boot-starter:$auroraStartersVersion",
       "org.springframework.boot:spring-boot-starter-security",
       "com.fasterxml.jackson.module:jackson-module-kotlin:2.8.7",
       'org.eclipse.jgit:org.eclipse.jgit:4.6.1.201703071140-r',
@@ -52,7 +52,7 @@ dependencies {
   )
 
   testCompile(
-      "ske.aurora.springboot:aurora-spock-spring-boot-starter:$auroraStartersVersion",
+      "no.skatteetaten.aurora.springboot:aurora-spock-spring-boot-starter:$auroraStartersVersion",
       "org.springframework.security:spring-security-test"
   )
 }
