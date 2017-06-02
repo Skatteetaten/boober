@@ -65,7 +65,9 @@ class AuroraConfigFacade(
         val repo = getRepo(affiliation)
         val filesForAffiliation: MutableMap<String, File> = gitService.getAllFilesInRepo(repo).toMutableMap()
 
-        secrets.forEach { filesForAffiliation.remove(it) }
+        secrets.filter { it.startsWith(GIT_SECRET_FOLDER) }
+                .forEach { filesForAffiliation.remove(it) }
+
         val auroraConfig = createAuroraConfigFromFiles(filesForAffiliation)
 
         commitAuroraConfig(repo, auroraConfig, auroraConfig, filesForAffiliation)
