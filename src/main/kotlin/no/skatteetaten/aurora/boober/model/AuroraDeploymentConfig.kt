@@ -27,7 +27,7 @@ interface AuroraDeploymentConfig {
     val routeName: String?
         get() = route?.let {
             val host = it.host ?: "$name-$namespace"
-            "http://$host.$cluster.paas.skead.no${it.path}"
+            "http://$host.$cluster.paas.skead.no${it.path ?: ""}"
         }
 }
 

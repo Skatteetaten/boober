@@ -117,7 +117,7 @@
               },
               {
                 "name": "ROUTE_NAME",
-                "value": "http://openshift-console-api-aos-booberdev.utv.paas.skead.nonull"
+                "value": "http://openshift-console-api-aos-booberdev.utv.paas.skead.no"
               }
             ],
             "resources": {
