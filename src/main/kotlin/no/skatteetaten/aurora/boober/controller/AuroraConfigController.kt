@@ -34,6 +34,13 @@ class AuroraConfigController(val auroraConfigFacade: AuroraConfigFacade) {
         return Response(items = listOf(auroraConfig).map(::fromAuroraConfig))
     }
 
+    @DeleteMapping("/{affiliation}/auroraconfig/secrets")
+    fun deleteSecrets(@PathVariable affiliation: String, @RequestBody secretsToDelete: List<String>): Response {
+
+        val auroraConfig = auroraConfigFacade.deleteSecrets(affiliation, secretsToDelete)
+        return Response(items = listOf(auroraConfig).map(::fromAuroraConfig))
+    }
+
     @PutMapping("/{affiliation}/auroraconfig/{filename:\\w+}.json")
     fun updateAuroraConfigFile(@PathVariable affiliation: String, @PathVariable filename: String,
                                @RequestBody fileContents: JsonNode): Response {
