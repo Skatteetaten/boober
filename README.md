@@ -8,7 +8,7 @@ First start up a local version of boober. Either in you ide or by running
 
       ./gradlew run
 
-Then run the script `testscripts/setup-local.sh`
+Then run the script `testscripts/deploy-local.sh`
  - import configuration into your local git repo in `/tmp/boobergit/paas`
  - see the configuration
  - deploy an application
