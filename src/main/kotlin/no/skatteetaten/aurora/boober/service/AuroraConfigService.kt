@@ -25,8 +25,9 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient) {
 
         val deployCommands = auroraConfig.getApplicationIds().map { DeployCommand(it) }
         processDeployCommands(deployCommands, {
-            createMapper(it, auroraConfig).validate()
-            true
+            val mapper = createMapper(it, auroraConfig)
+            mapper.validate()
+            mapper.toAuroraDeploymentConfig()
         })
     }
 
