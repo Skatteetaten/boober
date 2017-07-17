@@ -1,0 +1,46 @@
+{
+  "kind": "RoleBinding",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "view"
+  }
+#if (${adc.permissions.view.groups.size()} != 0)
+,"groupNames": [
+  #foreach ($group in $adc.permissions.view.groups)
+    #if($velocityCount != 1)
+      ,
+    #end
+    "${group}"
+  #end
+]
+#end
+
+#if (${adc.permissions.view.users.size()} != 0)
+,"userNames": [
+  #foreach ($user in $adc.permissions.view.users)
+    #if($velocityCount != 1)
+      ,
+    #end
+    "${user}"
+  #end
+]
+#end
+
+#if (${adc.permissions.view.rolebindings.size()} != 0)
+,"subjects": [
+  #foreach ($binding in $adc.permissions.view.rolebindings.entrySet())
+    #if($velocityCount != 1)
+      ,
+    #end
+  {
+    "kind": "$binding.value",
+    "name": "$binding.key"
+  }
+  #end
+]
+#end
+
+, "roleRef": {
+"name": "view"
+}
+}

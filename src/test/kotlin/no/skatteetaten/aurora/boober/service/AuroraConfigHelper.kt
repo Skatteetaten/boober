@@ -49,7 +49,9 @@ fun getResultFiles(aid: ApplicationId): Map<String, JsonNode?> {
     val baseFolder = File(AuroraConfigHelper::class.java.getResource("/samples/result/${aid.environment}/${aid.application}").file)
 
     return baseFolder.listFiles().toHashSet().map {
-        it.nameWithoutExtension to convertFileToJsonNode(it)
+        val json = convertFileToJsonNode(it)
+        val name = json?.at("/kind")?.textValue() + "/" + json?.at("/metadata/name")?.textValue()
+        name.toLowerCase() to json
     }.toMap()
 }
 

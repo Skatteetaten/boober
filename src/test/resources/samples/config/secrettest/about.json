@@ -1,4 +1,10 @@
 {
   "type": "development",
-  "cluster": "utv"
+  "cluster": "utv",
+  "permissions": {
+    "view": {
+      "groups": "APP_PaaS_utv",
+      "users": "foo"
+    }
+  }
 }
