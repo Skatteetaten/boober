@@ -1,0 +1,162 @@
+{
+  "kind": "DeploymentConfig",
+  "apiVersion": "v1",
+  "metadata": {
+    "annotations": {
+      "console.skatteetaten.no/management-path": ":8081/actuator",
+      "console.skatteetaten.no/alarm": "true"
+    },
+    "labels": {
+      "app": "sprocket",
+      "updatedBy": "hero",
+      "affiliation": "aos"
+    },
+    "name": "sprocket"
+  },
+  "spec": {
+    "strategy": {
+      "type": "Recreate",
+      "resources": {}
+    },
+    "triggers": [
+      {
+        "type": "ImageChange",
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "sprocket"
+          ],
+          "from": {
+            "name": "sprocket:default",
+            "kind": "ImageStreamTag"
+          }
+        }
+      }
+    ],
+    "replicas": 1,
+    "selector": {
+      "name": "sprocket"
+    },
+    "template": {
+      "metadata": {
+        "labels": {
+          "name": "sprocket",
+          "updatedBy": "hero",
+          "affiliation": "aos"
+        }
+      },
+      "spec": {
+        "volumes": [
+          {
+            "name": "application-log-volume",
+            "emptyDir": {
+            }
+          }
+        ],
+        "containers": [
+          {
+            "name": "sprocket",
+            "ports": [
+              {
+                "containerPort": 8080,
+                "protocol": "TCP",
+                "name": "http"
+              },
+              {
+                "containerPort": 8081,
+                "protocol": "TCP",
+                "name": "management"
+              },
+              {
+                "containerPort": 8778,
+                "name": "jolokia"
+              }
+            ],
+            "env": [
+              {
+                "name": "SPLUNK_INDEX",
+                "value": "openshift-test"
+              },
+              {
+                "name": "POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              },
+              {
+                "name": "POD_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "HTTP_PORT",
+                "value": "8080"
+              },
+              {
+                "name": "MANAGEMENT_HTTP_PORT",
+                "value": "8081"
+              },
+              {
+                "name": "APP_NAME",
+                "value": "sprocket"
+              }
+            ],
+            "resources": {
+              "limits": {
+                "cpu": "2000m",
+                "memory": "128Mi"
+              },
+              "requests": {
+                "cpu": "0",
+                "memory": "128Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "application-log-volume",
+                "mountPath": "/u01/logs"
+              }
+            ],
+            "terminationMessagePath": "/dev/termination-log",
+            "imagePullPolicy": "IfNotPresent",
+            "capabilities": {
+            },
+            "securityContext": {
+              "capabilities": {
+              },
+              "privileged": false
+            },
+            "livenessProbe": {
+              "exec": {
+                "command": [
+                  "/u01/application/bin/liveness.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 1
+            },
+            "readinessProbe": {
+              "exec": {
+                "command": [
+                  "/u01/application/bin/readiness.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 1
+            },
+            "serviceAccountName": "aurora-fraggle"
+          }
+        ],
+        "restartPolicy": "Always",
+        "dnsPolicy": "ClusterFirst"
+      }
+    }
+  }
+}

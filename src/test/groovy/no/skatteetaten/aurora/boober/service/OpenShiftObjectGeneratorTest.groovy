@@ -123,6 +123,7 @@ class OpenShiftObjectGeneratorTest extends Specification {
       "booberdev"  | "verify-ebs-users" | [:]                                                        | null
       "booberdev"  | "tvinn"            | [:]                                                        | "atomhopper.json"
       "secrettest" | "verify-ebs-users" | ["/tmp/foo/latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="] | null
+      "booberdev"  | "sprocket"         | [:]                                                        | null
 
   }
 

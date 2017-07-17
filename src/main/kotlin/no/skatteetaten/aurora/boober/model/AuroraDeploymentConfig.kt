@@ -55,6 +55,7 @@ data class AuroraDeploymentConfigDeploy(
         val webseal: Webseal? = null,
         val prometheus: HttpEndpoint? = null,
         val managementPath: String? = null,
+        val serviceAccount: String? = null,
         override val fields: Map<String, AuroraConfigField>
 ) : AuroraDeploymentConfig {
 
