@@ -48,6 +48,18 @@
       "spec": {
         "volumes": [
           {
+            "name": "aurora-token",
+            "secret": {
+              "secretName": "aurora-token"
+            }
+          },
+          {
+            "name": "sprocket-config",
+            "configMap": {
+              "name": "sprocket-config"
+            }
+          },
+          {
             "name": "application-log-volume",
             "emptyDir": {
             }
@@ -119,6 +131,14 @@
               }
             },
             "volumeMounts": [
+              {
+                "name": "aurora-token",
+                "mountPath": "/u01/secrets/app/aurora-token"
+              },
+              {
+                "name": "sprocket-config",
+                "mountPath": "/u01/foo"
+              },
               {
                 "name": "application-log-volume",
                 "mountPath": "/u01/logs"

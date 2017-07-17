@@ -31,6 +31,21 @@ interface AuroraDeploymentConfig {
         }
 }
 
+
+enum class MountType {
+    ConfigMap, Secret
+}
+
+data class Mount(
+        val path: String,
+        val type: MountType,
+        val mountName: String,
+        val volumeName: String,
+        val exist: Boolean,
+        val content: Map<String, String>?
+)
+
+
 data class AuroraDeploymentConfigDeploy(
         override val schemaVersion: String = "v1",
         override val affiliation: String,
@@ -56,6 +71,7 @@ data class AuroraDeploymentConfigDeploy(
         val prometheus: HttpEndpoint? = null,
         val managementPath: String? = null,
         val serviceAccount: String? = null,
+        val mounts: List<Mount>? = null,
         override val fields: Map<String, AuroraConfigField>
 ) : AuroraDeploymentConfig {
 

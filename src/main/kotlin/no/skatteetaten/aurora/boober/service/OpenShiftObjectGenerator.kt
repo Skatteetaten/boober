@@ -81,10 +81,20 @@ class OpenShiftObjectGenerator(
         }
 
         if (auroraDc.type in listOf(TemplateType.deploy, TemplateType.development)) {
+            val adc = auroraDc as? AuroraDeploymentConfigDeploy
             templatesToProcess.add("imagestream.json")
         }
 
         var openShiftObjects = templatesToProcess.map { mergeVelocityTemplate(it, params) }
+
+        if (auroraDc is AuroraDeploymentConfigDeploy && auroraDc.mounts != null) {
+            val mounts = auroraDc.mounts.filter { !it.exist }.map {
+                logger.debug("Create manual mount {}", it)
+                val mountParams = mapOf("adc" to auroraDc, "mount" to it)
+                mergeVelocityTemplate("mount.json", mountParams)
+            }.toList()
+            openShiftObjects += mounts
+        }
 
         if (auroraDc is AuroraDeploymentConfigProcess) {
             val generateObjects = openShiftTemplateProcessor.generateObjects(auroraDc)

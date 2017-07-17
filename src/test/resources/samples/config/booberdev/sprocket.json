@@ -1,3 +1,13 @@
 {
-  "type": "deploy"
+  "type": "deploy",
+  "mounts": {
+    "sprocket-config": {
+      "type": "ConfigMap",
+      "path": "/u01/foo",
+      "content": {
+        "FOO": "BAR"
+      }
+    }
+  }
 }
+

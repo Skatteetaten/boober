@@ -74,6 +74,22 @@
       },
       "spec": {
         "volumes": [
+          #if (${adc.mounts})
+            #foreach ($mount in $adc.mounts)
+              {
+                "name": "${mount.volumeName}",
+                #if(${mount.type} == "ConfigMap")
+                  "configMap": {
+                    "name": "${mount.mountName}"
+                  }
+                #elseif(${mount.type} == "Secret")
+                  "secret": {
+                    "secretName": "${mount.mountName}"
+                  }
+                #end
+              },
+            #end
+          #end
           {
             "name": "application-log-volume",
             "emptyDir": {}
@@ -181,6 +197,14 @@
               }
             },
             "volumeMounts": [
+              #if (${adc.mounts})
+                #foreach ($mount in $adc.mounts)
+                  {
+                    "name": "${mount.mountName}",
+                    "mountPath": "${mount.path}"
+                  },
+                #end
+              #end
               {
                 "name": "application-log-volume",
                 "mountPath": "/u01/logs"

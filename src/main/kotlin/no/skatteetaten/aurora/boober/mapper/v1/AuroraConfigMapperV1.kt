@@ -3,15 +3,10 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigMapper
-import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.DeployCommand
-import no.skatteetaten.aurora.boober.model.Route
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.utils.notBlank
-import no.skatteetaten.aurora.boober.utils.pattern
-import no.skatteetaten.aurora.boober.utils.startsWith
+import no.skatteetaten.aurora.boober.utils.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -27,8 +22,9 @@ abstract class AuroraConfigMapperV1(
     val configHandlers = findConfigFieldHandlers(applicationFiles)
     val parameterHandlers = findParameters(applicationFiles)
 
+    val mountHandlers = findMounts(applicationFiles)
     val routeHandlers = findRouteAnnotaionHandlers(applicationFiles)
-    val v1Handlers = baseHandlers + routeHandlers + configHandlers + parameterHandlers + listOf(
+    val v1Handlers = baseHandlers + routeHandlers + configHandlers + mountHandlers + parameterHandlers + listOf(
             AuroraConfigFieldHandler("affiliation", validator = { it.pattern("^[a-z]{0,23}[a-z]$", "Affiliation is must be alphanumeric and under 24 characters") }),
             AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
             AuroraConfigFieldHandler("name", validator = { it.pattern("^[a-z][-a-z0-9]{0,23}[a-z0-9]$", "Name must be alphanumeric and under 24 characters") }),
@@ -87,6 +83,24 @@ abstract class AuroraConfigMapperV1(
             ac.contents.at("/route/annotations")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
         }.toSet().map { key ->
             AuroraConfigFieldHandler("route/annotations/$key")
+        }
+    }
+
+    fun findMounts(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
+
+        val mountKeys = findSubKeys(applicationFiles, "mounts")
+
+        return mountKeys.flatMap { mountName ->
+            listOf(
+                    AuroraConfigFieldHandler("mounts/$mountName/path", validator = { it.required("Path is required for mount") }),
+                    AuroraConfigFieldHandler("mounts/$mountName/type", validator = { it.oneOf(MountType.values().map { it.name }) }),
+                    AuroraConfigFieldHandler("mounts/$mountName/mountName", defaultValue = mountName),
+                    AuroraConfigFieldHandler("mounts/$mountName/volumeName", defaultValue = mountName),
+                    AuroraConfigFieldHandler("mounts/$mountName/exist", defaultValue = "false"),
+                    AuroraConfigFieldHandler("mounts/$mountName/content"),
+                    AuroraConfigFieldHandler("mounts/$mountName/secretFolder")
+            )
+
         }
     }
 

@@ -105,15 +105,15 @@ class OpenShiftObjectGeneratorTest extends Specification {
 
       def resultFiles = AuroraConfigHelperKt.getResultFiles(aid)
 
-      generatedObjects.forEach {
+      def keys = resultFiles.keySet()
 
+      generatedObjects.forEach {
         def key = getKey(it)
-        assert resultFiles.containsKey(key)
+        assert keys.contains(key)
         compareJson(resultFiles[key], it)
       }
 
       generatedObjects.collect { getKey(it) } as Set == resultFiles.keySet()
-
 
     when:
 
@@ -138,4 +138,5 @@ class OpenShiftObjectGeneratorTest extends Specification {
 
     return "$kind/$name" as String
   }
+
 }

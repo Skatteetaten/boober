@@ -113,6 +113,7 @@ class AuroraConfigMapperV1Deploy(
                 config = auroraConfigFields.getConfigMap(configHandlers),
                 route = getRoute(),
                 serviceAccount = auroraConfigFields.extractOrNull("serviceAccount"),
+                mounts = auroraConfigFields.getMounts(mountHandlers, auroraConfig),
                 fields = auroraConfigFields.fields
         )
     }
