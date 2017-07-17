@@ -20,12 +20,7 @@
       "max": "128Mi"
     }
   },
-  "prometheus": {
-    "path": "/prometheus",
-    "port": "8081"
-  },
   "webseal": {
     "host": "webseal"
-  },
-  "managementPath": ":8081/actuator"
+  }
 }

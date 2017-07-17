@@ -23,5 +23,9 @@
     "annotations": {
       "timeout": "30s"
     }
+  },
+  "managementPath": "",
+  "prometheus": {
+    "path": ""
   }
 }
