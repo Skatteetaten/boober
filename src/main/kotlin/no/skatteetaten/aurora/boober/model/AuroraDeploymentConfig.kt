@@ -139,7 +139,8 @@ data class Webseal(
 
 
 data class Permissions(
-        val admin: Permission
+        val admin: Permission,
+        val view: Permission? = null
 )
 
 data class Permission(

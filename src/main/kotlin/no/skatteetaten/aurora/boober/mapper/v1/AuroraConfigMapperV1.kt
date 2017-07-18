@@ -35,6 +35,8 @@ abstract class AuroraConfigMapperV1(
             AuroraConfigFieldHandler("envName"),
             AuroraConfigFieldHandler("permissions/admin/groups", validator = validateGroups(openShiftClient)),
             AuroraConfigFieldHandler("permissions/admin/users", validator = validateUsers(openShiftClient)),
+            AuroraConfigFieldHandler("permissions/view/groups", validator = validateGroups(openShiftClient, false)),
+            AuroraConfigFieldHandler("permissions/view/users", validator = validateUsers(openShiftClient)),
             AuroraConfigFieldHandler("database"),
             AuroraConfigFieldHandler("route/host"),
             AuroraConfigFieldHandler("route/path", validator = { it?.startsWith("/", "Path must start with /") }),
@@ -108,14 +110,14 @@ abstract class AuroraConfigMapperV1(
         }.toSet()
     }
 
-    private fun validateGroups(openShiftClient: OpenShiftClient): (JsonNode?) -> Exception? {
+    private fun validateGroups(openShiftClient: OpenShiftClient, required: Boolean = true): (JsonNode?) -> Exception? {
         return { json ->
-            if (json == null || json.textValue().isBlank()) {
+            if (required && (json == null || json.textValue().isBlank())) {
                 IllegalArgumentException("Groups must be set")
             } else {
-                val groups = json.textValue().split(" ").toSet()
-                groups.filter { !openShiftClient.isValidGroup(it) }
-                        .takeIf { it.isNotEmpty() }
+                val groups = json?.textValue()?.split(" ")?.toSet()
+                groups?.filter { !openShiftClient.isValidGroup(it) }
+                        .takeIf { it != null && it.isNotEmpty() }
                         ?.let { AuroraConfigException("The following groups are not valid=${it.joinToString()}") }
             }
         }

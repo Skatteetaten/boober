@@ -38,10 +38,17 @@ abstract class AuroraConfigMapper(val deployCommand: DeployCommand, val auroraCo
     }
 
     protected fun extractPermissions(): Permissions {
-        return Permissions(Permission(
-                auroraConfigFields.extract("permissions/admin/groups", { it.textValue().split(" ").toSet() }),
-                auroraConfigFields.extractOrNull("permissions/admin/users", { it.textValue().split(" ").toSet() })
-        ))
+        val viewGroups = auroraConfigFields.extractOrNull("permissions/view/groups", { it.textValue().split(" ").toSet() })
+        val viewUsers = auroraConfigFields.extractOrNull("permissions/view/users", { it.textValue().split(" ").toSet() })
+        val view = if (viewGroups != null || viewUsers != null) {
+            Permission(viewGroups, viewUsers)
+        } else null
+
+        return Permissions(
+                admin = Permission(
+                        auroraConfigFields.extract("permissions/admin/groups", { it.textValue().split(" ").toSet() }),
+                        auroraConfigFields.extractOrNull("permissions/admin/users", { it.textValue().split(" ").toSet() })),
+                view = view)
     }
 
     protected fun extractSecret(): Map<String, String>? {

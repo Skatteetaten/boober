@@ -52,8 +52,11 @@ class OpenShiftObjectGenerator(
 
         val templatesToProcess = mutableListOf(
                 "project.json",
-                "rolebinding.json"
-        )
+                "admin-rolebinding.json")
+
+        if (auroraDc.permissions.view != null) {
+            templatesToProcess.add("view-rolebinding.json")
+        }
 
         if (auroraDc.type in listOf(TemplateType.deploy, TemplateType.development)) {
             templatesToProcess.add("deployment-config.json")
