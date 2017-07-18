@@ -36,7 +36,7 @@ import spock.mock.DetachedMockFactory
 class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
   public static final String ENV_NAME = "booberdev"
-  public static final String APP_NAME = "verify-ebs-users"
+  public static final String APP_NAME = "aos-simple"
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
   final ApplicationId secretAId = new ApplicationId("secrettest", APP_NAME)
 
@@ -192,8 +192,8 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
     given: "AuroraConfig without build properties"
       def deployCommand = new DeployCommand(aid)
       Map<String, JsonNode> files = AuroraConfigHelperKt.getSampleFiles(aid)
-      (files.get("verify-ebs-users.json") as ObjectNode).remove("version")
-      (files.get("booberdev/verify-ebs-users.json") as ObjectNode).remove("version")
+      (files.get("aos-simple.json") as ObjectNode).remove("version")
+      (files.get("booberdev/aos-simple.json") as ObjectNode).remove("version")
       AuroraConfig auroraConfig =
           new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])
 

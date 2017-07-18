@@ -44,6 +44,16 @@ fun JsonNode?.pattern(pattern: String, message: String): Exception? {
     return null
 }
 
+fun JsonNode?.oneOf(candidates: List<String>): Exception? {
+    if (this == null) {
+        return IllegalArgumentException("Must be one of [" + candidates.joinToString { "," } + "]")
+    }
+    if (!candidates.contains(this.textValue())) {
+        return IllegalArgumentException("Must be one of [" + candidates.joinToString { "," } + "]")
+    }
+    return null
+}
+
 fun JsonNode?.required(message: String): Exception? {
     if (this == null) {
         return IllegalArgumentException(message)

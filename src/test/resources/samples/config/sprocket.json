@@ -1,0 +1,25 @@
+{
+  "name": "sprocket",
+  "groupId": "ske.openshift.aurora",
+  "artifactId": "sprocket",
+  "version": "3",
+  "splunkIndex": "openshift-test",
+  "resources": {
+    "memory": {
+      "max": "128Mi"
+    }
+  },
+  "prometheus": {
+    "path": "/prometheus",
+    "port": "8081"
+  },
+  "managementPath": ":8081/actuator",
+  "serviceAccount": "aurora-fraggle",
+  "mounts": {
+    "aurora-token": {
+      "path": "/u01/secrets/app/aurora-token",
+      "type": "Secret",
+      "exist": true
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "kind": "${mount.type.name()}",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "${mount.volumeName}",
+    "labels": {
+      "app": "${adc.name}",
+      "affiliation": "${adc.affiliation}"
+    }
+  }
+#if (${mount.content})
+,"data": {
+  #foreach ($config  in $mount.content.entrySet())
+    #if($velocityCount != 1)
+      ,
+    #end
+    "${config.key}": "${config.value}"
+  #end
+}
+#end
+}

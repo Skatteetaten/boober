@@ -105,24 +105,25 @@ class OpenShiftObjectGeneratorTest extends Specification {
 
       def resultFiles = AuroraConfigHelperKt.getResultFiles(aid)
 
-      generatedObjects.forEach {
+      def keys = resultFiles.keySet()
 
+      generatedObjects.forEach {
         def key = getKey(it)
-        assert resultFiles.containsKey(key)
+        assert keys.contains(key)
         compareJson(resultFiles[key], it)
       }
 
       generatedObjects.collect { getKey(it) } as Set == resultFiles.keySet()
-
 
     when:
 
     where:
       env          | name               | secret                                                     | templateFile
       "booberdev"  | "console"          | [:]                                                        | null
-      "booberdev"  | "verify-ebs-users" | [:]                                                        | null
+      "booberdev"  | "aos-simple" | [:]                                                        | null
       "booberdev"  | "tvinn"            | [:]                                                        | "atomhopper.json"
-      "secrettest" | "verify-ebs-users" | ["/tmp/foo/latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="] | null
+      "secrettest" | "aos-simple" | ["/tmp/foo/latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="] | null
+      "booberdev"  | "sprocket"         | [:]                                                        | null
 
   }
 
@@ -137,4 +138,5 @@ class OpenShiftObjectGeneratorTest extends Specification {
 
     return "$kind/$name" as String
   }
+
 }

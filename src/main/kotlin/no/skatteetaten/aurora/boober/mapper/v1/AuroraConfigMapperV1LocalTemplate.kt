@@ -44,6 +44,7 @@ class AuroraConfigMapperV1LocalTemplate(
                 templateJson = templateJson,
                 parameters = auroraConfigFields.getParameters(parameterHandlers),
                 route = getRoute(),
+                mounts = auroraConfigFields.getMounts(mountHandlers, auroraConfig),
                 fields = auroraConfigFields.fields
         )
     }

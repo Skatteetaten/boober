@@ -2,8 +2,12 @@ package no.skatteetaten.aurora.boober.mapper
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
+import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.Mount
+import no.skatteetaten.aurora.boober.model.MountType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -12,6 +16,41 @@ data class AuroraConfigField(val path: String, val value: JsonNode, val source: 
 typealias ConfigMap = Map<String, Map<String, String>>
 
 class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
+
+    fun getMounts(extractors: List<AuroraConfigFieldHandler>, auroraConfig: AuroraConfig): List<Mount>? {
+        if (extractors.isEmpty()) {
+            return null
+        }
+
+        val mountNames = extractors.map {
+            val (_, name, _) = it.name.split("/", limit = 3)
+            name
+        }.toSet()
+
+        return mountNames.map {
+            val type = extract("mounts/$it/type", { MountType.valueOf(it.asText()) })
+
+            val content = when (type) {
+                MountType.Secret -> extractOrNull("secretFolder", {
+                    auroraConfig.getSecrets(it.asText())
+                })
+
+                MountType.ConfigMap -> {
+                    extractOrNull("mounts/$it/content", { jacksonObjectMapper().convertValue<Map<String, String>>(it) })
+                }
+            }
+
+            Mount(
+                    extract("mounts/$it/path"),
+                    type,
+                    extract("mounts/$it/mountName"),
+                    extract("mounts/$it/volumeName"),
+                    extract("mounts/$it/exist", { it.asText() == "true" }),
+                    content
+            )
+        }
+    }
+
 
     fun getConfigMap(configExtractors: List<AuroraConfigFieldHandler>): ConfigMap? {
 

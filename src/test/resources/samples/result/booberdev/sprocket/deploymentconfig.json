@@ -3,26 +3,20 @@
   "apiVersion": "v1",
   "metadata": {
     "annotations": {
-      "console.skatteetaten.no/alarm": "true",
-      "sprocket.sits.no/deployment-config.certificate": "ske.admin.lisens.verify-ebs-users"
+      "console.skatteetaten.no/management-path": ":8081/actuator",
+      "console.skatteetaten.no/alarm": "true"
     },
     "labels": {
-      "app": "verify-ebs-users",
+      "app": "sprocket",
       "updatedBy": "hero",
       "affiliation": "aos"
     },
-    "name": "verify-ebs-users"
+    "name": "sprocket"
   },
   "spec": {
     "strategy": {
-      "type": "Rolling",
-      "rollingParams": {
-        "intervalSeconds": 1,
-        "maxSurge": "25%",
-        "maxUnavailable": 0,
-        "timeoutSeconds": 120,
-        "updatePeriodSeconds": 1
-      }
+      "type": "Recreate",
+      "resources": {}
     },
     "triggers": [
       {
@@ -30,10 +24,10 @@
         "imageChangeParams": {
           "automatic": true,
           "containerNames": [
-            "verify-ebs-users"
+            "sprocket"
           ],
           "from": {
-            "name": "verify-ebs-users:latest",
+            "name": "sprocket:default",
             "kind": "ImageStreamTag"
           }
         }
@@ -41,12 +35,12 @@
     ],
     "replicas": 1,
     "selector": {
-      "name": "verify-ebs-users"
+      "name": "sprocket"
     },
     "template": {
       "metadata": {
         "labels": {
-          "name": "verify-ebs-users",
+          "name": "sprocket",
           "updatedBy": "hero",
           "affiliation": "aos"
         }
@@ -54,19 +48,26 @@
       "spec": {
         "volumes": [
           {
-            "name": "application-log-volume",
-            "emptyDir": {}
+            "name": "aurora-token",
+            "secret": {
+              "secretName": "aurora-token"
+            }
           },
           {
-            "name": "config",
+            "name": "sprocket-config",
             "configMap": {
-              "name": "verify-ebs-users"
+              "name": "sprocket-config"
+            }
+          },
+          {
+            "name": "application-log-volume",
+            "emptyDir": {
             }
           }
         ],
         "containers": [
           {
-            "name": "verify-ebs-users",
+            "name": "sprocket",
             "ports": [
               {
                 "containerPort": 8080,
@@ -116,11 +117,7 @@
               },
               {
                 "name": "APP_NAME",
-                "value": "verify-ebs-users"
-              },
-              {
-                "name": "ROUTE_NAME",
-                "value": "http://verify-ebs-users-aos-booberdev.utv.paas.skead.no/foo"
+                "value": "sprocket"
               }
             ],
             "resources": {
@@ -135,19 +132,25 @@
             },
             "volumeMounts": [
               {
-                "name": "application-log-volume",
-                "mountPath": "/u01/logs"
+                "name": "aurora-token",
+                "mountPath": "/u01/secrets/app/aurora-token"
               },
               {
-                "name": "config",
-                "mountPath": "/u01/config/configmap"
+                "name": "sprocket-config",
+                "mountPath": "/u01/foo"
+              },
+              {
+                "name": "application-log-volume",
+                "mountPath": "/u01/logs"
               }
             ],
             "terminationMessagePath": "/dev/termination-log",
             "imagePullPolicy": "IfNotPresent",
-            "capabilities": {},
+            "capabilities": {
+            },
             "securityContext": {
-              "capabilities": {},
+              "capabilities": {
+              },
               "privileged": false
             },
             "livenessProbe": {
@@ -167,7 +170,8 @@
               },
               "initialDelaySeconds": 10,
               "timeoutSeconds": 1
-            }
+            },
+            "serviceAccountName": "aurora-fraggle"
           }
         ],
         "restartPolicy": "Always",

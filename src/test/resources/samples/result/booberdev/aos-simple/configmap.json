@@ -1,15 +1,15 @@
 {
-  "kind": "Secret",
+  "kind": "ConfigMap",
   "apiVersion": "v1",
   "metadata": {
-    "name": "verify-ebs-users",
+    "name": "aos-simple",
     "labels": {
-      "app": "verify-ebs-users",
+      "app": "aos-simple",
       "updatedBy": "hero",
       "affiliation": "aos"
     }
   },
   "data": {
-    "latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="
+    "latest.properties": "foo=baaaar"
   }
 }

@@ -1,0 +1,14 @@
+{
+  "kind": "ConfigMap",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "tvinn-config",
+    "labels": {
+      "app": "tvinn",
+      "affiliation": "aos"
+    }
+  },
+  "data": {
+    "FOO": "BAR"
+  }
+}

@@ -20,6 +20,7 @@ interface AuroraDeploymentConfig {
     val config: Map<String, Map<String, String>>?
     val fields: Map<String, AuroraConfigField>
     val route: Route?
+    val mounts: List<Mount>?
     val namespace: String
         get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"
 
@@ -30,6 +31,21 @@ interface AuroraDeploymentConfig {
             "http://$host.$cluster.paas.skead.no${it.path ?: ""}"
         }
 }
+
+
+enum class MountType {
+    ConfigMap, Secret
+}
+
+data class Mount(
+        val path: String,
+        val type: MountType,
+        val mountName: String,
+        val volumeName: String,
+        val exist: Boolean,
+        val content: Map<String, String>?
+)
+
 
 data class AuroraDeploymentConfigDeploy(
         override val schemaVersion: String = "v1",
@@ -55,6 +71,8 @@ data class AuroraDeploymentConfigDeploy(
         val webseal: Webseal? = null,
         val prometheus: HttpEndpoint? = null,
         val managementPath: String? = null,
+        val serviceAccount: String? = null,
+        override val mounts: List<Mount>? = null,
         override val fields: Map<String, AuroraConfigField>
 ) : AuroraDeploymentConfig {
 
@@ -82,6 +100,7 @@ data class AuroraDeploymentConfigProcessLocalTemplate(
         override val parameters: Map<String, String>? = mapOf(),
         override val fields: Map<String, AuroraConfigField>,
         override val route: Route? = null,
+        override val mounts: List<Mount>? = null,
         val templateJson: JsonNode
 ) : AuroraDeploymentConfigProcess, AuroraDeploymentConfig
 
@@ -98,7 +117,7 @@ data class AuroraDeploymentConfigProcessTemplate(
         override val parameters: Map<String, String>? = mapOf(),
         override val fields: Map<String, AuroraConfigField>,
         override val route: Route? = null,
-
+        override val mounts: List<Mount>? = null,
         val template: String
 
 ) : AuroraDeploymentConfigProcess, AuroraDeploymentConfig

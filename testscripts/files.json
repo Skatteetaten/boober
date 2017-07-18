@@ -2,52 +2,47 @@
   "affiliation": "paas",
   "setupParams": {
     "apps": [
-      "referanse"
+      "refapp"
     ],
     "envs": [
-      "espen-dev"
+      "wingnut"
     ],
-    "overrides": {},
-    "dryRun": false
+    "overrides": {}
   },
   "auroraConfig": {
     "files": {
       "about.json": {
+        "schemaVersion": "v1",
         "affiliation": "paas",
         "type": "deploy",
         "permissions" : {
           "admin" : {
-            "groups": "APP_PaaS_drift APP_PaaS_utv",
-            "users": "m86862"
+            "groups": "APP_PaaS_drift APP_PaaS_utv"
           }
         }
       },
-      "referanse.json": {
-        "name": "referanse",
+      "refapp.json": {
+        "name": "refapp",
         "replicas": "1",
         "flags": {
           "rolling": true,
           "cert": true,
           "route": true
         },
-        "groupId": "ske.aurora.openshift.referanse",
-        "artifactId": "openshift-referanse-springboot-server",
-        "version": "0.0.95",
+        "groupId": "ske.aurora.openshift",
+        "artifactId": "openshift-reference-springboot-server",
+        "version": "1",
         "managementPath": ":8081/actuator",
         "database": "referanseapp",
         "prometheus" : {
-          "port": "8082"
+          "port": "8081",
+          "path": "/prometheus"
         }
       },
-      "espen-dev/about.json": {
-        "cluster": "utv",
-        "config" : {
-          "latest.properties" : {
-            "Foo": "Fighters"
-          }
-        }
+      "wingnut/about.json": {
+        "cluster": "utv"
       },
-      "espen-dev/referanse.json": {
+      "wingnut/refapp.json": {
       }
     }
   }

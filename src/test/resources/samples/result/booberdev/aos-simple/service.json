@@ -2,14 +2,14 @@
   "kind": "Service",
   "apiVersion": "v1",
   "metadata": {
-    "name": "verify-ebs-users",
+    "name": "aos-simple",
     "annotations": {
       "sprocket.sits.no/service.webseal": "test",
       "sprocket.sits.no/service.webseal-roles": "admin dev",
       "prometheus.io/scrape": "false"
     },
     "labels": {
-      "app": "verify-ebs-users",
+      "app": "aos-simple",
       "updatedBy": "hero",
       "affiliation": "aos"
     }
@@ -25,7 +25,7 @@
       }
     ],
     "selector": {
-      "name": "verify-ebs-users"
+      "name": "aos-simple"
     },
     "type": "ClusterIP",
     "sessionAffinity": "None"

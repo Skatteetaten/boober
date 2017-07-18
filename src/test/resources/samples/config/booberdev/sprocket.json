@@ -1,10 +1,7 @@
 {
-  "parameters": {
-    "DATABASE": "tvinn"
-  },
-  "type": "localTemplate",
+  "type": "deploy",
   "mounts": {
-    "tvinn-config": {
+    "sprocket-config": {
       "type": "ConfigMap",
       "path": "/u01/foo",
       "content": {
@@ -13,3 +10,4 @@
     }
   }
 }
+
