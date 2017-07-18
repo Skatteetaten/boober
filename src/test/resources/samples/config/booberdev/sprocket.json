@@ -10,8 +10,8 @@
     }
   },
   "database": {
-    "REFERANSE": "auto",
-    "FOO": "123-456"
+    "referanse": "auto",
+    "foo": "123-456"
   }
 }
 

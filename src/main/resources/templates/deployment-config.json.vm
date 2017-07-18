@@ -234,7 +234,7 @@
                       "value": "${dbPath}/${db.dbName}/db.properties"
                     }
                   #end
-                ,
+                  ,
                   {
                     "name": "${db.envName}",
                     "value": "${dbPath}/${db.dbName}/info"
@@ -262,11 +262,11 @@
                 #foreach ($db  in $adc.database)
                   {
                     "name": "$db.dbName",
-                    "mountPath": "$dbPath/$db.dbName)"
+                    "mountPath": "$dbPath/$db.dbName"
                   },
                 #end
               #end
-              #if (${adc.mounts})
+               #if (${adc.mounts})
                 #foreach ($mount in $adc.mounts)
                   {
                     "name": "${mount.mountName}",
