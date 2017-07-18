@@ -46,6 +46,7 @@ class AuroraConfigMapperV1Template(
                 template = auroraConfigFields.extract("template"),
                 parameters = auroraConfigFields.getParameters(parameterHandlers),
                 route = getRoute(),
+                mounts = auroraConfigFields.getMounts(mountHandlers, auroraConfig),
                 fields = auroraConfigFields.fields
         )
     }

@@ -87,13 +87,12 @@ class OpenShiftObjectGenerator(
 
         var openShiftObjects = templatesToProcess.map { mergeVelocityTemplate(it, params) }
 
-        if (auroraDc is AuroraDeploymentConfigDeploy && auroraDc.mounts != null) {
-            val mounts = auroraDc.mounts.filter { !it.exist }.map {
-                logger.debug("Create manual mount {}", it)
-                val mountParams = mapOf("adc" to auroraDc, "mount" to it)
-                mergeVelocityTemplate("mount.json", mountParams)
-            }.toList()
-            openShiftObjects += mounts
+        auroraDc.mounts?.filter { !it.exist }?.map {
+            logger.debug("Create manual mount {}", it)
+            val mountParams = mapOf("adc" to auroraDc, "mount" to it)
+            mergeVelocityTemplate("mount.json", mountParams)
+        }?.let {
+            openShiftObjects += it
         }
 
         if (auroraDc is AuroraDeploymentConfigProcess) {

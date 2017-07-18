@@ -2,5 +2,14 @@
   "parameters": {
     "DATABASE": "tvinn"
   },
-  "type": "localTemplate"
+  "type": "localTemplate",
+  "mounts": {
+    "tvinn-config": {
+      "type": "ConfigMap",
+      "path": "/u01/foo",
+      "content": {
+        "FOO": "BAR"
+      }
+    }
+  }
 }
