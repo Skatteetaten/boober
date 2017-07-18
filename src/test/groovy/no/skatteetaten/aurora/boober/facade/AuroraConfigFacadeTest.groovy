@@ -36,7 +36,7 @@ import spock.mock.DetachedMockFactory
 class AuroraConfigFacadeTest extends Specification {
 
   public static final String ENV_NAME = "secrettest"
-  public static final String APP_NAME = "verify-ebs-users"
+  public static final String APP_NAME = "aos-simple"
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
   @Configuration

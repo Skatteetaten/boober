@@ -2,9 +2,9 @@
   "kind": "Route",
   "apiVersion": "v1",
   "metadata": {
-    "name": "verify-ebs-users",
+    "name": "aos-simple",
     "labels": {
-      "app": "verify-ebs-users",
+      "app": "aos-simple",
       "updatedBy": "hero",
       "affiliation": "aos"
     },
@@ -15,7 +15,7 @@
   "spec": {
     "to": {
       "kind": "Service",
-      "name": "verify-ebs-users"
+      "name": "aos-simple"
     },
     "path": "/foo"
   }

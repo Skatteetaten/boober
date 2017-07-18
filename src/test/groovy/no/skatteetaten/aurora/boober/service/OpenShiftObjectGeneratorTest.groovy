@@ -120,9 +120,9 @@ class OpenShiftObjectGeneratorTest extends Specification {
     where:
       env          | name               | secret                                                     | templateFile
       "booberdev"  | "console"          | [:]                                                        | null
-      "booberdev"  | "verify-ebs-users" | [:]                                                        | null
+      "booberdev"  | "aos-simple" | [:]                                                        | null
       "booberdev"  | "tvinn"            | [:]                                                        | "atomhopper.json"
-      "secrettest" | "verify-ebs-users" | ["/tmp/foo/latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="] | null
+      "secrettest" | "aos-simple" | ["/tmp/foo/latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="] | null
       "booberdev"  | "sprocket"         | [:]                                                        | null
 
   }

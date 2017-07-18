@@ -24,7 +24,7 @@ class SetupControllerTest extends AbstractControllerTest {
 
   public static final String AFFILIATION = "aos"
   public static final String ENV_NAME = "booberdev"
-  public static final String APP_NAME = "verify-ebs-users"
+  public static final String APP_NAME = "aos-simple"
 
   @Autowired
   ObjectMapper mapper
@@ -32,7 +32,7 @@ class SetupControllerTest extends AbstractControllerTest {
   def "Should fail when Aurora Config contains errors"() {
     given:
       def files = AuroraConfigHelperKt.getSampleFiles(new DeployCommand(ENV_NAME, APP_NAME))
-      files.put("verify-ebs-users.json", mapper.readTree("{}"))
+      files.put("aos-simple.json", mapper.readTree("{}"))
       SetupCommand cmd = new SetupCommand(AFFILIATION, new AuroraConfigPayload(files, [:]),
           new SetupParamsPayload([ENV_NAME], [APP_NAME], [:]))
       def json = mapper.writeValueAsString(cmd)

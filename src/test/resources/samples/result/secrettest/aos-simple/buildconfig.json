@@ -2,9 +2,9 @@
   "kind": "BuildConfig",
   "apiVersion": "v1",
   "metadata": {
-    "name": "verify-ebs-users",
+    "name": "aos-simple",
     "labels": {
-      "app": "verify-ebs-users",
+      "app": "aos-simple",
       "updatedBy": "hero",
       "affiliation": "aos"
     }
@@ -37,11 +37,11 @@
         "env": [
           {
             "name": "ARTIFACT_ID",
-            "value": "verify-ebs-users"
+            "value": "aos-simple"
           },
           {
             "name": "GROUP_ID",
-            "value": "ske.admin.lisens"
+            "value": "ske.aurora.openshift"
           },
           {
             "name": "VERSION",
@@ -66,7 +66,7 @@
     "output": {
       "to": {
         "kind": "ImageStreamTag",
-        "name": "verify-ebs-users:latest"
+        "name": "aos-simple:latest"
       }
     }
   }

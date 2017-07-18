@@ -25,7 +25,7 @@ import spock.mock.DetachedMockFactory
 class AuroraDeploymentConfigDeployServiceUserValidationTest extends Specification {
 
   public static final String ENV_NAME = "booberdev"
-  public static final String APP_NAME = "verify-ebs-users"
+  public static final String APP_NAME = "aos-simple"
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
   @Configuration

@@ -7,11 +7,11 @@
       "sprocket.sits.no/deployment-config.certificate": "tullball"
     },
     "labels": {
-      "app": "verify-ebs-users",
+      "app": "aos-simple",
       "updatedBy": "hero",
       "affiliation": "aos"
     },
-    "name": "verify-ebs-users"
+    "name": "aos-simple"
   },
   "spec": {
     "strategy": {
@@ -30,10 +30,10 @@
         "imageChangeParams": {
           "automatic": true,
           "containerNames": [
-            "verify-ebs-users"
+            "aos-simple"
           ],
           "from": {
-            "name": "verify-ebs-users:latest",
+            "name": "aos-simple:latest",
             "kind": "ImageStreamTag"
           }
         }
@@ -41,12 +41,12 @@
     ],
     "replicas": 1,
     "selector": {
-      "name": "verify-ebs-users"
+      "name": "aos-simple"
     },
     "template": {
       "metadata": {
         "labels": {
-          "name": "verify-ebs-users",
+          "name": "aos-simple",
           "updatedBy": "hero",
           "affiliation": "aos"
         }
@@ -60,13 +60,13 @@
           {
             "name": "secrets",
             "secret": {
-              "secretName": "verify-ebs-users"
+              "secretName": "aos-simple"
             }
           }
         ],
         "containers": [
           {
-            "name": "verify-ebs-users",
+            "name": "aos-simple",
             "ports": [
               {
                 "containerPort": 8080,
@@ -116,11 +116,11 @@
               },
               {
                 "name": "APP_NAME",
-                "value": "verify-ebs-users"
+                "value": "aos-simple"
               },
               {
                 "name": "ROUTE_NAME",
-                "value": "http://verify-ebs-users-aos-secrettest.utv.paas.skead.no/foo"
+                "value": "http://aos-simple-aos-secrettest.utv.paas.skead.no/foo"
               }
             ],
             "resources": {
