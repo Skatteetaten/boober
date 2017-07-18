@@ -4,10 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.Mount
-import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.model.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -81,6 +78,17 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         }.toMap()
 
     }
+
+    fun getDatabases(extractors: List<AuroraConfigFieldHandler>): List<Database> {
+
+        return extractors.map {
+            val (_, field) = it.name.split("/", limit = 2)
+
+            val value = extract(it.name)
+            Database(field, if (value == "auto" || value.isBlank()) null else value)
+        }
+    }
+
 
     fun getParameters(parameterExtractors: List<AuroraConfigFieldHandler>): Map<String, String>? {
         return parameterExtractors.map {

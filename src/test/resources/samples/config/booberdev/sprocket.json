@@ -8,6 +8,10 @@
         "FOO": "BAR"
       }
     }
+  },
+  "database": {
+    "REFERANSE": "auto",
+    "FOO": "123-456"
   }
 }
 

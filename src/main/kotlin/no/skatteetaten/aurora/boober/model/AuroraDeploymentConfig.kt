@@ -47,6 +47,19 @@ data class Mount(
 )
 
 
+data class Database(
+        val name: String,
+        val id: String? = null
+) {
+    val spec: String
+        get():String = (id?.let { "$name:$id" } ?: name).toLowerCase()
+    val envName: String
+        get(): String = "${name}_db".toUpperCase()
+
+    val dbName: String
+        get(): String = "$name-db".toLowerCase()
+}
+
 data class AuroraDeploymentConfigDeploy(
         override val schemaVersion: String = "v1",
         override val affiliation: String,
@@ -66,7 +79,7 @@ data class AuroraDeploymentConfigDeploy(
         val version: String,
         val extraTags: String,
         val splunkIndex: String? = null,
-        val database: String? = null,
+        val database: List<Database> = listOf(),
         val certificateCn: String? = null,
         val webseal: Webseal? = null,
         val prometheus: HttpEndpoint? = null,

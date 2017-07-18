@@ -11,9 +11,9 @@
       ,
         "sprocket.sits.no/deployment-config.certificate": "${adc.certificateCn}"
       #end
-      #if(${adc.database})
+      #if("${database}" != "")
       ,
-        "sprocket.sits.no/deployment-config.database": "$!{adc.database}"
+        "sprocket.sits.no/deployment-config.database": "${database}"
       #end
     },
     "labels": {
@@ -74,6 +74,16 @@
       },
       "spec": {
         "volumes": [
+          #if (${adc.database})
+            #foreach ($db  in $adc.database)
+              {
+                "name": "$db.dbName",
+                "secret": {
+                  "secretName": "$db.dbName"
+                }
+              },
+            #end
+          #end
           #if (${adc.mounts})
             #foreach ($mount in $adc.mounts)
               {
@@ -205,12 +215,37 @@
               #end
 
               #if (${adc.route})
-              ,
-                {
-                  "name": "ROUTE_NAME",
-                  "value": "${adc.routeName}"
-                }
+                  ,{
+                    "name": "ROUTE_NAME",
+                    "value": "${adc.routeName}"
+                  }
+                #end
+
+              #if (${adc.database})
+                #foreach ($db  in $adc.database)
+                  #if($velocityCount == 1)
+                  ,
+                    {
+                      "name": "DB",
+                      "value": "${dbPath}/${db.dbName}/info"
+                    },
+                    {
+                      "name": "DB_PROPERTIES",
+                      "value": "${dbPath}/${db.dbName}/db.properties"
+                    }
+                  #end
+                ,
+                  {
+                    "name": "${db.envName}",
+                    "value": "${dbPath}/${db.dbName}/info"
+                  },
+                  {
+                    "name": "${db.envName}_PROPERTIES",
+                    "value": "${dbPath}/${db.dbName}/db.properties"
+                  }
+                #end
               #end
+
             ],
             "resources": {
               "limits": {
@@ -223,6 +258,14 @@
               }
             },
             "volumeMounts": [
+              #if (${adc.database})
+                #foreach ($db  in $adc.database)
+                  {
+                    "name": "$db.dbName",
+                    "mountPath": "$dbPath/$db.dbName)"
+                  },
+                #end
+              #end
               #if (${adc.mounts})
                 #foreach ($mount in $adc.mounts)
                   {
