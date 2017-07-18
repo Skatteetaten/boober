@@ -55,12 +55,19 @@
         "volumes": [
           {
             "name": "application-log-volume",
-            "emptyDir": {}
+            "emptyDir": {
+            }
           },
           {
             "name": "secrets",
             "secret": {
               "secretName": "aos-simple"
+            }
+          },
+          {
+            "name": "aos-simple-cert",
+            "secret": {
+              "secretName": "aos-simple-cert"
             }
           }
         ],
@@ -119,6 +126,18 @@
                 "value": "aos-simple"
               },
               {
+                "name": "STS_CERTIFICATE_URL",
+                "value": "/u01/secrets/app/aos-simple-cert/certificate.crt"
+              },
+              {
+                "name": "STS_PRIVATE_KEY_URL",
+                "value": "/u01/secrets/app/aos-simple-cert/privatekey.key"
+              },
+              {
+                "name": "STS_KEYSTORE_DESCRIPTOR",
+                "value": "/u01/secrets/app/aos-simple-cert/descriptor.properties"
+              },
+              {
                 "name": "ROUTE_NAME",
                 "value": "http://aos-simple-aos-secrettest.utv.paas.skead.no/foo"
               }
@@ -139,15 +158,21 @@
                 "mountPath": "/u01/logs"
               },
               {
+                "name": "aos-simple-cert",
+                "mountPath": "/u01/secrets/app/aos-simple-cert"
+              },
+              {
                 "name": "secrets",
                 "mountPath": "/u01/config/secret"
               }
             ],
             "terminationMessagePath": "/dev/termination-log",
             "imagePullPolicy": "IfNotPresent",
-            "capabilities": {},
+            "capabilities": {
+            },
             "securityContext": {
-              "capabilities": {},
+              "capabilities": {
+              },
               "privileged": false
             },
             "livenessProbe": {

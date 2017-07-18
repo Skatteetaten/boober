@@ -10,15 +10,15 @@
       #if(${adc.certificateCn})
       ,
         "sprocket.sits.no/deployment-config.certificate": "${adc.certificateCn}"
-    #end
+      #end
       #if(${adc.database})
       ,
         "sprocket.sits.no/deployment-config.database": "$!{adc.database}"
-    #end
+      #end
     },
     "labels": {
       "app": "${adc.name}",
-      "updatedBy" : "${username}",
+      "updatedBy": "${username}",
       "affiliation": "${adc.affiliation}"
     },
     "name": "${adc.name}"
@@ -42,23 +42,23 @@
       },
     #end
     "triggers": [
-          {
-            "type": "ImageChange",
-            "imageChangeParams": {
-              "automatic": true,
-              "containerNames": [
-                "${adc.name}"
-              ],
-              "from": {
-              #if(${adc.type} == "development")
-                "name": "${adc.name}:latest",
-              #else
-                "name": "${adc.name}:default",
-              #end
-                "kind": "ImageStreamTag"
-              }
-            }
+      {
+        "type": "ImageChange",
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "${adc.name}"
+          ],
+          "from": {
+            #if(${adc.type} == "development")
+              "name": "${adc.name}:latest",
+            #else
+              "name": "${adc.name}:default",
+            #end
+            "kind": "ImageStreamTag"
           }
+        }
+      }
     ],
     "replicas": ${adc.replicas},
     "selector": {
@@ -68,7 +68,7 @@
       "metadata": {
         "labels": {
           "name": "${adc.name}",
-          "updatedBy" : "${username}",
+          "updatedBy": "${username}",
           "affiliation": "${adc.affiliation}"
         }
       },
@@ -96,12 +96,12 @@
           }
           #if(${adc.config})
           ,
-          {
-            "name": "config",
-            "configMap": {
-              "name": "${adc.name}"
+            {
+              "name": "config",
+              "configMap": {
+                "name": "${adc.name}"
+              }
             }
-          }
           #end
           #if(${adc.secrets})
           ,
@@ -109,6 +109,16 @@
               "name": "secrets",
               "secret": {
                 "secretName": "${adc.name}"
+              }
+            }
+          #end
+
+          #if(${adc.certificateCn})
+          ,
+            {
+              "name": "${adc.name}-cert",
+              "secret": {
+                "secretName": "${adc.name}-cert"
               }
             }
           #end
@@ -167,6 +177,21 @@
                 "name": "APP_NAME",
                 "value": "${adc.name}"
               }
+              #if(${adc.certificateCn})
+              ,
+                {
+                  "name": "STS_CERTIFICATE_URL",
+                  "value": "${certPath}/certificate.crt"
+                },
+                {
+                  "name": "STS_PRIVATE_KEY_URL",
+                  "value": "${certPath}/privatekey.key"
+                },
+                {
+                  "name": "STS_KEYSTORE_DESCRIPTOR",
+                  "value": "${certPath}/descriptor.properties"
+                }
+              #end
               #if (${adc.flags.debug})
               ,
                 {
@@ -180,11 +205,12 @@
               #end
 
               #if (${adc.route})
-                  ,{
-                    "name": "ROUTE_NAME",
-                    "value": "${adc.routeName}"
-                  }
-                #end
+              ,
+                {
+                  "name": "ROUTE_NAME",
+                  "value": "${adc.routeName}"
+                }
+              #end
             ],
             "resources": {
               "limits": {
@@ -211,10 +237,17 @@
               }
               #if(${adc.config})
               ,
-              {
-                "name": "config",
-                "mountPath": "/u01/config/configmap"
-              }
+                {
+                  "name": "config",
+                  "mountPath": "/u01/config/configmap"
+                }
+              #end
+              #if(${adc.certificateCn})
+              ,
+                {
+                  "name": "${adc.name}-cert",
+                  "mountPath": "$certPath"
+                }
               #end
               #if(${adc.secrets})
               ,
@@ -253,7 +286,6 @@
             ,
               "serviceAccountName": "${adc.serviceAccount}"
             #end
-
           }
         ],
         "restartPolicy": "Always",

@@ -47,7 +47,8 @@ class OpenShiftObjectGenerator(
                 "username" to userDetailsProvider.getAuthenticatedUser().username,
                 "dockerRegistry" to "docker-registry.aurora.sits.no:5000",
                 "builder" to mapOf("name" to "leveransepakkebygger", "version" to "prod"),
-                "base" to mapOf("name" to "oracle8", "version" to "1")
+                "base" to mapOf("name" to "oracle8", "version" to "1"),
+                "certPath" to "/u01/secrets/app/${auroraDc.name}-cert"
         )
 
         val templatesToProcess = mutableListOf(
