@@ -22,9 +22,10 @@ abstract class AuroraConfigMapperV1(
     val configHandlers = findConfigFieldHandlers(applicationFiles)
     val parameterHandlers = findParameters(applicationFiles)
 
+    val dbHandlers = findDbHandlers(applicationFiles)
     val mountHandlers = findMounts(applicationFiles)
     val routeHandlers = findRouteAnnotaionHandlers(applicationFiles)
-    val v1Handlers = baseHandlers + routeHandlers + configHandlers + mountHandlers + parameterHandlers + listOf(
+    val v1Handlers = baseHandlers + dbHandlers + routeHandlers + configHandlers + mountHandlers + parameterHandlers + listOf(
             AuroraConfigFieldHandler("affiliation", validator = { it.pattern("^[a-z]{0,23}[a-z]$", "Affiliation is must be alphanumeric and under 24 characters") }),
             AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
             AuroraConfigFieldHandler("name", validator = { it.pattern("^[a-z][-a-z0-9]{0,23}[a-z0-9]$", "Name must be alphanumeric and under 24 characters") }),
@@ -33,7 +34,6 @@ abstract class AuroraConfigMapperV1(
             AuroraConfigFieldHandler("permissions/admin/users", validator = validateUsers(openShiftClient)),
             AuroraConfigFieldHandler("permissions/view/groups", validator = validateGroups(openShiftClient, false)),
             AuroraConfigFieldHandler("permissions/view/users", validator = validateUsers(openShiftClient)),
-            AuroraConfigFieldHandler("database"),
             AuroraConfigFieldHandler("route/host"),
             AuroraConfigFieldHandler("route/path", validator = { it?.startsWith("/", "Path must start with /") }),
             AuroraConfigFieldHandler("route/generate", defaultValue = "false"),
@@ -104,6 +104,14 @@ abstract class AuroraConfigMapperV1(
         }
     }
 
+    fun findDbHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
+
+        val keys = findSubKeys(applicationFiles, "database")
+
+        return keys.map { key ->
+            AuroraConfigFieldHandler("database/$key")
+        }
+    }
     fun findParameters(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
 
         val parameterKeys = findSubKeys(applicationFiles, "parameters")

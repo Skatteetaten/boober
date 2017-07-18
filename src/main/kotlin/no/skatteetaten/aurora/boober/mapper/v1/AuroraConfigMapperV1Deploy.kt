@@ -87,7 +87,7 @@ class AuroraConfigMapperV1Deploy(
                 ),
                 permissions = extractPermissions(),
                 splunkIndex = auroraConfigFields.extractOrNull("splunkIndex"),
-                database = auroraConfigFields.extractOrNull("database"),
+                database = auroraConfigFields.getDatabases(dbHandlers),
                 managementPath = auroraConfigFields.extractOrNull("managementPath"),
 
                 certificateCn = auroraConfigFields.extractOrDefault("certificateCn", certificateCnDefault),

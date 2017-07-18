@@ -41,6 +41,13 @@ class OpenShiftObjectGenerator(
             key to value.map { "${it.key}=${it.value}" }.joinToString(separator = "\\n")
         }?.toMap() ?: mapOf()
 
+
+        val database = if (auroraDc is AuroraDeploymentConfigDeploy) {
+            auroraDc.database.map { it.spec }.joinToString(",")
+        } else ""
+
+        logger.debug("Database is $database")
+
         val params = mapOf(
                 "adc" to (auroraDc as? AuroraDeploymentConfigDeploy ?: auroraDc as AuroraDeploymentConfigProcess),
                 "configs" to configs,
@@ -48,6 +55,8 @@ class OpenShiftObjectGenerator(
                 "dockerRegistry" to "docker-registry.aurora.sits.no:5000",
                 "builder" to mapOf("name" to "leveransepakkebygger", "version" to "prod"),
                 "base" to mapOf("name" to "oracle8", "version" to "1"),
+                "database" to database,
+                "dbPath" to "/u01/secrets/app",
                 "certPath" to "/u01/secrets/app/${auroraDc.name}-cert"
         )
 

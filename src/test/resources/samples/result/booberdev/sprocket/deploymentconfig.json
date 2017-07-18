@@ -4,7 +4,8 @@
   "metadata": {
     "annotations": {
       "console.skatteetaten.no/management-path": ":8081/actuator",
-      "console.skatteetaten.no/alarm": "true"
+      "console.skatteetaten.no/alarm": "true",
+      "sprocket.sits.no/deployment-config.database": "referanse,foo:123-456"
     },
     "labels": {
       "app": "sprocket",
@@ -47,6 +48,18 @@
       },
       "spec": {
         "volumes": [
+          {
+            "name": "referanse-db",
+            "secret": {
+              "secretName": "referanse-db"
+            }
+          },
+          {
+            "name": "foo-db",
+            "secret": {
+              "secretName": "foo-db"
+            }
+          },
           {
             "name": "aurora-token",
             "secret": {
@@ -118,6 +131,30 @@
               {
                 "name": "APP_NAME",
                 "value": "sprocket"
+              },
+              {
+                "name": "DB",
+                "value": "/u01/secrets/app/referanse-db/info"
+              },
+              {
+                "name": "DB_PROPERTIES",
+                "value": "/u01/secrets/app/referanse-db/db.properties"
+              },
+              {
+                "name": "REFERANSE_DB",
+                "value": "/u01/secrets/app/referanse-db/info"
+              },
+              {
+                "name": "REFERANSE_DB_PROPERTIES",
+                "value": "/u01/secrets/app/referanse-db/db.properties"
+              },
+              {
+                "name": "FOO_DB",
+                "value": "/u01/secrets/app/foo-db/info"
+              },
+              {
+                "name": "FOO_DB_PROPERTIES",
+                "value": "/u01/secrets/app/foo-db/db.properties"
               }
             ],
             "resources": {
@@ -131,6 +168,14 @@
               }
             },
             "volumeMounts": [
+              {
+                "name": "referanse-db",
+                "mountPath": "/u01/secrets/app/referanse-db"
+              },
+              {
+                "name": "foo-db",
+                "mountPath": "/u01/secrets/app/foo-db"
+              },
               {
                 "name": "aurora-token",
                 "mountPath": "/u01/secrets/app/aurora-token"
