@@ -87,7 +87,9 @@ class AuroraConfigFacadeTest extends Specification {
       def gitAuroraConfig = getAuroraConfigFromGit(affiliation, false)
 
     when:
-      service.saveAuroraConfig(affiliation, auroraConfig)
+
+      def newAuroraConfig = new AuroraConfig(gitAuroraConfig.auroraConfigFiles, auroraConfig.secrets)
+      service.saveAuroraConfig(affiliation, newAuroraConfig)
       def updatedAuroraConfig = getAuroraConfigFromGit(affiliation, false)
 
     then:
@@ -134,6 +136,8 @@ class AuroraConfigFacadeTest extends Specification {
     given:
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, ["/tmp/foo/latest.properties": "FOO=BAR"])
       createRepoAndSaveFiles("aos", auroraConfig)
+      def gitAuroraConfig = getAuroraConfigFromGit("aos", false)
+
       def jsonOp = """[{
   "op": "replace",
   "path": "/version",
@@ -143,7 +147,9 @@ class AuroraConfigFacadeTest extends Specification {
 
     when:
       def filename = "${aid.environment}/${aid.application}.json"
-      def patchedAuroraConfig = service.patchAuroraConfigFile("aos", filename, jsonOp)
+
+      def version = gitAuroraConfig.auroraConfigFiles.find { it.name == filename }.version
+      def patchedAuroraConfig = service.patchAuroraConfigFile("aos", filename, jsonOp, version)
       def git = gitService.checkoutRepoForAffiliation("aos")
       def gitLog = git.log().call().head()
       gitService.closeRepository(git)

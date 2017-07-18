@@ -98,7 +98,7 @@ class OpenShiftObjectGeneratorTest extends Specification {
 
     expect:
 
-      def auroraConfig = new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, secret)
+      def auroraConfig = new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false, null) }, secret)
       def auroraDc = auroraDeploymentConfigService.createAuroraDeploymentConfigs(deployCommand, auroraConfig)
 
       List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc)

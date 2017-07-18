@@ -109,6 +109,7 @@ class AuroraConfigFacade(
     }
 
     private fun validateGitVersion(auroraConfig: AuroraConfig, newAuroraConfig: AuroraConfig, allFilesInRepo: Map<String, Pair<RevCommit?, File>>) {
+        //TODO:Validate secrets aswell
         val oldVersions = auroraConfig.getVersions().filterValues { it != null }
         val invalidVersions = newAuroraConfig.getVersions().filter {
             oldVersions[it.key] != it.value
@@ -116,8 +117,7 @@ class AuroraConfigFacade(
 
         if (invalidVersions.isNotEmpty()) {
             val gitInfo: Map<String, RevCommit> = allFilesInRepo
-                    .filter { !it.key.startsWith(GIT_SECRET_FOLDER) }
-                    .filterValues { it.first != null }
+                    .filter { it.value.first != null }
                     .mapValues { it.value.first!! }
 
             val errors = invalidVersions.map {

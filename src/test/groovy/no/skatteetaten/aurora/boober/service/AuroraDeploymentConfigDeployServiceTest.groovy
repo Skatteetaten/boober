@@ -85,7 +85,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
     given:
 
       def overrideFile = mapper.convertValue(["name": "test%qwe)"], JsonNode.class)
-      def overrides = [new AuroraConfigFile("${aid.environment}/${aid.application}.json", overrideFile, true)]
+      def overrides = [new AuroraConfigFile("${aid.environment}/${aid.application}.json", overrideFile, true, null)]
       final DeployCommand deployCommand = new DeployCommand(aid, overrides)
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
@@ -116,7 +116,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
   def "Should create AuroraConfigFields with overrides"() {
     given:
       def overrideFile = mapper.convertValue(["type": "deploy", "cluster": "utv"], JsonNode.class)
-      def overrides = [new AuroraConfigFile("booberdev/about.json", overrideFile, true)]
+      def overrides = [new AuroraConfigFile("booberdev/about.json", overrideFile, true, null)]
 
       final DeployCommand deployCommand = new DeployCommand(aid, overrides)
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
@@ -139,7 +139,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       Map<String, JsonNode> files = AuroraConfigHelperKt.getSampleFiles(aid)
       files.remove("${APP_NAME}.json" as String)
       def auroraConfig =
-          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])
+          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false, null) }, [:])
 
     when:
       auroraConfig.getFilesForApplication(deployCommand)
@@ -174,7 +174,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
     given:
       def overrideFile = mapper.convertValue(["name": "awesome-app"], JsonNode.class)
-      def overrides = [new AuroraConfigFile("booberdev/about.json", overrideFile, true)]
+      def overrides = [new AuroraConfigFile("booberdev/about.json", overrideFile, true, null)]
 
       final DeployCommand deployCommand = new DeployCommand(aid, overrides)
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
@@ -195,7 +195,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       (files.get("aos-simple.json") as ObjectNode).remove("version")
       (files.get("booberdev/aos-simple.json") as ObjectNode).remove("version")
       AuroraConfig auroraConfig =
-          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, [:])
+          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false, null) }, [:])
 
     when:
       auroraDeploymentConfigService.createAuroraDeploymentConfigs(deployCommand, auroraConfig)
