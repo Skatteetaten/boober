@@ -7,10 +7,13 @@ import org.eclipse.jgit.api.CreateBranchCommand
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.EmtpyCommitException
 import org.eclipse.jgit.api.errors.GitAPIException
+import org.eclipse.jgit.api.errors.NoHeadException
 import org.eclipse.jgit.lib.PersonIdent
 import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.revwalk.RevCommit
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
@@ -24,6 +27,8 @@ class GitService(
         @Value("\${boober.git.checkoutPath}") val checkoutPath: String,
         @Value("\${boober.git.username}") val username: String,
         @Value("\${boober.git.password}") val password: String) {
+
+    val logger: Logger = LoggerFactory.getLogger(GitService::class.java)
 
     val cp = UsernamePasswordCredentialsProvider(username, password)
 
@@ -65,12 +70,21 @@ class GitService(
         repo.close()
     }
 
-    fun getAllFilesInRepo(git: Git): Map<String, File> {
+    fun getAllFilesInRepo(git: Git): Map<String, Pair<RevCommit?, File>> {
         val folder = git.repository.directory.parentFile
         return folder.walkBottomUp()
                 .onEnter { !it.name.startsWith(".git") }
                 .filter { it.isFile }
-                .associate { it.relativeTo(folder).path to it }
+                .associate {
+                    val path = it.relativeTo(folder).path
+                    val commit = try {
+                        git.log().addPath(path).setMaxCount(1).call().first()
+                    } catch(e: NoHeadException) {
+                        logger.debug("No history was found for path={}", path)
+                        null
+                    }
+                    path to Pair(commit, it)
+                }
     }
 
 

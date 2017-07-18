@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.controller.internal
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
+import no.skatteetaten.aurora.boober.service.internal.AuroraVersioningException
 import no.skatteetaten.aurora.boober.service.internal.OpenShiftException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -42,6 +43,7 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
         val items = when (e) {
             is AuroraConfigException -> e.errors
             is ApplicationConfigException -> e.errors
+            is AuroraVersioningException -> e.errors
             else -> listOf()
         }
 

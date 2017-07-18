@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service.internal
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
+import java.util.*
 
 data class Error(
         val application: String,
@@ -29,3 +30,9 @@ class AuroraConfigException(
 ) : ServiceException(message)
 
 data class ValidationError(val message: String, val field: AuroraConfigField? = null)
+
+class AuroraVersioningException(message: String, val errors: List<VersioningError>) : ServiceException(message)
+
+data class VersioningError(val fileName: String, val name: String, val date: Date)
+
+

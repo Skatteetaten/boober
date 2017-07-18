@@ -10,7 +10,8 @@ typealias JsonDataFiles = Map<String, JsonNode>
 
 data class AuroraConfigPayload(
         val files: JsonDataFiles = mapOf(),
-        val secrets: Map<String, String> = mapOf()
+        val secrets: Map<String, String> = mapOf(),
+        val versions: Map<String, String?> = mapOf()
 ) {
     fun toAuroraConfig(): AuroraConfig {
         val auroraConfigFiles = files.map { AuroraConfigFile(it.key, it.value) }
@@ -21,7 +22,8 @@ data class AuroraConfigPayload(
 fun fromAuroraConfig(auroraConfig: AuroraConfig): AuroraConfigPayload {
 
     val files: JsonDataFiles = auroraConfig.auroraConfigFiles.associate { it.name to it.contents }
-    return AuroraConfigPayload(files, auroraConfig.secrets)
+    val versions = auroraConfig.auroraConfigFiles.associate { it.name to it.version }
+    return AuroraConfigPayload(files, auroraConfig.secrets, versions = versions)
 }
 
 data class SetupParamsPayload(
