@@ -30,9 +30,9 @@ class AuroraConfigMapperV1Deploy(
             AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set") }),
             AuroraConfigFieldHandler("extraTags", defaultValue = "latest,major,minor,patch"),
             AuroraConfigFieldHandler("splunkIndex"),
-            AuroraConfigFieldHandler("prometheus/path"),
-            AuroraConfigFieldHandler("prometheus/port"),
-            AuroraConfigFieldHandler("managementPath"),
+            AuroraConfigFieldHandler("prometheus/path", defaultValue = "/prometheus"),
+            AuroraConfigFieldHandler("prometheus/port", defaultValue = "8081"),
+            AuroraConfigFieldHandler("managementPath", defaultValue = ":8081/actuator"),
             AuroraConfigFieldHandler("certificateCn")
     )
 

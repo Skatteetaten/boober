@@ -3,7 +3,7 @@
   "apiVersion": "v1",
   "metadata": {
     "annotations": {
-      #if(${adc.managementPath})
+      #if(${adc.managementPath} && "$!{adc.managementPath}" != "")
         "console.skatteetaten.no/management-path": "${adc.managementPath}",
       #end
       "console.skatteetaten.no/alarm": "${adc.flags.alarm}"
