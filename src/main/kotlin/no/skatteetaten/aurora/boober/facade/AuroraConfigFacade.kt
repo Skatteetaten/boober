@@ -10,7 +10,10 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
+import no.skatteetaten.aurora.boober.service.internal.AuroraVersioningException
+import no.skatteetaten.aurora.boober.service.internal.VersioningError
 import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.revwalk.RevCommit
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
@@ -33,7 +36,7 @@ class AuroraConfigFacade(
 
     fun saveAuroraConfig(affiliation: String, auroraConfig: AuroraConfig): AuroraConfig {
 
-        return withAuroraConfig(affiliation, function = {
+        return withAuroraConfig(affiliation, validateVersions = false, function = {
             val originalSecrets = it.secrets
             val updatedAuroraConfig = updateAuroraConfigSecretPaths(auroraConfig)
 
@@ -41,55 +44,63 @@ class AuroraConfigFacade(
         })
     }
 
-    fun patchAuroraConfigFile(affiliation: String, filename: String, jsonPatchOp: String): AuroraConfig {
+    fun patchAuroraConfigFile(affiliation: String, filename: String, jsonPatchOp: String, configFileVersion: String): AuroraConfig {
 
-        return withAuroraConfig(affiliation, true, { auroraConfig: AuroraConfig ->
+        return withAuroraConfig(affiliation, function={ auroraConfig: AuroraConfig ->
             val patch: JsonPatch = mapper.readValue(jsonPatchOp, JsonPatch::class.java)
 
             val auroraConfigFile = auroraConfig.auroraConfigFiles.filter { it.name == filename }.first()
             val originalContentsNode = mapper.convertValue(auroraConfigFile.contents, JsonNode::class.java)
 
             val fileContents = patch.apply(originalContentsNode)
-            auroraConfig.updateFile(filename, fileContents)
+            auroraConfig.updateFile(filename, fileContents, configFileVersion)
         })
     }
 
-    fun updateAuroraConfigFile(affiliation: String, filename: String, fileContents: JsonNode): AuroraConfig {
-        return withAuroraConfig(affiliation, true, { auroraConfig: AuroraConfig ->
-            auroraConfig.updateFile(filename, fileContents)
+    fun updateAuroraConfigFile(affiliation: String, filename: String, fileContents: JsonNode, configFileVersion: String): AuroraConfig {
+        return withAuroraConfig(affiliation, function={ auroraConfig: AuroraConfig ->
+
+            auroraConfig.updateFile(filename, fileContents, configFileVersion)
         })
     }
 
     fun deleteSecrets(affiliation: String, secrets: List<String>): AuroraConfig {
 
         val repo = getRepo(affiliation)
-        val filesForAffiliation: MutableMap<String, File> = gitService.getAllFilesInRepo(repo).toMutableMap()
+        val filesForAffiliation: MutableMap<String, Pair<RevCommit?, File>> = gitService.getAllFilesInRepo(repo).toMutableMap()
 
         secrets.filter { it.startsWith(GIT_SECRET_FOLDER) }
                 .forEach { filesForAffiliation.remove(it) }
 
         val auroraConfig = createAuroraConfigFromFiles(filesForAffiliation)
 
-        commitAuroraConfig(repo, auroraConfig, auroraConfig, filesForAffiliation)
+        val files = filesForAffiliation.mapValues { it.value.second }
+        commitAuroraConfig(repo, auroraConfig, auroraConfig, files)
 
         return auroraConfig
     }
 
     private fun withAuroraConfig(affiliation: String,
                                  commitChanges: Boolean = true,
+                                 validateVersions: Boolean = true,
                                  function: (AuroraConfig) -> AuroraConfig = { it -> it }): AuroraConfig {
 
         val repo = getRepo(affiliation)
 
-        val allFilesInRepo: Map<String, File> = gitService.getAllFilesInRepo(repo)
+        val allFilesInRepo: Map<String, Pair<RevCommit?, File>> = gitService.getAllFilesInRepo(repo)
+
         val auroraConfig = createAuroraConfigFromFiles(allFilesInRepo)
 
         val newAuroraConfig = function(auroraConfig)
 
         if (commitChanges) {
+
+            if(validateVersions) {
+                validateGitVersion(auroraConfig, newAuroraConfig, allFilesInRepo)
+            }
             measureTimeMillis {
                 auroraConfigService.validate(newAuroraConfig)
-                commitAuroraConfig(repo, auroraConfig, newAuroraConfig, allFilesInRepo)
+                commitAuroraConfig(repo, auroraConfig, newAuroraConfig, allFilesInRepo.mapValues { it.value.second })
             }.let { logger.debug("Spent {} millis committing and pushing to git", it) }
         } else {
             measureTimeMillis {
@@ -98,6 +109,27 @@ class AuroraConfigFacade(
         }
 
         return newAuroraConfig
+    }
+
+    private fun validateGitVersion(auroraConfig: AuroraConfig, newAuroraConfig: AuroraConfig, allFilesInRepo: Map<String, Pair<RevCommit?, File>>) {
+        //TODO:Validate secrets aswell
+        val oldVersions = auroraConfig.getVersions().filterValues { it != null }
+        val invalidVersions = newAuroraConfig.getVersions().filter {
+            oldVersions[it.key] != it.value
+        }
+
+        if (invalidVersions.isNotEmpty()) {
+            val gitInfo: Map<String, RevCommit> = allFilesInRepo
+                    .filter { it.value.first != null }
+                    .mapValues { it.value.first!! }
+
+            val errors = invalidVersions.map {
+                val commit = gitInfo[it.key]!!
+                VersioningError(it.key, commit.authorIdent.name, commit.authorIdent.`when`)
+            }
+
+            throw AuroraVersioningException("Source file has changed since you fetched it", errors)
+        }
     }
 
     private fun getRepo(affiliation: String): Git {
@@ -109,18 +141,18 @@ class AuroraConfigFacade(
         return repo
     }
 
-    private fun createAuroraConfigFromFiles(filesFromGit: Map<String, File>, decryptSecrets: Boolean = true): AuroraConfig {
+    private fun createAuroraConfigFromFiles(filesFromGit: Map<String, Pair<RevCommit?, File>>, decryptSecrets: Boolean = true): AuroraConfig {
 
         val secretFiles: Map<String, String> = filesFromGit
                 .filter { it.key.startsWith(GIT_SECRET_FOLDER) }
                 .map { (key, value) ->
-                    if (decryptSecrets) key to encryptionService.decrypt(value.readText())
-                    else key to value.readText()
+                    if (decryptSecrets) key to encryptionService.decrypt(value.second.readText())
+                    else key to value.second.readText()
                 }.toMap()
 
         val auroraConfigFiles = filesFromGit
                 .filter { !it.key.startsWith(GIT_SECRET_FOLDER) }
-                .map { AuroraConfigFile(it.key, mapper.readValue(it.value)) }
+                .map { AuroraConfigFile(it.key, mapper.readValue(it.value.second), version = it.value.first?.abbreviate(7)?.name()) }
 
         return AuroraConfig(auroraConfigFiles = auroraConfigFiles, secrets = secretFiles)
     }

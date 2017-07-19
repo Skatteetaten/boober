@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode
 
 data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val secrets: Map<String, String> = mapOf()) {
 
+    fun getVersions() = auroraConfigFiles.associate { it.name to it.version }
+
     fun getApplicationIds(env: String = "", app: String = ""): List<ApplicationId> {
 
         return auroraConfigFiles
@@ -34,11 +36,11 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val secre
         return allFiles
     }
 
-    fun updateFile(name: String, contents: JsonNode): AuroraConfig {
+    fun updateFile(name: String, contents: JsonNode, configFileVersion: String): AuroraConfig {
 
         val files = auroraConfigFiles.toMutableList()
         val indexOfFileToUpdate = files.indexOfFirst { it.name == name }
-        val newAuroraConfigFile = AuroraConfigFile(name, contents)
+        val newAuroraConfigFile = AuroraConfigFile(name, contents, version = configFileVersion)
 
         if (indexOfFileToUpdate == -1) {
             files.add(newAuroraConfigFile)

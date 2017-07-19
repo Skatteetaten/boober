@@ -30,7 +30,7 @@ fun getAuroraConfigSamples(secrets: Map<String, String> = mapOf()): AuroraConfig
 fun createAuroraConfig(aid: ApplicationId, secrets: Map<String, String> = mapOf()): AuroraConfig {
     val files = getSampleFiles(aid)
 
-    return AuroraConfig(files.map { AuroraConfigFile(it.key, it.value!!, false) }, secrets)
+    return AuroraConfig(files.map { AuroraConfigFile(it.key, it.value!!, false, version = null) }, secrets)
 }
 
 @JvmOverloads

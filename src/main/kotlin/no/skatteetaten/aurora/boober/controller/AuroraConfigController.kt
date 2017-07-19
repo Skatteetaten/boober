@@ -35,23 +35,25 @@ class AuroraConfigController(val auroraConfigFacade: AuroraConfigFacade) {
 
     @PutMapping("/{affiliation}/auroraconfigfile/**")
     fun updateAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest,
-                               @RequestBody fileContents: JsonNode): Response {
+                               @RequestBody fileContents: JsonNode,
+                               @RequestHeader(value = "AuroraConfigFileVersion") configFileVersion: String): Response {
 
         val path = "affiliation/$affiliation/auroraconfigfile/**"
         val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
 
-        val auroraConfig =auroraConfigFacade.updateAuroraConfigFile(affiliation, fileName, fileContents)
+        val auroraConfig = auroraConfigFacade.updateAuroraConfigFile(affiliation, fileName, fileContents, configFileVersion)
         return Response(items = listOf(auroraConfig).map(::fromAuroraConfig))
     }
 
     @PatchMapping(value = "/{affiliation}/auroraconfigfile/**", consumes = arrayOf("application/json-patch+json"))
     fun patchAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest,
-                              @RequestBody jsonPatchOp: String): Response {
+                              @RequestBody jsonPatchOp: String,
+                              @RequestHeader(value = "AuroraConfigFileVersion") configFileVersion: String): Response {
 
         val path = "affiliation/$affiliation/auroraconfigfile/**"
         val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
 
-        val auroraConfig = auroraConfigFacade.patchAuroraConfigFile(affiliation, fileName, jsonPatchOp)
+        val auroraConfig = auroraConfigFacade.patchAuroraConfigFile(affiliation, fileName, jsonPatchOp, configFileVersion)
         return Response(items = listOf(auroraConfig).map(::fromAuroraConfig))
     }
 }

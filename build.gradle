@@ -22,11 +22,9 @@ buildscript {
 
 repositories {
   mavenCentral()
+  mavenLocal()
 }
 
-ext.aurora = [
-    applyNexusRepositories: false
-]
 
 apply plugin: 'no.skatteetaten.plugins.aurora'
 apply plugin: 'kotlin'
