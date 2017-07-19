@@ -36,7 +36,7 @@ class AuroraConfigFacade(
 
     fun saveAuroraConfig(affiliation: String, auroraConfig: AuroraConfig): AuroraConfig {
 
-        return withAuroraConfig(affiliation, function = {
+        return withAuroraConfig(affiliation, validateVersions = false, function = {
             val originalSecrets = it.secrets
             val updatedAuroraConfig = updateAuroraConfigSecretPaths(auroraConfig)
 
@@ -46,7 +46,7 @@ class AuroraConfigFacade(
 
     fun patchAuroraConfigFile(affiliation: String, filename: String, jsonPatchOp: String, configFileVersion: String): AuroraConfig {
 
-        return withAuroraConfig(affiliation, true, { auroraConfig: AuroraConfig ->
+        return withAuroraConfig(affiliation, function={ auroraConfig: AuroraConfig ->
             val patch: JsonPatch = mapper.readValue(jsonPatchOp, JsonPatch::class.java)
 
             val auroraConfigFile = auroraConfig.auroraConfigFiles.filter { it.name == filename }.first()
@@ -58,7 +58,7 @@ class AuroraConfigFacade(
     }
 
     fun updateAuroraConfigFile(affiliation: String, filename: String, fileContents: JsonNode, configFileVersion: String): AuroraConfig {
-        return withAuroraConfig(affiliation, true, { auroraConfig: AuroraConfig ->
+        return withAuroraConfig(affiliation, function={ auroraConfig: AuroraConfig ->
 
             auroraConfig.updateFile(filename, fileContents, configFileVersion)
         })
@@ -82,6 +82,7 @@ class AuroraConfigFacade(
 
     private fun withAuroraConfig(affiliation: String,
                                  commitChanges: Boolean = true,
+                                 validateVersions: Boolean = true,
                                  function: (AuroraConfig) -> AuroraConfig = { it -> it }): AuroraConfig {
 
         val repo = getRepo(affiliation)
@@ -94,7 +95,9 @@ class AuroraConfigFacade(
 
         if (commitChanges) {
 
-            validateGitVersion(auroraConfig, newAuroraConfig, allFilesInRepo)
+            if(validateVersions) {
+                validateGitVersion(auroraConfig, newAuroraConfig, allFilesInRepo)
+            }
             measureTimeMillis {
                 auroraConfigService.validate(newAuroraConfig)
                 commitAuroraConfig(repo, auroraConfig, newAuroraConfig, allFilesInRepo.mapValues { it.value.second })

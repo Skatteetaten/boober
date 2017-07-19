@@ -78,7 +78,7 @@ class GitService(
                 .associate {
                     val path = it.relativeTo(folder).path
                     val commit = try {
-                        git.log().addPath(path).setMaxCount(1).call().first()
+                         git.log().addPath(path).setMaxCount(1).call().firstOrNull()
                     } catch(e: NoHeadException) {
                         logger.debug("No history was found for path={}", path)
                         null
