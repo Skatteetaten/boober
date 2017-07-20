@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.controller.security;
 
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.internal.OpenShiftException
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.CredentialsExpiredException

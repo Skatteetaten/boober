@@ -6,7 +6,14 @@ import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.internal.fromAuroraConfig
 import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
 import org.springframework.util.AntPathMatcher
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import javax.servlet.http.HttpServletRequest
 
 @RestController
@@ -16,7 +23,7 @@ class AuroraConfigController(val auroraConfigFacade: AuroraConfigFacade) {
     @PutMapping("/{affiliation}/auroraconfig")
     fun save(@PathVariable affiliation: String, @RequestBody payload: AuroraConfigPayload): Response {
 
-        val auroraConfig = auroraConfigFacade.saveAuroraConfig(affiliation, payload.toAuroraConfig())
+        val auroraConfig = auroraConfigFacade.saveAuroraConfig(affiliation, payload.toAuroraConfig(affiliation))
         return Response(items = listOf(auroraConfig).map(::fromAuroraConfig))
     }
 
@@ -26,12 +33,6 @@ class AuroraConfigController(val auroraConfigFacade: AuroraConfigFacade) {
         return Response(items = listOf(auroraConfigFacade.findAuroraConfig(affiliation)).map(::fromAuroraConfig))
     }
 
-    @DeleteMapping("/{affiliation}/auroraconfig/secrets")
-    fun deleteSecrets(@PathVariable affiliation: String, @RequestBody secretsToDelete: List<String>): Response {
-
-        val auroraConfig = auroraConfigFacade.deleteSecrets(affiliation, secretsToDelete)
-        return Response(items = listOf(auroraConfig).map(::fromAuroraConfig))
-    }
 
     @PutMapping("/{affiliation}/auroraconfigfile/**")
     fun updateAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest,

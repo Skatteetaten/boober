@@ -18,7 +18,7 @@
     "referanse.json": {
       "name": "referanse",
       "replicas": 1,
-      "secretFolder": "/tmp/test",
+      "secretVault": "test",
       "flags": {
         "cert": true,
         "rolling": true
@@ -47,7 +47,7 @@
     },
     "espen-dev/about.json": {
       "cluster": "utv",
-      "secretFolder": "/tmp/utv"
+      "secretVault": "utv"
     },
     "espen-dev/referanse.json": {
 

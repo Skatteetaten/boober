@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service.openshift
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import no.skatteetaten.aurora.boober.model.AuroraPermissions
 import no.skatteetaten.aurora.boober.utils.updateField
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -99,6 +100,19 @@ class OpenShiftClient(
         return OpenShiftResponse("user", operationType = OperationType.NONE, responseBody = currentUser?.body)
     }
 
+    fun hasUserAccess(user: String, permissions: AuroraPermissions?): Boolean {
+        if (permissions == null) {
+            return true
+        }
+
+        val validUser: Boolean = permissions.users?.any { user == it && isValidUser(user) } ?: false
+
+        val validGroup = permissions.groups?.any { isUserInGroup(user, it) } ?: false
+
+        return validUser || validGroup
+
+    }
+
     fun isValidUser(user: String): Boolean {
         return exist("$baseUrl/oapi/v1/users/$user")
     }
@@ -118,6 +132,15 @@ class OpenShiftClient(
 
         val existingResource = resource.getExistingResource(headers, url)
         return existingResource != null
+    }
+
+    private fun isUserInGroup(user: String, group: String): Boolean {
+        val headers: HttpHeaders = resource.getAuthorizationHeaders()
+
+        val url = "$baseUrl/oapi/v1/groups/$group"
+
+        val resource = resource.getExistingResource(headers, url)
+        return resource?.body?.get("users")?.any { it.textValue() == user } ?: false
     }
 
 }

@@ -3,7 +3,17 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigDeploy
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigFlags
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResources
+import no.skatteetaten.aurora.boober.model.AuroraSecretVault
+import no.skatteetaten.aurora.boober.model.DeployCommand
+import no.skatteetaten.aurora.boober.model.HttpEndpoint
+import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.model.Webseal
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.length
 import no.skatteetaten.aurora.boober.utils.notBlank
@@ -12,8 +22,9 @@ import no.skatteetaten.aurora.boober.utils.notBlank
 class AuroraConfigMapperV1Deploy(
         aid: DeployCommand,
         auroraConfig: AuroraConfig,
-        openShiftClient: OpenShiftClient
-) : AuroraConfigMapperV1(aid, auroraConfig, openShiftClient) {
+        openShiftClient: OpenShiftClient,
+        vaults: Map<String, AuroraSecretVault>
+) : AuroraConfigMapperV1(aid, auroraConfig, openShiftClient, vaults) {
 
     val handlers = listOf(
             AuroraConfigFieldHandler("flags/cert", defaultValue = "false"),
@@ -106,14 +117,14 @@ class AuroraConfigMapperV1Deploy(
                     )
                 }),
 
-                secrets = auroraConfigFields.extractOrNull("secretFolder", {
-                    auroraConfig.getSecrets(it.asText())
+                secrets = auroraConfigFields.extractOrNull("secretVault", {
+                    vaults[it.asText()]?.secrets
                 }),
 
                 config = auroraConfigFields.getConfigMap(configHandlers),
                 route = getRoute(),
                 serviceAccount = auroraConfigFields.extractOrNull("serviceAccount"),
-                mounts = auroraConfigFields.getMounts(mountHandlers, auroraConfig),
+                mounts = auroraConfigFields.getMounts(mountHandlers, vaults),
                 fields = auroraConfigFields.fields
         )
     }

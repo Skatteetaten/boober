@@ -3,18 +3,28 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigMapper
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraSecretVault
+import no.skatteetaten.aurora.boober.model.DeployCommand
+import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.model.Route
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.utils.*
+import no.skatteetaten.aurora.boober.utils.notBlank
+import no.skatteetaten.aurora.boober.utils.oneOf
+import no.skatteetaten.aurora.boober.utils.pattern
+import no.skatteetaten.aurora.boober.utils.required
+import no.skatteetaten.aurora.boober.utils.startsWith
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 abstract class AuroraConfigMapperV1(
         aid: DeployCommand,
         auroraConfig: AuroraConfig,
-        openShiftClient: OpenShiftClient
-) : AuroraConfigMapper(aid, auroraConfig) {
+        openShiftClient: OpenShiftClient,
+        vaults: Map<String, AuroraSecretVault>
+) : AuroraConfigMapper(aid, auroraConfig, vaults) {
 
     override val logger: Logger = LoggerFactory.getLogger(AuroraConfigMapperV1::class.java)
 
@@ -39,7 +49,7 @@ abstract class AuroraConfigMapperV1(
             AuroraConfigFieldHandler("route/generate", defaultValue = "false"),
             AuroraConfigFieldHandler("webseal/host"),
             AuroraConfigFieldHandler("webseal/roles"),
-            AuroraConfigFieldHandler("secretFolder", validator = validateSecrets(auroraConfig))
+            AuroraConfigFieldHandler("secretVault", validator = validateSecrets())
     )
 
     fun getRoute(): Route? {
@@ -98,7 +108,7 @@ abstract class AuroraConfigMapperV1(
                     AuroraConfigFieldHandler("mounts/$mountName/volumeName", defaultValue = mountName),
                     AuroraConfigFieldHandler("mounts/$mountName/exist", defaultValue = "false"),
                     AuroraConfigFieldHandler("mounts/$mountName/content"),
-                    AuroraConfigFieldHandler("mounts/$mountName/secretFolder")
+                    AuroraConfigFieldHandler("mounts/$mountName/secretVault")
             )
 
         }
@@ -112,6 +122,7 @@ abstract class AuroraConfigMapperV1(
             AuroraConfigFieldHandler("database/$key")
         }
     }
+
     fun findParameters(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
 
         val parameterKeys = findSubKeys(applicationFiles, "parameters")
@@ -154,16 +165,16 @@ abstract class AuroraConfigMapperV1(
         }
     }
 
-    private fun validateSecrets(auroraConfig: AuroraConfig): (JsonNode?) -> Exception? {
+    private fun validateSecrets(): (JsonNode?) -> Exception? {
         return { json ->
 
-            val secretFolder = json?.textValue()
-            val secrets = secretFolder?.let {
-                auroraConfig.getSecrets(it)
+            val secretVault = json?.textValue()
+            val secrets = secretVault?.let {
+                vaults[it]?.secrets
             }
 
-            if (secrets != null && secrets.isEmpty()) {
-                IllegalArgumentException("No secrets in folder=$secretFolder")
+            if (secretVault != null && (secrets == null || secrets.isEmpty())) {
+                IllegalArgumentException("No secrets in folder=$secretVault")
             } else {
                 null
             }

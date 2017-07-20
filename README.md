@@ -89,7 +89,7 @@ Below is an json with all possible values ( and some comments)
   "groupId": "ske.aurora.openshift.referanse", //groupId for what to deploy
   "artifactId": "openshift-referanse-springboot-server", //artifactId for what to deploy
   "version": "0", //version to follow
-  "prometheus": { //where is prometheus located
+  "prometheus": { //where is prometheus located, this is the default
     "port": "8081",
     "path": "/prometheus"
   },
@@ -97,7 +97,7 @@ Below is an json with all possible values ( and some comments)
     "host": "webseal-hostprefix",
     "roles": "role1, role2"
   },
-  "managementPath": ":8081/actuator", //where is the management interface located
+  "managementPath": ":8081/actuator", //where is the management interface located, this is the default
   "database": "referanseapp", //fetch or create database with this name from DatabaseHotel
   "config": {
     "1.properties" : { //all applications that run in the 1 tree will get this
@@ -108,7 +108,7 @@ Below is an json with all possible values ( and some comments)
     }
 
   },
-  "secretFolder": "/tmp/test" //all files inside this dir is added in a secret.
+  "secretVault": "test" //all secrets in the vault test are added as fields in a secret
 }
 
 ```

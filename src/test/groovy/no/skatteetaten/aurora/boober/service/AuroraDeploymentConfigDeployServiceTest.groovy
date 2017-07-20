@@ -11,7 +11,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -27,7 +26,6 @@ import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
-    AuroraConfigFacade,
     EncryptionService,
     AuroraConfigService,
     OpenShiftResourceClient,
@@ -90,7 +88,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
     when:
-      auroraDeploymentConfigService.createAuroraDeploymentConfigs(deployCommand, auroraConfig)
+      auroraDeploymentConfigService.createAuroraDeploymentConfigs(deployCommand, auroraConfig, [:])
 
     then:
       thrown(ApplicationConfigException)
@@ -106,7 +104,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
     when:
       def auroraDc =
           (AuroraDeploymentConfigDeploy) auroraDeploymentConfigService.
-              createAuroraDeploymentConfigs(deployCommand, auroraConfig)
+              createAuroraDeploymentConfigs(deployCommand, auroraConfig, [:])
 
     then:
       auroraDc.prometheus.port == 8081
@@ -122,7 +120,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def auroraDc = auroraDeploymentConfigService.createAuroraDeploymentConfigs(deployCommand, auroraConfig)
+      def auroraDc = auroraDeploymentConfigService.createAuroraDeploymentConfigs(deployCommand, auroraConfig, [:])
 
       def fields = auroraDc.fields
     then:
@@ -139,7 +137,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       Map<String, JsonNode> files = AuroraConfigHelperKt.getSampleFiles(aid)
       files.remove("${APP_NAME}.json" as String)
       def auroraConfig =
-          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false, null) }, [:])
+          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false, null) }, "aos")
 
     when:
       auroraConfig.getFilesForApplication(deployCommand)
@@ -156,7 +154,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
     when:
       def auroraDc = auroraDeploymentConfigService.
-          createAuroraDeploymentConfigs(deployCommand, auroraConfig) as AuroraDeploymentConfigDeploy
+          createAuroraDeploymentConfigs(deployCommand, auroraConfig, [:]) as AuroraDeploymentConfigDeploy
 
     then:
       with(auroraDc) {
@@ -181,7 +179,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
     when:
       def auroraDc = auroraDeploymentConfigService.
-          createAuroraDeploymentConfigs(deployCommand, auroraConfig) as AuroraDeploymentConfigDeploy
+          createAuroraDeploymentConfigs(deployCommand, auroraConfig, [:]) as AuroraDeploymentConfigDeploy
 
     then:
       auroraDc.name == "awesome-app"
@@ -195,10 +193,10 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       (files.get("aos-simple.json") as ObjectNode).remove("version")
       (files.get("booberdev/aos-simple.json") as ObjectNode).remove("version")
       AuroraConfig auroraConfig =
-          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false, null) }, [:])
+          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false, null) }, "aos")
 
     when:
-      auroraDeploymentConfigService.createAuroraDeploymentConfigs(deployCommand, auroraConfig)
+      auroraDeploymentConfigService.createAuroraDeploymentConfigs(deployCommand, auroraConfig, [:])
 
     then:
       def ex = thrown(ApplicationConfigException)
@@ -212,25 +210,12 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def result = auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [deployCommand])
+      def result = auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [deployCommand], [:])
 
     then:
       result != null
   }
 
-  def "Should collect secrets"() {
-
-    given:
-      def deployCommmand = new DeployCommand(secretAId)
-      AuroraConfig auroraConfig = AuroraConfigHelperKt.
-          createAuroraConfig(secretAId, ["/tmp/foo/latest.properties": "FOO=BAR"])
-
-    when:
-      def result = auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [deployCommmand])
-
-    then:
-      result[0].secrets.containsKey("latest.properties")
-  }
 
   def "Should get error if we want secrets but there are none "() {
 
@@ -239,7 +224,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [deployCommand])
+      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [deployCommand], [:])
 
     then:
       thrown(AuroraConfigException)

@@ -21,8 +21,11 @@ import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
+import no.skatteetaten.aurora.boober.service.EncryptionService
+import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 import no.skatteetaten.aurora.boober.service.OpenShiftTemplateProcessor
+import no.skatteetaten.aurora.boober.service.SecretVaultService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
@@ -36,6 +39,10 @@ import spock.mock.DetachedMockFactory
     AuroraConfigService,
     OpenShiftObjectGenerator,
     OpenShiftTemplateProcessor,
+    GitService,
+    SecretVaultService,
+    EncryptionService,
+    AuroraConfigFacade,
     Config
 ])
 class SetupFacadeTest extends Specification {
@@ -96,6 +103,7 @@ class SetupFacadeTest extends Specification {
   }
 
   def "Should setup process for application"() {
+
     def processAid = new ApplicationId("booberdev", "tvinn")
     def deployCommand = new DeployCommand(processAid)
 
@@ -108,7 +116,7 @@ class SetupFacadeTest extends Specification {
       def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def result = setupFacade.executeSetup(auroraConfig, [deployCommand])
+      def result = setupFacade.performSetup(auroraConfig, [deployCommand], [:])
 
     then:
       result.size() == 1
@@ -121,7 +129,7 @@ class SetupFacadeTest extends Specification {
       def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def result = setupFacade.executeSetup(auroraConfig, [deployCommand])
+      def result = setupFacade.performSetup(auroraConfig, [deployCommand], [:])
 
     then:
       result.size() == 1
@@ -209,7 +217,7 @@ class SetupFacadeTest extends Specification {
       def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def result = setupFacade.executeSetup(auroraConfig, [deployCommand])
+      def result = setupFacade.performSetup(auroraConfig, [deployCommand], [:])
 
     then:
       result.size() == 1

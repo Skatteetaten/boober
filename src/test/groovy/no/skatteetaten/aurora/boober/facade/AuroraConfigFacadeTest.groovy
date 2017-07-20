@@ -14,6 +14,7 @@ import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
+import no.skatteetaten.aurora.boober.service.SecretVaultService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import spock.lang.Specification
@@ -26,6 +27,7 @@ import spock.mock.DetachedMockFactory
     OpenShiftClient,
     EncryptionService,
     OpenShiftResourceClient,
+    SecretVaultService,
     Config
 ], properties = [
     "boober.git.urlPattern=/tmp/boober-test/%s",
@@ -73,52 +75,16 @@ class AuroraConfigFacadeTest extends Specification {
 
     def git = gitService.checkoutRepoForAffiliation(affiliation)
     def files = gitService.getAllFilesInRepo(git)
-    def auroraConfig = service.createAuroraConfigFromFiles(files, decryptSecrets)
+    def auroraConfig = service.createAuroraConfigFromFiles(files, "aos")
     gitService.closeRepository(git)
 
     return auroraConfig
   }
 
-  def "Should not encrypt unchanged secrets"() {
-    given:
-      def affiliation = "aos"
-      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, ["/tmp/foo/latest.properties": "FOO=BAR"])
-      createRepoAndSaveFiles(affiliation, auroraConfig)
-      def gitAuroraConfig = getAuroraConfigFromGit(affiliation, false)
-
-    when:
-
-      def newAuroraConfig = new AuroraConfig(gitAuroraConfig.auroraConfigFiles, auroraConfig.secrets)
-      service.saveAuroraConfig(affiliation, newAuroraConfig)
-      def updatedAuroraConfig = getAuroraConfigFromGit(affiliation, false)
-
-    then:
-      def secretFile = ".config/foo/latest.properties"
-      gitAuroraConfig.secrets.get(secretFile) == updatedAuroraConfig.secrets.get(secretFile)
-  }
-
-  def "Should remove secrets"() {
-    given:
-      def affiliation = "aos"
-      def secrets = [
-          "/tmp/foo/latest.properties": "FOO=BAR",
-          "/tmp/foo/token"            : "test",
-      ]
-      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, secrets)
-      createRepoAndSaveFiles(affiliation, auroraConfig)
-
-    when:
-      service.deleteSecrets(affiliation, [".secret/foo/latest.properties"])
-      def updatedAuroraConfig = getAuroraConfigFromGit(affiliation, true)
-
-    then:
-      updatedAuroraConfig.secrets.keySet() == new HashSet([".secret/foo/token"])
-  }
-
-  def "Should successfully save AuroraConfig and secrets to git"() {
+  def "Should successfully save AuroraConfig"() {
     given:
       GitServiceHelperKt.createInitRepo("aos")
-      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, ["/tmp/foo/latest.properties": "FOO=BAR"])
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
       userDetailsProvider.authenticatedUser >> new User("foobar", "", "Foo Bar")
 
     when:
@@ -129,12 +95,12 @@ class AuroraConfigFacadeTest extends Specification {
 
     then:
       gitLog.authorIdent.name == "Foo Bar"
-      gitLog.fullMessage == "Added: 5, Modified: 0, Deleted: 0"
+      gitLog.fullMessage == "Added: 4, Modified: 0, Deleted: 0"
   }
 
   def "Should patch AuroraConfigFile and push changes to git"() {
     given:
-      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, ["/tmp/foo/latest.properties": "FOO=BAR"])
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, "aos")
       createRepoAndSaveFiles("aos", auroraConfig)
       def gitAuroraConfig = getAuroraConfigFromGit("aos", false)
 

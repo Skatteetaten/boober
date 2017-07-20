@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.model.AuroraGitFile
 import no.skatteetaten.aurora.boober.service.internal.GitException
 import no.skatteetaten.aurora.boober.utils.use
 import org.eclipse.jgit.api.CreateBranchCommand
@@ -49,10 +50,25 @@ class GitService(
         }
     }
 
-    fun saveFilesAndClose(git: Git, files: Map<String, String>) {
+    fun deleteDirectory(git: Git, dirName: String) {
+        try {
+            git.rm().addFilepattern(dirName).call()
+
+            val status = git.status().call()
+            commitAllChanges(git, "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}")
+            push(git)
+        } catch(ex: EmtpyCommitException) {
+        } catch(ex: GitAPIException) {
+            throw GitException("Unexpected error committing changes", ex)
+        } finally {
+            closeRepository(git)
+        }
+    }
+
+    fun saveFilesAndClose(git: Git, files: Map<String, String>, keep: (String) -> Boolean) {
         try {
             writeAndAddChanges(git, files)
-            deleteMissingFiles(git, files.keys)
+            deleteMissingFiles(git, files.keys, keep)
 
             val status = git.status().call()
             commitAllChanges(git, "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}")
@@ -87,6 +103,24 @@ class GitService(
                 }
     }
 
+    fun getAllFilesInRepoList(git: Git): List<AuroraGitFile> {
+        val folder = git.repository.directory.parentFile
+        return folder.walkBottomUp()
+                .onEnter { !it.name.startsWith(".git") }
+                .filter { it.isFile }
+                .map {
+                    val path = it.relativeTo(folder).path
+                    val commit = try {
+                        git.log().addPath(path).setMaxCount(1).call().firstOrNull()
+                    } catch(e: NoHeadException) {
+                        logger.debug("No history was found for path={}", path)
+                        null
+                    }
+                    AuroraGitFile(path, it, commit)
+                }.toList()
+    }
+
+
 
     private fun writeAndAddChanges(git: Git, files: Map<String, String>) {
 
@@ -106,10 +140,11 @@ class GitService(
         }
     }
 
-    private fun deleteMissingFiles(git: Git, files: Set<String>) {
+    private fun deleteMissingFiles(git: Git, files: Set<String>, keep: (String) -> Boolean) {
 
         getAllFilesInRepo(git)
                 .map { it.key }
+                .filter { keep.invoke(it) }
                 .filter { !files.contains(it) }
                 .forEach { git.rm().addFilepattern(it).call() }
     }

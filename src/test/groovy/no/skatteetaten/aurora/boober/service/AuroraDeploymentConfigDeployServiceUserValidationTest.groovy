@@ -74,7 +74,7 @@ class AuroraDeploymentConfigDeployServiceUserValidationTest extends Specificatio
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [deployCommand])
+      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [deployCommand], [:])
 
     then:
       def e = thrown(AuroraConfigException)
@@ -94,7 +94,7 @@ class AuroraDeploymentConfigDeployServiceUserValidationTest extends Specificatio
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [deployCommand])
+      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [deployCommand], [:])
 
     then:
       AuroraConfigException e = thrown()
