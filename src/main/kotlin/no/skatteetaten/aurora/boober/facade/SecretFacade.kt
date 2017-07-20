@@ -100,6 +100,8 @@ class SecretFacade(
     ) {
 
 
+        val vaultPath="$GIT_SECRET_FOLDER/${vault.name}"
+
         val secretFilesForVault = vaultFiles.filter { !it.path.endsWith(PERMISSION_FILE) }
 
         val encryptedSecretsFiles: Map<String, String> = encryptSecrets(oldVault.secrets, vault.secrets, secretFilesForVault)
@@ -122,17 +124,16 @@ class SecretFacade(
 
             val errors = invalidVersions.map { fileName ->
                 val commit = vaultFiles.find { it.file.name == fileName }?.commit!!//since oldVersion != null above this is safe
-                VersioningError("$GIT_SECRET_FOLDER/${vault.name}/$fileName", commit.authorIdent.name, commit.authorIdent.`when`)
+                VersioningError("$vaultPath/$fileName", commit.authorIdent.name, commit.authorIdent.`when`)
             }
             throw AuroraVersioningException("Source file has changed since you fetched it", errors)
         }
 
 
-        val pathResult = result.mapKeys { "$GIT_SECRET_FOLDER/${vault.name}/${it.key}" }
-
+        val pathResult = result.mapKeys { "$vaultPath/${it.key}" }
 
         //when we save secret files we do not mess with auroraConfig
-        val keep: (String) -> Boolean = { it -> it.startsWith(GIT_SECRET_FOLDER) }
+        val keep: (String) -> Boolean = { it -> it.startsWith(vaultPath) }
         gitService.saveFilesAndClose(repo, pathResult, keep)
     }
 

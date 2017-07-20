@@ -223,4 +223,23 @@ class SecretFacadeTest extends Specification {
       files.size() == 0
   }
 
+  def "Should not remove other vaults when adding a new"() {
+    given:
+      openshift.hasUserAccess(_, _) >> true
+      createRepoAndSaveFiles(affiliation, vault)
+
+    when:
+      def newVault = new AuroraSecretVault("vault2", secret, null, [:])
+      facade.save(affiliation, newVault)
+
+      def vault = facade.find(affiliation, vaultName)
+      def vault2 = facade.find(affiliation, "vault2")
+
+
+    then:
+      vault.secrets.size()==2
+      vault2.secrets.size()==2
+
+  }
+
 }

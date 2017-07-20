@@ -1,6 +1,7 @@
 {
   "files": {
     "about.json": {
+      "schemaVersion": "v1",
       "affiliation": "paas",
       "type": "deploy",
       "splunkIndex": "openshift-test",
@@ -15,10 +16,8 @@
         }
       }
     },
-    "referanse.json": {
-      "name": "referanse",
-      "replicas": 1,
-      "secretVault": "test",
+    "reference.json": {
+      "name": "refapp",
       "flags": {
         "cert": true,
         "rolling": true
@@ -29,34 +28,28 @@
       "groupId": "ske.aurora.openshift.referanse",
       "artifactId": "openshift-referanse-springboot-server",
       "version": "0",
-      "prometheus": {
-        "port": "8081"
+      "database": {
+        "referanseapp": "auto"
       },
-      "managementPath": ":8081/actuator",
-      "database": "referanseapp",
       "config": {
         "latest.properties": {
           "foo2": "baz"
         }
       }
     },
-    "boober/about.json": {
-      "cluster": "utv"
-    },
-    "boober/referanse.json": {
-    },
-    "espen-dev/about.json": {
-      "cluster": "utv",
+    "boober-utv/about.json": {
+      "cluster": "qa",
       "secretVault": "utv"
+
     },
-    "espen-dev/referanse.json": {
+    "boober-utv/reference.json": {
+    },
+    "boober-test/about.json": {
+      "cluster": "qa",
+      "secretVault": "test"
+    },
+    "boober-test/reference.json": {
 
     }
-  },
-  "secrets": {
-    "/tmp/test/latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg==",
-    "/tmp/test/1.2.3.properties": "Rk9PPU9IWUVBSApCQVI9Rk9PQkFSCg==",
-    "/tmp/utv/latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg==",
-    "/tmp/utv/1.2.3.properties": "Rk9PPU9IWUVBSApCQVI9Rk9PQkFSCg=="
   }
 }

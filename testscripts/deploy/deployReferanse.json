@@ -1,9 +1,9 @@
 {
     "affiliation": "paas",
     "setupParams": {
-        "apps": ["referanse"],
+        "apps": ["refapp"],
       "envs": [
-        "boober"
+        "boober-utv", "boober-test"
       ]
     }
 }

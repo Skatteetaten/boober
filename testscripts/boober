@@ -1,0 +1,9 @@
+#/bin/sh
+
+token=$(oc whoami -t)
+if [ "$#" -eq 1 ]; then
+  http --timeout 300 PUT :8080/affiliation/$1 Authorization:"bearer $token"
+else
+  http --timeout 300 PUT :8080/affiliation/$1 Authorization:"bearer $token"  < $2
+fi
+
