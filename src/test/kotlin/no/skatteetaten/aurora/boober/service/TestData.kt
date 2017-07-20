@@ -37,7 +37,7 @@ val auroraDcDevelopment = AuroraDeploymentConfigDeploy(
 )
 
 
-fun generateProccessADC(templateFile: String, template: JsonNode) =
+fun generateProccessADC(template: JsonNode) =
         AuroraDeploymentConfigProcessLocalTemplate(
                 affiliation = "aurora",
                 cluster = "utv",

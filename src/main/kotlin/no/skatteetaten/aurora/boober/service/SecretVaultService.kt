@@ -23,7 +23,6 @@ class SecretVaultService(val mapper: ObjectMapper,
         val vaultFiles: List<AuroraGitFile> = gitService.getAllFilesInRepoList(repo)
                 .filter { it.path.startsWith(GIT_SECRET_FOLDER) }
 
-
         return vaultFiles
                 .groupBy { it.path.split("/")[1] } //.secret/<vaultName>/<secretName>
                 .mapValues { createVault(it.key, it.value) }
@@ -38,11 +37,11 @@ class SecretVaultService(val mapper: ObjectMapper,
 
     fun createVault(name: String, vaultFiles: List<AuroraGitFile>): AuroraSecretVault {
 
-        val permissions: AuroraPermissions? = vaultFiles.find { gitFile -> gitFile.file.name == PERMISSION_FILE }
-                ?.file
-                ?.let { mapper.readValue(it) }
+        val permissions: AuroraPermissions? = vaultFiles.find {
+            gitFile -> gitFile.file.name == PERMISSION_FILE
+        }?.file?.let { mapper.readValue(it) }
 
-        val files = vaultFiles.filter { it.file.name != ".permissions" }.associate { gitFile ->
+        val files = vaultFiles.filter { it.file.name != PERMISSION_FILE }.associate { gitFile ->
             val contents = encryptionService.decrypt(gitFile.file.readText())
 
             gitFile.file.name to contents

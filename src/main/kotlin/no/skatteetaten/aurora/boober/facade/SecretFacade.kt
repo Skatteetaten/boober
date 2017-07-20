@@ -106,7 +106,7 @@ class SecretFacade(
 
         val result = vault.permissions?.let {
             encryptedSecretsFiles +
-                    mapOf("permissions" to mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it))
+                    mapOf(PERMISSION_FILE to mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it))
         } ?: encryptedSecretsFiles
 
         val invalidVersions = result

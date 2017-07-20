@@ -11,7 +11,6 @@ class AuroraConfigHelper
 
 val folder = File(AuroraConfigHelper::class.java.getResource("/samples/config").file)
 
-@JvmOverloads
 fun getAuroraConfigSamples(): AuroraConfig {
     val files = folder.walkBottomUp()
             .onEnter { it.name != "secret" }
