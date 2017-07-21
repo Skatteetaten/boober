@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.AuroraPermissions
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
@@ -242,4 +243,37 @@ class SecretFacadeTest extends Specification {
 
   }
 
+  def "Should list all vaults"() {
+    given:
+      openshift.hasUserAccess(_, _) >> true
+      createRepoAndSaveFiles(affiliation, vault)
+      def newVault = new AuroraSecretVault("vault2", secret)
+      facade.save(affiliation, newVault)
+
+    when:
+
+      def vaults = facade.listVaults(affiliation)
+
+
+    then:
+      vaults.size() == 2
+  }
+
+  def "Should not include vault you cannot admin"() {
+    given:
+      def permissions = new AuroraPermissions(["UTV"], ["UTV"])
+      3 * openshift.hasUserAccess(_, _) >> true
+      createRepoAndSaveFiles(affiliation, vault)
+      def newVault = new AuroraSecretVault("vault2", secret, permissions)
+      facade.save(affiliation, newVault)
+
+    when:
+      1 * openshift.hasUserAccess("test", permissions) >> false
+
+      def vaults = facade.listVaults(affiliation)
+
+
+    then:
+      vaults.size() == 1
+  }
 }

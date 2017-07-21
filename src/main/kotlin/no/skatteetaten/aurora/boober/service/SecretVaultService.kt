@@ -29,6 +29,11 @@ class SecretVaultService(val mapper: ObjectMapper,
 
     }
 
+    fun getAllVaultFiles(repo: Git): List<AuroraGitFile> {
+        return gitService.getAllFilesInRepoList(repo)
+                .filter { it.path.startsWith("$GIT_SECRET_FOLDER") }
+
+    }
     fun getVaultFiles(repo: Git, vault: String): List<AuroraGitFile> {
         return gitService.getAllFilesInRepoList(repo)
                 .filter { it.path.startsWith("$GIT_SECRET_FOLDER/$vault") }

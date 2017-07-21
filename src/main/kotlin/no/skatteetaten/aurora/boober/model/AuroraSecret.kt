@@ -6,8 +6,8 @@ import java.io.File
 data class AuroraSecretVault @JvmOverloads constructor(
         val name: String,
         val secrets: Map<String, String>,
-        val permissions: AuroraPermissions?,
-        val versions: Map<String, String?>,
+        val permissions: AuroraPermissions? = null,
+        val versions: Map<String, String?> = mapOf(),
         val skipVersionCheck: Boolean = false
 )
 

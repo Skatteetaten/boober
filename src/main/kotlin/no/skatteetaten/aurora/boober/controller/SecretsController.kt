@@ -15,22 +15,27 @@ import org.springframework.web.bind.annotation.RestController
 import javax.servlet.http.HttpServletRequest
 
 @RestController
-@RequestMapping("/affiliation")
+@RequestMapping("/affiliation/{affiliation}/vault")
 class SecretsController(val facade: SecretFacade) {
 
 
-    @PutMapping("/{affiliation}/secrets")
+    @GetMapping()
+    fun listVaults(@PathVariable affiliation: String): Response {
+        return Response(items = listOf(facade.listVaults(affiliation)))
+    }
+
+    @PutMapping()
     fun save(@PathVariable affiliation: String, @RequestBody vault: AuroraSecretVault): Response {
         val auroraConfig = facade.save(affiliation, vault)
         return Response(items = listOf(auroraConfig))
     }
 
-    @GetMapping("/{affiliation}/secrets/{vault}")
+    @GetMapping("/{vault}")
     fun get(@PathVariable affiliation: String, @PathVariable vault: String): Response {
         return Response(items = listOf(facade.find(affiliation, vault)))
     }
 
-    @PutMapping("/{affiliation}/secrets/{vault}/**")
+    @PutMapping("/{vault}/**")
     fun update(@PathVariable affiliation: String,
                @PathVariable vault: String,
                request: HttpServletRequest,
@@ -44,7 +49,7 @@ class SecretsController(val facade: SecretFacade) {
         return Response(items = listOf(vault))
     }
 
-    @DeleteMapping("/{affiliation}/secrets/{vault}")
+    @DeleteMapping("/{vault}")
     fun delete(@PathVariable affiliation: String, @PathVariable vault: String): Response {
         return Response(items = listOf(facade.delete(affiliation, vault)))
     }

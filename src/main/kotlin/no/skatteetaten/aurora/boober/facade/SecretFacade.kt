@@ -28,6 +28,16 @@ class SecretFacade(
     private val GIT_SECRET_FOLDER = ".secret"
     private val PERMISSION_FILE = ".permissions"
 
+    fun listVaults(affiliation: String): List<String> {
+        val repo = getRepo(affiliation)
+
+        val names = secretVaultService.getVaults(repo)
+                .filter { openShiftClient.hasUserAccess(userDetailsProvider.getAuthenticatedUser().username, it.value.permissions) }
+                .map { it.key }
+        gitService.closeRepository(repo)
+        return names
+    }
+
     fun find(affiliation: String, vault: String): AuroraSecretVault {
 
         return withAuroraVault(affiliation, vault, false)
@@ -100,7 +110,7 @@ class SecretFacade(
     ) {
 
 
-        val vaultPath="$GIT_SECRET_FOLDER/${vault.name}"
+        val vaultPath = "$GIT_SECRET_FOLDER/${vault.name}"
 
         val secretFilesForVault = vaultFiles.filter { !it.path.endsWith(PERMISSION_FILE) }
 

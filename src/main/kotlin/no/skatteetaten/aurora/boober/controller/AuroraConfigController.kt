@@ -17,24 +17,24 @@ import org.springframework.web.bind.annotation.RestController
 import javax.servlet.http.HttpServletRequest
 
 @RestController
-@RequestMapping("/affiliation")
+@RequestMapping("/affiliation/{affiliation}")
 class AuroraConfigController(val auroraConfigFacade: AuroraConfigFacade) {
 
-    @PutMapping("/{affiliation}/auroraconfig")
+    @PutMapping("/auroraconfig")
     fun save(@PathVariable affiliation: String, @RequestBody payload: AuroraConfigPayload): Response {
 
         val auroraConfig = auroraConfigFacade.saveAuroraConfig(affiliation, payload.toAuroraConfig(affiliation))
         return Response(items = listOf(auroraConfig).map(::fromAuroraConfig))
     }
 
-    @GetMapping("/{affiliation}/auroraconfig")
+    @GetMapping("/auroraconfig")
     fun get(@PathVariable affiliation: String): Response {
 
         return Response(items = listOf(auroraConfigFacade.findAuroraConfig(affiliation)).map(::fromAuroraConfig))
     }
 
 
-    @PutMapping("/{affiliation}/auroraconfigfile/**")
+    @PutMapping("/auroraconfigfile/**")
     fun updateAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest,
                                @RequestBody fileContents: JsonNode,
                                @RequestHeader(value = "AuroraConfigFileVersion") configFileVersion: String): Response {
@@ -46,7 +46,7 @@ class AuroraConfigController(val auroraConfigFacade: AuroraConfigFacade) {
         return Response(items = listOf(auroraConfig).map(::fromAuroraConfig))
     }
 
-    @PatchMapping(value = "/{affiliation}/auroraconfigfile/**", consumes = arrayOf("application/json-patch+json"))
+    @PatchMapping(value = "/auroraconfigfile/**", consumes = arrayOf("application/json-patch+json"))
     fun patchAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest,
                               @RequestBody jsonPatchOp: String,
                               @RequestHeader(value = "AuroraConfigFileVersion") configFileVersion: String): Response {
