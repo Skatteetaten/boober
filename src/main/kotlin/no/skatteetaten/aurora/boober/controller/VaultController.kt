@@ -27,12 +27,17 @@ class VaultController(val facade: VaultFacade) {
     @PutMapping()
     fun save(@PathVariable affiliation: String,
              @RequestBody vault: AuroraSecretVault,
-             @RequestHeader(value = "AuroraValidateVersions") validateVersions: Boolean = true): Response {
+             @RequestHeader(value = "AuroraValidateVersions", required = false) validateVersions: Boolean = true
+    ): Response {
+
+
         return Response(items = listOf(facade.save(affiliation, vault, validateVersions)))
     }
 
     @GetMapping("/{vault}")
-    fun get(@PathVariable affiliation: String, @PathVariable vault: String): Response {
+    fun get(@PathVariable affiliation: String,
+            @PathVariable vault: String
+    ): Response {
         return Response(items = listOf(facade.find(affiliation, vault)))
     }
 
@@ -42,7 +47,8 @@ class VaultController(val facade: VaultFacade) {
                request: HttpServletRequest,
                @RequestBody fileContents: String,
                @RequestHeader(value = "AuroraConfigFileVersion") fileVersion: String,
-               @RequestHeader(value = "AuroraValidateVersions") validateVersions: Boolean = true): Response {
+               @RequestHeader(value = "AuroraValidateVersions", required = false) validateVersions: Boolean = true
+    ): Response {
 
         val path = "affiliation/$affiliation/secrets/$vault/**"
         val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)

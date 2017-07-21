@@ -6,7 +6,8 @@
     "labels": {
       "app": "${adc.name}",
       "updatedBy": "${username}",
-      "affiliation": "${adc.affiliation}"
+      "affiliation": "${adc.affiliation}",
+      "booberDeployId": "${deployId}"
     }
   }
     #if (${adc.type} == "deploy")

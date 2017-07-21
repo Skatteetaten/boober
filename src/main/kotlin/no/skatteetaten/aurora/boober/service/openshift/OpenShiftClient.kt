@@ -39,6 +39,7 @@ class OpenShiftClient(
 
     fun applyMany(namespace: String, openShiftObjects: List<JsonNode>): List<OpenShiftResponse> {
 
+
         return openShiftObjects.map { apply(namespace, it) }
     }
 
@@ -141,6 +142,25 @@ class OpenShiftClient(
 
         val resource = resource.getExistingResource(headers, url)
         return resource?.body?.get("users")?.any { it.textValue() == user } ?: false
+    }
+
+    fun findOldObjectUrls(name: String, namespace: String, deployId: String,
+                          kinds: List<String> = listOf("deploymentconfigs", "configmaps", "secrets", "services", "routes", "imagestreams")): List<String> {
+        val headers: HttpHeaders = resource.getAuthorizationHeaders()
+
+
+        return kinds.flatMap {
+            val apiType = if (it in listOf("services", "configmaps", "secrets")) "api" else "oapi"
+            val url = "$baseUrl/$apiType/v1/namespaces/$namespace/$it?labelSelector=app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
+            resource.getExistingResource(headers, url)?.body?.get("items")?.toList() ?: emptyList()
+        }.map {
+            it["metadata"]["selfLink"].asText()
+        }
+    }
+
+    fun deleteObject(url: String): Boolean {
+        val headers: HttpHeaders = resource.getAuthorizationHeaders()
+        return resource.delete(headers, "$baseUrl/$url")?.statusCode?.is2xxSuccessful ?: false
     }
 
 }

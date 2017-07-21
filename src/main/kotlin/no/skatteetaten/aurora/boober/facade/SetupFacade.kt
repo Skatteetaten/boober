@@ -21,6 +21,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.*
 
 @Service
 class SetupFacade(
@@ -42,10 +43,12 @@ class SetupFacade(
         val vaults = secretVaultService.getVaults(repo)
 
         gitService.closeRepository(repo)
-        return performSetup(auroraConfig, setupParams.applicationIds, vaults)
+        val deployId = UUID.randomUUID().toString()
+
+        return performSetup(auroraConfig, setupParams.applicationIds, vaults, deployId)
     }
 
-    fun performSetup(auroraConfig: AuroraConfig, applicationIds: List<DeployCommand>, vaults: Map<String, AuroraSecretVault>): List<ApplicationResult> {
+    fun performSetup(auroraConfig: AuroraConfig, applicationIds: List<DeployCommand>, vaults: Map<String, AuroraSecretVault>, deployId: String): List<ApplicationResult> {
         val appIds: List<DeployCommand> = applicationIds
                 .takeIf { it.isNotEmpty() } ?: throw IllegalArgumentException("Specify applicationId")
 
@@ -53,17 +56,23 @@ class SetupFacade(
 
         return auroraDcs
                 .filter { it.cluster == cluster }
-                .map { applyDeploymentConfig(it) }
+                .map { applyDeploymentConfig(it, deployId) }
 
     }
 
 
-    private fun applyDeploymentConfig(adc: AuroraDeploymentConfig): ApplicationResult {
+    private fun applyDeploymentConfig(adc: AuroraDeploymentConfig, deployId: String): ApplicationResult {
         logger.info("Creating OpenShift objects for application ${adc.name} in namespace ${adc.namespace}")
 
-        val openShiftObjects = openShiftObjectGenerator.generateObjects(adc)
+        val openShiftObjects = openShiftObjectGenerator.generateObjects(adc, deployId)
 
         val openShiftResponses: List<OpenShiftResponse> = openShiftClient.applyMany(adc.namespace, openShiftObjects)
+
+        val deleteObjectUrls = openShiftClient.findOldObjectUrls(adc.name, adc.namespace, deployId)
+
+        deleteObjectUrls.forEach {
+            openShiftClient.deleteObject(it)
+        }
 
         val deployResource: JsonNode? =
                 generateRedeployResource(openShiftResponses, adc.type, adc.name)
@@ -75,7 +84,8 @@ class SetupFacade(
         return ApplicationResult(
                 applicationId = DeployCommand(ApplicationId(adc.envName, adc.name)),
                 auroraDc = adc,
-                openShiftResponses = finalResponse
+                openShiftResponses = finalResponse,
+                deletedObjectUrls = deleteObjectUrls
         )
     }
 

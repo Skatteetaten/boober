@@ -87,11 +87,14 @@ class SetupFacadeTest extends Specification {
   public static final String APP_NAME = "aos-simple"
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
+  def deployId = "123"
   def setup() {
     userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
     openShiftClient.isValidUser(_) >> true
     openShiftClient.isValidGroup(_) >> true
     openShiftClient.applyMany(_, _) >> []
+    openShiftClient.findOldObjectUrls(_, _, deployId, _) >> []
+
   }
 
   def createOpenShiftResponse(String kind, OperationType operationType, int prevVersion, int currVersion) {
@@ -116,7 +119,7 @@ class SetupFacadeTest extends Specification {
       def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def result = setupFacade.performSetup(auroraConfig, [deployCommand], [:])
+      def result = setupFacade.performSetup(auroraConfig, [deployCommand], [:], deployId)
 
     then:
       result.size() == 1
@@ -129,7 +132,7 @@ class SetupFacadeTest extends Specification {
       def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def result = setupFacade.performSetup(auroraConfig, [deployCommand], [:])
+      def result = setupFacade.performSetup(auroraConfig, [deployCommand], [:], deployId)
 
     then:
       result.size() == 1
@@ -217,7 +220,26 @@ class SetupFacadeTest extends Specification {
       def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def result = setupFacade.performSetup(auroraConfig, [deployCommand], [:])
+      def result = setupFacade.performSetup(auroraConfig, [deployCommand], [:], deployId)
+
+    then:
+      result.size() == 1
+      result.get(0).auroraDc.type == deploy
+  }
+
+  def "Should delete old objects"() {
+    given:
+      def newDeployId = "456"
+      openShiftClient.findOldObjectUrls(_, _, newDeployId, _) >> ["/foo/bar"]
+
+      def consoleAid = new ApplicationId(ENV_NAME, "console")
+      def deployCommand = new DeployCommand(consoleAid)
+      def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
+
+    when:
+      1 * openShiftClient.deleteObject('/foo/bar')
+
+      def result = setupFacade.performSetup(auroraConfig, [deployCommand], [:], newDeployId)
 
     then:
       result.size() == 1

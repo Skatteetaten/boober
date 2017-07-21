@@ -24,6 +24,7 @@ class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: String,
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftResourceClient::class.java)
 
+
     fun put(kind: String, name: String, namespace: String, payload: JsonNode): ResponseEntity<JsonNode> {
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, name, namespace)
         val headers: HttpHeaders = getAuthorizationHeaders()
@@ -52,6 +53,11 @@ class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: String,
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, name, namespace)
         val headers: HttpHeaders = getAuthorizationHeaders()
         return exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.POST, URI(urls.create)))
+    }
+
+    fun delete(headers: HttpHeaders, url: String): ResponseEntity<JsonNode>? {
+        val requestEntity = RequestEntity<Any>(headers, HttpMethod.DELETE, URI(url))
+        return restTemplate.exchange(requestEntity, JsonNode::class.java)
     }
 
     fun getExistingResource(headers: HttpHeaders, url: String): ResponseEntity<JsonNode>? {

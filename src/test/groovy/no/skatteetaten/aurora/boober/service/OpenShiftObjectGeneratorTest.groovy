@@ -80,6 +80,8 @@ class OpenShiftObjectGeneratorTest extends Specification {
     openShiftClient.isValidUser(_) >> true
   }
 
+  def deployId = "123"
+
   @Unroll
   def "should create openshift objects for #env/#name"() {
 
@@ -105,7 +107,7 @@ class OpenShiftObjectGeneratorTest extends Specification {
       def auroraConfig = new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false, null) }, "aos")
       def auroraDc = auroraDeploymentConfigService.createAuroraDeploymentConfigs(deployCommand, auroraConfig, vaults)
 
-      List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc)
+      List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc, deployId)
 
       def resultFiles = AuroraConfigHelperKt.getResultFiles(aid)
 

@@ -35,7 +35,7 @@ class OpenShiftObjectGenerator(
 
     }
 
-    fun generateObjects(auroraDc: AuroraDeploymentConfig): List<JsonNode> {
+    fun generateObjects(auroraDc: AuroraDeploymentConfig, deployId: String): List<JsonNode> {
 
         val configs: Map<String, String> = auroraDc.config?.map { (key, value) ->
             key to value.map { "${it.key}=${it.value}" }.joinToString(separator = "\\n")
@@ -49,6 +49,7 @@ class OpenShiftObjectGenerator(
         logger.debug("Database is $database")
 
         val params = mapOf(
+                "deployId" to deployId,
                 "adc" to (auroraDc as? AuroraDeploymentConfigDeploy ?: auroraDc as AuroraDeploymentConfigProcess),
                 "configs" to configs,
                 "username" to userDetailsProvider.getAuthenticatedUser().username,
@@ -99,7 +100,7 @@ class OpenShiftObjectGenerator(
 
         auroraDc.mounts?.filter { !it.exist }?.map {
             logger.debug("Create manual mount {}", it)
-            val mountParams = mapOf("adc" to auroraDc, "mount" to it)
+            val mountParams = mapOf("adc" to auroraDc, "mount" to it, "deployId" to deployId)
             mergeVelocityTemplate("mount.json", mountParams)
         }?.let {
             openShiftObjects += it
