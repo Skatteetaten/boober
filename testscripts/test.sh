@@ -14,6 +14,8 @@ http --timeout 300 PUT :8080/affiliation/paas/secrets Authorization:"bearer $tok
 echo "Add aurora config for referance app"
 http --timeout 300 PUT :8080/affiliation/paas/auroraconfig Authorization:"bearer $token"  < reference.json
 
+http --timeout 300 PUT :8080/affiliation/paas/vaults Authorization:"bearer $token"
+
 echo "Deploy application to paas-boober-dev and paas-boober-test"
-http --timeout 300 PUT :8080/affiliation/paas/deploy Authorization:"bearer $token"  < deploy.json
+#http --timeout 300 PUT :8080/affiliation/paas/deploy Authorization:"bearer $token"  < deploy.json
 
