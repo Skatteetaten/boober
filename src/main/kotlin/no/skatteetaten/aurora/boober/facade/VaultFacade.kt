@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
-class SecretFacade(
+class VaultFacade(
         val gitService: GitService,
         val mapper: ObjectMapper,
         val encryptionService: EncryptionService,
@@ -24,27 +24,27 @@ class SecretFacade(
         val secretVaultService: SecretVaultService
 ) {
 
-    private val logger = LoggerFactory.getLogger(SecretFacade::class.java)
+    private val logger = LoggerFactory.getLogger(VaultFacade::class.java)
     private val GIT_SECRET_FOLDER = ".secret"
     private val PERMISSION_FILE = ".permissions"
 
-    fun listVaults(affiliation: String): List<String> {
+    fun listVaults(affiliation: String): List<AuroraSecretVault> {
         val repo = getRepo(affiliation)
 
-        val names = secretVaultService.getVaults(repo)
+        val vaults = secretVaultService.getVaults(repo)
                 .filter { openShiftClient.hasUserAccess(userDetailsProvider.getAuthenticatedUser().username, it.value.permissions) }
-                .map { it.key }
+                .values.toList()
         gitService.closeRepository(repo)
-        return names
+        return vaults
     }
 
     fun find(affiliation: String, vault: String): AuroraSecretVault {
 
-        return withAuroraVault(affiliation, vault, false)
+        return withAuroraVault(affiliation, vault, false, false)
     }
 
-    fun save(affiliation: String, vault: AuroraSecretVault): AuroraSecretVault {
-        return withAuroraVault(affiliation, vault.name, function = {
+    fun save(affiliation: String, vault: AuroraSecretVault, validateVersions: Boolean): AuroraSecretVault {
+        return withAuroraVault(affiliation, vault.name, validateVersions, function = {
             vault
         })
     }
@@ -60,9 +60,10 @@ class SecretFacade(
                          vault: String,
                          fileName: String,
                          fileContents: String,
-                         fileVersion: String): AuroraSecretVault {
+                         fileVersion: String,
+                         validateVersions: Boolean): AuroraSecretVault {
 
-        return withAuroraVault(affiliation, vault, function = {
+        return withAuroraVault(affiliation, vault, validateVersions, function = {
             val newVersions = it.versions + (fileName to fileVersion)
             val newSecrets = it.secrets + (fileName to encryptionService.encrypt(fileContents))
             it.copy(versions = newVersions, secrets = newSecrets)
@@ -72,6 +73,7 @@ class SecretFacade(
 
     private fun withAuroraVault(affiliation: String,
                                 vault: String,
+                                validateVersions: Boolean,
                                 commitChanges: Boolean = true,
                                 function: (AuroraSecretVault) -> AuroraSecretVault = { it -> it }): AuroraSecretVault {
 
@@ -88,7 +90,7 @@ class SecretFacade(
         val newSecrets = function(oldVault)
 
         if (commitChanges) {
-            commit(repo, oldVault, newSecrets, vaultFiles)
+            commit(repo, oldVault, newSecrets, vaultFiles, validateVersions)
         } else {
             gitService.closeRepository(repo)
 
@@ -106,7 +108,8 @@ class SecretFacade(
     private fun commit(repo: Git,
                        oldVault: AuroraSecretVault,
                        vault: AuroraSecretVault,
-                       vaultFiles: List<AuroraGitFile>
+                       vaultFiles: List<AuroraGitFile>,
+                       validateVersions: Boolean
     ) {
 
 
@@ -121,24 +124,24 @@ class SecretFacade(
                     mapOf(PERMISSION_FILE to mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it))
         } ?: encryptedSecretsFiles
 
-        val invalidVersions = result
-                .filter { !vault.skipVersionCheck }
-                .filter { oldVault.versions.containsKey(it.key) }
-                .filter {
-                    val newVersion = vault.versions[it.key]
-                    val oldVersion = oldVault.versions[it.key]
-                    newVersion != oldVersion
-                }.map { it.key }
+        if (validateVersions) {
+            val invalidVersions = result
+                    .filter { oldVault.versions.containsKey(it.key) }
+                    .filter {
+                        val newVersion = vault.versions[it.key]
+                        val oldVersion = oldVault.versions[it.key]
+                        newVersion != oldVersion
+                    }.map { it.key }
 
-        if (invalidVersions.isNotEmpty()) {
+            if (invalidVersions.isNotEmpty()) {
 
-            val errors = invalidVersions.map { fileName ->
-                val commit = vaultFiles.find { it.file.name == fileName }?.commit!!//since oldVersion != null above this is safe
-                VersioningError("$vaultPath/$fileName", commit.authorIdent.name, commit.authorIdent.`when`)
+                val errors = invalidVersions.map { fileName ->
+                    val commit = vaultFiles.find { it.file.name == fileName }?.commit!!//since oldVersion != null above this is safe
+                    VersioningError("$vaultPath/$fileName", commit.authorIdent.name, commit.authorIdent.`when`)
+                }
+                throw AuroraVersioningException("Source file has changed since you fetched it", errors)
             }
-            throw AuroraVersioningException("Source file has changed since you fetched it", errors)
         }
-
 
         val pathResult = result.mapKeys { "$vaultPath/${it.key}" }
 

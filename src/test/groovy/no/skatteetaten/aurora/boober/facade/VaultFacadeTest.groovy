@@ -21,7 +21,7 @@ import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
-    SecretFacade,
+    VaultFacade,
     GitService,
     EncryptionService,
     SecretVaultService,
@@ -32,7 +32,7 @@ import spock.mock.DetachedMockFactory
     "boober.git.username=",
     "boober.git.password="
 ])
-class SecretFacadeTest extends Specification {
+class VaultFacadeTest extends Specification {
 
   public static final String ENV_NAME = "secrettest"
   public static final String APP_NAME = "aos-simple"
@@ -54,7 +54,7 @@ class SecretFacadeTest extends Specification {
   }
 
   @Autowired
-  SecretFacade facade
+  VaultFacade facade
 
   @Autowired
   UserDetailsProvider userDetailsProvider
@@ -68,7 +68,7 @@ class SecretFacadeTest extends Specification {
   private void createRepoAndSaveFiles(String affiliation, AuroraSecretVault vault) {
     GitServiceHelperKt.createInitRepo(affiliation)
     userDetailsProvider.authenticatedUser >> new User("test", "", "Test Foo")
-    facade.save(affiliation, vault)
+    facade.save(affiliation, vault, false)
   }
 
   def affiliation = "aos"
@@ -115,7 +115,7 @@ class SecretFacadeTest extends Specification {
 
     when:
       def newVault = new AuroraSecretVault(vaultName, secret, null, ["latest.properties": "INVALID_VERSION"])
-      facade.save(affiliation, newVault)
+      facade.save(affiliation, newVault, true)
 
     then:
       def e = thrown(AuroraVersioningException)
@@ -123,14 +123,14 @@ class SecretFacadeTest extends Specification {
       e.errors[0].fileName == ".secret/foo/latest.properties"
   }
 
-  def "Allow ignore versions if skipVersionCheck is true"() {
+  def "Allow ignore versions if we specify validateVersions=false is true"() {
     given:
       openshift.hasUserAccess(_, _) >> true
       createRepoAndSaveFiles(affiliation, vault)
 
     when:
-      def newVault = new AuroraSecretVault(vaultName, secret, null, [:], true)
-      def result = facade.save(affiliation, newVault)
+      def newVault = new AuroraSecretVault(vaultName, secret, null, [:])
+      def result = facade.save(affiliation, newVault, false)
 
     then:
       result.name == "foo"
@@ -146,7 +146,7 @@ class SecretFacadeTest extends Specification {
     when:
       def newVault = new AuroraSecretVault(vaultName, secret, null, storedVault.versions)
 
-      facade.save(affiliation, newVault)
+      facade.save(affiliation, newVault, false)
       def updatedAuroraConfig = facade.find(affiliation, vaultName)
 
     then:
@@ -165,7 +165,7 @@ class SecretFacadeTest extends Specification {
 
       def newVault = new AuroraSecretVault(vaultName, newSecrets, null, storedVault.versions)
 
-      facade.save(affiliation, newVault)
+      facade.save(affiliation, newVault, false)
       def updatedAuroraConfig = facade.find(affiliation, vaultName)
 
     then:
@@ -187,7 +187,7 @@ class SecretFacadeTest extends Specification {
           ['latest.properties': storedVault.versions['latest.properties']])
 
 
-      facade.save(affiliation, removeVault)
+      facade.save(affiliation, removeVault, false)
       def updatedAuroraConfig = facade.find(affiliation, vaultName)
 
     then:
@@ -203,7 +203,7 @@ class SecretFacadeTest extends Specification {
     when:
 
       facade.updateSecretFile(affiliation, vaultName, "latest.properties", "OOOHYEAH",
-          storedVault.versions['latest.properties'])
+          storedVault.versions['latest.properties'], true)
       def updatedAuroraConfig = facade.find(affiliation, vaultName)
 
     then:
@@ -231,15 +231,15 @@ class SecretFacadeTest extends Specification {
 
     when:
       def newVault = new AuroraSecretVault("vault2", secret, null, [:])
-      facade.save(affiliation, newVault)
+      facade.save(affiliation, newVault, false)
 
       def vault = facade.find(affiliation, vaultName)
       def vault2 = facade.find(affiliation, "vault2")
 
 
     then:
-      vault.secrets.size()==2
-      vault2.secrets.size()==2
+      vault.secrets.size() == 1
+      vault2.secrets.size() == 1
 
   }
 
@@ -248,7 +248,7 @@ class SecretFacadeTest extends Specification {
       openshift.hasUserAccess(_, _) >> true
       createRepoAndSaveFiles(affiliation, vault)
       def newVault = new AuroraSecretVault("vault2", secret)
-      facade.save(affiliation, newVault)
+      facade.save(affiliation, newVault, false)
 
     when:
 
@@ -265,7 +265,7 @@ class SecretFacadeTest extends Specification {
       3 * openshift.hasUserAccess(_, _) >> true
       createRepoAndSaveFiles(affiliation, vault)
       def newVault = new AuroraSecretVault("vault2", secret, permissions)
-      facade.save(affiliation, newVault)
+      facade.save(affiliation, newVault, false)
 
     when:
       1 * openshift.hasUserAccess("test", permissions) >> false

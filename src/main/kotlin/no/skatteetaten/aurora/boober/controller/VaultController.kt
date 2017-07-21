@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.controller
 
 import no.skatteetaten.aurora.boober.controller.internal.Response
-import no.skatteetaten.aurora.boober.facade.SecretFacade
+import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -16,7 +16,7 @@ import javax.servlet.http.HttpServletRequest
 
 @RestController
 @RequestMapping("/affiliation/{affiliation}/vault")
-class VaultController(val facade: SecretFacade) {
+class VaultController(val facade: VaultFacade) {
 
 
     @GetMapping()
@@ -25,8 +25,10 @@ class VaultController(val facade: SecretFacade) {
     }
 
     @PutMapping()
-    fun save(@PathVariable affiliation: String, @RequestBody vault: AuroraSecretVault): Response {
-        return Response(items = listOf(facade.save(affiliation, vault)))
+    fun save(@PathVariable affiliation: String,
+             @RequestBody vault: AuroraSecretVault,
+             @RequestHeader(value = "AuroraValidateVersions") validateVersions: Boolean = true): Response {
+        return Response(items = listOf(facade.save(affiliation, vault, validateVersions)))
     }
 
     @GetMapping("/{vault}")
@@ -39,12 +41,13 @@ class VaultController(val facade: SecretFacade) {
                @PathVariable vault: String,
                request: HttpServletRequest,
                @RequestBody fileContents: String,
-               @RequestHeader(value = "AuroraConfigFileVersion") fileVersion: String): Response {
+               @RequestHeader(value = "AuroraConfigFileVersion") fileVersion: String,
+               @RequestHeader(value = "AuroraValidateVersions") validateVersions: Boolean = true): Response {
 
         val path = "affiliation/$affiliation/secrets/$vault/**"
         val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
 
-        val vault = facade.updateSecretFile(affiliation, vault, fileName, fileContents, fileVersion)
+        val vault = facade.updateSecretFile(affiliation, vault, fileName, fileContents, fileVersion, validateVersions)
         return Response(items = listOf(vault))
     }
 

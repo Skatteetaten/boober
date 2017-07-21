@@ -68,7 +68,7 @@ class AuroraConfigFacadeTest extends Specification {
   private void createRepoAndSaveFiles(String affiliation, AuroraConfig auroraConfig) {
     GitServiceHelperKt.createInitRepo(affiliation)
     userDetailsProvider.authenticatedUser >> new User("test", "", "Test Foo")
-    service.saveAuroraConfig(affiliation, auroraConfig)
+    service.saveAuroraConfig(affiliation, auroraConfig, false)
   }
 
   private AuroraConfig getAuroraConfigFromGit(String affiliation, boolean decryptSecrets) {
@@ -88,7 +88,7 @@ class AuroraConfigFacadeTest extends Specification {
       userDetailsProvider.authenticatedUser >> new User("foobar", "", "Foo Bar")
 
     when:
-      service.saveAuroraConfig("aos", auroraConfig)
+      service.saveAuroraConfig("aos", auroraConfig, false)
       def git = gitService.checkoutRepoForAffiliation("aos")
       def gitLog = git.log().call().head()
       gitService.closeRepository(git)
@@ -115,7 +115,7 @@ class AuroraConfigFacadeTest extends Specification {
       def filename = "${aid.environment}/${aid.application}.json"
 
       def version = gitAuroraConfig.auroraConfigFiles.find { it.name == filename }.version
-      def patchedAuroraConfig = service.patchAuroraConfigFile("aos", filename, jsonOp, version)
+      def patchedAuroraConfig = service.patchAuroraConfigFile("aos", filename, jsonOp, version, false)
       def git = gitService.checkoutRepoForAffiliation("aos")
       def gitLog = git.log().call().head()
       gitService.closeRepository(git)

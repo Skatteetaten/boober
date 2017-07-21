@@ -16,7 +16,6 @@ import org.eclipse.jgit.revwalk.RevCommit
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
-import kotlin.system.measureTimeMillis
 
 @Service
 class AuroraConfigFacade(
@@ -41,15 +40,15 @@ class AuroraConfigFacade(
         return config.copy(auroraConfigFiles = config.auroraConfigFiles + overrides)
     }
 
-    fun saveAuroraConfig(affiliation: String, auroraConfig: AuroraConfig): AuroraConfig {
-        return withAuroraConfig(affiliation, validateVersions = false, function = {
+    fun saveAuroraConfig(affiliation: String, auroraConfig: AuroraConfig, validateVersions: Boolean): AuroraConfig {
+        return withAuroraConfig(affiliation, validateVersions, {
             auroraConfig
         })
     }
 
-    fun patchAuroraConfigFile(affiliation: String, filename: String, jsonPatchOp: String, configFileVersion: String): AuroraConfig {
+    fun patchAuroraConfigFile(affiliation: String, filename: String, jsonPatchOp: String, configFileVersion: String, validateVersions: Boolean): AuroraConfig {
 
-        return withAuroraConfig(affiliation, function={ auroraConfig: AuroraConfig ->
+        return withAuroraConfig(affiliation, validateVersions, { auroraConfig: AuroraConfig ->
             val patch: JsonPatch = mapper.readValue(jsonPatchOp, JsonPatch::class.java)
 
             val auroraConfigFile = auroraConfig.auroraConfigFiles.filter { it.name == filename }.first()
@@ -60,17 +59,15 @@ class AuroraConfigFacade(
         })
     }
 
-    fun updateAuroraConfigFile(affiliation: String, filename: String, fileContents: JsonNode, configFileVersion: String): AuroraConfig {
-        return withAuroraConfig(affiliation, function={ auroraConfig: AuroraConfig ->
+    fun updateAuroraConfigFile(affiliation: String, filename: String, fileContents: JsonNode, configFileVersion: String, validateVersions: Boolean): AuroraConfig {
+        return withAuroraConfig(affiliation, validateVersions, { auroraConfig: AuroraConfig ->
             auroraConfig.updateFile(filename, fileContents, configFileVersion)
         })
     }
 
 
-
     private fun withAuroraConfig(affiliation: String,
-                                 commitChanges: Boolean = true,
-                                 validateVersions: Boolean = true,
+                                 validateVersions: Boolean,
                                  function: (AuroraConfig) -> AuroraConfig = { it -> it }): AuroraConfig {
 
         val repo = getRepo(affiliation)
@@ -82,20 +79,11 @@ class AuroraConfigFacade(
         val vaults = secretVaultService.getVaults(repo)
         val newAuroraConfig = function(auroraConfig)
 
-        if (commitChanges) {
-
-            if(validateVersions) {
-                validateGitVersion(auroraConfig, newAuroraConfig, allFilesInRepo)
-            }
-            measureTimeMillis {
-                auroraConfigService.validate(newAuroraConfig, vaults)
-                commitAuroraConfig(repo, newAuroraConfig)
-            }.let { logger.debug("Spent {} millis committing and pushing to git", it) }
-        } else {
-            measureTimeMillis {
-                gitService.closeRepository(repo)
-            }.let { logger.debug("Spent {} millis closing git repository", it) }
+        if (validateVersions) {
+            validateGitVersion(auroraConfig, newAuroraConfig, allFilesInRepo)
         }
+        auroraConfigService.validate(newAuroraConfig, vaults)
+        commitAuroraConfig(repo, newAuroraConfig)
 
         return newAuroraConfig
     }
