@@ -42,7 +42,6 @@ class AuroraConfigFacade(
     }
 
     fun saveAuroraConfig(affiliation: String, auroraConfig: AuroraConfig): AuroraConfig {
-
         return withAuroraConfig(affiliation, validateVersions = false, function = {
             auroraConfig
         })

@@ -16,18 +16,17 @@ import javax.servlet.http.HttpServletRequest
 
 @RestController
 @RequestMapping("/affiliation/{affiliation}/vault")
-class SecretsController(val facade: SecretFacade) {
+class VaultController(val facade: SecretFacade) {
 
 
     @GetMapping()
     fun listVaults(@PathVariable affiliation: String): Response {
-        return Response(items = listOf(facade.listVaults(affiliation)))
+        return Response(items = facade.listVaults(affiliation))
     }
 
     @PutMapping()
     fun save(@PathVariable affiliation: String, @RequestBody vault: AuroraSecretVault): Response {
-        val auroraConfig = facade.save(affiliation, vault)
-        return Response(items = listOf(auroraConfig))
+        return Response(items = listOf(facade.save(affiliation, vault)))
     }
 
     @GetMapping("/{vault}")
