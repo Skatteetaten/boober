@@ -27,7 +27,7 @@ class VaultController(val facade: VaultFacade) {
     @PutMapping()
     fun save(@PathVariable affiliation: String,
              @RequestBody vault: AuroraSecretVault,
-             @RequestHeader(value = "AuroraValidateVersions") validateVersions: Boolean = true): Response {
+             @RequestHeader(value = "AuroraValidateVersions", required = false) validateVersions: Boolean = true): Response {
         return Response(items = listOf(facade.save(affiliation, vault, validateVersions)))
     }
 
@@ -41,8 +41,12 @@ class VaultController(val facade: VaultFacade) {
                @PathVariable vault: String,
                request: HttpServletRequest,
                @RequestBody fileContents: String,
-               @RequestHeader(value = "AuroraConfigFileVersion") fileVersion: String,
-               @RequestHeader(value = "AuroraValidateVersions") validateVersions: Boolean = true): Response {
+               @RequestHeader(value = "AuroraConfigFileVersion", required = false) fileVersion: String = "",
+               @RequestHeader(value = "AuroraValidateVersions", required = false) validateVersions: Boolean = true): Response {
+
+        if(validateVersions && fileVersion.isEmpty()) {
+            throw IllegalAccessException("Must specify AuroraConfigFileVersion header");
+        }
 
         val path = "affiliation/$affiliation/secrets/$vault/**"
         val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
