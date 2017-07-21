@@ -36,7 +36,7 @@ class VaultController(val facade: VaultFacade) {
         return Response(items = listOf(facade.find(affiliation, vault)))
     }
 
-    @PutMapping("/{vault}/**")
+    @PutMapping("/{vault}/secret/**")
     fun update(@PathVariable affiliation: String,
                @PathVariable vault: String,
                request: HttpServletRequest,
@@ -48,7 +48,7 @@ class VaultController(val facade: VaultFacade) {
             throw IllegalAccessException("Must specify AuroraConfigFileVersion header");
         }
 
-        val path = "affiliation/$affiliation/secrets/$vault/**"
+        val path = "affiliation/$affiliation/vault/$vault/secret/**"
         val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
 
         val vault = facade.updateSecretFile(affiliation, vault, fileName, fileContents, fileVersion, validateVersions)

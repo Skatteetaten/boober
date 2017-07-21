@@ -46,7 +46,8 @@ class SecretVaultService(val mapper: ObjectMapper,
             gitFile -> gitFile.file.name == PERMISSION_FILE
         }?.file?.let { mapper.readValue(it) }
 
-        val files = vaultFiles.filter { it.file.name != PERMISSION_FILE }.associate { gitFile ->
+        val files = vaultFiles.filter { it.file.name != PERMISSION_FILE }
+                .associate { gitFile ->
             val contents = encryptionService.decrypt(gitFile.file.readText())
 
             gitFile.file.name to contents

@@ -60,7 +60,7 @@ class AuroraConfigController(val auroraConfigFacade: AuroraConfigFacade) {
         if(validateVersions && configFileVersion.isEmpty()) {
             throw IllegalAccessException("Must specify AuroraConfigFileVersion header");
         }
-        
+
         val path = "affiliation/$affiliation/auroraconfigfile/**"
         val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
 
