@@ -23,7 +23,7 @@ class AuroraConfigController(val auroraConfigFacade: AuroraConfigFacade) {
     @PutMapping("/auroraconfig")
     fun save(@PathVariable affiliation: String,
              @RequestBody payload: AuroraConfigPayload,
-             @RequestHeader(value = "AuroraValidateVersions") validateVersions: Boolean = true): Response {
+             @RequestHeader(value = "AuroraValidateVersions", required = false) validateVersions: Boolean = true): Response {
 
         val auroraConfig = auroraConfigFacade.saveAuroraConfig(affiliation, payload.toAuroraConfig(affiliation), validateVersions)
         return Response(items = listOf(auroraConfig).map(::fromAuroraConfig))
@@ -38,9 +38,12 @@ class AuroraConfigController(val auroraConfigFacade: AuroraConfigFacade) {
     @PutMapping("/auroraconfigfile/**")
     fun updateAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest,
                                @RequestBody fileContents: JsonNode,
-                               @RequestHeader(value = "AuroraConfigFileVersion") configFileVersion: String,
-                               @RequestHeader(value = "AuroraValidateVersions") validateVersions: Boolean = true): Response {
+                               @RequestHeader(value = "AuroraConfigFileVersion") configFileVersion: String = "",
+                               @RequestHeader(value = "AuroraValidateVersions", required = false) validateVersions: Boolean = true): Response {
 
+        if(validateVersions && configFileVersion.isEmpty()) {
+            throw IllegalAccessException("Must specify AuroraConfigFileVersion header");
+        }
         val path = "affiliation/$affiliation/auroraconfigfile/**"
         val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
 
@@ -51,9 +54,13 @@ class AuroraConfigController(val auroraConfigFacade: AuroraConfigFacade) {
     @PatchMapping(value = "/auroraconfigfile/**", consumes = arrayOf("application/json-patch+json"))
     fun patchAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest,
                               @RequestBody jsonPatchOp: String,
-                              @RequestHeader(value = "AuroraConfigFileVersion") configFileVersion: String,
-                              @RequestHeader(value = "AuroraValidateVersions") validateVersions: Boolean = true): Response {
+                              @RequestHeader(value = "AuroraConfigFileVersion") configFileVersion: String = "",
+                              @RequestHeader(value = "AuroraValidateVersions", required = false) validateVersions: Boolean = true): Response {
 
+        if(validateVersions && configFileVersion.isEmpty()) {
+            throw IllegalAccessException("Must specify AuroraConfigFileVersion header");
+        }
+        
         val path = "affiliation/$affiliation/auroraconfigfile/**"
         val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
 
