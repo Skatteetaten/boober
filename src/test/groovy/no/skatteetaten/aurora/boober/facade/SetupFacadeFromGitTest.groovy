@@ -120,14 +120,14 @@ class SetupFacadeFromGitTest extends Specification {
         def revTag = history[0]
 
         revTag.taggerIdent != null
-        revTag.fullMessage.startsWith("""{"deployCommand":{"applicationId":{"environment":"booberdev","application":"aos-simple"}""")
-        revTag.tagName.startsWith("DEPLOY/booberdev-aos-simple/")
+        revTag.fullMessage.startsWith("""{"command":{"deployId""")
+        revTag.tagName.startsWith("DEPLOY/aos-booberdev.aos-simple/")
         gitService.closeRepository(git)
 
 
     }
 
-    def "Should perform two releases and get deoploy history"() {
+    def "Should perform two releases and get deploy history"() {
         given:
         GitServiceHelperKt.createInitRepo(affiliation)
         def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, affiliation)
@@ -145,13 +145,13 @@ class SetupFacadeFromGitTest extends Specification {
         def revTag = tags[0]
 
         revTag.ident != null
-        revTag.result.get("deployCommand") != null
+        revTag.result.get("command") != null
 
 
         def revTag2 = tags[1]
 
         revTag2.ident != null
-        revTag2.result.get("deployCommand") != null
+        revTag2.result.get("command") != null
 
     }
 

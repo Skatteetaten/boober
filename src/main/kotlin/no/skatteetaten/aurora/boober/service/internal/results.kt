@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.service.internal
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
@@ -10,19 +9,17 @@ import org.eclipse.jgit.lib.PersonIdent
 data class Result<out V, out E>(val value: V? = null, val error: E? = null)
 
 
-data class ApplicationCommand @JvmOverloads constructor(
+data class ApplicationCommand(
         val deployId: String,
         val auroraDc: AuroraDeploymentConfig,
-        val commands: List<OpenshiftCommand>,
-        val overrides: List<AuroraConfigFile>
-        )
+        val commands: List<OpenshiftCommand>)
 
 data class ApplicationResult @JvmOverloads constructor(
         val command: ApplicationCommand,
         val openShiftResponses: List<OpenShiftResponse> = listOf(),
         val deletedObjectUrls: List<String> = listOf()
-)              {
-    val tag:String = "${command.auroraDc.namespace}.${command.auroraDc.name}/${command.deployId}"
+) {
+    val tag: String = "${command.auroraDc.namespace}.${command.auroraDc.name}/${command.deployId}"
 }
 
 fun <T : Any> List<Result<T?, Error?>>.orElseThrow(block: (List<Error>) -> Exception): List<T> {
@@ -34,4 +31,4 @@ fun <T : Any> List<Result<T?, Error?>>.orElseThrow(block: (List<Error>) -> Excep
 }
 
 
-data class DeployHistory (val ident: PersonIdent, val result: JsonNode)
+data class DeployHistory(val ident: PersonIdent, val result: JsonNode)

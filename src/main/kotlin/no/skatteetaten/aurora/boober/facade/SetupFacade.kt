@@ -99,16 +99,7 @@ class SetupFacade(
         val appIds: List<DeployCommand> = setupParams.applicationIds
                 .takeIf { it.isNotEmpty() } ?: throw IllegalArgumentException("Specify applicationId")
 
-        val auroraDcs = auroraConfigService.createAuroraDcs(auroraConfig, appIds, vaults)
-
-        val res = auroraDcs
-                .filter { it.cluster == cluster }
-                .map {
-                    val openShiftObjects = openShiftObjectGenerator.generateObjects(it, deployId)
-
-                    val openshiftCommand = openShiftClient.prepareCommands(it.namespace, openShiftObjects)
-                    ApplicationCommand(deployId, it, openshiftCommand, setupParams.overrides)
-                }
+        val res = createApplicationCommands(auroraConfig, appIds, vaults, deployId)
 
         if (git == null) {
             gitService.closeRepository(repo)
@@ -116,6 +107,19 @@ class SetupFacade(
         return res
 
 
+    }
+
+    fun createApplicationCommands(auroraConfig: AuroraConfig, appIds: List<DeployCommand>, vaults: Map<String, AuroraSecretVault>, deployId: String): List<ApplicationCommand> {
+        val auroraDcs = auroraConfigService.createAuroraDcs(auroraConfig, appIds, vaults)
+
+        val res = auroraDcs
+                .filter { it.cluster == cluster }
+                .map {
+                    val openShiftObjects = openShiftObjectGenerator.generateObjects(it, deployId)
+                    val openShiftCommand = openShiftClient.prepareCommands(it.namespace, openShiftObjects)
+                    ApplicationCommand(deployId, it, openShiftCommand)
+                }
+        return res
     }
 
 

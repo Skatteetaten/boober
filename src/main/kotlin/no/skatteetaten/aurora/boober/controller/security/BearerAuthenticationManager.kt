@@ -31,6 +31,6 @@ class BearerAuthenticationManager(
             throw CredentialsExpiredException("An unexpected error occurred while getting OpenShift user", e)
         }
 
-        return PreAuthenticatedAuthenticationToken(response.responseBody, token)
+        return PreAuthenticatedAuthenticationToken(response, token)
     }
 }

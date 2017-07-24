@@ -2,12 +2,7 @@ package no.skatteetaten.aurora.boober.service.openshift
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraPermissions
-import no.skatteetaten.aurora.boober.model.DeployCommand
-import no.skatteetaten.aurora.boober.model.TemplateType
-import no.skatteetaten.aurora.boober.service.internal.ApplicationCommand
-import no.skatteetaten.aurora.boober.service.internal.ApplicationResult
 import no.skatteetaten.aurora.boober.utils.updateField
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -30,7 +25,7 @@ data class OpenShiftResponse(
 ) {
     val changed: Boolean
         get() {
-            val previousVersion = command.payload.at("/metadata/resourceVersion")?.asLong()
+            val previousVersion = command.previous?.at("/metadata/resourceVersion")?.asLong()
             val currentVersion = responseBody.at("/metadata/resourceVersion")?.asLong()
 
             return command.operationType == OperationType.UPDATE && previousVersion != currentVersion
@@ -57,7 +52,7 @@ class OpenShiftClient(
         val name = cmd.payload["metadata"]["name"].asText()
         val namespace = cmd.payload["metadata"]["namespace"].asText()
 
-        val res =  if(cmd.operationType == OperationType.UPDATE) {
+        val res = if (cmd.operationType == OperationType.UPDATE) {
             resource.put(kind, name, namespace, cmd.payload)
         } else {
             resource.post(kind, name, namespace, cmd.payload)
@@ -68,8 +63,6 @@ class OpenShiftClient(
         return OpenShiftResponse(cmd, res.body)
 
     }
-
-
 
 
     fun prepare(namespace: String, json: JsonNode): OpenshiftCommand? {
@@ -120,13 +113,13 @@ class OpenShiftClient(
 
     }
 
-    fun findCurrentUser(token: String): OpenShiftResponse {
+    fun findCurrentUser(token: String): JsonNode? {
 
         val url = "$baseUrl/oapi/v1/users/~"
         val headers: HttpHeaders = resource.createHeaders(token)
 
         val currentUser = resource.getExistingResource(headers, url)
-        return OpenShiftResponse("user", operationType = OperationType.NONE, responseBody = currentUser?.body)
+        return currentUser?.body
     }
 
     fun hasUserAccess(user: String, permissions: AuroraPermissions?): Boolean {

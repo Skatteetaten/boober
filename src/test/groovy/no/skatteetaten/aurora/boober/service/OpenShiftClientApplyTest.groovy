@@ -102,7 +102,7 @@ class OpenShiftClientApplyTest extends Specification {
 
     then:
 
-      result.operationType == OperationType.NONE
+      result == null
   }
 
   @Unroll
