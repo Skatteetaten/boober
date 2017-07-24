@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.facade
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.controller.internal.SetupParams
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
@@ -15,10 +14,12 @@ import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 import no.skatteetaten.aurora.boober.service.SecretVaultService
+import no.skatteetaten.aurora.boober.service.internal.ApplicationCommand
 import no.skatteetaten.aurora.boober.service.internal.ApplicationResult
 import no.skatteetaten.aurora.boober.service.internal.DeployHistory
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
+import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import org.eclipse.jgit.api.Git
 import org.slf4j.Logger
@@ -40,8 +41,54 @@ class SetupFacade(
 
     val logger: Logger = LoggerFactory.getLogger(SetupFacade::class.java)
 
+    private val DEPLOY_PREFIX = "DEPLOY"
+
+
     fun executeSetup(affiliation: String, setupParams: SetupParams): List<ApplicationResult> {
         val repo = gitService.checkoutRepoForAffiliation(affiliation)
+
+        val applications = getDeployCommands(affiliation, setupParams, repo)
+
+        val res = applications.map { setupApplication(it) }
+
+        markRelease(res, repo)
+        gitService.closeRepository(repo)
+        return res
+
+    }
+
+     fun setupApplication(cmd: ApplicationCommand): ApplicationResult {
+        val responses = cmd.commands.map { openShiftClient.performOpenshiftCommand(it) }
+
+        val deployResource: JsonNode? =
+                generateRedeployResource(responses, cmd.auroraDc.type, cmd.auroraDc.name)
+
+        val deployCommand = deployResource?.let {
+            openShiftClient.prepare(cmd.auroraDc.namespace, deployResource)
+
+        }
+
+         //TODO: Refactor this into OpenshiftCommand and OpenshiftReponse
+        val deleteObjectUrls = openShiftClient.findOldObjectUrls(cmd.auroraDc.name, cmd.auroraDc.namespace, cmd.deployId)
+
+        deleteObjectUrls.forEach {
+            openShiftClient.deleteObject(it)
+        }
+
+
+        return if (deployCommand == null) {
+            ApplicationResult(cmd, responses, deleteObjectUrls)
+        } else {
+            val deployResponse = openShiftClient.performOpenshiftCommand(deployCommand)
+            ApplicationResult(cmd.copy(commands = cmd.commands + deployCommand), responses + deployResponse, deleteObjectUrls)
+
+        }
+    }
+
+
+    fun getDeployCommands(affiliation: String, setupParams: SetupParams, git: Git? = null): List<ApplicationCommand> {
+
+        val repo = git ?: gitService.checkoutRepoForAffiliation(affiliation)
 
         val auroraConfig = auroraConfigFacade.createAuroraConfig(repo, affiliation, setupParams.overrides)
 
@@ -49,14 +96,28 @@ class SetupFacade(
 
         val deployId = UUID.randomUUID().toString()
 
-        val res = performSetup(auroraConfig, setupParams.applicationIds, vaults, deployId)
+        val appIds: List<DeployCommand> = setupParams.applicationIds
+                .takeIf { it.isNotEmpty() } ?: throw IllegalArgumentException("Specify applicationId")
 
-        markRelease(res, repo)
-         return res
+        val auroraDcs = auroraConfigService.createAuroraDcs(auroraConfig, appIds, vaults)
+
+        val res = auroraDcs
+                .filter { it.cluster == cluster }
+                .map {
+                    val openShiftObjects = openShiftObjectGenerator.generateObjects(it, deployId)
+
+                    val openshiftCommand = openShiftClient.prepareCommands(it.namespace, openShiftObjects)
+                    ApplicationCommand(deployId, it, openshiftCommand, setupParams.overrides)
+                }
+
+        if (git == null) {
+            gitService.closeRepository(repo)
+        }
+        return res
+
 
     }
 
-    private val DEPLOY_PREFIX = "DEPLOY"
 
     fun markRelease(res: List<ApplicationResult>, repo: Git) {
         res.forEach {
@@ -67,51 +128,11 @@ class SetupFacade(
         gitService.closeRepository(repo)
     }
 
-    fun performSetup(auroraConfig: AuroraConfig, applicationIds: List<DeployCommand>, vaults: Map<String, AuroraSecretVault>, deployId: String): List<ApplicationResult> {
-        val appIds: List<DeployCommand> = applicationIds
-                .takeIf { it.isNotEmpty() } ?: throw IllegalArgumentException("Specify applicationId")
-
-        val auroraDcs = auroraConfigService.createAuroraDcs(auroraConfig, appIds, vaults)
-
-        return  auroraDcs
-                .filter { it.cluster == cluster }
-                .map { applyDeploymentConfig(it, deployId) }
-
-    }
-
-
-    private fun applyDeploymentConfig(adc: AuroraDeploymentConfig, deployId: String): ApplicationResult {
-        logger.info("Creating OpenShift objects for application ${adc.name} in namespace ${adc.namespace}")
-
-        val openShiftObjects = openShiftObjectGenerator.generateObjects(adc, deployId)
-
-        val openShiftResponses: List<OpenShiftResponse> = openShiftClient.applyMany(adc.namespace, openShiftObjects)
-
-        val deleteObjectUrls = openShiftClient.findOldObjectUrls(adc.name, adc.namespace, deployId)
-
-        deleteObjectUrls.forEach {
-            openShiftClient.deleteObject(it)
-        }
-
-        val deployResource: JsonNode? =
-                generateRedeployResource(openShiftResponses, adc.type, adc.name)
-
-        val finalResponse = deployResource?.let {
-            openShiftResponses + openShiftClient.apply(adc.namespace, it)
-        } ?: openShiftResponses
-
-        return ApplicationResult(
-                deployCommand = DeployCommand(ApplicationId(adc.envName, adc.name)),
-                auroraDc = adc,
-                openShiftResponses = finalResponse,
-                deletedObjectUrls = deleteObjectUrls,
-                deployId = deployId)
-    }
 
     fun generateRedeployResource(openShiftResponses: List<OpenShiftResponse>, type: TemplateType, name: String): JsonNode? {
 
-        val imageStream = openShiftResponses.find { it.kind == "imagestream" }
-        val deployment = openShiftResponses.find { it.kind == "deploymentconfig" }
+        val imageStream = openShiftResponses.find { it.responseBody["kind"].asText() == "imagestream" }
+        val deployment = openShiftResponses.find { it.responseBody["kind"].asText() == "deploymentconfig" }
 
         val deployResource: JsonNode? =
                 if (type == development) {
@@ -124,7 +145,7 @@ class SetupFacade(
                     } else {
                         null
                     }
-                } else if (!imageStream.changed && imageStream.operationType == OperationType.UPDATE) {
+                } else if (!imageStream.changed && imageStream.command.operationType == OperationType.UPDATE) {
                     openShiftObjectGenerator.generateDeploymentRequest(name)
                 } else {
                     null
@@ -133,11 +154,11 @@ class SetupFacade(
         return deployResource
     }
 
-    fun  deployHistory(affiliation: String): List<DeployHistory> {
+    fun deployHistory(affiliation: String): List<DeployHistory> {
         val repo = gitService.checkoutRepoForAffiliation(affiliation)
-        val res =  gitService.tagHistory(repo)
-                .filter{it.tagName.startsWith(DEPLOY_PREFIX)}
-                .map{ DeployHistory(it.taggerIdent, mapper.readTree(it.fullMessage)) }
+        val res = gitService.tagHistory(repo)
+                .filter { it.tagName.startsWith(DEPLOY_PREFIX) }
+                .map { DeployHistory(it.taggerIdent, mapper.readTree(it.fullMessage)) }
         gitService.closeRepository(repo)
         return res
     }

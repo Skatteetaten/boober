@@ -1,12 +1,10 @@
 package no.skatteetaten.aurora.boober.facade
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.internal.SetupParams
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.service.AuroraConfigHelper
 import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.EncryptionService
@@ -15,11 +13,8 @@ import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 import no.skatteetaten.aurora.boober.service.OpenShiftTemplateProcessor
 import no.skatteetaten.aurora.boober.service.SecretVaultService
-import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
-import org.eclipse.jgit.lib.Ref
-import org.eclipse.jgit.revwalk.RevTag
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
@@ -96,7 +91,7 @@ class SetupFacadeFromGitTest extends Specification {
         userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
         openShiftClient.isValidUser(_) >> true
         openShiftClient.isValidGroup(_) >> true
-        openShiftClient.applyMany(_, _) >> []
+        openShiftClient.prepareCommands(_, _) >> []
         openShiftClient.findOldObjectUrls(_, _, _, _) >> []
 
     }

@@ -92,7 +92,7 @@ class SetupFacadeTest extends Specification {
     userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
     openShiftClient.isValidUser(_) >> true
     openShiftClient.isValidGroup(_) >> true
-    openShiftClient.applyMany(_, _) >> []
+    openShiftClient.prepareCommands(_, _) >> []
     openShiftClient.findOldObjectUrls(_, _, deployId, _) >> []
 
   }
@@ -204,7 +204,7 @@ class SetupFacadeTest extends Specification {
     given:
       def templateType = deploy
       def name = "boober"
-      def imagestream = createOpenShiftResponse("imagestream", OperationType.CREATED, 1, 1)
+      def imagestream = createOpenShiftResponse("imagestream", OperationType.CREATE, 1, 1)
 
     when:
       def result = setupFacade.generateRedeployResource([imagestream], templateType, name)

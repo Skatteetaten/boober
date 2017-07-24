@@ -2,7 +2,12 @@ package no.skatteetaten.aurora.boober.service.openshift
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraPermissions
+import no.skatteetaten.aurora.boober.model.DeployCommand
+import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.service.internal.ApplicationCommand
+import no.skatteetaten.aurora.boober.service.internal.ApplicationResult
 import no.skatteetaten.aurora.boober.utils.updateField
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -10,21 +15,25 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Service
 
-enum class OperationType { CREATED, UPDATE, NONE }
+enum class OperationType { CREATE, UPDATE }
 
-data class OpenShiftResponse(
-        val kind: String,
+data class OpenshiftCommand(
         val operationType: OperationType,
         val previous: JsonNode? = null,
-        val payload: JsonNode? = null,
-        val responseBody: JsonNode?
+        val generated: JsonNode? = null,
+        val payload: JsonNode
+)
+
+data class OpenShiftResponse(
+        val command: OpenshiftCommand,
+        val responseBody: JsonNode
 ) {
     val changed: Boolean
         get() {
-            val previousVersion = previous?.at("/metadata/resourceVersion")?.asLong()
-            val currentVersion = responseBody?.at("/metadata/resourceVersion")?.asLong()
+            val previousVersion = command.payload.at("/metadata/resourceVersion")?.asLong()
+            val currentVersion = responseBody.at("/metadata/resourceVersion")?.asLong()
 
-            return operationType == OperationType.UPDATE && previousVersion != currentVersion
+            return command.operationType == OperationType.UPDATE && previousVersion != currentVersion
         }
 }
 
@@ -37,14 +46,36 @@ class OpenShiftClient(
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftClient::class.java)
 
-    fun applyMany(namespace: String, openShiftObjects: List<JsonNode>): List<OpenShiftResponse> {
-
-
-        return openShiftObjects.map { apply(namespace, it) }
+    fun prepareCommands(namespace: String, openShiftObjects: List<JsonNode>): List<OpenshiftCommand> {
+        return openShiftObjects.mapNotNull { prepare(namespace, it) }
     }
 
-    fun apply(namespace: String, json: JsonNode): OpenShiftResponse {
 
+    fun performOpenshiftCommand(cmd: OpenshiftCommand): OpenShiftResponse {
+
+        val kind = cmd.payload["kind"].asText()
+        val name = cmd.payload["metadata"]["name"].asText()
+        val namespace = cmd.payload["metadata"]["namespace"].asText()
+
+        val res =  if(cmd.operationType == OperationType.UPDATE) {
+            resource.put(kind, name, namespace, cmd.payload)
+        } else {
+            resource.post(kind, name, namespace, cmd.payload)
+
+        }
+
+        //error handling here!
+        return OpenShiftResponse(cmd, res.body)
+
+    }
+
+
+
+
+    fun prepare(namespace: String, json: JsonNode): OpenshiftCommand? {
+
+
+        val generated = json.deepCopy<JsonNode>()
         val kind = json.get("kind")?.asText()?.toLowerCase() ?: throw IllegalArgumentException("Kind must be set in file=$json")
 
         val name = if (kind == "deploymentrequest") {
@@ -56,14 +87,13 @@ class OpenShiftClient(
         val existingResource = resource.get(kind, name, namespace)
 
         if (existingResource == null) {
-            val createdResource = resource.post(kind, name, namespace, json)
-            return OpenShiftResponse(kind, OperationType.CREATED, null, json, createdResource.body)
+            return OpenshiftCommand(OperationType.CREATE, payload = json)
         }
 
         val existing = existingResource.body
 
         if (kind == "projectrequest") {
-            return OpenShiftResponse(kind, OperationType.NONE, existing, json, null)
+            return null
         }
 
         json.updateField(existing, "/metadata", "resourceVersion")
@@ -86,9 +116,7 @@ class OpenShiftClient(
             json.updateField(existing, "/spec", "triggers")
         }
 
-        val updated = resource.put(kind, name, namespace, json)
-
-        return OpenShiftResponse(kind, OperationType.UPDATE, existing, json, updated.body)
+        return OpenshiftCommand(OperationType.UPDATE, existing, generated, json)
 
     }
 

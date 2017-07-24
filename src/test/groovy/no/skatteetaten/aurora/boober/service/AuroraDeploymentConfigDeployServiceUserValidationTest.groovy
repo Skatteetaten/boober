@@ -61,7 +61,7 @@ class AuroraDeploymentConfigDeployServiceUserValidationTest extends Specificatio
   def setup() {
     userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
 
-    openShiftClient.applyMany(_, _) >> []
+    openShiftClient.prepareCommands(_, _) >> []
   }
 
   def "Should get error if user is not valid"() {
