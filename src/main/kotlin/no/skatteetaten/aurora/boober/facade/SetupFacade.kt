@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.facade
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.controller.internal.SetupParams
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
@@ -15,9 +16,11 @@ import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 import no.skatteetaten.aurora.boober.service.SecretVaultService
 import no.skatteetaten.aurora.boober.service.internal.ApplicationResult
+import no.skatteetaten.aurora.boober.service.internal.DeployHistory
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import org.eclipse.jgit.api.Git
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -48,14 +51,20 @@ class SetupFacade(
 
         val res = performSetup(auroraConfig, setupParams.applicationIds, vaults, deployId)
 
-        res.forEach{
-            gitService.markRelease(repo, it.tag, mapper.writeValueAsString(it))
+        markRelease(res, repo)
+         return res
+
+    }
+
+    private val DEPLOY_PREFIX = "DEPLOY"
+
+    fun markRelease(res: List<ApplicationResult>, repo: Git) {
+        res.forEach {
+            gitService.markRelease(repo, "$DEPLOY_PREFIX/${it.tag}", mapper.writeValueAsString(it))
         }
 
         gitService.push(repo)
         gitService.closeRepository(repo)
-         return res
-
     }
 
     fun performSetup(auroraConfig: AuroraConfig, applicationIds: List<DeployCommand>, vaults: Map<String, AuroraSecretVault>, deployId: String): List<ApplicationResult> {
@@ -64,7 +73,7 @@ class SetupFacade(
 
         val auroraDcs = auroraConfigService.createAuroraDcs(auroraConfig, appIds, vaults)
 
-        return auroraDcs
+        return  auroraDcs
                 .filter { it.cluster == cluster }
                 .map { applyDeploymentConfig(it, deployId) }
 
@@ -122,5 +131,14 @@ class SetupFacade(
                 }
 
         return deployResource
+    }
+
+    fun  deployHistory(affiliation: String): List<DeployHistory> {
+        val repo = gitService.checkoutRepoForAffiliation(affiliation)
+        val res =  gitService.tagHistory(repo)
+                .filter{it.tagName.startsWith(DEPLOY_PREFIX)}
+                .map{ DeployHistory(it.taggerIdent, mapper.readTree(it.fullMessage)) }
+        gitService.closeRepository(repo)
+        return res
     }
 }

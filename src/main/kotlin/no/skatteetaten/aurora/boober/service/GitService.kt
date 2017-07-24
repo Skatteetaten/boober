@@ -10,9 +10,11 @@ import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.EmtpyCommitException
 import org.eclipse.jgit.api.errors.GitAPIException
 import org.eclipse.jgit.api.errors.NoHeadException
+import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.lib.PersonIdent
 import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.revwalk.RevCommit
+import org.eclipse.jgit.revwalk.RevTag
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -180,20 +182,26 @@ class GitService(
                 .call()
     }
 
-    /*
-    dette er Det vi skal gjøre når det blir kjørt en setup kommando. resourceVersion får vi først etter at kommando er kjørt
-    så dette må gjøres etter at vi har installert objektene. Det er resourceVersion i DC vi hovedsakelig bryr oss om.
-    men hva med de tilfellene hvor vi ikke endrer dc men f.eks bare endrer en configMap? Da vil vi jo ikke ha resourceVersion på dc være endret.
-    må vi faktisk ha med en annotated tag for hver ressurstype vi endrer?
 
-    så f.eks hvis en boober setup endrer en configMap så må vi hente ned resourceVersion etterpå og tagge med namespace-name-resourcetype-resourceVersion?
-    Vi har jo sagt at dette apiet kun skal applye det som faktisk er endret. så hvis vi applyer en configmap og den ikke endret så får vi vel samme resourceVersion og da skal jo
-    ikke denne taggen flyttes?
-     */
      fun markRelease(git: Git, tag:String, tagBody:String) {
-
-        //createBranch(git, "$namespace-$name", commit)
 
         git.tag().setAnnotated(true).setName(tag).setMessage(tagBody).call()
     }
+
+    fun readTag(git:Git, oid:ObjectId): RevTag? {
+
+        val objectLoader = git.repository.open(oid)
+
+        val bytes = objectLoader.getCachedBytes(Int.MAX_VALUE)
+
+        return RevTag.parse(bytes)
+
+    }
+
+    fun tagHistory(git:Git): List<RevTag> {
+        val tags = git.tagList().call()
+        return tags.mapNotNull{ readTag(git, it.objectId)}
+    }
+
+    
 }
