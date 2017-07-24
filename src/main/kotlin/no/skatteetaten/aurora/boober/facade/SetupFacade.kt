@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.facade
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.internal.SetupParams
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
@@ -31,6 +32,7 @@ class SetupFacade(
         val gitService: GitService,
         val secretVaultService: SecretVaultService,
         val auroraConfigFacade: AuroraConfigFacade,
+        val mapper: ObjectMapper,
         @Value("\${openshift.cluster}") val cluster: String) {
 
     val logger: Logger = LoggerFactory.getLogger(SetupFacade::class.java)
@@ -42,10 +44,18 @@ class SetupFacade(
 
         val vaults = secretVaultService.getVaults(repo)
 
-        gitService.closeRepository(repo)
         val deployId = UUID.randomUUID().toString()
 
-        return performSetup(auroraConfig, setupParams.applicationIds, vaults, deployId)
+        val res = performSetup(auroraConfig, setupParams.applicationIds, vaults, deployId)
+
+        res.forEach{
+            gitService.markRelease(repo, it.tag, mapper.writeValueAsString(it))
+        }
+
+        gitService.push(repo)
+        gitService.closeRepository(repo)
+         return res
+
     }
 
     fun performSetup(auroraConfig: AuroraConfig, applicationIds: List<DeployCommand>, vaults: Map<String, AuroraSecretVault>, deployId: String): List<ApplicationResult> {
@@ -82,11 +92,11 @@ class SetupFacade(
         } ?: openShiftResponses
 
         return ApplicationResult(
-                applicationId = DeployCommand(ApplicationId(adc.envName, adc.name)),
+                deployCommand = DeployCommand(ApplicationId(adc.envName, adc.name)),
                 auroraDc = adc,
                 openShiftResponses = finalResponse,
-                deletedObjectUrls = deleteObjectUrls
-        )
+                deletedObjectUrls = deleteObjectUrls,
+                deployId = deployId)
     }
 
     fun generateRedeployResource(openShiftResponses: List<OpenShiftResponse>, type: TemplateType, name: String): JsonNode? {

@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraGitFile
+import no.skatteetaten.aurora.boober.service.internal.ApplicationResult
 import no.skatteetaten.aurora.boober.service.internal.GitException
 import no.skatteetaten.aurora.boober.utils.use
 import org.eclipse.jgit.api.CreateBranchCommand
@@ -170,7 +171,7 @@ class GitService(
                 .call()
     }
 
-    private fun push(git: Git) {
+    fun push(git: Git) {
 
         git.push()
                 .setCredentialsProvider(cp)
@@ -189,11 +190,10 @@ class GitService(
     Vi har jo sagt at dette apiet kun skal applye det som faktisk er endret. så hvis vi applyer en configmap og den ikke endret så får vi vel samme resourceVersion og da skal jo
     ikke denne taggen flyttes?
      */
-    private fun markRelease(git: Git, namespace: String, name: String, resourceVersion: Int, commit: RevCommit) {
+     fun markRelease(git: Git, tag:String, tagBody:String) {
 
-        createBranch(git, "$namespace-$name", commit)
+        //createBranch(git, "$namespace-$name", commit)
 
-        val tag = "$namespace-$name-$resourceVersion"
-        git.tag().setAnnotated(true).setName(tag).setMessage(tag).call()
+        git.tag().setAnnotated(true).setName(tag).setMessage(tagBody).call()
     }
 }
