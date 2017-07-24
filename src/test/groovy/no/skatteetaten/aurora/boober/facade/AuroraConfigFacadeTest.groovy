@@ -1,11 +1,13 @@
 package no.skatteetaten.aurora.boober.facade
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.*
+import no.skatteetaten.aurora.boober.service.internal.AuroraVersioningException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,6 +54,10 @@ class AuroraConfigFacadeTest extends Specification {
         }
     }
 
+
+    @Autowired
+    ObjectMapper mapper
+
     @Autowired
     AuroraConfigFacade service
 
@@ -77,11 +83,60 @@ class AuroraConfigFacadeTest extends Specification {
         return auroraConfig
     }
 
+
+
+    def "Should not update one file in AuroraConfig if version is wrong"() {
+        given:
+        def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
+        createRepoAndSaveFiles("aos", auroraConfig)
+
+
+        when:
+        def fileToChange = "secrettest/aos-simple.json"
+
+        def newFile = mapper.convertValue([], JsonNode.class)
+
+        service.updateAuroraConfigFile("aos", fileToChange, newFile, "wrong version", true)
+        then:
+
+        def e = thrown(AuroraVersioningException)
+        e.errors.size() ==1
+
+
+    }
+
+
+
+    def "Should update one file in AuroraConfig"() {
+        given:
+        def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
+        createRepoAndSaveFiles("aos", auroraConfig)
+
+        when:
+        def storedConfig = service.findAuroraConfig("aos")
+
+        def fileToChange = "secrettest/aos-simple.json"
+        def theFileToChange = storedConfig.auroraConfigFiles.find { it.name == fileToChange}
+
+        def newFile = mapper.convertValue([], JsonNode.class)
+
+        service.updateAuroraConfigFile("aos", fileToChange, newFile, theFileToChange.version, true)
+
+        def git = gitService.checkoutRepoForAffiliation("aos")
+        def gitLog = git.log().call().head()
+        gitService.closeRepository(git)
+
+        then:
+        gitLog.authorIdent.name == "Test Foo"
+        gitLog.fullMessage == "Added: 0, Modified: 1, Deleted: 0"
+    }
+
+
+
     def "Should successfully save AuroraConfig"() {
         given:
-        GitServiceHelperKt.createInitRepo("aos")
         def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
-        userDetailsProvider.authenticatedUser >> new User("foobar", "", "Foo Bar")
+        createRepoAndSaveFiles("aos", auroraConfig)
 
         when:
         service.saveAuroraConfig("aos", auroraConfig, false)
@@ -90,7 +145,6 @@ class AuroraConfigFacadeTest extends Specification {
         gitService.closeRepository(git)
 
         then:
-        gitLog.authorIdent.name == "Foo Bar"
         gitLog.fullMessage == "Added: 4, Modified: 0, Deleted: 0"
     }
 
