@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Service
 
-enum class OperationType { CREATE, UPDATE }
+enum class OperationType { CREATE, UPDATE, DELETE }
 
 data class OpenshiftCommand(
         val operationType: OperationType,
@@ -41,28 +41,27 @@ class OpenShiftClient(
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftClient::class.java)
 
+
+
+    fun performOpenShiftCommand(cmd: OpenshiftCommand, namespace: String): OpenShiftResponse {
+
+        val kind = cmd.payload["kind"].asText()
+        val name = cmd.payload["metadata"]["name"].asText()
+
+        val res = when(cmd.operationType) {
+            OperationType.CREATE -> resource.post(kind, name, namespace, cmd.payload)
+            OperationType.UPDATE -> resource.put(kind, name, namespace, cmd.payload)
+            OperationType.DELETE -> resource.delete(kind, name, namespace, cmd.payload)
+        }
+
+        return OpenShiftResponse(cmd, res.body)
+
+    }
+
     fun prepareCommands(namespace: String, openShiftObjects: List<JsonNode>): List<OpenshiftCommand> {
         return openShiftObjects.mapNotNull { prepare(namespace, it) }
     }
 
-
-    fun performOpenshiftCommand(cmd: OpenshiftCommand): OpenShiftResponse {
-
-        val kind = cmd.payload["kind"].asText()
-        val name = cmd.payload["metadata"]["name"].asText()
-        val namespace = cmd.payload["metadata"]["namespace"].asText()
-
-        val res = if (cmd.operationType == OperationType.UPDATE) {
-            resource.put(kind, name, namespace, cmd.payload)
-        } else {
-            resource.post(kind, name, namespace, cmd.payload)
-
-        }
-
-        //error handling here!
-        return OpenShiftResponse(cmd, res.body)
-
-    }
 
 
     fun prepare(namespace: String, json: JsonNode): OpenshiftCommand? {
@@ -165,8 +164,8 @@ class OpenShiftClient(
         return resource?.body?.get("users")?.any { it.textValue() == user } ?: false
     }
 
-    fun findOldObjectUrls(name: String, namespace: String, deployId: String,
-                          kinds: List<String> = listOf("deploymentconfigs", "configmaps", "secrets", "services", "routes", "imagestreams")): List<String> {
+    fun createOpenshiftDeleteCommands(name: String, namespace: String, deployId: String,
+                                      kinds: List<String> = listOf("deploymentconfigs", "configmaps", "secrets", "services", "routes", "imagestreams")): List<OpenshiftCommand> {
         val headers: HttpHeaders = resource.getAuthorizationHeaders()
 
 
@@ -174,8 +173,8 @@ class OpenShiftClient(
             val apiType = if (it in listOf("services", "configmaps", "secrets")) "api" else "oapi"
             val url = "$baseUrl/$apiType/v1/namespaces/$namespace/$it?labelSelector=app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
             resource.getExistingResource(headers, url)?.body?.get("items")?.toList() ?: emptyList()
-        }.map {
-            it["metadata"]["selfLink"].asText()
+        }.map{
+            OpenshiftCommand(OperationType.DELETE, it, payload = it)
         }
     }
 

@@ -96,7 +96,6 @@ class SetupFacadeTest extends Specification {
     openShiftClient.isValidUser(_) >> true
     openShiftClient.isValidGroup(_) >> true
     openShiftClient.prepareCommands(_, _) >> []
-    openShiftClient.findOldObjectUrls(_, _, deployId, _) >> []
 
   }
 
@@ -230,23 +229,4 @@ class SetupFacadeTest extends Specification {
       result.get(0).auroraDc.type == deploy
   }
 
-  @Ignore
-  def "Should delete old objects"() {
-    given:
-      def newDeployId = "456"
-      openShiftClient.findOldObjectUrls(_, _, newDeployId, _) >> ["/foo/bar"]
-
-      def consoleAid = new ApplicationId(ENV_NAME, "console")
-      def deployCommand = new DeployCommand(consoleAid)
-      def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-
-    when:
-      1 * openShiftClient.deleteObject('/foo/bar')
-
-      def result = setupFacade.createApplicationCommands(auroraConfig, [deployCommand], [:], newDeployId)
-
-    then:
-      result.size() == 1
-      result.get(0).auroraDc.type == deploy
-  }
 }

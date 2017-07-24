@@ -3,9 +3,7 @@ package no.skatteetaten.aurora.boober.facade
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.internal.SetupParams
-import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.model.TemplateType
@@ -19,7 +17,6 @@ import no.skatteetaten.aurora.boober.service.internal.ApplicationResult
 import no.skatteetaten.aurora.boober.service.internal.DeployHistory
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
-import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import org.eclipse.jgit.api.Git
 import org.slf4j.Logger
@@ -57,32 +54,29 @@ class SetupFacade(
 
     }
 
-     fun setupApplication(cmd: ApplicationCommand): ApplicationResult {
-        val responses = cmd.commands.map { openShiftClient.performOpenshiftCommand(it) }
+    fun setupApplication(cmd: ApplicationCommand): ApplicationResult {
+        val responses = cmd.commands.map { openShiftClient.performOpenShiftCommand(it, cmd.auroraDc.namespace) }
 
-        val deployResource: JsonNode? =
+        val deployCommand =
                 generateRedeployResource(responses, cmd.auroraDc.type, cmd.auroraDc.name)
+                        ?.let {
+                            openShiftClient.prepare(cmd.auroraDc.namespace, it)
+                        }?.let {
+                    openShiftClient.performOpenShiftCommand(it, cmd.auroraDc.namespace)
+                }
 
-        val deployCommand = deployResource?.let {
-            openShiftClient.prepare(cmd.auroraDc.namespace, deployResource)
-
-        }
-
-         //TODO: Refactor this into OpenshiftCommand and OpenshiftReponse
-        val deleteObjectUrls = openShiftClient.findOldObjectUrls(cmd.auroraDc.name, cmd.auroraDc.namespace, cmd.deployId)
-
-        deleteObjectUrls.forEach {
-            openShiftClient.deleteObject(it)
-        }
+        val deleteObjects = openShiftClient.createOpenshiftDeleteCommands(cmd.auroraDc.name, cmd.auroraDc.namespace, cmd.deployId)
+                .map { openShiftClient.performOpenShiftCommand(it, cmd.auroraDc.namespace) }
 
 
-        return if (deployCommand == null) {
-            ApplicationResult(cmd, responses, deleteObjectUrls)
-        } else {
-            val deployResponse = openShiftClient.performOpenshiftCommand(deployCommand)
-            ApplicationResult(cmd.copy(commands = cmd.commands + deployCommand), responses + deployResponse, deleteObjectUrls)
+        val responseWithDelete = responses + deleteObjects
 
-        }
+        val finalResponses = deployCommand?.let {
+            responseWithDelete + it
+        } ?: responseWithDelete
+
+        return ApplicationResult(cmd.deployId, cmd.auroraDc, finalResponses)
+
     }
 
 
@@ -135,8 +129,8 @@ class SetupFacade(
 
     fun generateRedeployResource(openShiftResponses: List<OpenShiftResponse>, type: TemplateType, name: String): JsonNode? {
 
-        val imageStream = openShiftResponses.find { it.responseBody["kind"].asText() == "imagestream" }
-        val deployment = openShiftResponses.find { it.responseBody["kind"].asText() == "deploymentconfig" }
+        val imageStream = openShiftResponses.find { it.responseBody["kind"].asText().toLowerCase() == "imagestream" }
+        val deployment = openShiftResponses.find { it.responseBody["kind"].asText().toLowerCase() == "deploymentconfig" }
 
         val deployResource: JsonNode? =
                 if (type == development) {

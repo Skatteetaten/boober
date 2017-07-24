@@ -15,11 +15,10 @@ data class ApplicationCommand(
         val commands: List<OpenshiftCommand>)
 
 data class ApplicationResult @JvmOverloads constructor(
-        val command: ApplicationCommand,
-        val openShiftResponses: List<OpenShiftResponse> = listOf(),
-        val deletedObjectUrls: List<String> = listOf()
-) {
-    val tag: String = "${command.auroraDc.namespace}.${command.auroraDc.name}/${command.deployId}"
+        val deployId: String,
+        val auroraDc: AuroraDeploymentConfig,
+        val openShiftResponses: List<OpenShiftResponse> = listOf()) {
+    val tag: String = "${auroraDc.namespace}.${auroraDc.name}/${deployId}"
 }
 
 fun <T : Any> List<Result<T?, Error?>>.orElseThrow(block: (List<Error>) -> Exception): List<T> {

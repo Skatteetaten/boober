@@ -55,6 +55,13 @@ class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: String,
         return exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.POST, URI(urls.create)))
     }
 
+    fun delete(kind: String, name: String? = null, namespace: String, payload: JsonNode): ResponseEntity<JsonNode> {
+
+        val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, name, namespace)
+        val headers: HttpHeaders = getAuthorizationHeaders()
+        return exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.DELETE, URI(urls.get)))
+    }
+
     fun delete(headers: HttpHeaders, url: String): ResponseEntity<JsonNode>? {
         val requestEntity = RequestEntity<Any>(headers, HttpMethod.DELETE, URI(url))
         return restTemplate.exchange(requestEntity, JsonNode::class.java)

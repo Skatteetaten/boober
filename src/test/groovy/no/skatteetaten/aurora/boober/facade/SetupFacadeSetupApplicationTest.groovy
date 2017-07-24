@@ -1,27 +1,25 @@
 package no.skatteetaten.aurora.boober.facade
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.internal.SetupParams
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
-import no.skatteetaten.aurora.boober.service.AuroraConfigService
-import no.skatteetaten.aurora.boober.service.EncryptionService
-import no.skatteetaten.aurora.boober.service.GitService
-import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
-import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
-import no.skatteetaten.aurora.boober.service.OpenShiftTemplateProcessor
-import no.skatteetaten.aurora.boober.service.SecretVaultService
+import no.skatteetaten.aurora.boober.service.*
+import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
-
 
 @SpringBootTest(classes = [
         no.skatteetaten.aurora.boober.Configuration,
@@ -32,6 +30,7 @@ import spock.mock.DetachedMockFactory
         GitService,
         SecretVaultService,
         EncryptionService,
+        OpenShiftClient,
         AuroraConfigFacade,
         Config
 ]
@@ -41,7 +40,7 @@ import spock.mock.DetachedMockFactory
                 "boober.git.username=",
                 "boober.git.password="
         ])
-class SetupFacadeFromGitTest extends Specification {
+class SetupFacadeSetupApplicationTest extends Specification {
 
     @Configuration
     static class Config {
@@ -54,19 +53,13 @@ class SetupFacadeFromGitTest extends Specification {
         }
 
         @Bean
-        OpenShiftClient openshiftClient() {
-            factory.Mock(OpenShiftClient)
-        }
-
-        @Bean
         OpenShiftResourceClient resourceClient() {
             factory.Mock(OpenShiftResourceClient)
         }
     }
 
     @Autowired
-    OpenShiftClient openShiftClient
-
+    OpenShiftResourceClient resourceClient
 
     @Autowired
     UserDetailsProvider userDetailsProvider
@@ -75,10 +68,10 @@ class SetupFacadeFromGitTest extends Specification {
     SetupFacade setupFacade
 
     @Autowired
-    GitService gitService
+    AuroraConfigFacade configFacade
 
     @Autowired
-    AuroraConfigFacade configFacade
+    ObjectMapper mapper
 
 
     public static final String ENV_NAME = "booberdev"
@@ -87,12 +80,44 @@ class SetupFacadeFromGitTest extends Specification {
 
     final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
+    def okJson(def obj) {
+        return new ResponseEntity<JsonNode>(mapper.convertValue(obj, JsonNode.class), HttpStatus.OK)
+    }
+
     def setup() {
         userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
-        openShiftClient.isValidUser(_) >> true
-        openShiftClient.isValidGroup(_) >> true
-        openShiftClient.prepareCommands(_, _) >> []
-        openShiftClient.createOpenshiftDeleteCommands(_, _, _, _) >> []
+
+        //test is a valid user
+        resourceClient.getExistingResource(_, _) >> { args ->
+            def url = args[1]
+            if (url.contains("labelSelector")) {
+                if (url.contains("deploymentconfigs")) {
+                    okJson([items: [["kind": "DeploymentConfig", "metadata": ["name": "Foo"]]]])
+                } else {
+                    okJson([items: []])
+                }
+            } else {
+                new ResponseEntity<JsonNode>(mapper.convertValue(["kind": "Users", "users": ["test"]], JsonNode.class), HttpStatus.OK)
+            }
+        }
+
+        //we have a image stream that gets a new version. It is changed.
+        resourceClient.get(_, _, _) >> { args ->
+
+            def kind = args[0]
+            if (kind == "imagestream") {
+                okJson([metadata: [resourceVersion: "123"]])
+            } else {
+                null
+            }
+        }
+        resourceClient.put(_, _, _, _) >> { okJson([kind: "ImageStream", metadata: [resourceVersion: "1235"]]) }
+
+
+        resourceClient.post(_, _, _, _) >> { new ResponseEntity<JsonNode>(it[3], HttpStatus.OK) }
+
+
+        resourceClient.delete(_, _, _, _) >> { new ResponseEntity<JsonNode>(it[3], HttpStatus.OK) }
 
     }
 
@@ -101,7 +126,7 @@ class SetupFacadeFromGitTest extends Specification {
         configFacade.saveAuroraConfig(affiliation, auroraConfig, false)
     }
 
-    def "Should perform release and mark it"() {
+    def "Should setup application with config change, delete old object and do manual redeploy"() {
         given:
         GitServiceHelperKt.createInitRepo(affiliation)
         def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, "aos")
@@ -109,50 +134,21 @@ class SetupFacadeFromGitTest extends Specification {
 
         when:
 
-        setupFacade.executeSetup(affiliation, new SetupParams([ENV_NAME], [APP_NAME], []))
+        def res = setupFacade.executeSetup(affiliation, new SetupParams([ENV_NAME], [APP_NAME], []))
 
         then:
-        def git = gitService.checkoutRepoForAffiliation(affiliation)
+        def responses = res[0].openShiftResponses
+        def typeCounts = responses.countBy { it.command.operationType }
+        def kinds = responses.collect{ it.command.payload.get("kind").asText()} toSet()
+        
+        typeCounts[OperationType.CREATE] == 8
+        typeCounts[OperationType.DELETE] == 1
+        typeCounts[OperationType.UPDATE] == 1
 
-        def history = gitService.tagHistory(git)
-        history.size() == 1
-        def revTag = history[0]
+        kinds == [ 'ConfigMap', 'ProjectRequest', 'Service', 'ImageStream', 'BuildConfig', 'RoleBinding', 'DeploymentConfig', 'BuildRequest', 'Route']                    as Set
 
-        revTag.taggerIdent != null
-        revTag.fullMessage.startsWith("""{"deployId":""")
-        revTag.tagName.startsWith("DEPLOY/aos-booberdev.aos-simple/")
-        gitService.closeRepository(git)
 
 
     }
-
-    def "Should perform two releases and get deploy history"() {
-        given:
-        GitServiceHelperKt.createInitRepo(affiliation)
-        def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, affiliation)
-        def aid2 = new ApplicationId(ENV_NAME, "sprocket")
-        def auroraConfig2 = AuroraConfigHelperKt.createAuroraConfig(aid2, affiliation)
-        def mergedConfig = auroraConfig.copy(auroraConfig.auroraConfigFiles + auroraConfig2.auroraConfigFiles, affiliation)
-        createRepoAndSaveFiles(affiliation, mergedConfig)
-
-        when:
-        setupFacade.executeSetup(affiliation, new SetupParams([ENV_NAME], [APP_NAME, "sprocket"], []))
-
-        then:
-        def tags = setupFacade.deployHistory(affiliation)
-        tags.size() == 2
-        def revTag = tags[0]
-
-        revTag.ident != null
-        revTag.result.get("deployId") != null
-
-
-        def revTag2 = tags[1]
-
-        revTag2.ident != null
-        revTag2.result.get("deployId") != null
-
-    }
-
 
 }
