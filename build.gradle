@@ -4,9 +4,15 @@ buildscript {
   ext.auroraStartersVersion = '1.1.0'
 
   repositories {
-    mavenCentral()
-    jcenter()
-    mavenLocal()
+      maven {
+        url "http://repo1.maven.org/maven2"
+      }
+
+      maven {
+          url "http://jcenter.bintray.com/"
+      }
+
+      mavenLocal()
   }
 
   dependencies {
@@ -21,8 +27,15 @@ buildscript {
 }
 
 repositories {
-  mavenCentral()
-  mavenLocal()
+    maven {
+        url "http://repo1.maven.org/maven2"
+    }
+
+    mavenLocal()
+
+    maven {
+        url "http://jcenter.bintray.com/"
+    }
 }
 
 
