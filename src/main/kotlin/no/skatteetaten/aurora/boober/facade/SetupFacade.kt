@@ -79,7 +79,7 @@ class SetupFacade(
     }
 
 
-    fun getDeployCommands(affiliation: String, setupParams: SetupParams, git: Git? = null): List<ApplicationCommand> {
+    fun getDeployCommands(affiliation: String, setupParams: SetupParams, git: Git? = null): LinkedList<ApplicationCommand> {
 
         //TODO: If you try to create commands with a vault you cannot access throw error
 
@@ -104,16 +104,16 @@ class SetupFacade(
 
     }
 
-    fun createApplicationCommands(auroraConfig: AuroraConfig, appIds: List<DeployCommand>, vaults: Map<String, AuroraSecretVault>, deployId: String): List<ApplicationCommand> {
+    fun createApplicationCommands(auroraConfig: AuroraConfig, appIds: List<DeployCommand>, vaults: Map<String, AuroraSecretVault>, deployId: String): LinkedList<ApplicationCommand> {
         val auroraDcs = auroraConfigService.createAuroraDcs(auroraConfig, appIds, vaults)
 
-        val res = auroraDcs
+        val res = LinkedList(auroraDcs
                 .filter { it.cluster == cluster }
                 .map { adc ->
                     val openShiftObjects = openShiftObjectGenerator.generateObjects(adc, deployId)
                     val openShiftCommand = openShiftObjects.mapNotNull { openShiftClient.prepare(adc.namespace, it) }
                     ApplicationCommand(deployId, adc, openShiftCommand)
-                }
+                })
         return res
     }
 

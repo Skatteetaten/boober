@@ -148,15 +148,16 @@ class SetupFacadeSetupApplicationTest extends Specification {
     then:
       def responses = res[0].openShiftResponses
       def typeCounts = responses.countBy { it.command.operationType }
-      def kinds = responses.collect { it.command.payload.get("kind").asText() } toSet()
+      def kinds = responses.collect { it.command.payload.get("kind").asText() }
 
       typeCounts[OperationType.CREATE] == 8
       typeCounts[OperationType.DELETE] == 1
       typeCounts[OperationType.UPDATE] == 1
 
       kinds ==
-          ['ConfigMap', 'ProjectRequest', 'Service', 'ImageStream', 'BuildConfig', 'RoleBinding', 'DeploymentConfig', 'BuildRequest', 'Route'] as Set
+          ['ProjectRequest', 'RoleBinding', 'DeploymentConfig', 'Service', 'ConfigMap', 'Route', 'BuildConfig', 'ImageStream', 'DeploymentConfig', 'BuildRequest',]
 
+      //the last DC here is the delete request
   }
 
 }
