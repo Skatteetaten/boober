@@ -5,7 +5,8 @@
     "name": "sprocket-config",
     "labels": {
       "app": "sprocket",
-      "affiliation": "aos"
+      "affiliation": "aos",
+      "booberDeployId": "123"
     }
   },
   "data": {

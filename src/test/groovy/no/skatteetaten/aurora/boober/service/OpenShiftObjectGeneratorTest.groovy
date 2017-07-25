@@ -16,6 +16,7 @@ import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
@@ -79,10 +80,15 @@ class OpenShiftObjectGeneratorTest extends Specification {
     openShiftClient.isValidUser(_) >> true
   }
 
+  def deployId = "123"
+
   @Unroll
   def "should create openshift objects for #env/#name"() {
 
     given:
+      def vaults = ["foo": new AuroraSecretVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null,
+          ["foo": null])]
+
       ApplicationId aid = new ApplicationId(env, name)
       DeployCommand deployCommand = new DeployCommand(aid)
       Map<String, JsonNode> files = AuroraConfigHelperKt.getSampleFiles(aid, templateFile)
@@ -98,10 +104,10 @@ class OpenShiftObjectGeneratorTest extends Specification {
 
     expect:
 
-      def auroraConfig = new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false, null) }, secret)
-      def auroraDc = auroraDeploymentConfigService.createAuroraDeploymentConfigs(deployCommand, auroraConfig)
+      def auroraConfig = new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false, null) }, "aos")
+      def auroraDc = auroraDeploymentConfigService.createAuroraDeploymentConfigs(deployCommand, auroraConfig, vaults)
 
-      List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc)
+      List<JsonNode> generatedObjects = openShiftService.generateObjects(auroraDc, deployId)
 
       def resultFiles = AuroraConfigHelperKt.getResultFiles(aid)
 
@@ -118,12 +124,12 @@ class OpenShiftObjectGeneratorTest extends Specification {
     when:
 
     where:
-      env          | name               | secret                                                     | templateFile
-      "booberdev"  | "console"          | [:]                                                        | null
-      "booberdev"  | "aos-simple" | [:]                                                        | null
-      "booberdev"  | "tvinn"            | [:]                                                        | "atomhopper.json"
-      "secrettest" | "aos-simple" | ["/tmp/foo/latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="] | null
-      "booberdev"  | "sprocket"         | [:]                                                        | null
+      env          | name         | templateFile
+      "booberdev"  | "console"    | null
+      "booberdev"  | "aos-simple" | null
+      "booberdev"  | "tvinn"      | "atomhopper.json"
+      "secrettest" | "aos-simple" | null
+      "booberdev"  | "sprocket"   | null
 
   }
 

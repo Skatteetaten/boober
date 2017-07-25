@@ -30,6 +30,9 @@ logging:
 ---
 profiles: local
 
+openshift:
+    cluster: qa
+    
 boober:
   encrypt:
     key: "komogsyngensang"

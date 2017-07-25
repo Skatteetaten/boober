@@ -11,7 +11,8 @@
     "labels": {
       "app": "aos-simple",
       "updatedBy": "hero",
-      "affiliation": "aos"
+      "affiliation": "aos",
+      "booberDeployId": "123"
     }
   },
   "spec": {

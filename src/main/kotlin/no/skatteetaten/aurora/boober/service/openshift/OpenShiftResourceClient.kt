@@ -6,7 +6,12 @@ import no.skatteetaten.aurora.boober.service.internal.OpenShiftException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.*
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpMethod
+import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
+import org.springframework.http.RequestEntity
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate
@@ -18,6 +23,7 @@ class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: String,
                               val restTemplate: RestTemplate) {
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftResourceClient::class.java)
+
 
     fun put(kind: String, name: String, namespace: String, payload: JsonNode): ResponseEntity<JsonNode> {
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, name, namespace)
@@ -47,6 +53,18 @@ class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: String,
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, name, namespace)
         val headers: HttpHeaders = getAuthorizationHeaders()
         return exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.POST, URI(urls.create)))
+    }
+
+    fun delete(kind: String, name: String? = null, namespace: String, payload: JsonNode): ResponseEntity<JsonNode> {
+
+        val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, name, namespace)
+        val headers: HttpHeaders = getAuthorizationHeaders()
+        return exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.DELETE, URI(urls.get)))
+    }
+
+    fun delete(headers: HttpHeaders, url: String): ResponseEntity<JsonNode>? {
+        val requestEntity = RequestEntity<Any>(headers, HttpMethod.DELETE, URI(url))
+        return restTemplate.exchange(requestEntity, JsonNode::class.java)
     }
 
     fun getExistingResource(headers: HttpHeaders, url: String): ResponseEntity<JsonNode>? {

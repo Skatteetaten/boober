@@ -1,162 +1,178 @@
 package no.skatteetaten.aurora.boober.facade
 
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
-import no.skatteetaten.aurora.boober.service.AuroraConfigService
-import no.skatteetaten.aurora.boober.service.EncryptionService
-import no.skatteetaten.aurora.boober.service.GitService
-import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
+import no.skatteetaten.aurora.boober.service.*
+import no.skatteetaten.aurora.boober.service.internal.AuroraVersioningException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [
-    no.skatteetaten.aurora.boober.Configuration,
-    AuroraConfigFacade,
-    GitService,
-    OpenShiftClient,
-    EncryptionService,
-    OpenShiftResourceClient,
-    Config
+        no.skatteetaten.aurora.boober.Configuration,
+        AuroraConfigFacade,
+        GitService,
+        OpenShiftClient,
+        EncryptionService,
+        OpenShiftResourceClient,
+        SecretVaultService,
+        ObjectMapper,
+        Config
 ], properties = [
-    "boober.git.urlPattern=/tmp/boober-test/%s",
-    "boober.git.checkoutPath=/tmp/boober",
-    "boober.git.username=",
-    "boober.git.password="
+        "boober.git.urlPattern=/tmp/boober-test/%s",
+        "boober.git.checkoutPath=/tmp/boober",
+        "boober.git.username=",
+        "boober.git.password="
 ])
 class AuroraConfigFacadeTest extends Specification {
 
-  public static final String ENV_NAME = "secrettest"
-  public static final String APP_NAME = "aos-simple"
-  final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
+    public static final String ENV_NAME = "secrettest"
+    public static final String APP_NAME = "aos-simple"
+    final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
-  @Configuration
-  static class Config {
-    private DetachedMockFactory factory = new DetachedMockFactory()
+    @Configuration
+    static class Config {
+        private DetachedMockFactory factory = new DetachedMockFactory()
 
-    @Bean
-    AuroraConfigService auroraDeploymentConfigService() {
-      factory.Mock(AuroraConfigService)
+        @Bean
+        AuroraConfigService auroraDeploymentConfigService() {
+            factory.Mock(AuroraConfigService)
+        }
+
+        @Bean
+        UserDetailsProvider userDetailsProvider() {
+            factory.Mock(UserDetailsProvider)
+        }
     }
 
-    @Bean
-    UserDetailsProvider userDetailsProvider() {
-      factory.Mock(UserDetailsProvider)
+
+    @Autowired
+    ObjectMapper mapper
+
+    @Autowired
+    AuroraConfigFacade service
+
+    @Autowired
+    UserDetailsProvider userDetailsProvider
+
+    @Autowired
+    GitService gitService
+
+    private void createRepoAndSaveFiles(String affiliation, AuroraConfig auroraConfig) {
+        GitServiceHelperKt.createInitRepo(affiliation)
+        userDetailsProvider.authenticatedUser >> new User("test", "", "Test Foo")
+        service.saveAuroraConfig(affiliation, auroraConfig, false)
     }
-  }
 
-  @Autowired
-  AuroraConfigFacade service
+    private AuroraConfig getAuroraConfigFromGit(String affiliation, boolean decryptSecrets) {
 
-  @Autowired
-  UserDetailsProvider userDetailsProvider
+        def git = gitService.checkoutRepoForAffiliation(affiliation)
+        def files = gitService.getAllFilesInRepo(git)
+        def auroraConfig = service.createAuroraConfigFromFiles(files, "aos")
+        gitService.closeRepository(git)
 
-  @Autowired
-  GitService gitService
+        return auroraConfig
+    }
 
-  private void createRepoAndSaveFiles(String affiliation, AuroraConfig auroraConfig) {
-    GitServiceHelperKt.createInitRepo(affiliation)
-    userDetailsProvider.authenticatedUser >> new User("test", "", "Test Foo")
-    service.saveAuroraConfig(affiliation, auroraConfig)
-  }
 
-  private AuroraConfig getAuroraConfigFromGit(String affiliation, boolean decryptSecrets) {
 
-    def git = gitService.checkoutRepoForAffiliation(affiliation)
-    def files = gitService.getAllFilesInRepo(git)
-    def auroraConfig = service.createAuroraConfigFromFiles(files, decryptSecrets)
-    gitService.closeRepository(git)
+    def "Should not update one file in AuroraConfig if version is wrong"() {
+        given:
+        def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
+        createRepoAndSaveFiles("aos", auroraConfig)
 
-    return auroraConfig
-  }
 
-  def "Should not encrypt unchanged secrets"() {
-    given:
-      def affiliation = "aos"
-      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, ["/tmp/foo/latest.properties": "FOO=BAR"])
-      createRepoAndSaveFiles(affiliation, auroraConfig)
-      def gitAuroraConfig = getAuroraConfigFromGit(affiliation, false)
+        when:
+        def fileToChange = "secrettest/aos-simple.json"
 
-    when:
+        def newFile = mapper.convertValue([], JsonNode.class)
 
-      def newAuroraConfig = new AuroraConfig(gitAuroraConfig.auroraConfigFiles, auroraConfig.secrets)
-      service.saveAuroraConfig(affiliation, newAuroraConfig)
-      def updatedAuroraConfig = getAuroraConfigFromGit(affiliation, false)
+        service.updateAuroraConfigFile("aos", fileToChange, newFile, "wrong version", true)
+        then:
 
-    then:
-      def secretFile = ".config/foo/latest.properties"
-      gitAuroraConfig.secrets.get(secretFile) == updatedAuroraConfig.secrets.get(secretFile)
-  }
+        def e = thrown(AuroraVersioningException)
+        e.errors.size() ==1
 
-  def "Should remove secrets"() {
-    given:
-      def affiliation = "aos"
-      def secrets = [
-          "/tmp/foo/latest.properties": "FOO=BAR",
-          "/tmp/foo/token"            : "test",
-      ]
-      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, secrets)
-      createRepoAndSaveFiles(affiliation, auroraConfig)
 
-    when:
-      service.deleteSecrets(affiliation, [".secret/foo/latest.properties"])
-      def updatedAuroraConfig = getAuroraConfigFromGit(affiliation, true)
+    }
 
-    then:
-      updatedAuroraConfig.secrets.keySet() == new HashSet([".secret/foo/token"])
-  }
 
-  def "Should successfully save AuroraConfig and secrets to git"() {
-    given:
-      GitServiceHelperKt.createInitRepo("aos")
-      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, ["/tmp/foo/latest.properties": "FOO=BAR"])
-      userDetailsProvider.authenticatedUser >> new User("foobar", "", "Foo Bar")
 
-    when:
-      service.saveAuroraConfig("aos", auroraConfig)
-      def git = gitService.checkoutRepoForAffiliation("aos")
-      def gitLog = git.log().call().head()
-      gitService.closeRepository(git)
+    def "Should update one file in AuroraConfig"() {
+        given:
+        def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
+        createRepoAndSaveFiles("aos", auroraConfig)
 
-    then:
-      gitLog.authorIdent.name == "Foo Bar"
-      gitLog.fullMessage == "Added: 5, Modified: 0, Deleted: 0"
-  }
+        when:
+        def storedConfig = service.findAuroraConfig("aos")
 
-  def "Should patch AuroraConfigFile and push changes to git"() {
-    given:
-      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, ["/tmp/foo/latest.properties": "FOO=BAR"])
-      createRepoAndSaveFiles("aos", auroraConfig)
-      def gitAuroraConfig = getAuroraConfigFromGit("aos", false)
+        def fileToChange = "secrettest/aos-simple.json"
+        def theFileToChange = storedConfig.auroraConfigFiles.find { it.name == fileToChange}
 
-      def jsonOp = """[{
+        def newFile = mapper.convertValue([], JsonNode.class)
+
+        service.updateAuroraConfigFile("aos", fileToChange, newFile, theFileToChange.version, true)
+
+        def git = gitService.checkoutRepoForAffiliation("aos")
+        def gitLog = git.log().call().head()
+        gitService.closeRepository(git)
+
+        then:
+        gitLog.authorIdent.name == "Test Foo"
+        gitLog.fullMessage == "Added: 0, Modified: 1, Deleted: 0"
+    }
+
+
+
+    def "Should successfully save AuroraConfig"() {
+        given:
+        def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
+        createRepoAndSaveFiles("aos", auroraConfig)
+
+        when:
+        service.saveAuroraConfig("aos", auroraConfig, false)
+        def git = gitService.checkoutRepoForAffiliation("aos")
+        def gitLog = git.log().call().head()
+        gitService.closeRepository(git)
+
+        then:
+        gitLog.fullMessage == "Added: 4, Modified: 0, Deleted: 0"
+    }
+
+    def "Should patch AuroraConfigFile and push changes to git"() {
+        given:
+        def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, "aos")
+        createRepoAndSaveFiles("aos", auroraConfig)
+        def gitAuroraConfig = getAuroraConfigFromGit("aos", false)
+
+        def jsonOp = """[{
   "op": "replace",
   "path": "/version",
   "value": "3"
 }]
 """
 
-    when:
-      def filename = "${aid.environment}/${aid.application}.json"
+        when:
+        def filename = "${aid.environment}/${aid.application}.json"
 
-      def version = gitAuroraConfig.auroraConfigFiles.find { it.name == filename }.version
-      def patchedAuroraConfig = service.patchAuroraConfigFile("aos", filename, jsonOp, version)
-      def git = gitService.checkoutRepoForAffiliation("aos")
-      def gitLog = git.log().call().head()
-      gitService.closeRepository(git)
+        def version = gitAuroraConfig.auroraConfigFiles.find { it.name == filename }.version
+        def patchedAuroraConfig = service.patchAuroraConfigFile("aos", filename, jsonOp, version, false)
+        def git = gitService.checkoutRepoForAffiliation("aos")
+        def gitLog = git.log().call().head()
+        gitService.closeRepository(git)
 
-    then:
-      gitLog.fullMessage == "Added: 0, Modified: 1, Deleted: 0"
-      def patchedFile = patchedAuroraConfig.auroraConfigFiles.find { it.name == filename }
-      patchedFile.contents.at("/version").textValue() == "3"
-  }
+        then:
+        gitLog.fullMessage == "Added: 0, Modified: 1, Deleted: 0"
+        def patchedFile = patchedAuroraConfig.auroraConfigFiles.find { it.name == filename }
+        patchedFile.contents.at("/version").textValue() == "3"
+    }
 }

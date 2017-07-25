@@ -2,7 +2,7 @@ package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
 
-data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val secrets: Map<String, String> = mapOf()) {
+data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affiliation: String) {
 
     fun getVersions() = auroraConfigFiles.associate { it.name to it.version }
 
@@ -16,11 +16,6 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val secre
                 .map { val (environment, application) = it.split("/"); ApplicationId(environment, application) }
     }
 
-    fun getSecrets(secretFolder: String): Map<String, String> {
-
-        val prefix = if (secretFolder.endsWith("/")) secretFolder else "$secretFolder/"
-        return secrets.filter { it.key.startsWith(prefix) }.mapKeys { it.key.removePrefix(prefix) }
-    }
 
     fun getFilesForApplication(deployCommand: DeployCommand): List<AuroraConfigFile> {
 
