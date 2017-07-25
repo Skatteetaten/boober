@@ -37,6 +37,7 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient) {
         })
     }
 
+
     fun createAuroraDcs(auroraConfig: AuroraConfig, deployCommands: List<DeployCommand>, vaults: Map<String, AuroraSecretVault>): List<AuroraDeploymentConfig> {
 
         return processDeployCommands(deployCommands, { createAuroraDeploymentConfigs(it, auroraConfig, vaults) })

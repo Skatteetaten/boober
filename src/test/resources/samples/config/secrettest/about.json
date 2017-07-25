@@ -1,4 +1,5 @@
 {
+  "schemaVersion": "v1",
   "type": "development",
   "cluster": "utv",
   "permissions": {
