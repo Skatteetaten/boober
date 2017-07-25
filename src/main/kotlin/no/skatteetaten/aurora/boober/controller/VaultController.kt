@@ -27,30 +27,28 @@ class VaultController(val facade: VaultFacade) {
     @PutMapping()
     fun save(@PathVariable affiliation: String,
              @RequestBody vault: AuroraSecretVault,
-             @RequestHeader(value = "AuroraValidateVersions", required = false) validateVersions: Boolean = true
-    ): Response {
-
-
+             @RequestHeader(value = "AuroraValidateVersions", required = false) validateVersions: Boolean = true): Response {
         return Response(items = listOf(facade.save(affiliation, vault, validateVersions)))
     }
 
     @GetMapping("/{vault}")
-    fun get(@PathVariable affiliation: String,
-            @PathVariable vault: String
-    ): Response {
+    fun get(@PathVariable affiliation: String, @PathVariable vault: String): Response {
         return Response(items = listOf(facade.find(affiliation, vault)))
     }
 
-    @PutMapping("/{vault}/**")
+    @PutMapping("/{vault}/secret/**")
     fun update(@PathVariable affiliation: String,
                @PathVariable vault: String,
                request: HttpServletRequest,
                @RequestBody fileContents: String,
-               @RequestHeader(value = "AuroraConfigFileVersion") fileVersion: String,
-               @RequestHeader(value = "AuroraValidateVersions", required = false) validateVersions: Boolean = true
-    ): Response {
+               @RequestHeader(value = "AuroraConfigFileVersion", required = false) fileVersion: String = "",
+               @RequestHeader(value = "AuroraValidateVersions", required = false) validateVersions: Boolean = true): Response {
 
-        val path = "affiliation/$affiliation/vault/$vault/**"
+        if(validateVersions && fileVersion.isEmpty()) {
+            throw IllegalAccessException("Must specify AuroraConfigFileVersion header");
+        }
+
+        val path = "affiliation/$affiliation/vault/$vault/secret/**"
         val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
 
         val vault = facade.updateSecretFile(affiliation, vault, fileName, fileContents, fileVersion, validateVersions)

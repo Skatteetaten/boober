@@ -65,7 +65,7 @@ class VaultFacade(
 
         return withAuroraVault(affiliation, vault, validateVersions, function = {
             val newVersions = it.versions + (fileName to fileVersion)
-            val newSecrets = it.secrets + (fileName to encryptionService.encrypt(fileContents))
+            val newSecrets = it.secrets + (fileName to fileContents)
             it.copy(versions = newVersions, secrets = newSecrets)
         })
 
