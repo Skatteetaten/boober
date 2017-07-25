@@ -50,7 +50,7 @@ class VaultController(val facade: VaultFacade) {
                @RequestHeader(value = "AuroraValidateVersions", required = false) validateVersions: Boolean = true
     ): Response {
 
-        val path = "affiliation/$affiliation/secrets/$vault/**"
+        val path = "affiliation/$affiliation/vault/$vault/**"
         val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
 
         val vault = facade.updateSecretFile(affiliation, vault, fileName, fileContents, fileVersion, validateVersions)
