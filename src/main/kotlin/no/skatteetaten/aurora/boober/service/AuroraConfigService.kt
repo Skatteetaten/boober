@@ -72,6 +72,7 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient) {
 
     fun createMapper(deployCommand: DeployCommand, auroraConfig: AuroraConfig, vaults: Map<String, AuroraSecretVault>): AuroraConfigMapper {
 
+
         val fields = AuroraConfigFields.create(baseHandlers, auroraConfig.getFilesForApplication(deployCommand))
 
         val type = fields.extract("type", { TemplateType.valueOf(it.textValue()) })

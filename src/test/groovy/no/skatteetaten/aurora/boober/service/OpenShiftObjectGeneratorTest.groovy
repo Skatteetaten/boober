@@ -91,9 +91,12 @@ class OpenShiftObjectGeneratorTest extends Specification {
 
       ApplicationId aid = new ApplicationId(env, name)
       DeployCommand deployCommand = new DeployCommand(aid)
-      Map<String, JsonNode> files = AuroraConfigHelperKt.getSampleFiles(aid, templateFile)
+
+      Map<String, JsonNode> files = AuroraConfigHelperKt.getSampleFiles(aid)
 
       if (templateFile != null) {
+        files = AuroraConfigHelperKt.getSampleFiles(aid, "templates/$templateFile")
+
         def templateFileName = "/samples/processedtemplate/${aid.environment}/${aid.application}/$templateFile"
         def templateResult = this.getClass().getResource(templateFileName)
         JsonNode jsonResult = mapper.readTree(templateResult)
