@@ -13,6 +13,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.StringWriter
+import java.util.*
 
 @Service
 class OpenShiftObjectGenerator(
@@ -35,7 +36,7 @@ class OpenShiftObjectGenerator(
 
     }
 
-    fun generateObjects(auroraDc: AuroraDeploymentConfig): List<JsonNode> {
+    fun generateObjects(auroraDc: AuroraDeploymentConfig, deployId: String): LinkedList<JsonNode> {
 
         val configs: Map<String, String> = auroraDc.config?.map { (key, value) ->
             key to value.map { "${it.key}=${it.value}" }.joinToString(separator = "\\n")
@@ -49,6 +50,7 @@ class OpenShiftObjectGenerator(
         logger.debug("Database is $database")
 
         val params = mapOf(
+                "deployId" to deployId,
                 "adc" to (auroraDc as? AuroraDeploymentConfigDeploy ?: auroraDc as AuroraDeploymentConfigProcess),
                 "configs" to configs,
                 "username" to userDetailsProvider.getAuthenticatedUser().username,
@@ -60,9 +62,9 @@ class OpenShiftObjectGenerator(
                 "certPath" to "/u01/secrets/app/${auroraDc.name}-cert"
         )
 
-        val templatesToProcess = mutableListOf(
+        val templatesToProcess = LinkedList(mutableListOf(
                 "project.json",
-                "admin-rolebinding.json")
+                "admin-rolebinding.json"))
 
         if (auroraDc.permissions.view != null) {
             templatesToProcess.add("view-rolebinding.json")
@@ -95,19 +97,19 @@ class OpenShiftObjectGenerator(
             templatesToProcess.add("imagestream.json")
         }
 
-        var openShiftObjects = templatesToProcess.map { mergeVelocityTemplate(it, params) }
+        var openShiftObjects = LinkedList(templatesToProcess.map { mergeVelocityTemplate(it, params) })
 
         auroraDc.mounts?.filter { !it.exist }?.map {
             logger.debug("Create manual mount {}", it)
-            val mountParams = mapOf("adc" to auroraDc, "mount" to it)
+            val mountParams = mapOf("adc" to auroraDc, "mount" to it, "deployId" to deployId)
             mergeVelocityTemplate("mount.json", mountParams)
         }?.let {
-            openShiftObjects += it
+            openShiftObjects.addAll(it)
         }
 
         if (auroraDc is AuroraDeploymentConfigProcess) {
             val generateObjects = openShiftTemplateProcessor.generateObjects(auroraDc)
-            openShiftObjects += generateObjects
+            openShiftObjects.addAll(generateObjects)
         }
 
         return openShiftObjects

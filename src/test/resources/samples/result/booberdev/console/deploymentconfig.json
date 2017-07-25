@@ -9,7 +9,8 @@
     "labels": {
       "app": "openshift-console-api",
       "updatedBy": "hero",
-      "affiliation": "aos"
+      "affiliation": "aos",
+      "booberDeployId": "123"
     },
     "name": "openshift-console-api"
   },

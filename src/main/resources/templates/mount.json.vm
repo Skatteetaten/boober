@@ -5,7 +5,8 @@
     "name": "${mount.volumeName}",
     "labels": {
       "app": "${adc.name}",
-      "affiliation": "${adc.affiliation}"
+      "affiliation": "${adc.affiliation}",
+      "booberDeployId": "${deployId}"
     }
   }
 #if (${mount.content})

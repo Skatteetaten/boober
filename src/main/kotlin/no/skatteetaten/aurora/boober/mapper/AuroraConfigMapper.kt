@@ -1,6 +1,11 @@
 package no.skatteetaten.aurora.boober.mapper
 
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
+import no.skatteetaten.aurora.boober.model.AuroraSecretVault
+import no.skatteetaten.aurora.boober.model.DeployCommand
+import no.skatteetaten.aurora.boober.model.Permission
+import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.internal.ValidationError
 import no.skatteetaten.aurora.boober.utils.required
@@ -10,7 +15,7 @@ import org.slf4j.LoggerFactory
 /*
  This class maps a verisioned AuroraConfig into a AuroraDeploymentConfigDeploy
  */
-abstract class AuroraConfigMapper(val deployCommand: DeployCommand, val auroraConfig: AuroraConfig) {
+abstract class AuroraConfigMapper(val deployCommand: DeployCommand, val auroraConfig: AuroraConfig, val vaults: Map<String, AuroraSecretVault>) {
 
     open val logger: Logger = LoggerFactory.getLogger(AuroraConfigMapper::class.java)
 
@@ -52,8 +57,8 @@ abstract class AuroraConfigMapper(val deployCommand: DeployCommand, val auroraCo
     }
 
     protected fun extractSecret(): Map<String, String>? {
-        return auroraConfigFields.extractOrNull("secretFolder", {
-            auroraConfig.getSecrets(it.asText())
+        return auroraConfigFields.extractOrNull("secretVault", {
+            vaults[it.asText()]?.secrets
         })
     }
 

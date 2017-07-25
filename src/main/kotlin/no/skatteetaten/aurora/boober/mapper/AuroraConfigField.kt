@@ -4,7 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraSecretVault
+import no.skatteetaten.aurora.boober.model.Database
+import no.skatteetaten.aurora.boober.model.Mount
+import no.skatteetaten.aurora.boober.model.MountType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -14,7 +18,7 @@ typealias ConfigMap = Map<String, Map<String, String>>
 
 class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
-    fun getMounts(extractors: List<AuroraConfigFieldHandler>, auroraConfig: AuroraConfig): List<Mount>? {
+    fun getMounts(extractors: List<AuroraConfigFieldHandler>, vaults: Map<String, AuroraSecretVault>): List<Mount>? {
         if (extractors.isEmpty()) {
             return null
         }
@@ -28,8 +32,8 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
             val type = extract("mounts/$it/type", { MountType.valueOf(it.asText()) })
 
             val content = when (type) {
-                MountType.Secret -> extractOrNull("secretFolder", {
-                    auroraConfig.getSecrets(it.asText())
+                MountType.Secret -> extractOrNull("secretVault", {
+                    vaults[it.asText()]?.secrets
                 })
 
                 MountType.ConfigMap -> {
@@ -143,7 +147,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
             val fields = handlers.mapNotNull { handler ->
 
                 val matches = files.reversed().mapNotNull {
-                    logger.debug("Sjekker om ${handler.path} finnes i fil ${it.contents}")
+                    logger.debug("Check if  ${handler.path} exist in file  ${it.contents}")
                     val value = it.contents.at(handler.path)
 
                     if (!value.isMissingNode) {

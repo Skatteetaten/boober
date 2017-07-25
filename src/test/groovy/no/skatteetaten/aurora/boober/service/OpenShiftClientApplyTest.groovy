@@ -60,7 +60,7 @@ class OpenShiftClientApplyTest extends Specification {
       resource.get("projectrequest", "foobar", "foobar") >> {
         throw new OpenShiftException("Does not exist", new HttpClientErrorException(HttpStatus.SERVICE_UNAVAILABLE))
       }
-      openShiftClient.apply("foobar", projectRequest)
+      openShiftClient.prepare("foobar", projectRequest)
 
     then:
       thrown(OpenShiftException)
@@ -79,11 +79,11 @@ class OpenShiftClientApplyTest extends Specification {
 
       resource.post("projectrequest", "foobar", "foobar", projectRequest) >>
           new ResponseEntity(projectRequest, HttpStatus.OK)
-      def result = openShiftClient.apply("foobar", projectRequest)
+      def result = openShiftClient.prepare("foobar", projectRequest)
 
     then:
 
-      result.operationType == OperationType.CREATED
+      result.operationType == OperationType.CREATE
   }
 
   def "Should not update project if it does exist"() {
@@ -98,11 +98,11 @@ class OpenShiftClientApplyTest extends Specification {
       resource.get("projectrequest", "foobar", "foobar") >>
           new ResponseEntity(projectRequest, HttpStatus.OK)
 
-      def result = openShiftClient.apply("foobar", projectRequest)
+      def result = openShiftClient.prepare("foobar", projectRequest)
 
     then:
 
-      result.operationType == OperationType.NONE
+      result == null
   }
 
   @Unroll
@@ -120,7 +120,7 @@ class OpenShiftClientApplyTest extends Specification {
           new ResponseEntity(oldResource, HttpStatus.OK)
 
     expect:
-      def result = openShiftClient.apply("foobar", newResource)
+      def result = openShiftClient.prepare("foobar", newResource)
       result.operationType == OperationType.UPDATE
       fields.each { result.payload.at(it) == result.previous.at(it) }
 

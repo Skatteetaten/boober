@@ -12,7 +12,8 @@
     "labels": {
       "app": "sprocket",
       "updatedBy": "hero",
-      "affiliation": "aos"
+      "affiliation": "aos",
+      "booberDeployId": "123"
     }
   },
   "spec": {

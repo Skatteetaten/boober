@@ -5,7 +5,8 @@
     "name": "tvinn-config",
     "labels": {
       "app": "tvinn",
-      "affiliation": "aos"
+      "affiliation": "aos",
+      "booberDeployId": "123"
     }
   },
   "data": {

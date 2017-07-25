@@ -54,7 +54,7 @@ class OpenShiftClientTest extends Specification {
       def project = openShiftObjects.find { it.get('kind').asText() == "ProjectRequest" }
 
     expect:
-      def openShiftResponse = openShiftClient.apply("aurora-boober-test", project)
+      def openShiftResponse = openShiftClient.prepare("aurora-boober-test", project)
       println ReflectionToStringBuilder.toString(openShiftResponse, ToStringStyle.MULTI_LINE_STYLE)
       true
   }

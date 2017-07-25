@@ -1,16 +1,17 @@
 package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.model.AuroraGitFile
 import no.skatteetaten.aurora.boober.service.internal.GitException
 import no.skatteetaten.aurora.boober.utils.use
-import org.eclipse.jgit.api.CreateBranchCommand
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.EmtpyCommitException
 import org.eclipse.jgit.api.errors.GitAPIException
 import org.eclipse.jgit.api.errors.NoHeadException
+import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.lib.PersonIdent
-import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.revwalk.RevCommit
+import org.eclipse.jgit.revwalk.RevTag
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -49,10 +50,25 @@ class GitService(
         }
     }
 
-    fun saveFilesAndClose(git: Git, files: Map<String, String>) {
+    fun deleteDirectory(git: Git, dirName: String) {
+        try {
+            git.rm().addFilepattern(dirName).call()
+
+            val status = git.status().call()
+            commitAllChanges(git, "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}")
+            push(git)
+        } catch(ex: EmtpyCommitException) {
+        } catch(ex: GitAPIException) {
+            throw GitException("Unexpected error committing changes", ex)
+        } finally {
+            closeRepository(git)
+        }
+    }
+
+    fun saveFilesAndClose(git: Git, files: Map<String, String>, keep: (String) -> Boolean) {
         try {
             writeAndAddChanges(git, files)
-            deleteMissingFiles(git, files.keys)
+            deleteMissingFiles(git, files.keys, keep)
 
             val status = git.status().call()
             commitAllChanges(git, "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}")
@@ -87,6 +103,24 @@ class GitService(
                 }
     }
 
+    fun getAllFilesInRepoList(git: Git): List<AuroraGitFile> {
+        val folder = git.repository.directory.parentFile
+        return folder.walkBottomUp()
+                .onEnter { !it.name.startsWith(".git") }
+                .filter { it.isFile }
+                .map {
+                    val path = it.relativeTo(folder).path
+                    val commit = try {
+                        git.log().addPath(path).setMaxCount(1).call().firstOrNull()
+                    } catch(e: NoHeadException) {
+                        logger.debug("No history was found for path={}", path)
+                        null
+                    }
+                    AuroraGitFile(path, it, commit)
+                }.toList()
+    }
+
+
 
     private fun writeAndAddChanges(git: Git, files: Map<String, String>) {
 
@@ -106,10 +140,11 @@ class GitService(
         }
     }
 
-    private fun deleteMissingFiles(git: Git, files: Set<String>) {
+    private fun deleteMissingFiles(git: Git, files: Set<String>, keep: (String) -> Boolean) {
 
         getAllFilesInRepo(git)
                 .map { it.key }
+                .filter { keep.invoke(it) }
                 .filter { !files.contains(it) }
                 .forEach { git.rm().addFilepattern(it).call() }
     }
@@ -125,17 +160,8 @@ class GitService(
                 .call()
     }
 
-    private fun createBranch(git: Git, branchName: String, commit: RevCommit): Ref {
 
-        return git.branchCreate()
-                .setForce(true)
-                .setName(branchName)
-                .setStartPoint(commit)
-                .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.SET_UPSTREAM)
-                .call()
-    }
-
-    private fun push(git: Git) {
+    fun push(git: Git) {
 
         git.push()
                 .setCredentialsProvider(cp)
@@ -144,21 +170,26 @@ class GitService(
                 .call()
     }
 
-    /*
-    dette er Det vi skal gjøre når det blir kjørt en setup kommando. resourceVersion får vi først etter at kommando er kjørt
-    så dette må gjøres etter at vi har installert objektene. Det er resourceVersion i DC vi hovedsakelig bryr oss om.
-    men hva med de tilfellene hvor vi ikke endrer dc men f.eks bare endrer en configMap? Da vil vi jo ikke ha resourceVersion på dc være endret.
-    må vi faktisk ha med en annotated tag for hver ressurstype vi endrer?
 
-    så f.eks hvis en boober setup endrer en configMap så må vi hente ned resourceVersion etterpå og tagge med namespace-name-resourcetype-resourceVersion?
-    Vi har jo sagt at dette apiet kun skal applye det som faktisk er endret. så hvis vi applyer en configmap og den ikke endret så får vi vel samme resourceVersion og da skal jo
-    ikke denne taggen flyttes?
-     */
-    private fun markRelease(git: Git, namespace: String, name: String, resourceVersion: Int, commit: RevCommit) {
+     fun markRelease(git: Git, tag:String, tagBody:String) {
 
-        createBranch(git, "$namespace-$name", commit)
-
-        val tag = "$namespace-$name-$resourceVersion"
-        git.tag().setAnnotated(true).setName(tag).setMessage(tag).call()
+        git.tag().setAnnotated(true).setName(tag).setMessage(tagBody).call()
     }
+
+    fun readTag(git:Git, oid:ObjectId): RevTag? {
+
+        val objectLoader = git.repository.open(oid)
+
+        val bytes = objectLoader.getCachedBytes(Int.MAX_VALUE)
+
+        return RevTag.parse(bytes)
+
+    }
+
+    fun tagHistory(git:Git): List<RevTag> {
+        val tags = git.tagList().call()
+        return tags.mapNotNull{ readTag(git, it.objectId)}
+    }
+
+    
 }

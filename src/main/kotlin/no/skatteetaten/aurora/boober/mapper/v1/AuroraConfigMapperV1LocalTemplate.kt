@@ -3,14 +3,20 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigProcessLocalTemplate
+import no.skatteetaten.aurora.boober.model.AuroraSecretVault
+import no.skatteetaten.aurora.boober.model.DeployCommand
+import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 
 class AuroraConfigMapperV1LocalTemplate(
         aid: DeployCommand,
         auroraConfig: AuroraConfig,
-        openShiftClient: OpenShiftClient
-) : AuroraConfigMapperV1(aid, auroraConfig, openShiftClient) {
+        openShiftClient: OpenShiftClient,
+        secretVaultService: Map<String, AuroraSecretVault>
+) : AuroraConfigMapperV1(aid, auroraConfig, openShiftClient, secretVaultService) {
 
     val handlers = listOf(
             AuroraConfigFieldHandler("templateFile", validator = { json ->
@@ -44,7 +50,7 @@ class AuroraConfigMapperV1LocalTemplate(
                 templateJson = templateJson,
                 parameters = auroraConfigFields.getParameters(parameterHandlers),
                 route = getRoute(),
-                mounts = auroraConfigFields.getMounts(mountHandlers, auroraConfig),
+                mounts = auroraConfigFields.getMounts(mountHandlers, vaults),
                 fields = auroraConfigFields.fields
         )
     }

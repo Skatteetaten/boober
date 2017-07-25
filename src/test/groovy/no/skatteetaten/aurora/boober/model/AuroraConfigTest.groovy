@@ -42,30 +42,6 @@ class AuroraConfigTest extends Specification {
       "4" == version.get()
   }
 
-  def "Should fetch secrets"() {
-    given:
-      def auroraConfig = AuroraConfigHelperKt.
-          createAuroraConfig(aid, ["/tmp/foo/bar/secret1.properties": "Secret stuff"])
-
-    when:
-      def secretsForFolder = auroraConfig.getSecrets("/tmp/foo/bar")
-
-    then:
-      secretsForFolder.size() == 1
-      secretsForFolder.get("secret1.properties") != null
-  }
-
-  def "Should fetch secrets with trailing slash"() {
-    given:
-      def auroraConfig = new AuroraConfig([], ["/tmp/foo/bar/secret1.properties": "Secret stuff"])
-
-    when:
-      def secretsForFolder = auroraConfig.getSecrets("/tmp/foo/bar/")
-
-    then:
-      secretsForFolder.size() == 1
-      secretsForFolder.get("secret1.properties") != null
-  }
 
   def "Returns files for application"() {
     given:
@@ -121,7 +97,7 @@ class AuroraConfigTest extends Specification {
     given:
       def referanseAid = new ApplicationId("utv", "referanse")
       def files = createMockFiles("about.json", "referanse.json", "utv/about.json")
-      def auroraConfig = new AuroraConfig(files, [:])
+      def auroraConfig = new AuroraConfig(files, "aos")
 
     when:
       auroraConfig.getFilesForApplication(new DeployCommand(referanseAid))

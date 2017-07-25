@@ -11,8 +11,7 @@ class AuroraConfigHelper
 
 val folder = File(AuroraConfigHelper::class.java.getResource("/samples/config").file)
 
-@JvmOverloads
-fun getAuroraConfigSamples(secrets: Map<String, String> = mapOf()): AuroraConfig {
+fun getAuroraConfigSamples(): AuroraConfig {
     val files = folder.walkBottomUp()
             .onEnter { it.name != "secret" }
             .filter { it.isFile }
@@ -22,15 +21,15 @@ fun getAuroraConfigSamples(secrets: Map<String, String> = mapOf()): AuroraConfig
         it.key to convertFileToJsonNode(it.value)
     }.toMap()
 
-    return AuroraConfig(nodes.map { AuroraConfigFile(it.key, it.value!!, false) }, secrets)
+    return AuroraConfig(nodes.map { AuroraConfigFile(it.key, it.value!!, false) }, "aos")
 }
 
 
 @JvmOverloads
-fun createAuroraConfig(aid: ApplicationId, secrets: Map<String, String> = mapOf()): AuroraConfig {
+fun createAuroraConfig(aid: ApplicationId, affiliation: String = "aos"): AuroraConfig {
     val files = getSampleFiles(aid)
 
-    return AuroraConfig(files.map { AuroraConfigFile(it.key, it.value!!, false, version = null) }, secrets)
+    return AuroraConfig(files.map { AuroraConfigFile(it.key, it.value!!, false, version = null) }, affiliation)
 }
 
 @JvmOverloads

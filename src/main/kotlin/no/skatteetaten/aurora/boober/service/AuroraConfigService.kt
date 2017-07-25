@@ -8,9 +8,15 @@ import no.skatteetaten.aurora.boober.mapper.v1.AuroraConfigMapperV1LocalTemplate
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraConfigMapperV1Template
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
+import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.model.TemplateType
-import no.skatteetaten.aurora.boober.service.internal.*
+import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
+import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
+import no.skatteetaten.aurora.boober.service.internal.Error
+import no.skatteetaten.aurora.boober.service.internal.Result
+import no.skatteetaten.aurora.boober.service.internal.ValidationError
+import no.skatteetaten.aurora.boober.service.internal.orElseThrow
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -21,19 +27,20 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient) {
     val logger: Logger = LoggerFactory.getLogger(AuroraConfigService::class.java)
 
 
-    fun validate(auroraConfig: AuroraConfig) {
+    fun validate(auroraConfig: AuroraConfig, vaults: Map<String, AuroraSecretVault>) {
 
         val deployCommands = auroraConfig.getApplicationIds().map { DeployCommand(it) }
         processDeployCommands(deployCommands, {
-            val mapper = createMapper(it, auroraConfig)
+            val mapper = createMapper(it, auroraConfig, vaults)
             mapper.validate()
             mapper.toAuroraDeploymentConfig()
         })
     }
 
-    fun createAuroraDcs(auroraConfig: AuroraConfig, deployCommands: List<DeployCommand>): List<AuroraDeploymentConfig> {
 
-        return processDeployCommands(deployCommands, { createAuroraDeploymentConfigs(it, auroraConfig) })
+    fun createAuroraDcs(auroraConfig: AuroraConfig, deployCommands: List<DeployCommand>, vaults: Map<String, AuroraSecretVault>): List<AuroraDeploymentConfig> {
+
+        return processDeployCommands(deployCommands, { createAuroraDeploymentConfigs(it, auroraConfig, vaults) })
     }
 
     private fun <T : Any> processDeployCommands(deployCommands: List<DeployCommand>, operation: (DeployCommand) -> T): List<T> {
@@ -55,15 +62,15 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient) {
         }
     }
 
-    fun createAuroraDeploymentConfigs(deployCommand: DeployCommand, auroraConfig: AuroraConfig): AuroraDeploymentConfig {
-        val mapper = createMapper(deployCommand, auroraConfig)
+    fun createAuroraDeploymentConfigs(deployCommand: DeployCommand, auroraConfig: AuroraConfig, vaults: Map<String, AuroraSecretVault>): AuroraDeploymentConfig {
+        val mapper = createMapper(deployCommand, auroraConfig, vaults)
         mapper.validate()
         val adc = mapper.toAuroraDeploymentConfig()
         return adc
     }
 
 
-    fun createMapper(deployCommand: DeployCommand, auroraConfig: AuroraConfig): AuroraConfigMapper {
+    fun createMapper(deployCommand: DeployCommand, auroraConfig: AuroraConfig, vaults: Map<String, AuroraSecretVault>): AuroraConfigMapper {
 
         val fields = AuroraConfigFields.create(baseHandlers, auroraConfig.getFilesForApplication(deployCommand))
 
@@ -76,14 +83,14 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient) {
         }
 
         if (type == TemplateType.localTemplate) {
-            return AuroraConfigMapperV1LocalTemplate(deployCommand, auroraConfig, openShiftClient)
+            return AuroraConfigMapperV1LocalTemplate(deployCommand, auroraConfig, openShiftClient, vaults)
         }
 
         if (type == TemplateType.template) {
-            return AuroraConfigMapperV1Template(deployCommand, auroraConfig, openShiftClient)
+            return AuroraConfigMapperV1Template(deployCommand, auroraConfig, openShiftClient, vaults)
 
         }
 
-        return AuroraConfigMapperV1Deploy(deployCommand, auroraConfig, openShiftClient)
+        return AuroraConfigMapperV1Deploy(deployCommand, auroraConfig, openShiftClient, vaults)
     }
 }
