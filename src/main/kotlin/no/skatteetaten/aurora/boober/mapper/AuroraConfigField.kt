@@ -147,7 +147,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
             val fields = handlers.mapNotNull { handler ->
 
                 val matches = files.reversed().mapNotNull {
-                    logger.debug("Sjekker om ${handler.path} finnes i fil ${it.contents}")
+                    logger.debug("Check if  ${handler.path} exist in file  ${it.contents}")
                     val value = it.contents.at(handler.path)
 
                     if (!value.isMissingNode) {
