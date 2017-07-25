@@ -82,6 +82,8 @@ class SetupFacade(
 
     fun getDeployCommands(affiliation: String, setupParams: SetupParams, git: Git? = null): List<ApplicationCommand> {
 
+        //TODO: If you try to create commands with a vault you cannot access throw error
+
         val appIds: List<DeployCommand> = setupParams.applicationIds
                 .takeIf { it.isNotEmpty() } ?: throw IllegalArgumentException("Specify applicationId")
 
@@ -118,6 +120,7 @@ class SetupFacade(
 
 
     fun markRelease(res: List<ApplicationResult>, repo: Git) {
+        //TODO: Filter out sensitive secret information?
         res.forEach {
             gitService.markRelease(repo, "$DEPLOY_PREFIX/${it.tag}", mapper.writeValueAsString(it))
         }
