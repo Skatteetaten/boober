@@ -82,6 +82,9 @@ class SetupFacade(
 
     fun getDeployCommands(affiliation: String, setupParams: SetupParams, git: Git? = null): List<ApplicationCommand> {
 
+        val appIds: List<DeployCommand> = setupParams.applicationIds
+                .takeIf { it.isNotEmpty() } ?: throw IllegalArgumentException("Specify applicationId")
+
         val repo = git ?: gitService.checkoutRepoForAffiliation(affiliation)
 
         val auroraConfig = auroraConfigFacade.createAuroraConfig(repo, affiliation, setupParams.overrides)
@@ -89,9 +92,6 @@ class SetupFacade(
         val vaults = secretVaultService.getVaults(repo)
 
         val deployId = UUID.randomUUID().toString()
-
-        val appIds: List<DeployCommand> = setupParams.applicationIds
-                .takeIf { it.isNotEmpty() } ?: throw IllegalArgumentException("Specify applicationId")
 
         val res = createApplicationCommands(auroraConfig, appIds, vaults, deployId)
 
