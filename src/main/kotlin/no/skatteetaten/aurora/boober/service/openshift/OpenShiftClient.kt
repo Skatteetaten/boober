@@ -42,13 +42,12 @@ class OpenShiftClient(
     val logger: Logger = LoggerFactory.getLogger(OpenShiftClient::class.java)
 
 
-
     fun performOpenShiftCommand(cmd: OpenshiftCommand, namespace: String): OpenShiftResponse {
 
         val kind = cmd.payload["kind"].asText()
         val name = cmd.payload["metadata"]["name"].asText()
 
-        val res = when(cmd.operationType) {
+        val res = when (cmd.operationType) {
             OperationType.CREATE -> resource.post(kind, name, namespace, cmd.payload)
             OperationType.UPDATE -> resource.put(kind, name, namespace, cmd.payload)
             OperationType.DELETE -> resource.delete(kind, name, namespace, cmd.payload)
@@ -167,9 +166,21 @@ class OpenShiftClient(
             val apiType = if (it in listOf("services", "configmaps", "secrets")) "api" else "oapi"
             val url = "$baseUrl/$apiType/v1/namespaces/$namespace/$it?labelSelector=app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
             resource.getExistingResource(headers, url)?.body?.get("items")?.toList() ?: emptyList()
-        }.map{
+        }.map {
             OpenshiftCommand(OperationType.DELETE, payload = it, previous = it)
         }
+    }
+
+    fun updateRolebindingCommand(json: JsonNode, namespace: String): OpenshiftCommand {
+
+        val kind = json["kind"].asText().toLowerCase()
+        val name = json["metadata"]["name"].asText().toLowerCase()
+
+        val existing = resource.get(kind, name, namespace)?.body ?: throw IllegalArgumentException("Admin rolebinding should exist")
+
+        json.updateField(existing, "/metadata", "resourceVersion")
+
+        return OpenshiftCommand(OperationType.UPDATE, json, previous = existing)
     }
 
 }

@@ -102,7 +102,7 @@ class SetupFacadeFromGitTest extends Specification {
       def cmd = it[0]
       new OpenShiftResponse(cmd, cmd.payload)
     }
-
+    openShiftClient.updateRolebindingCommand(_, _) >> { new OpenshiftCommand(OperationType.UPDATE, it[0]) }
     openShiftClient.createOpenshiftDeleteCommands(_, _, _, _) >> []
     openShiftClient.hasUserAccess(_, _) >> true
 
@@ -183,7 +183,7 @@ class SetupFacadeFromGitTest extends Specification {
       def tags = setupFacade.deployHistory(affiliation)
       tags.size() == 1
       def revTag = tags[0]
-      revTag.result["openShiftResponses"].size() == 8
+      revTag.result["openShiftResponses"].size() == 9
 
   }
 

@@ -116,6 +116,8 @@ class SetupFacadeSetupApplicationTest extends Specification {
       def kind = args[0]
       if (kind == "imagestream") {
         okJson([metadata: [resourceVersion: "123"]])
+      } else if (kind == "rolebinding") {
+        okJson([metadata: [resourceVersion: "123"]])
       } else {
         null
       }
@@ -150,9 +152,9 @@ class SetupFacadeSetupApplicationTest extends Specification {
       def typeCounts = responses.countBy { it.command.operationType }
       def kinds = responses.collect { it.command.payload.get("kind").asText() }
 
-      typeCounts[OperationType.CREATE] == 8
+      typeCounts[OperationType.CREATE] == 7
       typeCounts[OperationType.DELETE] == 1
-      typeCounts[OperationType.UPDATE] == 1
+      typeCounts[OperationType.UPDATE] == 2
 
       kinds ==
           ['ProjectRequest', 'RoleBinding', 'DeploymentConfig', 'Service', 'ConfigMap', 'Route', 'BuildConfig', 'ImageStream', 'DeploymentConfig', 'BuildRequest',]

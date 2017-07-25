@@ -54,7 +54,18 @@ class SetupFacade(
     }
 
     fun setupApplication(cmd: ApplicationCommand): ApplicationResult {
-        val responses = cmd.commands.map { openShiftClient.performOpenShiftCommand(it, cmd.auroraDc.namespace) }
+        val responses = cmd.commands.map {
+
+            //When we create an Openshift project we get a default rolebinding called admin that we do not want.
+            val openshiftCommand = if (it.operationType == OperationType.CREATE &&
+                    it.payload["kind"].asText().toLowerCase() == "rolebinding" &&
+                    it.payload["metadata"]["name"].asText().toLowerCase() == "admin") {
+                openShiftClient.updateRolebindingCommand(it.payload, cmd.auroraDc.namespace)
+            } else {
+                it
+            }
+            openShiftClient.performOpenShiftCommand(openshiftCommand, cmd.auroraDc.namespace)
+        }
 
         val deployCommand =
                 generateRedeployResource(responses, cmd.auroraDc.type, cmd.auroraDc.name)
@@ -80,8 +91,6 @@ class SetupFacade(
 
 
     fun getDeployCommands(affiliation: String, setupParams: SetupParams, git: Git? = null): LinkedList<ApplicationCommand> {
-
-        //TODO: If you try to create commands with a vault you cannot access throw error
 
         val appIds: List<DeployCommand> = setupParams.applicationIds
                 .takeIf { it.isNotEmpty() } ?: throw IllegalArgumentException("Specify applicationId")
