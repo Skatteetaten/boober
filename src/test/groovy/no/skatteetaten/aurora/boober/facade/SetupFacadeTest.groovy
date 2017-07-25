@@ -1,8 +1,5 @@
 package no.skatteetaten.aurora.boober.facade
 
-import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
-import spock.lang.Ignore
-
 import static no.skatteetaten.aurora.boober.model.TemplateType.deploy
 import static no.skatteetaten.aurora.boober.model.TemplateType.development
 import static no.skatteetaten.aurora.boober.service.openshift.OperationType.UPDATE
@@ -32,18 +29,20 @@ import no.skatteetaten.aurora.boober.service.SecretVaultService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
+import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
+    SecretVaultService,
     SetupFacade,
     AuroraConfigService,
     OpenShiftObjectGenerator,
     OpenShiftTemplateProcessor,
     GitService,
-    SecretVaultService,
+    VaultFacade,
     EncryptionService,
     AuroraConfigFacade,
     Config
@@ -91,12 +90,16 @@ class SetupFacadeTest extends Specification {
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
   def deployId = "123"
+
   def setup() {
     userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
     openShiftClient.isValidUser(_) >> true
     openShiftClient.isValidGroup(_) >> true
-    openShiftClient.prepareCommands(_, _) >> []
-
+    openShiftClient.prepare(_, _) >> { new OpenshiftCommand(OperationType.CREATE, it[1]) }
+    openShiftClient.performOpenShiftCommand(_, _) >> {
+      OpenshiftCommand cmd = it[1]
+      new OpenShiftResponse(cmd, cmd.payload)
+    }
   }
 
   def createOpenShiftResponse(String kind, OperationType operationType, int prevVersion, int currVersion) {
@@ -104,7 +107,7 @@ class SetupFacadeTest extends Specification {
     def payload = Mock(JsonNode)
     def response = mapper.convertValue(["kind": kind, "metadata": ["resourceVersion": currVersion]], JsonNode.class)
 
-    return new OpenShiftResponse(new OpenshiftCommand(operationType, previous, null, payload), response)
+    return new OpenShiftResponse(new OpenshiftCommand(operationType, payload, previous, null), response)
   }
 
   def "Should setup process for application"() {

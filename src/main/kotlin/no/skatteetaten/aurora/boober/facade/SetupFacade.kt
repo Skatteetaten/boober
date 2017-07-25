@@ -11,7 +11,6 @@ import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
-import no.skatteetaten.aurora.boober.service.SecretVaultService
 import no.skatteetaten.aurora.boober.service.internal.ApplicationCommand
 import no.skatteetaten.aurora.boober.service.internal.ApplicationResult
 import no.skatteetaten.aurora.boober.service.internal.DeployHistory
@@ -31,7 +30,7 @@ class SetupFacade(
         val openShiftObjectGenerator: OpenShiftObjectGenerator,
         val openShiftClient: OpenShiftClient,
         val gitService: GitService,
-        val secretVaultService: SecretVaultService,
+        val secretVaultFacade: VaultFacade,
         val auroraConfigFacade: AuroraConfigFacade,
         val mapper: ObjectMapper,
         @Value("\${openshift.cluster}") val cluster: String) {
@@ -91,7 +90,7 @@ class SetupFacade(
 
         val auroraConfig = auroraConfigFacade.createAuroraConfig(repo, affiliation, setupParams.overrides)
 
-        val vaults = secretVaultService.getVaults(repo)
+        val vaults = secretVaultFacade.listVaults(affiliation, repo).associateBy { it.name }
 
         val deployId = UUID.randomUUID().toString()
 
@@ -110,23 +109,32 @@ class SetupFacade(
 
         val res = auroraDcs
                 .filter { it.cluster == cluster }
-                .map {
-                    val openShiftObjects = openShiftObjectGenerator.generateObjects(it, deployId)
-                    val openShiftCommand = openShiftClient.prepareCommands(it.namespace, openShiftObjects)
-                    ApplicationCommand(deployId, it, openShiftCommand)
+                .map { adc ->
+                    val openShiftObjects = openShiftObjectGenerator.generateObjects(adc, deployId)
+                    val openShiftCommand = openShiftObjects.mapNotNull { openShiftClient.prepare(adc.namespace, it) }
+                    ApplicationCommand(deployId, adc, openShiftCommand)
                 }
         return res
     }
 
 
     fun markRelease(res: List<ApplicationResult>, repo: Git) {
-        //TODO: Filter out sensitive secret information?
+
+
         res.forEach {
-            gitService.markRelease(repo, "$DEPLOY_PREFIX/${it.tag}", mapper.writeValueAsString(it))
+
+            val result = filterSensitiveInformation(it)
+            gitService.markRelease(repo, "$DEPLOY_PREFIX/${it.tag}", mapper.writeValueAsString(result))
         }
 
         gitService.push(repo)
         gitService.closeRepository(repo)
+    }
+
+    private fun filterSensitiveInformation(result: ApplicationResult): ApplicationResult {
+        val filteredResponses = result.openShiftResponses.filter { it.responseBody.get("kind").asText() != "Secret" }
+        return result.copy(openShiftResponses = filteredResponses)
+
     }
 
 

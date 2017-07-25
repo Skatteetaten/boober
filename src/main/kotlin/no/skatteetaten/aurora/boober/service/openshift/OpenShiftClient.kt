@@ -12,11 +12,11 @@ import org.springframework.stereotype.Service
 
 enum class OperationType { CREATE, UPDATE, DELETE }
 
-data class OpenshiftCommand(
+data class OpenshiftCommand @JvmOverloads constructor(
         val operationType: OperationType,
+        val payload: JsonNode,
         val previous: JsonNode? = null,
-        val generated: JsonNode? = null,
-        val payload: JsonNode
+        val generated: JsonNode? = null
 )
 
 data class OpenShiftResponse(
@@ -58,11 +58,6 @@ class OpenShiftClient(
 
     }
 
-    fun prepareCommands(namespace: String, openShiftObjects: List<JsonNode>): List<OpenshiftCommand> {
-        return openShiftObjects.mapNotNull { prepare(namespace, it) }
-    }
-
-
 
     fun prepare(namespace: String, json: JsonNode): OpenshiftCommand? {
 
@@ -101,14 +96,13 @@ class OpenShiftClient(
         if (kind == "deploymentconfig") {
             json.updateField(existing, "/spec/triggers/0/imageChangeParams", "lastTriggeredImage")
             json.updateField(existing, "/spec/template/spec/containers/0", "image")
-            //TODO:Handle sprocket done?
         }
 
         if (kind == "buildconfig") {
             json.updateField(existing, "/spec", "triggers")
         }
 
-        return OpenshiftCommand(OperationType.UPDATE, existing, generated, json)
+        return OpenshiftCommand(OperationType.UPDATE, json, existing, generated)
 
     }
 
@@ -174,13 +168,8 @@ class OpenShiftClient(
             val url = "$baseUrl/$apiType/v1/namespaces/$namespace/$it?labelSelector=app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
             resource.getExistingResource(headers, url)?.body?.get("items")?.toList() ?: emptyList()
         }.map{
-            OpenshiftCommand(OperationType.DELETE, it, payload = it)
+            OpenshiftCommand(OperationType.DELETE, payload = it, previous = it)
         }
-    }
-
-    fun deleteObject(url: String): Boolean {
-        val headers: HttpHeaders = resource.getAuthorizationHeaders()
-        return resource.delete(headers, "$baseUrl/$url")?.statusCode?.is2xxSuccessful ?: false
     }
 
 }

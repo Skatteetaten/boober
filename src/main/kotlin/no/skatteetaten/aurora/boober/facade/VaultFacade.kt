@@ -28,13 +28,17 @@ class VaultFacade(
     private val GIT_SECRET_FOLDER = ".secret"
     private val PERMISSION_FILE = ".permissions"
 
-    fun listVaults(affiliation: String): List<AuroraSecretVault> {
-        val repo = getRepo(affiliation)
+    @JvmOverloads
+    fun listVaults(affiliation: String, git: Git? = null): List<AuroraSecretVault> {
+
+        val repo = git ?: getRepo(affiliation)
 
         val vaults = secretVaultService.getVaults(repo)
                 .filter { openShiftClient.hasUserAccess(userDetailsProvider.getAuthenticatedUser().username, it.value.permissions) }
                 .values.toList()
-        gitService.closeRepository(repo)
+        if (git == null) {
+            gitService.closeRepository(repo)
+        }
         return vaults
     }
 
