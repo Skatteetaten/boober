@@ -26,6 +26,7 @@ import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 import no.skatteetaten.aurora.boober.service.OpenShiftTemplateProcessor
 import no.skatteetaten.aurora.boober.service.SecretVaultService
+import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
@@ -232,4 +233,17 @@ class SetupFacadeTest extends Specification {
       result.get(0).auroraDc.type == deploy
   }
 
+  def "Should get error when using vault you have no permission for"() {
+    given:
+      def deployCommand = new DeployCommand(new ApplicationId("secrettest", "aos-simple"))
+      def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
+
+    when:
+      def result = setupFacade.createApplicationCommands(auroraConfig, [deployCommand], [:], deployId)
+
+    then:
+      def e = thrown(AuroraConfigException)
+      e.errors[0].messages[0].message == "No secret vault named=foo, or you do not have permission to use it."
+
+  }
 }

@@ -174,7 +174,7 @@ abstract class AuroraConfigMapperV1(
             }
 
             if (secretVault != null && (secrets == null || secrets.isEmpty())) {
-                IllegalArgumentException("No secrets in folder=$secretVault")
+                IllegalArgumentException("No secret vault named=$secretVault, or you do not have permission to use it.")
             } else {
                 null
             }

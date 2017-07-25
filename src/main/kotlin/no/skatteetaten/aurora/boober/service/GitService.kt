@@ -2,17 +2,14 @@ package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraGitFile
-import no.skatteetaten.aurora.boober.service.internal.ApplicationResult
 import no.skatteetaten.aurora.boober.service.internal.GitException
 import no.skatteetaten.aurora.boober.utils.use
-import org.eclipse.jgit.api.CreateBranchCommand
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.EmtpyCommitException
 import org.eclipse.jgit.api.errors.GitAPIException
 import org.eclipse.jgit.api.errors.NoHeadException
 import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.lib.PersonIdent
-import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.revwalk.RevCommit
 import org.eclipse.jgit.revwalk.RevTag
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
@@ -163,15 +160,6 @@ class GitService(
                 .call()
     }
 
-    private fun createBranch(git: Git, branchName: String, commit: RevCommit): Ref {
-
-        return git.branchCreate()
-                .setForce(true)
-                .setName(branchName)
-                .setStartPoint(commit)
-                .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.SET_UPSTREAM)
-                .call()
-    }
 
     fun push(git: Git) {
 

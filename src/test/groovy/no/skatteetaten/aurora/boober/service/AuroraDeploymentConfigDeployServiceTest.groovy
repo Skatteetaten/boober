@@ -75,7 +75,6 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
     userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
     openShiftClient.isValidUser(_) >> true
     openShiftClient.isValidGroup(_) >> true
-    openShiftClient.prepareCommands(_, _) >> []
   }
 
   def "Should return error when name is not valid DNS952 label"() {
