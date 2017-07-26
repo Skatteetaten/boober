@@ -23,13 +23,12 @@ data class OpenShiftResponse(
         val command: OpenshiftCommand,
         val responseBody: JsonNode
 ) {
-    val changed: Boolean
-        get() {
-            val previousVersion = command.previous?.at("/metadata/resourceVersion")?.asLong()
-            val currentVersion = responseBody.at("/metadata/resourceVersion")?.asLong()
-
-            return command.operationType == OperationType.UPDATE && previousVersion != currentVersion
-        }
+    fun labelChanged(name: String): Boolean {
+        val pointer = "/metadata/labels/$name"
+        val response = responseBody.at(pointer).asText()
+        val previous = command.previous?.at(pointer)?.asText() ?: ""
+        return response != previous
+    }
 }
 
 @Service

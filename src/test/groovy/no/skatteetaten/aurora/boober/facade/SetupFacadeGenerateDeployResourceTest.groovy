@@ -44,7 +44,7 @@ import spock.mock.DetachedMockFactory
     AuroraConfigFacade,
     Config
 ])
-class SetupFacadeGenerateDeployTest extends Specification {
+class SetupFacadeGenerateDeployResourceTest extends Specification {
 
   @Configuration
   static class Config {
@@ -100,15 +100,16 @@ class SetupFacadeGenerateDeployTest extends Specification {
   }
 
   def createOpenShiftResponse(String kind, OperationType operationType, int prevVersion, int currVersion) {
-    def previous = mapper.convertValue(["kind": kind, "metadata": ["resourceVersion": prevVersion]], JsonNode.class)
+    def previous = mapper.
+        convertValue(["kind": kind, "metadata": ["labels": ["releasedVersion": prevVersion]]], JsonNode.class)
     def payload = Mock(JsonNode)
-    def response = mapper.convertValue(["kind": kind, "metadata": ["resourceVersion": currVersion]], JsonNode.class)
+    def response = mapper.
+        convertValue(["kind": kind, "metadata": ["labels": ["releasedVersion": currVersion]]], JsonNode.class)
 
     return new OpenShiftResponse(new OpenshiftCommand(operationType, payload, previous, null), response)
   }
 
-
-  def "Should not create redeploy resource when ImageStream has not changed and template is development"() {
+  def "Should  create redeploy resource when development flow"() {
     given:
       def templateType = development
       def name = "boober"
@@ -116,20 +117,6 @@ class SetupFacadeGenerateDeployTest extends Specification {
 
     when:
       def result = setupFacade.generateRedeployResource([imagestream], templateType, name)
-
-    then:
-      result == null
-  }
-
-  def "Should create BuildRequest when any object has changed and template is development"() {
-    given:
-      def templateType = development
-      def name = "boober"
-      def imagestream = createOpenShiftResponse("imagestream", UPDATE, 1, 1)
-      def deploymentConfig = createOpenShiftResponse("deploymentconfig", UPDATE, 1, 2)
-
-    when:
-      def result = setupFacade.generateRedeployResource([imagestream, deploymentConfig], templateType, name)
 
     then:
       result.get("kind").asText() == "BuildRequest"
@@ -160,19 +147,7 @@ class SetupFacadeGenerateDeployTest extends Specification {
       def templateType = deploy
       def name = "boober"
       def imagestream = createOpenShiftResponse("imagestream", UPDATE, 1, 1)
-
-    when:
-      def result = setupFacade.generateRedeployResource([imagestream], templateType, name)
-
-    then:
-      result.get("kind").asText() == "DeploymentRequest"
-  }
-
-  def "Should not create DeploymentRequest when we release to tag"() {
-    given:
-      def templateType = deploy
-      def name = "boober"
-      def imagestream = createOpenShiftResponse("imagestream", UPDATE, 1, 1)
+      imagestream.command
 
     when:
       def result = setupFacade.generateRedeployResource([imagestream], templateType, name)

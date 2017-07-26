@@ -7,9 +7,7 @@
       "app": "${adc.name}",
       "updatedBy": "${username}",
       "affiliation": "${adc.affiliation}",
-      #if ("$!{adc.releaseTo}" != "")
-        "releasedVersion": "${adc.version}",
-      #end
+      "releasedVersion": "${adc.version}",
       "booberDeployId": "${deployId}"
 
     }

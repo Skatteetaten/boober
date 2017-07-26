@@ -164,16 +164,14 @@ class SetupFacade(
 
         val deployResource: JsonNode? =
                 if (type == development) {
-                    openShiftResponses.filter { it.changed }.firstOrNull()?.let {
                         openShiftObjectGenerator.generateBuildRequest(name)
-                    }
                 } else if (imageStream == null) {
                     if (deployment != null) {
                         openShiftObjectGenerator.generateDeploymentRequest(name)
                     } else {
                         null
                     }
-                } else if (!imageStream.changed && imageStream.command.operationType == OperationType.UPDATE) {
+                } else if (!imageStream.labelChanged("releasedVersion") && imageStream.command.operationType == OperationType.UPDATE) {
                     openShiftObjectGenerator.generateDeploymentRequest(name)
                 } else {
                     null
@@ -181,6 +179,7 @@ class SetupFacade(
 
         return deployResource
     }
+
 
     fun deployHistory(affiliation: String): List<DeployHistory> {
         val repo = gitService.checkoutRepoForAffiliation(affiliation)
