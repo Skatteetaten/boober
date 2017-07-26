@@ -13,12 +13,13 @@ import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader
 import org.encryptor4j.factory.AbsKeyFactory
 import org.encryptor4j.factory.KeyFactory
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory
 import org.springframework.web.client.RestTemplate
 import java.security.cert.X509Certificate
 
-@org.springframework.context.annotation.Configuration
+@Configuration
 class Configuration {
 
     @Bean

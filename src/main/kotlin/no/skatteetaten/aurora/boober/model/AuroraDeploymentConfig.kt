@@ -21,6 +21,7 @@ interface AuroraDeploymentConfig {
     val fields: Map<String, AuroraConfigField>
     val route: Route?
     val mounts: List<Mount>?
+    val releaseTo: String?
     val namespace: String
         get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"
 
@@ -86,7 +87,8 @@ data class AuroraDeploymentConfigDeploy(
         val managementPath: String? = null,
         val serviceAccount: String? = null,
         override val mounts: List<Mount>? = null,
-        override val fields: Map<String, AuroraConfigField>
+        override val fields: Map<String, AuroraConfigField>,
+        override val releaseTo: String? = null
 ) : AuroraDeploymentConfig {
 
     //In use in velocity template
@@ -114,6 +116,7 @@ data class AuroraDeploymentConfigProcessLocalTemplate(
         override val fields: Map<String, AuroraConfigField>,
         override val route: Route? = null,
         override val mounts: List<Mount>? = null,
+        override val releaseTo: String? = null,
         val templateJson: JsonNode
 ) : AuroraDeploymentConfigProcess, AuroraDeploymentConfig
 
@@ -131,6 +134,7 @@ data class AuroraDeploymentConfigProcessTemplate(
         override val fields: Map<String, AuroraConfigField>,
         override val route: Route? = null,
         override val mounts: List<Mount>? = null,
+        override val releaseTo: String? = null,
         val template: String
 
 ) : AuroraDeploymentConfigProcess, AuroraDeploymentConfig

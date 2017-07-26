@@ -7,11 +7,12 @@ spring:
 boober:
   encrypt:
     key: "komogsyngensang"
-
   git:
     urlPattern: "/tmp/boobertest/%s"
     username: "boober"
     password: "komogsyngensang"
+  docker:
+    registry: "docker-registry.aurora.sits.no:5000"
 
 management:
     port: 0

@@ -5,19 +5,29 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import org.eclipse.jgit.lib.PersonIdent
+import org.springframework.http.ResponseEntity
 
 data class Result<out V, out E>(val value: V? = null, val error: E? = null)
 
 
-data class ApplicationCommand(
+data class ApplicationCommand @JvmOverloads constructor(
         val deployId: String,
         val auroraDc: AuroraDeploymentConfig,
-        val commands: List<OpenshiftCommand>)
+        val commands: List<OpenshiftCommand>,
+        val tagCommand: TagCommand? = null)
+
+data class TagCommand @JvmOverloads constructor(
+        val name: String,
+        val from: String,
+        val to: String,
+        val fromRegistry: String,
+        val toRegistry: String = fromRegistry)
 
 data class ApplicationResult @JvmOverloads constructor(
         val deployId: String,
         val auroraDc: AuroraDeploymentConfig,
-        val openShiftResponses: List<OpenShiftResponse> = listOf()) {
+        val openShiftResponses: List<OpenShiftResponse> = listOf(),
+        val tagCommandResponse: ResponseEntity<JsonNode>? = null) {
     val tag: String = "${auroraDc.namespace}.${auroraDc.name}/${deployId}"
 }
 

@@ -49,7 +49,8 @@ abstract class AuroraConfigMapperV1(
             AuroraConfigFieldHandler("route/generate", defaultValue = "false"),
             AuroraConfigFieldHandler("webseal/host"),
             AuroraConfigFieldHandler("webseal/roles"),
-            AuroraConfigFieldHandler("secretVault", validator = validateSecrets())
+            AuroraConfigFieldHandler("secretVault", validator = validateSecrets()),
+            AuroraConfigFieldHandler("releaseTo")
     )
 
     fun getRoute(): Route? {

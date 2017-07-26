@@ -4,6 +4,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
+
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.controller.internal.SetupParams
 import no.skatteetaten.aurora.boober.controller.security.User
@@ -13,6 +18,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
+import no.skatteetaten.aurora.boober.service.DockerService
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
@@ -38,6 +44,7 @@ import spock.mock.DetachedMockFactory
     EncryptionService,
     AuroraConfigFacade,
     VaultFacade,
+    ObjectMapper,
     Config
 ]
     , properties = [
@@ -67,6 +74,11 @@ class SetupFacadeFromGitTest extends Specification {
     OpenShiftResourceClient resourceClient() {
       factory.Mock(OpenShiftResourceClient)
     }
+
+    @Bean
+    DockerService dockerService() {
+      factory.Mock(DockerService)
+    }
   }
 
   @Autowired
@@ -86,6 +98,12 @@ class SetupFacadeFromGitTest extends Specification {
 
   @Autowired
   AuroraConfigFacade configFacade
+
+  @Autowired
+  DockerService dockerService
+
+  @Autowired
+  ObjectMapper mapper
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "aos-simple"
@@ -184,6 +202,23 @@ class SetupFacadeFromGitTest extends Specification {
       tags.size() == 1
       def revTag = tags[0]
       revTag.result["openShiftResponses"].size() == 9
+
+  }
+
+  def "Should perform release and tag in docker repo"() {
+    given:
+      GitServiceHelperKt.createInitRepo(affiliation)
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(new ApplicationId("release", "aos-simple"), "aos")
+      createRepoAndSaveFiles("aos", auroraConfig)
+
+    when:
+
+      1 * dockerService.tag(_) >>
+          new ResponseEntity<JsonNode>(mapper.convertValue(["foo": "foo"], JsonNode.class), HttpStatus.OK)
+      def result = setupFacade.executeSetup(affiliation, new SetupParams(["release"], ["aos-simple"], []))
+    then:
+      result.size() == 1
+      result[0].tagCommandResponse.statusCode.is2xxSuccessful()
 
   }
 

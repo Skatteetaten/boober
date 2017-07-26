@@ -12,6 +12,9 @@ spring:
   profiles:
     active: local
 
+boober:
+    docker:
+        registry: "docker-registry.aurora.sits.no:5000"
 aurora:
     client:
         metricsPathLabelGroupings:
@@ -41,6 +44,9 @@ boober:
     checkoutPath: "/tmp/boober"
     username: "boober"
     password: "password"
+  docker:
+    registry: "uil0paas-utv-registry01.skead.no:5000"
+
 
 spring:
     application:

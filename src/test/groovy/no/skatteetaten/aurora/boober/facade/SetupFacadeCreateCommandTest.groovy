@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.facade
 
 import static no.skatteetaten.aurora.boober.model.TemplateType.deploy
 import static no.skatteetaten.aurora.boober.model.TemplateType.development
-import static no.skatteetaten.aurora.boober.service.openshift.OperationType.UPDATE
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -21,6 +20,7 @@ import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
+import no.skatteetaten.aurora.boober.service.DockerService
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
@@ -44,11 +44,12 @@ import spock.mock.DetachedMockFactory
     OpenShiftTemplateProcessor,
     GitService,
     VaultFacade,
+    DockerService,
     EncryptionService,
     AuroraConfigFacade,
     Config
 ])
-class SetupFacadeTest extends Specification {
+class SetupFacadeCreateCommandTest extends Specification {
 
   @Configuration
   static class Config {
@@ -103,14 +104,6 @@ class SetupFacadeTest extends Specification {
     }
   }
 
-  def createOpenShiftResponse(String kind, OperationType operationType, int prevVersion, int currVersion) {
-    def previous = mapper.convertValue(["kind": kind, "metadata": ["resourceVersion": prevVersion]], JsonNode.class)
-    def payload = Mock(JsonNode)
-    def response = mapper.convertValue(["kind": kind, "metadata": ["resourceVersion": currVersion]], JsonNode.class)
-
-    return new OpenShiftResponse(new OpenshiftCommand(operationType, payload, previous, null), response)
-  }
-
   def "Should setup process for application"() {
 
     def processAid = new ApplicationId("booberdev", "tvinn")
@@ -146,79 +139,6 @@ class SetupFacadeTest extends Specification {
 
   }
 
-  def "Should not create redeploy resource when ImageStream has not changed and template is development"() {
-    given:
-      def templateType = development
-      def name = "boober"
-      def imagestream = createOpenShiftResponse("imagestream", UPDATE, 1, 1)
-
-    when:
-      def result = setupFacade.generateRedeployResource([imagestream], templateType, name)
-
-    then:
-      result == null
-  }
-
-  def "Should create BuildRequest when any object has changed and template is development"() {
-    given:
-      def templateType = development
-      def name = "boober"
-      def imagestream = createOpenShiftResponse("imagestream", UPDATE, 1, 1)
-      def deploymentConfig = createOpenShiftResponse("deploymentconfig", UPDATE, 1, 2)
-
-    when:
-      def result = setupFacade.generateRedeployResource([imagestream, deploymentConfig], templateType, name)
-
-    then:
-      result.get("kind").asText() == "BuildRequest"
-  }
-
-  def "Should create DeploymentRequest when no ImageStream is present and DeploymentConfig has changed and template is deploy"() {
-    given:
-      def templateType = deploy
-      def name = "boober"
-      def deploymentConfig = createOpenShiftResponse("deploymentconfig", UPDATE, 1, 2)
-
-    when:
-      def result = setupFacade.generateRedeployResource([deploymentConfig], templateType, name)
-
-    then:
-      result.get("kind").asText() == "DeploymentRequest"
-  }
-
-  def "Should not create redeploy resource if there is no ImageStream and DeploymentConfig"() {
-    expect:
-      def templateType = deploy
-      def name = "boober"
-      setupFacade.generateRedeployResource([], templateType, name) == null
-  }
-
-  def "Should create DeploymentRequest when ImageStream has not changed but OperationType is Update and template is deploy"() {
-    given:
-      def templateType = deploy
-      def name = "boober"
-      def imagestream = createOpenShiftResponse("imagestream", UPDATE, 1, 1)
-
-    when:
-      def result = setupFacade.generateRedeployResource([imagestream], templateType, name)
-
-    then:
-      result.get("kind").asText() == "DeploymentRequest"
-  }
-
-  def "Should not create redeploy resource when objects are created and template is deploy"() {
-    given:
-      def templateType = deploy
-      def name = "boober"
-      def imagestream = createOpenShiftResponse("imagestream", OperationType.CREATE, 1, 1)
-
-    when:
-      def result = setupFacade.generateRedeployResource([imagestream], templateType, name)
-
-    then:
-      result == null
-  }
-
   def "Should setup deploy for application"() {
     given:
       def consoleAid = new ApplicationId(ENV_NAME, "console")
@@ -231,6 +151,7 @@ class SetupFacadeTest extends Specification {
     then:
       result.size() == 1
       result.get(0).auroraDc.type == deploy
+      result.get(0).tagCommand == null
   }
 
   def "Should get error when using vault you have no permission for"() {
@@ -244,6 +165,25 @@ class SetupFacadeTest extends Specification {
     then:
       def e = thrown(AuroraConfigException)
       e.errors[0].messages[0].message == "No secret vault named=foo, or you do not have permission to use it."
+
+  }
+
+  def "Should setup deploy for application with releaseTo"() {
+    given:
+      def consoleAid = new ApplicationId("release", "aos-simple")
+      def deployCommand = new DeployCommand(consoleAid)
+      def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
+
+    when:
+      def result = setupFacade.createApplicationCommands(auroraConfig, [deployCommand], [:], deployId)
+
+    then:
+      result.size() == 1
+      def cmd = result[0]
+      cmd.auroraDc.type == deploy
+      cmd.tagCommand.from == "1.0.3-b1.1.0-wingnut-1.0.0"
+      cmd.tagCommand.to == "ref"
+      cmd.tagCommand.name == "ske_aurora_openshift/aos-simple"
 
   }
 }

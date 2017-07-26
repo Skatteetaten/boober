@@ -7,7 +7,11 @@
       "app": "${adc.name}",
       "updatedBy": "${username}",
       "affiliation": "${adc.affiliation}",
+      #if ("$!{adc.releaseTo}" != "")
+        "releasedVersion": "${adc.version}",
+      #end
       "booberDeployId": "${deployId}"
+
     }
   }
     #if (${adc.type} == "deploy")
@@ -19,7 +23,11 @@
             "name": "default",
               "from": {
                 "kind": "DockerImage",
-                "name": "${dockerRegistry}/${adc.dockerGroup}/${adc.dockerName}:${adc.version}"
+                #if ("$!{adc.releaseTo}" != "")
+                  "name": "${dockerRegistry}/${adc.dockerGroup}/${adc.dockerName}:${adc.releaseTo}"
+                #else
+                  "name": "${dockerRegistry}/${adc.dockerGroup}/${adc.dockerName}:${adc.version}"
+                #end
               },
               "importPolicy": {
                 "scheduled": true
