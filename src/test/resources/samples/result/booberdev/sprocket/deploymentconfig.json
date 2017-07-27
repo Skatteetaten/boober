@@ -217,12 +217,12 @@
               },
               "initialDelaySeconds": 10,
               "timeoutSeconds": 1
-            },
-            "serviceAccountName": "aurora-fraggle"
+            }
           }
         ],
         "restartPolicy": "Always",
-        "dnsPolicy": "ClusterFirst"
+        "dnsPolicy": "ClusterFirst",
+        "serviceAccountName": "aurora-fraggle"
       }
     }
   }
