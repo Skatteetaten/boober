@@ -1,5 +1,5 @@
 {
-  "kind": "ImageStream",
+  "kind": "Route",
   "apiVersion": "v1",
   "metadata": {
     "name": "aos-simple",
@@ -7,8 +7,17 @@
       "app": "aos-simple",
       "updatedBy": "hero",
       "affiliation": "aos",
-      "releasedVersion": "1.0.3-SNAPSHOT",
       "booberDeployId": "123"
+    },
+    "annotations": {
+      "haproxy.router.openshift.io/timeout": "30s"
     }
+  },
+  "spec": {
+    "to": {
+      "kind": "Service",
+      "name": "aos-simple"
+    },
+    "path": "/foo"
   }
 }

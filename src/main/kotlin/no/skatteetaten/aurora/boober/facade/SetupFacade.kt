@@ -4,16 +4,19 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.internal.SetupParams
 import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigDeploy
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
+import no.skatteetaten.aurora.boober.service.DockerService
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 import no.skatteetaten.aurora.boober.service.internal.ApplicationCommand
 import no.skatteetaten.aurora.boober.service.internal.ApplicationResult
 import no.skatteetaten.aurora.boober.service.internal.DeployHistory
+import no.skatteetaten.aurora.boober.service.internal.TagCommand
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
@@ -33,7 +36,9 @@ class SetupFacade(
         val secretVaultFacade: VaultFacade,
         val auroraConfigFacade: AuroraConfigFacade,
         val mapper: ObjectMapper,
-        @Value("\${openshift.cluster}") val cluster: String) {
+        val dockerService: DockerService,
+        @Value("\${openshift.cluster}") val cluster: String,
+        @Value("\${boober.docker.registry}") val dockerRegistry: String) {
 
     val logger: Logger = LoggerFactory.getLogger(SetupFacade::class.java)
 
@@ -85,7 +90,9 @@ class SetupFacade(
             responseWithDelete + it
         } ?: responseWithDelete
 
-        return ApplicationResult(cmd.deployId, cmd.auroraDc, finalResponses)
+        val result = cmd.tagCommand?.let { dockerService.tag(it) }
+
+        return ApplicationResult(cmd.deployId, cmd.auroraDc, finalResponses, result)
 
     }
 
@@ -121,7 +128,10 @@ class SetupFacade(
                 .map { adc ->
                     val openShiftObjects = openShiftObjectGenerator.generateObjects(adc, deployId)
                     val openShiftCommand = openShiftObjects.mapNotNull { openShiftClient.prepare(adc.namespace, it) }
-                    ApplicationCommand(deployId, adc, openShiftCommand)
+                    val tagCmd = if (adc is AuroraDeploymentConfigDeploy && adc.releaseTo != null) {
+                        TagCommand("${adc.dockerGroup}/${adc.dockerName}", adc.version, adc.releaseTo!!, dockerRegistry)
+                    } else null
+                    ApplicationCommand(deployId, adc, openShiftCommand, tagCmd)
                 })
         return res
     }
@@ -154,16 +164,14 @@ class SetupFacade(
 
         val deployResource: JsonNode? =
                 if (type == development) {
-                    openShiftResponses.filter { it.changed }.firstOrNull()?.let {
                         openShiftObjectGenerator.generateBuildRequest(name)
-                    }
                 } else if (imageStream == null) {
                     if (deployment != null) {
                         openShiftObjectGenerator.generateDeploymentRequest(name)
                     } else {
                         null
                     }
-                } else if (!imageStream.changed && imageStream.command.operationType == OperationType.UPDATE) {
+                } else if (!imageStream.labelChanged("releasedVersion") && imageStream.command.operationType == OperationType.UPDATE) {
                     openShiftObjectGenerator.generateDeploymentRequest(name)
                 } else {
                     null
@@ -171,6 +179,7 @@ class SetupFacade(
 
         return deployResource
     }
+
 
     fun deployHistory(affiliation: String): List<DeployHistory> {
         val repo = gitService.checkoutRepoForAffiliation(affiliation)

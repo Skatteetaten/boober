@@ -17,6 +17,7 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
+import no.skatteetaten.aurora.boober.service.DockerService
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
@@ -39,6 +40,7 @@ import spock.mock.DetachedMockFactory
     SecretVaultService,
     VaultFacade,
     EncryptionService,
+    DockerService,
     OpenShiftClient,
     AuroraConfigFacade,
     Config

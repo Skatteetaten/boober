@@ -11,6 +11,7 @@ import org.apache.velocity.VelocityContext
 import org.apache.velocity.app.VelocityEngine
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.StringWriter
 import java.util.*
@@ -20,7 +21,8 @@ class OpenShiftObjectGenerator(
         val userDetailsProvider: UserDetailsProvider,
         val ve: VelocityEngine,
         val mapper: ObjectMapper,
-        val openShiftTemplateProcessor: OpenShiftTemplateProcessor) {
+        val openShiftTemplateProcessor: OpenShiftTemplateProcessor,
+        @Value("\${boober.docker.registry}") val dockerRegistry: String) {
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftObjectGenerator::class.java)
 
@@ -54,7 +56,7 @@ class OpenShiftObjectGenerator(
                 "adc" to (auroraDc as? AuroraDeploymentConfigDeploy ?: auroraDc as AuroraDeploymentConfigProcess),
                 "configs" to configs,
                 "username" to userDetailsProvider.getAuthenticatedUser().username,
-                "dockerRegistry" to "docker-registry.aurora.sits.no:5000",
+                "dockerRegistry" to dockerRegistry,
                 "builder" to mapOf("name" to "leveransepakkebygger", "version" to "prod"),
                 "base" to mapOf("name" to "oracle8", "version" to "1"),
                 "database" to database,

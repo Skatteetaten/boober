@@ -23,13 +23,12 @@ data class OpenShiftResponse(
         val command: OpenshiftCommand,
         val responseBody: JsonNode
 ) {
-    val changed: Boolean
-        get() {
-            val previousVersion = command.previous?.at("/metadata/resourceVersion")?.asLong()
-            val currentVersion = responseBody.at("/metadata/resourceVersion")?.asLong()
-
-            return command.operationType == OperationType.UPDATE && previousVersion != currentVersion
-        }
+    fun labelChanged(name: String): Boolean {
+        val pointer = "/metadata/labels/$name"
+        val response = responseBody.at(pointer).asText()
+        val previous = command.previous?.at(pointer)?.asText() ?: ""
+        return response != previous
+    }
 }
 
 @Service
@@ -42,6 +41,7 @@ class OpenShiftClient(
     val logger: Logger = LoggerFactory.getLogger(OpenShiftClient::class.java)
 
 
+    //TODO:error handling look at processDeployCommands
     fun performOpenShiftCommand(cmd: OpenshiftCommand, namespace: String): OpenShiftResponse {
 
         val kind = cmd.payload["kind"].asText()
@@ -116,6 +116,12 @@ class OpenShiftClient(
 
     fun hasUserAccess(user: String, permissions: AuroraPermissions?): Boolean {
         if (permissions == null) {
+            return true
+        }
+
+        val groupSize = permissions.groups?.size ?: 0
+        val userSize = permissions.users?.size ?: 0
+        if (groupSize + userSize == 0) {
             return true
         }
 
