@@ -119,6 +119,12 @@ class OpenShiftClient(
             return true
         }
 
+        val groupSize = permissions.groups?.size ?: 0
+        val userSize = permissions.users?.size ?: 0
+        if (groupSize + userSize == 0) {
+            return true
+        }
+
         val validUser: Boolean = permissions.users?.any { user == it && isValidUser(user) } ?: false
 
         val validGroup = permissions.groups?.any { isUserInGroup(user, it) } ?: false
