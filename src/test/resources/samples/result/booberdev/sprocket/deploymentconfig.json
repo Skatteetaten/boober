@@ -43,6 +43,7 @@
       "metadata": {
         "labels": {
           "name": "sprocket",
+          "app": "sprocket",
           "updatedBy": "hero",
           "affiliation": "aos"
         }

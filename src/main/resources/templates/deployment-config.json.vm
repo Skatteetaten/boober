@@ -69,6 +69,7 @@
       "metadata": {
         "labels": {
           "name": "${adc.name}",
+          "app": "${adc.name}",
           "updatedBy": "${username}",
           "affiliation": "${adc.affiliation}"
         }

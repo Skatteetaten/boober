@@ -48,6 +48,7 @@
       "metadata": {
         "labels": {
           "name": "aos-simple",
+          "app": "aos-simple",
           "updatedBy": "hero",
           "affiliation": "aos"
         }
