@@ -149,7 +149,6 @@ class SetupFacade(
         }
 
         gitService.push(repo)
-        gitService.closeRepository(repo)
     }
 
     private fun filterSensitiveInformation(result: ApplicationResult): ApplicationResult {
