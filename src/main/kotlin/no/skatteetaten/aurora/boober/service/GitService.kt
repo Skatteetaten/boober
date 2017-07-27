@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraGitFile
+import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.internal.GitException
 import no.skatteetaten.aurora.boober.utils.use
 import org.eclipse.jgit.api.Git
@@ -58,6 +59,7 @@ class GitService(
             commitAllChanges(git, "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}")
             push(git)
         } catch(ex: EmtpyCommitException) {
+            throw AuroraConfigException("No such directory")
         } catch(ex: GitAPIException) {
             throw GitException("Unexpected error committing changes", ex)
         } finally {
