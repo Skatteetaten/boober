@@ -13,6 +13,9 @@ spring:
     active: local
 
 boober:
+    git:
+       checkoutPath: "/tmp/boober"
+
     docker:
         registry: "docker-registry.aurora.sits.no:5000"
 aurora:
@@ -41,7 +44,6 @@ boober:
     key: "komogsyngensang"
   git:
     urlPattern: "file:///tmp/boobergit/%s"
-    checkoutPath: "/tmp/boober"
     username: "boober"
     password: "password"
   docker:
