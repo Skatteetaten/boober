@@ -26,21 +26,21 @@ fun getAuroraConfigSamples(): AuroraConfig {
 
 
 @JvmOverloads
-fun createAuroraConfig(aid: ApplicationId, affiliation: String = "aos"): AuroraConfig {
-    val files = getSampleFiles(aid)
+fun createAuroraConfig(aid: ApplicationId, affiliation: String = "aos", additionalFile: String? = null): AuroraConfig {
+    val files = getSampleFiles(aid, additionalFile)
 
     return AuroraConfig(files.map { AuroraConfigFile(it.key, it.value!!, false, version = null) }, affiliation)
 }
 
 @JvmOverloads
-fun getSampleFiles(aid: ApplicationId, template: String? = null): Map<String, JsonNode?> {
+fun getSampleFiles(aid: ApplicationId, additionalFile: String? = null): Map<String, JsonNode?> {
 
     return collectFilesToMapOfJsonNode(
             "about.json",
             "${aid.application}.json",
             "${aid.environment}/about.json",
             "${aid.environment}/${aid.application}.json",
-            template?.let { "templates/$it" } ?: ""
+            additionalFile?.let { it } ?: ""
     )
 }
 

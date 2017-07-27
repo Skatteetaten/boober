@@ -16,15 +16,36 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
                 .map { val (environment, application) = it.split("/"); ApplicationId(environment, application) }
     }
 
+    fun getImplementationFile(applicationId: ApplicationId): AuroraConfigFile? {
+        return auroraConfigFiles.find { it.name == "${applicationId.environment}/${applicationId.application}.json" }
+    }
+
+
+    fun requiredFilesForApplication(applicationId: ApplicationId): Set<String> {
+        val baseFile = getImplementationFile(applicationId)
+                ?.contents?.get("base")?.asText()
+                ?: "${applicationId.application}.json"
+
+        return setOf(
+                "about.json",
+                baseFile,
+                "${applicationId.environment}/about.json",
+                "${applicationId.environment}/${applicationId.application}.json")
+    }
 
     fun getFilesForApplication(deployCommand: DeployCommand): List<AuroraConfigFile> {
 
-        val filesForApplication = deployCommand.requiredFilesForApplication.mapNotNull { fileName -> auroraConfigFiles.find { it.name == fileName } }
-        val allFiles = filesForApplication + deployCommand.overrides
+
+        val requiredFiles = requiredFilesForApplication(deployCommand.applicationId)
+        val filesForApplication = requiredFiles.mapNotNull { fileName -> auroraConfigFiles.find { it.name == fileName } }
+
+        val overrides = requiredFiles.mapNotNull { fileName -> deployCommand.overrideFiles.find { it.name == fileName } }
+
+        val allFiles = filesForApplication + overrides
 
         val uniqueFileNames = HashSet(allFiles.map { it.name })
-        if (uniqueFileNames.size != deployCommand.requiredFilesForApplication.size) {
-            val missingFiles = deployCommand.requiredFilesForApplication.filter { it !in uniqueFileNames }
+        if (uniqueFileNames.size != requiredFiles.size) {
+            val missingFiles = requiredFiles.filter { it !in uniqueFileNames }
             throw IllegalArgumentException("Unable to merge files because some required files are missing. Missing $missingFiles.")
         }
 
