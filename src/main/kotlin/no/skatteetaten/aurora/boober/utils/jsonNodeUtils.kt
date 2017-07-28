@@ -3,6 +3,18 @@ package no.skatteetaten.aurora.boober.utils
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 
+
+val JsonNode.openshiftKind: String
+    get() = this.get("kind")?.asText()?.toLowerCase() ?: throw IllegalArgumentException("Kind must be set in file=$this")
+
+val JsonNode.openshiftName: String
+    get() = if (this.openshiftKind == "deploymentrequest") {
+        this.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource kind=${this.openshiftKind}")
+    } else {
+        this.get("metadata")?.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource kind=${this.openshiftKind}")
+    }
+
+
 fun JsonNode.updateField(source: JsonNode, root: String, field: String, required: Boolean = false) {
     val sourceField = source.at("$root/$field")
 
@@ -32,6 +44,7 @@ fun JsonNode?.startsWith(pattern: String, message: String): Exception? {
 
     return null
 }
+
 fun JsonNode?.pattern(pattern: String, message: String): Exception? {
     if (this == null) {
         return IllegalArgumentException(message)

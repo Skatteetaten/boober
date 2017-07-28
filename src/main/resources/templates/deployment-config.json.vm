@@ -69,6 +69,7 @@
       "metadata": {
         "labels": {
           "name": "${adc.name}",
+          "app": "${adc.name}",
           "updatedBy": "${username}",
           "affiliation": "${adc.affiliation}"
         }
@@ -326,14 +327,14 @@
               "initialDelaySeconds": 10,
               "timeoutSeconds": 1
             }
-            #if(${adc.serviceAccount})
-            ,
-              "serviceAccountName": "${adc.serviceAccount}"
-            #end
           }
         ],
         "restartPolicy": "Always",
         "dnsPolicy": "ClusterFirst"
+        #if(${adc.serviceAccount})
+        ,
+          "serviceAccountName": "${adc.serviceAccount}"
+        #end
       }
     }
   }
