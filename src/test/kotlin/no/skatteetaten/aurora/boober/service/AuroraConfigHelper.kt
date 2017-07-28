@@ -5,6 +5,7 @@ import no.skatteetaten.aurora.boober.Configuration
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.utils.findAllPointers
 import java.io.File
 
 class AuroraConfigHelper
@@ -24,6 +25,7 @@ fun getAuroraConfigSamples(): AuroraConfig {
     return AuroraConfig(nodes.map { AuroraConfigFile(it.key, it.value!!, false) }, "aos")
 }
 
+fun findAllPointers(node: JsonNode, maxLevel: Int) = node.findAllPointers(maxLevel)
 
 @JvmOverloads
 fun createAuroraConfig(aid: ApplicationId, affiliation: String = "aos", additionalFile: String? = null): AuroraConfig {

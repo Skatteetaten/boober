@@ -45,7 +45,7 @@ filename           | name          | description
 about.json         | global        | Global configuration for all applications in an affiliation
 utv/about.json     | environment   | Environment configuration that is shared by all applications in an openshift project
 reference.json     | application   | Configuration shared by all instances of an application in all projects
-utv/refernce.json  | override      | Configuration specific to one application in one openshift project
+utv/reference.json | override      | Configuration specific to one application in one openshift project
 
 All properties in AuroraConfig can be set inn all files.
 
@@ -56,7 +56,12 @@ Below is an json with all possible values ( and some comments)
   "type" : "deploy",  //valid types are deploy,development,localTemplate, template
   "name" : "reference",
   "cluster" : "utv", //what cluster to run on. We have 6 clusters utv,test,prod and utv-relay, test-relay, prod-relay
+  "groupId": "ske.aurora.openshift.referanse", //groupId for what to deploy
+  "artifactId": "openshift-referanse-springboot-server", //artifactId for what to deploy
+  "version": "0", //version to follow
   "replicas": 3, //run application in 3 replicas
+  "envFile" : "about-template.json", ca be set in the override file, if set will use this value instead of about.json
+  "baseFile" : "new-base.json", must be set in the override file, if set will use this value instead of 
   "flags": {
     "cert": true, //generate keystore with cn=$groupId.$artifactId
     "rolling": true, //we want rolling upgrade
@@ -66,6 +71,11 @@ Below is an json with all possible values ( and some comments)
   "permissions": {
     "admin": {
       "groups": "APP_PaaS_drift APP_PaaS_utv" //what AD groups can admin this project in openshift
+      "users" : "User1 user2" //what users can admin this project in openshift
+     },
+     "view" : {
+     "groups": "APP_PaaS_drift APP_PaaS_utv" //what AD groups can view this project in openshift
+           "users" : "User1 user2" //what users can view this project in openshift
      }
   },
   "route": {
@@ -86,9 +96,7 @@ Below is an json with all possible values ( and some comments)
       "min" : "128Mi"
     }
   },
-  "groupId": "ske.aurora.openshift.referanse", //groupId for what to deploy
-  "artifactId": "openshift-referanse-springboot-server", //artifactId for what to deploy
-  "version": "0", //version to follow
+
   "prometheus": { //where is prometheus located, this is the default
     "port": "8081",
     "path": "/prometheus"
@@ -108,7 +116,17 @@ Below is an json with all possible values ( and some comments)
     }
 
   },
-  "secretVault": "test" //all secrets in the vault test are added as fields in a secret
+  "secretVault": "test" //all secrets in the vault test are added as fields in a secret,
+  "releseTo: : "prod" //when doing a deploy will not update imagestream but will share tag in docker registry. Imagestream listens to prod not version
+  "mount" : {
+      "mount-name" : {
+        "type" : "Secret", //"Secret or ConfigMap"
+        "existing" : true/false, //does the secret/configmap already exist in the cluster?
+        "path" : "/u01/volume/mount-name", //where the files are mounted
+        "content": "any content", //content to put in configmap
+        "secretVault" : "my-vault", //secret vault to use
+      }
+  }
 }
 
 ```

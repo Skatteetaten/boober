@@ -4,6 +4,32 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 
 
+fun JsonNode.findAllPointers(maxLevel: Int): List<String> {
+
+    fun inner(root: String, node: ObjectNode): List<String> {
+
+        if (root.split("/").size > maxLevel) {
+            return listOf(root)
+        }
+        val ret = mutableListOf<String>()
+        for ((key, child) in node.fields()) {
+            val newKey = "$root/$key"
+            if (child is ObjectNode) {
+                ret += inner(newKey, child)
+            } else {
+                ret += newKey
+            }
+        }
+        return ret
+    }
+
+    if (this is ObjectNode) {
+        return inner("", this)
+    } else {
+        return listOf()
+    }
+}
+
 val JsonNode.openshiftKind: String
     get() = this.get("kind")?.asText()?.toLowerCase() ?: throw IllegalArgumentException("Kind must be set in file=$this")
 
@@ -13,6 +39,7 @@ val JsonNode.openshiftName: String
     } else {
         this.get("metadata")?.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource kind=${this.openshiftKind}")
     }
+
 
 
 fun JsonNode.updateField(source: JsonNode, root: String, field: String, required: Boolean = false) {
