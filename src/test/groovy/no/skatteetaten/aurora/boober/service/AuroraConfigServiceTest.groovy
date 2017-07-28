@@ -5,6 +5,9 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
@@ -17,6 +20,7 @@ import spock.mock.DetachedMockFactory
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
     AuroraConfigService,
+    ObjectMapper,
     Config
 ])
 class AuroraConfigServiceTest extends Specification {
@@ -37,6 +41,9 @@ class AuroraConfigServiceTest extends Specification {
     }
 
   }
+
+  @Autowired
+  ObjectMapper mapper
 
   @Autowired
   UserDetailsProvider userDetailsProvider
@@ -76,6 +83,35 @@ class AuroraConfigServiceTest extends Specification {
 
     then:
       adc.size() == 1
+
+  }
+
+  def "Should create adc from another env file"() {
+    given:
+      def aid = new ApplicationId("customenv", "aos-simple")
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, "aos", "customenv/about-template.json")
+
+    when:
+      def adc = service.createAuroraDcs(auroraConfig, [new DeployCommand(aid)], [:])
+
+    then:
+      adc.size() == 1
+
+  }
+
+  def "should findUnmappedPaths in json file and return too long maps"() {
+    given:
+      JsonNode json = mapper.convertValue([
+          config: ["latest.properties": ["BAZ": "ads"]],
+          baz   : [asd: ["asdf", "adfs"]],
+          mount : [foo: [content: [foo: "bar"]]]
+      ], JsonNode.class)
+
+    when:
+      def res = AuroraConfigHelperKt.findAllPointers(json, 3)
+
+    then:
+      res == ["/config/latest.properties/BAZ", "/baz/asd"]
 
   }
 }

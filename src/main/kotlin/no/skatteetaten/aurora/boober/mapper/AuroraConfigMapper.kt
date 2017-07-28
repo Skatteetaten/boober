@@ -42,6 +42,7 @@ abstract class AuroraConfigMapper(val deployCommand: DeployCommand, val auroraCo
         }
     }
 
+
     protected fun extractPermissions(): Permissions {
         val viewGroups = auroraConfigFields.extractOrNull("permissions/view/groups", { it.textValue().split(" ").toSet() })
         val viewUsers = auroraConfigFields.extractOrNull("permissions/view/users", { it.textValue().split(" ").toSet() })
@@ -65,7 +66,10 @@ abstract class AuroraConfigMapper(val deployCommand: DeployCommand, val auroraCo
     companion object {
         val baseHandlers = listOf(
                 AuroraConfigFieldHandler("schemaVersion"),
-                AuroraConfigFieldHandler("type", validator = { it.required("Type is required") }))
+                AuroraConfigFieldHandler("type", validator = { it.required("Type is required") }),
+                AuroraConfigFieldHandler("baseFile"),
+                AuroraConfigFieldHandler("envFile")
+        )
     }
 
 }

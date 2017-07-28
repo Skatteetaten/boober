@@ -51,7 +51,9 @@ class AuroraConfigMapperV1LocalTemplate(
                 parameters = auroraConfigFields.getParameters(parameterHandlers),
                 route = getRoute(),
                 mounts = auroraConfigFields.getMounts(mountHandlers, vaults),
-                fields = auroraConfigFields.fields
+                fields = auroraConfigFields.fields,
+                unmappedPointers = getUnmappedPointers()
+
         )
     }
 

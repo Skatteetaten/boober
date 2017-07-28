@@ -3,6 +3,34 @@ package no.skatteetaten.aurora.boober.utils
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 
+
+fun JsonNode.findAllPointers(maxLevel: Int): List<String> {
+
+    fun inner(root: String, node: ObjectNode): List<String> {
+
+        if (root.split("/").size > maxLevel) {
+
+            return emptyList()
+        }
+        val ret = mutableListOf<String>()
+        for ((key, child) in node.fields()) {
+            val newKey = "$root/$key"
+            if (child is ObjectNode) {
+                ret += inner(newKey, child)
+            } else {
+                ret += newKey
+            }
+        }
+        return ret
+    }
+
+    if (this is ObjectNode) {
+        return inner("", this)
+    } else {
+        return listOf()
+    }
+}
+
 fun JsonNode.updateField(source: JsonNode, root: String, field: String, required: Boolean = false) {
     val sourceField = source.at("$root/$field")
 
@@ -32,6 +60,7 @@ fun JsonNode?.startsWith(pattern: String, message: String): Exception? {
 
     return null
 }
+
 fun JsonNode?.pattern(pattern: String, message: String): Exception? {
     if (this == null) {
         return IllegalArgumentException(message)

@@ -1,7 +1,16 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigDeploy
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigFlags
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigProcessLocalTemplate
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResources
+import no.skatteetaten.aurora.boober.model.Database
+import no.skatteetaten.aurora.boober.model.Permission
+import no.skatteetaten.aurora.boober.model.Permissions
+import no.skatteetaten.aurora.boober.model.Route
+import no.skatteetaten.aurora.boober.model.TemplateType
 
 val auroraDcDevelopment = AuroraDeploymentConfigDeploy(
         schemaVersion = "v1",
@@ -33,7 +42,8 @@ val auroraDcDevelopment = AuroraDeploymentConfigDeploy(
         secrets = emptyMap(),
         extraTags = "",
         route = Route(),
-        fields = emptyMap()
+        fields = emptyMap(),
+        unmappedPointers = emptyMap()
 )
 
 
@@ -61,4 +71,5 @@ fun generateProccessADC(template: JsonNode) =
                 secrets = emptyMap(),
                 config = emptyMap(),
                 route = Route(),
-                fields = emptyMap())
+                fields = emptyMap(),
+                unmappedPointers = emptyMap())

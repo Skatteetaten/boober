@@ -30,11 +30,25 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient) {
     fun validate(auroraConfig: AuroraConfig, vaults: Map<String, AuroraSecretVault>) {
 
         val deployCommands = auroraConfig.getApplicationIds().map { DeployCommand(it) }
-        processDeployCommands(deployCommands, {
-            val mapper = createMapper(it, auroraConfig, vaults)
-            mapper.validate()
-            mapper.toAuroraDeploymentConfig()
-        })
+        processDeployCommands(deployCommands, { createAuroraDeploymentConfigs(it, auroraConfig, vaults) })
+    }
+
+    fun createAuroraDeploymentConfigs(deployCommand: DeployCommand, auroraConfig: AuroraConfig, vaults: Map<String, AuroraSecretVault>): AuroraDeploymentConfig {
+        val mapper = createMapper(deployCommand, auroraConfig, vaults)
+        mapper.validate()
+        val adc = mapper.toAuroraDeploymentConfig()
+
+        if (adc.unmappedPointers.isNotEmpty()) {
+
+            val errors = adc.unmappedPointers.flatMap {
+                val fileName = it.key
+                it.value.map { ValidationError(it, fileName = fileName) }
+            }
+            throw ApplicationConfigException(
+                    "There are unmapped paths for application ${deployCommand.applicationId} ",
+                    errors = errors)
+        }
+        return adc
     }
 
 
@@ -60,13 +74,6 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient) {
         }.orElseThrow {
             AuroraConfigException("AuroraConfig contained errors for one or more applications", it)
         }
-    }
-
-    fun createAuroraDeploymentConfigs(deployCommand: DeployCommand, auroraConfig: AuroraConfig, vaults: Map<String, AuroraSecretVault>): AuroraDeploymentConfig {
-        val mapper = createMapper(deployCommand, auroraConfig, vaults)
-        mapper.validate()
-        val adc = mapper.toAuroraDeploymentConfig()
-        return adc
     }
 
 

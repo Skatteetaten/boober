@@ -126,7 +126,8 @@ class AuroraConfigMapperV1Deploy(
                 serviceAccount = auroraConfigFields.extractOrNull("serviceAccount"),
                 mounts = auroraConfigFields.getMounts(mountHandlers, vaults),
                 releaseTo = auroraConfigFields.extractOrNull("releaseTo"),
-                fields = auroraConfigFields.fields
+                fields = auroraConfigFields.fields,
+                unmappedPointers = getUnmappedPointers()
         )
     }
 

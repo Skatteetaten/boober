@@ -11,6 +11,7 @@ import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.model.Route
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.utils.findAllPointers
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.pattern
@@ -52,6 +53,15 @@ abstract class AuroraConfigMapperV1(
             AuroraConfigFieldHandler("secretVault", validator = validateSecrets()),
             AuroraConfigFieldHandler("releaseTo")
     )
+
+
+    fun getUnmappedPointers(): Map<String, List<String>> {
+        val allPaths = fieldHandlers.map { it.path }
+
+        val filePointers = applicationFiles.associateBy({ it.configName }, { it.contents.findAllPointers(3) })
+
+        return filePointers.mapValues { it.value - allPaths }.filterValues { it.isNotEmpty() }
+    }
 
     fun getRoute(): Route? {
 

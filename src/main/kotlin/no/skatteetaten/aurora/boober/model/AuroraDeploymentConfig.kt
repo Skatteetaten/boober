@@ -19,6 +19,7 @@ interface AuroraDeploymentConfig {
     val secrets: Map<String, String>?
     val config: Map<String, Map<String, String>>?
     val fields: Map<String, AuroraConfigField>
+    val unmappedPointers: Map<String, List<String>>
     val route: Route?
     val mounts: List<Mount>?
     val releaseTo: String?
@@ -88,7 +89,8 @@ data class AuroraDeploymentConfigDeploy(
         val serviceAccount: String? = null,
         override val mounts: List<Mount>? = null,
         override val fields: Map<String, AuroraConfigField>,
-        override val releaseTo: String? = null
+        override val releaseTo: String? = null,
+        override val unmappedPointers: Map<String, List<String>>
 ) : AuroraDeploymentConfig {
 
     //In use in velocity template
@@ -117,7 +119,8 @@ data class AuroraDeploymentConfigProcessLocalTemplate(
         override val route: Route? = null,
         override val mounts: List<Mount>? = null,
         override val releaseTo: String? = null,
-        val templateJson: JsonNode
+        val templateJson: JsonNode,
+        override val unmappedPointers: Map<String, List<String>>
 ) : AuroraDeploymentConfigProcess, AuroraDeploymentConfig
 
 data class AuroraDeploymentConfigProcessTemplate(
@@ -135,7 +138,8 @@ data class AuroraDeploymentConfigProcessTemplate(
         override val route: Route? = null,
         override val mounts: List<Mount>? = null,
         override val releaseTo: String? = null,
-        val template: String
+        val template: String,
+        override val unmappedPointers: Map<String, List<String>>
 
 ) : AuroraDeploymentConfigProcess, AuroraDeploymentConfig
 

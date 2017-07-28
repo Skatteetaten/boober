@@ -21,15 +21,22 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
     }
 
 
+
     fun requiredFilesForApplication(applicationId: ApplicationId): Set<String> {
-        val baseFile = getImplementationFile(applicationId)
-                ?.contents?.get("base")?.asText()
+
+        val implementationFile = getImplementationFile(applicationId)
+        val baseFile = implementationFile
+                ?.contents?.get("baseFile")?.asText()
                 ?: "${applicationId.application}.json"
+
+        val envFile = implementationFile
+                ?.contents?.get("envFile")?.asText()
+                ?: "about.json"
 
         return setOf(
                 "about.json",
                 baseFile,
-                "${applicationId.environment}/about.json",
+                "${applicationId.environment}/$envFile",
                 "${applicationId.environment}/${applicationId.application}.json")
     }
 
@@ -67,3 +74,4 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
         return this.copy(auroraConfigFiles = files)
     }
 }
+

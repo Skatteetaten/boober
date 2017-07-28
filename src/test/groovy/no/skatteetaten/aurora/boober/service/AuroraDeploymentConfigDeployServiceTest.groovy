@@ -94,6 +94,26 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
   }
 
+  def "Should return error when there are unmapped paths"() {
+
+    given:
+      def overrideFile = mapper.convertValue(["foo": "test%qwe)"], JsonNode.class)
+      def overrides = [new AuroraConfigFile("${aid.environment}/${aid.application}.json", overrideFile, true, null)]
+      final DeployCommand deployCommand = new DeployCommand(aid, overrides)
+
+      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
+    when:
+      auroraDeploymentConfigService.createAuroraDeploymentConfigs(deployCommand, auroraConfig, [:])
+
+    then:
+      def e = thrown(ApplicationConfigException)
+      def error = e.errors[0]
+      e.message.contains('unmapped paths for application booberdev-aos-simple')
+      error.fileName == "${aid.environment}/${aid.application}.json.override"
+      error.message == "/foo"
+
+  }
+
   def "Should create AuroraDC for Console"() {
     given:
       def consoleAid = new ApplicationId("booberdev", "console")
@@ -214,7 +234,6 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
     then:
       result != null
   }
-
 
   def "Should get error if we want secrets but there are none "() {
 
