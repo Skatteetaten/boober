@@ -99,7 +99,7 @@ class AuroraConfigServiceTest extends Specification {
 
   }
 
-  def "should findUnmappedPaths in json file and return too long maps"() {
+  def "should findUnmappedPaths in json file and ignore too long maps"() {
     given:
       JsonNode json = mapper.convertValue([
           config: ["latest.properties": ["BAZ": "ads"]],
@@ -111,7 +111,9 @@ class AuroraConfigServiceTest extends Specification {
       def res = AuroraConfigHelperKt.findAllPointers(json, 3)
 
     then:
-      res == ["/config/latest.properties/BAZ", "/baz/asd"]
+      res == ["/config/latest.properties/BAZ",
+              "/baz/asd",
+              "/mount/foo/content"]
 
   }
 }
