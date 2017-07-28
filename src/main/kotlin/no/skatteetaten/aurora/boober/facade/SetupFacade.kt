@@ -20,6 +20,8 @@ import no.skatteetaten.aurora.boober.service.internal.TagCommand
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import no.skatteetaten.aurora.boober.utils.openshiftKind
+import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.eclipse.jgit.api.Git
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -63,8 +65,8 @@ class SetupFacade(
 
             //When we create an Openshift project we get a default rolebinding called admin that we do not want.
             val openshiftCommand = if (it.operationType == OperationType.CREATE &&
-                    it.payload["kind"].asText().toLowerCase() == "rolebinding" &&
-                    it.payload["metadata"]["name"].asText().toLowerCase() == "admin") {
+                    it.payload.openshiftKind.toLowerCase() == "rolebinding" &&
+                    it.payload.openshiftName.toLowerCase() == "admin") {
                 openShiftClient.updateRolebindingCommand(it.payload, cmd.auroraDc.namespace)
             } else {
                 it
@@ -147,7 +149,6 @@ class SetupFacade(
         }
 
         gitService.push(repo)
-        gitService.closeRepository(repo)
     }
 
     private fun filterSensitiveInformation(result: ApplicationResult): ApplicationResult {

@@ -34,7 +34,10 @@ logging:
         catalina: INFO
         velocity: INFO
 ---
-profiles: local
+spring:
+    profiles: local
+    application:
+            name: boober
 
 openshift:
     cluster: qa
@@ -48,11 +51,6 @@ boober:
     password: "password"
   docker:
     registry: "uil0paas-utv-registry01.skead.no:5000"
-
-
-spring:
-    application:
-        name: boober
 
 management:
     port: 8081

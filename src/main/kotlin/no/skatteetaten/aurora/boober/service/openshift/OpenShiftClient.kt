@@ -3,6 +3,8 @@ package no.skatteetaten.aurora.boober.service.openshift
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.model.AuroraPermissions
+import no.skatteetaten.aurora.boober.utils.openshiftKind
+import no.skatteetaten.aurora.boober.utils.openshiftName
 import no.skatteetaten.aurora.boober.utils.updateField
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -44,8 +46,9 @@ class OpenShiftClient(
     //TODO:error handling look at processDeployCommands
     fun performOpenShiftCommand(cmd: OpenshiftCommand, namespace: String): OpenShiftResponse {
 
-        val kind = cmd.payload["kind"].asText()
-        val name = cmd.payload["metadata"]["name"].asText()
+
+        val kind = cmd.payload.openshiftKind
+        val name = cmd.payload.openshiftName
 
         val res = when (cmd.operationType) {
             OperationType.CREATE -> resource.post(kind, name, namespace, cmd.payload)
@@ -62,13 +65,9 @@ class OpenShiftClient(
 
 
         val generated = json.deepCopy<JsonNode>()
-        val kind = json.get("kind")?.asText()?.toLowerCase() ?: throw IllegalArgumentException("Kind must be set in file=$json")
+        val kind = json.openshiftKind
 
-        val name = if (kind == "deploymentrequest") {
-            json.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource kind=$kind")
-        } else {
-            json.get("metadata")?.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource kind=$kind")
-        }
+        val name = json.openshiftName
 
         val existingResource = resource.get(kind, name, namespace)
 
@@ -179,8 +178,8 @@ class OpenShiftClient(
 
     fun updateRolebindingCommand(json: JsonNode, namespace: String): OpenshiftCommand {
 
-        val kind = json["kind"].asText().toLowerCase()
-        val name = json["metadata"]["name"].asText().toLowerCase()
+        val kind = json.openshiftKind.toLowerCase()
+        val name = json.openshiftName.toLowerCase()
 
         val existing = resource.get(kind, name, namespace)?.body ?: throw IllegalArgumentException("Admin rolebinding should exist")
 
