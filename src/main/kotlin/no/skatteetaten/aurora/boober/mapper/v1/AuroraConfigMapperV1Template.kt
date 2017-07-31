@@ -32,7 +32,7 @@ class AuroraConfigMapperV1Template(
             })
     )
 
-    override val fieldHandlers = v1Handlers + handlers
+    override val fieldHandlers = v1Handlers + handlers + parameterHandlers
     override val auroraConfigFields = AuroraConfigFields.create(fieldHandlers, applicationFiles)
 
     override fun toAuroraDeploymentConfig(): AuroraDeploymentConfig {

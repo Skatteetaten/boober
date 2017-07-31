@@ -36,7 +36,7 @@ abstract class AuroraConfigMapperV1(
     val dbHandlers = findDbHandlers(applicationFiles)
     val mountHandlers = findMounts(applicationFiles)
     val routeHandlers = findRouteAnnotaionHandlers(applicationFiles)
-    val v1Handlers = baseHandlers + dbHandlers + routeHandlers + configHandlers + mountHandlers + parameterHandlers + listOf(
+    val v1Handlers = baseHandlers + dbHandlers + routeHandlers + configHandlers + mountHandlers + listOf(
             AuroraConfigFieldHandler("affiliation", validator = { it.pattern("^[a-z]{0,23}[a-z]$", "Affiliation is must be alphanumeric and under 24 characters") }),
             AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
             AuroraConfigFieldHandler("name", validator = { it.pattern("^[a-z][-a-z0-9]{0,23}[a-z0-9]$", "Name must be alphanumeric and under 24 characters") }),
