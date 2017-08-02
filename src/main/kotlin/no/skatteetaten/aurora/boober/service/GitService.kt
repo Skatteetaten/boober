@@ -96,7 +96,7 @@ class GitService(
                 .associate {
                     val path = it.relativeTo(folder).path
                     val commit = try {
-                         git.log().addPath(path).setMaxCount(1).call().firstOrNull()
+                        git.log().addPath(path).setMaxCount(1).call().firstOrNull()
                     } catch(e: NoHeadException) {
                         logger.debug("No history was found for path={}", path)
                         null
@@ -121,8 +121,6 @@ class GitService(
                     AuroraGitFile(path, it, commit)
                 }.toList()
     }
-
-
 
     private fun writeAndAddChanges(git: Git, files: Map<String, String>) {
 
@@ -162,7 +160,6 @@ class GitService(
                 .call()
     }
 
-
     fun push(git: Git) {
 
         git.push()
@@ -172,13 +169,12 @@ class GitService(
                 .call()
     }
 
-
-     fun markRelease(git: Git, tag:String, tagBody:String) {
-
-        git.tag().setAnnotated(true).setName(tag).setMessage(tagBody).call()
+    fun markRelease(git: Git, tag: String, tagBody: String) {
+        val user = userDetails.getAuthenticatedUser().let { PersonIdent(it.fullName, "${it.username}@skatteetaten.no") }
+        git.tag().setTagger(user).setAnnotated(true).setName(tag).setMessage(tagBody).call()
     }
 
-    fun readTag(git:Git, oid:ObjectId): RevTag? {
+    fun readTag(git: Git, oid: ObjectId): RevTag? {
 
         val objectLoader = git.repository.open(oid)
 
@@ -188,10 +184,8 @@ class GitService(
 
     }
 
-    fun tagHistory(git:Git): List<RevTag> {
+    fun tagHistory(git: Git): List<RevTag> {
         val tags = git.tagList().call()
-        return tags.mapNotNull{ readTag(git, it.objectId)}
+        return tags.mapNotNull { readTag(git, it.objectId) }
     }
-
-    
 }
