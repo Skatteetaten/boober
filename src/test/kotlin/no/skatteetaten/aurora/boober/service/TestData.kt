@@ -43,7 +43,9 @@ val auroraDcDevelopment = AuroraDeploymentConfigDeploy(
         extraTags = "",
         route = Route(),
         fields = emptyMap(),
-        unmappedPointers = emptyMap()
+        unmappedPointers = emptyMap(),
+        applicationFile = "boober-unit-test/dev-test.json",
+        overrideFiles = emptyMap()
 )
 
 
@@ -72,4 +74,6 @@ fun generateProccessADC(template: JsonNode) =
                 config = emptyMap(),
                 route = Route(),
                 fields = emptyMap(),
-                unmappedPointers = emptyMap())
+                unmappedPointers = emptyMap(),
+                applicationFile = "boober-unit-test/dev-test.json",
+                overrideFiles = emptyMap())

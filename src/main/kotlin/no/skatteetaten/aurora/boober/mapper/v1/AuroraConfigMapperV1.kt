@@ -21,15 +21,17 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 abstract class AuroraConfigMapperV1(
-        aid: DeployCommand,
+        deployCommand: DeployCommand,
         auroraConfig: AuroraConfig,
         openShiftClient: OpenShiftClient,
         vaults: Map<String, AuroraSecretVault>
-) : AuroraConfigMapper(aid, auroraConfig, vaults) {
+) : AuroraConfigMapper(deployCommand, auroraConfig, vaults) {
 
     override val logger: Logger = LoggerFactory.getLogger(AuroraConfigMapperV1::class.java)
 
-    val applicationFiles = auroraConfig.getFilesForApplication(aid)
+    val applicationFile = auroraConfig.getApplicationFile(deployCommand.applicationId)
+    val overrideFiles = deployCommand.overrideFiles.map { it.name to it.contents }.toMap()
+    val applicationFiles = auroraConfig.getFilesForApplication(deployCommand)
     val configHandlers = findConfigFieldHandlers(applicationFiles)
     val parameterHandlers = findParameters(applicationFiles)
 

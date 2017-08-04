@@ -7,6 +7,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigProcess
 import no.skatteetaten.aurora.boober.model.TemplateType
+import org.apache.commons.lang.StringEscapeUtils
 import org.apache.velocity.VelocityContext
 import org.apache.velocity.app.VelocityEngine
 import org.slf4j.Logger
@@ -40,8 +41,18 @@ class OpenShiftObjectGenerator(
 
     fun generateObjects(auroraDc: AuroraDeploymentConfig, deployId: String): LinkedList<JsonNode> {
 
+
+        var overrides = StringEscapeUtils.escapeJavaScript(mapper.writeValueAsString(auroraDc.overrideFiles))
+
+
         val configs: Map<String, String> = auroraDc.config?.map { (key, value) ->
-            key to value.map { "${it.key}=${it.value}" }.joinToString(separator = "\\n")
+            val keyProps = if (!key.endsWith(".properties")) {
+                "$key.properties"
+            } else key
+
+            keyProps to value.map {
+                "${it.key}=${it.value}"
+            }.joinToString(separator = "\\n")
         }?.toMap() ?: mapOf()
 
 
@@ -52,6 +63,7 @@ class OpenShiftObjectGenerator(
         logger.debug("Database is $database")
 
         val params = mapOf(
+                "overrides" to overrides,
                 "deployId" to deployId,
                 "adc" to (auroraDc as? AuroraDeploymentConfigDeploy ?: auroraDc as AuroraDeploymentConfigProcess),
                 "configs" to configs,

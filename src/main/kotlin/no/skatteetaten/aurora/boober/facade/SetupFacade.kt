@@ -106,7 +106,7 @@ class SetupFacade(
 
         val repo = git ?: gitService.checkoutRepoForAffiliation(affiliation)
 
-        val auroraConfig = auroraConfigFacade.createAuroraConfig(repo, affiliation, setupParams.overrides)
+        val auroraConfig = auroraConfigFacade.createAuroraConfig(repo, affiliation)
 
         val vaults = secretVaultFacade.listVaults(affiliation, repo).associateBy { it.name }
 

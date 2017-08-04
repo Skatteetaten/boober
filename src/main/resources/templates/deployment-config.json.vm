@@ -3,6 +3,10 @@
   "apiVersion": "v1",
   "metadata": {
     "annotations": {
+      "boober.skatteetaten.no/applicationFile": "${adc.applicationFile}",
+      #if("$!{overrides}" != "{}")
+        "boober.skatteetaten.no/overrides": "${overrides}",
+      #end
       #if(${adc.managementPath} && "$!{adc.managementPath}" != "")
         "console.skatteetaten.no/management-path": "${adc.managementPath}",
       #end
@@ -68,10 +72,16 @@
     "template": {
       "metadata": {
         "labels": {
+          #if ("$!{adc.releaseTo}" != "")
+            "deployTag": "${adc.releaseTo}",
+          #else
+            "deployTag": "${adc.version}",
+          #end
           "name": "${adc.name}",
           "app": "${adc.name}",
           "updatedBy": "${username}",
-          "affiliation": "${adc.affiliation}"
+          "affiliation": "${adc.affiliation}",
+          "booberDeployId": "${deployId}"
         }
       },
       "spec": {

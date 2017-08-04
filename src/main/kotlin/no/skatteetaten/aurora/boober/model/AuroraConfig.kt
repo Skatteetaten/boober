@@ -16,21 +16,20 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
                 .map { val (environment, application) = it.split("/"); ApplicationId(environment, application) }
     }
 
-    fun getImplementationFile(applicationId: ApplicationId): AuroraConfigFile? {
-        return auroraConfigFiles.find { it.name == "${applicationId.environment}/${applicationId.application}.json" }
+    fun getApplicationFile(applicationId: ApplicationId): AuroraConfigFile {
+        val fileName = "${applicationId.environment}/${applicationId.application}.json"
+        val file = auroraConfigFiles.find { it.name == fileName && !it.override }
+        return file ?: throw IllegalArgumentException("Should find applicationFile $fileName")
     }
-
 
 
     fun requiredFilesForApplication(applicationId: ApplicationId): Set<String> {
 
-        val implementationFile = getImplementationFile(applicationId)
-        val baseFile = implementationFile
-                ?.contents?.get("baseFile")?.asText()
+        val implementationFile = getApplicationFile(applicationId)
+        val baseFile = implementationFile.contents.get("baseFile")?.asText()
                 ?: "${applicationId.application}.json"
 
-        val envFile = implementationFile
-                ?.contents?.get("envFile")?.asText()
+        val envFile = implementationFile.contents.get("envFile")?.asText()
                 ?: "about.json"
 
         return setOf(
@@ -41,7 +40,6 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
     }
 
     fun getFilesForApplication(deployCommand: DeployCommand): List<AuroraConfigFile> {
-
 
         val requiredFiles = requiredFilesForApplication(deployCommand.applicationId)
         val filesForApplication = requiredFiles.mapNotNull { fileName -> auroraConfigFiles.find { it.name == fileName } }

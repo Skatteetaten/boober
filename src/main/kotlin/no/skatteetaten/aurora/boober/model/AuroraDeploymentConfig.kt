@@ -23,6 +23,8 @@ interface AuroraDeploymentConfig {
     val route: Route?
     val mounts: List<Mount>?
     val releaseTo: String?
+    val applicationFile: String
+    val overrideFiles: Map<String, JsonNode>
     val namespace: String
         get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"
 
@@ -90,7 +92,9 @@ data class AuroraDeploymentConfigDeploy(
         override val mounts: List<Mount>? = null,
         override val fields: Map<String, AuroraConfigField>,
         override val releaseTo: String? = null,
-        override val unmappedPointers: Map<String, List<String>>
+        override val unmappedPointers: Map<String, List<String>>,
+        override val applicationFile: String,
+        override val overrideFiles: Map<String, JsonNode> = emptyMap()
 ) : AuroraDeploymentConfig {
 
     //In use in velocity template
@@ -120,7 +124,9 @@ data class AuroraDeploymentConfigProcessLocalTemplate(
         override val mounts: List<Mount>? = null,
         override val releaseTo: String? = null,
         val templateJson: JsonNode,
-        override val unmappedPointers: Map<String, List<String>>
+        override val unmappedPointers: Map<String, List<String>>,
+        override val applicationFile: String,
+        override val overrideFiles: Map<String, JsonNode> = emptyMap()
 ) : AuroraDeploymentConfigProcess, AuroraDeploymentConfig
 
 data class AuroraDeploymentConfigProcessTemplate(
@@ -139,7 +145,9 @@ data class AuroraDeploymentConfigProcessTemplate(
         override val mounts: List<Mount>? = null,
         override val releaseTo: String? = null,
         val template: String,
-        override val unmappedPointers: Map<String, List<String>>
+        override val unmappedPointers: Map<String, List<String>>,
+        override val applicationFile: String,
+        override val overrideFiles: Map<String, JsonNode> = emptyMap()
 
 ) : AuroraDeploymentConfigProcess, AuroraDeploymentConfig
 
