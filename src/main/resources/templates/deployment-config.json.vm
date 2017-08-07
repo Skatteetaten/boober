@@ -3,6 +3,9 @@
   "apiVersion": "v1",
   "metadata": {
     "annotations": {
+      #if(${adc.releaseTo} && "$!{adc.releaseTo}" != "")
+        "boober.skatteetaten.no/releaseTo": "${adc.releaseTo}",
+      #end
       "boober.skatteetaten.no/applicationFile": "${adc.applicationFile}",
       #if("$!{overrides}" != "{}")
         "boober.skatteetaten.no/overrides": "${overrides}",
