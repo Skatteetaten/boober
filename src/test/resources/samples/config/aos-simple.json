@@ -6,7 +6,6 @@
   "groupId": "ske.aurora.openshift",
   "artifactId": "aos-simple",
   "name": "aos-simple",
-
   "version": "1.0.3",
   "splunkIndex": "openshift-test",
   "resources": {

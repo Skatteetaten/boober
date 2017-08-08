@@ -3,6 +3,8 @@
   "apiVersion": "v1",
   "metadata": {
     "annotations": {
+      "boober.skatteetaten.no/releaseTo": "ref",
+      "boober.skatteetaten.no/applicationFile": "release/aos-simple.json",
       "console.skatteetaten.no/alarm": "true",
       "sprocket.sits.no/deployment-config.certificate": "ske.aurora.openshift.aos-simple"
     },
@@ -47,10 +49,12 @@
     "template": {
       "metadata": {
         "labels": {
+          "deployTag": "ref",
           "name": "aos-simple",
           "app": "aos-simple",
           "updatedBy": "hero",
-          "affiliation": "aos"
+          "affiliation": "aos",
+          "booberDeployId": "123"
         }
       },
       "spec": {

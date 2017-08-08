@@ -20,6 +20,7 @@ import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
 import spock.mock.DetachedMockFactory
@@ -28,7 +29,10 @@ import spock.mock.DetachedMockFactory
     EncryptionService,
     AuroraConfigService,
     OpenShiftTemplateProcessor,
-    GitService, OpenShiftObjectGenerator, Config])
+    GitService,
+    OpenShiftObjectGenerator,
+    Config,
+    ObjectMapper])
 class OpenShiftObjectGeneratorTest extends Specification {
 
   @Configuration
@@ -82,15 +86,22 @@ class OpenShiftObjectGeneratorTest extends Specification {
 
   def deployId = "123"
 
+  @Shared
+  def file = new ObjectMapper().convertValue([managementPath: ":8080/test"], JsonNode.class)
+
+  @Shared
+  def booberDevAosSimpleOverrides = [new AuroraConfigFile("booberdev/aos-simple.json", file, true, null)]
+
   @Unroll
   def "should create openshift objects for #env/#name"() {
 
     given:
+
       def vaults = ["foo": new AuroraSecretVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null,
           ["foo": null])]
 
       ApplicationId aid = new ApplicationId(env, name)
-      DeployCommand deployCommand = new DeployCommand(aid)
+      DeployCommand deployCommand = new DeployCommand(aid, overrides)
 
       Map<String, JsonNode> files = AuroraConfigHelperKt.getSampleFiles(aid)
 
@@ -106,7 +117,6 @@ class OpenShiftObjectGeneratorTest extends Specification {
       }
 
     expect:
-
       def auroraConfig = new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false, null) }, "aos")
       def auroraDc = auroraDeploymentConfigService.createAuroraDeploymentConfigs(deployCommand, auroraConfig, vaults)
 
@@ -127,13 +137,13 @@ class OpenShiftObjectGeneratorTest extends Specification {
     when:
 
     where:
-      env          | name         | templateFile
-      "booberdev"  | "console"    | null
-      "booberdev"  | "aos-simple" | null
-      "booberdev"  | "tvinn"      | "atomhopper.json"
-      "secrettest" | "aos-simple" | null
-      "booberdev"  | "sprocket"   | null
-      "release"    | "aos-simple" | null
+      env          | name         | templateFile      | overrides
+      "booberdev"  | "console"    | null              | []
+      "booberdev"  | "aos-simple" | null              | booberDevAosSimpleOverrides
+      "booberdev"  | "tvinn"      | "atomhopper.json" | []
+      "secrettest" | "aos-simple" | null              | []
+      "booberdev"  | "sprocket"   | null              | []
+      "release"    | "aos-simple" | null              | []
 
   }
 

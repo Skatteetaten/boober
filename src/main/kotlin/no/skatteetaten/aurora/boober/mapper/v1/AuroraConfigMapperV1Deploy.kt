@@ -123,7 +123,9 @@ class AuroraConfigMapperV1Deploy(
                 mounts = auroraConfigFields.getMounts(mountHandlers, vaults),
                 releaseTo = auroraConfigFields.extractOrNull("releaseTo"),
                 fields = auroraConfigFields.fields,
-                unmappedPointers = getUnmappedPointers()
+                unmappedPointers = getUnmappedPointers(),
+                applicationFile = applicationFile?.name,
+                overrideFiles = overrideFiles
         )
     }
 

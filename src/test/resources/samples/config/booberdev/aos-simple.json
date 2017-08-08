@@ -1,7 +1,7 @@
 {
   "version": "1.0.3-SNAPSHOT",
   "config": {
-    "latest.properties": {
+    "latest": {
       "foo": "baaaar"
     }
   }

@@ -34,10 +34,9 @@ class AuroraConfigFacade(
         return createAuroraConfigFromFiles(allFilesInRepo, affiliation)
     }
 
-    fun createAuroraConfig(repo: Git, affiliation: String, overrides: List<AuroraConfigFile>): AuroraConfig {
+    fun createAuroraConfig(repo: Git, affiliation: String): AuroraConfig {
         val allFilesInRepo: Map<String, Pair<RevCommit?, File>> = gitService.getAllFilesInRepo(repo)
-        val config = createAuroraConfigFromFiles(allFilesInRepo, affiliation)
-        return config.copy(auroraConfigFiles = config.auroraConfigFiles + overrides)
+        return createAuroraConfigFromFiles(allFilesInRepo, affiliation)
     }
 
     fun saveAuroraConfig(affiliation: String, auroraConfig: AuroraConfig, validateVersions: Boolean): AuroraConfig {
