@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory
 
 data class AuroraConfigField(val path: String, val value: JsonNode, val source: String)
 
-typealias ConfigMap = Map<String, Map<String, String>>
 
 class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
@@ -53,21 +52,54 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
     }
 
 
-    fun getConfigMap(configExtractors: List<AuroraConfigFieldHandler>): ConfigMap? {
+    fun getConfigMap(configExtractors: List<AuroraConfigFieldHandler>): Map<String, String> {
+
+
+        val envMap: Map<String, String> = configExtractors.filter { it.name.count { it == '/' } == 1 }.map {
+            val (_, field) = it.name.split("/", limit = 2)
+            val value = extract(it.name)
+            field to value
+        }.toMap()
+
 
         val configMap: MutableMap<String, MutableMap<String, String>> = mutableMapOf()
+        configExtractors.filter { it.name.count { it == '/' } > 1 }.forEach {
 
-        configExtractors.forEach {
-            val (_, configFile, field) = it.name.split("/", limit = 3)
+            val parts = it.name.split("/", limit = 3)
+
+            val (_, configFile, field) = parts
 
             val value = extract(it.name)
             val keyValue = mutableMapOf(field to value)
 
-            if (configMap.containsKey(configFile)) configMap[configFile]?.putAll(keyValue)
-            else configMap.put(configFile, keyValue)
+            val keyProps = if (!configFile.endsWith(".properties")) {
+                "$configFile.properties"
+            } else configFile
+
+            if (configMap.containsKey(keyProps)) configMap[keyProps]?.putAll(keyValue)
+            else configMap.put(keyProps, keyValue)
         }
 
-        return if (configMap.isNotEmpty()) configMap else null
+        val propertiesMap: Map<String, String> = configMap.map { (key, value) ->
+            key to value.map {
+                "${it.key}=${it.value}"
+            }.joinToString(separator = "\\n")
+        }.toMap()
+
+        if (envMap.isEmpty()) {
+            return propertiesMap
+        }
+
+        //TODO: When we have 3.6 we can remove this
+        val latestPair: Pair<String, String> =
+                "latest.properties" to envMap.map {
+                    "${it.key}=${it.value}"
+                }.joinToString(separator = "\\n")
+
+
+        return propertiesMap + envMap + latestPair
+
+
     }
 
     fun getRouteAnnotations(extractors: List<AuroraConfigFieldHandler>): Map<String, String>? {

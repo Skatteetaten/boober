@@ -247,5 +247,6 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
     then:
       thrown(AuroraConfigException)
   }
+
 }
 

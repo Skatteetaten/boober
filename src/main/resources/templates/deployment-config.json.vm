@@ -119,7 +119,7 @@
             "name": "application-log-volume",
             "emptyDir": {}
           }
-          #if(${adc.config})
+          #if(${adc.config.size()} != 0)
           ,
             {
               "name": "config",
@@ -293,7 +293,7 @@
                 "name": "application-log-volume",
                 "mountPath": "/u01/logs"
               }
-              #if(${adc.config})
+              #if(${adc.config.size()} != 0)
               ,
                 {
                   "name": "config",
