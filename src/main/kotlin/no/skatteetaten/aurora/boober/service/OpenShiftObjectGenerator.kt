@@ -97,11 +97,6 @@ class OpenShiftObjectGenerator(
             templatesToProcess.add("secret.json")
         }
 
-        if (auroraDc.route != null) {
-            logger.debug("Route is {}", auroraDc.route)
-            templatesToProcess.add("route.json")
-        }
-
         if (auroraDc.type == TemplateType.development) {
             templatesToProcess.add("build-config.json")
         }
@@ -120,6 +115,19 @@ class OpenShiftObjectGenerator(
         }?.let {
             openShiftObjects.addAll(it)
         }
+
+        auroraDc.route.map {
+            logger.debug("Route is {}", it)
+            val routeParams = mapOf(
+                    "adc" to auroraDc,
+                    "route" to it,
+                    "deployId" to deployId,
+                    "username" to userDetailsProvider.getAuthenticatedUser().username)
+            mergeVelocityTemplate("route.json", routeParams)
+        }.let {
+            openShiftObjects.addAll(it)
+        }
+
 
         if (auroraDc is AuroraDeploymentConfigProcess) {
             val generateObjects = openShiftTemplateProcessor.generateObjects(auroraDc)

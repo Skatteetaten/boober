@@ -70,17 +70,15 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         return if (configMap.isNotEmpty()) configMap else null
     }
 
-    fun getRouteAnnotations(extractors: List<AuroraConfigFieldHandler>): Map<String, String>? {
-        if (extractors.isEmpty()) {
-            return null
-        }
-        return extractors.map {
-            val (_, _, field) = it.name.split("/", limit = 3)
+    fun getRouteAnnotations(prefix: String, extractors: List<AuroraConfigFieldHandler>): Map<String, String> {
+        return extractors
+                .filter { it.path.startsWith("/$prefix") }
+                .map {
+                    val (_, _, _, field) = it.name.split("/", limit = 4)
 
-            val value = extract(it.name)
-            field to value
-        }.toMap()
-
+                    val value = extract(it.name)
+                    field to value
+                }.toMap()
     }
 
     fun getDatabases(extractors: List<AuroraConfigFieldHandler>): List<Database> {

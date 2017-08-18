@@ -138,12 +138,13 @@ class OpenShiftObjectGeneratorTest extends Specification {
 
     where:
       env          | name         | templateFile      | overrides
-      "booberdev"  | "console"    | null              | []
+      /*"booberdev"  | "console"    | null              | []
       "booberdev"  | "aos-simple" | null              | booberDevAosSimpleOverrides
       "booberdev"  | "tvinn"      | "atomhopper.json" | []
       "secrettest" | "aos-simple" | null              | []
       "booberdev"  | "sprocket"   | null              | []
-      "release"    | "aos-simple" | null              | []
+      "release"    | "aos-simple" | null              | []*/
+      "mounts"     | "aos-simple" | null              | []
 
   }
 
