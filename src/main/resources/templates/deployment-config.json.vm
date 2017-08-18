@@ -323,22 +323,29 @@
               "privileged": false
             },
             "livenessProbe": {
-              "exec": {
-                "command": [
-                  "/u01/application/bin/liveness.sh"
-                ]
-              },
-              "initialDelaySeconds": 10,
-              "timeoutSeconds": 1
+              #if(${adc.liveness.path} && "$!{adc.liveness.path}" != "")
+              "httpGet": {
+                "path": "${adc.liveness.path}",
+              #else
+              "tcpSocket": {
+              #end
+              "port": ${adc.liveness.port}
+            },
+              "initialDelaySeconds": ${adc.liveness.delay},
+              "timeoutSeconds": ${adc.liveness.timeout}
             },
             "readinessProbe": {
-              "exec": {
-                "command": [
-                  "/u01/application/bin/readiness.sh"
-                ]
+              #if(${adc.readiness.path} && "$!{adc.readiness.path}" != "")
+              "httpGet": {
+                "path": "${adc.readiness.path}",
+              #else
+              "tcpSocket": {
+
+              #end
+              "port": ${adc.readiness.port}
               },
-              "initialDelaySeconds": 10,
-              "timeoutSeconds": 1
+              "initialDelaySeconds": ${adc.readiness.delay},
+              "timeoutSeconds": ${adc.readiness.timeout}
             }
           }
         ],

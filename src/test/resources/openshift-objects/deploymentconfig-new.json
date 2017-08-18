@@ -192,10 +192,8 @@
               }
             ],
             "livenessProbe": {
-              "exec": {
-                "command": [
-                  "/u01/application/bin/liveness.sh"
-                ]
+              "tcpSocket": {
+                "port": 8080
               },
               "initialDelaySeconds": 10,
               "timeoutSeconds": 1,
@@ -204,10 +202,8 @@
               "failureThreshold": 3
             },
             "readinessProbe": {
-              "exec": {
-                "command": [
-                  "/u01/application/bin/readiness.sh"
-                ]
+              "tcpSocket": {
+                "port": 8080
               },
               "initialDelaySeconds": 10,
               "timeoutSeconds": 1,
