@@ -15,7 +15,7 @@
       #if($velocityCount != 1)
         ,
       #end
-      "haproxy.router.openshift.io/${annotation.key}": "${annotation.value}"
+      "${annotation.key.replace("|", "/")}": "${annotation.value}"
     #end
   }
   #end
