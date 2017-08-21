@@ -160,6 +160,14 @@
               {
                 "name": "FOO_DB_PROPERTIES",
                 "value": "/u01/secrets/app/foo-db/db.properties"
+              },
+              {
+                "name": "VOLUME_AURORA_TOKEN",
+                "value": "/u01/secrets/app/aurora-token"
+              },
+              {
+                "name": "VOLUME_SPROCKET_CONFIG",
+                "value": "/u01/foo"
               }
             ],
             "resources": {
