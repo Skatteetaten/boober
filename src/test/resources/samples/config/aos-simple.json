@@ -17,10 +17,12 @@
     "host": "test",
     "roles": "admin dev"
   },
-  "route": {
-    "path": "/foo",
-    "annotations": {
-      "haproxy.router.openshift.io|timeout": "30s"
+  "route": {    
+    "aos-simple": {
+      "path": "/foo",
+      "annotations": {
+        "timeout": "30s"
+      }
     }
   },
   "managementPath": "",

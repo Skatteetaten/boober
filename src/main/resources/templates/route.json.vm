@@ -2,16 +2,16 @@
   "kind": "Route",
   "apiVersion": "v1",
   "metadata": {
-    "name": "${adc.name}",
+  "name": "${route.name}",
     "labels": {
       "app": "${adc.name}",
       "updatedBy" : "${username}",
       "affiliation": "${adc.affiliation}",
       "booberDeployId": "${deployId}"
     }
-  #if (${adc.route.annotations})
+  #if (${route.annotations.size()} != 0)
   ,"annotations": {
-    #foreach ($annotation  in $adc.route.annotations.entrySet())
+    #foreach ($annotation  in $route.annotations.entrySet())
       #if($velocityCount != 1)
         ,
       #end
@@ -25,11 +25,11 @@
       "kind": "Service",
       "name": "${adc.name}"
     }
-#if (${adc.route.host})
-, "host": "${adc.route.host}"
+#if (${route.host})
+, "host": "${route.host}"
 #end
-#if (${adc.route.path})
-, "path": "${adc.route.path}"
+#if (${route.path})
+, "path": "${route.path}"
 #end
   }
 }

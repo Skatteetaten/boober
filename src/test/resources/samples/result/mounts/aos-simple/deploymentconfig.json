@@ -3,22 +3,28 @@
   "apiVersion": "v1",
   "metadata": {
     "annotations": {
-      "boober.skatteetaten.no/applicationFile": "booberdev/console.json",
-      "console.skatteetaten.no/management-path": ":8081/actuator",
-      "console.skatteetaten.no/alarm": "true"
+      "boober.skatteetaten.no/applicationFile": "mounts/aos-simple.json",
+      "console.skatteetaten.no/alarm": "true",
+      "sprocket.sits.no/deployment-config.certificate": "ske.aurora.openshift.aos-simple"
     },
     "labels": {
-      "app": "openshift-console-api",
+      "app": "aos-simple",
       "updatedBy": "hero",
       "affiliation": "aos",
       "booberDeployId": "123"
     },
-    "name": "openshift-console-api"
+    "name": "aos-simple"
   },
   "spec": {
     "strategy": {
-      "type": "Recreate",
-      "resources": {}
+      "type": "Rolling",
+      "rollingParams": {
+        "intervalSeconds": 1,
+        "maxSurge": "25%",
+        "maxUnavailable": 0,
+        "timeoutSeconds": 120,
+        "updatePeriodSeconds": 1
+      }
     },
     "triggers": [
       {
@@ -26,10 +32,10 @@
         "imageChangeParams": {
           "automatic": true,
           "containerNames": [
-            "openshift-console-api"
+            "aos-simple"
           ],
           "from": {
-            "name": "openshift-console-api:default",
+            "name": "aos-simple:latest",
             "kind": "ImageStreamTag"
           }
         }
@@ -37,14 +43,14 @@
     ],
     "replicas": 1,
     "selector": {
-      "name": "openshift-console-api"
+      "name": "aos-simple"
     },
     "template": {
       "metadata": {
         "labels": {
-          "deployTag": "3",
-          "name": "openshift-console-api",
-          "app": "openshift-console-api",
+          "deployTag": "1.0.3-SNAPSHOT",
+          "name": "aos-simple",
+          "app": "aos-simple",
           "updatedBy": "hero",
           "affiliation": "aos",
           "booberDeployId": "123"
@@ -56,11 +62,23 @@
             "name": "application-log-volume",
             "emptyDir": {
             }
+          },
+          {
+            "name": "config",
+            "configMap": {
+              "name": "aos-simple"
+            }
+          },
+          {
+            "name": "aos-simple-cert",
+            "secret": {
+              "secretName": "aos-simple-cert"
+            }
           }
         ],
         "containers": [
           {
-            "name": "openshift-console-api",
+            "name": "aos-simple",
             "ports": [
               {
                 "containerPort": 8080,
@@ -110,19 +128,23 @@
               },
               {
                 "name": "APP_NAME",
-                "value": "openshift-console-api"
+                "value": "aos-simple"
               },
               {
-                "name": "REMOTE_DEBUG",
-                "value": "true"
+                "name": "STS_CERTIFICATE_URL",
+                "value": "/u01/secrets/app/aos-simple-cert/certificate.crt"
               },
               {
-                "name": "DEBUG_PORT",
-                "value": "5005"
+                "name": "STS_PRIVATE_KEY_URL",
+                "value": "/u01/secrets/app/aos-simple-cert/privatekey.key"
+              },
+              {
+                "name": "STS_KEYSTORE_DESCRIPTOR",
+                "value": "/u01/secrets/app/aos-simple-cert/descriptor.properties"
               },
               {
                 "name": "ROUTE_NAME",
-                "value": "http://openshift-console-api-aos-booberdev.utv.paas.skead.no"
+                "value": "http://aos-simple-aos-mounts.utv.paas.skead.no/foo"
               }
             ],
             "resources": {
@@ -139,6 +161,14 @@
               {
                 "name": "application-log-volume",
                 "mountPath": "/u01/logs"
+              },
+              {
+                "name": "config",
+                "mountPath": "/u01/config/configmap"
+              },
+              {
+                "name": "aos-simple-cert",
+                "mountPath": "/u01/secrets/app/aos-simple-cert"
               }
             ],
             "terminationMessagePath": "/dev/termination-log",
@@ -151,15 +181,19 @@
               "privileged": false
             },
             "livenessProbe": {
-              "tcpSocket": {
-                "port": 8080
+              "exec": {
+                "command": [
+                  "/u01/application/bin/liveness.sh"
+                ]
               },
               "initialDelaySeconds": 10,
               "timeoutSeconds": 1
             },
             "readinessProbe": {
-              "tcpSocket": {
-                "port": 8080
+              "exec": {
+                "command": [
+                  "/u01/application/bin/readiness.sh"
+                ]
               },
               "initialDelaySeconds": 10,
               "timeoutSeconds": 1

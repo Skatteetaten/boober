@@ -45,7 +45,15 @@ class AuroraConfigMapperV1Deploy(
             AuroraConfigFieldHandler("prometheus/path", defaultValue = "/prometheus"),
             AuroraConfigFieldHandler("prometheus/port", defaultValue = "8081"),
             AuroraConfigFieldHandler("managementPath", defaultValue = ":8081/actuator"),
-            AuroraConfigFieldHandler("certificateCn")
+            AuroraConfigFieldHandler("certificateCn"),
+            AuroraConfigFieldHandler("readiness/port", defaultValue = "8080"),
+            AuroraConfigFieldHandler("readiness/path"),
+            AuroraConfigFieldHandler("readiness/delay", defaultValue = "10"),
+            AuroraConfigFieldHandler("readiness/timeout", defaultValue = "1"),
+            AuroraConfigFieldHandler("liveliness/port", defaultValue = "8080"),
+            AuroraConfigFieldHandler("liveliness/path"),
+            AuroraConfigFieldHandler("liveliness/delay", defaultValue = "10"),
+            AuroraConfigFieldHandler("liveliness/timeout", defaultValue = "1")
     )
 
     override val fieldHandlers = v1Handlers + handlers
@@ -118,14 +126,16 @@ class AuroraConfigMapperV1Deploy(
                 }),
 
                 config = auroraConfigFields.getConfigMap(configHandlers),
-                route = getRoute(),
+                route = getRoute(name),
                 serviceAccount = auroraConfigFields.extractOrNull("serviceAccount"),
                 mounts = auroraConfigFields.getMounts(mountHandlers, vaults),
                 releaseTo = auroraConfigFields.extractOrNull("releaseTo"),
                 fields = auroraConfigFields.fields,
                 unmappedPointers = getUnmappedPointers(),
-                applicationFile = applicationFile?.name,
-                overrideFiles = overrideFiles
+                applicationFile = applicationFile.name,
+                overrideFiles = overrideFiles,
+                liveness = getProbe("liveliness"),
+                readiness = getProbe("readiness")
         )
     }
 

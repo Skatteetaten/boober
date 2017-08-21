@@ -8,7 +8,7 @@ fun JsonNode.findAllPointers(maxLevel: Int): List<String> {
 
     fun inner(root: String, node: ObjectNode): List<String> {
 
-        if (root.split("/").size > maxLevel) {
+        if (root.startsWith("/mount") && root.split("/").size > maxLevel) {
             return listOf(root)
         }
         val ret = mutableListOf<String>()
