@@ -8,6 +8,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.model.Probe
 import no.skatteetaten.aurora.boober.model.Route
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -60,6 +61,20 @@ abstract class AuroraConfigMapperV1(
         val filePointers = applicationFiles.associateBy({ it.configName }, { it.contents.findAllPointers(3) })
 
         return filePointers.mapValues { it.value - allPaths }.filterValues { it.isNotEmpty() }
+    }
+
+    fun getProbe(name: String): Probe {
+        return Probe(
+                auroraConfigFields.extractOrNull("$name/path")?.let {
+                    if (!it.startsWith("/")) {
+                        "/$it"
+                    } else it
+                },
+                auroraConfigFields.extract("$name/port", JsonNode::asInt),
+                auroraConfigFields.extract("$name/delay", JsonNode::asInt),
+                auroraConfigFields.extract("$name/timeout", JsonNode::asInt)
+
+        )
     }
 
     fun getRoute(name: String): List<Route> {

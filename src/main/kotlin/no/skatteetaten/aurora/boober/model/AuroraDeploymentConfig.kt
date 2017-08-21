@@ -70,6 +70,8 @@ data class Database(
         get(): String = "$name-db".toLowerCase()
 }
 
+data class Probe(val path: String? = null, val port: Int, val delay: Int, val timeout: Int)
+
 data class AuroraDeploymentConfigDeploy(
         override val schemaVersion: String = "v1",
         override val affiliation: String,
@@ -101,7 +103,9 @@ data class AuroraDeploymentConfigDeploy(
         override val releaseTo: String? = null,
         override val unmappedPointers: Map<String, List<String>>,
         override val applicationFile: String,
-        override val overrideFiles: Map<String, JsonNode> = emptyMap()
+        override val overrideFiles: Map<String, JsonNode> = emptyMap(),
+        val liveness: Probe,
+        val readiness: Probe
 ) : AuroraDeploymentConfig {
 
     //In use in velocity template

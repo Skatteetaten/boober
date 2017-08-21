@@ -9,6 +9,9 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResources
 import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.model.Permission
 import no.skatteetaten.aurora.boober.model.Permissions
+import no.skatteetaten.aurora.boober.model.Probe
+import no.skatteetaten.aurora.boober.model.Route
+
 import no.skatteetaten.aurora.boober.model.TemplateType
 
 val auroraDcDevelopment = AuroraDeploymentConfigDeploy(
@@ -44,7 +47,9 @@ val auroraDcDevelopment = AuroraDeploymentConfigDeploy(
         fields = emptyMap(),
         unmappedPointers = emptyMap(),
         applicationFile = "boober-unit-test/dev-test.json",
-        overrideFiles = emptyMap()
+        overrideFiles = emptyMap(),
+        liveness = Probe(null, 8080, 10, 1),
+        readiness = Probe(null, 8080, 10, 1)
 )
 
 
