@@ -159,7 +159,7 @@ class SetupFacadeSetupApplicationTest extends Specification {
       typeCounts[OperationType.UPDATE] == 2
 
       kinds ==
-          ['ProjectRequest', 'RoleBinding', 'DeploymentConfig', 'Service', 'ConfigMap', 'Route', 'BuildConfig', 'ImageStream', 'DeploymentConfig', 'BuildRequest',]
+          ['ProjectRequest', 'RoleBinding', 'DeploymentConfig', 'Service', 'ConfigMap', 'BuildConfig', 'ImageStream', 'Route', 'DeploymentConfig', 'BuildRequest',]
 
       //the last DC here is the delete request
   }

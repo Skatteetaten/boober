@@ -3,23 +3,28 @@
   "apiVersion": "v1",
   "metadata": {
     "annotations": {
-      "boober.skatteetaten.no/applicationFile": "booberdev/sprocket.json",
-      "console.skatteetaten.no/management-path": ":8081/actuator",
+      "boober.skatteetaten.no/applicationFile": "mounts/aos-simple.json",
       "console.skatteetaten.no/alarm": "true",
-      "sprocket.sits.no/deployment-config.database": "referanse,foo:123-456"
+      "sprocket.sits.no/deployment-config.certificate": "ske.aurora.openshift.aos-simple"
     },
     "labels": {
-      "app": "sprocket",
+      "app": "aos-simple",
       "updatedBy": "hero",
       "affiliation": "aos",
       "booberDeployId": "123"
     },
-    "name": "sprocket"
+    "name": "aos-simple"
   },
   "spec": {
     "strategy": {
-      "type": "Recreate",
-      "resources": {}
+      "type": "Rolling",
+      "rollingParams": {
+        "intervalSeconds": 1,
+        "maxSurge": "25%",
+        "maxUnavailable": 0,
+        "timeoutSeconds": 120,
+        "updatePeriodSeconds": 1
+      }
     },
     "triggers": [
       {
@@ -27,10 +32,10 @@
         "imageChangeParams": {
           "automatic": true,
           "containerNames": [
-            "sprocket"
+            "aos-simple"
           ],
           "from": {
-            "name": "sprocket:default",
+            "name": "aos-simple:latest",
             "kind": "ImageStreamTag"
           }
         }
@@ -38,14 +43,14 @@
     ],
     "replicas": 1,
     "selector": {
-      "name": "sprocket"
+      "name": "aos-simple"
     },
     "template": {
       "metadata": {
         "labels": {
-          "deployTag": "3",
-          "name": "sprocket",
-          "app": "sprocket",
+          "deployTag": "1.0.3-SNAPSHOT",
+          "name": "aos-simple",
+          "app": "aos-simple",
           "updatedBy": "hero",
           "affiliation": "aos",
           "booberDeployId": "123"
@@ -54,38 +59,26 @@
       "spec": {
         "volumes": [
           {
-            "name": "referanse-db",
-            "secret": {
-              "secretName": "referanse-db"
-            }
-          },
-          {
-            "name": "foo-db",
-            "secret": {
-              "secretName": "foo-db"
-            }
-          },
-          {
-            "name": "aurora-token",
-            "secret": {
-              "secretName": "aurora-token"
-            }
-          },
-          {
-            "name": "sprocket-config",
-            "configMap": {
-              "name": "sprocket-config"
-            }
-          },
-          {
             "name": "application-log-volume",
             "emptyDir": {
+            }
+          },
+          {
+            "name": "config",
+            "configMap": {
+              "name": "aos-simple"
+            }
+          },
+          {
+            "name": "aos-simple-cert",
+            "secret": {
+              "secretName": "aos-simple-cert"
             }
           }
         ],
         "containers": [
           {
-            "name": "sprocket",
+            "name": "aos-simple",
             "ports": [
               {
                 "containerPort": 8080,
@@ -135,39 +128,23 @@
               },
               {
                 "name": "APP_NAME",
-                "value": "sprocket"
+                "value": "aos-simple"
               },
               {
-                "name": "DB",
-                "value": "/u01/secrets/app/referanse-db/info"
+                "name": "STS_CERTIFICATE_URL",
+                "value": "/u01/secrets/app/aos-simple-cert/certificate.crt"
               },
               {
-                "name": "DB_PROPERTIES",
-                "value": "/u01/secrets/app/referanse-db/db.properties"
+                "name": "STS_PRIVATE_KEY_URL",
+                "value": "/u01/secrets/app/aos-simple-cert/privatekey.key"
               },
               {
-                "name": "REFERANSE_DB",
-                "value": "/u01/secrets/app/referanse-db/info"
+                "name": "STS_KEYSTORE_DESCRIPTOR",
+                "value": "/u01/secrets/app/aos-simple-cert/descriptor.properties"
               },
               {
-                "name": "REFERANSE_DB_PROPERTIES",
-                "value": "/u01/secrets/app/referanse-db/db.properties"
-              },
-              {
-                "name": "FOO_DB",
-                "value": "/u01/secrets/app/foo-db/info"
-              },
-              {
-                "name": "FOO_DB_PROPERTIES",
-                "value": "/u01/secrets/app/foo-db/db.properties"
-              },
-              {
-                "name": "VOLUME_AURORA_TOKEN",
-                "value": "/u01/secrets/app/aurora-token"
-              },
-              {
-                "name": "VOLUME_SPROCKET_CONFIG",
-                "value": "/u01/foo"
+                "name": "ROUTE_NAME",
+                "value": "http://aos-simple-aos-mounts.utv.paas.skead.no/foo"
               }
             ],
             "resources": {
@@ -182,24 +159,16 @@
             },
             "volumeMounts": [
               {
-                "name": "referanse-db",
-                "mountPath": "/u01/secrets/app/referanse-db"
-              },
-              {
-                "name": "foo-db",
-                "mountPath": "/u01/secrets/app/foo-db"
-              },
-              {
-                "name": "aurora-token",
-                "mountPath": "/u01/secrets/app/aurora-token"
-              },
-              {
-                "name": "sprocket-config",
-                "mountPath": "/u01/foo"
-              },
-              {
                 "name": "application-log-volume",
                 "mountPath": "/u01/logs"
+              },
+              {
+                "name": "config",
+                "mountPath": "/u01/config/configmap"
+              },
+              {
+                "name": "aos-simple-cert",
+                "mountPath": "/u01/secrets/app/aos-simple-cert"
               }
             ],
             "terminationMessagePath": "/dev/termination-log",
@@ -212,15 +181,19 @@
               "privileged": false
             },
             "livenessProbe": {
-              "tcpSocket": {
-                "port": 8080
+              "exec": {
+                "command": [
+                  "/u01/application/bin/liveness.sh"
+                ]
               },
               "initialDelaySeconds": 10,
               "timeoutSeconds": 1
             },
             "readinessProbe": {
-              "tcpSocket": {
-                "port": 8080
+              "exec": {
+                "command": [
+                  "/u01/application/bin/readiness.sh"
+                ]
               },
               "initialDelaySeconds": 10,
               "timeoutSeconds": 1
@@ -228,8 +201,7 @@
           }
         ],
         "restartPolicy": "Always",
-        "dnsPolicy": "ClusterFirst",
-        "serviceAccountName": "aurora-fraggle"
+        "dnsPolicy": "ClusterFirst"
       }
     }
   }

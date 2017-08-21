@@ -1,0 +1,11 @@
+{
+  "type": "deploy",
+  "config": {
+    "foo": "baaaar",
+    "bar": "bar",
+    "1": {
+      "bar": "baz",
+      "foo": "baz"
+    }
+  }
+}

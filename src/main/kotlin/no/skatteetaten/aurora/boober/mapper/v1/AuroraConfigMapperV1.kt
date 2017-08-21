@@ -38,7 +38,7 @@ abstract class AuroraConfigMapperV1(
 
     val dbHandlers = findDbHandlers(applicationFiles)
     val mountHandlers = findMounts(applicationFiles)
-    val routeHandlers = findRouteAnnotaionHandlers(applicationFiles)
+    val routeHandlers = findRouteHandlers(applicationFiles)
     val v1Handlers = baseHandlers + dbHandlers + routeHandlers + configHandlers + mountHandlers + listOf(
             AuroraConfigFieldHandler("affiliation", validator = { it.pattern("^[a-z]{0,23}[a-z]$", "Affiliation is must be alphanumeric and under 24 characters") }),
             AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
@@ -48,9 +48,6 @@ abstract class AuroraConfigMapperV1(
             AuroraConfigFieldHandler("permissions/admin/users", validator = validateUsers(openShiftClient)),
             AuroraConfigFieldHandler("permissions/view/groups", validator = validateGroups(openShiftClient, false)),
             AuroraConfigFieldHandler("permissions/view/users", validator = validateUsers(openShiftClient)),
-            AuroraConfigFieldHandler("route/host"),
-            AuroraConfigFieldHandler("route/path", validator = { it?.startsWith("/", "Path must start with /") }),
-            AuroraConfigFieldHandler("route/generate", defaultValue = "false"),
             AuroraConfigFieldHandler("webseal/host"),
             AuroraConfigFieldHandler("webseal/roles"),
             AuroraConfigFieldHandler("secretVault", validator = validateSecrets()),
@@ -80,25 +77,29 @@ abstract class AuroraConfigMapperV1(
         )
     }
 
-    fun getRoute(): Route? {
+    fun getRoute(name: String): List<Route> {
 
-        val generateRoute = auroraConfigFields.extract("route/generate", { it.asText() == "true" })
-        logger.debug("Route generate, {}", generateRoute)
-        val routePath = auroraConfigFields.extractOrNull("route/path")
-        val routeHost = auroraConfigFields.extractOrNull("route/host")
-        routeHandlers.forEach { it -> logger.debug("{}", it.toString()) }
+        val routes = findSubKeys(applicationFiles, "route")
 
-        return if (generateRoute || routeHost != null || routePath != null || !routeHandlers.isEmpty()) {
-            Route(routeHost, routePath, auroraConfigFields.getRouteAnnotations(routeHandlers))
-        } else null
+        return routes.map {
+            val routePath = auroraConfigFields.extractOrNull("route/$it/path")
+            val routeHost = auroraConfigFields.extractOrNull("route/$it/host")
+            val routeName = if (!it.startsWith(name)) {
+                "$name-$it"
+            } else {
+                it
+            }
+            Route(routeName, routeHost, routePath, auroraConfigFields.getRouteAnnotations("route/$it/annotations", routeHandlers))
+        }.toList()
     }
+
 
     fun findConfigFieldHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
 
         val name = "config"
-        val configFiles = findSubKeys(applicationFiles, name)
+        val keysStartingWithConfig = findSubKeys(applicationFiles, name)
 
-        val configKeys: Map<String, Set<String>> = configFiles.map { configFileName ->
+        val configKeys: Map<String, Set<String>> = keysStartingWithConfig.map { configFileName ->
             //find all unique keys in a configFile
             val keys = applicationFiles.flatMap { ac ->
                 ac.contents.at("/$name/$configFileName")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
@@ -108,19 +109,36 @@ abstract class AuroraConfigMapperV1(
         }.toMap()
 
         return configKeys.flatMap { configFile ->
-            configFile.value.map { field ->
-                AuroraConfigFieldHandler("$name/${configFile.key}/$field")
+            val value = configFile.value
+            if (value.isEmpty()) {
+                listOf(AuroraConfigFieldHandler("$name/${configFile.key}"))
+            } else {
+                value.map { field ->
+                    AuroraConfigFieldHandler("$name/${configFile.key}/$field")
+                }
             }
         }
     }
 
 
-    fun findRouteAnnotaionHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
+    fun findRouteAnnotaionHandlers(prefix: String, applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
 
         return applicationFiles.flatMap { ac ->
-            ac.contents.at("/route/annotations")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
+            ac.contents.at("/$prefix/annotations")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
         }.toSet().map { key ->
-            AuroraConfigFieldHandler("route/annotations/$key")
+            AuroraConfigFieldHandler("$prefix/annotations/$key")
+        }
+    }
+
+    fun findRouteHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
+
+        val routeHandlers = findSubKeys(applicationFiles, "route")
+
+        return routeHandlers.flatMap { routeName ->
+            listOf(
+                    AuroraConfigFieldHandler("route/$routeName/host"),
+                    AuroraConfigFieldHandler("route/$routeName/path", validator = { it?.startsWith("/", "Path must start with /") })
+            ) + findRouteAnnotaionHandlers("route/$routeName", applicationFiles)
         }
     }
 

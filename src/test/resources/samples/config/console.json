@@ -8,7 +8,7 @@
     "debug": true
   },
   "route": {
-    "generate": true
+    "openshift-console-api": {}
   },
   "name": "openshift-console-api",
   "groupId": "ske.openshift.aurora",

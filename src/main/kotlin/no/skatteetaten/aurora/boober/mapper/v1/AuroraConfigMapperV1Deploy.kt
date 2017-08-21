@@ -126,7 +126,7 @@ class AuroraConfigMapperV1Deploy(
                 }),
 
                 config = auroraConfigFields.getConfigMap(configHandlers),
-                route = getRoute(),
+                route = getRoute(name),
                 serviceAccount = auroraConfigFields.extractOrNull("serviceAccount"),
                 mounts = auroraConfigFields.getMounts(mountHandlers, vaults),
                 releaseTo = auroraConfigFields.extractOrNull("releaseTo"),

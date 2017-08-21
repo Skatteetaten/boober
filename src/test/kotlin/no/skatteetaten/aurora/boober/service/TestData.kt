@@ -11,6 +11,7 @@ import no.skatteetaten.aurora.boober.model.Permission
 import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.Probe
 import no.skatteetaten.aurora.boober.model.Route
+
 import no.skatteetaten.aurora.boober.model.TemplateType
 
 val auroraDcDevelopment = AuroraDeploymentConfigDeploy(
@@ -42,7 +43,7 @@ val auroraDcDevelopment = AuroraDeploymentConfigDeploy(
         replicas = 1,
         secrets = emptyMap(),
         extraTags = "",
-        route = Route(),
+        route = emptyList(),
         fields = emptyMap(),
         unmappedPointers = emptyMap(),
         applicationFile = "boober-unit-test/dev-test.json",
@@ -75,7 +76,7 @@ fun generateProccessADC(template: JsonNode) =
                 name = "dev-test",
                 secrets = emptyMap(),
                 config = emptyMap(),
-                route = Route(),
+                route = emptyList(),
                 fields = emptyMap(),
                 unmappedPointers = emptyMap(),
                 applicationFile = "boober-unit-test/dev-test.json",

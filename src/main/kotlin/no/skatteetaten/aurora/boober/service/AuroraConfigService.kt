@@ -72,6 +72,7 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient) {
                 Result<T, Error?>(error = Error(aid.application, aid.environment, listOf(ValidationError(e.message!!))))
             }
         }.orElseThrow {
+            logger.debug("ACE {}", it)
             AuroraConfigException("AuroraConfig contained errors for one or more applications", it)
         }
     }
