@@ -1,0 +1,16 @@
+{
+  "version": "1.0.3-SNAPSHOT",
+  "config": {
+    "latest": {
+      "foo": "baaaar"
+    }
+  },
+  "route": {
+    "bar": {
+      "path": "/bar",
+      "annotations": {
+        "timeout": "30s"
+      }
+    }
+  }
+}

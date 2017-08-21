@@ -18,9 +18,11 @@
     "roles": "admin dev"
   },
   "route": {
-    "path": "/foo",
-    "annotations": {
-      "timeout": "30s"
+    "aos-simple": {
+      "path": "/foo",
+      "annotations": {
+        "timeout": "30s"
+      }
     }
   },
   "managementPath": "",

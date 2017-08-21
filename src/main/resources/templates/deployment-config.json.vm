@@ -229,7 +229,7 @@
                 }
               #end
 
-              #if (${adc.route})
+              #if (${adc.route.size()} !=0)
                   ,{
                     "name": "ROUTE_NAME",
                     "value": "${adc.routeName}"
@@ -260,6 +260,18 @@
                   }
                 #end
               #end
+
+              #if (${adc.mounts})
+
+                #foreach ($mount in $adc.mounts)
+                ,
+                  {
+                    "name": "VOLUME_${mount.mountName.toUpperCase().replace("-", "_")}",
+                    "value": "${mount.path}"
+                  }
+                #end
+              #end
+
 
             ],
             "resources": {

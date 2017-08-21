@@ -37,19 +37,20 @@ class AuroraConfigMapperV1LocalTemplate(
         val type = auroraConfigFields.extract("type", { TemplateType.valueOf(it.textValue()) })
         val templateJson = extractTemplateJson()
 
+        val name = auroraConfigFields.extract("name")
         return AuroraDeploymentConfigProcessLocalTemplate(
                 schemaVersion = auroraConfigFields.extract("schemaVersion"),
                 affiliation = auroraConfigFields.extract("affiliation"),
                 cluster = auroraConfigFields.extract("cluster"),
                 type = type,
-                name = auroraConfigFields.extract("name"),
+                name = name,
                 envName = auroraConfigFields.extractOrDefault("envName", deployCommand.applicationId.environment),
                 permissions = extractPermissions(),
                 secrets = extractSecret(),
                 config = auroraConfigFields.getConfigMap(configHandlers),
                 templateJson = templateJson,
                 parameters = auroraConfigFields.getParameters(parameterHandlers),
-                route = getRoute(),
+                route = getRoute(name),
                 mounts = auroraConfigFields.getMounts(mountHandlers, vaults),
                 fields = auroraConfigFields.fields,
                 unmappedPointers = getUnmappedPointers(),
