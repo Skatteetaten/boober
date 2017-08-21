@@ -85,7 +85,6 @@ data class AuroraDeploymentConfigDeploy(
         val replicas: Int?,
         override val secrets: Map<String, String>? = null,
         override val config: Map<String, String> = mapOf(),
-        override val route: Route? = null,
         override val route: List<Route> = emptyList(),
         val groupId: String,
         val artifactId: String,

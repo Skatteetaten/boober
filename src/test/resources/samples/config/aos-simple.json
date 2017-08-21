@@ -21,7 +21,7 @@
     "aos-simple": {
       "path": "/foo",
       "annotations": {
-        "timeout": "30s"
+        "haproxy.router.openshift.io|timeout": "30s"
       }
     }
   },
