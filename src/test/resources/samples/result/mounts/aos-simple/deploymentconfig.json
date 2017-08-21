@@ -1,0 +1,208 @@
+{
+  "kind": "DeploymentConfig",
+  "apiVersion": "v1",
+  "metadata": {
+    "annotations": {
+      "boober.skatteetaten.no/applicationFile": "mounts/aos-simple.json",
+      "console.skatteetaten.no/alarm": "true",
+      "sprocket.sits.no/deployment-config.certificate": "ske.aurora.openshift.aos-simple"
+    },
+    "labels": {
+      "app": "aos-simple",
+      "updatedBy": "hero",
+      "affiliation": "aos",
+      "booberDeployId": "123"
+    },
+    "name": "aos-simple"
+  },
+  "spec": {
+    "strategy": {
+      "type": "Rolling",
+      "rollingParams": {
+        "intervalSeconds": 1,
+        "maxSurge": "25%",
+        "maxUnavailable": 0,
+        "timeoutSeconds": 120,
+        "updatePeriodSeconds": 1
+      }
+    },
+    "triggers": [
+      {
+        "type": "ImageChange",
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "aos-simple"
+          ],
+          "from": {
+            "name": "aos-simple:latest",
+            "kind": "ImageStreamTag"
+          }
+        }
+      }
+    ],
+    "replicas": 1,
+    "selector": {
+      "name": "aos-simple"
+    },
+    "template": {
+      "metadata": {
+        "labels": {
+          "deployTag": "1.0.3-SNAPSHOT",
+          "name": "aos-simple",
+          "app": "aos-simple",
+          "updatedBy": "hero",
+          "affiliation": "aos",
+          "booberDeployId": "123"
+        }
+      },
+      "spec": {
+        "volumes": [
+          {
+            "name": "application-log-volume",
+            "emptyDir": {
+            }
+          },
+          {
+            "name": "config",
+            "configMap": {
+              "name": "aos-simple"
+            }
+          },
+          {
+            "name": "aos-simple-cert",
+            "secret": {
+              "secretName": "aos-simple-cert"
+            }
+          }
+        ],
+        "containers": [
+          {
+            "name": "aos-simple",
+            "ports": [
+              {
+                "containerPort": 8080,
+                "protocol": "TCP",
+                "name": "http"
+              },
+              {
+                "containerPort": 8081,
+                "protocol": "TCP",
+                "name": "management"
+              },
+              {
+                "containerPort": 8778,
+                "name": "jolokia"
+              }
+            ],
+            "env": [
+              {
+                "name": "SPLUNK_INDEX",
+                "value": "openshift-test"
+              },
+              {
+                "name": "POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              },
+              {
+                "name": "POD_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "HTTP_PORT",
+                "value": "8080"
+              },
+              {
+                "name": "MANAGEMENT_HTTP_PORT",
+                "value": "8081"
+              },
+              {
+                "name": "APP_NAME",
+                "value": "aos-simple"
+              },
+              {
+                "name": "STS_CERTIFICATE_URL",
+                "value": "/u01/secrets/app/aos-simple-cert/certificate.crt"
+              },
+              {
+                "name": "STS_PRIVATE_KEY_URL",
+                "value": "/u01/secrets/app/aos-simple-cert/privatekey.key"
+              },
+              {
+                "name": "STS_KEYSTORE_DESCRIPTOR",
+                "value": "/u01/secrets/app/aos-simple-cert/descriptor.properties"
+              },
+              {
+                "name": "ROUTE_NAME",
+                "value": "http://aos-simple-aos-mounts.utv.paas.skead.no/foo"
+              }
+            ],
+            "resources": {
+              "limits": {
+                "cpu": "2000m",
+                "memory": "128Mi"
+              },
+              "requests": {
+                "cpu": "0",
+                "memory": "128Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "application-log-volume",
+                "mountPath": "/u01/logs"
+              },
+              {
+                "name": "config",
+                "mountPath": "/u01/config/configmap"
+              },
+              {
+                "name": "aos-simple-cert",
+                "mountPath": "/u01/secrets/app/aos-simple-cert"
+              }
+            ],
+            "terminationMessagePath": "/dev/termination-log",
+            "imagePullPolicy": "IfNotPresent",
+            "capabilities": {
+            },
+            "securityContext": {
+              "capabilities": {
+              },
+              "privileged": false
+            },
+            "livenessProbe": {
+              "exec": {
+                "command": [
+                  "/u01/application/bin/liveness.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 1
+            },
+            "readinessProbe": {
+              "exec": {
+                "command": [
+                  "/u01/application/bin/readiness.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 1
+            }
+          }
+        ],
+        "restartPolicy": "Always",
+        "dnsPolicy": "ClusterFirst"
+      }
+    }
+  }
+}

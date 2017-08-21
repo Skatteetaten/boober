@@ -229,7 +229,7 @@
                 }
               #end
 
-              #if (${adc.route})
+              #if (${adc.route.size()} !=0)
                   ,{
                     "name": "ROUTE_NAME",
                     "value": "${adc.routeName}"

@@ -20,7 +20,7 @@ interface AuroraDeploymentConfig {
     val config: Map<String, Map<String, String>>?
     val fields: Map<String, AuroraConfigField>
     val unmappedPointers: Map<String, List<String>>
-    val route: Route?
+    val route: List<Route>
     val mounts: List<Mount>?
     val releaseTo: String?
     val applicationFile: String
@@ -30,10 +30,16 @@ interface AuroraDeploymentConfig {
 
     //In use in velocity template
     val routeName: String?
-        get() = route?.let {
-            val host = it.host ?: "$name-$namespace"
-            "http://$host.$cluster.paas.skead.no${it.path ?: ""}"
-        }
+        get() =
+            if (route.isEmpty()) {
+                null
+            } else {
+                route.first().let {
+                    val host = it.host ?: "$name-$namespace"
+                    "http://$host.$cluster.paas.skead.no${it.path ?: ""}"
+                }
+            }
+
 }
 
 
@@ -77,7 +83,7 @@ data class AuroraDeploymentConfigDeploy(
         val replicas: Int?,
         override val secrets: Map<String, String>? = null,
         override val config: Map<String, Map<String, String>>? = null,
-        override val route: Route? = null,
+        override val route: List<Route> = emptyList(),
         val groupId: String,
         val artifactId: String,
         val version: String,
@@ -108,6 +114,7 @@ interface AuroraDeploymentConfigProcess {
     val parameters: Map<String, String>?
 }
 
+
 data class AuroraDeploymentConfigProcessLocalTemplate(
         override val schemaVersion: String = "v1",
         override val affiliation: String,
@@ -120,7 +127,7 @@ data class AuroraDeploymentConfigProcessLocalTemplate(
         override val config: Map<String, Map<String, String>>? = null,
         override val parameters: Map<String, String>? = mapOf(),
         override val fields: Map<String, AuroraConfigField>,
-        override val route: Route? = null,
+        override val route: List<Route> = emptyList(),
         override val mounts: List<Mount>? = null,
         override val releaseTo: String? = null,
         val templateJson: JsonNode,
@@ -141,7 +148,7 @@ data class AuroraDeploymentConfigProcessTemplate(
         override val config: Map<String, Map<String, String>>? = null,
         override val parameters: Map<String, String>? = mapOf(),
         override val fields: Map<String, AuroraConfigField>,
-        override val route: Route? = null,
+        override val route: List<Route> = emptyList(),
         override val mounts: List<Mount>? = null,
         override val releaseTo: String? = null,
         val template: String,
@@ -153,6 +160,7 @@ data class AuroraDeploymentConfigProcessTemplate(
 
 
 data class Route(
+        val name: String,
         val host: String? = null,
         val path: String? = null,
         val annotations: Map<String, String>? = null
