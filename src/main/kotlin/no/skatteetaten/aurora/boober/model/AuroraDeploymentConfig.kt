@@ -17,7 +17,7 @@ interface AuroraDeploymentConfig {
     val envName: String
     val permissions: Permissions
     val secrets: Map<String, String>?
-    val config: Map<String, Map<String, String>>?
+    val config: Map<String, String>
     val fields: Map<String, AuroraConfigField>
     val unmappedPointers: Map<String, List<String>>
     val route: List<Route>
@@ -82,7 +82,8 @@ data class AuroraDeploymentConfigDeploy(
         override val permissions: Permissions,
         val replicas: Int?,
         override val secrets: Map<String, String>? = null,
-        override val config: Map<String, Map<String, String>>? = null,
+        override val config: Map<String, String> = mapOf(),
+        override val route: Route? = null,
         override val route: List<Route> = emptyList(),
         val groupId: String,
         val artifactId: String,
@@ -124,7 +125,7 @@ data class AuroraDeploymentConfigProcessLocalTemplate(
         override val envName: String,
         override val permissions: Permissions,
         override val secrets: Map<String, String>? = null,
-        override val config: Map<String, Map<String, String>>? = null,
+        override val config: Map<String, String> = mapOf(),
         override val parameters: Map<String, String>? = mapOf(),
         override val fields: Map<String, AuroraConfigField>,
         override val route: List<Route> = emptyList(),
@@ -145,7 +146,7 @@ data class AuroraDeploymentConfigProcessTemplate(
         override val envName: String,
         override val permissions: Permissions,
         override val secrets: Map<String, String>? = null,
-        override val config: Map<String, Map<String, String>>? = null,
+        override val config: Map<String, String> = mapOf(),
         override val parameters: Map<String, String>? = mapOf(),
         override val fields: Map<String, AuroraConfigField>,
         override val route: List<Route> = emptyList(),

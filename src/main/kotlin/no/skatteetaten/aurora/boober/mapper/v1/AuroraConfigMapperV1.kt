@@ -82,9 +82,9 @@ abstract class AuroraConfigMapperV1(
     fun findConfigFieldHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
 
         val name = "config"
-        val configFiles = findSubKeys(applicationFiles, name)
+        val keysStartingWithConfig = findSubKeys(applicationFiles, name)
 
-        val configKeys: Map<String, Set<String>> = configFiles.map { configFileName ->
+        val configKeys: Map<String, Set<String>> = keysStartingWithConfig.map { configFileName ->
             //find all unique keys in a configFile
             val keys = applicationFiles.flatMap { ac ->
                 ac.contents.at("/$name/$configFileName")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
@@ -94,8 +94,13 @@ abstract class AuroraConfigMapperV1(
         }.toMap()
 
         return configKeys.flatMap { configFile ->
-            configFile.value.map { field ->
-                AuroraConfigFieldHandler("$name/${configFile.key}/$field")
+            val value = configFile.value
+            if (value.isEmpty()) {
+                listOf(AuroraConfigFieldHandler("$name/${configFile.key}"))
+            } else {
+                value.map { field ->
+                    AuroraConfigFieldHandler("$name/${configFile.key}/$field")
+                }
             }
         }
     }

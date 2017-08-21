@@ -44,18 +44,6 @@ class OpenShiftObjectGenerator(
 
         var overrides = StringEscapeUtils.escapeJavaScript(mapper.writeValueAsString(auroraDc.overrideFiles))
 
-
-        val configs: Map<String, String> = auroraDc.config?.map { (key, value) ->
-            val keyProps = if (!key.endsWith(".properties")) {
-                "$key.properties"
-            } else key
-
-            keyProps to value.map {
-                "${it.key}=${it.value}"
-            }.joinToString(separator = "\\n")
-        }?.toMap() ?: mapOf()
-
-
         val database = if (auroraDc is AuroraDeploymentConfigDeploy) {
             auroraDc.database.map { it.spec }.joinToString(",")
         } else ""
@@ -66,7 +54,6 @@ class OpenShiftObjectGenerator(
                 "overrides" to overrides,
                 "deployId" to deployId,
                 "adc" to (auroraDc as? AuroraDeploymentConfigDeploy ?: auroraDc as AuroraDeploymentConfigProcess),
-                "configs" to configs,
                 "username" to userDetailsProvider.getAuthenticatedUser().username,
                 "dockerRegistry" to dockerRegistry,
                 "builder" to mapOf("name" to "leveransepakkebygger", "version" to "prod"),
@@ -89,7 +76,7 @@ class OpenShiftObjectGenerator(
             templatesToProcess.add("service.json")
         }
 
-        if (configs.isNotEmpty()) {
+        if (auroraDc.config.isNotEmpty()) {
             templatesToProcess.add("configmap.json")
         }
 

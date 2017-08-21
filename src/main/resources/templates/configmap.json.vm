@@ -9,15 +9,13 @@
       "affiliation": "${adc.affiliation}",
       "booberDeployId": "${deployId}"
     }
-  }
-#if (${configs})
-,"data": {
-  #foreach ($config  in $configs.entrySet())
+  },
+"data": {
+  #foreach ($config  in $adc.config.entrySet())
     #if($velocityCount != 1)
       ,
     #end
     "${config.key}": "${config.value}"
   #end
 }
-#end
 }
