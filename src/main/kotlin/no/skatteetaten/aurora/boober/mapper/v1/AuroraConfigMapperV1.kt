@@ -63,17 +63,22 @@ abstract class AuroraConfigMapperV1(
         return filePointers.mapValues { it.value - allPaths }.filterValues { it.isNotEmpty() }
     }
 
-    fun getProbe(name: String): Probe {
+    fun getProbe(name: String): Probe? {
+        val port = auroraConfigFields.extractOrNull("$name/port", JsonNode::asInt)
+
+        if (port == null) {
+            return null
+        }
+
         return Probe(
                 auroraConfigFields.extractOrNull("$name/path")?.let {
                     if (!it.startsWith("/")) {
                         "/$it"
                     } else it
                 },
-                auroraConfigFields.extract("$name/port", JsonNode::asInt),
+                port,
                 auroraConfigFields.extract("$name/delay", JsonNode::asInt),
                 auroraConfigFields.extract("$name/timeout", JsonNode::asInt)
-
         )
     }
 
