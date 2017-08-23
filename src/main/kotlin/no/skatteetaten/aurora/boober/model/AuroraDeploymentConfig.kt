@@ -103,7 +103,7 @@ data class AuroraDeploymentConfigDeploy(
         override val unmappedPointers: Map<String, List<String>>,
         override val applicationFile: String,
         override val overrideFiles: Map<String, JsonNode> = emptyMap(),
-        val liveness: Probe,
+        val liveness: Probe?,
         val readiness: Probe
 ) : AuroraDeploymentConfig {
 

@@ -150,13 +150,6 @@
               },
               "privileged": false
             },
-            "livenessProbe": {
-              "tcpSocket": {
-                "port": 8080
-              },
-              "initialDelaySeconds": 10,
-              "timeoutSeconds": 1
-            },
             "readinessProbe": {
               "tcpSocket": {
                 "port": 8080

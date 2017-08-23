@@ -50,10 +50,10 @@ class AuroraConfigMapperV1Deploy(
             AuroraConfigFieldHandler("readiness/path"),
             AuroraConfigFieldHandler("readiness/delay", defaultValue = "10"),
             AuroraConfigFieldHandler("readiness/timeout", defaultValue = "1"),
-            AuroraConfigFieldHandler("liveliness/port", defaultValue = "8080"),
-            AuroraConfigFieldHandler("liveliness/path"),
-            AuroraConfigFieldHandler("liveliness/delay", defaultValue = "10"),
-            AuroraConfigFieldHandler("liveliness/timeout", defaultValue = "1")
+            AuroraConfigFieldHandler("liveness/port"),
+            AuroraConfigFieldHandler("liveness/path"),
+            AuroraConfigFieldHandler("liveness/delay", defaultValue = "10"),
+            AuroraConfigFieldHandler("liveness/timeout", defaultValue = "1")
     )
 
     override val fieldHandlers = v1Handlers + handlers
@@ -134,8 +134,8 @@ class AuroraConfigMapperV1Deploy(
                 unmappedPointers = getUnmappedPointers(),
                 applicationFile = applicationFile.name,
                 overrideFiles = overrideFiles,
-                liveness = getProbe("liveliness"),
-                readiness = getProbe("readiness")
+                liveness = getProbe("liveness"),
+                readiness = getProbe("readiness")!!
         )
     }
 

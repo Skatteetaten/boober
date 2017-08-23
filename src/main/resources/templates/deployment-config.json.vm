@@ -334,6 +334,7 @@
               "capabilities": {},
               "privileged": false
             },
+            #if (${adc.liveness})
             "livenessProbe": {
               #if(${adc.liveness.path} && "$!{adc.liveness.path}" != "")
               "httpGet": {
@@ -346,6 +347,7 @@
               "initialDelaySeconds": ${adc.liveness.delay},
               "timeoutSeconds": ${adc.liveness.timeout}
             },
+            #end
             "readinessProbe": {
               #if(${adc.readiness.path} && "$!{adc.readiness.path}" != "")
               "httpGet": {
