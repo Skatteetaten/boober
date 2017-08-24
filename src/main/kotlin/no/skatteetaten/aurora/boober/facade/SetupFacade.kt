@@ -133,6 +133,7 @@ class SetupFacade(
                     //vi må finne ut om prosjektet finnes.
                     val openShiftObjects = openShiftObjectGenerator.generateObjects(adc, deployId)
 
+                    //we need to check if there is a project that you cannot view/operate on
                     val openShiftCommand = if (openShiftClient.projectExist(adc.namespace)) {
                         openShiftObjects.mapNotNull { openShiftClient.prepare(adc.namespace, it) }
                     } else {
