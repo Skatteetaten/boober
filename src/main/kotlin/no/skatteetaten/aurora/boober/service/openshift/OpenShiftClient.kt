@@ -52,14 +52,19 @@ class OpenShiftClient(
     //TODO:error handling look at processDeployCommands
     fun performOpenShiftCommand(cmd: OpenshiftCommand, namespace: String): OpenShiftResponse {
 
-
         val kind = cmd.payload.openshiftKind
+
+        val performClient= if(listOf("project","rolebinding").contains(kind)) {
+            serviceAccountClient
+        } else {
+            userClient
+        }
         val name = cmd.payload.openshiftName
 
         val res = when (cmd.operationType) {
-            OperationType.CREATE -> userClient.post(kind, name, namespace, cmd.payload).body
-            OperationType.UPDATE -> userClient.put(kind, name, namespace, cmd.payload).body
-            OperationType.DELETE -> userClient.delete(kind, name, namespace, cmd.payload).body
+            OperationType.CREATE -> performClient.post(kind, name, namespace, cmd.payload).body
+            OperationType.UPDATE -> performClient.put(kind, name, namespace, cmd.payload).body
+            OperationType.DELETE -> performClient.delete(kind, name, namespace, cmd.payload).body
             OperationType.NOOP -> cmd.payload
         }
 
@@ -155,26 +160,27 @@ class OpenShiftClient(
     }
 
     private fun exist(url: String): Boolean {
-        val headers: HttpHeaders = userClient.getAuthorizationHeaders()
+        val headers: HttpHeaders = serviceAccountClient.getAuthorizationHeaders()
 
-        val existingResource = userClient.getExistingResource(headers, url)
+        val existingResource = serviceAccountClient.getExistingResource(headers, url)
         return existingResource != null
     }
 
     private fun isUserInGroup(user: String, group: String): Boolean {
-        val headers: HttpHeaders = userClient.getAuthorizationHeaders()
+        val headers: HttpHeaders = serviceAccountClient.getAuthorizationHeaders()
 
         val url = "$baseUrl/oapi/v1/groups/$group"
 
-        val resource = userClient.getExistingResource(headers, url)
+        val resource = serviceAccountClient.getExistingResource(headers, url)
         return resource?.body?.get("users")?.any { it.textValue() == user } ?: false
     }
 
     fun createOpenshiftDeleteCommands(name: String, namespace: String, deployId: String,
                                       kinds: List<String> = listOf("deploymentconfigs", "configmaps", "secrets", "services", "routes", "imagestreams")): List<OpenshiftCommand> {
+        val headers: HttpHeaders = userClient.getAuthorizationHeaders()
+
 
         return kinds.flatMap {
-            val headers: HttpHeaders = userClient.getAuthorizationHeaders()
             val apiType = if (it in listOf("services", "configmaps", "secrets")) "api" else "oapi"
             val url = "$baseUrl/$apiType/v1/namespaces/$namespace/$it?labelSelector=app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
             userClient.getExistingResource(headers, url)?.body?.get("items")?.toList() ?: emptyList()
