@@ -24,16 +24,16 @@ class OpenShiftResourceClientConfig(
     @Target(AnnotationTarget.TYPE, AnnotationTarget.FUNCTION, AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
     @Retention(AnnotationRetention.RUNTIME)
     @Qualifier
-    annotation class OpenShiftResourceClientType(val value: TokenSource)
+    annotation class ClientType(val value: TokenSource)
 
     @Bean
-    @OpenShiftResourceClientType(TokenSource.API_USER)
+    @ClientType(TokenSource.API_USER)
     @Primary
     fun createUserDetailsOpenShiftResourceClient(): OpenShiftResourceClient
             = OpenShiftResourceClient(baseUrl, userDetailsTokenProvider, restTemplate)
 
     @Bean
-    @OpenShiftResourceClientType(TokenSource.SERVICE_ACCOUNT)
+    @ClientType(TokenSource.SERVICE_ACCOUNT)
     fun createServiceAccountOpenShiftResourceClient(): OpenShiftResourceClient
             = OpenShiftResourceClient(baseUrl, serviceAccountTokenProvider, restTemplate)
 }

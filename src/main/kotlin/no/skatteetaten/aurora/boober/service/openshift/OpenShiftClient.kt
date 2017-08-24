@@ -3,7 +3,7 @@ package no.skatteetaten.aurora.boober.service.openshift
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.model.AuroraPermissions
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.OpenShiftResourceClientType
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
 import no.skatteetaten.aurora.boober.utils.openshiftKind
@@ -39,8 +39,8 @@ data class OpenShiftResponse(
 @Service
 class OpenShiftClient(
         @Value("\${openshift.url}") val baseUrl: String,
-        @OpenShiftResourceClientType(API_USER) val userClient: OpenShiftResourceClient,
-        @OpenShiftResourceClientType(SERVICE_ACCOUNT) val serviceAccountClient: OpenShiftResourceClient,
+        @ClientType(API_USER) val userClient: OpenShiftResourceClient,
+        @ClientType(SERVICE_ACCOUNT) val serviceAccountClient: OpenShiftResourceClient,
         val mapper: ObjectMapper
 ) {
 
