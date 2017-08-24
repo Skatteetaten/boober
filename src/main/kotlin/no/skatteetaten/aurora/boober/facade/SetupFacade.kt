@@ -19,6 +19,7 @@ import no.skatteetaten.aurora.boober.service.internal.DeployHistory
 import no.skatteetaten.aurora.boober.service.internal.TagCommand
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
+import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
@@ -62,7 +63,7 @@ class SetupFacade(
 
     fun setupApplication(cmd: ApplicationCommand): ApplicationResult {
         val responses = cmd.commands.map {
-
+/* TODO: remove
             //When we create an Openshift project we get a default rolebinding called admin that we do not want.
             val openshiftCommand = if (it.operationType == OperationType.CREATE &&
                     it.payload.openshiftKind.toLowerCase() == "rolebinding" &&
@@ -70,8 +71,8 @@ class SetupFacade(
                 openShiftClient.updateRolebindingCommand(it.payload, cmd.auroraDc.namespace)
             } else {
                 it
-            }
-            openShiftClient.performOpenShiftCommand(openshiftCommand, cmd.auroraDc.namespace)
+            }*/
+            openShiftClient.performOpenShiftCommand(it, cmd.auroraDc.namespace)
         }
 
         val deployCommand =
@@ -128,8 +129,15 @@ class SetupFacade(
         val res = LinkedList(auroraDcs
                 .filter { it.cluster == cluster }
                 .map { adc ->
+                    //her kan vi ikke gjøre det på denne måten.
+                    //vi må finne ut om prosjektet finnes.
                     val openShiftObjects = openShiftObjectGenerator.generateObjects(adc, deployId)
-                    val openShiftCommand = openShiftObjects.mapNotNull { openShiftClient.prepare(adc.namespace, it) }
+
+                    val openShiftCommand = if (openShiftClient.projectExist(adc.namespace)) {
+                        openShiftObjects.mapNotNull { openShiftClient.prepare(adc.namespace, it) }
+                    } else {
+                        openShiftObjects.mapNotNull { OpenshiftCommand(OperationType.CREATE, payload = it) }
+                    }
                     val tagCmd = if (adc is AuroraDeploymentConfigDeploy && adc.releaseTo != null) {
                         TagCommand("${adc.dockerGroup}/${adc.dockerName}", adc.version, adc.releaseTo!!, dockerRegistry)
                     } else null
@@ -165,7 +173,7 @@ class SetupFacade(
 
         val deployResource: JsonNode? =
                 if (type == development) {
-                        openShiftObjectGenerator.generateBuildRequest(name)
+                    openShiftObjectGenerator.generateBuildRequest(name)
                 } else if (imageStream == null) {
                     if (deployment != null) {
                         openShiftObjectGenerator.generateDeploymentRequest(name)

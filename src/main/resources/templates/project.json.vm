@@ -1,7 +1,15 @@
 {
-  "kind": "ProjectRequest",
   "apiVersion": "v1",
+  "kind": "Project",
   "metadata": {
+    "annotations": {
+      "openshift.io/description": "",
+      "openshift.io/display-name": "",
+      "openshift.io/requester": "${username}"
+    },
+    "labels": {
+      "affiliation": "${adc.affiliation}"
+    },
     "name": "${adc.namespace}"
   }
 }

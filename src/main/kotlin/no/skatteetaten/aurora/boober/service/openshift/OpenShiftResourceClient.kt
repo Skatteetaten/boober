@@ -25,7 +25,8 @@ class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: String,
 
     fun put(kind: String, name: String, namespace: String, payload: JsonNode): ResponseEntity<JsonNode> {
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, name, namespace)
-        val headers: HttpHeaders = getAuthorizationHeaders()
+
+        val headers = getAuthorizationHeaders()
         return exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.PUT, URI(urls.update)))
     }
 
@@ -38,7 +39,7 @@ class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: String,
 
         try {
             return exchange(RequestEntity<Any>(headers, HttpMethod.GET, URI(urls.get)))
-        } catch(e: OpenShiftException) {
+        } catch (e: OpenShiftException) {
             if (e.cause is HttpClientErrorException && e.cause.statusCode == HttpStatus.NOT_FOUND) {
                 return null
             }
@@ -46,6 +47,7 @@ class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: String,
         }
     }
 
+    @JvmOverloads
     fun post(kind: String, name: String? = null, namespace: String, payload: JsonNode): ResponseEntity<JsonNode> {
 
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, name, namespace)
@@ -69,7 +71,7 @@ class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: String,
         return try {
             val requestEntity = RequestEntity<Any>(headers, HttpMethod.GET, URI(url))
             restTemplate.exchange(requestEntity, JsonNode::class.java)
-        } catch(e: Exception) {
+        } catch (e: Exception) {
             if (e is HttpClientErrorException && e.statusCode != HttpStatus.NOT_FOUND) {
                 throw OpenShiftException("An unexpected error occurred when getting resource $url", e)
             }
@@ -93,7 +95,7 @@ class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: String,
 
         val createResponse: ResponseEntity<JsonNode> = try {
             restTemplate.exchange(requestEntity, JsonNode::class.java)
-        } catch(e: HttpClientErrorException) {
+        } catch (e: HttpClientErrorException) {
             throw OpenShiftException("Error saving url=${requestEntity.url}, with message=${e.message}", e)
         }
         logger.debug("Body=${createResponse.body}")

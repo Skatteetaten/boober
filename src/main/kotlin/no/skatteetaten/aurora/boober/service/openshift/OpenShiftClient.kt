@@ -2,6 +2,8 @@ package no.skatteetaten.aurora.boober.service.openshift
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.TextNode
 import no.skatteetaten.aurora.boober.model.AuroraPermissions
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
@@ -15,7 +17,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Service
 
-enum class OperationType { CREATE, UPDATE, DELETE }
+enum class OperationType { CREATE, UPDATE, DELETE, NOOP }
 
 data class OpenshiftCommand @JvmOverloads constructor(
         val operationType: OperationType,
@@ -55,12 +57,13 @@ class OpenShiftClient(
         val name = cmd.payload.openshiftName
 
         val res = when (cmd.operationType) {
-            OperationType.CREATE -> userClient.post(kind, name, namespace, cmd.payload)
-            OperationType.UPDATE -> userClient.put(kind, name, namespace, cmd.payload)
-            OperationType.DELETE -> userClient.delete(kind, name, namespace, cmd.payload)
+            OperationType.CREATE -> userClient.post(kind, name, namespace, cmd.payload).body
+            OperationType.UPDATE -> userClient.put(kind, name, namespace, cmd.payload).body
+            OperationType.DELETE -> userClient.delete(kind, name, namespace, cmd.payload).body
+            OperationType.NOOP -> cmd.payload
         }
 
-        return OpenShiftResponse(cmd, res.body)
+        return OpenShiftResponse(cmd, res)
 
     }
 
@@ -79,11 +82,12 @@ class OpenShiftClient(
             return OpenshiftCommand(OperationType.CREATE, payload = json)
         }
 
+        //we do not update project objects
+        if (kind == "project") {
+            return OpenshiftCommand(OperationType.NOOP, payload = json)
+        }
         val existing = existingResource.body
 
-        if (kind == "projectrequest") {
-            return null
-        }
 
         json.updateField(existing, "/metadata", "resourceVersion")
 
@@ -168,10 +172,9 @@ class OpenShiftClient(
 
     fun createOpenshiftDeleteCommands(name: String, namespace: String, deployId: String,
                                       kinds: List<String> = listOf("deploymentconfigs", "configmaps", "secrets", "services", "routes", "imagestreams")): List<OpenshiftCommand> {
-        val headers: HttpHeaders = userClient.getAuthorizationHeaders()
-
 
         return kinds.flatMap {
+            val headers: HttpHeaders = userClient.getAuthorizationHeaders()
             val apiType = if (it in listOf("services", "configmaps", "secrets")) "api" else "oapi"
             val url = "$baseUrl/$apiType/v1/namespaces/$namespace/$it?labelSelector=app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
             userClient.getExistingResource(headers, url)?.body?.get("items")?.toList() ?: emptyList()
@@ -180,16 +183,15 @@ class OpenShiftClient(
         }
     }
 
-    fun updateRolebindingCommand(json: JsonNode, namespace: String): OpenshiftCommand {
 
-        val kind = json.openshiftKind.toLowerCase()
-        val name = json.openshiftName.toLowerCase()
+    fun projectExist(name: String): Boolean {
+        val headers: HttpHeaders = userClient.getAuthorizationHeaders()
+        val url = "$baseUrl/oapi/v1/projects"
+        val projects = userClient.getExistingResource(headers, url)?.body?.get("items")?.toList() ?: emptyList()
 
-        val existing = userClient.get(kind, name, namespace)?.body ?: throw IllegalArgumentException("Admin rolebinding should exist")
 
-        json.updateField(existing, "/metadata", "resourceVersion")
+        return projects.any { it.at("/metadata/name").asText() == name }
 
-        return OpenshiftCommand(OperationType.UPDATE, json, previous = existing)
     }
 
 }
