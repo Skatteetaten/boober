@@ -196,8 +196,15 @@ class OpenShiftClient(
         val projects = userClient.getExistingResource(headers, url)?.body?.get("items")?.toList() ?: emptyList()
 
 
-        return projects.any { it.at("/metadata/name").asText() == name }
+        val canSee= projects.any { it.at("/metadata/name").asText() == name }
 
+        if(canSee) {
+            if(exist("$url/$name")) {
+                throw IllegalAccessException("Project exist but you do not have permission to modify it")
+            }
+        }
+
+        return canSee
     }
 
 }

@@ -22,7 +22,7 @@ import java.util.Optional.ofNullable
 @Component
 class ServiceAccountTokenProvider(
         @Value("\${boober.openshift.tokenLocation}") val tokenLocation: String,
-        @Value("\${boober.openshift.token:}") val tokenOverride: String?
+        @Value("\${boober.openshift.token:}") val tokenOverride: String
 ) : TokenProvider {
 
     private val logger: Logger = LoggerFactory.getLogger(ServiceAccountTokenProvider::class.java)
@@ -36,21 +36,29 @@ class ServiceAccountTokenProvider(
      *
      * @return
      */
-    override fun getToken() : String {
-        val token: String = Suppliers.memoize ({ tokenOverride ?: readTokenFromFile()}).get();
+    override fun getToken(): String {
+        val token: String = Suppliers.memoize({ readToken() }).get()
         logger.debug("Using application token with length={}, firstLetter={}, lastLetter={}", token.length,
                 token[0], token[token.length - 1])
         return token
     }
 
-    fun readTokenFromFile() : String {
+    fun readToken(): String {
+        return if (tokenOverride.isBlank()) {
+            readTokenFromFile()
+        } else {
+            tokenOverride
+        }
+    }
+
+    fun readTokenFromFile(): String {
         logger.info("Reading application token from tokenLocation={}", tokenLocation)
         try {
-            val token: String = Files.toString (File (tokenLocation), Charsets.UTF_8)
+            val token: String = Files.toString(File(tokenLocation), Charsets.UTF_8).trimEnd()
             logger.debug("Read token with length={}", token.length)
-            return token;
-        } catch (e : IOException) {
-            throw IllegalStateException ("tokenLocation=$tokenLocation could not be read", e)
+            return token
+        } catch (e: IOException) {
+            throw IllegalStateException("tokenLocation=$tokenLocation could not be read", e)
         }
     }
 }

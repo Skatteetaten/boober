@@ -19,7 +19,6 @@ boober:
         registry: "docker-registry.aurora.sits.no:5000"
     openshift:
         tokenLocation: /var/run/secrets/kubernetes.io/serviceaccount/token
-        #token:
 
 aurora:
   client:
@@ -45,9 +44,10 @@ spring:
 
 openshift:
     cluster: qa
-    saToken: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJhdXJvcmEiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlY3JldC5uYW1lIjoiY29uc29sZS10b2tlbi1oN3JlMSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJjb25zb2xlIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiMDY1ZmE5NmItZWEwOS0xMWU2LWFmYmMtMDA1MDU2ODM3YzQxIiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50OmF1cm9yYTpjb25zb2xlIn0.eTDro4F6-zlE2bY8wEBdaQgIaQuhx2bsN-1QSAtlyghYDUGfalKGyqlYaRP-ApN8kS0AvkCs_cQS5700k6yCxIBSQ9-EZUEwa1lnkY1QrXCoJva_TsTF7WSfbNlLz9lBG3x4geVxdiQQ5-qFjuf4SBFC2_8oI7CNr1sIDzFezvU3nD3mPsVHGx9gUt4_wXE4R3FxDAtJEyg58b6Xfqv1GInQyfB8SKrpYkoUR_iTuTg6G4HmiEazdJrX-pJvbLnfgdUITn_lzA3c2MrRDa4KZqGd3VR5LTZHl4O8PZ0l0YgX_UnhXzIta6nAU1ccIL6NfL7nVIql9WLtzrdM2RvnOA
 
 boober:
+  openshift:
+    tokenLocation: /opt/boober
   encrypt:
     key: "komogsyngensang"
   git:

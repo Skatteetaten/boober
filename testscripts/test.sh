@@ -14,7 +14,6 @@ echo "Create test Secret Vault"
 echo "Create utv Secret Vault"
 
 #http --timeout 300 PUT :8080/affiliation/paas/vault Authorization:"bearer $token"  < secretVault_utv.json
-B
 
 echo "Add aurora config for referance app"
 #http --timeout 300 PUT :8080/affiliation/paas/auroraconfig Authorization:"bearer $token"  < reference.json
