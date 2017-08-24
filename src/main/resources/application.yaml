@@ -15,9 +15,12 @@ spring:
 boober:
     git:
        checkoutPath: "/tmp/boober"
-
     docker:
         registry: "docker-registry.aurora.sits.no:5000"
+    openshift:
+        tokenLocation: /var/run/secrets/kubernetes.io/serviceaccount/token
+        #token:
+
 aurora:
     client:
         metricsPathLabelGroupings:

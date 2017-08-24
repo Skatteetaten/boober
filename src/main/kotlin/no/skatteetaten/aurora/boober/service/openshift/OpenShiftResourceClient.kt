@@ -12,14 +12,12 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.RequestEntity
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate
 import java.net.URI
 
-@Service
 class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: String,
-                              val userDetailsProvider: UserDetailsProvider,
+                              val tokenProvider: TokenProvider,
                               val restTemplate: RestTemplate) {
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftResourceClient::class.java)
@@ -80,7 +78,7 @@ class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: String,
     }
 
     fun getAuthorizationHeaders(): HttpHeaders {
-        return createHeaders(userDetailsProvider.getAuthenticatedUser().token)
+        return createHeaders(tokenProvider.getToken())
     }
 
     fun createHeaders(token: String): HttpHeaders {
