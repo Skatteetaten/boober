@@ -36,7 +36,7 @@ class AuroraConfigFieldTest extends Specification {
       factory.Stub(UserDetailsProvider)
     }
 
-    @Bean
+    //@Bean
     OpenShiftClient openShiftClient() {
       factory.Mock(OpenShiftClient)
     }

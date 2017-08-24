@@ -26,7 +26,10 @@ import no.skatteetaten.aurora.boober.service.OpenShiftTemplateProcessor
 import no.skatteetaten.aurora.boober.service.SecretVaultService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import no.skatteetaten.aurora.boober.service.openshift.ServiceAccountTokenProvider
+import no.skatteetaten.aurora.boober.service.openshift.UserDetailsTokenProvider
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -43,7 +46,9 @@ import spock.mock.DetachedMockFactory
     DockerService,
     OpenShiftClient,
     AuroraConfigFacade,
-    Config
+    Config,
+    OpenShiftResourceClientConfig,
+    UserDetailsTokenProvider
 ]
     , properties = [
         "boober.git.urlPattern=/tmp/boober-test/%s",
@@ -66,6 +71,11 @@ class SetupFacadeSetupApplicationTest extends Specification {
     @Bean
     OpenShiftResourceClient resourceClient() {
       factory.Mock(OpenShiftResourceClient)
+    }
+
+    @Bean
+    ServiceAccountTokenProvider tokenProvider() {
+      factory.Mock(ServiceAccountTokenProvider)
     }
   }
 

@@ -13,6 +13,8 @@ boober:
     password: "komogsyngensang"
   docker:
     registry: "docker-registry.aurora.sits.no:5000"
+  openshift:
+    token: foo
 
 management:
     port: 0

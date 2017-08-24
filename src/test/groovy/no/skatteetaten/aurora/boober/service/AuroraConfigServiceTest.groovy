@@ -29,7 +29,7 @@ class AuroraConfigServiceTest extends Specification {
   static class Config {
     private DetachedMockFactory factory = new DetachedMockFactory()
 
-    @Bean
+    // @Bean
     OpenShiftClient openShiftClient() {
       factory.Mock(OpenShiftClient)
     }

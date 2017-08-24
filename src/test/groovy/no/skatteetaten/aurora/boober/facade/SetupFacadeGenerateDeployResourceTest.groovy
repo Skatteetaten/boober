@@ -24,9 +24,13 @@ import no.skatteetaten.aurora.boober.service.OpenShiftTemplateProcessor
 import no.skatteetaten.aurora.boober.service.SecretVaultService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import no.skatteetaten.aurora.boober.service.openshift.ServiceAccountTokenProvider
+import no.skatteetaten.aurora.boober.service.openshift.TokenProvider
+import no.skatteetaten.aurora.boober.service.openshift.UserDetailsTokenProvider
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -42,7 +46,9 @@ import spock.mock.DetachedMockFactory
     DockerService,
     EncryptionService,
     AuroraConfigFacade,
-    Config
+    Config,
+    OpenShiftResourceClientConfig,
+    UserDetailsTokenProvider
 ])
 class SetupFacadeGenerateDeployResourceTest extends Specification {
 
@@ -61,9 +67,19 @@ class SetupFacadeGenerateDeployResourceTest extends Specification {
       factory.Mock(OpenShiftClient)
     }
 
-    @Bean
+    // @Bean
     OpenShiftResourceClient resourceClient() {
       factory.Mock(OpenShiftResourceClient)
+    }
+
+    @Bean
+    ServiceAccountTokenProvider serviceTokenProvider() {
+      factory.Mock(ServiceAccountTokenProvider)
+    }
+
+    @Bean
+    TokenProvider tokenProvider() {
+      factory.Mock(ServiceAccountTokenProvider)
     }
   }
 

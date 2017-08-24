@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.service
 
+import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
+import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
+
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
@@ -14,7 +17,9 @@ import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.internal.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import no.skatteetaten.aurora.boober.service.openshift.UserDetailsTokenProvider
 import spock.lang.Specification
 import spock.lang.Unroll
 import spock.mock.DetachedMockFactory
@@ -25,7 +30,9 @@ import spock.mock.DetachedMockFactory
     OpenShiftObjectGenerator,
     OpenShiftTemplateProcessor,
     Config,
-    UserDetailsProvider])
+    UserDetailsProvider,
+    UserDetailsTokenProvider
+])
 class OpenShiftClientApplyTest extends Specification {
 
   @Configuration
@@ -33,7 +40,15 @@ class OpenShiftClientApplyTest extends Specification {
     private DetachedMockFactory factory = new DetachedMockFactory()
 
     @Bean
+    @OpenShiftResourceClientConfig.ClientType(API_USER)
     OpenShiftResourceClient resourceClient() {
+
+      factory.Mock(OpenShiftResourceClient)
+    }
+
+    @Bean
+    @OpenShiftResourceClientConfig.ClientType(SERVICE_ACCOUNT)
+    OpenShiftResourceClient resourceClientSA() {
 
       factory.Mock(OpenShiftResourceClient)
     }

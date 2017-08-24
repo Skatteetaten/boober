@@ -38,7 +38,7 @@ class AuroraDeploymentConfigDeployServiceUserValidationTest extends Specificatio
       factory.Stub(UserDetailsProvider)
     }
 
-    @Bean
+    // @Bean
     OpenShiftClient openShiftClient() {
       factory.Mock(OpenShiftClient)
     }
