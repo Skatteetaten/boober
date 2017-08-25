@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "v1",
+  "type": "development",
+  "cluster": "utv",
+  "permissions": {
+    "view": {
+      "groups": "APP_PaaS_utv",
+      "users": "foo"
+    }
+  }
+}

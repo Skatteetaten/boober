@@ -1,16 +1,14 @@
 {
-  "kind": "ConfigMap",
+  "kind": "ImageStream",
   "apiVersion": "v1",
   "metadata": {
-    "name": "sprocket-config",
+    "name": "aos-simple",
     "labels": {
-      "app": "sprocket",
+      "app": "aos-simple",
       "updatedBy": "hero",
       "affiliation": "aos",
+      "releasedVersion": "1.0.3-SNAPSHOT",
       "booberDeployId": "123"
     }
-  },
-  "data": {
-    "FOO": "BAR"
   }
 }

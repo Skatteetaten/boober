@@ -30,15 +30,14 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         return mountNames.map {
             val type = extract("mounts/$it/type", { MountType.valueOf(it.asText()) })
 
-            val content = when (type) {
-                MountType.Secret -> extractOrNull("secretVault", {
+            val content = if(type == MountType.ConfigMap) {
+                    extractOrNull("mounts/$it/content", { jacksonObjectMapper().convertValue<Map<String, String>>(it) })
+            } else {
+                extractOrNull("mounts/$it/secretVault", {
                     vaults[it.asText()]?.secrets
                 })
-
-                MountType.ConfigMap -> {
-                    extractOrNull("mounts/$it/content", { jacksonObjectMapper().convertValue<Map<String, String>>(it) })
-                }
             }
+
 
             Mount(
                     extract("mounts/$it/path"),
