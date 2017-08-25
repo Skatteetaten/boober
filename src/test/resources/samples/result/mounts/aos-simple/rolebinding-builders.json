@@ -1,0 +1,19 @@
+{
+  "apiVersion": "v1",
+  "kind": "RoleBinding",
+  "metadata": {
+    "name": "system:image-builders"
+  },
+  "roleRef": {
+    "name": "system:image-builder"
+  },
+  "subjects": [
+    {
+      "kind": "ServiceAccount",
+      "name": "builder"
+    }
+  ],
+  "userNames": [
+    "system:serviceaccount:aos-mounts:builder"
+  ]
+}

@@ -65,6 +65,9 @@ class OpenShiftObjectGenerator(
 
         val templatesToProcess = LinkedList(mutableListOf(
                 "project.json",
+                "deployer-rolebinding.json",
+                "imagebuilder-rolebinding.json",
+                "imagepuller-rolebinding.json",
                 "admin-rolebinding.json"))
 
         if (auroraDc.permissions.view != null) {

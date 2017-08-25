@@ -1,0 +1,19 @@
+{
+  "apiVersion": "v1",
+  "kind": "RoleBinding",
+  "groupNames": [
+    "system:serviceaccounts:aos-booberdev"
+  ],
+  "metadata": {
+    "name": "system:image-pullers"
+  },
+  "roleRef": {
+    "name": "system:image-puller"
+  },
+  "subjects": [
+    {
+      "kind": "SystemGroup",
+      "name": "system:serviceaccounts:aos-booberdev"
+    }
+  ]
+}

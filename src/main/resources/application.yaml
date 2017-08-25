@@ -15,13 +15,16 @@ spring:
 boober:
     git:
        checkoutPath: "/tmp/boober"
-
     docker:
         registry: "docker-registry.aurora.sits.no:5000"
+    openshift:
+        tokenLocation: /var/run/secrets/kubernetes.io/serviceaccount/token
+
 aurora:
-    client:
-        metricsPathLabelGroupings:
-            httpbin: ".*httpbin.org.*"
+  client:
+    metricsPathLabelGroupings:
+      httpbin: ".*httpbin.org.*"
+
 logging:
   level:
     no.skatteetaten: INFO
@@ -41,8 +44,10 @@ spring:
 
 openshift:
     cluster: qa
-    
+
 boober:
+  openshift:
+    tokenLocation: /opt/boober
   encrypt:
     key: "komogsyngensang"
   git:

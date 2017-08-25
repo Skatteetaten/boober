@@ -1,0 +1,19 @@
+{
+  "apiVersion": "v1",
+  "kind": "RoleBinding",
+  "groupNames": [
+    "system:serviceaccounts:aos-mounts"
+  ],
+  "metadata": {
+    "name": "system:image-pullers"
+  },
+  "roleRef": {
+    "name": "system:image-puller"
+  },
+  "subjects": [
+    {
+      "kind": "SystemGroup",
+      "name": "system:serviceaccounts:aos-mounts"
+    }
+  ]
+}

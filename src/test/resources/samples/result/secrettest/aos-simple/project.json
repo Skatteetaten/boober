@@ -5,11 +5,11 @@
     "annotations": {
       "openshift.io/description": "",
       "openshift.io/display-name": "",
-      "openshift.io/requester": "${username}"
+      "openshift.io/requester": "hero"
     },
     "labels": {
-      "affiliation": "${adc.affiliation}"
+      "affiliation": "aos"
     },
-    "name": "${adc.namespace}"
+    "name": "aos-secrettest"
   }
 }

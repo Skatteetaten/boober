@@ -29,9 +29,12 @@ import no.skatteetaten.aurora.boober.service.SecretVaultService
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import no.skatteetaten.aurora.boober.service.openshift.ServiceAccountTokenProvider
+import no.skatteetaten.aurora.boober.service.openshift.UserDetailsTokenProvider
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -70,6 +73,12 @@ class SetupFacadeCreateCommandTest extends Specification {
     OpenShiftResourceClient resourceClient() {
       factory.Mock(OpenShiftResourceClient)
     }
+
+    @Bean
+    ServiceAccountTokenProvider tokenProvider() {
+      factory.Mock(ServiceAccountTokenProvider)
+    }
+
   }
 
   @Autowired
@@ -102,41 +111,6 @@ class SetupFacadeCreateCommandTest extends Specification {
       OpenshiftCommand cmd = it[1]
       new OpenShiftResponse(cmd, cmd.payload)
     }
-  }
-
-  def "Should setup process for application"() {
-
-    def processAid = new ApplicationId("booberdev", "tvinn")
-    def deployCommand = new DeployCommand(processAid)
-
-    given:
-      def templateResult = this.getClass().getResource("/samples/processedtemplate/booberdev/tvinn/atomhopper.json")
-      JsonNode jsonResult = mapper.readTree(templateResult)
-      resourceClient.post("processedtemplate", null, _, _) >>
-          new ResponseEntity<JsonNode>(jsonResult, HttpStatus.OK)
-
-      def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-
-    when:
-      def result = setupFacade.createApplicationCommands(auroraConfig, [deployCommand], [:], deployId)
-
-    then:
-      result.size() == 1
-      result.get(0).auroraDc.type == TemplateType.localTemplate
-  }
-
-  def "Should setup development for application"() {
-    given:
-      def deployCommand = new DeployCommand(aid)
-      def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-
-    when:
-      def result = setupFacade.createApplicationCommands(auroraConfig, [deployCommand], [:], deployId)
-
-    then:
-      result.size() == 1
-      result.get(0).auroraDc.type == development
-
   }
 
   def "Should setup deploy for application"() {

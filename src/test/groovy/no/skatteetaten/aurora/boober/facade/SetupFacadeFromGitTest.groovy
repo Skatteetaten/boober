@@ -26,10 +26,12 @@ import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 import no.skatteetaten.aurora.boober.service.OpenShiftTemplateProcessor
 import no.skatteetaten.aurora.boober.service.SecretVaultService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import no.skatteetaten.aurora.boober.service.openshift.ServiceAccountTokenProvider
+import no.skatteetaten.aurora.boober.service.openshift.UserDetailsTokenProvider
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -45,7 +47,9 @@ import spock.mock.DetachedMockFactory
     AuroraConfigFacade,
     VaultFacade,
     ObjectMapper,
-    Config
+    Config,
+    OpenShiftResourceClientConfig,
+    UserDetailsTokenProvider
 ]
     , properties = [
         "boober.git.urlPattern=/tmp/boober-test/%s",
@@ -66,13 +70,13 @@ class SetupFacadeFromGitTest extends Specification {
     }
 
     @Bean
-    OpenShiftClient openshiftClient() {
-      factory.Mock(OpenShiftClient)
+    ServiceAccountTokenProvider tokenProvider() {
+      factory.Mock(ServiceAccountTokenProvider)
     }
 
     @Bean
-    OpenShiftResourceClient resourceClient() {
-      factory.Mock(OpenShiftResourceClient)
+    OpenShiftClient openshiftClient() {
+      factory.Mock(OpenShiftClient)
     }
 
     @Bean
@@ -120,7 +124,6 @@ class SetupFacadeFromGitTest extends Specification {
       def cmd = it[0]
       new OpenShiftResponse(cmd, cmd.payload)
     }
-    openShiftClient.updateRolebindingCommand(_, _) >> { new OpenshiftCommand(OperationType.UPDATE, it[0]) }
     openShiftClient.createOpenshiftDeleteCommands(_, _, _, _) >> []
     openShiftClient.hasUserAccess(_, _) >> true
 
@@ -201,7 +204,7 @@ class SetupFacadeFromGitTest extends Specification {
       def tags = setupFacade.deployHistory(affiliation)
       tags.size() == 1
       def revTag = tags[0]
-      revTag.result["openShiftResponses"].size() == 9
+      revTag.result["openShiftResponses"].size() == 12
 
   }
 

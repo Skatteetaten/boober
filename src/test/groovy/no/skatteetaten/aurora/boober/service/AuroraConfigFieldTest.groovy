@@ -21,7 +21,6 @@ import spock.mock.DetachedMockFactory
     no.skatteetaten.aurora.boober.Configuration,
     EncryptionService,
     AuroraConfigService,
-    OpenShiftResourceClient,
     Config
 ])
 class AuroraConfigFieldTest extends Specification {

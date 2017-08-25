@@ -21,6 +21,7 @@ import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import no.skatteetaten.aurora.boober.service.openshift.UserDetailsTokenProvider
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -29,7 +30,8 @@ import spock.mock.DetachedMockFactory
     EncryptionService,
     AuroraConfigService,
     OpenShiftResourceClient,
-    Config
+    Config,
+    UserDetailsTokenProvider
 ])
 class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
