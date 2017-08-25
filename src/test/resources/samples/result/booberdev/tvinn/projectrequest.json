@@ -1,7 +1,0 @@
-{
-  "kind": "ProjectRequest",
-  "apiVersion": "v1",
-  "metadata": {
-    "name": "aos-booberdev"
-  }
-}
