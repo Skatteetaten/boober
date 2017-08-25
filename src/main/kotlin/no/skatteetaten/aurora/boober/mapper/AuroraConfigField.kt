@@ -34,7 +34,6 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
                     extractOrNull("mounts/$it/content", { jacksonObjectMapper().convertValue<Map<String, String>>(it) })
             } else {
                 extractOrNull("mounts/$it/secretVault", {
-                    //TODO:her er det noe galt
                     vaults[it.asText()]?.secrets
                 })
             }
