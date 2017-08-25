@@ -199,6 +199,7 @@ class OpenShiftClient(
         val canSee= projects.any { it.at("/metadata/name").asText() == name }
 
         if(canSee) {
+            // Potential bug if the user can view, but not change the project.
             if(exist("$url/$name")) {
                 throw IllegalAccessException("Project exist but you do not have permission to modify it")
             }

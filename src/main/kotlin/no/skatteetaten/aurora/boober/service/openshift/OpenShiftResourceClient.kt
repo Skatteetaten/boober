@@ -16,7 +16,7 @@ import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate
 import java.net.URI
 
-class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: String,
+open class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: String,
                               val tokenProvider: TokenProvider,
                               val restTemplate: RestTemplate) {
 
@@ -25,12 +25,11 @@ class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: String,
 
     fun put(kind: String, name: String, namespace: String, payload: JsonNode): ResponseEntity<JsonNode> {
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, name, namespace)
-
-        val headers = getAuthorizationHeaders()
+        val headers: HttpHeaders = getAuthorizationHeaders()
         return exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.PUT, URI(urls.update)))
     }
 
-    fun get(kind: String, name: String, namespace: String): ResponseEntity<JsonNode>? {
+    open fun get(kind: String, name: String, namespace: String): ResponseEntity<JsonNode>? {
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, name, namespace)
         if (urls.get == null) {
             return null
@@ -47,8 +46,7 @@ class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: String,
         }
     }
 
-    @JvmOverloads
-    fun post(kind: String, name: String? = null, namespace: String, payload: JsonNode): ResponseEntity<JsonNode> {
+    open fun post(kind: String, name: String? = null, namespace: String, payload: JsonNode): ResponseEntity<JsonNode> {
 
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, name, namespace)
         val headers: HttpHeaders = getAuthorizationHeaders()

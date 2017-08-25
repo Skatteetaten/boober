@@ -50,9 +50,7 @@ import spock.mock.DetachedMockFactory
     DockerService,
     EncryptionService,
     AuroraConfigFacade,
-    Config,
-    OpenShiftResourceClientConfig,
-    UserDetailsTokenProvider
+    Config
 ])
 class SetupFacadeCreateCommandTest extends Specification {
 
@@ -113,41 +111,6 @@ class SetupFacadeCreateCommandTest extends Specification {
       OpenshiftCommand cmd = it[1]
       new OpenShiftResponse(cmd, cmd.payload)
     }
-  }
-
-  def "Should setup process for application"() {
-
-    def processAid = new ApplicationId("booberdev", "tvinn")
-    def deployCommand = new DeployCommand(processAid)
-
-    given:
-      def templateResult = this.getClass().getResource("/samples/processedtemplate/booberdev/tvinn/atomhopper.json")
-      JsonNode jsonResult = mapper.readTree(templateResult)
-      resourceClient.post("processedtemplate", null, _, _) >>
-          new ResponseEntity<JsonNode>(jsonResult, HttpStatus.OK)
-
-      def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-
-    when:
-      def result = setupFacade.createApplicationCommands(auroraConfig, [deployCommand], [:], deployId)
-
-    then:
-      result.size() == 1
-      result.get(0).auroraDc.type == TemplateType.localTemplate
-  }
-
-  def "Should setup development for application"() {
-    given:
-      def deployCommand = new DeployCommand(aid)
-      def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-
-    when:
-      def result = setupFacade.createApplicationCommands(auroraConfig, [deployCommand], [:], deployId)
-
-    then:
-      result.size() == 1
-      result.get(0).auroraDc.type == development
-
   }
 
   def "Should setup deploy for application"() {

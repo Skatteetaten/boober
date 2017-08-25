@@ -21,7 +21,6 @@ import spock.mock.DetachedMockFactory
     no.skatteetaten.aurora.boober.Configuration,
     EncryptionService,
     AuroraConfigService,
-    OpenShiftResourceClient,
     Config
 ])
 class AuroraConfigFieldTest extends Specification {
@@ -36,7 +35,7 @@ class AuroraConfigFieldTest extends Specification {
       factory.Stub(UserDetailsProvider)
     }
 
-    //@Bean
+    @Bean
     OpenShiftClient openShiftClient() {
       factory.Mock(OpenShiftClient)
     }

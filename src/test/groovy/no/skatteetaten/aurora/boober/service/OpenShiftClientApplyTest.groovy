@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.client.HttpClientErrorException
@@ -19,7 +20,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
-import no.skatteetaten.aurora.boober.service.openshift.UserDetailsTokenProvider
 import spock.lang.Specification
 import spock.lang.Unroll
 import spock.mock.DetachedMockFactory
@@ -31,7 +31,7 @@ import spock.mock.DetachedMockFactory
     OpenShiftTemplateProcessor,
     Config,
     UserDetailsProvider,
-    UserDetailsTokenProvider
+//    UserDetailsTokenProvider
 ])
 class OpenShiftClientApplyTest extends Specification {
 
@@ -41,6 +41,7 @@ class OpenShiftClientApplyTest extends Specification {
 
     @Bean
     @OpenShiftResourceClientConfig.ClientType(API_USER)
+    @Primary
     OpenShiftResourceClient resourceClient() {
 
       factory.Mock(OpenShiftResourceClient)
@@ -58,7 +59,8 @@ class OpenShiftClientApplyTest extends Specification {
   OpenShiftClient openShiftClient
 
   @Autowired
-  OpenShiftResourceClient resource
+  @OpenShiftResourceClientConfig.ClientType(API_USER)
+  OpenShiftResourceClient userClient
 
   @Autowired
   ObjectMapper mapper
@@ -70,11 +72,11 @@ class OpenShiftClientApplyTest extends Specification {
 
       def projectRequest = mapper.readTree(prFile)
 
-    when:
-
-      resource.get("projectrequest", "foobar", "foobar") >> {
+      userClient.get("project", "foobar", "foobar") >> {
         throw new OpenShiftException("Does not exist", new HttpClientErrorException(HttpStatus.SERVICE_UNAVAILABLE))
       }
+
+    when:
       openShiftClient.prepare("foobar", projectRequest)
 
     then:
@@ -90,9 +92,9 @@ class OpenShiftClientApplyTest extends Specification {
 
     when:
 
-      resource.get("projectrequest", "foobar", "foobar") >> null
+      userClient.get("projectrequest", "foobar", "foobar") >> null
 
-      resource.post("projectrequest", "foobar", "foobar", projectRequest) >>
+      userClient.post("projectrequest", "foobar", "foobar", projectRequest) >>
           new ResponseEntity(projectRequest, HttpStatus.OK)
       def result = openShiftClient.prepare("foobar", projectRequest)
 
@@ -110,14 +112,14 @@ class OpenShiftClientApplyTest extends Specification {
 
     when:
 
-      resource.get("projectrequest", "foobar", "foobar") >>
+      userClient.get("project", "foobar", "foobar") >>
           new ResponseEntity(projectRequest, HttpStatus.OK)
 
       def result = openShiftClient.prepare("foobar", projectRequest)
 
     then:
 
-      result == null
+      result.operationType == OperationType.NOOP
   }
 
   @Unroll
@@ -128,10 +130,10 @@ class OpenShiftClientApplyTest extends Specification {
       def newResource = mapper.readTree(this.getClass().getResource("/openshift-objects/$type-new.json"))
 
 
-      resource.get(type, "referanse", "foobar") >>
+      userClient.get(type, "referanse", "foobar") >>
           new ResponseEntity(oldResource, HttpStatus.OK)
 
-      resource.put(type, "referanse", "foobar", _) >>
+      userClient.put(type, "referanse", "foobar", _) >>
           new ResponseEntity(oldResource, HttpStatus.OK)
 
     expect:
