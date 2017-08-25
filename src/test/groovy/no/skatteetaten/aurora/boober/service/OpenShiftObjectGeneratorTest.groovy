@@ -145,6 +145,8 @@ class OpenShiftObjectGeneratorTest extends Specification {
       "booberdev"  | "sprocket"   | null              | []
       "release"    | "aos-simple" | null              | []
       "mounts"     | "aos-simple" | null              | []
+      "secretmount" | "aos-simple"| null              | []
+
 
   }
 

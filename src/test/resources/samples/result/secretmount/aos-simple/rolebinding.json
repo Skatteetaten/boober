@@ -1,0 +1,31 @@
+{
+  "kind": "RoleBinding",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "admin"
+  },
+  "groupNames": [
+    "APP_PaaS_drift",
+    "APP_PaaS_utv"
+  ],
+  "userNames": [
+    "foo"
+  ],
+  "subjects": [
+    {
+      "kind": "User",
+      "name": "foo"
+    },
+    {
+      "kind": "Group",
+      "name": "APP_PaaS_drift"
+    },
+    {
+      "kind": "Group",
+      "name": "APP_PaaS_utv"
+    }
+  ],
+  "roleRef": {
+    "name": "admin"
+  }
+}

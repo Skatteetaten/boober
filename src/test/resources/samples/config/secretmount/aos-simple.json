@@ -1,0 +1,10 @@
+{
+  "version": "1.0.3-SNAPSHOT",
+  "mounts": {
+    "secret-mount": {
+      "type": "Secret",
+      "path": "/u01/foo",
+      "secretVault": "foo"
+    }
+  }
+}

@@ -97,7 +97,12 @@ class OpenShiftObjectGenerator(
 
         auroraDc.mounts?.filter { !it.exist }?.map {
             logger.debug("Create manual mount {}", it)
-            val mountParams = mapOf("adc" to auroraDc, "mount" to it, "deployId" to deployId)
+            val mountParams = mapOf(
+                    "adc" to auroraDc,
+                    "mount" to it,
+                    "deployId" to deployId,
+                    "username" to userDetailsProvider.getAuthenticatedUser().username
+            )
             mergeVelocityTemplate("mount.json", mountParams)
         }?.let {
             openShiftObjects.addAll(it)
