@@ -110,7 +110,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
     then:
       def e = thrown(ApplicationConfigException)
       def error = e.errors[0]
-      e.message.contains('unmapped paths for application booberdev-aos-simple')
+      e.message.contains('Config for application aos-simple in environment booberdev contains errors')
       error.fileName == "${aid.environment}/${aid.application}.json.override"
       error.message == "/foo"
 

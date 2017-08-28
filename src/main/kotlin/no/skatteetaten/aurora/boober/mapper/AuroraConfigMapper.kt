@@ -1,13 +1,9 @@
 package no.skatteetaten.aurora.boober.mapper
 
-import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
-import no.skatteetaten.aurora.boober.model.AuroraSecretVault
-import no.skatteetaten.aurora.boober.model.DeployCommand
-import no.skatteetaten.aurora.boober.model.Permission
-import no.skatteetaten.aurora.boober.model.Permissions
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.internal.ValidationError
+import no.skatteetaten.aurora.boober.utils.findAllPointers
 import no.skatteetaten.aurora.boober.utils.required
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -24,6 +20,9 @@ abstract class AuroraConfigMapper(val deployCommand: DeployCommand, val auroraCo
 
     abstract fun toAuroraDeploymentConfig(): AuroraDeploymentConfig
 
+    val applicationFiles = auroraConfig.getFilesForApplication(deployCommand)
+
+
     fun validate() {
         val errors = fieldHandlers.mapNotNull { e ->
             val auroraConfigField = auroraConfigFields.fields[e.name]
@@ -33,13 +32,26 @@ abstract class AuroraConfigMapper(val deployCommand: DeployCommand, val auroraCo
             }
         }
 
-        errors.takeIf { it.isNotEmpty() }?.let {
+        val unmappedErrors = getUnmappedPointers().flatMap { pointerError ->
+            pointerError.value.map { ValidationError("$it", fileName = pointerError.key) }
+        }
+
+        (errors + unmappedErrors).takeIf { it.isNotEmpty() }?.let {
             logger.debug("{}", it)
             val aid = deployCommand.applicationId
             throw ApplicationConfigException(
                     "Config for application ${aid.application} in environment ${aid.environment} contains errors",
                     errors = it.mapNotNull { it })
         }
+    }
+
+
+    fun getUnmappedPointers(): Map<String, List<String>> {
+        val allPaths = fieldHandlers.map { it.path }
+
+        val filePointers = applicationFiles.associateBy({ it.configName }, { it.contents.findAllPointers(3) })
+
+        return filePointers.mapValues { it.value - allPaths }.filterValues { it.isNotEmpty() }
     }
 
 

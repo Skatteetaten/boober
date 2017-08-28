@@ -32,7 +32,6 @@ abstract class AuroraConfigMapperV1(
 
     val applicationFile = auroraConfig.getApplicationFile(deployCommand.applicationId)
     val overrideFiles = deployCommand.overrideFiles.map { it.name to it.contents }.toMap()
-    val applicationFiles = auroraConfig.getFilesForApplication(deployCommand)
     val configHandlers = findConfigFieldHandlers(applicationFiles)
     val parameterHandlers = findParameters(applicationFiles)
 
@@ -53,15 +52,6 @@ abstract class AuroraConfigMapperV1(
             AuroraConfigFieldHandler("secretVault", validator = validateSecrets()),
             AuroraConfigFieldHandler("releaseTo")
     )
-
-
-    fun getUnmappedPointers(): Map<String, List<String>> {
-        val allPaths = fieldHandlers.map { it.path }
-
-        val filePointers = applicationFiles.associateBy({ it.configName }, { it.contents.findAllPointers(3) })
-
-        return filePointers.mapValues { it.value - allPaths }.filterValues { it.isNotEmpty() }
-    }
 
     fun getProbe(name: String): Probe? {
         val port = auroraConfigFields.extractOrNull("$name/port", JsonNode::asInt)
