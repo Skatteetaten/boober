@@ -112,7 +112,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       def error = e.errors[0]
       e.message.contains('Config for application aos-simple in environment booberdev contains errors')
       error.fileName == "${aid.environment}/${aid.application}.json.override"
-      error.message == "/foo"
+      error.message == "/foo is not a valid config field pointer"
 
   }
 
