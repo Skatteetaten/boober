@@ -33,7 +33,7 @@ abstract class AuroraConfigMapper(val deployCommand: DeployCommand, val auroraCo
         }
 
         val unmappedErrors = getUnmappedPointers().flatMap { pointerError ->
-            pointerError.value.map { ValidationError("$it", fileName = pointerError.key) }
+            pointerError.value.map { ValidationError("$it is not a valid config field pointer", fileName = pointerError.key) }
         }
 
         (errors + unmappedErrors).takeIf { it.isNotEmpty() }?.let {
