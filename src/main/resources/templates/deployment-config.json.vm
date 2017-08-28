@@ -169,6 +169,10 @@
             ],
             "env": [
               {
+                "name": "OPENSHIFT_CLUSTER",
+                "value": "${adc.cluster}"
+              },
+              {
                 "name": "SPLUNK_INDEX",
                 "value": "${adc.splunkIndex}"
               },

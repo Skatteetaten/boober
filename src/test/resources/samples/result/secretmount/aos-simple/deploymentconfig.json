@@ -98,6 +98,10 @@
             ],
             "env": [
               {
+                "name": "OPENSHIFT_CLUSTER",
+                "value": "utv"
+              },
+              {
                 "name": "SPLUNK_INDEX",
                 "value": "openshift-test"
               },
