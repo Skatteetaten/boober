@@ -2,7 +2,7 @@
   "kind": "${mount.type.name()}",
   "apiVersion": "v1",
   "metadata": {
-    "name": "${mount.volumeName}",
+    "name": "${adc.name}-${mount.volumeName}",
     "labels": {
       "app": "${adc.name}",
       "updatedBy": "${username}",
