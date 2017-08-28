@@ -2,7 +2,7 @@
   "kind": "ConfigMap",
   "apiVersion": "v1",
   "metadata": {
-    "name": "sprocket-config",
+    "name": "sprocket-sprocket-config",
     "labels": {
       "app": "sprocket",
       "updatedBy": "hero",
