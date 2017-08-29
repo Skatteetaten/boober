@@ -8,10 +8,18 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/clientconfig")
-class ClientConfigController(@Value("\${boober.git.urlPattern}") val gitUrlPattern: String) {
+class ClientConfigController(
+        @Value("\${boober.git.urlPattern}") val gitUrlPattern: String,
+        @Value("\${openshift.cluster}") val openshiftCluster: String,
+        @Value("\${openshift.url}") val openshiftUrl: String
+) {
 
     @GetMapping("/")
     fun get(): Response {
-        return Response(items = listOf(mapOf(Pair("gitUrlPattern", gitUrlPattern))))
+        return Response(items = listOf(mapOf(
+                Pair("gitUrlPattern", gitUrlPattern),
+                Pair("openshiftCluster", openshiftCluster),
+                Pair("openshiftUrl", openshiftUrl)
+        )))
     }
 }
