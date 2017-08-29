@@ -60,15 +60,6 @@ class SetupFacade(
 
     fun setupApplication(cmd: ApplicationCommand): ApplicationResult {
         val responses = cmd.commands.map {
-            /* TODO: remove
-                        //When we create an Openshift project we get a default rolebinding called admin that we do not want.
-                        val openshiftCommand = if (it.operationType == OperationType.CREATE &&
-                                it.payload.openshiftKind.toLowerCase() == "rolebinding" &&
-                                it.payload.openshiftName.toLowerCase() == "admin") {
-                            openShiftClient.updateRolebindingCommand(it.payload, cmd.auroraDc.namespace)
-                        } else {
-                            it
-                        }*/
             openShiftClient.performOpenShiftCommand(it, cmd.auroraDc.namespace)
         }
 
