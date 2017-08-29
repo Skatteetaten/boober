@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.io.File
 import java.io.IOException
-import java.util.Optional.ofNullable
 
 /**
  * Loader for the Application Token that will be used when loading resources from Openshift that does not require
@@ -27,7 +26,7 @@ class ServiceAccountTokenProvider(
 
     private val logger: Logger = LoggerFactory.getLogger(ServiceAccountTokenProvider::class.java)
 
-    private val tokenSupplier: Supplier<String> = Suppliers.memoize({ ofNullable(tokenOverride).orElseGet(this::readTokenFromFile) })
+    private val tokenSupplier: Supplier<String> = Suppliers.memoize({ readToken() })
 
     /**
      * Get the Application Token by using the specified tokenOverride if it is set, or else reads the token from the
@@ -36,12 +35,7 @@ class ServiceAccountTokenProvider(
      *
      * @return
      */
-    override fun getToken(): String {
-        val token: String = Suppliers.memoize({ readToken() }).get()
-        logger.debug("Using application token with length={}, firstLetter={}, lastLetter={}", token.length,
-                token[0], token[token.length - 1])
-        return token
-    }
+    override fun getToken() =  tokenSupplier.get()
 
     fun readToken(): String {
         return if (tokenOverride.isBlank()) {
@@ -55,7 +49,8 @@ class ServiceAccountTokenProvider(
         logger.info("Reading application token from tokenLocation={}", tokenLocation)
         try {
             val token: String = Files.toString(File(tokenLocation), Charsets.UTF_8).trimEnd()
-            logger.debug("Read token with length={}", token.length)
+            logger.debug("Read token with length={}, firstLetter={}, lastLetter={}", token.length,
+                    token[0], token[token.length - 1])
             return token
         } catch (e: IOException) {
             throw IllegalStateException("tokenLocation=$tokenLocation could not be read", e)
