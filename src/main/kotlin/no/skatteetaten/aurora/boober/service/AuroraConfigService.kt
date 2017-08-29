@@ -79,6 +79,12 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient) {
             throw IllegalArgumentException("Only v1 of schema is supported")
         }
 
+
+        //lage en liste av handlere basert på type.
+        //lage auroraConfigFields
+        //validere
+        //lage AAC
+
         if (type == TemplateType.localTemplate) {
             return AuroraConfigMapperV1LocalTemplate(deployCommand, auroraConfig, openShiftClient, vaults)
         }
