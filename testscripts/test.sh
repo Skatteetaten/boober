@@ -9,6 +9,8 @@ which http || ( echo "Please install httpie" && sudo apt-get install httpie)
 
 token=$(oc whoami -t)
 
+echo $token | sudo tee /opt/boober
+
 echo "Create test Secret Vault"
 #http --timeout 300 PUT :8080/affiliation/paas/vault Authorization:"bearer $token"  < secretVault_test.json
 echo "Create utv Secret Vault"
