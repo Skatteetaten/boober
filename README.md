@@ -5,6 +5,8 @@ schemaVersion from a git repo (AuroraConfig) and transforms it into Openshift Ob
 
 ## How to run locally
 
+### Setup the API
+
 Boober maintains configuration files (called Aurora Config) in sets (called Affiliations) in git repositories. The 
 location of these repositories (either a local folder or remote via http) is a configuration parameter in boober and
 when running the API locally, the git path is a local folder. This folder must be created and initialized before
@@ -14,13 +16,26 @@ boober can be started for the first time. Run
    
 You are now ready to start boober;    
 
-      ./gradlew run
+    ./gradlew run
 
 or run from your ide.
 
-Then run the script `scripts/devsetup/setupdev.sh` to import some dev/test data.
+Then run the script 
+
+    scripts/devsetup/setupdev.sh
+     
+to import some dev/test data.
 
 By default, boober during development will deploy to the qa cluster.
+
+
+### Setup ao
+
+To use the ```ao``` command line utility to perform actions against your local api add the ```--localhost``` flag to
+the login command. Use the ```paas``` affiliation (since that is currently the only affiliation that has any test
+data)
+
+    ao login paas --localhost
 
 
 ## Architecture
