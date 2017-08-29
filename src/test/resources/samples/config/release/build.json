@@ -1,0 +1,10 @@
+{
+  "type": "build",
+  "version": "1.0.3-SNAPSHOT",
+  "baseImage": {
+    "name": "wingnut"
+  },
+  "builder": {
+    "name": "architect"
+  }
+}

@@ -11,7 +11,6 @@ import org.apache.velocity.VelocityContext
 import org.apache.velocity.app.VelocityEngine
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.StringWriter
 import java.util.*
@@ -22,8 +21,7 @@ class OpenShiftObjectGenerator(
         val ve: VelocityEngine,
         val mapper: ObjectMapper,
         val openShiftTemplateProcessor: OpenShiftTemplateProcessor,
-        val openShiftClient: OpenShiftResourceClient,
-        @Value("\${boober.docker.registry}") val dockerRegistry: String) {
+        val openShiftClient: OpenShiftResourceClient) {
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftObjectGenerator::class.java)
 
@@ -56,7 +54,6 @@ class OpenShiftObjectGenerator(
                 "deployId" to deployId,
                 "aac" to auroraApplicationConfig,
                 "username" to userDetailsProvider.getAuthenticatedUser().username,
-                "dockerRegistry" to dockerRegistry,
                 "database" to database,
                 "dbPath" to "/u01/secrets/app",
                 "certPath" to "/u01/secrets/app/${auroraApplicationConfig.name}-cert"
@@ -88,6 +85,9 @@ class OpenShiftObjectGenerator(
 
         auroraApplicationConfig.build?.let {
             templatesToProcess.add("build-config.json")
+            if (it.testGitUrl != null) {
+                templatesToProcess.add("jenkins-build-config.json")
+            }
         }
 
         auroraApplicationConfig.deploy?.let {

@@ -139,7 +139,8 @@ class SetupFacade(
 
                     val tagCmd = adc.deploy?.let {
                         if (it.releaseTo != null) {
-                            TagCommand("${it.dockerGroup}/${it.dockerName}", it.version, it.releaseTo, dockerRegistry)
+                            val dockerGroup = it.groupId.replace(".", "_")
+                            TagCommand("${dockerGroup}/${it.artifactId}", it.version, it.releaseTo, dockerRegistry)
                         } else null
                     }
 

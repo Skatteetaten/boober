@@ -7,9 +7,8 @@ import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.utils.length
 import no.skatteetaten.aurora.boober.utils.notBlank
 
-class AuroraDeployMapperV1(val auroraConfig: AuroraConfig, val deployCommand: DeployCommand) {
+class AuroraDeployMapperV1(val applicationFiles: List<AuroraConfigFile>, val deployCommand: DeployCommand, val dockerRegistry: String) {
 
-    val applicationFiles = auroraConfig.getFilesForApplication(deployCommand)
 
     val dbHandlers = findDbHandlers(applicationFiles)
 
@@ -46,18 +45,37 @@ class AuroraDeployMapperV1(val auroraConfig: AuroraConfig, val deployCommand: De
 
     )
 
+    fun getApplicationFile(applicationId: ApplicationId): AuroraConfigFile {
+        val fileName = "${applicationId.environment}/${applicationId.application}.json"
+        val file = applicationFiles.find { it.name == fileName && !it.override }
+        return file ?: throw IllegalArgumentException("Should find applicationFile $fileName")
+    }
+
     fun deploy(auroraConfigFields: AuroraConfigFields): AuroraDeploy? {
         val name = auroraConfigFields.extract("name")
         val certFlag = auroraConfigFields.extract("flags/cert", { it.asText() == "true" })
         val groupId = auroraConfigFields.extract("groupId")
         val certificateCnDefault = if (certFlag) "$groupId.$name" else null
-        val applicationFile = auroraConfig.getApplicationFile(deployCommand.applicationId)
+        val version = auroraConfigFields.extract("version")
+
+
+        val releaseTo = auroraConfigFields.extractOrNull("releaseTo")
+
+        val artifactId = auroraConfigFields.extract("artifactId")
+
+        val dockerGroup = groupId.replace(".", "_")
+
+        val tag = releaseTo ?: version
+
+        val applicationFile = getApplicationFile(deployCommand.applicationId)
         val overrideFiles = deployCommand.overrideFiles.map { it.name to it.contents }.toMap()
 
         return AuroraDeploy(
                 applicationFile = applicationFile.name,
+                releaseTo = releaseTo,
+                dockerImagePath = "$dockerRegistry/$dockerGroup/$artifactId",
+                dockerTag = tag,
                 overrideFiles = overrideFiles,
-                releaseTo = auroraConfigFields.extractOrNull("releaseTo"),
                 flags = AuroraDeploymentConfigFlags(
                         certFlag,
                         auroraConfigFields.extract("flags/debug", { it.asText() == "true" }),
@@ -77,8 +95,8 @@ class AuroraDeployMapperV1(val auroraConfig: AuroraConfig, val deployCommand: De
                 ),
                 replicas = auroraConfigFields.extract("replicas", JsonNode::asInt),
                 groupId = groupId,
-                artifactId = auroraConfigFields.extract("artifactId"),
-                version = auroraConfigFields.extract("version"),
+                artifactId = artifactId,
+                version = version,
                 splunkIndex = auroraConfigFields.extractOrNull("splunkIndex"),
                 database = auroraConfigFields.getDatabases(dbHandlers),
 

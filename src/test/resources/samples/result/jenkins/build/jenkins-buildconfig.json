@@ -1,0 +1,43 @@
+{
+  "kind": "BuildConfig",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "build-test",
+    "labels": {
+      "app": "build",
+      "updatedBy": "hero",
+      "affiliation": "aos",
+      "booberDeployId": "123"
+    }
+  },
+  "spec": {
+    "triggers": [
+      {
+        "type": "ImageChange",
+        "imageChange": {
+          "from": {
+            "kind": "ImageStreamTag",
+            "namespace": "openshift",
+            "name": "oracle8:1"
+          }
+        }
+      },
+      {
+        "type": "ImageChange",
+        "imageChange": {
+        }
+      }
+    ],
+    "source": {
+      "git": {
+        "uri": "http://foo/bar",
+        "ref": "1.0.0"
+      }
+    },
+    "strategy": {
+      "jenkinsPipelineStrategy": {
+        "jenkinsfilePath": "test.Jenkinsfile"
+      }
+    }
+  }
+}

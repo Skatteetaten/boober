@@ -56,7 +56,6 @@ data class AuroraDeploymentCore(
         val mounts: List<Mount>?
 )
 
-//TODO: GAV must be here aswell? Just parse it both places?
 //TODO:  from ImageStreamTag må customizes
 //TODO: output to latest/default
 data class AuroraBuild(
@@ -67,7 +66,13 @@ data class AuroraBuild(
         val testGitUrl: String?,
         val testTag: String?,
         val testJenkinsfile: String?,
-        val extraTags: String
+        val extraTags: String,
+        val groupId: String,
+        val artifactId: String,
+        val version: String,
+        val outputKind: String,
+        val outputName: String,
+        val triggers: Boolean
 )
 
 
@@ -89,13 +94,10 @@ data class AuroraDeploy(
         val managementPath: String? = null,
         val serviceAccount: String? = null,
         val liveness: Probe?,
-        val readiness: Probe
-) {
-    //In use in velocity template
-    val dockerGroup: String = groupId.replace(".", "_")
-    //In use in velocity template
-    val dockerName: String = artifactId
-}
+        val readiness: Probe,
+        val dockerImagePath: String,
+        val dockerTag: String
+)
 
 data class AuroraLocalTemplate(
         val parameters: Map<String, String>?,

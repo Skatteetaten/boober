@@ -3,26 +3,16 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.model.AuroraApplicationConfig
-import no.skatteetaten.aurora.boober.model.AuroraBuild
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraDeploy
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentCore
-import no.skatteetaten.aurora.boober.model.AuroraLocalTemplate
-import no.skatteetaten.aurora.boober.model.AuroraTemplate
-import no.skatteetaten.aurora.boober.model.DeployCommand
-import no.skatteetaten.aurora.boober.model.Permission
-import no.skatteetaten.aurora.boober.model.Permissions
-import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.findAllPointers
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.pattern
 
-class AuroraApplicationMapperV1(val openShiftClient: OpenShiftClient,
-                                val deployCommand: DeployCommand,
-                                val applicationFiles: List<AuroraConfigFile>) {
+class AuroraApplicationMapperV1(val applicationFiles: List<AuroraConfigFile>,
+                                val openShiftClient: OpenShiftClient,
+                                val deployCommand: DeployCommand) {
 
 
     val handlers = listOf(
@@ -37,7 +27,7 @@ class AuroraApplicationMapperV1(val openShiftClient: OpenShiftClient,
     )
 
     fun auroraApplicationConfig(auroraConfigFields: AuroraConfigFields,
-                                fieldHandlers: List<AuroraConfigFieldHandler>,
+                                fieldHandlers: Set<AuroraConfigFieldHandler>,
                                 dc: AuroraDeploymentCore?,
                                 build: AuroraBuild?,
                                 deploy: AuroraDeploy?,
@@ -101,7 +91,7 @@ class AuroraApplicationMapperV1(val openShiftClient: OpenShiftClient,
                 view = view)
     }
 
-    fun getUnmappedPointers(fieldHandlers: List<AuroraConfigFieldHandler>): Map<String, List<String>> {
+    fun getUnmappedPointers(fieldHandlers: Set<AuroraConfigFieldHandler>): Map<String, List<String>> {
         val allPaths = fieldHandlers.map { it.path }
 
         val filePointers = applicationFiles.associateBy({ it.configName }, { it.contents.findAllPointers(3) })

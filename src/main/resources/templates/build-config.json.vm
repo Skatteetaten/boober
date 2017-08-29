@@ -12,20 +12,22 @@
   },
   "spec": {
     "triggers": [
-      {
-        "type": "ImageChange",
-        "imageChange": {
-          "from": {
-            "kind": "ImageStreamTag",
-            "namespace": "openshift",
-            "name": "${aac.build.baseName}:${aac.build.baseVersion}"
+      #if (${aac.build.triggers})
+        {
+          "type": "ImageChange",
+          "imageChange": {
+            "from": {
+              "kind": "ImageStreamTag",
+              "namespace": "openshift",
+              "name": "${aac.build.baseName}:${aac.build.baseVersion}"
+            }
           }
+        },
+        {
+          "type": "ImageChange",
+          "imageChange": {}
         }
-      },
-      {
-        "type": "ImageChange",
-        "imageChange": {}
-      }
+      #end
     ],
     "strategy": {
       "type": "Custom",
@@ -38,15 +40,15 @@
         "env": [
           {
             "name": "ARTIFACT_ID",
-            "value": "${aac.deploy.artifactId}"
+            "value": "${aac.build.artifactId}"
           },
           {
             "name": "GROUP_ID",
-            "value": "${aac.deploy.groupId}"
+            "value": "${aac.build.groupId}"
           },
           {
             "name": "VERSION",
-            "value": "${aac.deploy.version}"
+            "value": "${aac.build.version}"
           },
           {
             "name": "DOCKER_BASE_VERSION",
@@ -66,8 +68,8 @@
     },
     "output": {
       "to": {
-        "kind": "ImageStreamTag",
-        "name": "${aac.name}:latest"
+        "kind": "${aac.build.outputKind}",
+        "name": "${aac.build.outputName}"
       }
     }
   }

@@ -1,0 +1,42 @@
+{
+  "kind": "BuildConfig",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "${aac.name}-test",
+    "labels": {
+      "app": "${aac.name}",
+      "updatedBy": "${username}",
+      "affiliation": "${aac.affiliation}",
+      "booberDeployId": "${deployId}"
+    }
+  },
+  "spec": {
+    "triggers": [
+      {
+        "type": "ImageChange",
+        "imageChange": {
+          "from": {
+            "kind": "ImageStreamTag",
+            "namespace": "openshift",
+            "name": "${aac.build.baseName}:${aac.build.baseVersion}"
+          }
+        }
+      },
+      {
+        "type": "ImageChange",
+        "imageChange": {}
+      }
+    ],
+    "source": {
+      "git": {
+        "uri": "${aac.build.testGitUrl}",
+        "ref": "${aac.build.testTag}"
+      }
+    },
+    "strategy": {
+      "jenkinsPipelineStrategy": {
+        "jenkinsfilePath": "${aac.build.testJenkinsfile}"
+      }
+    }
+  }
+}

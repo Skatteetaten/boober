@@ -1,0 +1,6 @@
+{
+  "test": {
+    "gitUrl": "http://foo/bar",
+    "tag": "1.0.0"
+  }
+}

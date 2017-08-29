@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory
 
 class AuroraConfigValidator(val deployCommand: DeployCommand,
                             val applicationFiles: List<AuroraConfigFile>,
-                            val fieldHandlers: List<AuroraConfigFieldHandler>,
+                            val fieldHandlers: Set<AuroraConfigFieldHandler>,
                             val auroraConfigFields: AuroraConfigFields) {
     val logger: Logger = LoggerFactory.getLogger(AuroraConfigValidator::class.java)
 

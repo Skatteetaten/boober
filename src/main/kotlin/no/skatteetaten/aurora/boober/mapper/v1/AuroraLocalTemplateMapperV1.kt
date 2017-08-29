@@ -7,8 +7,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraLocalTemplate
 
-class AuroraLocalTemplateMapperV1(val auroraConfig: AuroraConfig,
-                                  val applicationFiles: List<AuroraConfigFile>) {
+class AuroraLocalTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>, val auroraConfig: AuroraConfig) {
 
 
     val parameterHandlers = findParameters()

@@ -4,11 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraSecretVault
-import no.skatteetaten.aurora.boober.model.Database
-import no.skatteetaten.aurora.boober.model.Mount
-import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.model.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -16,6 +12,7 @@ data class AuroraConfigField(val path: String, val value: JsonNode, val source: 
 
 
 class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
+
 
     fun getMounts(extractors: List<AuroraConfigFieldHandler>, vaults: Map<String, AuroraSecretVault>): List<Mount>? {
         if (extractors.isEmpty()) {
@@ -172,7 +169,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
     companion object {
 
         val logger: Logger = LoggerFactory.getLogger(AuroraConfigFields::class.java)
-        fun create(handlers: List<AuroraConfigFieldHandler>, files: List<AuroraConfigFile>): AuroraConfigFields {
+        fun create(handlers: Set<AuroraConfigFieldHandler>, files: List<AuroraConfigFile>): AuroraConfigFields {
             val fields = handlers.mapNotNull { handler ->
 
                 val matches = files.reversed().mapNotNull {

@@ -1,18 +1,16 @@
 package no.skatteetaten.aurora.boober.service
 
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-
 import com.fasterxml.jackson.databind.ObjectMapper
-
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentCoreMapperV1
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -69,8 +67,9 @@ class AuroraConfigFieldTest extends Specification {
       def deployCommand = new DeployCommand(aid, [])
       def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
+    def files = auroraConfig.getFilesForApplication(deployCommand)
     when:
-      def mapper = new AuroraDeploymentCoreMapperV1(auroraConfig, deployCommand, [:])
+    def mapper = new AuroraDeploymentCoreMapperV1(files, [:])
 
     then:
       mapper.configHandlers.collect { it.path } == ["/config/foo", "/config/bar", "/config/1/bar", "/config/1/foo"]

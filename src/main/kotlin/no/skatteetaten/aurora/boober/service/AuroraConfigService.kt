@@ -3,36 +3,20 @@ package no.skatteetaten.aurora.boober.service
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigValidator
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraApplicationMapperV1
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraBuildMapperV1
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeployMapperV1
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentCoreMapperV1
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraLocalTemplateMapperV1
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraTemplateMapperV1
-import no.skatteetaten.aurora.boober.model.AuroraApplicationConfig
-import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.AuroraSecretVault
-import no.skatteetaten.aurora.boober.model.DeployCommand
-import no.skatteetaten.aurora.boober.model.TemplateType
-import no.skatteetaten.aurora.boober.model.TemplateType.build
-import no.skatteetaten.aurora.boober.model.TemplateType.deploy
-import no.skatteetaten.aurora.boober.model.TemplateType.development
-import no.skatteetaten.aurora.boober.model.TemplateType.localTemplate
-import no.skatteetaten.aurora.boober.model.TemplateType.template
-import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
-import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
-import no.skatteetaten.aurora.boober.service.internal.Error
-import no.skatteetaten.aurora.boober.service.internal.Result
-import no.skatteetaten.aurora.boober.service.internal.ValidationError
-import no.skatteetaten.aurora.boober.service.internal.orElseThrow
+import no.skatteetaten.aurora.boober.mapper.v1.*
+import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.TemplateType.*
+import no.skatteetaten.aurora.boober.service.internal.*
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.required
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class AuroraConfigService(val openShiftClient: OpenShiftClient) {
+class AuroraConfigService(val openShiftClient: OpenShiftClient,
+                          @Value("\${boober.docker.registry}") val dockerRegistry: String) {
     val logger: Logger = LoggerFactory.getLogger(AuroraConfigService::class.java)
 
 
@@ -45,13 +29,14 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient) {
 
     fun createAuroraApplicationConfig(deployCommand: DeployCommand, auroraConfig: AuroraConfig, vaults: Map<String, AuroraSecretVault>): AuroraApplicationConfig {
 
-        val baseHandlers = listOf(
+        val baseHandlers = setOf(
                 AuroraConfigFieldHandler("schemaVersion"),
                 AuroraConfigFieldHandler("type", validator = { it.required("Type is required") }),
                 AuroraConfigFieldHandler("baseFile"),
                 AuroraConfigFieldHandler("envFile")
         )
-        val fields = AuroraConfigFields.create(baseHandlers, auroraConfig.getFilesForApplication(deployCommand))
+        val applicationFiles = auroraConfig.getFilesForApplication(deployCommand)
+        val fields = AuroraConfigFields.create(baseHandlers, applicationFiles)
 
         val type = fields.extract("type", { TemplateType.valueOf(it.textValue()) })
 
@@ -60,24 +45,20 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient) {
         if (schemaVersion != "v1") {
             throw IllegalArgumentException("Only v1 of schema is supported")
         }
-        val applicationFiles = auroraConfig.getFilesForApplication(deployCommand)
-        val applicationMapper = AuroraApplicationMapperV1(openShiftClient, deployCommand, applicationFiles)
-
-
-        val deployMapper = AuroraDeployMapperV1(auroraConfig, deployCommand)
-
-        val deploymentCoreMapper = AuroraDeploymentCoreMapperV1(auroraConfig, deployCommand, vaults)
-        val localTemplateMapper = AuroraLocalTemplateMapperV1(auroraConfig, applicationFiles)
-        val templateMapper = AuroraTemplateMapperV1(auroraConfig, applicationFiles, openShiftClient)
+        val applicationMapper = AuroraApplicationMapperV1(applicationFiles, openShiftClient, deployCommand)
+        val deployMapper = AuroraDeployMapperV1(applicationFiles, deployCommand, dockerRegistry)
+        val deploymentCoreMapper = AuroraDeploymentCoreMapperV1(applicationFiles, vaults)
+        val localTemplateMapper = AuroraLocalTemplateMapperV1(applicationFiles, auroraConfig)
+        val templateMapper = AuroraTemplateMapperV1(applicationFiles, openShiftClient)
 
         val buildMapper = AuroraBuildMapperV1()
-        val handlers = baseHandlers + applicationMapper.handlers + when (type) {
+        val handlers = (baseHandlers + applicationMapper.handlers + when (type) {
             deploy -> deploymentCoreMapper.handlers + deployMapper.handlers
             development -> deploymentCoreMapper.handlers + deployMapper.handlers + buildMapper.handlers
             localTemplate -> deploymentCoreMapper.handlers + localTemplateMapper.handlers
             template -> deploymentCoreMapper.handlers + templateMapper.handlers
             build -> buildMapper.handlers
-        }
+        }).toSet()
 
         val auroraConfigFields = AuroraConfigFields.create(handlers, applicationFiles)
         val validator = AuroraConfigValidator(deployCommand, applicationFiles, handlers, auroraConfigFields)
@@ -86,7 +67,7 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient) {
 
         val dc = if (type == build) null else deploymentCoreMapper.auroraDeploymentCore(auroraConfigFields)
 
-        val build = if (type == build || type == development) buildMapper.build(auroraConfigFields) else null
+        val build = if (type == build || type == development) buildMapper.build(auroraConfigFields, dockerRegistry) else null
 
         val deploy = if (type == deploy || type == development) deployMapper.deploy(auroraConfigFields) else null
 

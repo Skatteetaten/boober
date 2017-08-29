@@ -2,9 +2,9 @@
   "kind": "BuildConfig",
   "apiVersion": "v1",
   "metadata": {
-    "name": "aos-simple",
+    "name": "build",
     "labels": {
-      "app": "aos-simple",
+      "app": "build",
       "updatedBy": "hero",
       "affiliation": "aos",
       "booberDeployId": "123"
@@ -18,7 +18,7 @@
         "from": {
           "kind": "ImageStreamTag",
           "namespace": "openshift",
-          "name": "leveransepakkebygger:prod"
+          "name": "architect:prod"
         },
         "env": [
           {
@@ -39,7 +39,7 @@
           },
           {
             "name": "DOCKER_BASE_IMAGE",
-            "value": "aurora/oracle8"
+            "value": "aurora/wingnut"
           },
           {
             "name": "PUSH_EXTRA_TAGS",
@@ -51,8 +51,8 @@
     },
     "output": {
       "to": {
-        "kind": "ImageStreamTag",
-        "name": "aos-simple:latest"
+        "kind": "DockerImage",
+        "name": "docker-registry.aurora.sits.no:5000/ske_aurora_openshift/aos-simple:default"
       }
     }
   }

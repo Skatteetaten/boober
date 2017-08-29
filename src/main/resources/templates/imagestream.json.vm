@@ -15,17 +15,14 @@
     #if (${aac.type} == "deploy")
     ,
       "spec": {
-        "dockerImageRepository": "${dockerRegistry}/${aac.deploy.dockerGroup}/${aac.deploy.dockerName}",
+        "dockerImageRepository": "${aac.deploy.dockerImagePath}",
         "tags": [
           {
             "name": "default",
               "from": {
                 "kind": "DockerImage",
-                #if ("$!{aac.deploy.releaseTo}" != "")
-                  "name": "${dockerRegistry}/${aac.deploy.dockerGroup}/${aac.deploy.dockerName}:${aac.deploy.releaseTo}"
-                #else
-                  "name": "${dockerRegistry}/${aac.deploy.dockerGroup}/${aac.deploy.dockerName}:${aac.deploy.version}"
-                #end
+                "name": "${aac.deploy.dockerImagePath}:${aac.deploy.dockerTag}"
+
               },
               "importPolicy": {
                 "scheduled": true

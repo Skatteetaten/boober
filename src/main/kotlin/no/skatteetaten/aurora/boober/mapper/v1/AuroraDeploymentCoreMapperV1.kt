@@ -3,21 +3,15 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentCore
-import no.skatteetaten.aurora.boober.model.AuroraSecretVault
-import no.skatteetaten.aurora.boober.model.DeployCommand
-import no.skatteetaten.aurora.boober.model.MountType
-import no.skatteetaten.aurora.boober.model.Route
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.required
 import no.skatteetaten.aurora.boober.utils.startsWith
 
-class AuroraDeploymentCoreMapperV1(val auroraConfig: AuroraConfig, val deployCommand: DeployCommand,
+class AuroraDeploymentCoreMapperV1(val applicationFiles: List<AuroraConfigFile>,
                                    val vaults: Map<String, AuroraSecretVault>) {
 
 
-    val applicationFiles = auroraConfig.getFilesForApplication(deployCommand)
 
     val mountHandlers = findMounts()
     val configHandlers = findConfigFieldHandlers()
@@ -29,6 +23,7 @@ class AuroraDeploymentCoreMapperV1(val auroraConfig: AuroraConfig, val deployCom
 
 
     fun auroraDeploymentCore(auroraConfigFields: AuroraConfigFields): AuroraDeploymentCore {
+
         val name = auroraConfigFields.extract("name")
 
         return AuroraDeploymentCore(
