@@ -30,13 +30,13 @@ val auroraDevelopment = AuroraApplicationConfig(
                 config = mapOf(),
                 secrets = emptyMap(),
                 route = emptyList(),
-                mounts = emptyList(),
-                releaseTo = null,
-                applicationFile = "boober-unit-test/dev-test.json",
-                overrideFiles = emptyMap()
+                mounts = emptyList()
+
         ),
         deploy = AuroraDeploy(
-
+                releaseTo = null,
+                applicationFile = "boober-unit-test/dev-test.json",
+                overrideFiles = emptyMap(),
                 flags = AuroraDeploymentConfigFlags(
                         alarm = false,
                         debug = false,

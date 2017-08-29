@@ -2,29 +2,29 @@
   "kind": "ImageStream",
   "apiVersion": "v1",
   "metadata": {
-    "name": "${adc.name}",
+    "name": "${aac.name}",
     "labels": {
-      "app": "${adc.name}",
+      "app": "${aac.name}",
       "updatedBy": "${username}",
-      "affiliation": "${adc.affiliation}",
-      "releasedVersion": "${adc.version}",
+      "affiliation": "${aac.affiliation}",
+      "releasedVersion": "${aac.deploy.version}",
       "booberDeployId": "${deployId}"
 
     }
   }
-    #if (${adc.type} == "deploy")
+    #if (${aac.type} == "deploy")
     ,
       "spec": {
-        "dockerImageRepository": "${dockerRegistry}/${adc.dockerGroup}/${adc.dockerName}",
+        "dockerImageRepository": "${dockerRegistry}/${aac.deploy.dockerGroup}/${aac.deploy.dockerName}",
         "tags": [
           {
             "name": "default",
               "from": {
                 "kind": "DockerImage",
-                #if ("$!{adc.releaseTo}" != "")
-                  "name": "${dockerRegistry}/${adc.dockerGroup}/${adc.dockerName}:${adc.releaseTo}"
+                #if ("$!{aac.deploy.releaseTo}" != "")
+                  "name": "${dockerRegistry}/${aac.deploy.dockerGroup}/${aac.deploy.dockerName}:${aac.deploy.releaseTo}"
                 #else
-                  "name": "${dockerRegistry}/${adc.dockerGroup}/${adc.dockerName}:${adc.version}"
+                  "name": "${dockerRegistry}/${aac.deploy.dockerGroup}/${aac.deploy.dockerName}:${aac.deploy.version}"
                 #end
               },
               "importPolicy": {

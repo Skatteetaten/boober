@@ -2,16 +2,16 @@
   "kind": "ConfigMap",
   "apiVersion": "v1",
   "metadata": {
-    "name": "${adc.name}",
+    "name": "${aac.name}",
     "labels": {
-      "app": "${adc.name}",
+      "app": "${aac.name}",
       "updatedBy" : "${username}",
-      "affiliation": "${adc.affiliation}",
+      "affiliation": "${aac.affiliation}",
       "booberDeployId": "${deployId}"
     }
   },
 "data": {
-  #foreach ($config  in $adc.config.entrySet())
+  #foreach ($config  in $aac.dc.config.entrySet())
     #if($velocityCount != 1)
       ,
     #end

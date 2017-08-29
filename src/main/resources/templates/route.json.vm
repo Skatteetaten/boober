@@ -4,9 +4,9 @@
   "metadata": {
   "name": "${route.name}",
     "labels": {
-      "app": "${adc.name}",
+      "app": "${aac.name}",
       "updatedBy" : "${username}",
-      "affiliation": "${adc.affiliation}",
+      "affiliation": "${aac.affiliation}",
       "booberDeployId": "${deployId}"
     }
   #if (${route.annotations.size()} != 0)
@@ -23,7 +23,7 @@
   "spec": {
     "to": {
       "kind": "Service",
-      "name": "${adc.name}"
+      "name": "${aac.name}"
     }
 #if (${route.host})
 , "host": "${route.host}"

@@ -14,6 +14,6 @@
     }
   ],
   "userNames": [
-    "system:serviceaccount:${adc.namespace}:deployer"
+    "system:serviceaccount:${aac.namespace}:deployer"
   ]
 }

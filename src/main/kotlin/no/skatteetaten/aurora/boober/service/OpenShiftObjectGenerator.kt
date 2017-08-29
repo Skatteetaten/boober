@@ -42,7 +42,7 @@ class OpenShiftObjectGenerator(
     fun generateObjects(auroraApplicationConfig: AuroraApplicationConfig, deployId: String): LinkedList<JsonNode> {
 
 
-        val overrides = auroraApplicationConfig.dc?.let {
+        val overrides = auroraApplicationConfig.deploy?.let {
             StringEscapeUtils.escapeJavaScript(mapper.writeValueAsString(it.overrideFiles))
         }
 
@@ -54,11 +54,9 @@ class OpenShiftObjectGenerator(
         val params = mapOf(
                 "overrides" to overrides,
                 "deployId" to deployId,
-                "adc" to auroraApplicationConfig,
+                "aac" to auroraApplicationConfig,
                 "username" to userDetailsProvider.getAuthenticatedUser().username,
                 "dockerRegistry" to dockerRegistry,
-                "builder" to mapOf("name" to "leveransepakkebygger", "version" to "prod"),
-                "base" to mapOf("name" to "oracle8", "version" to "1"),
                 "database" to database,
                 "dbPath" to "/u01/secrets/app",
                 "certPath" to "/u01/secrets/app/${auroraApplicationConfig.name}-cert"
@@ -80,7 +78,7 @@ class OpenShiftObjectGenerator(
             templatesToProcess.add("service.json")
         }
 
-        auroraApplicationConfig.dc?.config?.isNotEmpty().let {
+        if(auroraApplicationConfig.dc?.config?.isNotEmpty() == true) {
             templatesToProcess.add("configmap.json")
         }
 
@@ -101,7 +99,7 @@ class OpenShiftObjectGenerator(
         auroraApplicationConfig.dc?.mounts?.filter { !it.exist }?.map {
             logger.debug("Create manual mount {}", it)
             val mountParams = mapOf(
-                    "adc" to auroraApplicationConfig,
+                    "aac" to auroraApplicationConfig,
                     "mount" to it,
                     "deployId" to deployId,
                     "username" to userDetailsProvider.getAuthenticatedUser().username
@@ -114,7 +112,7 @@ class OpenShiftObjectGenerator(
         auroraApplicationConfig.dc?.route?.map {
             logger.debug("Route is {}", it)
             val routeParams = mapOf(
-                    "adc" to auroraApplicationConfig,
+                    "aac" to auroraApplicationConfig,
                     "route" to it,
                     "deployId" to deployId,
                     "username" to userDetailsProvider.getAuthenticatedUser().username)

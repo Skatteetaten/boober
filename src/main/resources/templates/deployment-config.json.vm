@@ -3,20 +3,20 @@
   "apiVersion": "v1",
   "metadata": {
     "annotations": {
-      #if(${adc.releaseTo} && "$!{adc.releaseTo}" != "")
-        "boober.skatteetaten.no/releaseTo": "${adc.releaseTo}",
+      #if(${aac.deploy.releaseTo} && "$!{aac.deploy.releaseTo}" != "")
+        "boober.skatteetaten.no/releaseTo": "${aac.deploy.releaseTo}",
       #end
-      "boober.skatteetaten.no/applicationFile": "${adc.applicationFile}",
+      "boober.skatteetaten.no/applicationFile": "${aac.deploy.applicationFile}",
       #if("$!{overrides}" != "{}")
         "boober.skatteetaten.no/overrides": "${overrides}",
       #end
-      #if(${adc.managementPath} && "$!{adc.managementPath}" != "")
-        "console.skatteetaten.no/management-path": "${adc.managementPath}",
+      #if(${aac.deploy.managementPath} && "$!{aac.deploy.managementPath}" != "")
+        "console.skatteetaten.no/management-path": "${aac.deploy.managementPath}",
       #end
-      "console.skatteetaten.no/alarm": "${adc.flags.alarm}"
-      #if(${adc.certificateCn})
+      "console.skatteetaten.no/alarm": "${aac.deploy.flags.alarm}"
+      #if(${aac.deploy.certificateCn})
       ,
-        "sprocket.sits.no/deployment-config.certificate": "${adc.certificateCn}"
+        "sprocket.sits.no/deployment-config.certificate": "${aac.deploy.certificateCn}"
       #end
       #if("${database}" != "")
       ,
@@ -24,15 +24,15 @@
       #end
     },
     "labels": {
-      "app": "${adc.name}",
+      "app": "${aac.name}",
       "updatedBy": "${username}",
-      "affiliation": "${adc.affiliation}",
+      "affiliation": "${aac.affiliation}",
       "booberDeployId": "${deployId}"
     },
-    "name": "${adc.name}"
+    "name": "${aac.name}"
   },
   "spec": {
-    #if(${adc.flags.rolling})
+    #if(${aac.deploy.flags.rolling})
       "strategy": {
         "type": "Rolling",
         "rollingParams": {
@@ -55,42 +55,42 @@
         "imageChangeParams": {
           "automatic": true,
           "containerNames": [
-            "${adc.name}"
+            "${aac.name}"
           ],
           "from": {
-            #if(${adc.type} == "development")
-              "name": "${adc.name}:latest",
+            #if(${aac.type} == "development")
+              "name": "${aac.name}:latest",
             #else
-              "name": "${adc.name}:default",
+              "name": "${aac.name}:default",
             #end
             "kind": "ImageStreamTag"
           }
         }
       }
     ],
-    "replicas": ${adc.replicas},
+    "replicas": ${aac.deploy.replicas},
     "selector": {
-      "name": "${adc.name}"
+      "name": "${aac.name}"
     },
     "template": {
       "metadata": {
         "labels": {
-          #if ("$!{adc.releaseTo}" != "")
-            "deployTag": "${adc.releaseTo}",
+          #if ("$!{aac.deploy.releaseTo}" != "")
+            "deployTag": "${aac.deploy.releaseTo}",
           #else
-            "deployTag": "${adc.version}",
+            "deployTag": "${aac.deploy.version}",
           #end
-          "name": "${adc.name}",
-          "app": "${adc.name}",
+          "name": "${aac.name}",
+          "app": "${aac.name}",
           "updatedBy": "${username}",
-          "affiliation": "${adc.affiliation}",
+          "affiliation": "${aac.affiliation}",
           "booberDeployId": "${deployId}"
         }
       },
       "spec": {
         "volumes": [
-          #if (${adc.database})
-            #foreach ($db  in $adc.database)
+          #if (${aac.deploy.database})
+            #foreach ($db  in $aac.deploy.database)
               {
                 "name": "$db.dbName",
                 "secret": {
@@ -99,8 +99,8 @@
               },
             #end
           #end
-          #if (${adc.mounts})
-            #foreach ($mount in $adc.mounts)
+          #if (${aac.dc.mounts})
+            #foreach ($mount in $aac.dc.mounts)
               {
                 "name": "${mount.volumeName}",
                 #if(${mount.type} == "ConfigMap")
@@ -119,38 +119,38 @@
             "name": "application-log-volume",
             "emptyDir": {}
           }
-          #if(${adc.config.size()} != 0)
+          #if(${aac.dc.config.size()} != 0)
           ,
             {
               "name": "config",
               "configMap": {
-                "name": "${adc.name}"
+                "name": "${aac.name}"
               }
             }
           #end
-          #if(${adc.secrets})
+          #if(${aac.dc.secrets})
           ,
             {
               "name": "secrets",
               "secret": {
-                "secretName": "${adc.name}"
+                "secretName": "${aac.name}"
               }
             }
           #end
 
-          #if(${adc.certificateCn})
+          #if(${aac.deploy.certificateCn})
           ,
             {
-              "name": "${adc.name}-cert",
+              "name": "${aac.name}-cert",
               "secret": {
-                "secretName": "${adc.name}-cert"
+                "secretName": "${aac.name}-cert"
               }
             }
           #end
         ],
         "containers": [
           {
-            "name": "${adc.name}",
+            "name": "${aac.name}",
             "ports": [
               {
                 "containerPort": 8080,
@@ -170,11 +170,11 @@
             "env": [
               {
                 "name": "OPENSHIFT_CLUSTER",
-                "value": "${adc.cluster}"
+                "value": "${aac.cluster}"
               },
               {
                 "name": "SPLUNK_INDEX",
-                "value": "${adc.splunkIndex}"
+                "value": "${aac.deploy.splunkIndex}"
               },
               {
                 "name": "POD_NAME",
@@ -204,9 +204,9 @@
               },
               {
                 "name": "APP_NAME",
-                "value": "${adc.name}"
+                "value": "${aac.name}"
               }
-              #if(${adc.certificateCn})
+              #if(${aac.deploy.certificateCn})
               ,
                 {
                   "name": "STS_CERTIFICATE_URL",
@@ -221,7 +221,7 @@
                   "value": "${certPath}/descriptor.properties"
                 }
               #end
-              #if (${adc.flags.debug})
+              #if (${aac.deploy.flags.debug})
               ,
                 {
                   "name": "REMOTE_DEBUG",
@@ -233,15 +233,15 @@
                 }
               #end
 
-              #if (${adc.route.size()} !=0)
+              #if (${aac.dc.route.size()} !=0)
                   ,{
                     "name": "ROUTE_NAME",
-                    "value": "${adc.routeName}"
+                    "value": "${aac.routeName}"
                   }
                 #end
 
-              #if (${adc.database})
-                #foreach ($db  in $adc.database)
+              #if (${aac.deploy.database})
+                #foreach ($db  in $aac.deploy.database)
                   #if($velocityCount == 1)
                   ,
                     {
@@ -265,9 +265,9 @@
                 #end
               #end
 
-              #if (${adc.mounts})
+              #if (${aac.dc.mounts})
 
-                #foreach ($mount in $adc.mounts)
+                #foreach ($mount in $aac.dc.mounts)
                 ,
                   {
                     "name": "VOLUME_${mount.mountName.toUpperCase().replace("-", "_")}",
@@ -280,25 +280,25 @@
             ],
             "resources": {
               "limits": {
-                "cpu": "${adc.resources.cpu.max}",
-                "memory": "${adc.resources.memory.max}"
+                "cpu": "${aac.deploy.resources.cpu.max}",
+                "memory": "${aac.deploy.resources.memory.max}"
               },
               "requests": {
-                "cpu": "${adc.resources.cpu.min}",
-                "memory": "${adc.resources.memory.min}"
+                "cpu": "${aac.deploy.resources.cpu.min}",
+                "memory": "${aac.deploy.resources.memory.min}"
               }
             },
             "volumeMounts": [
-              #if (${adc.database})
-                #foreach ($db  in $adc.database)
+              #if (${aac.deploy.database})
+                #foreach ($db  in $aac.deploy.database)
                   {
                     "name": "$db.dbName",
                     "mountPath": "$dbPath/$db.dbName"
                   },
                 #end
               #end
-               #if (${adc.mounts})
-                #foreach ($mount in $adc.mounts)
+               #if (${aac.dc.mounts})
+                #foreach ($mount in $aac.dc.mounts)
                   {
                     "name": "${mount.mountName}",
                     "mountPath": "${mount.path}"
@@ -309,21 +309,21 @@
                 "name": "application-log-volume",
                 "mountPath": "/u01/logs"
               }
-              #if(${adc.config.size()} != 0)
+              #if(${aac.dc.config.size()} != 0)
               ,
                 {
                   "name": "config",
                   "mountPath": "/u01/config/configmap"
                 }
               #end
-              #if(${adc.certificateCn})
+              #if(${aac.deploy.certificateCn})
               ,
                 {
-                  "name": "${adc.name}-cert",
+                  "name": "${aac.name}-cert",
                   "mountPath": "$certPath"
                 }
               #end
-              #if(${adc.secrets})
+              #if(${aac.dc.secrets})
               ,
                 {
                   "name": "secrets",
@@ -338,40 +338,40 @@
               "capabilities": {},
               "privileged": false
             },
-            #if (${adc.liveness})
+            #if (${aac.deploy.liveness})
             "livenessProbe": {
-              #if(${adc.liveness.path} && "$!{adc.liveness.path}" != "")
+              #if(${aac.deploy.liveness.path} && "$!{aac.deploy.liveness.path}" != "")
               "httpGet": {
-                "path": "${adc.liveness.path}",
+                "path": "${aac.deploy.liveness.path}",
               #else
               "tcpSocket": {
               #end
-              "port": ${adc.liveness.port}
+              "port": ${aac.deploy.liveness.port}
             },
-              "initialDelaySeconds": ${adc.liveness.delay},
-              "timeoutSeconds": ${adc.liveness.timeout}
+              "initialDelaySeconds": ${aac.deploy.liveness.delay},
+              "timeoutSeconds": ${aac.deploy.liveness.timeout}
             },
             #end
             "readinessProbe": {
-              #if(${adc.readiness.path} && "$!{adc.readiness.path}" != "")
+              #if(${aac.deploy.readiness.path} && "$!{aac.deploy.readiness.path}" != "")
               "httpGet": {
-                "path": "${adc.readiness.path}",
+                "path": "${aac.deploy.readiness.path}",
               #else
               "tcpSocket": {
 
               #end
-              "port": ${adc.readiness.port}
+              "port": ${aac.deploy.readiness.port}
               },
-              "initialDelaySeconds": ${adc.readiness.delay},
-              "timeoutSeconds": ${adc.readiness.timeout}
+              "initialDelaySeconds": ${aac.deploy.readiness.delay},
+              "timeoutSeconds": ${aac.deploy.readiness.timeout}
             }
           }
         ],
         "restartPolicy": "Always",
         "dnsPolicy": "ClusterFirst"
-        #if(${adc.serviceAccount})
+        #if(${aac.deploy.serviceAccount})
         ,
-          "serviceAccountName": "${adc.serviceAccount}"
+          "serviceAccountName": "${aac.deploy.serviceAccount}"
         #end
       }
     }

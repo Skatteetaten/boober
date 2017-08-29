@@ -47,16 +47,18 @@ data class AuroraApplicationConfig(
 
 }
 
+//TODO: Trenger vi denne i det hele tatt? Eller kan vi kalle den noe annet nå? Hva med AuroraOtherResources og kalle var other?
+//DC er ihvertfall helt feil nå
 data class AuroraDeploymentCore(
         val secrets: Map<String, String>?,
         val config: Map<String, String>,
         val route: List<Route>,
-        val mounts: List<Mount>?,
-        val releaseTo: String?,
-        val applicationFile: String,
-        val overrideFiles: Map<String, JsonNode>
+        val mounts: List<Mount>?
 )
 
+//TODO: GAV must be here aswell? Just parse it both places?
+//TODO:  from ImageStreamTag må customizes
+//TODO: output to latest/default
 data class AuroraBuild(
         val baseName: String,
         val baseVersion: String,
@@ -70,7 +72,9 @@ data class AuroraBuild(
 
 
 data class AuroraDeploy(
-
+        val applicationFile: String,
+        val overrideFiles: Map<String, JsonNode>,
+        val releaseTo: String?,
         val flags: AuroraDeploymentConfigFlags,
         val resources: AuroraDeploymentConfigResources,
         val replicas: Int?,

@@ -4,9 +4,9 @@
   "metadata": {
     "name": "view"
   }
-#if (${adc.permissions.view.groups.size()} != 0)
+#if (${aac.permissions.view.groups.size()} != 0)
 ,"groupNames": [
-  #foreach ($group in $adc.permissions.view.groups)
+  #foreach ($group in $aac.permissions.view.groups)
     #if($velocityCount != 1)
       ,
     #end
@@ -15,9 +15,9 @@
 ]
 #end
 
-#if (${adc.permissions.view.users.size()} != 0)
+#if (${aac.permissions.view.users.size()} != 0)
 ,"userNames": [
-  #foreach ($user in $adc.permissions.view.users)
+  #foreach ($user in $aac.permissions.view.users)
     #if($velocityCount != 1)
       ,
     #end
@@ -26,9 +26,9 @@
 ]
 #end
 
-#if (${adc.permissions.view.rolebindings.size()} != 0)
+#if (${aac.permissions.view.rolebindings.size()} != 0)
 ,"subjects": [
-  #foreach ($binding in $adc.permissions.view.rolebindings.entrySet())
+  #foreach ($binding in $aac.permissions.view.rolebindings.entrySet())
     #if($velocityCount != 1)
       ,
     #end

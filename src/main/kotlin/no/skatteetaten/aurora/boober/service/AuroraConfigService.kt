@@ -64,7 +64,7 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient) {
         val applicationMapper = AuroraApplicationMapperV1(openShiftClient, deployCommand, applicationFiles)
 
 
-        val deployMapper = AuroraDeployMapperV1(applicationFiles)
+        val deployMapper = AuroraDeployMapperV1(auroraConfig, deployCommand)
 
         val deploymentCoreMapper = AuroraDeploymentCoreMapperV1(auroraConfig, deployCommand, vaults)
         val localTemplateMapper = AuroraLocalTemplateMapperV1(auroraConfig, applicationFiles)

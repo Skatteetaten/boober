@@ -19,21 +19,16 @@ class AuroraDeploymentCoreMapperV1(val auroraConfig: AuroraConfig, val deployCom
 
     val applicationFiles = auroraConfig.getFilesForApplication(deployCommand)
 
-
     val mountHandlers = findMounts()
     val configHandlers = findConfigFieldHandlers()
     val routeHandlers = findRouteHandlers()
 
     val handlers = routeHandlers + configHandlers + mountHandlers + listOf(
-
-            AuroraConfigFieldHandler("secretVault", validator = validateSecrets()),
-            AuroraConfigFieldHandler("releaseTo")
+            AuroraConfigFieldHandler("secretVault", validator = validateSecrets())
     )
 
 
     fun auroraDeploymentCore(auroraConfigFields: AuroraConfigFields): AuroraDeploymentCore {
-        val applicationFile = auroraConfig.getApplicationFile(deployCommand.applicationId)
-        val overrideFiles = deployCommand.overrideFiles.map { it.name to it.contents }.toMap()
         val name = auroraConfigFields.extract("name")
 
         return AuroraDeploymentCore(
@@ -42,10 +37,7 @@ class AuroraDeploymentCoreMapperV1(val auroraConfig: AuroraConfig, val deployCom
                 }),
                 config = auroraConfigFields.getConfigMap(configHandlers),
                 route = getRoute(auroraConfigFields, name),
-                mounts = auroraConfigFields.getMounts(mountHandlers, vaults),
-                releaseTo = auroraConfigFields.extractOrNull("releaseTo"),
-                applicationFile = applicationFile.name,
-                overrideFiles = overrideFiles
+                mounts = auroraConfigFields.getMounts(mountHandlers, vaults)
         )
     }
 

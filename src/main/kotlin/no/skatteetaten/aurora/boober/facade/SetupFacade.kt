@@ -137,10 +137,9 @@ class SetupFacade(
                         openShiftObjects.mapNotNull { OpenshiftCommand(OperationType.CREATE, payload = it) }
                     }
 
-                    val tagCmd = adc.dc?.let {
+                    val tagCmd = adc.deploy?.let {
                         if (it.releaseTo != null) {
-                            //TODO:fix !!
-                            TagCommand("${adc.deploy!!.dockerGroup}/${adc.deploy!!.dockerName}", adc.deploy!!.version, it.releaseTo, dockerRegistry)
+                            TagCommand("${it.dockerGroup}/${it.dockerName}", it.version, it.releaseTo, dockerRegistry)
                         } else null
                     }
 
