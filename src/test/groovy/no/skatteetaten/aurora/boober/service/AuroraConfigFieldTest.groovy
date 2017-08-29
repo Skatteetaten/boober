@@ -72,13 +72,9 @@ class AuroraConfigFieldTest extends Specification {
     when:
       def mapper = new AuroraDeploymentCoreMapperV1(auroraConfig, deployCommand, [:])
 
-
-      def config = mapper.auroraConfigFields.getConfigMap(mapper.configHandlers)
-
     then:
       mapper.configHandlers.collect { it.path } == ["/config/foo", "/config/bar", "/config/1/bar", "/config/1/foo"]
-      config ==
-          ["1.properties": "bar=baz\\nfoo=baz", foo: "baaaar", bar: "bar", "latest.properties": "foo=baaaar\\nbar=bar"]
+
   }
 }
 

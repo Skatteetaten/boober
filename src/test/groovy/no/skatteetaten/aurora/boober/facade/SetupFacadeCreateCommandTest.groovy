@@ -123,7 +123,9 @@ class SetupFacadeCreateCommandTest extends Specification {
       def result = setupFacade.createApplicationCommands(auroraConfig, [deployCommand], [:], deployId)
 
     then:
-      result.size() == 1
+    def e = thrown(AuroraConfigException)
+
+    result.size() == 1
       result.get(0).auroraDc.type == deploy
       result.get(0).tagCommand == null
   }

@@ -14,7 +14,6 @@ import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigDeploy
 import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
@@ -89,7 +88,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
     when:
-      auroraDeploymentConfigService.createAuroraDeploymentConfigs(deployCommand, auroraConfig, [:])
+      auroraDeploymentConfigService.createAuroraApplicationConfig(deployCommand, auroraConfig, [:])
 
     then:
       thrown(ApplicationConfigException)
@@ -105,7 +104,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
     when:
-      auroraDeploymentConfigService.createAuroraDeploymentConfigs(deployCommand, auroraConfig, [:])
+      auroraDeploymentConfigService.createAuroraApplicationConfig(deployCommand, auroraConfig, [:])
 
     then:
       def e = thrown(ApplicationConfigException)
@@ -123,13 +122,11 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def auroraDc =
-          (AuroraDeploymentConfigDeploy) auroraDeploymentConfigService.
-              createAuroraDeploymentConfigs(deployCommand, auroraConfig, [:])
+      def auroraDc = auroraDeploymentConfigService.createAuroraApplicationConfig(deployCommand, auroraConfig, [:])
 
     then:
-      auroraDc.prometheus.port == 8081
-      auroraDc.webseal.host == "webseal"
+      auroraDc.deploy.prometheus.port == 8081
+      auroraDc.deploy.webseal.host == "webseal"
   }
 
   def "Should create AuroraConfigFields with overrides"() {
@@ -141,7 +138,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def auroraDc = auroraDeploymentConfigService.createAuroraDeploymentConfigs(deployCommand, auroraConfig, [:])
+      def auroraDc = auroraDeploymentConfigService.createAuroraApplicationConfig(deployCommand, auroraConfig, [:])
 
       def fields = auroraDc.fields
     then:
@@ -175,7 +172,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
     when:
       def auroraDc = auroraDeploymentConfigService.
-          createAuroraDeploymentConfigs(deployCommand, auroraConfig, [:]) as AuroraDeploymentConfigDeploy
+              createAuroraApplicationConfig(deployCommand, auroraConfig, [:])
 
     then:
       with(auroraDc) {
@@ -183,7 +180,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
         affiliation == "aos"
         name == APP_NAME
         cluster == "utv"
-        replicas == 1
+        deploy.replicas == 1
         type == TemplateType.development
         permissions.admin.groups.containsAll(["APP_PaaS_drift", "APP_PaaS_utv"])
       }
@@ -200,7 +197,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
     when:
       def auroraDc = auroraDeploymentConfigService.
-          createAuroraDeploymentConfigs(deployCommand, auroraConfig, [:]) as AuroraDeploymentConfigDeploy
+              createAuroraApplicationConfig(deployCommand, auroraConfig, [:])
 
     then:
       auroraDc.name == "awesome-app"
@@ -217,7 +214,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
           new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false, null) }, "aos")
 
     when:
-      auroraDeploymentConfigService.createAuroraDeploymentConfigs(deployCommand, auroraConfig, [:])
+      auroraDeploymentConfigService.createAuroraApplicationConfig(deployCommand, auroraConfig, [:])
 
     then:
       def ex = thrown(ApplicationConfigException)
