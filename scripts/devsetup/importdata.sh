@@ -5,11 +5,7 @@ FILES_DIR=$SCRIPT_DIR/files
 GIT_FOLDER=/tmp/boobergit/paas
 
 oc whoami -t || (echo "You must be logged into openshift" && exit 1)
-which git || ( echo "Please install git" && sudo apt-get install git)
-
 which http || ( echo "Please install httpie" && sudo apt-get install httpie)
-
-[[ -d $GIT_FOLDER ]] || (mkdir -p $GIT_FOLDER && git init --bare $GIT_FOLDER)
 
 TOKEN=$(oc whoami -t)
 
@@ -24,8 +20,8 @@ http --timeout 300 PUT :8080/affiliation/paas/vault Authorization:"bearer $TOKEN
 echo "Add aurora config for referance app"
 http --timeout 300 PUT :8080/affiliation/paas/auroraconfig Authorization:"bearer $TOKEN"  < ${FILES_DIR}/reference.json
 
-echo "The vaults are"
-http --timeout 300 GET :8080/affiliation/paas/vault Authorization:"bearer $TOKEN"
+#echo "The vaults are"
+#http --timeout 300 GET :8080/affiliation/paas/vault Authorization:"bearer $TOKEN"
 
 #echo "Dry run deploy of  application to paas-boober-dev and paas-boober-test"
 #http --timeout 300 PUT :8080/affiliation/paas/deploy/dryrun Authorization:"bearer $TOKEN"  < ${FILES_DIR}/deploy.json
