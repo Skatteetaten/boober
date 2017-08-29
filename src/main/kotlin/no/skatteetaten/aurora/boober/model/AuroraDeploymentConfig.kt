@@ -4,9 +4,101 @@ import com.fasterxml.jackson.databind.JsonNode
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
 
+
 enum class TemplateType {
-    deploy, development, localTemplate, template
+    deploy, development, localTemplate, template, build
 }
+
+
+data class AuroraApplicationConfig(
+        val schemaVersion: String,
+        val affiliation: String,
+        val cluster: String,
+        val type: TemplateType,
+        val name: String,
+        val envName: String,
+        val permissions: Permissions,
+        val fields: Map<String, AuroraConfigField>,
+        val unmappedPointers: Map<String, List<String>>,
+
+
+        val dc: ADC? = null,
+        val build: AuroraBuild? = null,
+        val deploy: AuroraDeploy? = null,
+        val template: AuroraTemplate? = null
+) {
+
+    val namespace: String
+        get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"
+
+    //In use in velocity template
+    val routeName: String?
+        get() = dc?.let {
+            if (it.route.isEmpty()) {
+                null
+            } else {
+                it.route.first().let {
+                    val host = it.host ?: "$name-$namespace"
+                    "http://$host.$cluster.paas.skead.no${it.path ?: ""}"
+                }
+            }
+        }
+
+}
+
+data class ADC(
+        val secrets: Map<String, String>?,
+        val config: Map<String, String>,
+        val route: List<Route>,
+        val mounts: List<Mount>?,
+        val releaseTo: String?,
+        val applicationFile: String,
+        val overrideFiles: Map<String, JsonNode>
+)
+
+data class AuroraBuild(
+        val baseName: String,
+        val baseVersion: String,
+        val builderName: String,
+        val builderVersion: String,
+        val testGitUrl: String?,
+        val testTag: String?,
+        val testJenkinsfile: String?,
+        val extraTags: String
+)
+
+
+data class AuroraDeploy(
+
+        val flags: AuroraDeploymentConfigFlags,
+        val resources: AuroraDeploymentConfigResources,
+        val replicas: Int?,
+        val groupId: String,
+        val artifactId: String,
+        val version: String,
+        val splunkIndex: String? = null,
+        val database: List<Database> = listOf(),
+        val certificateCn: String? = null,
+        val webseal: Webseal? = null,
+        val prometheus: HttpEndpoint? = null,
+        val managementPath: String? = null,
+        val serviceAccount: String? = null,
+        val liveness: Probe?,
+        val readiness: Probe
+) {
+    //In use in velocity template
+    val dockerGroup: String = groupId.replace(".", "_")
+    //In use in velocity template
+    val dockerName: String = artifactId
+}
+
+
+data class AuroraTemplate(
+        val parameters: Map<String, String>?,
+        val templateJson: JsonNode? = null,
+        val template: String? = null
+)
+
 
 interface AuroraDeploymentConfig {
     val schemaVersion: String
