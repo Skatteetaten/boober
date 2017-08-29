@@ -3,10 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigProcess
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigProcessLocalTemplate
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigProcessTemplate
+import no.skatteetaten.aurora.boober.model.AuroraApplicationConfig
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import org.springframework.stereotype.Service
 
@@ -16,18 +13,9 @@ class OpenShiftTemplateProcessor(
         val mapper: ObjectMapper) {
 
 
-    fun generateObjects(apc: AuroraDeploymentConfigProcess): List<JsonNode> {
+    fun generateObjects(template: ObjectNode, parameters: Map<String, String>?, aac: AuroraApplicationConfig): List<JsonNode> {
 
-
-        val template = if (apc is AuroraDeploymentConfigProcessTemplate) {
-            openShiftClient.get("template", apc.template, "openshift")?.body as ObjectNode
-        } else if (apc is AuroraDeploymentConfigProcessLocalTemplate) {
-            apc.templateJson as ObjectNode
-        } else {
-            throw IllegalArgumentException("Template or templateFile should be specified")
-        }
-
-        val adcParameters = apc.parameters ?: emptyMap()
+        val adcParameters = parameters ?: emptyMap()
         val adcParameterKeys = adcParameters.keys
 
         if (template.has("parameters")) {
@@ -48,16 +36,15 @@ class OpenShiftTemplateProcessor(
 
         val labels = template["labels"] as ObjectNode
 
-        val base = apc as AuroraDeploymentConfig
         if (!labels.has("affiliation")) {
-            labels.put("affiliation", base.affiliation)
+            labels.put("affiliation", aac.affiliation)
         }
 
         if (!labels.has("app")) {
-            labels.put("app", base.name)
+            labels.put("app", aac.name)
         }
 
-        val result = openShiftClient.post("processedtemplate", namespace = base.namespace, payload = template)
+        val result = openShiftClient.post("processedtemplate", namespace = aac.namespace, payload = template)
 
         return result.body["objects"].asSequence().toList()
     }

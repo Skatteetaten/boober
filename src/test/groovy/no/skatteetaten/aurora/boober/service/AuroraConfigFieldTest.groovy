@@ -9,11 +9,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraConfigMapperV1Deploy
+import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentCoreMapperV1
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -71,8 +70,8 @@ class AuroraConfigFieldTest extends Specification {
       def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def mapper = auroraDeploymentConfigService.
-          createMapper(deployCommand, auroraConfig, [:]) as AuroraConfigMapperV1Deploy
+      def mapper = new AuroraDeploymentCoreMapperV1(auroraConfig, deployCommand, [:])
+
 
       def config = mapper.auroraConfigFields.getConfigMap(mapper.configHandlers)
 

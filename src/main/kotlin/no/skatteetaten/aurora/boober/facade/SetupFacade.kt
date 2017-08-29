@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.internal.SetupParams
 import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigDeploy
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.model.TemplateType
@@ -21,8 +20,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
-import no.skatteetaten.aurora.boober.utils.openshiftKind
-import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.eclipse.jgit.api.Git
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -63,15 +60,15 @@ class SetupFacade(
 
     fun setupApplication(cmd: ApplicationCommand): ApplicationResult {
         val responses = cmd.commands.map {
-/* TODO: remove
-            //When we create an Openshift project we get a default rolebinding called admin that we do not want.
-            val openshiftCommand = if (it.operationType == OperationType.CREATE &&
-                    it.payload.openshiftKind.toLowerCase() == "rolebinding" &&
-                    it.payload.openshiftName.toLowerCase() == "admin") {
-                openShiftClient.updateRolebindingCommand(it.payload, cmd.auroraDc.namespace)
-            } else {
-                it
-            }*/
+            /* TODO: remove
+                        //When we create an Openshift project we get a default rolebinding called admin that we do not want.
+                        val openshiftCommand = if (it.operationType == OperationType.CREATE &&
+                                it.payload.openshiftKind.toLowerCase() == "rolebinding" &&
+                                it.payload.openshiftName.toLowerCase() == "admin") {
+                            openShiftClient.updateRolebindingCommand(it.payload, cmd.auroraDc.namespace)
+                        } else {
+                            it
+                        }*/
             openShiftClient.performOpenShiftCommand(it, cmd.auroraDc.namespace)
         }
 
@@ -139,9 +136,14 @@ class SetupFacade(
                     } else {
                         openShiftObjects.mapNotNull { OpenshiftCommand(OperationType.CREATE, payload = it) }
                     }
-                    val tagCmd = if (adc is AuroraDeploymentConfigDeploy && adc.releaseTo != null) {
-                        TagCommand("${adc.dockerGroup}/${adc.dockerName}", adc.version, adc.releaseTo!!, dockerRegistry)
-                    } else null
+
+                    val tagCmd = adc.dc?.let {
+                        if (it.releaseTo != null) {
+                            //TODO:fix !!
+                            TagCommand("${adc.deploy!!.dockerGroup}/${adc.deploy!!.dockerName}", adc.deploy!!.version, it.releaseTo, dockerRegistry)
+                        } else null
+                    }
+
                     ApplicationCommand(deployId, adc, openShiftCommand, tagCmd)
                 })
         return res

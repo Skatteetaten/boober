@@ -22,10 +22,11 @@ data class AuroraApplicationConfig(
         val unmappedPointers: Map<String, List<String>>,
 
 
-        val dc: ADC? = null,
+        val dc: AuroraDeploymentCore? = null,
         val build: AuroraBuild? = null,
         val deploy: AuroraDeploy? = null,
-        val template: AuroraTemplate? = null
+        val template: AuroraTemplate? = null,
+        val localTemplate: AuroraLocalTemplate? = null
 ) {
 
     val namespace: String
@@ -46,7 +47,7 @@ data class AuroraApplicationConfig(
 
 }
 
-data class ADC(
+data class AuroraDeploymentCore(
         val secrets: Map<String, String>?,
         val config: Map<String, String>,
         val route: List<Route>,
@@ -92,47 +93,15 @@ data class AuroraDeploy(
     val dockerName: String = artifactId
 }
 
+data class AuroraLocalTemplate(
+        val parameters: Map<String, String>?,
+        val templateJson: JsonNode
+)
 
 data class AuroraTemplate(
         val parameters: Map<String, String>?,
-        val templateJson: JsonNode? = null,
-        val template: String? = null
+        val template: String
 )
-
-
-interface AuroraDeploymentConfig {
-    val schemaVersion: String
-    val affiliation: String
-    val cluster: String
-    val type: TemplateType
-    val name: String
-    val envName: String
-    val permissions: Permissions
-    val secrets: Map<String, String>?
-    val config: Map<String, String>
-    val fields: Map<String, AuroraConfigField>
-    val unmappedPointers: Map<String, List<String>>
-    val route: List<Route>
-    val mounts: List<Mount>?
-    val releaseTo: String?
-    val applicationFile: String
-    val overrideFiles: Map<String, JsonNode>
-    val namespace: String
-        get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"
-
-    //In use in velocity template
-    val routeName: String?
-        get() =
-            if (route.isEmpty()) {
-                null
-            } else {
-                route.first().let {
-                    val host = it.host ?: "$name-$namespace"
-                    "http://$host.$cluster.paas.skead.no${it.path ?: ""}"
-                }
-            }
-
-}
 
 
 enum class MountType {
@@ -164,95 +133,6 @@ data class Database(
 
 data class Probe(val path: String? = null, val port: Int, val delay: Int, val timeout: Int)
 
-data class AuroraDeploymentConfigDeploy(
-        override val schemaVersion: String = "v1",
-        override val affiliation: String,
-        override val cluster: String,
-        override val type: TemplateType,
-        override val name: String,
-        val flags: AuroraDeploymentConfigFlags,
-        val resources: AuroraDeploymentConfigResources,
-        override val envName: String,
-        override val permissions: Permissions,
-        val replicas: Int?,
-        override val secrets: Map<String, String>? = null,
-        override val config: Map<String, String> = mapOf(),
-        override val route: List<Route> = emptyList(),
-        val groupId: String,
-        val artifactId: String,
-        val version: String,
-        val extraTags: String,
-        val splunkIndex: String? = null,
-        val database: List<Database> = listOf(),
-        val certificateCn: String? = null,
-        val webseal: Webseal? = null,
-        val prometheus: HttpEndpoint? = null,
-        val managementPath: String? = null,
-        val serviceAccount: String? = null,
-        override val mounts: List<Mount>? = null,
-        override val fields: Map<String, AuroraConfigField>,
-        override val releaseTo: String? = null,
-        override val unmappedPointers: Map<String, List<String>>,
-        override val applicationFile: String,
-        override val overrideFiles: Map<String, JsonNode> = emptyMap(),
-        val liveness: Probe?,
-        val readiness: Probe
-) : AuroraDeploymentConfig {
-
-    //In use in velocity template
-    val dockerGroup: String = groupId.replace(".", "_")
-    //In use in velocity template
-    val dockerName: String = artifactId
-}
-
-
-interface AuroraDeploymentConfigProcess {
-    val parameters: Map<String, String>?
-}
-
-
-data class AuroraDeploymentConfigProcessLocalTemplate(
-        override val schemaVersion: String = "v1",
-        override val affiliation: String,
-        override val cluster: String,
-        override val type: TemplateType,
-        override val name: String,
-        override val envName: String,
-        override val permissions: Permissions,
-        override val secrets: Map<String, String>? = null,
-        override val config: Map<String, String> = mapOf(),
-        override val parameters: Map<String, String>? = mapOf(),
-        override val fields: Map<String, AuroraConfigField>,
-        override val route: List<Route> = emptyList(),
-        override val mounts: List<Mount>? = null,
-        override val releaseTo: String? = null,
-        val templateJson: JsonNode,
-        override val unmappedPointers: Map<String, List<String>>,
-        override val applicationFile: String,
-        override val overrideFiles: Map<String, JsonNode> = emptyMap()
-) : AuroraDeploymentConfigProcess, AuroraDeploymentConfig
-
-data class AuroraDeploymentConfigProcessTemplate(
-        override val schemaVersion: String = "v1",
-        override val affiliation: String,
-        override val cluster: String,
-        override val type: TemplateType,
-        override val name: String,
-        override val envName: String,
-        override val permissions: Permissions,
-        override val secrets: Map<String, String>? = null,
-        override val config: Map<String, String> = mapOf(),
-        override val parameters: Map<String, String>? = mapOf(),
-        override val fields: Map<String, AuroraConfigField>,
-        override val route: List<Route> = emptyList(),
-        override val mounts: List<Mount>? = null,
-        override val releaseTo: String? = null,
-        val template: String,
-        override val unmappedPointers: Map<String, List<String>>,
-        override val applicationFile: String,
-        override val overrideFiles: Map<String, JsonNode> = emptyMap()
-
-) : AuroraDeploymentConfigProcess, AuroraDeploymentConfig
 
 
 data class Route(
