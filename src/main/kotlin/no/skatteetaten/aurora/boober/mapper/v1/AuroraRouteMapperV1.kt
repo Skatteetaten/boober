@@ -1,19 +1,13 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
-import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraRoute
-import no.skatteetaten.aurora.boober.model.AuroraVolume
-import no.skatteetaten.aurora.boober.model.AuroraSecretVault
-import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.model.Route
 import no.skatteetaten.aurora.boober.utils.startsWith
 
-class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>,
-                          val vaults: Map<String, AuroraSecretVault>) {
-
+class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>) {
 
 
     val handlers = findRouteHandlers()
@@ -40,7 +34,7 @@ class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>,
             } else {
                 it
             }
-            Route(routeName, routeHost, routePath, auroraConfigFields.getRouteAnnotations("route/$it/annotations", routeHandlers))
+            Route(routeName, routeHost, routePath, auroraConfigFields.getRouteAnnotations("route/$it/annotations", handlers))
         }.toList()
     }
 

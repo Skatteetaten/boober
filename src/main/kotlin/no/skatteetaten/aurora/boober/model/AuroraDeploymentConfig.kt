@@ -22,41 +22,28 @@ data class AuroraApplicationConfig(
         val unmappedPointers: Map<String, List<String>>,
 
 
-        val dc: AuroraDeploymentCore? = null,
+        val volume: AuroraVolume? = null,
+        val route: AuroraRoute? = null,
         val build: AuroraBuild? = null,
         val deploy: AuroraDeploy? = null,
         val template: AuroraTemplate? = null,
         val localTemplate: AuroraLocalTemplate? = null
 ) {
-
     val namespace: String
         get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"
 
-    //In use in velocity template
-    val routeName: String?
-        get() = dc?.let {
-            if (it.route.isEmpty()) {
-                null
-            } else {
-                it.route.first().let {
-                    val host = it.host ?: "$name-$namespace"
-                    "http://$host.$cluster.paas.skead.no${it.path ?: ""}"
-                }
-            }
-        }
-
 }
 
-//TODO: Trenger vi denne i det hele tatt? Eller kan vi kalle den noe annet nå? Hva med AuroraOtherResources og kalle var other?
-//DC er ihvertfall helt feil nå
-data class AuroraDeploymentCore(
+data class AuroraVolume(
         val secrets: Map<String, String>?,
         val config: Map<String, String>,
-        val route: List<Route>,
         val mounts: List<Mount>?
 )
 
-// Add name suffix for branch name
+data class AuroraRoute(
+        val route: List<Route>
+)
+
 data class AuroraBuild(
         val baseName: String,
         val baseVersion: String,
@@ -71,7 +58,8 @@ data class AuroraBuild(
         val version: String,
         val outputKind: String,
         val outputName: String,
-        val triggers: Boolean
+        val triggers: Boolean,
+        val buildSuffix: String?
 )
 
 

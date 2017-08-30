@@ -6,5 +6,6 @@
   },
   "builder": {
     "name": "architect"
-  }
+  },
+  "buildSuffix": "dev"
 }

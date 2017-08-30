@@ -99,8 +99,8 @@
               },
             #end
           #end
-          #if (${aac.dc.mounts})
-            #foreach ($mount in $aac.dc.mounts)
+          #if (${aac.volume.mounts})
+            #foreach ($mount in $aac.volume.mounts)
               {
                 "name": "${mount.volumeName}",
                 #if(${mount.type} == "ConfigMap")
@@ -119,7 +119,7 @@
             "name": "application-log-volume",
             "emptyDir": {}
           }
-          #if(${aac.dc.config.size()} != 0)
+          #if(${aac.volume.config.size()} != 0)
           ,
             {
               "name": "config",
@@ -128,7 +128,7 @@
               }
             }
           #end
-          #if(${aac.dc.secrets})
+          #if(${aac.volume.secrets})
           ,
             {
               "name": "secrets",
@@ -233,10 +233,10 @@
                 }
               #end
 
-              #if (${aac.dc.route.size()} !=0)
+              #if (${aac.route.route.size()} !=0)
                   ,{
                     "name": "ROUTE_NAME",
-                    "value": "${aac.routeName}"
+                "value": "${routeName}"
                   }
                 #end
 
@@ -265,9 +265,9 @@
                 #end
               #end
 
-              #if (${aac.dc.mounts})
+              #if (${aac.volume.mounts})
 
-                #foreach ($mount in $aac.dc.mounts)
+                #foreach ($mount in $aac.volume.mounts)
                 ,
                   {
                     "name": "VOLUME_${mount.mountName.toUpperCase().replace("-", "_")}",
@@ -297,8 +297,8 @@
                   },
                 #end
               #end
-               #if (${aac.dc.mounts})
-                #foreach ($mount in $aac.dc.mounts)
+              #if (${aac.volume.mounts})
+                #foreach ($mount in $aac.volume.mounts)
                   {
                     "name": "${mount.mountName}",
                     "mountPath": "${mount.path}"
@@ -309,7 +309,7 @@
                 "name": "application-log-volume",
                 "mountPath": "/u01/logs"
               }
-              #if(${aac.dc.config.size()} != 0)
+              #if(${aac.volume.config.size()} != 0)
               ,
                 {
                   "name": "config",
@@ -323,7 +323,7 @@
                   "mountPath": "$certPath"
                 }
               #end
-              #if(${aac.dc.secrets})
+              #if(${aac.volume.secrets})
               ,
                 {
                   "name": "secrets",

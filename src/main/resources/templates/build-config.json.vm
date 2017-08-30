@@ -2,9 +2,9 @@
   "kind": "BuildConfig",
   "apiVersion": "v1",
   "metadata": {
-    "name": "${aac.name}",
+    "name": "${buildName}",
     "labels": {
-      "app": "${aac.name}",
+      "app": "${buildName}",
       "updatedBy": "${username}",
       "affiliation": "${aac.affiliation}",
       "booberDeployId": "${deployId}"

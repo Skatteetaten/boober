@@ -3,10 +3,12 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraSecretVault
+import no.skatteetaten.aurora.boober.model.AuroraVolume
+import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.required
-import no.skatteetaten.aurora.boober.utils.startsWith
 
 class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>,
                            val vaults: Map<String, AuroraSecretVault>) {
@@ -15,9 +17,8 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>,
 
     val mountHandlers = findMounts()
     val configHandlers = findConfigFieldHandlers()
-    val routeHandlers = findRouteHandlers()
 
-    val handlers = routeHandlers + configHandlers + mountHandlers + listOf(
+    val handlers = configHandlers + mountHandlers + listOf(
             AuroraConfigFieldHandler("secretVault", validator = validateSecrets())
     )
 
@@ -31,26 +32,10 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>,
                     vaults[it.asText()]?.secrets
                 }),
                 config = auroraConfigFields.getConfigMap(configHandlers),
-                route = getRoute(auroraConfigFields, name),
                 mounts = auroraConfigFields.getMounts(mountHandlers, vaults)
         )
     }
 
-    fun getRoute(auroraConfigFields: AuroraConfigFields, name: String): List<Route> {
-
-        val routes = findSubKeys("route")
-
-        return routes.map {
-            val routePath = auroraConfigFields.extractOrNull("route/$it/path")
-            val routeHost = auroraConfigFields.extractOrNull("route/$it/host")
-            val routeName = if (!it.startsWith(name)) {
-                "$name-$it"
-            } else {
-                it
-            }
-            Route(routeName, routeHost, routePath, auroraConfigFields.getRouteAnnotations("route/$it/annotations", routeHandlers))
-        }.toList()
-    }
 
     private fun validateSecrets(): (JsonNode?) -> Exception? {
         return { json ->
@@ -68,26 +53,6 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>,
         }
     }
 
-    fun findRouteHandlers(): List<AuroraConfigFieldHandler> {
-
-        val routeHandlers = findSubKeys("route")
-
-        return routeHandlers.flatMap { routeName ->
-            listOf(
-                    AuroraConfigFieldHandler("route/$routeName/host"),
-                    AuroraConfigFieldHandler("route/$routeName/path", validator = { it?.startsWith("/", "Path must start with /") })
-            ) + findRouteAnnotaionHandlers("route/$routeName")
-        }
-    }
-
-    fun findRouteAnnotaionHandlers(prefix: String): List<AuroraConfigFieldHandler> {
-
-        return applicationFiles.flatMap { ac ->
-            ac.contents.at("/$prefix/annotations")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
-        }.toSet().map { key ->
-            AuroraConfigFieldHandler("$prefix/annotations/$key")
-        }
-    }
 
 
     fun findConfigFieldHandlers(): List<AuroraConfigFieldHandler> {

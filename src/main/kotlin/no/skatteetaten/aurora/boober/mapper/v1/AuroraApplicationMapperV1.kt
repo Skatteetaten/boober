@@ -3,7 +3,18 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.AuroraApplicationConfig
+import no.skatteetaten.aurora.boober.model.AuroraBuild
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraDeploy
+import no.skatteetaten.aurora.boober.model.AuroraLocalTemplate
+import no.skatteetaten.aurora.boober.model.AuroraRoute
+import no.skatteetaten.aurora.boober.model.AuroraTemplate
+import no.skatteetaten.aurora.boober.model.AuroraVolume
+import no.skatteetaten.aurora.boober.model.DeployCommand
+import no.skatteetaten.aurora.boober.model.Permission
+import no.skatteetaten.aurora.boober.model.Permissions
+import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.findAllPointers
@@ -28,7 +39,8 @@ class AuroraApplicationMapperV1(val applicationFiles: List<AuroraConfigFile>,
 
     fun auroraApplicationConfig(auroraConfigFields: AuroraConfigFields,
                                 fieldHandlers: Set<AuroraConfigFieldHandler>,
-                                dc: AuroraVolume?,
+                                volume: AuroraVolume?,
+                                route: AuroraRoute?,
                                 build: AuroraBuild?,
                                 deploy: AuroraDeploy?,
                                 template: AuroraTemplate?,
@@ -46,7 +58,8 @@ class AuroraApplicationMapperV1(val applicationFiles: List<AuroraConfigFile>,
                 permissions = extractPermissions(auroraConfigFields),
                 fields = auroraConfigFields.fields,
                 unmappedPointers = getUnmappedPointers(fieldHandlers),
-                volume = dc,
+                volume = volume,
+                route = route,
                 build = build,
                 deploy = deploy,
                 template = template,

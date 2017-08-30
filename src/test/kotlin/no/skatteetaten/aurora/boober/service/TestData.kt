@@ -1,6 +1,17 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.AuroraApplicationConfig
+import no.skatteetaten.aurora.boober.model.AuroraDeploy
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigFlags
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResources
+import no.skatteetaten.aurora.boober.model.AuroraRoute
+import no.skatteetaten.aurora.boober.model.AuroraVolume
+import no.skatteetaten.aurora.boober.model.Database
+import no.skatteetaten.aurora.boober.model.Permission
+import no.skatteetaten.aurora.boober.model.Permissions
+import no.skatteetaten.aurora.boober.model.Probe
+import no.skatteetaten.aurora.boober.model.TemplateType
 
 val auroraDevelopment = AuroraApplicationConfig(
         schemaVersion = "v1",
@@ -19,10 +30,10 @@ val auroraDevelopment = AuroraApplicationConfig(
         volume = AuroraVolume(
                 config = mapOf(),
                 secrets = emptyMap(),
-                route = emptyList(),
                 mounts = emptyList()
 
         ),
+        route = AuroraRoute(emptyList()),
         deploy = AuroraDeploy(
                 releaseTo = null,
                 applicationFile = "boober-unit-test/dev-test.json",

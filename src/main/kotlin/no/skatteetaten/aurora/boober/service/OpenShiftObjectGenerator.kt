@@ -48,11 +48,32 @@ class OpenShiftObjectGenerator(
         val database = auroraApplicationConfig.deploy?.database?.map { it.spec }?.joinToString(",") ?: ""
 
         logger.debug("Database is $database")
+        //In use in velocity template
+        val routeName = auroraApplicationConfig.route?.let {
+            if (it.route.isEmpty()) {
+                null
+            } else {
+                it.route.first().let {
+                    val host = it.host ?: "${auroraApplicationConfig.name}-${auroraApplicationConfig.namespace}"
+                    "http://$host.${auroraApplicationConfig.cluster}.paas.skead.no${it.path ?: ""}"
+                }
+            }
+        }
 
+
+        val buildName = auroraApplicationConfig.build?.let {
+            if (it.buildSuffix != null) {
+                "${auroraApplicationConfig.name}-${it.buildSuffix}"
+            } else {
+                auroraApplicationConfig.name
+            }
+        }
         val params = mapOf(
                 "overrides" to overrides,
                 "deployId" to deployId,
                 "aac" to auroraApplicationConfig,
+                "buildName" to buildName,
+                "routeName" to routeName,
                 "username" to userDetailsProvider.getAuthenticatedUser().username,
                 "database" to database,
                 "dbPath" to "/u01/secrets/app",
@@ -109,7 +130,7 @@ class OpenShiftObjectGenerator(
             openShiftObjects.addAll(it)
         }
 
-        auroraApplicationConfig.volume?.route?.map {
+        auroraApplicationConfig.route?.route?.map {
             logger.debug("Route is {}", it)
             val routeParams = mapOf(
                     "aac" to auroraApplicationConfig,

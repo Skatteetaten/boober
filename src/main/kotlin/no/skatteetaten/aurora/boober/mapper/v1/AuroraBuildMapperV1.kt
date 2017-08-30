@@ -48,13 +48,15 @@ class AuroraBuildMapperV1 {
                 artifactId = artifactId,
                 outputKind = outputKind,
                 outputName = outputName,
-                triggers = !skipTriggers
+                triggers = !skipTriggers,
+                buildSuffix = auroraConfigFields.extractOrNull("buildSuffix")
 
         )
     }
 
     val handlers = listOf(
             AuroraConfigFieldHandler("extraTags", defaultValue = "latest,major,minor,patch"),
+            AuroraConfigFieldHandler("buildSuffix"),
             AuroraConfigFieldHandler("builder/version", defaultValue = "prod"),
             AuroraConfigFieldHandler("builder/name", defaultValue = "leveransepakkebygger"),
             AuroraConfigFieldHandler("baseImage/name", defaultValue = "oracle8"),

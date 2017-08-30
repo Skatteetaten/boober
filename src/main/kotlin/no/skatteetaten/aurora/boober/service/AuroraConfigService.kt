@@ -6,10 +6,10 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigValidator
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraApplicationMapperV1
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraBuildMapperV1
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeployMapperV1
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraVolumeMapperV1
-
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraLocalTemplateMapperV1
+import no.skatteetaten.aurora.boober.mapper.v1.AuroraRouteMapperV1
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraTemplateMapperV1
+import no.skatteetaten.aurora.boober.mapper.v1.AuroraVolumeMapperV1
 import no.skatteetaten.aurora.boober.model.AuroraApplicationConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
@@ -66,15 +66,16 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient,
         }
         val applicationMapper = AuroraApplicationMapperV1(applicationFiles, openShiftClient, deployCommand)
         val deployMapper = AuroraDeployMapperV1(applicationFiles, deployCommand, dockerRegistry)
-        val deploymentCoreMapper = AuroraVolumeMapperV1(applicationFiles, vaults)
+        val volumeMapper = AuroraVolumeMapperV1(applicationFiles, vaults)
+        val routeMapper = AuroraRouteMapperV1(applicationFiles)
         val localTemplateMapper = AuroraLocalTemplateMapperV1(applicationFiles, auroraConfig)
         val templateMapper = AuroraTemplateMapperV1(applicationFiles, openShiftClient)
         val buildMapper = AuroraBuildMapperV1()
         val handlers = (baseHandlers + applicationMapper.handlers + when (type) {
-            deploy -> deploymentCoreMapper.handlers + deployMapper.handlers
-            development -> deploymentCoreMapper.handlers + deployMapper.handlers + buildMapper.handlers
-            localTemplate -> deploymentCoreMapper.handlers + localTemplateMapper.handlers
-            template -> deploymentCoreMapper.handlers + templateMapper.handlers
+            deploy -> routeMapper.handlers + volumeMapper.handlers + deployMapper.handlers
+            development -> routeMapper.handlers + volumeMapper.handlers + deployMapper.handlers + buildMapper.handlers
+            localTemplate -> routeMapper.handlers + volumeMapper.handlers + localTemplateMapper.handlers
+            template -> routeMapper.handlers + volumeMapper.handlers + templateMapper.handlers
             build -> buildMapper.handlers
         }).toSet()
 
@@ -83,7 +84,8 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient,
         validator.validate()
 
 
-        val dc = if (type == build) null else deploymentCoreMapper.auroraDeploymentCore(auroraConfigFields)
+        val volume = if (type == build) null else volumeMapper.auroraDeploymentCore(auroraConfigFields)
+        val route = if (type == build) null else routeMapper.route(auroraConfigFields)
 
         val build = if (type == build || type == development) buildMapper.build(auroraConfigFields, dockerRegistry) else null
 
@@ -93,7 +95,7 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient,
 
         val localTemplate = if (type == localTemplate) localTemplateMapper.localTemplate(auroraConfigFields) else null
 
-        return applicationMapper.auroraApplicationConfig(auroraConfigFields, handlers, dc, build, deploy, template, localTemplate)
+        return applicationMapper.auroraApplicationConfig(auroraConfigFields, handlers, volume, route, build, deploy, template, localTemplate)
     }
 
 

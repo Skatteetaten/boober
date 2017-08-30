@@ -2,9 +2,9 @@
   "kind": "BuildConfig",
   "apiVersion": "v1",
   "metadata": {
-    "name": "build",
+    "name": "build-dev",
     "labels": {
-      "app": "build",
+      "app": "build-dev",
       "updatedBy": "hero",
       "affiliation": "aos",
       "booberDeployId": "123"
