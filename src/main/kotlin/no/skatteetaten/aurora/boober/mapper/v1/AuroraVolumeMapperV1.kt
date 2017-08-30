@@ -8,8 +8,8 @@ import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.required
 import no.skatteetaten.aurora.boober.utils.startsWith
 
-class AuroraDeploymentCoreMapperV1(val applicationFiles: List<AuroraConfigFile>,
-                                   val vaults: Map<String, AuroraSecretVault>) {
+class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>,
+                           val vaults: Map<String, AuroraSecretVault>) {
 
 
 
@@ -22,11 +22,11 @@ class AuroraDeploymentCoreMapperV1(val applicationFiles: List<AuroraConfigFile>,
     )
 
 
-    fun auroraDeploymentCore(auroraConfigFields: AuroraConfigFields): AuroraDeploymentCore {
+    fun auroraDeploymentCore(auroraConfigFields: AuroraConfigFields): AuroraVolume {
 
         val name = auroraConfigFields.extract("name")
 
-        return AuroraDeploymentCore(
+        return AuroraVolume(
                 secrets = auroraConfigFields.extractOrNull("secretVault", {
                     vaults[it.asText()]?.secrets
                 }),

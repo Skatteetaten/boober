@@ -3,7 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentCoreMapperV1
+import no.skatteetaten.aurora.boober.mapper.v1.AuroraVolumeMapperV1
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -69,7 +69,7 @@ class AuroraConfigFieldTest extends Specification {
 
     def files = auroraConfig.getFilesForApplication(deployCommand)
     when:
-    def mapper = new AuroraDeploymentCoreMapperV1(files, [:])
+    def mapper = new AuroraVolumeMapperV1(files, [:])
 
     then:
       mapper.configHandlers.collect { it.path } == ["/config/foo", "/config/bar", "/config/1/bar", "/config/1/foo"]

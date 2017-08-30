@@ -6,7 +6,7 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigValidator
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraApplicationMapperV1
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraBuildMapperV1
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeployMapperV1
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentCoreMapperV1
+import no.skatteetaten.aurora.boober.mapper.v1.AuroraVolumeMapperV1
 
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraLocalTemplateMapperV1
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraTemplateMapperV1
@@ -66,7 +66,7 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient,
         }
         val applicationMapper = AuroraApplicationMapperV1(applicationFiles, openShiftClient, deployCommand)
         val deployMapper = AuroraDeployMapperV1(applicationFiles, deployCommand, dockerRegistry)
-        val deploymentCoreMapper = AuroraDeploymentCoreMapperV1(applicationFiles, vaults)
+        val deploymentCoreMapper = AuroraVolumeMapperV1(applicationFiles, vaults)
         val localTemplateMapper = AuroraLocalTemplateMapperV1(applicationFiles, auroraConfig)
         val templateMapper = AuroraTemplateMapperV1(applicationFiles, openShiftClient)
         val buildMapper = AuroraBuildMapperV1()

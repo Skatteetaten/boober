@@ -16,7 +16,7 @@ val auroraDevelopment = AuroraApplicationConfig(
                         users = setOf("m123", "x123bar"))),
 
         name = "dev-test",
-        dc = AuroraDeploymentCore(
+        volume = AuroraVolume(
                 config = mapOf(),
                 secrets = emptyMap(),
                 route = emptyList(),

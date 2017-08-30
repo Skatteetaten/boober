@@ -75,11 +75,11 @@ class OpenShiftObjectGenerator(
             templatesToProcess.add("service.json")
         }
 
-        if(auroraApplicationConfig.dc?.config?.isNotEmpty() == true) {
+        if(auroraApplicationConfig.volume?.config?.isNotEmpty() == true) {
             templatesToProcess.add("configmap.json")
         }
 
-        auroraApplicationConfig.dc?.secrets?.let {
+        auroraApplicationConfig.volume?.secrets?.let {
             templatesToProcess.add("secret.json")
         }
 
@@ -96,7 +96,7 @@ class OpenShiftObjectGenerator(
 
         val openShiftObjects = LinkedList(templatesToProcess.map { mergeVelocityTemplate(it, params) })
 
-        auroraApplicationConfig.dc?.mounts?.filter { !it.exist }?.map {
+        auroraApplicationConfig.volume?.mounts?.filter { !it.exist }?.map {
             logger.debug("Create manual mount {}", it)
             val mountParams = mapOf(
                     "aac" to auroraApplicationConfig,
@@ -109,7 +109,7 @@ class OpenShiftObjectGenerator(
             openShiftObjects.addAll(it)
         }
 
-        auroraApplicationConfig.dc?.route?.map {
+        auroraApplicationConfig.volume?.route?.map {
             logger.debug("Route is {}", it)
             val routeParams = mapOf(
                     "aac" to auroraApplicationConfig,
