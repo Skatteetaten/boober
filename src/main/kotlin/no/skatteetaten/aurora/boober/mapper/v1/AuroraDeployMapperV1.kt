@@ -3,30 +3,16 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigDeploy
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigFlags
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResources
-import no.skatteetaten.aurora.boober.model.AuroraSecretVault
-import no.skatteetaten.aurora.boober.model.DeployCommand
-import no.skatteetaten.aurora.boober.model.HttpEndpoint
-import no.skatteetaten.aurora.boober.model.TemplateType
-import no.skatteetaten.aurora.boober.model.Webseal
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.utils.length
 import no.skatteetaten.aurora.boober.utils.notBlank
 
+class AuroraDeployMapperV1(val applicationFiles: List<AuroraConfigFile>, val deployCommand: DeployCommand, val dockerRegistry: String) {
 
-class AuroraConfigMapperV1Deploy(
-        aid: DeployCommand,
-        auroraConfig: AuroraConfig,
-        openShiftClient: OpenShiftClient,
-        vaults: Map<String, AuroraSecretVault>
-) : AuroraConfigMapperV1(aid, auroraConfig, openShiftClient, vaults) {
 
-    val handlers = listOf(
+    val dbHandlers = findDbHandlers(applicationFiles)
+
+    val handlers = dbHandlers + listOf(
             AuroraConfigFieldHandler("flags/cert", defaultValue = "false"),
             AuroraConfigFieldHandler("flags/debug", defaultValue = "false"),
             AuroraConfigFieldHandler("flags/alarm", defaultValue = "true"),
@@ -39,7 +25,6 @@ class AuroraConfigMapperV1Deploy(
             AuroraConfigFieldHandler("groupId", validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
             AuroraConfigFieldHandler("artifactId", validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters") }),
             AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set") }),
-            AuroraConfigFieldHandler("extraTags", defaultValue = "latest,major,minor,patch"),
             AuroraConfigFieldHandler("splunkIndex"),
             AuroraConfigFieldHandler("serviceAccount"),
             AuroraConfigFieldHandler("prometheus/path", defaultValue = "/prometheus"),
@@ -53,36 +38,44 @@ class AuroraConfigMapperV1Deploy(
             AuroraConfigFieldHandler("liveness/port"),
             AuroraConfigFieldHandler("liveness/path"),
             AuroraConfigFieldHandler("liveness/delay", defaultValue = "10"),
-            AuroraConfigFieldHandler("liveness/timeout", defaultValue = "1")
+            AuroraConfigFieldHandler("liveness/timeout", defaultValue = "1"),
+            AuroraConfigFieldHandler("webseal/host"),
+            AuroraConfigFieldHandler("webseal/roles"),
+            AuroraConfigFieldHandler("releaseTo")
+
     )
 
-    override val fieldHandlers = v1Handlers + handlers
-    override val auroraConfigFields = AuroraConfigFields.create(fieldHandlers, applicationFiles)
+    fun getApplicationFile(applicationId: ApplicationId): AuroraConfigFile {
+        val fileName = "${applicationId.environment}/${applicationId.application}.json"
+        val file = applicationFiles.find { it.name == fileName && !it.override }
+        return file ?: throw IllegalArgumentException("Should find applicationFile $fileName")
+    }
 
-    override fun toAuroraDeploymentConfig(): AuroraDeploymentConfig {
-
-        val groupId = auroraConfigFields.extract("groupId")
+    fun deploy(auroraConfigFields: AuroraConfigFields): AuroraDeploy? {
         val name = auroraConfigFields.extract("name")
-
         val certFlag = auroraConfigFields.extract("flags/cert", { it.asText() == "true" })
+        val groupId = auroraConfigFields.extract("groupId")
         val certificateCnDefault = if (certFlag) "$groupId.$name" else null
+        val version = auroraConfigFields.extract("version")
 
-        return AuroraDeploymentConfigDeploy(
-                schemaVersion = auroraConfigFields.extract("schemaVersion"),
 
-                affiliation = auroraConfigFields.extract("affiliation"),
-                cluster = auroraConfigFields.extract("cluster"),
-                type = auroraConfigFields.extract("type", { TemplateType.valueOf(it.textValue()) }),
-                name = name,
-                envName = auroraConfigFields.extractOrDefault("envName", deployCommand.applicationId.environment),
+        val releaseTo = auroraConfigFields.extractOrNull("releaseTo")
 
-                groupId = groupId,
-                artifactId = auroraConfigFields.extract("artifactId"),
-                version = auroraConfigFields.extract("version"),
+        val artifactId = auroraConfigFields.extract("artifactId")
 
-                replicas = auroraConfigFields.extract("replicas", JsonNode::asInt),
-                extraTags = auroraConfigFields.extract("extraTags"),
+        val dockerGroup = groupId.replace(".", "_")
 
+        val tag = releaseTo ?: version
+
+        val applicationFile = getApplicationFile(deployCommand.applicationId)
+        val overrideFiles = deployCommand.overrideFiles.map { it.name to it.contents }.toMap()
+
+        return AuroraDeploy(
+                applicationFile = applicationFile.name,
+                releaseTo = releaseTo,
+                dockerImagePath = "$dockerRegistry/$dockerGroup/$artifactId",
+                dockerTag = tag,
+                overrideFiles = overrideFiles,
                 flags = AuroraDeploymentConfigFlags(
                         certFlag,
                         auroraConfigFields.extract("flags/debug", { it.asText() == "true" }),
@@ -100,12 +93,15 @@ class AuroraConfigMapperV1Deploy(
                                 max = auroraConfigFields.extract("resources/cpu/max")
                         )
                 ),
-                permissions = extractPermissions(),
+                replicas = auroraConfigFields.extract("replicas", JsonNode::asInt),
+                groupId = groupId,
+                artifactId = artifactId,
+                version = version,
                 splunkIndex = auroraConfigFields.extractOrNull("splunkIndex"),
                 database = auroraConfigFields.getDatabases(dbHandlers),
-                managementPath = auroraConfigFields.extractOrNull("managementPath"),
 
                 certificateCn = auroraConfigFields.extractOrDefault("certificateCn", certificateCnDefault),
+                serviceAccount = auroraConfigFields.extractOrNull("serviceAccount"),
 
                 webseal = auroraConfigFields.findAll("webseal", {
                     Webseal(
@@ -120,22 +116,49 @@ class AuroraConfigMapperV1Deploy(
                             auroraConfigFields.extractOrNull("prometheus/port", JsonNode::asInt)
                     )
                 }),
+                managementPath = auroraConfigFields.extractOrNull("managementPath"),
+                liveness = getProbe(auroraConfigFields, "liveness"),
+                readiness = getProbe(auroraConfigFields, "readiness")!!
+        )
+    }
 
-                secrets = auroraConfigFields.extractOrNull("secretVault", {
-                    vaults[it.asText()]?.secrets
-                }),
 
-                config = auroraConfigFields.getConfigMap(configHandlers),
-                route = getRoute(name),
-                serviceAccount = auroraConfigFields.extractOrNull("serviceAccount"),
-                mounts = auroraConfigFields.getMounts(mountHandlers, vaults),
-                releaseTo = auroraConfigFields.extractOrNull("releaseTo"),
-                fields = auroraConfigFields.fields,
-                unmappedPointers = getUnmappedPointers(),
-                applicationFile = applicationFile.name,
-                overrideFiles = overrideFiles,
-                liveness = getProbe("liveness"),
-                readiness = getProbe("readiness")!!
+    fun findDbHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
+
+        val keys = findSubKeys(applicationFiles, "database")
+
+        return keys.map { key ->
+            AuroraConfigFieldHandler("database/$key")
+        }
+    }
+
+    private fun findSubKeys(applicationFiles: List<AuroraConfigFile>, name: String): Set<String> {
+
+        return applicationFiles.flatMap {
+            if (it.contents.has(name)) {
+                it.contents[name].fieldNames().asSequence().toList()
+            } else {
+                emptyList()
+            }
+        }.toSet()
+    }
+
+    fun getProbe(auroraConfigFields: AuroraConfigFields, name: String): Probe? {
+        val port = auroraConfigFields.extractOrNull("$name/port", JsonNode::asInt)
+
+        if (port == null) {
+            return null
+        }
+
+        return Probe(
+                auroraConfigFields.extractOrNull("$name/path")?.let {
+                    if (!it.startsWith("/")) {
+                        "/$it"
+                    } else it
+                },
+                port,
+                auroraConfigFields.extract("$name/delay", JsonNode::asInt),
+                auroraConfigFields.extract("$name/timeout", JsonNode::asInt)
         )
     }
 

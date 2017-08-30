@@ -1,19 +1,16 @@
 package no.skatteetaten.aurora.boober.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import no.skatteetaten.aurora.boober.controller.security.User
+import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.mapper.v1.AuroraVolumeMapperV1
+import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.DeployCommand
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-
-import com.fasterxml.jackson.databind.ObjectMapper
-
-import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraConfigMapperV1Deploy
-import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.DeployCommand
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -70,16 +67,13 @@ class AuroraConfigFieldTest extends Specification {
       def deployCommand = new DeployCommand(aid, [])
       def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
+    def files = auroraConfig.getFilesForApplication(deployCommand)
     when:
-      def mapper = auroraDeploymentConfigService.
-          createMapper(deployCommand, auroraConfig, [:]) as AuroraConfigMapperV1Deploy
-
-      def config = mapper.auroraConfigFields.getConfigMap(mapper.configHandlers)
+    def mapper = new AuroraVolumeMapperV1(files, [:])
 
     then:
       mapper.configHandlers.collect { it.path } == ["/config/foo", "/config/bar", "/config/1/bar", "/config/1/foo"]
-      config ==
-          ["1.properties": "bar=baz\\nfoo=baz", foo: "baaaar", bar: "bar", "latest.properties": "foo=baaaar\\nbar=bar"]
+
   }
 }
 

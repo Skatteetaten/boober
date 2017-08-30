@@ -2,27 +2,27 @@
   "kind": "Service",
   "apiVersion": "v1",
   "metadata": {
-    "name": "${adc.name}",
+    "name": "${aac.name}",
     "annotations": {
-      #if(${adc.webseal})
-        "sprocket.sits.no/service.webseal": "${adc.webseal.host}",
-        #if(${adc.webseal.roles})
-          "sprocket.sits.no/service.webseal-roles": "${adc.webseal.roles}",
+      #if(${aac.deploy.webseal})
+        "sprocket.sits.no/service.webseal": "${aac.deploy.webseal.host}",
+        #if(${aac.deploy.webseal.roles})
+          "sprocket.sits.no/service.webseal-roles": "${aac.deploy.webseal.roles}",
         #end
       #end
-      #if(${adc.prometheus} && "$!{adc.prometheus.path}" != "" )
+      #if(${aac.deploy.prometheus} && "$!{aac.deploy.prometheus.path}" != "" )
         "prometheus.io/scheme": "http",
         "prometheus.io/scrape": "true",
-        "prometheus.io/path": "${adc.prometheus.path}",
-        "prometheus.io/port": "$adc.prometheus.port"
+        "prometheus.io/path": "${aac.deploy.prometheus.path}",
+        "prometheus.io/port": "$aac.deploy.prometheus.port"
       #else
         "prometheus.io/scrape": "false"
       #end
     },
     "labels": {
-      "app": "${adc.name}",
+      "app": "${aac.name}",
       "updatedBy": "${username}",
-      "affiliation": "${adc.affiliation}",
+      "affiliation": "${aac.affiliation}",
       "booberDeployId": "${deployId}"
     }
   },
@@ -37,7 +37,7 @@
       }
     ],
     "selector": {
-      "name": "${adc.name}"
+      "name": "${aac.name}"
     },
     "type": "ClusterIP",
     "sessionAffinity": "None"

@@ -2,30 +2,32 @@
   "kind": "BuildConfig",
   "apiVersion": "v1",
   "metadata": {
-    "name": "${adc.name}",
+    "name": "${buildName}",
     "labels": {
-      "app": "${adc.name}",
+      "app": "${buildName}",
       "updatedBy": "${username}",
-      "affiliation": "${adc.affiliation}",
+      "affiliation": "${aac.affiliation}",
       "booberDeployId": "${deployId}"
     }
   },
   "spec": {
     "triggers": [
-      {
-        "type": "ImageChange",
-        "imageChange": {
-          "from": {
-            "kind": "ImageStreamTag",
-            "namespace": "openshift",
-            "name": "${base.name}:${base.version}"
+      #if (${aac.build.triggers})
+        {
+          "type": "ImageChange",
+          "imageChange": {
+            "from": {
+              "kind": "ImageStreamTag",
+              "namespace": "openshift",
+              "name": "${aac.build.baseName}:${aac.build.baseVersion}"
+            }
           }
+        },
+        {
+          "type": "ImageChange",
+          "imageChange": {}
         }
-      },
-      {
-        "type": "ImageChange",
-        "imageChange": {}
-      }
+      #end
     ],
     "strategy": {
       "type": "Custom",
@@ -33,32 +35,32 @@
         "from": {
           "kind": "ImageStreamTag",
           "namespace": "openshift",
-          "name": "${builder.name}:${builder.version}"
+          "name": "${aac.build.builderName}:${aac.build.builderVersion}"
         },
         "env": [
           {
             "name": "ARTIFACT_ID",
-            "value": "${adc.artifactId}"
+            "value": "${aac.build.artifactId}"
           },
           {
             "name": "GROUP_ID",
-            "value": "${adc.groupId}"
+            "value": "${aac.build.groupId}"
           },
           {
             "name": "VERSION",
-            "value": "${adc.version}"
+            "value": "${aac.build.version}"
           },
           {
             "name": "DOCKER_BASE_VERSION",
-            "value": "${base.version}"
+            "value": "${aac.build.baseVersion}"
           },
           {
             "name": "DOCKER_BASE_IMAGE",
-            "value": "aurora/${base.name}"
+            "value": "aurora/${aac.build.baseName}"
           },
           {
             "name": "PUSH_EXTRA_TAGS",
-            "value": "${adc.extraTags}"
+            "value": "${aac.build.extraTags}"
           }
         ],
         "exposeDockerSocket": true
@@ -66,8 +68,8 @@
     },
     "output": {
       "to": {
-        "kind": "ImageStreamTag",
-        "name": "${adc.name}:latest"
+        "kind": "${aac.build.outputKind}",
+        "name": "${aac.build.outputName}"
       }
     }
   }

@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.service.internal
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfig
+import no.skatteetaten.aurora.boober.model.AuroraApplicationConfig
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import org.eclipse.jgit.lib.PersonIdent
@@ -12,7 +12,7 @@ data class Result<out V, out E>(val value: V? = null, val error: E? = null)
 
 data class ApplicationCommand @JvmOverloads constructor(
         val deployId: String,
-        val auroraDc: AuroraDeploymentConfig,
+        val auroraDc: AuroraApplicationConfig,
         val commands: List<OpenshiftCommand>,
         val tagCommand: TagCommand? = null)
 
@@ -25,7 +25,7 @@ data class TagCommand @JvmOverloads constructor(
 
 data class ApplicationResult @JvmOverloads constructor(
         val deployId: String,
-        val auroraDc: AuroraDeploymentConfig,
+        val auroraDc: AuroraApplicationConfig,
         val openShiftResponses: List<OpenShiftResponse> = listOf(),
         val tagCommandResponse: ResponseEntity<JsonNode>? = null) {
     val tag: String = "${auroraDc.namespace}.${auroraDc.name}/${deployId}"

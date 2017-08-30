@@ -4,9 +4,9 @@
   "metadata": {
     "name": "admin"
   }
-#if (${adc.permissions.admin.groups.size()} != 0)
+#if (${aac.permissions.admin.groups.size()} != 0)
 ,"groupNames": [
-  #foreach ($group in $adc.permissions.admin.groups)
+  #foreach ($group in $aac.permissions.admin.groups)
     #if($velocityCount != 1)
       ,
     #end
@@ -15,9 +15,9 @@
 ]
 #end
 
-#if (${adc.permissions.admin.users.size()} != 0)
+#if (${aac.permissions.admin.users.size()} != 0)
 ,"userNames": [
-  #foreach ($user in $adc.permissions.admin.users)
+  #foreach ($user in $aac.permissions.admin.users)
     #if($velocityCount != 1)
       ,
     #end
@@ -26,9 +26,9 @@
 ]
 #end
 
-#if (${adc.permissions.admin.rolebindings.size()} != 0)
+#if (${aac.permissions.admin.rolebindings.size()} != 0)
 ,"subjects": [
-  #foreach ($binding in $adc.permissions.admin.rolebindings.entrySet())
+  #foreach ($binding in $aac.permissions.admin.rolebindings.entrySet())
     #if($velocityCount != 1)
       ,
     #end

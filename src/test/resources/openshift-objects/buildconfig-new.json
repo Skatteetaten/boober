@@ -15,6 +15,22 @@
     "source": {
       "type": "None"
     },
+    "triggers": [
+      {
+        "type": "ImageChange",
+        "imageChange": {
+          "from": {
+            "kind": "ImageStreamTag",
+            "namespace": "openshift",
+            "name": "oracle8:2"
+          }
+        }
+      },
+      {
+        "type": "ImageChange",
+        "imageChange": {}
+      }
+    ],
     "strategy": {
       "type": "Custom",
       "customStrategy": {
