@@ -4,14 +4,38 @@ Boober is our take on how to handle the `wall of yaml` challenge of Kubernetes. 
 schemaVersion from a git repo (AuroraConfig) and transforms it into Openshift Objects via a AuroraDeploymentConfiguration.
 
 ## How to run locally
-First start up a local version of boober. Either in you ide or by running
 
-      ./gradlew run
+### Setup the API
 
-Then run the script `testscripts/deploy-local.sh`
- - import configuration into your local git repo in `/tmp/boobergit/paas`
- - see the configuration
- - deploy an application
+Boober maintains configuration files (called Aurora Config) in sets (called Affiliations) in git repositories. The 
+location of these repositories (either a local folder or remote via http) is a configuration parameter in boober and
+when running the API locally, the git path is a local folder. This folder must be created and initialized before
+boober can be started for the first time. Run
+
+    scripts/devsetup/initdev.sh
+   
+You are now ready to start boober;    
+
+    ./gradlew run
+
+or run from your ide.
+
+Then run the script 
+
+    scripts/devsetup/setupdev.sh
+     
+to import some dev/test data.
+
+By default, boober during development will deploy to the qa cluster.
+
+
+### Setup ao
+
+To use the ```ao``` command line utility to perform actions against your local api add the ```--localhost``` flag to
+the login command. Use the ```paas``` affiliation (since that is currently the only affiliation that has any test
+data)
+
+    ao login paas --localhost
 
 
 ## Architecture

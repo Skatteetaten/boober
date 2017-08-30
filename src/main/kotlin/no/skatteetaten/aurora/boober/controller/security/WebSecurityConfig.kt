@@ -28,6 +28,7 @@ class WebSecurityConfig(
                 .addFilter(requestHeaderAuthenticationFilter())
                 .authorizeRequests()
                 .requestMatchers(forPort(managementPort)).permitAll()
+                .antMatchers("/clientconfig/").permitAll()
                 .anyRequest().authenticated()
     }
 
