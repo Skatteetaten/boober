@@ -56,8 +56,7 @@ data class AuroraDeploymentCore(
         val mounts: List<Mount>?
 )
 
-//TODO:  from ImageStreamTag må customizes
-//TODO: output to latest/default
+// Add name suffix for branch name
 data class AuroraBuild(
         val baseName: String,
         val baseVersion: String,
