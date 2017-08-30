@@ -139,7 +139,7 @@ class OpenShiftClientApplyTest extends Specification {
     expect:
       def result = openShiftClient.prepare("foobar", newResource)
       result.operationType == OperationType.UPDATE
-      fields.each { result.payload.at(it) == result.previous.at(it) }
+      fields.each { assert result.payload.at(it) == result.previous.at(it) }
 
 
 
@@ -147,7 +147,7 @@ class OpenShiftClientApplyTest extends Specification {
       type               | fields
       "service"          | ["/metadata/resourceVersion", "/spec/clusterIP"]
       "deploymentconfig" | ["/metadata/resourceVersion", "/spec/template/spec/containers/0/image"]
-      "buildconfig"      | ["/metadata/resourceVersion", "/spec/triggers"]
+      "buildconfig"      | ["/metadata/resourceVersion", "/spec/triggers/0/imageChange/lastTriggeredImageID", "/spec/triggers/1/imageChange/lastTriggeredImageID"]
       "configmap"        | ["/metadata/resourceVersion"]
 
   }

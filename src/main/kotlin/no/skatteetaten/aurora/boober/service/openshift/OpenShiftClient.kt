@@ -2,8 +2,7 @@ package no.skatteetaten.aurora.boober.service.openshift
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.databind.node.TextNode
+import com.fasterxml.jackson.databind.node.ArrayNode
 import no.skatteetaten.aurora.boober.model.AuroraPermissions
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
@@ -54,7 +53,7 @@ class OpenShiftClient(
 
         val kind = cmd.payload.openshiftKind
 
-        val performClient= if(listOf("project","rolebinding").contains(kind)) {
+        val performClient = if (listOf("project", "rolebinding").contains(kind)) {
             serviceAccountClient
         } else {
             userClient
@@ -110,11 +109,13 @@ class OpenShiftClient(
         }
 
         if (kind == "buildconfig") {
-            json.updateField(existing, "/spec", "triggers")
+            val triggerCount = (json.at("/spec/triggers") as ArrayNode).size()
+            (0..triggerCount).forEach {
+                json.updateField(existing, "/spec/triggers/$it/imageChange", "lastTriggeredImageID")
+            }
         }
 
         return OpenshiftCommand(OperationType.UPDATE, json, existing, generated)
-
     }
 
     fun findCurrentUser(token: String): JsonNode? {
@@ -196,11 +197,11 @@ class OpenShiftClient(
         val projects = userClient.getExistingResource(headers, url)?.body?.get("items")?.toList() ?: emptyList()
 
 
-        val canSee= projects.any { it.at("/metadata/name").asText() == name }
+        val canSee = projects.any { it.at("/metadata/name").asText() == name }
 
         if(!canSee) {
             // Potential bug if the user can view, but not change the project.
-            if(exist("$url/$name")) {
+            if (exist("$url/$name")) {
                 throw IllegalAccessException("Project exist but you do not have permission to modify it")
             }
         }
