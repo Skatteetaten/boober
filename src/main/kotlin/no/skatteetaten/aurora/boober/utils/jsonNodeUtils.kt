@@ -54,7 +54,11 @@ fun JsonNode.updateField(source: JsonNode, root: String, field: String, required
 
     val targetRoot = this.at(root)
     if (targetRoot.isMissingNode) {
-        throw IllegalArgumentException("Root $root is not set in target")
+        if (required) {
+            throw IllegalArgumentException("Root $root is not set in target")
+        } else {
+            return
+        }
     }
 
     (targetRoot as ObjectNode).set(field, sourceField)
