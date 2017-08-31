@@ -60,7 +60,7 @@ class OpenShiftObjectGenerator(
 
     }
 
-    private fun generateProject(auroraApplicationConfig: AuroraApplicationConfig): LinkedList<JsonNode> {
+    fun generateProject(auroraApplicationConfig: AuroraApplicationConfig): LinkedList<JsonNode> {
         val templatesToProcess = listOf(
                 "project.json",
                 "deployer-rolebinding.json",
