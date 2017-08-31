@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraApplicationConfig
+import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import org.apache.commons.lang.StringEscapeUtils
 import org.apache.velocity.VelocityContext
 import org.apache.velocity.app.VelocityEngine
@@ -68,10 +70,19 @@ class OpenShiftObjectGenerator(
                 auroraApplicationConfig.name
             }
         }
+
+        val mounts: List<Mount>? = auroraApplicationConfig.volume?.mounts?.map {
+            if (it.exist) {
+                it
+            } else {
+                it.copy(volumeName = it.volumeName.ensureStartWith(auroraApplicationConfig.name, "-"))
+            }
+        }
         val params = mapOf(
                 "overrides" to overrides,
                 "deployId" to deployId,
                 "aac" to auroraApplicationConfig,
+                "mounts" to mounts,
                 "buildName" to buildName,
                 "routeName" to routeName,
                 "username" to userDetailsProvider.getAuthenticatedUser().username,
@@ -117,7 +128,8 @@ class OpenShiftObjectGenerator(
 
         val openShiftObjects = LinkedList(templatesToProcess.map { mergeVelocityTemplate(it, params) })
 
-        auroraApplicationConfig.volume?.mounts?.filter { !it.exist }?.map {
+
+        mounts?.filter { !it.exist }?.map {
             logger.debug("Create manual mount {}", it)
             val mountParams = mapOf(
                     "aac" to auroraApplicationConfig,

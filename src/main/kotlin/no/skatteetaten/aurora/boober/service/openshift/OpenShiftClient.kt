@@ -47,8 +47,6 @@ class OpenShiftClient(
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftClient::class.java)
 
-
-    //TODO:error handling look at processDeployCommands
     fun performOpenShiftCommand(cmd: OpenshiftCommand, namespace: String): OpenShiftResponse {
 
         val kind = cmd.payload.openshiftKind
