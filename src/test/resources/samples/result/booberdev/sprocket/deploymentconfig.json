@@ -4,15 +4,17 @@
   "metadata": {
     "annotations": {
       "boober.skatteetaten.no/applicationFile": "booberdev/sprocket.json",
-      "console.skatteetaten.no/management-path": ":8081/actuator",
       "console.skatteetaten.no/alarm": "true",
+      "console.skatteetaten.no/management-path": ":8081/actuator",
       "sprocket.sits.no/deployment-config.database": "referanse,foo:123-456"
     },
     "labels": {
       "app": "sprocket",
       "updatedBy": "hero",
       "affiliation": "aos",
-      "booberDeployId": "123"
+      "booberDeployId": "123",
+      "name": "sprocket",
+      "deployTag": "3"
     },
     "name": "sprocket"
   },
@@ -20,6 +22,7 @@
     "strategy": {
       "type": "Recreate",
       "resources": {
+
       }
     },
     "triggers": [
@@ -44,12 +47,12 @@
     "template": {
       "metadata": {
         "labels": {
-          "deployTag": "3",
-          "name": "sprocket",
           "app": "sprocket",
           "updatedBy": "hero",
           "affiliation": "aos",
-          "booberDeployId": "123"
+          "booberDeployId": "123",
+          "name": "sprocket",
+          "deployTag": "3"
         }
       },
       "spec": {
@@ -240,4 +243,3 @@
     }
   }
 }
-               

@@ -8,8 +8,8 @@
       "openshift.io/requester": "${username}"
     },
     "labels": {
-      "affiliation": "${aac.affiliation}"
+      "affiliation": "${affiliation}"
     },
-    "name": "${aac.namespace}"
+    "name": "${namespace}"
   }
 }

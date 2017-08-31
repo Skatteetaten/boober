@@ -2,27 +2,14 @@
   "kind": "DeploymentConfig",
   "apiVersion": "v1",
   "metadata": {
-    "annotations": {
-      #if(${aac.deploy.releaseTo} && "$!{aac.deploy.releaseTo}" != "")
-        "boober.skatteetaten.no/releaseTo": "${aac.deploy.releaseTo}",
+  "annotations": {
+    #foreach ($annotation  in $annotations.entrySet())
+      #if($velocityCount != 1)
+        ,
       #end
-      "boober.skatteetaten.no/applicationFile": "${aac.deploy.applicationFile}",
-      #if("$!{overrides}" != "{}")
-        "boober.skatteetaten.no/overrides": "${overrides}",
-      #end
-      #if(${aac.deploy.managementPath} && "$!{aac.deploy.managementPath}" != "")
-        "console.skatteetaten.no/management-path": "${aac.deploy.managementPath}",
-      #end
-      "console.skatteetaten.no/alarm": "${aac.deploy.flags.alarm}"
-      #if(${aac.deploy.certificateCn})
-      ,
-        "sprocket.sits.no/deployment-config.certificate": "${aac.deploy.certificateCn}"
-      #end
-      #if("${database}" != "")
-      ,
-        "sprocket.sits.no/deployment-config.database": "${database}"
-      #end
-    },
+      "${annotation.key}": "${annotation.value}"
+    #end
+  },
     "labels": {
       #foreach ($label  in $labels.entrySet())
           #if($velocityCount != 1)
@@ -31,10 +18,10 @@
         "${label.key}": "${label.value}"
       #end
   },
-    "name": "${aac.name}"
+"name": "${name}"
   },
   "spec": {
-    #if(${aac.deploy.flags.rolling})
+  #if(${deploy.flags.rolling})
       "strategy": {
         "type": "Rolling",
         "rollingParams": {
@@ -57,32 +44,22 @@
         "imageChangeParams": {
           "automatic": true,
           "containerNames": [
-            "${aac.name}"
+"${name}"
           ],
           "from": {
-            #if(${aac.type} == "development")
-              "name": "${aac.name}:latest",
-            #else
-              "name": "${aac.name}:default",
-            #end
+"name": "${name}:${imageStreamTag}",
             "kind": "ImageStreamTag"
           }
         }
       }
     ],
-    "replicas": ${aac.deploy.replicas},
+"replicas": ${deploy.replicas} ,
     "selector": {
-      "name": "${aac.name}"
+"name": "${name}"
     },
     "template": {
       "metadata": {
         "labels": {
-          #if ("$!{aac.deploy.releaseTo}" != "")
-            "deployTag": "${aac.deploy.releaseTo}",
-          #else
-            "deployTag": "${aac.deploy.version}",
-          #end
-  "name": "${aac.name}",
       #foreach ($label  in $labels.entrySet())
           #if($velocityCount != 1)
           ,
@@ -116,7 +93,7 @@
         ],
         "containers": [
           {
-            "name": "${aac.name}",
+          "name": "${name}",
             "ports": [
               {
                 "containerPort": 8080,
@@ -152,21 +129,21 @@
                   }
                 }
               }
-    #foreach ($var  in $env.entrySet())
-                  ,{
-    "name": "$var.key",
-    "value": "$var.value"
-                    }
-    #end
+            #foreach ($var  in $env.entrySet())
+            , {
+            "name": "$var.key",
+            "value": "$var.value"
+            }
+            #end
             ],
             "resources": {
               "limits": {
-                "cpu": "${aac.deploy.resources.cpu.max}",
-                "memory": "${aac.deploy.resources.memory.max}"
+          "cpu": "${deploy.resources.cpu.max}",
+          "memory": "${deploy.resources.memory.max}"
               },
               "requests": {
-                "cpu": "${aac.deploy.resources.cpu.min}",
-                "memory": "${aac.deploy.resources.memory.min}"
+          "cpu": "${deploy.resources.cpu.min}",
+          "memory": "${deploy.resources.memory.min}"
               }
             },
             "volumeMounts": [
@@ -190,40 +167,40 @@
               "capabilities": {},
               "privileged": false
             },
-            #if (${aac.deploy.liveness})
+  #if (${deploy.liveness})
             "livenessProbe": {
-              #if(${aac.deploy.liveness.path} && "$!{aac.deploy.liveness.path}" != "")
+    #if(${deploy.liveness.path} && "$!{deploy.liveness.path}" != "")
               "httpGet": {
-                "path": "${aac.deploy.liveness.path}",
+    "path": "${deploy.liveness.path}",
               #else
               "tcpSocket": {
               #end
-              "port": ${aac.deploy.liveness.port}
+  "port": ${deploy.liveness.port}
             },
-              "initialDelaySeconds": ${aac.deploy.liveness.delay},
-              "timeoutSeconds": ${aac.deploy.liveness.timeout}
+  "initialDelaySeconds": ${deploy.liveness.delay},
+  "timeoutSeconds": ${deploy.liveness.timeout}
             },
             #end
             "readinessProbe": {
-              #if(${aac.deploy.readiness.path} && "$!{aac.deploy.readiness.path}" != "")
+  #if(${deploy.readiness.path} && "$!{deploy.readiness.path}" != "")
               "httpGet": {
-                "path": "${aac.deploy.readiness.path}",
+  "path": "${deploy.readiness.path}",
               #else
               "tcpSocket": {
 
               #end
-              "port": ${aac.deploy.readiness.port}
+"port": ${deploy.readiness.port}
               },
-              "initialDelaySeconds": ${aac.deploy.readiness.delay},
-              "timeoutSeconds": ${aac.deploy.readiness.timeout}
+"initialDelaySeconds": ${deploy.readiness.delay},
+"timeoutSeconds": ${deploy.readiness.timeout}
             }
           }
         ],
         "restartPolicy": "Always",
         "dnsPolicy": "ClusterFirst"
-        #if(${aac.deploy.serviceAccount})
+#if(${deploy.serviceAccount})
         ,
-          "serviceAccountName": "${aac.deploy.serviceAccount}"
+"serviceAccountName": "${deploy.serviceAccount}"
         #end
       }
     }

@@ -4,16 +4,18 @@
   "metadata": {
     "annotations": {
       "boober.skatteetaten.no/applicationFile": "booberdev/aos-simple.json",
+      "console.skatteetaten.no/alarm": "true",
       "boober.skatteetaten.no/overrides": "{\"booberdev/aos-simple.json\":{\"managementPath\":\":8080/test\"}}",
       "console.skatteetaten.no/management-path": ":8080/test",
-      "console.skatteetaten.no/alarm": "true",
       "sprocket.sits.no/deployment-config.certificate": "ske.aurora.openshift.aos-simple"
     },
     "labels": {
       "app": "aos-simple",
       "updatedBy": "hero",
       "affiliation": "aos",
-      "booberDeployId": "123"
+      "booberDeployId": "123",
+      "name": "aos-simple",
+      "deployTag": "1.0.3-SNAPSHOT"
     },
     "name": "aos-simple"
   },
@@ -50,12 +52,12 @@
     "template": {
       "metadata": {
         "labels": {
-          "deployTag": "1.0.3-SNAPSHOT",
-          "name": "aos-simple",
           "app": "aos-simple",
           "updatedBy": "hero",
           "affiliation": "aos",
-          "booberDeployId": "123"
+          "booberDeployId": "123",
+          "name": "aos-simple",
+          "deployTag": "1.0.3-SNAPSHOT"
         }
       },
       "spec": {

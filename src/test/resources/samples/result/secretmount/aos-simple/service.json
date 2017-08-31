@@ -4,9 +4,9 @@
   "metadata": {
     "name": "aos-simple",
     "annotations": {
+      "prometheus.io/scrape": "false",
       "sprocket.sits.no/service.webseal": "test",
-      "sprocket.sits.no/service.webseal-roles": "admin dev",
-      "prometheus.io/scrape": "false"
+      "sprocket.sits.no/service.webseal-roles": "admin dev"
     },
     "labels": {
       "app": "aos-simple",

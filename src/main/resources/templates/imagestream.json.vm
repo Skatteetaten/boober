@@ -2,7 +2,7 @@
   "kind": "ImageStream",
   "apiVersion": "v1",
   "metadata": {
-    "name": "${aac.name}",
+    "name": "${name}",
   "labels": {
       #foreach ($label  in $labels.entrySet())
           #if($velocityCount != 1)
@@ -10,20 +10,18 @@
           #end
         "${label.key}": "${label.value}"
       #end
-  ,
-    "releasedVersion": "${aac.deploy.version}"
     }
   }
-    #if (${aac.type} == "deploy")
+#if (${type} == "deploy")
     ,
       "spec": {
-        "dockerImageRepository": "${aac.deploy.dockerImagePath}",
+      "dockerImageRepository": "${deploy.dockerImagePath}",
         "tags": [
           {
             "name": "default",
               "from": {
                 "kind": "DockerImage",
-                "name": "${aac.deploy.dockerImagePath}:${aac.deploy.dockerTag}"
+"name": "${deploy.dockerImagePath}:${deploy.dockerTag}"
 
               },
               "importPolicy": {

@@ -4,14 +4,16 @@
   "metadata": {
     "annotations": {
       "boober.skatteetaten.no/applicationFile": "booberdev/console.json",
-      "console.skatteetaten.no/management-path": ":8081/actuator",
-      "console.skatteetaten.no/alarm": "true"
+      "console.skatteetaten.no/alarm": "true",
+      "console.skatteetaten.no/management-path": ":8081/actuator"
     },
     "labels": {
       "app": "openshift-console-api",
       "updatedBy": "hero",
       "affiliation": "aos",
-      "booberDeployId": "123"
+      "booberDeployId": "123",
+      "name": "openshift-console-api",
+      "deployTag": "3"
     },
     "name": "openshift-console-api"
   },
@@ -19,6 +21,7 @@
     "strategy": {
       "type": "Recreate",
       "resources": {
+
       }
     },
     "triggers": [
@@ -43,12 +46,12 @@
     "template": {
       "metadata": {
         "labels": {
-          "deployTag": "3",
-          "name": "openshift-console-api",
           "app": "openshift-console-api",
           "updatedBy": "hero",
           "affiliation": "aos",
-          "booberDeployId": "123"
+          "booberDeployId": "123",
+          "name": "openshift-console-api",
+          "deployTag": "3"
         }
       },
       "spec": {

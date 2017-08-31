@@ -11,7 +11,9 @@
       "app": "aos-simple",
       "updatedBy": "hero",
       "affiliation": "aos",
-      "booberDeployId": "123"
+      "booberDeployId": "123",
+      "name": "aos-simple",
+      "deployTag": "1.0.3-SNAPSHOT"
     },
     "name": "aos-simple"
   },
@@ -48,12 +50,12 @@
     "template": {
       "metadata": {
         "labels": {
-          "deployTag": "1.0.3-SNAPSHOT",
-          "name": "aos-simple",
           "app": "aos-simple",
           "updatedBy": "hero",
           "affiliation": "aos",
-          "booberDeployId": "123"
+          "booberDeployId": "123",
+          "name": "aos-simple",
+          "deployTag": "1.0.3-SNAPSHOT"
         }
       },
       "spec": {

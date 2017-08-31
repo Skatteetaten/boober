@@ -4,10 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.model.AuroraApplicationConfig
-import no.skatteetaten.aurora.boober.model.Database
-import no.skatteetaten.aurora.boober.model.Mount
-import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
@@ -45,59 +43,218 @@ class OpenShiftObjectGenerator(
     fun generateObjects(auroraApplicationConfig: AuroraApplicationConfig, deployId: String): LinkedList<JsonNode> {
 
 
-        val overrides = auroraApplicationConfig.deploy?.let {
-            StringEscapeUtils.escapeJavaScript(mapper.writeValueAsString(it.overrideFiles))
-        }
-
-
-        val database = auroraApplicationConfig.deploy?.database?.map { it.spec }?.joinToString(",") ?: ""
-
-        logger.debug("Database is $database")
-        //In use in velocity template
-
-
         val mounts: List<Mount>? = findMounts(auroraApplicationConfig)
-
-        val env = findEnv(mounts, auroraApplicationConfig)
 
         val labels = findLabels(auroraApplicationConfig, deployId, auroraApplicationConfig.name)
 
-        val params = mapOf(
-                "overrides" to overrides,
-                "labels" to labels,
-                "aac" to auroraApplicationConfig,
-                "mounts" to mounts,
-                "env" to env,
-                "username" to userDetailsProvider.getAuthenticatedUser().username,
-                "database" to database
-        )
-
         val templatesToProcess = LinkedList(mutableListOf(
-                "project.json",
-                "deployer-rolebinding.json",
-                "imagebuilder-rolebinding.json",
-                "imagepuller-rolebinding.json",
-                "admin-rolebinding.json"))
-
-        if (auroraApplicationConfig.permissions.view != null) {
-            templatesToProcess.add("view-rolebinding.json")
-        }
-
-        auroraApplicationConfig.deploy?.let {
-            templatesToProcess.add("deployment-config.json")
-            templatesToProcess.add("service.json")
-        }
-
-        auroraApplicationConfig.deploy?.let {
-            templatesToProcess.add("imagestream.json")
-        }
+                "project.json", //namespace, affiliation, username
+                "deployer-rolebinding.json", //namespace
+                "imagebuilder-rolebinding.json", //namespace
+                "imagepuller-rolebinding.json" //namespace
+        ))
 
         val openShiftObjects = LinkedList(templatesToProcess.map {
-            mergeVelocityTemplate(it, params)
+            mergeVelocityTemplate(it, mapOf(
+                    "namespace" to auroraApplicationConfig.namespace,
+                    "affiliation" to auroraApplicationConfig.affiliation,
+                    "username" to userDetailsProvider.getAuthenticatedUser().username))
         })
 
 
-        auroraApplicationConfig.build?.let {
+        generateRolebindings(auroraApplicationConfig.permissions)?.let {
+            openShiftObjects.addAll(it)
+        }
+
+        generateDeploymentConfig(auroraApplicationConfig, labels, mounts)?.let {
+            openShiftObjects.add(it)
+        }
+
+        generateService(auroraApplicationConfig, labels)?.let {
+            openShiftObjects.add(it)
+        }
+        generateImageStream(auroraApplicationConfig, labels)?.let {
+            openShiftObjects.add(it)
+        }
+
+        generateBuilds(auroraApplicationConfig, deployId)?.let {
+            openShiftObjects.addAll(it)
+        }
+
+        generateMount(mounts, labels)?.let {
+            openShiftObjects.addAll(it)
+        }
+
+        generateRoute(auroraApplicationConfig, labels)?.let {
+            openShiftObjects.addAll(it)
+        }
+
+        generateTemplate(auroraApplicationConfig)?.let {
+            openShiftObjects.addAll(it)
+        }
+
+        generateLocalTemplate(auroraApplicationConfig)?.let {
+            openShiftObjects.addAll(it)
+        }
+        return openShiftObjects
+    }
+
+    fun generateRolebindings(permissions: Permissions): List<JsonNode>? {
+        val admin = mergeVelocityTemplate("rolebinding.json", mapOf(
+                "permission" to permissions.admin,
+                "name" to "admin"
+        ))
+
+        val view = permissions.view?.let {
+            mergeVelocityTemplate("rolebinding.json", mapOf(
+                    "permission" to it,
+                    "name" to "view"))
+        }
+
+        return listOf(admin).addIfNotNull(view)
+
+    }
+
+
+    fun generateDeploymentConfig(auroraApplicationConfig: AuroraApplicationConfig,
+                                 labels: Map<String, String>,
+                                 mounts: List<Mount>?): JsonNode? {
+
+        return auroraApplicationConfig.deploy?.let {
+            val annotations = mapOf(
+                    "boober.skatteetaten.no/applicationFile" to it.applicationFile,
+                    "console.skatteetaten.no/alarm" to it.flags.alarm.toString()
+            )
+
+            val cert = it.certificateCn?.takeIf { it.isNotBlank() }?.let {
+                "sprocket.sits.no/deployment-config.certificate" to it
+            }
+
+            val database = it.database.takeIf { it.isNotEmpty() }?.map { it.spec }?.joinToString(",")?.let {
+                "sprocket.sits.no/deployment-config.database" to it
+            }
+
+            val overrides = StringEscapeUtils.escapeJavaScript(mapper.writeValueAsString(it.overrideFiles)).takeIf { it != "{}" }?.let {
+                "boober.skatteetaten.no/overrides" to it
+            }
+
+            val managementPath = it.managementPath?.takeIf { it.isNotBlank() }?.let {
+                "console.skatteetaten.no/management-path" to it
+            }
+
+            val release = it.releaseTo?.takeIf { it.isNotBlank() }
+
+            val releaseToAnnotation = release?.let {
+                "boober.skatteetaten.no/releaseTo" to it
+            }
+            val env = findEnv(mounts, auroraApplicationConfig)
+
+            val deployTag = release?.let {
+                it
+            } ?: it.version
+            val tag = if (auroraApplicationConfig.type == development) {
+                "latest"
+            } else {
+                "default"
+            }
+            val params = mapOf(
+                    "annotations" to annotations
+                            .addIfNotNull(releaseToAnnotation)
+                            .addIfNotNull(overrides)
+                            .addIfNotNull(managementPath)
+                            .addIfNotNull(cert)
+                            .addIfNotNull(database),
+                    "labels" to labels + mapOf("name" to auroraApplicationConfig.name, "deployTag" to deployTag),
+                    "name" to auroraApplicationConfig.name,
+                    "deploy" to it,
+                    "mounts" to mounts,
+                    "env" to env,
+                    "imageStreamTag" to tag
+            )
+
+            mergeVelocityTemplate("deployment-config.json", params)
+        }
+    }
+
+    fun generateService(auroraApplicationConfig: AuroraApplicationConfig, labels: Map<String, String>): JsonNode? {
+        return auroraApplicationConfig.deploy?.let {
+
+            val webseal = it.webseal?.let {
+                "sprocket.sits.no/service.webseal" to it.host
+            }
+
+            val websealRoles = it.webseal?.roles?.let {
+                "sprocket.sits.no/service.webseal-roles" to it
+            }
+
+            val prometheusAnnotations = it.prometheus?.takeIf { it.path != "" }?.let {
+                mapOf("prometheus.io/scheme" to "http",
+                        "prometheus.io/scrape" to "true",
+                        "prometheus.io/path" to it.path,
+                        "prometheus.io/port" to it.port
+                )
+            } ?: mapOf("prometheus.io/scrape" to "false")
+
+
+            mergeVelocityTemplate("service.json", mapOf(
+                    "labels" to labels,
+                    "name" to auroraApplicationConfig.name,
+                    "annotations" to prometheusAnnotations.addIfNotNull(webseal).addIfNotNull(websealRoles)
+            ))
+        }
+
+    }
+
+    fun generateImageStream(auroraApplicationConfig: AuroraApplicationConfig, labels: Map<String, String>): JsonNode? {
+        return auroraApplicationConfig.deploy?.let {
+            mergeVelocityTemplate("imagestream.json", mapOf(
+                    "labels" to labels + mapOf("releasedVersion" to it.version),
+                    "deploy" to it,
+                    "name" to auroraApplicationConfig.name,
+                    "type" to auroraApplicationConfig.type.name
+            ))
+        }
+    }
+
+    fun generateLocalTemplate(auroraApplicationConfig: AuroraApplicationConfig): List<JsonNode>? {
+        return auroraApplicationConfig.localTemplate?.let {
+            openShiftTemplateProcessor.generateObjects(it.templateJson as ObjectNode,
+                    it.parameters, auroraApplicationConfig)
+        }
+    }
+
+    fun generateTemplate(auroraApplicationConfig: AuroraApplicationConfig): List<JsonNode>? {
+        return auroraApplicationConfig.template?.let {
+            val template = openShiftClient.get("template", it.template, "openshift")?.body as ObjectNode
+            openShiftTemplateProcessor.generateObjects(template,
+                    it.parameters, auroraApplicationConfig)
+        }
+    }
+
+    fun generateRoute(auroraApplicationConfig: AuroraApplicationConfig, labels: Map<String, String>): List<JsonNode>? {
+        return auroraApplicationConfig.route?.route?.map {
+            logger.debug("Route is {}", it)
+            val routeParams = mapOf(
+                    "name" to auroraApplicationConfig.name,
+                    "route" to it,
+                    "labels" to labels)
+            mergeVelocityTemplate("route.json", routeParams)
+        }
+    }
+
+    fun generateMount(mounts: List<Mount>?, labels: Map<String, String>): List<JsonNode>? {
+        return mounts?.filter { !it.exist }?.map {
+            logger.debug("Create manual mount {}", it)
+            val mountParams = mapOf(
+                    "mount" to it,
+                    "labels" to labels
+            )
+            mergeVelocityTemplate("mount.json", mountParams)
+        }
+    }
+
+    private fun generateBuilds(auroraApplicationConfig: AuroraApplicationConfig, deployId: String): List<JsonNode>? {
+        return auroraApplicationConfig.build?.let {
             val buildName = if (it.buildSuffix != null) {
                 "${auroraApplicationConfig.name}-${it.buildSuffix}"
             } else {
@@ -109,48 +266,16 @@ class OpenShiftObjectGenerator(
                     "buildName" to buildName,
                     "build" to it
             )
-            openShiftObjects.add(mergeVelocityTemplate("build-config.json", buildParams))
+            val bc = mergeVelocityTemplate("build-config.json", buildParams)
 
-            if (it.testGitUrl != null) {
-                openShiftObjects.add(mergeVelocityTemplate("jenkins-build-config.json", buildParams))
+            val testBc = if (it.testGitUrl != null) {
+                mergeVelocityTemplate("jenkins-build-config.json", buildParams)
+            } else {
+                null
             }
-        }
 
-        mounts?.filter { !it.exist }?.map {
-            logger.debug("Create manual mount {}", it)
-            val mountParams = mapOf(
-                    "mount" to it,
-                    "labels" to labels
-            )
-            mergeVelocityTemplate("mount.json", mountParams)
-        }?.let {
-            openShiftObjects.addAll(it)
+            listOf(bc).addIfNotNull(testBc)
         }
-
-        auroraApplicationConfig.route?.route?.map {
-            logger.debug("Route is {}", it)
-            val routeParams = mapOf(
-                    "name" to auroraApplicationConfig.name,
-                    "route" to it,
-                    "labels" to labels)
-            mergeVelocityTemplate("route.json", routeParams)
-        }?.let {
-            openShiftObjects.addAll(it)
-        }
-
-        auroraApplicationConfig.template?.let {
-            val template = openShiftClient.get("template", it.template, "openshift")?.body as ObjectNode
-            val generateObjects = openShiftTemplateProcessor.generateObjects(template,
-                    it.parameters, auroraApplicationConfig)
-            openShiftObjects.addAll(generateObjects)
-        }
-
-        auroraApplicationConfig.localTemplate?.let {
-            val generateObjects = openShiftTemplateProcessor.generateObjects(it.templateJson as ObjectNode,
-                    it.parameters, auroraApplicationConfig)
-            openShiftObjects.addAll(generateObjects)
-        }
-        return openShiftObjects
     }
 
     fun findLabels(auroraApplicationConfig: AuroraApplicationConfig, deployId: String, name: String): Map<String, String> {

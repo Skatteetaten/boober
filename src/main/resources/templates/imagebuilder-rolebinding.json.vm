@@ -14,6 +14,6 @@
     }
   ],
   "userNames": [
-    "system:serviceaccount:${aac.namespace}:builder"
+    "system:serviceaccount:${namespace}:builder"
   ]
 }
