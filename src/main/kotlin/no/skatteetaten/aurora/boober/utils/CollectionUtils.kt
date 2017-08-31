@@ -12,6 +12,12 @@ fun <T> List<T>.addIfNotNull(value: T?): List<T> {
     } ?: this
 }
 
+fun <T> List<T>.addIfNotNull(value: List<T>?): List<T> {
+    return value?.let {
+        this + it
+    } ?: this
+}
+
 
 fun <K, V> Map<K, V>?.nullOnEmpty(): Map<K, V>? {
     if (this == null) {

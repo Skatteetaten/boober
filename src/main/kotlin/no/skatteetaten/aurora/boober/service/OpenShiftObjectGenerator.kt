@@ -40,63 +40,40 @@ class OpenShiftObjectGenerator(
 
     }
 
-    fun generateObjects(auroraApplicationConfig: AuroraApplicationConfig, deployId: String): LinkedList<JsonNode> {
+    fun generateObjects(auroraApplicationConfig: AuroraApplicationConfig, deployId: String): List<JsonNode> {
 
 
         val mounts: List<Mount>? = findMounts(auroraApplicationConfig)
 
         val labels = findLabels(auroraApplicationConfig, deployId, auroraApplicationConfig.name)
 
-        val templatesToProcess = LinkedList(mutableListOf(
-                "project.json", //namespace, affiliation, username
-                "deployer-rolebinding.json", //namespace
-                "imagebuilder-rolebinding.json", //namespace
-                "imagepuller-rolebinding.json" //namespace
-        ))
+        return generateProject(auroraApplicationConfig)
+                .addIfNotNull(generateRolebindings(auroraApplicationConfig.permissions))
+                .addIfNotNull(generateDeploymentConfig(auroraApplicationConfig, labels, mounts))
+                .addIfNotNull(generateService(auroraApplicationConfig, labels))
+                .addIfNotNull(generateImageStream(auroraApplicationConfig, labels))
+                .addIfNotNull(generateBuilds(auroraApplicationConfig, deployId))
+                .addIfNotNull(generateMount(mounts, labels))
+                .addIfNotNull(generateRoute(auroraApplicationConfig, labels))
+                .addIfNotNull(generateTemplate(auroraApplicationConfig))
+                .addIfNotNull(generateLocalTemplate(auroraApplicationConfig))
 
-        val openShiftObjects = LinkedList(templatesToProcess.map {
+    }
+
+    private fun generateProject(auroraApplicationConfig: AuroraApplicationConfig): LinkedList<JsonNode> {
+        val templatesToProcess = listOf(
+                "project.json",
+                "deployer-rolebinding.json",
+                "imagebuilder-rolebinding.json",
+                "imagepuller-rolebinding.json"
+        )
+
+        return LinkedList(templatesToProcess.map {
             mergeVelocityTemplate(it, mapOf(
                     "namespace" to auroraApplicationConfig.namespace,
                     "affiliation" to auroraApplicationConfig.affiliation,
                     "username" to userDetailsProvider.getAuthenticatedUser().username))
         })
-
-
-        generateRolebindings(auroraApplicationConfig.permissions)?.let {
-            openShiftObjects.addAll(it)
-        }
-
-        generateDeploymentConfig(auroraApplicationConfig, labels, mounts)?.let {
-            openShiftObjects.add(it)
-        }
-
-        generateService(auroraApplicationConfig, labels)?.let {
-            openShiftObjects.add(it)
-        }
-        generateImageStream(auroraApplicationConfig, labels)?.let {
-            openShiftObjects.add(it)
-        }
-
-        generateBuilds(auroraApplicationConfig, deployId)?.let {
-            openShiftObjects.addAll(it)
-        }
-
-        generateMount(mounts, labels)?.let {
-            openShiftObjects.addAll(it)
-        }
-
-        generateRoute(auroraApplicationConfig, labels)?.let {
-            openShiftObjects.addAll(it)
-        }
-
-        generateTemplate(auroraApplicationConfig)?.let {
-            openShiftObjects.addAll(it)
-        }
-
-        generateLocalTemplate(auroraApplicationConfig)?.let {
-            openShiftObjects.addAll(it)
-        }
-        return openShiftObjects
     }
 
     fun generateRolebindings(permissions: Permissions): List<JsonNode>? {
