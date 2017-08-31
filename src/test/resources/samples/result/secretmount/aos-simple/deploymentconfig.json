@@ -61,7 +61,7 @@
           {
             "name": "secret-mount",
             "secret": {
-              "secretName": "secret-mount"
+              "secretName": "aos-simple-secret-mount"
             }
           },
           {

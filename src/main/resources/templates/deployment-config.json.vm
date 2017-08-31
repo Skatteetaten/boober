@@ -99,17 +99,17 @@
               },
             #end
           #end
-          #if (${aac.volume.mounts})
-            #foreach ($mount in $aac.volume.mounts)
+          #if (${mounts})
+            #foreach ($mount in $mounts)
               {
-                "name": "${mount.volumeName}",
+                "name": "${mount.mountName}",
                 #if(${mount.type} == "ConfigMap")
                   "configMap": {
-                    "name": "${mount.mountName}"
+                    "name": "${mount.volumeName}"
                   }
                 #elseif(${mount.type} == "Secret")
                   "secret": {
-                    "secretName": "${mount.mountName}"
+                    "secretName": "${mount.volumeName}"
                   }
                 #end
               },
@@ -265,9 +265,9 @@
                 #end
               #end
 
-              #if (${aac.volume.mounts})
+              #if (${mounts})
 
-                #foreach ($mount in $aac.volume.mounts)
+                #foreach ($mount in $mounts)
                 ,
                   {
                     "name": "VOLUME_${mount.mountName.toUpperCase().replace("-", "_")}",
@@ -297,8 +297,8 @@
                   },
                 #end
               #end
-              #if (${aac.volume.mounts})
-                #foreach ($mount in $aac.volume.mounts)
+              #if (${mounts})
+                #foreach ($mount in $mounts)
                   {
                     "name": "${mount.mountName}",
                     "mountPath": "${mount.path}"
