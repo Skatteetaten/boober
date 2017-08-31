@@ -142,7 +142,7 @@ class SetupFacadeFromGitTest extends Specification {
 
         when:
 
-        setupFacade.executeSetup(affiliation, new SetupParams([ENV_NAME], [APP_NAME], []))
+          setupFacade.executeSetup(affiliation, new SetupParams([ENV_NAME], [APP_NAME], [], true))
 
         then:
         def git = gitService.checkoutRepoForAffiliation(affiliation)
@@ -169,7 +169,7 @@ class SetupFacadeFromGitTest extends Specification {
         createRepoAndSaveFiles(affiliation, mergedConfig)
 
         when:
-        setupFacade.executeSetup(affiliation, new SetupParams([ENV_NAME], [APP_NAME, "sprocket"], []))
+          setupFacade.executeSetup(affiliation, new SetupParams([ENV_NAME], [APP_NAME, "sprocket"], [], true))
 
         then:
         def tags = setupFacade.deployHistory(affiliation)
@@ -198,7 +198,7 @@ class SetupFacadeFromGitTest extends Specification {
         configFacade.saveAuroraConfig(affiliation, auroraConfig, false)
 
         when:
-        setupFacade.executeSetup(affiliation, new SetupParams(["secrettest"], ["aos-simple"], []))
+          setupFacade.executeSetup(affiliation, new SetupParams(["secrettest"], ["aos-simple"], [], true))
 
         then:
         def tags = setupFacade.deployHistory(affiliation)
@@ -220,7 +220,7 @@ class SetupFacadeFromGitTest extends Specification {
 
         1 * dockerService.tag(_) >>
                 new ResponseEntity<JsonNode>(mapper.convertValue(["foo": "foo"], JsonNode.class), HttpStatus.OK)
-        def result = setupFacade.executeSetup(affiliation, new SetupParams(["release"], ["aos-simple"], []))
+          def result = setupFacade.executeSetup(affiliation, new SetupParams(["release"], ["aos-simple"], [], true))
         then:
         result.size() == 1
         result[0].tagCommandResponse.statusCode.is2xxSuccessful()
