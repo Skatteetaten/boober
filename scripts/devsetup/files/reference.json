@@ -16,6 +16,7 @@
     },
     "reference.json": {
       "name": "refapp",
+      "applicationPlatform": "java",
       "flags": {
         "cert": true,
         "rolling": true
@@ -30,11 +31,25 @@
         "foo2": "baz"
       }
     },
+    "reference-web.json": {
+      "name": "refwebapp",
+      "applicationPlatform": "web",
+      "flags": {
+        "rolling": true
+      },
+      "npmName": "openshift-referanse-react",
+      "version": "0",
+      "config": {
+        "foo2": "baz"
+      }
+    },
     "boober-utv/about.json": {
       "cluster": "qa",
       "secretVault": "utv"
     },
     "boober-utv/reference.json": {
+    },
+    "boober-utv/reference-web.json": {
     },
     "boober-test/about.json": {
       "cluster": "qa",
