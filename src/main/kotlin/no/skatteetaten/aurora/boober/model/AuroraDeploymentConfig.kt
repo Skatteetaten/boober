@@ -36,7 +36,7 @@ data class AuroraApplicationConfig(
 
 data class AuroraVolume(
         val secrets: Map<String, String>?,
-        val config: Map<String, String>,
+        val config: Map<String, String>?,
         val mounts: List<Mount>?
 )
 

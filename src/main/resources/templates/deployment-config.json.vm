@@ -89,16 +89,6 @@
       },
       "spec": {
         "volumes": [
-          #if (${aac.deploy.database})
-            #foreach ($db  in $aac.deploy.database)
-              {
-                "name": "$db.dbName",
-                "secret": {
-                  "secretName": "$db.dbName"
-                }
-              },
-            #end
-          #end
           #if (${mounts})
             #foreach ($mount in $mounts)
               {
@@ -119,34 +109,6 @@
             "name": "application-log-volume",
             "emptyDir": {}
           }
-          #if(${aac.volume.config.size()} != 0)
-          ,
-            {
-              "name": "config",
-              "configMap": {
-                "name": "${aac.name}"
-              }
-            }
-          #end
-          #if(${aac.volume.secrets})
-          ,
-            {
-              "name": "secrets",
-              "secret": {
-                "secretName": "${aac.name}"
-              }
-            }
-          #end
-
-          #if(${aac.deploy.certificateCn})
-          ,
-            {
-              "name": "${aac.name}-cert",
-              "secret": {
-                "secretName": "${aac.name}-cert"
-              }
-            }
-          #end
         ],
         "containers": [
           {
@@ -168,14 +130,7 @@
               }
             ],
             "env": [
-              {
-                "name": "OPENSHIFT_CLUSTER",
-                "value": "${aac.cluster}"
-              },
-              {
-                "name": "SPLUNK_INDEX",
-                "value": "${aac.deploy.splunkIndex}"
-              },
+
               {
                 "name": "POD_NAME",
                 "valueFrom": {
@@ -193,6 +148,14 @@
                     "fieldPath": "metadata.namespace"
                   }
                 }
+              },
+              {
+                "name": "OPENSHIFT_CLUSTER",
+                "value": "${aac.cluster}"
+              },
+              {
+                "name": "SPLUNK_INDEX",
+                "value": "${aac.deploy.splunkIndex}"
               },
               {
                 "name": "HTTP_PORT",
@@ -289,14 +252,6 @@
               }
             },
             "volumeMounts": [
-              #if (${aac.deploy.database})
-                #foreach ($db  in $aac.deploy.database)
-                  {
-                    "name": "$db.dbName",
-                    "mountPath": "$dbPath/$db.dbName"
-                  },
-                #end
-              #end
               #if (${mounts})
                 #foreach ($mount in $mounts)
                   {
@@ -309,27 +264,6 @@
                 "name": "application-log-volume",
                 "mountPath": "/u01/logs"
               }
-              #if(${aac.volume.config.size()} != 0)
-              ,
-                {
-                  "name": "config",
-                  "mountPath": "/u01/config/configmap"
-                }
-              #end
-              #if(${aac.deploy.certificateCn})
-              ,
-                {
-                  "name": "${aac.name}-cert",
-                  "mountPath": "$certPath"
-                }
-              #end
-              #if(${aac.volume.secrets})
-              ,
-                {
-                  "name": "secrets",
-                  "mountPath": "/u01/config/secret"
-                }
-              #end
             ],
             "terminationMessagePath": "/dev/termination-log",
             "imagePullPolicy": "IfNotPresent",

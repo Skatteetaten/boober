@@ -6,7 +6,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraApplicationConfig
 import no.skatteetaten.aurora.boober.model.Mount
+import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import org.apache.commons.lang.StringEscapeUtils
 import org.apache.velocity.VelocityContext
@@ -71,13 +73,68 @@ class OpenShiftObjectGenerator(
             }
         }
 
-        val mounts: List<Mount>? = auroraApplicationConfig.volume?.mounts?.map {
-            if (it.exist) {
-                it
-            } else {
-                it.copy(volumeName = it.volumeName.ensureStartWith(auroraApplicationConfig.name, "-"))
-            }
+
+        val mounts: List<Mount>? = findMounts(auroraApplicationConfig)
+
+
+        val splunkIndex = auroraApplicationConfig.deploy?.splunkIndex?.let { "SPLUNK_INDEX" to it }
+
+        val certEnv = auroraApplicationConfig.deploy?.certificateCn?.let {
+            mapOf(
+                    "STS_CERTIFICATE_URL" to "/u01/secrets/app/certificate.crt",
+                    "STS_PRIVATE_KEY_URL" to "/u01/secrets/app/privatekey.crt",
+                    "STS_KEYSTORE_DESCRIPTOR" to "/u01/secrets/app/descriptor.properties"
+            )
         }
+
+        val debugEnv = auroraApplicationConfig.deploy?.flags?.takeIf { it.debug }?.let {
+            mapOf(
+                    "REMOTE_DEBUG" to "true",
+                    "DEBUG_PORT" to "5005"
+            )
+        }
+        val env: Map<String, String> = mapOf(
+                "OPENSHIFT_CLUSTER" to auroraApplicationConfig.cluster,
+                "HTTP_PORT" to "8080",
+                "MANAGEMENT_HTTP_PORT" to "8081",
+                "APP_NAME" to auroraApplicationConfig.name
+        ).addIfNotNull(splunkIndex)
+
+
+        /*
+
+              #if (${aac.route.route.size()} !=0)
+                  ,{
+                    "name": "ROUTE_NAME",
+                "value": "${routeName}"
+                  }
+                #end
+
+              #if (${aac.deploy.database})
+                #foreach ($db  in $aac.deploy.database)
+                  #if($velocityCount == 1)
+                  ,
+                    {
+                      "name": "DB",
+                      "value": "${dbPath}/${db.dbName}/info"
+                    },
+                    {
+                      "name": "DB_PROPERTIES",
+                      "value": "${dbPath}/${db.dbName}/db.properties"
+                    }
+                  #end
+                  ,
+                  {
+                    "name": "${db.envName}",
+                    "value": "${dbPath}/${db.dbName}/info"
+                  },
+                  {
+                    "name": "${db.envName}_PROPERTIES",
+                    "value": "${dbPath}/${db.dbName}/db.properties"
+                  }
+                #end
+         */
+
         val params = mapOf(
                 "overrides" to overrides,
                 "deployId" to deployId,
@@ -86,9 +143,8 @@ class OpenShiftObjectGenerator(
                 "buildName" to buildName,
                 "routeName" to routeName,
                 "username" to userDetailsProvider.getAuthenticatedUser().username,
-                "database" to database,
-                "dbPath" to "/u01/secrets/app",
-                "certPath" to "/u01/secrets/app/${auroraApplicationConfig.name}-cert"
+                "database" to database
+
         )
 
         val templatesToProcess = LinkedList(mutableListOf(
@@ -105,14 +161,6 @@ class OpenShiftObjectGenerator(
         auroraApplicationConfig.deploy?.let {
             templatesToProcess.add("deployment-config.json")
             templatesToProcess.add("service.json")
-        }
-
-        if(auroraApplicationConfig.volume?.config?.isNotEmpty() == true) {
-            templatesToProcess.add("configmap.json")
-        }
-
-        auroraApplicationConfig.volume?.secrets?.let {
-            templatesToProcess.add("secret.json")
         }
 
         auroraApplicationConfig.build?.let {
@@ -167,6 +215,58 @@ class OpenShiftObjectGenerator(
             openShiftObjects.addAll(generateObjects)
         }
         return openShiftObjects
+    }
+
+    fun findMounts(auroraApplicationConfig: AuroraApplicationConfig): List<Mount> {
+        val mounts: List<Mount> = auroraApplicationConfig.volume?.mounts?.map {
+            if (it.exist) {
+                it
+            } else {
+                it.copy(volumeName = it.volumeName.ensureStartWith(auroraApplicationConfig.name, "-"))
+            }
+        } ?: emptyList()
+
+
+        val configMount = auroraApplicationConfig.volume?.config?.let {
+
+            Mount(path = "/u01/config/configmap",
+                    type = MountType.ConfigMap,
+                    volumeName = auroraApplicationConfig.name,
+                    mountName = auroraApplicationConfig.name,
+                    exist = false,
+                    content = it)
+        }
+
+        val secretMount = auroraApplicationConfig.volume?.secrets?.let {
+            Mount(path = "/u01/config/secret",
+                    type = MountType.Secret,
+                    volumeName = auroraApplicationConfig.name,
+                    mountName = auroraApplicationConfig.name,
+                    exist = false,
+                    content = it)
+        }
+
+        val certMount = auroraApplicationConfig.deploy?.certificateCn?.let {
+            Mount(path = "/u01/secrets/app/${auroraApplicationConfig.name}-cert",
+                    type = MountType.Secret,
+                    volumeName = "${auroraApplicationConfig.name}-cert",
+                    mountName = "${auroraApplicationConfig.name}-cert",
+                    exist = true,
+                    content = null)
+            //TODO: Add sprocket content here
+        }
+
+        val databaseMounts = auroraApplicationConfig.deploy?.database?.map {
+            val dbName = "${it.name}-db".toLowerCase()
+            Mount(path = "/u01/secrets/app/$dbName",
+                    type = MountType.Secret,
+                    volumeName = dbName,
+                    mountName = dbName,
+                    exist = true,
+                    content = null)
+            //TODO add sprocket content here
+        } ?: emptyList()
+        return databaseMounts + mounts.addIfNotNull(configMount).addIfNotNull(secretMount).addIfNotNull(certMount)
     }
 
 
