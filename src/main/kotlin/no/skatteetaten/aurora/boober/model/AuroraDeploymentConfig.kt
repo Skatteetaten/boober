@@ -19,8 +19,6 @@ data class AuroraApplicationConfig(
         val envName: String,
         val permissions: Permissions,
         val fields: Map<String, AuroraConfigField>,
-        val unmappedPointers: Map<String, List<String>>,
-
 
         val volume: AuroraVolume? = null,
         val route: AuroraRoute? = null,

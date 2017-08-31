@@ -19,7 +19,6 @@ val auroraDevelopment = AuroraApplicationConfig(
         cluster = "utv",
         type = TemplateType.development,
         fields = emptyMap(),
-        unmappedPointers = emptyMap(),
         envName = "boober-unit-test",
         permissions = Permissions(
                 admin = Permission(
