@@ -25,7 +25,7 @@ import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.internal.Error
 import no.skatteetaten.aurora.boober.service.internal.Result
 import no.skatteetaten.aurora.boober.service.internal.ValidationError
-import no.skatteetaten.aurora.boober.service.internal.orElseThrow
+import no.skatteetaten.aurora.boober.service.internal.onErrorThrow
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.required
 import org.slf4j.Logger
@@ -118,7 +118,7 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient,
                 logger.debug("IAE {}", e.message)
                 Result<T, Error?>(error = Error(aid.application, aid.environment, listOf(ValidationError(e.message!!))))
             }
-        }.orElseThrow {
+        }.onErrorThrow {
             logger.debug("ACE {}", it)
             AuroraConfigException("AuroraConfig contained errors for one or more applications", it)
         }

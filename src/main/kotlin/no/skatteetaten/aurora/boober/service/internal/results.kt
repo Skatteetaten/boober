@@ -31,7 +31,7 @@ data class ApplicationResult @JvmOverloads constructor(
     val tag: String = "${auroraDc.namespace}.${auroraDc.name}/${deployId}"
 }
 
-fun <T : Any> List<Result<T?, Error?>>.orElseThrow(block: (List<Error>) -> Exception): List<T> {
+fun <T : Any> List<Result<T?, Error?>>.onErrorThrow(block: (List<Error>) -> Exception): List<T> {
     this.mapNotNull { it.error }
             .takeIf { it.isNotEmpty() }
             ?.let { throw block(it) }
