@@ -65,15 +65,15 @@
             }
           },
           {
-            "name": "application-log-volume",
-            "emptyDir": {
-
-            }
-          },
-          {
             "name": "aos-simple-cert",
             "secret": {
               "secretName": "aos-simple-cert"
+            }
+          },
+          {
+            "name": "application-log-volume",
+            "emptyDir": {
+
             }
           }
         ],
@@ -98,14 +98,6 @@
             ],
             "env": [
               {
-                "name": "OPENSHIFT_CLUSTER",
-                "value": "utv"
-              },
-              {
-                "name": "SPLUNK_INDEX",
-                "value": "openshift-test"
-              },
-              {
                 "name": "POD_NAME",
                 "valueFrom": {
                   "fieldRef": {
@@ -124,6 +116,10 @@
                 }
               },
               {
+                "name": "OPENSHIFT_CLUSTER",
+                "value": "utv"
+              },
+              {
                 "name": "HTTP_PORT",
                 "value": "8080"
               },
@@ -134,6 +130,14 @@
               {
                 "name": "APP_NAME",
                 "value": "aos-simple"
+              },
+              {
+                "name": "SPLUNK_INDEX",
+                "value": "openshift-test"
+              },
+              {
+                "name": "ROUTE_NAME",
+                "value": "http://aos-simple-aos-secretmount.utv.paas.skead.no/foo"
               },
               {
                 "name": "STS_CERTIFICATE_URL",
@@ -148,12 +152,12 @@
                 "value": "/u01/secrets/app/aos-simple-cert/descriptor.properties"
               },
               {
-                "name": "ROUTE_NAME",
-                "value": "http://aos-simple-aos-secretmount.utv.paas.skead.no/foo"
-              },
-              {
                 "name": "VOLUME_SECRET_MOUNT",
                 "value": "/u01/foo"
+              },
+              {
+                "name": "VOLUME_AOS_SIMPLE_CERT",
+                "value": "/u01/secrets/app/aos-simple-cert"
               }
             ],
             "resources": {
@@ -172,12 +176,12 @@
                 "mountPath": "/u01/foo"
               },
               {
-                "name": "application-log-volume",
-                "mountPath": "/u01/logs"
-              },
-              {
                 "name": "aos-simple-cert",
                 "mountPath": "/u01/secrets/app/aos-simple-cert"
+              },
+              {
+                "name": "application-log-volume",
+                "mountPath": "/u01/logs"
               }
             ],
             "terminationMessagePath": "/dev/termination-log",

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraApplicationConfig
+import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
@@ -53,98 +54,22 @@ class OpenShiftObjectGenerator(
 
         logger.debug("Database is $database")
         //In use in velocity template
-        val routeName = auroraApplicationConfig.route?.let {
-            if (it.route.isEmpty()) {
-                null
-            } else {
-                it.route.first().let {
-                    val host = it.host ?: "${auroraApplicationConfig.name}-${auroraApplicationConfig.namespace}"
-                    "http://$host.${auroraApplicationConfig.cluster}.paas.skead.no${it.path ?: ""}"
-                }
-            }
-        }
-
-
-        val buildName = auroraApplicationConfig.build?.let {
-            if (it.buildSuffix != null) {
-                "${auroraApplicationConfig.name}-${it.buildSuffix}"
-            } else {
-                auroraApplicationConfig.name
-            }
-        }
 
 
         val mounts: List<Mount>? = findMounts(auroraApplicationConfig)
 
+        val env = findEnv(mounts, auroraApplicationConfig)
 
-        val splunkIndex = auroraApplicationConfig.deploy?.splunkIndex?.let { "SPLUNK_INDEX" to it }
-
-        val certEnv = auroraApplicationConfig.deploy?.certificateCn?.let {
-            mapOf(
-                    "STS_CERTIFICATE_URL" to "/u01/secrets/app/certificate.crt",
-                    "STS_PRIVATE_KEY_URL" to "/u01/secrets/app/privatekey.crt",
-                    "STS_KEYSTORE_DESCRIPTOR" to "/u01/secrets/app/descriptor.properties"
-            )
-        }
-
-        val debugEnv = auroraApplicationConfig.deploy?.flags?.takeIf { it.debug }?.let {
-            mapOf(
-                    "REMOTE_DEBUG" to "true",
-                    "DEBUG_PORT" to "5005"
-            )
-        }
-        val env: Map<String, String> = mapOf(
-                "OPENSHIFT_CLUSTER" to auroraApplicationConfig.cluster,
-                "HTTP_PORT" to "8080",
-                "MANAGEMENT_HTTP_PORT" to "8081",
-                "APP_NAME" to auroraApplicationConfig.name
-        ).addIfNotNull(splunkIndex)
-
-
-        /*
-
-              #if (${aac.route.route.size()} !=0)
-                  ,{
-                    "name": "ROUTE_NAME",
-                "value": "${routeName}"
-                  }
-                #end
-
-              #if (${aac.deploy.database})
-                #foreach ($db  in $aac.deploy.database)
-                  #if($velocityCount == 1)
-                  ,
-                    {
-                      "name": "DB",
-                      "value": "${dbPath}/${db.dbName}/info"
-                    },
-                    {
-                      "name": "DB_PROPERTIES",
-                      "value": "${dbPath}/${db.dbName}/db.properties"
-                    }
-                  #end
-                  ,
-                  {
-                    "name": "${db.envName}",
-                    "value": "${dbPath}/${db.dbName}/info"
-                  },
-                  {
-                    "name": "${db.envName}_PROPERTIES",
-                    "value": "${dbPath}/${db.dbName}/db.properties"
-                  }
-                #end
-         */
+        val labels = findLabels(auroraApplicationConfig, deployId, auroraApplicationConfig.name)
 
         val params = mapOf(
                 "overrides" to overrides,
-                "deployId" to deployId,
+                "labels" to labels,
                 "aac" to auroraApplicationConfig,
                 "mounts" to mounts,
-                "buildName" to buildName,
-                "routeName" to routeName,
+                "env" to env,
                 "username" to userDetailsProvider.getAuthenticatedUser().username,
                 "database" to database
-
         )
 
         val templatesToProcess = LinkedList(mutableListOf(
@@ -163,27 +88,39 @@ class OpenShiftObjectGenerator(
             templatesToProcess.add("service.json")
         }
 
-        auroraApplicationConfig.build?.let {
-            templatesToProcess.add("build-config.json")
-            if (it.testGitUrl != null) {
-                templatesToProcess.add("jenkins-build-config.json")
-            }
-        }
-
         auroraApplicationConfig.deploy?.let {
             templatesToProcess.add("imagestream.json")
         }
 
-        val openShiftObjects = LinkedList(templatesToProcess.map { mergeVelocityTemplate(it, params) })
+        val openShiftObjects = LinkedList(templatesToProcess.map {
+            mergeVelocityTemplate(it, params)
+        })
 
+
+        auroraApplicationConfig.build?.let {
+            val buildName = if (it.buildSuffix != null) {
+                "${auroraApplicationConfig.name}-${it.buildSuffix}"
+            } else {
+                auroraApplicationConfig.name
+            }
+
+            val buildParams = mapOf(
+                    "labels" to findLabels(auroraApplicationConfig, deployId, buildName),
+                    "buildName" to buildName,
+                    "build" to it
+            )
+            openShiftObjects.add(mergeVelocityTemplate("build-config.json", buildParams))
+
+            if (it.testGitUrl != null) {
+                openShiftObjects.add(mergeVelocityTemplate("jenkins-build-config.json", buildParams))
+            }
+        }
 
         mounts?.filter { !it.exist }?.map {
             logger.debug("Create manual mount {}", it)
             val mountParams = mapOf(
-                    "aac" to auroraApplicationConfig,
                     "mount" to it,
-                    "deployId" to deployId,
-                    "username" to userDetailsProvider.getAuthenticatedUser().username
+                    "labels" to labels
             )
             mergeVelocityTemplate("mount.json", mountParams)
         }?.let {
@@ -193,10 +130,9 @@ class OpenShiftObjectGenerator(
         auroraApplicationConfig.route?.route?.map {
             logger.debug("Route is {}", it)
             val routeParams = mapOf(
-                    "aac" to auroraApplicationConfig,
+                    "name" to auroraApplicationConfig.name,
                     "route" to it,
-                    "deployId" to deployId,
-                    "username" to userDetailsProvider.getAuthenticatedUser().username)
+                    "labels" to labels)
             mergeVelocityTemplate("route.json", routeParams)
         }?.let {
             openShiftObjects.addAll(it)
@@ -217,6 +153,66 @@ class OpenShiftObjectGenerator(
         return openShiftObjects
     }
 
+    fun findLabels(auroraApplicationConfig: AuroraApplicationConfig, deployId: String, name: String): Map<String, String> {
+        val labels = mapOf(
+                "app" to name,
+                "updatedBy" to userDetailsProvider.getAuthenticatedUser().username,
+                "affiliation" to auroraApplicationConfig.affiliation,
+                "booberDeployId" to deployId
+        )
+        return labels
+    }
+
+    fun findEnv(mounts: List<Mount>?, auroraApplicationConfig: AuroraApplicationConfig): Map<String, String> {
+        val mountEnv = mounts?.map {
+            "VOLUME_${it.mountName.toUpperCase().replace("-", "_")}" to it.path
+        }?.toMap() ?: mapOf()
+
+        val splunkIndex = auroraApplicationConfig.deploy?.splunkIndex?.let { "SPLUNK_INDEX" to it }
+
+        val certEnv = auroraApplicationConfig.deploy?.certificateCn?.let {
+            val baseUrl = "/u01/secrets/app/${auroraApplicationConfig.name}-cert"
+            mapOf(
+                    "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
+                    "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
+                    "STS_KEYSTORE_DESCRIPTOR" to "$baseUrl/descriptor.properties"
+            )
+        } ?: mapOf()
+
+        val debugEnv = auroraApplicationConfig.deploy?.flags?.takeIf { it.debug }?.let {
+            mapOf(
+                    "REMOTE_DEBUG" to "true",
+                    "DEBUG_PORT" to "5005"
+            )
+        } ?: mapOf()
+
+        val routeName = auroraApplicationConfig.route?.route?.takeIf { it.isNotEmpty() }?.first()?.let {
+            val host = it.host ?: "${auroraApplicationConfig.name}-${auroraApplicationConfig.namespace}"
+            "ROUTE_NAME" to "http://$host.${auroraApplicationConfig.cluster}.paas.skead.no${it.path ?: ""}"
+        }
+
+        val dbEnv = auroraApplicationConfig.deploy?.database?.takeIf { it.isNotEmpty() }?.let {
+            fun createDbEnv(db: Database, envName: String): List<Pair<String, String>> {
+                val path = "/u01/secrets/app/${db.name.toLowerCase()}-db"
+                val envName = envName.toUpperCase()
+
+                return listOf(
+                        envName to "$path/info",
+                        "${envName}_PROPERTIES" to "$path/db.properties"
+                )
+            }
+
+            it.flatMap { createDbEnv(it, "${it.name}_db") } + createDbEnv(it.first(), "db")
+        }?.toMap() ?: mapOf()
+
+        return mapOf(
+                "OPENSHIFT_CLUSTER" to auroraApplicationConfig.cluster,
+                "HTTP_PORT" to "8080",
+                "MANAGEMENT_HTTP_PORT" to "8081",
+                "APP_NAME" to auroraApplicationConfig.name
+        ).addIfNotNull(splunkIndex).addIfNotNull(routeName) + certEnv + debugEnv + dbEnv + mountEnv
+    }
+
     fun findMounts(auroraApplicationConfig: AuroraApplicationConfig): List<Mount> {
         val mounts: List<Mount> = auroraApplicationConfig.volume?.mounts?.map {
             if (it.exist) {
@@ -232,7 +228,7 @@ class OpenShiftObjectGenerator(
             Mount(path = "/u01/config/configmap",
                     type = MountType.ConfigMap,
                     volumeName = auroraApplicationConfig.name,
-                    mountName = auroraApplicationConfig.name,
+                    mountName = "config",
                     exist = false,
                     content = it)
         }
@@ -241,7 +237,7 @@ class OpenShiftObjectGenerator(
             Mount(path = "/u01/config/secret",
                     type = MountType.Secret,
                     volumeName = auroraApplicationConfig.name,
-                    mountName = auroraApplicationConfig.name,
+                    mountName = "secrets",
                     exist = false,
                     content = it)
         }

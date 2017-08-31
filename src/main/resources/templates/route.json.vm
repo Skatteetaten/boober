@@ -3,12 +3,14 @@
   "apiVersion": "v1",
   "metadata": {
   "name": "${route.name}",
-    "labels": {
-      "app": "${aac.name}",
-      "updatedBy" : "${username}",
-      "affiliation": "${aac.affiliation}",
-      "booberDeployId": "${deployId}"
-    }
+  "labels": {
+      #foreach ($label  in $labels.entrySet())
+          #if($velocityCount != 1)
+            ,
+          #end
+        "${label.key}": "${label.value}"
+      #end
+  }
   #if (${route.annotations.size()} != 0)
   ,"annotations": {
     #foreach ($annotation  in $route.annotations.entrySet())
@@ -23,7 +25,7 @@
   "spec": {
     "to": {
       "kind": "Service",
-      "name": "${aac.name}"
+"name": "${name}"
     }
 #if (${route.host})
 , "host": "${route.host}"

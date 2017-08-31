@@ -24,11 +24,13 @@
       #end
     },
     "labels": {
-      "app": "${aac.name}",
-      "updatedBy": "${username}",
-      "affiliation": "${aac.affiliation}",
-      "booberDeployId": "${deployId}"
-    },
+      #foreach ($label  in $labels.entrySet())
+          #if($velocityCount != 1)
+            ,
+          #end
+        "${label.key}": "${label.value}"
+      #end
+  },
     "name": "${aac.name}"
   },
   "spec": {
@@ -80,11 +82,13 @@
           #else
             "deployTag": "${aac.deploy.version}",
           #end
-          "name": "${aac.name}",
-          "app": "${aac.name}",
-          "updatedBy": "${username}",
-          "affiliation": "${aac.affiliation}",
-          "booberDeployId": "${deployId}"
+  "name": "${aac.name}",
+      #foreach ($label  in $labels.entrySet())
+          #if($velocityCount != 1)
+          ,
+          #end
+      "${label.key}": "${label.value}"
+      #end
         }
       },
       "spec": {
@@ -130,7 +134,6 @@
               }
             ],
             "env": [
-
               {
                 "name": "POD_NAME",
                 "valueFrom": {
@@ -148,98 +151,13 @@
                     "fieldPath": "metadata.namespace"
                   }
                 }
-              },
-              {
-                "name": "OPENSHIFT_CLUSTER",
-                "value": "${aac.cluster}"
-              },
-              {
-                "name": "SPLUNK_INDEX",
-                "value": "${aac.deploy.splunkIndex}"
-              },
-              {
-                "name": "HTTP_PORT",
-                "value": "8080"
-              },
-              {
-                "name": "MANAGEMENT_HTTP_PORT",
-                "value": "8081"
-              },
-              {
-                "name": "APP_NAME",
-                "value": "${aac.name}"
               }
-              #if(${aac.deploy.certificateCn})
-              ,
-                {
-                  "name": "STS_CERTIFICATE_URL",
-                  "value": "${certPath}/certificate.crt"
-                },
-                {
-                  "name": "STS_PRIVATE_KEY_URL",
-                  "value": "${certPath}/privatekey.key"
-                },
-                {
-                  "name": "STS_KEYSTORE_DESCRIPTOR",
-                  "value": "${certPath}/descriptor.properties"
-                }
-              #end
-              #if (${aac.deploy.flags.debug})
-              ,
-                {
-                  "name": "REMOTE_DEBUG",
-                  "value": "true"
-                },
-                {
-                  "name": "DEBUG_PORT",
-                  "value": "5005"
-                }
-              #end
-
-              #if (${aac.route.route.size()} !=0)
+    #foreach ($var  in $env.entrySet())
                   ,{
-                    "name": "ROUTE_NAME",
-                "value": "${routeName}"
-                  }
-                #end
-
-              #if (${aac.deploy.database})
-                #foreach ($db  in $aac.deploy.database)
-                  #if($velocityCount == 1)
-                  ,
-                    {
-                      "name": "DB",
-                      "value": "${dbPath}/${db.dbName}/info"
-                    },
-                    {
-                      "name": "DB_PROPERTIES",
-                      "value": "${dbPath}/${db.dbName}/db.properties"
+    "name": "$var.key",
+    "value": "$var.value"
                     }
-                  #end
-                  ,
-                  {
-                    "name": "${db.envName}",
-                    "value": "${dbPath}/${db.dbName}/info"
-                  },
-                  {
-                    "name": "${db.envName}_PROPERTIES",
-                    "value": "${dbPath}/${db.dbName}/db.properties"
-                  }
-                #end
-              #end
-
-              #if (${mounts})
-
-                #foreach ($mount in $mounts)
-                ,
-                  {
-                    "name": "VOLUME_${mount.mountName.toUpperCase().replace("-", "_")}",
-                    "value": "${mount.path}"
-                  }
-                #end
-              #end
-
-
+    #end
             ],
             "resources": {
               "limits": {

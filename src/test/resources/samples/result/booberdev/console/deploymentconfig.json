@@ -18,7 +18,8 @@
   "spec": {
     "strategy": {
       "type": "Recreate",
-      "resources": {}
+      "resources": {
+      }
     },
     "triggers": [
       {
@@ -79,14 +80,6 @@
             ],
             "env": [
               {
-                "name": "OPENSHIFT_CLUSTER",
-                "value": "utv"
-              },
-              {
-                "name": "SPLUNK_INDEX",
-                "value": "openshift-test"
-              },
-              {
                 "name": "POD_NAME",
                 "valueFrom": {
                   "fieldRef": {
@@ -105,6 +98,10 @@
                 }
               },
               {
+                "name": "OPENSHIFT_CLUSTER",
+                "value": "utv"
+              },
+              {
                 "name": "HTTP_PORT",
                 "value": "8080"
               },
@@ -117,16 +114,20 @@
                 "value": "openshift-console-api"
               },
               {
+                "name": "SPLUNK_INDEX",
+                "value": "openshift-test"
+              },
+              {
+                "name": "ROUTE_NAME",
+                "value": "http://openshift-console-api-aos-booberdev.utv.paas.skead.no"
+              },
+              {
                 "name": "REMOTE_DEBUG",
                 "value": "true"
               },
               {
                 "name": "DEBUG_PORT",
                 "value": "5005"
-              },
-              {
-                "name": "ROUTE_NAME",
-                "value": "http://openshift-console-api-aos-booberdev.utv.paas.skead.no"
               }
             ],
             "resources": {

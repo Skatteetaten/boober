@@ -4,11 +4,13 @@
   "metadata": {
     "name": "${buildName}-test",
     "labels": {
-      "app": "${buildName}",
-      "updatedBy": "${username}",
-      "affiliation": "${aac.affiliation}",
-      "booberDeployId": "${deployId}"
-    }
+      #foreach ($label  in $labels.entrySet())
+          #if($velocityCount != 1)
+            ,
+          #end
+        "${label.key}": "${label.value}"
+      #end
+  }
   },
   "spec": {
     "triggers": [
@@ -18,7 +20,7 @@
           "from": {
             "kind": "ImageStreamTag",
             "namespace": "openshift",
-            "name": "${aac.build.baseName}:${aac.build.baseVersion}"
+"name": "${build.baseName}:${build.baseVersion}"
           }
         }
       },
@@ -29,13 +31,13 @@
     ],
     "source": {
       "git": {
-        "uri": "${aac.build.testGitUrl}",
-        "ref": "${aac.build.testTag}"
+"uri": "${build.testGitUrl}",
+"ref": "${build.testTag}"
       }
     },
     "strategy": {
       "jenkinsPipelineStrategy": {
-        "jenkinsfilePath": "${aac.build.testJenkinsfile}"
+      "jenkinsfilePath": "${build.testJenkinsfile}"
       }
     }
   }

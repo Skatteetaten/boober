@@ -7,8 +7,8 @@
       "app": "aos-simple",
       "updatedBy": "hero",
       "affiliation": "aos",
-      "releasedVersion": "1.0.3-SNAPSHOT",
-      "booberDeployId": "123"
+      "booberDeployId": "123",
+      "releasedVersion": "1.0.3-SNAPSHOT"
     }
   }
 }
