@@ -11,9 +11,7 @@
         }
       },
       "config": {
-        "latest.properties": {
-          "foo": "bar"
-        }
+        "foo": "bar"
       }
     },
     "reference.json": {
@@ -29,15 +27,12 @@
         "referanseapp": "auto"
       },
       "config": {
-        "latest.properties": {
-          "foo2": "baz"
-        }
+        "foo2": "baz"
       }
     },
     "boober-utv/about.json": {
       "cluster": "qa",
       "secretVault": "utv"
-
     },
     "boober-utv/reference.json": {
     },
@@ -46,7 +41,6 @@
       "secretVault": "test"
     },
     "boober-test/reference.json": {
-
     }
   }
 }
