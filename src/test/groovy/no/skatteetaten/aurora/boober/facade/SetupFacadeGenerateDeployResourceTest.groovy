@@ -132,7 +132,7 @@ class SetupFacadeGenerateDeployResourceTest extends Specification {
       def imagestream = createOpenShiftResponse("imagestream", UPDATE, 1, 1)
 
     when:
-      def result = setupFacade.generateRedeployResource([imagestream], templateType, name)
+      def result = setupFacade.generateRedeployResource([imagestream], templateType, name, true)
 
     then:
       result.get("kind").asText() == "BuildRequest"
@@ -145,7 +145,7 @@ class SetupFacadeGenerateDeployResourceTest extends Specification {
       def deploymentConfig = createOpenShiftResponse("deploymentconfig", UPDATE, 1, 2)
 
     when:
-      def result = setupFacade.generateRedeployResource([deploymentConfig], templateType, name)
+      def result = setupFacade.generateRedeployResource([deploymentConfig], templateType, name, true)
 
     then:
       result.get("kind").asText() == "DeploymentRequest"
@@ -155,7 +155,7 @@ class SetupFacadeGenerateDeployResourceTest extends Specification {
     expect:
       def templateType = deploy
       def name = "boober"
-      setupFacade.generateRedeployResource([], templateType, name) == null
+      setupFacade.generateRedeployResource([], templateType, name, true) == null
   }
 
   def "Should create DeploymentRequest when ImageStream has not changed but OperationType is Update and template is deploy"() {
@@ -166,7 +166,7 @@ class SetupFacadeGenerateDeployResourceTest extends Specification {
       imagestream.command
 
     when:
-      def result = setupFacade.generateRedeployResource([imagestream], templateType, name)
+      def result = setupFacade.generateRedeployResource([imagestream], templateType, name, true)
 
     then:
       result.get("kind").asText() == "DeploymentRequest"
@@ -179,7 +179,21 @@ class SetupFacadeGenerateDeployResourceTest extends Specification {
       def imagestream = createOpenShiftResponse("imagestream", OperationType.CREATE, 1, 1)
 
     when:
-      def result = setupFacade.generateRedeployResource([imagestream], templateType, name)
+      def result = setupFacade.generateRedeployResource([imagestream], templateType, name, true)
+
+    then:
+      result == null
+  }
+
+  def "Should not create deploy request if deploy is false"() {
+    given:
+      def templateType = deploy
+      def name = "boober"
+      def imagestream = createOpenShiftResponse("imagestream", UPDATE, 1, 1)
+      imagestream.command
+
+    when:
+      def result = setupFacade.generateRedeployResource([imagestream], templateType, name, false)
 
     then:
       result == null

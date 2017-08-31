@@ -50,7 +50,7 @@ class SetupFacade(
 
         val applications = getDeployCommands(affiliation, setupParams, repo)
 
-        val res = applications.map { setupApplication(it) }
+        val res = applications.map { setupApplication(it, setupParams.deploy) }
 
         markRelease(res, repo)
         gitService.closeRepository(repo)
@@ -58,13 +58,13 @@ class SetupFacade(
 
     }
 
-    fun setupApplication(cmd: ApplicationCommand): ApplicationResult {
+    fun setupApplication(cmd: ApplicationCommand, deploy: Boolean): ApplicationResult {
         val responses = cmd.commands.map {
             openShiftClient.performOpenShiftCommand(it, cmd.auroraDc.namespace)
         }
 
         val deployCommand =
-                generateRedeployResource(responses, cmd.auroraDc.type, cmd.auroraDc.name)
+                generateRedeployResource(responses, cmd.auroraDc.type, cmd.auroraDc.name, deploy)
                         ?.let {
                             openShiftClient.prepare(cmd.auroraDc.namespace, it)
                         }?.let {
@@ -160,7 +160,11 @@ class SetupFacade(
     }
 
 
-    fun generateRedeployResource(openShiftResponses: List<OpenShiftResponse>, type: TemplateType, name: String): JsonNode? {
+    fun generateRedeployResource(openShiftResponses: List<OpenShiftResponse>, type: TemplateType, name: String, deploy: Boolean): JsonNode? {
+
+        if (!deploy) {
+            return null
+        }
 
         val imageStream = openShiftResponses.find { it.responseBody["kind"].asText().toLowerCase() == "imagestream" }
         val deployment = openShiftResponses.find { it.responseBody["kind"].asText().toLowerCase() == "deploymentconfig" }
