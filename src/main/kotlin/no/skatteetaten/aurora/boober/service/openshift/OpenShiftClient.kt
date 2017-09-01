@@ -145,6 +145,9 @@ class OpenShiftClient(
     }
 
     fun isValidUser(user: String): Boolean {
+        if (user.startsWith("system:serviceaccount")) {
+            return true
+        }
         return exist("$baseUrl/oapi/v1/users/$user")
     }
 
@@ -197,7 +200,7 @@ class OpenShiftClient(
 
         val canSee = projects.any { it.at("/metadata/name").asText() == name }
 
-        if(!canSee) {
+        if (!canSee) {
             // Potential bug if the user can view, but not change the project.
             if (exist("$url/$name")) {
                 throw IllegalAccessException("Project exist but you do not have permission to modify it")
