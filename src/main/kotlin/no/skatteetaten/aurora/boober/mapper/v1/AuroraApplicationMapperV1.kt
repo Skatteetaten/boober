@@ -6,7 +6,6 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.utils.findAllPointers
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.pattern
 
@@ -32,9 +31,9 @@ class AuroraApplicationMapperV1(val openShiftClient: OpenShiftClient,
                                 deploy: AuroraDeploy?,
                                 template: AuroraTemplate?,
                                 localTemplate: AuroraLocalTemplate?
-    ): AuroraApplicationConfig {
+    ): AuroraResource {
         val name = auroraConfigFields.extract("name")
-        return AuroraApplicationConfig(
+        return AuroraResource(
                 schemaVersion = auroraConfigFields.extract("schemaVersion"),
 
                 affiliation = auroraConfigFields.extract("affiliation"),

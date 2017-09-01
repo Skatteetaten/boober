@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.boober.model.AuroraApplicationConfig
+import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigFlags
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
@@ -13,7 +13,7 @@ import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.Probe
 import no.skatteetaten.aurora.boober.model.TemplateType
 
-val auroraDevelopment = AuroraApplicationConfig(
+val auroraDevelopment = AuroraResource(
         schemaVersion = "v1",
         affiliation = "aurora",
         cluster = "utv",
