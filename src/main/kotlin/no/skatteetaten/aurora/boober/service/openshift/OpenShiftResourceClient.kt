@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.service.openshift
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.internal.OpenShiftException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -94,6 +93,7 @@ open class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: Stri
         val createResponse: ResponseEntity<JsonNode> = try {
             restTemplate.exchange(requestEntity, JsonNode::class.java)
         } catch (e: HttpClientErrorException) {
+            //TODO:do we not want to include that body of the error here? It is not useful to know the result of what has failed?
             throw OpenShiftException("Error saving url=${requestEntity.url}, with message=${e.message}", e)
         }
         logger.debug("Body=${createResponse.body}")
