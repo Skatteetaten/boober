@@ -43,6 +43,7 @@ class SetupFacade(
     val logger: Logger = LoggerFactory.getLogger(SetupFacade::class.java)
 
     private val DEPLOY_PREFIX = "DEPLOY"
+    private val FAILED_PREFIX = "FAILED"
 
 
     fun executeSetup(affiliation: String, setupParams: SetupParams): List<ApplicationResult> {
@@ -58,9 +59,15 @@ class SetupFacade(
 
     }
 
+    //TODO: test failure
     fun setupApplication(cmd: ApplicationCommand, deploy: Boolean): ApplicationResult {
+
         val responses = cmd.commands.map {
             openShiftClient.performOpenShiftCommand(it, cmd.auroraDc.namespace)
+        }
+
+        if (responses.any { !it.success }) {
+            return ApplicationResult(cmd.deployId, cmd.auroraDc, responses, success = false)
         }
 
         val deployCommand =
@@ -77,6 +84,7 @@ class SetupFacade(
 
         val responseWithDelete = responses + deleteObjects
 
+        //TODO: fix with extention method
         val finalResponses = deployCommand?.let {
             responseWithDelete + it
         } ?: responseWithDelete
@@ -141,12 +149,17 @@ class SetupFacade(
     }
 
 
+    //TODO: test failure
     fun markRelease(res: List<ApplicationResult>, repo: Git) {
-
 
         res.forEach {
 
             val result = filterSensitiveInformation(it)
+            val prefix = if (it.success) {
+                DEPLOY_PREFIX
+            } else {
+                FAILED_PREFIX
+            }
             gitService.markRelease(repo, "$DEPLOY_PREFIX/${it.tag}", mapper.writeValueAsString(result))
         }
 
@@ -154,7 +167,7 @@ class SetupFacade(
     }
 
     private fun filterSensitiveInformation(result: ApplicationResult): ApplicationResult {
-        val filteredResponses = result.openShiftResponses.filter { it.responseBody.get("kind").asText() != "Secret" }
+        val filteredResponses = result.openShiftResponses.filter { it.responseBody?.get("kind")?.asText() != "Secret" }
         return result.copy(openShiftResponses = filteredResponses)
 
     }
@@ -166,8 +179,8 @@ class SetupFacade(
             return null
         }
 
-        val imageStream = openShiftResponses.find { it.responseBody["kind"].asText().toLowerCase() == "imagestream" }
-        val deployment = openShiftResponses.find { it.responseBody["kind"].asText().toLowerCase() == "deploymentconfig" }
+        val imageStream = openShiftResponses.find { it.responseBody?.get("kind")?.asText()?.toLowerCase() == "imagestream" }
+        val deployment = openShiftResponses.find { it.responseBody?.get("kind")?.asText()?.toLowerCase() == "deploymentconfig" }
 
         val deployResource: JsonNode? =
                 if (type == development) {
