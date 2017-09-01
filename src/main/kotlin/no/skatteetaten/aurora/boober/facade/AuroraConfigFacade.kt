@@ -39,8 +39,8 @@ class AuroraConfigFacade(
         return createAuroraConfigFromFiles(allFilesInRepo, affiliation)
     }
 
-    fun saveAuroraConfig(affiliation: String, auroraConfig: AuroraConfig, validateVersions: Boolean): AuroraConfig {
-        return withAuroraConfig(affiliation, validateVersions, {
+    fun saveAuroraConfig(auroraConfig: AuroraConfig, validateVersions: Boolean): AuroraConfig {
+        return withAuroraConfig(auroraConfig.affiliation, validateVersions, {
             auroraConfig
         })
     }

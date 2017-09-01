@@ -5,6 +5,7 @@ import no.skatteetaten.aurora.boober.controller.internal.AuroraConfigPayload
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.internal.fromAuroraConfig
 import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
+import no.skatteetaten.aurora.boober.model.AuroraConfig
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -25,13 +26,13 @@ class AuroraConfigController(val auroraConfigFacade: AuroraConfigFacade) {
              @RequestBody payload: AuroraConfigPayload,
              @RequestHeader(value = "AuroraValidateVersions", required = false) validateVersions: Boolean = true): Response {
 
-        val auroraConfig = auroraConfigFacade.saveAuroraConfig(affiliation, payload.toAuroraConfig(affiliation), validateVersions)
-        return Response(items = listOf(auroraConfig).map(::fromAuroraConfig))
+        val auroraConfig = auroraConfigFacade.saveAuroraConfig(payload.toAuroraConfig(affiliation), validateVersions)
+        return createAuroraConfigResponse(auroraConfig)
     }
 
     @GetMapping("/auroraconfig")
     fun get(@PathVariable affiliation: String): Response {
-        return Response(items = listOf(auroraConfigFacade.findAuroraConfig(affiliation)).map(::fromAuroraConfig))
+        return createAuroraConfigResponse(auroraConfigFacade.findAuroraConfig(affiliation))
     }
 
 
@@ -48,7 +49,7 @@ class AuroraConfigController(val auroraConfigFacade: AuroraConfigFacade) {
         val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
 
         val auroraConfig = auroraConfigFacade.updateAuroraConfigFile(affiliation, fileName, fileContents, configFileVersion, validateVersions)
-        return Response(items = listOf(auroraConfig).map(::fromAuroraConfig))
+        return createAuroraConfigResponse(auroraConfig)
     }
 
     @PatchMapping(value = "/auroraconfigfile/**", consumes = arrayOf("application/json-patch+json"))
@@ -65,6 +66,10 @@ class AuroraConfigController(val auroraConfigFacade: AuroraConfigFacade) {
         val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
 
         val auroraConfig = auroraConfigFacade.patchAuroraConfigFile(affiliation, fileName, jsonPatchOp, configFileVersion, validateVersions)
+        return createAuroraConfigResponse(auroraConfig)
+    }
+
+    private fun createAuroraConfigResponse(auroraConfig: AuroraConfig): Response {
         return Response(items = listOf(auroraConfig).map(::fromAuroraConfig))
     }
 }
