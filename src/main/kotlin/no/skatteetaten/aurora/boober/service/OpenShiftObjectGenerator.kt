@@ -85,7 +85,7 @@ class OpenShiftObjectGenerator(
                 "mounts" to mounts,
                 "buildName" to buildName,
                 "routeName" to routeName,
-                "username" to userDetailsProvider.getAuthenticatedUser().username,
+                "username" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
                 "database" to database,
                 "dbPath" to "/u01/secrets/app",
                 "certPath" to "/u01/secrets/app/${auroraApplicationConfig.name}-cert"
