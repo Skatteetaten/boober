@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.utils.length
 import no.skatteetaten.aurora.boober.utils.notBlank
+import no.skatteetaten.aurora.boober.utils.oneOf
 
 class AuroraDeployMapperV1(val applicationFiles: List<AuroraConfigFile>, val deployCommand: DeployCommand, val dockerRegistry: String) {
 
@@ -22,6 +23,7 @@ class AuroraDeployMapperV1(val applicationFiles: List<AuroraConfigFile>, val dep
             AuroraConfigFieldHandler("resources/memory/min", defaultValue = "128Mi"),
             AuroraConfigFieldHandler("resources/memory/max", defaultValue = "256Mi"),
             AuroraConfigFieldHandler("replicas", defaultValue = "1"),
+            AuroraConfigFieldHandler("applicationPlatform", validator = { it.oneOf(listOf("web", "java")) }),
             AuroraConfigFieldHandler("groupId", validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
             AuroraConfigFieldHandler("artifactId", validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters") }),
             AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set") }),
