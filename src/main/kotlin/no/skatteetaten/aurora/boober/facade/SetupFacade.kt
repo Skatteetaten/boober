@@ -62,6 +62,10 @@ class SetupFacade(
     //TODO: test failure
     fun setupApplication(cmd: ApplicationCommand, deploy: Boolean): ApplicationResult {
 
+        //TODO: if we do not want to try another command after the first failed we have to do a manual
+        //loop here and append to a list, stop if we have a failure and return what we have so far and the failure.
+        //the question is what do we really want here. Is it not nice to know all failures in some situatjons?
+        //note that a deploy/build/import command is never run if this fails.
         val responses = cmd.commands.map {
             openShiftClient.performOpenShiftCommand(it, cmd.auroraDc.namespace)
         }
