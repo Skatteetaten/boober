@@ -39,12 +39,12 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
                 "${applicationId.environment}/${applicationId.application}.json")
     }
 
-    fun getFilesForApplication(deployCommand: DeployCommand): List<AuroraConfigFile> {
+    fun getFilesForApplication(applicationId: ApplicationId, overrideFiles: List<AuroraConfigFile> = listOf()): List<AuroraConfigFile> {
 
-        val requiredFiles = requiredFilesForApplication(deployCommand.applicationId)
+        val requiredFiles = requiredFilesForApplication(applicationId)
         val filesForApplication = requiredFiles.mapNotNull { fileName -> auroraConfigFiles.find { it.name == fileName } }
 
-        val overrides = requiredFiles.mapNotNull { fileName -> deployCommand.overrideFiles.find { it.name == fileName } }
+        val overrides = requiredFiles.mapNotNull { fileName -> overrideFiles.find { it.name == fileName } }
 
         val allFiles = filesForApplication + overrides
 

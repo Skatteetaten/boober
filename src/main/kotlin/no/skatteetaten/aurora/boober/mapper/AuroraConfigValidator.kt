@@ -37,7 +37,7 @@ class AuroraConfigValidator(val deployCommand: DeployCommand,
     }
 
 
-    fun getUnmappedPointers(): Map<String, List<String>> {
+    private fun getUnmappedPointers(): Map<String, List<String>> {
         val allPaths = fieldHandlers.map { it.path }
 
         val filePointers = applicationFiles.associateBy({ it.configName }, { it.contents.findAllPointers(3) })

@@ -54,7 +54,8 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient,
                 AuroraConfigFieldHandler("baseFile"),
                 AuroraConfigFieldHandler("envFile")
         )
-        val applicationFiles = auroraConfig.getFilesForApplication(deployCommand)
+        val applicationId = deployCommand.applicationId
+        val applicationFiles = auroraConfig.getFilesForApplication(applicationId, deployCommand.overrideFiles)
         val fields = AuroraConfigFields.create(baseHandlers, applicationFiles)
 
         val type = fields.extract("type", { TemplateType.valueOf(it.textValue()) })
@@ -64,7 +65,7 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient,
         if (schemaVersion != "v1") {
             throw IllegalArgumentException("Only v1 of schema is supported")
         }
-        val applicationMapper = AuroraApplicationMapperV1(applicationFiles, openShiftClient, deployCommand)
+        val applicationMapper = AuroraApplicationMapperV1(openShiftClient, applicationId)
         val deployMapper = AuroraDeployMapperV1(applicationFiles, deployCommand, dockerRegistry)
         val volumeMapper = AuroraVolumeMapperV1(applicationFiles, vaults)
         val routeMapper = AuroraRouteMapperV1(applicationFiles)
@@ -95,7 +96,7 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient,
 
         val localTemplate = if (type == localTemplate) localTemplateMapper.localTemplate(auroraConfigFields) else null
 
-        return applicationMapper.auroraApplicationConfig(auroraConfigFields, handlers, volume, route, build, deploy, template, localTemplate)
+        return applicationMapper.auroraApplicationConfig(auroraConfigFields, volume, route, build, deploy, template, localTemplate)
     }
 
 
