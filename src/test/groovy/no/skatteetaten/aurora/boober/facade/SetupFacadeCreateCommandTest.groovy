@@ -1,23 +1,18 @@
 package no.skatteetaten.aurora.boober.facade
 
 import static no.skatteetaten.aurora.boober.model.TemplateType.deploy
-import static no.skatteetaten.aurora.boober.model.TemplateType.development
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.DeployCommand
-import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.DockerService
@@ -29,12 +24,10 @@ import no.skatteetaten.aurora.boober.service.SecretVaultService
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.service.openshift.ServiceAccountTokenProvider
-import no.skatteetaten.aurora.boober.service.openshift.UserDetailsTokenProvider
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -125,7 +118,7 @@ class SetupFacadeCreateCommandTest extends Specification {
     then:
 
     result.size() == 1
-      result.get(0).auroraDc.type == deploy
+      result.get(0).getAuroraResource.type == deploy
       result.get(0).tagCommand == null
   }
 
@@ -155,7 +148,7 @@ class SetupFacadeCreateCommandTest extends Specification {
     then:
       result.size() == 1
       def cmd = result[0]
-      cmd.auroraDc.type == deploy
+      cmd.getAuroraResource.type == deploy
       cmd.tagCommand.from == "1.0.3-b1.1.0-wingnut-1.0.0"
       cmd.tagCommand.to == "ref"
       cmd.tagCommand.name == "ske_aurora_openshift/aos-simple"

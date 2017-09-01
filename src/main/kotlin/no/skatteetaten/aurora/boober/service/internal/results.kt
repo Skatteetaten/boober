@@ -10,9 +10,9 @@ import org.springframework.http.ResponseEntity
 data class Result<out V, out E>(val value: V? = null, val error: E? = null)
 
 
-data class ApplicationCommand @JvmOverloads constructor(
+data class AuroraApplicationCommand @JvmOverloads constructor(
         val deployId: String,
-        val auroraDc: AuroraResource,
+        val auroraResource: AuroraResource,
         val commands: List<OpenshiftCommand>,
         val tagCommand: TagCommand? = null)
 
@@ -23,12 +23,12 @@ data class TagCommand @JvmOverloads constructor(
         val fromRegistry: String,
         val toRegistry: String = fromRegistry)
 
-data class ApplicationResult @JvmOverloads constructor(
+data class AuroraApplicationResult @JvmOverloads constructor(
         val deployId: String,
-        val auroraDc: AuroraResource,
+        val auroraResource: AuroraResource,
         val openShiftResponses: List<OpenShiftResponse> = listOf(),
         val tagCommandResponse: ResponseEntity<JsonNode>? = null) {
-    val tag: String = "${auroraDc.namespace}.${auroraDc.name}/${deployId}"
+    val tag: String = "${auroraResource.namespace}.${auroraResource.name}/${deployId}"
 }
 
 fun <T : Any> List<Result<T?, Error?>>.onErrorThrow(block: (List<Error>) -> Exception): List<T> {
