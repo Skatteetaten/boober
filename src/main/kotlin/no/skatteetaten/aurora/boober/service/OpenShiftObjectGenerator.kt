@@ -135,7 +135,7 @@ class OpenShiftObjectGenerator(
                     "aac" to auroraApplicationConfig,
                     "mount" to it,
                     "deployId" to deployId,
-                    "username" to userDetailsProvider.getAuthenticatedUser().username
+                    "username" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-")
             )
             mergeVelocityTemplate("mount.json", mountParams)
         }?.let {
@@ -148,7 +148,7 @@ class OpenShiftObjectGenerator(
                     "aac" to auroraApplicationConfig,
                     "route" to it,
                     "deployId" to deployId,
-                    "username" to userDetailsProvider.getAuthenticatedUser().username)
+                    "username" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"))
             mergeVelocityTemplate("route.json", routeParams)
         }?.let {
             openShiftObjects.addAll(it)
