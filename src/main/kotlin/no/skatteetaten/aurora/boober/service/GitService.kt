@@ -151,7 +151,11 @@ class GitService(
 
     private fun commitAllChanges(git: Git, message: String): RevCommit {
 
-        val user = userDetails.getAuthenticatedUser().let { PersonIdent(it.fullName, "${it.username}@skatteetaten.no") }
+
+        val user = userDetails.getAuthenticatedUser().let {
+
+            PersonIdent(it.fullName ?: it.username, "${it.username}@skatteetaten.no")
+        }
         return git.commit()
                 .setAll(true)
                 .setAllowEmpty(false)
@@ -170,7 +174,7 @@ class GitService(
     }
 
     fun markRelease(git: Git, tag: String, tagBody: String) {
-        val user = userDetails.getAuthenticatedUser().let { PersonIdent(it.fullName, "${it.username}@skatteetaten.no") }
+        val user = userDetails.getAuthenticatedUser().let { PersonIdent(it.fullName ?: it.username, "${it.username}@skatteetaten.no") }
         git.tag().setTagger(user).setAnnotated(true).setName(tag).setMessage(tagBody).call()
     }
 
