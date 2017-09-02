@@ -1,7 +1,10 @@
 package no.skatteetaten.aurora.boober.service
 
+import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
+
+import java.nio.charset.Charset
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -12,13 +15,14 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.client.HttpClientErrorException
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.internal.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
+import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -40,7 +44,7 @@ class OpenShiftClientApplyTest extends Specification {
     private DetachedMockFactory factory = new DetachedMockFactory()
 
     @Bean
-    @OpenShiftResourceClientConfig.ClientType(API_USER)
+    @ClientType(API_USER)
     @Primary
     OpenShiftResourceClient resourceClient() {
 
@@ -48,7 +52,7 @@ class OpenShiftClientApplyTest extends Specification {
     }
 
     @Bean
-    @OpenShiftResourceClientConfig.ClientType(SERVICE_ACCOUNT)
+    @ClientType(SERVICE_ACCOUNT)
     OpenShiftResourceClient resourceClientSA() {
 
       factory.Mock(OpenShiftResourceClient)
@@ -59,7 +63,7 @@ class OpenShiftClientApplyTest extends Specification {
   OpenShiftClient openShiftClient
 
   @Autowired
-  @OpenShiftResourceClientConfig.ClientType(API_USER)
+  @ClientType(API_USER)
   OpenShiftResourceClient userClient
 
   @Autowired
@@ -147,8 +151,58 @@ class OpenShiftClientApplyTest extends Specification {
       type               | fields
       "service"          | ["/metadata/resourceVersion", "/spec/clusterIP"]
       "deploymentconfig" | ["/metadata/resourceVersion", "/spec/template/spec/containers/0/image"]
-      "buildconfig"      | ["/metadata/resourceVersion", "/spec/triggers/0/imageChange/lastTriggeredImageID", "/spec/triggers/1/imageChange/lastTriggeredImageID"]
+      "buildconfig"      |
+          ["/metadata/resourceVersion", "/spec/triggers/0/imageChange/lastTriggeredImageID", "/spec/triggers/1/imageChange/lastTriggeredImageID"]
       "configmap"        | ["/metadata/resourceVersion"]
+
+  }
+
+  def "Should record exception when command fails"() {
+    given:
+      JsonNode payload = mapper.convertValue([
+          kind    : "service",
+          metadata: [
+              "name": "bar"
+          ]
+      ], JsonNode.class)
+
+      def cmd = new OpenshiftCommand(OperationType.CREATE, payload)
+      userClient.post("service", "bar", "foo", payload) >> {
+        throw new OpenShiftException("Does not exist",
+            new HttpClientErrorException(HttpStatus.SERVICE_UNAVAILABLE, "not available",
+                '''{ "failed" : "true"}'''.bytes,
+                Charset.defaultCharset()))
+      }
+    when:
+
+      def result = openShiftClient.performOpenShiftCommand(cmd, "foo")
+    then:
+      !result.success
+      result.responseBody.get("failed").asText() == "true"
+
+  }
+
+  def "Should record exception when command fails with non json body"() {
+    given:
+      JsonNode payload = mapper.convertValue([
+          kind    : "service",
+          metadata: [
+              "name": "bar"
+          ]
+      ], JsonNode.class)
+
+      def cmd = new OpenshiftCommand(OperationType.CREATE, payload)
+      userClient.post("service", "bar", "foo", payload) >> {
+        throw new OpenShiftException("Does not exist",
+            new HttpClientErrorException(HttpStatus.SERVICE_UNAVAILABLE, "not available", "failed".bytes,
+                Charset.defaultCharset()))
+      }
+    when:
+
+      def result = openShiftClient.performOpenShiftCommand(cmd, "foo")
+    then:
+      !result.success
+      result.responseBody.get("error").asText() == "failed"
 
   }
 

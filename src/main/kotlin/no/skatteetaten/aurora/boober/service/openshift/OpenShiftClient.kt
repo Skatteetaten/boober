@@ -3,6 +3,8 @@ package no.skatteetaten.aurora.boober.service.openshift
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.model.AuroraPermissions
 import no.skatteetaten.aurora.boober.service.internal.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
@@ -16,6 +18,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Service
+import org.springframework.web.client.HttpClientErrorException
 
 enum class OperationType { CREATE, UPDATE, DELETE, NOOP }
 
@@ -30,7 +33,7 @@ data class OpenShiftResponse @JvmOverloads constructor(
         val command: OpenshiftCommand,
         val responseBody: JsonNode? = null,
         val success: Boolean = true,
-        val exception: Exception? = null) {
+        val exception: String? = null) {
     fun labelChanged(name: String): Boolean {
         val pointer = "/metadata/labels/$name"
         val response = responseBody?.at(pointer)?.asText()
@@ -49,7 +52,6 @@ class OpenShiftClient(
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftClient::class.java)
 
-    //TODO: test that it fails
     fun performOpenShiftCommand(cmd: OpenshiftCommand, namespace: String): OpenShiftResponse {
 
         val kind = cmd.payload.openshiftKind
@@ -70,7 +72,17 @@ class OpenShiftClient(
             }
             OpenShiftResponse(cmd, res)
         } catch (e: OpenShiftException) {
-            OpenShiftResponse(cmd, null, success = false, exception = e)
+            val response = if (e.cause is HttpClientErrorException) {
+                val body = e.cause.responseBodyAsString
+                try {
+                    mapper.readValue<JsonNode>(body)
+                } catch (je: Exception) {
+                    mapper.convertValue<JsonNode>(mapOf("error" to body))
+                }
+            } else {
+                null
+            }
+            OpenShiftResponse(cmd, response, success = false, exception = e.message)
         }
     }
 

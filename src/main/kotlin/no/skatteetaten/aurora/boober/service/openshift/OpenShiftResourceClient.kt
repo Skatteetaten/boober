@@ -93,8 +93,7 @@ open class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: Stri
         val createResponse: ResponseEntity<JsonNode> = try {
             restTemplate.exchange(requestEntity, JsonNode::class.java)
         } catch (e: HttpClientErrorException) {
-            //TODO:do we not want to include that body of the error here? It is not useful to know the result of what has failed?
-            throw OpenShiftException("Error saving url=${requestEntity.url}, with message=${e.message}", e)
+            throw OpenShiftException("Request failed url=${requestEntity.url}, method=${requestEntity.method}, message=${e.message}, code=${e.statusCode.value()}", e)
         }
         logger.debug("Body=${createResponse.body}")
         return createResponse

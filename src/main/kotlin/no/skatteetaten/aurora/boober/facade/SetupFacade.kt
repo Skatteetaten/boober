@@ -59,7 +59,6 @@ class SetupFacade(
 
     }
 
-    //TODO: test failure
     fun setupApplication(cmd: ApplicationCommand, deploy: Boolean): ApplicationResult {
 
         //TODO: if we do not want to try another command after the first failed we have to do a manual
@@ -164,7 +163,7 @@ class SetupFacade(
             } else {
                 FAILED_PREFIX
             }
-            gitService.markRelease(repo, "$DEPLOY_PREFIX/${it.tag}", mapper.writeValueAsString(result))
+            gitService.markRelease(repo, "$prefix/${it.tag}", mapper.writeValueAsString(result))
         }
 
         gitService.push(repo)
