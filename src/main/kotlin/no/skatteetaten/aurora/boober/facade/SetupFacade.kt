@@ -24,7 +24,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.*
 
-class AuroraConfigEtAl(
+class DeployBundle(
         val repo: Git,
         val auroraConfig: AuroraConfig,
         val vaults: Map<String, AuroraSecretVault>,
@@ -53,7 +53,7 @@ class SetupFacade(
 
     fun executeSetup(affiliation: String, setupParams: SetupParams): List<AuroraApplicationResult> {
 
-        return withAuroraConfigEtAl(affiliation, setupParams.overrides, {
+        return withDeployBundle(affiliation, setupParams.overrides, {
             val applications = createApplicationCommands(it, setupParams.applicationIds)
             val res = applications.map { setupApplication(it, setupParams.deploy) }
             markRelease(res, it.repo)
@@ -63,33 +63,33 @@ class SetupFacade(
 
     fun dryRun(affiliation: String, setupParams: SetupParams): List<AuroraApplicationCommand> {
 
-        return withAuroraConfigEtAl(affiliation, setupParams.overrides, {
+        return withDeployBundle(affiliation, setupParams.overrides, {
             createApplicationCommands(it, setupParams.applicationIds)
         })
     }
 
-    fun <T> withAuroraConfigEtAl(affiliation: String, overrideFiles: List<AuroraConfigFile> = listOf(), function: (AuroraConfigEtAl) -> T): T {
+    fun <T> withDeployBundle(affiliation: String, overrideFiles: List<AuroraConfigFile> = listOf(), function: (DeployBundle) -> T): T {
 
-        val auroraConfigEtAl = createAuroraConfigEtAl(affiliation, overrideFiles)
-        val res = function(auroraConfigEtAl)
-        gitService.closeRepository(auroraConfigEtAl.repo)
+        val deployBundle = createDeployBundle(affiliation, overrideFiles)
+        val res = function(deployBundle)
+        gitService.closeRepository(deployBundle.repo)
         return res
     }
 
-    private fun createAuroraConfigEtAl(affiliation: String, overrideFiles: List<AuroraConfigFile> = listOf()): AuroraConfigEtAl {
+    private fun createDeployBundle(affiliation: String, overrideFiles: List<AuroraConfigFile> = listOf()): DeployBundle {
         val repo = gitService.checkoutRepoForAffiliation(affiliation)
         val auroraConfig = auroraConfigFacade.createAuroraConfig(repo, affiliation)
         val vaults = secretVaultFacade.listVaults(affiliation, repo).associateBy { it.name }
 
-        return AuroraConfigEtAl(auroraConfig = auroraConfig, vaults = vaults, repo = repo, overrideFiles = overrideFiles)
+        return DeployBundle(auroraConfig = auroraConfig, vaults = vaults, repo = repo, overrideFiles = overrideFiles)
     }
 
-    private fun createApplicationCommands(auroraConfigEtAl: AuroraConfigEtAl, applicationIds: List<ApplicationId>): List<AuroraApplicationCommand> {
+    private fun createApplicationCommands(deployBundle: DeployBundle, applicationIds: List<ApplicationId>): List<AuroraApplicationCommand> {
         if (applicationIds.isEmpty()) {
             throw IllegalArgumentException("Specify applicationId")
         }
         val deployId = UUID.randomUUID().toString()
-        val auroraDcs = auroraConfigService.createAuroraDcs(auroraConfigEtAl, applicationIds)
+        val auroraDcs = auroraConfigService.createAuroraDcs(deployBundle, applicationIds)
 
         val res = LinkedList(auroraDcs
                 .filter { it.cluster == cluster }
