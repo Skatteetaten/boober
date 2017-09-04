@@ -21,7 +21,7 @@ import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration,
         EncryptionService,
-        AuroraConfigService,
+//        AuroraConfigService,
         OpenShiftTemplateProcessor,
         GitService,
         OpenShiftObjectGenerator,
@@ -60,8 +60,8 @@ class OpenShiftObjectGeneratorTest extends Specification {
     @Autowired
     UserDetailsProvider userDetailsProvider
 
-    @Autowired
-    AuroraConfigService auroraDeploymentConfigService
+//    @Autowired
+//    AuroraConfigService auroraDeploymentConfigService
 
     @Autowired
     OpenShiftClient openShiftClient

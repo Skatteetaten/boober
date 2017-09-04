@@ -13,7 +13,7 @@ import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
-import no.skatteetaten.aurora.boober.service.AuroraConfigService
+//import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
@@ -55,10 +55,12 @@ class DeployBundleServiceTest extends Specification {
   static class Config {
     private DetachedMockFactory factory = new DetachedMockFactory()
 
+/*
     @Bean
     AuroraConfigService auroraDeploymentConfigService() {
       factory.Mock(AuroraConfigService)
     }
+*/
 
     @Bean
     ServiceAccountTokenProvider tokenProvider() {

@@ -17,7 +17,6 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
-import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.DockerService
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
@@ -38,7 +37,6 @@ import spock.mock.DetachedMockFactory
 @SpringBootTest(classes = [
         no.skatteetaten.aurora.boober.Configuration,
         SetupFacade,
-        AuroraConfigService,
         OpenShiftObjectGenerator,
         OpenShiftTemplateProcessor,
         GitService,

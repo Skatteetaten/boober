@@ -19,7 +19,6 @@ import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
-    AuroraConfigService,
     ObjectMapper,
     Config
 ])
@@ -56,8 +55,8 @@ class AuroraConfigServiceTest extends Specification {
     openShiftClient.isValidUser(_) >> true
     openShiftClient.isValidGroup(_) >> true
   }
-  @Autowired
-  AuroraConfigService service
+//  @Autowired
+//  AuroraConfigService service
 
   def "Should get error if creating mapper for auroraConfig with missing schemaVersion "() {
     given:

@@ -17,7 +17,7 @@ import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
-    AuroraConfigService,
+//    AuroraConfigService,
     Config
 ])
 class AuroraDeploymentConfigDeployServiceUserValidationTest extends Specification {
@@ -53,8 +53,10 @@ class AuroraDeploymentConfigDeployServiceUserValidationTest extends Specificatio
   @Autowired
   OpenShiftClient openShiftClient
 
+/*
   @Autowired
   AuroraConfigService auroraDeploymentConfigService
+*/
 
   def setup() {
     userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
