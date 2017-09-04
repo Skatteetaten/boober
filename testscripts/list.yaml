@@ -1,0 +1,113 @@
+{
+    "kind": "List",
+    "apiVersion": "v1",
+    "metadata": {},
+    "items": [
+        {
+            "apiVersion": "v1",
+            "kind": "Project",
+            "metadata": {
+                "annotations": {
+                    "openshift.io/description": "foobar",
+                    "openshift.io/display-name": "foobar",
+                    "openshift.io/requester": "m89870"
+                },
+                "creationTimestamp": null,
+                "labels": {
+                    "affiliation": "paas"
+                },
+                "name": "paas-foo"
+            },
+            "spec": {},
+            "status": {}
+        },
+        {
+            "apiVersion": "v1",
+            "groupNames": [
+                "system:serviceaccounts:paas-foo"
+            ],
+            "kind": "RoleBinding",
+            "metadata": {
+                "creationTimestamp": null,
+                "name": "system:image-pullers",
+                "namespace": "paas-foo"
+            },
+            "roleRef": {
+                "name": "system:image-puller"
+            },
+            "subjects": [
+                {
+                    "kind": "SystemGroup",
+                    "name": "system:serviceaccounts:paas-foo"
+                }
+            ],
+            "userNames": null
+        },
+        {
+            "apiVersion": "v1",
+            "groupNames": null,
+            "kind": "RoleBinding",
+            "metadata": {
+                "creationTimestamp": null,
+                "name": "system:image-builders",
+                "namespace": "paas-foo"
+            },
+            "roleRef": {
+                "name": "system:image-builder"
+            },
+            "subjects": [
+                {
+                    "kind": "ServiceAccount",
+                    "name": "builder"
+                }
+            ],
+            "userNames": [
+                "system:serviceaccount:paas-foo:builder"
+            ]
+        },
+        {
+            "apiVersion": "v1",
+            "groupNames": null,
+            "kind": "RoleBinding",
+            "metadata": {
+                "creationTimestamp": null,
+                "name": "system:deployers",
+                "namespace": "paas-foo"
+            },
+            "roleRef": {
+                "name": "system:deployer"
+            },
+            "subjects": [
+                {
+                    "kind": "ServiceAccount",
+                    "name": "deployer"
+                }
+            ],
+            "userNames": [
+                "system:serviceaccount:paas-foo:deployer"
+            ]
+        },
+        {
+            "apiVersion": "v1",
+            "groupNames": null,
+            "kind": "RoleBinding",
+            "metadata": {
+                "creationTimestamp": null,
+                "name": "admin",
+                "namespace": "paas-foo"
+            },
+            "roleRef": {
+                "name": "admin"
+            },
+            "subjects": [
+                {
+                    "kind": "User",
+                    "name": "m89870"
+                }
+            ],
+            "userNames": [
+                "m89870"
+            ]
+        }
+    ]
+}

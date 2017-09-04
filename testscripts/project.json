@@ -1,0 +1,10 @@
+{
+  "kind": "ProjectRequest",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "paas-labeltest",
+    "labels": {
+      "foo": "bar"
+    }
+  }
+}

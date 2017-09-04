@@ -1,0 +1,11 @@
+{
+  "affiliation": "aurora",
+  "setupParams": {
+    "apps": [
+      "dbh"
+    ],
+    "envs": [
+      "qa"
+    ]
+  }
+}
