@@ -7,6 +7,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.model.TemplateType.build
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.DockerService
@@ -174,27 +175,28 @@ class SetupFacade(
             return null
         }
 
+        if (type == build) {
+            return null
+        }
+
+        if (type == development) {
+            return openShiftObjectGenerator.generateBuildRequest(name)
+        }
+
         val imageStream = openShiftResponses.find { it.responseBody["kind"].asText().toLowerCase() == "imagestream" }
         val deployment = openShiftResponses.find { it.responseBody["kind"].asText().toLowerCase() == "deploymentconfig" }
 
-        //TODO: Rewrite, not very clear algorithm
-        val deployResource: JsonNode? =
-                if (type == development) {
-                    openShiftObjectGenerator.generateBuildRequest(name)
-                } else if (imageStream == null) {
-                    if (deployment != null) {
-                        openShiftObjectGenerator.generateDeploymentRequest(name)
-                    } else {
-                        null
-                    }
-                } else if (!imageStream.labelChanged("releasedVersion") && imageStream.command.operationType == OperationType.UPDATE) {
-                    openShiftObjectGenerator.generateDeploymentRequest(name)
-                } else {
+        imageStream?.takeIf { !it.labelChanged("releasedVersion") && it.command.operationType == OperationType.UPDATE }?.let {
+            return openShiftObjectGenerator.generateDeploymentRequest(name)
+        }
 
-                    openShiftObjectGenerator.generateImageStreamImport(name, docker)
-                }
+        if (imageStream == null) {
+            return deployment?.let {
+                openShiftObjectGenerator.generateDeploymentRequest(name)
+            }
+        }
+        return openShiftObjectGenerator.generateImageStreamImport(name, docker)
 
-        return deployResource
     }
 
 

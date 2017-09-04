@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.facade
 
+import static no.skatteetaten.aurora.boober.model.TemplateType.build
 import static no.skatteetaten.aurora.boober.model.TemplateType.deploy
 import static no.skatteetaten.aurora.boober.model.TemplateType.development
 import static no.skatteetaten.aurora.boober.service.openshift.OperationType.UPDATE
@@ -125,6 +126,19 @@ class SetupFacadeGenerateDeployResourceTest extends Specification {
         convertValue(["kind": kind, "metadata": ["labels": ["releasedVersion": currVersion]]], JsonNode.class)
 
     return new OpenShiftResponse(new OpenshiftCommand(operationType, payload, previous, null), response)
+  }
+
+  def "Should  not create any resource on build flow"() {
+    given:
+      def templateType = build
+      def name = "boober"
+      def imagestream = createOpenShiftResponse("imagestream", UPDATE, 1, 1)
+
+    when:
+      def result = setupFacade.generateRedeployResource([imagestream], templateType, name, docker, true)
+
+    then:
+      result == null
   }
 
   def "Should  create redeploy resource when development flow"() {
