@@ -23,5 +23,5 @@ http --timeout 300 PUT :8080/affiliation/paas/auroraconfig Authorization:"bearer
 #echo "The vaults are"
 #http --timeout 300 GET :8080/affiliation/paas/vault Authorization:"bearer $TOKEN"
 
-#echo "Dry run deploy of  application to paas-boober-dev and paas-boober-test"
-#http --timeout 300 PUT :8080/affiliation/paas/deploy/dryrun Authorization:"bearer $TOKEN"  < ${FILES_DIR}/deploy.json
+echo "Dry run deploy of  application to paas-boober-dev and paas-boober-test"
+http --timeout 300 PUT :8080/affiliation/paas/deploy/dryrun Authorization:"bearer $TOKEN"  < ${FILES_DIR}/deploy.json
