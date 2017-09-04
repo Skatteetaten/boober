@@ -44,6 +44,7 @@ class SetupFacade(
     val logger: Logger = LoggerFactory.getLogger(SetupFacade::class.java)
 
     private val DEPLOY_PREFIX = "DEPLOY"
+    private val FAILED_PREFIX = "FAILED"
 
 
     fun executeSetup(affiliation: String, setupParams: SetupParams): List<ApplicationResult> {
@@ -60,8 +61,17 @@ class SetupFacade(
     }
 
     fun setupApplication(cmd: ApplicationCommand, deploy: Boolean): ApplicationResult {
+
+        //TODO: if we do not want to try another command after the first failed we have to do a manual
+        //loop here and append to a list, stop if we have a failure and return what we have so far and the failure.
+        //the question is what do we really want here. Is it not nice to know all failures in some situatjons?
+        //note that a deploy/build/import command is never run if this fails.
         val responses = cmd.commands.map {
             openShiftClient.performOpenShiftCommand(it, cmd.auroraDc.namespace)
+        }
+
+        if (responses.any { !it.success }) {
+            return ApplicationResult(cmd.deployId, cmd.auroraDc, responses, success = false)
         }
 
         if (cmd.auroraDc.deploy == null) {
@@ -82,6 +92,7 @@ class SetupFacade(
 
         val responseWithDelete = responses + deleteObjects
 
+        //TODO: fix with extention method
         val finalResponses = deployCommand?.let {
             responseWithDelete + it
         } ?: responseWithDelete
@@ -145,21 +156,26 @@ class SetupFacade(
     }
 
 
+    //TODO: test failure
     fun markRelease(res: List<ApplicationResult>, repo: Git) {
-
 
         res.forEach {
 
             //TODO: MARK FAILURE
             val result = filterSensitiveInformation(it)
-            gitService.markRelease(repo, "$DEPLOY_PREFIX/${it.tag}", mapper.writeValueAsString(result))
+            val prefix = if (it.success) {
+                DEPLOY_PREFIX
+            } else {
+                FAILED_PREFIX
+            }
+            gitService.markRelease(repo, "$prefix/${it.tag}", mapper.writeValueAsString(result))
         }
 
         gitService.push(repo)
     }
 
     private fun filterSensitiveInformation(result: ApplicationResult): ApplicationResult {
-        val filteredResponses = result.openShiftResponses.filter { it.responseBody.get("kind").asText() != "Secret" }
+        val filteredResponses = result.openShiftResponses.filter { it.responseBody?.get("kind")?.asText() != "Secret" }
         return result.copy(openShiftResponses = filteredResponses)
 
     }
