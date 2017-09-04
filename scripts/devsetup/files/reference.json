@@ -37,7 +37,8 @@
       "flags": {
         "rolling": true
       },
-      "npmName": "openshift-referanse-react",
+      "groupId": "ske.aurora.openshift.referanse",
+      "artifactId": "openshift-referanse-react",
       "version": "0",
       "config": {
         "foo2": "baz"
