@@ -1,0 +1,304 @@
+{
+  "kind": "DeploymentConfig",
+  "apiVersion": "v1",
+  "metadata": {
+  "annotations": {
+    #foreach ($annotation  in $annotations.entrySet())
+      #if($velocityCount != 1)
+        ,
+      #end
+      "${annotation.key}": "${annotation.value}"
+    #end
+  },
+    "labels": {
+      #foreach ($label  in $labels.entrySet())
+          #if($velocityCount != 1)
+            ,
+          #end
+        "${label.key}": "${label.value}"
+      #end
+  },
+"name": "${name}"
+  },
+  "spec": {
+  #if(${deploy.flags.rolling})
+      "strategy": {
+        "type": "Rolling",
+        "rollingParams": {
+          "intervalSeconds": 1,
+          "maxSurge": "25%",
+          "maxUnavailable": 0,
+          "timeoutSeconds": 120,
+          "updatePeriodSeconds": 1
+        }
+      },
+    #else
+      "strategy": {
+        "type": "Recreate",
+        "resources": {}
+      },
+    #end
+    "triggers": [
+      {
+        "type": "ImageChange",
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "${name}-node",
+            "${name}-nginx"
+          ],
+          "from": {
+"name": "${name}:${imageStreamTag}",
+            "kind": "ImageStreamTag"
+          }
+        }
+      }
+    ],
+"replicas": ${deploy.replicas} ,
+    "selector": {
+"name": "${name}"
+    },
+    "template": {
+      "metadata": {
+        "labels": {
+      #foreach ($label  in $labels.entrySet())
+          #if($velocityCount != 1)
+          ,
+          #end
+      "${label.key}": "${label.value}"
+      #end
+        }
+      },
+      "spec": {
+        "volumes": [
+          #if (${mounts})
+            #foreach ($mount in $mounts)
+              {
+                "name": "${mount.mountName}",
+                #if(${mount.type} == "ConfigMap")
+                  "configMap": {
+                    "name": "${mount.volumeName}"
+                  }
+                #elseif(${mount.type} == "Secret")
+                  "secret": {
+                    "secretName": "${mount.volumeName}"
+                  }
+                #end
+              },
+            #end
+          #end
+          {
+            "name": "application-log-volume",
+            "emptyDir": {}
+          }
+        ],
+        "containers": [
+          {
+          "image": "${name}",
+          "args": [
+              "/u01/bin/run_node"
+            ],
+            "capabilities": {
+
+            },
+            "env": [
+              {
+                "name": "SPLUNK_INDEX",
+                "value": "${SPLUNK_INDEX}"
+              },
+              {
+                "name": "POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              },
+              {
+                "name": "POD_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "HTTP_PORT",
+                "value": "9090"
+              },
+              {
+                "name": "MANAGEMENT_HTTP_PORT",
+                "value": "8081"
+              }
+            ],
+            "imagePullPolicy": "IfNotPresent",
+            "livenessProbe": {
+              "exec": {
+                "command": [
+                  "/u01/application/bin/liveness.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 1
+            },
+            "name": "${name}-node",
+            "ports": [
+              {
+                "containerPort": 9090,
+                "name": "http",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8081,
+                "name": "management",
+                "protocol": "TCP"
+              }
+            ],
+            "readinessProbe": {
+              "exec": {
+                "command": [
+                  "/u01/application/bin/readiness.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 1
+            },
+"resources": {
+"limits": {
+"cpu": "${deploy.resources.cpu.max}",
+"memory": "${deploy.resources.memory.max}"
+},
+"requests": {
+"cpu": "${deploy.resources.cpu.min}",
+"memory": "${deploy.resources.memory.min}"
+}
+},
+            "securityContext": {
+              "capabilities": {
+
+              },
+              "privileged": false
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "volumeMounts": [
+              #if (${mounts})
+                #foreach ($mount in $mounts)
+                  {
+                    "name": "${mount.mountName}",
+                    "mountPath": "${mount.path}"
+                  },
+                #end
+              #end
+              {
+                "name": "application-log-volume",
+                "mountPath": "/u01/logs"
+              }
+            ]
+          },
+          {
+            "image": "${name}",
+            "args": [
+              "/u01/bin/run_nginx"
+            ],
+            "capabilities": {
+
+            },
+            "env": [
+              {
+                "name": "SPLUNK_INDEX",
+                "value": "${SPLUNK_INDEX}"
+              },
+              {
+                "name": "POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              },
+              {
+                "name": "POD_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "HTTP_PORT",
+                "value": "8080"
+              }
+            ],
+            "imagePullPolicy": "IfNotPresent",
+            "livenessProbe": {
+              "exec": {
+                "command": [
+                  "/u01/application/bin/liveness.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 1
+            },
+            "name": "${name}-nginx",
+            "ports": [
+              {
+                "containerPort": 8080,
+                "name": "http",
+                "protocol": "TCP"
+              }
+            ],
+            "readinessProbe": {
+              "exec": {
+                "command": [
+                  "/u01/application/bin/readiness.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 1
+            },
+"resources": {
+"limits": {
+"cpu": "${deploy.resources.cpu.max}",
+"memory": "${deploy.resources.memory.max}"
+},
+"requests": {
+"cpu": "${deploy.resources.cpu.min}",
+"memory": "${deploy.resources.memory.min}"
+}
+},
+            "securityContext": {
+              "capabilities": {
+
+              },
+              "privileged": false
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "volumeMounts": [
+              #if (${mounts})
+                #foreach ($mount in $mounts)
+                  {
+                    "name": "${mount.mountName}",
+                    "mountPath": "${mount.path}"
+                  },
+                #end
+              #end
+              {
+                "name": "application-log-volume",
+                "mountPath": "/u01/logs"
+              }
+            ]
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "restartPolicy": "Always"
+      }
+    }
+  },
+  "status": {
+
+  }
+}

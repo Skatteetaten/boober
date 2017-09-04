@@ -37,8 +37,8 @@
       "flags": {
         "rolling": true
       },
-      "groupId": "ske.aurora.openshift.referanse",
-      "artifactId": "openshift-referanse-react",
+      "groupId": "aurora",
+      "artifactId": "webleveransetest",
       "version": "0",
       "config": {
         "foo2": "baz"

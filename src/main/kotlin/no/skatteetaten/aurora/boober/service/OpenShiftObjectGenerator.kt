@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.ApplicationPlatform.java
+import no.skatteetaten.aurora.boober.model.ApplicationPlatform.web
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
@@ -16,6 +18,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.StringWriter
+import java.io.File
 import java.util.*
 
 @Service
@@ -41,7 +44,6 @@ class OpenShiftObjectGenerator(
     }
 
     fun generateObjects(auroraApplication: AuroraApplication, deployId: String): List<JsonNode> {
-
 
         val mounts: List<Mount>? = findMounts(auroraApplication)
 
@@ -99,6 +101,11 @@ class OpenShiftObjectGenerator(
                                  mounts: List<Mount>?): JsonNode? {
 
         return auroraApplication.deploy?.let {
+            val template = when (auroraApplication.deploy.applicationPlatform) {
+                java -> "deployment-config.json"
+                web -> "deployment-config-web.json"
+            }
+
             val annotations = mapOf(
                     "boober.skatteetaten.no/applicationFile" to it.applicationFile,
                     "console.skatteetaten.no/alarm" to it.flags.alarm.toString()
@@ -150,7 +157,10 @@ class OpenShiftObjectGenerator(
                     "imageStreamTag" to tag
             )
 
-            mergeVelocityTemplate("deployment-config.json", params)
+            val mergeVelocityTemplate: JsonNode = mergeVelocityTemplate(template, params)
+            val text = mergeVelocityTemplate.toString()
+            File("./webdc.json").writeText(text)
+            mergeVelocityTemplate
         }
     }
 

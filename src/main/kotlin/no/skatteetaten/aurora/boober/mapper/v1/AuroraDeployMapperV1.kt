@@ -23,7 +23,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
             AuroraConfigFieldHandler("resources/memory/min", defaultValue = "128Mi"),
             AuroraConfigFieldHandler("resources/memory/max", defaultValue = "256Mi"),
             AuroraConfigFieldHandler("replicas", defaultValue = "1"),
-            AuroraConfigFieldHandler("applicationPlatform", validator = { it.oneOf(listOf("web", "java")) }),
+            AuroraConfigFieldHandler("applicationPlatform", validator = { it.oneOf(ApplicationPlatform.values().map { it.toString() }) }),
             AuroraConfigFieldHandler("groupId", validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
             AuroraConfigFieldHandler("artifactId", validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters") }),
             AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set") }),
@@ -96,6 +96,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
                         )
                 ),
                 replicas = auroraConfigFields.extract("replicas", JsonNode::asInt),
+                applicationPlatform = ApplicationPlatform.valueOf(auroraConfigFields.extract("applicationPlatform")),
                 groupId = groupId,
                 artifactId = artifactId,
                 version = version,

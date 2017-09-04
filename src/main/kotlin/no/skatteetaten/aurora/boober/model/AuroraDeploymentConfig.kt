@@ -9,6 +9,10 @@ enum class TemplateType {
     deploy, development, localTemplate, template, build
 }
 
+enum class ApplicationPlatform {
+    java, web
+}
+
 
 data class AuroraApplication(
         val schemaVersion: String,
@@ -68,6 +72,7 @@ data class AuroraDeploy(
         val flags: AuroraDeploymentConfigFlags,
         val resources: AuroraDeploymentConfigResources,
         val replicas: Int?,
+        val applicationPlatform: ApplicationPlatform = ApplicationPlatform.java,
         val groupId: String,
         val artifactId: String,
         val version: String,
