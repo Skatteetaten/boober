@@ -10,8 +10,5 @@
     "mainClass": "no.skatteetaten.aurora.boober.ApplicationKt",
     "jvmOpts": "-Dspring.profiles.active=openshift",
     "applicationArgs": "--logging.config=${LOGBACK_FILE}"
-  },
-  "openshift": {
-    "readinessUrl": "/health"
   }
 }

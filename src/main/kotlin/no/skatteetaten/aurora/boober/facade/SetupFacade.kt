@@ -4,6 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.internal.SetupParams
 import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraSecretVault
+import no.skatteetaten.aurora.boober.model.DeployCommand
+import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.model.TemplateType.build
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.DockerService
@@ -74,6 +79,39 @@ class SetupFacade(
         return res
     }
 
+    fun setupApplication(cmd: ApplicationCommand, deploy: Boolean): ApplicationResult {
+        val responses = cmd.commands.map {
+            openShiftClient.performOpenShiftCommand(it, cmd.auroraDc.namespace)
+        }
+
+        if (cmd.auroraDc.deploy == null) {
+            throw NullPointerException("Deploy should not be null")
+        }
+        val docker = "$dockerRegistry/${cmd.auroraDc.deploy.dockerImagePath}:${cmd.auroraDc.deploy.dockerTag}"
+        val deployCommand =
+                generateRedeployResource(responses, cmd.auroraDc.type, cmd.auroraDc.name, docker, deploy)
+                        ?.let {
+                            openShiftClient.prepare(cmd.auroraDc.namespace, it)
+                        }?.let {
+                    openShiftClient.performOpenShiftCommand(it, cmd.auroraDc.namespace)
+                }
+
+        val deleteObjects = openShiftClient.createOpenshiftDeleteCommands(cmd.auroraDc.name, cmd.auroraDc.namespace, cmd.deployId)
+                .map { openShiftClient.performOpenShiftCommand(it, cmd.auroraDc.namespace) }
+
+
+        val responseWithDelete = responses + deleteObjects
+
+        val finalResponses = deployCommand?.let {
+            responseWithDelete + it
+        } ?: responseWithDelete
+
+        val result = cmd.tagCommand?.let { dockerService.tag(it) }
+
+        return ApplicationResult(cmd.deployId, cmd.auroraDc, finalResponses, result)
+
+    }
+
     private fun createDeployBundle(affiliation: String, overrideFiles: List<AuroraConfigFile> = listOf()): DeployBundle {
         val repo = gitService.checkoutRepoForAffiliation(affiliation)
         val auroraConfig = auroraConfigFacade.createAuroraConfig(repo, affiliation)
@@ -89,7 +127,7 @@ class SetupFacade(
         val deployId = UUID.randomUUID().toString()
         val auroraDcs = auroraConfigService.createAuroraApplications(deployBundle, applicationIds)
 
-        val res = LinkedList(auroraDcs
+        return LinkedList(auroraDcs
                 .filter { it.cluster == cluster }
                 .map { adc ->
                     //her kan vi ikke gjøre det på denne måten.
@@ -103,16 +141,15 @@ class SetupFacade(
                         openShiftObjects.mapNotNull { OpenshiftCommand(OperationType.CREATE, payload = it) }
                     }
 
-                    val tagCmd = adc.deploy?.let {
-                        if (it.releaseTo != null) {
-                            val dockerGroup = it.groupId.replace(".", "_")
-                            TagCommand("${dockerGroup}/${it.artifactId}", it.version, it.releaseTo, dockerRegistry)
-                        } else null
+
+                    //Her kan vi lage deploy/build/importImage kommando
+                    val tagCmd = adc.deploy?.takeIf { it.releaseTo != null }?.let {
+                        val dockerGroup = it.groupId.replace(".", "_")
+                        TagCommand("${dockerGroup}/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
                     }
 
                     AuroraApplicationCommand(deployId, adc, openShiftCommand, tagCmd)
                 })
-        return res
     }
 
     private fun setupApplication(cmd: AuroraApplicationCommand, deploy: Boolean): AuroraApplicationResult {
@@ -146,8 +183,10 @@ class SetupFacade(
 
     private fun markRelease(res: List<AuroraApplicationResult>, repo: Git) {
 
+
         res.forEach {
 
+            //TODO: MARK FAILURE
             val result = filterSensitiveInformation(it)
             gitService.markRelease(repo, "$DEPLOY_PREFIX/${it.tag}", mapper.writeValueAsString(result))
         }
@@ -162,32 +201,40 @@ class SetupFacade(
     }
 
 
-    fun generateRedeployResource(openShiftResponses: List<OpenShiftResponse>, type: TemplateType, name: String, deploy: Boolean): JsonNode? {
+    fun generateRedeployResource(openShiftResponses: List<OpenShiftResponse>,
+                                 type: TemplateType,
+                                 name: String,
+                                 docker: String,
+                                 deploy: Boolean): JsonNode? {
 
         if (!deploy) {
             return null
         }
 
+        if (type == build) {
+            return null
+        }
+
+        if (type == development) {
+            return openShiftObjectGenerator.generateBuildRequest(name)
+        }
+
         val imageStream = openShiftResponses.find { it.responseBody["kind"].asText().toLowerCase() == "imagestream" }
         val deployment = openShiftResponses.find { it.responseBody["kind"].asText().toLowerCase() == "deploymentconfig" }
 
-        val deployResource: JsonNode? =
-                if (type == development) {
-                    openShiftObjectGenerator.generateBuildRequest(name)
-                } else if (imageStream == null) {
-                    if (deployment != null) {
-                        openShiftObjectGenerator.generateDeploymentRequest(name)
-                    } else {
-                        null
-                    }
-                } else if (!imageStream.labelChanged("releasedVersion") && imageStream.command.operationType == OperationType.UPDATE) {
-                    openShiftObjectGenerator.generateDeploymentRequest(name)
-                } else {
-                    null
-                }
+        imageStream?.takeIf { !it.labelChanged("releasedVersion") && it.command.operationType == OperationType.UPDATE }?.let {
+            return openShiftObjectGenerator.generateDeploymentRequest(name)
+        }
 
-        return deployResource
+        if (imageStream == null) {
+            return deployment?.let {
+                openShiftObjectGenerator.generateDeploymentRequest(name)
+            }
+        }
+        return openShiftObjectGenerator.generateImageStreamImport(name, docker)
+
     }
+
 
     fun deployHistory(affiliation: String): List<DeployHistory> {
         val repo = gitService.checkoutRepoForAffiliation(affiliation)

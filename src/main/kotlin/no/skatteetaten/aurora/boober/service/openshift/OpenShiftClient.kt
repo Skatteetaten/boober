@@ -58,6 +58,7 @@ class OpenShiftClient(
         }
         val name = cmd.payload.openshiftName
 
+        //TODO: Handle error and add error to response class.
         val res = when (cmd.operationType) {
             OperationType.CREATE -> performClient.post(kind, name, namespace, cmd.payload).body
             OperationType.UPDATE -> performClient.put(kind, name, namespace, cmd.payload).body
@@ -145,6 +146,9 @@ class OpenShiftClient(
     }
 
     fun isValidUser(user: String): Boolean {
+        if (user.startsWith("system:serviceaccount")) {
+            return true
+        }
         return exist("$baseUrl/oapi/v1/users/$user")
     }
 
@@ -197,7 +201,7 @@ class OpenShiftClient(
 
         val canSee = projects.any { it.at("/metadata/name").asText() == name }
 
-        if(!canSee) {
+        if (!canSee) {
             // Potential bug if the user can view, but not change the project.
             if (exist("$url/$name")) {
                 throw IllegalAccessException("Project exist but you do not have permission to modify it")
