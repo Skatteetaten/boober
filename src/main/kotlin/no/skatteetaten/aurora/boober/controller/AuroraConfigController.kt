@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.controller.internal.AuroraConfigPayload
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.internal.fromAuroraConfig
-import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
+import no.skatteetaten.aurora.boober.facade.DeployBundleService
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.bind.annotation.GetMapping
@@ -19,20 +19,20 @@ import javax.servlet.http.HttpServletRequest
 
 @RestController
 @RequestMapping("/affiliation/{affiliation}")
-class AuroraConfigController(val auroraConfigFacade: AuroraConfigFacade) {
+class AuroraConfigController(val deployBundleService: DeployBundleService) {
 
     @PutMapping("/auroraconfig")
     fun save(@PathVariable affiliation: String,
              @RequestBody payload: AuroraConfigPayload,
              @RequestHeader(value = "AuroraValidateVersions", required = false) validateVersions: Boolean = true): Response {
 
-        val auroraConfig = auroraConfigFacade.saveAuroraConfig(payload.toAuroraConfig(affiliation), validateVersions)
+        val auroraConfig = deployBundleService.saveAuroraConfig(payload.toAuroraConfig(affiliation), validateVersions)
         return createAuroraConfigResponse(auroraConfig)
     }
 
     @GetMapping("/auroraconfig")
     fun get(@PathVariable affiliation: String): Response {
-        return createAuroraConfigResponse(auroraConfigFacade.findAuroraConfig(affiliation))
+        return createAuroraConfigResponse(deployBundleService.findAuroraConfig(affiliation))
     }
 
 
@@ -48,7 +48,7 @@ class AuroraConfigController(val auroraConfigFacade: AuroraConfigFacade) {
         val path = "affiliation/$affiliation/auroraconfigfile/**"
         val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
 
-        val auroraConfig = auroraConfigFacade.updateAuroraConfigFile(affiliation, fileName, fileContents, configFileVersion, validateVersions)
+        val auroraConfig = deployBundleService.updateAuroraConfigFile(affiliation, fileName, fileContents, configFileVersion, validateVersions)
         return createAuroraConfigResponse(auroraConfig)
     }
 
@@ -65,7 +65,7 @@ class AuroraConfigController(val auroraConfigFacade: AuroraConfigFacade) {
         val path = "affiliation/$affiliation/auroraconfigfile/**"
         val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
 
-        val auroraConfig = auroraConfigFacade.patchAuroraConfigFile(affiliation, fileName, jsonPatchOp, configFileVersion, validateVersions)
+        val auroraConfig = deployBundleService.patchAuroraConfigFile(affiliation, fileName, jsonPatchOp, configFileVersion, validateVersions)
         return createAuroraConfigResponse(auroraConfig)
     }
 

@@ -44,7 +44,7 @@ import spock.mock.DetachedMockFactory
         GitService,
         SecretVaultService,
         EncryptionService,
-        AuroraConfigFacade,
+        DeployBundleService,
         VaultFacade,
         ObjectMapper,
         Config,
@@ -101,7 +101,7 @@ class SetupFacadeFromGitTest extends Specification {
     GitService gitService
 
     @Autowired
-    AuroraConfigFacade configFacade
+    DeployBundleService configFacade
 
     @Autowired
     DockerService dockerService

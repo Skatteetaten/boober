@@ -29,7 +29,7 @@ import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
-    AuroraConfigFacade,
+    DeployBundleService,
     GitService,
     OpenShiftClient,
     EncryptionService,
@@ -45,7 +45,7 @@ import spock.mock.DetachedMockFactory
     "boober.git.username=",
     "boober.git.password="
 ])
-class AuroraConfigFacadeTest extends Specification {
+class DeployBundleServiceTest extends Specification {
 
   public static final String ENV_NAME = "secrettest"
   public static final String APP_NAME = "aos-simple"
@@ -75,7 +75,7 @@ class AuroraConfigFacadeTest extends Specification {
   ObjectMapper mapper
 
   @Autowired
-  AuroraConfigFacade service
+  DeployBundleService service
 
   @Autowired
   UserDetailsProvider userDetailsProvider

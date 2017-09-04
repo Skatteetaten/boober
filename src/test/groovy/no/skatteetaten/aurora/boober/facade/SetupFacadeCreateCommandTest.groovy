@@ -42,7 +42,7 @@ import spock.mock.DetachedMockFactory
     VaultFacade,
     DockerService,
     EncryptionService,
-    AuroraConfigFacade,
+    DeployBundleService,
     Config
 ])
 class SetupFacadeCreateCommandTest extends Specification {

@@ -179,6 +179,4 @@ class VaultFacade(
 
         return encryptedSecrets + encryptedOldSecrets
     }
-
-
 }

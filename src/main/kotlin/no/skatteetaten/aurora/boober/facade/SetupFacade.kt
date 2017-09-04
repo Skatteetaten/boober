@@ -9,7 +9,6 @@ import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.model.TemplateType.build
 import no.skatteetaten.aurora.boober.model.TemplateType.development
-import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.DockerService
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
@@ -30,19 +29,17 @@ import java.util.*
 
 class DeployBundle(
         val repo: Git,
-        val auroraConfig: AuroraConfig,
+        var auroraConfig: AuroraConfig,
         val vaults: Map<String, AuroraSecretVault>,
         val overrideFiles: List<AuroraConfigFile> = listOf()
 )
 
 @Service
 class SetupFacade(
-        val auroraConfigService: AuroraConfigService,
         val openShiftObjectGenerator: OpenShiftObjectGenerator,
         val openShiftClient: OpenShiftClient,
         val gitService: GitService,
-        val secretVaultFacade: VaultFacade,
-        val auroraConfigFacade: AuroraConfigFacade,
+        val deployBundleService: DeployBundleService,
         val mapper: ObjectMapper,
         val dockerService: DockerService,
         @Value("\${openshift.cluster}") val cluster: String,
@@ -72,27 +69,19 @@ class SetupFacade(
 
     fun <T> withDeployBundle(affiliation: String, overrideFiles: List<AuroraConfigFile> = listOf(), function: (DeployBundle) -> T): T {
 
-        val deployBundle = createDeployBundle(affiliation, overrideFiles)
+        val deployBundle = deployBundleService.createDeployBundle(affiliation, overrideFiles)
         val res = function(deployBundle)
         gitService.closeRepository(deployBundle.repo)
         return res
     }
 
 
-    private fun createDeployBundle(affiliation: String, overrideFiles: List<AuroraConfigFile> = listOf()): DeployBundle {
-        val repo = gitService.checkoutRepoForAffiliation(affiliation)
-        val auroraConfig = auroraConfigFacade.createAuroraConfig(repo, affiliation)
-        val vaults = secretVaultFacade.listVaults(affiliation, repo).associateBy { it.name }
-
-        return DeployBundle(auroraConfig = auroraConfig, vaults = vaults, repo = repo, overrideFiles = overrideFiles)
-    }
-
     private fun createApplicationCommands(deployBundle: DeployBundle, applicationIds: List<ApplicationId>): List<AuroraApplicationCommand> {
         if (applicationIds.isEmpty()) {
             throw IllegalArgumentException("Specify applicationId")
         }
         val deployId = UUID.randomUUID().toString()
-        val auroraDcs = auroraConfigService.createAuroraApplications(deployBundle, applicationIds)
+        val auroraDcs = deployBundleService.createAuroraApplications(deployBundle, applicationIds)
 
         return LinkedList(auroraDcs
                 .filter { it.cluster == cluster }

@@ -46,7 +46,7 @@ import spock.mock.DetachedMockFactory
     VaultFacade,
     DockerService,
     EncryptionService,
-    AuroraConfigFacade,
+    DeployBundleService,
     Config,
     OpenShiftResourceClientConfig,
     UserDetailsTokenProvider
