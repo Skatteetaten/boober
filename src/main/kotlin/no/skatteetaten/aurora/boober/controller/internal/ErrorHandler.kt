@@ -26,7 +26,7 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
     fun handleValidationErrors(ex: ApplicationConfigException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
 
     @ExceptionHandler(OpenShiftException::class)
-    fun handleOpenShiftErrors(ex: OpenShiftException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
+    fun handleOpenShiftErrors(ex: OpenShiftException, req: WebRequest) = handleException(ex, req, INTERNAL_SERVER_ERROR)
 
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleBadRequest(ex: IllegalArgumentException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
@@ -48,6 +48,7 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
         }
 
         if (httpStatus.is5xxServerError) {
+
             logger.error("Unexpected error while handling request", e)
         }
 
