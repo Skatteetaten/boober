@@ -39,6 +39,7 @@ class OpenShiftObjectGenerator(
 
     }
 
+
     fun generateObjects(auroraApplicationConfig: AuroraApplicationConfig, deployId: String): LinkedList<JsonNode> {
 
 
@@ -177,5 +178,10 @@ class OpenShiftObjectGenerator(
         val sw = StringWriter()
         t.merge(context, sw)
         return mapper.readTree(sw.toString())
+    }
+
+    fun generateImageStreamImport(name: String, docker: String): JsonNode {
+
+        return mergeVelocityTemplate("imagestreamimport.json", mapOf("name" to name, "docker" to docker))
     }
 }

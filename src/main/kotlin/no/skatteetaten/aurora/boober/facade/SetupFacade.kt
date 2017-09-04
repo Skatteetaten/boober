@@ -7,6 +7,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.model.TemplateType.build
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.DockerService
@@ -73,8 +74,12 @@ class SetupFacade(
             return ApplicationResult(cmd.deployId, cmd.auroraDc, responses, success = false)
         }
 
+        if (cmd.auroraDc.deploy == null) {
+            throw NullPointerException("Deploy should not be null")
+        }
+        val docker = "$dockerRegistry/${cmd.auroraDc.deploy.dockerImagePath}:${cmd.auroraDc.deploy.dockerTag}"
         val deployCommand =
-                generateRedeployResource(responses, cmd.auroraDc.type, cmd.auroraDc.name, deploy)
+                generateRedeployResource(responses, cmd.auroraDc.type, cmd.auroraDc.name, docker, deploy)
                         ?.let {
                             openShiftClient.prepare(cmd.auroraDc.namespace, it)
                         }?.let {
@@ -125,7 +130,7 @@ class SetupFacade(
     fun createApplicationCommands(auroraConfig: AuroraConfig, appIds: List<DeployCommand>, vaults: Map<String, AuroraSecretVault>, deployId: String): LinkedList<ApplicationCommand> {
         val auroraDcs = auroraConfigService.createAuroraDcs(auroraConfig, appIds, vaults)
 
-        val res = LinkedList(auroraDcs
+        return LinkedList(auroraDcs
                 .filter { it.cluster == cluster }
                 .map { adc ->
                     //her kan vi ikke gjøre det på denne måten.
@@ -139,16 +144,15 @@ class SetupFacade(
                         openShiftObjects.mapNotNull { OpenshiftCommand(OperationType.CREATE, payload = it) }
                     }
 
-                    val tagCmd = adc.deploy?.let {
-                        if (it.releaseTo != null) {
-                            val dockerGroup = it.groupId.replace(".", "_")
-                            TagCommand("${dockerGroup}/${it.artifactId}", it.version, it.releaseTo, dockerRegistry)
-                        } else null
+
+                    //Her kan vi lage deploy/build/importImage kommando
+                    val tagCmd = adc.deploy?.takeIf { it.releaseTo != null }?.let {
+                        val dockerGroup = it.groupId.replace(".", "_")
+                        TagCommand("${dockerGroup}/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
                     }
 
                     ApplicationCommand(deployId, adc, openShiftCommand, tagCmd)
                 })
-        return res
     }
 
 
@@ -157,6 +161,7 @@ class SetupFacade(
 
         res.forEach {
 
+            //TODO: MARK FAILURE
             val result = filterSensitiveInformation(it)
             val prefix = if (it.success) {
                 DEPLOY_PREFIX
@@ -176,31 +181,38 @@ class SetupFacade(
     }
 
 
-    fun generateRedeployResource(openShiftResponses: List<OpenShiftResponse>, type: TemplateType, name: String, deploy: Boolean): JsonNode? {
+    fun generateRedeployResource(openShiftResponses: List<OpenShiftResponse>,
+                                 type: TemplateType,
+                                 name: String,
+                                 docker: String,
+                                 deploy: Boolean): JsonNode? {
 
         if (!deploy) {
             return null
         }
 
-        val imageStream = openShiftResponses.find { it.responseBody?.get("kind")?.asText()?.toLowerCase() == "imagestream" }
-        val deployment = openShiftResponses.find { it.responseBody?.get("kind")?.asText()?.toLowerCase() == "deploymentconfig" }
+        if (type == build) {
+            return null
+        }
 
-        val deployResource: JsonNode? =
-                if (type == development) {
-                    openShiftObjectGenerator.generateBuildRequest(name)
-                } else if (imageStream == null) {
-                    if (deployment != null) {
-                        openShiftObjectGenerator.generateDeploymentRequest(name)
-                    } else {
-                        null
-                    }
-                } else if (!imageStream.labelChanged("releasedVersion") && imageStream.command.operationType == OperationType.UPDATE) {
-                    openShiftObjectGenerator.generateDeploymentRequest(name)
-                } else {
-                    null
-                }
+        if (type == development) {
+            return openShiftObjectGenerator.generateBuildRequest(name)
+        }
 
-        return deployResource
+        val imageStream = openShiftResponses.find { it.responseBody["kind"].asText().toLowerCase() == "imagestream" }
+        val deployment = openShiftResponses.find { it.responseBody["kind"].asText().toLowerCase() == "deploymentconfig" }
+
+        imageStream?.takeIf { !it.labelChanged("releasedVersion") && it.command.operationType == OperationType.UPDATE }?.let {
+            return openShiftObjectGenerator.generateDeploymentRequest(name)
+        }
+
+        if (imageStream == null) {
+            return deployment?.let {
+                openShiftObjectGenerator.generateDeploymentRequest(name)
+            }
+        }
+        return openShiftObjectGenerator.generateImageStreamImport(name, docker)
+
     }
 
 
