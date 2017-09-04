@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.controller.internal.AuroraConfigPayload
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.internal.fromAuroraConfig
-import no.skatteetaten.aurora.boober.facade.DeployBundleService
+import no.skatteetaten.aurora.boober.service.DeployBundleService
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.bind.annotation.GetMapping

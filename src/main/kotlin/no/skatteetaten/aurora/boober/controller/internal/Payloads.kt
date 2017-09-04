@@ -30,18 +30,18 @@ data class SetupParamsPayload(
         val overrides: JsonDataFiles = mapOf(),
         val deploy: Boolean = true
 ) {
-    fun toSetupParams(): SetupParams {
+    fun toDeployParams(): DeployParams {
 
         val overrideFiles = overrides.map { AuroraConfigFile(it.key, it.value, true) }.toMutableList()
-        return SetupParams(envs, apps, overrideFiles, deploy)
+        return DeployParams(envs, apps, overrideFiles, deploy)
     }
 }
 
-data class SetupCommand(val affiliation: String,
-                        val setupParams: SetupParamsPayload
+data class DeployCommand(val affiliation: String,
+                         val setupParams: SetupParamsPayload
 )
 
-data class SetupParams(
+data class DeployParams(
         val envs: List<String> = listOf(),
         val apps: List<String> = listOf(),
         val overrides: MutableList<AuroraConfigFile> = mutableListOf(),

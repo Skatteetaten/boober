@@ -14,6 +14,8 @@ import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 //import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
+import no.skatteetaten.aurora.boober.service.DeployBundleService
+import no.skatteetaten.aurora.boober.service.DeployService
 import no.skatteetaten.aurora.boober.service.DockerService
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
@@ -33,7 +35,7 @@ import spock.mock.DetachedMockFactory
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
     SecretVaultService,
-    SetupFacade,
+    DeployService,
     OpenShiftObjectGenerator,
     OpenShiftTemplateProcessor,
     GitService,
@@ -43,7 +45,7 @@ import spock.mock.DetachedMockFactory
     DeployBundleService,
     Config
 ])
-class SetupFacadeCreateCommandTest extends Specification {
+class DeployServiceCreateCommandTest extends Specification {
 
   @Configuration
   static class Config {
@@ -82,7 +84,7 @@ class SetupFacadeCreateCommandTest extends Specification {
   UserDetailsProvider userDetailsProvider
 
   @Autowired
-  SetupFacade setupFacade
+  DeployService setupFacade
 
   @Autowired
   ObjectMapper mapper

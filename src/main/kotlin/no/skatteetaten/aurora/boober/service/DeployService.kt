@@ -1,17 +1,12 @@
-package no.skatteetaten.aurora.boober.facade
+package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.controller.internal.SetupParams
+import no.skatteetaten.aurora.boober.controller.internal.DeployParams
 import no.skatteetaten.aurora.boober.model.*
-import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.model.TemplateType.build
 import no.skatteetaten.aurora.boober.model.TemplateType.development
-import no.skatteetaten.aurora.boober.service.DockerService
-import no.skatteetaten.aurora.boober.service.GitService
-import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 import no.skatteetaten.aurora.boober.service.internal.AuroraApplicationCommand
 import no.skatteetaten.aurora.boober.service.internal.AuroraApplicationResult
 import no.skatteetaten.aurora.boober.service.internal.DeployHistory
@@ -29,7 +24,7 @@ import org.springframework.stereotype.Service
 import java.util.*
 
 @Service
-class SetupFacade(
+class DeployService(
         val openShiftObjectGenerator: OpenShiftObjectGenerator,
         val openShiftClient: OpenShiftClient,
         val gitService: GitService,
@@ -39,25 +34,25 @@ class SetupFacade(
         @Value("\${openshift.cluster}") val cluster: String,
         @Value("\${boober.docker.registry}") val dockerRegistry: String) {
 
-    val logger: Logger = LoggerFactory.getLogger(SetupFacade::class.java)
+    val logger: Logger = LoggerFactory.getLogger(DeployService::class.java)
 
     private val DEPLOY_PREFIX = "DEPLOY"
 
 
-    fun executeSetup(affiliation: String, setupParams: SetupParams): List<AuroraApplicationResult> {
+    fun executeDeploy(affiliation: String, deployParams: DeployParams): List<AuroraApplicationResult> {
 
-        return deployBundleService.withDeployBundle(affiliation, setupParams.overrides, {
-            val applications = createApplicationCommands(it, setupParams.applicationIds)
-            val res = applications.map { setupApplication(it, setupParams.deploy) }
+        return deployBundleService.withDeployBundle(affiliation, deployParams.overrides, {
+            val applications = createApplicationCommands(it, deployParams.applicationIds)
+            val res = applications.map { setupApplication(it, deployParams.deploy) }
             markRelease(res, it.repo)
             res
         })
     }
 
-    fun dryRun(affiliation: String, setupParams: SetupParams): List<AuroraApplicationCommand> {
+    fun dryRun(affiliation: String, deployParams: DeployParams): List<AuroraApplicationCommand> {
 
-        return deployBundleService.withDeployBundle(affiliation, setupParams.overrides, {
-            createApplicationCommands(it, setupParams.applicationIds)
+        return deployBundleService.withDeployBundle(affiliation, deployParams.overrides, {
+            createApplicationCommands(it, deployParams.applicationIds)
         })
     }
 
