@@ -28,13 +28,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.*
 
-class DeployBundle(
-        val repo: Git,
-        var auroraConfig: AuroraConfig,
-        val vaults: Map<String, AuroraSecretVault>,
-        val overrideFiles: List<AuroraConfigFile> = listOf()
-)
-
 @Service
 class SetupFacade(
         val openShiftObjectGenerator: OpenShiftObjectGenerator,
@@ -53,7 +46,7 @@ class SetupFacade(
 
     fun executeSetup(affiliation: String, setupParams: SetupParams): List<AuroraApplicationResult> {
 
-        return withDeployBundle(affiliation, setupParams.overrides, {
+        return deployBundleService.withDeployBundle(affiliation, setupParams.overrides, {
             val applications = createApplicationCommands(it, setupParams.applicationIds)
             val res = applications.map { setupApplication(it, setupParams.deploy) }
             markRelease(res, it.repo)
@@ -63,17 +56,9 @@ class SetupFacade(
 
     fun dryRun(affiliation: String, setupParams: SetupParams): List<AuroraApplicationCommand> {
 
-        return withDeployBundle(affiliation, setupParams.overrides, {
+        return deployBundleService.withDeployBundle(affiliation, setupParams.overrides, {
             createApplicationCommands(it, setupParams.applicationIds)
         })
-    }
-
-    fun <T> withDeployBundle(affiliation: String, overrideFiles: List<AuroraConfigFile> = listOf(), function: (DeployBundle) -> T): T {
-
-        val deployBundle = deployBundleService.createDeployBundle(affiliation, overrideFiles)
-        val res = function(deployBundle)
-        gitService.closeRepository(deployBundle.repo)
-        return res
     }
 
 
@@ -82,67 +67,64 @@ class SetupFacade(
             throw IllegalArgumentException("Specify applicationId")
         }
         val deployId = UUID.randomUUID().toString()
-        val auroraDcs = deployBundleService.createAuroraApplications(deployBundle, applicationIds)
+        val auroraApplications = deployBundleService.createAuroraApplications(deployBundle, applicationIds)
 
-        return LinkedList(auroraDcs
+        return LinkedList(auroraApplications
                 .filter { it.cluster == cluster }
-                .map { adc ->
+                .map { application ->
                     //her kan vi ikke gjøre det på denne måten.
                     //vi må finne ut om prosjektet finnes.
-                    val openShiftObjects = openShiftObjectGenerator.generateObjects(adc, deployId)
+                    val openShiftObjects = openShiftObjectGenerator.generateObjects(application, deployId)
 
                     //we need to check if there is a project that you cannot view/operate on
-                    val openShiftCommand = if (openShiftClient.projectExist(adc.namespace)) {
-                        openShiftObjects.mapNotNull { openShiftClient.prepare(adc.namespace, it) }
+                    val openShiftCommand = if (openShiftClient.projectExist(application.namespace)) {
+                        openShiftObjects.mapNotNull { openShiftClient.prepare(application.namespace, it) }
                     } else {
                         openShiftObjects.mapNotNull { OpenshiftCommand(OperationType.CREATE, payload = it) }
                     }
 
 
                     //Her kan vi lage deploy/build/importImage kommando
-                    val tagCmd = adc.deploy?.takeIf { it.releaseTo != null }?.let {
+                    val tagCmd = application.deploy?.takeIf { it.releaseTo != null }?.let {
                         val dockerGroup = it.groupId.replace(".", "_")
                         TagCommand("${dockerGroup}/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
                     }
 
-                    AuroraApplicationCommand(deployId, adc, openShiftCommand, tagCmd)
+                    AuroraApplicationCommand(deployId, application, openShiftCommand, tagCmd)
                 })
     }
 
     private fun setupApplication(cmd: AuroraApplicationCommand, deploy: Boolean): AuroraApplicationResult {
-        val auroraDc = cmd.auroraApplication
+        val application = cmd.auroraApplication
         val responses = cmd.commands.map {
-            openShiftClient.performOpenShiftCommand(it, auroraDc.namespace)
+            openShiftClient.performOpenShiftCommand(it, application.namespace)
         }
 
-        if (auroraDc.deploy == null) {
+        if (application.deploy == null) {
             throw NullPointerException("Deploy should not be null")
         }
 
-        val docker = "$dockerRegistry/${auroraDc.deploy.dockerImagePath}:${auroraDc.deploy.dockerTag}"
+        val docker = "$dockerRegistry/${application.deploy.dockerImagePath}:${application.deploy.dockerTag}"
         val deployCommand =
-                generateRedeployResource(responses, auroraDc.type, auroraDc.name, docker, deploy)
+                generateRedeployResource(responses, application.type, application.name, docker, deploy)
                         ?.let {
-                            openShiftClient.prepare(auroraDc.namespace, it)
+                            openShiftClient.prepare(application.namespace, it)
                         }?.let {
-                    openShiftClient.performOpenShiftCommand(it, auroraDc.namespace)
+                    openShiftClient.performOpenShiftCommand(it, application.namespace)
                 }
 
-        val deleteObjects = openShiftClient.createOpenshiftDeleteCommands(auroraDc.name, auroraDc.namespace, cmd.deployId)
-                .map { openShiftClient.performOpenShiftCommand(it, auroraDc.namespace) }
+        val deleteObjects = openShiftClient.createOpenshiftDeleteCommands(application.name, application.namespace, cmd.deployId)
+                .map { openShiftClient.performOpenShiftCommand(it, application.namespace) }
 
 
         val finalResponses = (responses + deleteObjects).addIfNotNull(deployCommand)
 
         val result = cmd.tagCommand?.let { dockerService.tag(it) }
 
-        return AuroraApplicationResult(cmd.deployId, auroraDc, finalResponses, result)
-
+        return AuroraApplicationResult(cmd.deployId, application, finalResponses, result)
     }
 
-
     private fun markRelease(res: List<AuroraApplicationResult>, repo: Git) {
-
 
         res.forEach {
 
@@ -159,7 +141,6 @@ class SetupFacade(
         val filteredResponses = result.openShiftResponses.filter { it.responseBody.get("kind").asText() != "Secret" }
         return result.copy(openShiftResponses = filteredResponses)
     }
-
 
     fun generateRedeployResource(openShiftResponses: List<OpenShiftResponse>,
                                  type: TemplateType,

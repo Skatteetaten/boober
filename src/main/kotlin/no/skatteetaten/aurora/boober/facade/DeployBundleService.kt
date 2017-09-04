@@ -41,6 +41,14 @@ class DeployBundleService(
         return DeployBundle(auroraConfig = auroraConfig, vaults = vaults, repo = repo, overrideFiles = overrideFiles)
     }
 
+    fun <T> withDeployBundle(affiliation: String, overrideFiles: List<AuroraConfigFile> = listOf(), function: (DeployBundle) -> T): T {
+
+        val deployBundle = createDeployBundle(affiliation, overrideFiles)
+        val res = function(deployBundle)
+        gitService.closeRepository(deployBundle.repo)
+        return res
+    }
+
     fun findAuroraConfig(affiliation: String): AuroraConfig {
         val repo = getRepo(affiliation)
         val allFilesInRepo: Map<String, Pair<RevCommit?, File>> = gitService.getAllFilesInRepo(repo)
