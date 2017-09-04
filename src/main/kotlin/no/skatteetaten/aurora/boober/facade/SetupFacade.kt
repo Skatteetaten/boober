@@ -119,19 +119,19 @@ class SetupFacade(
 
     private fun setupApplication(cmd: AuroraApplicationCommand, deploy: Boolean): AuroraApplicationResult {
         val responses = cmd.commands.map {
-            openShiftClient.performOpenShiftCommand(it, cmd.auroraResource.namespace)
+            openShiftClient.performOpenShiftCommand(it, cmd.auroraApplication.namespace)
         }
 
         val deployCommand =
-                generateRedeployResource(responses, cmd.auroraResource.type, cmd.auroraResource.name, deploy)
+                generateRedeployResource(responses, cmd.auroraApplication.type, cmd.auroraApplication.name, deploy)
                         ?.let {
-                            openShiftClient.prepare(cmd.auroraResource.namespace, it)
+                            openShiftClient.prepare(cmd.auroraApplication.namespace, it)
                         }?.let {
-                    openShiftClient.performOpenShiftCommand(it, cmd.auroraResource.namespace)
+                    openShiftClient.performOpenShiftCommand(it, cmd.auroraApplication.namespace)
                 }
 
-        val deleteObjects = openShiftClient.createOpenshiftDeleteCommands(cmd.auroraResource.name, cmd.auroraResource.namespace, cmd.deployId)
-                .map { openShiftClient.performOpenShiftCommand(it, cmd.auroraResource.namespace) }
+        val deleteObjects = openShiftClient.createOpenshiftDeleteCommands(cmd.auroraApplication.name, cmd.auroraApplication.namespace, cmd.deployId)
+                .map { openShiftClient.performOpenShiftCommand(it, cmd.auroraApplication.namespace) }
 
 
         val responseWithDelete = responses + deleteObjects
@@ -142,7 +142,7 @@ class SetupFacade(
 
         val result = cmd.tagCommand?.let { dockerService.tag(it) }
 
-        return AuroraApplicationResult(cmd.deployId, cmd.auroraResource, finalResponses, result)
+        return AuroraApplicationResult(cmd.deployId, cmd.auroraApplication, finalResponses, result)
 
     }
 

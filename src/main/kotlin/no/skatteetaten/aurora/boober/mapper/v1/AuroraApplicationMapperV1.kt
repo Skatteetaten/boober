@@ -31,9 +31,9 @@ class AuroraApplicationMapperV1(val openShiftClient: OpenShiftClient,
                                 deploy: AuroraDeploy?,
                                 template: AuroraTemplate?,
                                 localTemplate: AuroraLocalTemplate?
-    ): AuroraResource {
+    ): AuroraApplication {
         val name = auroraConfigFields.extract("name")
-        return AuroraResource(
+        return AuroraApplication(
                 schemaVersion = auroraConfigFields.extract("schemaVersion"),
 
                 affiliation = auroraConfigFields.extract("affiliation"),

@@ -10,7 +10,7 @@ enum class TemplateType {
 }
 
 
-data class AuroraResource(
+data class AuroraApplication(
         val schemaVersion: String,
         val affiliation: String,
         val cluster: String,

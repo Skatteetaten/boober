@@ -10,7 +10,7 @@ import no.skatteetaten.aurora.boober.mapper.v1.AuroraLocalTemplateMapperV1
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraRouteMapperV1
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraTemplateMapperV1
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraVolumeMapperV1
-import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.AuroraApplication
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.model.DeployCommand
@@ -46,7 +46,7 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient,
     }
 
 
-    fun createAuroraApplicationConfig(deployCommand: DeployCommand, auroraConfig: AuroraConfig, vaults: Map<String, AuroraSecretVault>): AuroraResource {
+    fun createAuroraApplicationConfig(deployCommand: DeployCommand, auroraConfig: AuroraConfig, vaults: Map<String, AuroraSecretVault>): AuroraApplication {
 
         val baseHandlers = setOf(
                 AuroraConfigFieldHandler("schemaVersion"),
@@ -100,7 +100,7 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient,
     }
 
 
-    fun createAuroraDcs(auroraConfig: AuroraConfig, deployCommands: List<DeployCommand>, vaults: Map<String, AuroraSecretVault>): List<AuroraResource> {
+    fun createAuroraDcs(auroraConfig: AuroraConfig, deployCommands: List<DeployCommand>, vaults: Map<String, AuroraSecretVault>): List<AuroraApplication> {
 
         return processDeployCommands(deployCommands, { createAuroraApplicationConfig(it, auroraConfig, vaults) })
     }
