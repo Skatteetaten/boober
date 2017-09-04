@@ -65,7 +65,7 @@ class AuroraConfigServiceTest extends Specification {
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
 
     when:
-      service.createAuroraDcs(auroraConfig, [new DeployCommand(aid)], [:])
+      service.createAuroraApplications(auroraConfig, [new DeployCommand(aid)], [:])
 
     then:
       def e = thrown(AuroraConfigException)
@@ -79,7 +79,7 @@ class AuroraConfigServiceTest extends Specification {
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, "aos", "aos-simple.json")
 
     when:
-      def adc = service.createAuroraDcs(auroraConfig, [new DeployCommand(aid)], [:])
+      def adc = service.createAuroraApplications(auroraConfig, [new DeployCommand(aid)], [:])
 
     then:
       adc.size() == 1
@@ -92,7 +92,7 @@ class AuroraConfigServiceTest extends Specification {
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, "aos", "customenv/about-template.json")
 
     when:
-      def adc = service.createAuroraDcs(auroraConfig, [new DeployCommand(aid)], [:])
+      def adc = service.createAuroraApplications(auroraConfig, [new DeployCommand(aid)], [:])
 
     then:
       adc.size() == 1

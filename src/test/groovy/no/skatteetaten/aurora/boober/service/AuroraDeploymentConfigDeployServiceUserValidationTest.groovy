@@ -12,7 +12,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -73,7 +72,7 @@ class AuroraDeploymentConfigDeployServiceUserValidationTest extends Specificatio
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [deployCommand], [:])
+      auroraDeploymentConfigService.createAuroraApplications(auroraConfig, [deployCommand], [:])
 
     then:
       def e = thrown(AuroraConfigException)
@@ -93,7 +92,7 @@ class AuroraDeploymentConfigDeployServiceUserValidationTest extends Specificatio
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [deployCommand], [:])
+      auroraDeploymentConfigService.createAuroraApplications(auroraConfig, [deployCommand], [:])
 
     then:
       AuroraConfigException e = thrown()

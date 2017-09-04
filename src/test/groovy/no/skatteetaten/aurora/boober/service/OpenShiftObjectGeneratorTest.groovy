@@ -114,7 +114,7 @@ class OpenShiftObjectGeneratorTest extends Specification {
         def auroraConfig = new AuroraConfig(files.collect {
             new AuroraConfigFile(it.key, it.value, false, null)
         }, "aos")
-        def aac = auroraDeploymentConfigService.createAuroraApplicationConfig(deployCommand, auroraConfig, vaults)
+        def aac = auroraDeploymentConfigService.createAuroraApplication(deployCommand, auroraConfig, vaults)
 
         List<JsonNode> generatedObjects = openShiftService.generateObjects(aac, deployId)
 

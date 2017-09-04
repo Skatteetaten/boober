@@ -8,7 +8,7 @@ import no.skatteetaten.aurora.boober.utils.length
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.oneOf
 
-class AuroraDeployMapperV1(val applicationFiles: List<AuroraConfigFile>, val deployCommand: DeployCommand, val dockerRegistry: String) {
+class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFiles: List<AuroraConfigFile>, val overrideFiles: List<AuroraConfigFile>, val dockerRegistry: String) {
 
 
     val dbHandlers = findDbHandlers(applicationFiles)
@@ -69,8 +69,8 @@ class AuroraDeployMapperV1(val applicationFiles: List<AuroraConfigFile>, val dep
 
         val tag = releaseTo ?: version
 
-        val applicationFile = getApplicationFile(deployCommand.applicationId)
-        val overrideFiles = deployCommand.overrideFiles.map { it.name to it.contents }.toMap()
+        val applicationFile = getApplicationFile(applicationId)
+        val overrideFiles = overrideFiles.map { it.name to it.contents }.toMap()
 
         return AuroraDeploy(
                 applicationFile = applicationFile.name,

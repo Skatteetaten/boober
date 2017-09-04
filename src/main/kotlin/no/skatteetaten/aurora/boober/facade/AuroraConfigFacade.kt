@@ -81,7 +81,7 @@ class AuroraConfigFacade(
         if (validateVersions) {
             validateGitVersion(auroraConfig, newAuroraConfig, allFilesInRepo)
         }
-        auroraConfigService.validate(newAuroraConfig, vaults)
+        auroraConfigService.validate(DeployBundle(repo, newAuroraConfig, vaults))
         commitAuroraConfig(repo, newAuroraConfig)
 
         return newAuroraConfig

@@ -88,7 +88,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
     when:
-      auroraDeploymentConfigService.createAuroraApplicationConfig(deployCommand, auroraConfig, [:])
+      auroraDeploymentConfigService.createAuroraApplication(deployCommand, auroraConfig, [:])
 
     then:
       thrown(ApplicationConfigException)
@@ -104,7 +104,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
     when:
-      auroraDeploymentConfigService.createAuroraApplicationConfig(deployCommand, auroraConfig, [:])
+      auroraDeploymentConfigService.createAuroraApplication(deployCommand, auroraConfig, [:])
 
     then:
       def e = thrown(ApplicationConfigException)
@@ -122,7 +122,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def auroraDc = auroraDeploymentConfigService.createAuroraApplicationConfig(deployCommand, auroraConfig, [:])
+      def auroraDc = auroraDeploymentConfigService.createAuroraApplication(deployCommand, auroraConfig, [:])
 
     then:
       auroraDc.deploy.prometheus.port == 8081
@@ -138,7 +138,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def auroraDc = auroraDeploymentConfigService.createAuroraApplicationConfig(deployCommand, auroraConfig, [:])
+      def auroraDc = auroraDeploymentConfigService.createAuroraApplication(deployCommand, auroraConfig, [:])
 
       def fields = auroraDc.fields
     then:
@@ -172,7 +172,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
     when:
       def auroraDc = auroraDeploymentConfigService.
-              createAuroraApplicationConfig(deployCommand, auroraConfig, [:])
+              createAuroraApplication(deployCommand, auroraConfig, [:])
 
     then:
       with(auroraDc) {
@@ -197,7 +197,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
     when:
       def auroraDc = auroraDeploymentConfigService.
-              createAuroraApplicationConfig(deployCommand, auroraConfig, [:])
+              createAuroraApplication(deployCommand, auroraConfig, [:])
 
     then:
       auroraDc.name == "awesome-app"
@@ -214,7 +214,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
           new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false, null) }, "aos")
 
     when:
-      auroraDeploymentConfigService.createAuroraApplicationConfig(deployCommand, auroraConfig, [:])
+      auroraDeploymentConfigService.createAuroraApplication(deployCommand, auroraConfig, [:])
 
     then:
       def ex = thrown(ApplicationConfigException)
@@ -228,7 +228,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def result = auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [deployCommand], [:])
+      def result = auroraDeploymentConfigService.createAuroraApplications(auroraConfig, [deployCommand], [:])
 
     then:
       result != null
@@ -241,7 +241,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [deployCommand], [:])
+      auroraDeploymentConfigService.createAuroraApplications(auroraConfig, [deployCommand], [:])
 
     then:
       thrown(AuroraConfigException)

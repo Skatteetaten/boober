@@ -29,9 +29,7 @@ class DeployBundle(
         val auroraConfig: AuroraConfig,
         val vaults: Map<String, AuroraSecretVault>,
         val overrideFiles: List<AuroraConfigFile> = listOf()
-) {
-
-}
+)
 
 @Service
 class SetupFacade(
@@ -89,7 +87,7 @@ class SetupFacade(
             throw IllegalArgumentException("Specify applicationId")
         }
         val deployId = UUID.randomUUID().toString()
-        val auroraDcs = auroraConfigService.createAuroraDcs(deployBundle, applicationIds)
+        val auroraDcs = auroraConfigService.createAuroraApplications(deployBundle, applicationIds)
 
         val res = LinkedList(auroraDcs
                 .filter { it.cluster == cluster }

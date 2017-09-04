@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
+import no.skatteetaten.aurora.boober.facade.DeployBundle
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigValidator
@@ -10,11 +11,7 @@ import no.skatteetaten.aurora.boober.mapper.v1.AuroraLocalTemplateMapperV1
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraRouteMapperV1
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraTemplateMapperV1
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraVolumeMapperV1
-import no.skatteetaten.aurora.boober.model.AuroraApplication
-import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.AuroraSecretVault
-import no.skatteetaten.aurora.boober.model.DeployCommand
-import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.TemplateType.build
 import no.skatteetaten.aurora.boober.model.TemplateType.deploy
 import no.skatteetaten.aurora.boober.model.TemplateType.development
@@ -39,14 +36,19 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient,
     val logger: Logger = LoggerFactory.getLogger(AuroraConfigService::class.java)
 
 
-    fun validate(auroraConfig: AuroraConfig, vaults: Map<String, AuroraSecretVault>) {
+    fun validate(deployBundle: DeployBundle) {
 
-        val deployCommands = auroraConfig.getApplicationIds().map { DeployCommand(it) }
-        processDeployCommands(deployCommands, { createAuroraApplicationConfig(it, auroraConfig, vaults) })
+        tryCreateAuroraApplications(deployBundle, deployBundle.auroraConfig.getApplicationIds())
     }
 
 
-    fun createAuroraApplicationConfig(deployCommand: DeployCommand, auroraConfig: AuroraConfig, vaults: Map<String, AuroraSecretVault>): AuroraApplication {
+    fun createAuroraApplications(deployBundle: DeployBundle, applicationIds: List<ApplicationId>): List<AuroraApplication> {
+
+        return tryCreateAuroraApplications(deployBundle, applicationIds)
+    }
+
+
+    fun createAuroraApplication(deployBundle: DeployBundle, applicationId: ApplicationId): AuroraApplication {
 
         val baseHandlers = setOf(
                 AuroraConfigFieldHandler("schemaVersion"),
@@ -54,8 +56,10 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient,
                 AuroraConfigFieldHandler("baseFile"),
                 AuroraConfigFieldHandler("envFile")
         )
-        val applicationId = deployCommand.applicationId
-        val applicationFiles = auroraConfig.getFilesForApplication(applicationId, deployCommand.overrideFiles)
+        val auroraConfig = deployBundle.auroraConfig
+        val overrideFiles = deployBundle.overrideFiles
+        val vaults = deployBundle.vaults
+        val applicationFiles = auroraConfig.getFilesForApplication(applicationId, overrideFiles)
         val fields = AuroraConfigFields.create(baseHandlers, applicationFiles)
 
         val type = fields.extract("type", { TemplateType.valueOf(it.textValue()) })
@@ -66,7 +70,7 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient,
             throw IllegalArgumentException("Only v1 of schema is supported")
         }
         val applicationMapper = AuroraApplicationMapperV1(openShiftClient, applicationId)
-        val deployMapper = AuroraDeployMapperV1(applicationFiles, deployCommand, dockerRegistry)
+        val deployMapper = AuroraDeployMapperV1(applicationId, applicationFiles, deployBundle.overrideFiles, dockerRegistry)
         val volumeMapper = AuroraVolumeMapperV1(applicationFiles, vaults)
         val routeMapper = AuroraRouteMapperV1(applicationFiles)
         val localTemplateMapper = AuroraLocalTemplateMapperV1(applicationFiles, auroraConfig)
@@ -81,7 +85,7 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient,
         }).toSet()
 
         val auroraConfigFields = AuroraConfigFields.create(handlers, applicationFiles)
-        val validator = AuroraConfigValidator(deployCommand, applicationFiles, handlers, auroraConfigFields)
+        val validator = AuroraConfigValidator(applicationId, applicationFiles, handlers, auroraConfigFields)
         validator.validate()
 
 
@@ -100,24 +104,18 @@ class AuroraConfigService(val openShiftClient: OpenShiftClient,
     }
 
 
-    fun createAuroraDcs(auroraConfig: AuroraConfig, deployCommands: List<DeployCommand>, vaults: Map<String, AuroraSecretVault>): List<AuroraApplication> {
+    private fun tryCreateAuroraApplications(deployBundle: DeployBundle, applicationIds: List<ApplicationId>): List<AuroraApplication> {
 
-        return processDeployCommands(deployCommands, { createAuroraApplicationConfig(it, auroraConfig, vaults) })
-    }
-
-    private fun <T : Any> processDeployCommands(deployCommands: List<DeployCommand>, operation: (DeployCommand) -> T): List<T> {
-
-        return deployCommands.map { deployCommand ->
-            val aid = deployCommand.applicationId
+        return applicationIds.map { aid ->
             try {
-                val value = operation(deployCommand)
-                Result<T, Error?>(value = value)
+                val value = createAuroraApplication(deployBundle, aid)
+                Result<AuroraApplication, Error?>(value = value)
             } catch (e: ApplicationConfigException) {
                 logger.debug("ACE {}", e.errors)
-                Result<T, Error?>(error = Error(aid.application, aid.environment, e.errors))
+                Result<AuroraApplication, Error?>(error = Error(aid.application, aid.environment, e.errors))
             } catch (e: IllegalArgumentException) {
                 logger.debug("IAE {}", e.message)
-                Result<T, Error?>(error = Error(aid.application, aid.environment, listOf(ValidationError(e.message!!))))
+                Result<AuroraApplication, Error?>(error = Error(aid.application, aid.environment, listOf(ValidationError(e.message!!))))
             }
         }.onErrorThrow {
             logger.debug("ACE {}", it)
