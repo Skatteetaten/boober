@@ -11,7 +11,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import spock.lang.Specification
@@ -64,7 +63,7 @@ class AuroraConfigServiceTest extends Specification {
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
 
     when:
-      service.createAuroraApplications(auroraConfig, [new DeployCommand(aid)], [:])
+      service.createAuroraApplications(auroraConfig, [aid], [:])
 
     then:
       def e = thrown(AuroraConfigException)
@@ -78,7 +77,7 @@ class AuroraConfigServiceTest extends Specification {
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, "aos", "aos-simple.json")
 
     when:
-      def adc = service.createAuroraApplications(auroraConfig, [new DeployCommand(aid)], [:])
+      def adc = service.createAuroraApplications(auroraConfig, [aid], [:])
 
     then:
       adc.size() == 1
@@ -91,7 +90,7 @@ class AuroraConfigServiceTest extends Specification {
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, "aos", "customenv/about-template.json")
 
     when:
-      def adc = service.createAuroraApplications(auroraConfig, [new DeployCommand(aid)], [:])
+      def adc = service.createAuroraApplications(auroraConfig, [aid], [:])
 
     then:
       adc.size() == 1

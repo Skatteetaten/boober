@@ -45,11 +45,10 @@ class AuroraConfigTest extends Specification {
 
   def "Returns files for application"() {
     given:
-      def deployCommand = new DeployCommand(aid)
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
 
     when:
-      def filesForApplication = auroraConfig.getFilesForApplication(deployCommand)
+      def filesForApplication = auroraConfig.getFilesForApplication(aid)
 
     then:
       filesForApplication.size() == 4
@@ -57,11 +56,10 @@ class AuroraConfigTest extends Specification {
 
   def "Returns files for application with about override"() {
     given:
-      def deployCommand = new DeployCommand(aid, [overrideFile("about.json")])
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
 
     when:
-      def filesForApplication = auroraConfig.getFilesForApplication(deployCommand)
+      def filesForApplication = auroraConfig.getFilesForApplication(aid, [overrideFile("about.json")])
 
     then:
       filesForApplication.size() == 5
@@ -69,11 +67,10 @@ class AuroraConfigTest extends Specification {
 
   def "Returns files for application with app override"() {
     given:
-      def deployCommand = new DeployCommand(aid, [overrideFile("console.json")])
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
 
     when:
-      def filesForApplication = auroraConfig.getFilesForApplication(deployCommand)
+      def filesForApplication = auroraConfig.getFilesForApplication(aid, [overrideFile("console.json")])
 
     then:
       filesForApplication.size() == 5
@@ -82,12 +79,10 @@ class AuroraConfigTest extends Specification {
   def "Returns files for application with app for env override"() {
     given:
 
-      def deployCommand = new DeployCommand(aid,
-          [overrideFile("${aid.environment}/${aid.application}.json")])
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
 
     when:
-      def filesForApplication = auroraConfig.getFilesForApplication(deployCommand)
+      def filesForApplication = auroraConfig.getFilesForApplication(aid, [overrideFile("${aid.environment}/${aid.application}.json")])
 
     then:
       filesForApplication.size() == 5
@@ -100,7 +95,7 @@ class AuroraConfigTest extends Specification {
       def auroraConfig = new AuroraConfig(files, "aos")
 
     when:
-      auroraConfig.getFilesForApplication(new DeployCommand(referanseAid))
+      auroraConfig.getFilesForApplication(referanseAid)
 
     then: "Should be missing utv/referanse.json"
       def ex = thrown(IllegalArgumentException)

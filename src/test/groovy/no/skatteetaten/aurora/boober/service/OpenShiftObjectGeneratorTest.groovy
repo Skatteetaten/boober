@@ -95,7 +95,6 @@ class OpenShiftObjectGeneratorTest extends Specification {
                 ["foo": null])]
 
         ApplicationId aid = new ApplicationId(env, name)
-        DeployCommand deployCommand = new DeployCommand(aid, overrides)
 
         Map<String, JsonNode> files = AuroraConfigHelperKt.getSampleFiles(aid)
 

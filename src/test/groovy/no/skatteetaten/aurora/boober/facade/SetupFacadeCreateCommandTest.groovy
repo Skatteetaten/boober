@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.DeployCommand
+//import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.service.DockerService
 import no.skatteetaten.aurora.boober.service.EncryptionService
@@ -107,11 +107,10 @@ class SetupFacadeCreateCommandTest extends Specification {
   def "Should setup deploy for application"() {
     given:
       def consoleAid = new ApplicationId(ENV_NAME, "console")
-      def deployCommand = new DeployCommand(consoleAid)
       def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def result = setupFacade.createApplicationCommands(auroraConfig, [deployCommand], [:], deployId)
+      def result = setupFacade.createApplicationCommands(auroraConfig, [consoleAid], [:], deployId)
 
     then:
 
@@ -122,11 +121,10 @@ class SetupFacadeCreateCommandTest extends Specification {
 
   def "Should get error when using vault you have no permission for"() {
     given:
-      def deployCommand = new DeployCommand(new ApplicationId("secrettest", "aos-simple"))
       def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def result = setupFacade.createApplicationCommands(auroraConfig, [deployCommand], [:], deployId)
+      def result = setupFacade.createApplicationCommands(auroraConfig, [new ApplicationId("secrettest", "aos-simple")], [:], deployId)
 
     then:
       def e = thrown(AuroraConfigException)
@@ -137,11 +135,10 @@ class SetupFacadeCreateCommandTest extends Specification {
   def "Should setup deploy for application with releaseTo"() {
     given:
       def consoleAid = new ApplicationId("release", "aos-simple")
-      def deployCommand = new DeployCommand(consoleAid)
       def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      def result = setupFacade.createApplicationCommands(auroraConfig, [deployCommand], [:], deployId)
+      def result = setupFacade.createApplicationCommands(auroraConfig, [consoleAid], [:], deployId)
 
     then:
       result.size() == 1

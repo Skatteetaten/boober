@@ -11,7 +11,6 @@ import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraVolumeMapperV1
 import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
@@ -62,10 +61,9 @@ class AuroraConfigFieldTest extends Specification {
   def "Should generate correct config extractors"() {
     given:
       def aid = new ApplicationId("config", "console")
-      def deployCommand = new DeployCommand(aid, [])
       def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
-    def files = auroraConfig.getFilesForApplication(deployCommand)
+    def files = auroraConfig.getFilesForApplication(aid)
     when:
     def mapper = new AuroraVolumeMapperV1(files, [:])
 

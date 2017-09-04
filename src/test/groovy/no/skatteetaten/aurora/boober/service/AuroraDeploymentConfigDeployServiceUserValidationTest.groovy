@@ -9,7 +9,6 @@ import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import spock.lang.Specification
@@ -67,7 +66,7 @@ class AuroraDeploymentConfigDeployServiceUserValidationTest extends Specificatio
   def "Should get error if user is not valid"() {
 
     given:
-      def deployCommand = new DeployCommand(aid)
+//      def deployCommand = new DeployCommand(aid)
       openShiftClient.isValidUser("foo") >> false
       openShiftClient.isValidGroup(_) >> true
 
@@ -87,7 +86,7 @@ class AuroraDeploymentConfigDeployServiceUserValidationTest extends Specificatio
   def "Should get error if group is not valid"() {
 
     given:
-      def deployCommand = new DeployCommand(aid)
+//      def deployCommand = new DeployCommand(aid)
       openShiftClient.isValidUser(_) >> true
       openShiftClient.isValidGroup(_) >> false
 

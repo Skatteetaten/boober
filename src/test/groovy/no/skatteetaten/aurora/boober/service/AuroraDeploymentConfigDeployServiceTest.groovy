@@ -14,7 +14,6 @@ import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
@@ -84,7 +83,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
       def overrideFile = mapper.convertValue(["name": "test%qwe)"], JsonNode.class)
       def overrides = [new AuroraConfigFile("${aid.environment}/${aid.application}.json", overrideFile, true, null)]
-      final DeployCommand deployCommand = new DeployCommand(aid, overrides)
+//      final DeployCommand deployCommand = new DeployCommand(aid, overrides)
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
     when:
@@ -100,7 +99,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
     given:
       def overrideFile = mapper.convertValue(["foo": "test%qwe)"], JsonNode.class)
       def overrides = [new AuroraConfigFile("${aid.environment}/${aid.application}.json", overrideFile, true, null)]
-      final DeployCommand deployCommand = new DeployCommand(aid, overrides)
+//      final DeployCommand deployCommand = new DeployCommand(aid, overrides)
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
     when:
@@ -118,7 +117,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
   def "Should create AuroraDC for Console"() {
     given:
       def consoleAid = new ApplicationId("booberdev", "console")
-      def deployCommand = new DeployCommand(consoleAid)
+//      def deployCommand = new DeployCommand(consoleAid)
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
@@ -134,7 +133,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       def overrideFile = mapper.convertValue(["type": "deploy", "cluster": "utv"], JsonNode.class)
       def overrides = [new AuroraConfigFile("booberdev/about.json", overrideFile, true, null)]
 
-      final DeployCommand deployCommand = new DeployCommand(aid, overrides)
+//      final DeployCommand deployCommand = new DeployCommand(aid, overrides)
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
@@ -151,7 +150,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
   def "Should fail due to missing config file"() {
 
     given:
-      def deployCommand = new DeployCommand(aid)
+//      def deployCommand = new DeployCommand(aid)
       Map<String, JsonNode> files = AuroraConfigHelperKt.getSampleFiles(aid)
       files.remove("${APP_NAME}.json" as String)
       def auroraConfig =
@@ -167,7 +166,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
   def "Should successfully merge all config files"() {
 
     given:
-      def deployCommand = new DeployCommand(aid)
+//      def deployCommand = new DeployCommand(aid)
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
@@ -192,7 +191,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       def overrideFile = mapper.convertValue(["name": "awesome-app"], JsonNode.class)
       def overrides = [new AuroraConfigFile("booberdev/about.json", overrideFile, true, null)]
 
-      final DeployCommand deployCommand = new DeployCommand(aid, overrides)
+//      final DeployCommand deployCommand = new DeployCommand(aid, overrides)
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
@@ -206,7 +205,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
   def "Should throw ValidationException due to missing required properties"() {
 
     given: "AuroraConfig without build properties"
-      def deployCommand = new DeployCommand(aid)
+//      def deployCommand = new DeployCommand(aid)
       Map<String, JsonNode> files = AuroraConfigHelperKt.getSampleFiles(aid)
       (files.get("aos-simple.json") as ObjectNode).remove("version")
       (files.get("booberdev/aos-simple.json") as ObjectNode).remove("version")
@@ -224,7 +223,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
   def "Should create aurora dc for application"() {
 
     given:
-      def deployCommand = new DeployCommand(aid)
+//      def deployCommand = new DeployCommand(aid)
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
@@ -237,7 +236,7 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
   def "Should get error if we want secrets but there are none "() {
 
     given:
-      def deployCommand = new DeployCommand(secretAId)
+//      def deployCommand = new DeployCommand(secretAId)
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
