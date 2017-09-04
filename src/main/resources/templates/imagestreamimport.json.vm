@@ -1,0 +1,21 @@
+{
+  "kind": "ImageStreamImport",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "${name}"
+  },
+  "spec": {
+    "import": true,
+    "images": [
+      {
+        "from": {
+          "kind": "DockerImage",
+          "name": "${docker}"
+        },
+        "to": {
+          "name": "default"
+        }
+      }
+    ]
+  }
+}

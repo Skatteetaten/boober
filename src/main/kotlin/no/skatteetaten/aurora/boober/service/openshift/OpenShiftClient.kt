@@ -58,6 +58,7 @@ class OpenShiftClient(
         }
         val name = cmd.payload.openshiftName
 
+        //TODO: Handle error and add error to response class.
         val res = when (cmd.operationType) {
             OperationType.CREATE -> performClient.post(kind, name, namespace, cmd.payload).body
             OperationType.UPDATE -> performClient.put(kind, name, namespace, cmd.payload).body
