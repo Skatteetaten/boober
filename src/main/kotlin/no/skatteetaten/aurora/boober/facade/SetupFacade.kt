@@ -20,6 +20,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.eclipse.jgit.api.Git
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -131,11 +132,7 @@ class SetupFacade(
                 .map { openShiftClient.performOpenShiftCommand(it, auroraDc.namespace) }
 
 
-        val responseWithDelete = responses + deleteObjects
-
-        val finalResponses = deployCommand?.let {
-            responseWithDelete + it
-        } ?: responseWithDelete
+        val finalResponses = (responses + deleteObjects).addIfNotNull(deployCommand)
 
         val result = cmd.tagCommand?.let { dockerService.tag(it) }
 
