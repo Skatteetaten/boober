@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.mapper
 
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.internal.ValidationError
 import no.skatteetaten.aurora.boober.utils.findAllPointers
