@@ -6,7 +6,6 @@ import no.skatteetaten.aurora.boober.controller.internal.SetupParams
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
-import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.model.TemplateType.build
 import no.skatteetaten.aurora.boober.model.TemplateType.development
@@ -79,38 +78,6 @@ class SetupFacade(
         return res
     }
 
-    fun setupApplication(cmd: ApplicationCommand, deploy: Boolean): ApplicationResult {
-        val responses = cmd.commands.map {
-            openShiftClient.performOpenShiftCommand(it, cmd.auroraDc.namespace)
-        }
-
-        if (cmd.auroraDc.deploy == null) {
-            throw NullPointerException("Deploy should not be null")
-        }
-        val docker = "$dockerRegistry/${cmd.auroraDc.deploy.dockerImagePath}:${cmd.auroraDc.deploy.dockerTag}"
-        val deployCommand =
-                generateRedeployResource(responses, cmd.auroraDc.type, cmd.auroraDc.name, docker, deploy)
-                        ?.let {
-                            openShiftClient.prepare(cmd.auroraDc.namespace, it)
-                        }?.let {
-                    openShiftClient.performOpenShiftCommand(it, cmd.auroraDc.namespace)
-                }
-
-        val deleteObjects = openShiftClient.createOpenshiftDeleteCommands(cmd.auroraDc.name, cmd.auroraDc.namespace, cmd.deployId)
-                .map { openShiftClient.performOpenShiftCommand(it, cmd.auroraDc.namespace) }
-
-
-        val responseWithDelete = responses + deleteObjects
-
-        val finalResponses = deployCommand?.let {
-            responseWithDelete + it
-        } ?: responseWithDelete
-
-        val result = cmd.tagCommand?.let { dockerService.tag(it) }
-
-        return ApplicationResult(cmd.deployId, cmd.auroraDc, finalResponses, result)
-
-    }
 
     private fun createDeployBundle(affiliation: String, overrideFiles: List<AuroraConfigFile> = listOf()): DeployBundle {
         val repo = gitService.checkoutRepoForAffiliation(affiliation)
@@ -153,20 +120,26 @@ class SetupFacade(
     }
 
     private fun setupApplication(cmd: AuroraApplicationCommand, deploy: Boolean): AuroraApplicationResult {
+        val auroraDc = cmd.auroraApplication
         val responses = cmd.commands.map {
-            openShiftClient.performOpenShiftCommand(it, cmd.auroraApplication.namespace)
+            openShiftClient.performOpenShiftCommand(it, auroraDc.namespace)
         }
 
+        if (auroraDc.deploy == null) {
+            throw NullPointerException("Deploy should not be null")
+        }
+
+        val docker = "$dockerRegistry/${auroraDc.deploy.dockerImagePath}:${auroraDc.deploy.dockerTag}"
         val deployCommand =
-                generateRedeployResource(responses, cmd.auroraApplication.type, cmd.auroraApplication.name, deploy)
+                generateRedeployResource(responses, auroraDc.type, auroraDc.name, docker, deploy)
                         ?.let {
-                            openShiftClient.prepare(cmd.auroraApplication.namespace, it)
+                            openShiftClient.prepare(auroraDc.namespace, it)
                         }?.let {
-                    openShiftClient.performOpenShiftCommand(it, cmd.auroraApplication.namespace)
+                    openShiftClient.performOpenShiftCommand(it, auroraDc.namespace)
                 }
 
-        val deleteObjects = openShiftClient.createOpenshiftDeleteCommands(cmd.auroraApplication.name, cmd.auroraApplication.namespace, cmd.deployId)
-                .map { openShiftClient.performOpenShiftCommand(it, cmd.auroraApplication.namespace) }
+        val deleteObjects = openShiftClient.createOpenshiftDeleteCommands(auroraDc.name, auroraDc.namespace, cmd.deployId)
+                .map { openShiftClient.performOpenShiftCommand(it, auroraDc.namespace) }
 
 
         val responseWithDelete = responses + deleteObjects
@@ -177,9 +150,10 @@ class SetupFacade(
 
         val result = cmd.tagCommand?.let { dockerService.tag(it) }
 
-        return AuroraApplicationResult(cmd.deployId, cmd.auroraApplication, finalResponses, result)
+        return AuroraApplicationResult(cmd.deployId, auroraDc, finalResponses, result)
 
     }
+
 
     private fun markRelease(res: List<AuroraApplicationResult>, repo: Git) {
 

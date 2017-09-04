@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.model.AuroraApplication
 import no.skatteetaten.aurora.boober.model.AuroraApplicationConfig
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
@@ -40,56 +41,56 @@ class OpenShiftObjectGenerator(
     }
 
 
-    fun generateObjects(auroraApplicationConfig: AuroraApplicationConfig, deployId: String): LinkedList<JsonNode> {
+    fun generateObjects(auroraApplication: AuroraApplication, deployId: String): LinkedList<JsonNode> {
 
 
-        val overrides = auroraApplicationConfig.deploy?.let {
+        val overrides = auroraApplication.deploy?.let {
             StringEscapeUtils.escapeJavaScript(mapper.writeValueAsString(it.overrideFiles))
         }
 
 
-        val database = auroraApplicationConfig.deploy?.database?.map { it.spec }?.joinToString(",") ?: ""
+        val database = auroraApplication.deploy?.database?.map { it.spec }?.joinToString(",") ?: ""
 
         logger.debug("Database is $database")
         //In use in velocity template
-        val routeName = auroraApplicationConfig.route?.let {
+        val routeName = auroraApplication.route?.let {
             if (it.route.isEmpty()) {
                 null
             } else {
                 it.route.first().let {
-                    val host = it.host ?: "${auroraApplicationConfig.name}-${auroraApplicationConfig.namespace}"
-                    "http://$host.${auroraApplicationConfig.cluster}.paas.skead.no${it.path ?: ""}"
+                    val host = it.host ?: "${auroraApplication.name}-${auroraApplication.namespace}"
+                    "http://$host.${auroraApplication.cluster}.paas.skead.no${it.path ?: ""}"
                 }
             }
         }
 
 
-        val buildName = auroraApplicationConfig.build?.let {
+        val buildName = auroraApplication.build?.let {
             if (it.buildSuffix != null) {
-                "${auroraApplicationConfig.name}-${it.buildSuffix}"
+                "${auroraApplication.name}-${it.buildSuffix}"
             } else {
-                auroraApplicationConfig.name
+                auroraApplication.name
             }
         }
 
-        val mounts: List<Mount>? = auroraApplicationConfig.volume?.mounts?.map {
+        val mounts: List<Mount>? = auroraApplication.volume?.mounts?.map {
             if (it.exist) {
                 it
             } else {
-                it.copy(volumeName = it.volumeName.ensureStartWith(auroraApplicationConfig.name, "-"))
+                it.copy(volumeName = it.volumeName.ensureStartWith(auroraApplication.name, "-"))
             }
         }
         val params = mapOf(
                 "overrides" to overrides,
                 "deployId" to deployId,
-                "aac" to auroraApplicationConfig,
+                "aac" to auroraApplication,
                 "mounts" to mounts,
                 "buildName" to buildName,
                 "routeName" to routeName,
                 "username" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
                 "database" to database,
                 "dbPath" to "/u01/secrets/app",
-                "certPath" to "/u01/secrets/app/${auroraApplicationConfig.name}-cert"
+                "certPath" to "/u01/secrets/app/${auroraApplication.name}-cert"
         )
 
         val templatesToProcess = LinkedList(mutableListOf(
@@ -99,31 +100,31 @@ class OpenShiftObjectGenerator(
                 "imagepuller-rolebinding.json",
                 "admin-rolebinding.json"))
 
-        if (auroraApplicationConfig.permissions.view != null) {
+        if (auroraApplication.permissions.view != null) {
             templatesToProcess.add("view-rolebinding.json")
         }
 
-        auroraApplicationConfig.deploy?.let {
+        auroraApplication.deploy?.let {
             templatesToProcess.add("deployment-config.json")
             templatesToProcess.add("service.json")
         }
 
-        if(auroraApplicationConfig.volume?.config?.isNotEmpty() == true) {
+        if(auroraApplication.volume?.config?.isNotEmpty() == true) {
             templatesToProcess.add("configmap.json")
         }
 
-        auroraApplicationConfig.volume?.secrets?.let {
+        auroraApplication.volume?.secrets?.let {
             templatesToProcess.add("secret.json")
         }
 
-        auroraApplicationConfig.build?.let {
+        auroraApplication.build?.let {
             templatesToProcess.add("build-config.json")
             if (it.testGitUrl != null) {
                 templatesToProcess.add("jenkins-build-config.json")
             }
         }
 
-        auroraApplicationConfig.deploy?.let {
+        auroraApplication.deploy?.let {
             templatesToProcess.add("imagestream.json")
         }
 
@@ -133,7 +134,7 @@ class OpenShiftObjectGenerator(
         mounts?.filter { !it.exist }?.map {
             logger.debug("Create manual mount {}", it)
             val mountParams = mapOf(
-                    "aac" to auroraApplicationConfig,
+                    "aac" to auroraApplication,
                     "mount" to it,
                     "deployId" to deployId,
                     "username" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-")
@@ -143,10 +144,10 @@ class OpenShiftObjectGenerator(
             openShiftObjects.addAll(it)
         }
 
-        auroraApplicationConfig.route?.route?.map {
+        auroraApplication.route?.route?.map {
             logger.debug("Route is {}", it)
             val routeParams = mapOf(
-                    "aac" to auroraApplicationConfig,
+                    "aac" to auroraApplication,
                     "route" to it,
                     "deployId" to deployId,
                     "username" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"))
@@ -155,16 +156,16 @@ class OpenShiftObjectGenerator(
             openShiftObjects.addAll(it)
         }
 
-        auroraApplicationConfig.template?.let {
+        auroraApplication.template?.let {
             val template = openShiftClient.get("template", it.template, "openshift")?.body as ObjectNode
             val generateObjects = openShiftTemplateProcessor.generateObjects(template,
-                    it.parameters, auroraApplicationConfig)
+                    it.parameters, auroraApplication)
             openShiftObjects.addAll(generateObjects)
         }
 
-        auroraApplicationConfig.localTemplate?.let {
+        auroraApplication.localTemplate?.let {
             val generateObjects = openShiftTemplateProcessor.generateObjects(it.templateJson as ObjectNode,
-                    it.parameters, auroraApplicationConfig)
+                    it.parameters, auroraApplication)
             openShiftObjects.addAll(generateObjects)
         }
         return openShiftObjects
