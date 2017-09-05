@@ -7,8 +7,8 @@
       "app": "openshift-console-api",
       "updatedBy": "hero",
       "affiliation": "aos",
-      "releasedVersion": "3",
-      "booberDeployId": "123"
+      "booberDeployId": "123",
+      "releasedVersion": "3"
     }
   },
   "spec": {

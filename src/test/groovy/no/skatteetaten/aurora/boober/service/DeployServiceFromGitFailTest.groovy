@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.facade
+package no.skatteetaten.aurora.boober.service
 
 import java.nio.charset.Charset
 
@@ -11,13 +11,15 @@ import org.springframework.web.client.HttpClientErrorException
 
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import no.skatteetaten.aurora.boober.controller.internal.SetupParams
+import no.skatteetaten.aurora.boober.controller.internal.DeployParams
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
-import no.skatteetaten.aurora.boober.service.AuroraConfigService
+import no.skatteetaten.aurora.boober.service.DeployBundleService
+import no.skatteetaten.aurora.boober.service.DeployService
 import no.skatteetaten.aurora.boober.service.DockerService
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
@@ -38,27 +40,20 @@ import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
-    SetupFacade,
-    AuroraConfigService,
+    DeployService,
     OpenShiftObjectGenerator,
     OpenShiftTemplateProcessor,
     GitService,
     SecretVaultService,
     EncryptionService,
-    AuroraConfigFacade,
+    DeployBundleService,
     VaultFacade,
     ObjectMapper,
     Config,
     OpenShiftResourceClientConfig,
     UserDetailsTokenProvider
-]
-    , properties = [
-        "boober.git.urlPattern=/tmp/boober-test/%s",
-        "boober.git.checkoutPath=/tmp/boober",
-        "boober.git.username=",
-        "boober.git.password="
-    ])
-class SetupFacadeFromGitFailTest extends Specification {
+])
+class DeployServiceFromGitFailTest extends Specification {
 
   @Configuration
   static class Config {
@@ -96,13 +91,13 @@ class SetupFacadeFromGitFailTest extends Specification {
   UserDetailsProvider userDetailsProvider
 
   @Autowired
-  SetupFacade setupFacade
+  DeployService deployService
 
   @Autowired
   GitService gitService
 
   @Autowired
-  AuroraConfigFacade configFacade
+  DeployBundleService deployBundleService
 
   @Autowired
   DockerService dockerService
@@ -135,18 +130,16 @@ class SetupFacadeFromGitFailTest extends Specification {
 
   private void createRepoAndSaveFiles(String affiliation, AuroraConfig auroraConfig) {
     GitServiceHelperKt.createInitRepo(affiliation)
-    configFacade.saveAuroraConfig(affiliation, auroraConfig, false)
+    deployBundleService.saveAuroraConfig(auroraConfig, false)
   }
 
   def "Should perform release that fails and mark it as failed"() {
     given:
-      GitServiceHelperKt.createInitRepo(affiliation)
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, "aos")
       createRepoAndSaveFiles("aos", auroraConfig)
 
     when:
-
-      setupFacade.executeSetup(affiliation, new SetupParams([ENV_NAME], [APP_NAME], [], true))
+      deployService.executeDeploy(affiliation, new DeployParams([ENV_NAME], [APP_NAME], [], true))
 
     then:
       def git = gitService.checkoutRepoForAffiliation(affiliation)

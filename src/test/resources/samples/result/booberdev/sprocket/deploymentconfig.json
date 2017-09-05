@@ -4,22 +4,26 @@
   "metadata": {
     "annotations": {
       "boober.skatteetaten.no/applicationFile": "booberdev/sprocket.json",
-      "console.skatteetaten.no/management-path": ":8081/actuator",
       "console.skatteetaten.no/alarm": "true",
+      "console.skatteetaten.no/management-path": ":8081/actuator",
       "sprocket.sits.no/deployment-config.database": "referanse,foo:123-456"
     },
     "labels": {
       "app": "sprocket",
       "updatedBy": "hero",
       "affiliation": "aos",
-      "booberDeployId": "123"
+      "booberDeployId": "123",
+      "name": "sprocket",
+      "deployTag": "3"
     },
     "name": "sprocket"
   },
   "spec": {
     "strategy": {
       "type": "Recreate",
-      "resources": {}
+      "resources": {
+
+      }
     },
     "triggers": [
       {
@@ -43,12 +47,12 @@
     "template": {
       "metadata": {
         "labels": {
-          "deployTag": "3",
-          "name": "sprocket",
           "app": "sprocket",
           "updatedBy": "hero",
           "affiliation": "aos",
-          "booberDeployId": "123"
+          "booberDeployId": "123",
+          "name": "sprocket",
+          "deployTag": "3"
         }
       },
       "spec": {
@@ -104,14 +108,6 @@
             ],
             "env": [
               {
-                "name": "OPENSHIFT_CLUSTER",
-                "value": "utv"
-              },
-              {
-                "name": "SPLUNK_INDEX",
-                "value": "openshift-test"
-              },
-              {
                 "name": "POD_NAME",
                 "valueFrom": {
                   "fieldRef": {
@@ -130,6 +126,10 @@
                 }
               },
               {
+                "name": "OPENSHIFT_CLUSTER",
+                "value": "utv"
+              },
+              {
                 "name": "HTTP_PORT",
                 "value": "8080"
               },
@@ -142,12 +142,8 @@
                 "value": "sprocket"
               },
               {
-                "name": "DB",
-                "value": "/u01/secrets/app/referanse-db/info"
-              },
-              {
-                "name": "DB_PROPERTIES",
-                "value": "/u01/secrets/app/referanse-db/db.properties"
+                "name": "SPLUNK_INDEX",
+                "value": "openshift-test"
               },
               {
                 "name": "REFERANSE_DB",
@@ -164,6 +160,22 @@
               {
                 "name": "FOO_DB_PROPERTIES",
                 "value": "/u01/secrets/app/foo-db/db.properties"
+              },
+              {
+                "name": "DB",
+                "value": "/u01/secrets/app/referanse-db/info"
+              },
+              {
+                "name": "DB_PROPERTIES",
+                "value": "/u01/secrets/app/referanse-db/db.properties"
+              },
+              {
+                "name": "VOLUME_REFERANSE_DB",
+                "value": "/u01/secrets/app/referanse-db"
+              },
+              {
+                "name": "VOLUME_FOO_DB",
+                "value": "/u01/secrets/app/foo-db"
               },
               {
                 "name": "VOLUME_AURORA_TOKEN",

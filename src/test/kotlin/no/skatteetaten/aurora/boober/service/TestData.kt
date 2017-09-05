@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.boober.model.AuroraApplicationConfig
+import no.skatteetaten.aurora.boober.model.AuroraApplication
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigFlags
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
@@ -13,13 +13,12 @@ import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.Probe
 import no.skatteetaten.aurora.boober.model.TemplateType
 
-val auroraDevelopment = AuroraApplicationConfig(
+val auroraDevelopment = AuroraApplication(
         schemaVersion = "v1",
         affiliation = "aurora",
         cluster = "utv",
         type = TemplateType.development,
         fields = emptyMap(),
-        unmappedPointers = emptyMap(),
         envName = "boober-unit-test",
         permissions = Permissions(
                 admin = Permission(

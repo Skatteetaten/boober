@@ -4,21 +4,25 @@
   "metadata": {
     "annotations": {
       "boober.skatteetaten.no/applicationFile": "booberdev/console.json",
-      "console.skatteetaten.no/management-path": ":8081/actuator",
-      "console.skatteetaten.no/alarm": "true"
+      "console.skatteetaten.no/alarm": "true",
+      "console.skatteetaten.no/management-path": ":8081/actuator"
     },
     "labels": {
       "app": "openshift-console-api",
       "updatedBy": "hero",
       "affiliation": "aos",
-      "booberDeployId": "123"
+      "booberDeployId": "123",
+      "name": "openshift-console-api",
+      "deployTag": "3"
     },
     "name": "openshift-console-api"
   },
   "spec": {
     "strategy": {
       "type": "Recreate",
-      "resources": {}
+      "resources": {
+
+      }
     },
     "triggers": [
       {
@@ -42,12 +46,12 @@
     "template": {
       "metadata": {
         "labels": {
-          "deployTag": "3",
-          "name": "openshift-console-api",
           "app": "openshift-console-api",
           "updatedBy": "hero",
           "affiliation": "aos",
-          "booberDeployId": "123"
+          "booberDeployId": "123",
+          "name": "openshift-console-api",
+          "deployTag": "3"
         }
       },
       "spec": {
@@ -79,14 +83,6 @@
             ],
             "env": [
               {
-                "name": "OPENSHIFT_CLUSTER",
-                "value": "utv"
-              },
-              {
-                "name": "SPLUNK_INDEX",
-                "value": "openshift-test"
-              },
-              {
                 "name": "POD_NAME",
                 "valueFrom": {
                   "fieldRef": {
@@ -105,6 +101,10 @@
                 }
               },
               {
+                "name": "OPENSHIFT_CLUSTER",
+                "value": "utv"
+              },
+              {
                 "name": "HTTP_PORT",
                 "value": "8080"
               },
@@ -117,16 +117,20 @@
                 "value": "openshift-console-api"
               },
               {
+                "name": "SPLUNK_INDEX",
+                "value": "openshift-test"
+              },
+              {
+                "name": "ROUTE_NAME",
+                "value": "http://openshift-console-api-aos-booberdev.utv.paas.skead.no"
+              },
+              {
                 "name": "REMOTE_DEBUG",
                 "value": "true"
               },
               {
                 "name": "DEBUG_PORT",
                 "value": "5005"
-              },
-              {
-                "name": "ROUTE_NAME",
-                "value": "http://openshift-console-api-aos-booberdev.utv.paas.skead.no"
               }
             ],
             "resources": {

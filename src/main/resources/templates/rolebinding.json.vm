@@ -2,11 +2,11 @@
   "kind": "RoleBinding",
   "apiVersion": "v1",
   "metadata": {
-    "name": "admin"
+    "name": "$name"
   }
-#if (${aac.permissions.admin.groups.size()} != 0)
+#if (${permission.groups.size()} != 0)
 ,"groupNames": [
-  #foreach ($group in $aac.permissions.admin.groups)
+  #foreach ($group in $permission.groups)
     #if($velocityCount != 1)
       ,
     #end
@@ -15,9 +15,9 @@
 ]
 #end
 
-#if (${aac.permissions.admin.users.size()} != 0)
+#if (${permission.users.size()} != 0)
 ,"userNames": [
-  #foreach ($user in $aac.permissions.admin.users)
+  #foreach ($user in $permission.users)
     #if($velocityCount != 1)
       ,
     #end
@@ -26,9 +26,9 @@
 ]
 #end
 
-#if (${aac.permissions.admin.rolebindings.size()} != 0)
+#if (${permission.rolebindings.size()} != 0)
 ,"subjects": [
-  #foreach ($binding in $aac.permissions.admin.rolebindings.entrySet())
+  #foreach ($binding in $permission.rolebindings.entrySet())
     #if($velocityCount != 1)
       ,
     #end
@@ -41,6 +41,6 @@
 #end
 
 , "roleRef": {
-"name": "admin"
+"name": "$name"
 }
 }

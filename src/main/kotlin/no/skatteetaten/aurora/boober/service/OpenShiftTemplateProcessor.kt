@@ -3,7 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
-import no.skatteetaten.aurora.boober.model.AuroraApplicationConfig
+import no.skatteetaten.aurora.boober.model.AuroraApplication
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import org.springframework.stereotype.Service
 
@@ -13,7 +13,7 @@ class OpenShiftTemplateProcessor(
         val mapper: ObjectMapper) {
 
 
-    fun generateObjects(template: ObjectNode, parameters: Map<String, String>?, aac: AuroraApplicationConfig): List<JsonNode> {
+    fun generateObjects(template: ObjectNode, parameters: Map<String, String>?, aac: AuroraApplication): List<JsonNode> {
 
         val adcParameters = parameters ?: emptyMap()
         val adcParameterKeys = adcParameters.keys

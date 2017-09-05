@@ -11,7 +11,9 @@
       "app": "aos-simple",
       "updatedBy": "hero",
       "affiliation": "aos",
-      "booberDeployId": "123"
+      "booberDeployId": "123",
+      "name": "aos-simple",
+      "deployTag": "1.0.3-SNAPSHOT"
     },
     "name": "aos-simple"
   },
@@ -48,21 +50,16 @@
     "template": {
       "metadata": {
         "labels": {
-          "deployTag": "1.0.3-SNAPSHOT",
-          "name": "aos-simple",
           "app": "aos-simple",
           "updatedBy": "hero",
           "affiliation": "aos",
-          "booberDeployId": "123"
+          "booberDeployId": "123",
+          "name": "aos-simple",
+          "deployTag": "1.0.3-SNAPSHOT"
         }
       },
       "spec": {
         "volumes": [
-          {
-            "name": "application-log-volume",
-            "emptyDir": {
-            }
-          },
           {
             "name": "config",
             "configMap": {
@@ -73,6 +70,12 @@
             "name": "aos-simple-cert",
             "secret": {
               "secretName": "aos-simple-cert"
+            }
+          },
+          {
+            "name": "application-log-volume",
+            "emptyDir": {
+
             }
           }
         ],
@@ -97,14 +100,6 @@
             ],
             "env": [
               {
-                "name": "OPENSHIFT_CLUSTER",
-                "value": "utv"
-              },
-              {
-                "name": "SPLUNK_INDEX",
-                "value": "openshift-test"
-              },
-              {
                 "name": "POD_NAME",
                 "valueFrom": {
                   "fieldRef": {
@@ -123,6 +118,10 @@
                 }
               },
               {
+                "name": "OPENSHIFT_CLUSTER",
+                "value": "utv"
+              },
+              {
                 "name": "HTTP_PORT",
                 "value": "8080"
               },
@@ -133,6 +132,14 @@
               {
                 "name": "APP_NAME",
                 "value": "aos-simple"
+              },
+              {
+                "name": "SPLUNK_INDEX",
+                "value": "openshift-test"
+              },
+              {
+                "name": "ROUTE_NAME",
+                "value": "http://aos-simple-aos-mounts.utv.paas.skead.no/foo"
               },
               {
                 "name": "STS_CERTIFICATE_URL",
@@ -147,8 +154,12 @@
                 "value": "/u01/secrets/app/aos-simple-cert/descriptor.properties"
               },
               {
-                "name": "ROUTE_NAME",
-                "value": "http://aos-simple-aos-mounts.utv.paas.skead.no/foo"
+                "name": "VOLUME_CONFIG",
+                "value": "/u01/config/configmap"
+              },
+              {
+                "name": "VOLUME_AOS_SIMPLE_CERT",
+                "value": "/u01/secrets/app/aos-simple-cert"
               }
             ],
             "resources": {
@@ -163,16 +174,16 @@
             },
             "volumeMounts": [
               {
-                "name": "application-log-volume",
-                "mountPath": "/u01/logs"
-              },
-              {
                 "name": "config",
                 "mountPath": "/u01/config/configmap"
               },
               {
                 "name": "aos-simple-cert",
                 "mountPath": "/u01/secrets/app/aos-simple-cert"
+              },
+              {
+                "name": "application-log-volume",
+                "mountPath": "/u01/logs"
               }
             ],
             "terminationMessagePath": "/dev/termination-log",

@@ -5,46 +5,66 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
+import com.fasterxml.jackson.databind.ObjectMapper
+
+import no.skatteetaten.aurora.boober.controller.internal.DeployParams
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
+import no.skatteetaten.aurora.boober.service.openshift.ServiceAccountTokenProvider
+import no.skatteetaten.aurora.boober.service.openshift.UserDetailsTokenProvider
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
-    AuroraConfigService,
-    Config
+    DeployService,
+    OpenShiftObjectGenerator,
+    OpenShiftTemplateProcessor,
+    GitService,
+    SecretVaultService,
+    EncryptionService,
+    DeployBundleService,
+    VaultFacade,
+    ObjectMapper,
+    Config,
+    OpenShiftResourceClientConfig,
+    UserDetailsTokenProvider
 ])
 class AuroraDeploymentConfigDeployServiceUserValidationTest extends Specification {
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "aos-simple"
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
+  final ApplicationId secretAId = new ApplicationId("secrettest", APP_NAME)
 
   @Configuration
   static class Config {
     private DetachedMockFactory factory = new DetachedMockFactory()
 
     @Bean
-    UserDetailsProvider userDetailsProvider() {
-
-      factory.Stub(UserDetailsProvider)
-    }
-
-    @Bean
-    OpenShiftClient openShiftClient() {
+    OpenShiftClient openshiftClient() {
       factory.Mock(OpenShiftClient)
     }
 
     @Bean
-    GitService gitService() {
-      factory.Mock(GitService)
+    ServiceAccountTokenProvider tokenProvider() {
+      factory.Mock(ServiceAccountTokenProvider)
+    }
+
+    @Bean
+    UserDetailsProvider userDetailsProvider() {
+      factory.Mock(UserDetailsProvider)
+    }
+
+    @Bean
+    DockerService dockerService() {
+      factory.Mock(DockerService)
     }
   }
 
@@ -55,25 +75,35 @@ class AuroraDeploymentConfigDeployServiceUserValidationTest extends Specificatio
   OpenShiftClient openShiftClient
 
   @Autowired
-  AuroraConfigService auroraDeploymentConfigService
+  ObjectMapper mapper
+
+  @Autowired
+  DeployBundleService deployBundleService
+
+  @Autowired
+  DeployService service
 
   def setup() {
     userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
+  }
 
-    openShiftClient.prepareCommands(_, _) >> []
+  private void createRepoAndSaveFiles(String affiliation, AuroraConfig auroraConfig) {
+    GitServiceHelperKt.createInitRepo(affiliation)
+    deployBundleService.saveAuroraConfig(auroraConfig, false)
   }
 
   def "Should get error if user is not valid"() {
 
     given:
-      def deployCommand = new DeployCommand(aid)
+
+      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
+      createRepoAndSaveFiles("aos", auroraConfig)
       openShiftClient.isValidUser("foo") >> false
       openShiftClient.isValidGroup(_) >> true
 
-      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
     when:
-      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [deployCommand], [:])
+      service.dryRun("aos", new DeployParams([aid.environment], [aid.application], [], false))
 
     then:
       def e = thrown(AuroraConfigException)
@@ -86,14 +116,14 @@ class AuroraDeploymentConfigDeployServiceUserValidationTest extends Specificatio
   def "Should get error if group is not valid"() {
 
     given:
-      def deployCommand = new DeployCommand(aid)
+      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
+      createRepoAndSaveFiles("aos", auroraConfig)
+
       openShiftClient.isValidUser(_) >> true
       openShiftClient.isValidGroup(_) >> false
-
-      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-
     when:
-      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [deployCommand], [:])
+
+      service.dryRun("aos", new DeployParams([aid.environment], [aid.application], [], false))
 
     then:
       AuroraConfigException e = thrown()

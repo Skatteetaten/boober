@@ -1,14 +1,14 @@
 package no.skatteetaten.aurora.boober.mapper
 
+import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.DeployCommand
 import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.internal.ValidationError
 import no.skatteetaten.aurora.boober.utils.findAllPointers
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class AuroraConfigValidator(val deployCommand: DeployCommand,
+class AuroraConfigValidator(val applicationId: ApplicationId,
                             val applicationFiles: List<AuroraConfigFile>,
                             val fieldHandlers: Set<AuroraConfigFieldHandler>,
                             val auroraConfigFields: AuroraConfigFields) {
@@ -29,7 +29,7 @@ class AuroraConfigValidator(val deployCommand: DeployCommand,
 
         (errors + unmappedErrors).takeIf { it.isNotEmpty() }?.let {
             logger.debug("{}", it)
-            val aid = deployCommand.applicationId
+            val aid = applicationId
             throw ApplicationConfigException(
                     "Config for application ${aid.application} in environment ${aid.environment} contains errors",
                     errors = it.mapNotNull { it })
@@ -37,7 +37,7 @@ class AuroraConfigValidator(val deployCommand: DeployCommand,
     }
 
 
-    fun getUnmappedPointers(): Map<String, List<String>> {
+    private fun getUnmappedPointers(): Map<String, List<String>> {
         val allPaths = fieldHandlers.map { it.path }
 
         val filePointers = applicationFiles.associateBy({ it.configName }, { it.contents.findAllPointers(3) })

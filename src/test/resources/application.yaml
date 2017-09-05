@@ -8,9 +8,10 @@ boober:
   encrypt:
     key: "komogsyngensang"
   git:
-    urlPattern: "/tmp/boobertest/%s"
-    username: "boober"
-    password: "komogsyngensang"
+    urlPattern: "file:///tmp/boobertest/%s"
+    checkoutPath: "build/boobercheckout"
+    username: ""
+    password: ""
   docker:
     registry: "docker-registry.aurora.sits.no:5000"
   openshift:

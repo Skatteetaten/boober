@@ -4,7 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraSecretVault
+import no.skatteetaten.aurora.boober.model.Database
+import no.skatteetaten.aurora.boober.model.Mount
+import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.utils.nullOnEmpty
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -27,8 +32,8 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         return mountNames.map {
             val type = extract("mounts/$it/type", { MountType.valueOf(it.asText()) })
 
-            val content = if(type == MountType.ConfigMap) {
-                    extractOrNull("mounts/$it/content", { jacksonObjectMapper().convertValue<Map<String, String>>(it) })
+            val content = if (type == MountType.ConfigMap) {
+                extractOrNull("mounts/$it/content", { jacksonObjectMapper().convertValue<Map<String, String>>(it) })
             } else {
                 extractOrNull("mounts/$it/secretVault", {
                     vaults[it.asText()]?.secrets
@@ -48,7 +53,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
     }
 
 
-    fun getConfigMap(configExtractors: List<AuroraConfigFieldHandler>): Map<String, String> {
+    fun getConfigMap(configExtractors: List<AuroraConfigFieldHandler>): Map<String, String>? {
 
 
         val envMap: Map<String, String> = configExtractors.filter { it.name.count { it == '/' } == 1 }.map {
@@ -83,7 +88,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         }.toMap()
 
         if (envMap.isEmpty()) {
-            return propertiesMap
+            return propertiesMap.nullOnEmpty()
         }
 
         //TODO: When we have 3.6 we can remove this
@@ -93,8 +98,8 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
                 }.joinToString(separator = "\\n")
 
 
-        return propertiesMap + envMap + latestPair
-
+        val config = propertiesMap + envMap + latestPair
+        return config.nullOnEmpty()
 
     }
 

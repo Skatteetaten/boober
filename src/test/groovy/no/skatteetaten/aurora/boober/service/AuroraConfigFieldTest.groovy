@@ -1,23 +1,23 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraVolumeMapperV1
-import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.DeployCommand
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+
+import com.fasterxml.jackson.databind.ObjectMapper
+
+import no.skatteetaten.aurora.boober.controller.security.User
+import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.mapper.v1.AuroraVolumeMapperV1
+import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
     EncryptionService,
-    AuroraConfigService,
     Config
 ])
 class AuroraConfigFieldTest extends Specification {
@@ -52,9 +52,6 @@ class AuroraConfigFieldTest extends Specification {
   @Autowired
   ObjectMapper mapper
 
-  @Autowired
-  AuroraConfigService auroraDeploymentConfigService
-
   def setup() {
     userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
     openShiftClient.isValidUser(_) >> true
@@ -64,10 +61,9 @@ class AuroraConfigFieldTest extends Specification {
   def "Should generate correct config extractors"() {
     given:
       def aid = new ApplicationId("config", "console")
-      def deployCommand = new DeployCommand(aid, [])
       def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
-    def files = auroraConfig.getFilesForApplication(deployCommand)
+    def files = auroraConfig.getFilesForApplication(aid)
     when:
     def mapper = new AuroraVolumeMapperV1(files, [:])
 

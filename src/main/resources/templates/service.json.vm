@@ -2,28 +2,22 @@
   "kind": "Service",
   "apiVersion": "v1",
   "metadata": {
-    "name": "${aac.name}",
+    "name": "${name}",
     "annotations": {
-      #if(${aac.deploy.webseal})
-        "sprocket.sits.no/service.webseal": "${aac.deploy.webseal.host}",
-        #if(${aac.deploy.webseal.roles})
-          "sprocket.sits.no/service.webseal-roles": "${aac.deploy.webseal.roles}",
-        #end
+      #foreach ($annotation  in $annotations.entrySet())
+          #if($velocityCount != 1)
+            ,
       #end
-      #if(${aac.deploy.prometheus} && "$!{aac.deploy.prometheus.path}" != "" )
-        "prometheus.io/scheme": "http",
-        "prometheus.io/scrape": "true",
-        "prometheus.io/path": "${aac.deploy.prometheus.path}",
-        "prometheus.io/port": "$aac.deploy.prometheus.port"
-      #else
-        "prometheus.io/scrape": "false"
+        "${annotation.key}": "${annotation.value}"
       #end
     },
     "labels": {
-      "app": "${aac.name}",
-      "updatedBy": "${username}",
-      "affiliation": "${aac.affiliation}",
-      "booberDeployId": "${deployId}"
+      #foreach ($label  in $labels.entrySet())
+          #if($velocityCount != 1)
+            ,
+          #end
+        "${label.key}": "${label.value}"
+      #end
     }
   },
   "spec": {
@@ -37,7 +31,7 @@
       }
     ],
     "selector": {
-      "name": "${aac.name}"
+"name": "${name}"
     },
     "type": "ClusterIP",
     "sessionAffinity": "None"

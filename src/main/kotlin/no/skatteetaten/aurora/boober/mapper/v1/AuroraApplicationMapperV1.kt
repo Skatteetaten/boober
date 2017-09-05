@@ -3,27 +3,14 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.model.AuroraApplicationConfig
-import no.skatteetaten.aurora.boober.model.AuroraBuild
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraDeploy
-import no.skatteetaten.aurora.boober.model.AuroraLocalTemplate
-import no.skatteetaten.aurora.boober.model.AuroraRoute
-import no.skatteetaten.aurora.boober.model.AuroraTemplate
-import no.skatteetaten.aurora.boober.model.AuroraVolume
-import no.skatteetaten.aurora.boober.model.DeployCommand
-import no.skatteetaten.aurora.boober.model.Permission
-import no.skatteetaten.aurora.boober.model.Permissions
-import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.utils.findAllPointers
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.pattern
 
-class AuroraApplicationMapperV1(val applicationFiles: List<AuroraConfigFile>,
-                                val openShiftClient: OpenShiftClient,
-                                val deployCommand: DeployCommand) {
+class AuroraApplicationMapperV1(val openShiftClient: OpenShiftClient,
+                                val applicationId: ApplicationId) {
 
 
     val handlers = listOf(
@@ -38,26 +25,24 @@ class AuroraApplicationMapperV1(val applicationFiles: List<AuroraConfigFile>,
     )
 
     fun auroraApplicationConfig(auroraConfigFields: AuroraConfigFields,
-                                fieldHandlers: Set<AuroraConfigFieldHandler>,
                                 volume: AuroraVolume?,
                                 route: AuroraRoute?,
                                 build: AuroraBuild?,
                                 deploy: AuroraDeploy?,
                                 template: AuroraTemplate?,
                                 localTemplate: AuroraLocalTemplate?
-    ): AuroraApplicationConfig {
+    ): AuroraApplication {
         val name = auroraConfigFields.extract("name")
-        return AuroraApplicationConfig(
+        return AuroraApplication(
                 schemaVersion = auroraConfigFields.extract("schemaVersion"),
 
                 affiliation = auroraConfigFields.extract("affiliation"),
                 cluster = auroraConfigFields.extract("cluster"),
                 type = auroraConfigFields.extract("type", { TemplateType.valueOf(it.textValue()) }),
                 name = name,
-                envName = auroraConfigFields.extractOrDefault("envName", deployCommand.applicationId.environment),
+                envName = auroraConfigFields.extractOrDefault("envName", applicationId.environment),
                 permissions = extractPermissions(auroraConfigFields),
                 fields = auroraConfigFields.fields,
-                unmappedPointers = getUnmappedPointers(fieldHandlers),
                 volume = volume,
                 route = route,
                 build = build,
@@ -90,7 +75,7 @@ class AuroraApplicationMapperV1(val applicationFiles: List<AuroraConfigFile>,
         }
     }
 
-    protected fun extractPermissions(auroraConfigFields: AuroraConfigFields): Permissions {
+    private fun extractPermissions(auroraConfigFields: AuroraConfigFields): Permissions {
         val viewGroups = auroraConfigFields.extractOrNull("permissions/view/groups", { it.textValue().split(" ").toSet() })
         val viewUsers = auroraConfigFields.extractOrNull("permissions/view/users", { it.textValue().split(" ").toSet() })
         val view = if (viewGroups != null || viewUsers != null) {
@@ -103,14 +88,4 @@ class AuroraApplicationMapperV1(val applicationFiles: List<AuroraConfigFile>,
                         auroraConfigFields.extractOrNull("permissions/admin/users", { it.textValue().split(" ").toSet() })),
                 view = view)
     }
-
-    fun getUnmappedPointers(fieldHandlers: Set<AuroraConfigFieldHandler>): Map<String, List<String>> {
-        val allPaths = fieldHandlers.map { it.path }
-
-        val filePointers = applicationFiles.associateBy({ it.configName }, { it.contents.findAllPointers(3) })
-
-        return filePointers.mapValues { it.value - allPaths }.filterValues { it.isNotEmpty() }
-    }
-
-
 }

@@ -9,8 +9,12 @@ enum class TemplateType {
     deploy, development, localTemplate, template, build
 }
 
+enum class ApplicationPlatform {
+    java, web
+}
 
-data class AuroraApplicationConfig(
+
+data class AuroraApplication(
         val schemaVersion: String,
         val affiliation: String,
         val cluster: String,
@@ -19,8 +23,6 @@ data class AuroraApplicationConfig(
         val envName: String,
         val permissions: Permissions,
         val fields: Map<String, AuroraConfigField>,
-        val unmappedPointers: Map<String, List<String>>,
-
 
         val volume: AuroraVolume? = null,
         val route: AuroraRoute? = null,
@@ -36,7 +38,7 @@ data class AuroraApplicationConfig(
 
 data class AuroraVolume(
         val secrets: Map<String, String>?,
-        val config: Map<String, String>,
+        val config: Map<String, String>?,
         val mounts: List<Mount>?
 )
 
@@ -70,6 +72,7 @@ data class AuroraDeploy(
         val flags: AuroraDeploymentConfigFlags,
         val resources: AuroraDeploymentConfigResources,
         val replicas: Int?,
+        val applicationPlatform: ApplicationPlatform = ApplicationPlatform.java,
         val groupId: String,
         val artifactId: String,
         val version: String,

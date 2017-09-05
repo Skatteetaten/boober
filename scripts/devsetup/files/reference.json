@@ -11,13 +11,12 @@
         }
       },
       "config": {
-        "latest.properties": {
-          "foo": "bar"
-        }
+        "foo": "bar"
       }
     },
     "reference.json": {
-      "name": "refapp",
+      "name": "reference",
+      "applicationPlatform": "java",
       "flags": {
         "cert": true,
         "rolling": true
@@ -29,24 +28,38 @@
         "referanseapp": "auto"
       },
       "config": {
-        "latest.properties": {
-          "foo2": "baz"
-        }
+        "foo2": "baz"
+      }
+    },
+    "reference-web.json": {
+      "name": "reference-web",
+      "applicationPlatform": "web",
+      "flags": {
+        "rolling": true
+      },
+      "groupId": "aurora",
+      "artifactId": "webleveransetest",
+      "version": "0",
+      "route" : {
+        "reference-web" : { }
+      },
+      "config": {
+        "foo2": "baz"
       }
     },
     "boober-utv/about.json": {
       "cluster": "qa",
       "secretVault": "utv"
-
     },
     "boober-utv/reference.json": {
+    },
+    "boober-utv/reference-web.json": {
     },
     "boober-test/about.json": {
       "cluster": "qa",
       "secretVault": "test"
     },
     "boober-test/reference.json": {
-
     }
   }
 }

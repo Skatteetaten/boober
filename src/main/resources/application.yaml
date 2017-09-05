@@ -54,8 +54,6 @@ boober:
     urlPattern: "file:///tmp/boobergit/%s"
     username: "boober"
     password: "password"
-  docker:
-    registry: "uil0paas-utv-registry01.skead.no:5000"
 
 management:
     port: 8081

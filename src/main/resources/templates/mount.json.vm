@@ -4,10 +4,12 @@
   "metadata": {
     "name": "${mount.volumeName}",
     "labels": {
-      "app": "${aac.name}",
-      "updatedBy": "${username}",
-      "affiliation": "${aac.affiliation}",
-      "booberDeployId": "${deployId}"
+      #foreach ($label  in $labels.entrySet())
+          #if($velocityCount != 1)
+            ,
+          #end
+        "${label.key}": "${label.value}"
+      #end
     }
   }
 #if (${mount.content})

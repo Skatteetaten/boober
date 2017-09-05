@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.facade
+package no.skatteetaten.aurora.boober.service
 
 import static no.skatteetaten.aurora.boober.model.TemplateType.build
 import static no.skatteetaten.aurora.boober.model.TemplateType.deploy
@@ -15,8 +15,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.service.AuroraConfigService
+import no.skatteetaten.aurora.boober.service.DeployBundleService
+import no.skatteetaten.aurora.boober.service.DeployService
 import no.skatteetaten.aurora.boober.service.DockerService
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
@@ -38,20 +40,19 @@ import spock.mock.DetachedMockFactory
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
     SecretVaultService,
-    SetupFacade,
-    AuroraConfigService,
+    DeployService,
     OpenShiftObjectGenerator,
     OpenShiftTemplateProcessor,
     GitService,
     VaultFacade,
     DockerService,
     EncryptionService,
-    AuroraConfigFacade,
+    DeployBundleService,
     Config,
     OpenShiftResourceClientConfig,
     UserDetailsTokenProvider
 ])
-class SetupFacadeGenerateDeployResourceTest extends Specification {
+class DeployServiceGenerateDeployResourceTest extends Specification {
 
   @Configuration
   static class Config {
@@ -68,7 +69,7 @@ class SetupFacadeGenerateDeployResourceTest extends Specification {
       factory.Mock(OpenShiftClient)
     }
 
-    // @Bean
+     @Bean
     OpenShiftResourceClient resourceClient() {
       factory.Mock(OpenShiftResourceClient)
     }
@@ -94,7 +95,7 @@ class SetupFacadeGenerateDeployResourceTest extends Specification {
   UserDetailsProvider userDetailsProvider
 
   @Autowired
-  SetupFacade setupFacade
+  DeployService setupFacade
 
   @Autowired
   ObjectMapper mapper

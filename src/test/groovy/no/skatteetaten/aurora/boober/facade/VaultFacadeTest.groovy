@@ -26,11 +26,6 @@ import spock.mock.DetachedMockFactory
     EncryptionService,
     SecretVaultService,
     Config
-], properties = [
-    "boober.git.urlPattern=/tmp/boober-test/%s",
-    "boober.git.checkoutPath=/tmp/boober",
-    "boober.git.username=",
-    "boober.git.password="
 ])
 class VaultFacadeTest extends Specification {
 
@@ -210,18 +205,16 @@ class VaultFacadeTest extends Specification {
       updatedAuroraConfig.versions['latest.properties'] != storedVault.versions['latest.properties']
   }
 
-  def "Should remove secrets"() {
+  def "Should remove vault"() {
     given:
       openshift.hasUserAccess(_, _) >> true
       createRepoAndSaveFiles(affiliation, vault)
 
     when:
       facade.delete(affiliation, vaultName)
-      def repo = gitService.checkoutRepoForAffiliation(affiliation)
-      def files = gitService.getAllFilesInRepo(repo)
 
     then:
-      files.size() == 0
+      facade.find(affiliation, vaultName).secrets.isEmpty()
   }
 
   def "Should not remove other vaults when adding a new"() {

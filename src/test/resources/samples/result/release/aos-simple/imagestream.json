@@ -7,8 +7,8 @@
       "app": "aos-simple",
       "updatedBy": "hero",
       "affiliation": "aos",
-      "releasedVersion": "1.0.3-b1.1.0-wingnut-1.0.0",
-      "booberDeployId": "123"
+      "booberDeployId": "123",
+      "releasedVersion": "1.0.3-b1.1.0-wingnut-1.0.0"
     }
   },
   "spec": {

@@ -5,7 +5,7 @@ import java.io.File
 
 fun createInitRepo(affiliation: String): Git {
 
-    val booberTestFolder = File("/tmp/boober-test/$affiliation.git")
+    val booberTestFolder = File("/tmp/boobertest/$affiliation.git")
 
     if (!booberTestFolder.exists()) {
         booberTestFolder.mkdirs()

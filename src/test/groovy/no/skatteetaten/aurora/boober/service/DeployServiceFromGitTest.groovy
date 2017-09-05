@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.facade
+package no.skatteetaten.aurora.boober.service
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -10,14 +10,16 @@ import org.springframework.http.ResponseEntity
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import no.skatteetaten.aurora.boober.controller.internal.SetupParams
+import no.skatteetaten.aurora.boober.controller.internal.DeployParams
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
-import no.skatteetaten.aurora.boober.service.AuroraConfigService
+import no.skatteetaten.aurora.boober.service.DeployBundleService
+import no.skatteetaten.aurora.boober.service.DeployService
 import no.skatteetaten.aurora.boober.service.DockerService
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
@@ -37,27 +39,20 @@ import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [
         no.skatteetaten.aurora.boober.Configuration,
-        SetupFacade,
-        AuroraConfigService,
+        DeployService,
         OpenShiftObjectGenerator,
         OpenShiftTemplateProcessor,
         GitService,
         SecretVaultService,
         EncryptionService,
-        AuroraConfigFacade,
+        DeployBundleService,
         VaultFacade,
         ObjectMapper,
         Config,
         OpenShiftResourceClientConfig,
         UserDetailsTokenProvider
-]
-        , properties = [
-                "boober.git.urlPattern=/tmp/boober-test/%s",
-                "boober.git.checkoutPath=/tmp/boober",
-                "boober.git.username=",
-                "boober.git.password="
-        ])
-class SetupFacadeFromGitTest extends Specification {
+])
+class DeployServiceFromGitTest extends Specification {
 
     @Configuration
     static class Config {
@@ -95,13 +90,13 @@ class SetupFacadeFromGitTest extends Specification {
     UserDetailsProvider userDetailsProvider
 
     @Autowired
-    SetupFacade setupFacade
+    DeployService deployService
 
     @Autowired
     GitService gitService
 
     @Autowired
-    AuroraConfigFacade configFacade
+    DeployBundleService deployBundleService
 
     @Autowired
     DockerService dockerService
@@ -131,18 +126,17 @@ class SetupFacadeFromGitTest extends Specification {
 
     private void createRepoAndSaveFiles(String affiliation, AuroraConfig auroraConfig) {
         GitServiceHelperKt.createInitRepo(affiliation)
-        configFacade.saveAuroraConfig(affiliation, auroraConfig, false)
+      deployBundleService.saveAuroraConfig(auroraConfig, false)
     }
 
     def "Should perform release and mark it"() {
         given:
-        GitServiceHelperKt.createInitRepo(affiliation)
         def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, "aos")
         createRepoAndSaveFiles("aos", auroraConfig)
 
         when:
 
-          setupFacade.executeSetup(affiliation, new SetupParams([ENV_NAME], [APP_NAME], [], true))
+          deployService.executeDeploy(affiliation, new DeployParams([ENV_NAME], [APP_NAME], [], true))
 
         then:
         def git = gitService.checkoutRepoForAffiliation(affiliation)
@@ -169,10 +163,10 @@ class SetupFacadeFromGitTest extends Specification {
         createRepoAndSaveFiles(affiliation, mergedConfig)
 
         when:
-          setupFacade.executeSetup(affiliation, new SetupParams([ENV_NAME], [APP_NAME, "sprocket"], [], true))
+          deployService.executeDeploy(affiliation, new DeployParams([ENV_NAME], [APP_NAME, "sprocket"], [], true))
 
         then:
-        def tags = setupFacade.deployHistory(affiliation)
+        def tags = deployService.deployHistory(affiliation)
         tags.size() == 2
         def revTag = tags[0]
 
@@ -195,13 +189,13 @@ class SetupFacadeFromGitTest extends Specification {
 
         def auroraConfig = AuroraConfigHelperKt.
                 createAuroraConfig(new ApplicationId("secrettest", "aos-simple"), affiliation)
-        configFacade.saveAuroraConfig(affiliation, auroraConfig, false)
+          deployBundleService.saveAuroraConfig(auroraConfig, false)
 
         when:
-          setupFacade.executeSetup(affiliation, new SetupParams(["secrettest"], ["aos-simple"], [], true))
+          deployService.executeDeploy(affiliation, new DeployParams(["secrettest"], ["aos-simple"], [], true))
 
         then:
-        def tags = setupFacade.deployHistory(affiliation)
+        def tags = deployService.deployHistory(affiliation)
         tags.size() == 1
         def revTag = tags[0]
         def resp = revTag.result["openShiftResponses"]
@@ -220,7 +214,7 @@ class SetupFacadeFromGitTest extends Specification {
 
         1 * dockerService.tag(_) >>
                 new ResponseEntity<JsonNode>(mapper.convertValue(["foo": "foo"], JsonNode.class), HttpStatus.OK)
-          def result = setupFacade.executeSetup(affiliation, new SetupParams(["release"], ["aos-simple"], [], true))
+          def result = deployService.executeDeploy(affiliation, new DeployParams(["release"], ["aos-simple"], [], true))
         then:
         result.size() == 1
         result[0].tagCommandResponse.statusCode.is2xxSuccessful()

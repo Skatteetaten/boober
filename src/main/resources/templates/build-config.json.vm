@@ -4,22 +4,24 @@
   "metadata": {
     "name": "${buildName}",
     "labels": {
-      "app": "${buildName}",
-      "updatedBy": "${username}",
-      "affiliation": "${aac.affiliation}",
-      "booberDeployId": "${deployId}"
+      #foreach ($label  in $labels.entrySet())
+          #if($velocityCount != 1)
+            ,
+          #end
+        "${label.key}": "${label.value}"
+      #end
     }
   },
   "spec": {
     "triggers": [
-      #if (${aac.build.triggers})
+    #if (${build.triggers})
         {
           "type": "ImageChange",
           "imageChange": {
             "from": {
               "kind": "ImageStreamTag",
               "namespace": "openshift",
-              "name": "${aac.build.baseName}:${aac.build.baseVersion}"
+    "name": "${build.baseName}:${build.baseVersion}"
             }
           }
         },
@@ -35,32 +37,32 @@
         "from": {
           "kind": "ImageStreamTag",
           "namespace": "openshift",
-          "name": "${aac.build.builderName}:${aac.build.builderVersion}"
+"name": "${build.builderName}:${build.builderVersion}"
         },
         "env": [
           {
             "name": "ARTIFACT_ID",
-            "value": "${aac.build.artifactId}"
+          "value": "${build.artifactId}"
           },
           {
             "name": "GROUP_ID",
-            "value": "${aac.build.groupId}"
+          "value": "${build.groupId}"
           },
           {
             "name": "VERSION",
-            "value": "${aac.build.version}"
+          "value": "${build.version}"
           },
           {
             "name": "DOCKER_BASE_VERSION",
-            "value": "${aac.build.baseVersion}"
+          "value": "${build.baseVersion}"
           },
           {
             "name": "DOCKER_BASE_IMAGE",
-            "value": "aurora/${aac.build.baseName}"
+          "value": "aurora/${build.baseName}"
           },
           {
             "name": "PUSH_EXTRA_TAGS",
-            "value": "${aac.build.extraTags}"
+          "value": "${build.extraTags}"
           }
         ],
         "exposeDockerSocket": true
@@ -68,8 +70,8 @@
     },
     "output": {
       "to": {
-        "kind": "${aac.build.outputKind}",
-        "name": "${aac.build.outputName}"
+      "kind": "${build.outputKind}",
+      "name": "${build.outputName}"
       }
     }
   }

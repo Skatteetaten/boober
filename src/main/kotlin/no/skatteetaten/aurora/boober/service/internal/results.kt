@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.service.internal
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.model.AuroraApplicationConfig
+import no.skatteetaten.aurora.boober.model.AuroraApplication
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import org.eclipse.jgit.lib.PersonIdent
@@ -10,9 +10,9 @@ import org.springframework.http.ResponseEntity
 data class Result<out V, out E>(val value: V? = null, val error: E? = null)
 
 
-data class ApplicationCommand @JvmOverloads constructor(
+data class AuroraApplicationCommand @JvmOverloads constructor(
         val deployId: String,
-        val auroraDc: AuroraApplicationConfig,
+        val auroraApplication: AuroraApplication,
         val commands: List<OpenshiftCommand>,
         val tagCommand: TagCommand? = null)
 
@@ -23,16 +23,16 @@ data class TagCommand @JvmOverloads constructor(
         val fromRegistry: String,
         val toRegistry: String = fromRegistry)
 
-data class ApplicationResult @JvmOverloads constructor(
+data class AuroraApplicationResult @JvmOverloads constructor(
         val deployId: String,
-        val auroraDc: AuroraApplicationConfig,
+        val auroraApplication: AuroraApplication,
         val openShiftResponses: List<OpenShiftResponse> = listOf(),
         val tagCommandResponse: ResponseEntity<JsonNode>? = null,
         val success: Boolean = true) {
-    val tag: String = "${auroraDc.namespace}.${auroraDc.name}/${deployId}"
+    val tag: String = "${auroraApplication.namespace}.${auroraApplication.name}/${deployId}"
 }
 
-fun <T : Any> List<Result<T?, Error?>>.orElseThrow(block: (List<Error>) -> Exception): List<T> {
+fun <T : Any> List<Result<T?, Error?>>.onErrorThrow(block: (List<Error>) -> Exception): List<T> {
     this.mapNotNull { it.error }
             .takeIf { it.isNotEmpty() }
             ?.let { throw block(it) }

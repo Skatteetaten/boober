@@ -9,27 +9,34 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 
+import no.skatteetaten.aurora.boober.controller.internal.DeployParams
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.DeployCommand
-import no.skatteetaten.aurora.boober.model.TemplateType
-import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
+import no.skatteetaten.aurora.boober.service.openshift.ServiceAccountTokenProvider
 import no.skatteetaten.aurora.boober.service.openshift.UserDetailsTokenProvider
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
+    DeployService,
+    OpenShiftObjectGenerator,
+    OpenShiftTemplateProcessor,
+    GitService,
+    SecretVaultService,
     EncryptionService,
-    AuroraConfigService,
-    OpenShiftResourceClient,
+    DeployBundleService,
+    VaultFacade,
+    ObjectMapper,
     Config,
+    OpenShiftResourceClientConfig,
     UserDetailsTokenProvider
 ])
 class AuroraDeploymentConfigDeployServiceTest extends Specification {
@@ -44,19 +51,23 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
     private DetachedMockFactory factory = new DetachedMockFactory()
 
     @Bean
-    UserDetailsProvider userDetailsProvider() {
-
-      factory.Stub(UserDetailsProvider)
-    }
-
-    @Bean
-    OpenShiftClient openShiftClient() {
+    OpenShiftClient openshiftClient() {
       factory.Mock(OpenShiftClient)
     }
 
     @Bean
-    GitService gitService() {
-      factory.Mock(GitService)
+    ServiceAccountTokenProvider tokenProvider() {
+      factory.Mock(ServiceAccountTokenProvider)
+    }
+
+    @Bean
+    UserDetailsProvider userDetailsProvider() {
+      factory.Mock(UserDetailsProvider)
+    }
+
+    @Bean
+    DockerService dockerService() {
+      factory.Mock(DockerService)
     }
   }
 
@@ -70,7 +81,10 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
   ObjectMapper mapper
 
   @Autowired
-  AuroraConfigService auroraDeploymentConfigService
+  DeployBundleService deployBundleService
+
+  @Autowired
+  DeployService service
 
   def setup() {
     userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
@@ -78,21 +92,25 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
     openShiftClient.isValidGroup(_) >> true
   }
 
+  private void createRepoAndSaveFiles(String affiliation, AuroraConfig auroraConfig) {
+    GitServiceHelperKt.createInitRepo(affiliation)
+    deployBundleService.saveAuroraConfig(auroraConfig, false)
+  }
+
   def "Should return error when name is not valid DNS952 label"() {
 
     given:
-
       def overrideFile = mapper.convertValue(["name": "test%qwe)"], JsonNode.class)
       def overrides = [new AuroraConfigFile("${aid.environment}/${aid.application}.json", overrideFile, true, null)]
-      final DeployCommand deployCommand = new DeployCommand(aid, overrides)
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
+      createRepoAndSaveFiles("aos", auroraConfig)
     when:
-      auroraDeploymentConfigService.createAuroraApplicationConfig(deployCommand, auroraConfig, [:])
+      service.dryRun("aos", new DeployParams([aid.environment], [aid.application], overrides, false))
 
     then:
-      thrown(ApplicationConfigException)
-
+      def ex = thrown(AuroraConfigException)
+      ex.errors[0].messages[0].field.path == '/name'
   }
 
   def "Should return error when there are unmapped paths"() {
@@ -100,148 +118,68 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
     given:
       def overrideFile = mapper.convertValue(["foo": "test%qwe)"], JsonNode.class)
       def overrides = [new AuroraConfigFile("${aid.environment}/${aid.application}.json", overrideFile, true, null)]
-      final DeployCommand deployCommand = new DeployCommand(aid, overrides)
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
+      createRepoAndSaveFiles("aos", auroraConfig)
     when:
-      auroraDeploymentConfigService.createAuroraApplicationConfig(deployCommand, auroraConfig, [:])
+      service.dryRun("aos", new DeployParams([aid.environment], [aid.application], overrides, false))
 
     then:
-      def e = thrown(ApplicationConfigException)
+      def e = thrown(AuroraConfigException)
       def error = e.errors[0]
-      e.message.contains('Config for application aos-simple in environment booberdev contains errors')
-      error.fileName == "${aid.environment}/${aid.application}.json.override"
-      error.message == "/foo is not a valid config field pointer"
+      def validationError = error.messages[0]
+      error.application == aid.application
+      error.environment == aid.environment
+      validationError.fileName == "${aid.environment}/${aid.application}.json.override"
+      validationError.message == "/foo is not a valid config field pointer"
 
-  }
-
-  def "Should create AuroraDC for Console"() {
-    given:
-      def consoleAid = new ApplicationId("booberdev", "console")
-      def deployCommand = new DeployCommand(consoleAid)
-      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-
-    when:
-      def auroraDc = auroraDeploymentConfigService.createAuroraApplicationConfig(deployCommand, auroraConfig, [:])
-
-    then:
-      auroraDc.deploy.prometheus.port == 8081
-      auroraDc.deploy.webseal.host == "webseal"
-  }
-
-  def "Should create AuroraConfigFields with overrides"() {
-    given:
-      def overrideFile = mapper.convertValue(["type": "deploy", "cluster": "utv"], JsonNode.class)
-      def overrides = [new AuroraConfigFile("booberdev/about.json", overrideFile, true, null)]
-
-      final DeployCommand deployCommand = new DeployCommand(aid, overrides)
-      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-
-    when:
-      def auroraDc = auroraDeploymentConfigService.createAuroraApplicationConfig(deployCommand, auroraConfig, [:])
-
-      def fields = auroraDc.fields
-    then:
-      fields['cluster'].source == "booberdev/about.json.override"
-      fields['cluster'].value.asText() == "utv"
-      fields['type'].source == "booberdev/about.json.override"
-      fields['type'].value.asText() == "deploy"
   }
 
   def "Should fail due to missing config file"() {
 
     given:
-      def deployCommand = new DeployCommand(aid)
       Map<String, JsonNode> files = AuroraConfigHelperKt.getSampleFiles(aid)
       files.remove("${APP_NAME}.json" as String)
       def auroraConfig =
           new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false, null) }, "aos")
 
     when:
-      auroraConfig.getFilesForApplication(deployCommand)
+      auroraConfig.getFilesForApplication(aid)
 
     then:
       thrown(IllegalArgumentException)
   }
 
-  def "Should successfully merge all config files"() {
-
-    given:
-      def deployCommand = new DeployCommand(aid)
-      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-
-    when:
-      def auroraDc = auroraDeploymentConfigService.
-              createAuroraApplicationConfig(deployCommand, auroraConfig, [:])
-
-    then:
-      with(auroraDc) {
-        namespace == "aos-${ENV_NAME}"
-        affiliation == "aos"
-        name == APP_NAME
-        cluster == "utv"
-        deploy.replicas == 1
-        type == TemplateType.development
-        permissions.admin.groups.containsAll(["APP_PaaS_drift", "APP_PaaS_utv"])
-      }
-  }
-
-  def "Should override name property in 'app'.json with name in override"() {
-
-    given:
-      def overrideFile = mapper.convertValue(["name": "awesome-app"], JsonNode.class)
-      def overrides = [new AuroraConfigFile("booberdev/about.json", overrideFile, true, null)]
-
-      final DeployCommand deployCommand = new DeployCommand(aid, overrides)
-      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-
-    when:
-      def auroraDc = auroraDeploymentConfigService.
-              createAuroraApplicationConfig(deployCommand, auroraConfig, [:])
-
-    then:
-      auroraDc.name == "awesome-app"
-  }
 
   def "Should throw ValidationException due to missing required properties"() {
 
     given: "AuroraConfig without build properties"
-      def deployCommand = new DeployCommand(aid)
       Map<String, JsonNode> files = AuroraConfigHelperKt.getSampleFiles(aid)
       (files.get("aos-simple.json") as ObjectNode).remove("version")
       (files.get("booberdev/aos-simple.json") as ObjectNode).remove("version")
       AuroraConfig auroraConfig =
           new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false, null) }, "aos")
-
+      createRepoAndSaveFiles("aos", auroraConfig)
     when:
-      auroraDeploymentConfigService.createAuroraApplicationConfig(deployCommand, auroraConfig, [:])
+      service.dryRun("aos", new DeployParams([aid.environment], [aid.application], [], false))
 
     then:
-      def ex = thrown(ApplicationConfigException)
-      ex.errors[0].message == "Version must be set"
+      def ex = thrown(AuroraConfigException)
+      ex.errors[0].messages[0].message == "Version must be set"
   }
 
-  def "Should create aurora dc for application"() {
-
-    given:
-      def deployCommand = new DeployCommand(aid)
-      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-
-    when:
-      def result = auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [deployCommand], [:])
-
-    then:
-      result != null
-  }
 
   def "Should get error if we want secrets but there are none "() {
 
     given:
-      def deployCommand = new DeployCommand(secretAId)
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
+      createRepoAndSaveFiles("aos", auroraConfig)
 
     when:
-      auroraDeploymentConfigService.createAuroraDcs(auroraConfig, [deployCommand], [:])
+
+      def json = mapper.convertValue(["secretVault": "notfound)"], JsonNode.class)
+      def overrideAosFile = new AuroraConfigFile("aos-simple.json", json, true, null)
+      service.dryRun("aos", new DeployParams([aid.environment], [aid.application], [overrideAosFile], false))
 
     then:
       thrown(AuroraConfigException)
