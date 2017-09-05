@@ -3,6 +3,8 @@ package no.skatteetaten.aurora.boober.service
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
 
+import org.spockframework.runtime.model.FeatureInfo
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -10,12 +12,13 @@ import org.springframework.context.annotation.Primary
 
 import com.fasterxml.jackson.databind.ObjectMapper
 
+import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.facade.VaultFacade
+import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
-import no.skatteetaten.aurora.boober.service.openshift.ServiceAccountTokenProvider
 import no.skatteetaten.aurora.boober.service.openshift.UserDetailsTokenProvider
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
@@ -74,5 +77,43 @@ class AbstractMockedOpenShiftSpecification extends Specification {
 
       factory.Mock(OpenShiftResourceClient)
     }
+  }
+
+  @Autowired
+  UserDetailsProvider userDetailsProvider
+
+  @Autowired
+  OpenShiftClient openShiftClient
+
+  @Autowired
+  DeployBundleService deployBundleService
+
+  def setup() {
+
+    def currentFeature = specificationContext.currentFeature
+    DefaultOverride defaultOverride = currentFeature.featureMethod.getAnnotation(DefaultOverride)
+    defaultOverride = defaultOverride ?: currentFeature.parent.getAnnotation(DefaultOverride)
+    boolean useInteractions = defaultOverride ? defaultOverride.interactions() : true
+    boolean useAuroraConfig = defaultOverride ? defaultOverride.auroraConfig() : true
+
+    if (useInteractions) {
+      userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User")
+
+      openShiftClient.isValidGroup(_) >> true
+      openShiftClient.isValidUser(_) >> true
+      openShiftClient.hasUserAccess(_, _) >> true
+    }
+
+    if (useAuroraConfig) {
+      userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User")
+      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
+      createRepoAndSaveFiles(auroraConfig)
+    }
+  }
+
+  void createRepoAndSaveFiles(AuroraConfig auroraConfig) {
+
+    GitServiceHelperKt.createInitRepo(auroraConfig.affiliation)
+    deployBundleService.saveAuroraConfig(auroraConfig, false)
   }
 }

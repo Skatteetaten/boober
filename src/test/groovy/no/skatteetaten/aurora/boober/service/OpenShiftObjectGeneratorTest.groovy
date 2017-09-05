@@ -32,12 +32,6 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
   OpenShiftObjectGenerator openShiftService
 
   @Autowired
-  UserDetailsProvider userDetailsProvider
-
-  @Autowired
-  OpenShiftClient openShiftClient
-
-  @Autowired
   OpenShiftResourceClient openShiftResourceClient
 
   @Autowired
@@ -51,13 +45,6 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
 
   @Autowired
   VaultFacade vaultFacade
-
-  def setup() {
-    userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User")
-    openShiftClient.isValidGroup(_) >> true
-    openShiftClient.isValidUser(_) >> true
-    openShiftClient.hasUserAccess(_, _) >> true
-  }
 
   @Shared
   def file = new ObjectMapper().convertValue([managementPath: ":8080/test"], JsonNode.class)

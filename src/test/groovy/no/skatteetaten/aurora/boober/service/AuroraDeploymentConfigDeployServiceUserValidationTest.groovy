@@ -6,10 +6,10 @@ import no.skatteetaten.aurora.boober.controller.internal.DeployParams
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 
+@DefaultOverride(interactions = false)
 class AuroraDeploymentConfigDeployServiceUserValidationTest extends AbstractMockedOpenShiftSpecification {
 
   public static final String ENV_NAME = "booberdev"
@@ -23,26 +23,15 @@ class AuroraDeploymentConfigDeployServiceUserValidationTest extends AbstractMock
   OpenShiftClient openShiftClient
 
   @Autowired
-  DeployBundleService deployBundleService
-
-  @Autowired
   DeployService service
 
   def setup() {
     userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
   }
 
-  private void createRepoAndSaveFiles(String affiliation, AuroraConfig auroraConfig) {
-    GitServiceHelperKt.createInitRepo(affiliation)
-    deployBundleService.saveAuroraConfig(auroraConfig, false)
-  }
-
   def "Should get error if user is not valid"() {
 
     given:
-
-      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-      createRepoAndSaveFiles("aos", auroraConfig)
       openShiftClient.isValidUser("foo") >> false
       openShiftClient.isValidGroup(_) >> true
 
@@ -61,9 +50,6 @@ class AuroraDeploymentConfigDeployServiceUserValidationTest extends AbstractMock
   def "Should get error if group is not valid"() {
 
     given:
-      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-      createRepoAndSaveFiles("aos", auroraConfig)
-
       openShiftClient.isValidUser(_) >> true
       openShiftClient.isValidGroup(_) >> false
     when:
@@ -76,6 +62,5 @@ class AuroraDeploymentConfigDeployServiceUserValidationTest extends AbstractMock
       e.errors[0].messages[0].message == "The following groups are not valid=APP_PaaS_drift, APP_PaaS_utv"
       e.errors[0].messages[0].field.source == "about.json"
   }
-
 }
 

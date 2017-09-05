@@ -7,13 +7,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 
 import no.skatteetaten.aurora.boober.controller.internal.DeployParams
-import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 
 class AuroraDeploymentConfigDeployServiceTest extends AbstractMockedOpenShiftSpecification {
 
@@ -22,39 +19,16 @@ class AuroraDeploymentConfigDeployServiceTest extends AbstractMockedOpenShiftSpe
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
   @Autowired
-  UserDetailsProvider userDetailsProvider
-
-  @Autowired
-  OpenShiftClient openShiftClient
-
-  @Autowired
   ObjectMapper mapper
 
   @Autowired
-  DeployBundleService deployBundleService
-
-  @Autowired
   DeployService service
-
-  def setup() {
-    userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
-    openShiftClient.isValidUser(_) >> true
-    openShiftClient.isValidGroup(_) >> true
-  }
-
-  private void createRepoAndSaveFiles(String affiliation, AuroraConfig auroraConfig) {
-    GitServiceHelperKt.createInitRepo(affiliation)
-    deployBundleService.saveAuroraConfig(auroraConfig, false)
-  }
 
   def "Should return error when name is not valid DNS952 label"() {
 
     given:
       def overrideFile = mapper.convertValue(["name": "test%qwe)"], JsonNode.class)
       def overrides = [new AuroraConfigFile("${aid.environment}/${aid.application}.json", overrideFile, true, null)]
-
-      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-      createRepoAndSaveFiles("aos", auroraConfig)
     when:
       service.dryRun("aos", new DeployParams([aid.environment], [aid.application], overrides, false))
 
@@ -68,9 +42,6 @@ class AuroraDeploymentConfigDeployServiceTest extends AbstractMockedOpenShiftSpe
     given:
       def overrideFile = mapper.convertValue(["foo": "test%qwe)"], JsonNode.class)
       def overrides = [new AuroraConfigFile("${aid.environment}/${aid.application}.json", overrideFile, true, null)]
-
-      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-      createRepoAndSaveFiles("aos", auroraConfig)
     when:
       service.dryRun("aos", new DeployParams([aid.environment], [aid.application], overrides, false))
 
@@ -100,6 +71,7 @@ class AuroraDeploymentConfigDeployServiceTest extends AbstractMockedOpenShiftSpe
       thrown(IllegalArgumentException)
   }
 
+  @DefaultOverride(auroraConfig = false)
   def "Should throw ValidationException due to missing required properties"() {
 
     given: "AuroraConfig without build properties"
@@ -108,7 +80,7 @@ class AuroraDeploymentConfigDeployServiceTest extends AbstractMockedOpenShiftSpe
       (files.get("booberdev/aos-simple.json") as ObjectNode).remove("version")
       AuroraConfig auroraConfig =
           new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false, null) }, "aos")
-      createRepoAndSaveFiles("aos", auroraConfig)
+      createRepoAndSaveFiles(auroraConfig)
     when:
       service.dryRun("aos", new DeployParams([aid.environment], [aid.application], [], false))
 
@@ -118,10 +90,6 @@ class AuroraDeploymentConfigDeployServiceTest extends AbstractMockedOpenShiftSpe
   }
 
   def "Should get error if we want secrets but there are none "() {
-
-    given:
-      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-      createRepoAndSaveFiles("aos", auroraConfig)
 
     when:
 
