@@ -40,19 +40,6 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
   @Autowired
   OpenShiftClient openShiftClient
 
-  def setup() {
-    userDetailsProvider.authenticatedUser >> new User("test", "", "Test Foo")
-    openShiftClient.isValidGroup(_) >> true
-    openShiftClient.isValidUser(_) >> true
-    openShiftClient.hasUserAccess(_, _) >> true
-  }
-
-  private void createRepoAndSaveFiles(String affiliation, AuroraConfig auroraConfig) {
-    GitServiceHelperKt.createInitRepo(affiliation)
-
-    service.saveAuroraConfig(auroraConfig, false)
-  }
-
   private AuroraConfig getAuroraConfigFromGit(String affiliation, boolean decryptSecrets) {
 
     def git = gitService.checkoutRepoForAffiliation(affiliation)
@@ -66,7 +53,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
   def "Should not update one file in AuroraConfig if version is wrong"() {
     given:
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
-      createRepoAndSaveFiles("aos", auroraConfig)
+      createRepoAndSaveFiles(auroraConfig)
 
     when:
       def fileToChange = "secrettest/aos-simple.json"
@@ -81,13 +68,13 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
 
   }
 
+  @DefaultOverride(auroraConfig = false)
   def "Should update one file in AuroraConfig"() {
     given:
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
-      createRepoAndSaveFiles("aos", auroraConfig)
+      createRepoAndSaveFiles(auroraConfig)
       def vault = new AuroraSecretVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
       vaultFacade.save("aos", vault, false)
-
 
     when:
       def storedConfig = service.findAuroraConfig("aos")
@@ -104,19 +91,18 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
       gitService.closeRepository(git)
 
     then:
-      gitLog.authorIdent.name == "Test Foo"
+      gitLog.authorIdent.name == "Test User"
       gitLog.fullMessage == "Added: 0, Modified: 1, Deleted: 0"
   }
 
   def "Should successfully save AuroraConfig"() {
     given:
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
-      createRepoAndSaveFiles("aos", auroraConfig)
+      createRepoAndSaveFiles(auroraConfig)
       def vault = new AuroraSecretVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
       vaultFacade.save("aos", vault, false)
 
     when:
-
       def json = mapper.convertValue(["name": "test%qwe)"], JsonNode.class)
       def newFile = new AuroraConfigFile("foo", json, false, null)
       def newConfig = new AuroraConfig([newFile], affiliation)
@@ -132,7 +118,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
   def "Should patch AuroraConfigFile and push changes to git"() {
     given:
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, "aos")
-      createRepoAndSaveFiles("aos", auroraConfig)
+      createRepoAndSaveFiles(auroraConfig)
       def vault = new AuroraSecretVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
       vaultFacade.save("aos", vault, false)
 
