@@ -12,14 +12,15 @@ import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.service.DeployBundleService
-
-//import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
 import no.skatteetaten.aurora.boober.service.SecretVaultService
+
+//import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.internal.AuroraVersioningException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
@@ -33,19 +34,15 @@ import spock.mock.DetachedMockFactory
     no.skatteetaten.aurora.boober.Configuration,
     DeployBundleService,
     GitService,
-    OpenShiftClient,
     EncryptionService,
     OpenShiftResourceClient,
     SecretVaultService,
     ObjectMapper,
     Config,
+    VaultFacade,
+    SecretVaultService,
     OpenShiftResourceClientConfig,
     UserDetailsTokenProvider
-], properties = [
-    "boober.git.urlPattern=/tmp/boober-test/%s",
-    "boober.git.checkoutPath=/tmp/boober",
-    "boober.git.username=",
-    "boober.git.password="
 ])
 class DeployBundleServiceTest extends Specification {
 
@@ -57,12 +54,10 @@ class DeployBundleServiceTest extends Specification {
   static class Config {
     private DetachedMockFactory factory = new DetachedMockFactory()
 
-/*
     @Bean
-    AuroraConfigService auroraDeploymentConfigService() {
-      factory.Mock(AuroraConfigService)
+    OpenShiftClient openshiftClient() {
+      factory.Mock(OpenShiftClient)
     }
-*/
 
     @Bean
     ServiceAccountTokenProvider tokenProvider() {
@@ -87,10 +82,23 @@ class DeployBundleServiceTest extends Specification {
   @Autowired
   GitService gitService
 
+  @Autowired
+  VaultFacade vaultFacade
+
+  @Autowired
+  OpenShiftClient openShiftClient
+
+  def setup() {
+    userDetailsProvider.authenticatedUser >> new User("test", "", "Test Foo")
+    openShiftClient.isValidGroup(_) >> true
+    openShiftClient.isValidUser(_) >> true
+    openShiftClient.hasUserAccess(_, _) >> true
+  }
+
   private void createRepoAndSaveFiles(String affiliation, AuroraConfig auroraConfig) {
     GitServiceHelperKt.createInitRepo(affiliation)
-    userDetailsProvider.authenticatedUser >> new User("test", "", "Test Foo")
-    service.saveAuroraConfig(affiliation, auroraConfig, false)
+
+    service.saveAuroraConfig(auroraConfig, false)
   }
 
   private AuroraConfig getAuroraConfigFromGit(String affiliation, boolean decryptSecrets) {
@@ -126,6 +134,9 @@ class DeployBundleServiceTest extends Specification {
     given:
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
       createRepoAndSaveFiles("aos", auroraConfig)
+      def vault = new AuroraSecretVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
+      vaultFacade.save("aos", vault, false)
+
 
     when:
       def storedConfig = service.findAuroraConfig("aos")
@@ -150,9 +161,11 @@ class DeployBundleServiceTest extends Specification {
     given:
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
       createRepoAndSaveFiles("aos", auroraConfig)
+      def vault = new AuroraSecretVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
+      vaultFacade.save("aos", vault, false)
 
     when:
-      service.saveAuroraConfig("aos", auroraConfig, false)
+      service.saveAuroraConfig(auroraConfig, false)
       def git = gitService.checkoutRepoForAffiliation("aos")
       def gitLog = git.log().call().head()
       gitService.closeRepository(git)
@@ -165,6 +178,9 @@ class DeployBundleServiceTest extends Specification {
     given:
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, "aos")
       createRepoAndSaveFiles("aos", auroraConfig)
+      def vault = new AuroraSecretVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
+      vaultFacade.save("aos", vault, false)
+
       def gitAuroraConfig = getAuroraConfigFromGit("aos", false)
 
       def jsonOp = """[{

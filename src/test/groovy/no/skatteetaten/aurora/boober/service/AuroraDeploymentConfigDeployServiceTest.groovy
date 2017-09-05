@@ -14,7 +14,6 @@ import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -114,39 +113,6 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
 
   }
 
-  def "Should create AuroraDC for Console"() {
-    given:
-      def consoleAid = new ApplicationId("booberdev", "console")
-//      def deployCommand = new DeployCommand(consoleAid)
-      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-
-    when:
-      def auroraDc = auroraDeploymentConfigService.createAuroraApplication(deployCommand, auroraConfig, [:])
-
-    then:
-      auroraDc.deploy.prometheus.port == 8081
-      auroraDc.deploy.webseal.host == "webseal"
-  }
-
-  def "Should create AuroraConfigFields with overrides"() {
-    given:
-      def overrideFile = mapper.convertValue(["type": "deploy", "cluster": "utv"], JsonNode.class)
-      def overrides = [new AuroraConfigFile("booberdev/about.json", overrideFile, true, null)]
-
-//      final DeployCommand deployCommand = new DeployCommand(aid, overrides)
-      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-
-    when:
-      def auroraDc = auroraDeploymentConfigService.createAuroraApplication(deployCommand, auroraConfig, [:])
-
-      def fields = auroraDc.fields
-    then:
-      fields['cluster'].source == "booberdev/about.json.override"
-      fields['cluster'].value.asText() == "utv"
-      fields['type'].source == "booberdev/about.json.override"
-      fields['type'].value.asText() == "deploy"
-  }
-
   def "Should fail due to missing config file"() {
 
     given:
@@ -163,44 +129,6 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       thrown(IllegalArgumentException)
   }
 
-  def "Should successfully merge all config files"() {
-
-    given:
-//      def deployCommand = new DeployCommand(aid)
-      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-
-    when:
-      def auroraDc = auroraDeploymentConfigService.
-              createAuroraApplication(deployCommand, auroraConfig, [:])
-
-    then:
-      with(auroraDc) {
-        namespace == "aos-${ENV_NAME}"
-        affiliation == "aos"
-        name == APP_NAME
-        cluster == "utv"
-        deploy.replicas == 1
-        type == TemplateType.development
-        permissions.admin.groups.containsAll(["APP_PaaS_drift", "APP_PaaS_utv"])
-      }
-  }
-
-  def "Should override name property in 'app'.json with name in override"() {
-
-    given:
-      def overrideFile = mapper.convertValue(["name": "awesome-app"], JsonNode.class)
-      def overrides = [new AuroraConfigFile("booberdev/about.json", overrideFile, true, null)]
-
-//      final DeployCommand deployCommand = new DeployCommand(aid, overrides)
-      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-
-    when:
-      def auroraDc = auroraDeploymentConfigService.
-              createAuroraApplication(deployCommand, auroraConfig, [:])
-
-    then:
-      auroraDc.name == "awesome-app"
-  }
 
   def "Should throw ValidationException due to missing required properties"() {
 
@@ -220,18 +148,6 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       ex.errors[0].message == "Version must be set"
   }
 
-  def "Should create aurora dc for application"() {
-
-    given:
-//      def deployCommand = new DeployCommand(aid)
-      AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-
-    when:
-      def result = auroraDeploymentConfigService.createAuroraApplications(auroraConfig, [deployCommand], [:])
-
-    then:
-      result != null
-  }
 
   def "Should get error if we want secrets but there are none "() {
 

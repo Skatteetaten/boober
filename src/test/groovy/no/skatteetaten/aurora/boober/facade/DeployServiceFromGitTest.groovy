@@ -188,7 +188,7 @@ class DeployServiceFromGitTest extends Specification {
 
         def auroraConfig = AuroraConfigHelperKt.
                 createAuroraConfig(new ApplicationId("secrettest", "aos-simple"), affiliation)
-          deployBundleService.saveAuroraConfig(affiliation, auroraConfig, false)
+          deployBundleService.saveAuroraConfig(auroraConfig, false)
 
         when:
           setupFacade.executeDeploy(affiliation, new DeployParams(["secrettest"], ["aos-simple"], [], true))
