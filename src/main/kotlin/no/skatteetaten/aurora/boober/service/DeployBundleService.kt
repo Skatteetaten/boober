@@ -8,10 +8,27 @@ import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigValidator
-import no.skatteetaten.aurora.boober.mapper.v1.*
-import no.skatteetaten.aurora.boober.model.*
-import no.skatteetaten.aurora.boober.service.GitService
-import no.skatteetaten.aurora.boober.service.internal.*
+import no.skatteetaten.aurora.boober.mapper.v1.AuroraApplicationMapperV1
+import no.skatteetaten.aurora.boober.mapper.v1.AuroraBuildMapperV1
+import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeployMapperV1
+import no.skatteetaten.aurora.boober.mapper.v1.AuroraLocalTemplateMapperV1
+import no.skatteetaten.aurora.boober.mapper.v1.AuroraRouteMapperV1
+import no.skatteetaten.aurora.boober.mapper.v1.AuroraTemplateMapperV1
+import no.skatteetaten.aurora.boober.mapper.v1.AuroraVolumeMapperV1
+import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.AuroraApplication
+import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.DeployBundle
+import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
+import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
+import no.skatteetaten.aurora.boober.service.internal.AuroraVersioningException
+import no.skatteetaten.aurora.boober.service.internal.Error
+import no.skatteetaten.aurora.boober.service.internal.Result
+import no.skatteetaten.aurora.boober.service.internal.ValidationError
+import no.skatteetaten.aurora.boober.service.internal.VersioningError
+import no.skatteetaten.aurora.boober.service.internal.onErrorThrow
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.required
 import org.eclipse.jgit.api.Git
@@ -209,7 +226,7 @@ class DeployBundleService(
 
         val startCheckout = System.currentTimeMillis()
         val repo = gitService.checkoutRepoForAffiliation(affiliation)
-        logger.debug("Spent {} millis checking out gir repository", System.currentTimeMillis() - startCheckout)
+        logger.debug("Spent {} millis checking out git repository", System.currentTimeMillis() - startCheckout)
 
         return repo
     }
