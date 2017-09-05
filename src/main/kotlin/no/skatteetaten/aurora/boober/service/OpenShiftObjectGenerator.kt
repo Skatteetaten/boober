@@ -47,7 +47,7 @@ class OpenShiftObjectGenerator(
 
         val mounts: List<Mount>? = findMounts(auroraApplication)
 
-        val labels = findLabels(auroraApplication, deployId, auroraApplication.name)
+        val labels = findLabels(auroraApplication, deployId)
 
         return generateProject(auroraApplication)
                 .addIfNotNull(generateRolebindings(auroraApplication.permissions))
@@ -263,7 +263,7 @@ class OpenShiftObjectGenerator(
         }
     }
 
-    fun findLabels(auroraApplication: AuroraApplication, deployId: String, name: String): Map<String, String> {
+    fun findLabels(auroraApplication: AuroraApplication, deployId: String, name: String = auroraApplication.name): Map<String, String> {
         val labels = mapOf(
                 "app" to name,
                 "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
