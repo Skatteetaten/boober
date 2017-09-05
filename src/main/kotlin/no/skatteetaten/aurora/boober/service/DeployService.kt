@@ -37,6 +37,7 @@ class DeployService(
     val logger: Logger = LoggerFactory.getLogger(DeployService::class.java)
 
     private val DEPLOY_PREFIX = "DEPLOY"
+    private val FAILED_PREFIX = "FAILED"
 
 
     fun executeDeploy(affiliation: String, deployParams: DeployParams): List<AuroraApplicationResult> {
@@ -55,7 +56,6 @@ class DeployService(
             createApplicationCommands(it, deployParams.applicationIds)
         })
     }
-
 
     private fun createApplicationCommands(deployBundle: DeployBundle, applicationIds: List<ApplicationId>): List<AuroraApplicationCommand> {
         if (applicationIds.isEmpty()) {
@@ -90,9 +90,18 @@ class DeployService(
     }
 
     private fun setupApplication(cmd: AuroraApplicationCommand, deploy: Boolean): AuroraApplicationResult {
+
+        //TODO: if we do not want to try another command after the first failed we have to do a manual
+        //loop here and append to a list, stop if we have a failure and return what we have so far and the failure.
+        //the question is what do we really want here. Is it not nice to know all failures in some situatjons?
+        //note that a deploy/build/import command is never run if this fails.
         val application = cmd.auroraApplication
         val responses = cmd.commands.map {
             openShiftClient.performOpenShiftCommand(it, application.namespace)
+        }
+
+        if (responses.any { !it.success }) {
+            return AuroraApplicationResult(cmd.deployId, application, responses, success = false)
         }
 
         if (application.deploy == null) {
@@ -111,7 +120,6 @@ class DeployService(
         val deleteObjects = openShiftClient.createOpenshiftDeleteCommands(application.name, application.namespace, cmd.deployId)
                 .map { openShiftClient.performOpenShiftCommand(it, application.namespace) }
 
-
         val finalResponses = (responses + deleteObjects).addIfNotNull(deployCommand)
 
         val result = cmd.tagCommand?.let { dockerService.tag(it) }
@@ -125,7 +133,12 @@ class DeployService(
 
             //TODO: MARK FAILURE
             val result = filterSensitiveInformation(it)
-            gitService.markRelease(repo, "$DEPLOY_PREFIX/${it.tag}", mapper.writeValueAsString(result))
+            val prefix = if (it.success) {
+                DEPLOY_PREFIX
+            } else {
+                FAILED_PREFIX
+            }
+            gitService.markRelease(repo, "$prefix/${it.tag}", mapper.writeValueAsString(result))
         }
 
         gitService.push(repo)
@@ -133,9 +146,10 @@ class DeployService(
 
     private fun filterSensitiveInformation(result: AuroraApplicationResult): AuroraApplicationResult {
 
-        val filteredResponses = result.openShiftResponses.filter { it.responseBody.get("kind").asText() != "Secret" }
+        val filteredResponses = result.openShiftResponses.filter { it.responseBody?.get("kind")?.asText() != "Secret" }
         return result.copy(openShiftResponses = filteredResponses)
     }
+
 
     fun generateRedeployResource(openShiftResponses: List<OpenShiftResponse>,
                                  type: TemplateType,
@@ -155,8 +169,8 @@ class DeployService(
             return openShiftObjectGenerator.generateBuildRequest(name)
         }
 
-        val imageStream = openShiftResponses.find { it.responseBody["kind"].asText().toLowerCase() == "imagestream" }
-        val deployment = openShiftResponses.find { it.responseBody["kind"].asText().toLowerCase() == "deploymentconfig" }
+        val imageStream = openShiftResponses.find { it.responseBody?.get("kind")?.asText()?.toLowerCase() ?: "" == "imagestream" }
+        val deployment = openShiftResponses.find { it.responseBody?.get("kind")?.asText()?.toLowerCase() ?: "" == "deploymentconfig" }
 
         imageStream?.takeIf { !it.labelChanged("releasedVersion") && it.command.operationType == OperationType.UPDATE }?.let {
             return openShiftObjectGenerator.generateDeploymentRequest(name)

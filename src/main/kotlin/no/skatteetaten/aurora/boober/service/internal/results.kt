@@ -27,7 +27,8 @@ data class AuroraApplicationResult @JvmOverloads constructor(
         val deployId: String,
         val auroraApplication: AuroraApplication,
         val openShiftResponses: List<OpenShiftResponse> = listOf(),
-        val tagCommandResponse: ResponseEntity<JsonNode>? = null) {
+        val tagCommandResponse: ResponseEntity<JsonNode>? = null,
+        val success: Boolean = true) {
     val tag: String = "${auroraApplication.namespace}.${auroraApplication.name}/${deployId}"
 }
 
