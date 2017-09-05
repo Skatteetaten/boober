@@ -50,13 +50,7 @@ import spock.mock.DetachedMockFactory
         Config,
         OpenShiftResourceClientConfig,
         UserDetailsTokenProvider
-]
-        , properties = [
-                "boober.git.urlPattern=/tmp/boober-test/%s",
-                "boober.git.checkoutPath=/tmp/boober",
-                "boober.git.username=",
-                "boober.git.password="
-        ])
+])
 class DeployServiceFromGitTest extends Specification {
 
     @Configuration
@@ -101,7 +95,7 @@ class DeployServiceFromGitTest extends Specification {
     GitService gitService
 
     @Autowired
-    DeployBundleService configFacade
+    DeployBundleService deployBundleService
 
     @Autowired
     DockerService dockerService
@@ -131,12 +125,11 @@ class DeployServiceFromGitTest extends Specification {
 
     private void createRepoAndSaveFiles(String affiliation, AuroraConfig auroraConfig) {
         GitServiceHelperKt.createInitRepo(affiliation)
-        configFacade.saveAuroraConfig(affiliation, auroraConfig, false)
+      deployBundleService.saveAuroraConfig(auroraConfig, false)
     }
 
     def "Should perform release and mark it"() {
         given:
-        GitServiceHelperKt.createInitRepo(affiliation)
         def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, "aos")
         createRepoAndSaveFiles("aos", auroraConfig)
 
@@ -195,7 +188,7 @@ class DeployServiceFromGitTest extends Specification {
 
         def auroraConfig = AuroraConfigHelperKt.
                 createAuroraConfig(new ApplicationId("secrettest", "aos-simple"), affiliation)
-        configFacade.saveAuroraConfig(affiliation, auroraConfig, false)
+          deployBundleService.saveAuroraConfig(affiliation, auroraConfig, false)
 
         when:
           setupFacade.executeDeploy(affiliation, new DeployParams(["secrettest"], ["aos-simple"], [], true))
