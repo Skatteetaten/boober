@@ -17,7 +17,8 @@ class DeployController(val deployService: DeployService) {
 
         val setupParams = cmd.setupParams.toDeployParams()
         val auroraApplicationResults: List<AuroraApplicationResult> = deployService.executeDeploy(affiliation, setupParams)
-        return Response(items = auroraApplicationResults)
+        val success = !auroraApplicationResults.any { !it.success }
+        return Response(items = auroraApplicationResults, success = success)
     }
 
     @GetMapping("/{affiliation}/deploy")

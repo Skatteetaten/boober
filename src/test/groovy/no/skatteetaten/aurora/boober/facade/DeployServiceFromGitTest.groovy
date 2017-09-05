@@ -89,7 +89,7 @@ class DeployServiceFromGitTest extends Specification {
     UserDetailsProvider userDetailsProvider
 
     @Autowired
-    DeployService setupFacade
+    DeployService deployService
 
     @Autowired
     GitService gitService
@@ -135,7 +135,7 @@ class DeployServiceFromGitTest extends Specification {
 
         when:
 
-          setupFacade.executeDeploy(affiliation, new DeployParams([ENV_NAME], [APP_NAME], [], true))
+          deployService.executeDeploy(affiliation, new DeployParams([ENV_NAME], [APP_NAME], [], true))
 
         then:
         def git = gitService.checkoutRepoForAffiliation(affiliation)
@@ -162,10 +162,10 @@ class DeployServiceFromGitTest extends Specification {
         createRepoAndSaveFiles(affiliation, mergedConfig)
 
         when:
-          setupFacade.executeDeploy(affiliation, new DeployParams([ENV_NAME], [APP_NAME, "sprocket"], [], true))
+          deployService.executeDeploy(affiliation, new DeployParams([ENV_NAME], [APP_NAME, "sprocket"], [], true))
 
         then:
-        def tags = setupFacade.deployHistory(affiliation)
+        def tags = deployService.deployHistory(affiliation)
         tags.size() == 2
         def revTag = tags[0]
 
@@ -191,10 +191,10 @@ class DeployServiceFromGitTest extends Specification {
           deployBundleService.saveAuroraConfig(auroraConfig, false)
 
         when:
-          setupFacade.executeDeploy(affiliation, new DeployParams(["secrettest"], ["aos-simple"], [], true))
+          deployService.executeDeploy(affiliation, new DeployParams(["secrettest"], ["aos-simple"], [], true))
 
         then:
-        def tags = setupFacade.deployHistory(affiliation)
+        def tags = deployService.deployHistory(affiliation)
         tags.size() == 1
         def revTag = tags[0]
         def resp = revTag.result["openShiftResponses"]
@@ -213,7 +213,7 @@ class DeployServiceFromGitTest extends Specification {
 
         1 * dockerService.tag(_) >>
                 new ResponseEntity<JsonNode>(mapper.convertValue(["foo": "foo"], JsonNode.class), HttpStatus.OK)
-          def result = setupFacade.executeDeploy(affiliation, new DeployParams(["release"], ["aos-simple"], [], true))
+          def result = deployService.executeDeploy(affiliation, new DeployParams(["release"], ["aos-simple"], [], true))
         then:
         result.size() == 1
         result[0].tagCommandResponse.statusCode.is2xxSuccessful()
