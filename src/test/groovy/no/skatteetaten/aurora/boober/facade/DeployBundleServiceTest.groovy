@@ -12,6 +12,7 @@ import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.service.DeployBundleService
@@ -19,9 +20,9 @@ import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
 import no.skatteetaten.aurora.boober.service.SecretVaultService
+import no.skatteetaten.aurora.boober.service.internal.AuroraVersioningException
 
 //import no.skatteetaten.aurora.boober.service.AuroraConfigService
-import no.skatteetaten.aurora.boober.service.internal.AuroraVersioningException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
@@ -49,6 +50,7 @@ class DeployBundleServiceTest extends Specification {
   public static final String ENV_NAME = "secrettest"
   public static final String APP_NAME = "aos-simple"
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
+  def affiliation = "aos"
 
   @Configuration
   static class Config {
@@ -116,7 +118,6 @@ class DeployBundleServiceTest extends Specification {
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
       createRepoAndSaveFiles("aos", auroraConfig)
 
-
     when:
       def fileToChange = "secrettest/aos-simple.json"
 
@@ -165,13 +166,17 @@ class DeployBundleServiceTest extends Specification {
       vaultFacade.save("aos", vault, false)
 
     when:
-      service.saveAuroraConfig(auroraConfig, false)
+
+      def json = mapper.convertValue(["name": "test%qwe)"], JsonNode.class)
+      def newFile = new AuroraConfigFile("foo", json, false, null)
+      def newConfig = new AuroraConfig([newFile], affiliation)
+      service.saveAuroraConfig(newConfig, false)
       def git = gitService.checkoutRepoForAffiliation("aos")
       def gitLog = git.log().call().head()
       gitService.closeRepository(git)
 
     then:
-      gitLog.fullMessage == "Added: 4, Modified: 0, Deleted: 0"
+      gitLog.fullMessage.contains("Added: 1")
   }
 
   def "Should patch AuroraConfigFile and push changes to git"() {
