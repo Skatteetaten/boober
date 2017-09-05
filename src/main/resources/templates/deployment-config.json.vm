@@ -131,19 +131,19 @@
               }
             #foreach ($var  in $env.entrySet())
             , {
-            "name": "$var.key",
-            "value": "$var.value"
+              "name": "$var.key",
+              "value": "$var.value"
             }
             #end
             ],
             "resources": {
               "limits": {
-          "cpu": "${deploy.resources.cpu.max}",
-          "memory": "${deploy.resources.memory.max}"
+                "cpu": "${deploy.resources.cpu.max}",
+                "memory": "${deploy.resources.memory.max}"
               },
               "requests": {
-          "cpu": "${deploy.resources.cpu.min}",
-          "memory": "${deploy.resources.memory.min}"
+                "cpu": "${deploy.resources.cpu.min}",
+                "memory": "${deploy.resources.memory.min}"
               }
             },
             "volumeMounts": [
@@ -167,32 +167,31 @@
               "capabilities": {},
               "privileged": false
             },
-  #if (${deploy.liveness})
+            #if (${deploy.liveness})
             "livenessProbe": {
-    #if(${deploy.liveness.path} && "$!{deploy.liveness.path}" != "")
+              #if(${deploy.liveness.path} && "$!{deploy.liveness.path}" != "")
               "httpGet": {
-    "path": "${deploy.liveness.path}",
+                "path": "${deploy.liveness.path}",
               #else
               "tcpSocket": {
               #end
-  "port": ${deploy.liveness.port}
-            },
-  "initialDelaySeconds": ${deploy.liveness.delay},
-  "timeoutSeconds": ${deploy.liveness.timeout}
+                "port": ${deploy.liveness.port}
+              },
+              "initialDelaySeconds": ${deploy.liveness.delay},
+              "timeoutSeconds": ${deploy.liveness.timeout}
             },
             #end
             "readinessProbe": {
-  #if(${deploy.readiness.path} && "$!{deploy.readiness.path}" != "")
+              #if(${deploy.readiness.path} && "$!{deploy.readiness.path}" != "")
               "httpGet": {
-  "path": "${deploy.readiness.path}",
+                "path": "${deploy.readiness.path}",
               #else
               "tcpSocket": {
-
               #end
-"port": ${deploy.readiness.port}
+                "port": ${deploy.readiness.port}
               },
-"initialDelaySeconds": ${deploy.readiness.delay},
-"timeoutSeconds": ${deploy.readiness.timeout}
+              "initialDelaySeconds": ${deploy.readiness.delay},
+              "timeoutSeconds": ${deploy.readiness.timeout}
             }
           }
         ],
