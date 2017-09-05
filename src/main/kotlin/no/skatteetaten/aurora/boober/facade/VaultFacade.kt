@@ -85,6 +85,7 @@ class VaultFacade(
 
         val vaultFiles = secretVaultService.getVaultFiles(repo, vault)
 
+        //TODO: What if the vault does not exist?
         val oldVault = secretVaultService.createVault(vault, vaultFiles)
 
         if (!openShiftClient.hasUserAccess(userDetailsProvider.getAuthenticatedUser().username, oldVault.permissions)) {
