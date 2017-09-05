@@ -16,9 +16,7 @@ import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
-import no.skatteetaten.aurora.boober.service.internal.Error
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
 import no.skatteetaten.aurora.boober.service.openshift.ServiceAccountTokenProvider
@@ -178,7 +176,10 @@ class AuroraDeploymentConfigDeployServiceTest extends Specification {
       createRepoAndSaveFiles("aos", auroraConfig)
 
     when:
-      service.dryRun("aos", new DeployParams([aid.environment], [aid.application], [], false))
+
+      def json = mapper.convertValue(["secretVault": "notfound)"], JsonNode.class)
+      def overrideAosFile = new AuroraConfigFile("aos-simple.json", json, true, null)
+      service.dryRun("aos", new DeployParams([aid.environment], [aid.application], [overrideAosFile], false))
 
     then:
       thrown(AuroraConfigException)
