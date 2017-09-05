@@ -99,7 +99,7 @@ class DeployService(
             throw NullPointerException("Deploy should not be null")
         }
 
-        val docker = "$dockerRegistry/${application.deploy.dockerImagePath}:${application.deploy.dockerTag}"
+        val docker = "${application.deploy.dockerImagePath}:${application.deploy.dockerTag}"
         val deployCommand =
                 generateRedeployResource(responses, application.type, application.name, docker, deploy)
                         ?.let {
