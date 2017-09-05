@@ -385,7 +385,7 @@ class OpenShiftObjectGenerator(
         val mergedResult = sw.toString()
         val jsonResult = mapper.readTree(mergedResult)
 
-        File("./build/$template.json").writeText(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonResult))
+        File("./build/$template").writeText(mapper.writeValueAsString(jsonResult))
 
         return jsonResult
     }
