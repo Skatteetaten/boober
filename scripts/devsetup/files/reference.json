@@ -40,6 +40,9 @@
       "groupId": "aurora",
       "artifactId": "webleveransetest",
       "version": "0",
+      "route" : {
+        "reference-web" : { }
+      },
       "config": {
         "foo2": "baz"
       }
