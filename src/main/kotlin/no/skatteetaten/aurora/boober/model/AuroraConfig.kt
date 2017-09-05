@@ -39,6 +39,7 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
                 "${applicationId.environment}/${applicationId.application}.json")
     }
 
+    @JvmOverloads
     fun getFilesForApplication(applicationId: ApplicationId, overrideFiles: List<AuroraConfigFile> = listOf()): List<AuroraConfigFile> {
 
         val requiredFiles = requiredFilesForApplication(applicationId)
