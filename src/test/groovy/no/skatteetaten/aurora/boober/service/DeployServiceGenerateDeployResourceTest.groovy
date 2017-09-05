@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.facade
+package no.skatteetaten.aurora.boober.service
 
 import static no.skatteetaten.aurora.boober.model.TemplateType.build
 import static no.skatteetaten.aurora.boober.model.TemplateType.deploy
@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.service.DeployBundleService
 import no.skatteetaten.aurora.boober.service.DeployService
@@ -68,7 +69,7 @@ class DeployServiceGenerateDeployResourceTest extends Specification {
       factory.Mock(OpenShiftClient)
     }
 
-    // @Bean
+     @Bean
     OpenShiftResourceClient resourceClient() {
       factory.Mock(OpenShiftResourceClient)
     }
