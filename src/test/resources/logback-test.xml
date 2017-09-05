@@ -3,5 +3,4 @@
   <include resource="org/springframework/boot/logging/logback/base.xml" />
   <logger name="ROOT" level="WARN" />
   <logger name="no.skatteetaten" level="INFO" />
-  <logger name="no.skatteetaten.aurora.boober.service.DeployBundleService" level="DEBUG" />
 </configuration>

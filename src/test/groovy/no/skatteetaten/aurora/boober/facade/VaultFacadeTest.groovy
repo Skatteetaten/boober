@@ -26,11 +26,6 @@ import spock.mock.DetachedMockFactory
     EncryptionService,
     SecretVaultService,
     Config
-], properties = [
-    "boober.git.urlPattern=/tmp/boober-test/%s",
-    "boober.git.checkoutPath=/tmp/boober",
-    "boober.git.username=",
-    "boober.git.password="
 ])
 class VaultFacadeTest extends Specification {
 
