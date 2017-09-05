@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory
 import org.apache.http.impl.client.CloseableHttpClient
@@ -26,7 +25,7 @@ class Configuration {
     @Bean
     @Primary
     fun mapper(): ObjectMapper {
-        return jacksonObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL).configure(SerializationFeature.INDENT_OUTPUT, true)
+        return jacksonObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
     }
 
     @Bean

@@ -18,6 +18,7 @@ import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import spock.lang.Shared
@@ -80,10 +81,14 @@ class OpenShiftObjectGeneratorTest extends Specification {
   @Autowired
   ObjectMapper mapper
 
+  @Autowired
+  VaultFacade vaultFacade
+
   def setup() {
     userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User")
     openShiftClient.isValidGroup(_) >> true
     openShiftClient.isValidUser(_) >> true
+    openShiftClient.hasUserAccess(_, _) >> true
   }
 
   @Shared
@@ -104,12 +109,14 @@ class OpenShiftObjectGeneratorTest extends Specification {
   def "should create openshift objects for #env/#name"() {
 
     given:
+      def vault = new AuroraSecretVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
+      vaultFacade.save(affiliation, vault, false)
 
       def aid = new ApplicationId(env, name)
-      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, "aos")
-      deployBundleService.saveAuroraConfig(auroraConfig, false)
-
+      def additionalFile = null
       if (templateFile != null) {
+
+        additionalFile = "templates/$templateFile"
         def templateFileName = "/samples/processedtemplate/${aid.environment}/${aid.application}/$templateFile"
         def templateResult = this.getClass().getResource(templateFileName)
         JsonNode jsonResult = mapper.readTree(templateResult)
@@ -117,6 +124,8 @@ class OpenShiftObjectGeneratorTest extends Specification {
         openShiftResourceClient.post("processedtemplate", null, _, _) >>
             new ResponseEntity<JsonNode>(jsonResult, HttpStatus.OK)
       }
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, affiliation, additionalFile)
+      deployBundleService.saveAuroraConfig(auroraConfig, false)
 
     expect:
 
