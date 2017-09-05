@@ -53,7 +53,6 @@ class OpenShiftObjectGenerator(
         val labels = findLabels(auroraApplication, deployId)
 
         return listOf(generateProject(auroraApplication))
-                .addIfNotNull(generateRolebindings(auroraApplication.permissions))
                 .addIfNotNull(generateDeploymentConfig(auroraApplication, labels, mounts))
                 .addIfNotNull(generateService(auroraApplication, labels))
                 .addIfNotNull(generateImageStream(auroraApplication, labels))
@@ -62,7 +61,7 @@ class OpenShiftObjectGenerator(
                 .addIfNotNull(generateRoute(auroraApplication, labels))
                 .addIfNotNull(generateTemplate(auroraApplication))
                 .addIfNotNull(generateLocalTemplate(auroraApplication))
-
+                .addIfNotNull(generateRolebindings(auroraApplication.permissions))
     }
 
     fun generateProject(auroraApplication: AuroraApplication): JsonNode {

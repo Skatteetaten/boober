@@ -245,12 +245,13 @@ class OpenShiftClient(
     }
 
     fun createNamespaceCommand(namespace: String, affiliation: String): OpenshiftCommand {
-        val existing = serviceAccountClient.get("namespace", namespace, "")?.body as ObjectNode ?: throw IllegalArgumentException("Namespace should exist")
-        val prev = existing.deepCopy()
+        val existing = serviceAccountClient.get("namespace", namespace, "")?.body ?: throw IllegalArgumentException("Namespace should exist")
+        //do we really need to sleep here?
+        val prev = (existing as ObjectNode).deepCopy()
 
-        val labels = mapper.convertValue<JsonNode>(mapOf("labels" to mapOf("affiliation" to affiliation)))
+        val labels = mapper.convertValue<JsonNode>(mapOf("affiliation" to affiliation))
 
-        val metadata = existing.at("metadata") as ObjectNode
+        val metadata = existing.at("/metadata") as ObjectNode
         metadata.set("labels", labels)
 
         return OpenshiftCommand(OperationType.UPDATE, existing, previous = prev)
