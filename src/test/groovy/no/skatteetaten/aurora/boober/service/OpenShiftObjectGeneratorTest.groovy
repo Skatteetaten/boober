@@ -15,6 +15,7 @@ import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.controller.internal.DeployParams
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -32,6 +33,9 @@ import spock.mock.DetachedMockFactory
     GitService,
     OpenShiftObjectGenerator,
     Config,
+    VaultFacade,
+    SecretVaultService,
+    DockerService,
     ObjectMapper])
 class OpenShiftObjectGeneratorTest extends Specification {
 
@@ -124,7 +128,9 @@ class OpenShiftObjectGeneratorTest extends Specification {
       def deployParams = new DeployParams([env], [name], overrides, false)
       def aac = deployService.dryRun("aos", deployParams)[0]
 
-      List<JsonNode> generatedObjects = openShiftService.generateObjects(aac.auroraApplication, aac.deployId)
+      def deployId = "123"
+
+      List<JsonNode> generatedObjects = openShiftService.generateObjects(aac.auroraApplication, deployId)
 
       def resultFiles = AuroraConfigHelperKt.getResultFiles(aid)
 
