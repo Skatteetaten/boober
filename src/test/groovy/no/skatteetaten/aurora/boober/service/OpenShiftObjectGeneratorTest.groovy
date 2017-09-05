@@ -49,11 +49,6 @@ class OpenShiftObjectGeneratorTest extends Specification {
     }
 
     @Bean
-    GitService gitService() {
-      factory.Mock(GitService)
-    }
-
-    @Bean
     OpenShiftClient openshiftClient() {
       factory.Mock(OpenShiftClient)
     }
