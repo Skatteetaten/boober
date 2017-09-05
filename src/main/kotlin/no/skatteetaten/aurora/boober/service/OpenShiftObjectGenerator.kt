@@ -157,10 +157,7 @@ class OpenShiftObjectGenerator(
                     "imageStreamTag" to tag
             )
 
-            val mergeVelocityTemplate: JsonNode = mergeVelocityTemplate(template, params)
-            val text = mergeVelocityTemplate.toString()
-            File("./webdc.json").writeText(text)
-            mergeVelocityTemplate
+            mergeVelocityTemplate(template, params)
         }
     }
 
@@ -385,7 +382,12 @@ class OpenShiftObjectGenerator(
         val t = ve.getTemplate("templates/$template.vm")
         val sw = StringWriter()
         t.merge(context, sw)
-        return mapper.readTree(sw.toString())
+        val mergedResult = sw.toString()
+        val jsonResult = mapper.readTree(mergedResult)
+
+        File("./build/$template.json").writeText(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonResult))
+
+        return jsonResult
     }
 
 
