@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service.openshift
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.model.AuroraPermissions
@@ -55,13 +56,17 @@ class OpenShiftClient(
     fun performOpenShiftCommand(cmd: OpenshiftCommand, namespace: String): OpenShiftResponse {
 
         val kind = cmd.payload.openshiftKind
+        val name = cmd.payload.openshiftName
 
-        val performClient = if (listOf("project", "rolebinding").contains(kind)) {
+        if (cmd.operationType == OperationType.CREATE && kind == "rolebinding" && name == "admin") {
+            updateRolebindingCommand(cmd.payload, namespace)
+        } else cmd
+
+        val performClient = if (kind == "namespace") {
             serviceAccountClient
         } else {
             userClient
         }
-        val name = cmd.payload.openshiftName
 
         return try {
             val res = when (cmd.operationType) {
@@ -102,7 +107,7 @@ class OpenShiftClient(
         }
 
         //we do not update project objects
-        if (kind == "project") {
+        if (kind == "projectrequest") {
             return OpenshiftCommand(OperationType.NOOP, payload = json)
         }
         val existing = existingResource.body
@@ -226,5 +231,30 @@ class OpenShiftClient(
 
         return canSee
     }
+
+    fun updateRolebindingCommand(json: JsonNode, namespace: String): OpenshiftCommand {
+
+        val kind = json["kind"].asText().toLowerCase()
+        val name = json["metadata"]["name"].asText().toLowerCase()
+
+        val existing = serviceAccountClient.get(kind, name, namespace)?.body ?: throw IllegalArgumentException("Admin rolebinding should exist")
+
+        json.updateField(existing, "/metadata", "resourceVersion")
+
+        return OpenshiftCommand(OperationType.UPDATE, json, previous = existing)
+    }
+
+    fun createNamespaceCommand(namespace: String, affiliation: String): OpenshiftCommand {
+        val existing = serviceAccountClient.get("namespace", namespace, "")?.body as ObjectNode ?: throw IllegalArgumentException("Namespace should exist")
+        val prev = existing.deepCopy()
+
+        val labels = mapper.convertValue<JsonNode>(mapOf("labels" to mapOf("affiliation" to affiliation)))
+
+        val metadata = existing.at("metadata") as ObjectNode
+        metadata.set("labels", labels)
+
+        return OpenshiftCommand(OperationType.UPDATE, existing, previous = prev)
+    }
+
 
 }

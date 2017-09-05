@@ -3,7 +3,8 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.internal.DeployParams
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.DeployBundle
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.model.TemplateType.build
 import no.skatteetaten.aurora.boober.model.TemplateType.development
@@ -16,6 +17,8 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.openshiftKind
+import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.eclipse.jgit.api.Git
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -72,6 +75,7 @@ class DeployService(
                     val openShiftObjects = openShiftObjectGenerator.generateObjects(application, deployId)
 
                     //we need to check if there is a project that you cannot view/operate on
+
                     val openShiftCommand = if (openShiftClient.projectExist(application.namespace)) {
                         openShiftObjects.mapNotNull { openShiftClient.prepare(application.namespace, it) }
                     } else {
@@ -91,17 +95,30 @@ class DeployService(
 
     private fun setupApplication(cmd: AuroraApplicationCommand, deploy: Boolean): AuroraApplicationResult {
 
-        //TODO: if we do not want to try another command after the first failed we have to do a manual
-        //loop here and append to a list, stop if we have a failure and return what we have so far and the failure.
-        //the question is what do we really want here. Is it not nice to know all failures in some situatjons?
-        //note that a deploy/build/import command is never run if this fails.
         val application = cmd.auroraApplication
+
         val responses = cmd.commands.map {
-            openShiftClient.performOpenShiftCommand(it, application.namespace)
+            val kind = it.payload.openshiftKind
+            val name = it.payload.openshiftName
+
+            val cmd = if (it.operationType == OperationType.CREATE && kind == "rolebinding" && name == "admin") {
+                openShiftClient.updateRolebindingCommand(it.payload, application.namespace)
+            } else {
+                it
+            }
+
+            openShiftClient.performOpenShiftCommand(cmd, application.namespace)
+        }
+
+        val namespaceResponse = if (cmd.commands.any { it.payload.openshiftKind == "projectrequest" && it.operationType == OperationType.CREATE }) {
+            val namespaceCommand = openShiftClient.createNamespaceCommand(cmd.auroraApplication.namespace, cmd.auroraApplication.affiliation)
+            openShiftClient.performOpenShiftCommand(namespaceCommand, "")
+        } else {
+            null
         }
 
         if (responses.any { !it.success }) {
-            return AuroraApplicationResult(cmd.deployId, application, responses, success = false)
+            return AuroraApplicationResult(cmd.deployId, application, responses.addIfNotNull(namespaceResponse), success = false)
         }
 
         if (application.deploy == null) {
@@ -120,7 +137,7 @@ class DeployService(
         val deleteObjects = openShiftClient.createOpenshiftDeleteCommands(application.name, application.namespace, cmd.deployId)
                 .map { openShiftClient.performOpenShiftCommand(it, application.namespace) }
 
-        val finalResponses = (responses + deleteObjects).addIfNotNull(deployCommand)
+        val finalResponses = (responses + deleteObjects).addIfNotNull(deployCommand).addIfNotNull(namespaceResponse)
 
         val result = cmd.tagCommand?.let { dockerService.tag(it) }
 

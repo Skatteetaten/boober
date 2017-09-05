@@ -43,8 +43,8 @@ class OpenShiftApiUrls(
         fun getCollectionPathForResource(baseUrl: String, kind: String, namespace: String? = null): String {
             val endpointKey = kind.toLowerCase() + "s"
 
-            val apiType = if (endpointKey in listOf("services", "configmaps", "secrets", "replicationcontrollers", "persistentvolumeclaims", "pods")) "api" else "oapi"
-            val namespacePrefix = if (endpointKey !in listOf("projects", "projectrequests", "buildrequests", "deploymentreqeusts", "users", "groups")) {
+            val apiType = if (endpointKey in listOf("namespace", "services", "configmaps", "secrets", "replicationcontrollers", "persistentvolumeclaims", "pods")) "api" else "oapi"
+            val namespacePrefix = if (endpointKey !in listOf("namespace", "projects", "projectrequests", "buildrequests", "deploymentreqeusts", "users", "groups")) {
                 namespace ?: throw IllegalArgumentException("namespace required for resource kind ${kind}")
                 "/namespaces/$namespace"
             } else ""
