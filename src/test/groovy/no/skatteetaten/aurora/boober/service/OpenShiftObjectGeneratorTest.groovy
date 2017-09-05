@@ -26,39 +26,7 @@ import spock.lang.Specification
 import spock.lang.Unroll
 import spock.mock.DetachedMockFactory
 
-@SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration,
-    EncryptionService,
-    DeployService,
-    DeployBundleService,
-    OpenShiftTemplateProcessor,
-    GitService,
-    OpenShiftObjectGenerator,
-    Config,
-    VaultFacade,
-    SecretVaultService,
-    DockerService,
-    ObjectMapper])
-class OpenShiftObjectGeneratorTest extends Specification {
-
-  @Configuration
-  static class Config {
-    private DetachedMockFactory factory = new DetachedMockFactory()
-
-    @Bean
-    UserDetailsProvider userDetailsProvider() {
-      factory.Mock(UserDetailsProvider)
-    }
-
-    @Bean
-    OpenShiftClient openshiftClient() {
-      factory.Mock(OpenShiftClient)
-    }
-
-    @Bean
-    OpenShiftResourceClient client() {
-      factory.Mock(OpenShiftResourceClient)
-    }
-  }
+class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification {
 
   @Autowired
   OpenShiftObjectGenerator openShiftService
@@ -102,7 +70,6 @@ class OpenShiftObjectGeneratorTest extends Specification {
   @Before
   def "Setup git"() {
     GitServiceHelperKt.createInitRepo(affiliation)
-
   }
 
   @Unroll

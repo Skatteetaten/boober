@@ -1,9 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -15,63 +12,15 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
-import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
-import no.skatteetaten.aurora.boober.service.DeployBundleService
-import no.skatteetaten.aurora.boober.service.EncryptionService
-import no.skatteetaten.aurora.boober.service.GitService
-import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
-import no.skatteetaten.aurora.boober.service.SecretVaultService
 import no.skatteetaten.aurora.boober.service.internal.AuroraVersioningException
-
-//import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
-import no.skatteetaten.aurora.boober.service.openshift.ServiceAccountTokenProvider
-import no.skatteetaten.aurora.boober.service.openshift.UserDetailsTokenProvider
-import spock.lang.Specification
-import spock.mock.DetachedMockFactory
 
-@SpringBootTest(classes = [
-    no.skatteetaten.aurora.boober.Configuration,
-    DeployBundleService,
-    GitService,
-    EncryptionService,
-    OpenShiftResourceClient,
-    SecretVaultService,
-    ObjectMapper,
-    Config,
-    VaultFacade,
-    SecretVaultService,
-    OpenShiftResourceClientConfig,
-    UserDetailsTokenProvider
-])
-class DeployBundleServiceTest extends Specification {
+class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
 
   public static final String ENV_NAME = "secrettest"
   public static final String APP_NAME = "aos-simple"
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
   def affiliation = "aos"
-
-  @Configuration
-  static class Config {
-    private DetachedMockFactory factory = new DetachedMockFactory()
-
-    @Bean
-    OpenShiftClient openshiftClient() {
-      factory.Mock(OpenShiftClient)
-    }
-
-    @Bean
-    ServiceAccountTokenProvider tokenProvider() {
-      factory.Mock(ServiceAccountTokenProvider)
-    }
-
-    @Bean
-    UserDetailsProvider userDetailsProvider() {
-      factory.Mock(UserDetailsProvider)
-    }
-  }
 
   @Autowired
   ObjectMapper mapper

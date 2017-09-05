@@ -6,96 +6,28 @@ import static no.skatteetaten.aurora.boober.model.TemplateType.development
 import static no.skatteetaten.aurora.boober.service.openshift.OperationType.UPDATE
 
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.service.DeployBundleService
-import no.skatteetaten.aurora.boober.service.DeployService
-import no.skatteetaten.aurora.boober.service.DockerService
-import no.skatteetaten.aurora.boober.service.EncryptionService
-import no.skatteetaten.aurora.boober.service.GitService
-import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
-import no.skatteetaten.aurora.boober.service.OpenShiftTemplateProcessor
-import no.skatteetaten.aurora.boober.service.SecretVaultService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
-import no.skatteetaten.aurora.boober.service.openshift.ServiceAccountTokenProvider
-import no.skatteetaten.aurora.boober.service.openshift.TokenProvider
-import no.skatteetaten.aurora.boober.service.openshift.UserDetailsTokenProvider
-import spock.lang.Specification
-import spock.mock.DetachedMockFactory
 
-@SpringBootTest(classes = [
-    no.skatteetaten.aurora.boober.Configuration,
-    SecretVaultService,
-    DeployService,
-    OpenShiftObjectGenerator,
-    OpenShiftTemplateProcessor,
-    GitService,
-    VaultFacade,
-    DockerService,
-    EncryptionService,
-    DeployBundleService,
-    Config,
-    OpenShiftResourceClientConfig,
-    UserDetailsTokenProvider
-])
-class DeployServiceGenerateDeployResourceTest extends Specification {
-
-  @Configuration
-  static class Config {
-    private DetachedMockFactory factory = new DetachedMockFactory()
-
-    @Bean
-    UserDetailsProvider userDetailsProvider() {
-
-      factory.Mock(UserDetailsProvider)
-    }
-
-    @Bean
-    OpenShiftClient openshiftClient() {
-      factory.Mock(OpenShiftClient)
-    }
-
-     @Bean
-    OpenShiftResourceClient resourceClient() {
-      factory.Mock(OpenShiftResourceClient)
-    }
-
-    @Bean
-    ServiceAccountTokenProvider serviceTokenProvider() {
-      factory.Mock(ServiceAccountTokenProvider)
-    }
-
-    @Bean
-    TokenProvider tokenProvider() {
-      factory.Mock(ServiceAccountTokenProvider)
-    }
-  }
+class DeployServiceGenerateDeployResourceTest extends AbstractMockedOpenShiftSpecification {
 
   @Autowired
   OpenShiftClient openShiftClient
 
   @Autowired
-  OpenShiftResourceClient resourceClient
-
-  @Autowired
   UserDetailsProvider userDetailsProvider
 
   @Autowired
-  DeployService setupFacade
+  DeployService deployService
 
   @Autowired
   ObjectMapper mapper
@@ -103,8 +35,6 @@ class DeployServiceGenerateDeployResourceTest extends Specification {
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "aos-simple"
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
-
-  def deployId = "123"
 
   def setup() {
     userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
@@ -136,7 +66,7 @@ class DeployServiceGenerateDeployResourceTest extends Specification {
       def imagestream = createOpenShiftResponse("imagestream", UPDATE, 1, 1)
 
     when:
-      def result = setupFacade.generateRedeployResource([imagestream], templateType, name, docker, true)
+      def result = deployService.generateRedeployResource([imagestream], templateType, name, docker, true)
 
     then:
       result == null
@@ -149,7 +79,7 @@ class DeployServiceGenerateDeployResourceTest extends Specification {
       def imagestream = createOpenShiftResponse("imagestream", UPDATE, 1, 1)
 
     when:
-      def result = setupFacade.generateRedeployResource([imagestream], templateType, name, docker, true)
+      def result = deployService.generateRedeployResource([imagestream], templateType, name, docker, true)
 
     then:
       result.get("kind").asText() == "BuildRequest"
@@ -162,7 +92,7 @@ class DeployServiceGenerateDeployResourceTest extends Specification {
       def deploymentConfig = createOpenShiftResponse("deploymentconfig", UPDATE, 1, 2)
 
     when:
-      def result = setupFacade.generateRedeployResource([deploymentConfig], templateType, name, docker, true)
+      def result = deployService.generateRedeployResource([deploymentConfig], templateType, name, docker, true)
 
     then:
       result.get("kind").asText() == "DeploymentRequest"
@@ -172,7 +102,7 @@ class DeployServiceGenerateDeployResourceTest extends Specification {
     expect:
       def templateType = deploy
       def name = "boober"
-      setupFacade.generateRedeployResource([], templateType, name, docker, true) == null
+      deployService.generateRedeployResource([], templateType, name, docker, true) == null
   }
 
   def "Should create DeploymentRequest when ImageStream has not changed but OperationType is Update and template is deploy"() {
@@ -183,7 +113,7 @@ class DeployServiceGenerateDeployResourceTest extends Specification {
       imagestream.command
 
     when:
-      def result = setupFacade.generateRedeployResource([imagestream], templateType, name, docker, true)
+      def result = deployService.generateRedeployResource([imagestream], templateType, name, docker, true)
 
     then:
       result.get("kind").asText() == "DeploymentRequest"
@@ -196,7 +126,7 @@ class DeployServiceGenerateDeployResourceTest extends Specification {
       def imagestream = createOpenShiftResponse("imagestream", OperationType.CREATE, 1, 1)
 
     when:
-      def result = setupFacade.generateRedeployResource([imagestream], templateType, name, docker, true)
+      def result = deployService.generateRedeployResource([imagestream], templateType, name, docker, true)
 
     then:
       result.get("kind").asText() == "ImageStreamImport"
@@ -210,7 +140,7 @@ class DeployServiceGenerateDeployResourceTest extends Specification {
       imagestream.command
 
     when:
-      def result = setupFacade.generateRedeployResource([imagestream], templateType, name, docker, false)
+      def result = deployService.generateRedeployResource([imagestream], templateType, name, docker, false)
 
     then:
       result == null

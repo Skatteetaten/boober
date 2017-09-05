@@ -21,7 +21,7 @@ import spock.mock.DetachedMockFactory
     DockerService,
     ObjectMapper,
 ])
-class DokcerServiceTest extends Specification {
+class DockerServiceTest extends Specification {
 
   @Configuration
   static class Config {

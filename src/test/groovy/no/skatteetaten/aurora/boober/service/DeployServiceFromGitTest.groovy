@@ -1,9 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 
@@ -17,68 +14,12 @@ import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
-import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
-import no.skatteetaten.aurora.boober.service.DeployBundleService
-import no.skatteetaten.aurora.boober.service.DeployService
-import no.skatteetaten.aurora.boober.service.DockerService
-import no.skatteetaten.aurora.boober.service.EncryptionService
-import no.skatteetaten.aurora.boober.service.GitService
-import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
-import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
-import no.skatteetaten.aurora.boober.service.OpenShiftTemplateProcessor
-import no.skatteetaten.aurora.boober.service.SecretVaultService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
-import no.skatteetaten.aurora.boober.service.openshift.ServiceAccountTokenProvider
-import no.skatteetaten.aurora.boober.service.openshift.UserDetailsTokenProvider
-import spock.lang.Specification
-import spock.mock.DetachedMockFactory
 
-@SpringBootTest(classes = [
-        no.skatteetaten.aurora.boober.Configuration,
-        DeployService,
-        OpenShiftObjectGenerator,
-        OpenShiftTemplateProcessor,
-        GitService,
-        SecretVaultService,
-        EncryptionService,
-        DeployBundleService,
-        VaultFacade,
-        ObjectMapper,
-        Config,
-        OpenShiftResourceClientConfig,
-        UserDetailsTokenProvider
-])
-class DeployServiceFromGitTest extends Specification {
-
-    @Configuration
-    static class Config {
-        private DetachedMockFactory factory = new DetachedMockFactory()
-
-        @Bean
-        UserDetailsProvider userDetailsProvider() {
-
-            factory.Mock(UserDetailsProvider)
-        }
-
-        @Bean
-        ServiceAccountTokenProvider tokenProvider() {
-            factory.Mock(ServiceAccountTokenProvider)
-        }
-
-        @Bean
-        OpenShiftClient openshiftClient() {
-            factory.Mock(OpenShiftClient)
-        }
-
-        @Bean
-        DockerService dockerService() {
-            factory.Mock(DockerService)
-        }
-    }
+class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
     @Autowired
     VaultFacade vaultFacade
