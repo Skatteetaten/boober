@@ -100,18 +100,17 @@ class OpenShiftClient(
 
         val name = json.openshiftName
 
-        val existingResource = userClient.get(kind, name, namespace)
-
-        if (existingResource == null) {
-            return OpenshiftCommand(OperationType.CREATE, payload = json)
-        }
-
         //we do not update project objects
         if (kind == "projectrequest") {
             return OpenshiftCommand(OperationType.NOOP, payload = json)
         }
-        val existing = existingResource.body
 
+        val existingResource = userClient.get(kind, name, namespace)
+        if (existingResource == null) {
+            return OpenshiftCommand(OperationType.CREATE, payload = json)
+        }
+
+        val existing = existingResource.body
 
         json.updateField(existing, "/metadata", "resourceVersion")
 
@@ -215,21 +214,7 @@ class OpenShiftClient(
 
 
     fun projectExist(name: String): Boolean {
-        val headers: HttpHeaders = userClient.getAuthorizationHeaders()
-        val url = "$baseUrl/oapi/v1/projects"
-        val projects = userClient.getExistingResource(headers, url)?.body?.get("items")?.toList() ?: emptyList()
-
-
-        val canSee = projects.any { it.at("/metadata/name").asText() == name }
-
-        if (!canSee) {
-            // Potential bug if the user can view, but not change the project.
-            if (exist("$url/$name")) {
-                throw IllegalAccessException("Project exist but you do not have permission to modify it")
-            }
-        }
-
-        return canSee
+        return exist("${baseUrl}/oapi/v1/projects/$name")
     }
 
     fun updateRolebindingCommand(json: JsonNode, namespace: String): OpenshiftCommand {

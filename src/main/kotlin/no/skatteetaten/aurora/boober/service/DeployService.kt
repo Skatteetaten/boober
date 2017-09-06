@@ -122,6 +122,7 @@ class DeployService(
         }
 
         if (responses.any { !it.success }) {
+            logger.warn("One or more commands failed for ${application.namespace}/${application.name}")
             return AuroraApplicationResult(cmd.deployId, application, responses.addIfNotNull(namespaceResponse), success = false)
         }
 
@@ -174,6 +175,7 @@ class DeployService(
                                  docker: String,
                                  deploy: Boolean): JsonNode? {
 
+        logger.info("Generate redeploy resource for $type")
         if (!deploy) {
             return null
         }
@@ -183,6 +185,7 @@ class DeployService(
         }
 
         if (type == development) {
+            logger.info("Generating build request")
             return openShiftObjectGenerator.generateBuildRequest(name)
         }
 
