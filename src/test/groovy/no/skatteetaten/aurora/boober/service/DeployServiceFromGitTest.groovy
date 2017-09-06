@@ -43,7 +43,16 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
   def setup() {
+
+    def namespaceJson = mapper.
+        convertValue(["kind": "namespace", "metadata": ["labels": ["affiliation": affiliation]]], JsonNode.class)
     openShiftClient.prepare(_, _) >> { new OpenshiftCommand(OperationType.CREATE, it[1]) }
+    openShiftClient.updateRolebindingCommand(_, _) >> {
+      new OpenshiftCommand(OperationType.UPDATE, it[0], null, it[0])
+    }
+    openShiftClient.createNamespaceCommand(_, _) >> {
+      new OpenshiftCommand(OperationType.UPDATE, namespaceJson, null, namespaceJson)
+    }
     openShiftClient.performOpenShiftCommand(_, _) >> {
       def cmd = it[0]
       new OpenShiftResponse(cmd, cmd.payload)
@@ -100,7 +109,7 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
       def revTag = tags[0]
       def resp = revTag.result["openShiftResponses"]
 
-      resp.size() == 12
+      resp.size() == 10
   }
 
   def "Should perform release and tag in docker repo"() {
