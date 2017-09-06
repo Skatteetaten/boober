@@ -37,9 +37,9 @@
       "flags": {
         "rolling": true
       },
-      "groupId": "aurora",
-      "artifactId": "webleveransetest",
-      "version": "0",
+      "groupId": "no.skatteetaten.aurora",
+      "artifactId": "openshift-referanse-react",
+      "version": "snapshot_test-SNAPSHOT",
       "route" : {
         "reference-web" : { }
       },
@@ -49,7 +49,8 @@
     },
     "boober-utv/about.json": {
       "cluster": "qa",
-      "secretVault": "utv"
+      "secretVault": "utv",
+      "type": "development"
     },
     "boober-utv/reference.json": {
     },
@@ -57,9 +58,12 @@
     },
     "boober-test/about.json": {
       "cluster": "qa",
-      "secretVault": "test"
+      "secretVault": "test",
+      "type": "development"
     },
     "boober-test/reference.json": {
+    },
+    "boober-test/reference-web.json": {
     }
   }
 }

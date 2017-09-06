@@ -243,7 +243,16 @@ class OpenShiftObjectGenerator(
                     "buildName" to buildName,
                     "build" to it
             )
-            val bc = mergeVelocityTemplate("build-config.json", buildParams)
+            val bc = if (auroraApplication.deploy != null) {
+                val applicationPlatform = auroraApplication.deploy.applicationPlatform
+                val template = when (applicationPlatform) {
+                    java -> "build-config.json"
+                    web -> "build-config-web.json"
+                }
+                mergeVelocityTemplate(template, buildParams)
+            } else {
+                null
+            }
 
             val testBc = if (it.testGitUrl != null) {
                 mergeVelocityTemplate("jenkins-build-config.json", buildParams)
@@ -251,7 +260,9 @@ class OpenShiftObjectGenerator(
                 null
             }
 
-            listOf(bc).addIfNotNull(testBc)
+            listOf<JsonNode>()
+                    .addIfNotNull(bc)
+                    .addIfNotNull(testBc)
         }
     }
 
