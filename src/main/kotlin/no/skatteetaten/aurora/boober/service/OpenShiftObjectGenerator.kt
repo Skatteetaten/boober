@@ -66,7 +66,7 @@ class OpenShiftObjectGenerator(
 
     fun generateProject(auroraApplication: AuroraApplication): JsonNode {
 
-        return mergeVelocityTemplate("project.json", mapOf(
+        return mergeVelocityTemplate("projectrequest.json", mapOf(
                 "namespace" to auroraApplication.namespace
         ))
     }

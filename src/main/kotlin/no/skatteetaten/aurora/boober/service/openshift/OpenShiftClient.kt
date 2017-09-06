@@ -237,7 +237,7 @@ class OpenShiftClient(
         val kind = json["kind"].asText().toLowerCase()
         val name = json["metadata"]["name"].asText().toLowerCase()
 
-        val existing = serviceAccountClient.get(kind, name, namespace)?.body ?: throw IllegalArgumentException("Admin rolebinding should exist")
+        val existing = userClient.get(kind, name, namespace)?.body ?: throw IllegalArgumentException("Admin rolebinding should exist")
 
         json.updateField(existing, "/metadata", "resourceVersion")
 
