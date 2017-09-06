@@ -95,6 +95,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
       gitLog.fullMessage == "Added: 0, Modified: 1, Deleted: 0"
   }
 
+  @DefaultOverride(auroraConfig = false)
   def "Should successfully save AuroraConfig"() {
     given:
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
@@ -115,6 +116,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
       gitLog.fullMessage.contains("Added: 1")
   }
 
+  @DefaultOverride(auroraConfig = false)
   def "Should patch AuroraConfigFile and push changes to git"() {
     given:
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, "aos")

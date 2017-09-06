@@ -10,8 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
@@ -24,9 +22,6 @@ class DeployServiceGenerateDeployResourceTest extends AbstractMockedOpenShiftSpe
   OpenShiftClient openShiftClient
 
   @Autowired
-  UserDetailsProvider userDetailsProvider
-
-  @Autowired
   DeployService deployService
 
   @Autowired
@@ -37,9 +32,6 @@ class DeployServiceGenerateDeployResourceTest extends AbstractMockedOpenShiftSpe
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
   def setup() {
-    userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
-    openShiftClient.isValidUser(_) >> true
-    openShiftClient.isValidGroup(_) >> true
     openShiftClient.prepare(_, _) >> { new OpenshiftCommand(OperationType.CREATE, it[1]) }
     openShiftClient.performOpenShiftCommand(_, _) >> {
       OpenshiftCommand cmd = it[1]
@@ -145,5 +137,4 @@ class DeployServiceGenerateDeployResourceTest extends AbstractMockedOpenShiftSpe
     then:
       result == null
   }
-
 }

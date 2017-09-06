@@ -35,7 +35,6 @@ import spock.mock.DetachedMockFactory
     OpenShiftTemplateProcessor,
     Config,
     UserDetailsProvider,
-//    UserDetailsTokenProvider
 ])
 class OpenShiftClientApplyTest extends Specification {
 
@@ -69,7 +68,7 @@ class OpenShiftClientApplyTest extends Specification {
   @Autowired
   ObjectMapper mapper
 
-  def "Should throw exception if unknown error occured"() {
+  def "Should throw exception if unknown error occurred"() {
 
     given:
       def prFile = this.getClass().getResource("/openshift-objects/project.json")

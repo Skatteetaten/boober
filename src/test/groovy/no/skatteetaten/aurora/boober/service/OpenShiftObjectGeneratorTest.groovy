@@ -26,6 +26,7 @@ import spock.lang.Specification
 import spock.lang.Unroll
 import spock.mock.DetachedMockFactory
 
+@DefaultOverride(auroraConfig = false)
 class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification {
 
   @Autowired
@@ -131,5 +132,4 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
 
     return "$kind/$name" as String
   }
-
 }
