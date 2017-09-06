@@ -101,6 +101,8 @@ class DeployService(
             val kind = it.payload.openshiftKind
             val name = it.payload.openshiftName
 
+            // ProjectRequest will always create an admin rolebinding, so if we get a command to create one, we just
+            // swap it out with an update command.
             val cmd = if (it.operationType == OperationType.CREATE && kind == "rolebinding" && name == "admin") {
                 openShiftClient.updateRolebindingCommand(it.payload, application.namespace)
             } else {
@@ -110,6 +112,8 @@ class DeployService(
             openShiftClient.performOpenShiftCommand(cmd, application.namespace)
         }
 
+        // ProjectRequest will create a Project and a Namespace, but without labels. To get the labels applied we need
+        // to update the namespace after the fact.
         val namespaceResponse = if (cmd.commands.any { it.payload.openshiftKind == "projectrequest" && it.operationType == OperationType.CREATE }) {
             val namespaceCommand = openShiftClient.createNamespaceCommand(cmd.auroraApplication.namespace, cmd.auroraApplication.affiliation)
             openShiftClient.performOpenShiftCommand(namespaceCommand, "")
@@ -126,13 +130,9 @@ class DeployService(
         }
 
         val docker = "${application.deploy.dockerImagePath}:${application.deploy.dockerTag}"
-        val deployCommand =
-                generateRedeployResource(responses, application.type, application.name, docker, deploy)
-                        ?.let {
-                            openShiftClient.prepare(application.namespace, it)
-                        }?.let {
-                    openShiftClient.performOpenShiftCommand(it, application.namespace)
-                }
+        val deployCommand = generateRedeployResource(responses, application.type, application.name, docker, deploy)
+                ?.let { openShiftClient.prepare(application.namespace, it) }
+                ?.let { openShiftClient.performOpenShiftCommand(it, application.namespace) }
 
         val deleteObjects = openShiftClient.createOpenshiftDeleteCommands(application.name, application.namespace, cmd.deployId)
                 .map { openShiftClient.performOpenShiftCommand(it, application.namespace) }
