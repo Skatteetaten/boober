@@ -106,24 +106,7 @@ class OpenShiftClientApplyTest extends Specification {
       result.operationType == OperationType.CREATE
   }
 
-  def "Should not update project if it does exist"() {
 
-    given:
-      def prFile = this.getClass().getResource("/openshift-objects/project.json")
-
-      def projectRequest = mapper.readTree(prFile)
-
-    when:
-
-      userClient.get("project", "foobar", "foobar") >>
-          new ResponseEntity(projectRequest, HttpStatus.OK)
-
-      def result = openShiftClient.prepare("foobar", projectRequest)
-
-    then:
-
-      result.operationType == OperationType.NOOP
-  }
 
   @Unroll
   def "Should update #type"() {

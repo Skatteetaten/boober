@@ -4,9 +4,13 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.java
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.web
+import no.skatteetaten.aurora.boober.model.AuroraApplication
+import no.skatteetaten.aurora.boober.model.Database
+import no.skatteetaten.aurora.boober.model.Mount
+import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
@@ -17,9 +21,8 @@ import org.apache.velocity.app.VelocityEngine
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.io.StringWriter
 import java.io.File
-import java.util.*
+import java.io.StringWriter
 
 @Service
 class OpenShiftObjectGenerator(
@@ -49,8 +52,7 @@ class OpenShiftObjectGenerator(
 
         val labels = findLabels(auroraApplication, deployId)
 
-        return generateProject(auroraApplication)
-                .addIfNotNull(generateRolebindings(auroraApplication.permissions))
+        return listOf(generateProject(auroraApplication))
                 .addIfNotNull(generateDeploymentConfig(auroraApplication, labels, mounts))
                 .addIfNotNull(generateService(auroraApplication, labels))
                 .addIfNotNull(generateImageStream(auroraApplication, labels))
@@ -59,24 +61,14 @@ class OpenShiftObjectGenerator(
                 .addIfNotNull(generateRoute(auroraApplication, labels))
                 .addIfNotNull(generateTemplate(auroraApplication))
                 .addIfNotNull(generateLocalTemplate(auroraApplication))
-
+                .addIfNotNull(generateRolebindings(auroraApplication.permissions))
     }
 
-    fun generateProject(auroraApplication: AuroraApplication): LinkedList<JsonNode> {
-        val templatesToProcess = listOf(
-                "project.json",
-                "deployer-rolebinding.json",
-                "imagebuilder-rolebinding.json",
-                "imagepuller-rolebinding.json"
-        )
+    fun generateProject(auroraApplication: AuroraApplication): JsonNode {
 
-        return LinkedList(templatesToProcess.map {
-            mergeVelocityTemplate(it, mapOf(
-                    "namespace" to auroraApplication.namespace,
-                    "affiliation" to auroraApplication.affiliation,
-                    "username" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-")
-            ))
-        })
+        return mergeVelocityTemplate("projectrequest.json", mapOf(
+                "namespace" to auroraApplication.namespace
+        ))
     }
 
     fun generateRolebindings(permissions: Permissions): List<JsonNode>? {
