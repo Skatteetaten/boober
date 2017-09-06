@@ -26,48 +26,11 @@ import spock.lang.Specification
 import spock.lang.Unroll
 import spock.mock.DetachedMockFactory
 
-@SpringBootTest(classes = [no.skatteetaten.aurora.boober.Configuration,
-    EncryptionService,
-    DeployService,
-    DeployBundleService,
-    OpenShiftTemplateProcessor,
-    GitService,
-    OpenShiftObjectGenerator,
-    Config,
-    VaultFacade,
-    SecretVaultService,
-    DockerService,
-    ObjectMapper])
-class OpenShiftObjectGeneratorTest extends Specification {
-
-  @Configuration
-  static class Config {
-    private DetachedMockFactory factory = new DetachedMockFactory()
-
-    @Bean
-    UserDetailsProvider userDetailsProvider() {
-      factory.Mock(UserDetailsProvider)
-    }
-
-    @Bean
-    OpenShiftClient openshiftClient() {
-      factory.Mock(OpenShiftClient)
-    }
-
-    @Bean
-    OpenShiftResourceClient client() {
-      factory.Mock(OpenShiftResourceClient)
-    }
-  }
+@DefaultOverride(auroraConfig = false)
+class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification {
 
   @Autowired
   OpenShiftObjectGenerator openShiftService
-
-  @Autowired
-  UserDetailsProvider userDetailsProvider
-
-  @Autowired
-  OpenShiftClient openShiftClient
 
   @Autowired
   OpenShiftResourceClient openShiftResourceClient
@@ -84,13 +47,6 @@ class OpenShiftObjectGeneratorTest extends Specification {
   @Autowired
   VaultFacade vaultFacade
 
-  def setup() {
-    userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User")
-    openShiftClient.isValidGroup(_) >> true
-    openShiftClient.isValidUser(_) >> true
-    openShiftClient.hasUserAccess(_, _) >> true
-  }
-
   @Shared
   def file = new ObjectMapper().convertValue([managementPath: ":8080/test"], JsonNode.class)
 
@@ -102,7 +58,6 @@ class OpenShiftObjectGeneratorTest extends Specification {
   @Before
   def "Setup git"() {
     GitServiceHelperKt.createInitRepo(affiliation)
-
   }
 
   @Unroll
@@ -177,5 +132,4 @@ class OpenShiftObjectGeneratorTest extends Specification {
 
     return "$kind/$name" as String
   }
-
 }

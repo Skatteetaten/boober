@@ -1,9 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -15,63 +12,15 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
-import no.skatteetaten.aurora.boober.service.AuroraConfigHelperKt
-import no.skatteetaten.aurora.boober.service.DeployBundleService
-import no.skatteetaten.aurora.boober.service.EncryptionService
-import no.skatteetaten.aurora.boober.service.GitService
-import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
-import no.skatteetaten.aurora.boober.service.SecretVaultService
 import no.skatteetaten.aurora.boober.service.internal.AuroraVersioningException
-
-//import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
-import no.skatteetaten.aurora.boober.service.openshift.ServiceAccountTokenProvider
-import no.skatteetaten.aurora.boober.service.openshift.UserDetailsTokenProvider
-import spock.lang.Specification
-import spock.mock.DetachedMockFactory
 
-@SpringBootTest(classes = [
-    no.skatteetaten.aurora.boober.Configuration,
-    DeployBundleService,
-    GitService,
-    EncryptionService,
-    OpenShiftResourceClient,
-    SecretVaultService,
-    ObjectMapper,
-    Config,
-    VaultFacade,
-    SecretVaultService,
-    OpenShiftResourceClientConfig,
-    UserDetailsTokenProvider
-])
-class DeployBundleServiceTest extends Specification {
+class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
 
   public static final String ENV_NAME = "secrettest"
   public static final String APP_NAME = "aos-simple"
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
   def affiliation = "aos"
-
-  @Configuration
-  static class Config {
-    private DetachedMockFactory factory = new DetachedMockFactory()
-
-    @Bean
-    OpenShiftClient openshiftClient() {
-      factory.Mock(OpenShiftClient)
-    }
-
-    @Bean
-    ServiceAccountTokenProvider tokenProvider() {
-      factory.Mock(ServiceAccountTokenProvider)
-    }
-
-    @Bean
-    UserDetailsProvider userDetailsProvider() {
-      factory.Mock(UserDetailsProvider)
-    }
-  }
 
   @Autowired
   ObjectMapper mapper
@@ -91,19 +40,6 @@ class DeployBundleServiceTest extends Specification {
   @Autowired
   OpenShiftClient openShiftClient
 
-  def setup() {
-    userDetailsProvider.authenticatedUser >> new User("test", "", "Test Foo")
-    openShiftClient.isValidGroup(_) >> true
-    openShiftClient.isValidUser(_) >> true
-    openShiftClient.hasUserAccess(_, _) >> true
-  }
-
-  private void createRepoAndSaveFiles(String affiliation, AuroraConfig auroraConfig) {
-    GitServiceHelperKt.createInitRepo(affiliation)
-
-    service.saveAuroraConfig(auroraConfig, false)
-  }
-
   private AuroraConfig getAuroraConfigFromGit(String affiliation, boolean decryptSecrets) {
 
     def git = gitService.checkoutRepoForAffiliation(affiliation)
@@ -117,7 +53,7 @@ class DeployBundleServiceTest extends Specification {
   def "Should not update one file in AuroraConfig if version is wrong"() {
     given:
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
-      createRepoAndSaveFiles("aos", auroraConfig)
+      createRepoAndSaveFiles(auroraConfig)
 
     when:
       def fileToChange = "secrettest/aos-simple.json"
@@ -132,13 +68,13 @@ class DeployBundleServiceTest extends Specification {
 
   }
 
+  @DefaultOverride(auroraConfig = false)
   def "Should update one file in AuroraConfig"() {
     given:
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
-      createRepoAndSaveFiles("aos", auroraConfig)
+      createRepoAndSaveFiles(auroraConfig)
       def vault = new AuroraSecretVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
       vaultFacade.save("aos", vault, false)
-
 
     when:
       def storedConfig = service.findAuroraConfig("aos")
@@ -155,19 +91,19 @@ class DeployBundleServiceTest extends Specification {
       gitService.closeRepository(git)
 
     then:
-      gitLog.authorIdent.name == "Test Foo"
+      gitLog.authorIdent.name == "Test User"
       gitLog.fullMessage == "Added: 0, Modified: 1, Deleted: 0"
   }
 
+  @DefaultOverride(auroraConfig = false)
   def "Should successfully save AuroraConfig"() {
     given:
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
-      createRepoAndSaveFiles("aos", auroraConfig)
+      createRepoAndSaveFiles(auroraConfig)
       def vault = new AuroraSecretVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
       vaultFacade.save("aos", vault, false)
 
     when:
-
       def json = mapper.convertValue(["name": "test%qwe)"], JsonNode.class)
       def newFile = new AuroraConfigFile("foo", json, false, null)
       def newConfig = new AuroraConfig([newFile], affiliation)
@@ -180,10 +116,11 @@ class DeployBundleServiceTest extends Specification {
       gitLog.fullMessage.contains("Added: 1")
   }
 
+  @DefaultOverride(auroraConfig = false)
   def "Should patch AuroraConfigFile and push changes to git"() {
     given:
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, "aos")
-      createRepoAndSaveFiles("aos", auroraConfig)
+      createRepoAndSaveFiles(auroraConfig)
       def vault = new AuroraSecretVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
       vaultFacade.save("aos", vault, false)
 
