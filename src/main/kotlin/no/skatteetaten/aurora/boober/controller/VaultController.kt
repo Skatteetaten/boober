@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.controller
 
+import io.micrometer.core.annotation.Timed
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
@@ -19,11 +20,13 @@ import javax.servlet.http.HttpServletRequest
 class VaultController(val facade: VaultFacade) {
 
 
+    @Timed
     @GetMapping()
     fun listVaults(@PathVariable affiliation: String): Response {
         return Response(items = facade.listVaults(affiliation))
     }
 
+    @Timed
     @PutMapping()
     fun save(@PathVariable affiliation: String,
              @RequestBody vault: AuroraSecretVault,
@@ -31,11 +34,13 @@ class VaultController(val facade: VaultFacade) {
         return Response(items = listOf(facade.save(affiliation, vault, validateVersions)))
     }
 
+    @Timed
     @GetMapping("/{vault}")
     fun get(@PathVariable affiliation: String, @PathVariable vault: String): Response {
         return Response(items = listOf(facade.find(affiliation, vault)))
     }
 
+    @Timed
     @PutMapping("/{vault}/secret/**")
     fun update(@PathVariable affiliation: String,
                @PathVariable vault: String,
@@ -55,6 +60,7 @@ class VaultController(val facade: VaultFacade) {
         return Response(items = listOf(vault))
     }
 
+    @Timed
     @DeleteMapping("/{vault}")
     fun delete(@PathVariable affiliation: String, @PathVariable vault: String): Response {
         return Response(items = listOf(facade.delete(affiliation, vault)))

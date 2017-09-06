@@ -1,11 +1,12 @@
 package no.skatteetaten.aurora.boober.controller
 
 import com.fasterxml.jackson.databind.JsonNode
+import io.micrometer.core.annotation.Timed
 import no.skatteetaten.aurora.boober.controller.internal.AuroraConfigPayload
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.internal.fromAuroraConfig
-import no.skatteetaten.aurora.boober.service.DeployBundleService
 import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.service.DeployBundleService
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -21,6 +22,8 @@ import javax.servlet.http.HttpServletRequest
 @RequestMapping("/affiliation/{affiliation}")
 class AuroraConfigController(val deployBundleService: DeployBundleService) {
 
+
+    @Timed
     @PutMapping("/auroraconfig")
     fun save(@PathVariable affiliation: String,
              @RequestBody payload: AuroraConfigPayload,
@@ -30,12 +33,14 @@ class AuroraConfigController(val deployBundleService: DeployBundleService) {
         return createAuroraConfigResponse(auroraConfig)
     }
 
+    @Timed
     @GetMapping("/auroraconfig")
     fun get(@PathVariable affiliation: String): Response {
         return createAuroraConfigResponse(deployBundleService.findAuroraConfig(affiliation))
     }
 
 
+    @Timed
     @PutMapping("/auroraconfigfile/**")
     fun updateAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest,
                                @RequestBody fileContents: JsonNode,
@@ -52,6 +57,8 @@ class AuroraConfigController(val deployBundleService: DeployBundleService) {
         return createAuroraConfigResponse(auroraConfig)
     }
 
+
+    @Timed
     @PatchMapping(value = "/auroraconfigfile/**", consumes = arrayOf("application/json-patch+json"))
     fun patchAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest,
                               @RequestBody jsonPatchOp: String,

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.fge.jsonpatch.JsonPatch
+import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
@@ -44,7 +45,8 @@ class DeployBundleService(
         val openShiftClient: OpenShiftClient,
         val gitService: GitService,
         val mapper: ObjectMapper,
-        val secretVaultFacade: VaultFacade) {
+        val secretVaultFacade: VaultFacade,
+        val metrics: AuroraMetrics) {
 
     private val GIT_SECRET_FOLDER = ".secret"
     private val logger = LoggerFactory.getLogger(DeployBundleService::class.java)
@@ -224,11 +226,7 @@ class DeployBundleService(
 
     private fun getRepo(affiliation: String): Git {
 
-        val startCheckout = System.currentTimeMillis()
-        val repo = gitService.checkoutRepoForAffiliation(affiliation)
-        logger.debug("Spent {} millis checking out git repository", System.currentTimeMillis() - startCheckout)
-
-        return repo
+        return gitService.checkoutRepoForAffiliation(affiliation)
     }
 
     private fun createAuroraConfigFromFiles(filesFromGit: Map<String, Pair<RevCommit?, File>>, affiliation: String): AuroraConfig {

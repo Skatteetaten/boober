@@ -20,11 +20,6 @@ boober:
     openshift:
         tokenLocation: /var/run/secrets/kubernetes.io/serviceaccount/token
 
-aurora:
-  client:
-    metricsPathLabelGroupings:
-      httpbin: ".*httpbin.org.*"
-
 logging:
   level:
     no.skatteetaten: INFO

@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
+import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraGitFile
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
@@ -28,7 +29,8 @@ class GitService(
         @Value("\${boober.git.urlPattern}") val url: String,
         @Value("\${boober.git.checkoutPath}") val checkoutPath: String,
         @Value("\${boober.git.username}") val username: String,
-        @Value("\${boober.git.password}") val password: String) {
+        @Value("\${boober.git.password}") val password: String,
+        val metrics: AuroraMetrics) {
 
     val logger: Logger = LoggerFactory.getLogger(GitService::class.java)
 
@@ -36,19 +38,21 @@ class GitService(
 
     fun checkoutRepoForAffiliation(affiliation: String): Git {
 
-        val dir = File("$checkoutPath/${UUID.randomUUID()}").apply { mkdirs() }
-        val uri = url.format(affiliation)
+        return metrics.withMetrics("git_checkout", {
+            val dir = File("$checkoutPath/${UUID.randomUUID()}").apply { mkdirs() }
+            val uri = url.format(affiliation)
 
-        return try {
-            Git.cloneRepository()
-                    .setURI(uri)
-                    .setCredentialsProvider(cp)
-                    .setDirectory(dir)
-                    .call()
-        } catch (ex: Exception) {
-            dir.deleteRecursively()
-            throw ex
-        }
+            try {
+                Git.cloneRepository()
+                        .setURI(uri)
+                        .setCredentialsProvider(cp)
+                        .setDirectory(dir)
+                        .call()
+            } catch (ex: Exception) {
+                dir.deleteRecursively()
+                throw ex
+            }
+        })
     }
 
     fun deleteDirectory(git: Git, dirName: String) {
@@ -58,9 +62,9 @@ class GitService(
             val status = git.status().call()
             commitAllChanges(git, "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}")
             push(git)
-        } catch(ex: EmtpyCommitException) {
+        } catch (ex: EmtpyCommitException) {
             throw AuroraConfigException("No such directory")
-        } catch(ex: GitAPIException) {
+        } catch (ex: GitAPIException) {
             throw GitException("Unexpected error committing changes", ex)
         } finally {
             closeRepository(git)
@@ -75,8 +79,8 @@ class GitService(
             val status = git.status().call()
             commitAllChanges(git, "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}")
             push(git)
-        } catch(ex: EmtpyCommitException) {
-        } catch(ex: GitAPIException) {
+        } catch (ex: EmtpyCommitException) {
+        } catch (ex: GitAPIException) {
             throw GitException("Unexpected error committing changes", ex)
         } finally {
             closeRepository(git)
@@ -97,7 +101,7 @@ class GitService(
                     val path = it.relativeTo(folder).path
                     val commit = try {
                         git.log().addPath(path).setMaxCount(1).call().firstOrNull()
-                    } catch(e: NoHeadException) {
+                    } catch (e: NoHeadException) {
                         logger.debug("No history was found for path={}", path)
                         null
                     }
@@ -114,7 +118,7 @@ class GitService(
                     val path = it.relativeTo(folder).path
                     val commit = try {
                         git.log().addPath(path).setMaxCount(1).call().firstOrNull()
-                    } catch(e: NoHeadException) {
+                    } catch (e: NoHeadException) {
                         logger.debug("No history was found for path={}", path)
                         null
                     }
@@ -151,7 +155,6 @@ class GitService(
 
     private fun commitAllChanges(git: Git, message: String): RevCommit {
 
-
         val user = userDetails.getAuthenticatedUser().let {
 
             PersonIdent(it.fullName ?: it.username, "${it.username}@skatteetaten.no")
@@ -166,11 +169,13 @@ class GitService(
 
     fun push(git: Git) {
 
-        git.push()
-                .setCredentialsProvider(cp)
-                .setPushAll()
-                .setPushTags()
-                .call()
+        metrics.withMetrics("git_push", {
+            git.push()
+                    .setCredentialsProvider(cp)
+                    .setPushAll()
+                    .setPushTags()
+                    .call()
+        })
     }
 
     fun markRelease(git: Git, tag: String, tagBody: String) {
