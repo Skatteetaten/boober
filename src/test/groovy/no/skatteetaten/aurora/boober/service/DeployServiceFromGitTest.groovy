@@ -109,7 +109,7 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
       def revTag = tags[0]
       def resp = revTag.result["openShiftResponses"]
 
-      resp.size() == 10
+      resp.size() == 9
   }
 
   def "Should perform release and tag in docker repo"() {

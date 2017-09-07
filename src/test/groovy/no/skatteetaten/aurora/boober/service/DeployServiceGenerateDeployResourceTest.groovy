@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import static no.skatteetaten.aurora.boober.model.TemplateType.build
 import static no.skatteetaten.aurora.boober.model.TemplateType.deploy
 import static no.skatteetaten.aurora.boober.model.TemplateType.development
+import static no.skatteetaten.aurora.boober.service.openshift.OperationType.CREATE
 import static no.skatteetaten.aurora.boober.service.openshift.OperationType.UPDATE
 
 import org.springframework.beans.factory.annotation.Autowired
@@ -64,17 +65,17 @@ class DeployServiceGenerateDeployResourceTest extends AbstractMockedOpenShiftSpe
       result == null
   }
 
-  def "Should  create redeploy resource when development flow"() {
+  def "Should not create redeploy resource when development flow and we create bc"() {
     given:
       def templateType = development
       def name = "boober"
-      def imagestream = createOpenShiftResponse("imagestream", UPDATE, 1, 1)
+      def bc = createOpenShiftResponse("buildconfig", CREATE, 1, 1)
 
     when:
-      def result = deployService.generateRedeployResource([imagestream], templateType, name, docker, true)
+      def result = deployService.generateRedeployResource([bc], templateType, name, docker, true)
 
     then:
-      result.get("kind").asText() == "BuildRequest"
+      result == null
   }
 
   def "Should create DeploymentRequest when no ImageStream is present and DeploymentConfig has changed and template is deploy"() {
