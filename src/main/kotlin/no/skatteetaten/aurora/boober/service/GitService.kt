@@ -43,6 +43,7 @@ class GitService(
             val uri = url.format(affiliation)
 
             try {
+                // TODO: Hvis history er false så skal depth være 1 og shallow true og no tags
                 Git.cloneRepository()
                         .setURI(uri)
                         .setCredentialsProvider(cp)

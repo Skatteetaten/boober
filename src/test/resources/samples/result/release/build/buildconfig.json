@@ -18,7 +18,7 @@
         "from": {
           "kind": "ImageStreamTag",
           "namespace": "openshift",
-          "name": "architect:prod"
+          "name": "architect:1"
         },
         "env": [
           {
@@ -35,7 +35,7 @@
           },
           {
             "name": "DOCKER_BASE_VERSION",
-            "value": "1"
+            "value": "8"
           },
           {
             "name": "DOCKER_BASE_IMAGE",

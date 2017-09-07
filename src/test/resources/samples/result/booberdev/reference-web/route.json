@@ -1,0 +1,19 @@
+{
+  "kind": "Route",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "openshift-referanse-react",
+    "labels": {
+      "app": "openshift-referanse-react",
+      "updatedBy": "hero",
+      "affiliation": "aos",
+      "booberDeployId": "123"
+    }
+  },
+  "spec": {
+    "to": {
+      "kind": "Service",
+      "name": "openshift-referanse-react"
+    }
+  }
+}

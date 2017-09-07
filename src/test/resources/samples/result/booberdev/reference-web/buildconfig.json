@@ -2,9 +2,9 @@
   "kind": "BuildConfig",
   "apiVersion": "v1",
   "metadata": {
-    "name": "build",
+    "name": "openshift-referanse-react",
     "labels": {
-      "app": "build",
+      "app": "openshift-referanse-react",
       "updatedBy": "hero",
       "affiliation": "aos",
       "booberDeployId": "123"
@@ -12,20 +12,7 @@
   },
   "spec": {
     "triggers": [
-      {
-        "type": "ImageChange",
-        "imageChange": {
-          "from": {
-            "kind": "ImageStreamTag",
-            "namespace": "openshift",
-            "name": "wingnut:8"
-          }
-        }
-      },
-      {
-        "type": "ImageChange",
-        "imageChange": {}
-      }
+
     ],
     "strategy": {
       "type": "Custom",
@@ -38,27 +25,31 @@
         "env": [
           {
             "name": "ARTIFACT_ID",
-            "value": "aos-simple"
+            "value": "openshift-referanse-react"
           },
           {
             "name": "GROUP_ID",
-            "value": "ske.aurora.openshift"
+            "value": "no.skatteetaten.aurora"
           },
           {
             "name": "VERSION",
-            "value": "1.0.3"
+            "value": "develop-SNAPSHOT"
           },
           {
             "name": "DOCKER_BASE_VERSION",
-            "value": "8"
+            "value": "0"
           },
           {
             "name": "DOCKER_BASE_IMAGE",
-            "value": "aurora/wingnut"
+            "value": "aurora/wrench"
           },
           {
             "name": "PUSH_EXTRA_TAGS",
             "value": "latest,major,minor,patch"
+          },
+          {
+            "name": "APPLICATION_TYPE",
+            "value": "nodejs"
           }
         ],
         "exposeDockerSocket": true
@@ -66,8 +57,8 @@
     },
     "output": {
       "to": {
-        "kind": "DockerImage",
-        "name": "docker-registry.aurora.sits.no:5000/ske_aurora_openshift/aos-simple:default"
+        "kind": "ImageStreamTag",
+        "name": "openshift-referanse-react:latest"
       }
     }
   }

@@ -36,15 +36,10 @@
       "type": "Custom",
       "customStrategy": {
         "from": {
-          "kind": "DockerImage",
-          "name": "docker-registry.aurora.sits.no:5000/aurora/${build.builderName}:${build.builderVersion}"
-        },
-#*        "from": {
           "kind": "ImageStreamTag",
           "namespace": "openshift",
           "name": "${build.builderName}:${build.builderVersion}"
         },
-*#
         "env": [
           {
             "name": "ARTIFACT_ID",
@@ -69,10 +64,6 @@
           {
             "name": "PUSH_EXTRA_TAGS",
             "value": "${build.extraTags}"
-          },
-          {
-            "name": "DOCKER_REGISTRY",
-            "value": "docker-registry.aurora.sits.no:5000"
           },
           {
             "name": "APPLICATION_TYPE",

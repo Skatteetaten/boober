@@ -37,7 +37,7 @@
         "from": {
           "kind": "ImageStreamTag",
           "namespace": "openshift",
-          "name": "leveransepakkebygger:prod"
+          "name": "architect:1"
         },
         "env": [
           {
@@ -58,7 +58,7 @@
           },
           {
             "name": "DOCKER_BASE_IMAGE",
-            "value": "aurora/oracle8"
+            "value": "aurora/wingnut"
           },
           {
             "name": "PUSH_EXTRA_TAGS",

@@ -9,6 +9,7 @@ import no.skatteetaten.aurora.boober.model.AuroraBuild
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.utils.length
 import no.skatteetaten.aurora.boober.utils.notBlank
+import no.skatteetaten.aurora.boober.utils.oneOf
 
 class AuroraBuildMapperV1 {
 
@@ -38,49 +39,40 @@ class AuroraBuildMapperV1 {
             "$name:latest"
         }
 
-        return when (applicationPlatform) {
-            java -> AuroraBuild(
-                    testJenkinsfile = auroraConfigFields.extract("test/jenkinsfile"),
-                    testGitUrl = testGitUrl,
-                    testTag = auroraConfigFields.extractOrNull("test/tag"),
-                    baseName = auroraConfigFields.extractOrNull("baseImage/name") ?: "oracle8",
-                    baseVersion = auroraConfigFields.extractOrNull("baseImage/version") ?: "1",
-                    builderName = auroraConfigFields.extractOrNull("builder/name") ?: "leveransepakkebygger",
-                    builderVersion = auroraConfigFields.extractOrNull("builder/version") ?: "prod",
-                    extraTags = auroraConfigFields.extract("extraTags"),
-                    version = version,
-                    groupId = groupId,
-                    artifactId = artifactId,
-                    outputKind = outputKind,
-                    outputName = outputName,
-                    triggers = !skipTriggers,
-                    buildSuffix = auroraConfigFields.extractOrNull("buildSuffix")
-            )
-            web -> AuroraBuild(
-                    testJenkinsfile = auroraConfigFields.extract("test/jenkinsfile"),
-                    testGitUrl = testGitUrl,
-                    testTag = auroraConfigFields.extractOrNull("test/tag"),
-                    baseName = auroraConfigFields.extractOrNull("baseImage/name") ?: "wrench",
-                    baseVersion = auroraConfigFields.extractOrNull("baseImage/version") ?: "0",
-                    builderName = auroraConfigFields.extractOrNull("builder/name") ?: "architect",
-                    builderVersion = auroraConfigFields.extractOrNull("builder/version") ?: "1",
-                    extraTags = auroraConfigFields.extract("extraTags"),
-                    version = version,
-                    groupId = groupId,
-                    artifactId = artifactId,
-                    outputKind = outputKind,
-                    outputName = outputName,
-                    triggers = !skipTriggers,
-                    buildSuffix = auroraConfigFields.extractOrNull("buildSuffix")
-            )
+        val (baseName, baseVersion) = when (applicationPlatform) {
+            java -> (auroraConfigFields.extractOrNull("baseImage/name") ?: "wingnut") to
+                    (auroraConfigFields.extractOrNull("baseImage/version") ?: "8")
+
+            web -> (auroraConfigFields.extractOrNull("baseImage/name") ?: "wrench") to
+                    (auroraConfigFields.extractOrNull("baseImage/version") ?: "0")
         }
+
+        return AuroraBuild(
+                applicationPlatform = ApplicationPlatform.valueOf(auroraConfigFields.extract("applicationPlatform")),
+                testJenkinsfile = auroraConfigFields.extract("test/jenkinsfile"),
+                testGitUrl = testGitUrl,
+                testTag = auroraConfigFields.extractOrNull("test/tag"),
+                baseName = baseName,
+                baseVersion = baseVersion,
+                builderName = auroraConfigFields.extract("builder/name"),
+                builderVersion = auroraConfigFields.extract("builder/version"),
+                extraTags = auroraConfigFields.extract("extraTags"),
+                version = version,
+                groupId = groupId,
+                artifactId = artifactId,
+                outputKind = outputKind,
+                outputName = outputName,
+                triggers = !skipTriggers,
+                buildSuffix = auroraConfigFields.extractOrNull("buildSuffix")
+        )
     }
 
     val handlers = listOf(
             AuroraConfigFieldHandler("extraTags", defaultValue = "latest,major,minor,patch"),
+            AuroraConfigFieldHandler("applicationPlatform", defaultValue = "java", validator = { it.oneOf(ApplicationPlatform.values().map { it.name }) }),
             AuroraConfigFieldHandler("buildSuffix"),
-            AuroraConfigFieldHandler("builder/version"),
-            AuroraConfigFieldHandler("builder/name"),
+            AuroraConfigFieldHandler("builder/name", defaultValue = "architect"),
+            AuroraConfigFieldHandler("builder/version", defaultValue = "1"),
             AuroraConfigFieldHandler("baseImage/name"),
             AuroraConfigFieldHandler("baseImage/version"),
             AuroraConfigFieldHandler("test/gitUrl"),
@@ -90,6 +82,4 @@ class AuroraBuildMapperV1 {
             AuroraConfigFieldHandler("artifactId", validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters") }),
             AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set") })
     )
-
-
 }
