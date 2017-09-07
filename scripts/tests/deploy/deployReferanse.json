@@ -1,11 +1,7 @@
 {
     "affiliation": "paas",
     "setupParams": {
-      "apps": [
-        "reference"
-      ],
-      "envs": [
-        "boober-utv"
-      ]
+      "apps": ["reference"],
+      "envs":[ "boober-utv"]
     }
 }
