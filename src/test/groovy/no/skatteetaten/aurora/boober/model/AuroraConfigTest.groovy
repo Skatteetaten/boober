@@ -16,7 +16,7 @@ class AuroraConfigTest extends Specification {
     given:
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
     when:
-      def applicationIds = auroraConfig.getApplicationIds("", "")
+      def applicationIds = auroraConfig.getApplicationIds()
 
     then:
       def console = applicationIds.get(0)

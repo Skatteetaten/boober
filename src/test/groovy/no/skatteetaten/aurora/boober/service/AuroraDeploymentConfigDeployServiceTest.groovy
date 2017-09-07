@@ -80,9 +80,9 @@ class AuroraDeploymentConfigDeployServiceTest extends AbstractMockedOpenShiftSpe
       (files.get("booberdev/aos-simple.json") as ObjectNode).remove("version")
       AuroraConfig auroraConfig =
           new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false, null) }, "aos")
-      createRepoAndSaveFiles(auroraConfig)
     when:
-      service.dryRun("aos", new DeployParams([aid.environment], [aid.application], [], false))
+
+      createRepoAndSaveFiles(auroraConfig)
 
     then:
       def ex = thrown(AuroraConfigException)

@@ -5,13 +5,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.service.internal.AuroraVersioningException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 
@@ -35,9 +32,6 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
   GitService gitService
 
   @Autowired
-  VaultFacade vaultFacade
-
-  @Autowired
   OpenShiftClient openShiftClient
 
   private AuroraConfig getAuroraConfigFromGit(String affiliation, boolean decryptSecrets) {
@@ -52,13 +46,11 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
 
   def "Should not update one file in AuroraConfig if version is wrong"() {
     given:
-      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
-      createRepoAndSaveFiles(auroraConfig)
-
-    when:
       def fileToChange = "secrettest/aos-simple.json"
 
       def newFile = mapper.convertValue([], JsonNode.class)
+
+    when:
 
       service.updateAuroraConfigFile("aos", fileToChange, newFile, "wrong version", true)
     then:
@@ -68,15 +60,8 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
 
   }
 
-  @DefaultOverride(auroraConfig = false)
   def "Should update one file in AuroraConfig"() {
     given:
-      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
-      createRepoAndSaveFiles(auroraConfig)
-      def vault = new AuroraSecretVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
-      vaultFacade.save("aos", vault, false)
-
-    when:
       def storedConfig = service.findAuroraConfig("aos")
 
       def fileToChange = "secrettest/aos-simple.json"
@@ -84,46 +69,38 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
 
       def newFile = mapper.convertValue([], JsonNode.class)
 
+    when:
       service.updateAuroraConfigFile("aos", fileToChange, newFile, theFileToChange.version, true)
 
+
+    then:
       def git = gitService.checkoutRepoForAffiliation("aos")
       def gitLog = git.log().call().head()
       gitService.closeRepository(git)
-
-    then:
       gitLog.authorIdent.name == "Test User"
       gitLog.fullMessage == "Added: 0, Modified: 1, Deleted: 0"
   }
 
-  @DefaultOverride(auroraConfig = false)
   def "Should successfully save AuroraConfig"() {
     given:
-      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
-      createRepoAndSaveFiles(auroraConfig)
-      def vault = new AuroraSecretVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
-      vaultFacade.save("aos", vault, false)
 
-    when:
       def json = mapper.convertValue(["name": "test%qwe)"], JsonNode.class)
       def newFile = new AuroraConfigFile("foo", json, false, null)
       def newConfig = new AuroraConfig([newFile], affiliation)
+
+    when:
       service.saveAuroraConfig(newConfig, false)
+
+    then:
       def git = gitService.checkoutRepoForAffiliation("aos")
       def gitLog = git.log().call().head()
       gitService.closeRepository(git)
 
-    then:
       gitLog.fullMessage.contains("Added: 1")
   }
 
-  @DefaultOverride(auroraConfig = false)
   def "Should patch AuroraConfigFile and push changes to git"() {
     given:
-      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, "aos")
-      createRepoAndSaveFiles(auroraConfig)
-      def vault = new AuroraSecretVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
-      vaultFacade.save("aos", vault, false)
-
       def gitAuroraConfig = getAuroraConfigFromGit("aos", false)
 
       def jsonOp = """[{
