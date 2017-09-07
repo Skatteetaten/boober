@@ -3,7 +3,17 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.AuroraApplication
+import no.skatteetaten.aurora.boober.model.AuroraBuild
+import no.skatteetaten.aurora.boober.model.AuroraDeploy
+import no.skatteetaten.aurora.boober.model.AuroraLocalTemplate
+import no.skatteetaten.aurora.boober.model.AuroraRoute
+import no.skatteetaten.aurora.boober.model.AuroraTemplate
+import no.skatteetaten.aurora.boober.model.AuroraVolume
+import no.skatteetaten.aurora.boober.model.Permission
+import no.skatteetaten.aurora.boober.model.Permissions
+import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.notBlank
@@ -53,7 +63,7 @@ class AuroraApplicationMapperV1(val openShiftClient: OpenShiftClient,
     }
 
 
-    private fun validateGroups(openShiftClient: OpenShiftClient, required: Boolean = true): (JsonNode?) -> Exception? {
+    fun validateGroups(openShiftClient: OpenShiftClient, required: Boolean = true): (JsonNode?) -> Exception? {
         return { json ->
             if (required && (json == null || json.textValue().isBlank())) {
                 IllegalArgumentException("Groups must be set")
@@ -66,7 +76,7 @@ class AuroraApplicationMapperV1(val openShiftClient: OpenShiftClient,
         }
     }
 
-    private fun validateUsers(openShiftClient: OpenShiftClient): (JsonNode?) -> AuroraConfigException? {
+    fun validateUsers(openShiftClient: OpenShiftClient): (JsonNode?) -> AuroraConfigException? {
         return { json ->
             val users = json?.textValue()?.split(" ")?.toSet()
             users?.filter { !openShiftClient.isValidUser(it) }

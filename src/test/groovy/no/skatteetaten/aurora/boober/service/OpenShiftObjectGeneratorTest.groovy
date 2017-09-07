@@ -2,9 +2,6 @@ package no.skatteetaten.aurora.boober.service
 
 import org.junit.Before
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 
@@ -13,18 +10,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.controller.internal.DeployParams
-import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import spock.lang.Shared
-import spock.lang.Specification
 import spock.lang.Unroll
-import spock.mock.DetachedMockFactory
 
 @DefaultOverride(auroraConfig = false)
 class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification {
@@ -43,9 +34,6 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
 
   @Autowired
   ObjectMapper mapper
-
-  @Autowired
-  VaultFacade vaultFacade
 
   @Shared
   def file = new ObjectMapper().convertValue([managementPath: ":8080/test"], JsonNode.class)
@@ -106,16 +94,16 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
     when:
 
     where:
-      env           | name         | templateFile      | overrides
-      "jenkins"     | "build"      | null              | []
-      "booberdev"   | "build"      | null              | []
-      "booberdev"   | "console"    | null              | []
-      "booberdev"   | "aos-simple" | null              | booberDevAosSimpleOverrides
-      "booberdev"   | "tvinn"      | "atomhopper.json" | []
-      "secrettest"  | "aos-simple" | null              | []
-      "booberdev"   | "sprocket"   | null              | []
-      "release"     | "aos-simple" | null              | []
-      "release"     | "build"      | null              | []
+      env          | name         | templateFile      | overrides
+      "booberdev"  | "tvinn"      | "atomhopper.json" | []
+      "jenkins"    | "build"      | null              | []
+      "booberdev"  | "build"      | null              | []
+      "booberdev"  | "console"    | null              | []
+      "booberdev"  | "aos-simple" | null              | booberDevAosSimpleOverrides
+      "secrettest" | "aos-simple" | null              | []
+      "booberdev"  | "sprocket"   | null              | []
+      "release"    | "aos-simple" | null              | []
+      "release"    | "build"      | null              | []
       "mounts"      | "aos-simple" | null              | []
       "secretmount" | "aos-simple" | null              | []
 
