@@ -6,13 +6,12 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
 
     fun getVersions() = auroraConfigFiles.associate { it.name to it.version }
 
-    fun getApplicationIds(env: String = "", app: String = ""): List<ApplicationId> {
+    fun getApplicationIds(): List<ApplicationId> {
 
         return auroraConfigFiles
+
                 .map { it.name.removeSuffix(".json") }
-                .filter { it.contains("/") && !it.contains("about") }
-                .filter { if (env.isNullOrBlank()) true else it.startsWith(env) }
-                .filter { if (app.isNullOrBlank()) true else it.endsWith(app) }
+                .filter { it.contains("/") && !it.contains("about") && !it.startsWith("templates") }
                 .map { val (environment, application) = it.split("/"); ApplicationId(environment, application) }
     }
 

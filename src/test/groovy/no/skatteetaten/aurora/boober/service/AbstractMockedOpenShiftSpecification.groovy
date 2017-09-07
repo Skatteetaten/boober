@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.service
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
 
-import org.spockframework.runtime.model.FeatureInfo
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
@@ -16,6 +15,7 @@ import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
@@ -80,6 +80,9 @@ class AbstractMockedOpenShiftSpecification extends Specification {
   }
 
   @Autowired
+  VaultFacade vaultFacade
+
+  @Autowired
   UserDetailsProvider userDetailsProvider
 
   @Autowired
@@ -105,9 +108,16 @@ class AbstractMockedOpenShiftSpecification extends Specification {
     }
 
     if (useAuroraConfig) {
+
+      def vault = new AuroraSecretVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
       userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User")
+      openShiftClient.hasUserAccess(_, _) >> true
+
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-      createRepoAndSaveFiles(auroraConfig)
+      GitServiceHelperKt.createInitRepo(auroraConfig.affiliation)
+      vaultFacade.save("aos", vault, false)
+      deployBundleService.saveAuroraConfig(auroraConfig, false)
+
     }
   }
 

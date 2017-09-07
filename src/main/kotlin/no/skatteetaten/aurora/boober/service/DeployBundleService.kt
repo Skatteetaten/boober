@@ -179,7 +179,7 @@ class DeployBundleService(
                 Result<AuroraApplication, Error?>(error = Error(aid.application, aid.environment, listOf(ValidationError(e.message!!))))
             }
         }.onErrorThrow {
-            logger.debug("ACE {}", it)
+            logger.info("ACE {}", it)
             AuroraConfigException("AuroraConfig contained errors for one or more applications", it)
         }
     }
@@ -193,7 +193,7 @@ class DeployBundleService(
         val repo = deployBundle.repo
 
         val newAuroraConfig = function(auroraConfig)
-        deployBundle.auroraConfig = auroraConfig
+        deployBundle.auroraConfig = newAuroraConfig
 
         if (validateVersions) {
             validateGitVersion(auroraConfig, newAuroraConfig, gitService.getAllFilesInRepo(repo))

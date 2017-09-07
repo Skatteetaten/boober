@@ -6,6 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.web.client.HttpClientErrorException
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+
 import no.skatteetaten.aurora.boober.controller.internal.DeployParams
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.service.internal.OpenShiftException
@@ -25,6 +28,9 @@ class DeployServiceFromGitFailTest extends AbstractMockedOpenShiftSpecification 
   @Autowired
   GitService gitService
 
+  @Autowired
+  ObjectMapper mapper
+
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "aos-simple"
   def affiliation = "aos"
@@ -32,7 +38,15 @@ class DeployServiceFromGitFailTest extends AbstractMockedOpenShiftSpecification 
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
   def setup() {
+    def namespaceJson = mapper.
+        convertValue(["kind": "namespace", "metadata": ["labels": ["affiliation": affiliation]]], JsonNode.class)
     openShiftClient.prepare(_, _) >> { new OpenshiftCommand(OperationType.CREATE, it[1]) }
+    openShiftClient.updateRolebindingCommand(_, _) >> {
+      new OpenshiftCommand(OperationType.UPDATE, it[0], null, it[0])
+    }
+    openShiftClient.createNamespaceCommand(_, _) >> {
+      new OpenshiftCommand(OperationType.UPDATE, namespaceJson, null, namespaceJson)
+    }
     openShiftClient.performOpenShiftCommand(_, _) >> {
       def cmd = it[0]
       def body = '''{ "response": "failed"}'''.bytes
