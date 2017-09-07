@@ -5,6 +5,9 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Metrics
+import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
@@ -25,7 +28,8 @@ import spock.mock.DetachedMockFactory
     GitService,
     EncryptionService,
     SecretVaultService,
-    Config
+    Config,
+    AuroraMetrics
 ])
 class VaultFacadeTest extends Specification {
 
@@ -36,6 +40,11 @@ class VaultFacadeTest extends Specification {
   @Configuration
   static class Config {
     private DetachedMockFactory factory = new DetachedMockFactory()
+
+    @Bean
+    MeterRegistry meterRegistry() {
+      Metrics.globalRegistry
+    }
 
     @Bean
     UserDetailsProvider userDetailsProvider() {

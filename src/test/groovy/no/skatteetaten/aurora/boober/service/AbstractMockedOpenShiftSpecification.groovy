@@ -11,6 +11,9 @@ import org.springframework.context.annotation.Primary
 
 import com.fasterxml.jackson.databind.ObjectMapper
 
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Metrics
+import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.facade.VaultFacade
@@ -35,6 +38,7 @@ import spock.mock.DetachedMockFactory
     VaultFacade,
     ObjectMapper,
     Config,
+    AuroraMetrics,
     UserDetailsTokenProvider
 ])
 class AbstractMockedOpenShiftSpecification extends Specification {
@@ -43,6 +47,10 @@ class AbstractMockedOpenShiftSpecification extends Specification {
   static class Config {
     private DetachedMockFactory factory = new DetachedMockFactory()
 
+    @Bean
+    MeterRegistry meterRegistry() {
+      Metrics.globalRegistry
+    }
     @Bean
     OpenShiftClient openShiftClient() {
       factory.Mock(OpenShiftClient)

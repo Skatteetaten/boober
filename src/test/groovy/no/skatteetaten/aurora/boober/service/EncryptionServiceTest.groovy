@@ -2,16 +2,29 @@ package no.skatteetaten.aurora.boober.service
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Bean
 
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Metrics
+import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.Configuration
 import spock.lang.Specification
 
 @SpringBootTest(classes = [
     Configuration,
-    EncryptionService
+    Config,
+    EncryptionService,
+    AuroraMetrics
 ])
 class EncryptionServiceTest extends Specification {
+  @org.springframework.context.annotation.Configuration
+  static class Config {
 
+    @Bean
+    MeterRegistry meterRegistry() {
+      Metrics.globalRegistry
+    }
+  }
   @Autowired
   EncryptionService service
 

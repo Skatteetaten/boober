@@ -7,6 +7,9 @@ import org.springframework.context.annotation.Configuration
 
 import com.fasterxml.jackson.databind.ObjectMapper
 
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Metrics
+import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraVolumeMapperV1
@@ -18,13 +21,19 @@ import spock.mock.DetachedMockFactory
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
     EncryptionService,
-    Config
+    Config,
+    AuroraMetrics
 ])
 class AuroraConfigFieldTest extends Specification {
 
   @Configuration
   static class Config {
     private DetachedMockFactory factory = new DetachedMockFactory()
+
+    @Bean
+    MeterRegistry meterRegistry() {
+      Metrics.globalRegistry
+    }
 
     @Bean
     UserDetailsProvider userDetailsProvider() {
@@ -63,9 +72,9 @@ class AuroraConfigFieldTest extends Specification {
       def aid = new ApplicationId("config", "console")
       def auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
 
-    def files = auroraConfig.getFilesForApplication(aid)
+      def files = auroraConfig.getFilesForApplication(aid)
     when:
-    def mapper = new AuroraVolumeMapperV1(files, [:])
+      def mapper = new AuroraVolumeMapperV1(files, [:])
 
     then:
       mapper.configHandlers.collect { it.path } == ["/config/foo", "/config/bar", "/config/1/bar", "/config/1/foo"]
