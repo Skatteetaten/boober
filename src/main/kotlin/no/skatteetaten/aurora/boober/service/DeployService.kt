@@ -185,8 +185,11 @@ class DeployService(
         }
 
         if (type == development) {
-            logger.info("Generating build request")
-            return openShiftObjectGenerator.generateBuildRequest(name)
+
+            return openShiftResponses.filter { it.responseBody?.openshiftKind ?: "" == "buildconfig" }
+                    .find { it.command.operationType != OperationType.CREATE }
+                    ?.let { openShiftObjectGenerator.generateBuildRequest(name) }
+
         }
 
         val imageStream = openShiftResponses.find { it.responseBody?.get("kind")?.asText()?.toLowerCase() ?: "" == "imagestream" }
