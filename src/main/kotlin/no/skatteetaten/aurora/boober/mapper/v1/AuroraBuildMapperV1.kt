@@ -2,16 +2,21 @@ package no.skatteetaten.aurora.boober.mapper.v1
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
+import no.skatteetaten.aurora.boober.model.ApplicationPlatform
+import no.skatteetaten.aurora.boober.model.ApplicationPlatform.java
+import no.skatteetaten.aurora.boober.model.ApplicationPlatform.web
 import no.skatteetaten.aurora.boober.model.AuroraBuild
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.utils.length
 import no.skatteetaten.aurora.boober.utils.notBlank
+import no.skatteetaten.aurora.boober.utils.oneOf
 
 class AuroraBuildMapperV1 {
 
     fun build(auroraConfigFields: AuroraConfigFields, dockerRegistry: String): AuroraBuild {
 
         val type = auroraConfigFields.extract("type", { TemplateType.valueOf(it.textValue()) })
+        val applicationPlatform = auroraConfigFields.extract("applicationPlatform", { ApplicationPlatform.valueOf(it.textValue()) })
         val name = auroraConfigFields.extract("name")
 
         val groupId = auroraConfigFields.extract("groupId")
@@ -34,12 +39,21 @@ class AuroraBuildMapperV1 {
             "$name:latest"
         }
 
+        val (baseName, baseVersion) = when (applicationPlatform) {
+            java -> (auroraConfigFields.extractOrNull("baseImage/name") ?: "wingnut") to
+                    (auroraConfigFields.extractOrNull("baseImage/version") ?: "8")
+
+            web -> (auroraConfigFields.extractOrNull("baseImage/name") ?: "wrench") to
+                    (auroraConfigFields.extractOrNull("baseImage/version") ?: "0")
+        }
+
         return AuroraBuild(
+                applicationPlatform = ApplicationPlatform.valueOf(auroraConfigFields.extract("applicationPlatform")),
                 testJenkinsfile = auroraConfigFields.extract("test/jenkinsfile"),
                 testGitUrl = testGitUrl,
                 testTag = auroraConfigFields.extractOrNull("test/tag"),
-                baseName = auroraConfigFields.extract("baseImage/name"),
-                baseVersion = auroraConfigFields.extract("baseImage/version"),
+                baseName = baseName,
+                baseVersion = baseVersion,
                 builderName = auroraConfigFields.extract("builder/name"),
                 builderVersion = auroraConfigFields.extract("builder/version"),
                 extraTags = auroraConfigFields.extract("extraTags"),
@@ -50,17 +64,17 @@ class AuroraBuildMapperV1 {
                 outputName = outputName,
                 triggers = !skipTriggers,
                 buildSuffix = auroraConfigFields.extractOrNull("buildSuffix")
-
         )
     }
 
     val handlers = listOf(
             AuroraConfigFieldHandler("extraTags", defaultValue = "latest,major,minor,patch"),
+            AuroraConfigFieldHandler("applicationPlatform", defaultValue = "java", validator = { it.oneOf(ApplicationPlatform.values().map { it.name }) }),
             AuroraConfigFieldHandler("buildSuffix"),
-            AuroraConfigFieldHandler("builder/version", defaultValue = "prod"),
-            AuroraConfigFieldHandler("builder/name", defaultValue = "leveransepakkebygger"),
-            AuroraConfigFieldHandler("baseImage/name", defaultValue = "oracle8"),
-            AuroraConfigFieldHandler("baseImage/version", defaultValue = "1"),
+            AuroraConfigFieldHandler("builder/name", defaultValue = "architect"),
+            AuroraConfigFieldHandler("builder/version", defaultValue = "1"),
+            AuroraConfigFieldHandler("baseImage/name"),
+            AuroraConfigFieldHandler("baseImage/version"),
             AuroraConfigFieldHandler("test/gitUrl"),
             AuroraConfigFieldHandler("test/jenkinsfile", defaultValue = "test.Jenkinsfile"),
             AuroraConfigFieldHandler("test/tag"),
@@ -68,6 +82,4 @@ class AuroraBuildMapperV1 {
             AuroraConfigFieldHandler("artifactId", validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters") }),
             AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set") })
     )
-
-
 }

@@ -4,13 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.java
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.web
-import no.skatteetaten.aurora.boober.model.AuroraApplication
-import no.skatteetaten.aurora.boober.model.Database
-import no.skatteetaten.aurora.boober.model.Mount
-import no.skatteetaten.aurora.boober.model.MountType
-import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
@@ -21,7 +17,6 @@ import org.apache.velocity.app.VelocityEngine
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.io.File
 import java.io.StringWriter
 
 @Service
@@ -243,7 +238,12 @@ class OpenShiftObjectGenerator(
                     "buildName" to buildName,
                     "build" to it
             )
-            val bc = mergeVelocityTemplate("build-config.json", buildParams)
+            val applicationPlatform = it.applicationPlatform
+            val template = when (applicationPlatform) {
+                java -> "build-config.json"
+                web -> "build-config-web.json"
+            }
+            val bc = mergeVelocityTemplate(template, buildParams)
 
             val testBc = if (it.testGitUrl != null) {
                 mergeVelocityTemplate("jenkins-build-config.json", buildParams)

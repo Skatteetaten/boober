@@ -61,7 +61,8 @@ data class AuroraBuild(
         val outputKind: String,
         val outputName: String,
         val triggers: Boolean,
-        val buildSuffix: String?
+        val buildSuffix: String?,
+        val applicationPlatform: ApplicationPlatform
 )
 
 

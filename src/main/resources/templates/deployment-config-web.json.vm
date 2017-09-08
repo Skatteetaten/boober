@@ -308,8 +308,5 @@
         "restartPolicy": "Always"
       }
     }
-  },
-  "status": {
-
   }
 }

@@ -19,11 +19,11 @@
       {
         "type": "ImageChange",
         "imageChange": {
-          "lastTriggeredImageID": "docker-registry.aurora.sits.no:5000/aurora/oracle8@sha256:ac9d16657f113e078a5bd79bb5811247291ae5f0368db2caab7e6421d1649382",
+          "lastTriggeredImageID": "docker-registry.aurora.sits.no:5000/aurora/wingnut@sha256:ac9d16657f113e078a5bd79bb5811247291ae5f0368db2caab7e6421d1649382",
           "from": {
             "kind": "ImageStreamTag",
             "namespace": "openshift",
-            "name": "oracle8:1"
+            "name": "wingnut:8"
           }
         }
       },
@@ -44,7 +44,7 @@
         "from": {
           "kind": "ImageStreamTag",
           "namespace": "openshift",
-          "name": "leveransepakkebygger:prod"
+          "name": "architect:1"
         },
         "env": [
           {
@@ -65,7 +65,7 @@
           },
           {
             "name": "DOCKER_BASE_IMAGE",
-            "value": "aurora/oracle8"
+            "value": "aurora/wingnut"
           },
           {
             "name": "PUSH_EXTRA_TAGS",
