@@ -15,29 +15,6 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
                 .map { val (environment, application) = it.split("/"); ApplicationId(environment, application) }
     }
 
-    fun getApplicationFile(applicationId: ApplicationId): AuroraConfigFile {
-        val fileName = "${applicationId.environment}/${applicationId.application}.json"
-        val file = auroraConfigFiles.find { it.name == fileName && !it.override }
-        return file ?: throw IllegalArgumentException("Should find applicationFile $fileName")
-    }
-
-
-    fun requiredFilesForApplication(applicationId: ApplicationId): Set<String> {
-
-        val implementationFile = getApplicationFile(applicationId)
-        val baseFile = implementationFile.contents.get("baseFile")?.asText()
-                ?: "${applicationId.application}.json"
-
-        val envFile = implementationFile.contents.get("envFile")?.asText()
-                ?: "about.json"
-
-        return setOf(
-                "about.json",
-                baseFile,
-                "${applicationId.environment}/$envFile",
-                "${applicationId.environment}/${applicationId.application}.json")
-    }
-
     @JvmOverloads
     fun getFilesForApplication(applicationId: ApplicationId, overrideFiles: List<AuroraConfigFile> = listOf()): List<AuroraConfigFile> {
 
@@ -70,6 +47,29 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
         }
 
         return this.copy(auroraConfigFiles = files)
+    }
+
+    private fun getApplicationFile(applicationId: ApplicationId): AuroraConfigFile {
+        val fileName = "${applicationId.environment}/${applicationId.application}.json"
+        val file = auroraConfigFiles.find { it.name == fileName && !it.override }
+        return file ?: throw IllegalArgumentException("Should find applicationFile $fileName")
+    }
+
+
+    private fun requiredFilesForApplication(applicationId: ApplicationId): Set<String> {
+
+        val implementationFile = getApplicationFile(applicationId)
+        val baseFile = implementationFile.contents.get("baseFile")?.asText()
+                ?: "${applicationId.application}.json"
+
+        val envFile = implementationFile.contents.get("envFile")?.asText()
+                ?: "about.json"
+
+        return setOf(
+                "about.json",
+                baseFile,
+                "${applicationId.environment}/$envFile",
+                "${applicationId.environment}/${applicationId.application}.json")
     }
 }
 
