@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.boober.model.AuroraApplication
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
+import no.skatteetaten.aurora.boober.model.AuroraDeployStrategy
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigFlags
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResources
@@ -37,7 +38,7 @@ val auroraDevelopment = AuroraApplication(
                 applicationFile = "boober-unit-test/dev-test.json",
                 overrideFiles = emptyMap(),
                 releaseTo = null,
-                deployStrategy = "rolling",
+                deployStrategy = AuroraDeployStrategy("rolling", 120),
                 flags = AuroraDeploymentConfigFlags(
                         alarm = false,
                         debug = false,

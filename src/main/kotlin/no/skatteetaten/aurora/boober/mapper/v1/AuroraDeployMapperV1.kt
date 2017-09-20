@@ -7,6 +7,7 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
+import no.skatteetaten.aurora.boober.model.AuroraDeployStrategy
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigFlags
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResources
@@ -26,7 +27,8 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
 
     val handlers = dbHandlers + listOf(
 
-            AuroraConfigFieldHandler("deployStrategy", defaultValue = "recreate", validator = { it.oneOf(listOf("recreate", "rolling")) }),
+            AuroraConfigFieldHandler("deployStrategy/type", defaultValue = "recreate", validator = { it.oneOf(listOf("recreate", "rolling")) }),
+            AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = "120"),
             AuroraConfigFieldHandler("database", defaultValue = "false"),
             AuroraConfigFieldHandler("debug", defaultValue = "false"),
             AuroraConfigFieldHandler("alarm", defaultValue = "true"),
@@ -97,7 +99,10 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
                 dockerImagePath = "$dockerRegistry/$dockerGroup/$artifactId",
                 dockerTag = tag,
                 overrideFiles = overrideFiles,
-                deployStrategy = auroraConfigFields.extract("deployStrategy"),
+                deployStrategy = AuroraDeployStrategy(
+                        auroraConfigFields.extract("deployStrategy/type"),
+                        auroraConfigFields.extract("deployStrategy/timeout", { it.asInt() })
+                ),
                 flags = AuroraDeploymentConfigFlags(
                         certFlag,
                         auroraConfigFields.extract("debug", { it.asText() == "true" }),

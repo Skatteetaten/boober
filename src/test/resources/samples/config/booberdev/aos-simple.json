@@ -6,5 +6,8 @@
     }
   },
   "liveness": true,
-  "readiness": false
+  "readiness": false,
+  "deployStrategy": {
+    "timeout": 600
+  }
 }

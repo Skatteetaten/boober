@@ -21,14 +21,14 @@
 "name": "${name}"
   },
   "spec": {
-  #if(${deploy.deployStrategy} == "rolling")
+  #if(${deploy.deployStrategy.type} == "rolling")
       "strategy": {
         "type": "Rolling",
         "rollingParams": {
           "intervalSeconds": 1,
           "maxSurge": "25%",
           "maxUnavailable": 0,
-          "timeoutSeconds": 120,
+  "timeoutSeconds": ${deploy.deployStrategy.timeout},
           "updatePeriodSeconds": 1
         }
       },

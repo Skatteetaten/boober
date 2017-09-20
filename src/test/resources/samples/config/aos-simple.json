@@ -1,6 +1,8 @@
 {
   "certificate": true,
-  "deployStrategy": "rolling",
+  "deployStrategy": {
+    "type": "rolling"
+  },
   "groupId": "ske.aurora.openshift",
   "artifactId": "aos-simple",
   "name": "aos-simple",

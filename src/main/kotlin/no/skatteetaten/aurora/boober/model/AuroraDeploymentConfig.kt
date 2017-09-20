@@ -88,9 +88,12 @@ data class AuroraDeploy(
         val readiness: Probe?,
         val dockerImagePath: String,
         val dockerTag: String,
-        val deployStrategy: String
+        val deployStrategy: AuroraDeployStrategy
 )
 
+data class AuroraDeployStrategy(
+        val type: String, val timeout: Int
+)
 data class AuroraLocalTemplate(
         val parameters: Map<String, String>?,
         val templateJson: JsonNode
