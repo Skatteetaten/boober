@@ -3,14 +3,12 @@ package no.skatteetaten.aurora.boober.service
 import org.springframework.beans.factory.annotation.Autowired
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 
-import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.AuroraApplication
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.internal.AuroraVersioningException
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 
 class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
 
@@ -20,25 +18,13 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
   def affiliation = "aos"
 
   @Autowired
-  ObjectMapper mapper
-
-  @Autowired
-  DeployBundleService service
-
-  @Autowired
-  UserDetailsProvider userDetailsProvider
-
-  @Autowired
   GitService gitService
-
-  @Autowired
-  OpenShiftClient openShiftClient
 
   private AuroraConfig getAuroraConfigFromGit(String affiliation, boolean decryptSecrets) {
 
     def git = gitService.checkoutRepoForAffiliation(affiliation)
     def files = gitService.getAllFilesInRepo(git)
-    def auroraConfig = service.createAuroraConfigFromFiles(files, "aos")
+    def auroraConfig = deployBundleService.createAuroraConfigFromFiles(files, "aos")
     gitService.closeRepository(git)
 
     return auroraConfig
@@ -52,7 +38,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
 
     when:
 
-      service.updateAuroraConfigFile("aos", fileToChange, newFile, "wrong version", true)
+      deployBundleService.updateAuroraConfigFile("aos", fileToChange, newFile, "wrong version", true)
     then:
 
       def e = thrown(AuroraVersioningException)
@@ -62,7 +48,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
 
   def "Should update one file in AuroraConfig"() {
     given:
-      def storedConfig = service.findAuroraConfig("aos")
+      def storedConfig = deployBundleService.findAuroraConfig("aos")
 
       def fileToChange = "secrettest/aos-simple.json"
       def theFileToChange = storedConfig.auroraConfigFiles.find { it.name == fileToChange }
@@ -70,7 +56,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
       def newFile = mapper.convertValue([], JsonNode.class)
 
     when:
-      service.updateAuroraConfigFile("aos", fileToChange, newFile, theFileToChange.version, true)
+      deployBundleService.updateAuroraConfigFile("aos", fileToChange, newFile, theFileToChange.version, true)
 
 
     then:
@@ -89,7 +75,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
       def newConfig = new AuroraConfig([newFile], affiliation)
 
     when:
-      service.saveAuroraConfig(newConfig, false)
+      deployBundleService.saveAuroraConfig(newConfig, false)
 
     then:
       def git = gitService.checkoutRepoForAffiliation("aos")
@@ -114,7 +100,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
       def filename = "${aid.environment}/${aid.application}.json"
 
       def version = gitAuroraConfig.auroraConfigFiles.find { it.name == filename }.version
-      def patchedAuroraConfig = service.patchAuroraConfigFile("aos", filename, jsonOp, version, false)
+      def patchedAuroraConfig = deployBundleService.patchAuroraConfigFile("aos", filename, jsonOp, version, false)
       def git = gitService.checkoutRepoForAffiliation("aos")
       def gitLog = git.log().call().head()
       gitService.closeRepository(git)
