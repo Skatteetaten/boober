@@ -1,9 +1,7 @@
 {
   "name": "openshift-referanse-react",
   "applicationPlatform": "web",
-  "flags": {
-    "rolling": true
-  },
+  "deployStrategy": "rolling",
   "groupId": "no.skatteetaten.aurora",
   "artifactId": "openshift-referanse-react",
   "version": "develop-SNAPSHOT",

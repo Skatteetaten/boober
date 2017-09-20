@@ -4,5 +4,7 @@
     "latest": {
       "foo": "baaaar"
     }
-  }
+  },
+  "liveness": true,
+  "readiness": false
 }

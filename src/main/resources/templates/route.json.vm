@@ -11,7 +11,7 @@
         "${label.key}": "${label.value}"
       #end
   }
-  #if (${route.annotations.size()} != 0)
+#if (${route.annotations} && ${route.annotations.size()} != 0)
   ,"annotations": {
     #foreach ($annotation  in $route.annotations.entrySet())
       #if($velocityCount != 1)

@@ -34,25 +34,25 @@ val auroraDevelopment = AuroraApplication(
         ),
         route = AuroraRoute(emptyList()),
         deploy = AuroraDeploy(
-                releaseTo = null,
                 applicationFile = "boober-unit-test/dev-test.json",
                 overrideFiles = emptyMap(),
+                releaseTo = null,
+                deployStrategy = "rolling",
                 flags = AuroraDeploymentConfigFlags(
                         alarm = false,
                         debug = false,
-                        rolling = true,
                         cert = false),
 
                 resources = AuroraDeploymentConfigResources(
                         memory = AuroraDeploymentConfigResource("128mi", "128mi"),
                         cpu = AuroraDeploymentConfigResource("0", "2000")),
 
-                artifactId = "openshift-referanse-springboot-server",
-                groupId = "ske.aurora.openshift.referanse",
-                version = "0.0.89",
-                database = listOf(Database("referanseapp")),
-                splunkIndex = "openshift-test",
                 replicas = 1,
+                groupId = "ske.aurora.openshift.referanse",
+                artifactId = "openshift-referanse-springboot-server",
+                version = "0.0.89",
+                splunkIndex = "openshift-test",
+                database = listOf(Database("referanseapp")),
                 liveness = Probe(null, 8080, 10, 1),
                 readiness = Probe(null, 8080, 10, 1),
                 dockerImagePath = "foo",

@@ -5,8 +5,7 @@
     "annotations": {
       "boober.skatteetaten.no/applicationFile": "booberdev/aos-simple.json",
       "console.skatteetaten.no/alarm": "true",
-      "boober.skatteetaten.no/overrides": "{\"booberdev/aos-simple.json\":{\"managementPath\":\":8080/test\"}}",
-      "console.skatteetaten.no/management-path": ":8080/test",
+      "boober.skatteetaten.no/overrides": "{\"booberdev/aos-simple.json\":{\"version\":\"1.0.4\"}}",
       "sprocket.sits.no/deployment-config.certificate": "ske.aurora.openshift.aos-simple"
     },
     "labels": {
@@ -15,7 +14,7 @@
       "affiliation": "aos",
       "booberDeployId": "123",
       "name": "aos-simple",
-      "deployTag": "1.0.3-SNAPSHOT"
+      "deployTag": "1.0.4"
     },
     "name": "aos-simple"
   },
@@ -57,7 +56,7 @@
           "affiliation": "aos",
           "booberDeployId": "123",
           "name": "aos-simple",
-          "deployTag": "1.0.3-SNAPSHOT"
+          "deployTag": "1.0.4"
         }
       },
       "spec": {
@@ -191,13 +190,14 @@
             "terminationMessagePath": "/dev/termination-log",
             "imagePullPolicy": "IfNotPresent",
             "capabilities": {
+
             },
             "securityContext": {
               "capabilities": {
               },
               "privileged": false
             },
-            "readinessProbe": {
+            "livenessProbe": {
               "tcpSocket": {
                 "port": 8080
               },

@@ -11,9 +11,12 @@
   },
   "prometheus": {
     "path": "/prometheus",
-    "port": "8081"
+    "port": "8082"
   },
-  "managementPath": ":8081/actuator",
+  "management": {
+    "port": "8081",
+    "path": "/foobar"
+  },
   "serviceAccount": "aurora-fraggle",
   "mounts": {
     "aurora-token": {

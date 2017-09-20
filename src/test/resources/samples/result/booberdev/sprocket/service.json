@@ -7,7 +7,7 @@
       "prometheus.io/scheme": "http",
       "prometheus.io/scrape": "true",
       "prometheus.io/path": "/prometheus",
-      "prometheus.io/port": "8081"
+      "prometheus.io/port": "8082"
     },
     "labels": {
       "app": "sprocket",

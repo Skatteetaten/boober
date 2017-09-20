@@ -85,9 +85,10 @@ data class AuroraDeploy(
         val managementPath: String? = null,
         val serviceAccount: String? = null,
         val liveness: Probe?,
-        val readiness: Probe,
+        val readiness: Probe?,
         val dockerImagePath: String,
-        val dockerTag: String
+        val dockerTag: String,
+        val deployStrategy: String
 )
 
 data class AuroraLocalTemplate(
@@ -142,8 +143,7 @@ data class Route(
 data class AuroraDeploymentConfigFlags(
         val cert: Boolean = false,
         val debug: Boolean = false,
-        val alarm: Boolean = false,
-        val rolling: Boolean = false
+        val alarm: Boolean = false
 )
 
 data class AuroraDeploymentConfigResource(

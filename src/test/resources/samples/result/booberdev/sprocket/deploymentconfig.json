@@ -5,7 +5,7 @@
     "annotations": {
       "boober.skatteetaten.no/applicationFile": "booberdev/sprocket.json",
       "console.skatteetaten.no/alarm": "true",
-      "console.skatteetaten.no/management-path": ":8081/actuator",
+      "console.skatteetaten.no/management-path": ":8081/foobar",
       "sprocket.sits.no/deployment-config.database": "referanse,foo:123-456"
     },
     "labels": {

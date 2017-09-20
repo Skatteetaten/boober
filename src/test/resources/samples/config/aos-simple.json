@@ -1,8 +1,6 @@
 {
-  "flags": {
-    "rolling": true,
-    "cert": true
-  },
+  "certificate": true,
+  "deployStrategy": "rolling",
   "groupId": "ske.aurora.openshift",
   "artifactId": "aos-simple",
   "name": "aos-simple",
@@ -25,7 +23,7 @@
       }
     }
   },
-  "managementPath": "",
+  "management": false,
   "prometheus": {
     "path": ""
   }

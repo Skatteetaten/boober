@@ -21,7 +21,7 @@
 "name": "${name}"
   },
   "spec": {
-  #if(${deploy.flags.rolling})
+  #if(${deploy.deployStrategy} == "rolling")
       "strategy": {
         "type": "Rolling",
         "rollingParams": {
@@ -166,9 +166,9 @@
             "securityContext": {
               "capabilities": {},
               "privileged": false
-            },
+}
             #if (${deploy.liveness})
-            "livenessProbe": {
+            , "livenessProbe": {
               #if(${deploy.liveness.path} && "$!{deploy.liveness.path}" != "")
               "httpGet": {
                 "path": "${deploy.liveness.path}",
@@ -179,9 +179,10 @@
               },
               "initialDelaySeconds": ${deploy.liveness.delay},
               "timeoutSeconds": ${deploy.liveness.timeout}
-            },
+            }
             #end
-            "readinessProbe": {
+  #if (${deploy.readiness})
+  ,"readinessProbe": {
               #if(${deploy.readiness.path} && "$!{deploy.readiness.path}" != "")
               "httpGet": {
                 "path": "${deploy.readiness.path}",
@@ -193,8 +194,9 @@
               "initialDelaySeconds": ${deploy.readiness.delay},
               "timeoutSeconds": ${deploy.readiness.timeout}
             }
-          }
-        ],
+  #end
+}
+],
         "restartPolicy": "Always",
         "dnsPolicy": "ClusterFirst"
 #if(${deploy.serviceAccount})

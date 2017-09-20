@@ -10,9 +10,12 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigFlags
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResources
+import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.model.HttpEndpoint
 import no.skatteetaten.aurora.boober.model.Probe
 import no.skatteetaten.aurora.boober.model.Webseal
+import no.skatteetaten.aurora.boober.model.findSubKeys
+import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.length
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.oneOf
@@ -22,10 +25,11 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
     val dbHandlers = findDbHandlers(applicationFiles)
 
     val handlers = dbHandlers + listOf(
-            AuroraConfigFieldHandler("flags/cert", defaultValue = "false"),
-            AuroraConfigFieldHandler("flags/debug", defaultValue = "false"),
-            AuroraConfigFieldHandler("flags/alarm", defaultValue = "true"),
-            AuroraConfigFieldHandler("flags/rolling", defaultValue = "false"),
+
+            AuroraConfigFieldHandler("deployStrategy", defaultValue = "recreate", validator = { it.oneOf(listOf("recreate", "rolling")) }),
+            AuroraConfigFieldHandler("database", defaultValue = "false"),
+            AuroraConfigFieldHandler("debug", defaultValue = "false"),
+            AuroraConfigFieldHandler("alarm", defaultValue = "true"),
             AuroraConfigFieldHandler("resources/cpu/min", defaultValue = "0"),
             AuroraConfigFieldHandler("resources/cpu/max", defaultValue = "2000m"),
             AuroraConfigFieldHandler("resources/memory/min", defaultValue = "128Mi"),
@@ -37,15 +41,21 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
             AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set") }),
             AuroraConfigFieldHandler("splunkIndex"),
             AuroraConfigFieldHandler("serviceAccount"),
+            AuroraConfigFieldHandler("prometheus", defaultValue = "true"),
             AuroraConfigFieldHandler("prometheus/path", defaultValue = "/prometheus"),
             AuroraConfigFieldHandler("prometheus/port", defaultValue = "8081"),
-            AuroraConfigFieldHandler("managementPath", defaultValue = ":8081/actuator"),
-            AuroraConfigFieldHandler("certificateCn"),
+            AuroraConfigFieldHandler("management", defaultValue = "true"),
+            AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
+            AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
+            AuroraConfigFieldHandler("certificate/commonName"),
+            AuroraConfigFieldHandler("certificate", defaultValue = "false"),
+            AuroraConfigFieldHandler("readiness", defaultValue = "true"),
             AuroraConfigFieldHandler("readiness/port", defaultValue = "8080"),
             AuroraConfigFieldHandler("readiness/path"),
             AuroraConfigFieldHandler("readiness/delay", defaultValue = "10"),
             AuroraConfigFieldHandler("readiness/timeout", defaultValue = "1"),
-            AuroraConfigFieldHandler("liveness/port"),
+            AuroraConfigFieldHandler("liveness", defaultValue = "false"),
+            AuroraConfigFieldHandler("liveness/port", defaultValue = "8080"),
             AuroraConfigFieldHandler("liveness/path"),
             AuroraConfigFieldHandler("liveness/delay", defaultValue = "10"),
             AuroraConfigFieldHandler("liveness/timeout", defaultValue = "1"),
@@ -63,8 +73,9 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
 
     fun deploy(auroraConfigFields: AuroraConfigFields): AuroraDeploy? {
         val name = auroraConfigFields.extract("name")
-        val certFlag = auroraConfigFields.extract("flags/cert", { it.asText() == "true" })
+        val certFlag = auroraConfigFields.extract("certificate", { it.asText() == "true" })
         val groupId = auroraConfigFields.extract("groupId")
+
         val certificateCnDefault = if (certFlag) "$groupId.$name" else null
         val version = auroraConfigFields.extract("version")
 
@@ -86,11 +97,11 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
                 dockerImagePath = "$dockerRegistry/$dockerGroup/$artifactId",
                 dockerTag = tag,
                 overrideFiles = overrideFiles,
+                deployStrategy = auroraConfigFields.extract("deployStrategy"),
                 flags = AuroraDeploymentConfigFlags(
                         certFlag,
-                        auroraConfigFields.extract("flags/debug", { it.asText() == "true" }),
-                        auroraConfigFields.extract("flags/alarm", { it.asText() == "true" }),
-                        auroraConfigFields.extract("flags/rolling", { it.asText() == "true" })
+                        auroraConfigFields.extract("debug", { it.asText() == "true" }),
+                        auroraConfigFields.extract("alarm", { it.asText() == "true" })
 
                 ),
                 resources = AuroraDeploymentConfigResources(
@@ -109,9 +120,9 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
                 artifactId = artifactId,
                 version = version,
                 splunkIndex = auroraConfigFields.extractOrNull("splunkIndex"),
-                database = auroraConfigFields.getDatabases(dbHandlers),
+                database = findDatabases(auroraConfigFields, name),
 
-                certificateCn = auroraConfigFields.extractOrDefault("certificateCn", certificateCnDefault),
+                certificateCn = auroraConfigFields.extractOrDefault("certificate/commonName", certificateCnDefault),
                 serviceAccount = auroraConfigFields.extractOrNull("serviceAccount"),
 
                 webseal = auroraConfigFields.findAll("webseal", {
@@ -121,43 +132,68 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
                     )
                 }),
 
-                prometheus = auroraConfigFields.findAll("prometheus", {
-                    HttpEndpoint(
-                            auroraConfigFields.extract("prometheus/path"),
-                            auroraConfigFields.extractOrNull("prometheus/port", JsonNode::asInt)
-                    )
-                }),
-                managementPath = auroraConfigFields.extractOrNull("managementPath"),
+                prometheus = findPrometheus(auroraConfigFields),
+                managementPath = findManagementPath(auroraConfigFields),
                 liveness = getProbe(auroraConfigFields, "liveness"),
-                readiness = getProbe(auroraConfigFields, "readiness")!!
+                readiness = getProbe(auroraConfigFields, "readiness")
         )
+    }
+
+    private fun findPrometheus(auroraConfigFields: AuroraConfigFields): HttpEndpoint? {
+
+        val name = "prometheus"
+        val noSubKeys = applicationFiles.findSubKeys(name).filter { it != name }.isEmpty()
+        val enabled = auroraConfigFields.extract(name, { it.asText() == "true" })
+
+        if (!enabled && noSubKeys) {
+            return null
+        }
+        return HttpEndpoint(
+                auroraConfigFields.extract("$name/path"),
+                auroraConfigFields.extractOrNull("$name/port", JsonNode::asInt)
+        )
+    }
+
+    private fun findManagementPath(auroraConfigFields: AuroraConfigFields): String? {
+
+        val name = "management"
+        val noSubKeys = applicationFiles.findSubKeys(name).filter { it != name }.isEmpty()
+        val enabled = auroraConfigFields.extract(name, { it.asText() == "true" })
+        if (!enabled && noSubKeys) {
+            return null
+        }
+
+        val path = auroraConfigFields.extract("management/path").ensureStartWith("/")
+        val port = auroraConfigFields.extract("management/port").ensureStartWith(":")
+        return "$port$path"
+    }
+
+    private fun findDatabases(auroraConfigFields: AuroraConfigFields, name: String): List<Database> {
+
+        val enabled = auroraConfigFields.extract("database", { it.asText() == "true" })
+        if (enabled) {
+            return listOf(Database(name = name))
+        }
+
+        return auroraConfigFields.getDatabases(dbHandlers)
     }
 
 
     fun findDbHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
 
-        val keys = findSubKeys(applicationFiles, "database")
+        val keys = applicationFiles.findSubKeys("database")
 
         return keys.map { key ->
             AuroraConfigFieldHandler("database/$key")
         }
     }
 
-    private fun findSubKeys(applicationFiles: List<AuroraConfigFile>, name: String): Set<String> {
-
-        return applicationFiles.flatMap {
-            if (it.contents.has(name)) {
-                it.contents[name].fieldNames().asSequence().toList()
-            } else {
-                emptyList()
-            }
-        }.toSet()
-    }
 
     fun getProbe(auroraConfigFields: AuroraConfigFields, name: String): Probe? {
-        val port = auroraConfigFields.extractOrNull("$name/port", JsonNode::asInt)
 
-        if (port == null) {
+        val noSubKeys = applicationFiles.findSubKeys(name).filter { it != name }.isEmpty()
+        val enabled = auroraConfigFields.extract(name, { it.asText() == "true" })
+        if (noSubKeys && !enabled) {
             return null
         }
 
@@ -167,7 +203,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
                         "/$it"
                     } else it
                 },
-                port,
+                auroraConfigFields.extract("$name/port", JsonNode::asInt),
                 auroraConfigFields.extract("$name/delay", JsonNode::asInt),
                 auroraConfigFields.extract("$name/timeout", JsonNode::asInt)
         )
