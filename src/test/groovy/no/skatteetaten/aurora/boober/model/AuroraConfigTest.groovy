@@ -42,7 +42,6 @@ class AuroraConfigTest extends Specification {
       "4" == version.get()
   }
 
-
   def "Returns files for application"() {
     given:
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
@@ -82,7 +81,8 @@ class AuroraConfigTest extends Specification {
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
 
     when:
-      def filesForApplication = auroraConfig.getFilesForApplication(aid, [overrideFile("${aid.environment}/${aid.application}.json")])
+      def filesForApplication = auroraConfig.
+          getFilesForApplication(aid, [overrideFile("${aid.environment}/${aid.application}.json")])
 
     then:
       filesForApplication.size() == 5
@@ -100,6 +100,21 @@ class AuroraConfigTest extends Specification {
     then: "Should be missing utv/referanse.json"
       def ex = thrown(IllegalArgumentException)
       ex.message.contains("utv/referanse.json")
+  }
+
+  def "Includes base file in files for application when set"() {
+    given:
+      def aid = new ApplicationId("booberdev", "aos-complex")
+      def auroraConfig = AuroraConfigHelperKt.getAuroraConfigSamples()
+
+    when:
+      def filesForApplication = auroraConfig.getFilesForApplication(aid)
+
+    then:
+      filesForApplication.size() == 4
+      def applicationFile = filesForApplication.find { it.name == 'booberdev/aos-complex.json' }
+      String baseFile = applicationFile.contents.get("baseFile").textValue()
+      filesForApplication.any { it.name == baseFile }
   }
 
   List<AuroraConfigFile> createMockFiles(String... files) {
