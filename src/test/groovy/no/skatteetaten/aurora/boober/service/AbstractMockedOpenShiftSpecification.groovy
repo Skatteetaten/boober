@@ -99,6 +99,10 @@ class AbstractMockedOpenShiftSpecification extends Specification {
   @Autowired
   DeployBundleService deployBundleService
 
+  @Autowired
+  ObjectMapper mapper
+
+
   def setup() {
 
     def currentFeature = specificationContext.currentFeature
