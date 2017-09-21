@@ -144,13 +144,19 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
         )
     }
 
-    private fun findPrometheus(auroraConfigFields: AuroraConfigFields): HttpEndpoint? {
+    private fun disabledAndNoSubKeys(auroraConfigFields: AuroraConfigFields, name: String): Boolean {
 
-        val name = "prometheus"
         val noSubKeys = applicationFiles.findSubKeys(name).filter { it != name }.isEmpty()
         val enabled = auroraConfigFields.extract(name, { it.asText() == "true" })
 
-        if (!enabled && noSubKeys) {
+        return !enabled && noSubKeys
+    }
+
+    private fun findPrometheus(auroraConfigFields: AuroraConfigFields): HttpEndpoint? {
+
+        val name = "prometheus"
+
+        if (disabledAndNoSubKeys(auroraConfigFields, name)) {
             return null
         }
         return HttpEndpoint(
@@ -162,9 +168,8 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
     private fun findManagementPath(auroraConfigFields: AuroraConfigFields): String? {
 
         val name = "management"
-        val noSubKeys = applicationFiles.findSubKeys(name).filter { it != name }.isEmpty()
-        val enabled = auroraConfigFields.extract(name, { it.asText() == "true" })
-        if (!enabled && noSubKeys) {
+
+        if (disabledAndNoSubKeys(auroraConfigFields, name)) {
             return null
         }
 
@@ -196,9 +201,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
 
     fun getProbe(auroraConfigFields: AuroraConfigFields, name: String): Probe? {
 
-        val noSubKeys = applicationFiles.findSubKeys(name).filter { it != name }.isEmpty()
-        val enabled = auroraConfigFields.extract(name, { it.asText() == "true" })
-        if (noSubKeys && !enabled) {
+        if (disabledAndNoSubKeys(auroraConfigFields, name)) {
             return null
         }
 
