@@ -17,10 +17,10 @@
     "reference.json": {
       "name": "reference",
       "applicationPlatform": "java",
-      "flags": {
-        "cert": true,
-        "rolling": true
+      "deployStrategy": {
+        "type": "Rolling"
       },
+      "certificate": true,
       "groupId": "ske.aurora.openshift.referanse",
       "artifactId": "openshift-referanse-springboot-server",
       "version": "0",
@@ -34,15 +34,13 @@
     "reference-web.json": {
       "name": "reference-web",
       "applicationPlatform": "web",
-      "flags": {
-        "rolling": true
+      "deployStrategy": {
+        "type": "rolling"
       },
       "groupId": "no.skatteetaten.aurora",
       "artifactId": "openshift-referanse-react",
       "version": "snapshot_test-SNAPSHOT",
-      "route" : {
-        "reference-web" : { }
-      },
+      "route" : true,
       "config": {
         "foo2": "baz"
       }
