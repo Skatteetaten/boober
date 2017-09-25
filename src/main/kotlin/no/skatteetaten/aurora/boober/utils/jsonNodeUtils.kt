@@ -90,10 +90,10 @@ fun JsonNode?.pattern(pattern: String, message: String): Exception? {
 
 fun JsonNode?.oneOf(candidates: List<String>): Exception? {
     if (this == null) {
-        return IllegalArgumentException("Must be one of [" + candidates.joinToString { "," } + "]")
+        return IllegalArgumentException("Must be one of [" + candidates.joinToString() + "]")
     }
     if (!candidates.contains(this.textValue())) {
-        return IllegalArgumentException("Must be one of [" + candidates.joinToString { "," } + "]")
+        return IllegalArgumentException("Must be one of [" + candidates.joinToString() + "]")
     }
     return null
 }
