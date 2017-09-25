@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraLocalTemplate
+import no.skatteetaten.aurora.boober.model.findSubKeys
 
 class AuroraLocalTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>, val auroraConfig: AuroraConfig) {
 
@@ -22,20 +23,10 @@ class AuroraLocalTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>, 
             })
     )
 
-    private fun findSubKeys(applicationFiles: List<AuroraConfigFile>, name: String): Set<String> {
-
-        return applicationFiles.flatMap {
-            if (it.contents.has(name)) {
-                it.contents[name].fieldNames().asSequence().toList()
-            } else {
-                emptyList()
-            }
-        }.toSet()
-    }
 
     fun findParameters(): List<AuroraConfigFieldHandler> {
 
-        val parameterKeys = findSubKeys(applicationFiles, "parameters")
+        val parameterKeys = applicationFiles.findSubKeys("parameters")
 
         return parameterKeys.map { parameter ->
             AuroraConfigFieldHandler("parameters/$parameter")

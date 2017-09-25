@@ -4,12 +4,8 @@
       "groups": "APP_PaaS_drift APP_PaaS_utv"
     }
   },
-  "flags": {
-    "debug": true
-  },
-  "route": {
-    "openshift-console-api": {}
-  },
+  "debug": true,
+  "route": true,
   "name": "openshift-console-api",
   "groupId": "ske.openshift.aurora",
   "artifactId": "openshift-console-api",

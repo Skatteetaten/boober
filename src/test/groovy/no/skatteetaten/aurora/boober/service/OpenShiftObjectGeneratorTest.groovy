@@ -36,7 +36,7 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
   ObjectMapper mapper
 
   @Shared
-  def file = new ObjectMapper().convertValue([managementPath: ":8080/test"], JsonNode.class)
+  def file = new ObjectMapper().convertValue([version: "1.0.4"], JsonNode.class)
 
   @Shared
   def booberDevAosSimpleOverrides = [new AuroraConfigFile("booberdev/aos-simple.json", file, true, null)]
@@ -94,16 +94,16 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
     when:
 
     where:
-      env           | name            | templateFile      | overrides
-      "booberdev"   | "tvinn"         | "atomhopper.json" | []
-      "jenkins"     | "build"         | null              | []
-      "booberdev"   | "reference-web" | null              | []
-      "booberdev"   | "build"         | null              | []
-      "booberdev"   | "console"       | null              | []
-      "booberdev"   | "aos-simple"    | null              | booberDevAosSimpleOverrides
-      "secrettest"  | "aos-simple"    | null              | []
-      "booberdev"   | "sprocket"      | null              | []
-      "release"     | "aos-simple"    | null              | []
+      env          | name            | templateFile      | overrides
+      "booberdev"  | "sprocket"      | null              | []
+      "booberdev"  | "tvinn"         | "atomhopper.json" | []
+      "jenkins"    | "build"         | null              | []
+      "booberdev"  | "reference-web" | null              | []
+      "booberdev"  | "build"         | null              | []
+      "booberdev"  | "console"       | null              | []
+      "booberdev"  | "aos-simple"    | null              | booberDevAosSimpleOverrides
+      "secrettest" | "aos-simple"    | null              | []
+      "release"    | "aos-simple"    | null              | []
       "release"     | "build"         | null              | []
       "mounts"      | "aos-simple"    | null              | []
       "secretmount" | "aos-simple"    | null              | []

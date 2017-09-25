@@ -31,7 +31,7 @@
           },
           {
             "name": "VERSION",
-            "value": "1.0.3-SNAPSHOT"
+            "value": "1.0.4"
           },
           {
             "name": "DOCKER_BASE_VERSION",

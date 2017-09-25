@@ -4,5 +4,10 @@
     "latest": {
       "foo": "baaaar"
     }
+  },
+  "liveness": true,
+  "readiness": false,
+  "deployStrategy": {
+    "timeout": 600
   }
 }

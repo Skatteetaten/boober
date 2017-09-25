@@ -7,12 +7,12 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.model.AuroraVolume
 import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.required
 
 class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>,
                            val vaults: Map<String, AuroraSecretVault>) {
-
 
 
     val mountHandlers = findMounts()
@@ -24,8 +24,6 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>,
 
 
     fun auroraDeploymentCore(auroraConfigFields: AuroraConfigFields): AuroraVolume {
-
-        val name = auroraConfigFields.extract("name")
 
         return AuroraVolume(
                 secrets = auroraConfigFields.extractOrNull("secretVault", {
@@ -54,11 +52,10 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>,
     }
 
 
-
     fun findConfigFieldHandlers(): List<AuroraConfigFieldHandler> {
 
         val name = "config"
-        val keysStartingWithConfig = findSubKeys(name)
+        val keysStartingWithConfig = applicationFiles.findSubKeys(name)
 
         val configKeys: Map<String, Set<String>> = keysStartingWithConfig.map { configFileName ->
             //find all unique keys in a configFile
@@ -83,7 +80,7 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>,
 
     fun findMounts(): List<AuroraConfigFieldHandler> {
 
-        val mountKeys = findSubKeys("mounts")
+        val mountKeys = applicationFiles.findSubKeys("mounts")
 
         return mountKeys.flatMap { mountName ->
             listOf(
@@ -97,17 +94,6 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>,
             )
 
         }
-    }
-
-    private fun findSubKeys(name: String): Set<String> {
-
-        return applicationFiles.flatMap {
-            if (it.contents.has(name)) {
-                it.contents[name].fieldNames().asSequence().toList()
-            } else {
-                emptyList()
-            }
-        }.toSet()
     }
 
 
