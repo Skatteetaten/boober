@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import io.micrometer.core.instrument.MeterRegistry
@@ -22,6 +23,9 @@ import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
+import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
+import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.service.openshift.UserDetailsTokenProvider
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
@@ -51,6 +55,7 @@ class AbstractMockedOpenShiftSpecification extends Specification {
     MeterRegistry meterRegistry() {
       Metrics.globalRegistry
     }
+
     @Bean
     OpenShiftClient openShiftClient() {
       factory.Mock(OpenShiftClient)
@@ -102,7 +107,6 @@ class AbstractMockedOpenShiftSpecification extends Specification {
   @Autowired
   ObjectMapper mapper
 
-
   def setup() {
 
     def currentFeature = specificationContext.currentFeature
@@ -137,5 +141,14 @@ class AbstractMockedOpenShiftSpecification extends Specification {
 
     GitServiceHelperKt.createInitRepo(auroraConfig.affiliation)
     deployBundleService.saveAuroraConfig(auroraConfig, false)
+  }
+
+  def createOpenShiftResponse(String kind, OperationType operationType, int prevVersion, int currVersion) {
+    def previous = mapper.
+        convertValue(["kind": kind, "metadata": ["labels": ["releasedVersion": prevVersion]]], JsonNode.class)
+    def response = mapper.
+        convertValue(["kind": kind, "metadata": ["labels": ["releasedVersion": currVersion]]], JsonNode.class)
+
+    return new OpenShiftResponse(new OpenshiftCommand(operationType, Mock(JsonNode), previous, null), response)
   }
 }
