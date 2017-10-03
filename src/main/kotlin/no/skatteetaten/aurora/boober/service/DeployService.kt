@@ -49,8 +49,6 @@ class DeployService(
 
         return deployBundleService.withDeployBundle(affiliation, deployParams.overrides, {
             val applications = createApplicationCommands(it, deployParams.applicationIds)
-
-            //TODO: here we need to validate if you can access all vaults
             val res = applications.map { setupApplication(it, deployParams.deploy) }
             markRelease(res, it.repo)
             res
