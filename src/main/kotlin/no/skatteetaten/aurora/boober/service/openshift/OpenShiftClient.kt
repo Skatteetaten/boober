@@ -72,7 +72,7 @@ class OpenShiftClient(
             val res = when (cmd.operationType) {
                 OperationType.CREATE -> performClient.post(kind, name, namespace, cmd.payload).body
                 OperationType.UPDATE -> performClient.put(kind, name, namespace, cmd.payload).body
-                OperationType.DELETE -> performClient.delete(kind, name, namespace, cmd.payload).body
+                OperationType.DELETE -> performClient.delete(kind, name, namespace).body
                 OperationType.NOOP -> cmd.payload
             }
             OpenShiftResponse(cmd, res)
@@ -198,20 +198,34 @@ class OpenShiftClient(
         return resource?.body?.get("users")?.any { it.textValue() == user } ?: false
     }
 
+    @JvmOverloads
     fun createOpenshiftDeleteCommands(name: String, namespace: String, deployId: String,
-                                      kinds: List<String> = listOf("deploymentconfigs", "configmaps", "secrets", "services", "routes", "imagestreams")): List<OpenshiftCommand> {
+                                      kinds: List<String> = listOf("buildconfigs", "deploymentconfigs", "configmaps", "secrets", "services", "routes", "imagestreams")): List<OpenshiftCommand> {
         val headers: HttpHeaders = userClient.getAuthorizationHeaders()
 
 
         return kinds.flatMap {
-            val apiType = if (it in listOf("services", "configmaps", "secrets")) "api" else "oapi"
+            val apiType = getApiType(it)
             val url = "$baseUrl/$apiType/v1/namespaces/$namespace/$it?labelSelector=app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
-            userClient.getExistingResource(headers, url)?.body?.get("items")?.toList() ?: emptyList()
+            val body = userClient.getExistingResource(headers, url)?.body
+
+            val kind = body?.get("kind")?.textValue()?.replace("List", "")
+            val items = body?.get("items")?.toList() ?: emptyList()
+            items.forEach {
+                if (it is ObjectNode) {
+                    // Kind is missing from response so we have to put it back
+                    it.put("kind", kind)
+                }
+            }
+            items
         }.map {
             OpenshiftCommand(OperationType.DELETE, payload = it, previous = it)
         }
     }
 
+    fun getApiType(kind: String): String {
+        return if (kind in listOf("services", "configmaps", "secrets")) "api" else "oapi"
+    }
 
     fun projectExist(name: String): Boolean {
         return exist("${baseUrl}/oapi/v1/projects/$name")
