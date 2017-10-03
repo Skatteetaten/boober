@@ -1,0 +1,7 @@
+{
+  "kind": "DeploymentRequest",
+  "apiVersion": "v1",
+  "name": "tvinn",
+  "latest": true,
+  "force": true
+}

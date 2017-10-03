@@ -14,9 +14,9 @@ val folder = File(AuroraConfigHelper::class.java.getResource("/samples/config").
 
 fun getAuroraConfigSamples(): AuroraConfig {
     val files = folder.walkBottomUp()
-            .onEnter { it.name != "secret" }
-            .filter { it.isFile }
-            .associate { it.relativeTo(folder).path to it }
+        .onEnter { it.name != "secret" }
+        .filter { it.isFile }
+        .associate { it.relativeTo(folder).path to it }
 
     val nodes = files.map {
         it.key to convertFileToJsonNode(it.value)
@@ -38,21 +38,39 @@ fun createAuroraConfig(aid: ApplicationId, affiliation: String = "aos", addition
 fun getSampleFiles(aid: ApplicationId, additionalFile: String? = null): Map<String, JsonNode?> {
 
     return collectFilesToMapOfJsonNode(
-            "about.json",
-            "${aid.application}.json",
-            "${aid.environment}/about.json",
-            "${aid.environment}/${aid.application}.json",
-            additionalFile?.let { it } ?: ""
+        "about.json",
+        "${aid.application}.json",
+        "${aid.environment}/about.json",
+        "${aid.environment}/${aid.application}.json",
+        additionalFile?.let { it } ?: ""
     )
 }
 
 fun getResultFiles(aid: ApplicationId): Map<String, JsonNode?> {
-    val baseFolder = File(AuroraConfigHelper::class.java.getResource("/samples/result/${aid.environment}/${aid.application}").file)
+    val baseFolder = File(AuroraConfigHelper::class.java
+        .getResource("/samples/result/${aid.environment}/${aid.application}").file)
 
+    return getFiles(baseFolder)
+}
+
+fun getDeployResultFiles(aid: ApplicationId): Map<String, JsonNode?> {
+    val baseFolder = File(AuroraConfigHelper::class.java
+        .getResource("/samples/deployresult/${aid.environment}/${aid.application}").file)
+
+    return getFiles(baseFolder, aid.application)
+}
+
+private fun getFiles(baseFolder: File, name: String = ""): Map<String, JsonNode?> {
     return baseFolder.listFiles().toHashSet().map {
         val json = convertFileToJsonNode(it)
-        val name = json?.at("/kind")?.textValue() + "/" + json?.at("/metadata/name")?.textValue()
-        name.toLowerCase() to json
+
+        var appName = json?.at("/metadata/name")?.textValue()
+        if (name.isNotBlank()) {
+            appName = name
+        }
+
+        val file = json?.at("/kind")?.textValue() + "/" + appName
+        file.toLowerCase() to json
     }.toMap()
 }
 
