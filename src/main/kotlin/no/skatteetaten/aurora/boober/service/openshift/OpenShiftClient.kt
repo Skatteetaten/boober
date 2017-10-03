@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.readValue
-import no.skatteetaten.aurora.boober.model.AuroraPermissions
 import no.skatteetaten.aurora.boober.service.internal.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
@@ -146,24 +145,6 @@ class OpenShiftClient(
         return currentUser?.body
     }
 
-    fun hasUserAccess(user: String, permissions: AuroraPermissions?): Boolean {
-        if (permissions == null) {
-            return true
-        }
-
-        val groupSize = permissions.groups?.size ?: 0
-        val userSize = permissions.users?.size ?: 0
-        if (groupSize + userSize == 0) {
-            return true
-        }
-
-        val validUser: Boolean = permissions.users?.any { user == it && isValidUser(user) } ?: false
-
-        val validGroup = permissions.groups?.any { isUserInGroup(user, it) } ?: false
-
-        return validUser || validGroup
-
-    }
 
     fun isValidUser(user: String): Boolean {
         if (user.startsWith("system:serviceaccount")) {
@@ -189,7 +170,7 @@ class OpenShiftClient(
         return existingResource != null
     }
 
-    private fun isUserInGroup(user: String, group: String): Boolean {
+    fun isUserInGroup(user: String, group: String): Boolean {
         val headers: HttpHeaders = serviceAccountClient.getAuthorizationHeaders()
 
         val url = "$baseUrl/oapi/v1/groups/$group"

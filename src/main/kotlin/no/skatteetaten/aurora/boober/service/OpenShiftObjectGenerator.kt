@@ -4,9 +4,13 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.java
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.web
+import no.skatteetaten.aurora.boober.model.AuroraApplication
+import no.skatteetaten.aurora.boober.model.Database
+import no.skatteetaten.aurora.boober.model.Mount
+import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
@@ -329,17 +333,17 @@ class OpenShiftObjectGenerator(
 
             Mount(path = "/u01/config/configmap",
                     type = MountType.ConfigMap,
-                    volumeName = auroraApplication.name,
                     mountName = "config",
+                    volumeName = auroraApplication.name,
                     exist = false,
-                    content = it)
+                    content = it, permissions = null)
         }
 
         val secretMount = auroraApplication.volume?.secrets?.let {
             Mount(path = "/u01/config/secret",
                     type = MountType.Secret,
-                    volumeName = auroraApplication.name,
                     mountName = "secrets",
+                    volumeName = auroraApplication.name,
                     exist = false,
                     content = it)
         }
@@ -347,8 +351,8 @@ class OpenShiftObjectGenerator(
         val certMount = auroraApplication.deploy?.certificateCn?.let {
             Mount(path = "/u01/secrets/app/${auroraApplication.name}-cert",
                     type = MountType.Secret,
-                    volumeName = "${auroraApplication.name}-cert",
                     mountName = "${auroraApplication.name}-cert",
+                    volumeName = "${auroraApplication.name}-cert",
                     exist = true,
                     content = null)
             //TODO: Add sprocket content here
@@ -358,8 +362,8 @@ class OpenShiftObjectGenerator(
             val dbName = "${it.name}-db".toLowerCase()
             Mount(path = "/u01/secrets/app/$dbName",
                     type = MountType.Secret,
-                    volumeName = dbName,
                     mountName = dbName,
+                    volumeName = dbName,
                     exist = true,
                     content = null)
             //TODO add sprocket content here

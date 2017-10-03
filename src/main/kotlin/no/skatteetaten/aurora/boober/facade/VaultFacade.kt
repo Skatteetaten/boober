@@ -1,15 +1,14 @@
 package no.skatteetaten.aurora.boober.facade
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraGitFile
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
+import no.skatteetaten.aurora.boober.service.SecretVaultPermissionService
 import no.skatteetaten.aurora.boober.service.SecretVaultService
 import no.skatteetaten.aurora.boober.service.internal.AuroraVersioningException
 import no.skatteetaten.aurora.boober.service.internal.VersioningError
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import org.eclipse.jgit.api.Git
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -19,9 +18,8 @@ class VaultFacade(
         val gitService: GitService,
         val mapper: ObjectMapper,
         val encryptionService: EncryptionService,
-        val userDetailsProvider: UserDetailsProvider,
-        val openShiftClient: OpenShiftClient,
-        val secretVaultService: SecretVaultService
+        val secretVaultService: SecretVaultService,
+        val secretVaultPermissionService: SecretVaultPermissionService
 ) {
 
     private val logger = LoggerFactory.getLogger(VaultFacade::class.java)
@@ -34,7 +32,7 @@ class VaultFacade(
         val repo = git ?: getRepo(affiliation)
 
         val vaults = secretVaultService.getVaults(repo)
-                .filter { openShiftClient.hasUserAccess(userDetailsProvider.getAuthenticatedUser().username, it.value.permissions) }
+                .filter { secretVaultPermissionService.hasUserAccess(it.value.permissions) }
                 .values.toList()
         if (git == null) {
             gitService.closeRepository(repo)
@@ -88,7 +86,7 @@ class VaultFacade(
         //TODO: What if the vault does not exist?
         val oldVault = secretVaultService.createVault(vault, vaultFiles)
 
-        if (!openShiftClient.hasUserAccess(userDetailsProvider.getAuthenticatedUser().username, oldVault.permissions)) {
+        if (!secretVaultPermissionService.hasUserAccess(oldVault.permissions)) {
             throw IllegalAccessError("You do not have permission to operate on his vault")
         }
 
