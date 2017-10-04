@@ -5,19 +5,14 @@ import no.skatteetaten.aurora.boober.service.internal.OpenShiftException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.http.RequestEntity
-import org.springframework.http.ResponseEntity
+import org.springframework.http.*
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate
 import java.net.URI
 
 open class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: String,
-                              val tokenProvider: TokenProvider,
-                              val restTemplate: RestTemplate) {
+                                   val tokenProvider: TokenProvider,
+                                   val restTemplate: RestTemplate) {
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftResourceClient::class.java)
 
@@ -64,7 +59,7 @@ open class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: Stri
         return restTemplate.exchange(requestEntity, JsonNode::class.java)
     }
 
-    fun getExistingResource(headers: HttpHeaders, url: String): ResponseEntity<JsonNode>? {
+    open fun getExistingResource(headers: HttpHeaders, url: String): ResponseEntity<JsonNode>? {
         return try {
             val requestEntity = RequestEntity<Any>(headers, HttpMethod.GET, URI(url))
             restTemplate.exchange(requestEntity, JsonNode::class.java)
@@ -76,7 +71,7 @@ open class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: Stri
         }
     }
 
-    fun getAuthorizationHeaders(): HttpHeaders {
+    open fun getAuthorizationHeaders(): HttpHeaders {
         return createHeaders(tokenProvider.getToken())
     }
 
