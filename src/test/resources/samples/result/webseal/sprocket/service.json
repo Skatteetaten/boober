@@ -1,0 +1,36 @@
+{
+  "kind": "Service",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "sprocket",
+    "annotations": {
+      "prometheus.io/scheme": "http",
+      "prometheus.io/scrape": "true",
+      "prometheus.io/path": "/prometheus",
+      "prometheus.io/port": "8082",
+      "sprocket.sits.no/service.webseal": "sprocket-aos-webseal"
+    },
+    "labels": {
+      "app": "sprocket",
+      "updatedBy": "hero",
+      "affiliation": "aos",
+      "booberDeployId": "123"
+    }
+  },
+  "spec": {
+    "ports": [
+      {
+        "name": "http",
+        "protocol": "TCP",
+        "port": 80,
+        "targetPort": 8080,
+        "nodePort": 0
+      }
+    ],
+    "selector": {
+      "name": "sprocket"
+    },
+    "type": "ClusterIP",
+    "sessionAffinity": "None"
+  }
+}

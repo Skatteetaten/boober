@@ -61,6 +61,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
             AuroraConfigFieldHandler("liveness/path"),
             AuroraConfigFieldHandler("liveness/delay", defaultValue = "10"),
             AuroraConfigFieldHandler("liveness/timeout", defaultValue = "1"),
+            AuroraConfigFieldHandler("webseal", defaultValue = "false"),
             AuroraConfigFieldHandler("webseal/host"),
             AuroraConfigFieldHandler("webseal/roles"),
             AuroraConfigFieldHandler("releaseTo")
@@ -129,14 +130,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
 
                 certificateCn = auroraConfigFields.extractOrDefault("certificate/commonName", certificateCnDefault),
                 serviceAccount = auroraConfigFields.extractOrNull("serviceAccount"),
-
-                webseal = auroraConfigFields.findAll("webseal", {
-                    Webseal(
-                            auroraConfigFields.extract("webseal/host"),
-                            auroraConfigFields.extractOrNull("webseal/roles")
-                    )
-                }),
-
+                webseal = findWebseal(auroraConfigFields),
                 prometheus = findPrometheus(auroraConfigFields),
                 managementPath = findManagementPath(auroraConfigFields),
                 liveness = getProbe(auroraConfigFields, "liveness"),
@@ -152,6 +146,20 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
         return !enabled && noSubKeys
     }
 
+    private fun findWebseal(auroraConfigFields: AuroraConfigFields): Webseal? {
+
+        val name = "webseal"
+
+        if (disabledAndNoSubKeys(auroraConfigFields, name)) {
+            return null
+        }
+
+        return Webseal(
+                auroraConfigFields.extractOrNull("webseal/host"),
+                auroraConfigFields.extractOrNull("webseal/roles")
+        )
+
+    }
     private fun findPrometheus(auroraConfigFields: AuroraConfigFields): HttpEndpoint? {
 
         val name = "prometheus"

@@ -156,7 +156,8 @@ class OpenShiftObjectGenerator(
         return auroraApplication.deploy?.let {
 
             val webseal = it.webseal?.let {
-                "sprocket.sits.no/service.webseal" to it.host
+                val host = it.host ?: "${auroraApplication.name}-${auroraApplication.namespace}"
+                "sprocket.sits.no/service.webseal" to host
             }
 
             val websealRoles = it.webseal?.roles?.let {
