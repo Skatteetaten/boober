@@ -301,7 +301,7 @@ class OpenShiftObjectGenerator(
         val dbEnv = auroraApplication.deploy?.database?.takeIf { it.isNotEmpty() }?.let {
             fun createDbEnv(db: Database, envName: String): List<Pair<String, String>> {
                 val path = "/u01/secrets/app/${db.name.toLowerCase()}-db"
-                val envName = envName.toUpperCase()
+                val envName = envName.replace("-", "_").toUpperCase()
 
                 return listOf(
                         envName to "$path/info",

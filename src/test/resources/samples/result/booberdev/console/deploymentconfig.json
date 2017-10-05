@@ -141,11 +141,11 @@
                 "value": "5005"
               },
               {
-                "name": "OPENSHIFT-CONSOLE-API_DB",
+                "name": "OPENSHIFT_CONSOLE_API_DB",
                 "value": "/u01/secrets/app/openshift-console-api-db/info"
               },
               {
-                "name": "OPENSHIFT-CONSOLE-API_DB_PROPERTIES",
+                "name": "OPENSHIFT_CONSOLE_API_DB_PROPERTIES",
                 "value": "/u01/secrets/app/openshift-console-api-db/db.properties"
               },
               {
