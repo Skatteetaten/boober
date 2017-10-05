@@ -25,6 +25,7 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>,
 
     fun auroraDeploymentCore(auroraConfigFields: AuroraConfigFields): AuroraVolume {
 
+        //TODO: Here we should return canEdit and not permissions
         return AuroraVolume(
                 secrets = auroraConfigFields.extractOrNull("secretVault", {
                     vaults[it.asText()]?.secrets

@@ -23,7 +23,7 @@ class VaultController(val facade: VaultFacade) {
     @Timed
     @GetMapping()
     fun listVaults(@PathVariable affiliation: String): Response {
-        return Response(items = facade.listVaults(affiliation))
+        return Response(items = facade.listVaults(affiliation).filter { it.canEdit })
     }
 
     @Timed
