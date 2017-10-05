@@ -44,7 +44,7 @@ class OpenShiftTemplateProcessor(
             labels.put("app", aac.name)
         }
 
-        val result = openShiftClient.post("processedtemplate", namespace = aac.namespace, payload = template)
+        val result = openShiftClient.post("processedtemplate", namespace = "default", payload = template)
 
         return result.body["objects"].asSequence().toList()
     }
