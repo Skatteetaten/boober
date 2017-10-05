@@ -51,6 +51,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
             AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
             AuroraConfigFieldHandler("certificate/commonName"),
             AuroraConfigFieldHandler("certificate", defaultValue = "false"),
+            AuroraConfigFieldHandler("pause", defaultValue = "false"),
             AuroraConfigFieldHandler("readiness", defaultValue = "true"),
             AuroraConfigFieldHandler("readiness/port", defaultValue = "8080"),
             AuroraConfigFieldHandler("readiness/path"),
@@ -93,6 +94,8 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
 
         val applicationFile = getApplicationFile(applicationId)
         val overrideFiles = overrideFiles.map { it.name to it.contents }.toMap()
+        val pause = auroraConfigFields.extract("pause", { it.asText() == "true" })
+        val replicas = auroraConfigFields.extract("replicas", JsonNode::asInt)
 
         return AuroraDeploy(
                 applicationFile = applicationFile.name,
@@ -107,7 +110,8 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
                 flags = AuroraDeploymentConfigFlags(
                         certFlag,
                         auroraConfigFields.extract("debug", { it.asText() == "true" }),
-                        auroraConfigFields.extract("alarm", { it.asText() == "true" })
+                        auroraConfigFields.extract("alarm", { it.asText() == "true" }),
+                        pause
 
                 ),
                 resources = AuroraDeploymentConfigResources(
@@ -120,7 +124,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
                                 max = auroraConfigFields.extract("resources/cpu/max")
                         )
                 ),
-                replicas = auroraConfigFields.extract("replicas", JsonNode::asInt),
+                replicas = if (pause) 0 else replicas,
                 applicationPlatform = ApplicationPlatform.valueOf(auroraConfigFields.extract("applicationPlatform")),
                 groupId = groupId,
                 artifactId = artifactId,
