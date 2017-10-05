@@ -4,6 +4,7 @@
       "schemaVersion": "v1",
       "affiliation": "paas",
       "type": "deploy",
+      "route": true,
       "splunkIndex": "openshift-test",
       "permissions": {
         "admin": {
@@ -15,7 +16,7 @@
       }
     },
     "reference.json": {
-      "name": "reference",
+      "name": "this-is-a-really-long-name-forreference",
       "applicationPlatform": "java",
       "deployStrategy": {
         "type": "rolling"
@@ -45,13 +46,11 @@
         "foo2": "baz"
       }
     },
-    "boober-utv/about.json": {
+    "boober-bjarte/about.json": {
       "cluster": "qa",
       "secretVault": "utv"
     },
-    "boober-utv/reference.json": {
-    },
-    "boober-utv/reference-web.json": {
+    "boober-bjarte/reference.json": {
     },
     "boober-test/about.json": {
       "cluster": "qa",

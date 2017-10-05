@@ -48,6 +48,22 @@ class AuroraDeploymentConfigDeployServiceTest extends AbstractMockedOpenShiftSpe
     then:
       !res
   }
+
+  def "Should return error when name is too long"() {
+
+    given:
+      def overrideFile = mapper.
+          convertValue(["name": "this-is-a-really-really-very-very-long-name-that-is-not-alloweed-over-40-char"],
+              JsonNode.class)
+      def overrides = [new AuroraConfigFile("${aid.environment}/${aid.application}.json", overrideFile, true, null)]
+    when:
+      service.dryRun("aos", new DeployParams([aid.environment], [aid.application], overrides, false))
+
+    then:
+      def ex = thrown(AuroraConfigException)
+      ex.errors[0].messages[0].field.path == '/name'
+  }
+
   def "Should return error when name is not valid DNS952 label"() {
 
     given:
