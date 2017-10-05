@@ -133,6 +133,13 @@ class OpenShiftObjectGenerator(
             } else {
                 "default"
             }
+
+
+            val pauseLabel = if (auroraApplication.deploy.flags.pause) {
+                "paused" to "true"
+            } else null
+
+            val dcLabels = labels + mapOf("name" to auroraApplication.name, "deployTag" to deployTag).addIfNotNull(pauseLabel)
             val params = mapOf(
                     "annotations" to annotations
                             .addIfNotNull(releaseToAnnotation)
@@ -140,7 +147,7 @@ class OpenShiftObjectGenerator(
                             .addIfNotNull(managementPath)
                             .addIfNotNull(cert)
                             .addIfNotNull(database),
-                    "labels" to labels + mapOf("name" to auroraApplication.name, "deployTag" to deployTag),
+                    "labels" to dcLabels,
                     "name" to auroraApplication.name,
                     "deploy" to it,
                     "mounts" to mounts,

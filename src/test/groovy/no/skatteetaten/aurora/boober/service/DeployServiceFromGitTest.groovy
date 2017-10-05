@@ -60,6 +60,17 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
     openShiftClient.createOpenShiftDeleteCommands(_, _, _, _) >> []
   }
 
+  def "Should perform release of paused env and not generate a redploy request"() {
+    when:
+      def result = deployService.executeDeploy(affiliation, new DeployParams([ENV_NAME], [APP_NAME], [], true))
+
+    then:
+      def app = result[0]
+      app.auroraApplication.deploy.flags.pause
+      app.openShiftResponses.size() == 9
+
+  }
+
   def "Should perform release and mark it"() {
     when:
       deployService.executeDeploy(affiliation, new DeployParams([ENV_NAME], [APP_NAME], [], true))

@@ -9,5 +9,6 @@
   "readiness": false,
   "deployStrategy": {
     "timeout": 600
-  }
+  },
+  "pause": true
 }

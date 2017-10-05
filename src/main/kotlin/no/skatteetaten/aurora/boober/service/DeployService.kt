@@ -144,12 +144,14 @@ class DeployService(
             return AuroraApplicationResult(cmd.deployId, application, responses.addIfNotNull(namespaceResponse), success = false)
         }
 
+        //TODO: When we start to create BuildConfig this needs to be modified
         if (application.deploy == null) {
             throw NullPointerException("Deploy should not be null")
         }
 
         val docker = "${application.deploy.dockerImagePath}:${application.deploy.dockerTag}"
-        val deployCommand = generateRedeployResource(responses, application.type, application.name, docker, deploy)
+        val shouldDeploy = deploy && application.deploy.flags.pause
+        val deployCommand = generateRedeployResource(responses, application.type, application.name, docker, shouldDeploy)
                 ?.let { openShiftClient.prepare(application.namespace, it) }
                 ?.let { openShiftClient.performOpenShiftCommand(it, application.namespace) }
 

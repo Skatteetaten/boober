@@ -148,7 +148,8 @@ data class Route(
 data class AuroraDeploymentConfigFlags(
         val cert: Boolean = false,
         val debug: Boolean = false,
-        val alarm: Boolean = false
+        val alarm: Boolean = false,
+        val pause: Boolean = false
 )
 
 data class AuroraDeploymentConfigResource(
