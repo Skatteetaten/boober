@@ -126,7 +126,7 @@ class AuroraDeploymentConfigDeployServiceTest extends AbstractMockedOpenShiftSpe
 
     then:
       def ex = thrown(AuroraConfigException)
-      ex.errors[0].messages[0].message == "Version must be set"
+      ex.errors[0].messages[0].message == "Version must be set as string"
   }
 
   def "Should get error if we want secrets but there are none "() {

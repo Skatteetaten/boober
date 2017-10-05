@@ -106,7 +106,7 @@ fun JsonNode?.required(message: String): Exception? {
 }
 
 fun JsonNode?.notBlank(message: String): Exception? {
-    if (this == null || this.textValue().isBlank()) {
+    if (this == null || this.isInt || this.textValue().isBlank()) {
         return IllegalArgumentException(message)
     }
 

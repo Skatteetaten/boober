@@ -5,9 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import com.fasterxml.jackson.databind.JsonNode
 
 import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraApplication
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.internal.AuroraVersioningException
 
 class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
@@ -83,6 +83,28 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
       gitService.closeRepository(git)
 
       gitLog.fullMessage.contains("Added: 1")
+  }
+
+  def "Should get error trying to set version as int"() {
+    given:
+      def gitAuroraConfig = getAuroraConfigFromGit("aos", false)
+
+      def jsonOp = """[{
+  "op": "replace",
+  "path": "/version",
+  "value": 3
+}]
+"""
+
+    when:
+      def filename = "${aid.environment}/${aid.application}.json"
+
+      def version = gitAuroraConfig.auroraConfigFiles.find { it.name == filename }.version
+      deployBundleService.patchAuroraConfigFile("aos", filename, jsonOp, version, false)
+
+    then:
+      def ex = thrown(AuroraConfigException)
+      ex.errors[0].messages[0].message == "Version must be set as string"
   }
 
   def "Should patch AuroraConfigFile and push changes to git"() {
