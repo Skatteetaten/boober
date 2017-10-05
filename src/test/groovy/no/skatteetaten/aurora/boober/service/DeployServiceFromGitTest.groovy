@@ -57,7 +57,7 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
       def cmd = it[0]
       new OpenShiftResponse(cmd, cmd.payload)
     }
-    openShiftClient.createOpenshiftDeleteCommands(_, _, _, _) >> []
+    openShiftClient.createOpenShiftDeleteCommands(_, _, _, _) >> []
   }
 
   def "Should perform release and mark it"() {

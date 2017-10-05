@@ -40,10 +40,12 @@ class OpenShiftApiUrls(
             )
         }
 
+        @JvmStatic
+        @JvmOverloads
         fun getCollectionPathForResource(baseUrl: String, kind: String, namespace: String? = null): String {
             val endpointKey = kind.toLowerCase() + "s"
 
-            val apiType = if (endpointKey in listOf("namespaces", "services", "configmaps", "secrets", "replicationcontrollers", "persistentvolumeclaims", "pods")) "api" else "oapi"
+            val apiType = getApiType(endpointKey)
             val namespacePrefix = if (endpointKey !in listOf("namespaces", "projects", "projectrequests", "buildrequests", "deploymentreqeusts", "users", "groups")) {
                 namespace ?: throw IllegalArgumentException("namespace required for resource kind ${kind}")
                 "/namespaces/$namespace"
@@ -51,6 +53,10 @@ class OpenShiftApiUrls(
 
             val resourceBasePath = "$baseUrl/$apiType/v1$namespacePrefix/$endpointKey"
             return resourceBasePath
+        }
+
+        fun getApiType(endpointKey: String): String {
+            return if (endpointKey in listOf("namespaces", "services", "configmaps", "secrets", "replicationcontrollers", "persistentvolumeclaims", "pods")) "api" else "oapi"
         }
 
     }

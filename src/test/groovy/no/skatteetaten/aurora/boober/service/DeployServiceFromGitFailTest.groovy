@@ -54,7 +54,7 @@ class DeployServiceFromGitFailTest extends AbstractMockedOpenShiftSpecification 
       def error = new OpenShiftException("Error saving url", cause)
       new OpenShiftResponse(cmd, cmd.payload, false, error.message)
     }
-    openShiftClient.createOpenshiftDeleteCommands(_, _, _, _) >> []
+    openShiftClient.createOpenShiftDeleteCommands(_, _, _, _) >> []
 
   }
 
