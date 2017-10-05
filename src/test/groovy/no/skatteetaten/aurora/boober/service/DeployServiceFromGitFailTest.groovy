@@ -9,7 +9,6 @@ import org.springframework.web.client.HttpClientErrorException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import no.skatteetaten.aurora.boober.controller.internal.DeployParams
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.service.internal.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -40,11 +39,11 @@ class DeployServiceFromGitFailTest extends AbstractMockedOpenShiftSpecification 
   def setup() {
     def namespaceJson = mapper.
         convertValue(["kind": "namespace", "metadata": ["labels": ["affiliation": affiliation]]], JsonNode.class)
-    openShiftClient.prepare(_, _) >> { new OpenshiftCommand(OperationType.CREATE, it[1]) }
-    openShiftClient.updateRolebindingCommand(_, _) >> {
+    openShiftClient.createOpenShiftCommand(_, _) >> { new OpenshiftCommand(OperationType.CREATE, it[1]) }
+    openShiftClient.createUpdateRolebindingCommand(_, _) >> {
       new OpenshiftCommand(OperationType.UPDATE, it[0], null, it[0])
     }
-    openShiftClient.createNamespaceCommand(_, _) >> {
+    openShiftClient.createUpdateNamespaceCommand(_, _) >> {
       new OpenshiftCommand(OperationType.UPDATE, namespaceJson, null, namespaceJson)
     }
     openShiftClient.performOpenShiftCommand(_, _) >> {

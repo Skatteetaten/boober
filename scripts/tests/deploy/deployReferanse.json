@@ -1,9 +1,7 @@
 {
     "affiliation": "paas",
     "setupParams": {
-      "apps": ["reference"],
-      "envs": [
-        "boober-bjarte"
-      ]
+      "apps": ["wiremock", "reference"],
+      "envs":[ "boober-bugfix"]
     }
 }

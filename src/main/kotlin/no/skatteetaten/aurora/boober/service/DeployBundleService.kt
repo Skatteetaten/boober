@@ -9,7 +9,7 @@ import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigValidator
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraApplicationMapperV1
+import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecMapperV1
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraBuildMapperV1
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeployMapperV1
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraLocalTemplateMapperV1
@@ -17,7 +17,7 @@ import no.skatteetaten.aurora.boober.mapper.v1.AuroraRouteMapperV1
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraTemplateMapperV1
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraVolumeMapperV1
 import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraApplication
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.DeployBundle
@@ -102,15 +102,15 @@ class DeployBundleService(
 
     fun validate(deployBundle: DeployBundle) {
 
-        tryCreateAuroraApplications(deployBundle, deployBundle.auroraConfig.getApplicationIds())
+        tryCreateAuroraDeploymentSpecs(deployBundle, deployBundle.auroraConfig.getApplicationIds())
     }
 
-    fun createAuroraApplications(deployBundle: DeployBundle, applicationIds: List<ApplicationId>): List<AuroraApplication> {
+    fun createAuroraDeploymentSpecs(deployBundle: DeployBundle, applicationIds: List<ApplicationId>): List<AuroraDeploymentSpec> {
 
-        return tryCreateAuroraApplications(deployBundle, applicationIds)
+        return tryCreateAuroraDeploymentSpecs(deployBundle, applicationIds)
     }
 
-    fun createAuroraApplication(deployBundle: DeployBundle, applicationId: ApplicationId): AuroraApplication {
+    fun createAuroraDeploymentSpec(deployBundle: DeployBundle, applicationId: ApplicationId): AuroraDeploymentSpec {
 
         val baseHandlers = setOf(
                 AuroraConfigFieldHandler("schemaVersion"),
@@ -131,14 +131,14 @@ class DeployBundleService(
         if (schemaVersion != "v1") {
             throw IllegalArgumentException("Only v1 of schema is supported")
         }
-        val applicationMapper = AuroraApplicationMapperV1(openShiftClient, applicationId)
+        val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(openShiftClient, applicationId)
         val deployMapper = AuroraDeployMapperV1(applicationId, applicationFiles, deployBundle.overrideFiles, dockerRegistry)
         val volumeMapper = AuroraVolumeMapperV1(applicationFiles, vaults)
         val routeMapper = AuroraRouteMapperV1(applicationFiles)
         val localTemplateMapper = AuroraLocalTemplateMapperV1(applicationFiles, auroraConfig)
         val templateMapper = AuroraTemplateMapperV1(applicationFiles, openShiftClient)
         val buildMapper = AuroraBuildMapperV1()
-        val handlers = (baseHandlers + applicationMapper.handlers + when (type) {
+        val handlers = (baseHandlers + deploymentSpecMapper.handlers + when (type) {
             TemplateType.deploy -> routeMapper.handlers + volumeMapper.handlers + deployMapper.handlers
             TemplateType.development -> routeMapper.handlers + volumeMapper.handlers + deployMapper.handlers + buildMapper.handlers
             TemplateType.localTemplate -> routeMapper.handlers + volumeMapper.handlers + localTemplateMapper.handlers
@@ -162,21 +162,21 @@ class DeployBundleService(
 
         val localTemplate = if (type == TemplateType.localTemplate) localTemplateMapper.localTemplate(auroraConfigFields) else null
 
-        return applicationMapper.auroraApplicationConfig(auroraConfigFields, volume, route, build, deploy, template, localTemplate)
+        return deploymentSpecMapper.createAuroraDeploymentSpec(auroraConfigFields, volume, route, build, deploy, template, localTemplate)
     }
 
-    private fun tryCreateAuroraApplications(deployBundle: DeployBundle, applicationIds: List<ApplicationId>): List<AuroraApplication> {
+    private fun tryCreateAuroraDeploymentSpecs(deployBundle: DeployBundle, applicationIds: List<ApplicationId>): List<AuroraDeploymentSpec> {
 
         return applicationIds.map { aid ->
             try {
-                val value = createAuroraApplication(deployBundle, aid)
-                Result<AuroraApplication, Error?>(value = value)
+                val auroraDeploymentSpec: AuroraDeploymentSpec = createAuroraDeploymentSpec(deployBundle, aid)
+                Result<AuroraDeploymentSpec, Error?>(value = auroraDeploymentSpec)
             } catch (e: ApplicationConfigException) {
                 logger.debug("ACE {}", e.errors)
-                Result<AuroraApplication, Error?>(error = Error(aid.application, aid.environment, e.errors))
+                Result<AuroraDeploymentSpec, Error?>(error = Error(aid.application, aid.environment, e.errors))
             } catch (e: IllegalArgumentException) {
                 logger.debug("IAE {}", e.message)
-                Result<AuroraApplication, Error?>(error = Error(aid.application, aid.environment, listOf(ValidationError(e.message!!))))
+                Result<AuroraDeploymentSpec, Error?>(error = Error(aid.application, aid.environment, listOf(ValidationError(e.message!!))))
             }
         }.onErrorThrow {
             logger.info("ACE {}", it)

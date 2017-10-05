@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.service.internal
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.model.AuroraApplication
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import org.eclipse.jgit.lib.PersonIdent
@@ -9,27 +9,13 @@ import org.springframework.http.ResponseEntity
 
 data class Result<out V, out E>(val value: V? = null, val error: E? = null)
 
-
-data class AuroraApplicationCommand @JvmOverloads constructor(
+data class AuroraDeployResult @JvmOverloads constructor(
         val deployId: String,
-        val auroraApplication: AuroraApplication,
-        val commands: List<OpenshiftCommand>,
-        val tagCommand: TagCommand? = null)
-
-data class TagCommand @JvmOverloads constructor(
-        val name: String,
-        val from: String,
-        val to: String,
-        val fromRegistry: String,
-        val toRegistry: String = fromRegistry)
-
-data class AuroraApplicationResult @JvmOverloads constructor(
-        val deployId: String,
-        val auroraApplication: AuroraApplication,
+        val auroraDeploymentSpec: AuroraDeploymentSpec,
         val openShiftResponses: List<OpenShiftResponse> = listOf(),
         val tagCommandResponse: ResponseEntity<JsonNode>? = null,
         val success: Boolean = true) {
-    val tag: String = "${auroraApplication.namespace}.${auroraApplication.name}/${deployId}"
+    val tag: String = "${auroraDeploymentSpec.namespace}.${auroraDeploymentSpec.name}/${deployId}"
 }
 
 fun <T : Any> List<Result<T?, Error?>>.onErrorThrow(block: (List<Error>) -> Exception): List<T> {

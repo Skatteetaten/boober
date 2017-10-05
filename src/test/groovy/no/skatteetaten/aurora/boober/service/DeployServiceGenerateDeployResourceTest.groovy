@@ -8,12 +8,14 @@ import static no.skatteetaten.aurora.boober.service.openshift.OperationType.UPDA
 
 import org.springframework.beans.factory.annotation.Autowired
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
+import no.skatteetaten.aurora.boober.service.openshift.OperationType
 
 class DeployServiceGenerateDeployResourceTest extends AbstractMockedOpenShiftSpecification {
 
@@ -31,7 +33,7 @@ class DeployServiceGenerateDeployResourceTest extends AbstractMockedOpenShiftSpe
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
   def setup() {
-    openShiftClient.prepare(_, _) >> { new OpenshiftCommand(CREATE, it[1]) }
+    openShiftClient.createOpenShiftCommand(_, _) >> { new OpenshiftCommand(OperationType.CREATE, it[1]) }
     openShiftClient.performOpenShiftCommand(_, _) >> {
       OpenshiftCommand cmd = it[1]
       new OpenShiftResponse(cmd, cmd.payload)
@@ -39,6 +41,16 @@ class DeployServiceGenerateDeployResourceTest extends AbstractMockedOpenShiftSpe
   }
 
   def docker = "docker/foo/bar:baz"
+
+  def createOpenShiftResponse(String kind, OperationType operationType, int prevVersion, int currVersion) {
+    def previous = mapper.
+        convertValue(["kind": kind, "metadata": ["labels": ["releasedVersion": prevVersion]]], JsonNode.class)
+    def payload = Mock(JsonNode)
+    def response = mapper.
+        convertValue(["kind": kind, "metadata": ["labels": ["releasedVersion": currVersion]]], JsonNode.class)
+
+    return new OpenShiftResponse(new OpenshiftCommand(operationType, payload, previous, null), response)
+  }
 
   def "Should  not create any resource on build flow"() {
     given:

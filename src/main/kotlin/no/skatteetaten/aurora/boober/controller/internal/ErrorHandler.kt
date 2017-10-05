@@ -37,6 +37,7 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
 
     private fun handleException(e: Exception, request: WebRequest, httpStatus: HttpStatus): ResponseEntity<*> {
 
+        e.printStackTrace()
         val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
         val message = createErrorMessage(e)
 

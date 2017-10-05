@@ -13,7 +13,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import groovy.json.JsonOutput
-import no.skatteetaten.aurora.boober.controller.internal.DeployParams
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
@@ -81,7 +80,7 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
 
       def deployId = "123"
 
-      List<JsonNode> generatedObjects = openShiftService.generateObjects(aac.auroraApplication, deployId)
+      List<JsonNode> generatedObjects = openShiftService.generateApplicationObjects(aac.getAuroraDeploymentSpec, deployId)
 
       def resultFiles = AuroraConfigHelperKt.getResultFiles(aid)
 

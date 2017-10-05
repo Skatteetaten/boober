@@ -5,7 +5,6 @@
       "affiliation": "paas",
       "type": "deploy",
       "route": true,
-      "splunkIndex": "openshift-test",
       "permissions": {
         "admin": {
           "groups": "APP_PaaS_drift APP_PaaS_utv"
@@ -46,11 +45,29 @@
         "foo2": "baz"
       }
     },
+    "wiremock.json": {
+      "name" : "wiremock",
+      "type" : "template",
+      "template" : "wiremock",
+      "parameters" : {
+        "AFFILIATION" : "sirus",
+        "CONFIG_DIR" : "systemtest/wiremock"
+      }
+    },
     "boober-bjarte/about.json": {
       "cluster": "qa",
       "secretVault": "utv"
     },
     "boober-bjarte/reference.json": {
+    },
+    "boober-utv/about.json": {
+      "cluster": "qa",
+      "secretVault": "utv",
+      "type": "development"
+    },
+    "boober-utv/reference.json": {
+    },
+    "boober-utv/reference-web.json": {
     },
     "boober-test/about.json": {
       "cluster": "qa",
@@ -60,6 +77,13 @@
     "boober-test/reference.json": {
     },
     "boober-test/reference-web.json": {
+    },
+    "boober-bugfix/about.json": {
+      "cluster": "qa"
+    },
+    "boober-bugfix/wiremock.json": {
+    },
+    "boober-bugfix/reference.json": {
     }
   }
 }
