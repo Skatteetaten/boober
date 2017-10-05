@@ -72,7 +72,7 @@ class OpenShiftClient(
             val res = when (cmd.operationType) {
                 OperationType.CREATE -> performClient.post(kind, name, namespace, cmd.payload).body
                 OperationType.UPDATE -> performClient.put(kind, name, namespace, cmd.payload).body
-                OperationType.DELETE -> performClient.delete(kind, name, namespace, cmd.payload).body
+                OperationType.DELETE -> performClient.delete(kind, name, namespace).body
                 OperationType.NOOP -> cmd.payload
             }
             OpenShiftResponse(cmd, res)
@@ -198,20 +198,24 @@ class OpenShiftClient(
         return resource?.body?.get("users")?.any { it.textValue() == user } ?: false
     }
 
-    fun createOpenshiftDeleteCommands(name: String, namespace: String, deployId: String,
-                                      kinds: List<String> = listOf("deploymentconfigs", "configmaps", "secrets", "services", "routes", "imagestreams")): List<OpenshiftCommand> {
+    @JvmOverloads
+    fun createOpenShiftDeleteCommands(name: String, namespace: String, deployId: String,
+                                      apiResources: List<String> = listOf("BuildConfig", "DeploymentConfig", "ConfigMap", "Secret", "Service", "Route", "ImageStream")): List<OpenshiftCommand> {
         val headers: HttpHeaders = userClient.getAuthorizationHeaders()
 
+        return apiResources.flatMap { kind ->
+            val queryString = "labelSelector=app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
+            val apiUrl = OpenShiftApiUrls.getCollectionPathForResource(baseUrl, kind, namespace)
+            val url = "$apiUrl?$queryString"
+            val body = userClient.getExistingResource(headers, url)?.body
 
-        return kinds.flatMap {
-            val apiType = if (it in listOf("services", "configmaps", "secrets")) "api" else "oapi"
-            val url = "$baseUrl/$apiType/v1/namespaces/$namespace/$it?labelSelector=app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
-            userClient.getExistingResource(headers, url)?.body?.get("items")?.toList() ?: emptyList()
+            val items = body?.get("items")?.toList() ?: emptyList()
+            items.filterIsInstance<ObjectNode>()
+                    .onEach { it.put("kind", kind) }
         }.map {
             OpenshiftCommand(OperationType.DELETE, payload = it, previous = it)
         }
     }
-
 
     fun projectExist(name: String): Boolean {
         return exist("${baseUrl}/oapi/v1/projects/$name")

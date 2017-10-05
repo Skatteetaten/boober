@@ -135,7 +135,7 @@ class DeployService(
                 ?.let { openShiftClient.prepare(application.namespace, it) }
                 ?.let { openShiftClient.performOpenShiftCommand(it, application.namespace) }
 
-        val deleteObjects = openShiftClient.createOpenshiftDeleteCommands(application.name, application.namespace, cmd.deployId)
+        val deleteObjects = openShiftClient.createOpenShiftDeleteCommands(application.name, application.namespace, cmd.deployId)
                 .map { openShiftClient.performOpenShiftCommand(it, application.namespace) }
 
         val finalResponses = (responses + deleteObjects).addIfNotNull(deployCommand).addIfNotNull(namespaceResponse)
