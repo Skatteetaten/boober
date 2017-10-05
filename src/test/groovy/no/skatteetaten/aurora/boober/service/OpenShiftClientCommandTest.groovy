@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftApiUrls
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
@@ -81,14 +82,15 @@ class OpenShiftClientCommandTest extends Specification {
 
       responses.each {
         def kind = it.key
-        def apiType = openShiftClient.getApiType(kind)
-        def url = "$baseUrl/$apiType/v1/namespaces/$namespace/$kind?labelSelector=app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
+        def queryString = "labelSelector=app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
+        def apiUrl = OpenShiftApiUrls.getCollectionPathForResource(baseUrl, kind, namespace)
+        def url = "$apiUrl?$queryString" as String
 
         userClient.getExistingResource(_, url) >> ResponseEntity.ok(it.value)
       }
 
     when:
-      def commands = openShiftClient.createOpenshiftDeleteCommands(name, namespace, deployId)
+      def commands = openShiftClient.createOpenShiftDeleteCommands(name, namespace, deployId)
 
     then:
       ["BuildConfig", "DeploymentConfig", "ConfigMap", "ImageStream", "Route", "Service"].forEach {
@@ -101,7 +103,7 @@ class OpenShiftClientCommandTest extends Specification {
       def responseBody = mapper.createObjectNode()
       def items = mapper.createArrayNode()
 
-      def kind = it.key.split("/")[0] + "s"
+      def kind = it.key.split("/")[0]
       def kindList = it.value.get("kind").textValue() + "List"
 
       items.add(it.value)

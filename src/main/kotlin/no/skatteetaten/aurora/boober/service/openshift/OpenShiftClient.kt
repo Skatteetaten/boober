@@ -199,32 +199,22 @@ class OpenShiftClient(
     }
 
     @JvmOverloads
-    fun createOpenshiftDeleteCommands(name: String, namespace: String, deployId: String,
-                                      kinds: List<String> = listOf("buildconfigs", "deploymentconfigs", "configmaps", "secrets", "services", "routes", "imagestreams")): List<OpenshiftCommand> {
+    fun createOpenShiftDeleteCommands(name: String, namespace: String, deployId: String,
+                                      apiResources: List<String> = listOf("BuildConfig", "DeploymentConfig", "ConfigMap", "Secret", "Service", "Route", "ImageStream")): List<OpenshiftCommand> {
         val headers: HttpHeaders = userClient.getAuthorizationHeaders()
 
-
-        return kinds.flatMap {
-            val apiType = getApiType(it)
-            val url = "$baseUrl/$apiType/v1/namespaces/$namespace/$it?labelSelector=app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
+        return apiResources.flatMap { kind ->
+            val queryString = "labelSelector=app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
+            val apiUrl = OpenShiftApiUrls.getCollectionPathForResource(baseUrl, kind, namespace)
+            val url = "$apiUrl?$queryString"
             val body = userClient.getExistingResource(headers, url)?.body
 
-            val kind = body?.get("kind")?.textValue()?.replace("List", "")
             val items = body?.get("items")?.toList() ?: emptyList()
-            items.forEach {
-                if (it is ObjectNode) {
-                    // Kind is missing from response so we have to put it back
-                    it.put("kind", kind)
-                }
-            }
-            items
+            items.filterIsInstance<ObjectNode>()
+                    .onEach { it.put("kind", kind) }
         }.map {
             OpenshiftCommand(OperationType.DELETE, payload = it, previous = it)
         }
-    }
-
-    fun getApiType(kind: String): String {
-        return if (kind in listOf("services", "configmaps", "secrets")) "api" else "oapi"
     }
 
     fun projectExist(name: String): Boolean {
