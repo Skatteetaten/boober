@@ -18,12 +18,12 @@
       "name": "reference",
       "applicationPlatform": "java",
       "deployStrategy": {
-        "type": "Rolling"
+        "type": "rolling"
       },
       "certificate": true,
-      "groupId": "ske.aurora.openshift.referanse",
-      "artifactId": "openshift-referanse-springboot-server",
-      "version": "0",
+      "groupId": "no.skatteetaten.aurora.openshift",
+      "artifactId": "openshift-reference-springboot-server",
+      "version": "1",
       "database": {
         "referanseapp": "auto"
       },
@@ -47,8 +47,7 @@
     },
     "boober-utv/about.json": {
       "cluster": "qa",
-      "secretVault": "utv",
-      "type": "development"
+      "secretVault": "utv"
     },
     "boober-utv/reference.json": {
     },
