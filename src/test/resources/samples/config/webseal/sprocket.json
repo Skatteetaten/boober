@@ -1,0 +1,18 @@
+{
+  "type": "deploy",
+  "mounts": {
+    "sprocket-config": {
+      "type": "ConfigMap",
+      "path": "/u01/foo",
+      "content": {
+        "FOO": "BAR"
+      }
+    }
+  },
+  "database": {
+    "referanse": "auto",
+    "foo": "123-456"
+  },
+  "webseal": true
+}
+
