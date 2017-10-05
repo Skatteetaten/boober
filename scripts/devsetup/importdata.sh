@@ -12,16 +12,16 @@ TOKEN=$(oc whoami -t)
 echo $TOKEN | sudo tee /opt/boober
 
 echo "Create test Secret Vault"
-http --timeout 300 PUT :8080/affiliation/paas/vault Authorization:"bearer $TOKEN"  < ${FILES_DIR}/secretVault_test.json
+#http --timeout 300 PUT :8080/affiliation/paas/vault Authorization:"bearer $TOKEN"  < ${FILES_DIR}/secretVault_test.json
 
 echo "Create utv Secret Vault"
-http --timeout 300 PUT :8080/affiliation/paas/vault Authorization:"bearer $TOKEN"  < ${FILES_DIR}/secretVault_utv.json
+#http --timeout 300 PUT :8080/affiliation/paas/vault Authorization:"bearer $TOKEN"  < ${FILES_DIR}/secretVault_utv.json
 
 echo "Add aurora config for referance app"
 http --timeout 300 PUT :8080/affiliation/paas/auroraconfig Authorization:"bearer $TOKEN"  < ${FILES_DIR}/reference.json
 
 echo "The vaults are"
-http --timeout 300 GET :8080/affiliation/paas/vault Authorization:"bearer $TOKEN"
+#http --timeout 300 GET :8080/affiliation/paas/vault Authorization:"bearer $TOKEN"
 
 echo "Dry run deploy of  application to paas-boober-dev and paas-boober-test"
-http --timeout 300 PUT :8080/affiliation/paas/deploy/dryrun Authorization:"bearer $TOKEN"  < ${FILES_DIR}/deploy.json
+#http --timeout 300 PUT :8080/affiliation/paas/deploy/dryrun Authorization:"bearer $TOKEN"  < ${FILES_DIR}/deploy.json
