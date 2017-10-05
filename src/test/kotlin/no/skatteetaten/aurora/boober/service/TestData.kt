@@ -28,10 +28,10 @@ val auroraDevelopment = AuroraApplication(
 
         name = "dev-test",
         volume = AuroraVolume(
-                config = mapOf(),
                 secrets = emptyMap(),
-                mounts = emptyList()
-
+                config = mapOf(),
+                mounts = emptyList(),
+                permissions = null
         ),
         route = AuroraRoute(emptyList()),
         deploy = AuroraDeploy(

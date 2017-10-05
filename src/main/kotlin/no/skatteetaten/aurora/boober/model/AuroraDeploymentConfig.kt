@@ -39,7 +39,8 @@ data class AuroraApplication(
 data class AuroraVolume(
         val secrets: Map<String, String>?,
         val config: Map<String, String>?,
-        val mounts: List<Mount>?
+        val mounts: List<Mount>?,
+        val permissions: AuroraPermissions?
 )
 
 data class AuroraRoute(
@@ -115,7 +116,8 @@ data class Mount(
         val mountName: String,
         val volumeName: String,
         val exist: Boolean,
-        val content: Map<String, String>?
+        val content: Map<String, String>?,
+        val permissions: AuroraPermissions? = null
 )
 
 

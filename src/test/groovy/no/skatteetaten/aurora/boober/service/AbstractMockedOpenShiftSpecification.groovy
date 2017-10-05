@@ -41,6 +41,7 @@ import spock.mock.DetachedMockFactory
     DeployBundleService,
     VaultFacade,
     ObjectMapper,
+    SecretVaultPermissionService,
     Config,
     AuroraMetrics,
     UserDetailsTokenProvider

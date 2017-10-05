@@ -10,6 +10,10 @@ import no.skatteetaten.aurora.boober.controller.internal.DeployParams
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraPermissions
+import no.skatteetaten.aurora.boober.model.AuroraVolume
+import no.skatteetaten.aurora.boober.model.Mount
+import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 
 class AuroraDeploymentConfigDeployServiceTest extends AbstractMockedOpenShiftSpecification {
@@ -24,6 +28,26 @@ class AuroraDeploymentConfigDeployServiceTest extends AbstractMockedOpenShiftSpe
   @Autowired
   DeployService service
 
+  def "Should filter out ApplicationId if user has not access to secretVault"() {
+
+    given:
+      def volume = new AuroraVolume(null, null, null, new AuroraPermissions(null, ["yoda"]))
+    when:
+      def res = service.hasAccessToAllVolumes(volume)
+    then:
+      !res
+  }
+
+  def "Should filter out ApplicationId if user has not access to one or more mounts"() {
+
+    given:
+      def volume = new AuroraVolume(null, null,
+          [new Mount("/foo", MountType.Secret, "foo", "foo", false, null, new AuroraPermissions(null, ["yoda"]))], null)
+    when:
+      def res = service.hasAccessToAllVolumes(volume)
+    then:
+      !res
+  }
   def "Should return error when name is not valid DNS952 label"() {
 
     given:
