@@ -16,9 +16,9 @@ import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
+import no.skatteetaten.aurora.boober.service.SecretVaultPermissionService
 import no.skatteetaten.aurora.boober.service.SecretVaultService
 import no.skatteetaten.aurora.boober.service.internal.AuroraVersioningException
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -52,8 +52,8 @@ class VaultFacadeTest extends Specification {
     }
 
     @Bean
-    OpenShiftClient openshiftClient() {
-      factory.Mock(OpenShiftClient)
+    SecretVaultPermissionService secretPermissionService() {
+      factory.Mock(SecretVaultPermissionService)
     }
   }
 
@@ -67,7 +67,7 @@ class VaultFacadeTest extends Specification {
   GitService gitService
 
   @Autowired
-  OpenShiftClient openshift
+  SecretVaultPermissionService permissionService
 
   private void createRepoAndSaveFiles(String affiliation, AuroraSecretVault vault) {
     GitServiceHelperKt.createInitRepo(affiliation)
@@ -84,7 +84,7 @@ class VaultFacadeTest extends Specification {
 
   def "Should successfully save secrets to git"() {
     given:
-      openshift.hasUserAccess(_, _) >> true
+      permissionService.hasUserAccess(_) >> true
 
     when:
       createRepoAndSaveFiles(affiliation, vault)
@@ -99,7 +99,7 @@ class VaultFacadeTest extends Specification {
 
   def "Should not allow users with no access to  save secrets to git"() {
     given:
-      openshift.hasUserAccess(_, _) >> false
+      permissionService.hasUserAccess(_) >> false
 
     when:
       createRepoAndSaveFiles(affiliation, vault)
@@ -114,7 +114,7 @@ class VaultFacadeTest extends Specification {
 
   def "Should not allow overwrite of changed secret with old version set"() {
     given:
-      openshift.hasUserAccess(_, _) >> true
+      permissionService.hasUserAccess(_) >> true
       createRepoAndSaveFiles(affiliation, vault)
 
     when:
@@ -129,7 +129,7 @@ class VaultFacadeTest extends Specification {
 
   def "Allow ignore versions if we specify validateVersions=false is true"() {
     given:
-      openshift.hasUserAccess(_, _) >> true
+      permissionService.hasUserAccess(_) >> true
       createRepoAndSaveFiles(affiliation, vault)
 
     when:
@@ -143,7 +143,7 @@ class VaultFacadeTest extends Specification {
 
   def "Should not reencrypt unchanged secrets"() {
     given:
-      openshift.hasUserAccess(_, _) >> true
+      permissionService.hasUserAccess(_) >> true
       createRepoAndSaveFiles(affiliation, vault)
       def storedVault = facade.find(affiliation, vaultName)
 
@@ -159,7 +159,7 @@ class VaultFacadeTest extends Specification {
 
   def "Should add secret to vault "() {
     given:
-      openshift.hasUserAccess(_, _) >> true
+      permissionService.hasUserAccess(_) >> true
       createRepoAndSaveFiles(affiliation, vault)
       def storedVault = facade.find(affiliation, vaultName)
 
@@ -181,7 +181,7 @@ class VaultFacadeTest extends Specification {
       def newVault = new AuroraSecretVault(vaultName, ['latest.properties': "FOO=BAR", "1.2.3.properties": "BAZ"], null,
           [:])
 
-      openshift.hasUserAccess(_, _) >> true
+      permissionService.hasUserAccess(_) >> true
       createRepoAndSaveFiles(affiliation, newVault)
       def storedVault = facade.find(affiliation, vaultName)
 
@@ -200,7 +200,7 @@ class VaultFacadeTest extends Specification {
 
   def "Should update one file in secret"() {
     given:
-      openshift.hasUserAccess(_, _) >> true
+      permissionService.hasUserAccess(_) >> true
       createRepoAndSaveFiles(affiliation, vault)
       def storedVault = facade.find(affiliation, vaultName)
 
@@ -216,7 +216,7 @@ class VaultFacadeTest extends Specification {
 
   def "Should remove vault"() {
     given:
-      openshift.hasUserAccess(_, _) >> true
+      permissionService.hasUserAccess(_) >> true
       createRepoAndSaveFiles(affiliation, vault)
 
     when:
@@ -228,7 +228,7 @@ class VaultFacadeTest extends Specification {
 
   def "Should not remove other vaults when adding a new"() {
     given:
-      openshift.hasUserAccess(_, _) >> true
+      permissionService.hasUserAccess(_) >> true
       createRepoAndSaveFiles(affiliation, vault)
 
     when:
@@ -247,7 +247,7 @@ class VaultFacadeTest extends Specification {
 
   def "Should list all vaults"() {
     given:
-      openshift.hasUserAccess(_, _) >> true
+      permissionService.hasUserAccess(_) >> true
       createRepoAndSaveFiles(affiliation, vault)
       def newVault = new AuroraSecretVault("vault2", secret)
       facade.save(affiliation, newVault, false)
@@ -264,13 +264,13 @@ class VaultFacadeTest extends Specification {
   def "Should not include vault you cannot admin"() {
     given:
       def permissions = new AuroraPermissions(["UTV"], ["UTV"])
-      3 * openshift.hasUserAccess(_, _) >> true
+      3 * permissionService.hasUserAccess(_) >> true
       createRepoAndSaveFiles(affiliation, vault)
       def newVault = new AuroraSecretVault("vault2", secret, permissions)
       facade.save(affiliation, newVault, false)
 
     when:
-      1 * openshift.hasUserAccess("test", permissions) >> false
+      1 * permissionService.hasUserAccess(permissions) >> false
 
       def vaults = facade.listVaults(affiliation)
 

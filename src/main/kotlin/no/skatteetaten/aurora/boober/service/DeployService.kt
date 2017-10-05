@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.internal.DeployParams
 import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.AuroraVolume
 import no.skatteetaten.aurora.boober.model.DeployBundle
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.model.TemplateType.build
@@ -32,6 +33,7 @@ class DeployService(
         val openShiftClient: OpenShiftClient,
         val gitService: GitService,
         val deployBundleService: DeployBundleService,
+        val secretVaultPermissionService: SecretVaultPermissionService,
         val mapper: ObjectMapper,
         val dockerService: DockerService,
         @Value("\${openshift.cluster}") val cluster: String,
@@ -69,6 +71,7 @@ class DeployService(
 
         return LinkedList(auroraApplications
                 .filter { it.cluster == cluster }
+                .filter { hasAccessToAllVolumes(it.volume) }
                 .map { application ->
                     //her kan vi ikke gjøre det på denne måten.
                     //vi må finne ut om prosjektet finnes.
@@ -91,6 +94,21 @@ class DeployService(
 
                     AuroraApplicationCommand(deployId, application, openShiftCommand, tagCmd)
                 })
+    }
+
+    fun hasAccessToAllVolumes(volume: AuroraVolume?): Boolean {
+        if (volume == null) return true
+
+        val secretAccess = secretVaultPermissionService.hasUserAccess(volume.permissions)
+
+        val mountsWithNoPermissions = volume.mounts?.filter {
+            !secretVaultPermissionService.hasUserAccess(it.permissions)
+        } ?: emptyList()
+        val volumeAccess = mountsWithNoPermissions.isEmpty()
+
+        //TODO: Her må vi finne ut hva vi skal returnere for å vise at disse applikasjonen ikke blir deployet fordi man ikke har tilgang
+        return secretAccess && volumeAccess
+
     }
 
     private fun setupApplication(cmd: AuroraApplicationCommand, deploy: Boolean): AuroraApplicationResult {

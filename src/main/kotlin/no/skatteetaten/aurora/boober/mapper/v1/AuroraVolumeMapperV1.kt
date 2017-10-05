@@ -30,8 +30,10 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>,
                     vaults[it.asText()]?.secrets
                 }),
                 config = auroraConfigFields.getConfigMap(configHandlers),
-                mounts = auroraConfigFields.getMounts(mountHandlers, vaults)
-        )
+                mounts = auroraConfigFields.getMounts(mountHandlers, vaults),
+                permissions = auroraConfigFields.extractOrNull("secretVault", {
+                    vaults[it.asText()]?.permissions
+                }))
     }
 
 
