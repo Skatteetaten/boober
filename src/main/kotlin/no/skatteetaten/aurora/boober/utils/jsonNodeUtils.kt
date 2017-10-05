@@ -65,7 +65,7 @@ fun JsonNode.updateField(source: JsonNode, root: String, field: String, required
 }
 
 fun JsonNode?.startsWith(pattern: String, message: String): Exception? {
-    if (this == null) {
+    if (this == null || !this.isTextual) {
         return IllegalArgumentException(message)
     }
     if (!this.textValue().startsWith(pattern)) {
@@ -77,7 +77,7 @@ fun JsonNode?.startsWith(pattern: String, message: String): Exception? {
 }
 
 fun JsonNode?.pattern(pattern: String, message: String): Exception? {
-    if (this == null) {
+    if (this == null || !this.isTextual) {
         return IllegalArgumentException(message)
     }
     if (!Regex(pattern).matches(this.textValue())) {
@@ -89,7 +89,7 @@ fun JsonNode?.pattern(pattern: String, message: String): Exception? {
 }
 
 fun JsonNode?.oneOf(candidates: List<String>): Exception? {
-    if (this == null) {
+    if (this == null || !this.isTextual) {
         return IllegalArgumentException("Must be one of [" + candidates.joinToString() + "]")
     }
     if (!candidates.contains(this.textValue())) {
@@ -106,7 +106,7 @@ fun JsonNode?.required(message: String): Exception? {
 }
 
 fun JsonNode?.notBlank(message: String): Exception? {
-    if (this == null || this.isInt || this.textValue().isBlank()) {
+    if (this == null || !this.isTextual || this.textValue().isBlank()) {
         return IllegalArgumentException(message)
     }
 
@@ -114,7 +114,7 @@ fun JsonNode?.notBlank(message: String): Exception? {
 }
 
 fun JsonNode?.length(length: Int, message: String): Exception? {
-    if (this == null) {
+    if (this == null || !this.isTextual) {
         return IllegalArgumentException(message)
     } else if (this.textValue().length > length) {
         return IllegalArgumentException(message)
