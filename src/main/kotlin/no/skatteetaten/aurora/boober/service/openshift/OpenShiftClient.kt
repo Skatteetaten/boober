@@ -52,14 +52,14 @@ class OpenShiftClient(
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftClient::class.java)
 
-    fun performOpenShiftCommand(namespace: String, cmd: OpenshiftCommand): OpenShiftResponse {
+    fun performOpenShiftCommand(namespace: String, command: OpenshiftCommand): OpenShiftResponse {
 
-        val kind = cmd.payload.openshiftKind
-        val name = cmd.payload.openshiftName
+        val kind = command.payload.openshiftKind
+        val name = command.payload.openshiftName
 
-        if (cmd.operationType == OperationType.CREATE && kind == "rolebinding" && name == "admin") {
-            createUpdateRolebindingCommand(cmd.payload, namespace)
-        } else cmd
+        val actualCommand = if (command.operationType == OperationType.CREATE && kind == "rolebinding" && name == "admin") {
+            createUpdateRolebindingCommand(command.payload, namespace)
+        } else command
 
         val performClient = if (kind == "namespace") {
             serviceAccountClient
@@ -68,13 +68,13 @@ class OpenShiftClient(
         }
 
         return try {
-            val res = when (cmd.operationType) {
-                OperationType.CREATE -> performClient.post(kind, name, namespace, cmd.payload).body
-                OperationType.UPDATE -> performClient.put(kind, name, namespace, cmd.payload).body
+            val res = when (actualCommand.operationType) {
+                OperationType.CREATE -> performClient.post(kind, name, namespace, actualCommand.payload).body
+                OperationType.UPDATE -> performClient.put(kind, name, namespace, actualCommand.payload).body
                 OperationType.DELETE -> performClient.delete(kind, name, namespace).body
-                OperationType.NOOP -> cmd.payload
+                OperationType.NOOP -> actualCommand.payload
             }
-            OpenShiftResponse(cmd, res)
+            OpenShiftResponse(actualCommand, res)
         } catch (e: OpenShiftException) {
             val response = if (e.cause is HttpClientErrorException) {
                 val body = e.cause.responseBodyAsString
@@ -86,7 +86,7 @@ class OpenShiftClient(
             } else {
                 null
             }
-            OpenShiftResponse(cmd, response, success = false, exception = e.message)
+            OpenShiftResponse(actualCommand, response, success = false, exception = e.message)
         }
     }
 
