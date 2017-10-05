@@ -14,7 +14,8 @@
       "affiliation": "aos",
       "booberDeployId": "123",
       "name": "aos-simple",
-      "deployTag": "1.0.4"
+      "deployTag": "1.0.4",
+      "paused": "true"
     },
     "name": "aos-simple"
   },
@@ -44,7 +45,7 @@
         }
       }
     ],
-    "replicas": 1,
+    "replicas": 0,
     "selector": {
       "name": "aos-simple"
     },
@@ -56,7 +57,8 @@
           "affiliation": "aos",
           "booberDeployId": "123",
           "name": "aos-simple",
-          "deployTag": "1.0.4"
+          "deployTag": "1.0.4",
+          "paused": "true"
         }
       },
       "spec": {
