@@ -47,7 +47,7 @@ class DeployServiceFromGitFailTest extends AbstractMockedOpenShiftSpecification 
       new OpenshiftCommand(OperationType.UPDATE, namespaceJson, null, namespaceJson)
     }
     openShiftClient.performOpenShiftCommand(_, _) >> {
-      def cmd = it[0]
+      def cmd = it[1]
       def body = '''{ "response": "failed"}'''.bytes
       def cause = new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Bad Request", body, Charset.defaultCharset())
       def error = new OpenShiftException("Error saving url", cause)

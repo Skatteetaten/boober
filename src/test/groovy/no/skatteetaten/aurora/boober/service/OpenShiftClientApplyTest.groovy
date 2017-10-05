@@ -66,6 +66,10 @@ class OpenShiftClientApplyTest extends Specification {
   OpenShiftResourceClient userClient
 
   @Autowired
+  @ClientType(SERVICE_ACCOUNT)
+  OpenShiftResourceClient serviceAccountClient
+
+  @Autowired
   ObjectMapper mapper
 
   def "Should throw exception if unknown error occurred"() {
@@ -75,6 +79,7 @@ class OpenShiftClientApplyTest extends Specification {
 
       def projectRequest = mapper.readTree(prFile)
 
+      serviceAccountClient.getExistingResource(_, _) >> new ResponseEntity<JsonNode>(HttpStatus.OK)
       userClient.get("project", "foobar", "foobar") >> {
         throw new OpenShiftException("Does not exist", new HttpClientErrorException(HttpStatus.SERVICE_UNAVAILABLE))
       }
@@ -115,6 +120,7 @@ class OpenShiftClientApplyTest extends Specification {
       def oldResource = mapper.readTree(this.getClass().getResource("/openshift-objects/${type}.json"))
       def newResource = mapper.readTree(this.getClass().getResource("/openshift-objects/$type-new.json"))
 
+      serviceAccountClient.getExistingResource(_, _) >> new ResponseEntity<JsonNode>(HttpStatus.OK)
 
       userClient.get(type, "referanse", "foobar") >>
           new ResponseEntity(oldResource, HttpStatus.OK)
@@ -157,7 +163,7 @@ class OpenShiftClientApplyTest extends Specification {
       }
     when:
 
-      def result = openShiftClient.performOpenShiftCommand(cmd, "foo")
+      def result = openShiftClient.performOpenShiftCommand("foo", cmd)
     then:
       !result.success
       result.responseBody.get("failed").asText() == "true"
@@ -181,7 +187,7 @@ class OpenShiftClientApplyTest extends Specification {
       }
     when:
 
-      def result = openShiftClient.performOpenShiftCommand(cmd, "foo")
+      def result = openShiftClient.performOpenShiftCommand("foo", cmd)
     then:
       !result.success
       result.responseBody.get("error").asText() == "failed"

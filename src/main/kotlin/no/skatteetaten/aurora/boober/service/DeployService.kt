@@ -6,7 +6,6 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraVolume
-import no.skatteetaten.aurora.boober.model.DeployBundle
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.model.TemplateType.build
 import no.skatteetaten.aurora.boober.model.TemplateType.development
@@ -63,12 +62,12 @@ class DeployService(
 
         return deployBundleService.withDeployBundle(affiliation, deployParams.overrides, {
             val deploymentSpecs: List<AuroraDeploymentSpec> = deployBundleService.createAuroraDeploymentSpecs(it, applicationIds)
-            val res = deploymentSpecs
+            val deployResults: List<AuroraDeployResult> = deploymentSpecs
                     .filter { it.cluster == cluster }
                     .filter { hasAccessToAllVolumes(it.volume) }
                     .map { deployFromSpec(it, deployParams.deploy) }
-            markRelease(res, it.repo)
-            res
+            markRelease(deployResults, it.repo)
+            deployResults
         })
     }
 
@@ -79,7 +78,7 @@ class DeployService(
         val openShiftResponses: List<OpenShiftResponse> = performOpenShiftCommands(deployId, deploymentSpec, shouldDeploy)
         val redeployResponse: ResponseEntity<JsonNode>? = if (shouldDeploy) triggerRedeploy(deploymentSpec, openShiftResponses) else null
 
-        val success = openShiftResponses.any { !it.success }
+        val success = openShiftResponses.all { it.success }
         return AuroraDeployResult(deployId, deploymentSpec, openShiftResponses, redeployResponse, success)
     }
 
@@ -111,7 +110,7 @@ class DeployService(
         }
 
         val deleteOldObjectResponses = openShiftClient
-                .createOpenshiftDeleteCommands(name, namespace, deployId)
+                .createOpenShiftDeleteCommands(name, namespace, deployId)
                 .map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         return generateProjectResponses.addIfNotNull(openShiftApplicationResponses).addIfNotNull(deleteOldObjectResponses)
@@ -127,7 +126,7 @@ class DeployService(
         val tagCommandResponse = tagCommand?.let { dockerService.tag(it) }
 
         val namespace = deploymentSpec.namespace
-        generateRedeployResource(deploymentSpec, openShiftResponses)
+        generateRedeployResourceFromSpec(deploymentSpec, openShiftResponses)
                 ?.let { openShiftClient.createOpenShiftCommand(namespace, it) }
                 ?.let { openShiftClient.performOpenShiftCommand(namespace, it) }
         return tagCommandResponse
@@ -172,11 +171,17 @@ class DeployService(
     }
 
 
-    fun generateRedeployResource(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>): JsonNode? {
+    fun generateRedeployResourceFromSpec(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>): JsonNode? {
 
         val type: TemplateType = deploymentSpec.type
         val name: String = deploymentSpec.name
+        val dockerImage: String? = deploymentSpec.deploy?.dockerImage
 
+        return generateRedeployResource(type, name, dockerImage, openShiftResponses)
+
+    }
+
+    fun generateRedeployResource(type: TemplateType, name: String, dockerImage: String?, openShiftResponses: List<OpenShiftResponse>): JsonNode? {
         if (type == build) {
             return null
         }
@@ -201,12 +206,10 @@ class DeployService(
                 openShiftObjectGenerator.generateDeploymentRequest(name)
             }
         }
-        if (deploymentSpec.deploy == null) {
-            throw NullPointerException("Deploy should not be null")
+        if (dockerImage == null) {
+            throw NullPointerException("DockerImage must be set")
         }
-        val dockerImage: String = deploymentSpec.deploy.dockerImage
         return openShiftObjectGenerator.generateImageStreamImport(name, dockerImage)
-
     }
 
 
