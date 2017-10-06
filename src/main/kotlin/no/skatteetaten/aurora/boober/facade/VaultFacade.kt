@@ -32,7 +32,6 @@ class VaultFacade(
         val repo = git ?: getRepo(affiliation)
 
         val vaults = secretVaultService.getVaults(repo)
-                .filter { secretVaultPermissionService.hasUserAccess(it.value.permissions) }
                 .values.toList()
         if (git == null) {
             gitService.closeRepository(repo)
@@ -86,7 +85,7 @@ class VaultFacade(
         //TODO: What if the vault does not exist?
         val oldVault = secretVaultService.createVault(vault, vaultFiles)
 
-        if (!secretVaultPermissionService.hasUserAccess(oldVault.permissions)) {
+        if (!oldVault.canEdit) {
             throw IllegalAccessError("You do not have permission to operate on his vault")
         }
 
