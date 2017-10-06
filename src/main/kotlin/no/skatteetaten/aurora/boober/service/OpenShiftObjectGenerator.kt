@@ -63,7 +63,7 @@ class OpenShiftObjectGenerator(
                 .addIfNotNull(generateRolebindings(auroraDeploymentSpec.permissions))
     }
 
-    fun generateProject(auroraDeploymentSpec: AuroraDeploymentSpec): JsonNode {
+    fun generateProjectRequest(auroraDeploymentSpec: AuroraDeploymentSpec): JsonNode {
 
         return mergeVelocityTemplate("projectrequest.json", mapOf(
                 "namespace" to auroraDeploymentSpec.namespace

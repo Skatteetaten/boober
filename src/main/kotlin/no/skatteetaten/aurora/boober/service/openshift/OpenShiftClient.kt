@@ -68,7 +68,7 @@ class OpenShiftClient(
         }
 
         return try {
-            val res = when (actualCommand.operationType) {
+            val res: JsonNode = when (actualCommand.operationType) {
                 OperationType.CREATE -> performClient.post(kind, name, namespace, actualCommand.payload).body
                 OperationType.UPDATE -> performClient.put(kind, name, namespace, actualCommand.payload).body
                 OperationType.DELETE -> performClient.delete(kind, name, namespace).body
@@ -235,6 +235,4 @@ class OpenShiftClient(
 
         return OpenshiftCommand(OperationType.UPDATE, existing, previous = prev)
     }
-
-
 }

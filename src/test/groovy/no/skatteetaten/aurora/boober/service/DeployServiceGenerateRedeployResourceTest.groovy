@@ -19,7 +19,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 
-class DeployServiceGenerateDeployResourceTest extends AbstractMockedOpenShiftSpecification {
+class DeployServiceGenerateRedeployResourceTest extends AbstractMockedOpenShiftSpecification {
 
   @Autowired
   OpenShiftClient openShiftClient

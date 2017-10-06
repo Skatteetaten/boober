@@ -9,27 +9,9 @@ import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigValidator
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecMapperV1
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraBuildMapperV1
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeployMapperV1
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraLocalTemplateMapperV1
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraRouteMapperV1
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraTemplateMapperV1
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraVolumeMapperV1
-import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.DeployBundle
-import no.skatteetaten.aurora.boober.model.TemplateType
-import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
-import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
-import no.skatteetaten.aurora.boober.service.internal.AuroraVersioningException
-import no.skatteetaten.aurora.boober.service.internal.Error
-import no.skatteetaten.aurora.boober.service.internal.Result
-import no.skatteetaten.aurora.boober.service.internal.ValidationError
-import no.skatteetaten.aurora.boober.service.internal.VersioningError
-import no.skatteetaten.aurora.boober.service.internal.onErrorThrow
+import no.skatteetaten.aurora.boober.mapper.v1.*
+import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.service.internal.*
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.required
 import org.eclipse.jgit.api.Git
@@ -103,6 +85,10 @@ class DeployBundleService(
     fun validate(deployBundle: DeployBundle) {
 
         tryCreateAuroraDeploymentSpecs(deployBundle, deployBundle.auroraConfig.getApplicationIds())
+    }
+
+    fun createAuroraDeploymentSpec(affiliation: String, applicationId: ApplicationId, overrides: List<AuroraConfigFile>): AuroraDeploymentSpec {
+        return withDeployBundle(affiliation, overrides, { createAuroraDeploymentSpec(it, applicationId) })
     }
 
     fun createAuroraDeploymentSpecs(deployBundle: DeployBundle, applicationIds: List<ApplicationId>): List<AuroraDeploymentSpec> {

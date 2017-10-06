@@ -2,11 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.AuroraVolume
-import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.TemplateType.build
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.internal.AuroraDeployResult
@@ -53,7 +49,8 @@ class DeployService(
     private val FAILED_PREFIX = "FAILED"
 
 
-    fun executeDeploy(affiliation: String, deployParams: DeployParams): List<AuroraDeployResult> {
+    @JvmOverloads
+    fun executeDeploy(affiliation: String, deployParams: DeployParams, dryRun: Boolean = false): List<AuroraDeployResult> {
 
         val applicationIds = deployParams.applicationIds
         if (applicationIds.isEmpty()) {
@@ -65,13 +62,15 @@ class DeployService(
             val deployResults: List<AuroraDeployResult> = deploymentSpecs
                     .filter { it.cluster == cluster }
                     .filter { hasAccessToAllVolumes(it.volume) }
-                    .map { deployFromSpec(it, deployParams.deploy) }
-            markRelease(deployResults, it.repo)
+                    .map { deployFromSpec(it, deployParams.deploy, dryRun) }
+            if (!dryRun) {
+                markRelease(deployResults, it.repo)
+            }
             deployResults
         })
     }
 
-    fun deployFromSpec(deploymentSpec: AuroraDeploymentSpec, shouldDeploy: Boolean): AuroraDeployResult {
+    fun deployFromSpec(deploymentSpec: AuroraDeploymentSpec, shouldDeploy: Boolean, dryRun: Boolean = false): AuroraDeployResult {
 
         val deployId = UUID.randomUUID().toString()
 
@@ -89,7 +88,7 @@ class DeployService(
         val namespace = deploymentSpec.namespace
         val name = deploymentSpec.name
 
-        val generateProjectResponses = openShiftObjectGenerator.generateProject(deploymentSpec).let {
+        val generateProjectResponses = openShiftObjectGenerator.generateProjectRequest(deploymentSpec).let {
             val createCommand = openShiftClient.createOpenShiftCommand(namespace, it)
             val createResponse = openShiftClient.performOpenShiftCommand(namespace, createCommand)
             val updateNamespaceCommand = openShiftClient.createUpdateNamespaceCommand(namespace, affiliation)
