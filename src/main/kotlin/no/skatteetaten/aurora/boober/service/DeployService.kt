@@ -74,14 +74,15 @@ class DeployService(
 
         val deployId = UUID.randomUUID().toString()
 
-        val openShiftResponses: List<OpenShiftResponse> = performOpenShiftCommands(deployId, deploymentSpec, shouldDeploy)
-        val redeployResponse: ResponseEntity<JsonNode>? = if (shouldDeploy) triggerRedeploy(deploymentSpec, openShiftResponses) else null
+        val openShiftResponses: List<OpenShiftResponse> = performOpenShiftCommands(deployId, deploymentSpec)
+        val performDeploy = deploymentSpec.deploy?.flags?.pause ?: false || !shouldDeploy
+        val redeployResponse: ResponseEntity<JsonNode>? = if (performDeploy) triggerRedeploy(deploymentSpec, openShiftResponses) else null
 
         val success = openShiftResponses.all { it.success }
         return AuroraDeployResult(deployId, deploymentSpec, openShiftResponses, redeployResponse, success)
     }
 
-    private fun performOpenShiftCommands(deployId: String, deploymentSpec: AuroraDeploymentSpec, shouldDeploy: Boolean): List<OpenShiftResponse> {
+    private fun performOpenShiftCommands(deployId: String, deploymentSpec: AuroraDeploymentSpec): List<OpenShiftResponse> {
 
         val affiliation = deploymentSpec.affiliation
 
