@@ -272,7 +272,7 @@ class VaultFacadeTest extends Specification {
     when:
       1 * permissionService.hasUserAccess(permissions) >> false
 
-      def vaults = facade.listVaults(affiliation)
+      def vaults = facade.listVaults(affiliation).findAll { it.canEdit }
 
 
     then:
