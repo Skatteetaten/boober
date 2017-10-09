@@ -8,7 +8,7 @@
   "liveness": true,
   "readiness": false,
   "deployStrategy": {
-    "timeout": 600
+    "type": "recreate"
   },
   "pause": true
 }

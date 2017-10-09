@@ -27,12 +27,12 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
 
     val handlers = dbHandlers + listOf(
 
-            AuroraConfigFieldHandler("deployStrategy/type", defaultValue = "recreate", validator = { it.oneOf(listOf("recreate", "rolling")) }),
-            AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = "120"),
+            AuroraConfigFieldHandler("deployStrategy/type", defaultValue = "rolling", validator = { it.oneOf(listOf("recreate", "rolling")) }),
+            AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = "180"),
             AuroraConfigFieldHandler("database", defaultValue = "false"),
             AuroraConfigFieldHandler("debug", defaultValue = "false"),
             AuroraConfigFieldHandler("alarm", defaultValue = "true"),
-            AuroraConfigFieldHandler("resources/cpu/min", defaultValue = "0"),
+            AuroraConfigFieldHandler("resources/cpu/min", defaultValue = "100m"),
             AuroraConfigFieldHandler("resources/cpu/max", defaultValue = "2000m"),
             AuroraConfigFieldHandler("resources/memory/min", defaultValue = "128Mi"),
             AuroraConfigFieldHandler("resources/memory/max", defaultValue = "256Mi"),
