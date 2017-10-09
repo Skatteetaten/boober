@@ -1,9 +1,6 @@
 {
   "permissions": {
-    "admin": {
-      "groups": "APP_PaaS_drift APP_PaaS_utv",
-      "users": "foo"
-    }
+    "admin": "APP_PaaS_drift APP_PaaS_utv"
   },
   "affiliation" : "aos"
 }
