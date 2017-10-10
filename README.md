@@ -22,7 +22,7 @@ or run from your ide.
 
 Then run the script 
 
-    scripts/devsetup/setupdev.sh
+    scripts/devsetup/importdata.sh
      
 to import some dev/test data.
 
