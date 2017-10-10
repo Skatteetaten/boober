@@ -37,7 +37,6 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
 
     private fun handleException(e: Exception, request: WebRequest, httpStatus: HttpStatus): ResponseEntity<*> {
 
-        e.printStackTrace()
         val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
         val message = createErrorMessage(e)
 
@@ -62,8 +61,12 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
 
         val cause = e.cause
         val openShiftMessage = if (cause is org.springframework.web.client.HttpClientErrorException) {
-            val json: Map<*, *>? = jacksonObjectMapper().readValue(cause.responseBodyAsString, Map::class.java)
-            if (json?.get("kind")!! == "Status") json["message"] as String? else null
+            try {
+                val json: Map<*, *>? = jacksonObjectMapper().readValue(cause.responseBodyAsString, Map::class.java)
+                if (json?.get("kind")!! == "Status") json["message"] as String? else null
+            } catch (e: Exception) {
+                cause.responseBodyAsString
+            }
         } else null
 
         return StringBuilder().apply {

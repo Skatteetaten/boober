@@ -57,10 +57,6 @@ class OpenShiftClient(
         val kind = command.payload.openshiftKind
         val name = command.payload.openshiftName
 
-        val actualCommand = if (command.operationType == OperationType.CREATE && kind == "rolebinding" && name == "admin") {
-            createUpdateRolebindingCommand(command.payload, namespace)
-        } else command
-
         val performClient = if (kind == "namespace") {
             serviceAccountClient
         } else {
@@ -68,13 +64,13 @@ class OpenShiftClient(
         }
 
         return try {
-            val res: JsonNode = when (actualCommand.operationType) {
-                OperationType.CREATE -> performClient.post(kind, name, namespace, actualCommand.payload).body
-                OperationType.UPDATE -> performClient.put(kind, name, namespace, actualCommand.payload).body
+            val res: JsonNode = when (command.operationType) {
+                OperationType.CREATE -> performClient.post(kind, name, namespace, command.payload).body
+                OperationType.UPDATE -> performClient.put(kind, name, namespace, command.payload).body
                 OperationType.DELETE -> performClient.delete(kind, name, namespace).body
-                OperationType.NOOP -> actualCommand.payload
+                OperationType.NOOP -> command.payload
             }
-            OpenShiftResponse(actualCommand, res)
+            OpenShiftResponse(command, res)
         } catch (e: OpenShiftException) {
             val response = if (e.cause is HttpClientErrorException) {
                 val body = e.cause.responseBodyAsString
@@ -86,7 +82,7 @@ class OpenShiftClient(
             } else {
                 null
             }
-            OpenShiftResponse(actualCommand, response, success = false, exception = e.message)
+            OpenShiftResponse(command, response, success = false, exception = e.message)
         }
     }
 
