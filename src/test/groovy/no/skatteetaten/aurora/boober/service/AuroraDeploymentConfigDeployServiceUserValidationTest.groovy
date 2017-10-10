@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.service
 
 import org.springframework.beans.factory.annotation.Autowired
 
-import no.skatteetaten.aurora.boober.controller.internal.DeployParams
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
