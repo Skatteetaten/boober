@@ -53,7 +53,6 @@ class OpenShiftObjectGenerator(
                     .addIfNotNull(generateRoute(auroraDeploymentSpec, labels))
                     .addIfNotNull(generateTemplate(auroraDeploymentSpec))
                     .addIfNotNull(generateLocalTemplate(auroraDeploymentSpec))
-                    .addIfNotNull(generateRolebindings(auroraDeploymentSpec.permissions))
         })
     }
 
@@ -64,7 +63,7 @@ class OpenShiftObjectGenerator(
         ))
     }
 
-    fun generateRolebindings(permissions: Permissions): List<JsonNode>? {
+    fun generateRolebindings(permissions: Permissions): List<JsonNode> {
         val admin = mergeVelocityTemplate("rolebinding.json", mapOf(
                 "permission" to permissions.admin,
                 "name" to "admin"
@@ -77,7 +76,6 @@ class OpenShiftObjectGenerator(
         }
 
         return listOf(admin).addIfNotNull(view)
-
     }
 
     fun generateDeploymentConfig(deploymentSpec: AuroraDeploymentSpec, deployId: String): JsonNode? {

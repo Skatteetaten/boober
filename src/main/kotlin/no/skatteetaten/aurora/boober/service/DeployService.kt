@@ -78,29 +78,21 @@ class DeployService(
 
         val deployId = UUID.randomUUID().toString()
 
-        val openShiftResponses: List<OpenShiftResponse> = performOpenShiftCommands(deployId, deploymentSpec)
-        val performDeploy = !(deploymentSpec.deploy?.flags?.pause ?: false) && shouldDeploy
-        val redeployResponse: ResponseEntity<JsonNode>? = if (performDeploy) triggerRedeploy(deploymentSpec, openShiftResponses) else null
+        val environmentResponses = prepareDeployEnvironment(deploymentSpec)
 
-        val success = openShiftResponses.all { it.success }
+        val applicationResponses: List<OpenShiftResponse> = applyOpenShiftApplicationObjects(deployId, deploymentSpec)
+        val performDeploy = !(deploymentSpec.deploy?.flags?.pause ?: false) && shouldDeploy
+        val redeployResponse: ResponseEntity<JsonNode>? = if (performDeploy) triggerRedeploy(deploymentSpec, applicationResponses) else null
+
+        val success = applicationResponses.all { it.success }
+        val openShiftResponses = environmentResponses + applicationResponses
         return AuroraDeployResult(deployId, deploymentSpec, openShiftResponses, redeployResponse, success)
     }
 
-    private fun performOpenShiftCommands(deployId: String, deploymentSpec: AuroraDeploymentSpec): List<OpenShiftResponse> {
-
-        val affiliation = deploymentSpec.affiliation
+    private fun applyOpenShiftApplicationObjects(deployId: String, deploymentSpec: AuroraDeploymentSpec): List<OpenShiftResponse> {
 
         val namespace = deploymentSpec.namespace
         val name = deploymentSpec.name
-
-        val generateProjectResponses = openShiftObjectGenerator.generateProjectRequest(deploymentSpec).let {
-            val createCommand = openShiftClient.createOpenShiftCommand(namespace, it)
-            val createResponse = openShiftClient.performOpenShiftCommand(namespace, createCommand)
-            val updateNamespaceCommand = openShiftClient.createUpdateNamespaceCommand(namespace, affiliation)
-            val updateNamespaceResponse = openShiftClient.performOpenShiftCommand(namespace, updateNamespaceCommand)
-
-            listOf(createResponse, updateNamespaceResponse)
-        }
 
         val openShiftApplicationObjects: List<JsonNode> = openShiftObjectGenerator.generateApplicationObjects(deploymentSpec, deployId)
         val openShiftApplicationResponses: List<OpenShiftResponse> = openShiftApplicationObjects.map {
@@ -109,7 +101,7 @@ class DeployService(
         }
 
         if (openShiftApplicationResponses.any { !it.success }) {
-            logger.warn("One or more commands failed for $namespace/$name")
+            logger.warn("One or more commands failed for $namespace/$name. Will not delete objects from previous deploys.")
             return openShiftApplicationResponses
         }
 
@@ -117,7 +109,30 @@ class DeployService(
                 .createOpenShiftDeleteCommands(name, namespace, deployId)
                 .map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
-        return generateProjectResponses.addIfNotNull(openShiftApplicationResponses).addIfNotNull(deleteOldObjectResponses)
+        return openShiftApplicationResponses.addIfNotNull(deleteOldObjectResponses)
+    }
+
+    private fun prepareDeployEnvironment(deploymentSpec: AuroraDeploymentSpec): List<OpenShiftResponse> {
+
+        val affiliation = deploymentSpec.affiliation
+        val namespace = deploymentSpec.namespace
+
+        return openShiftObjectGenerator.generateProjectRequest(deploymentSpec).let {
+            val createResponse = openShiftClient.createOpenShiftCommand(namespace, it).let {
+                openShiftClient.performOpenShiftCommand(namespace, it)
+            }
+
+            val updateNamespaceResponse = openShiftClient.createUpdateNamespaceCommand(namespace, affiliation).let {
+                openShiftClient.performOpenShiftCommand(namespace, it)
+            }
+
+            val updateRoleBindingsResponse = openShiftObjectGenerator.generateRolebindings(deploymentSpec.permissions).map {
+                openShiftClient.createOpenShiftCommand(namespace, it)
+            }.map { openShiftClient.performOpenShiftCommand(namespace, it) }
+
+
+            listOf(createResponse, updateNamespaceResponse) + updateRoleBindingsResponse
+        }
     }
 
     private fun triggerRedeploy(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>): ResponseEntity<JsonNode>? {
