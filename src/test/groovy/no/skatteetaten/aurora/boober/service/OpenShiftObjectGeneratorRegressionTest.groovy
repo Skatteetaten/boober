@@ -21,7 +21,8 @@ class OpenShiftObjectGeneratorRegressionTest extends AbstractMockedOpenShiftSpec
           BOOL_CONFIG                : true,
           INT_CONFIG                 : 1,
           FLOAT_CONFIG               : 1.101,
-          STRING_CONFIG              : "Just an ordinary string"
+          STRING_CONFIG              : "Just an ordinary string",
+          NULL_CONFIG                : null
       ]
     when:
 
@@ -34,7 +35,7 @@ class OpenShiftObjectGeneratorRegressionTest extends AbstractMockedOpenShiftSpec
         assert valueNode.textual
 
         def jsonValue = valueNode.textValue()
-        assert jsonValue == "$value"
+        assert jsonValue == value != null ? "$value" : ""
       }
   }
 }
