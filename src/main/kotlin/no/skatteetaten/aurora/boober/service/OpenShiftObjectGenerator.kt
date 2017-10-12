@@ -382,12 +382,7 @@ class OpenShiftObjectGenerator(
 
     private fun mergeVelocityTemplate(template: String, content: Map<String, Any?>): JsonNode {
 
-        class EscapeTools {
-            fun json(o : Any?) : String = (o ?: "").let { StringEscapeUtils.escapeJavaScript(it.toString()) }
-        }
-
         val context = VelocityContext().apply {
-            put("esc", EscapeTools())
             content.forEach { put(it.key, it.value) }
         }
         val t = ve.getTemplate("templates/$template.vm")
