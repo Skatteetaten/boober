@@ -18,7 +18,7 @@
     #if($velocityCount != 1)
       ,
     #end
-    "${config.key}": "${config.value}"
+    "${config.key}": "${esc.json(${config.value})}"
   #end
 }
 #end
