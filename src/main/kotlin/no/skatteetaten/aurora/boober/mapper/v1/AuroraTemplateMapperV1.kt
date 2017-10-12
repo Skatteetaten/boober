@@ -7,8 +7,7 @@ import no.skatteetaten.aurora.boober.model.AuroraTemplate
 import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 
-class AuroraTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>,
-                             val openShiftClient: OpenShiftClient) {
+class AuroraTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>) {
 
 
     val parameterHandlers = findParameters()
@@ -20,8 +19,10 @@ class AuroraTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>,
 
                 if (template == null) {
                     IllegalArgumentException("Template is required")
+/*
                 } else if (!openShiftClient.templateExist(template)) {
                     IllegalArgumentException("Template $template does not exist in openshift namespace")
+*/
                 } else {
                     null
                 }

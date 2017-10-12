@@ -19,8 +19,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.pattern
 
-class AuroraDeploymentSpecMapperV1(val openShiftClient: OpenShiftClient,
-                                   val applicationId: ApplicationId) {
+class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
 
 
     val handlers = listOf(
@@ -28,10 +27,10 @@ class AuroraDeploymentSpecMapperV1(val openShiftClient: OpenShiftClient,
             AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
             AuroraConfigFieldHandler("name", validator = { it.pattern("^[a-z][-a-z0-9]{0,38}[a-z0-9]$", "Name must be alphanumeric and no more then 40 characters") }),
             AuroraConfigFieldHandler("envName"),
-            AuroraConfigFieldHandler("permissions/admin/groups", validator = validateGroups(openShiftClient)),
-            AuroraConfigFieldHandler("permissions/admin/users", validator = validateUsers(openShiftClient)),
-            AuroraConfigFieldHandler("permissions/view/groups", validator = validateGroups(openShiftClient, false)),
-            AuroraConfigFieldHandler("permissions/view/users", validator = validateUsers(openShiftClient))
+            AuroraConfigFieldHandler("permissions/admin/groups"),
+            AuroraConfigFieldHandler("permissions/admin/users"),
+            AuroraConfigFieldHandler("permissions/view/groups"),
+            AuroraConfigFieldHandler("permissions/view/users")
     )
 
     fun createAuroraDeploymentSpec(auroraConfigFields: AuroraConfigFields,
