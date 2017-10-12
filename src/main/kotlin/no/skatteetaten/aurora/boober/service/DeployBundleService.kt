@@ -9,6 +9,7 @@ import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.mapper.v1.createAuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.internal.*
+import no.skatteetaten.aurora.boober.utils.oneOf
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.revwalk.RevCommit
 import org.slf4j.LoggerFactory
@@ -101,6 +102,17 @@ class DeployBundleService(
         val vaults = deployBundle.vaults
 
         return createAuroraDeploymentSpec(auroraConfig, applicationId, dockerRegistry, overrideFiles, vaults)
+    }
+
+    fun validateAuroraConfig(affiliation: String, function: (AuroraConfig) -> AuroraConfig = { it -> it }): AuroraConfig {
+        val deployBundle = createDeployBundle(affiliation)
+        val auroraConfig = deployBundle.auroraConfig
+
+        val newAuroraConfig = function(auroraConfig)
+        deployBundle.auroraConfig = newAuroraConfig
+        validate(deployBundle)
+
+        return newAuroraConfig
     }
 
     private fun tryCreateAuroraDeploymentSpecs(deployBundle: DeployBundle, applicationIds: List<ApplicationId>): List<AuroraDeploymentSpec> {

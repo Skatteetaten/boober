@@ -14,7 +14,8 @@ class AuroraConfigValidator(val applicationId: ApplicationId,
                             val auroraConfigFields: AuroraConfigFields) {
     val logger: Logger = LoggerFactory.getLogger(AuroraConfigValidator::class.java)
 
-    fun validate() {
+    @JvmOverloads
+    fun validate(checkUnmapedPointers: Boolean = true) {
         val errors = fieldHandlers.mapNotNull { e ->
             val auroraConfigField = auroraConfigFields.fields[e.name]
 
@@ -23,8 +24,12 @@ class AuroraConfigValidator(val applicationId: ApplicationId,
             }
         }
 
-        val unmappedErrors = getUnmappedPointers().flatMap { pointerError ->
-            pointerError.value.map { ValidationError("$it is not a valid config field pointer", fileName = pointerError.key) }
+        val unmappedErrors = if (checkUnmapedPointers) {
+            getUnmappedPointers().flatMap { pointerError ->
+                pointerError.value.map { ValidationError("$it is not a valid config field pointer", fileName = pointerError.key) }
+            }
+        } else {
+            emptyList()
         }
 
         (errors + unmappedErrors).takeIf { it.isNotEmpty() }?.let {
