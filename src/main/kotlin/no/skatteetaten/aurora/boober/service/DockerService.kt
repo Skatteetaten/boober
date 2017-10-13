@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.service
 
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.service.internal.TagCommand
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
@@ -11,6 +10,13 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import java.net.URI
+
+data class TagCommand @JvmOverloads constructor(
+        val name: String,
+        val from: String,
+        val to: String,
+        val fromRegistry: String,
+        val toRegistry: String = fromRegistry)
 
 @Service
 class DockerService(val httpClient: RestTemplate) {

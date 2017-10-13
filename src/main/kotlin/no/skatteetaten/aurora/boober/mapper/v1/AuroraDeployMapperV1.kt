@@ -40,7 +40,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
             AuroraConfigFieldHandler("applicationPlatform", defaultValue = "java", validator = { it.oneOf(ApplicationPlatform.values().map { it.name }) }),
             AuroraConfigFieldHandler("groupId", validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
             AuroraConfigFieldHandler("artifactId", validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters") }),
-            AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set") }),
+            AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set as string") }),
             AuroraConfigFieldHandler("splunkIndex"),
             AuroraConfigFieldHandler("serviceAccount"),
             AuroraConfigFieldHandler("prometheus", defaultValue = "true"),

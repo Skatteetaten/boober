@@ -3,18 +3,20 @@ package no.skatteetaten.aurora.boober.service
 import org.springframework.beans.factory.annotation.Autowired
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ObjectNode
 
 import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraApplication
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
+import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.internal.AuroraVersioningException
 
 class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
 
   public static final String ENV_NAME = "secrettest"
   public static final String APP_NAME = "aos-simple"
-  final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
+  def aid = new ApplicationId(ENV_NAME, APP_NAME)
   def affiliation = "aos"
 
   @Autowired
@@ -85,6 +87,28 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
       gitLog.fullMessage.contains("Added: 1")
   }
 
+  def "Should get error trying to set version as int"() {
+    given:
+      def gitAuroraConfig = getAuroraConfigFromGit("aos", false)
+
+      def jsonOp = """[{
+  "op": "replace",
+  "path": "/version",
+  "value": 3
+}]
+"""
+
+    when:
+      def filename = "${aid.environment}/${aid.application}.json"
+
+      def version = gitAuroraConfig.auroraConfigFiles.find { it.name == filename }.version
+      deployBundleService.patchAuroraConfigFile("aos", filename, jsonOp, version, false)
+
+    then:
+      def ex = thrown(AuroraConfigException)
+      ex.errors[0].messages[0].message == "Version must be set as string"
+  }
+
   def "Should patch AuroraConfigFile and push changes to git"() {
     given:
       def gitAuroraConfig = getAuroraConfigFromGit("aos", false)
@@ -109,5 +133,69 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
       gitLog.fullMessage == "Added: 0, Modified: 1, Deleted: 0"
       def patchedFile = patchedAuroraConfig.auroraConfigFiles.find { it.name == filename }
       patchedFile.contents.at("/version").textValue() == "3"
+  }
+
+
+  def "Should return error when name is too long"() {
+
+    given:
+      def overrideFile = mapper.
+          convertValue(["name": "this-is-a-really-really-very-very-long-name-that-is-not-alloweed-over-40-char"],
+              JsonNode.class)
+      def overrides = [new AuroraConfigFile("${aid.environment}/${aid.application}.json", overrideFile, true, null)]
+    when:
+      deployBundleService.createAuroraDeploymentSpec("aos", aid, overrides)
+
+    then:
+      def ex = thrown(ApplicationConfigException)
+      ex.errors[0].field.path == '/name'
+  }
+
+  def "Should return error when name is not valid DNS952 label"() {
+
+    given:
+      def overrideFile = mapper.convertValue(["name": "test%qwe)"], JsonNode.class)
+      def overrides = [new AuroraConfigFile("${aid.environment}/${aid.application}.json", overrideFile, true, null)]
+    when:
+      deployBundleService.createAuroraDeploymentSpec("aos", aid, overrides)
+
+    then:
+      def ex = thrown(ApplicationConfigException)
+      ex.errors[0].field.path == '/name'
+  }
+
+  def "Should return error when there are unmapped paths"() {
+
+    given:
+      def overrideFile = mapper.convertValue(["foo": "test%qwe)"], JsonNode.class)
+      def overrides = [new AuroraConfigFile("${aid.environment}/${aid.application}.json", overrideFile, true, null)]
+    when:
+      deployBundleService.createAuroraDeploymentSpec("aos", aid, overrides)
+
+    then:
+      def e = thrown(ApplicationConfigException)
+      def error = e.errors[0]
+      error.fileName == "${aid.environment}/${aid.application}.json.override"
+      error.message == "/foo is not a valid config field pointer"
+  }
+
+  @DefaultOverride(auroraConfig = false)
+  def "Should throw ValidationException due to missing required properties"() {
+
+    given:
+      aid = new ApplicationId("booberdev", "aos-simple")
+      Map<String, JsonNode> files = AuroraConfigHelperKt.getSampleFiles(aid)
+      (files.get("aos-simple.json") as ObjectNode).remove("version")
+      (files.get("$aid.environment/aos-simple.json" as String) as ObjectNode).remove("version")
+      AuroraConfig auroraConfig =
+          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false, null) }, "aos")
+      GitServiceHelperKt.createInitRepo(auroraConfig.affiliation)
+
+    when:
+      deployBundleService.saveAuroraConfig(auroraConfig, false)
+
+    then:
+      def ex = thrown(AuroraConfigException)
+      ex.errors[0].messages[0].message == "Version must be set"
   }
 }

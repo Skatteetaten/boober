@@ -14,7 +14,7 @@ enum class ApplicationPlatform {
 }
 
 
-data class AuroraApplication(
+data class AuroraDeploymentSpec(
         val schemaVersion: String,
         val affiliation: String,
         val cluster: String,
@@ -33,7 +33,6 @@ data class AuroraApplication(
 ) {
     val namespace: String
         get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"
-
 }
 
 data class AuroraVolume(
@@ -90,7 +89,10 @@ data class AuroraDeploy(
         val dockerImagePath: String,
         val dockerTag: String,
         val deployStrategy: AuroraDeployStrategy
-)
+) {
+    val dockerImage: String
+        get() = "${dockerImagePath}:${dockerTag}"
+}
 
 data class AuroraDeployStrategy(
         val type: String, val timeout: Int
