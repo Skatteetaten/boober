@@ -28,10 +28,8 @@ class AuroraDeploymentSpecMapperV1(val openShiftClient: OpenShiftClient,
             AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
             AuroraConfigFieldHandler("name", validator = { it.pattern("^[a-z][-a-z0-9]{0,38}[a-z0-9]$", "Name must be alphanumeric and no more then 40 characters") }),
             AuroraConfigFieldHandler("envName"),
-            AuroraConfigFieldHandler("permissions/admin/groups", validator = validateGroups(openShiftClient)),
-            AuroraConfigFieldHandler("permissions/admin/users", validator = validateUsers(openShiftClient)),
-            AuroraConfigFieldHandler("permissions/view/groups", validator = validateGroups(openShiftClient, false)),
-            AuroraConfigFieldHandler("permissions/view/users", validator = validateUsers(openShiftClient))
+            AuroraConfigFieldHandler("permissions/admin", validator = validateGroups(openShiftClient)),
+            AuroraConfigFieldHandler("permissions/view", validator = validateGroups(openShiftClient, false))
     )
 
     fun createAuroraDeploymentSpec(auroraConfigFields: AuroraConfigFields,
@@ -76,26 +74,15 @@ class AuroraDeploymentSpecMapperV1(val openShiftClient: OpenShiftClient,
         }
     }
 
-    fun validateUsers(openShiftClient: OpenShiftClient): (JsonNode?) -> AuroraConfigException? {
-        return { json ->
-            val users = json?.textValue()?.split(" ")?.toSet()
-            users?.filter { !openShiftClient.isValidUser(it) }
-                    .takeIf { it != null && it.isNotEmpty() }
-                    ?.let { AuroraConfigException("The following users are not valid=${it.joinToString()}") }
-        }
-    }
-
     private fun extractPermissions(auroraConfigFields: AuroraConfigFields): Permissions {
-        val viewGroups = auroraConfigFields.extractOrNull("permissions/view/groups", { it.textValue().split(" ").toSet() })
-        val viewUsers = auroraConfigFields.extractOrNull("permissions/view/users", { it.textValue().split(" ").toSet() })
-        val view = if (viewGroups != null || viewUsers != null) {
-            Permission(viewGroups, viewUsers)
+        val viewGroups = auroraConfigFields.extractOrNull("permissions/view", { it.textValue().split(" ").toSet() })
+        val view = if (viewGroups != null) {
+            Permission(viewGroups)
         } else null
 
         return Permissions(
                 admin = Permission(
-                        auroraConfigFields.extract("permissions/admin/groups", { it.textValue().split(" ").toSet() }),
-                        auroraConfigFields.extractOrNull("permissions/admin/users", { it.textValue().split(" ").toSet() })),
+                        auroraConfigFields.extract("permissions/admin", { it.textValue().split(" ").toSet() })),
                 view = view)
     }
 }
