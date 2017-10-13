@@ -63,6 +63,24 @@ class AuroraDeploymentConfigDeployServiceTest extends AbstractMockedOpenShiftSpe
       thrown(IllegalArgumentException)
   }
 
+  @DefaultOverride(auroraConfig = false)
+  def "Should throw ValidationException due to missing required properties"() {
+
+    given: "AuroraConfig without build properties"
+      Map<String, JsonNode> files = AuroraConfigHelperKt.getSampleFiles(aid)
+      (files.get("aos-simple.json") as ObjectNode).remove("version")
+      (files.get("booberdev/aos-simple.json") as ObjectNode).remove("version")
+      AuroraConfig auroraConfig =
+          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false, null) }, "aos")
+    when:
+
+      createRepoAndSaveFiles(auroraConfig)
+
+    then:
+      def ex = thrown(AuroraConfigException)
+      ex.errors[0].messages[0].message == "Version must be set as string"
+  }
+
   @Ignore("Need to reimplement dryRun")
   def "Should get error if we want secrets but there are none "() {
 

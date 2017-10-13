@@ -135,8 +135,6 @@ class DeployService(
     private fun markRelease(res: List<AuroraDeployResult>, repo: Git) {
 
         res.forEach {
-
-            //TODO: MARK FAILURE
             val result = filterSensitiveInformation(it)
             val prefix = if (it.success) {
                 DEPLOY_PREFIX
