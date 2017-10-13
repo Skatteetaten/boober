@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import java.net.URI
 
+data class TagResult(val cmd: TagCommand, val response: ResponseEntity<JsonNode>, val success: Boolean)
+
 data class TagCommand @JvmOverloads constructor(
         val name: String,
         val from: String,

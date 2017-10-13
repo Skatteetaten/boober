@@ -17,7 +17,6 @@ import org.eclipse.jgit.api.Git
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import java.util.*
 
@@ -78,12 +77,26 @@ class DeployService(
         val environmentResponses = prepareDeployEnvironment(deploymentSpec)
 
         val applicationResponses: List<OpenShiftResponse> = applyOpenShiftApplicationObjects(deployId, deploymentSpec)
-        val performDeploy = !(deploymentSpec.deploy?.flags?.pause ?: false) && shouldDeploy
-        val redeployResponse: ResponseEntity<JsonNode>? = if (performDeploy) triggerRedeploy(deploymentSpec, applicationResponses) else null
 
         val success = applicationResponses.all { it.success }
         val openShiftResponses = environmentResponses + applicationResponses
-        return AuroraDeployResult(deployId, deploymentSpec, openShiftResponses, redeployResponse, success)
+        val noPause = !(deploymentSpec.deploy?.flags?.pause ?: false)
+        val performDeploy = success && noPause && shouldDeploy
+
+        val tagResult = if (performDeploy) {
+            deploymentSpec.deploy?.takeIf { it.releaseTo != null }?.let {
+                val dockerGroup = it.groupId.replace(".", "_")
+                val cmd = TagCommand("${dockerGroup}/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
+                val response = dockerService.tag(cmd)
+                TagResult(cmd, response, response.statusCode.is2xxSuccessful)
+            }
+        } else {
+            null
+        }
+        val redeployResponse = if (performDeploy) triggerRedeploy(deploymentSpec, openShiftResponses) else emptyList()
+
+        val totalSuccess = success && tagResult?.success ?: true && redeployResponse.all { it.success }
+        return AuroraDeployResult(deployId, deploymentSpec, openShiftResponses + redeployResponse, tagResult, totalSuccess)
     }
 
     private fun applyOpenShiftApplicationObjects(deployId: String, deploymentSpec: AuroraDeploymentSpec): List<OpenShiftResponse> {
@@ -157,20 +170,14 @@ class DeployService(
         return hostChanged || pathChanged
     }
 
-    private fun triggerRedeploy(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>): ResponseEntity<JsonNode>? {
+    private fun triggerRedeploy(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>): List<OpenShiftResponse> {
 
-        val tagCommand = deploymentSpec.deploy?.takeIf { it.releaseTo != null }?.let {
-            val dockerGroup = it.groupId.replace(".", "_")
-            TagCommand("${dockerGroup}/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
-        }
-
-        val tagCommandResponse = tagCommand?.let { dockerService.tag(it) }
 
         val namespace = deploymentSpec.namespace
         generateRedeployResourceFromSpec(deploymentSpec, openShiftResponses)
                 ?.let { openShiftClient.createOpenShiftCommand(namespace, it) }
                 ?.let { openShiftClient.performOpenShiftCommand(namespace, it) }
-        return tagCommandResponse
+        return emptyList()
     }
 
     private fun markRelease(res: List<AuroraDeployResult>, repo: Git) {
@@ -261,3 +268,5 @@ class DeployService(
         return res
     }
 }
+
+
