@@ -23,8 +23,7 @@ val auroraDevelopment = AuroraDeploymentSpec(
         envName = "boober-unit-test",
         permissions = Permissions(
                 admin = Permission(
-                        groups = setOf("foo", "bar"),
-                        users = setOf("m123", "x123bar"))),
+                        groups = setOf("foo", "bar"))),
 
         name = "dev-test",
         volume = AuroraVolume(

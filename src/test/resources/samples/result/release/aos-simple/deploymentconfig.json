@@ -25,7 +25,7 @@
         "intervalSeconds": 1,
         "maxSurge": "25%",
         "maxUnavailable": 0,
-        "timeoutSeconds": 120,
+        "timeoutSeconds": 180,
         "updatePeriodSeconds": 1
       }
     },
@@ -159,7 +159,7 @@
                 "memory": "128Mi"
               },
               "requests": {
-                "cpu": "0",
+                "cpu": "100m",
                 "memory": "128Mi"
               }
             },

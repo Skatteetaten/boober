@@ -21,13 +21,9 @@
   },
   "spec": {
     "strategy": {
-      "type": "Rolling",
-      "rollingParams": {
-        "intervalSeconds": 1,
-        "maxSurge": "25%",
-        "maxUnavailable": 0,
-        "timeoutSeconds": 600,
-        "updatePeriodSeconds": 1
+      "type": "Recreate",
+      "recreateParams": {
+        "timeoutSeconds": 180
       }
     },
     "triggers": [
@@ -171,7 +167,7 @@
                 "memory": "128Mi"
               },
               "requests": {
-                "cpu": "0",
+                "cpu": "100m",
                 "memory": "128Mi"
               }
             },
