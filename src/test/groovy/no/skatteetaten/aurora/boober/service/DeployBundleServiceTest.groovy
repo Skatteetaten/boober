@@ -196,6 +196,6 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
 
     then:
       def ex = thrown(AuroraConfigException)
-      ex.errors[0].messages[0].message == "Version must be set"
+      ex.errors[0].messages[0].message == "Version must be set as string"
   }
 }
