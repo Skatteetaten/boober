@@ -115,6 +115,17 @@ class DeployBundleService(
         return newAuroraConfig
     }
 
+    private fun isSupportedVersion(node: JsonNode?): Exception? {
+        if (node == null) {
+            return IllegalArgumentException("Schema version must be set.")
+        }
+        if (node.asText() != "v1") {
+            return IllegalArgumentException("Only v1 of schema is supported")
+        }
+
+        return null
+    }
+
     private fun tryCreateAuroraDeploymentSpecs(deployBundle: DeployBundle, applicationIds: List<ApplicationId>): List<AuroraDeploymentSpec> {
 
         return applicationIds.map { aid ->
@@ -126,7 +137,8 @@ class DeployBundleService(
                 Result<AuroraDeploymentSpec, Error?>(error = Error(aid.application, aid.environment, e.errors))
             } catch (e: IllegalArgumentException) {
                 logger.debug("IAE {}", e.message)
-                Result<AuroraDeploymentSpec, Error?>(error = Error(aid.application, aid.environment, listOf(ValidationError(e.message!!))))
+                Result<AuroraDeploymentSpec, Error?>(error =
+                Error(aid.application, aid.environment, listOf(ValidationError(ValidationErrorType.ILLEGAL, e.message!!))))
             }
         }.onErrorThrow {
             logger.info("ACE {}", it)

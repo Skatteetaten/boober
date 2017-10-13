@@ -10,7 +10,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
 
 
     val handlers = listOf(
-            AuroraConfigFieldHandler("affiliation", validator = { it.pattern("^[a-z]{0,8}[a-z]$", "Affiliation is must be alphanumeric and not more then 10 characters") }),
+            AuroraConfigFieldHandler("affiliation", validator = { it.pattern("^[a-z]{0,8}[a-z]$", "Affiliation must be alphanumeric and not more then 10 characters") }),
             AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
             AuroraConfigFieldHandler("name", validator = { it.pattern("^[a-z][-a-z0-9]{0,38}[a-z0-9]$", "Name must be alphanumeric and no more then 40 characters") }),
             AuroraConfigFieldHandler("envName"),

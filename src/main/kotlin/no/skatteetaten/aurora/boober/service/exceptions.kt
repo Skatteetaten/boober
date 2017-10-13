@@ -31,7 +31,13 @@ class AuroraConfigException(
         val errors: List<Error> = listOf()
 ) : ServiceException(message)
 
-data class ValidationError(val message: String, val field: AuroraConfigField? = null, val fileName: String? = null)
+enum class ValidationErrorType {
+    ILLEGAL,
+    MISSING,
+    INVALID
+}
+
+data class ValidationError(val type: ValidationErrorType, val message: String, val field: AuroraConfigField? = null)
 
 class AuroraVersioningException(message: String, val errors: List<VersioningError>) : ServiceException(message)
 

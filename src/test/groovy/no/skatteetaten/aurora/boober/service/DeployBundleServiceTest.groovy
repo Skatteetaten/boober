@@ -173,7 +173,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
     then:
       def e = thrown(ApplicationConfigException)
       def error = e.errors[0]
-      error.fileName == "${aid.environment}/${aid.application}.json.override"
+      error.field.source == "${aid.environment}/${aid.application}.json.override"
       error.message == "/foo is not a valid config field pointer"
   }
 
