@@ -11,7 +11,8 @@ import org.springframework.stereotype.Service
 @Service
 class SecretVaultService(val mapper: ObjectMapper,
                          val encryptionService: EncryptionService,
-                         val gitService: GitService) {
+                         val gitService: GitService,
+                         val secretVaultPermissionService: SecretVaultPermissionService) {
 
 
     private val PERMISSION_FILE = ".permissions"
@@ -50,7 +51,8 @@ class SecretVaultService(val mapper: ObjectMapper,
 
         val versions = vaultFiles.associate { it.file.name to it.commit?.abbreviate(7)?.name() }
 
-        return AuroraSecretVault(name, files, permissions, versions)
+        val canEdit = secretVaultPermissionService.hasUserAccess(permissions)
+        return AuroraSecretVault(name, files, permissions, versions, canEdit)
 
     }
 }

@@ -13,9 +13,9 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import groovy.json.JsonOutput
-import no.skatteetaten.aurora.boober.controller.internal.DeployParams
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import spock.lang.Shared
@@ -76,12 +76,10 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
 
     expect:
 
-      def deployParams = new DeployParams([env], [name], overrides, false)
-      def aac = deployService.dryRun("aos", deployParams)[0]
-
+      AuroraDeploymentSpec deploymentSpec = deployBundleService.createAuroraDeploymentSpec("aos", aid, overrides)
       def deployId = "123"
 
-      List<JsonNode> generatedObjects = openShiftService.generateObjects(aac.auroraApplication, deployId)
+      List<JsonNode> generatedObjects = openShiftService.with { [generateProjectRequest(deploymentSpec)] + generateApplicationObjects(deploymentSpec, deployId) }
 
       def resultFiles = AuroraConfigHelperKt.getResultFiles(aid)
 
@@ -98,17 +96,18 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
     when:
 
     where:
-      env          | name            | templateFile      | overrides
-      "booberdev"  | "sprocket"      | null              | []
-      "webseal"    | "sprocket"      | null              | []
-      "booberdev"  | "tvinn"         | "atomhopper.json" | []
-      "jenkins"    | "build"         | null              | []
-      "booberdev"  | "reference-web" | null              | []
-      "booberdev"  | "build"         | null              | []
-      "booberdev"  | "console"       | null              | []
-      "booberdev"  | "aos-simple"    | null              | booberDevAosSimpleOverrides
-      "secrettest" | "aos-simple"    | null              | []
-      "release"    | "aos-simple"    | null              | []
+
+      env           | name            | templateFile      | overrides
+      "webseal"     | "sprocket"      | null              | []
+      "booberdev"   | "sprocket"      | null              | []
+      "booberdev"   | "tvinn"         | "atomhopper.json" | []
+      "jenkins"     | "build"         | null              | []
+      "booberdev"   | "reference-web" | null              | []
+      "booberdev"   | "build"         | null              | []
+      "booberdev"   | "console"       | null              | []
+      "booberdev"   | "aos-simple"    | null              | booberDevAosSimpleOverrides
+      "secrettest"  | "aos-simple"    | null              | []
+      "release"     | "aos-simple"    | null              | []
       "release"     | "build"         | null              | []
       "mounts"      | "aos-simple"    | null              | []
       "secretmount" | "aos-simple"    | null              | []
@@ -125,7 +124,7 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
       def resultFiles = AuroraConfigHelperKt.getDeployResultFiles(aid)
 
     expect:
-      JsonNode result = deployService.generateRedeployResource([response], templateType, name, docker, true)
+      JsonNode result = deployService.generateRedeployResource(templateType, name, docker, [response])
 
       def key = getKey(result)
       compareJson(resultFiles[key], result)

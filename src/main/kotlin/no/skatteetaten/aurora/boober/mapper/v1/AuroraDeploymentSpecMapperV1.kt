@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraApplication
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraBuild
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraLocalTemplate
@@ -19,8 +19,8 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.pattern
 
-class AuroraApplicationMapperV1(val openShiftClient: OpenShiftClient,
-                                val applicationId: ApplicationId) {
+class AuroraDeploymentSpecMapperV1(val openShiftClient: OpenShiftClient,
+                                   val applicationId: ApplicationId) {
 
 
     val handlers = listOf(
@@ -34,16 +34,16 @@ class AuroraApplicationMapperV1(val openShiftClient: OpenShiftClient,
             AuroraConfigFieldHandler("permissions/view/users", validator = validateUsers(openShiftClient))
     )
 
-    fun auroraApplicationConfig(auroraConfigFields: AuroraConfigFields,
-                                volume: AuroraVolume?,
-                                route: AuroraRoute?,
-                                build: AuroraBuild?,
-                                deploy: AuroraDeploy?,
-                                template: AuroraTemplate?,
-                                localTemplate: AuroraLocalTemplate?
-    ): AuroraApplication {
+    fun createAuroraDeploymentSpec(auroraConfigFields: AuroraConfigFields,
+                                   volume: AuroraVolume?,
+                                   route: AuroraRoute?,
+                                   build: AuroraBuild?,
+                                   deploy: AuroraDeploy?,
+                                   template: AuroraTemplate?,
+                                   localTemplate: AuroraLocalTemplate?
+    ): AuroraDeploymentSpec {
         val name = auroraConfigFields.extract("name")
-        return AuroraApplication(
+        return AuroraDeploymentSpec(
                 schemaVersion = auroraConfigFields.extract("schemaVersion"),
 
                 affiliation = auroraConfigFields.extract("affiliation"),

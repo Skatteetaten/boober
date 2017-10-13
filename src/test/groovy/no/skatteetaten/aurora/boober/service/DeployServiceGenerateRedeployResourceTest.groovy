@@ -8,14 +8,18 @@ import static no.skatteetaten.aurora.boober.service.openshift.OperationType.UPDA
 
 import org.springframework.beans.factory.annotation.Autowired
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
+import no.skatteetaten.aurora.boober.service.openshift.OperationType
 
-class DeployServiceGenerateDeployResourceTest extends AbstractMockedOpenShiftSpecification {
+class DeployServiceGenerateRedeployResourceTest extends AbstractMockedOpenShiftSpecification {
 
   @Autowired
   OpenShiftClient openShiftClient
@@ -31,7 +35,7 @@ class DeployServiceGenerateDeployResourceTest extends AbstractMockedOpenShiftSpe
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
   def setup() {
-    openShiftClient.prepare(_, _) >> { new OpenshiftCommand(CREATE, it[1]) }
+    openShiftClient.createOpenShiftCommand(_, _) >> { new OpenshiftCommand(OperationType.CREATE, it[1]) }
     openShiftClient.performOpenShiftCommand(_, _) >> {
       OpenshiftCommand cmd = it[1]
       new OpenShiftResponse(cmd, cmd.payload)
@@ -40,6 +44,16 @@ class DeployServiceGenerateDeployResourceTest extends AbstractMockedOpenShiftSpe
 
   def docker = "docker/foo/bar:baz"
 
+  def createOpenShiftResponse(String kind, OperationType operationType, int prevVersion, int currVersion) {
+    def previous = mapper.
+        convertValue(["kind": kind, "metadata": ["labels": ["releasedVersion": prevVersion]]], JsonNode.class)
+    def payload = Mock(JsonNode)
+    def response = mapper.
+        convertValue(["kind": kind, "metadata": ["labels": ["releasedVersion": currVersion]]], JsonNode.class)
+
+    return new OpenShiftResponse(new OpenshiftCommand(operationType, payload, previous, null), response)
+  }
+
   def "Should  not create any resource on build flow"() {
     given:
       def templateType = build
@@ -47,7 +61,7 @@ class DeployServiceGenerateDeployResourceTest extends AbstractMockedOpenShiftSpe
       def imagestream = createOpenShiftResponse("imagestream", UPDATE, 1, 1)
 
     when:
-      def result = deployService.generateRedeployResource([imagestream], templateType, name, docker, true)
+      def result = deployService.generateRedeployResource(templateType, name, docker, [imagestream])
 
     then:
       result == null
@@ -60,7 +74,7 @@ class DeployServiceGenerateDeployResourceTest extends AbstractMockedOpenShiftSpe
       def bc = createOpenShiftResponse("buildconfig", CREATE, 1, 1)
 
     when:
-      def result = deployService.generateRedeployResource([bc], templateType, name, docker, true)
+      def result = deployService.generateRedeployResource(templateType, name, docker, [bc])
 
     then:
       result == null
@@ -73,7 +87,7 @@ class DeployServiceGenerateDeployResourceTest extends AbstractMockedOpenShiftSpe
       def deploymentConfig = createOpenShiftResponse("deploymentconfig", UPDATE, 1, 2)
 
     when:
-      def result = deployService.generateRedeployResource([deploymentConfig], templateType, name, docker, true)
+      def result = deployService.generateRedeployResource(templateType, name, docker, [deploymentConfig])
 
     then:
       result.get("kind").asText() == "DeploymentRequest"
@@ -83,7 +97,7 @@ class DeployServiceGenerateDeployResourceTest extends AbstractMockedOpenShiftSpe
     expect:
       def templateType = deploy
       def name = "boober"
-      deployService.generateRedeployResource([], templateType, name, docker, true) == null
+      deployService.generateRedeployResource(templateType, name, docker, []) == null
   }
 
   def "Should create DeploymentRequest when ImageStream has not changed but OperationType is Update and template is deploy"() {
@@ -94,7 +108,7 @@ class DeployServiceGenerateDeployResourceTest extends AbstractMockedOpenShiftSpe
       imagestream.command
 
     when:
-      def result = deployService.generateRedeployResource([imagestream], templateType, name, docker, true)
+      def result = deployService.generateRedeployResource(templateType, name, docker, [imagestream])
 
     then:
       result.get("kind").asText() == "DeploymentRequest"
@@ -107,23 +121,9 @@ class DeployServiceGenerateDeployResourceTest extends AbstractMockedOpenShiftSpe
       def imagestream = createOpenShiftResponse("imagestream", CREATE, 1, 1)
 
     when:
-      def result = deployService.generateRedeployResource([imagestream], templateType, name, docker, true)
+      def result = deployService.generateRedeployResource(templateType, name, docker, [imagestream])
 
     then:
       result.get("kind").asText() == "ImageStreamImport"
-  }
-
-  def "Should not create deploy request if deploy is false"() {
-    given:
-      def templateType = deploy
-      def name = "boober"
-      def imagestream = createOpenShiftResponse("imagestream", UPDATE, 1, 1)
-      imagestream.command
-
-    when:
-      def result = deployService.generateRedeployResource([imagestream], templateType, name, docker, false)
-
-    then:
-      result == null
   }
 }

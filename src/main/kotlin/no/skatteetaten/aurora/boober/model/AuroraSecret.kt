@@ -7,7 +7,8 @@ data class AuroraSecretVault @JvmOverloads constructor(
         val name: String,
         val secrets: Map<String, String>,
         val permissions: AuroraPermissions? = null,
-        val versions: Map<String, String?> = mapOf()
+        val versions: Map<String, String?> = mapOf(),
+        val canEdit: Boolean = false
 )
 
 data class AuroraPermissions(
