@@ -38,4 +38,19 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
       then:
         thrown(AuroraDeploymentSpecValidationException)
     }
+
+
+    def "Fails when template does not exist"() {
+      given:
+        auroraConfigJson["aos-simple.json"] = '''{ "type": "template", "name": "aos-simple", "template": "aurora-deploy-3.0" }'''
+        openShiftClient.isValidGroup("APP_PaaS_utv") >> true
+        openShiftClient.templateExist("aurora-deploy-3.0") >> false
+        AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+      when:
+        specValidator.assertIsValid(deploymentSpec)
+
+      then:
+        thrown(AuroraDeploymentSpecValidationException)
+    }
 }
