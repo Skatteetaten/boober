@@ -6,7 +6,10 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigValidator
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.utils.required
 
-fun createAuroraDeploymentSpec(applicationId: ApplicationId, auroraConfig: AuroraConfig, dockerRegistry: String, overrideFiles: List<AuroraConfigFile>, vaults: Map<String, AuroraSecretVault>): AuroraDeploymentSpec {
+fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: ApplicationId, dockerRegistry: String,
+                               overrideFiles: List<AuroraConfigFile> = listOf(),
+                               vaults: Map<String, AuroraSecretVault> = mapOf()): AuroraDeploymentSpec {
+
     val baseHandlers = setOf(
             AuroraConfigFieldHandler("schemaVersion"),
             AuroraConfigFieldHandler("type", validator = { it.required("Type is required") }),

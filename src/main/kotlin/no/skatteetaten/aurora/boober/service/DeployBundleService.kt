@@ -80,7 +80,14 @@ class DeployBundleService(
 
     fun validate(deployBundle: DeployBundle) {
 
-        tryCreateAuroraDeploymentSpecs(deployBundle, deployBundle.auroraConfig.getApplicationIds())
+        val deploymentSpecs = tryCreateAuroraDeploymentSpecs(deployBundle, deployBundle.auroraConfig.getApplicationIds())
+        deploymentSpecs.forEach {
+            validateDeploymentSpec(it)
+        }
+    }
+
+    private fun validateDeploymentSpec(deploymentSpec: AuroraDeploymentSpec) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     fun createAuroraDeploymentSpec(affiliation: String, applicationId: ApplicationId, overrides: List<AuroraConfigFile>): AuroraDeploymentSpec {
@@ -98,7 +105,7 @@ class DeployBundleService(
         val overrideFiles = deployBundle.overrideFiles
         val vaults = deployBundle.vaults
 
-        return createAuroraDeploymentSpec(applicationId, auroraConfig, dockerRegistry, overrideFiles, vaults)
+        return createAuroraDeploymentSpec(auroraConfig, applicationId, dockerRegistry, overrideFiles, vaults)
     }
 
     private fun tryCreateAuroraDeploymentSpecs(deployBundle: DeployBundle, applicationIds: List<ApplicationId>): List<AuroraDeploymentSpec> {
