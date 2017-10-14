@@ -38,6 +38,6 @@ class AuroraDeploymentSpecValidator(val openShiftClient: OpenShiftClient) {
             }
         }
 
-        return true
+        return false
     }
 }
