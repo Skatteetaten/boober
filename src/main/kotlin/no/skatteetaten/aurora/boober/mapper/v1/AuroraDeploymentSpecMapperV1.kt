@@ -14,10 +14,8 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
             AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
             AuroraConfigFieldHandler("name", validator = { it.pattern("^[a-z][-a-z0-9]{0,38}[a-z0-9]$", "Name must be alphanumeric and no more then 40 characters") }),
             AuroraConfigFieldHandler("envName"),
-            AuroraConfigFieldHandler("permissions/admin/groups"),
-            AuroraConfigFieldHandler("permissions/admin/users"),
-            AuroraConfigFieldHandler("permissions/view/groups"),
-            AuroraConfigFieldHandler("permissions/view/users")
+            AuroraConfigFieldHandler("permissions/admin"),
+            AuroraConfigFieldHandler("permissions/view")
     )
 
     fun createAuroraDeploymentSpec(auroraConfigFields: AuroraConfigFields,
@@ -49,16 +47,14 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
     }
 
     private fun extractPermissions(auroraConfigFields: AuroraConfigFields): Permissions {
-        val viewGroups = auroraConfigFields.extractOrNull("permissions/view/groups", { it.textValue().split(" ").toSet() })
-        val viewUsers = auroraConfigFields.extractOrNull("permissions/view/users", { it.textValue().split(" ").toSet() })
-        val view = if (viewGroups != null || viewUsers != null) {
-            Permission(viewGroups, viewUsers)
+        val viewGroups = auroraConfigFields.extractOrNull("permissions/view", { it.textValue().split(" ").toSet() })
+        val view = if (viewGroups != null) {
+            Permission(viewGroups)
         } else null
 
         return Permissions(
                 admin = Permission(
-                        auroraConfigFields.extract("permissions/admin/groups", { it.textValue().split(" ").filter { !it.isBlank() }.toSet() }),
-                        auroraConfigFields.extractOrNull("permissions/admin/users", { it.textValue().split(" ").filter { !it.isBlank() }.toSet() })),
+                        auroraConfigFields.extract("permissions/admin", { it.textValue().split(" ").filter { !it.isBlank() }.toSet() })),
                 view = view)
     }
 }

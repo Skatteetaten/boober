@@ -85,6 +85,28 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
       gitLog.fullMessage.contains("Added: 1")
   }
 
+  def "Should get error trying to set version as int"() {
+    given:
+      def gitAuroraConfig = getAuroraConfigFromGit("aos", false)
+
+      def jsonOp = """[{
+  "op": "replace",
+  "path": "/version",
+  "value": 3
+}]
+"""
+
+    when:
+      def filename = "${aid.environment}/${aid.application}.json"
+
+      def version = gitAuroraConfig.auroraConfigFiles.find { it.name == filename }.version
+      deployBundleService.patchAuroraConfigFile("aos", filename, jsonOp, version, false)
+
+    then:
+      def ex = thrown(AuroraConfigException)
+      ex.errors[0].messages[0].message == "Version must be set as string"
+  }
+
   def "Should patch AuroraConfigFile and push changes to git"() {
     given:
       def gitAuroraConfig = getAuroraConfigFromGit("aos", false)
@@ -172,6 +194,6 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
 
     then:
       def ex = thrown(AuroraConfigException)
-      ex.errors[0].messages[0].message == "Version must be set"
+      ex.errors[0].messages[0].message == "Version must be set as string"
   }
 }

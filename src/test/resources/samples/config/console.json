@@ -1,8 +1,6 @@
 {
   "permissions": {
-    "admin": {
-      "groups": "APP_PaaS_drift APP_PaaS_utv"
-    }
+    "admin": "APP_PaaS_drift APP_PaaS_utv"
   },
   "debug": true,
   "route": true,

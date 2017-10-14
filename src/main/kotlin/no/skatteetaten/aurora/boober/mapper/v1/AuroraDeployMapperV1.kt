@@ -27,12 +27,12 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
 
     val handlers = dbHandlers + listOf(
 
-            AuroraConfigFieldHandler("deployStrategy/type", defaultValue = "recreate", validator = { it.oneOf(listOf("recreate", "rolling")) }),
-            AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = "120"),
+            AuroraConfigFieldHandler("deployStrategy/type", defaultValue = "rolling", validator = { it.oneOf(listOf("recreate", "rolling")) }),
+            AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = "180"),
             AuroraConfigFieldHandler("database", defaultValue = "false"),
             AuroraConfigFieldHandler("debug", defaultValue = "false"),
             AuroraConfigFieldHandler("alarm", defaultValue = "true"),
-            AuroraConfigFieldHandler("resources/cpu/min", defaultValue = "0"),
+            AuroraConfigFieldHandler("resources/cpu/min", defaultValue = "100m"),
             AuroraConfigFieldHandler("resources/cpu/max", defaultValue = "2000m"),
             AuroraConfigFieldHandler("resources/memory/min", defaultValue = "128Mi"),
             AuroraConfigFieldHandler("resources/memory/max", defaultValue = "256Mi"),
@@ -40,7 +40,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
             AuroraConfigFieldHandler("applicationPlatform", defaultValue = "java", validator = { it.oneOf(ApplicationPlatform.values().map { it.name }) }),
             AuroraConfigFieldHandler("groupId", validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
             AuroraConfigFieldHandler("artifactId", validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters") }),
-            AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set") }),
+            AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set as string") }),
             AuroraConfigFieldHandler("splunkIndex"),
             AuroraConfigFieldHandler("serviceAccount"),
             AuroraConfigFieldHandler("prometheus", defaultValue = "true"),

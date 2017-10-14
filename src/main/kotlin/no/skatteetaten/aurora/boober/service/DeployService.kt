@@ -2,7 +2,11 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraVolume
+import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.model.TemplateType.build
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.internal.AuroraDeployResult
@@ -75,7 +79,7 @@ class DeployService(
         val deployId = UUID.randomUUID().toString()
 
         val openShiftResponses: List<OpenShiftResponse> = performOpenShiftCommands(deployId, deploymentSpec)
-        val performDeploy = deploymentSpec.deploy?.flags?.pause ?: false || !shouldDeploy
+        val performDeploy = !(deploymentSpec.deploy?.flags?.pause ?: false) && shouldDeploy
         val redeployResponse: ResponseEntity<JsonNode>? = if (performDeploy) triggerRedeploy(deploymentSpec, openShiftResponses) else null
 
         val success = openShiftResponses.all { it.success }
@@ -135,8 +139,6 @@ class DeployService(
     private fun markRelease(res: List<AuroraDeployResult>, repo: Git) {
 
         res.forEach {
-
-            //TODO: MARK FAILURE
             val result = filterSensitiveInformation(it)
             val prefix = if (it.success) {
                 DEPLOY_PREFIX
