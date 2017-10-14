@@ -15,6 +15,7 @@ class AuroraDeploymentSpecValidator(val openShiftClient: OpenShiftClient) {
     }
 
     private fun validateAdminGroups(deploymentSpec: AuroraDeploymentSpec) {
+
         val adminGroups: Set<String> = deploymentSpec.permissions.admin.groups ?: setOf()
         adminGroups.takeIf { it.isEmpty() }
                 ?.let { throw AuroraDeploymentSpecValidationException("permissions.admin.groups cannot be empty") }
@@ -26,9 +27,8 @@ class AuroraDeploymentSpecValidator(val openShiftClient: OpenShiftClient) {
 
     private fun validateTemplateIfSet(deploymentSpec: AuroraDeploymentSpec) {
 
-        if (deploymentSpec.type != TemplateType.template) {
-            return
-        }
+        deploymentSpec.type.takeIf { it == TemplateType.template } ?: return
+
         deploymentSpec.template
                 ?.takeIf { !openShiftClient.templateExist(it.template) }
                 ?.let { throw AuroraDeploymentSpecValidationException("Template ${it.template} does not exist") }
