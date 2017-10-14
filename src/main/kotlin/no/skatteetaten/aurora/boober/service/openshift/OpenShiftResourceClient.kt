@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.service.openshift
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.service.internal.OpenShiftException
+import no.skatteetaten.aurora.boober.service.OpenShiftException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value

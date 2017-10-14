@@ -8,9 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.service.internal.ApplicationConfigException
-import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
-import no.skatteetaten.aurora.boober.service.internal.AuroraVersioningException
+
 
 class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
 

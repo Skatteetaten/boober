@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.service.internal
+package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
 import java.util.*
@@ -16,6 +16,8 @@ abstract class ServiceException(message: String?, cause: Throwable?) : RuntimeEx
 class OpenShiftException(messages: String?, cause: Throwable?) : ServiceException(messages, cause)
 
 class GitException(messages: String?, cause: Throwable?) : ServiceException(messages, cause)
+
+class AuroraDeploymentSpecValidationException(message: String) : ServiceException(message)
 
 class ApplicationConfigException(
         messages: String,

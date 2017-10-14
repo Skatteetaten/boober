@@ -3,8 +3,8 @@ package no.skatteetaten.aurora.boober.service
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraGitFile
-import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
-import no.skatteetaten.aurora.boober.service.internal.GitException
+import no.skatteetaten.aurora.boober.service.AuroraConfigException
+import no.skatteetaten.aurora.boober.service.GitException
 import no.skatteetaten.aurora.boober.utils.use
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.EmtpyCommitException
