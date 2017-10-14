@@ -81,7 +81,7 @@ class DeployBundleService(
 
         val deploymentSpecs = tryCreateAuroraDeploymentSpecs(deployBundle, deployBundle.auroraConfig.getApplicationIds())
         deploymentSpecs.forEach {
-            deploymentSpecValidator.validate(it)
+            deploymentSpecValidator.assertIsValid(it)
         }
     }
 

@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigValidator
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.utils.required
 
+@JvmOverloads
 fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: ApplicationId, dockerRegistry: String,
                                overrideFiles: List<AuroraConfigFile> = listOf(),
                                vaults: Map<String, AuroraSecretVault> = mapOf()): AuroraDeploymentSpec {

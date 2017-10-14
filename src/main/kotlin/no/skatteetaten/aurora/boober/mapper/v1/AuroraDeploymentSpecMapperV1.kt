@@ -57,8 +57,8 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
 
         return Permissions(
                 admin = Permission(
-                        auroraConfigFields.extract("permissions/admin/groups", { it.textValue().split(" ").toSet() }),
-                        auroraConfigFields.extractOrNull("permissions/admin/users", { it.textValue().split(" ").toSet() })),
+                        auroraConfigFields.extract("permissions/admin/groups", { it.textValue().split(" ").filter { !it.isBlank() }.toSet() }),
+                        auroraConfigFields.extractOrNull("permissions/admin/users", { it.textValue().split(" ").filter { !it.isBlank() }.toSet() })),
                 view = view)
     }
 }

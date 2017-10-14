@@ -9,10 +9,12 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import spock.lang.Specification
 
+import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
+
 
 abstract class AbstractAuroraDeploymentSpecTest extends Specification {
 
-    final DEFAULT_ABOUT = '''{
+    static final DEFAULT_ABOUT = '''{
   "schemaVersion": "v1",
   "permissions": {
     "admin": {
@@ -22,11 +24,11 @@ abstract class AbstractAuroraDeploymentSpecTest extends Specification {
   "affiliation" : "aos"
 }'''
 
-    final String DEFAULT_UTV_ABOUT = '''{
+    static final String DEFAULT_UTV_ABOUT = '''{
   "cluster": "utv"
 }'''
 
-    final String AOS_SIMPLE_JSON = '''{
+    static final String AOS_SIMPLE_JSON = '''{
   "certificate": true,
   "groupId": "ske.aurora.openshift",
   "artifactId": "aos-simple",
@@ -37,10 +39,23 @@ abstract class AbstractAuroraDeploymentSpecTest extends Specification {
 }'''
 
 
+    static defaultAuroraConfig() {
+        [
+                "about.json"         : DEFAULT_ABOUT,
+                "utv/about.json"     : DEFAULT_UTV_ABOUT,
+                "aos-simple.json"    : AOS_SIMPLE_JSON,
+                "utv/aos-simple.json": '''{ }'''
+        ]
+    }
+
+    static final DEFAULT_AID = aid("utv", "aos-simple")
+
+
+
     static AuroraDeploymentSpec createDeploymentSpec(Map<String, String> auroraConfigJson, ApplicationId applicationId) {
 
         AuroraConfig auroraConfig = createAuroraConfig(auroraConfigJson)
-        AuroraDeploymentSpecBuilderKt.createAuroraDeploymentSpec(applicationId, auroraConfig, "", [], [:])
+        AuroraDeploymentSpecBuilderKt.createAuroraDeploymentSpec(auroraConfig, applicationId, "", [], [:])
     }
 
 
