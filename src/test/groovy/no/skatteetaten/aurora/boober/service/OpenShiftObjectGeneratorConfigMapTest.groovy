@@ -47,6 +47,7 @@ class OpenShiftObjectGeneratorConfigMapTest extends AbstractAuroraDeploymentSpec
 
       and: "the latest.properties property contains a string with each property on a separate line"
         def latestProperties = mount.get('data').get('latest.properties').textValue()
+
         assertFileHasLinesWithProperties(latestProperties, ["OPPSLAGSTJENESTE_DELEGERING", "UTSTED_SAML_URL", "VALIDER_SAML_URL"])
 
       and: "the 1.properties property contains a string with each property on a separate line"

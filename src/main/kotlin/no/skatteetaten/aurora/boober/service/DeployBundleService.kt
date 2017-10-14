@@ -9,7 +9,6 @@ import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.mapper.v1.createAuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.internal.*
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.revwalk.RevCommit
 import org.slf4j.LoggerFactory
@@ -20,7 +19,7 @@ import java.io.File
 @Service
 class DeployBundleService(
         @Value("\${boober.docker.registry}") val dockerRegistry: String,
-        val openShiftClient: OpenShiftClient,
+        val deploymentSpecValidator: AuroraDeploymentSpecValidator,
         val gitService: GitService,
         val mapper: ObjectMapper,
         val secretVaultFacade: VaultFacade,
@@ -82,12 +81,8 @@ class DeployBundleService(
 
         val deploymentSpecs = tryCreateAuroraDeploymentSpecs(deployBundle, deployBundle.auroraConfig.getApplicationIds())
         deploymentSpecs.forEach {
-            validateDeploymentSpec(it)
+            deploymentSpecValidator.validate(it)
         }
-    }
-
-    private fun validateDeploymentSpec(deploymentSpec: AuroraDeploymentSpec) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     fun createAuroraDeploymentSpec(affiliation: String, applicationId: ApplicationId, overrides: List<AuroraConfigFile>): AuroraDeploymentSpec {
