@@ -17,9 +17,7 @@ abstract class AbstractAuroraDeploymentSpecTest extends Specification {
     static final DEFAULT_ABOUT = '''{
   "schemaVersion": "v1",
   "permissions": {
-    "admin": {
-      "groups": "APP_PaaS_utv"
-    }
+    "admin": "APP_PaaS_utv"
   },
   "affiliation" : "aos"
 }'''

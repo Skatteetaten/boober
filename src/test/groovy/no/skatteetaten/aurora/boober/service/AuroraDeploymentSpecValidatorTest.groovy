@@ -15,7 +15,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
 
     def "Fails when admin groups is empty"() {
       given:
-        auroraConfigJson["utv/aos-simple.json"] = '''{ "permissions": { "admin": { "groups": "" } } }'''
+        auroraConfigJson["utv/aos-simple.json"] = '''{ "permissions": { "admin": "" } }'''
         AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
       when:
@@ -28,7 +28,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
 
     def "Fails when admin groups does not exist"() {
       given:
-        auroraConfigJson["utv/aos-simple.json"] = '''{ "permissions": { "admin": { "groups": "APP_PaaS_utv" } } }'''
+        auroraConfigJson["utv/aos-simple.json"] = '''{ "permissions": { "admin": "APP_PaaS_utv" } }'''
         openShiftClient.isValidGroup("APP_PaaS_utv") >> false
         AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
