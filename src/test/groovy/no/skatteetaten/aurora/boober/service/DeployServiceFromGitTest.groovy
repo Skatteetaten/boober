@@ -84,7 +84,7 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
       revTag.taggerIdent != null
       revTag.fullMessage.startsWith("""{"deployId":""")
-      revTag.tagName.startsWith("DEPLOY/aos-booberdev.aos-simple/")
+      revTag.tagName.startsWith("DEPLOY/utv.aos-booberdev.aos-simple/")
       gitService.closeRepository(git)
 
   }
@@ -133,7 +133,7 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
     then:
       result.size() == 1
-      result[0].tagCommandResponse.statusCode.is2xxSuccessful()
+      result[0].tagResponse.success
 
   }
 

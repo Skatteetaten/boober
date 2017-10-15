@@ -15,7 +15,7 @@ data class AuroraDeployResult @JvmOverloads constructor(
         val openShiftResponses: List<OpenShiftResponse> = listOf(),
         val tagResponse: TagResult? = null,
         val success: Boolean = true) {
-    val tag: String = "${auroraDeploymentSpec.namespace}.${auroraDeploymentSpec.name}/${deployId}"
+    val tag: String = "${auroraDeploymentSpec.cluster}.${auroraDeploymentSpec.namespace}.${auroraDeploymentSpec.name}/${deployId}"
 }
 
 fun <T : Any> List<Result<T?, Error?>>.onErrorThrow(block: (List<Error>) -> Exception): List<T> {

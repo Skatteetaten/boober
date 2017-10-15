@@ -93,10 +93,10 @@ class DeployService(
         } else {
             null
         }
-        val redeployResponse = if (performDeploy) triggerRedeploy(deploymentSpec, openShiftResponses) else emptyList()
+        val redeployResponse = if (performDeploy) triggerRedeploy(deploymentSpec, openShiftResponses) else null
 
-        val totalSuccess = success && tagResult?.success ?: true && redeployResponse.all { it.success }
-        return AuroraDeployResult(deployId, deploymentSpec, openShiftResponses + redeployResponse, tagResult, totalSuccess)
+        val totalSuccess = success && tagResult?.success ?: true && redeployResponse?.success ?: true
+        return AuroraDeployResult(deployId, deploymentSpec, openShiftResponses.addIfNotNull(redeployResponse), tagResult, totalSuccess)
     }
 
     private fun applyOpenShiftApplicationObjects(deployId: String, deploymentSpec: AuroraDeploymentSpec): List<OpenShiftResponse> {
@@ -170,14 +170,14 @@ class DeployService(
         return hostChanged || pathChanged
     }
 
-    private fun triggerRedeploy(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>): List<OpenShiftResponse> {
+    private fun triggerRedeploy(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>): OpenShiftResponse? {
 
 
         val namespace = deploymentSpec.namespace
-        generateRedeployResourceFromSpec(deploymentSpec, openShiftResponses)
+        return generateRedeployResourceFromSpec(deploymentSpec, openShiftResponses)
                 ?.let { openShiftClient.createOpenShiftCommand(namespace, it) }
                 ?.let { openShiftClient.performOpenShiftCommand(namespace, it) }
-        return emptyList()
+        //TODO if the performed command is an imageStreamCommand we need to check if it actually updated the hash.
     }
 
     private fun markRelease(res: List<AuroraDeployResult>, repo: Git) {
