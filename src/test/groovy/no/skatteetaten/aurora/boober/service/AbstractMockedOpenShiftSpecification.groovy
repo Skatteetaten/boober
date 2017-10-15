@@ -44,7 +44,8 @@ import spock.mock.DetachedMockFactory
     SecretVaultPermissionService,
     Config,
     AuroraMetrics,
-    UserDetailsTokenProvider
+    UserDetailsTokenProvider,
+    AuroraDeploymentSpecValidator
 ])
 class AbstractMockedOpenShiftSpecification extends Specification {
 

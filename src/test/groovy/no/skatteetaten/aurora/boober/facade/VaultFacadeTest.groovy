@@ -18,7 +18,7 @@ import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
 import no.skatteetaten.aurora.boober.service.SecretVaultPermissionService
 import no.skatteetaten.aurora.boober.service.SecretVaultService
-import no.skatteetaten.aurora.boober.service.internal.AuroraVersioningException
+import no.skatteetaten.aurora.boober.service.AuroraVersioningException
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 

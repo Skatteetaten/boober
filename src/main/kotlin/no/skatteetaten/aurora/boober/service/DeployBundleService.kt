@@ -6,14 +6,9 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.fge.jsonpatch.JsonPatch
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.facade.VaultFacade
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigValidator
-import no.skatteetaten.aurora.boober.mapper.v1.*
+import no.skatteetaten.aurora.boober.mapper.v1.createAuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.internal.*
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.utils.required
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.revwalk.RevCommit
 import org.slf4j.LoggerFactory
@@ -24,7 +19,7 @@ import java.io.File
 @Service
 class DeployBundleService(
         @Value("\${boober.docker.registry}") val dockerRegistry: String,
-        val openShiftClient: OpenShiftClient,
+        val deploymentSpecValidator: AuroraDeploymentSpecValidator,
         val gitService: GitService,
         val mapper: ObjectMapper,
         val secretVaultFacade: VaultFacade,
@@ -84,7 +79,10 @@ class DeployBundleService(
 
     fun validate(deployBundle: DeployBundle) {
 
-        tryCreateAuroraDeploymentSpecs(deployBundle, deployBundle.auroraConfig.getApplicationIds())
+        val deploymentSpecs = tryCreateAuroraDeploymentSpecs(deployBundle, deployBundle.auroraConfig.getApplicationIds())
+        deploymentSpecs.forEach {
+            deploymentSpecValidator.assertIsValid(it)
+        }
     }
 
     fun createAuroraDeploymentSpec(affiliation: String, applicationId: ApplicationId, overrides: List<AuroraConfigFile>): AuroraDeploymentSpec {
@@ -98,57 +96,11 @@ class DeployBundleService(
 
     fun createAuroraDeploymentSpec(deployBundle: DeployBundle, applicationId: ApplicationId): AuroraDeploymentSpec {
 
-        val baseHandlers = setOf(
-                AuroraConfigFieldHandler("schemaVersion"),
-                AuroraConfigFieldHandler("type", validator = { it.required("Type is required") }),
-                AuroraConfigFieldHandler("baseFile"),
-                AuroraConfigFieldHandler("envFile")
-        )
         val auroraConfig = deployBundle.auroraConfig
         val overrideFiles = deployBundle.overrideFiles
         val vaults = deployBundle.vaults
-        val applicationFiles = auroraConfig.getFilesForApplication(applicationId, overrideFiles)
-        val fields = AuroraConfigFields.create(baseHandlers, applicationFiles)
 
-        val type = fields.extract("type", { TemplateType.valueOf(it.textValue()) })
-
-        val schemaVersion = fields.extract("schemaVersion")
-
-        if (schemaVersion != "v1") {
-            throw IllegalArgumentException("Only v1 of schema is supported")
-        }
-        val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(openShiftClient, applicationId)
-        val deployMapper = AuroraDeployMapperV1(applicationId, applicationFiles, deployBundle.overrideFiles, dockerRegistry)
-        val volumeMapper = AuroraVolumeMapperV1(applicationFiles, vaults)
-        val routeMapper = AuroraRouteMapperV1(applicationFiles)
-        val localTemplateMapper = AuroraLocalTemplateMapperV1(applicationFiles, auroraConfig)
-        val templateMapper = AuroraTemplateMapperV1(applicationFiles, openShiftClient)
-        val buildMapper = AuroraBuildMapperV1()
-        val handlers = (baseHandlers + deploymentSpecMapper.handlers + when (type) {
-            TemplateType.deploy -> routeMapper.handlers + volumeMapper.handlers + deployMapper.handlers
-            TemplateType.development -> routeMapper.handlers + volumeMapper.handlers + deployMapper.handlers + buildMapper.handlers
-            TemplateType.localTemplate -> routeMapper.handlers + volumeMapper.handlers + localTemplateMapper.handlers
-            TemplateType.template -> routeMapper.handlers + volumeMapper.handlers + templateMapper.handlers
-            TemplateType.build -> buildMapper.handlers
-        }).toSet()
-
-        val auroraConfigFields = AuroraConfigFields.create(handlers, applicationFiles)
-        val validator = AuroraConfigValidator(applicationId, applicationFiles, handlers, auroraConfigFields)
-        validator.validate()
-
-
-        val volume = if (type == TemplateType.build) null else volumeMapper.auroraDeploymentCore(auroraConfigFields)
-        val route = if (type == TemplateType.build) null else routeMapper.route(auroraConfigFields)
-
-        val build = if (type == TemplateType.build || type == TemplateType.development) buildMapper.build(auroraConfigFields, dockerRegistry) else null
-
-        val deploy = if (type == TemplateType.deploy || type == TemplateType.development) deployMapper.deploy(auroraConfigFields) else null
-
-        val template = if (type == TemplateType.template) templateMapper.template(auroraConfigFields) else null
-
-        val localTemplate = if (type == TemplateType.localTemplate) localTemplateMapper.localTemplate(auroraConfigFields) else null
-
-        return deploymentSpecMapper.createAuroraDeploymentSpec(auroraConfigFields, volume, route, build, deploy, template, localTemplate)
+        return createAuroraDeploymentSpec(auroraConfig, applicationId, dockerRegistry, overrideFiles, vaults)
     }
 
     private fun tryCreateAuroraDeploymentSpecs(deployBundle: DeployBundle, applicationIds: List<ApplicationId>): List<AuroraDeploymentSpec> {

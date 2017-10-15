@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.readValue
-import no.skatteetaten.aurora.boober.service.internal.OpenShiftException
+import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT

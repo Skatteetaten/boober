@@ -10,6 +10,7 @@ import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.utils.nullOnEmpty
+import org.apache.commons.lang.StringEscapeUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -65,7 +66,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         val envMap: Map<String, String> = configExtractors.filter { it.name.count { it == '/' } == 1 }.map {
             val (_, field) = it.name.split("/", limit = 2)
             val value = extract(it.name)
-            field to value
+            field to StringEscapeUtils.escapeJavaScript(value)
         }.toMap()
 
 
@@ -76,7 +77,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
             val (_, configFile, field) = parts
 
-            val value = extract(it.name)
+            val value = StringEscapeUtils.escapeJavaScript(extract(it.name))
             val keyValue = mutableMapOf(field to value)
 
             val keyProps = if (!configFile.endsWith(".properties")) {

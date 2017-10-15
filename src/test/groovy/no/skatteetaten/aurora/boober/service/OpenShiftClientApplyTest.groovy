@@ -19,7 +19,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.service.internal.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
