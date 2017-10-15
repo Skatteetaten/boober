@@ -9,8 +9,10 @@ import no.skatteetaten.aurora.boober.service.internal.AuroraDeployResult
 import no.skatteetaten.aurora.boober.service.internal.DeployHistory
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
+import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.changed
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.eclipse.jgit.api.Git
 import org.slf4j.Logger
@@ -91,10 +93,17 @@ class DeployService(
         val name = deploymentSpec.name
 
         val openShiftApplicationObjects: List<JsonNode> = openShiftObjectGenerator.generateApplicationObjects(deploymentSpec, deployId)
-        val openShiftApplicationResponses: List<OpenShiftResponse> = openShiftApplicationObjects.map {
+        val openShiftApplicationResponses: List<OpenShiftResponse> = openShiftApplicationObjects.flatMap {
             val openShiftCommand = openShiftClient.createOpenShiftCommand(namespace, it)
-            openShiftClient.performOpenShiftCommand(namespace, openShiftCommand)
-        }
+            if (updateRouteCommandWithChangedHostOrPath(openShiftCommand)) {
+                val deleteCommand = openShiftCommand.copy(operationType = OperationType.DELETE)
+                //TODO: Do we need to wait here?
+                val createCommand = openShiftCommand.copy(operationType = OperationType.CREATE)
+                listOf(deleteCommand, createCommand)
+            } else {
+                listOf(openShiftCommand)
+            }
+        }.map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         if (openShiftApplicationResponses.any { !it.success }) {
             logger.warn("One or more commands failed for $namespace/$name. Will not delete objects from previous deploys.")
@@ -126,6 +135,18 @@ class DeployService(
         }.map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         return listOf(createNamespaceResponse, updateNamespaceResponse) + updateRoleBindingsResponse
+    }
+
+    private fun updateRouteCommandWithChangedHostOrPath(openShiftCommand: OpenshiftCommand): Boolean {
+        if (openShiftCommand.payload.openshiftKind == "route" && openShiftCommand.operationType == OperationType.UPDATE) {
+            val previous = openShiftCommand.previous!!
+            if (previous.changed(openShiftCommand.payload, "/spec/host") ||
+                    previous.changed(openShiftCommand.payload, "/spec/host")) {
+                return true
+            }
+        }
+
+        return false
     }
 
     private fun triggerRedeploy(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>): ResponseEntity<JsonNode>? {

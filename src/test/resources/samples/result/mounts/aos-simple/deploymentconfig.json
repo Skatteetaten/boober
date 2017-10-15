@@ -139,7 +139,7 @@
               },
               {
                 "name": "ROUTE_NAME",
-                "value": "http://aos-simple-aos-mounts.utv.paas.skead.no/foo"
+                "value": "http://aos-mounts.utv.paas.skead.no/foo"
               },
               {
                 "name": "STS_CERTIFICATE_URL",

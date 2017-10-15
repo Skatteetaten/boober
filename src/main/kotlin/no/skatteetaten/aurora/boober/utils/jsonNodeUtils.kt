@@ -36,11 +36,17 @@ val JsonNode.openshiftKind: String
 val JsonNode.openshiftName: String
     get() = if (this.openshiftKind == "deploymentrequest") {
         this.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource kind=${this.openshiftKind}")
+    } else if (this.openshiftKind == "namespace") {
+        ""
     } else {
         this.get("metadata")?.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource kind=${this.openshiftKind}")
     }
 
-
+fun JsonNode.changed(source: JsonNode, path: String): Boolean {
+    val sourceValue = source.at(path)
+    val targetValue = this.at(path)
+    return sourceValue != targetValue
+}
 
 fun JsonNode.updateField(source: JsonNode, root: String, field: String, required: Boolean = false) {
     val sourceField = source.at("$root/$field")
