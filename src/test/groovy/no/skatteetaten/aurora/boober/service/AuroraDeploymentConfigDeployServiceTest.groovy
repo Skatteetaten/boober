@@ -13,7 +13,6 @@ import no.skatteetaten.aurora.boober.model.AuroraPermissions
 import no.skatteetaten.aurora.boober.model.AuroraVolume
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType
-import no.skatteetaten.aurora.boober.service.internal.AuroraConfigException
 import spock.lang.Ignore
 
 class AuroraDeploymentConfigDeployServiceTest extends AbstractMockedOpenShiftSpecification {

@@ -7,10 +7,6 @@ import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.java
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.web
-import no.skatteetaten.aurora.boober.model.Database
-import no.skatteetaten.aurora.boober.model.Mount
-import no.skatteetaten.aurora.boober.model.MountType
-import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
@@ -224,7 +220,15 @@ class OpenShiftObjectGenerator(
         }
     }
 
-    fun generateMount(mounts: List<Mount>?, labels: Map<String, String>): List<JsonNode>? {
+    private fun generateMount(deploymentSpec: AuroraDeploymentSpec, deployId: String): List<JsonNode>? {
+
+        val mounts = findMounts(deploymentSpec)
+        val labels = findLabels(deploymentSpec, deployId, deploymentSpec.name)
+
+        return generateMount(mounts, labels)
+    }
+
+    private fun generateMount(mounts: List<Mount>?, labels: Map<String, String>): List<JsonNode>? {
         return mounts?.filter { !it.exist }?.map {
             logger.debug("Create manual mount {}", it)
             val mountParams = mapOf(
