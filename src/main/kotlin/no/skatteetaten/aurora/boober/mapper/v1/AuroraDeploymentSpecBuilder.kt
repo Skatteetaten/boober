@@ -22,6 +22,9 @@ fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: Applic
 
     val type = fields.extract("type", { TemplateType.valueOf(it.textValue()) })
 
+    AuroraConfigValidator(applicationId, applicationFiles, baseHandlers, fields)
+            .validate(false)
+
     val schemaVersion = fields.extract("schemaVersion")
 
     if (schemaVersion != "v1") {
