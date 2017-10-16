@@ -5,7 +5,7 @@
     "annotations": {
       "boober.skatteetaten.no/applicationFile": "booberdev/console.json",
       "console.skatteetaten.no/alarm": "true",
-      "console.skatteetaten.no/management-path": ":8081/actuator",
+      "console.skatteetaten.no/management-path": ":8082/actuator",
       "sprocket.sits.no/deployment-config.database": "openshift-console-api"
     },
     "labels": {

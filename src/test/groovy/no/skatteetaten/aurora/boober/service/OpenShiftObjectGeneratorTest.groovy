@@ -97,16 +97,16 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
 
     where:
 
-      env           | name            | templateFile      | overrides
-      "webseal"     | "sprocket"      | null              | []
-      "booberdev"   | "sprocket"      | null              | []
-      "booberdev"   | "tvinn"         | "atomhopper.json" | []
-      "jenkins"     | "build"         | null              | []
-      "booberdev"   | "reference-web" | null              | []
-      "booberdev"   | "build"         | null              | []
-      "booberdev"   | "console"       | null              | []
-      "booberdev"   | "aos-simple"    | null              | booberDevAosSimpleOverrides
-      "secrettest"  | "aos-simple"    | null              | []
+      env          | name            | templateFile      | overrides
+      "booberdev"  | "console"       | null              | []
+      "webseal"    | "sprocket"      | null              | []
+      "booberdev"  | "sprocket"      | null              | []
+      "booberdev"  | "tvinn"         | "atomhopper.json" | []
+      "jenkins"    | "build"         | null              | []
+      "booberdev"  | "reference-web" | null              | []
+      "booberdev"  | "build"         | null              | []
+      "booberdev"  | "aos-simple"    | null              | booberDevAosSimpleOverrides
+      "secrettest" | "aos-simple"    | null              | []
       "release"     | "aos-simple"    | null              | []
       "release"     | "build"         | null              | []
       "mounts"      | "aos-simple"    | null              | []

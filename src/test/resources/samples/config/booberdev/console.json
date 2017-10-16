@@ -1,4 +1,7 @@
 {
   "type": "deploy",
-  "database": true
+  "database": true,
+  "management": {
+    "port": 8082
+  }
 }
