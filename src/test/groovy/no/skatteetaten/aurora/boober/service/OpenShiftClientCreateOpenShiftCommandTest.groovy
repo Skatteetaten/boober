@@ -44,7 +44,7 @@ class OpenShiftClientCreateOpenShiftCommandTest extends AbstractAuroraDeployment
 
     given:
       osClusterMock.expect(requestTo("$openShiftUrl/oapi/v1/projects/aos")).
-          andRespond(withSuccess("{}", MediaType.APPLICATION_JSON))
+          andRespond(withSuccess(loadResource("aos.json"), MediaType.APPLICATION_JSON))
 
       osClusterMock.expect(requestTo("$openShiftUrl/oapi/v1/namespaces/aos/deploymentconfigs/webleveranse")).
           andRespond(withSuccess(loadResource("webleveranse.json"), MediaType.APPLICATION_JSON))
