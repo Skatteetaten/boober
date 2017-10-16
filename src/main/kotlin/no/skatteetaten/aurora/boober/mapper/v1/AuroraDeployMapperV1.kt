@@ -186,7 +186,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
         }
 
         val path = auroraConfigFields.extract("management/path").ensureStartWith("/")
-        val port = auroraConfigFields.extract("management/port").ensureStartWith(":")
+        val port = auroraConfigFields.extract("management/port", JsonNode::asInt).toString().ensureStartWith(":")
         return "$port$path"
     }
 
