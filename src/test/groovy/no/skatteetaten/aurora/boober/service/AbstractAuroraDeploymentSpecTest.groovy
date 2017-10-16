@@ -36,6 +36,22 @@ abstract class AbstractAuroraDeploymentSpecTest extends Specification {
   "type": "deploy"
 }'''
 
+    static final String WEB_LEVERANSE = '''{
+  "applicationPlatform" : "web",
+  "name" : "webleveranse",
+  "groupId" : "no.skatteetaten.aurora",
+  "artifactId" : "openshift-referanse-react",
+  "replicas" : 1,
+  "deployStrategy" : {
+    "type" : "rolling"
+  },
+  "route" : true,
+  "management" : {
+    "port" : "8081",
+    "path" : ""
+  }
+}'''
+
 
     static defaultAuroraConfig() {
         [

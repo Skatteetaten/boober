@@ -43,20 +43,18 @@ class OpenShiftObjectGenerator(
 
     fun generateApplicationObjects(auroraDeploymentSpec: AuroraDeploymentSpec, deployId: String): List<JsonNode> {
 
-        val mounts: List<Mount>? = findMounts(auroraDeploymentSpec)
-
-        val labels = findLabels(auroraDeploymentSpec, deployId)
-
-        return listOf<JsonNode>()
-                .addIfNotNull(generateDeploymentConfig(auroraDeploymentSpec, labels, mounts))
-                .addIfNotNull(generateService(auroraDeploymentSpec, labels))
-                .addIfNotNull(generateImageStream(auroraDeploymentSpec, labels))
-                .addIfNotNull(generateBuilds(auroraDeploymentSpec, deployId))
-                .addIfNotNull(generateMount(mounts, labels))
-                .addIfNotNull(generateRoute(auroraDeploymentSpec, labels))
-                .addIfNotNull(generateTemplate(auroraDeploymentSpec))
-                .addIfNotNull(generateLocalTemplate(auroraDeploymentSpec))
-                .addIfNotNull(generateRolebindings(auroraDeploymentSpec.permissions))
+        return withLabelsAndMounts(auroraDeploymentSpec, deployId, { labels, mounts ->
+            listOf<JsonNode>()
+                    .addIfNotNull(generateDeploymentConfig(auroraDeploymentSpec, labels, mounts))
+                    .addIfNotNull(generateService(auroraDeploymentSpec, labels))
+                    .addIfNotNull(generateImageStream(auroraDeploymentSpec, labels))
+                    .addIfNotNull(generateBuilds(auroraDeploymentSpec, deployId))
+                    .addIfNotNull(generateMount(mounts, labels))
+                    .addIfNotNull(generateRoute(auroraDeploymentSpec, labels))
+                    .addIfNotNull(generateTemplate(auroraDeploymentSpec))
+                    .addIfNotNull(generateLocalTemplate(auroraDeploymentSpec))
+                    .addIfNotNull(generateRolebindings(auroraDeploymentSpec.permissions))
+        })
     }
 
     fun generateProjectRequest(auroraDeploymentSpec: AuroraDeploymentSpec): JsonNode {
@@ -82,6 +80,10 @@ class OpenShiftObjectGenerator(
 
     }
 
+    fun generateDeploymentConfig(deploymentSpec: AuroraDeploymentSpec, deployId: String): JsonNode? {
+
+        return withLabelsAndMounts(deploymentSpec, deployId, { labels, mounts -> generateDeploymentConfig(deploymentSpec, labels, mounts) })
+    }
 
     fun generateDeploymentConfig(auroraDeploymentSpec: AuroraDeploymentSpec,
                                  labels: Map<String, String>,
@@ -220,12 +222,9 @@ class OpenShiftObjectGenerator(
         }
     }
 
-    private fun generateMount(deploymentSpec: AuroraDeploymentSpec, deployId: String): List<JsonNode>? {
+    fun generateMount(deploymentSpec: AuroraDeploymentSpec, deployId: String): List<JsonNode>? {
 
-        val mounts = findMounts(deploymentSpec)
-        val labels = findLabels(deploymentSpec, deployId, deploymentSpec.name)
-
-        return generateMount(mounts, labels)
+        return withLabelsAndMounts(deploymentSpec, deployId, { labels, mounts -> generateMount(mounts, labels) })
     }
 
     private fun generateMount(mounts: List<Mount>?, labels: Map<String, String>): List<JsonNode>? {
@@ -381,6 +380,12 @@ class OpenShiftObjectGenerator(
         return databaseMounts + mounts.addIfNotNull(configMount).addIfNotNull(secretMount).addIfNotNull(certMount)
     }
 
+    private fun <T> withLabelsAndMounts(deploymentSpec: AuroraDeploymentSpec, deployId: String, c: (labels: Map<String, String>, mounts: List<Mount>?) -> T): T {
+
+        val mounts = findMounts(deploymentSpec)
+        val labels = findLabels(deploymentSpec, deployId, deploymentSpec.name)
+        return c(labels, mounts)
+    }
 
     private fun mergeVelocityTemplate(template: String, content: Map<String, Any?>): JsonNode {
         val context = VelocityContext()
