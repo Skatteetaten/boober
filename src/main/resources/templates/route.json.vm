@@ -27,8 +27,8 @@
       "kind": "Service",
 "name": "${name}"
     }
-#if (${route.host})
-, "host": "${route.host}"
+#if (${host})
+, "host": "${host}"
 #end
 #if (${route.path})
 , "path": "${route.path}"

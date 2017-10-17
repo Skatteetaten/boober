@@ -4,12 +4,17 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.java
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.web
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.Database
+import no.skatteetaten.aurora.boober.model.Mount
+import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import org.apache.commons.lang.StringEscapeUtils
 import org.apache.velocity.VelocityContext
@@ -212,9 +217,13 @@ class OpenShiftObjectGenerator(
     fun generateRoute(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>): List<JsonNode>? {
         return auroraDeploymentSpec.route?.route?.map {
             logger.debug("Route is {}", it)
+            val host = it.host?.let {
+                assembleRouteHost(it, auroraDeploymentSpec)
+            }
             val routeParams = mapOf(
                     "name" to auroraDeploymentSpec.name,
                     "route" to it,
+                    "host" to host,
                     "labels" to labels)
             mergeVelocityTemplate("route.json", routeParams)
         }
@@ -300,8 +309,8 @@ class OpenShiftObjectGenerator(
         } ?: mapOf()
 
         val routeName = auroraDeploymentSpec.route?.route?.takeIf { it.isNotEmpty() }?.first()?.let {
-            val host = it.host ?: "${auroraDeploymentSpec.name}-${auroraDeploymentSpec.namespace}"
-            "ROUTE_NAME" to "http://$host.${auroraDeploymentSpec.cluster}.paas.skead.no${it.path ?: ""}"
+            val host = assembleRouteHost(it.host ?: auroraDeploymentSpec.name, auroraDeploymentSpec)
+            "ROUTE_NAME" to "http://$host${it.path?.ensureStartWith("/") ?: ""}"
         }
 
         val dbEnv = auroraDeploymentSpec.deploy?.database?.takeIf { it.isNotEmpty() }?.let {
@@ -324,6 +333,18 @@ class OpenShiftObjectGenerator(
                 "MANAGEMENT_HTTP_PORT" to "8081",
                 "APP_NAME" to auroraDeploymentSpec.name
         ).addIfNotNull(splunkIndex).addIfNotNull(routeName) + certEnv + debugEnv + dbEnv + mountEnv
+    }
+
+    private fun assembleRouteHost(hostPrefix: String, auroraDeploymentSpec: AuroraDeploymentSpec): String {
+
+        val hostSuffix = "${auroraDeploymentSpec.namespace}.${auroraDeploymentSpec.cluster}.paas.skead.no"
+
+        return if (hostPrefix.isBlank()) {
+            hostSuffix
+        } else {
+            hostPrefix.ensureEndsWith(hostSuffix, "-")
+        }
+
     }
 
     fun findMounts(auroraDeploymentSpec: AuroraDeploymentSpec): List<Mount> {

@@ -18,6 +18,7 @@
       "kind": "Service",
       "name": "aos-simple"
     },
+    "host": "aos-mounts.utv.paas.skead.no",
     "path": "/foo"
   }
 }

@@ -57,11 +57,12 @@ class OpenShiftClient(
         val kind = command.payload.openshiftKind
         val name = command.payload.openshiftName
 
-        val performClient = if (kind == "namespace") {
+        val performClient = if (listOf("namespace", "route").contains(kind)) {
             serviceAccountClient
         } else {
             userClient
         }
+
 
         return try {
             val res: JsonNode = when (command.operationType) {
