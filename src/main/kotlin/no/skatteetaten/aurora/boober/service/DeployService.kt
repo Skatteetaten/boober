@@ -81,7 +81,7 @@ class DeployService(
 
         val openShiftResponses = environmentResponses + applicationResponses
         val success = openShiftResponses.all { it.success }
-        val result = AuroraDeployResult(deployId, deploymentSpec, openShiftResponses, null, success)
+        val result = AuroraDeployResult(deployId, deploymentSpec, openShiftResponses, success)
         if (!shouldDeploy) {
             return result
         }
@@ -93,7 +93,6 @@ class DeployService(
         if (deploymentSpec.deploy?.flags?.pause != false) {
             return result
         }
-
 
         val tagResult = deploymentSpec.deploy.takeIf { it.releaseTo != null }?.let {
             val dockerGroup = it.groupId.dockerGroupSafeName()

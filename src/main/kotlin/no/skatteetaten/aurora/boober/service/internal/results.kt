@@ -2,8 +2,8 @@ package no.skatteetaten.aurora.boober.service.internal
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.service.TagResult
 import no.skatteetaten.aurora.boober.model.Error
+import no.skatteetaten.aurora.boober.service.TagResult
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import org.eclipse.jgit.lib.PersonIdent
 
@@ -13,8 +13,8 @@ data class AuroraDeployResult @JvmOverloads constructor(
         val deployId: String,
         val auroraDeploymentSpec: AuroraDeploymentSpec,
         val openShiftResponses: List<OpenShiftResponse> = listOf(),
-        val tagResponse: TagResult? = null,
-        val success: Boolean = true) {
+        val success: Boolean = true,
+        val tagResponse: TagResult? = null) {
     val tag: String = "${auroraDeploymentSpec.cluster}.${auroraDeploymentSpec.namespace}.${auroraDeploymentSpec.name}/${deployId}"
 }
 
