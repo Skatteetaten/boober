@@ -75,6 +75,7 @@ class DeployServiceWithExistingRouteTest extends AbstractMockedOpenShiftSpecific
       resultSentences ==
           ['CREATE projectrequest aos-mounts',
            'UPDATE namespace',
+           'CREATE rolebinding admin',
            'CREATE deploymentconfig aos-simple',
            'CREATE service aos-simple',
            'CREATE imagestream aos-simple',
@@ -84,7 +85,7 @@ class DeployServiceWithExistingRouteTest extends AbstractMockedOpenShiftSpecific
            'CREATE route aos-simple',
            'DELETE route aos-simple-bar',
            'CREATE route aos-simple-bar',
-           'CREATE rolebinding admin']
+          ]
 
   }
 
