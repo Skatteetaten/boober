@@ -1,16 +1,11 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.databind.node.TextNode
 import no.skatteetaten.aurora.boober.Configuration
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
-import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.findAllPointers
-import no.skatteetaten.aurora.boober.utils.openshiftKind
 import java.io.File
 
 class AuroraConfigHelper
@@ -90,17 +85,4 @@ private fun convertFileToJsonNode(file: File): JsonNode? {
     return mapper.readValue(file, JsonNode::class.java)
 }
 
-fun modifyCommandIfRoute(json: JsonNode): OpenshiftCommand {
-    return if (json.openshiftKind == "route") {
-
-        val payload = json.deepCopy<JsonNode>()
-
-        val spec = payload.at("/spec") as ObjectNode
-        spec.set("host", TextNode("yoda"))
-
-        OpenshiftCommand(OperationType.UPDATE, payload, json)
-    } else {
-        OpenshiftCommand(OperationType.CREATE, json)
-    }
-}
 

@@ -1,10 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
-import org.springframework.beans.factory.annotation.Autowired
-
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-
 import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.service.internal.AuroraDeployResult
@@ -13,6 +10,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.JsonNodeUtilsKt
+import org.springframework.beans.factory.annotation.Autowired
 
 class DeployServiceWithExistingRouteTest extends AbstractMockedOpenShiftSpecification {
 
@@ -46,7 +44,7 @@ class DeployServiceWithExistingRouteTest extends AbstractMockedOpenShiftSpecific
         convertValue(["kind": "namespace", "metadata": ["labels": ["affiliation": affiliation]]], JsonNode.class)
     openShiftClient.createOpenShiftCommand(_, _) >> {
 
-      AuroraConfigHelperKt.modifyCommandIfRoute(it[1])
+        JsonNodeHelperKt.modifyCommandIfRoute(it[1])
     }
 
     openShiftClient.createUpdateRolebindingCommand(_, _) >> {
