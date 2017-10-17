@@ -1,12 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
-
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-
 import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
@@ -15,6 +10,9 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 
 class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
@@ -60,6 +58,18 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
     openShiftClient.createOpenShiftDeleteCommands(_, _, _, _) >> []
   }
 
+  def "Should perform release and generate a redploy request"() {
+    when:
+      List<AuroraDeployResult> deployResults = deployService.
+          executeDeploy(affiliation, new DeployParams([ENV_NAME], ["console"], [], true))
+
+    then:
+      def result = deployResults[0]
+      result.openShiftResponses.size() == 8
+      result.openShiftResponses[7].responseBody.at("/kind").asText() == "ImageStreamImport"
+
+  }
+
   def "Should perform release of paused env and not generate a redploy request"() {
     when:
       List<AuroraDeployResult> deployResults = deployService.executeDeploy(affiliation, new DeployParams([ENV_NAME], [APP_NAME], [], true))
@@ -84,7 +94,7 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
       revTag.taggerIdent != null
       revTag.fullMessage.startsWith("""{"deployId":""")
-      revTag.tagName.startsWith("DEPLOY/aos-booberdev.aos-simple/")
+      revTag.tagName.startsWith("DEPLOY/utv.aos-booberdev.aos-simple/")
       gitService.closeRepository(git)
 
   }
@@ -125,15 +135,16 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
   def "Should perform release and tag in docker repo"() {
     given:
-      1 * dockerService.tag(_) >>
-          new ResponseEntity<JsonNode>(mapper.convertValue(["foo": "foo"], JsonNode.class), HttpStatus.OK)
+    1 * dockerService.tag(_) >> {
+      new TagResult(it[0], new ResponseEntity<JsonNode>(mapper.convertValue(["foo": "foo"], JsonNode.class), HttpStatus.OK), true)
+    }
 
     when:
       def result = deployService.executeDeploy(affiliation, new DeployParams(["release"], ["aos-simple"], [], true))
 
     then:
       result.size() == 1
-      result[0].tagCommandResponse.statusCode.is2xxSuccessful()
+      result[0].tagResponse.success
 
   }
 
