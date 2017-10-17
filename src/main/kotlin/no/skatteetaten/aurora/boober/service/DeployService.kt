@@ -12,6 +12,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.dockerGroupSafeName
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.eclipse.jgit.api.Git
 import org.slf4j.Logger
@@ -83,19 +84,19 @@ class DeployService(
         val noPause = !(deploymentSpec.deploy?.flags?.pause ?: false)
         val performDeploy = success && noPause && shouldDeploy
 
-        val tagResult = if (performDeploy) {
-            deploymentSpec.deploy?.takeIf { it.releaseTo != null }?.let {
-                val dockerGroup = it.groupId.replace(".", "_")
-                val cmd = TagCommand("${dockerGroup}/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
-                val response = dockerService.tag(cmd)
-                TagResult(cmd, response, response.statusCode.is2xxSuccessful)
-            }
-        } else {
-            null
+        if (!performDeploy) {
+            return AuroraDeployResult(deployId, deploymentSpec, openShiftResponses, null, success)
+        }
+
+        val tagResult = deploymentSpec.deploy?.takeIf { it.releaseTo != null }?.let {
+            val dockerGroup = it.groupId.dockerGroupSafeName()
+            val cmd = TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
+            dockerService.tag(cmd)
         }
         val redeployResponse = if (performDeploy) triggerRedeploy(deploymentSpec, openShiftResponses) else null
 
-        val totalSuccess = success && tagResult?.success ?: true && redeployResponse?.success ?: true
+        val totalSuccess = listOf(success, tagResult?.success, redeployResponse?.success).filterNotNull().all { it }
+
         return AuroraDeployResult(deployId, deploymentSpec, openShiftResponses.addIfNotNull(redeployResponse), tagResult, totalSuccess)
     }
 

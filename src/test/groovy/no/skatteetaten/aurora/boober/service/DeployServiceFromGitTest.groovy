@@ -1,12 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
-
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-
 import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
@@ -15,6 +10,9 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 
 class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
@@ -137,8 +135,9 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
   def "Should perform release and tag in docker repo"() {
     given:
-      1 * dockerService.tag(_) >>
-          new ResponseEntity<JsonNode>(mapper.convertValue(["foo": "foo"], JsonNode.class), HttpStatus.OK)
+    1 * dockerService.tag(_) >> {
+      new TagResult(it[0], new ResponseEntity<JsonNode>(mapper.convertValue(["foo": "foo"], JsonNode.class), HttpStatus.OK), true)
+    }
 
     when:
       def result = deployService.executeDeploy(affiliation, new DeployParams(["release"], ["aos-simple"], [], true))

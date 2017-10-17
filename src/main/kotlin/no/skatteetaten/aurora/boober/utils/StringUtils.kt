@@ -15,3 +15,5 @@ fun String.ensureStartWith(startWith: String, seperator: String = ""): String {
     return "$startWith$seperator$this"
 
 }
+
+fun String.dockerGroupSafeName() = this.replace(".", "_")
