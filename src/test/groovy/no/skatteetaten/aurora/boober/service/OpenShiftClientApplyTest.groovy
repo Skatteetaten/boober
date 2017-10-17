@@ -78,7 +78,7 @@ class OpenShiftClientApplyTest extends Specification {
 
       def projectRequest = mapper.readTree(prFile)
 
-      serviceAccountClient.getExistingResource(_, _) >> new ResponseEntity<JsonNode>(HttpStatus.OK)
+      serviceAccountClient.get(_, _) >> new ResponseEntity<JsonNode>(HttpStatus.OK)
       userClient.get("project", "foobar", "foobar") >> {
         throw new OpenShiftException("Does not exist", new HttpClientErrorException(HttpStatus.SERVICE_UNAVAILABLE))
       }
@@ -119,12 +119,12 @@ class OpenShiftClientApplyTest extends Specification {
       def oldResource = mapper.readTree(this.getClass().getResource("/openshift-objects/${type}.json"))
       def newResource = mapper.readTree(this.getClass().getResource("/openshift-objects/$type-new.json"))
 
-      serviceAccountClient.getExistingResource(_, _) >> new ResponseEntity<JsonNode>(HttpStatus.OK)
+      serviceAccountClient.get(_, _) >> new ResponseEntity<JsonNode>(HttpStatus.OK)
 
-      userClient.get(type, "referanse", "foobar") >>
+      userClient.get(type, "foobar", "referanse") >>
           new ResponseEntity(oldResource, HttpStatus.OK)
 
-      userClient.put(type, "referanse", "foobar", _) >>
+      userClient.put(type, "foobar", "referanse", _) >>
           new ResponseEntity(oldResource, HttpStatus.OK)
 
     expect:
@@ -154,7 +154,7 @@ class OpenShiftClientApplyTest extends Specification {
       ], JsonNode.class)
 
       def cmd = new OpenshiftCommand(OperationType.CREATE, payload)
-      userClient.post("service", "bar", "foo", payload) >> {
+      userClient.post("service", "foo", "bar", payload) >> {
         throw new OpenShiftException("Does not exist",
             new HttpClientErrorException(HttpStatus.SERVICE_UNAVAILABLE, "not available",
                 '''{ "failed" : "true"}'''.bytes,
@@ -179,7 +179,7 @@ class OpenShiftClientApplyTest extends Specification {
       ], JsonNode.class)
 
       def cmd = new OpenshiftCommand(OperationType.CREATE, payload)
-      userClient.post("service", "bar", "foo", payload) >> {
+      userClient.post("service", "foo", "bar", payload) >> {
         throw new OpenShiftException("Does not exist",
             new HttpClientErrorException(HttpStatus.SERVICE_UNAVAILABLE, "not available", "failed".bytes,
                 Charset.defaultCharset()))

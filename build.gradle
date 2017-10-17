@@ -54,6 +54,7 @@ dependencies {
       "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version",
       "no.skatteetaten.aurora.springboot:aurora-spring-boot-starter:$auroraStartersVersion",
       "org.springframework.boot:spring-boot-starter-security",
+      "org.springframework.retry:spring-retry",
       "com.fasterxml.jackson.module:jackson-module-kotlin:2.8.7",
       'org.eclipse.jgit:org.eclipse.jgit:4.6.1.201703071140-r',
       'org.apache.velocity:velocity:1.7',
