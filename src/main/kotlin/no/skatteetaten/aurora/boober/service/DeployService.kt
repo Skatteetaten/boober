@@ -81,23 +81,30 @@ class DeployService(
 
         val openShiftResponses = environmentResponses + applicationResponses
         val success = openShiftResponses.all { it.success }
-        val noPause = !(deploymentSpec.deploy?.flags?.pause ?: false)
-        val performDeploy = success && noPause && shouldDeploy
-
-        if (!performDeploy) {
-            return AuroraDeployResult(deployId, deploymentSpec, openShiftResponses, null, success)
+        val result = AuroraDeployResult(deployId, deploymentSpec, openShiftResponses, null, success)
+        if (!shouldDeploy) {
+            return result
         }
+
+        if (!success) {
+            return result
+        }
+
+        if (deploymentSpec.deploy?.flags?.pause == false) {
+            return result
+        }
+
 
         val tagResult = deploymentSpec.deploy?.takeIf { it.releaseTo != null }?.let {
             val dockerGroup = it.groupId.dockerGroupSafeName()
             val cmd = TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
             dockerService.tag(cmd)
         }
-        val redeployResponse = if (performDeploy) triggerRedeploy(deploymentSpec, openShiftResponses) else null
+        val redeployResponse = triggerRedeploy(deploymentSpec, openShiftResponses)
 
         val totalSuccess = listOf(success, tagResult?.success, redeployResponse?.success).filterNotNull().all { it }
 
-        return AuroraDeployResult(deployId, deploymentSpec, openShiftResponses.addIfNotNull(redeployResponse), tagResult, totalSuccess)
+        return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResponse), tagResponse = tagResult, success = totalSuccess)
     }
 
     private fun applyOpenShiftApplicationObjects(deployId: String, deploymentSpec: AuroraDeploymentSpec): List<OpenShiftResponse> {
