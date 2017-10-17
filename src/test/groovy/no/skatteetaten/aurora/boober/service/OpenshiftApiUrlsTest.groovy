@@ -12,7 +12,7 @@ class OpenshiftApiUrlsTest extends Specification {
   def "Should create correct create url for #kind"() {
 
     given:
-      def result = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, name, namespace)
+      def result = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, namespace, name)
 
     expect:
       result.create == url
@@ -30,7 +30,7 @@ class OpenshiftApiUrlsTest extends Specification {
   def "Should create correct get url for #kind"() {
 
     given:
-      def url = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, name, namespace)
+      def url = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, namespace, name)
 
     expect:
 

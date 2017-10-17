@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.EnableAspectJAutoProxy
 import org.springframework.context.annotation.Primary
 import org.springframework.web.client.RestTemplate
 
@@ -11,7 +12,7 @@ import org.springframework.web.client.RestTemplate
 @Configuration
 class OpenShiftResourceClientConfig(
         @Value("\${openshift.url}") val baseUrl: String,
-        val restTemplate: RestTemplate,
+        val openShiftRequestHandler: OpenShiftRequestHandler,
         val userDetailsTokenProvider: UserDetailsTokenProvider,
         val serviceAccountTokenProvider: ServiceAccountTokenProvider
 ) {
@@ -30,10 +31,10 @@ class OpenShiftResourceClientConfig(
     @ClientType(TokenSource.API_USER)
     @Primary
     fun createUserDetailsOpenShiftResourceClient(): OpenShiftResourceClient
-            = OpenShiftResourceClient(baseUrl, userDetailsTokenProvider, restTemplate)
+            = OpenShiftResourceClient(baseUrl, userDetailsTokenProvider, openShiftRequestHandler)
 
     @Bean
     @ClientType(TokenSource.SERVICE_ACCOUNT)
     fun createServiceAccountOpenShiftResourceClient(): OpenShiftResourceClient
-            = OpenShiftResourceClient(baseUrl, serviceAccountTokenProvider, restTemplate)
+            = OpenShiftResourceClient(baseUrl, serviceAccountTokenProvider, openShiftRequestHandler)
 }
