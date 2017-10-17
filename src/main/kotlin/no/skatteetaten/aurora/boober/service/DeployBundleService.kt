@@ -8,8 +8,8 @@ import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.mapper.v1.createAuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.*
-import no.skatteetaten.aurora.boober.service.internal.*
-import no.skatteetaten.aurora.boober.utils.oneOf
+import no.skatteetaten.aurora.boober.service.internal.Result
+import no.skatteetaten.aurora.boober.service.internal.onErrorThrow
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.revwalk.RevCommit
 import org.slf4j.LoggerFactory
@@ -78,7 +78,15 @@ class DeployBundleService(
         })
     }
 
-    fun validate(deployBundle: DeployBundle) {
+    fun validateAuroraConfig(affiliation: String, auroraConfig: AuroraConfig): AuroraConfig {
+        val deployBundle = createDeployBundle(affiliation)
+        deployBundle.auroraConfig = auroraConfig
+        validateDeployBundle(deployBundle)
+
+        return auroraConfig
+    }
+
+    fun validateDeployBundle(deployBundle: DeployBundle) {
 
         val deploymentSpecs = tryCreateAuroraDeploymentSpecs(deployBundle, deployBundle.auroraConfig.getApplicationIds())
         deploymentSpecs.forEach {
@@ -104,45 +112,23 @@ class DeployBundleService(
         return createAuroraDeploymentSpec(auroraConfig, applicationId, dockerRegistry, overrideFiles, vaults)
     }
 
-    fun validateAuroraConfig(affiliation: String, function: (AuroraConfig) -> AuroraConfig = { it -> it }): AuroraConfig {
-        val deployBundle = createDeployBundle(affiliation)
-        val auroraConfig = deployBundle.auroraConfig
-
-        val newAuroraConfig = function(auroraConfig)
-        deployBundle.auroraConfig = newAuroraConfig
-        validate(deployBundle)
-
-        return newAuroraConfig
-    }
-
-    private fun isSupportedVersion(node: JsonNode?): Exception? {
-        if (node == null) {
-            return IllegalArgumentException("Schema version must be set.")
-        }
-        if (node.asText() != "v1") {
-            return IllegalArgumentException("Only v1 of schema is supported")
-        }
-
-        return null
-    }
-
     private fun tryCreateAuroraDeploymentSpecs(deployBundle: DeployBundle, applicationIds: List<ApplicationId>): List<AuroraDeploymentSpec> {
 
         return applicationIds.map { aid ->
             try {
                 val auroraDeploymentSpec: AuroraDeploymentSpec = createAuroraDeploymentSpec(deployBundle, aid)
                 Result<AuroraDeploymentSpec, Error?>(value = auroraDeploymentSpec)
-            } catch (e: ApplicationConfigException) {
+            } catch (e: AuroraConfigException) {
                 logger.debug("ACE {}", e.errors)
-                Result<AuroraDeploymentSpec, Error?>(error = Error(aid.application, aid.environment, e.errors))
+                Result<AuroraDeploymentSpec, Error?>(error = ValidationError(aid.application, aid.environment, e.errors))
             } catch (e: IllegalArgumentException) {
                 logger.debug("IAE {}", e.message)
                 Result<AuroraDeploymentSpec, Error?>(error =
-                Error(aid.application, aid.environment, listOf(ValidationError(ValidationErrorType.ILLEGAL, e.message!!))))
+                ValidationError(aid.application, aid.environment, listOf(ConfigFieldError.illegal(e.message!!))))
             }
         }.onErrorThrow {
             logger.info("ACE {}", it)
-            AuroraConfigException("AuroraConfig contained errors for one or more applications", it)
+            ValidationException("AuroraConfig contained errors for one or more applications", it)
         }
     }
 
@@ -160,7 +146,7 @@ class DeployBundleService(
         if (validateVersions) {
             validateGitVersion(auroraConfig, newAuroraConfig, gitService.getAllFilesInRepo(repo))
         }
-        validate(deployBundle)
+        validateDeployBundle(deployBundle)
         commitAuroraConfig(repo, newAuroraConfig)
 
         return newAuroraConfig

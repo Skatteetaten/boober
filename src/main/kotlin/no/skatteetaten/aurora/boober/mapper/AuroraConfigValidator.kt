@@ -1,11 +1,9 @@
 package no.skatteetaten.aurora.boober.mapper
 
-import com.fasterxml.jackson.databind.node.TextNode
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.service.ApplicationConfigException
-import no.skatteetaten.aurora.boober.service.ValidationError
-import no.skatteetaten.aurora.boober.service.ValidationErrorType.*
+import no.skatteetaten.aurora.boober.model.ConfigFieldError
+import no.skatteetaten.aurora.boober.service.AuroraConfigException
 import no.skatteetaten.aurora.boober.utils.findAllPointers
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -18,20 +16,20 @@ class AuroraConfigValidator(val applicationId: ApplicationId,
 
     @JvmOverloads
     fun validate(checkUnmappedPointers: Boolean = true) {
-        val errors: List<ValidationError> = fieldHandlers.mapNotNull { e ->
+        val errors: List<ConfigFieldError> = fieldHandlers.mapNotNull { e ->
             val auroraConfigField = auroraConfigFields.fields[e.name]
             val result = e.validator(auroraConfigField?.value)
 
             when {
                 result == null -> null
-                auroraConfigField != null -> illegalConfigField(result.localizedMessage, auroraConfigField)
-                else -> missingConfigField(e.path, result.localizedMessage)
+                auroraConfigField != null -> ConfigFieldError.illegal(result.localizedMessage, auroraConfigField)
+                else -> ConfigFieldError.missing(result.localizedMessage, e.path)
             }
         }
 
         val unmappedErrors = if (checkUnmappedPointers) {
             getUnmappedPointers().flatMap { pointerError ->
-                pointerError.value.map { invalidConfigField(it, pointerError.key) }
+                pointerError.value.map { ConfigFieldError.invalid(pointerError.key, it) }
             }
         } else {
             emptyList()
@@ -40,27 +38,12 @@ class AuroraConfigValidator(val applicationId: ApplicationId,
         (errors + unmappedErrors).takeIf { it.isNotEmpty() }?.let {
             logger.debug("{}", it)
             val aid = applicationId
-            throw ApplicationConfigException(
+            throw AuroraConfigException(
                     "Config for application ${aid.application} in environment ${aid.environment} contains errors",
-                    errors = it.mapNotNull { it }
+                    errors = it
             )
         }
     }
-
-    private fun illegalConfigField(message: String, auroraConfigField: AuroraConfigField): ValidationError {
-        return ValidationError(ILLEGAL, message, auroraConfigField)
-    }
-
-    private fun missingConfigField(path: String, message: String): ValidationError {
-        val acf = AuroraConfigField(path, TextNode(""), "Unknown")
-        return ValidationError(MISSING, message, acf)
-    }
-
-    private fun invalidConfigField(path: String, filename: String): ValidationError {
-        val acf = AuroraConfigField(path, TextNode(""), filename)
-        return ValidationError(INVALID, "$path is not a valid config field pointer", acf)
-    }
-
 
     private fun getUnmappedPointers(): Map<String, List<String>> {
         val allPaths = fieldHandlers.map { it.path }

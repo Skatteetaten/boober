@@ -9,7 +9,6 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 
-
 class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
 
   public static final String ENV_NAME = "secrettest"
@@ -103,7 +102,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
       deployBundleService.patchAuroraConfigFile("aos", filename, jsonOp, version, false)
 
     then:
-      def ex = thrown(AuroraConfigException)
+      def ex = thrown(ValidationException)
       ex.errors[0].messages[0].message == "Version must be set as string"
   }
 
@@ -133,7 +132,6 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
       patchedFile.contents.at("/version").textValue() == "3"
   }
 
-
   def "Should return error when name is too long"() {
 
     given:
@@ -145,7 +143,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
       deployBundleService.createAuroraDeploymentSpec("aos", aid, overrides)
 
     then:
-      def ex = thrown(ApplicationConfigException)
+      def ex = thrown(AuroraConfigException)
       ex.errors[0].field.path == '/name'
   }
 
@@ -158,7 +156,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
       deployBundleService.createAuroraDeploymentSpec("aos", aid, overrides)
 
     then:
-      def ex = thrown(ApplicationConfigException)
+      def ex = thrown(AuroraConfigException)
       ex.errors[0].field.path == '/name'
   }
 
@@ -171,7 +169,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
       deployBundleService.createAuroraDeploymentSpec("aos", aid, overrides)
 
     then:
-      def e = thrown(ApplicationConfigException)
+      def e = thrown(AuroraConfigException)
       def error = e.errors[0]
       error.field.source == "${aid.environment}/${aid.application}.json.override"
       error.message == "/foo is not a valid config field pointer"
@@ -193,7 +191,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
       deployBundleService.saveAuroraConfig(auroraConfig, false)
 
     then:
-      def ex = thrown(AuroraConfigException)
+      def ex = thrown(ValidationException)
       ex.errors[0].messages[0].message == "Version must be set as string"
   }
 }
