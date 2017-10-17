@@ -17,6 +17,7 @@ import org.springframework.web.client.RestTemplate
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftRequestHandler
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
 import no.skatteetaten.aurora.boober.service.openshift.ServiceAccountTokenProvider
 import no.skatteetaten.aurora.boober.service.openshift.UserDetailsTokenProvider
@@ -27,6 +28,7 @@ import no.skatteetaten.aurora.boober.service.openshift.UserDetailsTokenProvider
     MockRestServiceServiceInitializer,
     SecurityMock,
     no.skatteetaten.aurora.boober.Configuration,
+    OpenShiftRequestHandler,
     OpenShiftResourceClientConfig,
     UserDetailsProvider,
     UserDetailsTokenProvider,
@@ -69,6 +71,11 @@ class AbstractAuroraDeploymentSpecSpringTest extends AbstractAuroraDeploymentSpe
   }
 
   String loadResource(String resourceName) {
-    this.getClass().getResource("${this.getClass().simpleName}/$resourceName").text
+    def folder = this.getClass().simpleName
+    loadResource(folder, resourceName)
+  }
+
+  String loadResource(folder, String resourceName) {
+    this.getClass().getResource("${folder}/$resourceName").text
   }
 }
