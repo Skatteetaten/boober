@@ -126,7 +126,10 @@ class OpenShiftClient(
 
         if (kind == "deploymentconfig") {
             json.updateField(existing, "/spec/triggers/0/imageChangeParams", "lastTriggeredImage")
-            json.updateField(existing, "/spec/template/spec/containers/0", "image")
+            val containerCount = (json.at("/spec/template/spec/containers") as ArrayNode).size()
+            (0..containerCount).forEach {
+                json.updateField(existing, "/spec/template/spec/containers/$it", "image")
+            }
         }
 
         if (kind == "buildconfig") {
