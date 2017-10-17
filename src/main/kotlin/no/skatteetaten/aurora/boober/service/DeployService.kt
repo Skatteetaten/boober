@@ -79,8 +79,8 @@ class DeployService(
 
         val applicationResponses: List<OpenShiftResponse> = applyOpenShiftApplicationObjects(deployId, deploymentSpec)
 
-        val success = applicationResponses.all { it.success }
         val openShiftResponses = environmentResponses + applicationResponses
+        val success = openShiftResponses.all { it.success }
         val noPause = !(deploymentSpec.deploy?.flags?.pause ?: false)
         val performDeploy = success && noPause && shouldDeploy
 
