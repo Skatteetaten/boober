@@ -65,9 +65,9 @@ class OpenShiftClient(
 
         return try {
             val res: JsonNode = when (command.operationType) {
-                OperationType.CREATE -> performClient.post(kind, name, namespace, command.payload).body
-                OperationType.UPDATE -> performClient.put(kind, name, namespace, command.payload).body
-                OperationType.DELETE -> performClient.delete(kind, name, namespace).body
+                OperationType.CREATE -> performClient.post(kind, namespace, name, command.payload).body
+                OperationType.UPDATE -> performClient.put(kind, namespace, name, command.payload).body
+                OperationType.DELETE -> performClient.delete(kind, namespace, name).body
                 OperationType.NOOP -> command.payload
             }
             OpenShiftResponse(command, res)
@@ -101,7 +101,7 @@ class OpenShiftClient(
             return OpenshiftCommand(OperationType.NOOP, payload = json)
         }
 
-        val existingResource = if (projectExist) userClient.get(kind, name, namespace) else null
+        val existingResource = if (projectExist) userClient.get(kind, namespace, name) else null
         if (existingResource == null) {
             return OpenshiftCommand(OperationType.CREATE, payload = json)
         }
@@ -215,7 +215,7 @@ class OpenShiftClient(
         val name = json.openshiftName
 
         val generated = json.deepCopy<JsonNode>()
-        val existing = userClient.get(kind, name, namespace)?.body ?: throw IllegalArgumentException("Admin rolebinding should exist")
+        val existing = userClient.get(kind, namespace, name)?.body ?: throw IllegalArgumentException("Admin rolebinding should exist")
 
         json.updateField(existing, "/metadata", "resourceVersion")
 
@@ -223,7 +223,7 @@ class OpenShiftClient(
     }
 
     fun createUpdateNamespaceCommand(namespace: String, affiliation: String): OpenshiftCommand {
-        val existing = serviceAccountClient.get("namespace", namespace, "")?.body ?: throw IllegalArgumentException("Namespace should exist")
+        val existing = serviceAccountClient.get("namespace", "", namespace)?.body ?: throw IllegalArgumentException("Namespace should exist")
         //do we really need to sleep here?
         val prev = (existing as ObjectNode).deepCopy()
 

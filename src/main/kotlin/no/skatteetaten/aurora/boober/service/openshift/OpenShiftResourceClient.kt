@@ -17,14 +17,14 @@ open class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: Stri
     val logger: Logger = LoggerFactory.getLogger(OpenShiftResourceClient::class.java)
 
 
-    fun put(kind: String, name: String, namespace: String, payload: JsonNode): ResponseEntity<JsonNode> {
-        val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, name, namespace)
+    fun put(kind: String, namespace: String, name: String, payload: JsonNode): ResponseEntity<JsonNode> {
+        val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, namespace, name)
         val headers: HttpHeaders = getAuthorizationHeaders()
         return exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.PUT, URI(urls.update)))
     }
 
-    open fun get(kind: String, name: String, namespace: String): ResponseEntity<JsonNode>? {
-        val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, name, namespace)
+    open fun get(kind: String, namespace: String, name: String): ResponseEntity<JsonNode>? {
+        val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, namespace, name)
         if (urls.get == null) {
             return null
         }
@@ -40,16 +40,16 @@ open class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: Stri
         }
     }
 
-    open fun post(kind: String, name: String? = null, namespace: String, payload: JsonNode): ResponseEntity<JsonNode> {
+    open fun post(kind: String, namespace: String, name: String? = null, payload: JsonNode): ResponseEntity<JsonNode> {
 
-        val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, name, namespace)
+        val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, namespace, name)
         val headers: HttpHeaders = getAuthorizationHeaders()
         return exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.POST, URI(urls.create)))
     }
 
-    fun delete(kind: String, name: String? = null, namespace: String): ResponseEntity<JsonNode> {
+    fun delete(kind: String, namespace: String, name: String? = null): ResponseEntity<JsonNode> {
 
-        val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, name, namespace)
+        val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, namespace, name)
         val headers: HttpHeaders = getAuthorizationHeaders()
         return exchange(RequestEntity<JsonNode>(headers, HttpMethod.DELETE, URI(urls.get)))
     }
