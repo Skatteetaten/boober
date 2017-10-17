@@ -78,7 +78,7 @@ class OpenShiftClientApplyTest extends Specification {
 
       def projectRequest = mapper.readTree(prFile)
 
-      serviceAccountClient.getExistingResource(_, _) >> new ResponseEntity<JsonNode>(HttpStatus.OK)
+      serviceAccountClient.get(_, _) >> new ResponseEntity<JsonNode>(HttpStatus.OK)
       userClient.get("project", "foobar", "foobar") >> {
         throw new OpenShiftException("Does not exist", new HttpClientErrorException(HttpStatus.SERVICE_UNAVAILABLE))
       }
@@ -119,7 +119,7 @@ class OpenShiftClientApplyTest extends Specification {
       def oldResource = mapper.readTree(this.getClass().getResource("/openshift-objects/${type}.json"))
       def newResource = mapper.readTree(this.getClass().getResource("/openshift-objects/$type-new.json"))
 
-      serviceAccountClient.getExistingResource(_, _) >> new ResponseEntity<JsonNode>(HttpStatus.OK)
+      serviceAccountClient.get(_, _) >> new ResponseEntity<JsonNode>(HttpStatus.OK)
 
       userClient.get(type, "foobar", "referanse") >>
           new ResponseEntity(oldResource, HttpStatus.OK)

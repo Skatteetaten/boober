@@ -147,7 +147,7 @@ class OpenShiftClient(
         val url = "$baseUrl/oapi/v1/users/~"
         val headers: HttpHeaders = userClient.createHeaders(token)
 
-        val currentUser = userClient.getExistingResource(headers, url)
+        val currentUser = userClient.get(url, headers)
         return currentUser?.body
     }
 
@@ -170,31 +170,25 @@ class OpenShiftClient(
     }
 
     private fun exist(url: String): Boolean {
-        val headers: HttpHeaders = serviceAccountClient.getAuthorizationHeaders()
-
-        val existingResource = serviceAccountClient.getExistingResource(headers, url)
+        val existingResource = serviceAccountClient.get(url)
         return existingResource != null
     }
 
     fun isUserInGroup(user: String, group: String): Boolean {
-        val headers: HttpHeaders = serviceAccountClient.getAuthorizationHeaders()
-
         val url = "$baseUrl/oapi/v1/groups/$group"
-
-        val resource = serviceAccountClient.getExistingResource(headers, url)
+        val resource = serviceAccountClient.get(url)
         return resource?.body?.get("users")?.any { it.textValue() == user } ?: false
     }
 
     @JvmOverloads
     fun createOpenShiftDeleteCommands(name: String, namespace: String, deployId: String,
                                       apiResources: List<String> = listOf("BuildConfig", "DeploymentConfig", "ConfigMap", "Secret", "Service", "Route", "ImageStream")): List<OpenshiftCommand> {
-        val headers: HttpHeaders = userClient.getAuthorizationHeaders()
 
         return apiResources.flatMap { kind ->
             val queryString = "labelSelector=app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
             val apiUrl = OpenShiftApiUrls.getCollectionPathForResource(baseUrl, kind, namespace)
             val url = "$apiUrl?$queryString"
-            val body = userClient.getExistingResource(headers, url)?.body
+            val body = userClient.get(url)?.body
 
             val items = body?.get("items")?.toList() ?: emptyList()
             items.filterIsInstance<ObjectNode>()
