@@ -69,7 +69,7 @@ class DeployServiceFromGitFailTest extends AbstractMockedOpenShiftSpecification 
 
       revTag.taggerIdent != null
       revTag.fullMessage.startsWith("""{"deployId":""")
-      revTag.tagName.startsWith("FAILED/aos-booberdev.aos-simple/")
+      revTag.tagName.startsWith("FAILED/utv.aos-booberdev.aos-simple/")
       gitService.closeRepository(git)
 
   }

@@ -2,14 +2,12 @@ package no.skatteetaten.aurora.boober.service
 
 
 import com.fasterxml.jackson.databind.JsonNode
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
-import org.springframework.http.MediaType
-import org.springframework.http.RequestEntity
-import org.springframework.http.ResponseEntity
+import org.springframework.http.*
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import java.net.URI
+
+data class TagResult(val cmd: TagCommand, val response: ResponseEntity<JsonNode>, val success: Boolean)
 
 data class TagCommand @JvmOverloads constructor(
         val name: String,
@@ -23,17 +21,12 @@ class DockerService(val httpClient: RestTemplate) {
 
     val DOCKER_MANIFEST_V2: MediaType = MediaType.valueOf("application/vnd.docker.distribution.manifest.v2+json")
 
-    fun tag(cmd: TagCommand): ResponseEntity<JsonNode> {
-
-        //TODO:ErrorHandling
+    fun tag(cmd: TagCommand): TagResult {
         val manifest = getManifest(cmd.fromRegistry, cmd.name, cmd.from)
-        if (manifest.statusCode.is2xxSuccessful && manifest.hasBody()) {
-            return putManifest(cmd.toRegistry, cmd.name, cmd.to, manifest.body)
-        }
-
-        return manifest
-
-
+        val response = if (manifest.statusCode.is2xxSuccessful && manifest.hasBody()) {
+            putManifest(cmd.toRegistry, cmd.name, cmd.to, manifest.body)
+        } else manifest
+        return TagResult(cmd, response, response.statusCode.is2xxSuccessful)
     }
 
     fun getManifest(registryUrl: String, name: String, tag: String): ResponseEntity<JsonNode> {

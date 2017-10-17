@@ -12,12 +12,12 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.dockerGroupSafeName
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.eclipse.jgit.api.Git
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import java.util.*
 
@@ -78,12 +78,32 @@ class DeployService(
         val environmentResponses = prepareDeployEnvironment(deploymentSpec)
 
         val applicationResponses: List<OpenShiftResponse> = applyOpenShiftApplicationObjects(deployId, deploymentSpec)
-        val performDeploy = !(deploymentSpec.deploy?.flags?.pause ?: false) && shouldDeploy
-        val redeployResponse: ResponseEntity<JsonNode>? = if (performDeploy) triggerRedeploy(deploymentSpec, applicationResponses) else null
 
-        val success = applicationResponses.all { it.success }
         val openShiftResponses = environmentResponses + applicationResponses
-        return AuroraDeployResult(deployId, deploymentSpec, openShiftResponses, redeployResponse, success)
+        val success = openShiftResponses.all { it.success }
+        val result = AuroraDeployResult(deployId, deploymentSpec, openShiftResponses, success)
+        if (!shouldDeploy) {
+            return result
+        }
+
+        if (!success) {
+            return result
+        }
+
+        if (deploymentSpec.deploy?.flags?.pause != false) {
+            return result
+        }
+
+        val tagResult = deploymentSpec.deploy.takeIf { it.releaseTo != null }?.let {
+            val dockerGroup = it.groupId.dockerGroupSafeName()
+            val cmd = TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
+            dockerService.tag(cmd)
+        }
+        val redeployResponse = triggerRedeploy(deploymentSpec, openShiftResponses)
+
+        val totalSuccess = listOf(success, tagResult?.success, redeployResponse?.success).filterNotNull().all { it }
+
+        return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResponse), tagResponse = tagResult, success = totalSuccess)
     }
 
     private fun applyOpenShiftApplicationObjects(deployId: String, deploymentSpec: AuroraDeploymentSpec): List<OpenShiftResponse> {
@@ -157,20 +177,14 @@ class DeployService(
         return hostChanged || pathChanged
     }
 
-    private fun triggerRedeploy(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>): ResponseEntity<JsonNode>? {
+    private fun triggerRedeploy(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>): OpenShiftResponse? {
 
-        val tagCommand = deploymentSpec.deploy?.takeIf { it.releaseTo != null }?.let {
-            val dockerGroup = it.groupId.replace(".", "_")
-            TagCommand("${dockerGroup}/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
-        }
-
-        val tagCommandResponse = tagCommand?.let { dockerService.tag(it) }
 
         val namespace = deploymentSpec.namespace
-        generateRedeployResourceFromSpec(deploymentSpec, openShiftResponses)
+        return generateRedeployResourceFromSpec(deploymentSpec, openShiftResponses)
                 ?.let { openShiftClient.createOpenShiftCommand(namespace, it) }
                 ?.let { openShiftClient.performOpenShiftCommand(namespace, it) }
-        return tagCommandResponse
+        //TODO if the performed command is an imageStreamCommand we need to check if it actually updated the hash.
     }
 
     private fun markRelease(res: List<AuroraDeployResult>, repo: Git) {
@@ -261,3 +275,5 @@ class DeployService(
         return res
     }
 }
+
+
