@@ -11,23 +11,13 @@ class SecretVaultPermissionService(
         val userDetailsProvider: UserDetailsProvider
 ) {
     fun hasUserAccess(permissions: AuroraPermissions?): Boolean {
-        if (permissions == null) {
-            return true
-        }
-
-        val groupSize = permissions.groups?.size ?: 0
-        val userSize = permissions.users?.size ?: 0
-        if (groupSize + userSize == 0) {
+        if (permissions == null || permissions.groups?.isEmpty() != false) {
             return true
         }
 
         val user = userDetailsProvider.getAuthenticatedUser().username
 
-        val validUser: Boolean = permissions.users?.any { user == it && openShiftClient.isValidUser(user) } ?: false
-
-        val validGroup = permissions.groups?.any { openShiftClient.isUserInGroup(user, it) } ?: false
-
-        return validUser || validGroup
+        return permissions.groups.any { openShiftClient.isUserInGroup(user, it) }
 
     }
 }
