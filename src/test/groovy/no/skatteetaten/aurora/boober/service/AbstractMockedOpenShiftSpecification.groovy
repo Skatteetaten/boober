@@ -122,14 +122,12 @@ class AbstractMockedOpenShiftSpecification extends Specification {
 
       openShiftClient.isValidGroup(_) >> true
       openShiftClient.isValidUser(_) >> true
-      openShiftClient.hasUserAccess(_, _) >> true
     }
 
     if (useAuroraConfig) {
 
       def vault = new AuroraSecretVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
       userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User")
-      openShiftClient.hasUserAccess(_, _) >> true
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
       GitServiceHelperKt.createInitRepo(auroraConfig.affiliation)
