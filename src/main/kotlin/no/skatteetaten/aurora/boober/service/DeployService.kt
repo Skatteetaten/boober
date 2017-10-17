@@ -12,7 +12,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.changed
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.eclipse.jgit.api.Git
 import org.slf4j.Logger
@@ -97,7 +96,6 @@ class DeployService(
             val openShiftCommand = openShiftClient.createOpenShiftCommand(namespace, it)
             if (updateRouteCommandWithChangedHostOrPath(openShiftCommand)) {
                 val deleteCommand = openShiftCommand.copy(operationType = OperationType.DELETE)
-                //TODO: Do we need to wait here?
                 val createCommand = openShiftCommand.copy(operationType = OperationType.CREATE)
                 listOf(deleteCommand, createCommand)
             } else {
@@ -138,15 +136,25 @@ class DeployService(
     }
 
     private fun updateRouteCommandWithChangedHostOrPath(openShiftCommand: OpenshiftCommand): Boolean {
-        if (openShiftCommand.payload.openshiftKind == "route" && openShiftCommand.operationType == OperationType.UPDATE) {
-            val previous = openShiftCommand.previous!!
-            if (previous.changed(openShiftCommand.payload, "/spec/host") ||
-                    previous.changed(openShiftCommand.payload, "/spec/host")) {
-                return true
-            }
+
+        if (openShiftCommand.payload.openshiftKind != "route") {
+            return false
         }
 
-        return false
+        if (openShiftCommand.operationType != OperationType.UPDATE) {
+            return false
+        }
+        val previous = openShiftCommand.previous!!
+        val payload = openShiftCommand.payload
+
+
+        val hostPointer = "/spec/host"
+        val pathPointer = "/spec/path"
+
+        val hostChanged = previous.at(hostPointer) != payload.at(hostPointer)
+        val pathChanged = previous.at(pathPointer) != payload.at(pathPointer)
+
+        return hostChanged || pathChanged
     }
 
     private fun triggerRedeploy(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>): ResponseEntity<JsonNode>? {
