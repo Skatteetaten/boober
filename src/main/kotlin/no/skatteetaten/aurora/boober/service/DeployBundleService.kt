@@ -78,7 +78,11 @@ class DeployBundleService(
         })
     }
 
-    fun validateAuroraConfig(affiliation: String, auroraConfig: AuroraConfig): AuroraConfig {
+    /**
+     * Validates the DeployBundle for affiliation <code>affiliation</code> using the provided AuroraConfig instead
+     * of the AuroraConfig already saved for that affiliation.
+     */
+    fun validateDeployBundleWithAuroraConfig(affiliation: String, auroraConfig: AuroraConfig): AuroraConfig {
         val deployBundle = createDeployBundle(affiliation)
         deployBundle.auroraConfig = auroraConfig
         validateDeployBundle(deployBundle)
