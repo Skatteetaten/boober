@@ -3,12 +3,12 @@ package no.skatteetaten.aurora.boober.facade
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.model.AuroraGitFile
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
+import no.skatteetaten.aurora.boober.service.AuroraVersioningException
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.SecretVaultPermissionService
 import no.skatteetaten.aurora.boober.service.SecretVaultService
-import no.skatteetaten.aurora.boober.service.AuroraVersioningException
-import no.skatteetaten.aurora.boober.model.VersioningError
+import no.skatteetaten.aurora.boober.service.VersioningError
 import org.eclipse.jgit.api.Git
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -26,18 +26,23 @@ class VaultFacade(
     private val GIT_SECRET_FOLDER = ".secret"
     private val PERMISSION_FILE = ".permissions"
 
-    @JvmOverloads
-    fun listVaults(affiliation: String, git: Git? = null): List<AuroraSecretVault> {
 
-        val repo = git ?: getRepo(affiliation)
+    fun listAllEditableVaults(affiliation: String): List<AuroraSecretVault> {
+
+        val repo = getRepo(affiliation)
 
         val vaults = secretVaultService.getVaults(repo)
                 .values.toList()
-        if (git == null) {
-            gitService.closeRepository(repo)
-        }
+                .filter { secretVaultPermissionService.hasUserAccess(it.permissions) }
+        gitService.closeRepository(repo)
         return vaults
     }
+
+    fun listAllVaults(git: Git): List<AuroraSecretVault> {
+        return secretVaultService.getVaults(git)
+                .values.toList()
+    }
+
 
     fun find(affiliation: String, vault: String): AuroraSecretVault {
 
@@ -82,15 +87,16 @@ class VaultFacade(
 
         val vaultFiles = secretVaultService.getVaultFiles(repo, vault)
 
-        //TODO: What if the vault does not exist?
         val oldVault = secretVaultService.createVault(vault, vaultFiles)
 
-        if (!oldVault.canEdit) {
+        if (!secretVaultPermissionService.hasUserAccess(oldVault.permissions)) {
             throw IllegalAccessError("You do not have permission to operate on his vault")
         }
 
         val newSecrets = function(oldVault)
-
+        if (!secretVaultPermissionService.hasUserAccess(newSecrets.permissions)) {
+            throw IllegalAccessError("You do not have permission to operate on his vault")
+        }
         if (commitChanges) {
             commit(repo, oldVault, newSecrets, vaultFiles, validateVersions)
         } else {

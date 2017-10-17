@@ -27,10 +27,12 @@ class AuroraDeploymentConfigDeployServiceTest extends AbstractMockedOpenShiftSpe
   @Autowired
   DeployService service
 
-  def "Should filter out ApplicationId if user has not access to secretVault"() {
+  def "Should filter out ApplicationId if user is not in group that has has to secretVault"() {
 
     given:
-      def volume = new AuroraVolume(null, null, null, new AuroraPermissions(null, ["yoda"]))
+
+      this.openShiftClient.isUserInGroup("hero", "APP_jedi_dev") >> false
+      def volume = new AuroraVolume(null, null, null, new AuroraPermissions(["APP_jedi_dev"]))
     when:
       def res = service.hasAccessToAllVolumes(volume)
     then:
@@ -40,8 +42,10 @@ class AuroraDeploymentConfigDeployServiceTest extends AbstractMockedOpenShiftSpe
   def "Should filter out ApplicationId if user has not access to one or more mounts"() {
 
     given:
+      this.openShiftClient.isUserInGroup("hero", "APP_jedi_dev") >> false
       def volume = new AuroraVolume(null, null,
-          [new Mount("/foo", MountType.Secret, "foo", "foo", false, null, new AuroraPermissions(null, ["yoda"]))], null)
+          [new Mount("/foo", MountType.Secret, "foo", "foo", false, null, new AuroraPermissions(["APP_jedi_dev"]))],
+          null)
     when:
       def res = service.hasAccessToAllVolumes(volume)
     then:

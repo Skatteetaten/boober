@@ -34,7 +34,7 @@ class DeployBundleService(
         val repo = getRepo(affiliation)
         val allFilesInRepo: Map<String, Pair<RevCommit?, File>> = gitService.getAllFilesInRepo(repo)
         val auroraConfig = createAuroraConfigFromFiles(allFilesInRepo, affiliation)
-        val vaults = secretVaultFacade.listVaults(affiliation, repo).associateBy { it.name }
+        val vaults = secretVaultFacade.listAllVaults(repo).associateBy { it.name }
 
         return DeployBundle(auroraConfig = auroraConfig, vaults = vaults, repo = repo, overrideFiles = overrideFiles)
     }

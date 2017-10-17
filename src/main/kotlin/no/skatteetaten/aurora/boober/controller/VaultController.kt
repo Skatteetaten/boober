@@ -23,7 +23,7 @@ class VaultController(val facade: VaultFacade) {
     @Timed
     @GetMapping()
     fun listVaults(@PathVariable affiliation: String): Response {
-        return Response(items = facade.listVaults(affiliation).filter { it.canEdit })
+        return Response(items = facade.listAllEditableVaults(affiliation))
     }
 
     @Timed
@@ -50,7 +50,7 @@ class VaultController(val facade: VaultFacade) {
                @RequestHeader(value = "AuroraValidateVersions", required = false) validateVersions: Boolean = true): Response {
 
         if(validateVersions && fileVersion.isEmpty()) {
-            throw IllegalAccessException("Must specify AuroraConfigFileVersion header");
+            throw IllegalAccessException("Must specify AuroraConfigFileVersion header")
         }
 
         val path = "affiliation/$affiliation/vault/$vault/secret/**"

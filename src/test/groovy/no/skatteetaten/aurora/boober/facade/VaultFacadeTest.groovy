@@ -13,12 +13,12 @@ import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraPermissions
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
+import no.skatteetaten.aurora.boober.service.AuroraVersioningException
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
 import no.skatteetaten.aurora.boober.service.SecretVaultPermissionService
 import no.skatteetaten.aurora.boober.service.SecretVaultService
-import no.skatteetaten.aurora.boober.service.AuroraVersioningException
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -254,25 +254,29 @@ class VaultFacadeTest extends Specification {
 
     when:
 
-      def vaults = facade.listVaults(affiliation)
+      def vaults = facade.listAllEditableVaults(affiliation)
 
 
     then:
       vaults.size() == 2
   }
 
+  //TODO: Mock getVaults in a separate class
   def "Should not include vault you cannot admin"() {
     given:
-      def permissions = new AuroraPermissions(["UTV"], ["UTV"])
-      3 * permissionService.hasUserAccess(_) >> true
+      def permissions = new AuroraPermissions(["WRITE_GROUP"])
+      permissionService.hasUserAccess(null) >> true
+      permissionService.hasUserAccess(permissions) >> true
       createRepoAndSaveFiles(affiliation, vault)
       def newVault = new AuroraSecretVault("vault2", secret, permissions)
       facade.save(affiliation, newVault, false)
 
     when:
-      1 * permissionService.hasUserAccess(permissions) >> false
 
-      def vaults = facade.listVaults(affiliation).findAll { it.canEdit }
+      def readPermissions = new AuroraPermissions(["READ_GROUP"])
+      permissionService.hasUserAccess(readPermissions) >> false
+
+      def vaults = facade.listAllEditableVaults(affiliation)
 
 
     then:
