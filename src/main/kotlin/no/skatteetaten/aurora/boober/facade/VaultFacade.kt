@@ -27,7 +27,7 @@ class VaultFacade(
     private val PERMISSION_FILE = ".permissions"
 
 
-    fun listAllEditableVaults(affiliation: String): List<AuroraSecretVault> {
+    fun listAllVaultsWithUserAccess(affiliation: String): List<AuroraSecretVault> {
 
         val repo = getRepo(affiliation)
 

@@ -261,25 +261,28 @@ class VaultFacadeTest extends Specification {
       vaults.size() == 2
   }
 
-  //TODO: Mock getVaults in a separate class
   def "Should not include vault you cannot admin"() {
     given:
-      def permissions = new AuroraPermissions(["WRITE_GROUP"])
-      permissionService.hasUserAccess(null) >> true
-      permissionService.hasUserAccess(permissions) >> true
+      def opsGroup = new AuroraPermissions(["TEAM_OPS"])
+      def devGroup = new AuroraPermissions(["TEAM_DEV"])
+      _ * permissionService.hasUserAccess(null) >> true
+      _ * permissionService.hasUserAccess(devGroup) >> true
+
       createRepoAndSaveFiles(affiliation, vault)
-      def newVault = new AuroraSecretVault("vault2", secret, permissions)
-      facade.save(affiliation, newVault, false)
+
+      // Only temporarily grant ops access to allow vault to be saved
+      1 * permissionService.hasUserAccess(opsGroup) >> true
+      facade.save(affiliation, new AuroraSecretVault("vault2", secret, opsGroup), false)
+      facade.save(affiliation, new AuroraSecretVault("vault3", secret, devGroup), false)
+
+      _ * permissionService.hasUserAccess(opsGroup) >> false
 
     when:
-
-      def readPermissions = new AuroraPermissions(["READ_GROUP"])
-      permissionService.hasUserAccess(readPermissions) >> false
-
-      def vaults = facade.listAllEditableVaults(affiliation)
+      def vaults = facade.listAllVaultsWithUserAccess(affiliation)
 
 
     then:
-      vaults.size() == 1
+      vaults.size() == 2
+      !vaults.any { it.permissions?.groups?.contains("TEAM_OPS")}
   }
 }
