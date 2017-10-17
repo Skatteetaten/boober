@@ -35,12 +35,9 @@ class AuroraConfigController(val deployBundleService: DeployBundleService) {
 
     @Timed
     @PutMapping("/auroraconfig/validate")
-    fun validate(@PathVariable affiliation: String, @RequestBody payload: AuroraConfigPayload): Response {
+    fun validateAuroraConfig(@PathVariable affiliation: String, @RequestBody payload: AuroraConfigPayload): Response {
 
-        val auroraConfig = deployBundleService.validateAuroraConfig(affiliation, {
-            payload.toAuroraConfig(affiliation)
-        })
-
+        val auroraConfig = deployBundleService.validateAuroraConfig(affiliation, payload.toAuroraConfig(affiliation))
         return createAuroraConfigResponse(auroraConfig)
     }
 
