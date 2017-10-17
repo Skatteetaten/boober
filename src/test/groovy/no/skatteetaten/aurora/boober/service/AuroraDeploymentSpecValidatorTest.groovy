@@ -13,13 +13,13 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
     def specValidator = new AuroraDeploymentSpecValidator(openShiftClient)
 
     def "Fails when envFile does not start with about"() {
-        given:
+      given:
         auroraConfigJson["utv/aos-simple.json"] = '''{ "envFiles": "foo" }'''
 
-        when:
+      when:
         createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
-        then:
+      then:
         thrown(AuroraConfigException)
     }
 
