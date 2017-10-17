@@ -8,7 +8,8 @@ import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.mapper.v1.createAuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.*
-import no.skatteetaten.aurora.boober.service.internal.*
+import no.skatteetaten.aurora.boober.service.internal.Result
+import no.skatteetaten.aurora.boober.service.internal.onErrorThrow
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.revwalk.RevCommit
 import org.slf4j.LoggerFactory
@@ -77,7 +78,19 @@ class DeployBundleService(
         })
     }
 
-    fun validate(deployBundle: DeployBundle) {
+    /**
+     * Validates the DeployBundle for affiliation <code>affiliation</code> using the provided AuroraConfig instead
+     * of the AuroraConfig already saved for that affiliation.
+     */
+    fun validateDeployBundleWithAuroraConfig(affiliation: String, auroraConfig: AuroraConfig): AuroraConfig {
+        val deployBundle = createDeployBundle(affiliation)
+        deployBundle.auroraConfig = auroraConfig
+        validateDeployBundle(deployBundle)
+
+        return auroraConfig
+    }
+
+    fun validateDeployBundle(deployBundle: DeployBundle) {
 
         val deploymentSpecs = tryCreateAuroraDeploymentSpecs(deployBundle, deployBundle.auroraConfig.getApplicationIds())
         deploymentSpecs.forEach {
@@ -109,16 +122,17 @@ class DeployBundleService(
             try {
                 val auroraDeploymentSpec: AuroraDeploymentSpec = createAuroraDeploymentSpec(deployBundle, aid)
                 Result<AuroraDeploymentSpec, Error?>(value = auroraDeploymentSpec)
-            } catch (e: ApplicationConfigException) {
+            } catch (e: AuroraConfigException) {
                 logger.debug("ACE {}", e.errors)
-                Result<AuroraDeploymentSpec, Error?>(error = Error(aid.application, aid.environment, e.errors))
+                Result<AuroraDeploymentSpec, Error?>(error = ValidationError(aid.application, aid.environment, e.errors))
             } catch (e: IllegalArgumentException) {
                 logger.debug("IAE {}", e.message)
-                Result<AuroraDeploymentSpec, Error?>(error = Error(aid.application, aid.environment, listOf(ValidationError(e.message!!))))
+                Result<AuroraDeploymentSpec, Error?>(error =
+                ValidationError(aid.application, aid.environment, listOf(ConfigFieldError.illegal(e.message!!))))
             }
         }.onErrorThrow {
             logger.info("ACE {}", it)
-            AuroraConfigException("AuroraConfig contained errors for one or more applications", it)
+            ValidationException("AuroraConfig contained errors for one or more applications", it)
         }
     }
 
@@ -136,7 +150,7 @@ class DeployBundleService(
         if (validateVersions) {
             validateGitVersion(auroraConfig, newAuroraConfig, gitService.getAllFilesInRepo(repo))
         }
-        validate(deployBundle)
+        validateDeployBundle(deployBundle)
         commitAuroraConfig(repo, newAuroraConfig)
 
         return newAuroraConfig

@@ -8,7 +8,7 @@ import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.SecretVaultPermissionService
 import no.skatteetaten.aurora.boober.service.SecretVaultService
 import no.skatteetaten.aurora.boober.service.AuroraVersioningException
-import no.skatteetaten.aurora.boober.service.VersioningError
+import no.skatteetaten.aurora.boober.model.VersioningError
 import org.eclipse.jgit.api.Git
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service

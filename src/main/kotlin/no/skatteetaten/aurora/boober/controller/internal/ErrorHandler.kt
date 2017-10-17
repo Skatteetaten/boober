@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.controller.internal
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.service.ApplicationConfigException
 import no.skatteetaten.aurora.boober.service.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.AuroraVersioningException
 import no.skatteetaten.aurora.boober.service.OpenShiftException
@@ -22,9 +21,6 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
     @ExceptionHandler(AuroraConfigException::class)
     fun handleValidationErrors(ex: AuroraConfigException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
 
-    @ExceptionHandler(ApplicationConfigException::class)
-    fun handleValidationErrors(ex: ApplicationConfigException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
-
     @ExceptionHandler(OpenShiftException::class)
     fun handleOpenShiftErrors(ex: OpenShiftException, req: WebRequest) = handleException(ex, req, INTERNAL_SERVER_ERROR)
 
@@ -42,7 +38,6 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
 
         val items = when (e) {
             is AuroraConfigException -> e.errors
-            is ApplicationConfigException -> e.errors
             is AuroraVersioningException -> e.errors
             else -> listOf()
         }

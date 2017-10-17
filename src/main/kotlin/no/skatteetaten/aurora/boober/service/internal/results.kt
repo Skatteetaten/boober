@@ -2,9 +2,8 @@ package no.skatteetaten.aurora.boober.service.internal
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.service.Error
+import no.skatteetaten.aurora.boober.model.Error
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
-import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import org.eclipse.jgit.lib.PersonIdent
 import org.springframework.http.ResponseEntity
 
