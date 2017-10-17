@@ -4,6 +4,7 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigValidator
 import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.required
 
 @JvmOverloads
@@ -12,7 +13,7 @@ fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: Applic
                                vaults: Map<String, AuroraSecretVault> = mapOf()): AuroraDeploymentSpec {
 
     val baseHandlers = setOf(
-            AuroraConfigFieldHandler("schemaVersion"),
+            AuroraConfigFieldHandler("schemaVersion", validator = { it.oneOf(listOf("v1")) }),
             AuroraConfigFieldHandler("type", validator = { it.required("Type is required") }),
             AuroraConfigFieldHandler("baseFile"),
             AuroraConfigFieldHandler("envFile")
@@ -20,13 +21,11 @@ fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: Applic
     val applicationFiles = auroraConfig.getFilesForApplication(applicationId, overrideFiles)
     val fields = AuroraConfigFields.create(baseHandlers, applicationFiles)
 
+    AuroraConfigValidator(applicationId, applicationFiles, baseHandlers, fields)
+            .validate(false)
+
     val type = fields.extract("type", { TemplateType.valueOf(it.textValue()) })
 
-    val schemaVersion = fields.extract("schemaVersion")
-
-    if (schemaVersion != "v1") {
-        throw IllegalArgumentException("Only v1 of schema is supported")
-    }
     val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(applicationId)
     val deployMapper = AuroraDeployMapperV1(applicationId, applicationFiles, overrideFiles, dockerRegistry)
     val volumeMapper = AuroraVolumeMapperV1(applicationFiles, vaults)

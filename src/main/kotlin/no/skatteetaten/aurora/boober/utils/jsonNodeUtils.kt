@@ -82,7 +82,6 @@ fun JsonNode?.pattern(pattern: String, message: String): Exception? {
     }
     if (!Regex(pattern).matches(this.textValue())) {
         return IllegalArgumentException(message)
-
     }
 
     return null
