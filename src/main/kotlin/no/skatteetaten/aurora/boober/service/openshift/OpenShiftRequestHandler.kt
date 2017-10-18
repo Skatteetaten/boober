@@ -10,6 +10,8 @@ import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Component
 import org.springframework.web.client.HttpClientErrorException
+import org.springframework.web.client.RestClientException
+import org.springframework.web.client.RestClientResponseException
 import org.springframework.web.client.RestTemplate
 
 @Component
@@ -23,8 +25,10 @@ class OpenShiftRequestHandler(val restTemplate: RestTemplate) {
 
         val createResponse: ResponseEntity<JsonNode> = try {
             restTemplate.exchange(requestEntity, JsonNode::class.java)
-        } catch (e: HttpClientErrorException) {
-            throw OpenShiftException("Request failed url=${requestEntity.url}, method=${requestEntity.method}, message=${e.message}, code=${e.statusCode.value()}", e)
+        } catch (e: RestClientResponseException) {
+            throw OpenShiftException("Request failed url=${requestEntity.url}, method=${requestEntity.method}, message=${e.message}, code=${e.rawStatusCode}, statusText=${e.statusText}", e)
+        } catch (e: RestClientException) {
+            throw OpenShiftException("Request failed url=${requestEntity.url}, method=${requestEntity.method}, message=${e.message}", e)
         }
         logger.debug("Body=${createResponse.body}")
         return createResponse
