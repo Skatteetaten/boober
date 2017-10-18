@@ -254,7 +254,7 @@ class VaultFacadeTest extends Specification {
 
     when:
 
-      def vaults = facade.listAllEditableVaults(affiliation)
+      def vaults = facade.listAllVaultsWithUserAccess(affiliation)
 
 
     then:
