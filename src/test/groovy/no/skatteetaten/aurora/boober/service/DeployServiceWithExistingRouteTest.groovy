@@ -53,6 +53,7 @@ class DeployServiceWithExistingRouteTest extends AbstractMockedOpenShiftSpecific
     openShiftClient.createUpdateNamespaceCommand(_, _) >> {
       new OpenshiftCommand(OperationType.UPDATE, namespaceJson, null, namespaceJson)
     }
+
     openShiftClient.performOpenShiftCommand(_, _) >> {
       def cmd = it[1]
       new OpenShiftResponse(cmd, cmd.payload)

@@ -16,8 +16,8 @@ fun modifyCommandIfRoute(json: JsonNode): OpenshiftCommand {
         val spec = payload.at("/spec") as ObjectNode
         spec.set("host", TextNode("yoda"))
 
-        OpenshiftCommand(OperationType.UPDATE, payload, json)
+        OpenshiftCommand(OperationType.UPDATE, payload, json, json)
     } else {
-        OpenshiftCommand(OperationType.CREATE, json)
+        OpenshiftCommand(OperationType.CREATE, json, null, json)
     }
 }
