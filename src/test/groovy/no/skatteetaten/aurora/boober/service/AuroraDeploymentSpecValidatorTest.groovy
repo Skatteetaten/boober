@@ -12,17 +12,6 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
 
     def specValidator = new AuroraDeploymentSpecValidator(openShiftClient)
 
-    def "Fails when envFile does not start with about"() {
-      given:
-        auroraConfigJson["utv/aos-simple.json"] = '''{ "envFiles": "foo" }'''
-
-      when:
-        createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
-
-      then:
-        thrown(AuroraConfigException)
-    }
-
     def "Fails when admin groups is empty"() {
       given:
         auroraConfigJson["utv/aos-simple.json"] = '''{ "permissions": { "admin": "" } }'''
