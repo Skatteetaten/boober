@@ -12,7 +12,6 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
 
     def specValidator = new AuroraDeploymentSpecValidator(openShiftClient)
 
-
     def "Fails when admin groups is empty"() {
       given:
         auroraConfigJson["utv/aos-simple.json"] = '''{ "permissions": { "admin": "" } }'''

@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigValidator
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.required
+import no.skatteetaten.aurora.boober.utils.startsWith
 
 @JvmOverloads
 fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: ApplicationId, dockerRegistry: String,
@@ -16,7 +17,9 @@ fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: Applic
             AuroraConfigFieldHandler("schemaVersion", validator = { it.oneOf(listOf("v1")) }),
             AuroraConfigFieldHandler("type", validator = { it.required("Type is required") }),
             AuroraConfigFieldHandler("baseFile"),
-            AuroraConfigFieldHandler("envFile")
+            AuroraConfigFieldHandler("envFile", validator = {
+                it?.startsWith("about-", "envFile must start with about")
+            })
     )
     val applicationFiles = auroraConfig.getFilesForApplication(applicationId, overrideFiles)
     val fields = AuroraConfigFields.create(baseHandlers, applicationFiles)

@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
@@ -79,7 +80,8 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
       AuroraDeploymentSpec deploymentSpec = deployBundleService.createAuroraDeploymentSpec("aos", aid, overrides)
       def deployId = "123"
 
-      List<JsonNode> generatedObjects = openShiftService.with { [generateProjectRequest(deploymentSpec)] + generateApplicationObjects(deploymentSpec, deployId) }
+      List<JsonNode> generatedObjects = openShiftService.
+          with { [generateProjectRequest(deploymentSpec)] + generateApplicationObjects(deploymentSpec, deployId) }
 
       def resultFiles = AuroraConfigHelperKt.getResultFiles(aid)
 
@@ -97,16 +99,16 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
 
     where:
 
-      env          | name            | templateFile      | overrides
-      "booberdev"  | "console"       | null              | []
-      "webseal"    | "sprocket"      | null              | []
-      "booberdev"  | "sprocket"      | null              | []
-      "booberdev"  | "tvinn"         | "atomhopper.json" | []
-      "jenkins"    | "build"         | null              | []
-      "booberdev"  | "reference-web" | null              | []
-      "booberdev"  | "build"         | null              | []
-      "booberdev"  | "aos-simple"    | null              | booberDevAosSimpleOverrides
-      "secrettest" | "aos-simple"    | null              | []
+      env           | name            | templateFile      | overrides
+      "booberdev"   | "console"       | null              | []
+      "webseal"     | "sprocket"      | null              | []
+      "booberdev"   | "sprocket"      | null              | []
+      "booberdev"   | "tvinn"         | "atomhopper.json" | []
+      "jenkins"     | "build"         | null              | []
+      "booberdev"   | "reference-web" | null              | []
+      "booberdev"   | "build"         | null              | []
+      "booberdev"   | "aos-simple"    | null              | booberDevAosSimpleOverrides
+      "secrettest"  | "aos-simple"    | null              | []
       "release"     | "aos-simple"    | null              | []
       "release"     | "build"         | null              | []
       "mounts"      | "aos-simple"    | null              | []
