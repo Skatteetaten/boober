@@ -116,7 +116,7 @@ class DeployService(
             val openShiftCommand = openShiftClient.createOpenShiftCommand(namespace, it)
             if (updateRouteCommandWithChangedHostOrPath(openShiftCommand)) {
                 val deleteCommand = openShiftCommand.copy(operationType = OperationType.DELETE)
-                val createCommand = openShiftCommand.copy(operationType = OperationType.CREATE)
+                val createCommand = openShiftCommand.copy(operationType = OperationType.CREATE, payload = openShiftCommand.generated!!)
                 listOf(deleteCommand, createCommand)
             } else {
                 listOf(openShiftCommand)
