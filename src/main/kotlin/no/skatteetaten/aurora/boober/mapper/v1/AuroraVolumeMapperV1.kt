@@ -47,7 +47,7 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>,
             }
 
             if (secretVault != null && (secrets == null || secrets.isEmpty())) {
-                IllegalArgumentException("No secret vault named=$secretVault, or you do not have permission to use it.")
+                IllegalArgumentException("No secret vault named=$secretVault.")
             } else {
                 null
             }
