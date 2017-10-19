@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import spock.lang.Unroll
 
