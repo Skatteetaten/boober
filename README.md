@@ -32,7 +32,6 @@ to import some dev/test data.
 
 By default, boober during development will deploy to the qa cluster.
 
-
 ### Setup ao
 
 To use the ```ao``` command line utility to perform actions against your local api add the ```--localhost``` flag to
@@ -158,6 +157,13 @@ Below is an json with all possible values ( and some comments)
 }
 
 ```
+
+### Cluster role
+
+oc get clusterrole -o json system:aurora:aurora-fraggle > aurora-fraggle.json
+Change name to "system:paas-boober:aurora-fraggle"
+oc create -f aurora-fraggle.json
+oc adm policy add-cluster-role-to-user system:paas-boober:aurora-fraggle system:serviceaccount:paas-boober:aurora-fraggle
 
 ### AuroraDeploymentConfiguration
 An internal represetantion of AuroraConfig that is normalized from an AuroraConfig via a AuroraConfigMapper abstraction.
