@@ -3,5 +3,9 @@
   "database": true,
   "management": {
     "port": 8082
+  },
+  "permissions": {
+    "adminServiceAccount": "system:serviceaccount:paas:jenkinsbuilder"
   }
+
 }
