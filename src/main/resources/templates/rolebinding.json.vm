@@ -15,6 +15,18 @@
 ]
 #end
 
+
+#if (${permission.users.size()} != 0)
+,"userNames": [
+  #foreach ($user in $permission.users)
+    #if($velocityCount != 1)
+      ,
+    #end
+    "${user}"
+  #end
+]
+#end
+
 #if (${permission.rolebindings.size()} != 0)
 ,"subjects": [
   #foreach ($binding in $permission.rolebindings.entrySet())

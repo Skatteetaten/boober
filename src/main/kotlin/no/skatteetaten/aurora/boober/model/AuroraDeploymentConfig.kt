@@ -97,6 +97,7 @@ data class AuroraDeploy(
 data class AuroraDeployStrategy(
         val type: String, val timeout: Int
 )
+
 data class AuroraLocalTemplate(
         val parameters: Map<String, String>?,
         val templateJson: JsonNode
@@ -139,7 +140,6 @@ data class Database(
 data class Probe(val path: String? = null, val port: Int, val delay: Int, val timeout: Int)
 
 
-
 data class Route(
         val name: String,
         val host: String? = null,
@@ -148,7 +148,6 @@ data class Route(
 )
 
 data class AuroraDeploymentConfigFlags(
-        val cert: Boolean = false,
         val debug: Boolean = false,
         val alarm: Boolean = false,
         val pause: Boolean = false
@@ -181,11 +180,15 @@ data class Permissions(
 )
 
 data class Permission(
-        val groups: Set<String>?
+        val groups: Set<String>?,
+        val users: Set<String>? = emptySet()
 ) {
     //In use in velocity template
     val rolebindings: Map<String, String>
         get(): Map<String, String> {
-            return groups?.map { Pair(it, "Group") }?.toMap() ?: mapOf()
+            val userPart = users?.map { Pair(it, "User") }?.toMap() ?: mapOf()
+            val groupPart = groups?.map { Pair(it, "Group") }?.toMap() ?: mapOf()
+            return userPart + groupPart
         }
 }
+
