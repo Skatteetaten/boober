@@ -69,12 +69,6 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
 
     )
 
-    fun getApplicationFile(applicationId: ApplicationId): AuroraConfigFile {
-        val fileName = "${applicationId.environment}/${applicationId.application}.json"
-        val file = applicationFiles.find { it.name == fileName && !it.override }
-        return file ?: throw IllegalArgumentException("Should find applicationFile $fileName")
-    }
-
     fun deploy(auroraConfigFields: AuroraConfigFields): AuroraDeploy? {
         val name = auroraConfigFields.extract("name")
         val certFlag = auroraConfigFields.extract("certificate", { it.asText() == "true" })
@@ -140,6 +134,12 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
                 liveness = getProbe(auroraConfigFields, "liveness"),
                 readiness = getProbe(auroraConfigFields, "readiness")
         )
+    }
+
+    private fun getApplicationFile(applicationId: ApplicationId): AuroraConfigFile {
+        val fileName = "${applicationId.environment}/${applicationId.application}.json"
+        val file = applicationFiles.find { it.name == fileName && !it.override }
+        return file ?: throw IllegalArgumentException("Should find applicationFile $fileName")
     }
 
     private fun disabledAndNoSubKeys(auroraConfigFields: AuroraConfigFields, name: String): Boolean {
