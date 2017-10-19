@@ -3,19 +3,7 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.ApplicationPlatform
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraDeploy
-import no.skatteetaten.aurora.boober.model.AuroraDeployStrategy
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigFlags
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResources
-import no.skatteetaten.aurora.boober.model.Database
-import no.skatteetaten.aurora.boober.model.HttpEndpoint
-import no.skatteetaten.aurora.boober.model.Probe
-import no.skatteetaten.aurora.boober.model.Webseal
-import no.skatteetaten.aurora.boober.model.findSubKeys
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.length
 import no.skatteetaten.aurora.boober.utils.notBlank
@@ -71,12 +59,17 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
 
     fun deploy(auroraConfigFields: AuroraConfigFields): AuroraDeploy? {
         val name = auroraConfigFields.extract("name")
-        val certFlag = auroraConfigFields.extract("certificate", { it.asText() == "true" })
         val groupId = auroraConfigFields.extract("groupId")
 
-        val certificateCnDefault = if (certFlag) "$groupId.$name" else null
-        val version = auroraConfigFields.extract("version")
+        val isSimplifiedCertConfig: Boolean = auroraConfigFields.extract("certificate", { it.isBoolean })
+        val certificateCn = if (isSimplifiedCertConfig) {
+            val certFlag: Boolean = auroraConfigFields.extract("certificate", { it.asText() == "true" })
+            if (certFlag) "$groupId.$name" else null
+        } else {
+            auroraConfigFields.extractOrNull("certificate/commonName")
+        }
 
+        val version = auroraConfigFields.extract("version")
 
         val releaseTo = auroraConfigFields.extractOrNull("releaseTo")
 
@@ -102,7 +95,6 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
                         auroraConfigFields.extract("deployStrategy/timeout", { it.asInt() })
                 ),
                 flags = AuroraDeploymentConfigFlags(
-                        certFlag,
                         auroraConfigFields.extract("debug", { it.asText() == "true" }),
                         auroraConfigFields.extract("alarm", { it.asText() == "true" }),
                         pause
@@ -126,7 +118,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
                 splunkIndex = auroraConfigFields.extractOrNull("splunkIndex"),
                 database = findDatabases(auroraConfigFields, name),
 
-                certificateCn = auroraConfigFields.extractOrDefault("certificate/commonName", certificateCnDefault),
+                certificateCn = certificateCn,
                 serviceAccount = auroraConfigFields.extractOrNull("serviceAccount"),
                 webseal = findWebseal(auroraConfigFields),
                 prometheus = findPrometheus(auroraConfigFields),
@@ -164,6 +156,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
         )
 
     }
+
     private fun findPrometheus(auroraConfigFields: AuroraConfigFields): HttpEndpoint? {
 
         val name = "prometheus"

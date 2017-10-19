@@ -24,4 +24,22 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraConfigTest {
     then:
       thrown(AuroraConfigException)
   }
+
+  def "Disabling certificate with simplified config over full config"() {
+    given:
+      modify(auroraConfigJson, "aos-simple.json", {
+        certificate = [commonName: "some_common_name"]
+      })
+
+    when:
+      def deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+    then:
+      deploymentSpec.deploy.certificateCn == "some_common_name"
+
+    when:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "certificate": false }'''
+      deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+    then:
+      !deploymentSpec.deploy.certificateCn
+  }
 }

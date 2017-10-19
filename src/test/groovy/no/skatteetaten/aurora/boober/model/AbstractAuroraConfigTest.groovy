@@ -5,12 +5,13 @@ import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecBuilderKt
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 import spock.lang.Specification
 
 abstract class AbstractAuroraConfigTest extends Specification {
 
-    static final DEFAULT_ABOUT = '''{
+  static final DEFAULT_ABOUT = '''{
   "schemaVersion": "v1",
   "permissions": {
     "admin": "APP_PaaS_utv"
@@ -18,11 +19,11 @@ abstract class AbstractAuroraConfigTest extends Specification {
   "affiliation" : "aos"
 }'''
 
-    static final String DEFAULT_UTV_ABOUT = '''{
+  static final String DEFAULT_UTV_ABOUT = '''{
   "cluster": "utv"
 }'''
 
-    static final String AOS_SIMPLE_JSON = '''{
+  static final String AOS_SIMPLE_JSON = '''{
   "certificate": true,
   "groupId": "ske.aurora.openshift",
   "artifactId": "aos-simple",
@@ -32,7 +33,7 @@ abstract class AbstractAuroraConfigTest extends Specification {
   "type": "deploy"
 }'''
 
-    static final String WEB_LEVERANSE = '''{
+  static final String WEB_LEVERANSE = '''{
   "applicationPlatform" : "web",
   "name" : "webleveranse",
   "groupId" : "no.skatteetaten.aurora",
@@ -48,25 +49,33 @@ abstract class AbstractAuroraConfigTest extends Specification {
   }
 }'''
 
+  static defaultAuroraConfig() {
+    [
+        "about.json"         : DEFAULT_ABOUT,
+        "utv/about.json"     : DEFAULT_UTV_ABOUT,
+        "aos-simple.json"    : AOS_SIMPLE_JSON,
+        "utv/aos-simple.json": '''{ }'''
+    ]
+  }
 
-    static defaultAuroraConfig() {
-        [
-                "about.json"         : DEFAULT_ABOUT,
-                "utv/about.json"     : DEFAULT_UTV_ABOUT,
-                "aos-simple.json"    : AOS_SIMPLE_JSON,
-                "utv/aos-simple.json": '''{ }'''
-        ]
+  static final DEFAULT_AID = aid("utv", "aos-simple")
+
+  static AuroraConfig createAuroraConfig(Map<String, String> auroraConfigJson) {
+    def objectMapper = new ObjectMapper()
+    def auroraConfigFiles = auroraConfigJson.collect { name, contents ->
+      new AuroraConfigFile(name, objectMapper.readValue(contents, JsonNode), false, null)
     }
+    def auroraConfig = new AuroraConfig(auroraConfigFiles, "aos")
+    auroraConfig
+  }
 
-    static final DEFAULT_AID = aid("utv", "aos-simple")
-
-
-    static AuroraConfig createAuroraConfig(Map<String, String> auroraConfigJson) {
-        def objectMapper = new ObjectMapper()
-        def auroraConfigFiles = auroraConfigJson.collect { name, contents ->
-            new AuroraConfigFile(name, objectMapper.readValue(contents, JsonNode), false, null)
-        }
-        def auroraConfig = new AuroraConfig(auroraConfigFiles, "aos")
-        auroraConfig
-    }
+  static modify(Map<String, String> auroraConfig, String fileName, Closure modifier) {
+    def configFile = auroraConfig[fileName]
+    def asJson = new JsonSlurper().parseText(configFile)
+    modifier.resolveStrategy = Closure.DELEGATE_FIRST
+    modifier.delegate = asJson
+    modifier()
+    def modifiedJson = JsonOutput.prettyPrint(JsonOutput.toJson(asJson))
+    auroraConfig[fileName] = modifiedJson
+  }
 }
