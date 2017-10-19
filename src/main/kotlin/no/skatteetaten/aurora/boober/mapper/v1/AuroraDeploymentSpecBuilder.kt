@@ -37,8 +37,8 @@ fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: Applic
     val templateMapper = AuroraTemplateMapperV1(applicationFiles)
     val buildMapper = AuroraBuildMapperV1()
     val handlers = (baseHandlers + deploymentSpecMapper.handlers + when (type) {
-        TemplateType.deploy -> routeMapper.handlers + volumeMapper.handlers + deployMapper.handlers
-        TemplateType.development -> routeMapper.handlers + volumeMapper.handlers + deployMapper.handlers + buildMapper.handlers
+        TemplateType.deploy ->  deployMapper.handlers + routeMapper.handlers + volumeMapper.handlers
+        TemplateType.development -> deployMapper.handlers + routeMapper.handlers + volumeMapper.handlers +  buildMapper.handlers
         TemplateType.localTemplate -> routeMapper.handlers + volumeMapper.handlers + localTemplateMapper.handlers
         TemplateType.template -> routeMapper.handlers + volumeMapper.handlers + templateMapper.handlers
         TemplateType.build -> buildMapper.handlers
