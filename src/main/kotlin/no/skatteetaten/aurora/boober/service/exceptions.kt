@@ -22,7 +22,14 @@ class ValidationException(
 class AuroraConfigException(
         message: String,
         val errors: List<ConfigFieldError> = listOf()
-) : ServiceException(message)
+) : ServiceException(message) {
+    override val message: String?
+        get() {
+            val message = super.message
+            val errorMessages = errors.map { it.message }.joinToString(", ")
+            return "$message. $errorMessages."
+        }
+}
 
 class AuroraVersioningException(message: String, val errors: List<VersioningError>) : ServiceException(message)
 
