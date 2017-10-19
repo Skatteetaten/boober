@@ -4,17 +4,13 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 
-fun renderJsonFromAuroraDeploymentSpec(deploymentSpec: AuroraDeploymentSpec): Map<String, Any?> {
-
-    val entriesWithMultiValues = listOf("route", "webseal", "database", "certificate", "prometheus",
-            "management", "readiness", "liveness")
-
-    val resultMap = mutableMapOf<String, Any?>()
+fun createMapForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSpec): Map<String, Any?> {
+    val fields = mutableMapOf<String, Any?>()
 
     deploymentSpec.fields.entries.forEach { entry ->
 
         val keys = entry.key.split("/")
-        var next = resultMap
+        var next = fields
 
         if (entry.value.value is ObjectNode) {
             return@forEach
@@ -39,17 +35,11 @@ fun renderJsonFromAuroraDeploymentSpec(deploymentSpec: AuroraDeploymentSpec): Ma
         }
     }
 
-    return resultMap.filter {
-        val rootKey = it.key.removePrefix("/")
-
-        if (!entriesWithMultiValues.contains(rootKey)) {
-            return@filter true
-        }
-
+    return fields.filter {
         val map = it.value as Map<String, Any>
         if (map.containsKey("value")) {
             val value = map["value"] as JsonNode
-            return@filter value.asText() != "false"
+            return@filter !(value.asText() == "false" && map["source"] == "default")
         }
 
         return@filter true

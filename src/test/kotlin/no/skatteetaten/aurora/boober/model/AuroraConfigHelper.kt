@@ -58,6 +58,16 @@ fun getDeployResultFiles(aid: ApplicationId): Map<String, JsonNode?> {
     return getFiles(baseFolder, aid.application)
 }
 
+fun getRendererResultFiles(aid: ApplicationId): Map<String, JsonNode?> {
+    val baseFolder = File(AuroraConfigHelper::class.java
+            .getResource("/samples/rendererresult/${aid.environment}").file)
+
+    return baseFolder.listFiles().toHashSet().map {
+        val json = convertFileToJsonNode(it)
+        it.name to json
+    }.toMap()
+}
+
 private fun getFiles(baseFolder: File, name: String = ""): Map<String, JsonNode?> {
     return baseFolder.listFiles().toHashSet().map {
         val json = convertFileToJsonNode(it)
