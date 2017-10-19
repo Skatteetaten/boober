@@ -42,4 +42,25 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraConfigTest {
     then:
       !deploymentSpec.deploy.certificateCn
   }
+
+  def "A"() {
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ 
+  "config": { 
+    "BOOL": false,
+    "INT": 42,
+    "FLOAT": 4.2
+  } 
+}'''
+
+    when:
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    then:
+      deploymentSpec.fields.each { println it }
+      true
+    println deploymentSpec.fields["config/BOOL"].value
+    println deploymentSpec.fields["config/INT"].value
+    println deploymentSpec.fields["config/FLOAT"].value
+  }
 }
