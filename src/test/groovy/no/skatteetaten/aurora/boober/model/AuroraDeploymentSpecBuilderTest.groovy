@@ -15,7 +15,8 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraConfigTest {
 
   def "Fails when envFile does not start with about"() {
     given:
-      auroraConfigJson["utv/aos-simple.json"] = '''{ "envFiles": "foo" }'''
+      auroraConfigJson["utv/foo.json"] = '''{ }'''
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "envFile": "foo.json" }'''
 
     when:
       createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
