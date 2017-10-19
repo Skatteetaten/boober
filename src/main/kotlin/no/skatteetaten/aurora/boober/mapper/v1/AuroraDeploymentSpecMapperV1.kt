@@ -2,7 +2,17 @@ package no.skatteetaten.aurora.boober.mapper.v1
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.AuroraBuild
+import no.skatteetaten.aurora.boober.model.AuroraDeploy
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraLocalTemplate
+import no.skatteetaten.aurora.boober.model.AuroraRoute
+import no.skatteetaten.aurora.boober.model.AuroraTemplate
+import no.skatteetaten.aurora.boober.model.AuroraVolume
+import no.skatteetaten.aurora.boober.model.Permission
+import no.skatteetaten.aurora.boober.model.Permissions
+import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.pattern
 
@@ -15,7 +25,8 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
             AuroraConfigFieldHandler("name", validator = { it.pattern("^[a-z][-a-z0-9]{0,38}[a-z0-9]$", "Name must be alphanumeric and no more than 40 characters") }),
             AuroraConfigFieldHandler("envName"),
             AuroraConfigFieldHandler("permissions/admin"),
-            AuroraConfigFieldHandler("permissions/view")
+            AuroraConfigFieldHandler("permissions/view"),
+            AuroraConfigFieldHandler("permissions/adminServiceAccount")
     )
 
     fun createAuroraDeploymentSpec(auroraConfigFields: AuroraConfigFields,
@@ -47,14 +58,16 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
     }
 
     private fun extractPermissions(auroraConfigFields: AuroraConfigFields): Permissions {
-        val viewGroups = auroraConfigFields.extractOrNull("permissions/view", { it.textValue().split(" ").toSet() })
-        val view = if (viewGroups != null) {
-            Permission(viewGroups)
-        } else null
+        val view = auroraConfigFields.extractOrNull("permissions/view", { it.textValue().split(" ").toSet() })?.let {
+            Permission(it)
+        }
 
-        return Permissions(
+        //if sa present add to admin users.
+        val sa = auroraConfigFields.extractOrNull("permissions/adminServiceAccount", { it.textValue().split(" ").toSet() }) ?: emptySet()
+        val permission = Permissions(
                 admin = Permission(
-                        auroraConfigFields.extract("permissions/admin", { it.textValue().split(" ").filter { !it.isBlank() }.toSet() })),
+                        auroraConfigFields.extract("permissions/admin", { it.textValue().split(" ").filter { !it.isBlank() }.toSet() }), sa),
                 view = view)
+        return permission
     }
 }
