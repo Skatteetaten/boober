@@ -49,7 +49,6 @@ class AuroraBuildMapperV1 {
 
         return AuroraBuild(
                 applicationPlatform = ApplicationPlatform.valueOf(auroraConfigFields.extract("applicationPlatform")),
-                testJenkinsfile = auroraConfigFields.extract("test/jenkinsfile"),
                 testGitUrl = testGitUrl,
                 testTag = auroraConfigFields.extractOrNull("test/tag"),
                 baseName = baseName,
@@ -76,7 +75,6 @@ class AuroraBuildMapperV1 {
             AuroraConfigFieldHandler("baseImage/name"),
             AuroraConfigFieldHandler("baseImage/version"),
             AuroraConfigFieldHandler("test/gitUrl"),
-            AuroraConfigFieldHandler("test/jenkinsfile", defaultValue = "test.Jenkinsfile"),
             AuroraConfigFieldHandler("test/tag"),
             AuroraConfigFieldHandler("groupId", validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
             AuroraConfigFieldHandler("artifactId", validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters") }),

@@ -37,7 +37,7 @@
     },
     "strategy": {
       "jenkinsPipelineStrategy": {
-      "jenkinsfilePath": "${build.testJenkinsfile}"
+      "jenkinsfilePath": "Jenkinsfile"
       }
     }
   }
