@@ -4,6 +4,7 @@ import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 
 import com.fasterxml.jackson.databind.JsonNode
 
+import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.Configuration
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
@@ -55,11 +56,40 @@ class OpenShiftObjectGeneratorConfigMapTest extends AbstractAuroraDeploymentSpec
       assertFileHasLinesWithProperties(propertiesFile, ["OPPSLAGSTJENESTE_DELEGERING", "VALIDER_SAML_URL"])
   }
 
+  def "Renders non String configs properly"() {
+    given:
+      def auroraConfigJson = defaultAuroraConfig()
+      auroraConfigJson["utv/aos-simple.json"] = '''{ 
+  "config": {
+    "STRING": "Hello", 
+    "BOOL": false,
+    "INT": 42,
+    "FLOAT": 4.2,
+    "JSON": "{\\"key\\": \\"value\\"}"
+  } 
+}'''
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    when:
+      def jsonMounts = objectGenerator.generateMount(deploymentSpec, "deploy-id")
+
+    then:
+      deploymentSpec.fields.findAll { it.key.contains("config") }.each { println it }
+      jsonMounts.size() == 1
+      JsonNode mount = jsonMounts.first()
+
+      println JsonOutput.prettyPrint(mount.toString())
+
+      def latestProperties = mount.get('data').get('latest.properties').textValue()
+      assertFileHasLinesWithProperties(latestProperties, ["STRING", "BOOL", "INT", "FLOAT", "JSON"])
+  }
+
   void assertFileHasLinesWithProperties(String latestProperties, List<String> propertyNames) {
     // The following statement will produce a list of pairs of property name and a line from the latest.properties
     def lineProperties = [propertyNames, latestProperties.readLines()].transpose()
     lineProperties.each { String propertyName, String propertyLine ->
-      assert propertyLine.startsWith(propertyName)
+      assert propertyLine.startsWith("$propertyName=")
+      assert !propertyLine.startsWith("$propertyName=null")
     }
   }
 
