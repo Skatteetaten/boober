@@ -74,7 +74,7 @@ fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSp
         val indents = " ".repeat(level * indentLength)
 
         if (entry.value.keys.all { defaultKeys.indexOf(it) != -1 }) {
-            val keySpaces = " ".repeat(keyMaxLength + 3 - key.length - level * 2)
+            val keySpaces = " ".repeat(keyMaxLength + 2 - key.length - level * 2)
             val valueSpaces = " ".repeat(valueMaxLength + 1 - value.length)
 
             return "$result$indents$key:$keySpaces$value$valueSpaces// $source\n"
@@ -124,8 +124,9 @@ private fun findMaxKeyAndValueLength(fields: Map<String, AuroraConfigField>, ind
         }
 
         it.key.split("/").forEachIndexed { i, k ->
-            if (k.length + indentLength * i > keyMaxLength) {
-                keyMaxLength = it.key.length + indentLength * i
+            val key = k.length + indentLength * i + 1
+            if (key > keyMaxLength) {
+                keyMaxLength = key
             }
         }
     }

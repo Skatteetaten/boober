@@ -5,10 +5,8 @@ import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.service.DeployBundleService
 import no.skatteetaten.aurora.boober.service.createMapForAuroraDeploymentSpecPointers
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/auroradeployspec")
@@ -16,11 +14,27 @@ class AuroraDeploymentSpecController(val deployBundleService: DeployBundleServic
 
     @Timed
     @GetMapping("/{affiliation}/{environment}/{application}")
-    fun get(@PathVariable affiliation: String, @PathVariable environment: String, @PathVariable application: String): Response {
-
+    fun get(
+            @PathVariable affiliation: String,
+            @PathVariable environment: String,
+            @PathVariable application: String,
+            @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
+    ): Response {
         val spec = deployBundleService.createAuroraDeploymentSpec(affiliation, ApplicationId.aid(environment, application), emptyList())
-        val rendered = createMapForAuroraDeploymentSpecPointers(spec)
+        val mapOfPointers = createMapForAuroraDeploymentSpecPointers(spec, includeDefaults)
 
-        return Response(items = listOf(rendered))
+        return Response(items = listOf(mapOfPointers))
+    }
+
+    @Timed
+    @GetMapping("/{affiliation}/{environment}/{application}/formatted")
+    fun getJsonForMapOfPointers(
+            @PathVariable affiliation: String,
+            @PathVariable environment: String,
+            @PathVariable application: String,
+            @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
+    ): String {
+        val spec = deployBundleService.createAuroraDeploymentSpec(affiliation, ApplicationId.aid(environment, application), emptyList())
+        return renderJsonForAuroraDeploymentSpecPointers(spec, includeDefaults)
     }
 }
