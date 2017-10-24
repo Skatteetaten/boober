@@ -16,7 +16,9 @@ import no.skatteetaten.aurora.boober.utils.updateField
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.http.HttpHeaders
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
 
@@ -153,16 +155,9 @@ class OpenShiftClient(
     }
 
 
-    fun isValidUser(user: String): Boolean {
-        if (user.startsWith("system:serviceaccount")) {
-            return true
-        }
-        return exist("$baseUrl/oapi/v1/users/$user")
-    }
-
     fun isValidGroup(group: String): Boolean {
 
-        return exist("$baseUrl/oapi/v1/groups/$group")
+        return getGroups(group) != null
     }
 
     fun templateExist(template: String): Boolean {
@@ -175,9 +170,16 @@ class OpenShiftClient(
         return existingResource != null
     }
 
-    fun isUserInGroup(user: String, group: String): Boolean {
+    @Cacheable("groups")
+    private fun getGroups(group: String): ResponseEntity<JsonNode>? {
+
         val url = "$baseUrl/oapi/v1/groups/$group"
-        val resource = serviceAccountClient.get(url)
+        return serviceAccountClient.get(url)
+    }
+
+    @Cacheable("userInGroups")
+    fun isUserInGroup(user: String, group: String): Boolean {
+        val resource = getGroups(group)
         return resource?.body?.get("users")?.any { it.textValue() == user } ?: false
     }
 

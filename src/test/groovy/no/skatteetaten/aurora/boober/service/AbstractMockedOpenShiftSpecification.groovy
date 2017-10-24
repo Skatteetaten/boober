@@ -122,7 +122,6 @@ class AbstractMockedOpenShiftSpecification extends Specification {
       userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User")
 
       openShiftClient.isValidGroup(_) >> true
-      openShiftClient.isValidUser(_) >> true
     }
 
     if (useAuroraConfig) {

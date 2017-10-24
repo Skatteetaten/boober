@@ -25,7 +25,6 @@ class AuroraDeploymentConfigDeployServiceUserValidationTest extends AbstractMock
   def "Should get error if user is not valid"() {
 
     given:
-      openShiftClient.isValidUser(_) >> false
       openShiftClient.isValidGroup(_) >> true
 
     when:
@@ -42,7 +41,6 @@ class AuroraDeploymentConfigDeployServiceUserValidationTest extends AbstractMock
   def "Should get error if group is not valid"() {
 
     given:
-      openShiftClient.isValidUser(_) >> true
       openShiftClient.isValidGroup(_) >> false
     when:
 
