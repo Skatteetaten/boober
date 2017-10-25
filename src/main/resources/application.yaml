@@ -11,6 +11,9 @@ openshift:
 spring:
   profiles:
     active: local
+  cache:
+    caffeine:
+      spec: maximumSize=200,expireAfterAccess=300s
 
 boober:
     git:
@@ -19,6 +22,11 @@ boober:
         registry: "docker-registry.aurora.sits.no:5000"
     openshift:
         tokenLocation: /var/run/secrets/kubernetes.io/serviceaccount/token
+
+aurora:
+  starter:
+    headerfilter:
+      enabled: false
 
 logging:
   level:
@@ -35,7 +43,7 @@ logging:
 spring:
     profiles: local
     application:
-            name: boober
+        name: boober
 
 openshift:
     cluster: qa

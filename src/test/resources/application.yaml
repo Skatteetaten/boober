@@ -3,9 +3,6 @@ spring:
         banner-mode: "off"
     application:
         name: boober
-     cache:
-        caffeine:
-          spec: maximumSize=200,expireAfterAccess=300s
 
 boober:
   encrypt:
