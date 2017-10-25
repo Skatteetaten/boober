@@ -43,9 +43,6 @@ class OpenShiftClientCreateOpenShiftCommandTest extends AbstractAuroraDeployment
   def "Updates the generated DeploymentConfig with relevant existing data"() {
 
     given:
-      osClusterMock.expect(requestTo("$openShiftUrl/oapi/v1/projects/aos")).
-          andRespond(withSuccess(loadResource("aos.json"), MediaType.APPLICATION_JSON))
-
       osClusterMock.expect(requestTo("$openShiftUrl/oapi/v1/namespaces/aos/deploymentconfigs/webleveranse")).
           andRespond(withSuccess(loadResource("webleveranse.json"), MediaType.APPLICATION_JSON))
 
@@ -53,7 +50,7 @@ class OpenShiftClientCreateOpenShiftCommandTest extends AbstractAuroraDeployment
       JsonNode deploymentConfig = objectGenerator.generateDeploymentConfig(deploymentSpec, "deploy-id")
 
     when:
-      OpenshiftCommand command = client.createOpenShiftCommand("aos", deploymentConfig)
+      OpenshiftCommand command = client.createOpenShiftCommand("aos", deploymentConfig, true)
 
     then: "Preserves the lastTriggeredImage"
       def lastTriggeredImagePath = "/spec/triggers/0/imageChangeParams/lastTriggeredImage"

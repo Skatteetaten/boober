@@ -12,8 +12,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
@@ -35,7 +33,7 @@ class DeployServiceGenerateRedeployResourceTest extends AbstractMockedOpenShiftS
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
   def setup() {
-    openShiftClient.createOpenShiftCommand(_, _) >> { new OpenshiftCommand(OperationType.CREATE, it[1]) }
+    openShiftClient.createOpenShiftCommand(_, _, _) >> { new OpenshiftCommand(OperationType.CREATE, it[1]) }
     openShiftClient.performOpenShiftCommand(_, _) >> {
       OpenshiftCommand cmd = it[1]
       new OpenShiftResponse(cmd, cmd.payload)

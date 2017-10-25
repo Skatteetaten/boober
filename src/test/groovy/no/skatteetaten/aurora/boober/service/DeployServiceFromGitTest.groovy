@@ -1,7 +1,12 @@
 package no.skatteetaten.aurora.boober.service
 
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
+
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+
 import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
@@ -10,9 +15,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 
 class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
@@ -44,7 +46,7 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
     def namespaceJson = mapper.
         convertValue(["kind": "namespace", "metadata": ["labels": ["affiliation": affiliation]]], JsonNode.class)
-    openShiftClient.createOpenShiftCommand(_, _) >> { new OpenshiftCommand(OperationType.CREATE, it[1]) }
+    openShiftClient.createOpenShiftCommand(_, _, _) >> { new OpenshiftCommand(OperationType.CREATE, it[1]) }
     openShiftClient.createUpdateRolebindingCommand(_, _) >> {
       new OpenshiftCommand(OperationType.UPDATE, it[0], null, it[0])
     }

@@ -3,8 +3,6 @@ package no.skatteetaten.aurora.boober.service
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraGitFile
-import no.skatteetaten.aurora.boober.service.AuroraConfigException
-import no.skatteetaten.aurora.boober.service.GitException
 import no.skatteetaten.aurora.boober.utils.use
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.EmtpyCommitException
@@ -21,7 +19,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
 import java.io.FileWriter
-import java.util.*
 
 @Service
 class GitService(
@@ -37,9 +34,17 @@ class GitService(
     val cp = UsernamePasswordCredentialsProvider(username, password)
 
     fun checkoutRepoForAffiliation(affiliation: String): Git {
-
+        val repoPath = File("$checkoutPath/$affiliation")
+        if (repoPath.exists()) {
+            val git = Git.open(repoPath)
+            //TODO:Error handling
+            git.pull()
+                    .setCredentialsProvider(cp)
+                    .call()
+            return git
+        }
         return metrics.withMetrics("git_checkout", {
-            val dir = File("$checkoutPath/${UUID.randomUUID()}").apply { mkdirs() }
+            val dir = repoPath.apply { mkdirs() }
             val uri = url.format(affiliation)
 
             try {
@@ -88,13 +93,17 @@ class GitService(
     }
 
     fun closeRepository(repo: Git) {
-        File(repo.repository.directory.parent).deleteRecursively()
+        //   File(repo.repository.directory.parent).deleteRecursively()
         repo.close()
     }
 
+
+    //TODO: Get files without revCommit
+    @Synchronized
     fun getAllFilesInRepo(git: Git): Map<String, Pair<RevCommit?, File>> {
+        logger.debug("Get all files")
         val folder = git.repository.directory.parentFile
-        return folder.walkBottomUp()
+        val files = folder.walkBottomUp()
                 .onEnter { !it.name.startsWith(".git") }
                 .filter { it.isFile }
                 .associate {
@@ -107,6 +116,9 @@ class GitService(
                     }
                     path to Pair(commit, it)
                 }
+
+        logger.debug("/Get all files")
+        return files
     }
 
     fun getAllFilesInRepoList(git: Git): List<AuroraGitFile> {

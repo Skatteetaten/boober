@@ -185,18 +185,18 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
             val fields = handlers.mapNotNull { handler ->
 
                 val matches = files.reversed().mapNotNull {
-                    logger.debug("Check if  ${handler.path} exist in file  ${it.contents}")
+                    logger.trace("Check if  ${handler.path} exist in file  ${it.contents}")
                     val value = it.contents.at(handler.path)
 
                     if (!value.isMissingNode) {
-                        logger.debug("Match $value i fil ${it.configName}")
+                        logger.trace("Match $value i fil ${it.configName}")
                         handler.name to AuroraConfigField(handler.path, value, it.configName)
                     } else null
                 }
 
                 when {
                     (matches.isEmpty() && handler.defaultValue != null) -> {
-                        logger.debug("Default match ${handler.defaultValue}")
+                        logger.trace("Default match ${handler.defaultValue}")
                         handler.name to AuroraConfigField(handler.path, TextNode(handler.defaultValue), "default")
                     }
                     matches.isNotEmpty() -> matches.first()

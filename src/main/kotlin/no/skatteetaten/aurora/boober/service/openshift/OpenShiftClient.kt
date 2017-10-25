@@ -90,9 +90,7 @@ class OpenShiftClient(
     }
 
 
-    fun createOpenShiftCommand(namespace: String, json: JsonNode): OpenshiftCommand {
-
-        val projectExist = projectExists(namespace)
+    fun createOpenShiftCommand(namespace: String, json: JsonNode, projectExist: Boolean): OpenshiftCommand {
 
         val generated = json.deepCopy<JsonNode>()
 
@@ -177,7 +175,6 @@ class OpenShiftClient(
         return serviceAccountClient.get(url)
     }
 
-    @Cacheable("userInGroups")
     fun isUserInGroup(user: String, group: String): Boolean {
         val resource = getGroups(group)
         return resource?.body?.get("users")?.any { it.textValue() == user } ?: false

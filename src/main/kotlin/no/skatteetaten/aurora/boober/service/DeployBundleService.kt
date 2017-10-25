@@ -7,7 +7,15 @@ import com.github.fge.jsonpatch.JsonPatch
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.mapper.v1.createAuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.ConfigFieldError
+import no.skatteetaten.aurora.boober.model.DeployBundle
+import no.skatteetaten.aurora.boober.model.Error
+import no.skatteetaten.aurora.boober.model.ValidationError
+import no.skatteetaten.aurora.boober.model.VersioningError
 import no.skatteetaten.aurora.boober.service.internal.Result
 import no.skatteetaten.aurora.boober.service.internal.onErrorThrow
 import org.eclipse.jgit.api.Git
@@ -31,18 +39,26 @@ class DeployBundleService(
 
 
     fun createDeployBundle(affiliation: String, overrideFiles: List<AuroraConfigFile> = listOf()): DeployBundle {
+        logger.debug("Get repo")
         val repo = getRepo(affiliation)
+        logger.debug("Get all files")
         val allFilesInRepo: Map<String, Pair<RevCommit?, File>> = gitService.getAllFilesInRepo(repo)
-        val auroraConfig = createAuroraConfigFromFiles(allFilesInRepo, affiliation)
-        val vaults = secretVaultFacade.listAllVaults(repo).associateBy { it.name }
 
+        logger.debug("Create Aurora config")
+        val auroraConfig = createAuroraConfigFromFiles(allFilesInRepo, affiliation)
+
+        logger.debug("Get all vaults")
+        val vaults = secretVaultFacade.listAllVaults(repo).associateBy { it.name }
         return DeployBundle(auroraConfig = auroraConfig, vaults = vaults, repo = repo, overrideFiles = overrideFiles)
     }
 
     fun <T> withDeployBundle(affiliation: String, overrideFiles: List<AuroraConfigFile> = listOf(), function: (DeployBundle) -> T): T {
 
+        logger.debug("Create deploy bundle")
         val deployBundle = createDeployBundle(affiliation, overrideFiles)
+        logger.debug("Perform op on deploy bundle")
         val res = function(deployBundle)
+        logger.debug("Close and delete repo")
         gitService.closeRepository(deployBundle.repo)
         return res
     }

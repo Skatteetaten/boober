@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.model
 import com.fasterxml.jackson.databind.JsonNode
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
+import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 
 
 enum class TemplateType {
@@ -33,6 +34,18 @@ data class AuroraDeploymentSpec(
 ) {
     val namespace: String
         get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"
+
+    fun assembleRouteHost(hostPrefix: String = name): String {
+
+        val hostSuffix = "$namespace.$cluster.paas.skead.no"
+
+        return if (hostPrefix.isBlank()) {
+            hostSuffix
+        } else {
+            hostPrefix.ensureEndsWith(hostSuffix, "-")
+        }
+
+    }
 }
 
 data class AuroraVolume(
