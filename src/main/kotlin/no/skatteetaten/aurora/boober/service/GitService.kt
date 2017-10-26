@@ -35,15 +35,28 @@ class GitService(
 
     val cp = UsernamePasswordCredentialsProvider(username, password)
 
+    fun deleteFiles(affiliation: String) {
+        val repoDir = File(checkoutPath + "/" + affiliation)
+        if (repoDir.exists()) {
+            repoDir.deleteRecursively()
+        }
+    }
+
+    fun openRepo(affiliation: String): Git {
+        val repoPath = File("$checkoutPath/$affiliation")
+        return Git.open(repoPath)
+    }
+
     fun checkoutRepoForAffiliation(affiliation: String): Git {
         synchronized(affiliation, {
             val repoPath = File("$checkoutPath/$affiliation")
             if (repoPath.exists()) {
                 val git = Git.open(repoPath)
-                 git.pull()
-                         .setRebase(true)
-                         .setCredentialsProvider(cp)
-                         .call()
+                git.pull()
+                        .setRebase(true)
+                        .setRemote("origin")
+                        .setCredentialsProvider(cp)
+                        .call()
                 return git
             }
             return metrics.withMetrics("git_checkout", {
@@ -101,11 +114,7 @@ class GitService(
         }
     }
 
-    @JvmOverloads
-    fun closeRepository(repo: Git, deleteFiles: Boolean = false) {
-        if (deleteFiles) {
-            File(repo.repository.directory.parent).deleteRecursively()
-        }
+    fun closeRepository(repo: Git) {
         repo.close()
     }
 
