@@ -129,13 +129,9 @@ class GitService(
     }
 
     fun getAllFilesInRepo(git: Git): Map<String, Pair<RevCommit?, File>> {
-
-        logger.debug("Get all files")
         val files = getAllAuroraConfigFiles(git).mapValues {
             Pair(getRevCommit(git, it.key), it.value)
         }
-
-        logger.debug("/Get all files")
         return files
     }
 

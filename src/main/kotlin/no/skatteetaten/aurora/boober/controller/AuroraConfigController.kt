@@ -7,6 +7,8 @@ import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.internal.fromAuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.DeployBundleService
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -23,6 +25,7 @@ import javax.servlet.http.HttpServletRequest
 class AuroraConfigController(val deployBundleService: DeployBundleService) {
 
 
+    val logger: Logger = LoggerFactory.getLogger(AuroraConfigController::class.java)
     //TODO: Method to return a single auroraConfig File
     //TODO: Method to return all filenames
 
@@ -47,7 +50,10 @@ class AuroraConfigController(val deployBundleService: DeployBundleService) {
     @Timed
     @GetMapping("/auroraconfig")
     fun get(@PathVariable affiliation: String): Response {
-        return createAuroraConfigResponse(deployBundleService.findAuroraConfig(affiliation))
+        logger.debug("Henter aurora config")
+        val res =  createAuroraConfigResponse(deployBundleService.findAuroraConfig(affiliation))
+        logger.debug("/Henter aurora config")
+        return res
     }
 
 

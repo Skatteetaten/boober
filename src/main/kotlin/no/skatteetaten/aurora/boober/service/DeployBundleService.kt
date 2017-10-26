@@ -63,10 +63,13 @@ class DeployBundleService(
     }
 
     fun findAuroraConfig(affiliation: String): AuroraConfig {
+        logger.debug("Find aurora config")
         val repo = getRepo(affiliation)
         //TODO: add revCommit
         val allFilesInRepo: Map<String, Pair<RevCommit?, File>> = gitService.getAllFilesInRepo(repo)
-        return createAuroraConfigFromFiles(allFilesInRepo, affiliation)
+        val res = createAuroraConfigFromFiles(allFilesInRepo, affiliation)
+        logger.debug("/Find aurora config")
+        return res
     }
 
     fun saveAuroraConfig(auroraConfig: AuroraConfig, validateVersions: Boolean): AuroraConfig {
