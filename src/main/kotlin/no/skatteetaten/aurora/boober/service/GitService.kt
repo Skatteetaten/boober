@@ -42,9 +42,13 @@ class GitService(
                 val git = Git.open(repoPath)
                 ///TODO reset hard head? Is it an error if this is dirty?
                 //TODO:Error handling
-                //   git.pull()
-                //           .setCredentialsProvider(cp)
-                //           .call()
+                /*
+                 git.pull()
+                         .setRebase(true)
+                         .setRemote("origin")
+                         .setRemoteBranchName("master")
+                         .setCredentialsProvider(cp)
+                         .call()*/
                 return git
             }
             return metrics.withMetrics("git_checkout", {
@@ -97,8 +101,11 @@ class GitService(
         }
     }
 
-    fun closeRepository(repo: Git) {
-        //   File(repo.repository.directory.parent).deleteRecursively()
+    @JvmOverloads
+    fun closeRepository(repo: Git, deleteFiles: Boolean = false) {
+        if (deleteFiles) {
+            File(repo.repository.directory.parent).deleteRecursively()
+        }
         repo.close()
     }
 

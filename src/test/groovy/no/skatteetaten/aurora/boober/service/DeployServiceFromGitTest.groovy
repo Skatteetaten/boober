@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
+import org.eclipse.jgit.api.Git
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -42,6 +43,7 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
+  Git git
   def setup() {
 
     def namespaceJson = mapper.
@@ -58,6 +60,13 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
       new OpenShiftResponse(cmd, cmd.payload)
     }
     openShiftClient.createOpenShiftDeleteCommands(_, _, _, _) >> []
+
+//make sure repo is empty before each test.
+    git = gitService.checkoutRepoForAffiliation(affiliation)
+  }
+
+  def cleanup() {
+    gitService.closeRepository(git, true)
   }
 
   def "Should perform release and generate a redploy request"() {
@@ -88,7 +97,6 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
     deployService.executeDeploy(affiliation, [new ApplicationId(ENV_NAME, APP_NAME)], [], true)
 
     then:
-      def git = gitService.checkoutRepoForAffiliation(affiliation)
 
       def history = gitService.tagHistory(git)
       history.size() == 1
@@ -97,8 +105,6 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
       revTag.taggerIdent != null
       revTag.fullMessage.startsWith("""{"deployId":""")
       revTag.tagName.startsWith("DEPLOY/utv.aos-booberdev.aos-simple/")
-      gitService.closeRepository(git)
-
   }
 
   def "Should perform two releases and get deploy history"() {
