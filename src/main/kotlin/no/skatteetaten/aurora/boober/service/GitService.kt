@@ -2,7 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.model.AuroraGitFile
+import no.skatteetaten.aurora.boober.model.AuroraSecretFile
 import no.skatteetaten.aurora.boober.utils.use
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.EmtpyCommitException
@@ -29,34 +29,39 @@ class GitService(
         @Value("\${boober.git.password}") val password: String,
         val metrics: AuroraMetrics) {
 
+    val GIT_SECRET_FOLDER = ".secret"
+
     val logger: Logger = LoggerFactory.getLogger(GitService::class.java)
 
     val cp = UsernamePasswordCredentialsProvider(username, password)
 
     fun checkoutRepoForAffiliation(affiliation: String): Git {
-        val repoPath = File("$checkoutPath/$affiliation")
-        if (repoPath.exists()) {
-            val git = Git.open(repoPath)
-            //TODO:Error handling
-            git.pull()
-                    .setCredentialsProvider(cp)
-                    .call()
-            return git
-        }
-        return metrics.withMetrics("git_checkout", {
-            val dir = repoPath.apply { mkdirs() }
-            val uri = url.format(affiliation)
-
-            try {
-                Git.cloneRepository()
-                        .setURI(uri)
-                        .setCredentialsProvider(cp)
-                        .setDirectory(dir)
-                        .call()
-            } catch (ex: Exception) {
-                dir.deleteRecursively()
-                throw ex
+        synchronized(affiliation, {
+            val repoPath = File("$checkoutPath/$affiliation")
+            if (repoPath.exists()) {
+                val git = Git.open(repoPath)
+                ///TODO reset hard head? Is it an error if this is dirty?
+                //TODO:Error handling
+                //   git.pull()
+                //           .setCredentialsProvider(cp)
+                //           .call()
+                return git
             }
+            return metrics.withMetrics("git_checkout", {
+                val dir = repoPath.apply { mkdirs() }
+                val uri = url.format(affiliation)
+
+                try {
+                    Git.cloneRepository()
+                            .setURI(uri)
+                            .setCredentialsProvider(cp)
+                            .setDirectory(dir)
+                            .call()
+                } catch (ex: Exception) {
+                    dir.deleteRecursively()
+                    throw ex
+                }
+            })
         })
     }
 
@@ -97,45 +102,52 @@ class GitService(
         repo.close()
     }
 
+    fun getAllFiles(git: Git): Map<String, File> {
 
-    //TODO: Get files without revCommit
-    @Synchronized
-    fun getAllFilesInRepo(git: Git): Map<String, Pair<RevCommit?, File>> {
-        logger.debug("Get all files")
         val folder = git.repository.directory.parentFile
+        logger.debug("Get all files")
         val files = folder.walkBottomUp()
                 .onEnter { !it.name.startsWith(".git") }
                 .filter { it.isFile }
                 .associate {
-                    val path = it.relativeTo(folder).path
-                    val commit = try {
-                        git.log().addPath(path).setMaxCount(1).call().firstOrNull()
-                    } catch (e: NoHeadException) {
-                        logger.debug("No history was found for path={}", path)
-                        null
-                    }
-                    path to Pair(commit, it)
+                    it.relativeTo(folder).path to it
                 }
+        logger.debug("/Get all files")
+        return files
+    }
+
+    fun getAllAuroraConfigFiles(git: Git): Map<String, File> {
+        return getAllFiles(git)
+                .filter { !it.key.startsWith(GIT_SECRET_FOLDER) }
+    }
+
+    fun getAllFilesInRepo(git: Git): Map<String, Pair<RevCommit?, File>> {
+
+        logger.debug("Get all files")
+        val files = getAllAuroraConfigFiles(git).mapValues {
+            Pair(getRevCommit(git, it.key), it.value)
+        }
 
         logger.debug("/Get all files")
         return files
     }
 
-    fun getAllFilesInRepoList(git: Git): List<AuroraGitFile> {
-        val folder = git.repository.directory.parentFile
-        return folder.walkBottomUp()
-                .onEnter { !it.name.startsWith(".git") }
-                .filter { it.isFile }
+    fun getAllSecretFilesInRepoList(git: Git): List<AuroraSecretFile> {
+        return getAllFiles(git)
+                .filter { it.key.startsWith(GIT_SECRET_FOLDER) }
                 .map {
-                    val path = it.relativeTo(folder).path
-                    val commit = try {
-                        git.log().addPath(path).setMaxCount(1).call().firstOrNull()
-                    } catch (e: NoHeadException) {
-                        logger.debug("No history was found for path={}", path)
-                        null
-                    }
-                    AuroraGitFile(path, it, commit)
-                }.toList()
+                    AuroraSecretFile(it.key, it.value, getRevCommit(git, it.key))
+                }
+    }
+
+    private fun getRevCommit(git: Git, path: String?): RevCommit? {
+        val commit = try {
+            git.log().addPath(path).setMaxCount(1).call().firstOrNull()
+        } catch (e: NoHeadException) {
+            logger.debug("No history was found for path={}", path)
+            null
+        }
+        return commit
     }
 
     private fun writeAndAddChanges(git: Git, files: Map<String, String>) {
@@ -158,11 +170,15 @@ class GitService(
 
     private fun deleteMissingFiles(git: Git, files: Set<String>, keep: (String) -> Boolean) {
 
-        getAllFilesInRepo(git)
+        logger.debug("delete files")
+        //TODO: If this takes time rewrite to not include File content
+        getAllFiles(git)
                 .map { it.key }
                 .filter { keep.invoke(it) }
                 .filter { !files.contains(it) }
                 .forEach { git.rm().addFilepattern(it).call() }
+
+        logger.debug("/delete files")
     }
 
     private fun commitAllChanges(git: Git, message: String): RevCommit {

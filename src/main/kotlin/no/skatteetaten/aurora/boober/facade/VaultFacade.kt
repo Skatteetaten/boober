@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.facade
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.model.AuroraGitFile
+import no.skatteetaten.aurora.boober.model.AuroraSecretFile
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.model.VersioningError
 import no.skatteetaten.aurora.boober.service.AuroraVersioningException
@@ -116,7 +116,7 @@ class VaultFacade(
     private fun commit(repo: Git,
                        oldVault: AuroraSecretVault,
                        vault: AuroraSecretVault,
-                       vaultFiles: List<AuroraGitFile>,
+                       vaultFiles: List<AuroraSecretFile>,
                        validateVersions: Boolean
     ) {
 
@@ -160,7 +160,7 @@ class VaultFacade(
 
     private fun encryptSecrets(oldSecrets: Map<String, String>,
                                newSecrets: Map<String, String>,
-                               allFilesInRepo: List<AuroraGitFile>): Map<String, String> {
+                               allFilesInRepo: List<AuroraSecretFile>): Map<String, String> {
 
 
         val encryptedChangedSecrets = newSecrets

@@ -61,7 +61,7 @@ class DeployService(
             throw IllegalArgumentException("Specify applicationId")
         }
 
-        return deployBundleService.withDeployBundle(affiliation, overrides, {
+        return deployBundleService.withDeployBundle(affiliation, overrides) { repo, it ->
             logger.debug("deploy")
             logger.debug("create deployment spec")
 
@@ -76,11 +76,11 @@ class DeployService(
                         res
                     }
             logger.debug("mark release")
-            markRelease(deployResults, it.repo)
+            markRelease(deployResults, repo)
             logger.debug("/mark release")
             logger.debug("/deploy")
             deployResults
-        })
+        }
     }
 
     fun deployFromSpec(deploymentSpec: AuroraDeploymentSpec, shouldDeploy: Boolean): AuroraDeployResult {

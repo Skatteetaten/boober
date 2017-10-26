@@ -23,6 +23,9 @@ import javax.servlet.http.HttpServletRequest
 class AuroraConfigController(val deployBundleService: DeployBundleService) {
 
 
+    //TODO: Method to return a single auroraConfig File
+    //TODO: Method to return all filenames
+
     @Timed
     @PutMapping("/auroraconfig")
     fun save(@PathVariable affiliation: String,
