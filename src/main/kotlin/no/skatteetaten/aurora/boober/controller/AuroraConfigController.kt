@@ -26,8 +26,27 @@ class AuroraConfigController(val deployBundleService: DeployBundleService) {
 
 
     val logger: Logger = LoggerFactory.getLogger(AuroraConfigController::class.java)
-    //TODO: Method to return a single auroraConfig File
-    //TODO: Method to return all filenames
+
+    @Timed
+    @GetMapping("/auroraconfig/filenames")
+    fun getFilenames(@PathVariable affiliation: String): Response {
+        logger.info("Henter aurora config filenames affiliation={}", affiliation)
+        val res = Response(items= deployBundleService.findAuroraConfigFileNames(affiliation))
+        logger.debug("/Henter aurora config filenames")
+        return res
+    }
+
+    @Timed
+    @GetMapping("/auroraconfigfile/**")
+    fun getAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest) : Response{
+
+        val path = "affiliation/$affiliation/auroraconfig/**"
+        val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
+
+        val res =  deployBundleService.findAuroraConfigFile(affiliation, fileName)?.let { listOf(it)} ?: emptyList()
+
+        return Response(items = res)
+    }
 
     @Timed
     @PutMapping("/auroraconfig")
@@ -35,8 +54,12 @@ class AuroraConfigController(val deployBundleService: DeployBundleService) {
              @RequestBody payload: AuroraConfigPayload,
              @RequestHeader(value = "AuroraValidateVersions", required = false) validateVersions: Boolean = true): Response {
 
+        logger.info("Save aurora config affilation={}", affiliation)
         val auroraConfig = deployBundleService.saveAuroraConfig(payload.toAuroraConfig(affiliation), validateVersions)
-        return createAuroraConfigResponse(auroraConfig)
+        val res = createAuroraConfigResponse(auroraConfig)
+
+        logger.debug("/Save aurora config")
+        return res
     }
 
     @Timed
@@ -50,7 +73,7 @@ class AuroraConfigController(val deployBundleService: DeployBundleService) {
     @Timed
     @GetMapping("/auroraconfig")
     fun get(@PathVariable affiliation: String): Response {
-        logger.debug("Henter aurora config")
+        logger.info("Henter aurora config affiliation={}", affiliation)
         val res =  createAuroraConfigResponse(deployBundleService.findAuroraConfig(affiliation))
         logger.debug("/Henter aurora config")
         return res

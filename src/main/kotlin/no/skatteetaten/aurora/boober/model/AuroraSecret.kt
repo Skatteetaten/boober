@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.model
 
+import com.fasterxml.jackson.databind.JsonNode
 import org.eclipse.jgit.revwalk.RevCommit
 import java.io.File
 
@@ -21,3 +22,4 @@ data class AuroraSecretFile(
         val file: File,
         val commit: RevCommit?
 )
+

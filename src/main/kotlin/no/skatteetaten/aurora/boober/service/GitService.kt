@@ -40,15 +40,10 @@ class GitService(
             val repoPath = File("$checkoutPath/$affiliation")
             if (repoPath.exists()) {
                 val git = Git.open(repoPath)
-                ///TODO reset hard head? Is it an error if this is dirty?
-                //TODO:Error handling
-                /*
                  git.pull()
                          .setRebase(true)
-                         .setRemote("origin")
-                         .setRemoteBranchName("master")
                          .setCredentialsProvider(cp)
-                         .call()*/
+                         .call()
                 return git
             }
             return metrics.withMetrics("git_checkout", {
@@ -87,12 +82,17 @@ class GitService(
 
     fun saveFilesAndClose(git: Git, files: Map<String, String>, keep: (String) -> Boolean) {
         try {
+            logger.debug("write add changes")
             writeAndAddChanges(git, files)
+            logger.debug("delete missing files")
             deleteMissingFiles(git, files.keys, keep)
-
+            logger.debug("status")
             val status = git.status().call()
+            logger.debug("commit")
             commitAllChanges(git, "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}")
+            logger.debug("push")
             push(git)
+            logger.debug("/push")
         } catch (ex: EmtpyCommitException) {
         } catch (ex: GitAPIException) {
             throw GitException("Unexpected error committing changes", ex)
@@ -112,14 +112,12 @@ class GitService(
     fun getAllFiles(git: Git): Map<String, File> {
 
         val folder = git.repository.directory.parentFile
-        logger.debug("Get all files")
         val files = folder.walkBottomUp()
                 .onEnter { !it.name.startsWith(".git") }
                 .filter { it.isFile }
                 .associate {
                     it.relativeTo(folder).path to it
                 }
-        logger.debug("/Get all files")
         return files
     }
 
@@ -172,16 +170,12 @@ class GitService(
     }
 
     private fun deleteMissingFiles(git: Git, files: Set<String>, keep: (String) -> Boolean) {
-
-        logger.debug("delete files")
         //TODO: If this takes time rewrite to not include File content
         getAllFiles(git)
                 .map { it.key }
                 .filter { keep.invoke(it) }
                 .filter { !files.contains(it) }
                 .forEach { git.rm().addFilepattern(it).call() }
-
-        logger.debug("/delete files")
     }
 
     private fun commitAllChanges(git: Git, message: String): RevCommit {
@@ -227,5 +221,18 @@ class GitService(
     fun tagHistory(git: Git): List<RevTag> {
         val tags = git.tagList().call()
         return tags.mapNotNull { readTag(git, it.objectId) }
+    }
+
+
+    fun getFile(git: Git, fileName: String): AuroraSecretFile? {
+
+        val folder = git.repository.directory.parentFile
+        return folder.walkBottomUp()
+                .onEnter { !it.name.startsWith(".git") }
+                .filter { it.isFile && it.relativeTo(folder).path == fileName }
+                .map {
+                    val path = it.relativeTo(folder).path
+                    AuroraSecretFile(path, it, getRevCommit(git, path))
+                }.firstOrNull()
     }
 }

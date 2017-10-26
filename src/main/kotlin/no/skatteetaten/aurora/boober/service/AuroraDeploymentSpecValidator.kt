@@ -3,10 +3,15 @@ package no.skatteetaten.aurora.boober.service
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class AuroraDeploymentSpecValidator(val openShiftClient: OpenShiftClient) {
+
+
+    val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpecValidator::class.java)
 
     fun assertIsValid(deploymentSpec: AuroraDeploymentSpec) {
 

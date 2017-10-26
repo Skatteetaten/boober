@@ -153,6 +153,7 @@ class OpenShiftClient(
     }
 
 
+    @Cacheable("groups")
     fun isValidGroup(group: String): Boolean {
 
         return getGroups(group) != null
@@ -168,8 +169,7 @@ class OpenShiftClient(
         return existingResource != null
     }
 
-    @Cacheable("groups")
-    private fun getGroups(group: String): ResponseEntity<JsonNode>? {
+    fun getGroups(group: String): ResponseEntity<JsonNode>? {
 
         val url = "$baseUrl/oapi/v1/groups/$group"
         return serviceAccountClient.get(url)
