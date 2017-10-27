@@ -145,6 +145,7 @@ class AbstractMockedOpenShiftSpecification extends Specification {
 
     void createRepoAndSaveFiles(AuroraConfig auroraConfig) {
 
+        gitService.deleteFiles(auroraConfig.affiliation)
         GitServiceHelperKt.createInitRepo(auroraConfig.affiliation)
         deployBundleService.saveAuroraConfig(auroraConfig, false)
     }

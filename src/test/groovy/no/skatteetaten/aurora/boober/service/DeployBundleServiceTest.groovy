@@ -182,7 +182,10 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
       (files.get("$aid.environment/aos-simple.json" as String) as ObjectNode).remove("version")
       AuroraConfig auroraConfig =
           new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false, null) }, "aos")
+
+      gitService.deleteFiles(auroraConfig.affiliation)
       GitServiceHelperKt.createInitRepo(auroraConfig.affiliation)
+
 
     when:
       deployBundleService.saveAuroraConfig(auroraConfig, false)

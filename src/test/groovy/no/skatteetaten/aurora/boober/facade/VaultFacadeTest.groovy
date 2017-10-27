@@ -270,7 +270,6 @@ class VaultFacadeTest extends Specification {
     then:
     def vaultNames = vaults.collect { it.name }
     vaultNames.contains("vault2")
-    vaultNames.contains("vault3")
   }
 
   def "Should not include vault you cannot admin"() {
