@@ -64,7 +64,7 @@ class DeployServiceWithExistingRouteTest extends AbstractMockedOpenShiftSpecific
   def "Should delete and create route"() {
     when:
       List<AuroraDeployResult> deployResults = deployService.
-          executeDeploy(affiliation, new DeployParams([ENV_NAME], [APP_NAME], [], true))
+              executeDeploy(affiliation, [new ApplicationId(ENV_NAME, APP_NAME)], [], true)
 
     then:
       def result = deployResults[0]

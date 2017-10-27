@@ -51,27 +51,24 @@ class DeployService(
 
 
     @JvmOverloads
-    fun executeDeploy(affiliation: String, deployParams: DeployParams, dryRun: Boolean = false): List<AuroraDeployResult> {
+    fun executeDeploy(affiliation: String, applicationIds: List<ApplicationId>, overrides: List<AuroraConfigFile> = mutableListOf(), deploy: Boolean = true): List<AuroraDeployResult> {
 
-        val applicationIds = deployParams.applicationIds
         if (applicationIds.isEmpty()) {
             throw IllegalArgumentException("Specify applicationId")
         }
 
-        return deployBundleService.withDeployBundle(affiliation, deployParams.overrides, {
+        return deployBundleService.withDeployBundle(affiliation, overrides, {
             val deploymentSpecs: List<AuroraDeploymentSpec> = deployBundleService.createAuroraDeploymentSpecs(it, applicationIds)
             val deployResults: List<AuroraDeployResult> = deploymentSpecs
                     .filter { it.cluster == cluster }
                     .filter { hasAccessToAllVolumes(it.volume) }
-                    .map { deployFromSpec(it, deployParams.deploy, dryRun) }
-            if (!dryRun) {
-                markRelease(deployResults, it.repo)
-            }
+                    .map { deployFromSpec(it, deploy) }
+            markRelease(deployResults, it.repo)
             deployResults
         })
     }
 
-    fun deployFromSpec(deploymentSpec: AuroraDeploymentSpec, shouldDeploy: Boolean, dryRun: Boolean = false): AuroraDeployResult {
+    fun deployFromSpec(deploymentSpec: AuroraDeploymentSpec, shouldDeploy: Boolean): AuroraDeployResult {
 
         val deployId = UUID.randomUUID().toString()
 
