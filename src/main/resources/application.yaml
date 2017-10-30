@@ -11,6 +11,10 @@ openshift:
 spring:
   profiles:
     active: local
+  cache:
+    caffeine:
+      spec: maximumSize=200,expireAfterAccess=300s
+    cache-names: groups
 
 boober:
     git:
@@ -20,14 +24,20 @@ boober:
     openshift:
         tokenLocation: /var/run/secrets/kubernetes.io/serviceaccount/token
 
+aurora:
+  starter:
+    headerfilter:
+      enabled: false
+
 logging:
   level:
     no.skatteetaten: INFO
+    no.skatteetaten.aurora.boober: DEBUG
     ske.aurora.filter: INFO
     org:
       jboss: INFO
       hibernate: WARN
-      springframework: WARN
+      springframework: INFO
       apache:
         catalina: INFO
         velocity: INFO
@@ -35,7 +45,7 @@ logging:
 spring:
     profiles: local
     application:
-            name: boober
+        name: boober
 
 openshift:
     cluster: qa

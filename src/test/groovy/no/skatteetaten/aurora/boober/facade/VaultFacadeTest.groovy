@@ -1,10 +1,5 @@
 package no.skatteetaten.aurora.boober.facade
 
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Metrics
 import no.skatteetaten.aurora.AuroraMetrics
@@ -13,12 +8,14 @@ import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraPermissions
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
-import no.skatteetaten.aurora.boober.service.AuroraVersioningException
-import no.skatteetaten.aurora.boober.service.EncryptionService
-import no.skatteetaten.aurora.boober.service.GitService
-import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
-import no.skatteetaten.aurora.boober.service.SecretVaultPermissionService
-import no.skatteetaten.aurora.boober.service.SecretVaultService
+import no.skatteetaten.aurora.boober.service.*
+import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.treewalk.TreeWalk
+import org.eclipse.jgit.treewalk.filter.PathFilter
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -69,10 +66,10 @@ class VaultFacadeTest extends Specification {
   @Autowired
   SecretVaultPermissionService permissionService
 
-  private void createRepoAndSaveFiles(String affiliation, AuroraSecretVault vault) {
-    GitServiceHelperKt.createInitRepo(affiliation)
+  private Git createRepoAndSaveFiles(String affiliation, AuroraSecretVault vault) {
     userDetailsProvider.authenticatedUser >> new User("test", "", "Test Foo")
     facade.save(affiliation, vault, false)
+    return gitService.openRepo(affiliation)
   }
 
   def affiliation = "aos"
@@ -82,19 +79,34 @@ class VaultFacadeTest extends Specification {
   def secret = ['latest.properties': "FOO=BAR"]
   def vault = new AuroraSecretVault(vaultName, secret, null, [:])
 
+  def git
+
+  def setup() {
+    gitService.deleteFiles(affiliation)
+    GitServiceHelperKt.createInitRepo(affiliation)
+  }
+
+  def cleanup() {
+    if (git != null) {
+      gitService.closeRepository(git)
+    }
+  }
+
   def "Should successfully save secrets to git"() {
     given:
       permissionService.hasUserAccess(_) >> true
 
     when:
-      createRepoAndSaveFiles(affiliation, vault)
-      def git = gitService.checkoutRepoForAffiliation(affiliation)
+    git = createRepoAndSaveFiles(affiliation, vault)
       def gitLog = git.log().call().head()
-      gitService.closeRepository(git)
 
     then:
       gitLog.authorIdent.name == "Test Foo"
-      gitLog.fullMessage == "Added: 1, Modified: 0, Deleted: 0"
+    TreeWalk tw = new TreeWalk(git.getRepository())
+    def tree = tw.addTree(gitLog.tree)
+    tw.setRecursive(true)
+    tw.setFilter(PathFilter.create(".secret/foo/latest.properties"))
+    tw.next()
   }
 
   def "Should not allow users with no access to  save secrets to git"() {
@@ -102,10 +114,8 @@ class VaultFacadeTest extends Specification {
       permissionService.hasUserAccess(_) >> false
 
     when:
-      createRepoAndSaveFiles(affiliation, vault)
-      def git = gitService.checkoutRepoForAffiliation(affiliation)
-      def gitLog = git.log().call().head()
-      gitService.closeRepository(git)
+    git = createRepoAndSaveFiles(affiliation, vault)
+      git.log().call().head()
 
     then:
       thrown(IllegalAccessError)
@@ -130,7 +140,7 @@ class VaultFacadeTest extends Specification {
   def "Allow ignore versions if we specify validateVersions=false is true"() {
     given:
       permissionService.hasUserAccess(_) >> true
-      createRepoAndSaveFiles(affiliation, vault)
+    createRepoAndSaveFiles(affiliation, vault)
 
     when:
       def newVault = new AuroraSecretVault(vaultName, secret, null, [:])
@@ -258,7 +268,8 @@ class VaultFacadeTest extends Specification {
 
 
     then:
-      vaults.size() == 2
+    def vaultNames = vaults.collect { it.name }
+    vaultNames.contains("vault2")
   }
 
   def "Should not include vault you cannot admin"() {
@@ -283,6 +294,6 @@ class VaultFacadeTest extends Specification {
 
     then:
       vaults.size() == 2
-      !vaults.any { it.permissions?.groups?.contains("TEAM_OPS")}
+      !vaults.any { it.permissions?.groups?.contains("TEAM_OPS") }
   }
 }

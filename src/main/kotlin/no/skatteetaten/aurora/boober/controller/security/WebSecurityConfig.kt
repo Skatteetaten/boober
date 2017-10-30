@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.controller.security
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.utils.openshiftName
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -41,6 +42,7 @@ class WebSecurityConfig(
             val username: String = principal?.openshiftName ?: throw IllegalArgumentException("Unable to determine username from response")
             val fullName: String? = principal.get("fullName")?.asText()
 
+            MDC.put("user", username)
             User(username, it.credentials as String, fullName)
         })
     }

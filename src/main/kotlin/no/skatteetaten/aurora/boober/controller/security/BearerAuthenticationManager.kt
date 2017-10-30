@@ -2,6 +2,8 @@ package no.skatteetaten.aurora.boober.controller.security;
 
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.CredentialsExpiredException
@@ -15,6 +17,7 @@ class BearerAuthenticationManager(
         val openShiftClient: OpenShiftClient
 ) : AuthenticationManager {
 
+    val logger: Logger = LoggerFactory.getLogger(BearerAuthenticationManager::class.java)
     private val headerPattern: Pattern = Pattern.compile("Bearer\\s+(.*)", Pattern.CASE_INSENSITIVE)
 
     override fun authenticate(authentication: Authentication?): Authentication {
@@ -25,11 +28,14 @@ class BearerAuthenticationManager(
         }
         val token = matcher.group(1)
 
+        logger.debug("Find user")
         val response = try {
             openShiftClient.findCurrentUser(token)
         } catch (e: OpenShiftException) {
+            logger.debug("failed getting user", e)
             throw CredentialsExpiredException("An unexpected error occurred while getting OpenShift user", e)
         }
+        logger.debug("/Find user")
 
         return PreAuthenticatedAuthenticationToken(response, token)
     }

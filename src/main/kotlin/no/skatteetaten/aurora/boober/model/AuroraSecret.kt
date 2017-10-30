@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.model
 
+import com.fasterxml.jackson.databind.JsonNode
 import org.eclipse.jgit.revwalk.RevCommit
 import java.io.File
 
@@ -16,8 +17,9 @@ data class AuroraPermissions @JvmOverloads constructor(
 //TODO: users is not taken into consideration locally. Remove when client removes it.
 )
 
-data class AuroraGitFile(
+data class AuroraSecretFile(
         val path: String,
         val file: File,
         val commit: RevCommit?
 )
+

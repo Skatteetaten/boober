@@ -45,6 +45,7 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
 
     @Before
     def "Setup git"() {
+        gitService.deleteFiles(affiliation)
         GitServiceHelperKt.createInitRepo(affiliation)
     }
 

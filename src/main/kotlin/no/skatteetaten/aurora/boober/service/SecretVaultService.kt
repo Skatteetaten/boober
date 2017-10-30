@@ -2,8 +2,8 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import no.skatteetaten.aurora.boober.model.AuroraGitFile
 import no.skatteetaten.aurora.boober.model.AuroraPermissions
+import no.skatteetaten.aurora.boober.model.AuroraSecretFile
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import org.eclipse.jgit.api.Git
 import org.springframework.stereotype.Service
@@ -15,13 +15,12 @@ class SecretVaultService(val mapper: ObjectMapper,
 
 
     private val PERMISSION_FILE = ".permissions"
-    private val GIT_SECRET_FOLDER = ".secret"
+    val GIT_SECRET_FOLDER = ".secret"
 
 
     fun getVaults(repo: Git): Map<String, AuroraSecretVault> {
 
-        val vaultFiles: List<AuroraGitFile> = gitService.getAllFilesInRepoList(repo)
-                .filter { it.path.startsWith(GIT_SECRET_FOLDER) }
+        val vaultFiles: List<AuroraSecretFile> = gitService.getAllSecretFilesInRepoList(repo)
 
         return vaultFiles
                 .groupBy { it.path.split("/")[1] } //.secret/<vaultName>/<secretName>
@@ -29,13 +28,13 @@ class SecretVaultService(val mapper: ObjectMapper,
 
     }
 
-    fun getVaultFiles(repo: Git, vault: String): List<AuroraGitFile> {
-        return gitService.getAllFilesInRepoList(repo)
+    fun getVaultFiles(repo: Git, vault: String): List<AuroraSecretFile> {
+        return gitService.getAllSecretFilesInRepoList(repo)
                 .filter { it.path.startsWith("$GIT_SECRET_FOLDER/$vault") }
 
     }
 
-    fun createVault(name: String, vaultFiles: List<AuroraGitFile>): AuroraSecretVault {
+    fun createVault(name: String, vaultFiles: List<AuroraSecretFile>): AuroraSecretVault {
 
         val permissions: AuroraPermissions? = vaultFiles.find {
             gitFile -> gitFile.file.name == PERMISSION_FILE

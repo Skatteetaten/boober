@@ -14,7 +14,6 @@ import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import org.apache.commons.lang.StringEscapeUtils
 import org.apache.velocity.VelocityContext
@@ -35,13 +34,13 @@ class OpenShiftObjectGenerator(
     val logger: Logger = LoggerFactory.getLogger(OpenShiftObjectGenerator::class.java)
 
     fun generateBuildRequest(name: String): JsonNode {
-        logger.debug("Generating build request for name $name")
+        logger.trace("Generating build request for name $name")
         return mergeVelocityTemplate("buildrequest.json", mapOf("name" to name))
 
     }
 
     fun generateDeploymentRequest(name: String): JsonNode {
-        logger.debug("Generating deploy request for name $name")
+        logger.trace("Generating deploy request for name $name")
         return mergeVelocityTemplate("deploymentrequest.json", mapOf("name" to name))
 
     }
@@ -216,9 +215,9 @@ class OpenShiftObjectGenerator(
 
     fun generateRoute(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>): List<JsonNode>? {
         return auroraDeploymentSpec.route?.route?.map {
-            logger.debug("Route is {}", it)
+            logger.trace("Route is {}", it)
             val host = it.host?.let {
-                assembleRouteHost(it, auroraDeploymentSpec)
+                auroraDeploymentSpec.assembleRouteHost(it)
             }
             val routeParams = mapOf(
                     "name" to auroraDeploymentSpec.name,
@@ -236,7 +235,7 @@ class OpenShiftObjectGenerator(
 
     private fun generateMount(mounts: List<Mount>?, labels: Map<String, String>): List<JsonNode>? {
         return mounts?.filter { !it.exist }?.map {
-            logger.debug("Create manual mount {}", it)
+            logger.trace("Create manual mount {}", it)
             val mountParams = mapOf(
                     "mount" to it,
                     "labels" to labels
@@ -309,7 +308,7 @@ class OpenShiftObjectGenerator(
         } ?: mapOf()
 
         val routeName = auroraDeploymentSpec.route?.route?.takeIf { it.isNotEmpty() }?.first()?.let {
-            val host = assembleRouteHost(it.host ?: auroraDeploymentSpec.name, auroraDeploymentSpec)
+            val host = auroraDeploymentSpec.assembleRouteHost(it.host ?: auroraDeploymentSpec.name)
             "ROUTE_NAME" to "http://$host${it.path?.ensureStartWith("/") ?: ""}"
         }
 
@@ -333,18 +332,6 @@ class OpenShiftObjectGenerator(
                 "MANAGEMENT_HTTP_PORT" to "8081",
                 "APP_NAME" to auroraDeploymentSpec.name
         ).addIfNotNull(splunkIndex).addIfNotNull(routeName) + certEnv + debugEnv + dbEnv + mountEnv
-    }
-
-    private fun assembleRouteHost(hostPrefix: String, auroraDeploymentSpec: AuroraDeploymentSpec): String {
-
-        val hostSuffix = "${auroraDeploymentSpec.namespace}.${auroraDeploymentSpec.cluster}.paas.skead.no"
-
-        return if (hostPrefix.isBlank()) {
-            hostSuffix
-        } else {
-            hostPrefix.ensureEndsWith(hostSuffix, "-")
-        }
-
     }
 
     fun findMounts(auroraDeploymentSpec: AuroraDeploymentSpec): List<Mount> {

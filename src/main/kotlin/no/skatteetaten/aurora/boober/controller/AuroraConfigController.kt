@@ -7,6 +7,8 @@ import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.internal.fromAuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.DeployBundleService
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -23,14 +25,41 @@ import javax.servlet.http.HttpServletRequest
 class AuroraConfigController(val deployBundleService: DeployBundleService) {
 
 
+    val logger: Logger = LoggerFactory.getLogger(AuroraConfigController::class.java)
+
+    @Timed
+    @GetMapping("/auroraconfig/filenames")
+    fun getFilenames(@PathVariable affiliation: String): Response {
+        logger.info("Henter aurora config filenames affiliation={}", affiliation)
+        val res = Response(items= deployBundleService.findAuroraConfigFileNames(affiliation))
+        logger.debug("/Henter aurora config filenames")
+        return res
+    }
+
+    @Timed
+    @GetMapping("/auroraconfigfile/**")
+    fun getAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest) : Response{
+
+        val path = "affiliation/$affiliation/auroraconfig/**"
+        val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
+
+        val res =  deployBundleService.findAuroraConfigFile(affiliation, fileName)?.let { listOf(it)} ?: emptyList()
+
+        return Response(items = res)
+    }
+
     @Timed
     @PutMapping("/auroraconfig")
     fun save(@PathVariable affiliation: String,
              @RequestBody payload: AuroraConfigPayload,
              @RequestHeader(value = "AuroraValidateVersions", required = false) validateVersions: Boolean = true): Response {
 
+        logger.info("Save aurora config affilation={}", affiliation)
         val auroraConfig = deployBundleService.saveAuroraConfig(payload.toAuroraConfig(affiliation), validateVersions)
-        return createAuroraConfigResponse(auroraConfig)
+        val res = createAuroraConfigResponse(auroraConfig)
+
+        logger.debug("/Save aurora config")
+        return res
     }
 
     @Timed
@@ -44,7 +73,10 @@ class AuroraConfigController(val deployBundleService: DeployBundleService) {
     @Timed
     @GetMapping("/auroraconfig")
     fun get(@PathVariable affiliation: String): Response {
-        return createAuroraConfigResponse(deployBundleService.findAuroraConfig(affiliation))
+        logger.info("Henter aurora config affiliation={}", affiliation)
+        val res =  createAuroraConfigResponse(deployBundleService.findAuroraConfig(affiliation))
+        logger.debug("/Henter aurora config")
+        return res
     }
 
 

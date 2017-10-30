@@ -7,7 +7,15 @@ import com.github.fge.jsonpatch.JsonPatch
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.mapper.v1.createAuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.ConfigFieldError
+import no.skatteetaten.aurora.boober.model.DeployBundle
+import no.skatteetaten.aurora.boober.model.Error
+import no.skatteetaten.aurora.boober.model.ValidationError
+import no.skatteetaten.aurora.boober.model.VersioningError
 import no.skatteetaten.aurora.boober.service.internal.Result
 import no.skatteetaten.aurora.boober.service.internal.onErrorThrow
 import org.eclipse.jgit.api.Git
@@ -30,27 +38,41 @@ class DeployBundleService(
     private val logger = LoggerFactory.getLogger(DeployBundleService::class.java)
 
 
-    fun createDeployBundle(affiliation: String, overrideFiles: List<AuroraConfigFile> = listOf()): DeployBundle {
+    fun <T> withDeployBundle(affiliation: String, overrideFiles: List<AuroraConfigFile> = listOf(), function: (Git, DeployBundle) -> T): T {
+
+        logger.debug("Get repo")
         val repo = getRepo(affiliation)
-        val allFilesInRepo: Map<String, Pair<RevCommit?, File>> = gitService.getAllFilesInRepo(repo)
-        val auroraConfig = createAuroraConfigFromFiles(allFilesInRepo, affiliation)
+        //This is when we deploy
+
+        logger.debug("Get all aurora config files")
+        val auroraConfigFiles = gitService.getAllAuroraConfigFiles(repo).map {
+            AuroraConfigFile(it.key, mapper.readValue(it.value))
+        }
+
+        val auroraConfig = AuroraConfig(auroraConfigFiles = auroraConfigFiles, affiliation = affiliation)
+
+        logger.debug("Get all vaults")
         val vaults = secretVaultFacade.listAllVaults(repo).associateBy { it.name }
-
-        return DeployBundle(auroraConfig = auroraConfig, vaults = vaults, repo = repo, overrideFiles = overrideFiles)
-    }
-
-    fun <T> withDeployBundle(affiliation: String, overrideFiles: List<AuroraConfigFile> = listOf(), function: (DeployBundle) -> T): T {
-
-        val deployBundle = createDeployBundle(affiliation, overrideFiles)
-        val res = function(deployBundle)
-        gitService.closeRepository(deployBundle.repo)
+        logger.debug("Create deploy bundle")
+        val deployBundle = DeployBundle(auroraConfig = auroraConfig, vaults = vaults, overrideFiles = overrideFiles)
+        logger.debug("Perform op on deploy bundle")
+        val res = function(repo, deployBundle)
+        logger.debug("Close and delete repo")
+        gitService.closeRepository(repo)
         return res
     }
 
     fun findAuroraConfig(affiliation: String): AuroraConfig {
+        logger.debug("Find aurora config")
         val repo = getRepo(affiliation)
+        //TODO: add revCommit
+        logger.debug("get all files with revCommit")
         val allFilesInRepo: Map<String, Pair<RevCommit?, File>> = gitService.getAllFilesInRepo(repo)
-        return createAuroraConfigFromFiles(allFilesInRepo, affiliation)
+        logger.debug("create aurora config from files")
+        val res = createAuroraConfigFromFiles(allFilesInRepo, affiliation)
+        gitService.closeRepository(repo)
+        logger.debug("/Find aurora config")
+        return res
     }
 
     fun saveAuroraConfig(auroraConfig: AuroraConfig, validateVersions: Boolean): AuroraConfig {
@@ -83,9 +105,15 @@ class DeployBundleService(
      * of the AuroraConfig already saved for that affiliation.
      */
     fun validateDeployBundleWithAuroraConfig(affiliation: String, auroraConfig: AuroraConfig): AuroraConfig {
-        val deployBundle = createDeployBundle(affiliation)
-        deployBundle.auroraConfig = auroraConfig
-        validateDeployBundle(deployBundle)
+
+        val repo = getRepo(affiliation)
+        val vaults = secretVaultFacade.listAllVaults(repo).associateBy { it.name }
+        val bundle = DeployBundle(auroraConfig = auroraConfig, vaults = vaults)
+        try {
+            validateDeployBundle(bundle)
+        } finally {
+            gitService.closeRepository(repo)
+        }
 
         return auroraConfig
     }
@@ -99,7 +127,9 @@ class DeployBundleService(
     }
 
     fun createAuroraDeploymentSpec(affiliation: String, applicationId: ApplicationId, overrides: List<AuroraConfigFile>): AuroraDeploymentSpec {
-        return withDeployBundle(affiliation, overrides, { createAuroraDeploymentSpec(it, applicationId) })
+        return withDeployBundle(affiliation, overrides) { _, bundle ->
+            createAuroraDeploymentSpec(bundle, applicationId)
+        }
     }
 
     fun createAuroraDeploymentSpecs(deployBundle: DeployBundle, applicationIds: List<ApplicationId>): List<AuroraDeploymentSpec> {
@@ -140,19 +170,38 @@ class DeployBundleService(
                                  validateVersions: Boolean,
                                  function: (AuroraConfig) -> AuroraConfig = { it -> it }): AuroraConfig {
 
-        val deployBundle = createDeployBundle(affiliation)
-        val auroraConfig = deployBundle.auroraConfig
-        val repo = deployBundle.repo
+        //TODO: add revCommit
 
+        logger.debug("withAuroraConfig")
+        val repo = getRepo(affiliation)
+
+        logger.debug("Get all files")
+        val allFilesInRepo: Map<String, Pair<RevCommit?, File>> = gitService.getAllFilesInRepo(repo)
+        logger.debug("Create Aurora config")
+        val auroraConfig = createAuroraConfigFromFiles(allFilesInRepo, affiliation)
+        logger.debug("/Create Aurora config")
         val newAuroraConfig = function(auroraConfig)
-        deployBundle.auroraConfig = newAuroraConfig
 
         if (validateVersions) {
-            validateGitVersion(auroraConfig, newAuroraConfig, gitService.getAllFilesInRepo(repo))
+            logger.debug("validate git version")
+            validateGitVersion(auroraConfig, newAuroraConfig, allFilesInRepo)
+            logger.debug("/validate git version")
         }
-        validateDeployBundle(deployBundle)
-        commitAuroraConfig(repo, newAuroraConfig)
 
+        logger.debug("list all vaults")
+        val vaults = secretVaultFacade.listAllVaults(repo).associateBy { it.name }
+        logger.debug("/list all vaults")
+
+        val deployBundle = DeployBundle(auroraConfig = newAuroraConfig, vaults = vaults)
+        logger.debug("validate deploy bundle")
+        validateDeployBundle(deployBundle)
+        logger.debug("/validate deploy bundle")
+
+        logger.debug("commit Aurora config")
+        commitAuroraConfig(repo, newAuroraConfig)
+        logger.debug("/commit Aurora config")
+
+        logger.debug("/withAuroraConfig")
         return newAuroraConfig
     }
 
@@ -184,7 +233,6 @@ class DeployBundleService(
     private fun createAuroraConfigFromFiles(filesFromGit: Map<String, Pair<RevCommit?, File>>, affiliation: String): AuroraConfig {
 
         val auroraConfigFiles = filesFromGit
-                .filter { !it.key.startsWith(GIT_SECRET_FOLDER) }
                 .map { AuroraConfigFile(it.key, mapper.readValue(it.value.second), version = it.value.first?.abbreviate(7)?.name()) }
 
         return AuroraConfig(auroraConfigFiles = auroraConfigFiles, affiliation = affiliation)
@@ -194,6 +242,7 @@ class DeployBundleService(
     private fun commitAuroraConfig(repo: Git,
                                    newAuroraConfig: AuroraConfig) {
 
+        logger.debug("create file map")
         val configFiles: Map<String, String> = newAuroraConfig.auroraConfigFiles.map {
             it.name to mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it.contents)
         }.toMap()
@@ -201,6 +250,30 @@ class DeployBundleService(
 
         //when we save auroraConfig we do not want to mess with secret vault files
         val keep: (String) -> Boolean = { it -> !it.startsWith(GIT_SECRET_FOLDER) }
+
+        logger.debug("save files and close")
         gitService.saveFilesAndClose(repo, configFiles, keep)
+    }
+
+    fun findAuroraConfigFile(affiliation: String, fileName: String): AuroraConfigFile? {
+        logger.debug("Find aurora config filename={}", fileName)
+        val repo = getRepo(affiliation)
+        val file = gitService.getFile(repo, fileName)
+        val jsonFile = file?.let {
+            AuroraConfigFile(it.path, mapper.readValue(it.file), version = it.commit?.abbreviate(7)?.name())
+        }
+        gitService.closeRepository(repo)
+        logger.debug("/Find aurora config file")
+        return jsonFile
+
+
+    }
+
+    fun findAuroraConfigFileNames(affiliation: String): List<String> {
+        val repo = getRepo(affiliation)
+        val files = gitService.getAllAuroraConfigFiles(repo).map { it.key }
+        gitService.closeRepository(repo)
+        return files
+
     }
 }

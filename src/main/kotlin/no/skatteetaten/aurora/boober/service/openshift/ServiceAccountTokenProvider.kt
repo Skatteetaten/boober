@@ -49,7 +49,7 @@ class ServiceAccountTokenProvider(
         logger.info("Reading application token from tokenLocation={}", tokenLocation)
         try {
             val token: String = Files.toString(File(tokenLocation), Charsets.UTF_8).trimEnd()
-            logger.debug("Read token with length={}, firstLetter={}, lastLetter={}", token.length,
+            logger.trace("Read token with length={}, firstLetter={}, lastLetter={}", token.length,
                     token[0], token[token.length - 1])
             return token
         } catch (e: IOException) {

@@ -1,14 +1,12 @@
 package no.skatteetaten.aurora.boober.service
 
-import org.springframework.beans.factory.annotation.Autowired
-
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
-
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
+import org.springframework.beans.factory.annotation.Autowired
 
 class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
 
@@ -22,10 +20,8 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
 
   private AuroraConfig getAuroraConfigFromGit(String affiliation, boolean decryptSecrets) {
 
-    def git = gitService.checkoutRepoForAffiliation(affiliation)
     def files = gitService.getAllFilesInRepo(git)
     def auroraConfig = deployBundleService.createAuroraConfigFromFiles(files, "aos")
-    gitService.closeRepository(git)
 
     return auroraConfig
   }
@@ -186,7 +182,10 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
       (files.get("$aid.environment/aos-simple.json" as String) as ObjectNode).remove("version")
       AuroraConfig auroraConfig =
           new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false, null) }, "aos")
+
+      gitService.deleteFiles(auroraConfig.affiliation)
       GitServiceHelperKt.createInitRepo(auroraConfig.affiliation)
+
 
     when:
       deployBundleService.saveAuroraConfig(auroraConfig, false)

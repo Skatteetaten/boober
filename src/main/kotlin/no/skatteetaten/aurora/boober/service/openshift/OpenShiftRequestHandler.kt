@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Component
-import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestClientResponseException
 import org.springframework.web.client.RestTemplate
@@ -19,18 +18,27 @@ class OpenShiftRequestHandler(val restTemplate: RestTemplate) {
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftRequestHandler::class.java)
 
-    @Retryable(value = OpenShiftException::class, maxAttempts = 3, backoff = Backoff(delay = 500))
     fun <T> exchange(requestEntity: RequestEntity<T>): ResponseEntity<JsonNode> {
+
         logger.info("${requestEntity.method} resource at ${requestEntity.url}")
+        return exchangeWithRetry(requestEntity)
+    }
+
+    @Retryable(value = OpenShiftException::class, maxAttempts = 3, backoff = Backoff(delay = 500))
+    fun <T> exchangeWithRetry(requestEntity: RequestEntity<T>): ResponseEntity<JsonNode> {
 
         val createResponse: ResponseEntity<JsonNode> = try {
             restTemplate.exchange(requestEntity, JsonNode::class.java)
         } catch (e: RestClientResponseException) {
-            throw OpenShiftException("Request failed url=${requestEntity.url}, method=${requestEntity.method}, message=${e.message}, code=${e.rawStatusCode}, statusText=${e.statusText}", e)
+            val messages = "Request failed will be retried. url=${requestEntity.url}, method=${requestEntity.method}, message=${e.message}, code=${e.rawStatusCode}, statusText=${e.statusText}"
+            logger.debug(messages)
+            throw OpenShiftException(messages, e)
         } catch (e: RestClientException) {
-            throw OpenShiftException("Request failed url=${requestEntity.url}, method=${requestEntity.method}, message=${e.message}", e)
+            val messages = "Request failed will be retried url=${requestEntity.url}, method=${requestEntity.method}, message=${e.message}"
+            logger.debug(messages)
+            throw OpenShiftException(messages, e)
         }
-        logger.debug("Body=${createResponse.body}")
+        logger.trace("Body=${createResponse.body}")
         return createResponse
     }
 }

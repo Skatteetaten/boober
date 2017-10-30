@@ -64,7 +64,6 @@ class AuroraConfigFieldTest extends Specification {
 
   def setup() {
     userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User")
-    openShiftClient.isValidUser(_) >> true
     openShiftClient.isValidGroup(_) >> true
   }
 
