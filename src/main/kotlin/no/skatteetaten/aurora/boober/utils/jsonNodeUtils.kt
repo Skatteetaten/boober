@@ -36,8 +36,6 @@ val JsonNode.openshiftKind: String
 val JsonNode.openshiftName: String
     get() = if (this.openshiftKind == "deploymentrequest") {
         this.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource kind=${this.openshiftKind}")
-    } else if (this.openshiftKind == "namespace") {
-        ""
     } else {
         this.get("metadata")?.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource kind=${this.openshiftKind}")
     }

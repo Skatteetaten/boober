@@ -1,9 +1,11 @@
 # Boober
+<img align="right" src="https://vignette.wikia.nocookie.net/muppet/images/d/da/Boober_Fraggle.jpg/revision/latest/scale-to-width-down/280?cb=20121231172124">
 
 Boober is our take on how to handle the `wall of yaml` challenge of Kubernetes. It reads configuration files with a given
 schemaVersion from a git repo (AuroraConfig) and transforms it into Openshift Objects via a AuroraDeploymentConfiguration.
 
 The component is named after the Boober Fraggle (http://muppet.wikia.com/wiki/Boober_Fraggle). 
+
 
 ## How to run locally
 
@@ -29,7 +31,6 @@ Then run the script
 to import some dev/test data.
 
 By default, boober during development will deploy to the qa cluster.
-
 
 ### Setup ao
 
@@ -156,6 +157,13 @@ Below is an json with all possible values ( and some comments)
 }
 
 ```
+
+### Cluster role
+
+oc get clusterrole -o json system:aurora:aurora-fraggle > aurora-fraggle.json
+Change name to "system:paas-boober:aurora-fraggle"
+oc create -f aurora-fraggle.json
+oc adm policy add-cluster-role-to-user system:paas-boober:aurora-fraggle system:serviceaccount:paas-boober:aurora-fraggle
 
 ### AuroraDeploymentConfiguration
 An internal represetantion of AuroraConfig that is normalized from an AuroraConfig via a AuroraConfigMapper abstraction.

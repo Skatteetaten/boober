@@ -1,0 +1,76 @@
+{
+    "name": {
+        "source": "webleveranse.json",
+        "value": "webleveranse"
+    },
+    "namespace": {
+        "source": "generated",
+        "value": "aos-utv"
+    },
+    "envName": {
+        "source": "folderName",
+        "value": "utv"
+    },
+    "schemaVersion": {
+        "source": "about.json",
+        "value": "v1"
+    },
+    "type": {
+        "source": "utv/webleveranse.json",
+        "value": "development"
+    },
+    "affiliation": {
+        "source": "about.json",
+        "value": "aos"
+    },
+    "cluster": {
+        "source": "utv/about.json",
+        "value": "utv"
+    },
+    "permissions": {
+        "admin": {
+            "source": "about.json",
+            "value": "APP_PaaS_utv"
+        }
+    },
+    "artifactId": {
+        "source": "webleveranse.json",
+        "value": "openshift-referanse-react"
+    },
+    "groupId": {
+        "source": "webleveranse.json",
+        "value": "no.skatteetaten.aurora"
+    },
+    "version": {
+        "source": "utv/webleveranse.json",
+        "value": "1"
+    },
+    "applicationPlatform": {
+        "source": "webleveranse.json",
+        "value": "web"
+    },
+    "deployStrategy": {
+        "type": {
+            "source": "webleveranse.json",
+            "value": "rolling"
+        }
+    },
+    "replicas": {
+        "source": "webleveranse.json",
+        "value": 1
+    },
+    "management": {
+        "path": {
+            "source": "webleveranse.json",
+            "value": ""
+        },
+        "port": {
+            "source": "webleveranse.json",
+            "value": "8081"
+        }
+    },
+    "route": {
+        "source": "webleveranse.json",
+        "value": true
+    }
+}

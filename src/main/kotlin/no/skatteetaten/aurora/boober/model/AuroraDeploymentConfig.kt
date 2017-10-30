@@ -53,7 +53,6 @@ data class AuroraBuild(
         val builderVersion: String,
         val testGitUrl: String?,
         val testTag: String?,
-        val testJenkinsfile: String?,
         val extraTags: String,
         val groupId: String,
         val artifactId: String,
