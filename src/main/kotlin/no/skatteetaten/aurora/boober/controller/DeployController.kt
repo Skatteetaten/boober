@@ -24,6 +24,7 @@ class DeployController(val deployService: DeployService) {
 
     @Timed
     @PutMapping("/{affiliation}/deploy")
+    @Deprecated(message = "Use apply instead", replaceWith = ReplaceWith("apply(affiliation, _)"))
     fun deploy(@PathVariable affiliation: String, @RequestBody cmd: DeployCommand): Response {
 
         val setupParams = cmd.setupParams.toDeployParams()
