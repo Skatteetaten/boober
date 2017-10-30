@@ -38,7 +38,7 @@ data class SetupParamsPayload(
     }
 }
 
-data class ApplyPayload(val applicationId: List<ApplicationId>,
+data class ApplyPayload(val applicationIds: List<ApplicationId>,
                         val overrides: JsonDataFiles = mapOf(),
                         val deploy: Boolean = true
 ) {
