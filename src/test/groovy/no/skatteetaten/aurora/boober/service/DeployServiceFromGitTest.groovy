@@ -66,7 +66,7 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
   }
 
   def cleanup() {
-    gitService.closeRepository(git, true)
+    gitService.closeRepository(git)
   }
 
   def "Should perform release and generate a redploy request"() {
