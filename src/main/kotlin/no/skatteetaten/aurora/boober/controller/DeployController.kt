@@ -21,7 +21,7 @@ class DeployController(val deployService: DeployService) {
     @PutMapping("/{affiliation}/apply")
     fun apply(@PathVariable affiliation: String, @RequestBody payload: ApplyPayload): Response {
 
-        val auroraDeployResults: List<AuroraDeployResult> = deployService.executeDeploy(affiliation, payload.applicationId, payload.overridesToAuroraConfigFiles(), payload.deploy)
+        val auroraDeployResults: List<AuroraDeployResult> = deployService.executeDeploy(affiliation, payload.applicationIds, payload.overridesToAuroraConfigFiles(), payload.deploy)
         val success = !auroraDeployResults.any { !it.success }
         return Response(items = auroraDeployResults, success = success)
     }
