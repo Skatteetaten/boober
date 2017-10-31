@@ -79,8 +79,6 @@ class OpenShiftObjectGeneratorConfigMapTest extends AbstractAuroraDeploymentSpec
       jsonMounts.size() == 1
       JsonNode mount = jsonMounts.first()
 
-      println JsonOutput.prettyPrint(mount.toString())
-
       def latestProperties = mount.get('data').get('latest.properties').textValue()
       assertFileHasLinesWithProperties(latestProperties, ["STRING", "BOOL", "INT", "FLOAT", "ARRAY", "JSON_STRING"])
 
