@@ -83,7 +83,7 @@ class OpenShiftObjectGeneratorConfigMapTest extends AbstractAuroraDeploymentSpec
       assertFileHasLinesWithProperties(latestProperties, ["STRING", "BOOL", "INT", "FLOAT", "ARRAY", "JSON_STRING"])
 
       List<String> lines = latestProperties.readLines()
-      lines.contains('ARRAY="[4.2,\\"STRING\\",true]"')
+      lines.contains('ARRAY=[4.2,"STRING",true]')
   }
 
   void assertFileHasLinesWithProperties(String latestProperties, List<String> propertyNames) {

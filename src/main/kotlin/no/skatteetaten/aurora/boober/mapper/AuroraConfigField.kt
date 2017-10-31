@@ -4,11 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraSecretVault
-import no.skatteetaten.aurora.boober.model.Database
-import no.skatteetaten.aurora.boober.model.Mount
-import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.utils.nullOnEmpty
 import no.skatteetaten.aurora.boober.utils.toPrimitiveType
 import org.apache.commons.lang.StringEscapeUtils
@@ -66,19 +62,21 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         val envMap: Map<String, Any?> = configExtractors.filter { it.name.count { it == '/' } == 1 }.map {
             val (_, field) = it.name.split("/", limit = 2)
             val value = extractNative(it.name)
-            field to if (value is String) StringEscapeUtils.escapeJavaScript(value) else value
+            val escapedValue = if (value is String) StringEscapeUtils.escapeJavaScript(value) else value
+            field to escapedValue
         }.toMap()
 
 
-        val configMap: MutableMap<String, MutableMap<String, String>> = mutableMapOf()
+        val configMap: MutableMap<String, MutableMap<String, Any?>> = mutableMapOf()
         configExtractors.filter { it.name.count { it == '/' } > 1 }.forEach {
 
             val parts = it.name.split("/", limit = 3)
 
             val (_, configFile, field) = parts
 
-            val value = StringEscapeUtils.escapeJavaScript(extract(it.name))
-            val keyValue = mutableMapOf(field to value)
+            val value = extractNative(it.name)
+            val escapedValue = if (value is String) StringEscapeUtils.escapeJavaScript(value) else value
+            val keyValue = mutableMapOf(field to escapedValue)
 
             val keyProps = if (!configFile.endsWith(".properties")) {
                 "$configFile.properties"

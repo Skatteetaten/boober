@@ -130,9 +130,9 @@ fun JsonNode?.length(length: Int, message: String): Exception? {
 fun JsonNode.toPrimitiveType(): Any? {
     return when (this.nodeType) {
         JsonNodeType.BOOLEAN -> this.booleanValue()
-        JsonNodeType.STRING -> this.toString()
+        JsonNodeType.STRING -> this.asText()
         JsonNodeType.NUMBER -> this.numberValue()
         JsonNodeType.MISSING -> null
-        else -> "\"${StringEscapeUtils.escapeJavaScript(this.toString())}\""
+        else -> this.toString()
     }
 }
