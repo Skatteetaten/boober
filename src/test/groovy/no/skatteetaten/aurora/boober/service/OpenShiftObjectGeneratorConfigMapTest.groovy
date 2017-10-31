@@ -65,7 +65,8 @@ class OpenShiftObjectGeneratorConfigMapTest extends AbstractAuroraDeploymentSpec
     "BOOL": false,
     "INT": 42,
     "FLOAT": 4.2,
-    "JSON": "{\\"key\\": \\"value\\"}"
+    "ARRAY": [4.2, "STRING", true],
+    "JSON_STRING": "{\\"key\\": \\"value\\"}"
   } 
 }'''
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
@@ -81,7 +82,10 @@ class OpenShiftObjectGeneratorConfigMapTest extends AbstractAuroraDeploymentSpec
       println JsonOutput.prettyPrint(mount.toString())
 
       def latestProperties = mount.get('data').get('latest.properties').textValue()
-      assertFileHasLinesWithProperties(latestProperties, ["STRING", "BOOL", "INT", "FLOAT", "JSON"])
+      assertFileHasLinesWithProperties(latestProperties, ["STRING", "BOOL", "INT", "FLOAT", "ARRAY", "JSON_STRING"])
+
+      List<String> lines = latestProperties.readLines()
+      lines.contains('ARRAY="[4.2,\\"STRING\\",true]"')
   }
 
   void assertFileHasLinesWithProperties(String latestProperties, List<String> propertyNames) {
