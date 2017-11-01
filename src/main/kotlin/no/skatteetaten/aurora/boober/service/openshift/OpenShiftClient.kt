@@ -59,12 +59,7 @@ class OpenShiftClient(
         val kind = command.payload.openshiftKind
         val name = command.payload.openshiftName
 
-        val performClient = if (listOf("namespace", "route").contains(kind)) {
-            serviceAccountClient
-        } else {
-            userClient
-        }
-
+        val performClient = getClientForKind(kind)
 
         return try {
             val res: JsonNode = when (command.operationType) {
@@ -88,7 +83,6 @@ class OpenShiftClient(
             OpenShiftResponse(command, response, success = false, exception = e.message)
         }
     }
-
 
     fun createOpenShiftCommand(namespace: String, json: JsonNode, projectExist: Boolean): OpenshiftCommand {
 
@@ -227,5 +221,19 @@ class OpenShiftClient(
         metadata.set("labels", labels)
 
         return OpenshiftCommand(OperationType.UPDATE, existing, previous = prev)
+    }
+
+    /**
+     * Some operations that users need to perform require privileges that they typically do not have. Therefore, for
+     * some OpenShift kinds, we use a client that is based on the token of the service account of the current
+     * container instead of that of the user. This way we can in practice escalate the privileges of the user performing
+     * the request.
+     */
+    private fun getClientForKind(kind: String): OpenShiftResourceClient {
+        return if (listOf("namespace", "route", "rolebinding").contains(kind)) {
+            serviceAccountClient
+        } else {
+            userClient
+        }
     }
 }
