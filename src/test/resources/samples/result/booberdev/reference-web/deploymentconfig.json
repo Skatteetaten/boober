@@ -137,7 +137,7 @@
               },
               {
                 "name": "ROUTE_NAME",
-                "value": "http://openshift-referanse-react-aos-booberdev.utv.paas.skead.no"
+                "value": "openshift-referanse-react-aos-booberdev.utv.paas.skead.no"
               },
               {
                 "name": "VOLUME_CONFIG",
@@ -236,7 +236,7 @@
               },
               {
                 "name": "ROUTE_NAME",
-                "value": "http://openshift-referanse-react-aos-booberdev.utv.paas.skead.no"
+                "value": "openshift-referanse-react-aos-booberdev.utv.paas.skead.no"
               },
               {
                 "name": "VOLUME_CONFIG",

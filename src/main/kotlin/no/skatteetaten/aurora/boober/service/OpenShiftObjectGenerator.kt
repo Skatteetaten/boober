@@ -4,13 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.java
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.web
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.Database
-import no.skatteetaten.aurora.boober.model.Mount
-import no.skatteetaten.aurora.boober.model.MountType
-import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
@@ -309,7 +305,7 @@ class OpenShiftObjectGenerator(
 
         val routeName = auroraDeploymentSpec.route?.route?.takeIf { it.isNotEmpty() }?.first()?.let {
             val host = auroraDeploymentSpec.assembleRouteHost(it.host ?: auroraDeploymentSpec.name)
-            "ROUTE_NAME" to "http://$host${it.path?.ensureStartWith("/") ?: ""}"
+            "ROUTE_NAME" to "$host${it.path?.ensureStartWith("/") ?: ""}"
         }
 
         val dbEnv = auroraDeploymentSpec.deploy?.database?.takeIf { it.isNotEmpty() }?.let {
