@@ -4,12 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraSecretVault
-import no.skatteetaten.aurora.boober.model.Database
-import no.skatteetaten.aurora.boober.model.Mount
-import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.utils.nullOnEmpty
+import no.skatteetaten.aurora.boober.utils.toPrimitiveType
 import org.apache.commons.lang.StringEscapeUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -60,25 +57,26 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
     }
 
 
-    fun getConfigMap(configExtractors: List<AuroraConfigFieldHandler>): Map<String, String>? {
+    fun getConfigMap(configExtractors: List<AuroraConfigFieldHandler>): Map<String, Any?>? {
 
-
-        val envMap: Map<String, String> = configExtractors.filter { it.name.count { it == '/' } == 1 }.map {
+        val envMap: Map<String, Any?> = configExtractors.filter { it.name.count { it == '/' } == 1 }.map {
             val (_, field) = it.name.split("/", limit = 2)
-            val value = extract(it.name)
-            field to StringEscapeUtils.escapeJavaScript(value)
+            val value = extractNative(it.name)
+            val escapedValue = if (value is String) StringEscapeUtils.escapeJavaScript(value) else value
+            field to escapedValue
         }.toMap()
 
 
-        val configMap: MutableMap<String, MutableMap<String, String>> = mutableMapOf()
+        val configMap: MutableMap<String, MutableMap<String, Any?>> = mutableMapOf()
         configExtractors.filter { it.name.count { it == '/' } > 1 }.forEach {
 
             val parts = it.name.split("/", limit = 3)
 
             val (_, configFile, field) = parts
 
-            val value = StringEscapeUtils.escapeJavaScript(extract(it.name))
-            val keyValue = mutableMapOf(field to value)
+            val value = extractNative(it.name)
+            val escapedValue = if (value is String) StringEscapeUtils.escapeJavaScript(value) else value
+            val keyValue = mutableMapOf(field to escapedValue)
 
             val keyProps = if (!configFile.endsWith(".properties")) {
                 "$configFile.properties"
@@ -169,6 +167,10 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
     fun extract(name: String): String {
         return extract<String>(name, JsonNode::textValue)
+    }
+
+    fun extractNative(name: String): Any? {
+        return extract<Any?>(name, JsonNode::toPrimitiveType)
     }
 
     fun <T> extract(name: String, mapper: (JsonNode) -> T): T {

@@ -1,7 +1,9 @@
 package no.skatteetaten.aurora.boober.utils
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.JsonNodeType
 import com.fasterxml.jackson.databind.node.ObjectNode
+import org.apache.commons.lang.StringEscapeUtils
 
 
 fun JsonNode.findAllPointers(maxLevel: Int): List<String> {
@@ -119,4 +121,18 @@ fun JsonNode?.length(length: Int, message: String): Exception? {
     }
 
     return null
+}
+
+/**
+ * Will check the node type of the current node and return the value with appropriate native Kotlin type.
+ * Complex objects (like arrays and objects) will be returned as escaped JSON.
+ */
+fun JsonNode.toPrimitiveType(): Any? {
+    return when (this.nodeType) {
+        JsonNodeType.BOOLEAN -> this.booleanValue()
+        JsonNodeType.STRING -> this.asText()
+        JsonNodeType.NUMBER -> this.numberValue()
+        JsonNodeType.MISSING -> null
+        else -> this.toString()
+    }
 }
