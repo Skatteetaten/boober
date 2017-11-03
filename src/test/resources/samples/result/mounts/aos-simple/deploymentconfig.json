@@ -142,6 +142,10 @@
                 "value": "aos-mounts.utv.paas.skead.no/foo"
               },
               {
+                "name": "ROUTE_URL",
+                "value": "http://aos-mounts.utv.paas.skead.no/foo"
+              },
+              {
                 "name": "STS_CERTIFICATE_URL",
                 "value": "/u01/secrets/app/aos-simple-cert/certificate.crt"
               },
