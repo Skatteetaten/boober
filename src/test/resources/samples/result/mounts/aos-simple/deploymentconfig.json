@@ -139,6 +139,10 @@
               },
               {
                 "name": "ROUTE_NAME",
+                "value": "aos-mounts.utv.paas.skead.no/foo"
+              },
+              {
+                "name": "ROUTE_URL",
                 "value": "http://aos-mounts.utv.paas.skead.no/foo"
               },
               {

@@ -41,7 +41,7 @@ class OpenShiftClientTest extends Specification {
 
     where:
       kind               | expectedClientName
-      'rolebinding'      | "sa"
+      'rolebinding'      | "user"
       'route'            | "sa"
       'namespace'        | "sa"
       'service'          | "user"

@@ -134,6 +134,10 @@
               },
               {
                 "name": "ROUTE_NAME",
+                "value": "openshift-console-api-aos-booberdev.utv.paas.skead.no"
+              },
+              {
+                "name": "ROUTE_URL",
                 "value": "http://openshift-console-api-aos-booberdev.utv.paas.skead.no"
               },
               {

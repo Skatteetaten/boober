@@ -309,8 +309,10 @@ class OpenShiftObjectGenerator(
 
         val routeName = auroraDeploymentSpec.route?.route?.takeIf { it.isNotEmpty() }?.first()?.let {
             val host = auroraDeploymentSpec.assembleRouteHost(it.host ?: auroraDeploymentSpec.name)
-            "ROUTE_NAME" to "http://$host${it.path?.ensureStartWith("/") ?: ""}"
-        }
+
+            val url = "$host${it.path?.ensureStartWith("/") ?: ""}"
+            mapOf("ROUTE_NAME" to url, "ROUTE_URL" to "http://$url")
+        } ?: mapOf()
 
         val dbEnv = auroraDeploymentSpec.deploy?.database?.takeIf { it.isNotEmpty() }?.let {
             fun createDbEnv(db: Database, envName: String): List<Pair<String, String>> {
@@ -331,7 +333,7 @@ class OpenShiftObjectGenerator(
                 "HTTP_PORT" to "8080",
                 "MANAGEMENT_HTTP_PORT" to "8081",
                 "APP_NAME" to auroraDeploymentSpec.name
-        ).addIfNotNull(splunkIndex).addIfNotNull(routeName) + certEnv + debugEnv + dbEnv + mountEnv
+        ).addIfNotNull(splunkIndex) + routeName + certEnv + debugEnv + dbEnv + mountEnv
     }
 
     fun findMounts(auroraDeploymentSpec: AuroraDeploymentSpec): List<Mount> {

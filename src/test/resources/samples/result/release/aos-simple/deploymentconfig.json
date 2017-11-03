@@ -134,6 +134,10 @@
               },
               {
                 "name": "ROUTE_NAME",
+                "value": "aos-simple-aos-release.utv.paas.skead.no/foo"
+              },
+              {
+                "name": "ROUTE_URL",
                 "value": "http://aos-simple-aos-release.utv.paas.skead.no/foo"
               },
               {

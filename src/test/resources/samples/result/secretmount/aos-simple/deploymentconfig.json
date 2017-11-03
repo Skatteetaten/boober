@@ -139,6 +139,10 @@
               },
               {
                 "name": "ROUTE_NAME",
+                "value": "aos-simple-aos-secretmount.utv.paas.skead.no/foo"
+              },
+              {
+                "name": "ROUTE_URL",
                 "value": "http://aos-simple-aos-secretmount.utv.paas.skead.no/foo"
               },
               {
