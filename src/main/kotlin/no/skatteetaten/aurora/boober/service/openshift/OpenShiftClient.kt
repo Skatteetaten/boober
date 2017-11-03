@@ -230,7 +230,7 @@ class OpenShiftClient(
      * the request.
      */
     private fun getClientForKind(kind: String): OpenShiftResourceClient {
-        return if (listOf("namespace", "route", "rolebinding").contains(kind)) {
+        return if (listOf("namespace", "route").contains(kind)) {
             serviceAccountClient
         } else {
             userClient
