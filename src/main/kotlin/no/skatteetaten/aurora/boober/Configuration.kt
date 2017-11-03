@@ -12,6 +12,7 @@ import org.apache.velocity.runtime.RuntimeConstants
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader
 import org.encryptor4j.factory.AbsKeyFactory
 import org.encryptor4j.factory.KeyFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
@@ -44,7 +45,10 @@ class Configuration {
 
     @Bean
     @Primary
-    fun restTemplate(): RestTemplate {
+    fun restTemplate(
+            @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
+            @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int
+    ): RestTemplate {
 
         fun createSslTrustAllHttpClient(): CloseableHttpClient? {
             val acceptingTrustStrategy = { chain: Array<X509Certificate>, authType: String -> true }
@@ -62,8 +66,8 @@ class Configuration {
         }
 
         val clientHttpRequestFactory = HttpComponentsClientHttpRequestFactory().apply {
-            setReadTimeout(2000)
-            setConnectTimeout(2000)
+            setReadTimeout(readTimeout)
+            setConnectTimeout(connectTimeout)
             httpClient = createSslTrustAllHttpClient()
         }
 
