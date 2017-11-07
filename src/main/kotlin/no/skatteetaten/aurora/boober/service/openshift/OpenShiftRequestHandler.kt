@@ -2,8 +2,7 @@ package no.skatteetaten.aurora.boober.service.openshift
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.service.OpenShiftException
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import no.skatteetaten.aurora.boober.utils.logger
 import org.springframework.http.RequestEntity
 import org.springframework.http.ResponseEntity
 import org.springframework.retry.annotation.Backoff
@@ -16,7 +15,7 @@ import org.springframework.web.client.RestTemplate
 @Component
 class OpenShiftRequestHandler(val restTemplate: RestTemplate) {
 
-    val logger: Logger = LoggerFactory.getLogger(OpenShiftRequestHandler::class.java)
+    val logger by logger()
 
     @Retryable(value = OpenShiftException::class, maxAttempts = 3, backoff = Backoff(delay = 500))
     fun <T> exchange(requestEntity: RequestEntity<T>): ResponseEntity<JsonNode> {
