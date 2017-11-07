@@ -32,7 +32,7 @@ class OpenShiftRequestHandler(val restTemplate: RestTemplate) {
             logger.debug(messages)
             throw OpenShiftException(messages, e)
         }
-        logger.trace("Body=${createResponse.body}")
+        logger.trace("Body={}", createResponse.body)
         return createResponse
     }
 }
