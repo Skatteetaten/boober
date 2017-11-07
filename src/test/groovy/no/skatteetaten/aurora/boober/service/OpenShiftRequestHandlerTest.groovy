@@ -39,8 +39,7 @@ class OpenShiftRequestHandlerTest extends AbstractAuroraDeploymentSpecSpringTest
       osClusterMock.expect(requestTo(resourceUrl)).andRespond(withSuccess(resource, APPLICATION_JSON))
 
     when:
-      ResponseEntity<JsonNode> entity = requestHandler.
-          exchangeWithRetry(new RequestEntity<Object>(GET, new URI(resourceUrl)))
+      ResponseEntity<JsonNode> entity = requestHandler.exchange(new RequestEntity<Object>(GET, new URI(resourceUrl)))
 
     then:
       JsonOutput.prettyPrint(entity.body.toString()) == JsonOutput.prettyPrint(resource)
@@ -53,7 +52,7 @@ class OpenShiftRequestHandlerTest extends AbstractAuroraDeploymentSpecSpringTest
       3.times { osClusterMock.expect(requestTo(resourceUrl)).andRespond(withBadRequest()) }
 
     when:
-      requestHandler.exchangeWithRetry(new RequestEntity<Object>(GET, new URI(resourceUrl)))
+      requestHandler.exchange(new RequestEntity<Object>(GET, new URI(resourceUrl)))
 
     then:
       thrown(OpenShiftException)

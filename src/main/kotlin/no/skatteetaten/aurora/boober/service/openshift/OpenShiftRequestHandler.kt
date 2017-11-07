@@ -18,16 +18,11 @@ class OpenShiftRequestHandler(val restTemplate: RestTemplate) {
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftRequestHandler::class.java)
 
+    @Retryable(value = OpenShiftException::class, maxAttempts = 3, backoff = Backoff(delay = 500))
     fun <T> exchange(requestEntity: RequestEntity<T>): ResponseEntity<JsonNode> {
 
-        logger.info("${requestEntity.method} resource at ${requestEntity.url}")
-        return exchangeWithRetry(requestEntity)
-    }
-
-    @Retryable(value = OpenShiftException::class, maxAttempts = 3, backoff = Backoff(delay = 500))
-    fun <T> exchangeWithRetry(requestEntity: RequestEntity<T>): ResponseEntity<JsonNode> {
-
         val createResponse: ResponseEntity<JsonNode> = try {
+            logger.info("${requestEntity.method} resource at ${requestEntity.url}")
             restTemplate.exchange(requestEntity, JsonNode::class.java)
         } catch (e: RestClientResponseException) {
             val messages = "Request failed will be retried. url=${requestEntity.url}, method=${requestEntity.method}, message=${e.message}, code=${e.rawStatusCode}, statusText=${e.statusText}"
