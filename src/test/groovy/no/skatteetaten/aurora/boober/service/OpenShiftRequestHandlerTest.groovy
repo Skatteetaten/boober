@@ -6,6 +6,7 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withBadRequest
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess
 
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.RequestEntity
@@ -14,6 +15,8 @@ import org.springframework.test.web.client.MockRestServiceServer
 
 import com.fasterxml.jackson.databind.JsonNode
 
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.Logger
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftRequestHandler
 
@@ -30,6 +33,11 @@ class OpenShiftRequestHandlerTest extends AbstractAuroraDeploymentSpecSpringTest
 
   @Value('${openshift.url}/oapi/v1/namespaces/aos/deploymentconfigs/webleveranse')
   String resourceUrl
+
+  def setup() {
+    Logger root = (Logger)LoggerFactory.getLogger("no.skatteetaten")
+    root.setLevel(Level.DEBUG)
+  }
 
   def "Succeeds even if the request fails a couple of times"() {
 
