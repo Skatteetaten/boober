@@ -15,7 +15,7 @@ fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: Applic
 
     val baseHandlers = setOf(
             AuroraConfigFieldHandler("schemaVersion", validator = { it.oneOf(listOf("v1")) }),
-            AuroraConfigFieldHandler("type", validator = { it.required("Type is required") }),
+            AuroraConfigFieldHandler("type", validator = { it.oneOf(TemplateType.values().map { it.toString() }) }),
             AuroraConfigFieldHandler("baseFile"),
             AuroraConfigFieldHandler("envFile", validator = {
                 it?.startsWith("about-", "envFile must start with about")
