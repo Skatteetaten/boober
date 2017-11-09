@@ -1,6 +1,8 @@
 package no.skatteetaten.aurora.boober.controller.internal
 
+import com.fasterxml.jackson.annotation.JsonRawValue
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -10,12 +12,24 @@ typealias JsonDataFiles = Map<String, JsonNode>
 
 data class AuroraConfigPayload(
         val files: JsonDataFiles = mapOf(),
-        val versions: Map<String, String?> = mapOf()
+        val versions: Map<String, String?> = mapOf(),
+        val validateVersions: Boolean = true
 ) {
     fun toAuroraConfig(affiliation: String): AuroraConfig {
         val auroraConfigFiles = files.map { AuroraConfigFile(it.key, it.value, version = versions[it.key]) }
         return AuroraConfig(auroraConfigFiles, affiliation)
     }
+}
+
+data class UpdateAuroraConfigFilePayload(
+        val version: String = "",
+        val validateVersions: Boolean = true,
+
+        @JsonRawValue
+        val content: String
+) {
+    val contentAsJsonNode: JsonNode
+        get() = jacksonObjectMapper().readValue(this.content, JsonNode::class.java)
 }
 
 fun fromAuroraConfig(auroraConfig: AuroraConfig): AuroraConfigPayload {

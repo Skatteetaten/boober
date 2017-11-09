@@ -1,10 +1,7 @@
 package no.skatteetaten.aurora.boober.controller.internal
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.service.AuroraConfigException
-import no.skatteetaten.aurora.boober.service.AuroraVersioningException
-import no.skatteetaten.aurora.boober.service.OpenShiftException
-import no.skatteetaten.aurora.boober.service.ValidationException
+import no.skatteetaten.aurora.boober.service.*
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_REQUEST
@@ -19,14 +16,14 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @ControllerAdvice
 class ErrorHandler : ResponseEntityExceptionHandler() {
 
-    @ExceptionHandler(AuroraConfigException::class)
-    fun handleValidationErrors(ex: AuroraConfigException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
-
-    @ExceptionHandler(OpenShiftException::class)
-    fun handleOpenShiftErrors(ex: OpenShiftException, req: WebRequest) = handleException(ex, req, INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(ServiceException::class)
+    fun handleValidationErrors(ex: ServiceException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
 
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleBadRequest(ex: IllegalArgumentException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
+
+    @ExceptionHandler(OpenShiftException::class)
+    fun handleOpenShiftErrors(ex: OpenShiftException, req: WebRequest) = handleException(ex, req, INTERNAL_SERVER_ERROR)
 
     @ExceptionHandler(RuntimeException::class)
     fun handleGenericErrors(ex: RuntimeException, req: WebRequest) = handleException(ex, req, INTERNAL_SERVER_ERROR)
