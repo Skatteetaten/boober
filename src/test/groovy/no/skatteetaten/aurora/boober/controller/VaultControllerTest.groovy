@@ -1,0 +1,54 @@
+package no.skatteetaten.aurora.boober.controller
+
+import static org.springframework.http.MediaType.APPLICATION_JSON
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.put
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+
+import org.junit.Rule
+import org.springframework.restdocs.JUnitRestDocumentation
+import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.ResultActions
+import org.springframework.test.web.servlet.setup.MockMvcBuilders
+
+import groovy.json.JsonOutput
+import no.skatteetaten.aurora.boober.controller.internal.ErrorHandler
+import no.skatteetaten.aurora.boober.facade.VaultFacade
+import spock.lang.Specification
+
+class VaultControllerTest extends Specification {
+
+  @Rule
+  JUnitRestDocumentation restDocumentation = new JUnitRestDocumentation('test/docs/generated-snippets')
+
+  MockMvc mockMvc
+
+  def vaultFacade = Mock(VaultFacade)
+
+  def affiliation = 'aos'
+
+  def payload = [vault: [name: 'testvault', secrets: [:], versions: [:], permissions: null], validateVersions: true]
+
+  void setup() {
+    def controller = new VaultController(vaultFacade)
+    mockMvc = MockMvcBuilders.
+        standaloneSetup(controller)
+        .setControllerAdvice(new ErrorHandler())
+        .apply(documentationConfiguration(this.restDocumentation))
+        .build()
+  }
+
+  def "Simple test that verifies payload is correctly parsed"() {
+
+    given:
+      1 * vaultFacade.save(affiliation, _, payload.validateVersions)
+
+    when:
+      ResultActions result = mockMvc.perform(
+          put("/affiliation/$affiliation/vault").content(JsonOutput.toJson(payload)).
+              contentType(APPLICATION_JSON))
+
+    then:
+      result.andExpect(status().isOk())
+  }
+}
