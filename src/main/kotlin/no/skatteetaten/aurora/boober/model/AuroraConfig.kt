@@ -1,8 +1,28 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import java.io.File
 
 data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affiliation: String) {
+
+    companion object {
+        @JvmStatic
+        fun fromFolder(folderName: String) : AuroraConfig {
+
+            val folder = File(folderName)
+            val files = folder.walkBottomUp()
+                    .onEnter { !setOf(".secret", ".git").contains(it.name) }
+                    .filter { it.isFile }
+                    .associate { it.relativeTo(folder).path to it }
+
+            val nodes = files.map {
+                it.key to jacksonObjectMapper().readValue(it.value, JsonNode::class.java)
+            }.toMap()
+
+            return AuroraConfig(nodes.map { AuroraConfigFile(it.key, it.value!!, false) }, folder.name)
+        }
+    }
 
     fun getVersions() = auroraConfigFiles.associate { it.name to it.version }
 
