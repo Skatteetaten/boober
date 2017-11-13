@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
-import io.micrometer.core.annotation.Timed
 import no.skatteetaten.aurora.boober.controller.internal.ApplyPayload
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.service.DeployService
@@ -26,7 +25,6 @@ class DeployControllerV1(val deployService: DeployService) {
     }
 
 
-    @Timed
     @GetMapping("/history")
     fun deployHistory(@PathVariable affiliation: String): Response {
 
