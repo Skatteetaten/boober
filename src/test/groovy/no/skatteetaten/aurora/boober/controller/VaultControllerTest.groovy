@@ -27,8 +27,6 @@ class VaultControllerTest extends Specification {
 
   def affiliation = 'aos'
 
-  def payload = [vault: [name: 'testvault', secrets: [:], versions: [:], permissions: null], validateVersions: true]
-
   void setup() {
     def controller = new VaultController(vaultFacade)
     mockMvc = MockMvcBuilders.
@@ -38,15 +36,35 @@ class VaultControllerTest extends Specification {
         .build()
   }
 
-  def "Simple test that verifies payload is correctly parsed"() {
+  def "Simple test that verifies payload is correctly parsed on save"() {
 
     given:
+      def payload = [vault: [name: 'testvault', secrets: [:], versions: [:], permissions: null], validateVersions: true]
       1 * vaultFacade.save(affiliation, _, payload.validateVersions)
 
     when:
       ResultActions result = mockMvc.perform(
           put("/affiliation/$affiliation/vault").content(JsonOutput.toJson(payload)).
               contentType(APPLICATION_JSON))
+
+    then:
+      result.andExpect(status().isOk())
+  }
+
+  def "Simple test that verifies payload is correctly parsed on update secret file"() {
+
+    given:
+      def vaultName = "some_vault"
+      def secretName = "some_secret"
+      def fileContents = 'SECRET_PASS=asdlfkjaølfjaøf'
+      def payload = [contents: fileContents, validateVersions: false]
+      1 * vaultFacade.updateSecretFile(affiliation, vaultName, secretName, fileContents, _, payload.validateVersions)
+
+    when:
+      ResultActions result = mockMvc.perform(
+          put("/affiliation/$affiliation/vault/$vaultName/secret/$secretName")
+              .content(JsonOutput.toJson(payload))
+              .contentType(APPLICATION_JSON))
 
     then:
       result.andExpect(status().isOk())

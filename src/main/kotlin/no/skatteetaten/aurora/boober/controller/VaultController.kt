@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.validation.Valid
 
 data class AuroraSecretVaultPayload(val vault: AuroraSecretVault, val validateVersions: Boolean = true)
+data class UpdateSecretFilePayload(val contents: String, val validateVersions: Boolean = true, val version: String = "")
 
 @RestController
 @RequestMapping("/affiliation/{affiliation}/vault")
@@ -38,21 +39,23 @@ class VaultController(val facade: VaultFacade) {
 
     @Timed
     @PutMapping("/{vault}/secret/**")
-    fun update(@PathVariable affiliation: String,
-               @PathVariable vault: String,
-               request: HttpServletRequest,
-               @RequestBody fileContents: String,
-               @RequestHeader(value = "AuroraConfigFileVersion", required = false) fileVersion: String = "",
-               @RequestHeader(value = "AuroraValidateVersions", required = false) validateVersions: Boolean = true): Response {
+    fun updateSecretFile(@PathVariable affiliation: String,
+                         @PathVariable("vault") vaultName: String,
+                         request: HttpServletRequest,
+                         @RequestBody payload: UpdateSecretFilePayload): Response {
+
+        val fileVersion: String = payload.version
+        val validateVersions: Boolean = payload.validateVersions
+        val fileContents: String = payload.contents
 
         if (validateVersions && fileVersion.isEmpty()) {
             throw IllegalAccessException("Must specify AuroraConfigFileVersion header")
         }
 
-        val path = "affiliation/$affiliation/vault/$vault/secret/**"
+        val path = "affiliation/$affiliation/vault/$vaultName/secret/**"
         val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
 
-        val vault = facade.updateSecretFile(affiliation, vault, fileName, fileContents, fileVersion, validateVersions)
+        val vault = facade.updateSecretFile(affiliation, vaultName, fileName, fileContents, fileVersion, validateVersions)
         return Response(items = listOf(vault))
     }
 
@@ -61,7 +64,6 @@ class VaultController(val facade: VaultFacade) {
     fun delete(@PathVariable affiliation: String, @PathVariable vault: String): Response {
         return Response(items = listOf(facade.delete(affiliation, vault)))
     }
-
 }
 
 
