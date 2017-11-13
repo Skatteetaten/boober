@@ -3,37 +3,37 @@
   "apiVersion": "v1",
   "metadata": {
     "name": "${name}",
-    "annotations": {
-      #foreach ($annotation  in $annotations.entrySet())
-          #if($velocityCount != 1)
-            ,
+  "annotations": {
+    #foreach ($annotation  in $annotations.entrySet())
+      #if($velocityCount != 1)
+        ,
       #end
-        "${annotation.key}": "${annotation.value}"
-      #end
-    },
-    "labels": {
-      #foreach ($label  in $labels.entrySet())
-          #if($velocityCount != 1)
-            ,
-          #end
-        "${label.key}": "${label.value}"
-      #end
-    }
+      "${annotation.key}": "${annotation.value}"
+    #end
   },
-  "spec": {
-    "ports": [
-      {
-        "name": "http",
-        "protocol": "TCP",
-        "port": 80,
-        "targetPort": 8080,
-        "nodePort": 0
-      }
-    ],
-    "selector": {
+"labels": {
+  #foreach ($label  in $labels.entrySet())
+    #if($velocityCount != 1)
+      ,
+    #end
+    "${label.key}": "${label.value}"
+  #end
+}
+},
+"spec": {
+"ports": [
+{
+"name": "http",
+"protocol": "TCP",
+"port": 80,
+"targetPort": 8080,
+"nodePort": 0
+}
+],
+"selector": {
 "name": "${name}"
-    },
-    "type": "ClusterIP",
-    "sessionAffinity": "None"
-  }
+},
+"type": "ClusterIP",
+"sessionAffinity": "None"
+}
 }

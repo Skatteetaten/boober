@@ -36,16 +36,16 @@ class SecretVaultService(val mapper: ObjectMapper,
 
     fun createVault(name: String, vaultFiles: List<AuroraSecretFile>): AuroraSecretVault {
 
-        val permissions: AuroraPermissions? = vaultFiles.find {
-            gitFile -> gitFile.file.name == PERMISSION_FILE
+        val permissions: AuroraPermissions? = vaultFiles.find { gitFile ->
+            gitFile.file.name == PERMISSION_FILE
         }?.file?.let { mapper.readValue(it) }
 
         val files = vaultFiles.filter { it.file.name != PERMISSION_FILE }
                 .associate { gitFile ->
-            val contents = encryptionService.decrypt(gitFile.file.readText())
+                    val contents = encryptionService.decrypt(gitFile.file.readText())
 
-            gitFile.file.name to contents
-        }.toMap()
+                    gitFile.file.name to contents
+                }.toMap()
 
         val versions = vaultFiles.associate { it.file.name to it.commit?.abbreviate(7)?.name() }
 

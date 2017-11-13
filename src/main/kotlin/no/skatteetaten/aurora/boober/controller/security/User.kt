@@ -6,4 +6,4 @@ class User(
         username: String,
         val token: String,
         val fullName: String? = null
-): SpringSecurityUser(username, token, true, true, true, true, listOf())
+) : SpringSecurityUser(username, token, true, true, true, true, listOf())

@@ -4,31 +4,30 @@
   "metadata": {
     "name": "${name}",
   "labels": {
-      #foreach ($label  in $labels.entrySet())
-          #if($velocityCount != 1)
-            ,
-          #end
-        "${label.key}": "${label.value}"
+    #foreach ($label  in $labels.entrySet())
+      #if($velocityCount != 1)
+        ,
       #end
-    }
-  }
-#if (${type} == "deploy")
-    ,
-      "spec": {
-      "dockerImageRepository": "${deploy.dockerImagePath}",
-        "tags": [
-          {
-            "name": "default",
-              "from": {
-                "kind": "DockerImage",
-"name": "${deploy.dockerImagePath}:${deploy.dockerTag}"
-
-              },
-              "importPolicy": {
-                "scheduled": true
-              }
-          }
-        ]
-      }
+      "${label.key}": "${label.value}"
     #end
+  }
+}
+#if (${type} == "deploy")
+,
+"spec": {
+"dockerImageRepository": "${deploy.dockerImagePath}",
+"tags": [
+{
+"name": "default",
+"from": {
+"kind": "DockerImage",
+"name": "${deploy.dockerImagePath}:${deploy.dockerTag}"
+},
+"importPolicy": {
+"scheduled": true
+}
+}
+]
+}
+#end
 }

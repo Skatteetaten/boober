@@ -1,4 +1,5 @@
 @file:JvmName("Main")
+
 package no.skatteetaten.aurora.boober
 
 import io.micrometer.spring.autoconfigure.export.StringToDurationConverter

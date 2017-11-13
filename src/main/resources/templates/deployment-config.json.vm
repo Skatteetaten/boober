@@ -10,202 +10,205 @@
       "${annotation.key}": "${annotation.value}"
     #end
   },
-    "labels": {
-      #foreach ($label  in $labels.entrySet())
-          #if($velocityCount != 1)
-            ,
-          #end
-        "${label.key}": "${label.value}"
-      #end
-  },
-"name": "${name}"
-  },
-  "spec": {
-  #if(${deploy.deployStrategy.type} == "rolling")
-      "strategy": {
-        "type": "Rolling",
-        "rollingParams": {
-          "intervalSeconds": 1,
-          "maxSurge": "25%",
-          "maxUnavailable": 0,
-  "timeoutSeconds": ${deploy.deployStrategy.timeout},
-          "updatePeriodSeconds": 1
-        }
-      },
-    #else
-      "strategy": {
-        "type": "Recreate",
-    "recreateParams": {
-    "timeoutSeconds": ${deploy.deployStrategy.timeout}
-    }
-      },
+"labels": {
+  #foreach ($label  in $labels.entrySet())
+    #if($velocityCount != 1)
+      ,
     #end
-    "triggers": [
-      {
-        "type": "ImageChange",
-        "imageChangeParams": {
-          "automatic": true,
-          "containerNames": [
-"${name}"
-          ],
-          "from": {
-"name": "${name}:${imageStreamTag}",
-            "kind": "ImageStreamTag"
-          }
-        }
-      }
-    ],
-"replicas": ${deploy.replicas} ,
-    "selector": {
+    "${label.key}": "${label.value}"
+  #end
+},
 "name": "${name}"
-    },
-    "template": {
-      "metadata": {
-        "labels": {
-      #foreach ($label  in $labels.entrySet())
-          #if($velocityCount != 1)
-          ,
-          #end
-      "${label.key}": "${label.value}"
-      #end
-        }
-      },
-      "spec": {
-        "volumes": [
-          #if (${mounts})
-            #foreach ($mount in $mounts)
-              {
-                "name": "${mount.mountName}",
-                #if(${mount.type} == "ConfigMap")
-                  "configMap": {
-                    "name": "${mount.volumeName}"
-                  }
-                #elseif(${mount.type} == "Secret")
-                  "secret": {
-                    "secretName": "${mount.volumeName}"
-                  }
-                #end
-              },
-            #end
-          #end
-          {
-            "name": "application-log-volume",
-            "emptyDir": {}
-          }
-        ],
-        "containers": [
-          {
-          "name": "${name}",
-            "ports": [
-              {
-                "containerPort": 8080,
-                "protocol": "TCP",
-                "name": "http"
-              },
-              {
-                "containerPort": 8081,
-                "protocol": "TCP",
-                "name": "management"
-              },
-              {
-                "containerPort": 8778,
-                "name": "jolokia"
-              }
-            ],
-            "env": [
-              {
-                "name": "POD_NAME",
-                "valueFrom": {
-                  "fieldRef": {
-                    "apiVersion": "v1",
-                    "fieldPath": "metadata.name"
-                  }
-                }
-              },
-              {
-                "name": "POD_NAMESPACE",
-                "valueFrom": {
-                  "fieldRef": {
-                    "apiVersion": "v1",
-                    "fieldPath": "metadata.namespace"
-                  }
-                }
-              }
-            #foreach ($var  in $env.entrySet())
-            , {
-              "name": "$var.key",
-              "value": "$var.value"
-            }
-            #end
-            ],
-            "resources": {
-              "limits": {
-                "cpu": "${deploy.resources.cpu.max}",
-                "memory": "${deploy.resources.memory.max}"
-              },
-              "requests": {
-                "cpu": "${deploy.resources.cpu.min}",
-                "memory": "${deploy.resources.memory.min}"
-              }
-            },
-            "volumeMounts": [
-              #if (${mounts})
-                #foreach ($mount in $mounts)
-                  {
-                    "name": "${mount.mountName}",
-                    "mountPath": "${mount.path}"
-                  },
-                #end
-              #end
-              {
-                "name": "application-log-volume",
-                "mountPath": "/u01/logs"
-              }
-            ],
-            "terminationMessagePath": "/dev/termination-log",
-            "imagePullPolicy": "IfNotPresent",
-            "capabilities": {},
-            "securityContext": {
-              "capabilities": {},
-              "privileged": false
+},
+"spec": {
+  #if(${deploy.deployStrategy.type} == "rolling")
+  "strategy": {
+  "type": "Rolling",
+  "rollingParams": {
+  "intervalSeconds": 1,
+  "maxSurge": "25%",
+  "maxUnavailable": 0,
+  "timeoutSeconds": ${deploy.deployStrategy.timeout},
+  "updatePeriodSeconds": 1
+  }
+  },
+  #else
+  "strategy": {
+  "type": "Recreate",
+  "recreateParams": {
+  "timeoutSeconds": ${deploy.deployStrategy.timeout}
+  }
+  },
+  #end
+"triggers": [
+{
+"type": "ImageChange",
+"imageChangeParams": {
+"automatic": true,
+"containerNames": [
+"${name}"
+],
+"from": {
+"name": "${name}:${imageStreamTag}",
+"kind": "ImageStreamTag"
 }
-            #if (${deploy.liveness})
-            , "livenessProbe": {
-              #if(${deploy.liveness.path} && "$!{deploy.liveness.path}" != "")
-              "httpGet": {
-                "path": "${deploy.liveness.path}",
-              #else
-              "tcpSocket": {
-              #end
-                "port": ${deploy.liveness.port}
-              },
-              "initialDelaySeconds": ${deploy.liveness.delay},
-              "timeoutSeconds": ${deploy.liveness.timeout}
-            }
-            #end
+}
+}
+],
+"replicas": ${deploy.replicas} ,
+"selector": {
+"name": "${name}"
+},
+"template": {
+"metadata": {
+"labels": {
+  #foreach ($label  in $labels.entrySet())
+    #if($velocityCount != 1)
+    ,
+    #end
+  "${label.key}": "${label.value}"
+  #end
+}
+},
+"spec": {
+"volumes": [
+  #if (${mounts})
+    #foreach ($mount in $mounts)
+    {
+    "name": "${mount.mountName}",
+      #if(${mount.type} == "ConfigMap")
+      "configMap": {
+      "name": "${mount.volumeName}"
+      }
+      #elseif(${mount.type} == "Secret")
+      "secret": {
+      "secretName": "${mount.volumeName}"
+      }
+      #end
+    },
+    #end
+  #end
+{
+"name": "application-log-volume",
+"emptyDir": {
+}
+}
+],
+"containers": [
+{
+"name": "${name}",
+"ports": [
+{
+"containerPort": 8080,
+"protocol": "TCP",
+"name": "http"
+},
+{
+"containerPort": 8081,
+"protocol": "TCP",
+"name": "management"
+},
+{
+"containerPort": 8778,
+"name": "jolokia"
+}
+],
+"env": [
+{
+"name": "POD_NAME",
+"valueFrom": {
+"fieldRef": {
+"apiVersion": "v1",
+"fieldPath": "metadata.name"
+}
+}
+},
+{
+"name": "POD_NAMESPACE",
+"valueFrom": {
+"fieldRef": {
+"apiVersion": "v1",
+"fieldPath": "metadata.namespace"
+}
+}
+}
+  #foreach ($var  in $env.entrySet())
+  , {
+  "name": "$var.key",
+  "value": "$var.value"
+  }
+  #end
+],
+"resources": {
+"limits": {
+"cpu": "${deploy.resources.cpu.max}",
+"memory": "${deploy.resources.memory.max}"
+},
+"requests": {
+"cpu": "${deploy.resources.cpu.min}",
+"memory": "${deploy.resources.memory.min}"
+}
+},
+"volumeMounts": [
+  #if (${mounts})
+    #foreach ($mount in $mounts)
+    {
+    "name": "${mount.mountName}",
+    "mountPath": "${mount.path}"
+    },
+    #end
+  #end
+{
+"name": "application-log-volume",
+"mountPath": "/u01/logs"
+}
+],
+"terminationMessagePath": "/dev/termination-log",
+"imagePullPolicy": "IfNotPresent",
+"capabilities": {
+},
+"securityContext": {
+"capabilities": {
+},
+"privileged": false
+}
+  #if (${deploy.liveness})
+  , "livenessProbe": {
+    #if(${deploy.liveness.path} && "$!{deploy.liveness.path}" != "")
+    "httpGet": {
+    "path": "${deploy.liveness.path}",
+    #else
+    "tcpSocket": {
+    #end
+  "port": ${deploy.liveness.port}
+  },
+  "initialDelaySeconds": ${deploy.liveness.delay},
+  "timeoutSeconds": ${deploy.liveness.timeout}
+  }
+  #end
   #if (${deploy.readiness})
   ,"readinessProbe": {
-              #if(${deploy.readiness.path} && "$!{deploy.readiness.path}" != "")
-              "httpGet": {
-                "path": "${deploy.readiness.path}",
-              #else
-              "tcpSocket": {
-              #end
-                "port": ${deploy.readiness.port}
-              },
-              "initialDelaySeconds": ${deploy.readiness.delay},
-              "timeoutSeconds": ${deploy.readiness.timeout}
-            }
+    #if(${deploy.readiness.path} && "$!{deploy.readiness.path}" != "")
+    "httpGet": {
+    "path": "${deploy.readiness.path}",
+    #else
+    "tcpSocket": {
+    #end
+  "port": ${deploy.readiness.port}
+  },
+  "initialDelaySeconds": ${deploy.readiness.delay},
+  "timeoutSeconds": ${deploy.readiness.timeout}
+  }
   #end
 }
 ],
-        "restartPolicy": "Always",
-        "dnsPolicy": "ClusterFirst"
+"restartPolicy": "Always",
+"dnsPolicy": "ClusterFirst"
 #if(${deploy.serviceAccount})
-        ,
+,
 "serviceAccountName": "${deploy.serviceAccount}"
-        #end
-      }
-    }
-  }
+#end
+}
+}
+}
 }

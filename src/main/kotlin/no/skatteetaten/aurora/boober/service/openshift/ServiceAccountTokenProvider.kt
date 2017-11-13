@@ -35,7 +35,7 @@ class ServiceAccountTokenProvider(
      *
      * @return
      */
-    override fun getToken() =  tokenSupplier.get()
+    override fun getToken() = tokenSupplier.get()
 
     fun readToken(): String {
         return if (tokenOverride.isBlank()) {

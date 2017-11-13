@@ -16,6 +16,7 @@ data class AuroraSecretVaultPayload @JvmOverloads constructor(
         val permissions: AuroraPermissions? = null,
         val admin: Boolean = true
 )
+
 data class AuroraPermissions @JvmOverloads constructor(
         val groups: List<String>? = listOf(),
         val users: List<String>? = listOf()
