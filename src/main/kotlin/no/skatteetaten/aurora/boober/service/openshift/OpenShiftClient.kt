@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
@@ -42,6 +43,23 @@ data class OpenShiftResponse @JvmOverloads constructor(
         val previous = command.previous?.at(pointer)?.asText() ?: ""
         return response != previous
     }
+
+    companion object {
+        fun fromOpenShiftException(e: OpenShiftException, command: OpenshiftCommand): OpenShiftResponse {
+            val response = if (e.cause is HttpClientErrorException) {
+                val body = e.cause.responseBodyAsString
+                try {
+                    jacksonObjectMapper().readValue<JsonNode>(body)
+                } catch (je: Exception) {
+                    jacksonObjectMapper().convertValue<JsonNode>(mapOf("error" to body))
+                }
+            } else {
+                null
+            }
+            return OpenShiftResponse(command, response, success = false, exception = e.message)
+        }
+
+    }
 }
 
 @Service
@@ -70,17 +88,7 @@ class OpenShiftClient(
             }
             OpenShiftResponse(command, res)
         } catch (e: OpenShiftException) {
-            val response = if (e.cause is HttpClientErrorException) {
-                val body = e.cause.responseBodyAsString
-                try {
-                    mapper.readValue<JsonNode>(body)
-                } catch (je: Exception) {
-                    mapper.convertValue<JsonNode>(mapOf("error" to body))
-                }
-            } else {
-                null
-            }
-            OpenShiftResponse(command, response, success = false, exception = e.message)
+            OpenShiftResponse.fromOpenShiftException(e, command)
         }
     }
 

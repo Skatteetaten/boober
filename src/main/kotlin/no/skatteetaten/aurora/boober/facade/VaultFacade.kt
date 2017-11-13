@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.facade
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.model.AuroraSecretFile
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
+import no.skatteetaten.aurora.boober.model.AuroraSecretVaultPayload
 import no.skatteetaten.aurora.boober.model.VersioningError
 import no.skatteetaten.aurora.boober.service.AuroraVersioningException
 import no.skatteetaten.aurora.boober.service.EncryptionService
@@ -27,13 +28,14 @@ class VaultFacade(
     private val PERMISSION_FILE = ".permissions"
 
 
-    fun listAllVaultsWithUserAccess(affiliation: String): List<AuroraSecretVault> {
+    fun listAllVaultsWithUserAccess(affiliation: String): List<AuroraSecretVaultPayload> {
 
         val repo = getRepo(affiliation)
 
         val vaults = secretVaultService.getVaults(repo)
-                .values.toList()
-                .filter { secretVaultPermissionService.hasUserAccess(it.permissions) }
+                .values
+                .map { AuroraSecretVaultPayload(it.name, it.secrets.values.toList(), it.permissions, secretVaultPermissionService.hasUserAccess(it.permissions)) }
+                .toList()
         gitService.closeRepository(repo)
         return vaults
     }
