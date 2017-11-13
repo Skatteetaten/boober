@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.controller.internal.ErrorHandler
+import no.skatteetaten.aurora.boober.controller.v1.VaultController
 import no.skatteetaten.aurora.boober.facade.VaultFacade
 import spock.lang.Specification
 

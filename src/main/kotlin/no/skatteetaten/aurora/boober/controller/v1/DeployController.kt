@@ -1,7 +1,7 @@
-package no.skatteetaten.aurora.boober.controller
+package no.skatteetaten.aurora.boober.controller.v1
 
+import io.micrometer.core.annotation.Timed
 import no.skatteetaten.aurora.boober.controller.internal.ApplyPayload
-import no.skatteetaten.aurora.boober.controller.internal.DeployCommand
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.service.DeployService
 import no.skatteetaten.aurora.boober.service.internal.AuroraDeployResult
@@ -16,12 +16,12 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/affiliation")
+@RequestMapping("/v1")
 class DeployController(val deployService: DeployService) {
 
     val logger: Logger = LoggerFactory.getLogger(DeployController::class.java)
 
-    @PutMapping("/{affiliation}/apply")
+    @PutMapping("/apply")
     fun apply(@PathVariable affiliation: String, @RequestBody payload: ApplyPayload): Response {
 
         val auroraDeployResults: List<AuroraDeployResult> = deployService.executeDeploy(affiliation, payload.applicationIds, payload.overridesToAuroraConfigFiles(), payload.deploy)
@@ -29,19 +29,9 @@ class DeployController(val deployService: DeployService) {
         return Response(items = auroraDeployResults, success = success)
     }
 
-    @PutMapping("/{affiliation}/deploy")
-    @Deprecated(message = "Use apply instead", replaceWith = ReplaceWith("apply(affiliation, _)"))
-    fun deploy(@PathVariable affiliation: String, @RequestBody cmd: DeployCommand): Response {
 
-        logger.debug("Staring deploy request")
-        val setupParams = cmd.setupParams.toDeployParams()
-        val auroraDeployResults: List<AuroraDeployResult> = deployService.executeDeploy(affiliation, setupParams.applicationIds, setupParams.overrides, setupParams.deploy)
-        val success = !auroraDeployResults.any { !it.success }
-        logger.debug("end deploy request")
-        return Response(items = auroraDeployResults, success = success)
-    }
-
-    @GetMapping("/{affiliation}/deploy")
+    @Timed
+    @GetMapping("/deployhistory")
     fun deployHistory(@PathVariable affiliation: String): Response {
 
         val applicationResults: List<DeployHistory> = deployService.deployHistory(affiliation)

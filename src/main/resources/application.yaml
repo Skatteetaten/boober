@@ -15,7 +15,10 @@ spring:
     caffeine:
       spec: maximumSize=200,expireAfterAccess=300s
     cache-names: groups
-
+    metrics:
+        prometheus:
+            timerPercentilesMax: "PT5S"
+            timerPercentilesMin: "PT0.1S"
 boober:
     git:
        checkoutPath: "/tmp/boober"

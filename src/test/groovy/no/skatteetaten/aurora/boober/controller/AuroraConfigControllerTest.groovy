@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.JsonNode
 
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.controller.internal.ErrorHandler
+import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigController
 import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest
 import no.skatteetaten.aurora.boober.service.DeployBundleService
 import spock.lang.Specification
