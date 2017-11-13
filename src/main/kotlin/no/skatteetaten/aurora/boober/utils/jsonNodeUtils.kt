@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.utils
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.JsonNodeType
 import com.fasterxml.jackson.databind.node.ObjectNode
-import org.apache.commons.lang.StringEscapeUtils
 
 
 fun JsonNode.findAllPointers(maxLevel: Int): List<String> {

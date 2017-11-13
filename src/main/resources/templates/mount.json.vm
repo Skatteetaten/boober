@@ -3,22 +3,22 @@
   "apiVersion": "v1",
   "metadata": {
     "name": "${mount.volumeName}",
-    "labels": {
-      #foreach ($label  in $labels.entrySet())
-          #if($velocityCount != 1)
-            ,
-          #end
-        "${label.key}": "${label.value}"
+  "labels": {
+    #foreach ($label  in $labels.entrySet())
+      #if($velocityCount != 1)
+        ,
       #end
-    }
+      "${label.key}": "${label.value}"
+    #end
   }
+}
 #if (${mount.content})
 ,"data": {
   #foreach ($config  in $mount.content.entrySet())
     #if($velocityCount != 1)
-      ,
+    ,
     #end
-    "${config.key}": "${config.value}"
+  "${config.key}": "${config.value}"
   #end
 }
 #end

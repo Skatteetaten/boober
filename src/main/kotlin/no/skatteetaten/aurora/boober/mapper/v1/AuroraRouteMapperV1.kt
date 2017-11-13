@@ -65,6 +65,4 @@ class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>) {
     }
 
 
-
-
 }

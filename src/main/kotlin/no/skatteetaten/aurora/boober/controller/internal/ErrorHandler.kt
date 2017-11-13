@@ -1,7 +1,11 @@
 package no.skatteetaten.aurora.boober.controller.internal
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.service.*
+import no.skatteetaten.aurora.boober.service.AuroraConfigException
+import no.skatteetaten.aurora.boober.service.AuroraVersioningException
+import no.skatteetaten.aurora.boober.service.OpenShiftException
+import no.skatteetaten.aurora.boober.service.ServiceException
+import no.skatteetaten.aurora.boober.service.ValidationException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_REQUEST

@@ -8,7 +8,7 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
 
     companion object {
         @JvmStatic
-        fun fromFolder(folderName: String) : AuroraConfig {
+        fun fromFolder(folderName: String): AuroraConfig {
 
             val folder = File(folderName)
             val files = folder.walkBottomUp()
