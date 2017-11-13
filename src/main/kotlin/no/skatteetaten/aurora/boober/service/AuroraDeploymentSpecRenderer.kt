@@ -59,6 +59,7 @@ fun createMapForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSpe
     return fields
 }
 
+@JvmOverloads
 fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean): String {
 
     val fields = createMapForAuroraDeploymentSpecPointers(deploymentSpec, includeDefaults)
