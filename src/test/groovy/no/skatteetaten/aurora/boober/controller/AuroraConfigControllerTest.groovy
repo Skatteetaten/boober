@@ -16,7 +16,7 @@ import com.fasterxml.jackson.databind.JsonNode
 
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.controller.internal.ErrorHandler
-import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigController
+import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigFileControllerV1
 import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest
 import no.skatteetaten.aurora.boober.service.DeployBundleService
 import spock.lang.Specification
@@ -31,7 +31,7 @@ class AuroraConfigControllerTest extends Specification {
   def deployBundleService = Mock(DeployBundleService)
 
   void setup() {
-    def controller = new AuroraConfigController(deployBundleService)
+    def controller = new AuroraConfigFileControllerV1(deployBundleService)
     mockMvc = MockMvcBuilders.
         standaloneSetup(controller)
         .setControllerAdvice(new ErrorHandler())
@@ -57,7 +57,7 @@ class AuroraConfigControllerTest extends Specification {
       ) >> auroraConfig
     when:
       ResultActions result = mockMvc.perform(
-          put("/affiliation/$affiliation/auroraconfigfile/$fileName").content(JsonOutput.toJson(payload)).
+          put("/v1/auroraconfigfile/$affiliation/$fileName").content(JsonOutput.toJson(payload)).
               contentType(APPLICATION_JSON))
 
     then:
@@ -77,7 +77,7 @@ class AuroraConfigControllerTest extends Specification {
           auroraConfig
     when:
       ResultActions result = mockMvc.perform(
-          patch("/affiliation/$affiliation/auroraconfigfile/$fileName").content(JsonOutput.toJson(payload)).
+          patch("/v1/auroraconfigfile/$affiliation/$fileName").content(JsonOutput.toJson(payload)).
               contentType(APPLICATION_JSON))
 
     then:

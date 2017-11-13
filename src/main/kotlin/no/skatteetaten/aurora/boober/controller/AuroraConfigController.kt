@@ -7,8 +7,7 @@ import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.internal.fromAuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.DeployBundleService
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import no.skatteetaten.aurora.boober.utils.logger
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -25,7 +24,7 @@ import javax.servlet.http.HttpServletRequest
 class AuroraConfigController(val deployBundleService: DeployBundleService) {
 
 
-    val logger: Logger = LoggerFactory.getLogger(AuroraConfigController::class.java)
+    val logger by logger()
 
     @Timed
     @GetMapping("/auroraconfig/filenames")

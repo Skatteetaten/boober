@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/v1/auroradeployspec/{affiliation}/{environment}/{application}")
-class AuroraDeploymentSpecController(val deployBundleService: DeployBundleService) {
+class AuroraDeploymentSpecControllerV1(val deployBundleService: DeployBundleService) {
 
     @GetMapping()
     fun get(

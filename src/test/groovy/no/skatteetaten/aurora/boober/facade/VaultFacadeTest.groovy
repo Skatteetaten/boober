@@ -7,9 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Import
 
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Metrics
+import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
@@ -41,6 +43,7 @@ class VaultFacadeTest extends Specification {
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
   @Configuration
+  @Import(StringToDurationConverter.class)
   static class Config {
     private DetachedMockFactory factory = new DetachedMockFactory()
 

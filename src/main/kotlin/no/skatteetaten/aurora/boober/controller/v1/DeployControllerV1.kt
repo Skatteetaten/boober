@@ -6,8 +6,6 @@ import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.service.DeployService
 import no.skatteetaten.aurora.boober.service.internal.AuroraDeployResult
 import no.skatteetaten.aurora.boober.service.internal.DeployHistory
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
@@ -16,12 +14,10 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/v1")
-class DeployController(val deployService: DeployService) {
+@RequestMapping("/v1/apply")
+class DeployControllerV1(val deployService: DeployService) {
 
-    val logger: Logger = LoggerFactory.getLogger(DeployController::class.java)
-
-    @PutMapping("/apply")
+    @PutMapping()
     fun apply(@PathVariable affiliation: String, @RequestBody payload: ApplyPayload): Response {
 
         val auroraDeployResults: List<AuroraDeployResult> = deployService.executeDeploy(affiliation, payload.applicationIds, payload.overridesToAuroraConfigFiles(), payload.deploy)
@@ -31,7 +27,7 @@ class DeployController(val deployService: DeployService) {
 
 
     @Timed
-    @GetMapping("/deployhistory")
+    @GetMapping("/history")
     fun deployHistory(@PathVariable affiliation: String): Response {
 
         val applicationResults: List<DeployHistory> = deployService.deployHistory(affiliation)

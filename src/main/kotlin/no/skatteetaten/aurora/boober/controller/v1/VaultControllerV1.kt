@@ -19,8 +19,7 @@ data class UpdateSecretFilePayload(val contents: String, val validateVersions: B
 
 @RestController
 @RequestMapping("/v1/vault/{affiliation}")
-class VaultController(val facade: VaultFacade) {
-
+class VaultControllerV1(val facade: VaultFacade) {
 
     @GetMapping()
     fun listVaults(@PathVariable affiliation: String): Response {
