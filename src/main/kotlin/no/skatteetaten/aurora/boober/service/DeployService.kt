@@ -260,16 +260,8 @@ class DeployService(
     }
 
     fun generateRedeployResource(type: TemplateType, name: String, dockerImage: String?, openShiftResponses: List<OpenShiftResponse>): JsonNode? {
-        if (type == build) {
+        if (type == build || type == development) {
             return null
-        }
-
-        if (type == development) {
-
-            return openShiftResponses.filter { it.responseBody?.openshiftKind ?: "" == "buildconfig" }
-                    .find { it.command.operationType != OperationType.CREATE }
-                    ?.let { openShiftObjectGenerator.generateBuildRequest(name) }
-
         }
 
         val imageStream = openShiftResponses.find { it.responseBody?.get("kind")?.asText()?.toLowerCase() ?: "" == "imagestream" }
