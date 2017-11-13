@@ -15,7 +15,10 @@ spring:
     caffeine:
       spec: maximumSize=200,expireAfterAccess=300s
     cache-names: groups
-
+    metrics:
+        prometheus:
+            timerPercentilesMax: "PT5S"
+            timerPercentilesMin: "PT0.1S"
 boober:
     git:
        checkoutPath: "/tmp/boober"
@@ -32,15 +35,14 @@ aurora:
 logging:
   level:
     no.skatteetaten: INFO
-    no.skatteetaten.aurora.boober: DEBUG
-    ske.aurora.filter: INFO
+    no.skatteetaten.aurora.boober: INFO
     org:
       jboss: INFO
       hibernate: WARN
-      springframework: INFO
+      springframework: WARN
       apache:
-        catalina: INFO
-        velocity: INFO
+        catalina:  WARN
+        velocity:  WARN
 ---
 spring:
     profiles: local

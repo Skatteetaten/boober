@@ -1,26 +1,30 @@
 package no.skatteetaten.aurora.boober.controller
 
+import com.fasterxml.jackson.databind.JsonNode
 import io.micrometer.core.annotation.Timed
 import no.skatteetaten.aurora.boober.controller.internal.AuroraConfigPayload
 import no.skatteetaten.aurora.boober.controller.internal.Response
-import no.skatteetaten.aurora.boober.controller.internal.UpdateAuroraConfigFilePayload
 import no.skatteetaten.aurora.boober.controller.internal.fromAuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.DeployBundleService
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import no.skatteetaten.aurora.boober.utils.logger
 import org.springframework.util.AntPathMatcher
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import javax.servlet.http.HttpServletRequest
-import javax.validation.Valid
-
 
 @RestController
 @RequestMapping("/affiliation/{affiliation}")
 class AuroraConfigController(val deployBundleService: DeployBundleService) {
 
 
-    val logger: Logger = LoggerFactory.getLogger(AuroraConfigController::class.java)
+    val logger by logger()
 
     @Timed
     @GetMapping("/auroraconfig/filenames")
@@ -46,10 +50,11 @@ class AuroraConfigController(val deployBundleService: DeployBundleService) {
     @Timed
     @PutMapping("/auroraconfig")
     fun save(@PathVariable affiliation: String,
-             @RequestBody payload: AuroraConfigPayload): Response {
+             @RequestBody payload: AuroraConfigPayload,
+             @RequestHeader(value = "AuroraValidateVersions", required = false) validateVersions: Boolean = true): Response {
 
         logger.info("Save aurora config affilation={}", affiliation)
-        val auroraConfig = deployBundleService.saveAuroraConfig(payload.toAuroraConfig(affiliation), payload.validateVersions)
+        val auroraConfig = deployBundleService.saveAuroraConfig(payload.toAuroraConfig(affiliation), validateVersions)
         val res = createAuroraConfigResponse(auroraConfig)
 
         logger.debug("/Save aurora config")
@@ -77,34 +82,36 @@ class AuroraConfigController(val deployBundleService: DeployBundleService) {
     @Timed
     @PutMapping("/auroraconfigfile/**")
     fun updateAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest,
-                               @RequestBody @Valid payload: UpdateAuroraConfigFilePayload): Response {
+                               @RequestBody fileContents: JsonNode,
+                               @RequestHeader(value = "AuroraConfigFileVersion") configFileVersion: String = "",
+                               @RequestHeader(value = "AuroraValidateVersions", required = false) validateVersions: Boolean = true): Response {
 
-        if (payload.validateVersions && payload.version.isEmpty()) {
-            throw IllegalAccessException("Must specify version");
+        if (validateVersions && configFileVersion.isEmpty()) {
+            throw IllegalAccessException("Must specify AuroraConfigFileVersion header");
         }
         val path = "affiliation/$affiliation/auroraconfigfile/**"
         val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
 
-        val auroraConfig = deployBundleService.updateAuroraConfigFile(affiliation, fileName,
-                payload.contentAsJsonNode, payload.version, payload.validateVersions)
+        val auroraConfig = deployBundleService.updateAuroraConfigFile(affiliation, fileName, fileContents, configFileVersion, validateVersions)
         return createAuroraConfigResponse(auroraConfig)
     }
 
 
     @Timed
-    @PatchMapping(value = "/auroraconfigfile/**")
+    @PatchMapping(value = "/auroraconfigfile/**", consumes = arrayOf("application/json-patch+json"))
     fun patchAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest,
-                              @RequestBody @Valid payload: UpdateAuroraConfigFilePayload): Response {
+                              @RequestBody jsonPatchOp: String,
+                              @RequestHeader(value = "AuroraConfigFileVersion") configFileVersion: String = "",
+                              @RequestHeader(value = "AuroraValidateVersions", required = false) validateVersions: Boolean = true): Response {
 
-        if (payload.validateVersions && payload.version.isEmpty()) {
-            throw IllegalAccessException("Must specify version");
+        if (validateVersions && configFileVersion.isEmpty()) {
+            throw IllegalAccessException("Must specify AuroraConfigFileVersion header");
         }
 
         val path = "affiliation/$affiliation/auroraconfigfile/**"
         val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
 
-        val auroraConfig = deployBundleService.patchAuroraConfigFile(affiliation, fileName,
-                payload.content, payload.version, payload.validateVersions)
+        val auroraConfig = deployBundleService.patchAuroraConfigFile(affiliation, fileName, jsonPatchOp, configFileVersion, validateVersions)
         return createAuroraConfigResponse(auroraConfig)
     }
 

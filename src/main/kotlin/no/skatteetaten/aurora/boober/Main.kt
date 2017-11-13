@@ -1,14 +1,15 @@
 @file:JvmName("Main")
 package no.skatteetaten.aurora.boober
 
-import no.skatteetaten.aurora.annotations.AuroraApplication
+import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.cache.annotation.EnableCaching
+import org.springframework.context.annotation.Import
 
-@AuroraApplication
 @SpringBootApplication
 @EnableCaching
+@Import(StringToDurationConverter::class)
 class Application
 
 fun main(args: Array<String>) {

@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.controller.internal.ErrorHandler
+import no.skatteetaten.aurora.boober.controller.v1.VaultControllerV1
 import no.skatteetaten.aurora.boober.facade.VaultFacade
 import spock.lang.Specification
 
@@ -28,7 +29,7 @@ class VaultControllerTest extends Specification {
   def affiliation = 'aos'
 
   void setup() {
-    def controller = new VaultController(vaultFacade)
+    def controller = new VaultControllerV1(vaultFacade)
     mockMvc = MockMvcBuilders.
         standaloneSetup(controller)
         .setControllerAdvice(new ErrorHandler())
@@ -44,7 +45,7 @@ class VaultControllerTest extends Specification {
 
     when:
       ResultActions result = mockMvc.perform(
-          put("/affiliation/$affiliation/vault").content(JsonOutput.toJson(payload)).
+          put("/v1/vault/$affiliation").content(JsonOutput.toJson(payload)).
               contentType(APPLICATION_JSON))
 
     then:
@@ -62,7 +63,7 @@ class VaultControllerTest extends Specification {
 
     when:
       ResultActions result = mockMvc.perform(
-          put("/affiliation/$affiliation/vault/$vaultName/secret/$secretName")
+          put("/v1/vault/$affiliation/$vaultName/secret/$secretName")
               .content(JsonOutput.toJson(payload))
               .contentType(APPLICATION_JSON))
 
