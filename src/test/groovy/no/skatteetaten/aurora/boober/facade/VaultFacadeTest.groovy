@@ -233,6 +233,19 @@ class VaultFacadeTest extends Specification {
       updatedAuroraConfig.versions['latest.properties'] != storedVault.versions['latest.properties']
   }
 
+
+  def "Should not fetch vault with illegal name"() {
+    given:
+      permissionService.hasUserAccess(_) >> true
+      createRepoAndSaveFiles(affiliation, vault)
+
+    when:
+      facade.find(affiliation,"fo")
+
+    then:
+      thrown(IllegalArgumentException)
+  }
+
   def "Should remove vault"() {
     given:
       permissionService.hasUserAccess(_) >> true

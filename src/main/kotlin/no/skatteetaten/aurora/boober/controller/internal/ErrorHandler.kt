@@ -22,6 +22,10 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleBadRequest(ex: IllegalArgumentException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
 
+
+    @ExceptionHandler(IllegalAccessException::class)
+    fun handleAccessRequest(ex: IllegalAccessException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
+
     @ExceptionHandler(OpenShiftException::class)
     fun handleOpenShiftErrors(ex: OpenShiftException, req: WebRequest) = handleException(ex, req, INTERNAL_SERVER_ERROR)
 

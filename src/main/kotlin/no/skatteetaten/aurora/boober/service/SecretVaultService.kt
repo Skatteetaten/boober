@@ -30,7 +30,7 @@ class SecretVaultService(val mapper: ObjectMapper,
 
     fun getVaultFiles(repo: Git, vault: String): List<AuroraSecretFile> {
         return gitService.getAllSecretFilesInRepoList(repo)
-                .filter { it.path.startsWith("$GIT_SECRET_FOLDER/$vault") }
+                .filter { it.path.startsWith("$GIT_SECRET_FOLDER/$vault/") }
 
     }
 

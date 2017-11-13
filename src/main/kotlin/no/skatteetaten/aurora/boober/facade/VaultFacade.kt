@@ -5,11 +5,7 @@ import no.skatteetaten.aurora.boober.model.AuroraSecretFile
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.model.AuroraSecretVaultPayload
 import no.skatteetaten.aurora.boober.model.VersioningError
-import no.skatteetaten.aurora.boober.service.AuroraVersioningException
-import no.skatteetaten.aurora.boober.service.EncryptionService
-import no.skatteetaten.aurora.boober.service.GitService
-import no.skatteetaten.aurora.boober.service.SecretVaultPermissionService
-import no.skatteetaten.aurora.boober.service.SecretVaultService
+import no.skatteetaten.aurora.boober.service.*
 import org.eclipse.jgit.api.Git
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -40,6 +36,18 @@ class VaultFacade(
         return vaults
     }
 
+    fun listAllVaultsWithUserAccessLegacy(affiliation: String): List<AuroraSecretVault> {
+
+        val repo = getRepo(affiliation)
+
+        val vaults = secretVaultService.getVaults(repo)
+                .values
+                .filter { secretVaultPermissionService.hasUserAccess(it.permissions) }
+                .toList()
+        gitService.closeRepository(repo)
+        return vaults
+    }
+
     fun listAllVaults(git: Git): List<AuroraSecretVault> {
         return secretVaultService.getVaults(git)
                 .values.toList()
@@ -48,7 +56,12 @@ class VaultFacade(
 
     fun find(affiliation: String, vault: String): AuroraSecretVault {
 
-        return withAuroraVault(affiliation, vault, false, false)
+        return withAuroraVault(affiliation, vault, false, false, function = {
+            if(it.secrets.isEmpty()) {
+                throw IllegalArgumentException("Vault not found name=${it.name}")
+            }
+            it
+        })
     }
 
     fun save(affiliation: String, vault: AuroraSecretVault, validateVersions: Boolean): AuroraSecretVault {
@@ -185,4 +198,5 @@ class VaultFacade(
 
         return encryptedSecrets + encryptedOldSecrets
     }
+
 }
