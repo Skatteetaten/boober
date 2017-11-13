@@ -26,7 +26,11 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
             AuroraConfigFieldHandler("envName"),
             AuroraConfigFieldHandler("permissions/admin"),
             AuroraConfigFieldHandler("permissions/view"),
-            AuroraConfigFieldHandler("permissions/adminServiceAccount")
+            AuroraConfigFieldHandler("permissions/adminServiceAccount"),
+
+            AuroraConfigFieldHandler("splunkIndex"),
+            AuroraConfigFieldHandler("certificate/commonName"),
+            AuroraConfigFieldHandler("certificate")
     )
 
     fun createAuroraDeploymentSpec(auroraConfigFields: AuroraConfigFields,
