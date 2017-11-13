@@ -61,7 +61,6 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
     }
     openShiftClient.createOpenShiftDeleteCommands(_, _, _, _) >> []
 
-//make sure repo is empty before each test.
     git = gitService.checkoutRepoForAffiliation(affiliation)
   }
 
