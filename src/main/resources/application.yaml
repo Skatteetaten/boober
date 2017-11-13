@@ -35,15 +35,14 @@ aurora:
 logging:
   level:
     no.skatteetaten: INFO
-    no.skatteetaten.aurora.boober: DEBUG
-    ske.aurora.filter: INFO
+    no.skatteetaten.aurora.boober: INFO
     org:
       jboss: INFO
       hibernate: WARN
-      springframework: INFO
+      springframework: WARN
       apache:
-        catalina: INFO
-        velocity: INFO
+        catalina:  WARN
+        velocity:  WARN
 ---
 spring:
     profiles: local
