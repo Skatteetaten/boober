@@ -1,5 +1,13 @@
 package no.skatteetaten.aurora.boober.facade
 
+import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.treewalk.TreeWalk
+import org.eclipse.jgit.treewalk.filter.PathFilter
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Metrics
 import no.skatteetaten.aurora.AuroraMetrics
@@ -8,14 +16,12 @@ import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraPermissions
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
-import no.skatteetaten.aurora.boober.service.*
-import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.treewalk.TreeWalk
-import org.eclipse.jgit.treewalk.filter.PathFilter
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import no.skatteetaten.aurora.boober.service.AuroraVersioningException
+import no.skatteetaten.aurora.boober.service.EncryptionService
+import no.skatteetaten.aurora.boober.service.GitService
+import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
+import no.skatteetaten.aurora.boober.service.SecretVaultPermissionService
+import no.skatteetaten.aurora.boober.service.SecretVaultService
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -97,16 +103,16 @@ class VaultFacadeTest extends Specification {
       permissionService.hasUserAccess(_) >> true
 
     when:
-    git = createRepoAndSaveFiles(affiliation, vault)
+      git = createRepoAndSaveFiles(affiliation, vault)
       def gitLog = git.log().call().head()
 
     then:
       gitLog.authorIdent.name == "Test Foo"
-    TreeWalk tw = new TreeWalk(git.getRepository())
-    def tree = tw.addTree(gitLog.tree)
-    tw.setRecursive(true)
-    tw.setFilter(PathFilter.create(".secret/foo/latest.properties"))
-    tw.next()
+      TreeWalk tw = new TreeWalk(git.getRepository())
+      def tree = tw.addTree(gitLog.tree)
+      tw.setRecursive(true)
+      tw.setFilter(PathFilter.create(".secret/foo/latest.properties"))
+      tw.next()
   }
 
   def "Should not allow users with no access to  save secrets to git"() {
@@ -114,7 +120,7 @@ class VaultFacadeTest extends Specification {
       permissionService.hasUserAccess(_) >> false
 
     when:
-    git = createRepoAndSaveFiles(affiliation, vault)
+      git = createRepoAndSaveFiles(affiliation, vault)
       git.log().call().head()
 
     then:
@@ -140,7 +146,7 @@ class VaultFacadeTest extends Specification {
   def "Allow ignore versions if we specify validateVersions=false is true"() {
     given:
       permissionService.hasUserAccess(_) >> true
-    createRepoAndSaveFiles(affiliation, vault)
+      createRepoAndSaveFiles(affiliation, vault)
 
     when:
       def newVault = new AuroraSecretVault(vaultName, secret, null, [:])
@@ -268,11 +274,11 @@ class VaultFacadeTest extends Specification {
 
 
     then:
-    def vaultNames = vaults.collect { it.name }
-    vaultNames.contains("vault2")
+      def vaultNames = vaults.collect { it.name }
+      vaultNames.contains("vault2")
   }
 
-  def "Should not include vault you cannot admin"() {
+  def "Should show that you cannot admin vault"() {
     given:
       def opsGroup = new AuroraPermissions(["TEAM_OPS"])
       def devGroup = new AuroraPermissions(["TEAM_DEV"])
@@ -293,7 +299,8 @@ class VaultFacadeTest extends Specification {
 
 
     then:
-      vaults.size() == 2
-      !vaults.any { it.permissions?.groups?.contains("TEAM_OPS") }
+      vaults.size() == 3
+      vaults.any { (!it.admin && it.name == "vault2") }
+
   }
 }
