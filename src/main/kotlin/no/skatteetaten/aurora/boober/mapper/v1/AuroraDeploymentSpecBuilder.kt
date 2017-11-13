@@ -1,33 +1,18 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigValidator
 import no.skatteetaten.aurora.boober.model.*
-import no.skatteetaten.aurora.boober.utils.oneOf
-import no.skatteetaten.aurora.boober.utils.required
-import no.skatteetaten.aurora.boober.utils.startsWith
 
 @JvmOverloads
 fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: ApplicationId, dockerRegistry: String,
                                overrideFiles: List<AuroraConfigFile> = listOf(),
                                vaults: Map<String, AuroraSecretVault> = mapOf()): AuroraDeploymentSpec {
 
-    val baseHandlers = setOf(
-            AuroraConfigFieldHandler("schemaVersion", validator = { it.oneOf(listOf("v1")) }),
-            AuroraConfigFieldHandler("type", validator = { it.oneOf(TemplateType.values().map { it.toString() }) }),
-            AuroraConfigFieldHandler("baseFile"),
-            AuroraConfigFieldHandler("envFile", validator = {
-                it?.startsWith("about-", "envFile must start with about")
-            })
-    )
     val applicationFiles = auroraConfig.getFilesForApplication(applicationId, overrideFiles)
-    val fields = AuroraConfigFields.create(baseHandlers, applicationFiles)
 
-    AuroraConfigValidator(applicationId, applicationFiles, baseHandlers, fields)
-            .validate(false)
-
-    val type = fields.extract("type", { TemplateType.valueOf(it.textValue()) })
+    val headerMapper = HeaderMapper.create(applicationFiles, applicationId)
+    val type = headerMapper.type
 
     val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(applicationId)
     val deployMapper = AuroraDeployMapperV1(applicationId, applicationFiles, overrideFiles, dockerRegistry)
@@ -36,9 +21,9 @@ fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: Applic
     val localTemplateMapper = AuroraLocalTemplateMapperV1(applicationFiles, auroraConfig)
     val templateMapper = AuroraTemplateMapperV1(applicationFiles)
     val buildMapper = AuroraBuildMapperV1()
-    val handlers = (baseHandlers + deploymentSpecMapper.handlers + when (type) {
-        TemplateType.deploy ->  deployMapper.handlers + routeMapper.handlers + volumeMapper.handlers
-        TemplateType.development -> deployMapper.handlers + routeMapper.handlers + volumeMapper.handlers +  buildMapper.handlers
+    val handlers = (HeaderMapper.handlers + deploymentSpecMapper.handlers + when (type) {
+        TemplateType.deploy -> deployMapper.handlers + routeMapper.handlers + volumeMapper.handlers
+        TemplateType.development -> deployMapper.handlers + routeMapper.handlers + volumeMapper.handlers + buildMapper.handlers
         TemplateType.localTemplate -> routeMapper.handlers + volumeMapper.handlers + localTemplateMapper.handlers
         TemplateType.template -> routeMapper.handlers + volumeMapper.handlers + templateMapper.handlers
         TemplateType.build -> buildMapper.handlers

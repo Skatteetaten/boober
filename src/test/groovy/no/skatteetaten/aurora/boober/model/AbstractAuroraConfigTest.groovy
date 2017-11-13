@@ -49,6 +49,21 @@ abstract class AbstractAuroraConfigTest extends Specification {
   }
 }'''
 
+  static final ATOMHOPPER = '''{
+  "name": "atomhopper",
+  "type" : "template",
+  "template" : "atomhopper",
+  "parameters" : {
+    "SPLUNK_INDEX" : "test",
+    "APP_NAME" : "atomhopper",
+    "FEED_NAME" : "tolldeklarasjon",
+    "DOMAIN_NAME" : "localhost",
+    "SCHEME" : "http",
+    "DB_NAME" : "atomhopper",
+    "AFFILIATION" : "aos"
+  }
+}'''
+
   static defaultAuroraConfig() {
     [
         "about.json"         : DEFAULT_ABOUT,
