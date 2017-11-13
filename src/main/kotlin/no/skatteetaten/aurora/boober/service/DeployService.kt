@@ -204,12 +204,17 @@ class DeployService(
 
     private fun triggerRedeploy(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>, projectExist: Boolean): OpenShiftResponse? {
 
-
         val namespace = deploymentSpec.namespace
+
         return generateRedeployResourceFromSpec(deploymentSpec, openShiftResponses)
                 ?.let { openShiftClient.createOpenShiftCommand(namespace, it, projectExist) }
-                ?.let { openShiftClient.performOpenShiftCommand(namespace, it) }
-        //TODO if the performed command is an imageStreamCommand we need to check if it actually updated the hash.
+                ?.let { command ->
+                    try {
+                        openShiftClient.performOpenShiftCommand(namespace, command)
+                    } catch (e: OpenShiftException) {
+                        OpenShiftResponse.fromOpenShiftException(e, command)
+                    }
+                }
     }
 
     private fun markRelease(res: List<AuroraDeployResult>, repo: Git) {
@@ -237,7 +242,6 @@ class DeployService(
         } ?: emptyList()
         val volumeAccess = mountsWithNoPermissions.isEmpty()
 
-        //TODO: Her må vi finne ut hva vi skal returnere for å vise at disse applikasjonen ikke blir deployet fordi man ikke har tilgang
         return secretAccess && volumeAccess
 
     }
