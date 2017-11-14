@@ -253,9 +253,11 @@ class VaultFacadeTest extends Specification {
 
     when:
       facade.delete(affiliation, vaultName)
+      facade.find(affiliation, vaultName)
 
     then:
-      facade.find(affiliation, vaultName).secrets.isEmpty()
+
+      thrown(IllegalArgumentException)
   }
 
   def "Should not remove other vaults when adding a new"() {
