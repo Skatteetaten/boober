@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.model
 
 import org.eclipse.jgit.revwalk.RevCommit
+import org.hibernate.validator.constraints.NotEmpty
 import java.io.File
 
 data class AuroraSecretVault @JvmOverloads constructor(
@@ -8,7 +9,11 @@ data class AuroraSecretVault @JvmOverloads constructor(
         val secrets: Map<String, String>,
         val permissions: AuroraPermissions? = null,
         val versions: Map<String, String?> = mapOf()
-)
+) {
+    init {
+        if (name.isBlank()) throw IllegalArgumentException("name must be set")
+    }
+}
 
 data class AuroraSecretVaultPayload @JvmOverloads constructor(
         val name: String,
