@@ -29,18 +29,26 @@ class OpenShiftRequestHandler(val restTemplate: RestTemplate) {
 
     val retryTemplate = retryTemplate(logger)
 
-    fun <T> exchange(requestEntity: RequestEntity<T>): ResponseEntity<JsonNode> {
+    fun <T> exchange(requestEntity: RequestEntity<T>, retry: Boolean = true): ResponseEntity<JsonNode> {
 
-        val responseEntity = retryTemplate.execute<ResponseEntity<JsonNode>, RestClientException> {
-            it.setAttribute(REQUEST_ENTITY, requestEntity)
-            try {
-                restTemplate.exchange(requestEntity, JsonNode::class.java)
-            } catch (e: Exception) {
-                throw OpenShiftException("An error occurred while communicating with OpenShift", e)
+        val responseEntity = if (retry) {
+            retryTemplate.execute<ResponseEntity<JsonNode>, RestClientException> {
+                it.setAttribute(REQUEST_ENTITY, requestEntity)
+                tryExchange(requestEntity)
             }
+        } else {
+            tryExchange(requestEntity)
         }
         logger.trace("Body={}", responseEntity.body)
         return responseEntity
+    }
+
+    private fun tryExchange(requestEntity: RequestEntity<*>): ResponseEntity<JsonNode> {
+        return try {
+            restTemplate.exchange<JsonNode>(requestEntity, JsonNode::class.java)
+        } catch (e: Exception) {
+            throw OpenShiftException("An error occurred while communicating with OpenShift", e)
+        }
     }
 
     private final fun retryTemplate(logger: Logger): RetryTemplate {

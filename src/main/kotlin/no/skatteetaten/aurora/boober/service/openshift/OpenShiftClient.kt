@@ -104,7 +104,7 @@ class OpenShiftClient(
             return OpenshiftCommand(OperationType.NOOP, payload = json)
         }
 
-        val existingResource = if (projectExist) userClient.get(kind, namespace, name) else null
+        val existingResource = if (projectExist) userClient.get(kind, namespace, name, false) else null
         if (existingResource == null) {
             return OpenshiftCommand(OperationType.CREATE, payload = json)
         }

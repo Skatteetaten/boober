@@ -47,7 +47,7 @@ class OpenShiftRequestHandlerTest extends AbstractAuroraDeploymentSpecSpringTest
       osClusterMock.expect(requestTo(resourceUrl)).andRespond(withSuccess(resource, APPLICATION_JSON))
 
     when:
-      ResponseEntity<JsonNode> entity = requestHandler.exchange(new RequestEntity<Object>(GET, new URI(resourceUrl)))
+      ResponseEntity<JsonNode> entity = requestHandler.exchange(new RequestEntity<Object>(GET, new URI(resourceUrl)), true)
 
     then:
       JsonOutput.prettyPrint(entity.body.toString()) == JsonOutput.prettyPrint(resource)
@@ -60,7 +60,21 @@ class OpenShiftRequestHandlerTest extends AbstractAuroraDeploymentSpecSpringTest
       3.times { osClusterMock.expect(requestTo(resourceUrl)).andRespond(withBadRequest()) }
 
     when:
-      requestHandler.exchange(new RequestEntity<Object>(GET, new URI(resourceUrl)))
+      requestHandler.exchange(new RequestEntity<Object>(GET, new URI(resourceUrl)), true)
+
+    then:
+      thrown(OpenShiftException)
+  }
+
+  def "Fails immediately when retry is disabled"() {
+
+    given:
+      def resourceUrl = "$openShiftUrl/oapi/v1/namespaces/aos/deploymentconfigs/webleveranse"
+      1.times { osClusterMock.expect(requestTo(resourceUrl)).andRespond(withBadRequest()) }
+      0 * osClusterMock._
+
+    when:
+      requestHandler.exchange(new RequestEntity<Object>(GET, new URI(resourceUrl)), false)
 
     then:
       thrown(OpenShiftException)
