@@ -74,7 +74,6 @@ class OpenShiftObjectGeneratorConfigMapTest extends AbstractAuroraDeploymentSpec
       def jsonMounts = objectGenerator.generateMount(deploymentSpec, "deploy-id")
 
     then:
-      deploymentSpec.fields.findAll { it.key.contains("config") }.each { println it }
       jsonMounts.size() == 1
       JsonNode mount = jsonMounts.first()
 
