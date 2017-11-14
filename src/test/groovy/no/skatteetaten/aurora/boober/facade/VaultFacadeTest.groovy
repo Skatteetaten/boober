@@ -118,6 +118,17 @@ class VaultFacadeTest extends Specification {
       tw.next()
   }
 
+  def "Should not save vault with no name"() {
+    given:
+      permissionService.hasUserAccess(_) >> true
+
+    when:
+      createRepoAndSaveFiles(affiliation, new AuroraSecretVault("", [:], null, [:]))
+
+    then:
+      thrown(IllegalArgumentException)
+  }
+
   def "Should not allow users with no access to  save secrets to git"() {
     given:
       permissionService.hasUserAccess(_) >> false

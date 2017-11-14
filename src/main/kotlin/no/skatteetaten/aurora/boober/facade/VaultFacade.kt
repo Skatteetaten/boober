@@ -34,7 +34,7 @@ class VaultFacade(
 
         val vaults = secretVaultService.getVaults(repo)
                 .values
-                .map { AuroraSecretVaultPayload(it.name, it.secrets.values.toList(), it.permissions, secretVaultPermissionService.hasUserAccess(it.permissions)) }
+                .map { AuroraSecretVaultPayload(it.name, it.secrets.keys.toList(), it.permissions, secretVaultPermissionService.hasUserAccess(it.permissions)) }
                 .toList()
         gitService.closeRepository(repo)
         return vaults
@@ -69,6 +69,9 @@ class VaultFacade(
     }
 
     fun save(affiliation: String, vault: AuroraSecretVault, validateVersions: Boolean): AuroraSecretVault {
+        if (vault.name.isEmpty()) {
+            throw IllegalArgumentException("Empty vault name is not allowed")
+        }
         return withAuroraVault(affiliation, vault.name, validateVersions, function = {
             vault
         })
@@ -109,21 +112,21 @@ class VaultFacade(
         val oldVault = secretVaultService.createVault(vault, vaultFiles)
 
         if (!secretVaultPermissionService.hasUserAccess(oldVault.permissions)) {
-            throw IllegalAccessError("You do not have permission to operate on his vault")
+            throw IllegalAccessError("You do not have permission to operate on this vault ($vault)")
         }
 
-        val newSecrets = function(oldVault)
-        if (!secretVaultPermissionService.hasUserAccess(newSecrets.permissions)) {
-            throw IllegalAccessError("You do not have permission to operate on his vault")
+        val newVault = function(oldVault)
+        if (!secretVaultPermissionService.hasUserAccess(newVault.permissions)) {
+            throw IllegalAccessError("You do not have permission to operate on this vault ($vault)")
         }
         if (commitChanges) {
-            commit(repo, oldVault, newSecrets, vaultFiles, validateVersions)
+            commit(repo, oldVault, newVault, vaultFiles, validateVersions)
         } else {
             gitService.closeRepository(repo)
 
         }
 
-        return newSecrets
+        return newVault
     }
 
 
