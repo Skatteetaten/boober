@@ -13,7 +13,7 @@ spring:
     active: local
   cache:
     caffeine:
-      spec: maximumSize=200,expireAfterAccess=300s
+      spec: maximumSize=2000,expireAfterAccess=300s
     cache-names: groups
     metrics:
         prometheus:
