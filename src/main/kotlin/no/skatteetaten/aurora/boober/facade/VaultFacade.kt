@@ -34,7 +34,7 @@ class VaultFacade(
 
         val vaults = secretVaultService.getVaults(repo)
                 .values
-                .map { AuroraSecretVaultPayload(it.name, it.secrets.values.toList(), it.permissions, secretVaultPermissionService.hasUserAccess(it.permissions)) }
+                .map { AuroraSecretVaultPayload(it.name, it.secrets.keys.toList(), it.permissions, secretVaultPermissionService.hasUserAccess(it.permissions)) }
                 .toList()
         gitService.closeRepository(repo)
         return vaults
@@ -109,21 +109,21 @@ class VaultFacade(
         val oldVault = secretVaultService.createVault(vault, vaultFiles)
 
         if (!secretVaultPermissionService.hasUserAccess(oldVault.permissions)) {
-            throw IllegalAccessError("You do not have permission to operate on his vault")
+            throw IllegalAccessError("You do not have permission to operate on this vault ($vault)")
         }
 
-        val newSecrets = function(oldVault)
-        if (!secretVaultPermissionService.hasUserAccess(newSecrets.permissions)) {
-            throw IllegalAccessError("You do not have permission to operate on his vault")
+        val newVault = function(oldVault)
+        if (!secretVaultPermissionService.hasUserAccess(newVault.permissions)) {
+            throw IllegalAccessError("You do not have permission to operate on this vault ($vault)")
         }
         if (commitChanges) {
-            commit(repo, oldVault, newSecrets, vaultFiles, validateVersions)
+            commit(repo, oldVault, newVault, vaultFiles, validateVersions)
         } else {
             gitService.closeRepository(repo)
 
         }
 
-        return newSecrets
+        return newVault
     }
 
 
@@ -139,7 +139,9 @@ class VaultFacade(
                        validateVersions: Boolean
     ) {
 
-
+        if (vault.name.isBlank()) {
+            throw IllegalArgumentException("Vault name must be set")
+        }
         val vaultPath = "$GIT_SECRET_FOLDER/${vault.name}"
 
         val secretFilesForVault = vaultFiles.filter { !it.path.endsWith(PERMISSION_FILE) }
