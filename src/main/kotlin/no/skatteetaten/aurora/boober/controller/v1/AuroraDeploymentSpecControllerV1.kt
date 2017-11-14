@@ -28,15 +28,15 @@ class AuroraDeploymentSpecControllerV1(val deployBundleService: DeployBundleServ
         return Response(items = listOf(mapOfPointers))
     }
 
-    //TODO: Burde ikke dette være content-type mat?
     @GetMapping("/formatted")
     fun getJsonForMapOfPointers(
             @PathVariable affiliation: String,
             @PathVariable environment: String,
             @PathVariable application: String,
             @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
-    ): String {
+    ): Response {
         val spec = deployBundleService.createAuroraDeploymentSpec(affiliation, ApplicationId.aid(environment, application), emptyList())
-        return renderJsonForAuroraDeploymentSpecPointers(spec, includeDefaults)
+        val formatted = renderJsonForAuroraDeploymentSpecPointers(spec, includeDefaults)
+        return Response(items = listOf(formatted))
     }
 }
