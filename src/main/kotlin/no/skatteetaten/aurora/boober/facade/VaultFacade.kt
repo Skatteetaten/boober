@@ -69,9 +69,6 @@ class VaultFacade(
     }
 
     fun save(affiliation: String, vault: AuroraSecretVault, validateVersions: Boolean): AuroraSecretVault {
-        if (vault.name.isEmpty()) {
-            throw IllegalArgumentException("Empty vault name is not allowed")
-        }
         return withAuroraVault(affiliation, vault.name, validateVersions, function = {
             vault
         })
@@ -142,7 +139,9 @@ class VaultFacade(
                        validateVersions: Boolean
     ) {
 
-
+        if (vault.name.isBlank()) {
+            throw IllegalArgumentException("Vault name must be set")
+        }
         val vaultPath = "$GIT_SECRET_FOLDER/${vault.name}"
 
         val secretFilesForVault = vaultFiles.filter { !it.path.endsWith(PERMISSION_FILE) }

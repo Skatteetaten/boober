@@ -123,10 +123,14 @@ class VaultFacadeTest extends Specification {
       permissionService.hasUserAccess(_) >> true
 
     when:
-      createRepoAndSaveFiles(affiliation, new AuroraSecretVault("", [:], null, [:]))
+      def vault = new AuroraSecretVault(name, [:], null, [:])
+      createRepoAndSaveFiles(affiliation, vault)
 
     then:
       thrown(IllegalArgumentException)
+
+    where:
+      name << ["", null, "     ", "\t\n"]
   }
 
   def "Should not allow users with no access to  save secrets to git"() {
