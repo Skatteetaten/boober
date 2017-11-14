@@ -87,7 +87,7 @@ class OpenShiftClientCommandTest extends Specification {
         def apiUrl = OpenShiftApiUrls.getCollectionPathForResource(baseUrl, kind, namespace)
         def url = "$apiUrl?$queryString" as String
 
-        userClient.get(url, _) >> ResponseEntity.ok(it.value)
+        userClient.get(url, _, true) >> ResponseEntity.ok(it.value)
       }
 
     when:
