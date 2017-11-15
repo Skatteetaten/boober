@@ -1,4 +1,17 @@
 package no.skatteetaten.aurora.boober.service
 
-class DatabaseSchemaProvisionerTest {
+import spock.lang.Specification
+
+class DatabaseSchemaProvisionerTest extends Specification {
+
+  def a() {
+    given:
+      def provisioner = new DatabaseSchemaProvisioner()
+
+    when:
+      def provisionResult = provisioner.provisionSchemas([])
+
+    then:
+      provisionResult.success
+  }
 }
