@@ -92,7 +92,16 @@ class OpenShiftClient(
         }
     }
 
-    fun createOpenShiftCommand(namespace: String, json: JsonNode, projectExist: Boolean): OpenshiftCommand {
+    /**
+     * @param projectExist Whether the OpenShift project the object belongs to exists. If it does, some object types
+     * will be updated with information from the existing object to support the update.
+     * @param retryGetResourceOnFailure Whether the GET request for the existing resource should be retried on errors
+     * or not. You may want to retry the request if you are trying to update an object that has recently been created
+     * by another task/process and you are not entirely sure it exists yet, for instance. The default is
+     * <code>false</code>, because retrying everything will significantly impact performance of creating or updating
+     * many objects.
+     */
+    fun createOpenShiftCommand(namespace: String, json: JsonNode, projectExist: Boolean, retryGetResourceOnFailure: Boolean = false): OpenshiftCommand {
 
         val generated = json.deepCopy<JsonNode>()
 
@@ -104,7 +113,7 @@ class OpenShiftClient(
             return OpenshiftCommand(OperationType.NOOP, payload = json)
         }
 
-        val existingResource = if (projectExist) userClient.get(kind, namespace, name, false) else null
+        val existingResource = if (projectExist) userClient.get(kind, namespace, name, retryGetResourceOnFailure) else null
         if (existingResource == null) {
             return OpenshiftCommand(OperationType.CREATE, payload = json)
         }

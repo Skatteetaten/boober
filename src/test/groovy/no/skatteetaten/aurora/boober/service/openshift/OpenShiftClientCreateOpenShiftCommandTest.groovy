@@ -50,7 +50,7 @@ class OpenShiftClientCreateOpenShiftCommandTest extends AbstractAuroraDeployment
       JsonNode deploymentConfig = objectGenerator.generateDeploymentConfig(deploymentSpec, "deploy-id")
 
     when:
-      OpenshiftCommand command = client.createOpenShiftCommand("aos", deploymentConfig, true)
+      OpenshiftCommand command = client.createOpenShiftCommand("aos", deploymentConfig, true, false)
 
     then: "Preserves the lastTriggeredImage"
       def lastTriggeredImagePath = "/spec/triggers/0/imageChangeParams/lastTriggeredImage"
