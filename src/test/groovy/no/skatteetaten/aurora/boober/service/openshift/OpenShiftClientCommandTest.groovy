@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.service
+package no.skatteetaten.aurora.boober.service.openshift
 
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
@@ -19,10 +19,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftApiUrls
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
+import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
+import no.skatteetaten.aurora.boober.service.OpenShiftTemplateProcessor
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 

@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.service
+package no.skatteetaten.aurora.boober.service.openshift
 
 import static org.springframework.http.HttpMethod.GET
 import static org.springframework.http.MediaType.APPLICATION_JSON
@@ -18,6 +18,9 @@ import com.fasterxml.jackson.databind.JsonNode
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import groovy.json.JsonOutput
+import no.skatteetaten.aurora.boober.service.AbstractAuroraDeploymentSpecSpringTest
+import no.skatteetaten.aurora.boober.service.OpenShiftClientCreateOpenShiftCommandTest
+import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftRequestHandler
 
 class OpenShiftRequestHandlerTest extends AbstractAuroraDeploymentSpecSpringTest {
