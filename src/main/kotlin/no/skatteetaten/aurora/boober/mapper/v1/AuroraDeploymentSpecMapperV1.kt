@@ -30,7 +30,8 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
 
             AuroraConfigFieldHandler("splunkIndex"),
             AuroraConfigFieldHandler("certificate/commonName"),
-            AuroraConfigFieldHandler("certificate")
+            AuroraConfigFieldHandler("certificate"),
+            AuroraConfigFieldHandler("database")
     )
 
     fun createAuroraDeploymentSpec(auroraConfigFields: AuroraConfigFields,

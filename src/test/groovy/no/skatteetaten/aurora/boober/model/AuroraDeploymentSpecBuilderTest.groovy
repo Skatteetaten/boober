@@ -63,6 +63,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraConfigTest {
     "commonName":"test"
   },
   "splunkIndex": "test",
+  "database": true,
   "config": {
     "A_STANDARD_CONFIG": "a default value for all applications"
   }
