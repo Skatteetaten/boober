@@ -18,7 +18,7 @@
           "from": {
             "kind": "ImageStreamTag",
             "namespace": "openshift",
-            "name": "wingnut:8"
+            "name": "flange:8"
           }
         }
       },
