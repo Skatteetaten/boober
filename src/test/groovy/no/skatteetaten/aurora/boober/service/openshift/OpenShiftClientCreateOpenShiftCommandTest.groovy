@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.service
+package no.skatteetaten.aurora.boober.service.openshift
 
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess
@@ -13,8 +13,8 @@ import org.springframework.test.web.client.MockRestServiceServer
 import com.fasterxml.jackson.databind.JsonNode
 
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
+import no.skatteetaten.aurora.boober.service.AbstractAuroraDeploymentSpecSpringTest
+import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 
 class OpenShiftClientCreateOpenShiftCommandTest extends AbstractAuroraDeploymentSpecSpringTest {
 

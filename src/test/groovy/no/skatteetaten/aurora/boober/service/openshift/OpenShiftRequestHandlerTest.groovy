@@ -19,9 +19,7 @@ import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.service.AbstractAuroraDeploymentSpecSpringTest
-import no.skatteetaten.aurora.boober.service.OpenShiftClientCreateOpenShiftCommandTest
 import no.skatteetaten.aurora.boober.service.OpenShiftException
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftRequestHandler
 
 class OpenShiftRequestHandlerTest extends AbstractAuroraDeploymentSpecSpringTest {
 
