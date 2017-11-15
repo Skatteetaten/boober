@@ -45,6 +45,7 @@ class DeployService(
         val secretVaultPermissionService: SecretVaultPermissionService,
         val mapper: ObjectMapper,
         val dockerService: DockerService,
+        val resourceProvisioner: ExternalResourceProvisioner,
         @Value("\${openshift.cluster}") val cluster: String,
         @Value("\${boober.docker.registry}") val dockerRegistry: String) {
 
@@ -88,6 +89,8 @@ class DeployService(
         val deployId = UUID.randomUUID().toString()
 
         val environmentResponses = prepareDeployEnvironment(deploymentSpec)
+
+        resourceProvisioner.provisionResources(deploymentSpec)
 
 
         val projectExist = openShiftClient.projectExists(deploymentSpec.namespace)
