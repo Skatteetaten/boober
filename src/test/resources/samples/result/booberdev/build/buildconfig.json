@@ -18,7 +18,7 @@
           "from": {
             "kind": "ImageStreamTag",
             "namespace": "openshift",
-            "name": "wingnut:8"
+            "name": "flange:8"
           }
         }
       },
@@ -54,7 +54,7 @@
           },
           {
             "name": "DOCKER_BASE_IMAGE",
-            "value": "aurora/wingnut"
+            "value": "aurora/flange"
           },
           {
             "name": "PUSH_EXTRA_TAGS",

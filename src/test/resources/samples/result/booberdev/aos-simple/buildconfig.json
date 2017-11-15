@@ -39,7 +39,7 @@
           },
           {
             "name": "DOCKER_BASE_IMAGE",
-            "value": "aurora/wingnut"
+            "value": "aurora/flange"
           },
           {
             "name": "PUSH_EXTRA_TAGS",
