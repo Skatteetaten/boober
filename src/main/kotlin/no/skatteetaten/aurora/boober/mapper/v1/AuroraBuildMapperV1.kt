@@ -40,7 +40,7 @@ class AuroraBuildMapperV1 {
         }
 
         val (baseName, baseVersion) = when (applicationPlatform) {
-            java -> (auroraConfigFields.extractOrNull("baseImage/name") ?: "wingnut") to
+            java -> (auroraConfigFields.extractOrNull("baseImage/name") ?: "flange") to
                     (auroraConfigFields.extractOrNull("baseImage/version") ?: "8")
 
             web -> (auroraConfigFields.extractOrNull("baseImage/name") ?: "wrench") to
