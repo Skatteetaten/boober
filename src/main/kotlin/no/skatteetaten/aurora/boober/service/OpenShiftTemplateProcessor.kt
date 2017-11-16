@@ -45,7 +45,7 @@ class OpenShiftTemplateProcessor(
         }
 
         //TODO: we should not use aoc-validate here. Please fix. 
-        val result = openShiftClient.post("processedtemplate", namespace = "aoc-validate", payload = template)
+        val result = openShiftClient.post("processedtemplate", namespace = aac.namespace, payload = template)
 
         return result.body["objects"].asSequence().toList()
     }
