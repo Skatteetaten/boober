@@ -1,0 +1,35 @@
+{
+  "status": "OK",
+  "totalCount": 1,
+  "items": [
+    {
+      "metadata": {
+        "sizeInMb": 0.25
+      },
+      "createdDate": "2017-05-24T15:03:54Z",
+      "lastUsedDate": "2017-09-27T13:13:50Z",
+      "jdbcUrl": "jdbc:oracle:thin:@til0map-sprint2demo-db01.skead.no:1521/maptest",
+      "name": "VCLFVAPKGOMBCFTWEVKZDYBGVTMYDP",
+      "databaseInstance": {
+        "port": 1521,
+        "host": "til0map-sprint2demo-db01.skead.no"
+      },
+      "id": "fd59dba9-7d67-4ea2-bb98-081a5df8c387",
+      "type": "MANAGED",
+      "users": [
+        {
+          "password": "yYGmRnUPBOrxMoMcPptGvDYgKxmRSm",
+          "type": "SCHEMA",
+          "username": "VCLFVAPKGOMBCFTWEVKZDYBGVTMYDP"
+        }
+      ],
+      "labels": {
+        "name": "referanseapp",
+        "environment": "architect-utv",
+        "application": "refapp",
+        "affiliation": "architect",
+        "userId": "k72950"
+      }
+    }
+  ]
+}

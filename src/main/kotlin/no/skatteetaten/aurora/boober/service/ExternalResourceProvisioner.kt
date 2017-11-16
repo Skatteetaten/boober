@@ -3,7 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import org.springframework.stereotype.Service
 
-class ProvisioningResult(val schemaProvisionResult: SchemaProvisionResult?)
+class ProvisioningResult(val schemaProvisionResults: SchemaProvisionResults?)
 
 @Service
 class ExternalResourceProvisioner(val databaseSchemaProvisioner: DatabaseSchemaProvisioner) {
@@ -13,7 +13,7 @@ class ExternalResourceProvisioner(val databaseSchemaProvisioner: DatabaseSchemaP
         return ProvisioningResult(schemaProvisionResult)
     }
 
-    private fun handleSchemaProvisioning(deploymentSpec: AuroraDeploymentSpec): SchemaProvisionResult? {
+    private fun handleSchemaProvisioning(deploymentSpec: AuroraDeploymentSpec): SchemaProvisionResults? {
         val schemaProvisionRequests = createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec)
         if (schemaProvisionRequests.isEmpty()) {
             return null
@@ -24,7 +24,7 @@ class ExternalResourceProvisioner(val databaseSchemaProvisioner: DatabaseSchemaP
     companion object {
         private fun createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec: AuroraDeploymentSpec): List<SchemaProvisionRequest> {
             return deploymentSpec.deploy?.database
-                    ?.map { SchemaProvisionRequest(deploymentSpec.affiliation) }
+                    ?.map { SchemaIdRequest("fd59dba9-7d67-4ea2-bb98-081a5df8c387") }
                     .orEmpty()
         }
     }

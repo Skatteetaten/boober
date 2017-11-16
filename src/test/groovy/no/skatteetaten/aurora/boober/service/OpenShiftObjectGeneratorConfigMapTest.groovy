@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.Configuration
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.model.AbstractAuroraDeploymentSpecTest
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 
