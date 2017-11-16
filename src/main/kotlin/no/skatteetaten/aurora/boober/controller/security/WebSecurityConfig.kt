@@ -30,6 +30,7 @@ class WebSecurityConfig(
                 .authorizeRequests()
                 .requestMatchers(forPort(managementPort)).permitAll()
                 .antMatchers("/clientconfig/").permitAll()
+                .antMatchers("/v1/auroraconfig").permitAll()
                 .anyRequest().authenticated()
     }
 

@@ -22,4 +22,5 @@ class ClientConfigController(
                 Pair("openshiftUrl", openshiftUrl)
         )))
     }
+
 }
