@@ -35,6 +35,19 @@ abstract class AbstractAuroraConfigTest extends Specification {
   "type": "deploy"
 }'''
 
+  public static final String REF_APP_JSON = '''{
+  "name" : "reference",
+  "groupId" : "no.skatteetaten.aurora.openshift",
+  "artifactId" : "openshift-reference-springboot-server",
+  "version" : "1.0.8",
+  "certificate" : true,
+  "database" : {
+    "reference" : "auto"
+  },
+  "type" : "deploy",
+  "route" : true
+}'''
+
   static final String WEB_LEVERANSE = '''{
   "applicationPlatform" : "web",
   "name" : "webleveranse",

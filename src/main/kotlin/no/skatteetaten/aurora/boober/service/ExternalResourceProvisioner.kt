@@ -22,10 +22,16 @@ class ExternalResourceProvisioner(val databaseSchemaProvisioner: DatabaseSchemaP
     }
 
     companion object {
-        private fun createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec: AuroraDeploymentSpec): List<SchemaProvisionRequest> {
-            return deploymentSpec.deploy?.database
-                    ?.map { SchemaIdRequest("fd59dba9-7d67-4ea2-bb98-081a5df8c387") }
-                    .orEmpty()
+        @JvmStatic
+        protected fun createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec: AuroraDeploymentSpec): List<SchemaProvisionRequest> {
+            val databaseSpecs = deploymentSpec.deploy?.database ?: listOf()
+            return databaseSpecs.map {
+                if (it.id != null) {
+                    SchemaIdRequest(it.id)
+                } else {
+                    SchemaForAppRequest(deploymentSpec.affiliation, deploymentSpec.envName, deploymentSpec.name, it.dbName)
+                }
+            }
         }
     }
 }

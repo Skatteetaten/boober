@@ -17,7 +17,7 @@ import no.skatteetaten.aurora.boober.Configuration
 @SpringBootTest(classes = [
     Configuration,
     DatabaseSchemaProvisioner,
-    AbstractAuroraDeploymentSpecSpringTest.MockRestServiceServiceInitializer
+    SpringTestUtils.MockRestServiceServiceInitializer
 ])
 class DatabaseSchemaProvisionerTest extends AbstractSpec {
 
@@ -60,7 +60,7 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
       thrown(ProvisioningException)
   }
 
-  def a() {
+  def "Matching of application coordinates to schema"() {
 
     given:
       dbhServer.expect(requestTo("${DBH_HOST}/api/v1/schema/$id")).
@@ -69,9 +69,10 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
               .contentType(MediaType.APPLICATION_JSON))
 
     when:
-      provisioner.provisionSchemas([new SchemaForAppRequest(id)])
+      def provisionResult = provisioner.provisionSchemas([new SchemaForAppRequest("aos", "utv", "reference", "reference-db")])
 
     then:
-      thrown(ProvisioningException)
+      println provisionResult
+      true
   }
 }

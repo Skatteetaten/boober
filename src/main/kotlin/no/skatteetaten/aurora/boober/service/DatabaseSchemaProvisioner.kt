@@ -9,7 +9,12 @@ interface SchemaProvisionRequest
 
 data class SchemaIdRequest(val id: String) : SchemaProvisionRequest
 
-data class SchemaForAppRequest(val id: String) : SchemaProvisionRequest
+data class SchemaForAppRequest(
+        val affiliation: String,
+        val environment: String,
+        val application: String,
+        val schemaName: String
+) : SchemaProvisionRequest
 
 data class SchemaProvisionResult(val request: SchemaProvisionRequest, val dbhSchema: DbhSchema)
 
@@ -42,6 +47,7 @@ class DatabaseSchemaProvisioner(
 
     fun provisionSchema(it: SchemaProvisionRequest): SchemaProvisionResult = when (it) {
         is SchemaIdRequest -> provisionFromId(it)
+        is SchemaForAppRequest -> provisionForApplication(it)
         else -> throw IllegalArgumentException("Unsupported type ${it::class.qualifiedName}")
     }
 
@@ -49,6 +55,10 @@ class DatabaseSchemaProvisioner(
 
         val dbhSchema = getSchemaById(request.id)
         return SchemaProvisionResult(request, dbhSchema)
+    }
+    
+    private fun provisionForApplication(request: SchemaForAppRequest): SchemaProvisionResult {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     private fun getSchemaById(id: String): DbhSchema {
