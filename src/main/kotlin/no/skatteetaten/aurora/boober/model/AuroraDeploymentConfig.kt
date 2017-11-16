@@ -52,7 +52,8 @@ data class AuroraVolume(
         val secrets: Map<String, String>?,
         val config: Map<String, Any?>?,
         val mounts: List<Mount>?,
-        val permissions: AuroraPermissions?
+        val permissions: AuroraPermissions?,
+        val env: Map<String, String>
 )
 
 data class AuroraRoute(

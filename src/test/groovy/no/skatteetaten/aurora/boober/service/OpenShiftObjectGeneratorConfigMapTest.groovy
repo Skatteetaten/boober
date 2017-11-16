@@ -16,6 +16,7 @@ class OpenShiftObjectGeneratorConfigMapTest extends AbstractAuroraDeploymentSpec
 
   OpenShiftObjectGenerator objectGenerator = createObjectGenerator()
 
+  //TODO: BAS blir dette rett nå? Skal vi virkelig escape alle Config fields som er strings?
   def "Verify properties entries contains a line for each property"() {
 
     given:
@@ -46,11 +47,10 @@ class OpenShiftObjectGeneratorConfigMapTest extends AbstractAuroraDeploymentSpec
       jsonMounts.size() == 1
       JsonNode mount = jsonMounts.first()
 
-    and: "the latest.properties property contains a string with each property on a separate line"
-      def latestProperties = mount.get('data').get('latest.properties').textValue()
-
-      assertFileHasLinesWithProperties(latestProperties,
-          ["OPPSLAGSTJENESTE_DELEGERING", "UTSTED_SAML_URL", "VALIDER_SAML_URL"])
+    and: "there are env fields for all config elements in root"
+      deploymentSpec.volume.env.containsKey("OPPSLAGSTJENESTE_DELEGERING")
+      deploymentSpec.volume.env.containsKey("UTSTED_SAML_URL")
+      deploymentSpec.volume.env.containsKey("VALIDER_SAML_URL")
 
     and: "the 1.properties property contains a string with each property on a separate line"
       def propertiesFile = mount.get('data').get('1.properties').textValue()
@@ -71,14 +71,18 @@ class OpenShiftObjectGeneratorConfigMapTest extends AbstractAuroraDeploymentSpec
     "JSON_STRING": "{\\"key\\": \\"value\\"}"
   } 
 }'''
+    when:
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
-    when:
-      def jsonMounts = objectGenerator.generateMount(deploymentSpec, "deploy-id")
-
     then:
-      jsonMounts.size() == 1
-      JsonNode mount = jsonMounts.first()
+      def env =deploymentSpec.volume.env
+      env["STRING"] == "Hello"
+      env["BOOL"] == "false"
+      env["INT"] == "42"
+      env["FLOAT"] == "4.2"
+      env["ARRAY"] == '''[4.2,\\"STRING\\",true]'''
+      env["JSON_STRING"] == '''{\\"key\\": \\"value\\"}'''
+      env["URL"] == '''https://int-at.skead.no:13110/felles/sikkerhet/stsSikkerhet/v1/validerSaml'''
 
       def latestProperties = mount.get('data').get('latest.properties').textValue()
       assertFileHasLinesWithProperties(latestProperties, ["STRING", "BOOL", "INT", "FLOAT", "ARRAY", "URL", "JSON_STRING"])

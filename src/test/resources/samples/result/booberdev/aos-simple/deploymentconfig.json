@@ -163,6 +163,10 @@
               {
                 "name": "VOLUME_AOS_SIMPLE_CERT",
                 "value": "/u01/secrets/app/aos-simple-cert"
+              },
+              {
+                "name": "FOO",
+                "value": "baaaar"
               }
             ],
             "resources": {
