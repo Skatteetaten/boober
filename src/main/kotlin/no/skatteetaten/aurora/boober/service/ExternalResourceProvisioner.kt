@@ -7,6 +7,7 @@ class ProvisioningResult(val schemaProvisionResults: SchemaProvisionResults?)
 
 @Service
 class ExternalResourceProvisioner(val databaseSchemaProvisioner: DatabaseSchemaProvisioner) {
+
     fun provisionResources(deploymentSpec: AuroraDeploymentSpec): ProvisioningResult {
 
         val schemaProvisionResult = handleSchemaProvisioning(deploymentSpec)

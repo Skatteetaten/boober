@@ -88,12 +88,12 @@ class DeployService(
 
         val deployId = UUID.randomUUID().toString()
 
-        val environmentResponses = prepareDeployEnvironment(deploymentSpec)
-
-        resourceProvisioner.provisionResources(deploymentSpec)
-
-
         val projectExist = openShiftClient.projectExists(deploymentSpec.namespace)
+
+        val environmentResponses = prepareDeployEnvironment(deploymentSpec, projectExist)
+
+        val provisioningResult = resourceProvisioner.provisionResources(deploymentSpec)
+
         val applicationResponses: List<OpenShiftResponse> = applyOpenShiftApplicationObjects(deployId, deploymentSpec, projectExist)
 
         val openShiftResponses = environmentResponses + applicationResponses
@@ -117,7 +117,7 @@ class DeployService(
             val cmd = TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
             dockerService.tag(cmd)
         }
-        val redeployResponse = triggerRedeploy(deploymentSpec, openShiftResponses, projectExist)
+        val redeployResponse = triggerRedeploy(deploymentSpec, openShiftResponses)
 
         val totalSuccess = listOf(success, tagResult?.success, redeployResponse?.success).filterNotNull().all { it }
 
@@ -153,12 +153,11 @@ class DeployService(
         return openShiftApplicationResponses.addIfNotNull(deleteOldObjectResponses)
     }
 
-    private fun prepareDeployEnvironment(deploymentSpec: AuroraDeploymentSpec): List<OpenShiftResponse> {
+    private fun prepareDeployEnvironment(deploymentSpec: AuroraDeploymentSpec, projectExist: Boolean): List<OpenShiftResponse> {
 
         val affiliation = deploymentSpec.affiliation
         val namespace = deploymentSpec.namespace
 
-        val projectExist = openShiftClient.projectExists(deploymentSpec.namespace)
         val createNamespaceResponse = openShiftObjectGenerator.generateProjectRequest(deploymentSpec).let {
             openShiftClient.createOpenShiftCommand(namespace, it, projectExist)
         }.let { openShiftClient.performOpenShiftCommand(namespace, it) }
@@ -206,12 +205,12 @@ class DeployService(
         return changed
     }
 
-    private fun triggerRedeploy(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>, projectExist: Boolean): OpenShiftResponse? {
+    private fun triggerRedeploy(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>): OpenShiftResponse? {
 
         val namespace = deploymentSpec.namespace
 
         return generateRedeployResourceFromSpec(deploymentSpec, openShiftResponses)
-                ?.let { openShiftClient.createOpenShiftCommand(namespace, it, projectExist) }
+                ?.let { openShiftClient.createOpenShiftCommand(namespace, it) }
                 ?.let { command ->
                     try {
                         openShiftClient.performOpenShiftCommand(namespace, command)
