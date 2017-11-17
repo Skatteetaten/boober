@@ -63,16 +63,28 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
   def "Matching of application coordinates to schema"() {
 
     given:
-      dbhServer.expect(requestTo("${DBH_HOST}/api/v1/schema/$id")).
-          andRespond(withStatus(HttpStatus.NOT_FOUND)
-              .body(loadResource("schema_${id}.json"))
-              .contentType(MediaType.APPLICATION_JSON))
+      dbhServer.expect(requestTo("${DBH_HOST}/api/v1/schema/labels=affiliation%253Daos%252Cenvironment%253Dutv%252Capplication%253Dreference%252Cname%253Dreference-db")).
+          andRespond(withSuccess(loadResource("schema_${id}.json"), MediaType.APPLICATION_JSON))
 
     when:
       def provisionResult = provisioner.provisionSchemas([new SchemaForAppRequest("aos", "utv", "reference", "reference-db")])
 
     then:
-      println provisionResult
-      true
+      provisionResult.results.size() == 1
+      provisionResult.results[0].dbhSchema.jdbcUrl
+  }
+
+  def "Creates new schema if schema is missing"() {
+
+    given:
+      dbhServer.expect(requestTo("${DBH_HOST}/api/v1/schema/labels=affiliation%253Daos%252Cenvironment%253Dutv%252Capplication%253Dreference%252Cname%253Dreference-db")).
+          andRespond(withSuccess(loadResource("schema_empty_response.json"), MediaType.APPLICATION_JSON))
+
+    when:
+      def provisionResult = provisioner.provisionSchemas([new SchemaForAppRequest("aos", "utv", "reference", "reference-db")])
+
+    then:
+      provisionResult.results.size() == 1
+      provisionResult.results[0].dbhSchema.jdbcUrl
   }
 }

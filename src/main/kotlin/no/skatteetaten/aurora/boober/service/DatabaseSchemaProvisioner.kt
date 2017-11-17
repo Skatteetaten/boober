@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
+import org.springframework.web.util.UriUtils
 
 interface SchemaProvisionRequest
 
@@ -29,7 +30,12 @@ data class DbApiEnvelope(
         val items: List<DbhSchema> = listOf()
 ) {
     val dbhSchema: DbhSchema
-        get() = items.get(0)
+        get() {
+            if (items.size != 1) {
+                throw IllegalArgumentException("Response should contain exactly one entry for the given query")
+            }
+            return items.get(0)
+        }
 }
 
 @Service
@@ -53,23 +59,57 @@ class DatabaseSchemaProvisioner(
 
     private fun provisionFromId(request: SchemaIdRequest): SchemaProvisionResult {
 
-        val dbhSchema = getSchemaById(request.id)
+        val dbhSchema = findSchemaById(request.id)
         return SchemaProvisionResult(request, dbhSchema)
     }
-    
+
+
     private fun provisionForApplication(request: SchemaForAppRequest): SchemaProvisionResult {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+
+        val labels = mapOf(
+                "affiliation" to request.affiliation,
+                "environment" to request.environment,
+                "application" to request.application,
+                "name" to request.schemaName
+        )
+        val dbhSchema = findOrCreateSchemaByLabels(labels)
+        return SchemaProvisionResult(request, dbhSchema)
     }
 
-    private fun getSchemaById(id: String): DbhSchema {
+    private fun findSchemaById(id: String): DbhSchema {
 
         val response: ResponseEntity<DbApiEnvelope> = try {
-            restTemplate.getForEntity("${dbhUrl}/api/v1/schema/$id", DbApiEnvelope::class.java)
+            restTemplate.getForEntity("{0}/api/v1/schema/{1}", DbApiEnvelope::class.java, dbhUrl, id)
         } catch (e: Exception) {
             throw ProvisioningException("Unable to get information on schema with id $id", e)
         }
 
         val dbApiEnvelope: DbApiEnvelope = response.body
         return dbApiEnvelope.dbhSchema
+    }
+
+    private fun findOrCreateSchemaByLabels(labels: Map<String, String>): DbhSchema {
+
+        return findSchemaByLabels(labels) ?: return createSchema(labels)
+    }
+
+    private fun findSchemaByLabels(labels: Map<String, String>): DbhSchema? {
+        val labelsString = labels.map { "${it.key}=${it.value}" }.joinToString(",")
+        val response: ResponseEntity<DbApiEnvelope> = try {
+            val encodedLabelsString = UriUtils.encode(labelsString, "UTF-8")
+            restTemplate.getForEntity("{0}/api/v1/schema/labels={1}", DbApiEnvelope::class.java, dbhUrl, encodedLabelsString)
+        } catch (e: Exception) {
+            throw ProvisioningException("Unable to get information on schema with labels ${labelsString}", e)
+        }
+
+        val dbApiEnvelope: DbApiEnvelope = response.body
+        if (dbApiEnvelope.items.isEmpty()) {
+            return null
+        }
+        return dbApiEnvelope.dbhSchema
+    }
+
+    private fun createSchema(labels: Map<String, String>): DbhSchema {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }
