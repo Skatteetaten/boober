@@ -1,55 +1,94 @@
 package no.skatteetaten.aurora.boober.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
+
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 
-
 class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest {
 
-    def auroraConfigJson = defaultAuroraConfig()
+  def auroraConfigJson = defaultAuroraConfig()
 
-    def openShiftClient = Mock(OpenShiftClient)
+  def openShiftClient = Mock(OpenShiftClient)
 
-    def specValidator = new AuroraDeploymentSpecValidator(openShiftClient)
+  def specValidator = new AuroraDeploymentSpecValidator(openShiftClient)
 
-    def "Fails when admin groups is empty"() {
-      given:
-        auroraConfigJson["utv/aos-simple.json"] = '''{ "permissions": { "admin": "" } }'''
-        AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+  def mapper = new ObjectMapper()
 
-      when:
-        specValidator.assertIsValid(deploymentSpec)
+  def "Fails when admin groups is empty"() {
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "permissions": { "admin": "" } }'''
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
-      then:
-        thrown(AuroraDeploymentSpecValidationException)
-    }
+    when:
+      specValidator.assertIsValid(deploymentSpec)
 
+    then:
+      thrown(AuroraDeploymentSpecValidationException)
+  }
 
-    def "Fails when admin groups does not exist"() {
-      given:
-        auroraConfigJson["utv/aos-simple.json"] = '''{ "permissions": { "admin": "APP_PaaS_utv" } }'''
-        openShiftClient.isValidGroup("APP_PaaS_utv") >> false
-        AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+  def "Fails when admin groups does not exist"() {
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "permissions": { "admin": "APP_PaaS_utv" } }'''
+      openShiftClient.isValidGroup("APP_PaaS_utv") >> false
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
-      when:
-        specValidator.assertIsValid(deploymentSpec)
+    when:
+      specValidator.assertIsValid(deploymentSpec)
 
-      then:
-        thrown(AuroraDeploymentSpecValidationException)
-    }
+    then:
+      thrown(AuroraDeploymentSpecValidationException)
+  }
 
+  def "Fails when template does not exist"() {
+    given:
+      auroraConfigJson["aos-simple.json"] = '''{ "type": "template", "name": "aos-simple", "template": "atomhopper" }'''
+      openShiftClient.isValidGroup("APP_PaaS_utv") >> true
+      openShiftClient.getTemplate("atomhopper") >> null
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
-    def "Fails when template does not exist"() {
-      given:
-        auroraConfigJson["aos-simple.json"] = '''{ "type": "template", "name": "aos-simple", "template": "aurora-deploy-3.0" }'''
-        openShiftClient.isValidGroup("APP_PaaS_utv") >> true
-        openShiftClient.templateExist("aurora-deploy-3.0") >> false
-        AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+    when:
+      specValidator.assertIsValid(deploymentSpec)
 
-      when:
-        specValidator.assertIsValid(deploymentSpec)
+    then:
+      thrown(AuroraDeploymentSpecValidationException)
+  }
 
-      then:
-        thrown(AuroraDeploymentSpecValidationException)
-    }
+  def "Fails when parameters not in template"() {
+    given:
+      auroraConfigJson["aos-simple.json"] = '''{ "type": "template", "name": "aos-simple", "template": "atomhopper", "parameters" : { "FOO" : "BAR"} }'''
+      openShiftClient.isValidGroup("APP_PaaS_utv") >> true
+      openShiftClient.getTemplate("atomhopper") >> {
+        def templateFileName = "/samples/processedtemplate/booberdev/tvinn/atomhopper.json"
+        def templateResult = this.getClass().getResource(templateFileName)
+        mapper.readTree(templateResult)
+      }
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    when:
+      specValidator.assertIsValid(deploymentSpec)
+
+    then:
+      def e =thrown(AuroraDeploymentSpecValidationException)
+      e.message == "Required template parameters [FEED_NAME, DATABASE] not set. Template does not contain parameter(s) [FOO]."
+  }
+
+  def "Fails when template does not contain required fields"() {
+    given:
+      auroraConfigJson["aos-simple.json"] = '''{ "type": "template", "name": "aos-simple", "template": "atomhopper" }'''
+      openShiftClient.isValidGroup("APP_PaaS_utv") >> true
+      openShiftClient.getTemplate("atomhopper") >> {
+        def templateFileName = "/samples/processedtemplate/booberdev/tvinn/atomhopper.json"
+        def templateResult = this.getClass().getResource(templateFileName)
+        mapper.readTree(templateResult)
+      }
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    when:
+      specValidator.assertIsValid(deploymentSpec)
+
+    then:
+      def e =thrown(AuroraDeploymentSpecValidationException)
+      e.message == "Required template parameters [FEED_NAME, DATABASE] not set."
+  }
 }

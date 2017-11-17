@@ -250,11 +250,13 @@
     },
     {
       "name": "FEED_NAME",
-      "description": "Atomhopper feed name"
+      "description": "Atomhopper feed name",
+      "required" : true
     },
     {
       "name": "DATABASE",
-      "description": "Spesifiser databaser fra dbHotel. Komma separert liste med: \u003cnavn\u003e:\u003cid\u003e for en db fra id. \u003cnavn\u003e:temp for en temp database. auto for å hente alle databaser for denne applikasjonen i dette miljøet. Standard er blank som gir ingen."
+      "description": "Spesifiser databaser fra dbHotel. Komma separert liste med: \u003cnavn\u003e:\u003cid\u003e for en db fra id. \u003cnavn\u003e:temp for en temp database. auto for å hente alle databaser for denne applikasjonen i dette miljøet. Standard er blank som gir ingen.",
+      "required" : "true"
     },
     {
       "name": "DB_NAME",
