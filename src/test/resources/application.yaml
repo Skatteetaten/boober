@@ -10,8 +10,8 @@ boober:
   git:
     urlPattern: "file:///tmp/boobertest/%s"
     checkoutPath: "build/boobercheckout"
-    username: ""
-    password: ""
+    username: "foo"
+    password: "bar"
   docker:
     registry: "docker-registry.aurora.sits.no:5000"
   openshift:
