@@ -65,6 +65,7 @@ class OpenShiftObjectGeneratorConfigMapTest extends AbstractAuroraDeploymentSpec
     "INT": 42,
     "FLOAT": 4.2,
     "ARRAY": [4.2, "STRING", true],
+    "URL": "https://int-at.skead.no:13110/felles/sikkerhet/stsSikkerhet/v1/validerSaml",
     "JSON_STRING": "{\\"key\\": \\"value\\"}"
   } 
 }'''
@@ -78,10 +79,11 @@ class OpenShiftObjectGeneratorConfigMapTest extends AbstractAuroraDeploymentSpec
       JsonNode mount = jsonMounts.first()
 
       def latestProperties = mount.get('data').get('latest.properties').textValue()
-      assertFileHasLinesWithProperties(latestProperties, ["STRING", "BOOL", "INT", "FLOAT", "ARRAY", "JSON_STRING"])
+      assertFileHasLinesWithProperties(latestProperties, ["STRING", "BOOL", "INT", "FLOAT", "ARRAY", "URL", "JSON_STRING"])
 
       List<String> lines = latestProperties.readLines()
       lines.contains('ARRAY=[4.2,"STRING",true]')
+      lines.contains('URL=https://int-at.skead.no:13110/felles/sikkerhet/stsSikkerhet/v1/validerSaml')
   }
 
   void assertFileHasLinesWithProperties(String latestProperties, List<String> propertyNames) {
