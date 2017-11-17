@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.content
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess
@@ -7,10 +9,12 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.client.MockRestServiceServer
 
+import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.Configuration
 
 @RestClientTest
@@ -30,6 +34,8 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
   DatabaseSchemaProvisioner provisioner
 
   def id = "fd59dba9-7d67-4ea2-bb98-081a5df8c387"
+
+  def labels = [affiliation: 'aos', environment: 'utv', application: 'reference', name: 'reference-db']
 
   def "Schema request with id succeeds when schema exists"() {
 
@@ -63,11 +69,13 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
   def "Matching of application coordinates to schema"() {
 
     given:
-      dbhServer.expect(requestTo("${DBH_HOST}/api/v1/schema/labels=affiliation%253Daos%252Cenvironment%253Dutv%252Capplication%253Dreference%252Cname%253Dreference-db")).
+      def labelsString = labels.collect { k, v -> "$k%3D$v" }.join(",")
+      dbhServer.expect(requestTo("${DBH_HOST}/api/v1/schema/?labels=$labelsString")).
           andRespond(withSuccess(loadResource("schema_${id}.json"), MediaType.APPLICATION_JSON))
 
     when:
-      def provisionResult = provisioner.provisionSchemas([new SchemaForAppRequest("aos", "utv", "reference", "reference-db")])
+      def provisionResult = provisioner.
+          provisionSchemas([new SchemaForAppRequest("aos", "utv", "reference", "reference-db")])
 
     then:
       provisionResult.results.size() == 1
@@ -77,11 +85,17 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
   def "Creates new schema if schema is missing"() {
 
     given:
-      dbhServer.expect(requestTo("${DBH_HOST}/api/v1/schema/labels=affiliation%253Daos%252Cenvironment%253Dutv%252Capplication%253Dreference%252Cname%253Dreference-db")).
+      def labelsString = labels.collect { k, v -> "$k%3D$v" }.join(",")
+      dbhServer.expect(requestTo("${DBH_HOST}/api/v1/schema/?labels=$labelsString")).
           andRespond(withSuccess(loadResource("schema_empty_response.json"), MediaType.APPLICATION_JSON))
+      dbhServer.expect(requestTo("${DBH_HOST}/api/v1/schema/")).
+          andExpect(method(HttpMethod.POST)).
+          andExpect(content().string(JsonOutput.toJson([labels: labels]))).
+          andRespond(withSuccess(loadResource("schema_${id}.json"), MediaType.APPLICATION_JSON))
 
     when:
-      def provisionResult = provisioner.provisionSchemas([new SchemaForAppRequest("aos", "utv", "reference", "reference-db")])
+      def provisionResult = provisioner.
+          provisionSchemas([new SchemaForAppRequest("aos", "utv", "reference", "reference-db")])
 
     then:
       provisionResult.results.size() == 1

@@ -96,8 +96,7 @@ class DatabaseSchemaProvisioner(
     private fun findSchemaByLabels(labels: Map<String, String>): DbhSchema? {
         val labelsString = labels.map { "${it.key}=${it.value}" }.joinToString(",")
         val response: ResponseEntity<DbApiEnvelope> = try {
-            val encodedLabelsString = UriUtils.encode(labelsString, "UTF-8")
-            restTemplate.getForEntity("{0}/api/v1/schema/labels={1}", DbApiEnvelope::class.java, dbhUrl, encodedLabelsString)
+            restTemplate.getForEntity("{0}/api/v1/schema/?labels={1}", DbApiEnvelope::class.java, dbhUrl, labelsString)
         } catch (e: Exception) {
             throw ProvisioningException("Unable to get information on schema with labels ${labelsString}", e)
         }
@@ -110,6 +109,16 @@ class DatabaseSchemaProvisioner(
     }
 
     private fun createSchema(labels: Map<String, String>): DbhSchema {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+
+        val payload = mapOf("labels" to labels)
+        val response: ResponseEntity<DbApiEnvelope> = try {
+            restTemplate.postForEntity("{0}/api/v1/schema/", payload, DbApiEnvelope::class.java, dbhUrl)
+        } catch (e: Exception) {
+            val labelsString = labels.map { "${it.key}=${it.value}" }.joinToString(",")
+            throw ProvisioningException("Unable to create database schema for application $labelsString", e)
+        }
+
+        val dbApiEnvelope: DbApiEnvelope = response.body
+        return dbApiEnvelope.dbhSchema
     }
 }
