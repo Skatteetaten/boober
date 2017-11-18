@@ -104,11 +104,12 @@ class DeployService(
             return result
         }
 
-        if (deploymentSpec.deploy?.flags?.pause != false) {
+
+        if (deploymentSpec.deploy?.flags?.pause == true){
             return result
         }
 
-        val tagResult = deploymentSpec.deploy.takeIf { it.releaseTo != null }?.let {
+        val tagResult = deploymentSpec.deploy?.takeIf { it.releaseTo != null }?.let {
             val dockerGroup = it.groupId.dockerGroupSafeName()
             val cmd = TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
             dockerService.tag(cmd)

@@ -1,7 +1,6 @@
 {
-    "affiliation": "paas",
-    "setupParams": {
-      "apps": ["wiremock", "reference"],
-      "envs":[ "boober-bugfix"]
-    }
+  "applicationIds" : [
+    { "environment" : "boober-bugfix", "application" : "wiremock" },
+    { "environment" : "boober-bugfix", "application" : "reference" }
+  ]
 }
