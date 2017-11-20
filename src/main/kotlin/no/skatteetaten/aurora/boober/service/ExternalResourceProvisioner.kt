@@ -28,9 +28,9 @@ class ExternalResourceProvisioner(val databaseSchemaProvisioner: DatabaseSchemaP
             val databaseSpecs = deploymentSpec.deploy?.database ?: listOf()
             return databaseSpecs.map {
                 if (it.id != null) {
-                    SchemaIdRequest(it.id)
+                    SchemaIdRequest(it.id, it.name)
                 } else {
-                    SchemaForAppRequest(deploymentSpec.affiliation, deploymentSpec.envName, deploymentSpec.name, it.dbName)
+                    SchemaForAppRequest(deploymentSpec.affiliation, deploymentSpec.envName, deploymentSpec.name, it.name)
                 }
             }
         }

@@ -44,7 +44,7 @@ class ExternalResourceProvisionerTest extends AbstractAuroraDeploymentSpecTest {
     then:
       requests.size() == 1
       SchemaProvisionRequest request = requests.first()
-      request == new SchemaIdRequest("fd59dba9-7d67-4ea2-bb98-081a5df8c387")
+      request == new SchemaIdRequest("fd59dba9-7d67-4ea2-bb98-081a5df8c387", "reference")
   }
 
   def "Multiple schemas"() {
@@ -59,7 +59,6 @@ class ExternalResourceProvisionerTest extends AbstractAuroraDeploymentSpecTest {
 
     when:
       def requests = ExternalResourceProvisioner.createSchemaProvisionRequestsFromDeploymentSpec(spec)
-      println requests
 
     then:
       requests.size() == 2

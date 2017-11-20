@@ -4,17 +4,18 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
-import org.springframework.web.util.UriUtils
 
-interface SchemaProvisionRequest
+interface SchemaProvisionRequest {
+    val schemaName: String
+}
 
-data class SchemaIdRequest(val id: String) : SchemaProvisionRequest
+data class SchemaIdRequest(val id: String, override val schemaName: String) : SchemaProvisionRequest
 
 data class SchemaForAppRequest(
         val affiliation: String,
         val environment: String,
         val application: String,
-        val schemaName: String
+        override val schemaName: String
 ) : SchemaProvisionRequest
 
 data class SchemaProvisionResult(val request: SchemaProvisionRequest, val dbhSchema: DbhSchema)
