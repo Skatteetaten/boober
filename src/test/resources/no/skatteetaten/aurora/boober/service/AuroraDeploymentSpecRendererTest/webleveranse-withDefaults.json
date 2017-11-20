@@ -81,7 +81,7 @@
             },
             "max": {
                 "source": "default",
-                "value": "256Mi"
+                "value": "512Mi"
             }
         }
     },

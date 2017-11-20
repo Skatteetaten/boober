@@ -38,7 +38,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
             AuroraConfigFieldHandler("resources/cpu/min", defaultValue = "100m"),
             AuroraConfigFieldHandler("resources/cpu/max", defaultValue = "2000m"),
             AuroraConfigFieldHandler("resources/memory/min", defaultValue = "128Mi"),
-            AuroraConfigFieldHandler("resources/memory/max", defaultValue = "256Mi"),
+            AuroraConfigFieldHandler("resources/memory/max", defaultValue = "512Mi"),
             AuroraConfigFieldHandler("replicas", defaultValue = "1"),
             AuroraConfigFieldHandler("splunkIndex"),
             AuroraConfigFieldHandler("serviceAccount"),

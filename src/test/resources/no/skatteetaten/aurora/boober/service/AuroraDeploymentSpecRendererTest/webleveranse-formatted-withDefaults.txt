@@ -25,7 +25,7 @@
     }
     memory: {
       min:             "128Mi"                     // default
-      max:             "256Mi"                     // default
+      max:             "512Mi"                     // default
     }
   }
   replicas:            1                           // webleveranse.json
