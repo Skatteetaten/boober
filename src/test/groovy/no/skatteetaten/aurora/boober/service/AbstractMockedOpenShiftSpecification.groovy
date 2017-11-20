@@ -38,9 +38,7 @@ import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceC
         Config,
         AuroraMetrics,
         UserDetailsTokenProvider,
-        AuroraDeploymentSpecValidator,
-        ExternalResourceProvisioner,
-        DatabaseSchemaProvisioner
+        AuroraDeploymentSpecValidator
 ])
 class AbstractMockedOpenShiftSpecification extends Specification {
 
@@ -71,6 +69,11 @@ class AbstractMockedOpenShiftSpecification extends Specification {
         @Bean
         OpenShiftResourceClient client() {
             factory.Mock(OpenShiftResourceClient)
+        }
+
+        @Bean
+        ExternalResourceProvisioner externalResourceProvisioner() {
+            factory.Mock(ExternalResourceProvisioner)
         }
 
         @Bean

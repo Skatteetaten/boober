@@ -7,9 +7,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
+import no.skatteetaten.aurora.boober.service.AbstractSpec
 import spock.lang.Specification
 
-abstract class AbstractAuroraConfigTest extends Specification {
+abstract class AbstractAuroraConfigTest extends AbstractSpec {
 
   static final AFFILIATION = "aos"
 
