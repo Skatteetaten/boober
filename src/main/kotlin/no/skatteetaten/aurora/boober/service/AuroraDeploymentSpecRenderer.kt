@@ -28,7 +28,7 @@ fun createMapForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSpe
             return@forEach
         }
 
-        if (configField.handler.defaultSource == "default" && !includeDefaults) {
+        if (configField.handler.defaultValue != null && !includeDefaults) {
             return@forEach
         }
 
@@ -41,7 +41,7 @@ fun createMapForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSpe
         keys.forEachIndexed { index, key ->
             if (index == keys.lastIndex) {
                 next[key] = mutableMapOf(
-                        "source" to configField.source,
+                        "source" to configField.source!!.configName,
                         "value" to configField.value
                 )
             } else {
