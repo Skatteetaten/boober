@@ -22,10 +22,11 @@ fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: Applic
     val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(applicationId)
     val deployMapper = AuroraDeployMapperV1(applicationId, applicationFiles, overrideFiles, dockerRegistry)
     val volumeMapper = AuroraVolumeMapperV1(applicationFiles, vaults)
-    val routeMapper = AuroraRouteMapperV1(applicationFiles)
+    val routeMapper = AuroraRouteMapperV1(applicationId, applicationFiles)
     val localTemplateMapper = AuroraLocalTemplateMapperV1(applicationFiles, auroraConfig)
     val templateMapper = AuroraTemplateMapperV1(applicationFiles)
-    val buildMapper = AuroraBuildMapperV1()
+    val buildMapper = AuroraBuildMapperV1(applicationId)
+
     val handlers = (HeaderMapper.handlers + deploymentSpecMapper.handlers + when (type) {
         TemplateType.deploy -> deployMapper.handlers + routeMapper.handlers + volumeMapper.handlers
         TemplateType.development -> deployMapper.handlers + routeMapper.handlers + volumeMapper.handlers + buildMapper.handlers

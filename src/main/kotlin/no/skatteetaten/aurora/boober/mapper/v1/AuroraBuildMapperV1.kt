@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.mapper.v1
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
+import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.java
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.web
@@ -11,16 +12,16 @@ import no.skatteetaten.aurora.boober.utils.length
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.oneOf
 
-class AuroraBuildMapperV1 {
+class AuroraBuildMapperV1(val applicationId: ApplicationId) {
 
     fun build(auroraConfigFields: AuroraConfigFields, dockerRegistry: String): AuroraBuild {
 
         val type = auroraConfigFields.extract("type", { TemplateType.valueOf(it.textValue()) })
         val applicationPlatform = auroraConfigFields.extract("applicationPlatform", { ApplicationPlatform.valueOf(it.textValue()) })
-        val name = auroraConfigFields.extract("name")
+        val name = auroraConfigFields.extractOrDefault("name", applicationId.application)
 
         val groupId = auroraConfigFields.extract("groupId")
-        val artifactId = auroraConfigFields.extract("artifactId")
+        val artifactId = auroraConfigFields.extractOrDefault("artifactId", applicationId.application)
         val version = auroraConfigFields.extract("version")
         val testGitUrl = auroraConfigFields.extractOrNull("test/gitUrl")
 
@@ -77,7 +78,7 @@ class AuroraBuildMapperV1 {
             AuroraConfigFieldHandler("test/gitUrl"),
             AuroraConfigFieldHandler("test/tag"),
             AuroraConfigFieldHandler("groupId", validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
-            AuroraConfigFieldHandler("artifactId", validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters") }),
+            AuroraConfigFieldHandler("artifactId", validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
             AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set") })
     )
 }

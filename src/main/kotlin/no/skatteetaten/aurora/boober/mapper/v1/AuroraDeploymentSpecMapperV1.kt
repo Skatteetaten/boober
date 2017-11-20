@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.mapper.v1
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigValidator.Companion.namePattern
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraBuild
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
@@ -22,7 +23,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
     val handlers = listOf(
             AuroraConfigFieldHandler("affiliation", validator = { it.pattern("^[a-z]{1,10}$", "Affiliation can only contain letters and must be no longer than 10 characters") }),
             AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
-            AuroraConfigFieldHandler("name", validator = { it.pattern("^[a-z][-a-z0-9]{0,38}[a-z0-9]$", "Name must be alphanumeric and no more than 40 characters") }),
+            AuroraConfigFieldHandler("name", validator = { it.pattern(namePattern, "Name must be alphanumeric and no more than 40 characters", false) }),
             AuroraConfigFieldHandler("envName"),
             AuroraConfigFieldHandler("permissions/admin"),
             AuroraConfigFieldHandler("permissions/view"),
@@ -42,7 +43,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                                    template: AuroraTemplate?,
                                    localTemplate: AuroraLocalTemplate?
     ): AuroraDeploymentSpec {
-        val name = auroraConfigFields.extract("name")
+        val name = auroraConfigFields.extractOrDefault("name",applicationId.application)
         return AuroraDeploymentSpec(
                 schemaVersion = auroraConfigFields.extract("schemaVersion"),
 

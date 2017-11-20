@@ -2,8 +2,10 @@ package no.skatteetaten.aurora.boober.mapper
 
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.ConfigErrorType
 import no.skatteetaten.aurora.boober.model.ConfigFieldError
 import no.skatteetaten.aurora.boober.service.AuroraConfigException
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.findAllPointers
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -14,8 +16,22 @@ class AuroraConfigValidator(val applicationId: ApplicationId,
                             val auroraConfigFields: AuroraConfigFields) {
     val logger: Logger = LoggerFactory.getLogger(AuroraConfigValidator::class.java)
 
+    companion object {
+        val namePattern = "^[a-z][-a-z0-9]{0,38}[a-z0-9]$"
+    }
+
     @JvmOverloads
-    fun validate(checkUnmappedPointers: Boolean = true) {
+    fun validate(fullValidation: Boolean = true) {
+
+        val fileNameRequired = auroraConfigFields.extractOrNull("name") == null ||
+                auroraConfigFields.extractOrNull("artifactId") == null
+
+        val nameError = if (fullValidation && fileNameRequired && !Regex(namePattern).matches(applicationId.application)) {
+            ConfigFieldError(ConfigErrorType.ILLEGAL, "Application fileName=${applicationId.application} is invalid. Must be alphanumeric and not over 40 characters")
+        } else {
+            null
+        }
+
         val errors: List<ConfigFieldError> = fieldHandlers.mapNotNull { e ->
             val auroraConfigField = auroraConfigFields.fields[e.name]
             val result = e.validator(auroraConfigField?.value)
@@ -27,7 +43,7 @@ class AuroraConfigValidator(val applicationId: ApplicationId,
             }
         }
 
-        val unmappedErrors = if (checkUnmappedPointers) {
+        val unmappedErrors = if (fullValidation) {
             getUnmappedPointers().flatMap { pointerError ->
                 pointerError.value.map { ConfigFieldError.invalid(pointerError.key, it) }
             }
@@ -35,7 +51,8 @@ class AuroraConfigValidator(val applicationId: ApplicationId,
             emptyList()
         }
 
-        (errors + unmappedErrors).takeIf { it.isNotEmpty() }?.let {
+
+        (errors + unmappedErrors).addIfNotNull(nameError).takeIf { it.isNotEmpty() }?.let {
             logger.debug("{}", it)
             val aid = applicationId
             throw AuroraConfigException(

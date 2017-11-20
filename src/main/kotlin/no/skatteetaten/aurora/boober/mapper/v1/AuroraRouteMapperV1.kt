@@ -2,13 +2,14 @@ package no.skatteetaten.aurora.boober.mapper.v1
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
+import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraRoute
 import no.skatteetaten.aurora.boober.model.Route
 import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.utils.startsWith
 
-class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>) {
+class AuroraRouteMapperV1(val applicationId: ApplicationId, val applicationFiles: List<AuroraConfigFile>) {
 
 
     val handlers = findRouteHandlers() +
@@ -16,7 +17,7 @@ class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>) {
 
     fun route(auroraConfigFields: AuroraConfigFields): AuroraRoute {
 
-        val name = auroraConfigFields.extract("name")
+        val name = auroraConfigFields.extractOrDefault("name", applicationId.application)
 
         return AuroraRoute(
                 route = getRoute(auroraConfigFields, name)
