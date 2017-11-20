@@ -4,8 +4,6 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform
-import no.skatteetaten.aurora.boober.model.ApplicationPlatform.java
-import no.skatteetaten.aurora.boober.model.ApplicationPlatform.web
 import no.skatteetaten.aurora.boober.model.AuroraBuild
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.utils.length
@@ -18,10 +16,10 @@ class AuroraBuildMapperV1(val applicationId: ApplicationId) {
 
         val type = auroraConfigFields.extract("type", { TemplateType.valueOf(it.textValue()) })
         val applicationPlatform = auroraConfigFields.extract("applicationPlatform", { ApplicationPlatform.valueOf(it.textValue()) })
-        val name = auroraConfigFields.extractOrDefault("name", applicationId.application)
+        val name = auroraConfigFields.extract("name")
 
         val groupId = auroraConfigFields.extract("groupId")
-        val artifactId = auroraConfigFields.extractOrDefault("artifactId", applicationId.application)
+        val artifactId = auroraConfigFields.extract("artifactId")
         val version = auroraConfigFields.extract("version")
         val testGitUrl = auroraConfigFields.extractOrNull("test/gitUrl")
 
@@ -40,20 +38,13 @@ class AuroraBuildMapperV1(val applicationId: ApplicationId) {
             "$name:latest"
         }
 
-        val (baseName, baseVersion) = when (applicationPlatform) {
-            java -> (auroraConfigFields.extractOrNull("baseImage/name") ?: "flange") to
-                    (auroraConfigFields.extractOrNull("baseImage/version") ?: "8")
-
-            web -> (auroraConfigFields.extractOrNull("baseImage/name") ?: "wrench") to
-                    (auroraConfigFields.extractOrNull("baseImage/version") ?: "0")
-        }
 
         return AuroraBuild(
                 applicationPlatform = ApplicationPlatform.valueOf(auroraConfigFields.extract("applicationPlatform")),
                 testGitUrl = testGitUrl,
                 testTag = auroraConfigFields.extractOrNull("test/tag"),
-                baseName = baseName,
-                baseVersion = baseVersion,
+                baseName = auroraConfigFields.extractOrDefault("baseImage/name", applicationPlatform.baseImageName),
+                baseVersion = auroraConfigFields.extractOrDefault("baseImage/version", applicationPlatform.baseImageVersion),
                 builderName = auroraConfigFields.extract("builder/name"),
                 builderVersion = auroraConfigFields.extract("builder/version"),
                 extraTags = auroraConfigFields.extract("extraTags"),
@@ -78,7 +69,9 @@ class AuroraBuildMapperV1(val applicationId: ApplicationId) {
             AuroraConfigFieldHandler("test/gitUrl"),
             AuroraConfigFieldHandler("test/tag"),
             AuroraConfigFieldHandler("groupId", validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
-            AuroraConfigFieldHandler("artifactId", validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
+            AuroraConfigFieldHandler("artifactId",
+                    defaultSource= "fileName",
+                    defaultValue = applicationId.application, validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
             AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set") })
     )
 }

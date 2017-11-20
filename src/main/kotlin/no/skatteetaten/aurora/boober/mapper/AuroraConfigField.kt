@@ -203,7 +203,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
                 when {
                     (matches.isEmpty() && handler.defaultValue != null) -> {
                         logger.trace("Default match ${handler.defaultValue}")
-                        handler.name to AuroraConfigField(handler.path, TextNode(handler.defaultValue), "default")
+                        handler.name to AuroraConfigField(handler.path, TextNode(handler.defaultValue), handler.defaultSource)
                     }
                     matches.isNotEmpty() -> matches.first()
                     else -> null

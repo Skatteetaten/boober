@@ -3,23 +3,29 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
+import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.ApplicationPlatform
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 
 fun createMapForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean = true): Map<String, Any?> {
     val fields = mutableMapOf<String, Any?>()
     val includeSubKeys = createIncludeSubKeysMap(deploymentSpec)
 
-    val missingFields = mutableMapOf(
-            "name" to deploymentSpec.fields["name"]!!,
-            "namespace" to AuroraConfigField("/namespace", TextNode(deploymentSpec.namespace), "generated")
-    )
+    val missingFields : MutableMap<String, AuroraConfigField> = mutableMapOf()
 
-    if (!deploymentSpec.fields.containsKey("/envName")) {
-        missingFields.put("envName", AuroraConfigField("/envName", TextNode(deploymentSpec.envName), "folderName"))
-
+    deploymentSpec.build?.let {
+        if (!deploymentSpec.fields.containsKey("baseImage/name")) {
+            missingFields.put("baseImage/name",
+                    AuroraConfigField("/baseImage/name", TextNode(it.applicationPlatform.baseImageName), "default")
+            )
+        }
+        if (!deploymentSpec.fields.containsKey("baseImage/version")) {
+            missingFields.put("baseImage/version",
+                    AuroraConfigField("/baseImage/version", TextNode(it.applicationPlatform.baseImageVersion), "default")
+            )
+        }
     }
-
-    (missingFields + deploymentSpec.fields).entries.forEach { entry ->
+    (deploymentSpec.fields +missingFields).entries.forEach { entry ->
 
         val configField = entry.value
         val configPath = entry.key
@@ -74,11 +80,11 @@ fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSp
         val source = entry.value["source"].toString()
         val indents = " ".repeat(level * indentLength)
 
-        if (entry.value.keys.all { defaultKeys.indexOf(it) != -1 }) {
+        return if (entry.value.keys.all { defaultKeys.indexOf(it) != -1 }) {
             val keySpaces = " ".repeat(keyMaxLength + 2 - key.length - level * 2)
             val valueSpaces = " ".repeat(valueMaxLength + 1 - value.length)
 
-            return "$result$indents$key:$keySpaces$value$valueSpaces// $source\n"
+            "$result$indents$key:$keySpaces$value$valueSpaces// $source\n"
         } else {
             val nextObject = indents + "$key: {\n"
             val nextObjectResult = entry.value
@@ -87,7 +93,7 @@ fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSp
                     .fold(nextObject) { res, e ->
                         res + renderJson(level + 1, "", e as Map.Entry<String, Map<String, Any?>>)
                     }
-            return result + nextObjectResult + indents + "}\n"
+            result + nextObjectResult + indents + "}\n"
         }
     }
 

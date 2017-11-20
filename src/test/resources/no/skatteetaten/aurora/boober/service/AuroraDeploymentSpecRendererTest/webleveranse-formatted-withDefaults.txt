@@ -1,14 +1,13 @@
 {
-  name:                "webleveranse"              // webleveranse.json
-  namespace:           "aos-utv"                   // generated
-  envName:             "utv"                       // folderName
   schemaVersion:       "v1"                        // about.json
   type:                "development"               // utv/webleveranse.json
-  affiliation:         "aos"                       // about.json
   cluster:             "utv"                       // utv/about.json
   permissions: {
     admin:             "APP_PaaS_utv"              // about.json
   }
+  affiliation:         "aos"                       // about.json
+  envName:             "utv"                       // folderName
+  name:                "webleveranse"              // webleveranse.json
   artifactId:          "openshift-referanse-react" // webleveranse.json
   groupId:             "no.skatteetaten.aurora"    // webleveranse.json
   version:             "1"                         // utv/webleveranse.json
@@ -53,5 +52,9 @@
   builder: {
     name:              "architect"                 // default
     version:           "1"                         // default
+  }
+  baseImage: {
+    name:              "wrench"                    // default
+    version:           "0"                         // default
   }
 }

@@ -23,12 +23,18 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
     val handlers = listOf(
             AuroraConfigFieldHandler("affiliation", validator = { it.pattern("^[a-z]{1,10}$", "Affiliation can only contain letters and must be no longer than 10 characters") }),
             AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
-            AuroraConfigFieldHandler("name", validator = { it.pattern(namePattern, "Name must be alphanumeric and no more than 40 characters", false) }),
-            AuroraConfigFieldHandler("envName"),
             AuroraConfigFieldHandler("permissions/admin"),
             AuroraConfigFieldHandler("permissions/view"),
             AuroraConfigFieldHandler("permissions/adminServiceAccount"),
-
+            AuroraConfigFieldHandler("affiliation", validator = { it.pattern("^[a-z]{0,8}[a-z]$", "Affiliation must be alphanumeric and not more than 10 characters") }),
+            AuroraConfigFieldHandler("envName",
+                    defaultSource = "folderName",
+                    defaultValue = applicationId.environment
+            ),
+            AuroraConfigFieldHandler("name",
+                    defaultValue = applicationId.application,
+                     defaultSource = "fileName",
+                    validator = { it.pattern(namePattern, "Name must be alphanumeric and no more than 40 characters", false) }),
             AuroraConfigFieldHandler("splunkIndex"),
             AuroraConfigFieldHandler("certificate/commonName"),
             AuroraConfigFieldHandler("certificate"),
@@ -43,7 +49,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                                    template: AuroraTemplate?,
                                    localTemplate: AuroraLocalTemplate?
     ): AuroraDeploymentSpec {
-        val name = auroraConfigFields.extractOrDefault("name",applicationId.application)
+        val name = auroraConfigFields.extract("name")
         return AuroraDeploymentSpec(
                 schemaVersion = auroraConfigFields.extract("schemaVersion"),
 
@@ -51,7 +57,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                 cluster = auroraConfigFields.extract("cluster"),
                 type = auroraConfigFields.extract("type", { TemplateType.valueOf(it.textValue()) }),
                 name = name,
-                envName = auroraConfigFields.extractOrDefault("envName", applicationId.environment),
+                envName = auroraConfigFields.extract("envName"),
                 permissions = extractPermissions(auroraConfigFields),
                 fields = auroraConfigFields.fields,
                 volume = volume,

@@ -17,7 +17,7 @@ class AuroraRouteMapperV1(val applicationId: ApplicationId, val applicationFiles
 
     fun route(auroraConfigFields: AuroraConfigFields): AuroraRoute {
 
-        val name = auroraConfigFields.extractOrDefault("name", applicationId.application)
+        val name = auroraConfigFields.extract("name")
 
         return AuroraRoute(
                 route = getRoute(auroraConfigFields, name)

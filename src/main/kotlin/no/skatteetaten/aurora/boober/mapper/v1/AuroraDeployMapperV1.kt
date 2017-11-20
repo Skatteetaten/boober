@@ -27,7 +27,10 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
 
     val handlers = dbHandlers + listOf(
 
-            AuroraConfigFieldHandler("artifactId", validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
+            AuroraConfigFieldHandler("artifactId",
+                    defaultValue = applicationId.application,
+                    defaultSource = "fileName",
+                    validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
             AuroraConfigFieldHandler("groupId", validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
             AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set as string") }),
             AuroraConfigFieldHandler("releaseTo"),
@@ -70,7 +73,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
     )
 
     fun deploy(auroraConfigFields: AuroraConfigFields): AuroraDeploy? {
-        val name = auroraConfigFields.extractOrDefault("name", applicationId.application)
+        val name = auroraConfigFields.extract("name")
         val groupId = auroraConfigFields.extract("groupId")
 
         val isSimplifiedCertConfig: Boolean = auroraConfigFields.extract("certificate", { it.isBoolean })
@@ -85,7 +88,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
 
         val releaseTo = auroraConfigFields.extractOrNull("releaseTo")
 
-        val artifactId = auroraConfigFields.extractOrDefault("artifactId", applicationId.application)
+        val artifactId = auroraConfigFields.extract("artifactId")
 
         val dockerGroup = groupId.replace(".", "_")
 

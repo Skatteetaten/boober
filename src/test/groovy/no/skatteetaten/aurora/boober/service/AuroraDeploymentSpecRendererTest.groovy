@@ -16,6 +16,8 @@ class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSprin
       "about.json"           : DEFAULT_ABOUT,
       "utv/about.json"       : DEFAULT_UTV_ABOUT,
       "webleveranse.json"    : WEB_LEVERANSE,
+      "reference.json"       : REFERENCE,
+      "utv/reference.json"        : '''{}''',
       "utv/webleveranse.json": '''{ "type": "development", "version": "1" }'''
   ]
 
@@ -38,13 +40,17 @@ class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSprin
       env   | app            | includeDefaults
       "utv" | "webleveranse" | true
       "utv" | "webleveranse" | false
+      "utv" | "reference"    | true
+      "utv" | "reference"    | false
   }
 
-  def "Should render formatted json-like output for pointers"() {
+  @Unroll
+  def "Should render formatted json-like output for pointers for #env/#app with defaults #includeDefaults"() {
     given:
       def aid = ApplicationId.aid(env, app)
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
-      def renderedJson = AuroraDeploymentSpecRendererKt.renderJsonForAuroraDeploymentSpecPointers(deploymentSpec, includeDefaults)
+      def renderedJson = AuroraDeploymentSpecRendererKt.
+          renderJsonForAuroraDeploymentSpecPointers(deploymentSpec, includeDefaults)
       def filename = getFilename(aid, includeDefaults, true, "txt")
       def expected = loadResource(filename)
 
@@ -55,7 +61,9 @@ class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSprin
     where:
       env   | app            | includeDefaults
       "utv" | "webleveranse" | true
+      "utv" | "reference"    | true
       "utv" | "webleveranse" | false
+      "utv" | "reference"    | false
   }
 
   def getFilename(ApplicationId aid, boolean includeDefaults, boolean formatted = false, String type = "json") {

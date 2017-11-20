@@ -16,6 +16,7 @@ fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: Applic
 
     val applicationFiles = auroraConfig.getFilesForApplication(applicationId, overrideFiles)
 
+
     val headerMapper = HeaderMapper.create(applicationFiles, applicationId)
     val type = headerMapper.type
 

@@ -1,0 +1,52 @@
+{
+  "schemaVersion": {
+    "source": "about.json",
+    "value": "v1"
+  },
+  "type": {
+    "source": "reference.json",
+    "value": "deploy"
+  },
+  "cluster": {
+    "source": "utv/about.json",
+    "value": "utv"
+  },
+  "permissions": {
+    "admin": {
+      "source": "about.json",
+      "value": "APP_PaaS_utv"
+    }
+  },
+  "affiliation": {
+    "source": "about.json",
+    "value": "aos"
+  },
+  "envName": {
+    "source": "folderName",
+    "value": "utv"
+  },
+  "name": {
+    "source": "fileName",
+    "value": "reference"
+  },
+  "artifactId": {
+    "source": "fileName",
+    "value": "reference"
+  },
+  "groupId": {
+    "source": "reference.json",
+    "value": "no.skatteetaten.aurora"
+  },
+  "version": {
+    "source": "reference.json",
+    "value": "1"
+  },
+  "replicas": {
+    "source": "reference.json",
+    "value": 1
+  },
+  "route": {
+    "source": "reference.json",
+    "value": true
+  }
+}
