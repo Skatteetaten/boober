@@ -38,9 +38,8 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraConfigTest {
       createDeploymentSpec(auroraConfigJson, aid("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"))
 
     then:
-      def e = thrown(AuroraConfigException)
-      e.message ==
-          "Config for application this-name-is-stupid-stupid-stupidly-long-for-no-reason in environment utv contains errors. Application fileName=this-name-is-stupid-stupid-stupidly-long-for-no-reason is invalid. Must be alphanumeric and not over 40 characters."
+      thrown(AuroraConfigException)
+
 
   }
 
@@ -53,9 +52,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraConfigTest {
       createDeploymentSpec(auroraConfigJson, aid("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"))
 
     then:
-      def e = thrown(AuroraConfigException)
-      e.message ==
-          "Config for application this-name-is-stupid-stupid-stupidly-long-for-no-reason in environment utv contains errors. Application fileName=this-name-is-stupid-stupid-stupidly-long-for-no-reason is invalid. Must be alphanumeric and not over 40 characters."
+      thrown(AuroraConfigException)
 
   }
 

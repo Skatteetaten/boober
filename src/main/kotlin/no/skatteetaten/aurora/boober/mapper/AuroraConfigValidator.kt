@@ -23,15 +23,6 @@ class AuroraConfigValidator(val applicationId: ApplicationId,
     @JvmOverloads
     fun validate(fullValidation: Boolean = true) {
 
-        val fileNameRequired = auroraConfigFields.extractOrNull("name") == null ||
-                auroraConfigFields.extractOrNull("artifactId") == null
-
-        val nameError = if (fullValidation && fileNameRequired && !Regex(namePattern).matches(applicationId.application)) {
-            ConfigFieldError(ConfigErrorType.ILLEGAL, "Application fileName=${applicationId.application} is invalid. Must be alphanumeric and not over 40 characters")
-        } else {
-            null
-        }
-
         val errors: List<ConfigFieldError> = fieldHandlers.mapNotNull { e ->
             val auroraConfigField = auroraConfigFields.fields[e.name]
             val result = e.validator(auroraConfigField?.value)
@@ -52,7 +43,7 @@ class AuroraConfigValidator(val applicationId: ApplicationId,
         }
 
 
-        (errors + unmappedErrors).addIfNotNull(nameError).takeIf { it.isNotEmpty() }?.let {
+        (errors + unmappedErrors).takeIf { it.isNotEmpty() }?.let {
             logger.debug("{}", it)
             val aid = applicationId
             throw AuroraConfigException(
