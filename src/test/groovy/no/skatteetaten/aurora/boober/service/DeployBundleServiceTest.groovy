@@ -141,7 +141,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
 
     then:
       def ex = thrown(AuroraConfigException)
-      ex.errors[0].field.path == '/name'
+      ex.errors[0].field.handler.name == 'name'
   }
 
   def "Should return error when name is not valid DNS952 label"() {
@@ -154,7 +154,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
 
     then:
       def ex = thrown(AuroraConfigException)
-      ex.errors[0].field.path == '/name'
+      ex.errors[0].field.handler.name == 'name'
   }
 
   def "Should return error when there are unmapped paths"() {
@@ -168,7 +168,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
     then:
       def e = thrown(AuroraConfigException)
       def error = e.errors[0]
-      error.field.source == "${aid.environment}/${aid.application}.json.override"
+      error.field.source.configName == "${aid.environment}/${aid.application}.json.override"
       error.message == "/foo is not a valid config field pointer"
   }
 

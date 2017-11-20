@@ -13,7 +13,6 @@ import no.skatteetaten.aurora.boober.model.AuroraTemplate
 import no.skatteetaten.aurora.boober.model.AuroraVolume
 import no.skatteetaten.aurora.boober.model.Permission
 import no.skatteetaten.aurora.boober.model.Permissions
-import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.pattern
 
@@ -33,7 +32,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
             ),
             AuroraConfigFieldHandler("name",
                     defaultValue = applicationId.application,
-                     defaultSource = "fileName",
+                    defaultSource = "fileName",
                     validator = { it.pattern(namePattern, "Name must be alphanumeric and no more than 40 characters", false) }),
             AuroraConfigFieldHandler("splunkIndex"),
             AuroraConfigFieldHandler("certificate/commonName"),
@@ -49,13 +48,13 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                                    template: AuroraTemplate?,
                                    localTemplate: AuroraLocalTemplate?
     ): AuroraDeploymentSpec {
-        val name = auroraConfigFields.extract("name")
+        val name: String = auroraConfigFields.extract("name")
         return AuroraDeploymentSpec(
                 schemaVersion = auroraConfigFields.extract("schemaVersion"),
 
                 affiliation = auroraConfigFields.extract("affiliation"),
                 cluster = auroraConfigFields.extract("cluster"),
-                type = auroraConfigFields.extract("type", { TemplateType.valueOf(it.textValue()) }),
+                type = auroraConfigFields.extract("type"),
                 name = name,
                 envName = auroraConfigFields.extract("envName"),
                 permissions = extractPermissions(auroraConfigFields),
@@ -70,15 +69,17 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
     }
 
     private fun extractPermissions(auroraConfigFields: AuroraConfigFields): Permissions {
-        val view = auroraConfigFields.extractOrNull("permissions/view", { it.textValue().split(" ").toSet() })?.let {
+        val view = auroraConfigFields.extractOrNull<String?>("permissions/view")?.let {
+            it.split(" ").toSet()
+        }?.let {
             Permission(it)
         }
 
         //if sa present add to admin users.
-        val sa = auroraConfigFields.extractOrNull("permissions/adminServiceAccount", { it.textValue().split(" ").toSet() }) ?: emptySet()
+        val sa = auroraConfigFields.extractOrNull<String?>("permissions/adminServiceAccount")?.let { it.split(" ").toSet() } ?: emptySet()
         val permission = Permissions(
                 admin = Permission(
-                        auroraConfigFields.extract("permissions/admin", { it.textValue().split(" ").filter { !it.isBlank() }.toSet() }), sa),
+                        auroraConfigFields.extract<String>("permissions/admin").let { it.split(" ").filter { !it.isBlank() }.toSet() }, sa),
                 view = view)
         return permission
     }

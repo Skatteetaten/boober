@@ -1,11 +1,11 @@
 package no.skatteetaten.aurora.boober.mapper
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.ConfigErrorType
 import no.skatteetaten.aurora.boober.model.ConfigFieldError
 import no.skatteetaten.aurora.boober.service.AuroraConfigException
-import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.findAllPointers
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -24,12 +24,22 @@ class AuroraConfigValidator(val applicationId: ApplicationId,
     fun validate(fullValidation: Boolean = true) {
 
         val errors: List<ConfigFieldError> = fieldHandlers.mapNotNull { e ->
-            val auroraConfigField = auroraConfigFields.fields[e.name]
-            val result = e.validator(auroraConfigField?.value)
+            val rawField = auroraConfigFields.fields[e.name]!!
+
+            //TODO: We should change this
+            val auroraConfigField = if (rawField.value.isMissingNode) {
+                jacksonObjectMapper().convertValue(rawField.handler.defaultValue, JsonNode::class.java)
+            } else {
+                rawField.value
+            }
+
+
+            val result = e.validator(auroraConfigField)
 
             when {
+                auroraConfigField == null && rawField.handler.defaultValue != null -> null
                 result == null -> null
-                auroraConfigField != null -> ConfigFieldError.illegal(result.localizedMessage, auroraConfigField)
+                auroraConfigField != null -> ConfigFieldError.illegal(result.localizedMessage, rawField)
                 else -> ConfigFieldError.missing(result.localizedMessage, e.path)
             }
         }

@@ -13,6 +13,8 @@ import org.springframework.web.client.HttpClientErrorException
 
 import java.nio.charset.Charset
 
+import spock.lang.Ignore
+
 class DeployServiceFromGitFailTest extends AbstractMockedOpenShiftSpecification {
 
   @Autowired
@@ -54,6 +56,7 @@ class DeployServiceFromGitFailTest extends AbstractMockedOpenShiftSpecification 
 
   }
 
+  @Ignore
   def "Should perform release that fails and mark it as failed"() {
     when:
     deployService.executeDeploy(affiliation, [new ApplicationId(ENV_NAME, APP_NAME)])

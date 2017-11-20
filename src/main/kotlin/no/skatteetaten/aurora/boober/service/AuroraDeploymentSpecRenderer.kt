@@ -1,31 +1,25 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.databind.node.TextNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
-import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.ApplicationPlatform
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 
 fun createMapForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean = true): Map<String, Any?> {
     val fields = mutableMapOf<String, Any?>()
     val includeSubKeys = createIncludeSubKeysMap(deploymentSpec)
 
-    val missingFields : MutableMap<String, AuroraConfigField> = mutableMapOf()
+    val missingFields: MutableMap<String, AuroraConfigField> = mutableMapOf()
 
     deploymentSpec.build?.let {
         if (!deploymentSpec.fields.containsKey("baseImage/name")) {
-            missingFields.put("baseImage/name",
-                    AuroraConfigField("/baseImage/name", TextNode(it.applicationPlatform.baseImageName), "default")
-            )
+            missingFields.put("baseImage/name", AuroraConfigField(AuroraConfigFieldHandler("baseImage/name", defaultValue = it.applicationPlatform.baseImageName)))
         }
         if (!deploymentSpec.fields.containsKey("baseImage/version")) {
-            missingFields.put("baseImage/version",
-                    AuroraConfigField("/baseImage/version", TextNode(it.applicationPlatform.baseImageVersion), "default")
-            )
+            missingFields.put("baseImage/version", AuroraConfigField(AuroraConfigFieldHandler("baseImage/version", defaultValue = it.applicationPlatform.baseImageVersion)))
         }
     }
-    (deploymentSpec.fields +missingFields).entries.forEach { entry ->
+    (deploymentSpec.fields + missingFields).entries.forEach { entry ->
 
         val configField = entry.value
         val configPath = entry.key
@@ -34,7 +28,7 @@ fun createMapForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSpe
             return@forEach
         }
 
-        if (configField.source == "default" && !includeDefaults) {
+        if (configField.handler.defaultSource == "default" && !includeDefaults) {
             return@forEach
         }
 

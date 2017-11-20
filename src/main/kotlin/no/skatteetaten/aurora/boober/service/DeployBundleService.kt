@@ -156,6 +156,7 @@ class DeployBundleService(
                 logger.debug("ACE {}", e.errors)
                 Result<AuroraDeploymentSpec, Error?>(error = ValidationError(aid.application, aid.environment, e.errors))
             } catch (e: IllegalArgumentException) {
+                throw e
                 logger.debug("IAE {}", e.message)
                 Result<AuroraDeploymentSpec, Error?>(error =
                 ValidationError(aid.application, aid.environment, listOf(ConfigFieldError.illegal(e.message!!))))

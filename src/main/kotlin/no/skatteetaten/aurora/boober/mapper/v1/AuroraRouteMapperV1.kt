@@ -13,34 +13,33 @@ class AuroraRouteMapperV1(val applicationId: ApplicationId, val applicationFiles
 
 
     val handlers = findRouteHandlers() +
-            AuroraConfigFieldHandler("route", defaultValue = "false")
+            AuroraConfigFieldHandler("route", defaultValue = false)
 
     fun route(auroraConfigFields: AuroraConfigFields): AuroraRoute {
-
-        val name = auroraConfigFields.extract("name")
-
         return AuroraRoute(
-                route = getRoute(auroraConfigFields, name)
+                route = getRoute(auroraConfigFields, auroraConfigFields.extract("name"))
         )
     }
 
     fun getRoute(auroraConfigFields: AuroraConfigFields, name: String): List<Route> {
 
-        val enabled = auroraConfigFields.extract("route", { it.asText() == "true" })
-        if (enabled) {
+
+        val simplified=auroraConfigFields.isSimplifiedConfig("route")
+        if (simplified && auroraConfigFields.extract("route")) {
             return listOf(Route(name = name))
         }
         val routes = applicationFiles.findSubKeys("route")
 
         return routes.map {
-            val routePath = auroraConfigFields.extractOrNull("route/$it/path")
-            val routeHost = auroraConfigFields.extractOrNull("route/$it/host")
             val routeName = if (!it.startsWith(name)) {
                 "$name-$it"
             } else {
                 it
             }
-            Route(routeName, routeHost, routePath, auroraConfigFields.getRouteAnnotations("route/$it/annotations", handlers))
+            Route(routeName,
+                    auroraConfigFields.extractOrNull("route/$it/host"),
+                    auroraConfigFields.extractOrNull("route/$it/path"),
+                    auroraConfigFields.getRouteAnnotations("route/$it/annotations", handlers))
         }.toList()
     }
 

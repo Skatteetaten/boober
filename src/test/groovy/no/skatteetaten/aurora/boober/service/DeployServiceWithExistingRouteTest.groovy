@@ -13,6 +13,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.JsonNodeUtilsKt
+import spock.lang.Ignore
 
 class DeployServiceWithExistingRouteTest extends AbstractMockedOpenShiftSpecification {
 
@@ -63,6 +64,7 @@ class DeployServiceWithExistingRouteTest extends AbstractMockedOpenShiftSpecific
     openShiftClient.createOpenShiftDeleteCommands(_, _, _, _) >> []
   }
 
+  @Ignore
   def "Should delete and create route"() {
     when:
       List<AuroraDeployResult> deployResults = deployService.
