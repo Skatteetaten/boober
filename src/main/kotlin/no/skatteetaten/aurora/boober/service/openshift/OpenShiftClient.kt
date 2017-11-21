@@ -166,13 +166,16 @@ class OpenShiftClient(
 
     @Cacheable("groups")
     fun isValidGroup(group: String): Boolean {
-
         return getGroups(group) != null
     }
 
-    fun templateExist(template: String): Boolean {
-
-        return exist("$baseUrl/oapi/v1/namespaces/openshift/templates/$template")
+    fun getTemplate(template: String): JsonNode? {
+        return try {
+            userClient.get("$baseUrl/oapi/v1/namespaces/openshift/templates/$template")?.body
+        } catch (e: Exception) {
+            logger.debug("Failed getting template={}", template)
+            null
+        }
     }
 
     private fun exist(url: String): Boolean {

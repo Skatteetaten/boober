@@ -1,14 +1,13 @@
 package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
-class AuroraDeploymentSpecValidator(val openShiftClient: OpenShiftClient) {
+class AuroraDeploymentSpecValidator(val openShiftClient: OpenShiftClient, val openShiftTemplateProcessor: OpenShiftTemplateProcessor) {
 
 
     val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpecValidator::class.java)
@@ -32,10 +31,16 @@ class AuroraDeploymentSpecValidator(val openShiftClient: OpenShiftClient) {
 
     private fun validateTemplateIfSet(deploymentSpec: AuroraDeploymentSpec) {
 
-        deploymentSpec.type.takeIf { it == TemplateType.template } ?: return
+        deploymentSpec.localTemplate?.let {
+            openShiftTemplateProcessor.validateTemplateParameters(it.templateJson, it.parameters ?: emptyMap())
+        }
 
-        deploymentSpec.template
-                ?.takeIf { !openShiftClient.templateExist(it.template) }
-                ?.let { throw AuroraDeploymentSpecValidationException("Template ${it.template} does not exist") }
+        deploymentSpec.template?.let {
+            val templateJson = openShiftClient.getTemplate(it.template) ?: throw AuroraDeploymentSpecValidationException("Template ${it.template} does not exist")
+            openShiftTemplateProcessor.validateTemplateParameters(templateJson, it.parameters ?: emptyMap())
+        }
+
     }
+
+
 }

@@ -2,7 +2,10 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.BooleanNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.TextNode
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import org.springframework.stereotype.Service
@@ -48,5 +51,47 @@ class OpenShiftTemplateProcessor(
         val result = openShiftClient.post("processedtemplate", namespace = aac.namespace, payload = template)
 
         return result.body["objects"].asSequence().toList()
+    }
+
+    fun validateTemplateParameters(templateJson: JsonNode, parameters: Map<String, String>) {
+
+        val templateParameters = templateJson["parameters"] as ArrayNode
+
+        val templateParameterNames = templateParameters.map { it["name"].textValue() }.toSet()
+
+        val requiredMissingParameters = templateParameters.filter {
+            val requiredNode = it["required"]
+            when (requiredNode) {
+                is BooleanNode -> requiredNode.booleanValue()
+                is TextNode -> requiredNode.textValue() == "true"
+                else -> false
+            }
+        }.map {
+            it["name"].textValue()
+        }.filter {
+            !parameters.containsKey(it)
+        }
+
+        val notMappedParameterNames = parameters.keys - templateParameterNames
+
+
+        if (requiredMissingParameters.isEmpty() && notMappedParameterNames.isEmpty()) {
+            return
+        }
+
+        val missingParameterString: String = requiredMissingParameters.takeIf { !it.isEmpty() }?.let {
+            val parametersString = it.joinToString(", ")
+            "Required template parameters [${parametersString}] not set."
+        } ?: ""
+
+        val tooManyParametersString: String = notMappedParameterNames.takeIf { !it.isEmpty() }?.let {
+            val parametersString = it.joinToString(", ")
+            "Template does not contain parameter(s) [${parametersString}]."
+        } ?: ""
+
+        val errorMessage = listOf(missingParameterString, tooManyParametersString).joinToString(" ")
+
+        throw AuroraDeploymentSpecValidationException(errorMessage.trim())
+
     }
 }
