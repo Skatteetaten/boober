@@ -7,14 +7,18 @@ import static no.skatteetaten.aurora.boober.service.OpenShiftObjectGeneratorUtil
 import com.fasterxml.jackson.databind.JsonNode
 
 import groovy.json.JsonOutput
+import no.skatteetaten.aurora.boober.Configuration
+import no.skatteetaten.aurora.boober.controller.security.User
+import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AbstractAuroraDeploymentSpecTest
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 
-class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractAuroraDeploymentSpecTest {
+class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractAuroraDeploymentSpecTest {
 
   OpenShiftObjectGenerator objectGenerator = createObjectGenerator()
 
-  def "A"() {
+  def "Verify properties entries contains a line for each property"() {
 
     given:
 
@@ -32,17 +36,9 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractAur
           ]))
 
     when:
-      List<JsonNode> objects = objectGenerator.
-          generateApplicationObjects('deploy-id', deploymentSpec, provisioningResult)
-      def deploymentConfig = objects.find { it.get("kind").textValue().toLowerCase() == "deploymentconfig" }
+      def dc = objectGenerator.generateDeploymentConfig(deploymentSpec, "deploy-id")
 
     then:
-      deploymentConfig != null
-      println JsonOutput.prettyPrint(deploymentConfig.toString())
-/*
-      objects.each {
-        println it
-      }
-*/
+      println JsonOutput.prettyPrint(dc.toString())
   }
 }

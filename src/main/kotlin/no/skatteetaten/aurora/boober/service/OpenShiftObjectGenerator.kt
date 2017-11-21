@@ -7,7 +7,7 @@ import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.java
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.web
-import no.skatteetaten.aurora.boober.service.internal.openshiftobjectgenerator.DeploymentConfigGenerator
+import no.skatteetaten.aurora.boober.service.internal.DeploymentConfigGenerator
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.utils.addIfNotNull

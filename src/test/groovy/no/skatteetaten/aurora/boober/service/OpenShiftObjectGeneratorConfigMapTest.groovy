@@ -10,6 +10,7 @@ import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AbstractAuroraDeploymentSpecTest
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import spock.mock.DetachedMockFactory
 
 class OpenShiftObjectGeneratorConfigMapTest extends AbstractAuroraDeploymentSpecTest {
 
@@ -94,14 +95,5 @@ class OpenShiftObjectGeneratorConfigMapTest extends AbstractAuroraDeploymentSpec
       assert propertyLine.startsWith("$propertyName=")
       assert !propertyLine.startsWith("$propertyName=null")
     }
-  }
-
-  OpenShiftObjectGenerator createObjectGenerator() {
-    def ve = new Configuration().velocity()
-    def objectMapper = new Configuration().mapper()
-    def userDetailsProvider = Mock(UserDetailsProvider)
-    userDetailsProvider.getAuthenticatedUser() >> new User("aurora", "token", "Aurora OpenShift")
-    new OpenShiftObjectGenerator(
-        userDetailsProvider, ve, objectMapper, Mock(OpenShiftTemplateProcessor), Mock(OpenShiftResourceClient))
   }
 }
