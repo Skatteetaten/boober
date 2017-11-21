@@ -47,6 +47,7 @@
       "name" : "wiremock",
       "type" : "template",
       "template" : "wiremock",
+      "route" : false,
       "parameters" : {
         "AFFILIATION" : "sirus",
         "CONFIG_DIR" : "systemtest/wiremock"
