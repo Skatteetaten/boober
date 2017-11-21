@@ -62,7 +62,7 @@ boober:
   git:
     urlPattern: "file:///tmp/boobergit/%s"
     username: "boober"
-    password: "t0@9@9%^3C1%"
+    password: ""
 
 management:
     port: 8081
