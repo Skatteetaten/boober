@@ -212,7 +212,15 @@ class OpenShiftClient(
 
 
     fun projectExists(name: String): Boolean {
-        return exist("${baseUrl}/oapi/v1/projects/$name")
+        serviceAccountClient.get("${baseUrl}/oapi/v1/projects/$name")?.body?.let {
+            val phase = it.at("/status/phase").textValue()
+            if (phase == "Active") {
+                return true
+            } else {
+                throw IllegalStateException("Project ${name} is not Active")
+            }
+        }
+        return false
     }
 
     fun createUpdateRolebindingCommand(json: JsonNode, namespace: String): OpenshiftCommand {

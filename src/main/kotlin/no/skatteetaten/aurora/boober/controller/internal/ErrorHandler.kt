@@ -26,6 +26,8 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleBadRequest(ex: IllegalArgumentException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
 
+    @ExceptionHandler(IllegalStateException::class)
+    fun handleStateRequest(ex: IllegalStateException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
 
     @ExceptionHandler(IllegalAccessException::class)
     fun handleAccessRequest(ex: IllegalAccessException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
