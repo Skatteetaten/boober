@@ -44,7 +44,7 @@ class DeployServiceWithExistingRouteTest extends AbstractMockedOpenShiftSpecific
 
     def namespaceJson = mapper.
         convertValue(["kind": "namespace", "metadata": ["labels": ["affiliation": affiliation], "name": "foo"]], JsonNode.class)
-    openShiftClient.createOpenShiftCommand(_, _, _) >> {
+    openShiftClient.createOpenShiftCommand(_, _, _, _) >> {
 
         JsonNodeHelperKt.modifyCommandIfRoute(it[1])
     }

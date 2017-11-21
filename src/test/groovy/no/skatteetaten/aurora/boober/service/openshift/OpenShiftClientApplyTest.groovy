@@ -83,7 +83,7 @@ class OpenShiftClientApplyTest extends Specification {
       }
 
     when:
-      openShiftClient.createOpenShiftCommand("foobar", projectRequest, true)
+      openShiftClient.createOpenShiftCommand("foobar", projectRequest, true, false)
 
     then:
       thrown(OpenShiftException)
@@ -102,7 +102,7 @@ class OpenShiftClientApplyTest extends Specification {
 
       userClient.post("projectrequest", "foobar", "foobar", projectRequest) >>
           new ResponseEntity(projectRequest, HttpStatus.OK)
-      def result = openShiftClient.createOpenShiftCommand("foobar", projectRequest, false)
+      def result = openShiftClient.createOpenShiftCommand("foobar", projectRequest, false, false)
 
     then:
 
@@ -127,7 +127,7 @@ class OpenShiftClientApplyTest extends Specification {
           new ResponseEntity(oldResource, HttpStatus.OK)
 
     expect:
-      def result = openShiftClient.createOpenShiftCommand("foobar", newResource, true)
+      def result = openShiftClient.createOpenShiftCommand("foobar", newResource, true, false)
       result.operationType == OperationType.UPDATE
       fields.each { assert result.payload.at(it) == result.previous.at(it) }
 

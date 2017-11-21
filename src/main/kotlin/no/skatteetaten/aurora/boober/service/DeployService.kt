@@ -164,7 +164,7 @@ class DeployService(
         }
 
         val updateRoleBindingsResponse = openShiftObjectGenerator.generateRolebindings(deploymentSpec.permissions).map {
-            openShiftClient.createOpenShiftCommand(namespace, it, createNamespaceResponse.success)
+            openShiftClient.createOpenShiftCommand(namespace, it, createNamespaceResponse.success, true)
         }.map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         return listOf(createNamespaceResponse, updateNamespaceResponse) + updateRoleBindingsResponse

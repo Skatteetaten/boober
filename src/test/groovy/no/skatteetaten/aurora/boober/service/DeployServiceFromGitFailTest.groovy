@@ -36,7 +36,7 @@ class DeployServiceFromGitFailTest extends AbstractMockedOpenShiftSpecification 
   def setup() {
     def namespaceJson = mapper.
         convertValue(["kind": "namespace", "metadata": ["labels": ["affiliation": affiliation]]], JsonNode.class)
-    openShiftClient.createOpenShiftCommand(_, _, _) >> { new OpenshiftCommand(OperationType.CREATE, it[1]) }
+    openShiftClient.createOpenShiftCommand(_, _, _, _) >> { new OpenshiftCommand(OperationType.CREATE, it[1]) }
     openShiftClient.createUpdateRolebindingCommand(_, _) >> {
       new OpenshiftCommand(OperationType.UPDATE, it[0], null, it[0])
     }
