@@ -3,19 +3,14 @@ package no.skatteetaten.aurora.boober.service
 import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 import static no.skatteetaten.aurora.boober.service.ExternalResourceProvisioner.createSchemaProvisionRequestsFromDeploymentSpec
 
-import groovy.json.JsonOutput
-import no.skatteetaten.aurora.boober.Configuration
-import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.model.AbstractAuroraDeploymentSpecTest
+import groovy.json.JsonSlurper
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 
 class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObjectGeneratorTest {
 
   OpenShiftObjectGenerator objectGenerator = createObjectGenerator()
 
-  def "Verify properties entries contains a line for each property"() {
+  def "Creates volumes, volumeMounts and env vars for provisioned database"() {
 
     given:
 
@@ -33,9 +28,24 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObje
           ]))
 
     when:
-      def dc = objectGenerator.generateDeploymentConfig(deploymentSpec, "deploy-id")
+      def dc = objectGenerator.generateDeploymentConfig("deploy-id", deploymentSpec, provisioningResult)
+      dc = new JsonSlurper().parseText(dc.toString()) // convert to groovy for easier navigation and validation
 
     then:
-      println JsonOutput.prettyPrint(dc.toString())
+      def name = deploymentSpec.name
+      def nameUpper = name.toUpperCase()
+
+      def spec = dc.spec.template.spec
+      spec.volumes.find { it == [name: "$name-db", secret: [secretName: "$name-db"]] }
+      def container = spec.containers[0]
+      container.volumeMounts.find { it == [mountPath: "/u01/secrets/app/$name-db", name: "$name-db"] }
+      def expectedEnvs = [
+          ("${nameUpper}_DB")           : "/u01/secrets/app/${name}-db/info",
+          ("${nameUpper}_DB_PROPERTIES"): "/u01/secrets/app/${name}-db/db.properties",
+          DB                            : "/u01/secrets/app/${name}-db/info",
+          DB_PROPERTIES                 : "/u01/secrets/app/${name}-db/db.properties",
+          ("VOLUME_${nameUpper}_DB")    : "/u01/secrets/app/${name}-db"
+      ]
+      expectedEnvs.every { envName, envValue -> container.env.find { it.name == envName && it.value == envValue } }
   }
 }

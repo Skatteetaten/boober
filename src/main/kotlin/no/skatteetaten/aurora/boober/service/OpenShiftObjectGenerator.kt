@@ -4,9 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
-import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.java
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.web
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.Mount
+import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.service.internal.DeploymentConfigGenerator
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
@@ -94,10 +97,10 @@ class OpenShiftObjectGenerator(
         return listOf(admin).addIfNotNull(view)
     }
 
-    fun generateDeploymentConfig(deploymentSpec: AuroraDeploymentSpec, deployId: String): JsonNode? {
-
-        return withLabelsAndMounts(deployId, deploymentSpec, null, { labels, mounts -> generateDeploymentConfig(deploymentSpec, labels, mounts) })
-    }
+    fun generateDeploymentConfig(deployId: String, deploymentSpec: AuroraDeploymentSpec, provisioningResult: ProvisioningResult? = null): JsonNode? =
+            withLabelsAndMounts(deployId, deploymentSpec, provisioningResult) { labels, mounts ->
+                generateDeploymentConfig(deploymentSpec, labels, mounts)
+            }
 
     fun generateDeploymentConfig(auroraDeploymentSpec: AuroraDeploymentSpec,
                                  labels: Map<String, String>,
