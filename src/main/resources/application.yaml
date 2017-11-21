@@ -21,6 +21,9 @@ spring:
       timerPercentilesMax: "PT5S"
 
 boober:
+    bitbucket:
+        project: "ac"
+        url: "https://git.aurora.skead.no/rest/api/1.0"
     git:
        checkoutPath: "/tmp/boober"
     docker:
@@ -61,7 +64,7 @@ boober:
   git:
     urlPattern: "file:///tmp/boobergit/%s"
     username: "boober"
-    password: "password"
+    password: ""
 
 management:
     port: 8081

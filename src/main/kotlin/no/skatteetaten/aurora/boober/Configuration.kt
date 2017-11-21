@@ -12,7 +12,9 @@ import org.apache.velocity.runtime.RuntimeConstants
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader
 import org.encryptor4j.factory.AbsKeyFactory
 import org.encryptor4j.factory.KeyFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
@@ -43,6 +45,45 @@ class Configuration {
     @Bean
     fun keyFactory(): KeyFactory = object : AbsKeyFactory("AES", 128) {}
 
+
+    @Bean
+    @Qualifier("bitbucket")
+    fun bitbucketRestTemplate(@Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
+                              @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
+                              @Value("\${boober.git.username}")  username: String,
+                              @Value("\${boober.git.password}")  password: String,
+                              @Value("\${boober.bitbucket.url}")  bitbucketUrl: String
+
+    ): RestTemplate {
+        val clientHttpRequestFactory = HttpComponentsClientHttpRequestFactory().apply {
+            setReadTimeout(readTimeout)
+            setConnectTimeout(connectTimeout)
+            httpClient = createSslTrustAllHttpClient()
+        }
+
+        return RestTemplateBuilder()
+                .requestFactory(clientHttpRequestFactory)
+                .rootUri(bitbucketUrl)
+                .basicAuthorization(username, password)
+                .build()
+
+    }
+
+    fun createSslTrustAllHttpClient(): CloseableHttpClient? {
+        val acceptingTrustStrategy = { chain: Array<X509Certificate>, authType: String -> true }
+
+        val sslContext = SSLContexts.custom()
+                .loadTrustMaterial(null, acceptingTrustStrategy)
+                .build()
+
+        val csf = SSLConnectionSocketFactory(sslContext)
+
+        val httpClient = HttpClients.custom()
+                .setSSLSocketFactory(csf)
+                .build()
+        return httpClient
+    }
+
     @Bean
     @Primary
     fun restTemplate(
@@ -50,20 +91,6 @@ class Configuration {
             @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int
     ): RestTemplate {
 
-        fun createSslTrustAllHttpClient(): CloseableHttpClient? {
-            val acceptingTrustStrategy = { chain: Array<X509Certificate>, authType: String -> true }
-
-            val sslContext = SSLContexts.custom()
-                    .loadTrustMaterial(null, acceptingTrustStrategy)
-                    .build()
-
-            val csf = SSLConnectionSocketFactory(sslContext)
-
-            val httpClient = HttpClients.custom()
-                    .setSSLSocketFactory(csf)
-                    .build()
-            return httpClient
-        }
 
         val clientHttpRequestFactory = HttpComponentsClientHttpRequestFactory().apply {
             setReadTimeout(readTimeout)
