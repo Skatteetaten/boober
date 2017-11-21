@@ -202,7 +202,7 @@ class OpenShiftClient(
     }
 
 
-    fun projectExistsAndIsActive(name: String): Boolean {
+    fun projectExists(name: String): Boolean {
         serviceAccountClient.get("${baseUrl}/oapi/v1/projects/$name")?.body?.let {
             val phase = it.at("/status/phase").textValue()
             if (phase == "Active") {

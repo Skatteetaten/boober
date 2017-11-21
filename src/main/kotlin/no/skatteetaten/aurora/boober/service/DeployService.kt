@@ -90,7 +90,7 @@ class DeployService(
         val environmentResponses = prepareDeployEnvironment(deploymentSpec)
 
 
-        val projectExist = openShiftClient.projectExistsAndIsActive(deploymentSpec.namespace)
+        val projectExist = openShiftClient.projectExists(deploymentSpec.namespace)
         val applicationResponses: List<OpenShiftResponse> = applyOpenShiftApplicationObjects(deployId, deploymentSpec, projectExist)
 
         val openShiftResponses = environmentResponses + applicationResponses
@@ -154,7 +154,7 @@ class DeployService(
         val affiliation = deploymentSpec.affiliation
         val namespace = deploymentSpec.namespace
 
-        val projectExist = openShiftClient.projectExistsAndIsActive(deploymentSpec.namespace)
+        val projectExist = openShiftClient.projectExists(deploymentSpec.namespace)
         val createNamespaceResponse = openShiftObjectGenerator.generateProjectRequest(deploymentSpec).let {
             openShiftClient.createOpenShiftCommand(namespace, it, projectExist)
         }.let { openShiftClient.performOpenShiftCommand(namespace, it) }
