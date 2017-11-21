@@ -188,7 +188,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         val field = fields[name]!!
 
         if (field.source == null) {
-            return field.handler.defaultValue as Boolean
+            return field.handler.defaultValue is Boolean
         }
         val value = field.source.contents.at(field.handler.path)
 
