@@ -21,6 +21,7 @@ spring:
             timerPercentilesMin: "PT0.1S"
 boober:
     bitbucket:
+        project: "ac"
         url: "https://git.aurora.skead.no/rest/api/1.0"
     git:
        checkoutPath: "/tmp/boober"
