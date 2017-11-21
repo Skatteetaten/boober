@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 
 class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest {
 
@@ -11,7 +12,8 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
 
   def openShiftClient = Mock(OpenShiftClient)
 
-  def specValidator = new AuroraDeploymentSpecValidator(openShiftClient)
+  def processor = new OpenShiftTemplateProcessor(Mock(OpenShiftResourceClient), new ObjectMapper())
+  def specValidator = new AuroraDeploymentSpecValidator(openShiftClient, processor)
 
   def mapper = new ObjectMapper()
 
