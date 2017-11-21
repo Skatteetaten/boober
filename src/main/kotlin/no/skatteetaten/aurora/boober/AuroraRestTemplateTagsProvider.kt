@@ -13,7 +13,7 @@ import io.micrometer.spring.web.client.RestTemplateExchangeTagsProvider
 @Component
 class AuroraRestTemplateTagsProvider : RestTemplateExchangeTagsProvider {
 
-    override fun getTags(urlTemplate: String, request: HttpRequest,
+    override fun getTags(urlTemplate: String?, request: HttpRequest,
                          response: ClientHttpResponse): Iterable<Tag> {
         return Arrays.asList(RestTemplateExchangeTags.method(request),
                 RestTemplateExchangeTags.status(response),
