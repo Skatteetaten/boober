@@ -2,7 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 import static no.skatteetaten.aurora.boober.service.ExternalResourceProvisioner.createSchemaProvisionRequestsFromDeploymentSpec
-import static no.skatteetaten.aurora.boober.service.OpenShiftObjectGeneratorUtils.createObjectGenerator
+import static AbstractOpenShiftObjectGeneratorTest.createObjectGenerator
 
 import com.fasterxml.jackson.databind.JsonNode
 
@@ -10,7 +10,7 @@ import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.model.AbstractAuroraDeploymentSpecTest
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 
-class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractAuroraDeploymentSpecTest {
+class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpenShiftObjectGeneratorTest {
 
   OpenShiftObjectGenerator objectGenerator = createObjectGenerator()
 

@@ -2,9 +2,6 @@ package no.skatteetaten.aurora.boober.service
 
 import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 import static no.skatteetaten.aurora.boober.service.ExternalResourceProvisioner.createSchemaProvisionRequestsFromDeploymentSpec
-import static no.skatteetaten.aurora.boober.service.OpenShiftObjectGeneratorUtils.createObjectGenerator
-
-import com.fasterxml.jackson.databind.JsonNode
 
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.Configuration
@@ -14,7 +11,7 @@ import no.skatteetaten.aurora.boober.model.AbstractAuroraDeploymentSpecTest
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 
-class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractAuroraDeploymentSpecTest {
+class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObjectGeneratorTest {
 
   OpenShiftObjectGenerator objectGenerator = createObjectGenerator()
 
@@ -26,7 +23,7 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractAuroraDeploym
           "about.json"        : DEFAULT_ABOUT,
           "utv/about.json"    : DEFAULT_UTV_ABOUT,
           "reference.json"    : REF_APP_JSON,
-          "utv/reference.json": '''{}'''
+          "utv/reference.json": '''{ "certificate": false }'''
       ], aid("utv", "reference"))
 
       def provisioningResult = new ProvisioningResult(

@@ -53,27 +53,13 @@ class DeploymentConfigGenerator(val mapper: ObjectMapper, private val velocityTe
                 "boober.skatteetaten.no/applicationFile" to deploy.applicationFile,
                 "console.skatteetaten.no/alarm" to deploy.flags.alarm.toString()
         )
-
-        val cert = deploy.certificateCn?.withNonBlank { "sprocket.sits.no/deployment-config.certificate" to it }
-/*
-        val cert: Pair<String, String>? = deploy.certificateCn?.takeIf { it.isNotBlank() }?.let {
-            "sprocket.sits.no/deployment-config.certificate" to it
-        }
-*/
-
         val overrides = StringEscapeUtils.escapeJavaScript(mapper.writeValueAsString(deploy.overrideFiles)).takeIf { it != "{}" }?.let {
             "boober.skatteetaten.no/overrides" to it
         }
 
-        val managementPath = deploy.managementPath?.takeIf { it.isNotBlank() }?.let {
-            "console.skatteetaten.no/management-path" to it
-        }
-
-        val release = deploy.releaseTo?.takeIf { it.isNotBlank() }
-
-        val releaseToAnnotation = release?.let {
-            "boober.skatteetaten.no/releaseTo" to it
-        }
+        val cert = deploy.certificateCn?.withNonBlank { "sprocket.sits.no/deployment-config.certificate" to it }
+        val managementPath = deploy.managementPath?.withNonBlank { "console.skatteetaten.no/management-path" to it }
+        val releaseToAnnotation = deploy.releaseTo?.withNonBlank { "boober.skatteetaten.no/releaseTo" to it }
 
         return annotations
                 .addIfNotNull(releaseToAnnotation)
@@ -86,16 +72,15 @@ class DeploymentConfigGenerator(val mapper: ObjectMapper, private val velocityTe
 
         val deploy = auroraDeploymentSpec.deploy!!
 
-        val release = deploy.releaseTo?.takeIf { it.isNotBlank() }
-
-        val deployTag = release?.let {
-            it
-        } ?: deploy.version
+        val deployTag = "deployTag" to (deploy.releaseTo?.withNonBlank { it } ?: deploy.version)
         val pauseLabel = if (deploy.flags.pause) {
             "paused" to "true"
         } else null
 
-        return labels + mapOf("name" to auroraDeploymentSpec.name, "deployTag" to deployTag).addIfNotNull(pauseLabel)
+        return labels + mapOf(
+                "name" to auroraDeploymentSpec.name,
+                deployTag
+        ).addIfNotNull(pauseLabel)
     }
 
     private fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpec: AuroraDeploymentSpec): Map<String, String> {

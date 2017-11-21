@@ -12,7 +12,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import spock.mock.DetachedMockFactory
 
-class OpenShiftObjectGeneratorConfigMapTest extends AbstractAuroraDeploymentSpecTest {
+class OpenShiftObjectGeneratorConfigMapTest extends AbstractOpenShiftObjectGeneratorTest {
 
   OpenShiftObjectGenerator objectGenerator = createObjectGenerator()
 
