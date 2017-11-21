@@ -33,7 +33,7 @@ class AuroraDeploymentConfigDeployServiceTest extends AbstractMockedOpenShiftSpe
     given:
 
       this.openShiftClient.isUserInGroup("hero", "APP_jedi_dev") >> false
-      def volume = new AuroraVolume(null, null, null, new AuroraPermissions(["APP_jedi_dev"]), [:] )
+      def volume = new AuroraVolume(null, null, null, new AuroraPermissions(["APP_jedi_dev"]))
     when:
       def res = service.hasAccessToAllVolumes(volume)
     then:
@@ -46,7 +46,7 @@ class AuroraDeploymentConfigDeployServiceTest extends AbstractMockedOpenShiftSpe
       this.openShiftClient.isUserInGroup("hero", "APP_jedi_dev") >> false
       def volume = new AuroraVolume(null, null,
           [new Mount("/foo", MountType.Secret, "foo", "foo", false, null, new AuroraPermissions(["APP_jedi_dev"]))],
-          null, [:] )
+          null)
     when:
       def res = service.hasAccessToAllVolumes(volume)
     then:

@@ -52,8 +52,7 @@ data class AuroraVolume(
         val secrets: Map<String, String>?,
         val config: Map<String, Any?>?,
         val mounts: List<Mount>?,
-        val permissions: AuroraPermissions?,
-        val env: Map<String, String>
+        val permissions: AuroraPermissions?
 )
 
 data class AuroraRoute(
@@ -101,7 +100,8 @@ data class AuroraDeploy(
         val readiness: Probe?,
         val dockerImagePath: String,
         val dockerTag: String,
-        val deployStrategy: AuroraDeployStrategy
+        val deployStrategy: AuroraDeployStrategy,
+        val env: Map<String, String>
 ) {
     val dockerImage: String
         get() = "${dockerImagePath}:${dockerTag}"

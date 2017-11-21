@@ -7,6 +7,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.model.AuroraVolume
 import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.model.findConfigFieldHandlers
 import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.required
@@ -16,7 +17,7 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>,
 
 
     val mountHandlers = findMounts()
-    val configHandlers = findConfigFieldHandlers()
+    val configHandlers = applicationFiles.findConfigFieldHandlers()
 
     val handlers = configHandlers + mountHandlers + listOf(
             AuroraConfigFieldHandler("secretVault", validator = validateSecrets())
@@ -35,7 +36,6 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>,
                     vaults[it]?.permissions
                 },
                 env = auroraConfigFields.getConfigEnv(configHandlers))
-
     }
 
 
@@ -55,32 +55,6 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>,
         }
     }
 
-
-    fun findConfigFieldHandlers(): List<AuroraConfigFieldHandler> {
-
-        val name = "config"
-        val keysStartingWithConfig = applicationFiles.findSubKeys(name)
-
-        val configKeys: Map<String, Set<String>> = keysStartingWithConfig.map { configFileName ->
-            //find all unique keys in a configFile
-            val keys = applicationFiles.flatMap { ac ->
-                ac.contents.at("/$name/$configFileName")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
-            }.toSet()
-
-            configFileName to keys
-        }.toMap()
-
-        return configKeys.flatMap { configFile ->
-            val value = configFile.value
-            if (value.isEmpty()) {
-                listOf(AuroraConfigFieldHandler("$name/${configFile.key}"))
-            } else {
-                value.map { field ->
-                    AuroraConfigFieldHandler("$name/${configFile.key}/$field")
-                }
-            }
-        }
-    }
 
     fun findMounts(): List<AuroraConfigFieldHandler> {
 

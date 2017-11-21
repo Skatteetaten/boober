@@ -14,6 +14,7 @@ import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.model.HttpEndpoint
 import no.skatteetaten.aurora.boober.model.Probe
 import no.skatteetaten.aurora.boober.model.Webseal
+import no.skatteetaten.aurora.boober.model.findConfigFieldHandlers
 import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.length
@@ -24,6 +25,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
 
     val dbHandlers = findDbHandlers(applicationFiles)
 
+    val configHandlers = applicationFiles.findConfigFieldHandlers()
     val handlers = dbHandlers + listOf(
 
             AuroraConfigFieldHandler("artifactId",
@@ -69,7 +71,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
             AuroraConfigFieldHandler("pause", defaultValue = false),
             AuroraConfigFieldHandler("alarm", defaultValue = true)
 
-    )
+    ) + configHandlers
 
     fun deploy(auroraConfigFields: AuroraConfigFields): AuroraDeploy? {
         val name: String = auroraConfigFields.extract("name")
@@ -137,7 +139,8 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
                 prometheus = findPrometheus(auroraConfigFields),
                 managementPath = findManagementPath(auroraConfigFields),
                 liveness = getProbe(auroraConfigFields, "liveness"),
-                readiness = getProbe(auroraConfigFields, "readiness")
+                readiness = getProbe(auroraConfigFields, "readiness"),
+                env = auroraConfigFields.getConfigEnv(configHandlers)
         )
     }
 

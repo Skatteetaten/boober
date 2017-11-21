@@ -326,7 +326,7 @@ class OpenShiftObjectGenerator(
             )
         } ?: mapOf()
 
-        val configEnv = auroraDeploymentSpec.volume?.env ?: emptyMap()
+        val configEnv = auroraDeploymentSpec.deploy?.env ?: emptyMap()
 
         val routeName = auroraDeploymentSpec.route?.route?.takeIf { it.isNotEmpty() }?.first()?.let {
             val host = auroraDeploymentSpec.assembleRouteHost(it.host ?: auroraDeploymentSpec.name)
