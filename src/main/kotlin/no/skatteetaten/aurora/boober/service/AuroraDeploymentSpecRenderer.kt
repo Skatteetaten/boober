@@ -49,19 +49,18 @@ fun filterDefaultFields(fields: Map<String, Map<String, Any?>>): Map<String, Map
 
     return fields
             .filter {
-               val bool = it.value["source"].toString() != "default"
-                if(!bool) {
-                    println("filtered out ${it}")
-                }
-                bool
+                it.value["source"].toString() != "default"
             }
             .mapValues {
-                if(it.value.containsKey("source")) {
+                if (it.value.containsKey("source")) {
                     it.value
                 } else {
                     filterDefaultFields(it.value as Map<String, Map<String, Any?>>)
                 }
+            }.filter {
+                !it.value.isEmpty()
             }
+    
 }
 
 

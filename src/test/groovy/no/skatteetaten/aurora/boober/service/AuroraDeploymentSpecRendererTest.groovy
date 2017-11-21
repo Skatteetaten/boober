@@ -8,6 +8,8 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import spock.lang.Unroll
 
+import static no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecRendererKt.filterDefaultFields
+
 class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSpringTest {
 
   ObjectMapper mapper = new ObjectMapper()
@@ -27,12 +29,10 @@ class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSprin
       def aid = ApplicationId.aid(env, app)
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
 
-      def renderedJson = deploymentSpec.fields.findAll {
-        if(!includeDefaults) {
-          it.value["source"] != "default"
-        } else {
-          true
-        }
+
+       def renderedJson = deploymentSpec.fields
+      if(!includeDefaults) {
+        renderedJson = filterDefaultFields(renderedJson)
       }
       def filename = getFilename(aid, includeDefaults)
       def expected = loadResource(filename)
@@ -44,10 +44,10 @@ class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSprin
 
     where:
       env   | app            | includeDefaults
-  //    "utv" | "webleveranse" | false
+      "utv" | "webleveranse" | false
       "utv" | "webleveranse" | true
       "utv" | "reference"    | true
-   //   "utv" | "reference"    | false
+      "utv" | "reference"    | false
   }
 
   @Unroll
@@ -66,10 +66,10 @@ class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSprin
 
     where:
       env   | app            | includeDefaults
-      //"utv" | "webleveranse" | true
-      //"utv" | "reference"    | true
+      "utv" | "webleveranse" | true
+      "utv" | "reference"    | true
       "utv" | "webleveranse" | false
-      //"utv" | "reference"    | false
+      "utv" | "reference"    | false
   }
 
   def getFilename(ApplicationId aid, boolean includeDefaults, boolean formatted = false, String type = "json") {
