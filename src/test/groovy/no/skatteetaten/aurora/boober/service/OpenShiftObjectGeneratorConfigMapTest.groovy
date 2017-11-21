@@ -82,7 +82,7 @@ class OpenShiftObjectGeneratorConfigMapTest extends AbstractAuroraDeploymentSpec
       env["FLOAT"] == "4.2"
       env["ARRAY"] == '''[4.2,\\"STRING\\",true]'''
       env["JSON_STRING"] == '''{\\"key\\": \\"value\\"}'''
-      env["URL"] == '''https://int-at.skead.no:13110/felles/sikkerhet/stsSikkerhet/v1/validerSaml'''
+      env["URL"] == '''https:\\/\\/int-at.skead.no:13110\\/felles\\/sikkerhet\\/stsSikkerhet\\/v1\\/validerSaml'''
 
       def latestProperties = mount.get('data').get('latest.properties').textValue()
       assertFileHasLinesWithProperties(latestProperties, ["STRING", "BOOL", "INT", "FLOAT", "ARRAY", "URL", "JSON_STRING"])
