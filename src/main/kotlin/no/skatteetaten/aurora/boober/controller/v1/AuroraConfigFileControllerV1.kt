@@ -28,9 +28,7 @@ class AuroraConfigFileControllerV1(val deployBundleService: DeployBundleService)
     @GetMapping("/**")
     fun getAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest): Response {
 
-        val path = "affiliation/$affiliation/auroraconfig/**"
-        val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
-
+        val fileName = extractFileName(affiliation, request)
         val res = deployBundleService.findAuroraConfigFile(affiliation, fileName)?.let { listOf(it) } ?: emptyList()
 
         return Response(items = res)
@@ -44,8 +42,7 @@ class AuroraConfigFileControllerV1(val deployBundleService: DeployBundleService)
         if (payload.validateVersions && payload.version.isEmpty()) {
             throw IllegalAccessException("Must specify version");
         }
-        val path = "affiliation/$affiliation/auroraconfigfile/**"
-        val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
+        val fileName = extractFileName(affiliation, request)
 
         val auroraConfig = deployBundleService.updateAuroraConfigFile(affiliation, fileName,
                 payload.contentAsJsonNode, payload.version, payload.validateVersions)
@@ -61,8 +58,7 @@ class AuroraConfigFileControllerV1(val deployBundleService: DeployBundleService)
             throw IllegalAccessException("Must specify version");
         }
 
-        val path = "affiliation/$affiliation/auroraconfigfile/**"
-        val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
+        val fileName = extractFileName(affiliation, request)
 
         val auroraConfig = deployBundleService.patchAuroraConfigFile(affiliation, fileName,
                 payload.content, payload.version, payload.validateVersions)
@@ -71,5 +67,10 @@ class AuroraConfigFileControllerV1(val deployBundleService: DeployBundleService)
 
     private fun createAuroraConfigResponse(auroraConfig: AuroraConfig): Response {
         return Response(items = listOf(auroraConfig).map(::fromAuroraConfig))
+    }
+
+    private fun extractFileName(affiliation: String, request: HttpServletRequest): String {
+        val path = "v1/auroraconfigfile/$affiliation/**"
+        return AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
     }
 }
