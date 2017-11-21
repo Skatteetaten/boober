@@ -8,6 +8,6 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 class InformationControllerV1(val bitbucketProjectService: BitbucketProjectService) {
 
-    @GetMapping("/v1/auroraconfig")
+    @GetMapping("/v1/auroraconfignames")
     fun auroraConfigs(): Response = Response(items = bitbucketProjectService.getAllSlugs())
 }
