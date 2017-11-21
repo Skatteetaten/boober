@@ -29,6 +29,14 @@
     "source": "webleveranse.json",
     "value": "webleveranse"
   },
+  "certificate": {
+    "source": "default",
+    "value": false
+  },
+  "database": {
+    "source": "default",
+    "value": false
+  },
   "artifactId": {
     "source": "webleveranse.json",
     "value": "openshift-referanse-react"
@@ -52,12 +60,8 @@
     },
     "timeout": {
       "source": "default",
-      "value": "180"
+      "value": 180
     }
-  },
-  "database": {
-    "source": "default",
-    "value": "false"
   },
   "resources": {
     "cpu": {
@@ -87,14 +91,14 @@
   },
   "prometheus": {
     "source": "default",
-    "value": "true",
+    "value": true,
     "path": {
       "source": "default",
       "value": "/prometheus"
     },
     "port": {
       "source": "default",
-      "value": "8081"
+      "value": 8081
     }
   },
   "management": {
@@ -107,45 +111,41 @@
       "value": "8081"
     }
   },
-  "certificate": {
-    "source": "default",
-    "value": "false"
-  },
   "readiness": {
     "source": "default",
-    "value": "true",
+    "value": true,
     "port": {
       "source": "default",
-      "value": "8080"
+      "value": 8080
     },
     "delay": {
       "source": "default",
-      "value": "10"
+      "value": 10
     },
     "timeout": {
       "source": "default",
-      "value": "1"
+      "value": 1
     }
   },
   "liveness": {
     "source": "default",
-    "value": "false"
+    "value": false
   },
   "webseal": {
     "source": "default",
-    "value": "false"
+    "value": false
   },
   "debug": {
     "source": "default",
-    "value": "false"
+    "value": false
   },
   "pause": {
     "source": "default",
-    "value": "false"
+    "value": false
   },
   "alarm": {
     "source": "default",
-    "value": "true"
+    "value": true
   },
   "route": {
     "source": "webleveranse.json",

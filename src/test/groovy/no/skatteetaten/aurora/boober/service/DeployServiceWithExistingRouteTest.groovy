@@ -64,7 +64,6 @@ class DeployServiceWithExistingRouteTest extends AbstractMockedOpenShiftSpecific
     openShiftClient.createOpenShiftDeleteCommands(_, _, _, _) >> []
   }
 
-  @Ignore
   def "Should delete and create route"() {
     when:
       List<AuroraDeployResult> deployResults = deployService.

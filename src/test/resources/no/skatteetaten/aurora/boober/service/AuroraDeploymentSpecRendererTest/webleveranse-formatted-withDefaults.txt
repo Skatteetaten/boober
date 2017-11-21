@@ -8,15 +8,16 @@
   affiliation:         "aos"                       // about.json
   envName:             "utv"                       // folderName
   name:                "webleveranse"              // webleveranse.json
+  certificate:         false                       // default
+  database:            false                       // default
   artifactId:          "openshift-referanse-react" // webleveranse.json
   groupId:             "no.skatteetaten.aurora"    // webleveranse.json
   version:             "1"                         // utv/webleveranse.json
   applicationPlatform: "web"                       // webleveranse.json
   deployStrategy: {
     type:              "rolling"                   // webleveranse.json
-    timeout:           "180"                       // default
+    timeout:           180                         // default
   }
-  database:            "false"                     // default
   resources: {
     cpu: {
       min:             "100m"                      // default
@@ -30,23 +31,22 @@
   replicas:            1                           // webleveranse.json
   prometheus: {
     path:              "/prometheus"               // default
-    port:              "8081"                      // default
+    port:              8081                        // default
   }
   management: {
     path:              ""                          // webleveranse.json
     port:              "8081"                      // webleveranse.json
   }
-  certificate:         "false"                     // default
   readiness: {
-    port:              "8080"                      // default
-    delay:             "10"                        // default
-    timeout:           "1"                         // default
+    port:              8080                        // default
+    delay:             10                          // default
+    timeout:           1                           // default
   }
-  liveness:            "false"                     // default
-  webseal:             "false"                     // default
-  debug:               "false"                     // default
-  pause:               "false"                     // default
-  alarm:               "true"                      // default
+  liveness:            false                       // default
+  webseal:             false                       // default
+  debug:               false                       // default
+  pause:               false                       // default
+  alarm:               true                        // default
   route:               true                        // webleveranse.json
   extraTags:           "latest,major,minor,patch"  // default
   builder: {

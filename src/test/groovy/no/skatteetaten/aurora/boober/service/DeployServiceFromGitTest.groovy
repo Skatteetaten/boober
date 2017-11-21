@@ -18,7 +18,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import spock.lang.Ignore
 
-@Ignore
 class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
   @Autowired

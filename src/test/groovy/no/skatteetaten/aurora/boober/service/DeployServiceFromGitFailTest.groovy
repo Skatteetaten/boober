@@ -56,7 +56,6 @@ class DeployServiceFromGitFailTest extends AbstractMockedOpenShiftSpecification 
 
   }
 
-  @Ignore
   def "Should perform release that fails and mark it as failed"() {
     when:
     deployService.executeDeploy(affiliation, [new ApplicationId(ENV_NAME, APP_NAME)])

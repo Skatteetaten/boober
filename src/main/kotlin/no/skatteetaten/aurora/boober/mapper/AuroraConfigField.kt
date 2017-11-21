@@ -13,9 +13,19 @@ import org.apache.commons.lang.StringEscapeUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+
 data class AuroraConfigField(val handler: AuroraConfigFieldHandler, val source: AuroraConfigFile? = null) {
     val value: JsonNode
         get() = source?.contents?.at(handler.path) ?: MissingNode.getInstance()
+    val valueOrDefault: JsonNode
+        get() =
+            source?.contents?.at(handler.path)?.let {
+                if (it.isMissingNode) {
+                    jacksonObjectMapper().convertValue(handler.defaultValue, JsonNode::class.java)
+                } else {
+                    it
+                }
+            } ?: jacksonObjectMapper().convertValue(handler.defaultValue, JsonNode::class.java)
 }
 
 inline fun <reified T> AuroraConfigField.getNullableValue(): T? {
@@ -182,7 +192,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         }
         val value = field.source.contents.at(field.handler.path)
 
-        if(value.isBoolean) {
+        if (value.isBoolean) {
             return true
         }
 

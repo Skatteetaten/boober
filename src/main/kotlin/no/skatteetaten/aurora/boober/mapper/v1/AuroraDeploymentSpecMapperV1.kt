@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
+import com.fasterxml.jackson.databind.node.ObjectNode
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigValidator.Companion.namePattern
@@ -49,6 +51,8 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                                    localTemplate: AuroraLocalTemplate?
     ): AuroraDeploymentSpec {
         val name: String = auroraConfigFields.extract("name")
+        val auroraConfigFields1 = createFieldsWithValues(auroraConfigFields, build)
+
         return AuroraDeploymentSpec(
                 schemaVersion = auroraConfigFields.extract("schemaVersion"),
 
@@ -58,7 +62,8 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                 name = name,
                 envName = auroraConfigFields.extract("envName"),
                 permissions = extractPermissions(auroraConfigFields),
-                fields = auroraConfigFields.fields,
+                fields = createMapForAuroraDeploymentSpecPointers(auroraConfigFields1, true),
+                formatting = findMaxKeyAndValueLength(auroraConfigFields1, 2),
                 volume = volume,
                 route = route,
                 build = build,
@@ -66,6 +71,108 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                 template = template,
                 localTemplate = localTemplate)
 
+    }
+
+    private fun createIncludeSubKeysMap(fields: Map<String, AuroraConfigField>): Map<String, Boolean> {
+
+        val includeSubKeys = mutableMapOf<String, Boolean>()
+
+        fields.entries
+                .filter { it.key.split("/").size == 1 }
+                .forEach {
+                    val key = it.key.split("/")[0]
+                    val shouldIncludeSubKeys = it.value.valueOrDefault.let {
+                        !it.isBoolean || it.booleanValue()
+                    }
+                    includeSubKeys.put(key, shouldIncludeSubKeys)
+                }
+
+        return includeSubKeys
+    }
+
+    private fun findMaxKeyAndValueLength(fields: Map<String, AuroraConfigField>, indentLength: Int): Triple<Int, Int, Int> {
+        var keyMaxLength = 0
+        var valueMaxLength = 0
+
+        fields.entries.forEach {
+            val configValue = it.value.value.toString()
+            if (configValue.length > valueMaxLength) {
+                valueMaxLength = configValue.length
+            }
+
+            it.key.split("/").forEachIndexed { i, k ->
+                val key = k.length + indentLength * i + 1
+                if (key > keyMaxLength) {
+                    keyMaxLength = key
+                }
+            }
+        }
+
+        return Triple(keyMaxLength, valueMaxLength, indentLength)
+    }
+
+    fun createMapForAuroraDeploymentSpecPointers(auroraConfigFields: Map<String, AuroraConfigField>, includeDefaults: Boolean = true): Map<String, Map<String, Any?>> {
+        val fields = mutableMapOf<String, Any?>()
+        val includeSubKeys = createIncludeSubKeysMap(auroraConfigFields)
+
+        auroraConfigFields.entries.forEach { entry ->
+
+            val configField = entry.value
+            val configPath = entry.key
+
+            if (configPath == "envName") {
+                ""
+            }
+            if (configField.value is ObjectNode) {
+                return@forEach
+            }
+
+            if (configField.source == null && configField.handler.defaultSource == "default" && !includeDefaults) {
+                return@forEach
+            }
+
+            val keys = configPath.split("/")
+            if (keys.size > 1 && !includeSubKeys.getOrDefault(keys[0], true)) {
+                return@forEach
+            }
+
+            var next = fields
+            keys.forEachIndexed { index, key ->
+                if (index == keys.lastIndex) {
+                    next[key] = mutableMapOf(
+                            "source" to (configField.source?.configName ?: configField.handler.defaultSource),
+                            "value" to configField.valueOrDefault
+                    )
+                } else {
+                    if (next[key] == null) {
+                        next[key] = mutableMapOf<String, Any?>()
+                    }
+
+                    if (next[key] is MutableMap<*, *>) {
+                        next = next[key] as MutableMap<String, Any?>
+                    }
+                }
+            }
+        }
+
+        return fields as Map<String, Map<String, Any?>>
+    }
+
+    private fun createFieldsWithValues(auroraConfigFields: AuroraConfigFields, build: AuroraBuild?): Map<String, AuroraConfigField> {
+
+        val fields: MutableMap<String, AuroraConfigField> = mutableMapOf()
+        val configFields = auroraConfigFields.fields.filterValues { it.source != null || it.handler.defaultValue != null }
+
+        build?.let {
+            if (!fields.containsKey("baseImage/name")) {
+                fields.put("baseImage/name", AuroraConfigField(AuroraConfigFieldHandler("baseImage/name", defaultValue = it.applicationPlatform.baseImageName)))
+            }
+
+            if (!fields.containsKey("baseImage/version")) {
+                fields.put("baseImage/version", AuroraConfigField(AuroraConfigFieldHandler("baseImage/version", defaultValue = it.applicationPlatform.baseImageVersion)))
+            }
+        }
+        return configFields + fields
     }
 
     private fun extractPermissions(auroraConfigFields: AuroraConfigFields): Permissions {
@@ -84,3 +191,4 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
         return permission
     }
 }
+

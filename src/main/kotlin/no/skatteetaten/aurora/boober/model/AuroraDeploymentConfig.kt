@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
 
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
 import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 
 
@@ -24,14 +23,15 @@ data class AuroraDeploymentSpec(
         val name: String,
         val envName: String,
         val permissions: Permissions,
-        val fields: Map<String, AuroraConfigField>,
+        val fields: Map<String, Map<String, Any?>>,
 
         val volume: AuroraVolume? = null,
         val route: AuroraRoute? = null,
         val build: AuroraBuild? = null,
         val deploy: AuroraDeploy? = null,
         val template: AuroraTemplate? = null,
-        val localTemplate: AuroraLocalTemplate? = null
+        val localTemplate: AuroraLocalTemplate? = null,
+        val formatting: Triple<Int, Int, Int>
 ) {
     val namespace: String
         get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"
