@@ -66,10 +66,10 @@ class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSprin
 
     where:
       env   | app            | includeDefaults
-      "utv" | "webleveranse" | true
-      "utv" | "reference"    | true
-   //   "utv" | "webleveranse" | false
-   //   "utv" | "reference"    | false
+      //"utv" | "webleveranse" | true
+      //"utv" | "reference"    | true
+      "utv" | "webleveranse" | false
+      //"utv" | "reference"    | false
   }
 
   def getFilename(ApplicationId aid, boolean includeDefaults, boolean formatted = false, String type = "json") {

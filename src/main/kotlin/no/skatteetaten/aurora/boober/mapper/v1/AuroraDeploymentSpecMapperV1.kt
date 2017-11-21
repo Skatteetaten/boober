@@ -120,9 +120,6 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
             val configField = entry.value
             val configPath = entry.key
 
-            if (configPath == "envName") {
-                ""
-            }
             if (configField.value is ObjectNode) {
                 return@forEach
             }

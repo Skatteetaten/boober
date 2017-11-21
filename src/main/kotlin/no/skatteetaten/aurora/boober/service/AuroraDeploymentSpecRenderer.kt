@@ -34,18 +34,34 @@ fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSp
         }
     }
 
-    return fields.entries
-            .filter {
-                if (!includeDefaults) {
-                    it.value["source"].toString() != "default"
-                } else {
-                    true
-                }
-            }
+
+    val filteredFields = if (includeDefaults) fields else filterDefaultFields(fields)
+
+
+    return filteredFields.entries
             .fold("{\n") { result, entry ->
                 renderJson(1, result, entry)
             } + "}"
 
+}
+
+fun filterDefaultFields(fields: Map<String, Map<String, Any?>>): Map<String, Map<String, Any?>> {
+
+    return fields
+            .filter {
+               val bool = it.value["source"].toString() != "default"
+                if(!bool) {
+                    println("filtered out ${it}")
+                }
+                bool
+            }
+            .mapValues {
+                if(it.value.containsKey("source")) {
+                    it.value
+                } else {
+                    filterDefaultFields(it.value as Map<String, Map<String, Any?>>)
+                }
+            }
 }
 
 
