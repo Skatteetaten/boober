@@ -51,13 +51,17 @@ class GitService(
         synchronized(affiliation, {
             val repoPath = File("$checkoutPath/$affiliation")
             if (repoPath.exists()) {
-                val git = Git.open(repoPath)
-                git.pull()
-                        .setRebase(true)
-                        .setRemote("origin")
-                        .setCredentialsProvider(cp)
-                        .call()
-                return git
+                try {
+                    val git = Git.open(repoPath)
+                    git.pull()
+                            .setRebase(true)
+                            .setRemote("origin")
+                            .setCredentialsProvider(cp)
+                            .call()
+                    return git
+                }catch(e:Exception) {
+                    repoPath.deleteRecursively()
+                }
             }
             return metrics.withMetrics("git_checkout", {
                 val dir = repoPath.apply { mkdirs() }
