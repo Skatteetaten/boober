@@ -11,13 +11,15 @@ import spock.lang.Specification
 
 abstract class AbstractAuroraConfigTest extends Specification {
 
-  static final DEFAULT_ABOUT = '''{
+  static final AFFILIATION = "aos"
+
+  static final DEFAULT_ABOUT = """{
   "schemaVersion": "v1",
   "permissions": {
     "admin": "APP_PaaS_utv"
   },
-  "affiliation" : "aos"
-}'''
+  "affiliation" : "$AFFILIATION"
+}"""
 
   static final String DEFAULT_UTV_ABOUT = '''{
   "cluster": "utv"
