@@ -12,7 +12,8 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
 
   def openShiftClient = Mock(OpenShiftClient)
 
-    def processor = new OpenShiftTemplateProcessor(Mock(OpenShiftResourceClient), new ObjectMapper())def specValidator = new AuroraDeploymentSpecValidator(openShiftClient, processor)
+    def processor = new OpenShiftTemplateProcessor(Mock(OpenShiftResourceClient), new ObjectMapper())
+    def specValidator = new AuroraDeploymentSpecValidator(openShiftClient, processor)
 
   def mapper = new ObjectMapper()
 
