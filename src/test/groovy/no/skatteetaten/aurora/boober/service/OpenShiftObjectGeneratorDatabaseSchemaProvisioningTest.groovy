@@ -2,12 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 import static no.skatteetaten.aurora.boober.service.ExternalResourceProvisioner.createSchemaProvisionRequestsFromDeploymentSpec
-import static AbstractOpenShiftObjectGeneratorTest.createObjectGenerator
 
-import com.fasterxml.jackson.databind.JsonNode
-
-import groovy.json.JsonOutput
-import no.skatteetaten.aurora.boober.model.AbstractAuroraDeploymentSpecTest
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 
 class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpenShiftObjectGeneratorTest {
@@ -32,17 +27,13 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
           ]))
 
     when:
-      List<JsonNode> objects = objectGenerator.
-          generateApplicationObjects('deploy-id', deploymentSpec, provisioningResult)
+      def objects = objectGenerator.generateApplicationObjects('deploy-id', deploymentSpec, provisioningResult)
       def deploymentConfig = objects.find { it.get("kind").textValue().toLowerCase() == "deploymentconfig" }
 
     then:
       deploymentConfig != null
-      println JsonOutput.prettyPrint(deploymentConfig.toString())
-/*
       objects.each {
         println it
       }
-*/
   }
 }

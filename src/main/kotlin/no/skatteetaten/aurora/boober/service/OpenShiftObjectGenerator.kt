@@ -13,6 +13,7 @@ import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.service.internal.DeploymentConfigGenerator
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import no.skatteetaten.aurora.boober.utils.addIf
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import org.slf4j.Logger
@@ -72,7 +73,12 @@ class OpenShiftObjectGenerator(
                     .addIfNotNull(generateRoute(auroraDeploymentSpec, labels))
                     .addIfNotNull(generateTemplate(auroraDeploymentSpec))
                     .addIfNotNull(generateLocalTemplate(auroraDeploymentSpec))
+                    .addIf(provisioningResult?.schemaProvisionResults != null, generateSecretsForSchemas(provisioningResult?.schemaProvisionResults!!   ))
         })
+    }
+
+    fun generateSecretsForSchemas(schemaProvisionResults: SchemaProvisionResults): JsonNode {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     fun generateProjectRequest(auroraDeploymentSpec: AuroraDeploymentSpec): JsonNode {
