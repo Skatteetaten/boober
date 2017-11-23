@@ -83,14 +83,6 @@ class OpenShiftObjectGeneratorConfigMapTest extends AbstractAuroraDeploymentSpec
       env["ARRAY"] == '''[4.2,\\"STRING\\",true]'''
       env["JSON_STRING"] == '''{\\"key\\": \\"value\\"}'''
       env["URL"] == '''https:\\/\\/int-at.skead.no:13110\\/felles\\/sikkerhet\\/stsSikkerhet\\/v1\\/validerSaml'''
-
-      def latestProperties = mount.get('data').get('latest.properties').textValue()
-      assertFileHasLinesWithProperties(latestProperties, ["STRING", "BOOL", "INT", "FLOAT", "ARRAY", "URL", "JSON_STRING"])
-
-      List<String> lines = latestProperties.readLines()
-      lines.contains('URL=https://int-at.skead.no:13110/felles/sikkerhet/stsSikkerhet/v1/validerSaml')
-    //TODO: This one fails. Is this right?
-      lines.contains('ARRAY=[4.2, "STRING", true]')
   }
 
   void assertFileHasLinesWithProperties(String latestProperties, List<String> propertyNames) {

@@ -34,8 +34,7 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>,
                 mounts = auroraConfigFields.getMounts(mountHandlers, vaults),
                 permissions = auroraConfigFields.extractOrNull<String?>("secretVault")?.let {
                     vaults[it]?.permissions
-                },
-                env = auroraConfigFields.getConfigEnv(configHandlers))
+                })
     }
 
 

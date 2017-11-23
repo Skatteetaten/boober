@@ -1,11 +1,11 @@
 {
   schemaVersion:       "v1"                        // about.json
   type:                "development"               // utv/webleveranse.json
+  affiliation:         "aos"                       // about.json
   cluster:             "utv"                       // utv/about.json
   permissions: {
     admin:             "APP_PaaS_utv"              // about.json
   }
-  affiliation:         "aos"                       // about.json
   envName:             "utv"                       // folderName
   name:                "webleveranse"              // webleveranse.json
   certificate:         false                       // default

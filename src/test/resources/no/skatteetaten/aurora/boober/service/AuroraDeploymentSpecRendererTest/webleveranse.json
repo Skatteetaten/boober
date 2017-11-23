@@ -7,6 +7,10 @@
     "source": "utv/webleveranse.json",
     "value": "development"
   },
+    "affiliation": {
+    "source": "about.json",
+    "value": "aos"
+  },
   "cluster": {
     "source": "utv/about.json",
     "value": "utv"
@@ -16,10 +20,6 @@
       "source": "about.json",
       "value": "APP_PaaS_utv"
     }
-  },
-  "affiliation": {
-    "source": "about.json",
-    "value": "aos"
   },
   "envName": {
     "source": "folderName",

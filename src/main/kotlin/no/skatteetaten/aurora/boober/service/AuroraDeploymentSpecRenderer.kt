@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 
 
@@ -8,8 +7,10 @@ fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSp
 
     val fields = deploymentSpec.fields
     val defaultKeys = listOf("source", "value")
-    //TODO rewrite
-    val (keyMaxLength, valueMaxLength, indent) = Triple(20, 20, 2)
+    val indent = 2
+
+    val keyMaxLength = findMaxKeyLength(deploymentSpec.fields, indent)
+    val valueMaxLength = findMaxValueLength(deploymentSpec.fields)
 
     fun renderJson(level: Int, result: String, entry: Map.Entry<String, Map<String, Any?>>): String {
 
@@ -46,25 +47,27 @@ fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSp
 
 }
 
-private fun findMaxKeyAndValueLength(fields: Map<String, AuroraConfigField>, indentLength: Int): Triple<Int, Int, Int> {
-    var keyMaxLength = 0
-    var valueMaxLength = 0
-
-    fields.entries.forEach {
-        val configValue = it.value.value.toString()
-        if (configValue.length > valueMaxLength) {
-            valueMaxLength = configValue.length
+fun findMaxKeyLength(fields: Map<String, Any>, indent: Int, accumulated: Int = 0): Int {
+    return fields.map {
+        val value = it.value as Map<String, Any>
+        if (value.containsKey("source")) {
+            it.key.length + accumulated
+        } else {
+            findMaxKeyLength(value, indent, accumulated + indent)
         }
+    }.max()?.let { it + 1 } ?: 0
+}
 
-        it.key.split("/").forEachIndexed { i, k ->
-            val key = k.length + indentLength * i + 1
-            if (key > keyMaxLength) {
-                keyMaxLength = key
-            }
+
+fun findMaxValueLength(fields: Map<String, Any>): Int {
+    return fields.map {
+        val value = it.value as Map<String, Any>
+        if (value.containsKey("value")) {
+            value["value"].toString().length
+        } else {
+            findMaxValueLength(value)
         }
-    }
-
-    return Triple(keyMaxLength, valueMaxLength, indentLength)
+    }.max() ?: 0
 }
 
 
@@ -81,9 +84,9 @@ fun filterDefaultFields(fields: Map<String, Map<String, Any?>>): Map<String, Map
                     filterDefaultFields(it.value as Map<String, Map<String, Any?>>)
                 }
             }.filter {
-                !it.value.isEmpty()
-            }
-    
+        !it.value.isEmpty()
+    }
+
 }
 
 

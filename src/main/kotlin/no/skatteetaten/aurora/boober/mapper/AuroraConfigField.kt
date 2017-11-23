@@ -98,12 +98,12 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         val env = configExtractors.filter { it.name.count { it == '/' } == 1 }.map {
             val (_, field) = it.name.split("/", limit = 2)
             val value: Any = extract(it.name)
-            //TODO This is rather clunky. Why not just represent everything as String in the extract.
+            //TODO: er det rett å escape her?
             val escapedValue: String = when (value) {
                 is String -> StringEscapeUtils.escapeJavaScript(value)
                 is Number -> value.toString()
                 is Boolean -> value.toString()
-                else -> ""
+                else  ->  StringEscapeUtils.escapeJavaScript(jacksonObjectMapper().writeValueAsString(value))
             }
             field to escapedValue
         }
