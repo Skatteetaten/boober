@@ -51,7 +51,6 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                                    localTemplate: AuroraLocalTemplate?
     ): AuroraDeploymentSpec {
         val name: String = auroraConfigFields.extract("name")
-        val auroraConfigFields1 = createFieldsWithValues(auroraConfigFields, build)
 
         return AuroraDeploymentSpec(
                 schemaVersion = auroraConfigFields.extract("schemaVersion"),
@@ -62,8 +61,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                 name = name,
                 envName = auroraConfigFields.extract("envName"),
                 permissions = extractPermissions(auroraConfigFields),
-                fields = createMapForAuroraDeploymentSpecPointers(auroraConfigFields1, true),
-                formatting = findMaxKeyAndValueLength(auroraConfigFields1, 2),
+                fields = createMapForAuroraDeploymentSpecPointers(createFieldsWithValues(auroraConfigFields, build)),
                 volume = volume,
                 route = route,
                 build = build,
@@ -81,37 +79,18 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                 .filter { it.key.split("/").size == 1 }
                 .forEach {
                     val key = it.key.split("/")[0]
-                    val shouldIncludeSubKeys = it.value.valueOrDefault.let {
+                    val shouldIncludeSubKeys = it.value.valueOrDefault?.let {
                         !it.isBoolean || it.booleanValue()
-                    }
+                    } ?: false
                     includeSubKeys.put(key, shouldIncludeSubKeys)
                 }
 
         return includeSubKeys
     }
 
-    private fun findMaxKeyAndValueLength(fields: Map<String, AuroraConfigField>, indentLength: Int): Triple<Int, Int, Int> {
-        var keyMaxLength = 0
-        var valueMaxLength = 0
 
-        fields.entries.forEach {
-            val configValue = it.value.value.toString()
-            if (configValue.length > valueMaxLength) {
-                valueMaxLength = configValue.length
-            }
 
-            it.key.split("/").forEachIndexed { i, k ->
-                val key = k.length + indentLength * i + 1
-                if (key > keyMaxLength) {
-                    keyMaxLength = key
-                }
-            }
-        }
-
-        return Triple(keyMaxLength, valueMaxLength, indentLength)
-    }
-
-    fun createMapForAuroraDeploymentSpecPointers(auroraConfigFields: Map<String, AuroraConfigField>, includeDefaults: Boolean = true): Map<String, Map<String, Any?>> {
+    fun createMapForAuroraDeploymentSpecPointers(auroraConfigFields: Map<String, AuroraConfigField>): Map<String, Map<String, Any?>> {
         val fields = mutableMapOf<String, Any?>()
         val includeSubKeys = createIncludeSubKeysMap(auroraConfigFields)
 
@@ -121,10 +100,6 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
             val configPath = entry.key
 
             if (configField.value is ObjectNode) {
-                return@forEach
-            }
-
-            if (configField.source == null && configField.handler.defaultSource == "default" && !includeDefaults) {
                 return@forEach
             }
 

@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.mapper
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.ConfigFieldError
@@ -26,22 +25,16 @@ class AuroraConfigValidator(val applicationId: ApplicationId,
         val errors: List<ConfigFieldError> = fieldHandlers.mapNotNull { e ->
             val rawField = auroraConfigFields.fields[e.name]!!
 
-            //TODO: We should change this
-            val auroraConfigField = if (rawField.value.isMissingNode) {
-                jacksonObjectMapper().convertValue(rawField.handler.defaultValue, JsonNode::class.java)
-            } else {
-                rawField.value
-            }
-
+            val auroraConfigField: JsonNode? = rawField.valueOrDefault
 
             val result = e.validator(auroraConfigField)
 
-            when {
-                auroraConfigField == null && rawField.handler.defaultValue != null -> null
+            val err = when {
                 result == null -> null
                 auroraConfigField != null -> ConfigFieldError.illegal(result.localizedMessage, rawField)
                 else -> ConfigFieldError.missing(result.localizedMessage, e.path)
             }
+            err
         }
 
         val unmappedErrors = if (fullValidation) {

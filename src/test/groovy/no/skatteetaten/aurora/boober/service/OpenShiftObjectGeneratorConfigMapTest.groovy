@@ -57,7 +57,6 @@ class OpenShiftObjectGeneratorConfigMapTest extends AbstractAuroraDeploymentSpec
       assertFileHasLinesWithProperties(propertiesFile, ["OPPSLAGSTJENESTE_DELEGERING", "VALIDER_SAML_URL"])
   }
 
-  @Ignore
   def "Renders non String configs properly"() {
     given:
       def auroraConfigJson = defaultAuroraConfig()
@@ -87,7 +86,7 @@ class OpenShiftObjectGeneratorConfigMapTest extends AbstractAuroraDeploymentSpec
       List<String> lines = latestProperties.readLines()
       lines.contains('URL=https://int-at.skead.no:13110/felles/sikkerhet/stsSikkerhet/v1/validerSaml')
     //TODO: This one fails. Is this right?
-      lines.contains('ARRAY=[4.2,"STRING",true]')
+      lines.contains('ARRAY=[4.2, "STRING", true]')
   }
 
   void assertFileHasLinesWithProperties(String latestProperties, List<String> propertyNames) {

@@ -17,15 +17,15 @@ import org.slf4j.LoggerFactory
 data class AuroraConfigField(val handler: AuroraConfigFieldHandler, val source: AuroraConfigFile? = null) {
     val value: JsonNode
         get() = source?.contents?.at(handler.path) ?: MissingNode.getInstance()
-    val valueOrDefault: JsonNode
+    val valueOrDefault: JsonNode?
         get() =
-            source?.contents?.at(handler.path)?.let {
+            value.let {
                 if (it.isMissingNode) {
                     jacksonObjectMapper().convertValue(handler.defaultValue, JsonNode::class.java)
                 } else {
                     it
                 }
-            } ?: jacksonObjectMapper().convertValue(handler.defaultValue, JsonNode::class.java)
+            }
 }
 
 inline fun <reified T> AuroraConfigField.getNullableValue(): T? {

@@ -30,8 +30,7 @@ data class AuroraDeploymentSpec(
         val build: AuroraBuild? = null,
         val deploy: AuroraDeploy? = null,
         val template: AuroraTemplate? = null,
-        val localTemplate: AuroraLocalTemplate? = null,
-        val formatting: Triple<Int, Int, Int>
+        val localTemplate: AuroraLocalTemplate? = null
 ) {
     val namespace: String
         get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"

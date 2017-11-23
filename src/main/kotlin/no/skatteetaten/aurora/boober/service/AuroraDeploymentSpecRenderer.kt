@@ -1,14 +1,15 @@
 package no.skatteetaten.aurora.boober.service
 
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 
 
-@JvmOverloads
 fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean): String {
 
     val fields = deploymentSpec.fields
     val defaultKeys = listOf("source", "value")
-    val (keyMaxLength, valueMaxLength, indent) = deploymentSpec.formatting
+    //TODO rewrite
+    val (keyMaxLength, valueMaxLength, indent) = Triple(20, 20, 2)
 
     fun renderJson(level: Int, result: String, entry: Map.Entry<String, Map<String, Any?>>): String {
 
@@ -44,6 +45,28 @@ fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSp
             } + "}"
 
 }
+
+private fun findMaxKeyAndValueLength(fields: Map<String, AuroraConfigField>, indentLength: Int): Triple<Int, Int, Int> {
+    var keyMaxLength = 0
+    var valueMaxLength = 0
+
+    fields.entries.forEach {
+        val configValue = it.value.value.toString()
+        if (configValue.length > valueMaxLength) {
+            valueMaxLength = configValue.length
+        }
+
+        it.key.split("/").forEachIndexed { i, k ->
+            val key = k.length + indentLength * i + 1
+            if (key > keyMaxLength) {
+                keyMaxLength = key
+            }
+        }
+    }
+
+    return Triple(keyMaxLength, valueMaxLength, indentLength)
+}
+
 
 fun filterDefaultFields(fields: Map<String, Map<String, Any?>>): Map<String, Map<String, Any?>> {
 
