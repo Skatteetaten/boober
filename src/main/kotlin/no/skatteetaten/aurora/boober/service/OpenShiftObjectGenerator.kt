@@ -144,7 +144,7 @@ class OpenShiftObjectGenerator(
     }
 
     fun generateImageStream(deployId: String, auroraDeploymentSpec: AuroraDeploymentSpec) =
-            withLabelsAndMounts(auroraDeploymentSpec, deployId) { labels, _ ->
+            withLabelsAndMounts(deployId, auroraDeploymentSpec) { labels, _ ->
                 generateImageStream(auroraDeploymentSpec, labels)
             }
 
