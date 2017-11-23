@@ -4,13 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.java
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.web
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.Database
-import no.skatteetaten.aurora.boober.model.Mount
-import no.skatteetaten.aurora.boober.model.MountType
-import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
@@ -32,6 +28,24 @@ class OpenShiftObjectGenerator(
         val openShiftClient: OpenShiftResourceClient) {
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftObjectGenerator::class.java)
+
+    companion object {
+        @JvmStatic
+        val MAX_LABEL_VALUE_LENGTH = 63
+
+        /**
+         * Returns a new Map where each value has been truncated as to not exceed the
+         * <code>MAX_LABEL_VALUE_LENGTH</code> max length.
+         * Truncation is done by cutting of characters from the start of the value, leaving only the last
+         * MAX_LABEL_VALUE_LENGTH characters.
+         */
+        fun toOpenShiftLabelNameSafeMap(labels: Map<String, String>): Map<String, String> {
+            return labels.mapValues {
+                val startIndex = (it.value.length - MAX_LABEL_VALUE_LENGTH).takeIf { it >= 0 } ?: 0
+                it.value.substring(startIndex)
+            }
+        }
+    }
 
     fun generateBuildRequest(name: String): JsonNode {
         logger.trace("Generating build request for name $name")
@@ -139,7 +153,7 @@ class OpenShiftObjectGenerator(
                 "paused" to "true"
             } else null
 
-            val dcLabels = labels + mapOf("name" to auroraDeploymentSpec.name, "deployTag" to deployTag).addIfNotNull(pauseLabel)
+            val dcLabels = toOpenShiftLabelNameSafeMap(labels + mapOf("name" to auroraDeploymentSpec.name, "deployTag" to deployTag).addIfNotNull(pauseLabel))
             val params = mapOf(
                     "annotations" to annotations
                             .addIfNotNull(releaseToAnnotation)
@@ -189,10 +203,15 @@ class OpenShiftObjectGenerator(
 
     }
 
+    fun generateImageStream(deployId: String, auroraDeploymentSpec: AuroraDeploymentSpec) =
+            withLabelsAndMounts(auroraDeploymentSpec, deployId) { labels, _ ->
+                generateImageStream(auroraDeploymentSpec, labels)
+            }
+
     fun generateImageStream(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>): JsonNode? {
         return auroraDeploymentSpec.deploy?.let {
             mergeVelocityTemplate("imagestream.json", mapOf(
-                    "labels" to labels + mapOf("releasedVersion" to it.version),
+                    "labels" to toOpenShiftLabelNameSafeMap(labels + mapOf("releasedVersion" to it.version)),
                     "deploy" to it,
                     "name" to auroraDeploymentSpec.name,
                     "type" to auroraDeploymentSpec.type.name
@@ -391,7 +410,7 @@ class OpenShiftObjectGenerator(
     private fun <T> withLabelsAndMounts(deploymentSpec: AuroraDeploymentSpec, deployId: String, c: (labels: Map<String, String>, mounts: List<Mount>?) -> T): T {
 
         val mounts = findMounts(deploymentSpec)
-        val labels = findLabels(deploymentSpec, deployId, deploymentSpec.name)
+        val labels = toOpenShiftLabelNameSafeMap(findLabels(deploymentSpec, deployId, deploymentSpec.name))
         return c(labels, mounts)
     }
 
