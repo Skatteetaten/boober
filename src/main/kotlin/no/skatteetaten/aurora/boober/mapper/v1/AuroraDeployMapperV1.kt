@@ -14,8 +14,6 @@ import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.model.HttpEndpoint
 import no.skatteetaten.aurora.boober.model.Probe
 import no.skatteetaten.aurora.boober.model.Webseal
-import no.skatteetaten.aurora.boober.model.findConfigFieldHandlers
-import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.length
 import no.skatteetaten.aurora.boober.utils.notBlank

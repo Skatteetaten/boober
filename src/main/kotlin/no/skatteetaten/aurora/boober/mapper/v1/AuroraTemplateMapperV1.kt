@@ -4,7 +4,6 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraTemplate
-import no.skatteetaten.aurora.boober.model.findSubKeys
 
 class AuroraTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>) {
 

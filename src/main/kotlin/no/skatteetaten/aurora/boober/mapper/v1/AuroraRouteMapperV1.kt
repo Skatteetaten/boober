@@ -6,7 +6,6 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraRoute
 import no.skatteetaten.aurora.boober.model.Route
-import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.utils.startsWith
 
 class AuroraRouteMapperV1(val applicationId: ApplicationId, val applicationFiles: List<AuroraConfigFile>) {
