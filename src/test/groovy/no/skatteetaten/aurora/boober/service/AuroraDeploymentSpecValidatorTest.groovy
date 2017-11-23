@@ -4,23 +4,35 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest {
 
   def auroraConfigJson = defaultAuroraConfig()
 
   def openShiftClient = Mock(OpenShiftClient)
 
-  def processor = new OpenShiftTemplateProcessor(Mock(OpenShiftResourceClient), new ObjectMapper())
-  def specValidator = new AuroraDeploymentSpecValidator(openShiftClient, processor)
+    def processor = new OpenShiftTemplateProcessor(Mock(OpenShiftResourceClient), new ObjectMapper())
+    def specValidator = new AuroraDeploymentSpecValidator(openShiftClient, processor)
 
   def mapper = new ObjectMapper()
 
-  def "Fails when admin groups is empty"() {
+  def "Fails when affiliation is too long"() {
     given:
-      auroraConfigJson["utv/aos-simple.json"] = '''{ "permissions": { "admin": "" } }'''
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "affiliation": "aaregistere" }'''
+
+    when:
+      createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    then:
+      def e=thrown(AuroraConfigException)
+      e.message=="Config for application aos-simple in environment utv contains errors. Affiliation can only contain letters and must be no longer than 10 characters."
+  }
+  
+  def "Fails when admin groups is empty"() {
+      given:
+        auroraConfigJson["utv/aos-simple.json"] = '''{ "permissions": { "admin": "" } }'''
+        AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
     when:
       specValidator.assertIsValid(deploymentSpec)
