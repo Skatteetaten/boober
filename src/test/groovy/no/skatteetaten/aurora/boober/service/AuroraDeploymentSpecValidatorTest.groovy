@@ -17,7 +17,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
 
   def mapper = new ObjectMapper()
 
-    def "Fails when affiliation is too long"() {
+  def "Fails when affiliation is too long"() {
     given:
       auroraConfigJson["utv/aos-simple.json"] = '''{ "affiliation": "aaregistere" }'''
 
@@ -27,7 +27,9 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
     then:
       def e=thrown(AuroraConfigException)
       e.message=="Config for application aos-simple in environment utv contains errors. Affiliation can only contain letters and must be no longer than 10 characters."
-  }def "Fails when admin groups is empty"() {
+  }
+  
+  def "Fails when admin groups is empty"() {
       given:
         auroraConfigJson["utv/aos-simple.json"] = '''{ "permissions": { "admin": "" } }'''
         AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
