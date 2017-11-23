@@ -1,8 +1,9 @@
 {
   "version": "1.0.3-SNAPSHOT",
   "config": {
-    "latest": {
-      "foo": "baaaar"
+    "FOO": "baaaar",
+    "1.properties" : {
+      "BAZ": "BAR"
     }
   },
   "liveness": true,

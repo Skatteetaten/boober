@@ -11,6 +11,6 @@
     }
   },
   "data": {
-    "latest.properties": "foo=baaaar"
+    "1.properties": "BAZ=BAR"
   }
 }

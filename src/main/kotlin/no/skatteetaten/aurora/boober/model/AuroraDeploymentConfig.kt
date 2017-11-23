@@ -100,7 +100,8 @@ data class AuroraDeploy(
         val readiness: Probe?,
         val dockerImagePath: String,
         val dockerTag: String,
-        val deployStrategy: AuroraDeployStrategy
+        val deployStrategy: AuroraDeployStrategy,
+        val env: Map<String, String>
 ) {
     val dockerImage: String
         get() = "${dockerImagePath}:${dockerTag}"

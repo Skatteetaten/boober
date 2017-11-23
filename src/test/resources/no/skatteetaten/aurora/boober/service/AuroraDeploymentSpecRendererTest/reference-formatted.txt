@@ -1,11 +1,11 @@
 {
   schemaVersion:       "v1"                     // about.json
   type:                "deploy"                 // reference.json
+  affiliation:         "aos"                    // about.json
   cluster:             "utv"                    // utv/about.json
   permissions: {
     admin:             "APP_PaaS_utv"           // about.json
   }
-  affiliation:         "aos"                    // about.json
   envName:             "utv"                    // folderName
   name:                "reference"              // fileName
   artifactId:          "reference"              // fileName

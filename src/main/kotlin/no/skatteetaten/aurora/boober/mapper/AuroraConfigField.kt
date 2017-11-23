@@ -8,6 +8,7 @@ import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.utils.toPrimitiveType
 import no.skatteetaten.aurora.boober.utils.nullOnEmpty
 import org.apache.commons.lang.StringEscapeUtils
 import org.slf4j.Logger
@@ -93,15 +94,25 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         }
     }
 
-
-    fun getConfigMap(configExtractors: List<AuroraConfigFieldHandler>): Map<String, Any?>? {
-
-        val envMap: Map<String, Any?> = configExtractors.filter { it.name.count { it == '/' } == 1 }.map {
+    fun getConfigEnv(configExtractors: List<AuroraConfigFieldHandler>): Map<String, String> {
+        val env = configExtractors.filter { it.name.count { it == '/' } == 1 }.map {
             val (_, field) = it.name.split("/", limit = 2)
             val value: Any = extract(it.name)
-            val escapedValue = if (value is String) StringEscapeUtils.escapeJavaScript(value) else value
+            //TODO: er det rett å escape her?
+            val escapedValue: String = when (value) {
+                is String -> StringEscapeUtils.escapeJavaScript(value)
+                is Number -> value.toString()
+                is Boolean -> value.toString()
+                else  ->  StringEscapeUtils.escapeJavaScript(jacksonObjectMapper().writeValueAsString(value))
+            }
             field to escapedValue
-        }.toMap()
+        }
+
+        return env.filter { !it.second.isBlank() }.toMap()
+    }
+
+
+    fun getConfigMap(configExtractors: List<AuroraConfigFieldHandler>): Map<String, Any?>? {
 
 
         val configMap: MutableMap<String, MutableMap<String, Any?>> = mutableMapOf()
@@ -123,25 +134,16 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
             else configMap.put(keyProps, keyValue)
         }
 
-        val propertiesMap: Map<String, String> = configMap.map { (key, value) ->
+        if (configMap.isEmpty()) {
+            return null
+        }
+
+        return configMap.map { (key, value) ->
             key to value.map {
                 "${it.key}=${it.value}"
             }.joinToString(separator = "\\n")
         }.toMap()
 
-        if (envMap.isEmpty()) {
-            return propertiesMap.nullOnEmpty()
-        }
-
-        //TODO: When we have 3.6 we can remove this
-        val latestPair: Pair<String, String> =
-                "latest.properties" to envMap.map {
-                    "${it.key}=${it.value}"
-                }.joinToString(separator = "\\n")
-
-
-        val config = propertiesMap + envMap + latestPair
-        return config.nullOnEmpty()
 
     }
 
