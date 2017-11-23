@@ -34,6 +34,13 @@ abstract class AbstractAuroraConfigTest extends Specification {
   "route": true,
   "type": "deploy"
 }'''
+  static final String REFERENCE = '''{
+  "groupId" : "no.skatteetaten.aurora",
+  "replicas" : 1,
+  "version" : "1",
+  "route" : true,
+  "type" : "deploy"
+}'''
 
   static final String WEB_LEVERANSE = '''{
   "applicationPlatform" : "web",

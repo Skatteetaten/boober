@@ -25,16 +25,15 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>,
 
     fun auroraDeploymentCore(auroraConfigFields: AuroraConfigFields): AuroraVolume {
 
-        //TODO: Here we should return canEdit and not permissions
         return AuroraVolume(
-                secrets = auroraConfigFields.extractOrNull("secretVault", {
-                    vaults[it.asText()]?.secrets
-                }),
+                secrets = auroraConfigFields.extractOrNull<String?>("secretVault")?.let {
+                    vaults[it]?.secrets
+                },
                 config = auroraConfigFields.getConfigMap(configHandlers),
                 mounts = auroraConfigFields.getMounts(mountHandlers, vaults),
-                permissions = auroraConfigFields.extractOrNull("secretVault", {
-                    vaults[it.asText()]?.permissions
-                }))
+                permissions = auroraConfigFields.extractOrNull<String?>("secretVault")?.let {
+                    vaults[it]?.permissions
+                })
     }
 
 
@@ -91,7 +90,7 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>,
                     AuroraConfigFieldHandler("mounts/$mountName/type", validator = { it.oneOf(MountType.values().map { it.name }) }),
                     AuroraConfigFieldHandler("mounts/$mountName/mountName", defaultValue = mountName),
                     AuroraConfigFieldHandler("mounts/$mountName/volumeName", defaultValue = mountName),
-                    AuroraConfigFieldHandler("mounts/$mountName/exist", defaultValue = "false"),
+                    AuroraConfigFieldHandler("mounts/$mountName/exist", defaultValue = false),
                     AuroraConfigFieldHandler("mounts/$mountName/content"),
                     AuroraConfigFieldHandler("mounts/$mountName/secretVault")
             )

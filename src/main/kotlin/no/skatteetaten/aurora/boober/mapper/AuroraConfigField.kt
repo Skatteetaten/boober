@@ -1,8 +1,7 @@
 package no.skatteetaten.aurora.boober.mapper
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.TextNode
-import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.databind.node.MissingNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
@@ -10,13 +9,47 @@ import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.utils.nullOnEmpty
-import no.skatteetaten.aurora.boober.utils.toPrimitiveType
 import org.apache.commons.lang.StringEscapeUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-data class AuroraConfigField(val path: String, val value: JsonNode, val source: String)
 
+data class AuroraConfigField(val handler: AuroraConfigFieldHandler, val source: AuroraConfigFile? = null) {
+    val value: JsonNode
+        get() = source?.contents?.at(handler.path) ?: MissingNode.getInstance()
+    val valueOrDefault: JsonNode?
+        get() =
+            value.let {
+                if (it.isMissingNode) {
+                    jacksonObjectMapper().convertValue(handler.defaultValue, JsonNode::class.java)
+                } else {
+                    it
+                }
+            }
+}
+
+inline fun <reified T> AuroraConfigField.getNullableValue(): T? {
+
+    if (this.source == null) {
+        return this.handler.defaultValue as T
+    }
+
+    val value = this.value
+
+    return jacksonObjectMapper().convertValue(value, T::class.java)
+}
+
+inline fun <reified T> AuroraConfigField.value(): T {
+
+    if (this.source == null) {
+        return this.handler.defaultValue as T
+    }
+
+    val value = this.source.contents.at(this.handler.path)
+
+    return jacksonObjectMapper().convertValue(value, T::class.java)
+
+}
 
 class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
@@ -31,29 +64,29 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
             name
         }.toSet()
 
-        return mountNames.map {
-            val type = extract("mounts/$it/type", { MountType.valueOf(it.asText()) })
+        return mountNames.map { mount ->
+            val type: MountType = extract("mounts/$mount/type")
 
             val permissions = if (type == MountType.Secret) {
-                extractOrNull("mounts/$it/secretVault", {
-                    vaults[it.asText()]?.permissions
-                })
+                extractOrNull<String?>("mounts/$mount/secretVault")?.let {
+                    vaults[it]?.permissions
+                }
             } else null
 
             val content = if (type == MountType.ConfigMap) {
-                extractOrNull("mounts/$it/content", { jacksonObjectMapper().convertValue<Map<String, String>>(it) })
+                extract("mounts/$mount/content")
             } else {
-                extractOrNull("mounts/$it/secretVault", {
-                    vaults[it.asText()]?.secrets
-                })
+                extractOrNull<String?>("mounts/$mount/secretVault")?.let {
+                    vaults[it]?.secrets
+                }
             }
 
             Mount(
-                    extract("mounts/$it/path"),
+                    extract("mounts/$mount/path"),
                     type,
-                    extract("mounts/$it/mountName"),
-                    extract("mounts/$it/volumeName"),
-                    extract("mounts/$it/exist", { it.asText() == "true" }),
+                    extract("mounts/$mount/mountName"),
+                    extract("mounts/$mount/volumeName"),
+                    extract("mounts/$mount/exist"),
                     content,
                     permissions
             )
@@ -65,7 +98,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
         val envMap: Map<String, Any?> = configExtractors.filter { it.name.count { it == '/' } == 1 }.map {
             val (_, field) = it.name.split("/", limit = 2)
-            val value = extractNative(it.name)
+            val value: Any = extract(it.name)
             val escapedValue = if (value is String) StringEscapeUtils.escapeJavaScript(value) else value
             field to escapedValue
         }.toMap()
@@ -78,7 +111,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
             val (_, configFile, field) = parts
 
-            val value = extractNative(it.name)
+            val value: Any = extract(it.name)
             val escapedValue = if (value is String) StringEscapeUtils.escapeJavaScript(value) else value
             val keyValue = mutableMapOf(field to escapedValue)
 
@@ -118,7 +151,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
                 .map {
                     val (_, _, _, field) = it.name.split("/", limit = 4)
 
-                    val value = extract(it.name)
+                    val value: String = extract(it.name)
                     field to value
                 }.toMap()
     }
@@ -128,7 +161,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         return extractors.map {
             val (_, field) = it.name.split("/", limit = 2)
 
-            val value = extract(it.name)
+            val value: String = extract(it.name)
             Database(field, if (value == "auto" || value.isBlank()) null else value)
         }
     }
@@ -138,79 +171,63 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         return parameterExtractors.map {
             val (_, field) = it.name.split("/", limit = 2)
 
-            val value = extract(it.name)
+            val value: String = extract(it.name)
             field to value
         }.toMap()
     }
 
+    fun disabledAndNoSubKeys(name: String): Boolean {
 
-    fun <T> findAll(name: String, mapper: (Map<String, AuroraConfigField>) -> T): T? {
+        val simplified = isSimplifiedConfig(name)
 
-        val fields = fields.entries.filter { it.key.contains(name) }.map { it.key to it.value }.toMap()
+        return simplified && !extract<Boolean>(name)
 
-        if (fields.isEmpty()) return null
-
-        return mapper(fields)
     }
 
+    fun isSimplifiedConfig(name: String): Boolean {
+        val field = fields[name]!!
 
-    fun extractOrNull(name: String): String? {
-        return if (fields.containsKey(name)) extract(name)
-        else null
+        if (field.source == null) {
+            return field.handler.defaultValue is Boolean
+        }
+        val value = field.source.contents.at(field.handler.path)
+
+        if (value.isBoolean) {
+            return true
+        }
+
+        return false
     }
 
-    fun <T> extractOrNull(name: String, mapper: (JsonNode) -> T): T? {
-        return if (fields.containsKey(name)) extract(name, mapper)
-        else null
-    }
+    inline fun <reified T> extract(name: String): T = fields[name]!!.value()
 
-    inline fun <reified T> extractOrDefault(name: String, default: T): T {
-        return if (fields.containsKey(name)) jacksonObjectMapper().convertValue(fields[name]!!.value, T::class.java)
-        else default
-    }
+    inline fun <reified T> extractOrNull(name: String): T? = fields[name]!!.getNullableValue()
 
-    fun extract(name: String): String {
-        return extract<String>(name, JsonNode::textValue)
-    }
-
-    fun extractNative(name: String): Any? {
-        return extract<Any?>(name, JsonNode::toPrimitiveType)
-    }
-
-    fun <T> extract(name: String, mapper: (JsonNode) -> T): T {
-
-        if (!fields.containsKey(name)) throw IllegalArgumentException("$name is not set")
-
-        return mapper(fields[name]!!.value)
-    }
 
     companion object {
 
         val logger: Logger = LoggerFactory.getLogger(AuroraConfigFields::class.java)
-        fun create(handlers: Set<AuroraConfigFieldHandler>, files: List<AuroraConfigFile>): AuroraConfigFields {
-            val fields = handlers.mapNotNull { handler ->
 
+        fun create(handlers: Set<AuroraConfigFieldHandler>, files: List<AuroraConfigFile>): AuroraConfigFields {
+            val fields: Map<String, AuroraConfigField> = handlers.map { handler ->
                 val matches = files.reversed().mapNotNull {
                     logger.trace("Check if  ${handler.path} exist in file  ${it.contents}")
                     val value = it.contents.at(handler.path)
 
                     if (!value.isMissingNode) {
                         logger.trace("Match $value i fil ${it.configName}")
-                        handler.name to AuroraConfigField(handler.path, value, it.configName)
+                        AuroraConfigField(handler, it)
                     } else null
                 }
 
-                when {
-                    (matches.isEmpty() && handler.defaultValue != null) -> {
-                        logger.trace("Default match ${handler.defaultValue}")
-                        handler.name to AuroraConfigField(handler.path, TextNode(handler.defaultValue), "default")
-                    }
-                    matches.isNotEmpty() -> matches.first()
-                    else -> null
-                }
-            }.toMap()
+                matches.firstOrNull()?.let {
+                    it
+                } ?: AuroraConfigField(handler)
+
+            }.associate { it.handler.name to it }
 
             return AuroraConfigFields(fields)
         }
+
     }
 }

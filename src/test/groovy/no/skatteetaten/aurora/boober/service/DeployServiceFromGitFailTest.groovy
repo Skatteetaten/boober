@@ -13,6 +13,8 @@ import org.springframework.web.client.HttpClientErrorException
 
 import java.nio.charset.Charset
 
+import spock.lang.Ignore
+
 class DeployServiceFromGitFailTest extends AbstractMockedOpenShiftSpecification {
 
   @Autowired

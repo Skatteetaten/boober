@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.mapper
 
+import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.ConfigFieldError
@@ -14,26 +15,36 @@ class AuroraConfigValidator(val applicationId: ApplicationId,
                             val auroraConfigFields: AuroraConfigFields) {
     val logger: Logger = LoggerFactory.getLogger(AuroraConfigValidator::class.java)
 
-    @JvmOverloads
-    fun validate(checkUnmappedPointers: Boolean = true) {
-        val errors: List<ConfigFieldError> = fieldHandlers.mapNotNull { e ->
-            val auroraConfigField = auroraConfigFields.fields[e.name]
-            val result = e.validator(auroraConfigField?.value)
+    companion object {
+        val namePattern = "^[a-z][-a-z0-9]{0,38}[a-z0-9]$"
+    }
 
-            when {
+    @JvmOverloads
+    fun validate(fullValidation: Boolean = true) {
+
+        val errors: List<ConfigFieldError> = fieldHandlers.mapNotNull { e ->
+            val rawField = auroraConfigFields.fields[e.name]!!
+
+            val auroraConfigField: JsonNode? = rawField.valueOrDefault
+
+            val result = e.validator(auroraConfigField)
+
+            val err = when {
                 result == null -> null
-                auroraConfigField != null -> ConfigFieldError.illegal(result.localizedMessage, auroraConfigField)
+                auroraConfigField != null -> ConfigFieldError.illegal(result.localizedMessage, rawField)
                 else -> ConfigFieldError.missing(result.localizedMessage, e.path)
             }
+            err
         }
 
-        val unmappedErrors = if (checkUnmappedPointers) {
+        val unmappedErrors = if (fullValidation) {
             getUnmappedPointers().flatMap { pointerError ->
                 pointerError.value.map { ConfigFieldError.invalid(pointerError.key, it) }
             }
         } else {
             emptyList()
         }
+
 
         (errors + unmappedErrors).takeIf { it.isNotEmpty() }?.let {
             logger.debug("{}", it)

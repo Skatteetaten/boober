@@ -1,0 +1,35 @@
+{
+  "kind": "Service",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "reference",
+    "annotations": {
+      "prometheus.io/scheme": "http",
+      "prometheus.io/scrape": "true",
+      "prometheus.io/path": "/prometheus",
+      "prometheus.io/port": "8081"
+    },
+    "labels": {
+      "app": "reference",
+      "updatedBy": "hero",
+      "affiliation": "aos",
+      "booberDeployId": "123"
+    }
+  },
+  "spec": {
+    "ports": [
+      {
+        "name": "http",
+        "protocol": "TCP",
+        "port": 80,
+        "targetPort": 8080,
+        "nodePort": 0
+      }
+    ],
+    "selector": {
+      "name": "reference"
+    },
+    "type": "ClusterIP",
+    "sessionAffinity": "None"
+  }
+}

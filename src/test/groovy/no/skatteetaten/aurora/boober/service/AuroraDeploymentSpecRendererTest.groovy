@@ -8,6 +8,8 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import spock.lang.Unroll
 
+import static no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecRendererKt.filterDefaultFields
+
 class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSpringTest {
 
   ObjectMapper mapper = new ObjectMapper()
@@ -16,6 +18,8 @@ class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSprin
       "about.json"           : DEFAULT_ABOUT,
       "utv/about.json"       : DEFAULT_UTV_ABOUT,
       "webleveranse.json"    : WEB_LEVERANSE,
+      "reference.json"       : REFERENCE,
+      "utv/reference.json"        : '''{}''',
       "utv/webleveranse.json": '''{ "type": "development", "version": "1" }'''
   ]
 
@@ -24,8 +28,12 @@ class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSprin
     given:
       def aid = ApplicationId.aid(env, app)
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
-      def renderedJson = AuroraDeploymentSpecRendererKt.
-          createMapForAuroraDeploymentSpecPointers(deploymentSpec, includeDefaults)
+
+
+       def renderedJson = deploymentSpec.fields
+      if(!includeDefaults) {
+        renderedJson = filterDefaultFields(renderedJson)
+      }
       def filename = getFilename(aid, includeDefaults)
       def expected = loadResource(filename)
 
@@ -36,15 +44,19 @@ class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSprin
 
     where:
       env   | app            | includeDefaults
-      "utv" | "webleveranse" | true
       "utv" | "webleveranse" | false
+      "utv" | "webleveranse" | true
+      "utv" | "reference"    | true
+      "utv" | "reference"    | false
   }
 
-  def "Should render formatted json-like output for pointers"() {
+  @Unroll
+  def "Should render formatted json-like output for pointers for #env/#app with defaults #includeDefaults"() {
     given:
       def aid = ApplicationId.aid(env, app)
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
-      def renderedJson = AuroraDeploymentSpecRendererKt.renderJsonForAuroraDeploymentSpecPointers(deploymentSpec, includeDefaults)
+      def renderedJson = AuroraDeploymentSpecRendererKt.
+          renderJsonForAuroraDeploymentSpecPointers(deploymentSpec, includeDefaults)
       def filename = getFilename(aid, includeDefaults, true, "txt")
       def expected = loadResource(filename)
 
@@ -55,7 +67,9 @@ class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSprin
     where:
       env   | app            | includeDefaults
       "utv" | "webleveranse" | true
+      "utv" | "reference"    | true
       "utv" | "webleveranse" | false
+      "utv" | "reference"    | false
   }
 
   def getFilename(ApplicationId aid, boolean includeDefaults, boolean formatted = false, String type = "json") {

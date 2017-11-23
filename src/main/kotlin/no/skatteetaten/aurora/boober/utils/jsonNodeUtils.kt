@@ -76,9 +76,13 @@ fun JsonNode?.startsWith(pattern: String, message: String): Exception? {
     return null
 }
 
-fun JsonNode?.pattern(pattern: String, message: String): Exception? {
+fun JsonNode?.pattern(pattern: String, message: String, required: Boolean = true): Exception? {
     if (this == null || !this.isTextual) {
-        return IllegalArgumentException(message)
+        return if (required) {
+            IllegalArgumentException(message)
+        } else {
+            null
+        }
     }
     if (!Regex(pattern).matches(this.textValue())) {
         return IllegalArgumentException(message)
@@ -112,9 +116,13 @@ fun JsonNode?.notBlank(message: String): Exception? {
     return null
 }
 
-fun JsonNode?.length(length: Int, message: String): Exception? {
+fun JsonNode?.length(length: Int, message: String, required: Boolean = true): Exception? {
     if (this == null || !this.isTextual) {
-        return IllegalArgumentException(message)
+        return if (required) {
+            IllegalArgumentException(message)
+        } else {
+            null
+        }
     } else if (this.textValue().length > length) {
         return IllegalArgumentException(message)
     }

@@ -1,0 +1,19 @@
+{
+  "kind": "Route",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "reference",
+    "labels": {
+      "app": "reference",
+      "updatedBy": "hero",
+      "affiliation": "aos",
+      "booberDeployId": "123"
+    }
+  },
+  "spec": {
+    "to": {
+      "kind": "Service",
+      "name": "reference"
+    }
+  }
+}

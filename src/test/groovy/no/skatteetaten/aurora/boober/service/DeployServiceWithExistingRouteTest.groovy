@@ -13,6 +13,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.JsonNodeUtilsKt
+import spock.lang.Ignore
 
 class DeployServiceWithExistingRouteTest extends AbstractMockedOpenShiftSpecification {
 

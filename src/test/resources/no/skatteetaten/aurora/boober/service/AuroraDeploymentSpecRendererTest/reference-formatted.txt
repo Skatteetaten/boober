@@ -1,0 +1,16 @@
+{
+  schemaVersion:       "v1"                     // about.json
+  type:                "deploy"                 // reference.json
+  cluster:             "utv"                    // utv/about.json
+  permissions: {
+    admin:             "APP_PaaS_utv"           // about.json
+  }
+  affiliation:         "aos"                    // about.json
+  envName:             "utv"                    // folderName
+  name:                "reference"              // fileName
+  artifactId:          "reference"              // fileName
+  groupId:             "no.skatteetaten.aurora" // reference.json
+  version:             "1"                      // reference.json
+  replicas:            1                        // reference.json
+  route:               true                     // reference.json
+}
