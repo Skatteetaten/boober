@@ -72,12 +72,19 @@ class OpenShiftObjectGenerator(
                     .addIfNotNull(generateRoute(auroraDeploymentSpec, labels))
                     .addIfNotNull(generateTemplate(auroraDeploymentSpec))
                     .addIfNotNull(generateLocalTemplate(auroraDeploymentSpec))
-                    .addIf(provisioningResult?.schemaProvisionResults != null, generateSecretsForSchemas(provisioningResult?.schemaProvisionResults!!   ))
+                    .addIf(provisioningResult?.schemaProvisionResults != null,
+                            generateSecretsForSchemas(auroraDeploymentSpec, provisioningResult?.schemaProvisionResults!!))
         })
     }
 
-    fun generateSecretsForSchemas(schemaProvisionResults: SchemaProvisionResults): JsonNode {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    fun generateSecretsForSchemas(deploymentSpec: AuroraDeploymentSpec, schemaProvisionResults: SchemaProvisionResults): List<JsonNode> {
+
+        return schemaProvisionResults.results.map {
+            mergeVelocityTemplate("secret.json", mapOf(
+                    "deploymentSpec" to deploymentSpec,
+                    "dbhSchema" to it.dbhSchema
+            ))
+        }
     }
 
     fun generateProjectRequest(auroraDeploymentSpec: AuroraDeploymentSpec): JsonNode {

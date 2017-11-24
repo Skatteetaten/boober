@@ -23,8 +23,12 @@ data class SchemaProvisionResult(val request: SchemaProvisionRequest, val dbhSch
 data class SchemaProvisionResults(val results: List<SchemaProvisionResult>)
 
 data class DbhSchema(
-        val jdbcUrl: String
-)
+        val jdbcUrl: String,
+        val labels: Map<String, String> = mapOf()
+) {
+    val name: String
+        get() = labels.get("name")!!
+}
 
 data class DbApiEnvelope(
         val status: String,

@@ -7,7 +7,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 
 class ExternalResourceProvisionerTest extends AbstractAuroraDeploymentSpecTest {
 
-  def "Auto providioned named schema"() {
+  def "Auto provisioned named schema"() {
     given:
       AuroraDeploymentSpec spec = createDeploySpecWithDbSpec('{ "database" : { "reference" : "auto" } }')
 
@@ -17,7 +17,7 @@ class ExternalResourceProvisionerTest extends AbstractAuroraDeploymentSpecTest {
     then:
       requests.size() == 1
       SchemaProvisionRequest request = requests.first()
-      request == new SchemaForAppRequest("aos", "utv", "reference", "reference-db")
+      request == new SchemaForAppRequest("aos", "utv", "reference", "reference")
   }
 
   def "Auto provisioned schema with default name"() {
@@ -30,7 +30,7 @@ class ExternalResourceProvisionerTest extends AbstractAuroraDeploymentSpecTest {
     then:
       requests.size() == 1
       SchemaProvisionRequest request = requests.first()
-      request == new SchemaForAppRequest("aos", "utv", "reference", "reference-db")
+      request == new SchemaForAppRequest("aos", "utv", "reference", "reference")
   }
 
   def "Named schema with explicit id"() {

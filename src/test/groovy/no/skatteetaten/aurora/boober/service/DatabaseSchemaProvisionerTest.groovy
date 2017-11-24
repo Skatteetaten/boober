@@ -34,8 +34,10 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
   DatabaseSchemaProvisioner provisioner
 
   def id = "fd59dba9-7d67-4ea2-bb98-081a5df8c387"
+  def appName = "reference"
+  def schemaName = "reference"
 
-  def labels = [affiliation: 'aos', environment: 'utv', application: 'reference', name: 'reference-db']
+  def labels = [affiliation: 'aos', environment: 'utv', application: appName, name: schemaName]
 
   def "Schema request with id succeeds when schema exists"() {
 
@@ -44,7 +46,7 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
           andRespond(withSuccess(loadResource("schema_${id}.json"), MediaType.APPLICATION_JSON))
 
     when:
-      def provisionResult = provisioner.provisionSchemas([new SchemaIdRequest(id)])
+      def provisionResult = provisioner.provisionSchemas([new SchemaIdRequest(id, schemaName)])
 
     then:
       provisionResult.results.size() == 1
@@ -60,7 +62,7 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
               .contentType(MediaType.APPLICATION_JSON))
 
     when:
-      provisioner.provisionSchemas([new SchemaIdRequest(id)])
+      provisioner.provisionSchemas([new SchemaIdRequest(id, schemaName)])
 
     then:
       thrown(ProvisioningException)
@@ -75,7 +77,7 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
 
     when:
       def provisionResult = provisioner.
-          provisionSchemas([new SchemaForAppRequest("aos", "utv", "reference", "reference-db")])
+          provisionSchemas([new SchemaForAppRequest("aos", "utv", "reference", "reference")])
 
     then:
       provisionResult.results.size() == 1
@@ -95,7 +97,7 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
 
     when:
       def provisionResult = provisioner.
-          provisionSchemas([new SchemaForAppRequest("aos", "utv", "reference", "reference-db")])
+          provisionSchemas([new SchemaForAppRequest("aos", "utv", "reference", "reference")])
 
     then:
       provisionResult.results.size() == 1

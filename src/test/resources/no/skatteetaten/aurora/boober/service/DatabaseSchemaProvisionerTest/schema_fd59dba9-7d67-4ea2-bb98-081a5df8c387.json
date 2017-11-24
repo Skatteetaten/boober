@@ -8,25 +8,25 @@
       },
       "createdDate": "2017-05-24T15:03:54Z",
       "lastUsedDate": "2017-09-27T13:13:50Z",
-      "jdbcUrl": "jdbc:oracle:thin:@til0map-sprint2demo-db01.skead.no:1521/maptest",
+      "jdbcUrl": "jdbc:oracle:thin:@some-db-server01.skead.no:1521/dbhotel",
       "name": "VCLFVAPKGOMBCFTWEVKZDYBGVTMYDP",
       "databaseInstance": {
         "port": 1521,
-        "host": "til0map-sprint2demo-db01.skead.no"
+        "host": "some-db-server01.skead.no"
       },
       "id": "fd59dba9-7d67-4ea2-bb98-081a5df8c387",
       "type": "MANAGED",
       "users": [
         {
-          "password": "yYGmRnUPBOrxMoMcPptGvDYgKxmRSm",
+          "password": "yYGmRnUPBORxMoMcPptGvDYgKxmRSm",
           "type": "SCHEMA",
-          "username": "VCLFVAPKGOMBCFTWEVKZDYBGVTMYDP"
+          "username": "VCLFVAPKGOMBPFTWEVKZDYBGVTMYDP"
         }
       ],
       "labels": {
-        "name": "referanseapp",
+        "name": "reference",
         "environment": "architect-utv",
-        "application": "refapp",
+        "application": "reference",
         "affiliation": "architect",
         "userId": "k72950"
       }

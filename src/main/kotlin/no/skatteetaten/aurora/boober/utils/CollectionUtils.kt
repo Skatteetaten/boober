@@ -20,6 +20,8 @@ fun <T> List<T>.addIfNotNull(value: List<T>?): List<T> {
 
 fun <T> List<T>.addIf(condition: Boolean, value: T): List<T> = if (condition) this + listOf(value) else this
 
+fun <T> List<T>.addIf(condition: Boolean, values: List<T>): List<T> = if (condition) this + values else this
+
 
 fun <K, V> Map<K, V>?.nullOnEmpty(): Map<K, V>? {
     if (this == null) {
