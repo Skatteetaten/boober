@@ -30,7 +30,7 @@ class DeploymentConfigGenerator(val mapper: ObjectMapper, private val velocityTe
         val labels = createLabels(auroraDeploymentSpec, commonLabels)
         val envVars = createEnvVars(mounts, auroraDeploymentSpec)
 
-        val tag = when(auroraDeploymentSpec.type) {
+        val tag = when (auroraDeploymentSpec.type) {
             development -> "latest"
             else -> "default"
         }
@@ -107,6 +107,8 @@ class DeploymentConfigGenerator(val mapper: ObjectMapper, private val velocityTe
             )
         } ?: mapOf()
 
+        val configEnv = auroraDeploymentSpec.deploy?.env ?: emptyMap()
+
         val routeName = auroraDeploymentSpec.route?.route?.takeIf { it.isNotEmpty() }?.first()?.let {
             val host = auroraDeploymentSpec.assembleRouteHost(it.host ?: auroraDeploymentSpec.name)
 
@@ -128,12 +130,14 @@ class DeploymentConfigGenerator(val mapper: ObjectMapper, private val velocityTe
             it.flatMap { createDbEnv(it, "${it.name}_db") } + createDbEnv(it.first(), "db")
         }?.toMap() ?: mapOf()
 
-        return mapOf(
+        val envs = mapOf(
                 "OPENSHIFT_CLUSTER" to auroraDeploymentSpec.cluster,
                 "HTTP_PORT" to "8080",
                 "MANAGEMENT_HTTP_PORT" to "8081",
                 "APP_NAME" to auroraDeploymentSpec.name
-        ).addIfNotNull(splunkIndex) + routeName + certEnv + debugEnv + dbEnv + mountEnv
+        ).addIfNotNull(splunkIndex) + routeName + certEnv + debugEnv + dbEnv + mountEnv + configEnv
+
+        return envs.mapKeys { it.key.replace(".", "_").replace("-", "_") }
     }
 
     private inline fun <R> String.withNonBlank(block: (String) -> R?): R? {
