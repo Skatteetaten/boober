@@ -10,7 +10,7 @@ import no.skatteetaten.aurora.boober.model.AbstractAuroraDeploymentSpecTest
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 
-class OpenShiftObjectGeneratorImageStreamTest extends AbstractAuroraDeploymentSpecTest {
+class OpenShiftObjectGeneratorImageStreamTest extends AbstractOpenShiftObjectGeneratorTest {
 
   OpenShiftObjectGenerator objectGenerator = createObjectGenerator()
 
@@ -38,14 +38,5 @@ class OpenShiftObjectGeneratorImageStreamTest extends AbstractAuroraDeploymentSp
       labels.releasedVersion == 'APSHOT-feature_MFU_3056-20171122.091423-23-b2.2.5-oracle8-1.4.0'
       labels.updatedBy == 'aurora'
       labels.each { name, value -> assert value.length() <= OpenShiftObjectGenerator.MAX_LABEL_VALUE_LENGTH }
-  }
-
-  OpenShiftObjectGenerator createObjectGenerator() {
-    def ve = new Configuration().velocity()
-    def objectMapper = new Configuration().mapper()
-    def userDetailsProvider = Mock(UserDetailsProvider)
-    userDetailsProvider.getAuthenticatedUser() >> new User("aurora", "token", "Aurora OpenShift")
-    new OpenShiftObjectGenerator(
-        userDetailsProvider, ve, objectMapper, Mock(OpenShiftTemplateProcessor), Mock(OpenShiftResourceClient))
   }
 }
