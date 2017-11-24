@@ -178,11 +178,6 @@ class OpenShiftClient(
         }
     }
 
-    private fun exist(url: String): Boolean {
-        val existingResource = serviceAccountClient.get(url)
-        return existingResource != null
-    }
-
     fun getGroups(group: String): ResponseEntity<JsonNode>? {
 
         val url = "$baseUrl/oapi/v1/groups/$group"
@@ -215,7 +210,7 @@ class OpenShiftClient(
 
 
     fun projectExists(name: String): Boolean {
-        serviceAccountClient.get("${baseUrl}/oapi/v1/projects/$name")?.body?.let {
+        serviceAccountClient.get("${baseUrl}/oapi/v1/projects/$name", retry = false)?.body?.let {
             val phase = it.at("/status/phase").textValue()
             if (phase == "Active") {
                 return true

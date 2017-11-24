@@ -40,7 +40,18 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraConfigTest {
     then:
       thrown(AuroraConfigException)
   }
+  def "Should allow AuroraConfig for ApplicationIf with no name or artifactId"(){
+    given:
+      auroraConfigJson["reference.json"] = REFERENCE
+      auroraConfigJson["utv/reference.json"] = '''{}'''
 
+    when:
+      def spec=createDeploymentSpec(auroraConfigJson, aid("utv", "reference"))
+
+    spec
+    then:
+      notThrown(AuroraConfigException)
+  }
   def "Fails when application name is too long and artifactId and name is blank"() {
     given:
       auroraConfigJson["this-name-is-stupid-stupid-stupidly-long-for-no-reason.json"] = '''{ "type" : "deploy", "groupId" : "foo", "version": "1"}'''
