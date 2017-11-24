@@ -35,6 +35,13 @@ abstract class AbstractAuroraConfigTest extends AbstractSpec {
   "route": true,
   "type": "deploy"
 }'''
+  static final String REFERENCE = '''{
+  "groupId" : "no.skatteetaten.aurora",
+  "replicas" : 1,
+  "version" : "1",
+  "route" : true,
+  "type" : "deploy"
+}'''
 
   public static final String REF_APP_JSON = '''{
   "name" : "reference",

@@ -62,12 +62,6 @@
       "spec": {
         "volumes": [
           {
-            "name": "config",
-            "configMap": {
-              "name": "openshift-referanse-react"
-            }
-          },
-          {
             "name": "application-log-volume",
             "emptyDir": {
 
@@ -144,8 +138,8 @@
                 "value": "http://openshift-referanse-react-aos-booberdev.utv.paas.skead.no"
               },
               {
-                "name": "VOLUME_CONFIG",
-                "value": "/u01/config/configmap"
+                "name": "foo2",
+                "value": "baz"
               }
             ],
             "resources": {
@@ -159,10 +153,6 @@
               }
             },
             "volumeMounts": [
-              {
-                "name": "config",
-                "mountPath": "/u01/config/configmap"
-              },
               {
                 "name": "application-log-volume",
                 "mountPath": "/u01/logs"
@@ -247,8 +237,8 @@
                 "value": "http://openshift-referanse-react-aos-booberdev.utv.paas.skead.no"
               },
               {
-                "name": "VOLUME_CONFIG",
-                "value": "/u01/config/configmap"
+                "name": "foo2",
+                "value": "baz"
               }
             ],
             "resources": {
@@ -262,10 +252,6 @@
               }
             },
             "volumeMounts": [
-              {
-                "name": "config",
-                "mountPath": "/u01/config/configmap"
-              },
               {
                 "name": "application-log-volume",
                 "mountPath": "/u01/logs"

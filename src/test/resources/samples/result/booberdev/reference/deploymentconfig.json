@@ -3,27 +3,30 @@
   "apiVersion": "v1",
   "metadata": {
     "annotations": {
-      "boober.skatteetaten.no/applicationFile": "booberdev/aos-simple.json",
+      "boober.skatteetaten.no/applicationFile": "booberdev/reference.json",
       "console.skatteetaten.no/alarm": "true",
-      "boober.skatteetaten.no/overrides": "{\"booberdev/aos-simple.json\":{\"version\":\"1.0.4\"}}",
-      "sprocket.sits.no/deployment-config.certificate": "ske.aurora.openshift.aos-simple"
+      "console.skatteetaten.no/management-path": ":8081/actuator",
+      "sprocket.sits.no/deployment-config.certificate": "no.skatteetaten.aurora.openshift.reference"
     },
     "labels": {
-      "app": "aos-simple",
+      "app": "reference",
       "updatedBy": "hero",
       "affiliation": "aos",
       "booberDeployId": "123",
-      "name": "aos-simple",
-      "deployTag": "1.0.4",
-      "paused": "true"
+      "name": "reference",
+      "deployTag": "1"
     },
-    "name": "aos-simple"
+    "name": "reference"
   },
   "spec": {
     "strategy": {
-      "type": "Recreate",
-      "recreateParams": {
-        "timeoutSeconds": 180
+      "type": "Rolling",
+      "rollingParams": {
+        "intervalSeconds": 1,
+        "maxSurge": "25%",
+        "maxUnavailable": 0,
+        "timeoutSeconds": 180,
+        "updatePeriodSeconds": 1
       }
     },
     "triggers": [
@@ -32,43 +35,36 @@
         "imageChangeParams": {
           "automatic": true,
           "containerNames": [
-            "aos-simple"
+            "reference"
           ],
           "from": {
-            "name": "aos-simple:latest",
+            "name": "reference:default",
             "kind": "ImageStreamTag"
           }
         }
       }
     ],
-    "replicas": 0,
+    "replicas": 1,
     "selector": {
-      "name": "aos-simple"
+      "name": "reference"
     },
     "template": {
       "metadata": {
         "labels": {
-          "app": "aos-simple",
+          "app": "reference",
           "updatedBy": "hero",
           "affiliation": "aos",
           "booberDeployId": "123",
-          "name": "aos-simple",
-          "deployTag": "1.0.4",
-          "paused": "true"
+          "name": "reference",
+          "deployTag": "1"
         }
       },
       "spec": {
         "volumes": [
           {
-            "name": "config",
-            "configMap": {
-              "name": "aos-simple"
-            }
-          },
-          {
-            "name": "aos-simple-cert",
+            "name": "reference-cert",
             "secret": {
-              "secretName": "aos-simple-cert"
+              "secretName": "reference-cert"
             }
           },
           {
@@ -80,7 +76,7 @@
         ],
         "containers": [
           {
-            "name": "aos-simple",
+            "name": "reference",
             "ports": [
               {
                 "containerPort": 8080,
@@ -130,7 +126,7 @@
               },
               {
                 "name": "APP_NAME",
-                "value": "aos-simple"
+                "value": "reference"
               },
               {
                 "name": "SPLUNK_INDEX",
@@ -138,41 +134,33 @@
               },
               {
                 "name": "ROUTE_NAME",
-                "value": "aos-simple-aos-booberdev.utv.paas.skead.no/foo"
+                "value": "reference-aos-booberdev.utv.paas.skead.no"
               },
               {
                 "name": "ROUTE_URL",
-                "value": "http://aos-simple-aos-booberdev.utv.paas.skead.no/foo"
+                "value": "http://reference-aos-booberdev.utv.paas.skead.no"
               },
               {
                 "name": "STS_CERTIFICATE_URL",
-                "value": "/u01/secrets/app/aos-simple-cert/certificate.crt"
+                "value": "/u01/secrets/app/reference-cert/certificate.crt"
               },
               {
                 "name": "STS_PRIVATE_KEY_URL",
-                "value": "/u01/secrets/app/aos-simple-cert/privatekey.key"
+                "value": "/u01/secrets/app/reference-cert/privatekey.key"
               },
               {
                 "name": "STS_KEYSTORE_DESCRIPTOR",
-                "value": "/u01/secrets/app/aos-simple-cert/descriptor.properties"
+                "value": "/u01/secrets/app/reference-cert/descriptor.properties"
               },
               {
-                "name": "VOLUME_CONFIG",
-                "value": "/u01/config/configmap"
-              },
-              {
-                "name": "VOLUME_AOS_SIMPLE_CERT",
-                "value": "/u01/secrets/app/aos-simple-cert"
-              },
-              {
-                "name": "FOO",
-                "value": "baaaar"
+                "name": "VOLUME_REFERENCE_CERT",
+                "value": "/u01/secrets/app/reference-cert"
               }
             ],
             "resources": {
               "limits": {
                 "cpu": "2000m",
-                "memory": "128Mi"
+                "memory": "512Mi"
               },
               "requests": {
                 "cpu": "100m",
@@ -181,12 +169,8 @@
             },
             "volumeMounts": [
               {
-                "name": "config",
-                "mountPath": "/u01/config/configmap"
-              },
-              {
-                "name": "aos-simple-cert",
-                "mountPath": "/u01/secrets/app/aos-simple-cert"
+                "name": "reference-cert",
+                "mountPath": "/u01/secrets/app/reference-cert"
               },
               {
                 "name": "application-log-volume",
@@ -200,10 +184,11 @@
             },
             "securityContext": {
               "capabilities": {
+
               },
               "privileged": false
             },
-            "livenessProbe": {
+            "readinessProbe": {
               "tcpSocket": {
                 "port": 8080
               },

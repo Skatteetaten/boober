@@ -3,7 +3,7 @@ package no.skatteetaten.aurora.boober.controller.v1
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.service.DeployBundleService
-import no.skatteetaten.aurora.boober.service.createMapForAuroraDeploymentSpecPointers
+import no.skatteetaten.aurora.boober.service.filterDefaultFields
 import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -23,9 +23,10 @@ class AuroraDeploymentSpecControllerV1(val deployBundleService: DeployBundleServ
             @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
     ): Response {
         val spec = deployBundleService.createAuroraDeploymentSpec(affiliation, ApplicationId.aid(environment, application), emptyList())
-        val mapOfPointers = createMapForAuroraDeploymentSpecPointers(spec, includeDefaults)
 
-        return Response(items = listOf(mapOfPointers))
+        val filteredFields = if (includeDefaults) spec.fields else filterDefaultFields(spec.fields)
+
+        return Response(items = listOf(filteredFields))
     }
 
     @GetMapping("/formatted")

@@ -6,7 +6,6 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraLocalTemplate
-import no.skatteetaten.aurora.boober.model.findSubKeys
 
 class AuroraLocalTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>, val auroraConfig: AuroraConfig) {
 
@@ -41,7 +40,7 @@ class AuroraLocalTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>, 
     }
 
     private fun extractTemplateJson(auroraConfigFields: AuroraConfigFields): JsonNode {
-        val templateFile = auroraConfigFields.extract("templateFile").let { fileName ->
+        val templateFile = auroraConfigFields.extract<String>("templateFile").let { fileName ->
             auroraConfig.auroraConfigFiles.find { it.name == fileName }?.contents
         }
         return templateFile ?: throw IllegalArgumentException("templateFile is required")

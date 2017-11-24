@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
 
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
 import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 
 
@@ -10,8 +9,9 @@ enum class TemplateType {
     deploy, development, localTemplate, template, build
 }
 
-enum class ApplicationPlatform {
-    java, web
+enum class ApplicationPlatform(val baseImageName:String, val baseImageVersion:String) {
+    java("flange", "8"),
+    web("wrench", "0")
 }
 
 
@@ -23,7 +23,7 @@ data class AuroraDeploymentSpec(
         val name: String,
         val envName: String,
         val permissions: Permissions,
-        val fields: Map<String, AuroraConfigField>,
+        val fields: Map<String, Map<String, Any?>>,
 
         val volume: AuroraVolume? = null,
         val route: AuroraRoute? = null,
@@ -100,7 +100,8 @@ data class AuroraDeploy(
         val readiness: Probe?,
         val dockerImagePath: String,
         val dockerTag: String,
-        val deployStrategy: AuroraDeployStrategy
+        val deployStrategy: AuroraDeployStrategy,
+        val env: Map<String, String>
 ) {
     val dockerImage: String
         get() = "${dockerImagePath}:${dockerTag}"

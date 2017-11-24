@@ -17,6 +17,42 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraConfigTest {
 
   def auroraConfigJson = defaultAuroraConfig()
 
+  def "fileName can be long if both artifactId and name exist"() {
+    given:
+      auroraConfigJson["this-name-is-stupid-stupid-stupidly-long-for-no-reason.json"] = '''{ "type" : "deploy", "groupId" : "foo", "version": "1"}'''
+      auroraConfigJson["utv/this-name-is-stupid-stupid-stupidly-long-for-no-reason.json"] = '''{ "name" : "foo", "artifactId" : "foo"}'''
+
+    when:
+      createDeploymentSpec(auroraConfigJson, aid("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"))
+
+    then:
+      notThrown(AuroraConfigException)
+  }
+  
+  def "Fails when application name is too long and artifactId blank"() {
+    given:
+      auroraConfigJson["this-name-is-stupid-stupid-stupidly-long-for-no-reason.json"] = '''{ "type" : "deploy", "groupId" : "foo", "version": "1"}'''
+      auroraConfigJson["utv/this-name-is-stupid-stupid-stupidly-long-for-no-reason.json"] = '''{ "name" : "foo"}'''
+
+    when:
+      createDeploymentSpec(auroraConfigJson, aid("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"))
+
+    then:
+      thrown(AuroraConfigException)
+  }
+
+  def "Fails when application name is too long and artifactId and name is blank"() {
+    given:
+      auroraConfigJson["this-name-is-stupid-stupid-stupidly-long-for-no-reason.json"] = '''{ "type" : "deploy", "groupId" : "foo", "version": "1"}'''
+      auroraConfigJson["utv/this-name-is-stupid-stupid-stupidly-long-for-no-reason.json"] = '''{}'''
+
+    when:
+      createDeploymentSpec(auroraConfigJson, aid("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"))
+
+    then:
+      thrown(AuroraConfigException)
+  }
+
   def "Fails when envFile does not start with about"() {
     given:
       auroraConfigJson["utv/foo.json"] = '''{ }'''
@@ -84,5 +120,4 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraConfigTest {
     then:
       noExceptionThrown()
   }
-
 }

@@ -4,21 +4,20 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.java
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.web
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.Mount
-import no.skatteetaten.aurora.boober.model.MountType
-import no.skatteetaten.aurora.boober.model.Permissions
-import no.skatteetaten.aurora.boober.service.internal.DeploymentConfigGenerator
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
-import no.skatteetaten.aurora.boober.utils.addIf
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
+import org.apache.commons.lang.StringEscapeUtils
+import org.apache.velocity.VelocityContext
+import org.apache.velocity.app.VelocityEngine
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.io.StringWriter
 
 @Service
 class OpenShiftObjectGenerator(

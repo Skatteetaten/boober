@@ -25,8 +25,7 @@ class HeaderMapper(val fields: AuroraConfigFields) {
                 AuroraConfigFieldHandler("baseFile"),
                 AuroraConfigFieldHandler("envFile", validator = {
                     it?.startsWith("about-", "envFile must start with about")
-                })
-        )
+                }))
 
         fun create(applicationFiles: List<AuroraConfigFile>, applicationId: ApplicationId): HeaderMapper {
 
@@ -39,5 +38,5 @@ class HeaderMapper(val fields: AuroraConfigFields) {
     }
 
     val type: TemplateType
-        get() = fields.extract("type", { TemplateType.valueOf(it.textValue()) })
+        get() = fields.extract("type")
 }

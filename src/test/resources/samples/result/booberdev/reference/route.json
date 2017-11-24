@@ -1,16 +1,19 @@
 {
-  "kind": "ConfigMap",
+  "kind": "Route",
   "apiVersion": "v1",
   "metadata": {
-    "name": "aos-simple",
+    "name": "reference",
     "labels": {
-      "app": "aos-simple",
+      "app": "reference",
       "updatedBy": "hero",
       "affiliation": "aos",
       "booberDeployId": "123"
     }
   },
-  "data": {
-    "1.properties": "BAZ=BAR"
+  "spec": {
+    "to": {
+      "kind": "Service",
+      "name": "reference"
+    }
   }
 }

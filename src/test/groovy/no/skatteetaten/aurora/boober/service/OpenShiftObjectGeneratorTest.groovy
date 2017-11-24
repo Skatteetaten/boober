@@ -96,6 +96,7 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
         where:
 
         env           | name            | templateFile      | overrides
+        "booberdev"   |  "reference"    | null              | []
         "booberdev"   | "console"       | null              | []
         "webseal"     | "sprocket"      | null              | []
         "booberdev"   | "sprocket"      | null              | []
