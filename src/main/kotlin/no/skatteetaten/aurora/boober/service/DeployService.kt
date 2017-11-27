@@ -220,7 +220,7 @@ class DeployService(
 
     private fun markRelease(res: List<AuroraDeployResult>, repo: Git) {
 
-        res.forEach {
+        val refs=res.map {
             val result = filterSensitiveInformation(it)
             val prefix = if (it.success) {
                 DEPLOY_PREFIX
@@ -229,8 +229,7 @@ class DeployService(
             }
             gitService.markRelease(repo, "$prefix/${it.tag}", mapper.writeValueAsString(result))
         }
-
-        gitService.push(repo)
+        gitService.pushTags(repo, refs)
     }
 
     fun hasAccessToAllVolumes(volume: AuroraVolume?): Boolean {
