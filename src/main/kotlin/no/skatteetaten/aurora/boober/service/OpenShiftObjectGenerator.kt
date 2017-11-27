@@ -10,11 +10,14 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.model.Permissions
+import no.skatteetaten.aurora.boober.service.internal.DbhSecretGenerator
 import no.skatteetaten.aurora.boober.service.internal.DeploymentConfigGenerator
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.utils.addIf
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
+import org.apache.commons.codec.binary.Base64
+import org.apache.commons.lang.StringEscapeUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -77,15 +80,8 @@ class OpenShiftObjectGenerator(
         })
     }
 
-    fun generateSecretsForSchemas(deploymentSpec: AuroraDeploymentSpec, schemaProvisionResults: SchemaProvisionResults): List<JsonNode> {
-
-        return schemaProvisionResults.results.map {
-            mergeVelocityTemplate("secret.json", mapOf(
-                    "deploymentSpec" to deploymentSpec,
-                    "dbhSchema" to it.dbhSchema
-            ))
-        }
-    }
+    fun generateSecretsForSchemas(deploymentSpec: AuroraDeploymentSpec, schemaProvisionResults: SchemaProvisionResults): List<JsonNode> =
+            DbhSecretGenerator(velocityTemplateJsonService).generateSecretsForSchemas(deploymentSpec, schemaProvisionResults)
 
     fun generateProjectRequest(auroraDeploymentSpec: AuroraDeploymentSpec): JsonNode {
 

@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober
 
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory
@@ -30,7 +31,9 @@ class Configuration {
     @Bean
     @Primary
     fun mapper(): ObjectMapper {
-        return jacksonObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        return jacksonObjectMapper()
+                .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     }
 
     @Bean
@@ -50,9 +53,9 @@ class Configuration {
     @Qualifier("bitbucket")
     fun bitbucketRestTemplate(@Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
                               @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
-                              @Value("\${boober.git.username}")  username: String,
-                              @Value("\${boober.git.password}")  password: String,
-                              @Value("\${boober.bitbucket.url}")  bitbucketUrl: String
+                              @Value("\${boober.git.username}") username: String,
+                              @Value("\${boober.git.password}") password: String,
+                              @Value("\${boober.bitbucket.url}") bitbucketUrl: String
 
     ): RestTemplate {
         val clientHttpRequestFactory = HttpComponentsClientHttpRequestFactory().apply {

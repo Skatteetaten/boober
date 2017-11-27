@@ -49,8 +49,7 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
       def provisionResult = provisioner.provisionSchemas([new SchemaIdRequest(id, schemaName)])
 
     then:
-      provisionResult.results.size() == 1
-      provisionResult.results[0].dbhSchema.jdbcUrl
+      assertSchemaIsCorrect(provisionResult)
   }
 
   def "Schema request with id fails when schema does not exist"() {
@@ -80,8 +79,7 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
           provisionSchemas([new SchemaForAppRequest("aos", "utv", "reference", "reference")])
 
     then:
-      provisionResult.results.size() == 1
-      provisionResult.results[0].dbhSchema.jdbcUrl
+      assertSchemaIsCorrect(provisionResult)
   }
 
   def "Creates new schema if schema is missing"() {
@@ -100,7 +98,18 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
           provisionSchemas([new SchemaForAppRequest("aos", "utv", "reference", "reference")])
 
     then:
-      provisionResult.results.size() == 1
-      provisionResult.results[0].dbhSchema.jdbcUrl
+      assertSchemaIsCorrect(provisionResult)
+  }
+
+
+  private static assertSchemaIsCorrect(SchemaProvisionResults provisionResult) {
+
+    def results = provisionResult.results
+    assert results.size() == 1
+    def schema = results[0].dbhSchema
+    assert schema.jdbcUrl == 'jdbc:oracle:thin:@some-db-server01.skead.no:1521/dbhotel'
+    assert schema.username == 'VCLFVAPKGOMBCFTWEVKZDYBGVTMYDP'
+    assert schema.password == 'yYGmRnUPBORxMoMcPptGvDYgKxmRSm'
+    true
   }
 }

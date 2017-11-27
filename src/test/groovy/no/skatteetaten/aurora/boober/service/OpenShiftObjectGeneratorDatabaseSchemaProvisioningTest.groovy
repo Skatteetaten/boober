@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.service
 import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 import static no.skatteetaten.aurora.boober.service.ExternalResourceProvisioner.createSchemaProvisionRequestsFromDeploymentSpec
 
-import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 
@@ -11,7 +10,7 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
 
   OpenShiftObjectGenerator objectGenerator = createObjectGenerator()
 
-  def "A"() {
+  def "Creates secret with database info when provisioning database"() {
 
     given:
 
@@ -23,11 +22,17 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
           "utv/reference.json": '''{}'''
       ], aid("utv", appName))
 
-      def schema = new DbhSchema("", [name: appName])
+      def schema = new DbhSchema(
+          "fd59dba9-7d67-4ea2-bb98-081a5df8c387",
+          "MANAGED",
+          "jdbc:oracle:thin:@some-db-server01.skead.no:1521/dbhotel",
+          [name: appName, affiliation: AFFILIATION],
+          [new DbhUser("VCLFVAPKGOMBCFTWEVKZDYBGVTMYDP", "yYGmRnUPBORxMoMcPptGvDYgKxmRSm", "MANAGED")]
+      )
       def provisioningResult = new ProvisioningResult(
           new SchemaProvisionResults([new SchemaProvisionResult(
               createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec)[0],
-              schema)
+              schema, "")
           ]))
 
     when:
@@ -41,15 +46,16 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
       secret != null
       def d = secret.data
 
-      println JsonOutput.prettyPrint(JsonOutput.toJson(secret))
-      println b64d(d.name)
-      println b64d(d.jdbcurl)
-      println b64d(d.info)
-      println b64d(d.id)
-      println b64d(d."db.properties")
-
       secret.metadata.name == 'reference-reference-db'
       b64d(d.jdbcurl) == 'jdbc:oracle:thin:@some-db-server01.skead.no:1521/dbhotel'
+      b64d(d.name) == 'VCLFVAPKGOMBCFTWEVKZDYBGVTMYDP'
+      b64d(d.id) == 'fd59dba9-7d67-4ea2-bb98-081a5df8c387'
+      def expectedProps = new Properties().with { load(new ByteArrayInputStream('''jdbc.url=jdbc\\:oracle\\:thin\\:@some-db-server01.skead.no\\:1521/dbhotel
+jdbc.user=VCLFVAPKGOMBCFTWEVKZDYBGVTMYDP
+jdbc.password=yYGmRnUPBORxMoMcPptGvDYgKxmRSm
+'''.bytes)); return it }
+      def actualProps = new Properties().with { load(new ByteArrayInputStream(b64d(d."db.properties").bytes)); return it}
+      expectedProps == actualProps
   }
 
   private static String b64d(String d) {

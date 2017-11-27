@@ -33,6 +33,6 @@ class AuroraConfigException(
 
 class AuroraVersioningException(message: String, val errors: List<VersioningError>) : ServiceException(message)
 
-class ProvisioningException(message: String, cause: Throwable) : ServiceException(message, cause)
+class ProvisioningException(message: String, cause: Throwable? = null) : ServiceException(message, cause)
 
 
