@@ -65,8 +65,11 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
             def templateResult = this.getClass().getResource(templateFileName)
             JsonNode jsonResult = mapper.readTree(templateResult)
 
-            openShiftResourceClient.post("processedtemplate", _, null, _) >>
-                    new ResponseEntity<JsonNode>(jsonResult, HttpStatus.OK)
+            openShiftResourceClient.post("processedtemplate", _, null, _) >> {
+
+                it[3]["labels"]["updatedBy"] == "hero"
+                new ResponseEntity<JsonNode>(jsonResult, HttpStatus.OK)
+            }
         }
         def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, affiliation, additionalFile)
         deployBundleService.saveAuroraConfig(auroraConfig, false)

@@ -6,12 +6,14 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.BooleanNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
+import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import org.springframework.stereotype.Service
 
 @Service
 class OpenShiftTemplateProcessor(
+        val userDetailsProvider: UserDetailsProvider,
         val openShiftClient: OpenShiftResourceClient,
         val mapper: ObjectMapper) {
 
@@ -47,7 +49,9 @@ class OpenShiftTemplateProcessor(
             labels.put("app", aac.name)
         }
 
-        //TODO: we should not use aoc-validate here. Please fix. 
+        labels.put("updatedBy",userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"))
+
+
         val result = openShiftClient.post("processedtemplate", namespace = aac.namespace, payload = template)
 
         return result.body["objects"].asSequence().toList()
