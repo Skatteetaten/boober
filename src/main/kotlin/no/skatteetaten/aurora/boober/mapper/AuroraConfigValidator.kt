@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.mapper
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.ConfigFieldError
@@ -25,14 +26,20 @@ class AuroraConfigValidator(val applicationId: ApplicationId,
         val errors: List<ConfigFieldError> = fieldHandlers.mapNotNull { e ->
             val rawField = auroraConfigFields.fields[e.name]!!
 
+            logger.debug("Validating field=${e.name}")
             val auroraConfigField: JsonNode? = rawField.valueOrDefault
+            logger.debug("value is=${jacksonObjectMapper().writeValueAsString(auroraConfigField)}")
 
             val result = e.validator(auroraConfigField)
+            logger.debug("validator result is=${result}")
 
             val err = when {
                 result == null -> null
                 auroraConfigField != null -> ConfigFieldError.illegal(result.localizedMessage, rawField)
                 else -> ConfigFieldError.missing(result.localizedMessage, e.path)
+            }
+            if(err!=null){
+                logger.debug("Error=$err message=${err.message}")
             }
             err
         }

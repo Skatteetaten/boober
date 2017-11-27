@@ -170,8 +170,6 @@ class DeployBundleService(
                                  validateVersions: Boolean,
                                  function: (AuroraConfig) -> AuroraConfig = { it -> it }): AuroraConfig {
 
-        //TODO: add revCommit
-
         logger.debug("withAuroraConfig")
         val repo = getRepo(affiliation)
 
