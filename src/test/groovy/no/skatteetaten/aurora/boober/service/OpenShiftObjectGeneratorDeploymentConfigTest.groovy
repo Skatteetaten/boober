@@ -32,19 +32,20 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObje
       dc = new JsonSlurper().parseText(dc.toString()) // convert to groovy for easier navigation and validation
 
     then:
-      def name = deploymentSpec.name
-      def nameUpper = name.toUpperCase()
+      def appName = deploymentSpec.name
+      def dbName = deploymentSpec.deploy.database.first().name
+      def dbNameUpper = dbName.toUpperCase()
 
       def spec = dc.spec.template.spec
-      spec.volumes.find { it == [name: "$name-db", secret: [secretName: "$name-db"]] }
+      spec.volumes.find { it == [name: "$dbName-db", secret: [secretName: "$appName-$dbName-db"]] }
       def container = spec.containers[0]
-      container.volumeMounts.find { it == [mountPath: "/u01/secrets/app/$name-db", name: "$name-db"] }
+      container.volumeMounts.find { it == [mountPath: "/u01/secrets/app/$dbName-db", name: "$dbName-db"] }
       def expectedEnvs = [
-          ("${nameUpper}_DB")           : "/u01/secrets/app/${name}-db/info",
-          ("${nameUpper}_DB_PROPERTIES"): "/u01/secrets/app/${name}-db/db.properties",
-          DB                            : "/u01/secrets/app/${name}-db/info",
-          DB_PROPERTIES                 : "/u01/secrets/app/${name}-db/db.properties",
-          ("VOLUME_${nameUpper}_DB")    : "/u01/secrets/app/${name}-db"
+          ("${dbNameUpper}_DB")           : "/u01/secrets/app/${dbName}-db/info",
+          ("${dbNameUpper}_DB_PROPERTIES"): "/u01/secrets/app/${dbName}-db/db.properties",
+          DB                              : "/u01/secrets/app/${dbName}-db/info",
+          DB_PROPERTIES                   : "/u01/secrets/app/${dbName}-db/db.properties",
+          ("VOLUME_${dbNameUpper}_DB")    : "/u01/secrets/app/${dbName}-db"
       ]
       expectedEnvs.every { envName, envValue -> container.env.find { it.name == envName && it.value == envValue } }
   }
