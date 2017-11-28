@@ -44,7 +44,6 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
       secret = new JsonSlurper().parseText(secret.toString())
 
     then:
-      println JsonOutput.prettyPrint(JsonOutput.toJson(secret))
       deploymentConfig != null
       secret != null
       def d = secret.data
