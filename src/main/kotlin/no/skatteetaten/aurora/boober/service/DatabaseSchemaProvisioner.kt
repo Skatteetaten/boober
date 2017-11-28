@@ -2,6 +2,8 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import no.skatteetaten.aurora.boober.ServiceTypes
+import no.skatteetaten.aurora.boober.TargetService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -61,6 +63,7 @@ data class DbApiEnvelope(
 
 @Service
 class DatabaseSchemaProvisioner(
+        @TargetService(ServiceTypes.AURORA)
         val restTemplate: RestTemplate,
         val mapper: ObjectMapper,
         @Value("\${boober.dbh:http://localhost:8080}") val dbhUrl: String

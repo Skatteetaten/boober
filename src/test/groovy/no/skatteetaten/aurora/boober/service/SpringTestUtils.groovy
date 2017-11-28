@@ -11,6 +11,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
 
+import no.skatteetaten.aurora.boober.ServiceTypes
+import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.controller.security.User
 
 class SpringTestUtils {
@@ -20,6 +22,21 @@ class SpringTestUtils {
     MockServerRestTemplateCustomizer customizer
 
     @Autowired
+    RestTemplate restTemplate
+
+    @Override
+    void afterPropertiesSet() throws Exception {
+      customizer.customize(restTemplate)
+    }
+  }
+
+  @Component
+  static class AuroraMockRestServiceServiceInitializer implements InitializingBean {
+    @Autowired
+    MockServerRestTemplateCustomizer customizer
+
+    @Autowired
+    @TargetService(ServiceTypes.AURORA)
     RestTemplate restTemplate
 
     @Override
