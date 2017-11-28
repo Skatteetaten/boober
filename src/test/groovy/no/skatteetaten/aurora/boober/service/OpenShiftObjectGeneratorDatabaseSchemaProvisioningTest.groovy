@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 import static no.skatteetaten.aurora.boober.service.ExternalResourceProvisioner.createSchemaProvisionRequestsFromDeploymentSpec
 
+import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 
@@ -29,11 +30,12 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
           [name: appName, affiliation: AFFILIATION],
           [new DbhUser("VCLFVAPKGOMBCFTWEVKZDYBGVTMYDP", "yYGmRnUPBORxMoMcPptGvDYgKxmRSm", "MANAGED")]
       )
+      def response =
+          loadResource(DatabaseSchemaProvisionerTest.simpleName, "schema_fd59dba9-7d67-4ea2-bb98-081a5df8c387.json")
       def provisioningResult = new ProvisioningResult(
           new SchemaProvisionResults([new SchemaProvisionResult(
-              createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec)[0],
-              schema, "")
-          ]))
+              createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec)[0], schema, response
+          )]))
 
     when:
       def objects = objectGenerator.generateApplicationObjects('deploy-id', deploymentSpec, provisioningResult)
@@ -42,6 +44,7 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
       secret = new JsonSlurper().parseText(secret.toString())
 
     then:
+      println JsonOutput.prettyPrint(JsonOutput.toJson(secret))
       deploymentConfig != null
       secret != null
       def d = secret.data
@@ -50,12 +53,26 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
       b64d(d.jdbcurl) == 'jdbc:oracle:thin:@some-db-server01.skead.no:1521/dbhotel'
       b64d(d.name) == 'VCLFVAPKGOMBCFTWEVKZDYBGVTMYDP'
       b64d(d.id) == 'fd59dba9-7d67-4ea2-bb98-081a5df8c387'
-      def expectedProps = new Properties().with { load(new ByteArrayInputStream('''jdbc.url=jdbc\\:oracle\\:thin\\:@some-db-server01.skead.no\\:1521/dbhotel
+      b64d(d.info) == response
+
+    and: "db.properties is correct"
+      def expectedProps = new Properties().with {
+        load(new ByteArrayInputStream('''jdbc.url=jdbc\\:oracle\\:thin\\:@some-db-server01.skead.no\\:1521/dbhotel
 jdbc.user=VCLFVAPKGOMBCFTWEVKZDYBGVTMYDP
 jdbc.password=yYGmRnUPBORxMoMcPptGvDYgKxmRSm
-'''.bytes)); return it }
-      def actualProps = new Properties().with { load(new ByteArrayInputStream(b64d(d."db.properties").bytes)); return it}
+'''.bytes)); return it
+      }
+      def actualProps = new Properties().
+          with { load(new ByteArrayInputStream(b64d(d."db.properties").bytes)); return it }
+
       expectedProps == actualProps
+
+    and: "labels are correct"
+      verifyLabels(secret.metadata.labels)
+  }
+
+  boolean verifyLabels(Map<String, String> labels) {
+    ['affiliation', 'app', 'booberDeployId', 'updatedBy'].every { !labels[it].isEmpty() }
   }
 
   private static String b64d(String d) {

@@ -20,31 +20,13 @@ import org.springframework.stereotype.Service
 
 @Service
 class OpenShiftObjectGenerator(
-        val userDetailsProvider: UserDetailsProvider,
+        val openShiftObjectLabelService: OpenShiftObjectLabelService,
         val velocityTemplateJsonService: VelocityTemplateJsonService,
         val mapper: ObjectMapper,
         val openShiftTemplateProcessor: OpenShiftTemplateProcessor,
         val openShiftClient: OpenShiftResourceClient) {
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftObjectGenerator::class.java)
-
-    companion object {
-        @JvmStatic
-        val MAX_LABEL_VALUE_LENGTH = 63
-
-        /**
-         * Returns a new Map where each value has been truncated as to not exceed the
-         * <code>MAX_LABEL_VALUE_LENGTH</code> max length.
-         * Truncation is done by cutting of characters from the start of the value, leaving only the last
-         * MAX_LABEL_VALUE_LENGTH characters.
-         */
-        fun toOpenShiftLabelNameSafeMap(labels: Map<String, String>): Map<String, String> {
-            return labels.mapValues {
-                val startIndex = (it.value.length - MAX_LABEL_VALUE_LENGTH).takeIf { it >= 0 } ?: 0
-                it.value.substring(startIndex)
-            }
-        }
-    }
 
     fun generateBuildRequest(name: String): JsonNode {
         logger.trace("Generating build request for name $name")
@@ -64,13 +46,13 @@ class OpenShiftObjectGenerator(
         return withLabelsAndMounts(deployId, auroraDeploymentSpec, provisioningResult, { labels, mounts ->
 
             val schemaSecrets = if (provisioningResult?.schemaProvisionResults != null) {
-                generateSecretsForSchemas(auroraDeploymentSpec, provisioningResult.schemaProvisionResults)
+                generateSecretsForSchemas(deployId, auroraDeploymentSpec, provisioningResult.schemaProvisionResults)
             } else null
 
             listOf<JsonNode>()
                     .addIfNotNull(generateDeploymentConfig(auroraDeploymentSpec, labels, mounts))
                     .addIfNotNull(generateService(auroraDeploymentSpec, labels))
-                    .addIfNotNull(generateImageStream(auroraDeploymentSpec, labels))
+                    .addIfNotNull(generateImageStream(deployId, auroraDeploymentSpec))
                     .addIfNotNull(generateBuilds(auroraDeploymentSpec, deployId))
                     .addIfNotNull(generateMount(mounts, labels))
                     .addIfNotNull(generateRoute(auroraDeploymentSpec, labels))
@@ -80,8 +62,8 @@ class OpenShiftObjectGenerator(
         })
     }
 
-    fun generateSecretsForSchemas(deploymentSpec: AuroraDeploymentSpec, schemaProvisionResults: SchemaProvisionResults): List<JsonNode> =
-            DbhSecretGenerator(velocityTemplateJsonService).generateSecretsForSchemas(deploymentSpec, schemaProvisionResults)
+    fun generateSecretsForSchemas(deployId: String, deploymentSpec: AuroraDeploymentSpec, schemaProvisionResults: SchemaProvisionResults): List<JsonNode> =
+            DbhSecretGenerator(velocityTemplateJsonService, openShiftObjectLabelService).generateSecretsForSchemas(deployId, deploymentSpec, schemaProvisionResults)
 
     fun generateProjectRequest(auroraDeploymentSpec: AuroraDeploymentSpec): JsonNode {
 
@@ -142,18 +124,14 @@ class OpenShiftObjectGenerator(
                     "annotations" to prometheusAnnotations.addIfNotNull(webseal).addIfNotNull(websealRoles)
             ))
         }
-
     }
 
-    fun generateImageStream(deployId: String, auroraDeploymentSpec: AuroraDeploymentSpec) =
-            withLabelsAndMounts(deployId, auroraDeploymentSpec) { labels, _ ->
-                generateImageStream(auroraDeploymentSpec, labels)
-            }
-
-    fun generateImageStream(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>): JsonNode? {
+    fun generateImageStream(deployId: String, auroraDeploymentSpec: AuroraDeploymentSpec): JsonNode? {
         return auroraDeploymentSpec.deploy?.let {
+            val labels = openShiftObjectLabelService.createCommonLabels(auroraDeploymentSpec, deployId,
+                    mapOf("releasedVersion" to it.version))
             mergeVelocityTemplate("imagestream.json", mapOf(
-                    "labels" to toOpenShiftLabelNameSafeMap(labels + mapOf("releasedVersion" to it.version)),
+                    "labels" to labels,
                     "deploy" to it,
                     "name" to auroraDeploymentSpec.name,
                     "type" to auroraDeploymentSpec.type.name
@@ -205,16 +183,17 @@ class OpenShiftObjectGenerator(
         }
     }
 
-    private fun generateBuilds(auroraDeploymentSpec: AuroraDeploymentSpec, deployId: String): List<JsonNode>? {
-        return auroraDeploymentSpec.build?.let {
+    private fun generateBuilds(deploymentSpec: AuroraDeploymentSpec, deployId: String): List<JsonNode>? {
+        return deploymentSpec.build?.let {
             val buildName = if (it.buildSuffix != null) {
-                "${auroraDeploymentSpec.name}-${it.buildSuffix}"
+                "${deploymentSpec.name}-${it.buildSuffix}"
             } else {
-                auroraDeploymentSpec.name
+                deploymentSpec.name
             }
 
+            val labels = openShiftObjectLabelService.createCommonLabels(deploymentSpec, deployId, name = buildName)
             val buildParams = mapOf(
-                    "labels" to createLabelsFromDeploymentSpec(auroraDeploymentSpec, deployId, buildName),
+                    "labels" to labels,
                     "buildName" to buildName,
                     "build" to it
             )
@@ -233,16 +212,6 @@ class OpenShiftObjectGenerator(
 
             listOf(bc).addIfNotNull(testBc)
         }
-    }
-
-    fun createLabelsFromDeploymentSpec(auroraDeploymentSpec: AuroraDeploymentSpec, deployId: String, name: String = auroraDeploymentSpec.name): Map<String, String> {
-        val labels = mapOf(
-                "app" to name,
-                "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
-                "affiliation" to auroraDeploymentSpec.affiliation,
-                "booberDeployId" to deployId
-        )
-        return labels
     }
 
     fun createMountsFromDeploymentSpec(auroraDeploymentSpec: AuroraDeploymentSpec): List<Mount> {
@@ -323,7 +292,7 @@ class OpenShiftObjectGenerator(
         val provisioningMounts = provisioningResult?.let { createMountsFromProvisioningResult(deploymentSpec, it) }.orEmpty()
         val allMounts: List<Mount> = deploymentSpecMounts + provisioningMounts
 
-        val labels = toOpenShiftLabelNameSafeMap(createLabelsFromDeploymentSpec(deploymentSpec, deployId))
+        val labels = openShiftObjectLabelService.createCommonLabels(deploymentSpec, deployId)
         return c(labels, allMounts)
     }
 

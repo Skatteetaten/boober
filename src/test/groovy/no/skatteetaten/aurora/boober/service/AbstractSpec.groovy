@@ -9,7 +9,7 @@ abstract class AbstractSpec extends Specification {
     loadResource(folder, resourceName)
   }
 
-  String loadResource(folder, String resourceName) {
+  String loadResource(String folder, String resourceName) {
     def resourcePath = "${folder}/$resourceName"
     this.getClass().getResource(resourcePath)?.text ?: { throw new IllegalArgumentException("No such resource $resourcePath")}()
   }
