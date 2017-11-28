@@ -80,3 +80,10 @@ management:
 ---
 spring:
   profiles: openshift
+
+boober:
+  dbh: http://dbh
+
+aurora:
+  token:
+    location: /u01/secrets/app/aurora-token/token
