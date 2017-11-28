@@ -6,11 +6,11 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Metrics
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
+import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import no.skatteetaten.aurora.boober.service.openshift.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -38,7 +38,9 @@ import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceC
         Config,
         AuroraMetrics,
         UserDetailsTokenProvider,
-        AuroraDeploymentSpecValidator
+        AuroraDeploymentSpecValidator,
+        SharedSecretReader,
+        VelocityTemplateJsonService
 ])
 class AbstractMockedOpenShiftSpecification extends Specification {
 

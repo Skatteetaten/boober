@@ -18,7 +18,7 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObje
           "about.json"        : DEFAULT_ABOUT,
           "utv/about.json"    : DEFAULT_UTV_ABOUT,
           "reference.json"    : REF_APP_JSON,
-          "utv/reference.json": '''{ "certificate": false }'''
+          "utv/reference.json": '''{ "name": "something-different", "certificate": false }'''
       ], aid("utv", "reference"))
 
       def provisioningResult = new ProvisioningResult(

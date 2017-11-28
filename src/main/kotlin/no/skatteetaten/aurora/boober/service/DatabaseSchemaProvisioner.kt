@@ -66,7 +66,8 @@ class DatabaseSchemaProvisioner(
         @TargetService(ServiceTypes.AURORA)
         val restTemplate: RestTemplate,
         val mapper: ObjectMapper,
-        @Value("\${boober.dbh:http://localhost:8080}") val dbhUrl: String
+        val userDetailsProvider: UserDetailsProvider,
+        @Value("\${boober.dbh}") val dbhUrl: String
 ) {
     fun provisionSchemas(schemaProvisionRequests: List<SchemaProvisionRequest>): SchemaProvisionResults {
 
@@ -91,11 +92,13 @@ class DatabaseSchemaProvisioner(
 
     private fun provisionForApplication(request: SchemaForAppRequest): SchemaProvisionResult {
 
+        val user = userDetailsProvider.getAuthenticatedUser()
         val labels = mapOf(
                 "affiliation" to request.affiliation,
                 "environment" to request.environment,
                 "application" to request.application,
-                "name" to request.schemaName
+                "name" to request.schemaName,
+                "userId" to user.username
         )
         val (dbhSchema, responseText) = findOrCreateSchemaByLabels(labels)
         return SchemaProvisionResult(request, dbhSchema, responseText)

@@ -47,7 +47,7 @@ class OpenShiftClientCreateOpenShiftCommandTest extends AbstractAuroraDeployment
           andRespond(withSuccess(loadResource("webleveranse.json"), MediaType.APPLICATION_JSON))
 
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid("utv", "webleveranse"))
-      JsonNode deploymentConfig = objectGenerator.generateDeploymentConfig(deploymentSpec, "deploy-id")
+      JsonNode deploymentConfig = objectGenerator.generateDeploymentConfig("deploy-id", deploymentSpec, null)
 
     when:
       OpenshiftCommand command = client.createOpenShiftCommand("aos", deploymentConfig, true, false)

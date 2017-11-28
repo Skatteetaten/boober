@@ -12,16 +12,22 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.security.test.context.support.WithUserDetails
 import org.springframework.test.web.client.MockRestServiceServer
 
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.Configuration
+import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 
+@WithUserDetails("aurora")
 @RestClientTest
 @SpringBootTest(classes = [
     Configuration,
+    SharedSecretReader,
+    SpringTestUtils.SecurityMock,
     DatabaseSchemaProvisioner,
-    SpringTestUtils.MockRestServiceServiceInitializer
+    UserDetailsProvider,
+    SpringTestUtils.AuroraMockRestServiceServiceInitializer
 ])
 class DatabaseSchemaProvisionerTest extends AbstractSpec {
 
@@ -37,7 +43,7 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
   def appName = "reference"
   def schemaName = "reference"
 
-  def labels = [affiliation: 'aos', environment: 'utv', application: appName, name: schemaName]
+  def labels = [affiliation: 'aos', environment: 'utv', application: appName, name: schemaName, userId: 'aurora']
 
   def "Schema request with id succeeds when schema exists"() {
 

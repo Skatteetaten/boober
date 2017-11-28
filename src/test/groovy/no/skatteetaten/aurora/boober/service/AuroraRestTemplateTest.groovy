@@ -20,15 +20,10 @@ import no.skatteetaten.aurora.filter.logging.AuroraHeaderFilter
 import no.skatteetaten.aurora.filter.logging.RequestKorrelasjon
 
 @RestClientTest
-@SpringBootTest(
-    classes = [
-        Configuration,
-        DatabaseSchemaProvisioner,
-        SharedSecretReader,
-        SpringTestUtils.AuroraMockRestServiceServiceInitializer],
-    properties = [
-        'aurora.token.value=token'
-    ]
+@SpringBootTest(classes = [
+    Configuration,
+    SharedSecretReader,
+    SpringTestUtils.AuroraMockRestServiceServiceInitializer]
 )
 
 class AuroraRestTemplateTest extends AbstractSpec {

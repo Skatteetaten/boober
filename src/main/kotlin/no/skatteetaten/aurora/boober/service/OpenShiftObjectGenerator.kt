@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
-import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.java
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.web
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -13,11 +12,8 @@ import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.service.internal.DbhSecretGenerator
 import no.skatteetaten.aurora.boober.service.internal.DeploymentConfigGenerator
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
-import no.skatteetaten.aurora.boober.utils.addIf
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
-import org.apache.commons.codec.binary.Base64
-import org.apache.commons.lang.StringEscapeUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -66,6 +62,11 @@ class OpenShiftObjectGenerator(
                                    provisioningResult: ProvisioningResult? = null): List<JsonNode> {
 
         return withLabelsAndMounts(deployId, auroraDeploymentSpec, provisioningResult, { labels, mounts ->
+
+            val schemaSecrets = if (provisioningResult?.schemaProvisionResults != null) {
+                generateSecretsForSchemas(auroraDeploymentSpec, provisioningResult.schemaProvisionResults)
+            } else null
+
             listOf<JsonNode>()
                     .addIfNotNull(generateDeploymentConfig(auroraDeploymentSpec, labels, mounts))
                     .addIfNotNull(generateService(auroraDeploymentSpec, labels))
@@ -75,8 +76,7 @@ class OpenShiftObjectGenerator(
                     .addIfNotNull(generateRoute(auroraDeploymentSpec, labels))
                     .addIfNotNull(generateTemplate(auroraDeploymentSpec))
                     .addIfNotNull(generateLocalTemplate(auroraDeploymentSpec))
-                    .addIf(provisioningResult?.schemaProvisionResults != null,
-                            generateSecretsForSchemas(auroraDeploymentSpec, provisioningResult?.schemaProvisionResults!!))
+                    .addIfNotNull(schemaSecrets)
         })
     }
 
@@ -286,7 +286,8 @@ class OpenShiftObjectGenerator(
         return mounts.addIfNotNull(configMount).addIfNotNull(secretMount).addIfNotNull(certMount)
     }
 
-    fun createMountsFromProvisioningResult(provisioningResult: ProvisioningResult): List<Mount> {
+    fun createMountsFromProvisioningResult(deploymentSpec: AuroraDeploymentSpec,
+                                           provisioningResult: ProvisioningResult): List<Mount> {
 
 /*
         val certMount = auroraDeploymentSpec.deploy?.certificateCn?.let {
@@ -302,10 +303,11 @@ class OpenShiftObjectGenerator(
         val schemaResults: List<SchemaProvisionResult> = (provisioningResult.schemaProvisionResults?.results ?: emptyList())
         val databaseMounts = schemaResults.map {
             val mountPath = "${it.request.schemaName}-db".toLowerCase()
+            val volumeName = "${deploymentSpec.name}-${it.request.schemaName}-db".toLowerCase()
             Mount(path = "/u01/secrets/app/$mountPath",
                     type = MountType.Secret,
                     mountName = mountPath,
-                    volumeName = mountPath,
+                    volumeName = volumeName,
                     exist = true,
                     content = null)
         }
@@ -318,7 +320,7 @@ class OpenShiftObjectGenerator(
                                         c: (labels: Map<String, String>, mounts: List<Mount>?) -> T): T {
 
         val deploymentSpecMounts = createMountsFromDeploymentSpec(deploymentSpec)
-        val provisioningMounts = provisioningResult?.let { createMountsFromProvisioningResult(it) }.orEmpty()
+        val provisioningMounts = provisioningResult?.let { createMountsFromProvisioningResult(deploymentSpec, it) }.orEmpty()
         val allMounts: List<Mount> = deploymentSpecMounts + provisioningMounts
 
         val labels = toOpenShiftLabelNameSafeMap(createLabelsFromDeploymentSpec(deploymentSpec, deployId))
