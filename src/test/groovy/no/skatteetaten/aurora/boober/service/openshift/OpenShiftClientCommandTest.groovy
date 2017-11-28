@@ -16,6 +16,7 @@ import org.springframework.test.context.TestPropertySource
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
+import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
@@ -35,7 +36,8 @@ import spock.mock.DetachedMockFactory
     Config,
     UserDetailsProvider,
     SharedSecretReader,
-    VelocityTemplateJsonService
+    VelocityTemplateJsonService,
+    OpenShiftObjectLabelService
 ])
 class OpenShiftClientCommandTest extends Specification {
 

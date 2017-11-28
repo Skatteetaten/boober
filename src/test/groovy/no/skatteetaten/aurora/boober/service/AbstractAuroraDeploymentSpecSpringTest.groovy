@@ -27,7 +27,8 @@ import no.skatteetaten.aurora.boober.service.openshift.UserDetailsTokenProvider
     OpenShiftClient,
     OpenShiftObjectGenerator,
     OpenShiftTemplateProcessor,
-    VelocityTemplateJsonService
+    VelocityTemplateJsonService,
+    OpenShiftObjectLabelService
 ], webEnvironment = SpringBootTest.WebEnvironment.NONE)
 class AbstractAuroraDeploymentSpecSpringTest extends AbstractAuroraDeploymentSpecTest {
 

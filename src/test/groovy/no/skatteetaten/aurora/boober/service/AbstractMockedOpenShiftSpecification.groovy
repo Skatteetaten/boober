@@ -40,7 +40,8 @@ import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceC
         UserDetailsTokenProvider,
         AuroraDeploymentSpecValidator,
         SharedSecretReader,
-        VelocityTemplateJsonService
+        VelocityTemplateJsonService,
+        OpenShiftObjectLabelService
 ])
 class AbstractMockedOpenShiftSpecification extends Specification {
 

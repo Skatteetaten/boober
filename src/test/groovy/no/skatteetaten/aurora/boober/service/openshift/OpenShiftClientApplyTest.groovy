@@ -18,6 +18,7 @@ import org.springframework.web.client.HttpClientErrorException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
+import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
@@ -37,6 +38,7 @@ import spock.mock.DetachedMockFactory
     SharedSecretReader,
     Config,
     UserDetailsProvider,
+    OpenShiftObjectLabelService
 ])
 class OpenShiftClientApplyTest extends Specification {
 

@@ -32,6 +32,6 @@ class OpenShiftObjectGeneratorImageStreamTest extends AbstractOpenShiftObjectGen
       labels.booberDeployId == 'deploy-id'
       labels.releasedVersion == 'APSHOT-feature_MFU_3056-20171122.091423-23-b2.2.5-oracle8-1.4.0'
       labels.updatedBy == 'aurora'
-      labels.each { name, value -> assert value.length() <= OpenShiftObjectGenerator.MAX_LABEL_VALUE_LENGTH }
+      labels.each { name, value -> assert value.length() <= OpenShiftObjectLabelService.MAX_LABEL_VALUE_LENGTH }
   }
 }
