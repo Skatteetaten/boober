@@ -23,6 +23,7 @@ class DbhSecretGenerator(
 
         val labels = openShiftObjectLabelService.createCommonLabels(deploymentSpec, deployId)
         return schemaProvisionResults.results.map {
+
             val connectionProperties = createConnectionProperties(it.dbhSchema)
             val responseText = it.responseText
             velocityTemplateJsonService.renderToJson("secret.json", mapOf(
@@ -30,6 +31,7 @@ class DbhSecretGenerator(
                     "labels" to labels,
                     "deploymentSpec" to deploymentSpec,
                     "dbhSchema" to it.dbhSchema,
+                    "request" to it.request,
                     "connectionProperties" to connectionProperties,
                     "responseText" to responseText
             ))
