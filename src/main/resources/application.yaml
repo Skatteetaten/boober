@@ -23,6 +23,7 @@ spring:
       timerPercentilesMax: "PT5S"
 
 boober:
+    dbh: http://dbh
     bitbucket:
         project: "ac"
         url: "https://git.aurora.skead.no/rest/api/1.0"
@@ -80,10 +81,3 @@ management:
 ---
 spring:
   profiles: openshift
-
-boober:
-  dbh: http://dbh
-
-aurora:
-  token:
-    location: /u01/secrets/app/aurora-token/token
