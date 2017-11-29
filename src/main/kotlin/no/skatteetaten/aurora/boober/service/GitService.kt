@@ -231,6 +231,7 @@ class GitService(
 
         logger.debug("push config")
         metrics.withMetrics("git_push", {
+            logger.debug("push config inner")
             val cmd = git.push()
                     .setCredentialsProvider(cp)
                     .add("refs/heads/master")
@@ -240,6 +241,7 @@ class GitService(
                 }))
             }
             cmd.call()
+            logger.debug("/push config inner")
         })
         logger.debug("/push config")
     }
