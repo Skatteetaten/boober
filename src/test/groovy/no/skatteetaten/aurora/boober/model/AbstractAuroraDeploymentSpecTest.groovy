@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.service
+package no.skatteetaten.aurora.boober.model
 
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecBuilderKt
 import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest

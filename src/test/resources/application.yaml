@@ -4,7 +4,13 @@ spring:
     application:
         name: boober
 
+aurora:
+  token:
+    value: token
+
 boober:
+  dbh:
+    http://localhost:8080
   encrypt:
     key: "komogsyngensang"
   git:

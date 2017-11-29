@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.boober.service.openshift
 
-import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import org.springframework.stereotype.Component
 
 @Component

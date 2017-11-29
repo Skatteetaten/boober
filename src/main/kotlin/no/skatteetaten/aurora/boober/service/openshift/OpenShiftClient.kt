@@ -101,57 +101,31 @@ class OpenShiftClient(
      * <code>false</code>, because retrying everything will significantly impact performance of creating or updating
      * many objects.
      */
-    fun createOpenShiftCommand(namespace: String, json: JsonNode, projectExist: Boolean, retryGetResourceOnFailure: Boolean = false): OpenshiftCommand {
+    fun createOpenShiftCommand(namespace: String, newResource: JsonNode, mergeWithExistingResource: Boolean = true, retryGetResourceOnFailure: Boolean = false): OpenshiftCommand {
 
-        val generated = json.deepCopy<JsonNode>()
-
-        val kind = json.openshiftKind
-        val name = json.openshiftName
+        val kind = newResource.openshiftKind
+        val name = newResource.openshiftName
 
         //we do not update project objects
-        if (kind == "projectrequest" && projectExist) {
-            return OpenshiftCommand(OperationType.NOOP, payload = json)
+        if (kind == "projectrequest" && mergeWithExistingResource) {
+            return OpenshiftCommand(OperationType.NOOP, payload = newResource)
         }
 
-        val existingResource = if (projectExist) userClient.get(kind, namespace, name, retryGetResourceOnFailure) else null
+        val existingResource = if (mergeWithExistingResource) userClient.get(kind, namespace, name, retryGetResourceOnFailure) else null
         if (existingResource == null) {
-            return OpenshiftCommand(OperationType.CREATE, payload = json)
+            return OpenshiftCommand(OperationType.CREATE, payload = newResource)
         }
         // ProjectRequest will always create an admin rolebinding, so if we get a command to create one, we just
         // swap it out with an update command.
         val isCreateAdminRoleBindingCommand = kind == "rolebinding" && name == "admin"
         if (isCreateAdminRoleBindingCommand) {
-            return createUpdateRolebindingCommand(json, namespace)
+            return createUpdateRolebindingCommand(newResource, namespace)
         }
 
         val existing = existingResource.body
+        val mergedResource = mergeWithExistingResource(newResource, existing)
 
-        json.updateField(existing, "/metadata", "resourceVersion")
-
-        if (kind == "service") {
-            json.updateField(existing, "/spec", "clusterIP")
-        }
-
-        if (kind == "persistentvolumeclaim") {
-            json.updateField(existing, "/spec", "volumeName")
-        }
-
-        if (kind == "deploymentconfig") {
-            json.updateField(existing, "/spec/triggers/0/imageChangeParams", "lastTriggeredImage")
-            val containerCount = (json.at("/spec/template/spec/containers") as ArrayNode).size()
-            (0..containerCount).forEach {
-                json.updateField(existing, "/spec/template/spec/containers/$it", "image")
-            }
-        }
-
-        if (kind == "buildconfig") {
-            val triggerCount = (json.at("/spec/triggers") as ArrayNode).size()
-            (0..triggerCount).forEach {
-                json.updateField(existing, "/spec/triggers/$it/imageChange", "lastTriggeredImageID")
-            }
-        }
-
-        return OpenshiftCommand(OperationType.UPDATE, json, existing, generated)
+        return OpenshiftCommand(OperationType.UPDATE, mergedResource, existing, newResource)
     }
 
     fun findCurrentUser(token: String): JsonNode? {

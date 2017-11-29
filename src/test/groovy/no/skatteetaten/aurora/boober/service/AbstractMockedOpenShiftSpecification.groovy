@@ -16,11 +16,11 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Metrics
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
+import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
@@ -46,7 +46,10 @@ import spock.mock.DetachedMockFactory
     Config,
     AuroraMetrics,
     UserDetailsTokenProvider,
-    AuroraDeploymentSpecValidator
+    AuroraDeploymentSpecValidator,
+    SharedSecretReader,
+    VelocityTemplateJsonService,
+    OpenShiftObjectLabelService
 ])
 class AbstractMockedOpenShiftSpecification extends Specification {
 
@@ -77,6 +80,11 @@ class AbstractMockedOpenShiftSpecification extends Specification {
     @Bean
     OpenShiftResourceClient client() {
       factory.Mock(OpenShiftResourceClient)
+    }
+
+    @Bean
+    ExternalResourceProvisioner externalResourceProvisioner() {
+        factory.Mock(ExternalResourceProvisioner)
     }
 
     @Bean

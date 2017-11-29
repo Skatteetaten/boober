@@ -23,10 +23,12 @@
       "artifactId": "openshift-reference-springboot-server",
       "version": "1",
       "database": {
-        "referanseapp": "auto"
+        "this-is-a-really-long-name-forreference": "b68eae4d-713e-473f-a39b-ab96ba8ea9d4"
       },
       "config": {
-        "foo2": "baz"
+        "foo2": "baz",
+        "bar": "501d911b-147e-4f45-bdb4-0bc8fdf8dcd3",
+        "bar2": "b68eae4d-713e-473f-a39b-ab96ba8ea9d4"
       }
     },
     "reference-web.json": {
@@ -84,5 +86,6 @@
     },
     "boober-bugfix/reference.json": {
     }
-  }
+  },
+  "validateVersions": false
 }

@@ -86,7 +86,9 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
       def deployId = "123"
 
       List<JsonNode> generatedObjects = openShiftService.
-          with { [generateProjectRequest(deploymentSpec)] + generateApplicationObjects(deploymentSpec, deployId) }
+          with { [generateProjectRequest(deploymentSpec)] + generateApplicationObjects(deployId, deploymentSpec, null) }
+        List<JsonNode> generatedObjects = openShiftService.
+                with { [generateProjectRequest(deploymentSpec)] + generateApplicationObjects(deployId, deploymentSpec, null) }
 
       def resultFiles = AuroraConfigHelperKt.getResultFiles(aid)
 
@@ -95,7 +97,7 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
       generatedObjects.forEach {
         def key = getKey(it)
         assert keys.contains(key)
-        compareJson(resultFiles[key], it)
+        compareJson("/samples/result/${aid.environment}/${aid.application} $key", resultFiles[key], it)
       }
 
       generatedObjects.collect { getKey(it) } as Set == resultFiles.keySet()
@@ -135,7 +137,7 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
       JsonNode result = deployService.generateRedeployResource(templateType, name, docker, [response])
 
       def key = getKey(result)
-      compareJson(resultFiles[key], result)
+      compareJson("/samples/result/${aid.environment}/${aid.application} $key", resultFiles[key], result)
 
     where:
       env         | name       | operation | kind               | prev | curr
@@ -166,8 +168,10 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
     (rolebinding.at(path) as ArrayNode).toSet().collect { it.textValue() }
   }
 
-  def compareJson(JsonNode jsonNode, JsonNode target) {
-    assert JsonOutput.prettyPrint(target.toString()) == JsonOutput.prettyPrint(jsonNode.toString())
+  def compareJson(String file, JsonNode jsonNode, JsonNode target) {
+    def expected = "$file\n" + JsonOutput.prettyPrint(target.toString())
+    def actual = "$file\n" + JsonOutput.prettyPrint(jsonNode.toString())
+    assert expected == actual
     true
   }
 

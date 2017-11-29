@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.AuroraMetrics
-import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraSecretFile
 import no.skatteetaten.aurora.boober.utils.use
 import org.eclipse.jgit.api.Git
@@ -10,6 +9,7 @@ import org.eclipse.jgit.api.errors.GitAPIException
 import org.eclipse.jgit.api.errors.NoHeadException
 import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.lib.PersonIdent
+import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.revwalk.RevCommit
 import org.eclipse.jgit.revwalk.RevTag
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
@@ -59,7 +59,7 @@ class GitService(
                             .setCredentialsProvider(cp)
                             .call()
                     return git
-                }catch(e:Exception) {
+                } catch (e: Exception) {
                     repoPath.deleteRecursively()
                 }
             }
@@ -87,7 +87,7 @@ class GitService(
 
             val status = git.status().call()
             commitAllChanges(git, "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}")
-            push(git)
+            pushMaster(git)
         } catch (ex: EmtpyCommitException) {
             throw AuroraConfigException("No such directory")
         } catch (ex: GitAPIException) {
@@ -108,7 +108,7 @@ class GitService(
             logger.debug("commit")
             commitAllChanges(git, "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}")
             logger.debug("push")
-            push(git)
+            pushMaster(git)
             logger.debug("/push")
         } catch (ex: EmtpyCommitException) {
         } catch (ex: GitAPIException) {
@@ -205,20 +205,29 @@ class GitService(
                 .call()
     }
 
-    fun push(git: Git) {
+    fun pushTags(git: Git, tags: List<Ref>) {
+
+        val cmd = git.push()
+        tags.forEach { cmd.add(it) }
+        metrics.withMetrics("git_push_tags", {
+            cmd.setCredentialsProvider(cp)
+                .call()
+        })
+    }
+
+    fun pushMaster(git: Git) {
 
         metrics.withMetrics("git_push", {
             git.push()
                     .setCredentialsProvider(cp)
-                    .setPushAll()
-                    .setPushTags()
+                    .add("refs/heads/master")
                     .call()
         })
     }
 
-    fun markRelease(git: Git, tag: String, tagBody: String) {
+    fun markRelease(git: Git, tag: String, tagBody: String): Ref {
         val user = userDetails.getAuthenticatedUser().let { PersonIdent(it.fullName ?: it.username, "${it.username}@skatteetaten.no") }
-        git.tag().setTagger(user).setAnnotated(true).setName(tag).setMessage(tagBody).call()
+        return git.tag().setTagger(user).setAnnotated(true).setName(tag).setMessage(tagBody).call()
     }
 
     fun readTag(git: Git, oid: ObjectId): RevTag? {

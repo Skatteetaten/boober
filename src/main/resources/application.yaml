@@ -11,6 +11,8 @@ openshift:
 spring:
   profiles:
     active: local
+  application:
+      name: boober
   cache:
     caffeine:
       spec: maximumSize=2000,expireAfterAccess=300s
@@ -21,6 +23,7 @@ spring:
       timerPercentilesMax: "PT5S"
 
 boober:
+    dbh: http://dbh
     bitbucket:
         project: "ac"
         url: "https://git.aurora.skead.no/rest/api/1.0"
@@ -32,6 +35,9 @@ boober:
         tokenLocation: /var/run/secrets/kubernetes.io/serviceaccount/token
 
 aurora:
+  token:
+    location: /u01/secrets/app/aurora-token/token
+
   starter:
     headerfilter:
       enabled: false
@@ -50,13 +56,12 @@ logging:
 ---
 spring:
     profiles: local
-    application:
-        name: boober
 
 openshift:
     cluster: qa
 
 boober:
+  dbh: http://dbh-aurora.qa.paas.skead.no
   openshift:
     tokenLocation: /opt/boober
   encrypt:
@@ -65,6 +70,10 @@ boober:
     urlPattern: "file:///tmp/boobergit/%s"
     username: "boober"
     password: ""
+
+aurora:
+  token:
+    value: token
 
 management:
     port: 8081

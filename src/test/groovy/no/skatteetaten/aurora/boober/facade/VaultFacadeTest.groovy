@@ -14,7 +14,7 @@ import io.micrometer.core.instrument.Metrics
 import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraPermissions
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
@@ -24,6 +24,7 @@ import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
 import no.skatteetaten.aurora.boober.service.SecretVaultPermissionService
 import no.skatteetaten.aurora.boober.service.SecretVaultService
+import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -33,6 +34,7 @@ import spock.mock.DetachedMockFactory
     GitService,
     EncryptionService,
     SecretVaultService,
+    SharedSecretReader,
     Config,
     AuroraMetrics
 ])
