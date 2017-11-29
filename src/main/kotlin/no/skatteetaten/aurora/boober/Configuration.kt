@@ -50,9 +50,9 @@ class Configuration {
     @Qualifier("bitbucket")
     fun bitbucketRestTemplate(@Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
                               @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
-                              @Value("\${boober.git.username}") username: String,
-                              @Value("\${boober.git.password}") password: String,
-                              @Value("\${boober.bitbucket.url}") bitbucketUrl: String
+                              @Value("\${boober.git.username}")  username: String,
+                              @Value("\${boober.git.password}")  password: String,
+                              @Value("\${boober.bitbucket.url}")  bitbucketUrl: String
 
     ): RestTemplate {
         val clientHttpRequestFactory = HttpComponentsClientHttpRequestFactory().apply {

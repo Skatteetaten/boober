@@ -59,7 +59,7 @@ class GitService(
                             .setCredentialsProvider(cp)
                             .call()
                     return git
-                } catch (e: Exception) {
+                }catch(e:Exception) {
                     repoPath.deleteRecursively()
                 }
             }

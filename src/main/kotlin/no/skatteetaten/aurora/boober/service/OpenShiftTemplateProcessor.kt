@@ -49,7 +49,7 @@ class OpenShiftTemplateProcessor(
             labels.put("app", aac.name)
         }
 
-        labels.put("updatedBy", userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"))
+        labels.put("updatedBy",userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"))
 
 
         val result = openShiftClient.post("processedtemplate", namespace = aac.namespace, payload = template)

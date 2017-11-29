@@ -1,12 +1,14 @@
 package no.skatteetaten.aurora.boober
 
-import io.micrometer.core.instrument.Tag
-import io.micrometer.spring.web.client.RestTemplateExchangeTags
-import io.micrometer.spring.web.client.RestTemplateExchangeTagsProvider
+import java.util.Arrays
+
 import org.springframework.http.HttpRequest
 import org.springframework.http.client.ClientHttpResponse
 import org.springframework.stereotype.Component
-import java.util.*
+
+import io.micrometer.core.instrument.Tag
+import io.micrometer.spring.web.client.RestTemplateExchangeTags
+import io.micrometer.spring.web.client.RestTemplateExchangeTagsProvider
 
 @Component
 class AuroraRestTemplateTagsProvider : RestTemplateExchangeTagsProvider {

@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.model
 
 import org.eclipse.jgit.revwalk.RevCommit
+import org.hibernate.validator.constraints.NotEmpty
 import java.io.File
 
 data class AuroraSecretVault @JvmOverloads constructor(

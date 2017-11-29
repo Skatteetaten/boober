@@ -9,7 +9,7 @@ enum class TemplateType {
     deploy, development, localTemplate, template, build
 }
 
-enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: String) {
+enum class ApplicationPlatform(val baseImageName:String, val baseImageVersion:String) {
     java("flange", "8"),
     web("wrench", "0")
 }

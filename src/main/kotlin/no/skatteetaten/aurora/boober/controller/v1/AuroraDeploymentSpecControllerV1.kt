@@ -5,7 +5,11 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.service.DeployBundleService
 import no.skatteetaten.aurora.boober.service.filterDefaultFields
 import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/v1/auroradeployspec/{affiliation}/{environment}/{application}")

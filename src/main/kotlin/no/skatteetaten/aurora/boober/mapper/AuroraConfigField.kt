@@ -3,7 +3,13 @@ package no.skatteetaten.aurora.boober.mapper
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.MissingNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraSecretVault
+import no.skatteetaten.aurora.boober.model.Database
+import no.skatteetaten.aurora.boober.model.Mount
+import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.utils.toPrimitiveType
+import no.skatteetaten.aurora.boober.utils.nullOnEmpty
 import org.apache.commons.lang.StringEscapeUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -97,7 +103,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
                 is String -> StringEscapeUtils.escapeJavaScript(value)
                 is Number -> value.toString()
                 is Boolean -> value.toString()
-                else -> StringEscapeUtils.escapeJavaScript(jacksonObjectMapper().writeValueAsString(value))
+                else  ->  StringEscapeUtils.escapeJavaScript(jacksonObjectMapper().writeValueAsString(value))
             }
             field to escapedValue
         }
