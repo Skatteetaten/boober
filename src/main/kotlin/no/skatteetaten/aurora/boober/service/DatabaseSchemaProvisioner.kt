@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
+import no.skatteetaten.aurora.boober.utils.logger
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -69,6 +70,8 @@ class DatabaseSchemaProvisioner(
         val userDetailsProvider: UserDetailsProvider,
         @Value("\${boober.dbh}") val dbhUrl: String
 ) {
+    val logger by logger()
+
     fun provisionSchemas(schemaProvisionRequests: List<SchemaProvisionRequest>): SchemaProvisionResults {
 
         if (schemaProvisionRequests.isEmpty()) throw IllegalArgumentException("SchemaProvisionRequest cannot be empty")

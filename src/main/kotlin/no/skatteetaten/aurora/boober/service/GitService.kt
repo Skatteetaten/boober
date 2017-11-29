@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.model.AuroraSecretFile
+import no.skatteetaten.aurora.boober.utils.LambdaOutputStream
 import no.skatteetaten.aurora.boober.utils.use
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.EmtpyCommitException
@@ -216,9 +217,12 @@ class GitService(
         logger.debug("/added tag")
         metrics.withMetrics("git_push_tags", {
             cmd.setCredentialsProvider(cp)
-            //TODO: Remove when debug done
-                    cmd.setProgressMonitor(TextProgressMonitor(PrintWriter(System.out)))
-                .call()
+            if (logger.isDebugEnabled) {
+                cmd.progressMonitor = TextProgressMonitor(PrintWriter(LambdaOutputStream {
+                    logger.debug(it)
+                }))
+            }
+            cmd.call()
         })
         logger.debug("/push tags to git")
     }
@@ -227,12 +231,15 @@ class GitService(
 
         logger.debug("push config")
         metrics.withMetrics("git_push", {
-            git.push()
+            val cmd = git.push()
                     .setCredentialsProvider(cp)
                     .add("refs/heads/master")
-                    //TODO: Remove when debug done
-                    .setProgressMonitor(TextProgressMonitor(PrintWriter(System.out)))
-                    .call()
+            if (logger.isDebugEnabled) {
+                cmd.progressMonitor = TextProgressMonitor(PrintWriter(LambdaOutputStream {
+                    logger.debug(it)
+                }))
+            }
+            cmd.call()
         })
         logger.debug("/push config")
     }

@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.utils.logger
 import org.springframework.stereotype.Service
 
 class ProvisioningResult(val schemaProvisionResults: SchemaProvisionResults?)
@@ -19,6 +20,7 @@ class ExternalResourceProvisioner(val databaseSchemaProvisioner: DatabaseSchemaP
         if (schemaProvisionRequests.isEmpty()) {
             return null
         }
+
         return databaseSchemaProvisioner.provisionSchemas(schemaProvisionRequests)
     }
 
