@@ -23,7 +23,7 @@ class AuroraRouteMapperV1(val applicationId: ApplicationId, val applicationFiles
     fun getRoute(auroraConfigFields: AuroraConfigFields, name: String): List<Route> {
 
 
-        val simplified=auroraConfigFields.isSimplifiedConfig("route")
+        val simplified = auroraConfigFields.isSimplifiedConfig("route")
         if (simplified && auroraConfigFields.extract("route")) {
             return listOf(Route(name = name))
         }

@@ -7,15 +7,7 @@ import com.github.fge.jsonpatch.JsonPatch
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.mapper.v1.createAuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.ConfigFieldError
-import no.skatteetaten.aurora.boober.model.DeployBundle
-import no.skatteetaten.aurora.boober.model.Error
-import no.skatteetaten.aurora.boober.model.ValidationError
-import no.skatteetaten.aurora.boober.model.VersioningError
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.internal.Result
 import no.skatteetaten.aurora.boober.service.internal.onErrorThrow
 import org.eclipse.jgit.api.Git

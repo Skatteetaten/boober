@@ -5,16 +5,7 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigValidator.Companion.namePattern
-import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraBuild
-import no.skatteetaten.aurora.boober.model.AuroraDeploy
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.AuroraLocalTemplate
-import no.skatteetaten.aurora.boober.model.AuroraRoute
-import no.skatteetaten.aurora.boober.model.AuroraTemplate
-import no.skatteetaten.aurora.boober.model.AuroraVolume
-import no.skatteetaten.aurora.boober.model.Permission
-import no.skatteetaten.aurora.boober.model.Permissions
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.pattern
 
@@ -86,7 +77,6 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
 
         return includeSubKeys
     }
-
 
 
     fun createMapForAuroraDeploymentSpecPointers(auroraConfigFields: Map<String, AuroraConfigField>): Map<String, Map<String, Any?>> {
