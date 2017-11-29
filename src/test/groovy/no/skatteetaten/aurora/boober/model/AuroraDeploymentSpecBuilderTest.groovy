@@ -2,10 +2,8 @@ package no.skatteetaten.aurora.boober.model
 
 import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 
-import groovy.json.JsonSlurper
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecBuilderKt
 import no.skatteetaten.aurora.boober.service.AuroraConfigException
-import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecRendererKt
 
 class AuroraDeploymentSpecBuilderTest extends AbstractAuroraConfigTest {
 
@@ -28,7 +26,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraConfigTest {
     then:
       notThrown(AuroraConfigException)
   }
-  
+
   def "Fails when application name is too long and artifactId blank"() {
     given:
       auroraConfigJson["this-name-is-stupid-stupid-stupidly-long-for-no-reason.json"] = '''{ "type" : "deploy", "groupId" : "foo", "version": "1"}'''
@@ -40,18 +38,20 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraConfigTest {
     then:
       thrown(AuroraConfigException)
   }
-  def "Should allow AuroraConfig for ApplicationIf with no name or artifactId"(){
+
+  def "Should allow AuroraConfig for ApplicationIf with no name or artifactId"() {
     given:
       auroraConfigJson["reference.json"] = REFERENCE
       auroraConfigJson["utv/reference.json"] = '''{}'''
 
     when:
-      def spec=createDeploymentSpec(auroraConfigJson, aid("utv", "reference"))
+      def spec = createDeploymentSpec(auroraConfigJson, aid("utv", "reference"))
 
-    spec
+      spec
     then:
       notThrown(AuroraConfigException)
   }
+
   def "Fails when application name is too long and artifactId and name is blank"() {
     given:
       auroraConfigJson["this-name-is-stupid-stupid-stupidly-long-for-no-reason.json"] = '''{ "type" : "deploy", "groupId" : "foo", "version": "1"}'''

@@ -1,7 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
@@ -10,6 +8,10 @@ import org.springframework.context.annotation.Primary
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.client.RestTemplate
+
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -47,10 +49,10 @@ class DockerServiceTest extends Specification {
       httpClient.exchange(_, _) >> new ResponseEntity<JsonNode>(manifest, HttpStatus.OK)
 
     when:
-    def response = service.tag(new TagCommand("foo/bar", "1.2.3", "latest", "registry"))
+      def response = service.tag(new TagCommand("foo/bar", "1.2.3", "latest", "registry"))
 
     then:
-    response.success
+      response.success
 
   }
 
@@ -60,10 +62,10 @@ class DockerServiceTest extends Specification {
       httpClient.exchange(_, _) >> new ResponseEntity<JsonNode>(manifest, HttpStatus.BAD_REQUEST)
 
     when:
-    def response = service.tag(new TagCommand("foo/bar", "1.2.3", "latest", "registry"))
+      def response = service.tag(new TagCommand("foo/bar", "1.2.3", "latest", "registry"))
 
     then:
-    !response.success
+      !response.success
 
   }
 }

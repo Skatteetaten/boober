@@ -36,7 +36,7 @@ class OpenShiftRequestHandlerTest extends AbstractAuroraDeploymentSpecSpringTest
   String resourceUrl
 
   def setup() {
-    Logger root = (Logger)LoggerFactory.getLogger("no.skatteetaten")
+    Logger root = (Logger) LoggerFactory.getLogger("no.skatteetaten")
     root.setLevel(Level.DEBUG)
   }
 
@@ -48,7 +48,8 @@ class OpenShiftRequestHandlerTest extends AbstractAuroraDeploymentSpecSpringTest
       osClusterMock.expect(requestTo(resourceUrl)).andRespond(withSuccess(resource, APPLICATION_JSON))
 
     when:
-      ResponseEntity<JsonNode> entity = requestHandler.exchange(new RequestEntity<Object>(GET, new URI(resourceUrl)), true)
+      ResponseEntity<JsonNode> entity = requestHandler.
+          exchange(new RequestEntity<Object>(GET, new URI(resourceUrl)), true)
 
     then:
       JsonOutput.prettyPrint(entity.body.toString()) == JsonOutput.prettyPrint(resource)

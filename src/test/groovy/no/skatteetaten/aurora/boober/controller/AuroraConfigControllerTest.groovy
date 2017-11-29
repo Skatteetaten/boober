@@ -73,7 +73,8 @@ class AuroraConfigControllerTest extends Specification {
   "value": 3
 }]"""
 
-      deployBundleService.patchAuroraConfigFile(affiliation, fileName, payload.content, payload.version, payload.validateVersions) >>
+      deployBundleService.
+          patchAuroraConfigFile(affiliation, fileName, payload.content, payload.version, payload.validateVersions) >>
           auroraConfig
     when:
       ResultActions result = mockMvc.perform(

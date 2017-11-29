@@ -9,5 +9,6 @@ import java.lang.annotation.Target
 @Target([ElementType.TYPE, ElementType.METHOD])
 @interface DefaultOverride {
   boolean interactions() default true
+
   boolean auroraConfig() default true
 }

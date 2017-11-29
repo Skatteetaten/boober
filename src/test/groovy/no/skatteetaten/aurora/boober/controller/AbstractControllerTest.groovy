@@ -9,8 +9,6 @@ import static org.springframework.restdocs.operation.preprocess.Preprocessors.pr
 import org.junit.Rule
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.MockServerRestTemplateCustomizer
-import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.restdocs.JUnitRestDocumentation
 import org.springframework.restdocs.mockmvc.RestDocumentationResultHandler
 import org.springframework.restdocs.snippet.Snippet

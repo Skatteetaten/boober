@@ -13,7 +13,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.JsonNodeUtilsKt
-import spock.lang.Ignore
 
 class DeployServiceWithExistingRouteTest extends AbstractMockedOpenShiftSpecification {
 
@@ -44,10 +43,11 @@ class DeployServiceWithExistingRouteTest extends AbstractMockedOpenShiftSpecific
   def setup() {
 
     def namespaceJson = mapper.
-        convertValue(["kind": "namespace", "metadata": ["labels": ["affiliation": affiliation], "name": "foo"]], JsonNode.class)
+        convertValue(["kind": "namespace", "metadata": ["labels": ["affiliation": affiliation], "name": "foo"]],
+            JsonNode.class)
     openShiftClient.createOpenShiftCommand(_, _, _, _) >> {
 
-        JsonNodeHelperKt.modifyCommandIfRoute(it[1])
+      JsonNodeHelperKt.modifyCommandIfRoute(it[1])
     }
 
     openShiftClient.createUpdateRolebindingCommand(_, _) >> {
@@ -67,7 +67,7 @@ class DeployServiceWithExistingRouteTest extends AbstractMockedOpenShiftSpecific
   def "Should delete and create route"() {
     when:
       List<AuroraDeployResult> deployResults = deployService.
-              executeDeploy(affiliation, [new ApplicationId(ENV_NAME, APP_NAME)], [], true)
+          executeDeploy(affiliation, [new ApplicationId(ENV_NAME, APP_NAME)], [], true)
 
     then:
       def result = deployResults[0]
