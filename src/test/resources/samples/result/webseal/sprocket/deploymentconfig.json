@@ -5,8 +5,7 @@
     "annotations": {
       "boober.skatteetaten.no/applicationFile": "webseal/sprocket.json",
       "console.skatteetaten.no/alarm": "true",
-      "console.skatteetaten.no/management-path": ":8081/foobar",
-      "sprocket.sits.no/deployment-config.database": "referanse,foo:123-456"
+      "console.skatteetaten.no/management-path": ":8081/foobar"
     },
     "labels": {
       "app": "sprocket",
@@ -61,18 +60,6 @@
       },
       "spec": {
         "volumes": [
-          {
-            "name": "referanse-db",
-            "secret": {
-              "secretName": "referanse-db"
-            }
-          },
-          {
-            "name": "foo-db",
-            "secret": {
-              "secretName": "foo-db"
-            }
-          },
           {
             "name": "aurora-token",
             "secret": {
@@ -174,14 +161,6 @@
                 "value": "/u01/secrets/app/referanse-db/db.properties"
               },
               {
-                "name": "VOLUME_REFERANSE_DB",
-                "value": "/u01/secrets/app/referanse-db"
-              },
-              {
-                "name": "VOLUME_FOO_DB",
-                "value": "/u01/secrets/app/foo-db"
-              },
-              {
                 "name": "VOLUME_AURORA_TOKEN",
                 "value": "/u01/secrets/app/aurora-token"
               },
@@ -201,14 +180,6 @@
               }
             },
             "volumeMounts": [
-              {
-                "name": "referanse-db",
-                "mountPath": "/u01/secrets/app/referanse-db"
-              },
-              {
-                "name": "foo-db",
-                "mountPath": "/u01/secrets/app/foo-db"
-              },
               {
                 "name": "aurora-token",
                 "mountPath": "/u01/secrets/app/aurora-token"

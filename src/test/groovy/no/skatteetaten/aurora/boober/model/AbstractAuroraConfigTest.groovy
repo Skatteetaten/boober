@@ -7,9 +7,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
+import no.skatteetaten.aurora.boober.service.AbstractSpec
 import spock.lang.Specification
 
-abstract class AbstractAuroraConfigTest extends Specification {
+abstract class AbstractAuroraConfigTest extends AbstractSpec {
 
   static final AFFILIATION = "aos"
 
@@ -40,6 +41,19 @@ abstract class AbstractAuroraConfigTest extends Specification {
   "version" : "1",
   "route" : true,
   "type" : "deploy"
+}'''
+
+  public static final String REF_APP_JSON = '''{
+  "name" : "reference",
+  "groupId" : "no.skatteetaten.aurora.openshift",
+  "artifactId" : "openshift-reference-springboot-server",
+  "version" : "1.0.8",
+  "certificate" : true,
+  "database" : {
+    "reference" : "auto"
+  },
+  "type" : "deploy",
+  "route" : true
 }'''
 
   static final String WEB_LEVERANSE = '''{

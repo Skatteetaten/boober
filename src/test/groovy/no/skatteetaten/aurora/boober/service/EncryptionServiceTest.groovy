@@ -8,13 +8,15 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Metrics
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.Configuration
+import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import spock.lang.Specification
 
 @SpringBootTest(classes = [
     Configuration,
     Config,
     EncryptionService,
-    AuroraMetrics
+    AuroraMetrics,
+    SharedSecretReader
 ])
 class EncryptionServiceTest extends Specification {
   @org.springframework.context.annotation.Configuration
