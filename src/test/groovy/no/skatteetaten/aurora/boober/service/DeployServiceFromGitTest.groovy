@@ -16,7 +16,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
-import spock.lang.Ignore
 
 class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
@@ -45,6 +44,7 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
   Git git
+
   def setup() {
 
     def namespaceJson = mapper.
@@ -72,7 +72,7 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
   def "Should perform release and generate a redploy request"() {
     when:
       List<AuroraDeployResult> deployResults = deployService.
-              executeDeploy(affiliation, [new ApplicationId(ENV_NAME, "console")], [], true)
+          executeDeploy(affiliation, [new ApplicationId(ENV_NAME, "console")], [], true)
 
     then:
       def result = deployResults[0]
@@ -83,7 +83,8 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
   def "Should perform release of paused env and not generate a redploy request"() {
     when:
-    List<AuroraDeployResult> deployResults = deployService.executeDeploy(affiliation, [new ApplicationId(ENV_NAME, APP_NAME)], [], true)
+      List<AuroraDeployResult> deployResults = deployService.
+          executeDeploy(affiliation, [new ApplicationId(ENV_NAME, APP_NAME)], [], true)
 
     then:
       def result = deployResults[0]
@@ -94,7 +95,7 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
   def "Should perform release and mark it"() {
     when:
-    deployService.executeDeploy(affiliation, [new ApplicationId(ENV_NAME, APP_NAME)], [], true)
+      deployService.executeDeploy(affiliation, [new ApplicationId(ENV_NAME, APP_NAME)], [], true)
 
     then:
 
@@ -109,7 +110,9 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
   def "Should perform two releases and get deploy history"() {
     when:
-    deployService.executeDeploy(affiliation, [new ApplicationId(ENV_NAME, APP_NAME), new ApplicationId(ENV_NAME, "sprocket")], [], true)
+      deployService.
+          executeDeploy(affiliation, [new ApplicationId(ENV_NAME, APP_NAME), new ApplicationId(ENV_NAME, "sprocket")],
+              [], true)
 
     then:
       def tags = deployService.deployHistory(affiliation)
@@ -130,7 +133,7 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
       vaultFacade.save(affiliation, new AuroraSecretVault("foo", ["latest.properties": "1.2.3"]), false)
 
     when:
-    deployService.executeDeploy(affiliation, [new ApplicationId("secrettest", "aos-simple")], [], true)
+      deployService.executeDeploy(affiliation, [new ApplicationId("secrettest", "aos-simple")], [], true)
 
     then:
       def tags = deployService.deployHistory(affiliation)
@@ -143,12 +146,13 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
   def "Should perform release and tag in docker repo"() {
     given:
-    1 * dockerService.tag(_) >> {
-      new TagResult(it[0], new ResponseEntity<JsonNode>(mapper.convertValue(["foo": "foo"], JsonNode.class), HttpStatus.OK), true)
-    }
+      1 * dockerService.tag(_) >> {
+        new TagResult(it[0],
+            new ResponseEntity<JsonNode>(mapper.convertValue(["foo": "foo"], JsonNode.class), HttpStatus.OK), true)
+      }
 
     when:
-    def result = deployService.executeDeploy(affiliation, [new ApplicationId("release", "aos-simple")], [], true)
+      def result = deployService.executeDeploy(affiliation, [new ApplicationId("release", "aos-simple")], [], true)
 
     then:
       result.size() == 1

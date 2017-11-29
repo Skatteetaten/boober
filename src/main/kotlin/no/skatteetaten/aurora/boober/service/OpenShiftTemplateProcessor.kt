@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class OpenShiftTemplateProcessor(
+        val userDetailsProvider: UserDetailsProvider,
         val openShiftClient: OpenShiftResourceClient,
         val mapper: ObjectMapper) {
 
@@ -47,7 +48,9 @@ class OpenShiftTemplateProcessor(
             labels.put("app", aac.name)
         }
 
-        //TODO: we should not use aoc-validate here. Please fix. 
+        labels.put("updatedBy", userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"))
+
+
         val result = openShiftClient.post("processedtemplate", namespace = aac.namespace, payload = template)
 
         return result.body["objects"].asSequence().toList()

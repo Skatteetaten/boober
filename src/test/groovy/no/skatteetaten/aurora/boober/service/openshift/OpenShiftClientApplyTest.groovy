@@ -115,8 +115,6 @@ class OpenShiftClientApplyTest extends Specification {
       result.operationType == OperationType.CREATE
   }
 
-
-
   @Unroll
   def "Should update #type"() {
 

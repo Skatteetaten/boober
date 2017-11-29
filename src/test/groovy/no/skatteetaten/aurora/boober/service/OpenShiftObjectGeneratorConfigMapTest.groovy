@@ -5,6 +5,7 @@ import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 import com.fasterxml.jackson.databind.JsonNode
 
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 
 class OpenShiftObjectGeneratorConfigMapTest extends AbstractOpenShiftObjectGeneratorTest {
 
@@ -69,7 +70,7 @@ class OpenShiftObjectGeneratorConfigMapTest extends AbstractOpenShiftObjectGener
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
     then:
-      def env =deploymentSpec.deploy.env
+      def env = deploymentSpec.deploy.env
       env["STRING"] == "Hello"
       env["BOOL"] == "false"
       env["INT"] == "42"

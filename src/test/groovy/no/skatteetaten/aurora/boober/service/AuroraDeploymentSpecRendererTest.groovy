@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
+import static no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecRendererKt.filterDefaultFields
+
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
@@ -7,8 +9,6 @@ import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import spock.lang.Unroll
-
-import static no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecRendererKt.filterDefaultFields
 
 class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSpringTest {
 
@@ -19,7 +19,7 @@ class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSprin
       "utv/about.json"       : DEFAULT_UTV_ABOUT,
       "webleveranse.json"    : WEB_LEVERANSE,
       "reference.json"       : REFERENCE,
-      "utv/reference.json"        : '''{}''',
+      "utv/reference.json"   : '''{}''',
       "utv/webleveranse.json": '''{ "type": "development", "version": "1" }'''
   ]
 
@@ -30,8 +30,8 @@ class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSprin
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
 
 
-       def renderedJson = deploymentSpec.fields
-      if(!includeDefaults) {
+      def renderedJson = deploymentSpec.fields
+      if (!includeDefaults) {
         renderedJson = filterDefaultFields(renderedJson)
       }
       def filename = getFilename(aid, includeDefaults)

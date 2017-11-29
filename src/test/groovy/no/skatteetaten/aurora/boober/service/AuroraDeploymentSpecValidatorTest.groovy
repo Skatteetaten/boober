@@ -1,21 +1,28 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+
+import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.AbstractAuroraDeploymentSpecTest
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+
 class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest {
 
   def auroraConfigJson = defaultAuroraConfig()
 
+  def udp = Mock(UserDetailsProvider)
   def openShiftClient = Mock(OpenShiftClient)
 
-    def processor = new OpenShiftTemplateProcessor(Mock(OpenShiftResourceClient), new ObjectMapper())
-    def specValidator = new AuroraDeploymentSpecValidator(openShiftClient, processor)
+  def processor = new OpenShiftTemplateProcessor(udp, Mock(OpenShiftResourceClient), new ObjectMapper())
+  def specValidator = new AuroraDeploymentSpecValidator(openShiftClient, processor)
 
   def mapper = new ObjectMapper()
+
+  def setup() {
+    udp.authenticatedUser >> new User("hero", "token", "Test User")
+  }
 
   def "Fails when affiliation is too long"() {
     given:
@@ -25,14 +32,15 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
       createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
     then:
-      def e=thrown(AuroraConfigException)
-      e.message=="Config for application aos-simple in environment utv contains errors. Affiliation can only contain letters and must be no longer than 10 characters."
+      def e = thrown(AuroraConfigException)
+      e.message ==
+          "Config for application aos-simple in environment utv contains errors. Affiliation can only contain letters and must be no longer than 10 characters."
   }
-  
+
   def "Fails when admin groups is empty"() {
-      given:
-        auroraConfigJson["utv/aos-simple.json"] = '''{ "permissions": { "admin": "" } }'''
-        AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "permissions": { "admin": "" } }'''
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
     when:
       specValidator.assertIsValid(deploymentSpec)
@@ -83,8 +91,9 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
       specValidator.assertIsValid(deploymentSpec)
 
     then:
-      def e =thrown(AuroraDeploymentSpecValidationException)
-      e.message == "Required template parameters [FEED_NAME, DATABASE] not set. Template does not contain parameter(s) [FOO]."
+      def e = thrown(AuroraDeploymentSpecValidationException)
+      e.message ==
+          "Required template parameters [FEED_NAME, DATABASE] not set. Template does not contain parameter(s) [FOO]."
   }
 
   def "Fails when template does not contain required fields"() {
@@ -102,7 +111,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
       specValidator.assertIsValid(deploymentSpec)
 
     then:
-      def e =thrown(AuroraDeploymentSpecValidationException)
+      def e = thrown(AuroraDeploymentSpecValidationException)
       e.message == "Required template parameters [FEED_NAME, DATABASE] not set."
   }
 }
