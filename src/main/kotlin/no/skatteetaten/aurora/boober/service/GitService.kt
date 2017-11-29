@@ -10,6 +10,7 @@ import org.eclipse.jgit.api.errors.NoHeadException
 import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.lib.PersonIdent
 import org.eclipse.jgit.lib.Ref
+import org.eclipse.jgit.lib.TextProgressMonitor
 import org.eclipse.jgit.revwalk.RevCommit
 import org.eclipse.jgit.revwalk.RevTag
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
 import java.io.FileWriter
+import java.io.PrintWriter
 
 @Service
 class GitService(
@@ -207,22 +209,32 @@ class GitService(
 
     fun pushTags(git: Git, tags: List<Ref>) {
 
+        logger.debug("push tags to git")
         val cmd = git.push()
+        logger.debug("added tag")
         tags.forEach { cmd.add(it) }
+        logger.debug("/added tag")
         metrics.withMetrics("git_push_tags", {
             cmd.setCredentialsProvider(cp)
+            //TODO: Remove when debug done
+                    cmd.setProgressMonitor(TextProgressMonitor(PrintWriter(System.out)))
                 .call()
         })
+        logger.debug("/push tags to git")
     }
 
     fun pushMaster(git: Git) {
 
+        logger.debug("push config")
         metrics.withMetrics("git_push", {
             git.push()
                     .setCredentialsProvider(cp)
                     .add("refs/heads/master")
+                    //TODO: Remove when debug done
+                    .setProgressMonitor(TextProgressMonitor(PrintWriter(System.out)))
                     .call()
         })
+        logger.debug("/push config")
     }
 
     fun markRelease(git: Git, tag: String, tagBody: String): Ref {

@@ -26,12 +26,12 @@ class AuroraConfigValidator(val applicationId: ApplicationId,
         val errors: List<ConfigFieldError> = fieldHandlers.mapNotNull { e ->
             val rawField = auroraConfigFields.fields[e.name]!!
 
-            logger.debug("Validating field=${e.name}")
+            logger.trace("Validating field=${e.name}")
             val auroraConfigField: JsonNode? = rawField.valueOrDefault
-            logger.debug("value is=${jacksonObjectMapper().writeValueAsString(auroraConfigField)}")
+            logger.trace("value is=${jacksonObjectMapper().writeValueAsString(auroraConfigField)}")
 
             val result = e.validator(auroraConfigField)
-            logger.debug("validator result is=${result}")
+            logger.trace("validator result is=${result}")
 
             val err = when {
                 result == null -> null
@@ -39,7 +39,7 @@ class AuroraConfigValidator(val applicationId: ApplicationId,
                 else -> ConfigFieldError.missing(result.localizedMessage, e.path)
             }
             if(err!=null){
-                logger.debug("Error=$err message=${err.message}")
+                logger.trace("Error=$err message=${err.message}")
             }
             err
         }

@@ -84,10 +84,14 @@ class DeployService(
 
         val deployId = UUID.randomUUID().toString()
 
+        logger.debug("Resource provisioning")
         val provisioningResult = resourceProvisioner.provisionResources(deploymentSpec)
 
+        logger.debug("Project exist")
         val projectExist = openShiftClient.projectExists(deploymentSpec.namespace)
+        logger.debug("Prepare environment")
         val environmentResponses = prepareDeployEnvironment(deploymentSpec, projectExist)
+        logger.debug("Apply objects")
         val applicationResponses: List<OpenShiftResponse> = applyOpenShiftApplicationObjects(deployId, deploymentSpec, provisioningResult, projectExist)
 
         val openShiftResponses = environmentResponses + applicationResponses
@@ -111,6 +115,7 @@ class DeployService(
             val cmd = TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
             dockerService.tag(cmd)
         }
+        logger.debug("Redeploy")
         val redeployResponse = triggerRedeploy(deploymentSpec, openShiftResponses)
 
         val totalSuccess = listOf(success, tagResult?.success, redeployResponse?.success).filterNotNull().all { it }
