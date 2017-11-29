@@ -11,17 +11,14 @@ import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.DeployBundleService
 import org.slf4j.LoggerFactory
 
-val logger = LoggerFactory.getLogger(DeployBundleService::class.java)
 @JvmOverloads
 fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: ApplicationId, dockerRegistry: String,
                                overrideFiles: List<AuroraConfigFile> = listOf(),
                                vaults: Map<String, AuroraSecretVault> = mapOf()): AuroraDeploymentSpec {
 
-    logger.debug("Get files for application")
     val applicationFiles = auroraConfig.getFilesForApplication(applicationId, overrideFiles)
 
 
-    logger.debug("Create header mapper")
     val headerMapper = HeaderMapper.create(applicationFiles, applicationId)
     val type = headerMapper.type
 
@@ -41,12 +38,9 @@ fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: Applic
         TemplateType.build -> buildMapper.handlers
     }).toSet()
 
-    logger.debug("Create aurora config fields")
     val auroraConfigFields = AuroraConfigFields.create(handlers, applicationFiles)
     val validator = AuroraConfigValidator(applicationId, applicationFiles, handlers, auroraConfigFields)
-    logger.debug("validate")
     validator.validate()
-    logger.debug("/validate")
 
     val volume = if (type == TemplateType.build) null else volumeMapper.auroraDeploymentCore(auroraConfigFields)
     val route = if (type == TemplateType.build) null else routeMapper.route(auroraConfigFields)
@@ -59,6 +53,5 @@ fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: Applic
 
     val localTemplate = if (type == TemplateType.localTemplate) localTemplateMapper.localTemplate(auroraConfigFields) else null
 
-    logger.debug("create spec")
     return deploymentSpecMapper.createAuroraDeploymentSpec(auroraConfigFields, volume, route, build, deploy, template, localTemplate)
 }

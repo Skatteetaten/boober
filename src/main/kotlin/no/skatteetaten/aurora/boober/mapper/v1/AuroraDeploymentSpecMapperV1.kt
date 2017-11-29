@@ -49,7 +49,6 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                                    template: AuroraTemplate?,
                                    localTemplate: AuroraLocalTemplate?
     ): AuroraDeploymentSpec {
-        logger.debug("Create spec")
         val name: String = auroraConfigFields.extract("name")
 
         return AuroraDeploymentSpec(

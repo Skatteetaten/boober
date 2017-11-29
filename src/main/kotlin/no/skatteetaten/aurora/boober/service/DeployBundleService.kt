@@ -122,9 +122,7 @@ class DeployBundleService(
 
         val deploymentSpecs = tryCreateAuroraDeploymentSpecs(deployBundle, deployBundle.auroraConfig.getApplicationIds())
         deploymentSpecs.forEach {
-            logger.debug("deployment spec validator")
             deploymentSpecValidator.assertIsValid(it)
-            logger.debug("/deployment spec validator")
         }
     }
 
@@ -151,9 +149,10 @@ class DeployBundleService(
     private fun tryCreateAuroraDeploymentSpecs(deployBundle: DeployBundle, applicationIds: List<ApplicationId>): List<AuroraDeploymentSpec> {
 
         return applicationIds.map { aid ->
+            logger.debug("Create ADC for app=${aid.application}, env=${aid.environment}")
             try {
                 val auroraDeploymentSpec: AuroraDeploymentSpec = createAuroraDeploymentSpec(deployBundle, aid)
-                logger.debug("spec created")
+                logger.debug("/create adc")
                 Result<AuroraDeploymentSpec, Error?>(value = auroraDeploymentSpec)
             } catch (e: AuroraConfigException) {
                 logger.debug("ACE {}", e.errors)
