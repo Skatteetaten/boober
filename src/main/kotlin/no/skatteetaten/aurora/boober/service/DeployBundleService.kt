@@ -122,7 +122,9 @@ class DeployBundleService(
 
         val deploymentSpecs = tryCreateAuroraDeploymentSpecs(deployBundle, deployBundle.auroraConfig.getApplicationIds())
         deploymentSpecs.forEach {
+            logger.debug("deployment spec validator")
             deploymentSpecValidator.assertIsValid(it)
+            logger.debug("/deployment spec validator")
         }
     }
 
@@ -151,6 +153,7 @@ class DeployBundleService(
         return applicationIds.map { aid ->
             try {
                 val auroraDeploymentSpec: AuroraDeploymentSpec = createAuroraDeploymentSpec(deployBundle, aid)
+                logger.debug("spec created")
                 Result<AuroraDeploymentSpec, Error?>(value = auroraDeploymentSpec)
             } catch (e: AuroraConfigException) {
                 logger.debug("ACE {}", e.errors)
