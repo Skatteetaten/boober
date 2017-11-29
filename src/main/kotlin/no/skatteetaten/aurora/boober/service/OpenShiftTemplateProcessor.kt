@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.BooleanNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
-import no.skatteetaten.aurora.boober.controller.security.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import org.springframework.stereotype.Service
@@ -49,7 +48,7 @@ class OpenShiftTemplateProcessor(
             labels.put("app", aac.name)
         }
 
-        labels.put("updatedBy",userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"))
+        labels.put("updatedBy", userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"))
 
 
         val result = openShiftClient.post("processedtemplate", namespace = aac.namespace, payload = template)

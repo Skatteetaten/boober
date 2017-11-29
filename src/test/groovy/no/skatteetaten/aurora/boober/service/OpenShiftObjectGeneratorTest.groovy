@@ -87,8 +87,6 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
 
       List<JsonNode> generatedObjects = openShiftService.
           with { [generateProjectRequest(deploymentSpec)] + generateApplicationObjects(deployId, deploymentSpec, null) }
-        List<JsonNode> generatedObjects = openShiftService.
-                with { [generateProjectRequest(deploymentSpec)] + generateApplicationObjects(deployId, deploymentSpec, null) }
 
       def resultFiles = AuroraConfigHelperKt.getResultFiles(aid)
 
