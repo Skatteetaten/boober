@@ -289,12 +289,20 @@ class DeployService(
         return openShiftObjectGenerator.generateImageStreamImport(name, dockerImage)
     }
 
-
     fun deployHistory(affiliation: String): List<DeployHistory> {
         val repo = gitService.checkoutRepoForAffiliation(affiliation)
         val res = gitService.tagHistory(repo)
                 .filter { it.tagName.startsWith(DEPLOY_PREFIX) }
                 .map { DeployHistory(it.taggerIdent, mapper.readTree(it.fullMessage)) }
+        gitService.closeRepository(repo)
+        return res
+    }
+
+    fun findDeployResultById(auroraConfigId: String, deployId: String): DeployHistory? {
+        val repo = gitService.checkoutRepoForAffiliation(auroraConfigId)
+        val res: DeployHistory? = gitService.tagHistory(repo)
+                .firstOrNull { it.tagName.endsWith(deployId) }
+                ?.let { DeployHistory(it.taggerIdent, mapper.readTree(it.fullMessage)) }
         gitService.closeRepository(repo)
         return res
     }
