@@ -140,6 +140,8 @@ class GitService(
     fun getAllAuroraConfigFiles(git: Git): Map<String, File> {
         return getAllFiles(git)
                 .filter { !it.key.startsWith(GIT_SECRET_FOLDER) }
+        //TODO: Try to add this to only allow json files in AuroraConfig
+//                .filter{ it.key.endsWith(".json")}
     }
 
     fun getAllFilesInRepo(git: Git): Map<String, Pair<RevCommit?, File>> {

@@ -29,10 +29,11 @@ class ExternalResourceProvisioner(val databaseSchemaProvisioner: DatabaseSchemaP
         protected fun createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec: AuroraDeploymentSpec): List<SchemaProvisionRequest> {
             val databaseSpecs = deploymentSpec.deploy?.database ?: listOf()
             return databaseSpecs.map {
+                val name = it.name.toLowerCase()
                 if (it.id != null) {
-                    SchemaIdRequest(it.id, it.name)
+                    SchemaIdRequest(it.id, name)
                 } else {
-                    SchemaForAppRequest(deploymentSpec.affiliation, deploymentSpec.envName, deploymentSpec.name, it.name)
+                    SchemaForAppRequest(deploymentSpec.affiliation, deploymentSpec.envName, deploymentSpec.name, name)
                 }
             }
         }

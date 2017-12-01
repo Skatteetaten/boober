@@ -11,6 +11,7 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
 
   OpenShiftObjectGenerator objectGenerator = createObjectGenerator()
 
+
   def "Creates secret with database info when provisioning database"() {
 
     given:

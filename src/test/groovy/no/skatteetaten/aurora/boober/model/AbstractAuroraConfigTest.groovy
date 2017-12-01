@@ -50,7 +50,7 @@ abstract class AbstractAuroraConfigTest extends AbstractSpec {
   "version" : "1.0.8",
   "certificate" : true,
   "database" : {
-    "reference" : "auto"
+    "REFerence" : "auto"
   },
   "type" : "deploy",
   "route" : true

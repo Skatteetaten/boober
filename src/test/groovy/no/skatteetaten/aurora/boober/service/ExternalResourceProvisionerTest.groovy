@@ -9,7 +9,7 @@ class ExternalResourceProvisionerTest extends AbstractAuroraDeploymentSpecTest {
 
   def "Auto provisioned named schema"() {
     given:
-      AuroraDeploymentSpec spec = createDeploySpecWithDbSpec('{ "database" : { "reference" : "auto" } }')
+      AuroraDeploymentSpec spec = createDeploySpecWithDbSpec('{ "database" : { "REFerence" : "auto" } }')
 
     when:
       def requests = ExternalResourceProvisioner.createSchemaProvisionRequestsFromDeploymentSpec(spec)
@@ -36,7 +36,7 @@ class ExternalResourceProvisionerTest extends AbstractAuroraDeploymentSpecTest {
   def "Named schema with explicit id"() {
     given:
       AuroraDeploymentSpec spec =
-          createDeploySpecWithDbSpec('{ "database": { "reference": "fd59dba9-7d67-4ea2-bb98-081a5df8c387" } }')
+          createDeploySpecWithDbSpec('{ "database": { "REFerence": "fd59dba9-7d67-4ea2-bb98-081a5df8c387" } }')
 
     when:
       def requests = ExternalResourceProvisioner.createSchemaProvisionRequestsFromDeploymentSpec(spec)
@@ -50,7 +50,7 @@ class ExternalResourceProvisionerTest extends AbstractAuroraDeploymentSpecTest {
   def "Multiple schemas"() {
     def dbSpec = '''{ 
   "database": { 
-    "reference": "fd59dba9-7d67-4ea2-bb98-081a5df8c387",
+    "REFerence": "fd59dba9-7d67-4ea2-bb98-081a5df8c387",
     "backup": "auto" 
   } 
 }'''
