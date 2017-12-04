@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.controller.internal
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.model.GenericError
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.service.*
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus

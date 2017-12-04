@@ -1,6 +1,8 @@
 package no.skatteetaten.aurora.boober.service
 
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.*
+import java.util.*
 
 abstract class ServiceException(message: String?, cause: Throwable?) : RuntimeException(message, cause) {
     constructor(message: String) : this(message, null)
@@ -13,6 +15,10 @@ class GitException(messages: String?, cause: Throwable?) : ServiceException(mess
 class AuroraDeploymentSpecValidationException(message: String) : ServiceException(message)
 
 data class ExceptionWrapper(val aid: ApplicationId, val throwable: Throwable)
+
+data class ValidationError(val application: String, val environment: String, val messages: List<Any>)
+
+data class GenericError(val message: String)
 
 class MultiApplicationValidationException(
         val errors: List<ExceptionWrapper> = listOf()
@@ -39,17 +45,7 @@ fun List<Pair<AuroraDeploymentSpec?, ExceptionWrapper?>>.onErrorThrow(block: (Li
     return this.mapNotNull { it.first }
 }
 
-class AuroraConfigException(
-        message: String,
-        val errors: List<ConfigFieldError> = listOf()
-) : ServiceException(message) {
-    override val message: String?
-        get() {
-            val message = super.message
-            val errorMessages = errors.map { it.message }.joinToString(", ")
-            return "$message. $errorMessages."
-        }
-}
+data class VersioningError(val fileName: String, val name: String, val date: Date)
 
 class AuroraVersioningException(message: String, val errors: List<VersioningError>) : ServiceException(message)
 

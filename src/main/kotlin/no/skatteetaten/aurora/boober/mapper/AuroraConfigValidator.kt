@@ -5,7 +5,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.ConfigFieldError
-import no.skatteetaten.aurora.boober.service.AuroraConfigException
 import no.skatteetaten.aurora.boober.utils.findAllPointers
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -38,7 +37,7 @@ class AuroraConfigValidator(val applicationId: ApplicationId,
                 auroraConfigField != null -> ConfigFieldError.illegal(result.localizedMessage, rawField)
                 else -> ConfigFieldError.missing(result.localizedMessage, e.name)
             }
-            if(err!=null){
+            if (err != null) {
                 logger.trace("Error=$err message=${err.message}")
             }
             err

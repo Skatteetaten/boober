@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -83,7 +84,7 @@ class AuroraDeploymentConfigDeployServiceTest extends AbstractMockedOpenShiftSpe
 
     then:
       def ex = thrown(MultiApplicationValidationException)
-      ex.errors[0].messages[0].message == "Version must be set as string"
+      ex.errors[0].throwable.message == "Config for application aos-simple in environment booberdev contains errors. Version must be set as string, Version must be set."
   }
 
   @Ignore("Need to reimplement dryRun")

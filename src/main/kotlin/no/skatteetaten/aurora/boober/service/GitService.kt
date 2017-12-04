@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.AuroraMetrics
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraSecretFile
 import no.skatteetaten.aurora.boober.utils.LambdaOutputStream
 import no.skatteetaten.aurora.boober.utils.use
@@ -91,8 +92,6 @@ class GitService(
             val status = git.status().call()
             commitAllChanges(git, "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}")
             pushMaster(git)
-        } catch (ex: EmtpyCommitException) {
-            throw AuroraConfigException("No such directory")
         } catch (ex: GitAPIException) {
             throw GitException("Unexpected error committing changes", ex)
         } finally {
