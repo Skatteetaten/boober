@@ -51,7 +51,6 @@ class AuroraConfigValidator(val applicationId: ApplicationId,
             emptyList()
         }
 
-
         (errors + unmappedErrors).takeIf { it.isNotEmpty() }?.let {
             logger.debug("{}", it)
             val aid = applicationId

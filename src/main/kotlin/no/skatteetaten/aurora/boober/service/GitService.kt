@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.AuroraMetrics
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraSecretFile
 import no.skatteetaten.aurora.boober.utils.LambdaOutputStream
 import no.skatteetaten.aurora.boober.utils.use
