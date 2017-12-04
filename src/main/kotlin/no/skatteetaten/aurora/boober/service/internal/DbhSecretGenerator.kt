@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service.internal
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.DbhSchema
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
@@ -11,7 +12,8 @@ import java.util.*
 
 class DbhSecretGenerator(
         private val velocityTemplateJsonService: VelocityTemplateJsonService,
-        private val openShiftObjectLabelService: OpenShiftObjectLabelService
+        private val openShiftObjectLabelService: OpenShiftObjectLabelService,
+        private val mapper: ObjectMapper
 ) {
 
     object Base64 {
@@ -25,7 +27,7 @@ class DbhSecretGenerator(
         return schemaProvisionResults.results.map {
 
             val connectionProperties = createConnectionProperties(it.dbhSchema)
-            val responseText = it.responseText
+            val infoFile = createInfoFile(it.dbhSchema)
             velocityTemplateJsonService.renderToJson("secret.json", mapOf(
                     "base64" to Base64,
                     "labels" to labels,
@@ -33,9 +35,30 @@ class DbhSecretGenerator(
                     "dbhSchema" to it.dbhSchema,
                     "request" to it.request,
                     "connectionProperties" to connectionProperties,
-                    "responseText" to responseText
+                    "infoFile" to infoFile
             ))
         }
+    }
+
+    private fun createInfoFile(dbhSchema: DbhSchema): String {
+
+        val infoFile = mapOf("database" to mapOf(
+                "id" to dbhSchema.id,
+                "name" to dbhSchema.username,
+                "createdDate" to null,
+                "lastUsedDate" to null,
+                "host" to dbhSchema.databaseInstance.host,
+                "port" to dbhSchema.databaseInstance.port,
+                "service" to dbhSchema.service,
+                "jdbcUrl" to dbhSchema.jdbcUrl,
+                "users" to listOf(mapOf(
+                        "username" to dbhSchema.username,
+                        "password" to dbhSchema.password,
+                        "type" to dbhSchema.userType
+                )),
+                "labels" to dbhSchema.labels
+        ))
+        return mapper.writeValueAsString(infoFile)
     }
 
     private fun createConnectionProperties(dbhSchema: DbhSchema): String {
