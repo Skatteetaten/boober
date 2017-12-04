@@ -56,7 +56,7 @@ class OpenShiftTemplateProcessor(
         return result.body["objects"].asSequence().toList()
     }
 
-    fun validateTemplateParameters(templateJson: JsonNode, parameters: Map<String, String>) {
+    fun validateTemplateParameters(templateJson: JsonNode, parameters: Map<String, String>) : List<String> {
 
         val templateParameters = templateJson[PARAMETERS_ATTRIBUTE] as ArrayNode
 
@@ -76,23 +76,22 @@ class OpenShiftTemplateProcessor(
         val notMappedParameterNames = parameters.keys - templateParameterNames
 
         if (requiredMissingParameters.isEmpty() && notMappedParameterNames.isEmpty()) {
-            return
+            return listOf()
         }
 
-        val missingParameterString: String = requiredMissingParameters.takeIf { !it.isEmpty() }?.let {
+        val errorMessages = mutableListOf<String>()
+
+        requiredMissingParameters.takeIf { !it.isEmpty() }?.let {
             val parametersString = it.joinToString(", ")
-            "Required template parameters [${parametersString}] not set."
-        } ?: ""
+            errorMessages.add("Required template parameters [${parametersString}] not set")
+        }
 
-        val tooManyParametersString: String = notMappedParameterNames.takeIf { !it.isEmpty() }?.let {
+        notMappedParameterNames.takeIf { !it.isEmpty() }?.let {
             val parametersString = it.joinToString(", ")
-            "Template does not contain parameter(s) [${parametersString}]."
-        } ?: ""
+            errorMessages.add("Template does not contain parameter(s) [${parametersString}]")
+        }
 
-        val errorMessage = listOf(missingParameterString, tooManyParametersString).joinToString(" ")
-
-        throw AuroraDeploymentSpecValidationException(errorMessage.trim())
-
+        return errorMessages
     }
 
     companion object {

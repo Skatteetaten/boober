@@ -12,6 +12,7 @@ class AuroraDeploymentSpecValidator(val openShiftClient: OpenShiftClient, val op
 
     val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpecValidator::class.java)
 
+    @Throws(AuroraDeploymentSpecValidationException::class)
     fun assertIsValid(deploymentSpec: AuroraDeploymentSpec) {
 
         validateAdminGroups(deploymentSpec)
@@ -26,21 +27,22 @@ class AuroraDeploymentSpecValidator(val openShiftClient: OpenShiftClient, val op
 
         adminGroups.filter { !openShiftClient.isValidGroup(it) }
                 .takeIf { it.isNotEmpty() }
-                ?.let { throw AuroraDeploymentSpecValidationException("$it is not a valid group") }
+                ?.let { it: List<String> -> throw AuroraDeploymentSpecValidationException("$it is not a valid group") }
     }
 
     private fun validateTemplateIfSet(deploymentSpec: AuroraDeploymentSpec) {
 
         deploymentSpec.localTemplate?.let {
             openShiftTemplateProcessor.validateTemplateParameters(it.templateJson, it.parameters ?: emptyMap())
+                    .takeIf { it.isNotEmpty() }
+                    ?.let { throw AuroraDeploymentSpecValidationException(it.joinToString(". ").trim()) }
         }
 
         deploymentSpec.template?.let {
             val templateJson = openShiftClient.getTemplate(it.template) ?: throw AuroraDeploymentSpecValidationException("Template ${it.template} does not exist")
             openShiftTemplateProcessor.validateTemplateParameters(templateJson, it.parameters ?: emptyMap())
+                    .takeIf { it.isNotEmpty() }
+                    ?.let { throw AuroraDeploymentSpecValidationException(it.joinToString(". ").trim()) }
         }
-
     }
-
-
 }

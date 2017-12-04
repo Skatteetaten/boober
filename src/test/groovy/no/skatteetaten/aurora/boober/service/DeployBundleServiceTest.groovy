@@ -101,7 +101,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
       deployBundleService.patchAuroraConfigFile("aos", filename, jsonOp, version, false)
 
     then:
-      def ex = thrown(ValidationException)
+      def ex = thrown(MultiApplicationValidationException)
       ex.errors[0].messages[0].message == "Version must be set as string"
   }
 
@@ -193,7 +193,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
       deployBundleService.saveAuroraConfig(auroraConfig, false)
 
     then:
-      def ex = thrown(ValidationException)
+      def ex = thrown(MultiApplicationValidationException)
       ex.errors[0].messages[0].message == "Version must be set as string"
   }
 }

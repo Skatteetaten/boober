@@ -7,17 +7,8 @@ import com.github.fge.jsonpatch.JsonPatch
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.mapper.v1.createAuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.ConfigFieldError
-import no.skatteetaten.aurora.boober.model.DeployBundle
-import no.skatteetaten.aurora.boober.model.Error
-import no.skatteetaten.aurora.boober.model.ValidationError
-import no.skatteetaten.aurora.boober.model.VersioningError
-import no.skatteetaten.aurora.boober.service.internal.Result
-import no.skatteetaten.aurora.boober.service.internal.onErrorThrow
+import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.ApplicationId.Companion.aid
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.revwalk.RevCommit
 import org.slf4j.LoggerFactory
@@ -121,9 +112,15 @@ class DeployBundleService(
     fun validateDeployBundle(deployBundle: DeployBundle) {
 
         val deploymentSpecs = tryCreateAuroraDeploymentSpecs(deployBundle, deployBundle.auroraConfig.getApplicationIds())
-        deploymentSpecs.forEach {
-            deploymentSpecValidator.assertIsValid(it)
-        }
+
+        deploymentSpecs.map { spec ->
+            try {
+                deploymentSpecValidator.assertIsValid(spec)
+                Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = spec, second = null)
+            } catch (e: Throwable) {
+                Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = spec, second = ExceptionWrapper(aid(spec.envName, spec.name), e))
+            }
+        }.onErrorThrow(::MultiApplicationValidationException)
     }
 
     fun createAuroraDeploymentSpec(affiliation: String, applicationId: ApplicationId, overrides: List<AuroraConfigFile>): AuroraDeploymentSpec {
@@ -152,20 +149,11 @@ class DeployBundleService(
             logger.debug("Create ADC for app=${aid.application}, env=${aid.environment}")
             try {
                 val auroraDeploymentSpec: AuroraDeploymentSpec = createAuroraDeploymentSpec(deployBundle, aid)
-                logger.debug("/create adc")
-                Result<AuroraDeploymentSpec, Error?>(value = auroraDeploymentSpec)
-            } catch (e: AuroraConfigException) {
-                logger.debug("ACE {}", e.errors)
-                Result<AuroraDeploymentSpec, Error?>(error = ValidationError(aid.application, aid.environment, e.errors))
-            } catch (e: IllegalArgumentException) {
-                logger.debug("IAE {}", e.message)
-                Result<AuroraDeploymentSpec, Error?>(error =
-                ValidationError(aid.application, aid.environment, listOf(ConfigFieldError.illegal(e.message!!))))
+                Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = auroraDeploymentSpec, second = null)
+            } catch (e: Throwable) {
+                Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = null, second = ExceptionWrapper(aid, e))
             }
-        }.onErrorThrow {
-            logger.info("ACE {}", it)
-            ValidationException("AuroraConfig contained errors for one or more applications", it)
-        }
+        }.onErrorThrow(::MultiApplicationValidationException)
     }
 
     private fun withAuroraConfig(affiliation: String,

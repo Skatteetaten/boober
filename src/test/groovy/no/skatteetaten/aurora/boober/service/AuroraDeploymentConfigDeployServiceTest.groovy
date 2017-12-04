@@ -82,7 +82,7 @@ class AuroraDeploymentConfigDeployServiceTest extends AbstractMockedOpenShiftSpe
       createRepoAndSaveFiles(auroraConfig)
 
     then:
-      def ex = thrown(ValidationException)
+      def ex = thrown(MultiApplicationValidationException)
       ex.errors[0].messages[0].message == "Version must be set as string"
   }
 

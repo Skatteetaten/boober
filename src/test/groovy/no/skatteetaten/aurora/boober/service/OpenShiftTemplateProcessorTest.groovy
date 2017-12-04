@@ -37,19 +37,19 @@ class OpenShiftTemplateProcessorTest extends AbstractSpec {
   def "Throws exception when parameters are missing"() {
 
     when:
-      templateProcessor.validateTemplateParameters(templateJson, [:])
+      def errors = templateProcessor.validateTemplateParameters(templateJson, [:])
 
     then:
-      thrown(AuroraDeploymentSpecValidationException)
+      !errors.isEmpty()
   }
 
   def "Throws exception when extra parameters are provided"() {
 
     when:
       def params = [AFFILIATION: "aos", VOLUME_CAPACITY: "512Mi", EXTRA: "SHOULD NOT BE SET"]
-      templateProcessor.validateTemplateParameters(templateJson, params)
+      def errors = templateProcessor.validateTemplateParameters(templateJson, params)
 
     then:
-      thrown(AuroraDeploymentSpecValidationException)
+      !errors.isEmpty()
   }
 }

@@ -15,6 +15,8 @@ sealed class Error
 
 data class ValidationError(val application: String, val environment: String, val messages: List<Error>) : Error()
 
+data class GenericError(val message: String) : Error()
+
 data class VersioningError(val fileName: String, val name: String, val date: Date) : Error()
 
 data class ConfigFieldError(val type: ConfigErrorType, val message: String, val field: AuroraConfigField? = null) : Error() {

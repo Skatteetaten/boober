@@ -4,8 +4,8 @@ import no.skatteetaten.aurora.boober.controller.internal.ApplyPayload
 import no.skatteetaten.aurora.boober.controller.internal.DeployCommand
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.service.DeployService
-import no.skatteetaten.aurora.boober.service.internal.AuroraDeployResult
-import no.skatteetaten.aurora.boober.service.internal.DeployHistory
+import no.skatteetaten.aurora.boober.service.AuroraDeployResult
+import no.skatteetaten.aurora.boober.service.DeployHistory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.web.bind.annotation.GetMapping
