@@ -189,7 +189,7 @@ class OpenShiftClient(
             if (phase == "Active") {
                 return true
             } else {
-                throw IllegalStateException("Project ${name} is not Active")
+                throw IllegalStateException("Project ${name} already exists but is in an illegal state ($phase)")
             }
         }
         return false
