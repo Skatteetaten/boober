@@ -283,10 +283,10 @@ class DeployService(
                 openShiftObjectGenerator.generateDeploymentRequest(name)
             }
         }
-        if (dockerImage == null) {
-            throw NullPointerException("DockerImage must be set")
+        if (dockerImage != null) {
+            return openShiftObjectGenerator.generateImageStreamImport(name, dockerImage)
         }
-        return openShiftObjectGenerator.generateImageStreamImport(name, dockerImage)
+        return null
     }
 
     fun deployHistory(affiliation: String): List<DeployHistory> {
