@@ -2,8 +2,8 @@ package no.skatteetaten.aurora.boober.model
 
 import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecBuilderKt
-import no.skatteetaten.aurora.boober.service.AuroraConfigException
 
 class AuroraDeploymentSpecBuilderTest extends AbstractAuroraConfigTest {
 

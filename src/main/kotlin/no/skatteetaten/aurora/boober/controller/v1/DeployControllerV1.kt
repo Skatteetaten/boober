@@ -3,8 +3,8 @@ package no.skatteetaten.aurora.boober.controller.v1
 import no.skatteetaten.aurora.boober.controller.internal.ApplyPayload
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.service.DeployService
-import no.skatteetaten.aurora.boober.service.internal.AuroraDeployResult
-import no.skatteetaten.aurora.boober.service.internal.DeployHistory
+import no.skatteetaten.aurora.boober.service.AuroraDeployResult
+import no.skatteetaten.aurora.boober.service.DeployHistory
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping

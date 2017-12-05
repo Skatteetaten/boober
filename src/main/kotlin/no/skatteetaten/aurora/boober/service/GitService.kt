@@ -91,8 +91,6 @@ class GitService(
             val status = git.status().call()
             commitAllChanges(git, "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}")
             pushMaster(git)
-        } catch (ex: EmtpyCommitException) {
-            throw AuroraConfigException("No such directory")
         } catch (ex: GitAPIException) {
             throw GitException("Unexpected error committing changes", ex)
         } finally {

@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -101,8 +102,8 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
       deployBundleService.patchAuroraConfigFile("aos", filename, jsonOp, version, false)
 
     then:
-      def ex = thrown(ValidationException)
-      ex.errors[0].messages[0].message == "Version must be set as string"
+      def ex = thrown(MultiApplicationValidationException)
+      ex.errors[0].throwable.message == "Config for application aos-simple in environment secrettest contains errors. Version must be set as string, Version must be set."
   }
 
   def "Should patch AuroraConfigFile and push changes to git"() {
@@ -193,7 +194,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
       deployBundleService.saveAuroraConfig(auroraConfig, false)
 
     then:
-      def ex = thrown(ValidationException)
-      ex.errors[0].messages[0].message == "Version must be set as string"
+      def ex = thrown(MultiApplicationValidationException)
+      ex.errors[0].throwable.message == "Config for application aos-simple in environment booberdev contains errors. Version must be set as string, Version must be set."
   }
 }

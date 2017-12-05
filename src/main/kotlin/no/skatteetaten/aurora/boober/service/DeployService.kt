@@ -5,8 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.TemplateType.build
 import no.skatteetaten.aurora.boober.model.TemplateType.development
-import no.skatteetaten.aurora.boober.service.internal.AuroraDeployResult
-import no.skatteetaten.aurora.boober.service.internal.DeployHistory
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand

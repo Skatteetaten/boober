@@ -1,11 +1,8 @@
 package no.skatteetaten.aurora.boober.controller.internal
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.service.AuroraConfigException
-import no.skatteetaten.aurora.boober.service.AuroraVersioningException
-import no.skatteetaten.aurora.boober.service.OpenShiftException
-import no.skatteetaten.aurora.boober.service.ServiceException
-import no.skatteetaten.aurora.boober.service.ValidationException
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
+import no.skatteetaten.aurora.boober.service.*
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_REQUEST
@@ -48,8 +45,8 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
         val items = when (e) {
             is AuroraConfigException -> e.errors
             is AuroraVersioningException -> e.errors
-            is ValidationException -> e.errors
-            else -> listOf()
+            is MultiApplicationValidationException -> e.toValidationErrors()
+            else -> listOf(GenericError(e.message!!))
         }
 
         if (httpStatus.is5xxServerError) {

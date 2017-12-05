@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.controller.security.User
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AbstractAuroraDeploymentSpecTest
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -93,7 +94,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
     then:
       def e = thrown(AuroraDeploymentSpecValidationException)
       e.message ==
-          "Required template parameters [FEED_NAME, DATABASE] not set. Template does not contain parameter(s) [FOO]."
+          "Required template parameters [FEED_NAME, DATABASE] not set. Template does not contain parameter(s) [FOO]"
   }
 
   def "Fails when template does not contain required fields"() {
@@ -112,6 +113,6 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
 
     then:
       def e = thrown(AuroraDeploymentSpecValidationException)
-      e.message == "Required template parameters [FEED_NAME, DATABASE] not set."
+      e.message == "Required template parameters [FEED_NAME, DATABASE] not set"
   }
 }

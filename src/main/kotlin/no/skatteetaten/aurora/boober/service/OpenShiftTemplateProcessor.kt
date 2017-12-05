@@ -56,45 +56,60 @@ class OpenShiftTemplateProcessor(
         return result.body["objects"].asSequence().toList()
     }
 
-    fun validateTemplateParameters(templateJson: JsonNode, parameters: Map<String, String>) {
+    fun validateTemplateParameters(templateJson: JsonNode, parameters: Map<String, String>) : List<String> {
 
-        val templateParameters = templateJson["parameters"] as ArrayNode
+        val templateParameters = templateJson[PARAMETERS_ATTRIBUTE] as ArrayNode
 
-        val templateParameterNames = templateParameters.map { it["name"].textValue() }.toSet()
+        val templateParameterNames = templateParameters.map { it[NAME_ATTRIBUTE].textValue() }.toSet()
 
         val requiredMissingParameters = templateParameters.filter {
-            val requiredNode = it["required"]
-            when (requiredNode) {
-                is BooleanNode -> requiredNode.booleanValue()
-                is TextNode -> requiredNode.textValue() == "true"
-                else -> false
-            }
+
+            val isRequiredParameter = getBoolean(it, REQUIRED_ATTRIBUTE)
+            val noDefaultValueSpecified = it[VALUE_ATTRIBUTE] == null
+            isRequiredParameter && noDefaultValueSpecified
         }.map {
-            it["name"].textValue()
+            it[NAME_ATTRIBUTE].textValue()
         }.filter {
             !parameters.containsKey(it)
         }
 
         val notMappedParameterNames = parameters.keys - templateParameterNames
 
-
         if (requiredMissingParameters.isEmpty() && notMappedParameterNames.isEmpty()) {
-            return
+            return listOf()
         }
 
-        val missingParameterString: String = requiredMissingParameters.takeIf { !it.isEmpty() }?.let {
+        val errorMessages = mutableListOf<String>()
+
+        requiredMissingParameters.takeIf { !it.isEmpty() }?.let {
             val parametersString = it.joinToString(", ")
-            "Required template parameters [${parametersString}] not set."
-        } ?: ""
+            errorMessages.add("Required template parameters [${parametersString}] not set")
+        }
 
-        val tooManyParametersString: String = notMappedParameterNames.takeIf { !it.isEmpty() }?.let {
+        notMappedParameterNames.takeIf { !it.isEmpty() }?.let {
             val parametersString = it.joinToString(", ")
-            "Template does not contain parameter(s) [${parametersString}]."
-        } ?: ""
+            errorMessages.add("Template does not contain parameter(s) [${parametersString}]")
+        }
 
-        val errorMessage = listOf(missingParameterString, tooManyParametersString).joinToString(" ")
+        return errorMessages
+    }
 
-        throw AuroraDeploymentSpecValidationException(errorMessage.trim())
+    companion object {
+        private val NAME_ATTRIBUTE = "name"
 
+        private val REQUIRED_ATTRIBUTE = "required"
+
+        private val VALUE_ATTRIBUTE = "value"
+
+        private val PARAMETERS_ATTRIBUTE = "parameters"
+
+        private fun getBoolean(it: JsonNode, nodeName: String): Boolean {
+            val valueNode = it[nodeName]
+            return when (valueNode) {
+                is BooleanNode -> valueNode.booleanValue()
+                is TextNode -> valueNode.textValue() == "true"
+                else -> false
+            }
+        }
     }
 }
