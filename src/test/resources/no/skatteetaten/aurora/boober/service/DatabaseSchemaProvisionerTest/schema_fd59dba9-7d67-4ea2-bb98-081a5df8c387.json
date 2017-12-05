@@ -18,16 +18,16 @@
       "type": "MANAGED",
       "users": [
         {
+          "username": "VCLFVAPKGOMBCFTWEVKZDYBGVTMYDP",
           "password": "yYGmRnUPBORxMoMcPptGvDYgKxmRSm",
-          "type": "SCHEMA",
-          "username": "VCLFVAPKGOMBCFTWEVKZDYBGVTMYDP"
+          "type": "SCHEMA"
         }
       ],
       "labels": {
-        "name": "reference",
         "environment": "architect-utv",
         "application": "reference",
-        "affiliation": "architect",
+        "affiliation": "aos",
+        "name": "reference",
         "userId": "k72950"
       }
     }
