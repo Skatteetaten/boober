@@ -43,7 +43,7 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
   def appName = "reference"
   def schemaName = "reference"
 
-  def labels = [affiliation: 'aos', environment: 'utv', application: appName, name: schemaName, userId: 'aurora']
+  def labels = [affiliation: 'aos', environment: 'aos-utv', application: appName, name: schemaName]
 
   def "Schema request with id succeeds when schema exists"() {
 
@@ -96,7 +96,7 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
           andRespond(withSuccess(loadResource("schema_empty_response.json"), MediaType.APPLICATION_JSON))
       dbhServer.expect(requestTo("${DBH_HOST}/api/v1/schema/")).
           andExpect(method(HttpMethod.POST)).
-          andExpect(content().string(JsonOutput.toJson([labels: labels]))).
+          andExpect(content().string(JsonOutput.toJson([labels: labels + [userId: 'aurora']]))).
           andRespond(withSuccess(loadResource("schema_${id}.json"), MediaType.APPLICATION_JSON))
 
     when:

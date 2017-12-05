@@ -36,7 +36,7 @@ class AuroraConfigValidator(val applicationId: ApplicationId,
             val err = when {
                 result == null -> null
                 auroraConfigField != null -> ConfigFieldError.illegal(result.localizedMessage, rawField)
-                else -> ConfigFieldError.missing(result.localizedMessage, e.path)
+                else -> ConfigFieldError.missing(result.localizedMessage, e.name)
             }
             if(err!=null){
                 logger.trace("Error=$err message=${err.message}")
