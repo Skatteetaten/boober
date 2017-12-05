@@ -4,12 +4,16 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.TemplateType.development
+import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.service.VelocityTemplateJsonService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import org.apache.commons.lang.StringEscapeUtils
 
-class DeploymentConfigGenerator(val mapper: ObjectMapper, private val velocityTemplateJsonService: VelocityTemplateJsonService) {
+class DeploymentConfigGenerator(
+        private val mapper: ObjectMapper,
+        private val velocityTemplateJsonService: VelocityTemplateJsonService
+) {
 
     fun create(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?): JsonNode? {
 
@@ -77,10 +81,11 @@ class DeploymentConfigGenerator(val mapper: ObjectMapper, private val velocityTe
             "paused" to "true"
         } else null
 
-        return labels + mapOf(
+        val allLabels = labels + mapOf(
                 "name" to auroraDeploymentSpec.name,
                 deployTag
         ).addIfNotNull(pauseLabel)
+        return OpenShiftObjectLabelService.toOpenShiftLabelNameSafeMap(allLabels)
     }
 
     private fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpec: AuroraDeploymentSpec): Map<String, String> {
