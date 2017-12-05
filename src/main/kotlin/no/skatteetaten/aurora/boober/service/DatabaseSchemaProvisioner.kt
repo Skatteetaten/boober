@@ -107,7 +107,7 @@ class DatabaseSchemaProvisioner(
         val user = userDetailsProvider.getAuthenticatedUser()
         val labels = mapOf(
                 "affiliation" to request.affiliation,
-                "environment" to request.environment,
+                "environment" to "${request.affiliation}-${request.environment}",
                 "application" to request.application,
                 "name" to request.schemaName,
                 "userId" to user.username
@@ -132,7 +132,9 @@ class DatabaseSchemaProvisioner(
     }
 
     private fun findSchemaByLabels(labels: Map<String, String>): Pair<DbhSchema, String>? {
-        val labelsString = labels.map { "${it.key}=${it.value}" }.joinToString(",")
+        val labelsString = labels
+                .filterKeys { it != "userId" }
+                .map { "${it.key}=${it.value}" }.joinToString(",")
         val response: ResponseEntity<JsonNode> = try {
             restTemplate.getForEntity("{0}/api/v1/schema/?labels={1}", JsonNode::class.java, dbhUrl, labelsString)
         } catch (e: Exception) {
