@@ -11,7 +11,6 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
 
   OpenShiftObjectGenerator objectGenerator = createObjectGenerator()
 
-
   def "Creates secret with database info when provisioning database"() {
 
     given:
@@ -27,15 +26,30 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
       def schema = new DbhSchema(
           "fd59dba9-7d67-4ea2-bb98-081a5df8c387",
           "MANAGED",
+          new DatabaseInstance(1521, "some-db-server01.skead.no"),
           "jdbc:oracle:thin:@some-db-server01.skead.no:1521/dbhotel",
-          [name: appName, affiliation: AFFILIATION],
-          [new DbhUser("VCLFVAPKGOMBCFTWEVKZDYBGVTMYDP", "yYGmRnUPBORxMoMcPptGvDYgKxmRSm", "MANAGED")]
+          [name: appName, affiliation: AFFILIATION, application: "reference", environment: "architect-utv", userId: "k72950"],
+          [new DbhUser("VCLFVAPKGOMBCFTWEVKZDYBGVTMYDP", "yYGmRnUPBORxMoMcPptGvDYgKxmRSm", "SCHEMA")]
       )
-      def response =
+      def responseText =
           loadResource(DatabaseSchemaProvisionerTest.simpleName, "schema_fd59dba9-7d67-4ea2-bb98-081a5df8c387.json")
+      def responseJson = new JsonSlurper().parseText(responseText)
+      def schemaInfo = responseJson.items[0]
+      def expectedInfo = [database: [
+          id          : schemaInfo.id,
+          name        : schemaInfo.name,
+          createdDate : null,
+          lastUsedDate: null,
+          host        : schemaInfo.databaseInstance.host,
+          port        : schemaInfo.databaseInstance.port,
+          service     : 'dbhotel',
+          jdbcUrl     : schemaInfo.jdbcUrl,
+          users       : schemaInfo.users,
+          labels      : schemaInfo.labels
+      ]]
       def provisioningResult = new ProvisioningResult(
           new SchemaProvisionResults([new SchemaProvisionResult(
-              createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec)[0], schema, response
+              createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec)[0], schema, responseText
           )]))
 
     when:
@@ -53,7 +67,7 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
       b64d(d.jdbcurl) == 'jdbc:oracle:thin:@some-db-server01.skead.no:1521/dbhotel'
       b64d(d.name) == 'VCLFVAPKGOMBCFTWEVKZDYBGVTMYDP'
       b64d(d.id) == 'fd59dba9-7d67-4ea2-bb98-081a5df8c387'
-      b64d(d.info) == response
+      new JsonSlurper().parseText(b64d(d.info)) == new JsonSlurper().parseText(JsonOutput.toJson(expectedInfo))
 
     and: "db.properties is correct"
       def expectedProps = new Properties().with {

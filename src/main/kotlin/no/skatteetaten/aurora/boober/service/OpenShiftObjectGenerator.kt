@@ -63,7 +63,7 @@ class OpenShiftObjectGenerator(
     }
 
     fun generateSecretsForSchemas(deployId: String, deploymentSpec: AuroraDeploymentSpec, schemaProvisionResults: SchemaProvisionResults): List<JsonNode> =
-            DbhSecretGenerator(velocityTemplateJsonService, openShiftObjectLabelService).generateSecretsForSchemas(deployId, deploymentSpec, schemaProvisionResults)
+            DbhSecretGenerator(velocityTemplateJsonService, openShiftObjectLabelService, mapper).generateSecretsForSchemas(deployId, deploymentSpec, schemaProvisionResults)
 
     fun generateProjectRequest(auroraDeploymentSpec: AuroraDeploymentSpec): JsonNode {
 

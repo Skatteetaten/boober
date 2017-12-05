@@ -29,9 +29,12 @@ data class SchemaProvisionResults(val results: List<SchemaProvisionResult>)
 
 data class DbhUser(val username: String, val password: String, val type: String)
 
+data class DatabaseInstance(val port: Long, val host: String)
+
 data class DbhSchema(
         val id: String,
         val type: String,
+        val databaseInstance: DatabaseInstance,
         val jdbcUrl: String,
         val labels: Map<String, String> = mapOf(),
         private val users: List<DbhUser> = listOf()
@@ -47,6 +50,12 @@ data class DbhSchema(
 
     val password: String
         get() = users.firstOrNull()?.password ?: ""
+
+    val userType: String
+        get() = users.firstOrNull()?.type ?: ""
+
+    val service: String
+        get() = jdbcUrl.split("/").last()
 }
 
 data class DbApiEnvelope(
