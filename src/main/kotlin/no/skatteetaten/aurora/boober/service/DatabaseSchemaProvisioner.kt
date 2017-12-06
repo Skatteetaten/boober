@@ -29,7 +29,7 @@ data class SchemaProvisionResults(val results: List<SchemaProvisionResult>)
 
 data class DbhUser(val username: String, val password: String, val type: String)
 
-data class DatabaseInstance(val port: Long, val host: String)
+data class DatabaseInstance(val port: Long, val host: String?)
 
 data class DbhSchema(
         val id: String,
