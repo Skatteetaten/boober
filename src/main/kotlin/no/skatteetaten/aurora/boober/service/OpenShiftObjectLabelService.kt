@@ -10,6 +10,8 @@ class OpenShiftObjectLabelService(private val userDetailsProvider: UserDetailsPr
         @JvmStatic
         val MAX_LABEL_VALUE_LENGTH = 63
 
+        val LABEL_PATTERN = "(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?"
+
         /**
          * Returns a new Map where each value has been truncated as to not exceed the
          * <code>MAX_LABEL_VALUE_LENGTH</code> max length.
@@ -19,9 +21,17 @@ class OpenShiftObjectLabelService(private val userDetailsProvider: UserDetailsPr
         fun toOpenShiftLabelNameSafeMap(labels: Map<String, String>): Map<String, String> =
                 labels.mapValues { toOpenShiftSafeLabel(it.value) }
 
+        @JvmStatic
         fun toOpenShiftSafeLabel(value: String): String {
             val startIndex = (value.length - MAX_LABEL_VALUE_LENGTH).takeIf { it >= 0 } ?: 0
-            return value.substring(startIndex)
+
+            var tail = value.substring(startIndex)
+            while (true) {
+                val isLegal = tail.matches(Regex(LABEL_PATTERN))
+                if (isLegal) break
+                tail = tail.substring(1)
+            }
+            return tail
         }
     }
 
