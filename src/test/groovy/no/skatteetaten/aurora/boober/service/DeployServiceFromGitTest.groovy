@@ -85,8 +85,9 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
     then:
     def result = deployResults[0]
-    result.openShiftResponses.size() == 8
-    result.openShiftResponses[7].responseBody.at("/kind").asText() == "DeploymentRequest"
+    result.openShiftResponses.size() == 9
+    result.openShiftResponses[7].responseBody.at("/kind").asText() == "ImageStreamImport"
+    result.openShiftResponses[8].responseBody.at("/kind").asText() == "DeploymentRequest"
 
   }
 

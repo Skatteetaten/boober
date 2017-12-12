@@ -118,7 +118,8 @@ class DeployService(
         logger.debug("Redeploy")
         val redeployResponse = triggerRedeploy(deploymentSpec, openShiftResponses)
 
-        val totalSuccess = listOf(success, tagResult?.success, redeployResponse?.success).filterNotNull().all { it }
+        val redeploySuccess = if (redeployResponse.isEmpty()) true else redeployResponse.last().success
+        val totalSuccess = listOf(success, tagResult?.success, redeploySuccess).filterNotNull().all { it }
 
         return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResponse), tagResponse = tagResult, success = totalSuccess)
     }
@@ -206,7 +207,7 @@ class DeployService(
         return changed
     }
 
-    private fun triggerRedeploy(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>): OpenShiftResponse? {
+    private fun triggerRedeploy(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>): List<OpenShiftResponse> {
 
         val namespace = deploymentSpec.namespace
 
@@ -216,17 +217,22 @@ class DeployService(
                     try {
                         val response = openShiftClient.performOpenShiftCommand(namespace, command)
                         if (response.command.payload.openshiftKind != "imagestreamimport" || didImportImage(response, openShiftResponses)) {
-                            response
+                            listOf(response)
                         } else {
                             val cmd = openShiftClient.createOpenShiftCommand(namespace,
                                     openShiftObjectGenerator.generateDeploymentRequest(deploymentSpec.name))
-                            return openShiftClient.performOpenShiftCommand(namespace, cmd)
+                            try {
+                                return listOf(response, openShiftClient.performOpenShiftCommand(namespace, cmd))
+                            } catch (e: OpenShiftException) {
+                                listOf(response, OpenShiftResponse.fromOpenShiftException(e, command))
+                            }
                         }
                     } catch (e: OpenShiftException) {
-                        OpenShiftResponse.fromOpenShiftException(e, command)
+                        listOf(OpenShiftResponse.fromOpenShiftException(e, command))
                     }
-                }
+                } ?: emptyList()
     }
+
 
     private fun didImportImage(response: OpenShiftResponse, openShiftResponses: List<OpenShiftResponse>): Boolean {
         response.responseBody?.let { body ->
