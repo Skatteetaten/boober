@@ -216,7 +216,7 @@ class DeployService(
                 ?.let { command ->
                     try {
                         val response = openShiftClient.performOpenShiftCommand(namespace, command)
-                        if (response.command.payload.openshiftKind != "imagestreamimport" || didImportImage(response, openShiftResponses)) {
+                        if (response.command.payload.openshiftKind != "imagestreamimport" || didNotImportImage(response, openShiftResponses)) {
                             listOf(response)
                         } else {
                             val cmd = openShiftClient.createOpenShiftCommand(namespace,
@@ -234,7 +234,7 @@ class DeployService(
     }
 
 
-    private fun didImportImage(response: OpenShiftResponse, openShiftResponses: List<OpenShiftResponse>): Boolean {
+    private fun didNotImportImage(response: OpenShiftResponse, openShiftResponses: List<OpenShiftResponse>): Boolean {
         response.responseBody?.let { body ->
             findImageInformation(openShiftResponses)?.let { info ->
                 if (info.lastTriggeredImage.isBlank()) {
