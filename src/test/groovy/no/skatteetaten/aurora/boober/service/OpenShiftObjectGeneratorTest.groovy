@@ -121,27 +121,6 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
       "secretmount" | "aos-simple"    | null              | []
   }
 
-  def docker = "docker/foo/bar:baz"
-
-  def "Testing deploy OpenShift resources"() {
-
-    given:
-      def aid = new ApplicationId(env, name)
-      def templateType = deploy
-      def response = createOpenShiftResponse(kind, operation, prev, curr)
-      def resultFiles = AuroraConfigHelperKt.getDeployResultFiles(aid)
-
-    expect:
-      JsonNode result = deployService.generateRedeployResource(templateType, name, docker, [response])
-
-      def key = getKey(result)
-      compareJson("/samples/result/${aid.environment}/${aid.application} $key", resultFiles[key], result)
-
-    where:
-      env         | name       | operation | kind               | prev | curr
-      "booberdev" | "sprocket" | CREATE    | "imagestream"      | 1    | 1
-      "booberdev" | "tvinn"    | UPDATE    | "deploymentconfig" | 1    | 2
-  }
 
   def "generate rolebinding should include serviceaccount "() {
 

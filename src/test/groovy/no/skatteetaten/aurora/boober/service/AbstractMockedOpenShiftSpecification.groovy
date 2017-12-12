@@ -51,7 +51,7 @@ import spock.mock.DetachedMockFactory
     VelocityTemplateJsonService,
     OpenShiftObjectLabelService
 ])
-class AbstractMockedOpenShiftSpecification extends Specification {
+class AbstractMockedOpenShiftSpecification extends AbstractSpec {
 
   @Configuration
   static class Config {

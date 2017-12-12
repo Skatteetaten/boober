@@ -37,12 +37,6 @@ data class OpenShiftResponse @JvmOverloads constructor(
         val responseBody: JsonNode? = null,
         val success: Boolean = true,
         val exception: String? = null) {
-    fun labelChanged(name: String): Boolean {
-        val pointer = "/metadata/labels/$name"
-        val response = responseBody?.at(pointer)?.asText()
-        val previous = command.previous?.at(pointer)?.asText() ?: ""
-        return response != previous
-    }
 
     companion object {
         fun fromOpenShiftException(e: OpenShiftException, command: OpenshiftCommand): OpenShiftResponse {

@@ -57,7 +57,17 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
     }
     openShiftClient.performOpenShiftCommand(_, _) >> {
       def cmd = it[1]
-      new OpenShiftResponse(cmd, cmd.payload)
+      def namespace = it[0]
+
+      def name = cmd.payload.at("/metadata/name").textValue()
+      def kind = cmd.payload.at("/kind").textValue().toLowerCase()
+      try {
+        def fileName = "$namespace-${name}-${kind}.json"
+        def resource = loadResource(fileName)
+        new OpenShiftResponse(cmd, mapper.readTree(resource))
+      } catch (Exception e) {
+        new OpenShiftResponse(cmd, cmd.payload)
+      }
     }
     openShiftClient.createOpenShiftDeleteCommands(_, _, _, _) >> []
 
@@ -68,10 +78,22 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
     gitService.closeRepository(git)
   }
 
-  def "Should perform release and generate a redploy request"() {
+  def "Should perform release and generate a deployRequest if imagestream does not trigger new image"() {
+    when:
+    List<AuroraDeployResult> deployResults = deployService.
+            executeDeploy(affiliation, [new ApplicationId("imagestreamtest", "reference")], [], true)
+
+    then:
+    def result = deployResults[0]
+    result.openShiftResponses.size() == 8
+    result.openShiftResponses[7].responseBody.at("/kind").asText() == "DeploymentRequest"
+
+  }
+
+  def "Should perform release and generate a imageStreamImport request"() {
     when:
       List<AuroraDeployResult> deployResults = deployService.
-          executeDeploy(affiliation, [new ApplicationId(ENV_NAME, "console")], [], true)
+              executeDeploy(affiliation, [new ApplicationId(ENV_NAME, "reference")], [], true)
 
     then:
       def result = deployResults[0]
