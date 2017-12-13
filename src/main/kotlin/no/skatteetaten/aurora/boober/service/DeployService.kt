@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ArrayNode
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.TemplateType.build
 import no.skatteetaten.aurora.boober.model.TemplateType.development
@@ -12,6 +13,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.dockerGroupSafeName
 import no.skatteetaten.aurora.boober.utils.openshiftKind
+import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.eclipse.jgit.api.Git
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -40,6 +42,7 @@ class DeployService(
         val mapper: ObjectMapper,
         val dockerService: DockerService,
         val resourceProvisioner: ExternalResourceProvisioner,
+        val redeployService: RedeployService,
         @Value("\${openshift.cluster}") val cluster: String,
         @Value("\${boober.docker.registry}") val dockerRegistry: String) {
 
@@ -104,7 +107,7 @@ class DeployService(
         }
 
 
-        if (deploymentSpec.deploy?.flags?.pause == true){
+        if (deploymentSpec.deploy?.flags?.pause == true) {
             return result
         }
 
@@ -114,9 +117,10 @@ class DeployService(
             dockerService.tag(cmd)
         }
         logger.debug("Redeploy")
-        val redeployResponse = triggerRedeploy(deploymentSpec, openShiftResponses)
+        val redeployResponse = redeployService.triggerRedeploy(deploymentSpec, openShiftResponses)
 
-        val totalSuccess = listOf(success, tagResult?.success, redeployResponse?.success).filterNotNull().all { it }
+        val redeploySuccess = if (redeployResponse.isEmpty()) true else redeployResponse.last().success
+        val totalSuccess = listOf(success, tagResult?.success, redeploySuccess).filterNotNull().all { it }
 
         return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResponse), tagResponse = tagResult, success = totalSuccess)
     }
@@ -204,24 +208,9 @@ class DeployService(
         return changed
     }
 
-    private fun triggerRedeploy(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>): OpenShiftResponse? {
-
-        val namespace = deploymentSpec.namespace
-
-        return generateRedeployResourceFromSpec(deploymentSpec, openShiftResponses)
-                ?.let { openShiftClient.createOpenShiftCommand(namespace, it) }
-                ?.let { command ->
-                    try {
-                        openShiftClient.performOpenShiftCommand(namespace, command)
-                    } catch (e: OpenShiftException) {
-                        OpenShiftResponse.fromOpenShiftException(e, command)
-                    }
-                }
-    }
-
     private fun markRelease(res: List<AuroraDeployResult>, repo: Git) {
 
-        val refs=res.map {
+        val refs = res.map {
             val result = filterSensitiveInformation(it)
             val prefix = if (it.success) {
                 DEPLOY_PREFIX
@@ -253,40 +242,6 @@ class DeployService(
         return result.copy(openShiftResponses = filteredResponses)
     }
 
-
-    fun generateRedeployResourceFromSpec(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>): JsonNode? {
-
-        val type: TemplateType = deploymentSpec.type
-        val name: String = deploymentSpec.name
-        val dockerImage: String? = deploymentSpec.deploy?.dockerImage
-
-        return generateRedeployResource(type, name, dockerImage, openShiftResponses)
-
-    }
-
-    fun generateRedeployResource(type: TemplateType, name: String, dockerImage: String?, openShiftResponses: List<OpenShiftResponse>): JsonNode? {
-        if (type == build || type == development) {
-            return null
-        }
-
-        val imageStream = openShiftResponses.find { it.responseBody?.get("kind")?.asText()?.toLowerCase() ?: "" == "imagestream" }
-        val deployment = openShiftResponses.find { it.responseBody?.get("kind")?.asText()?.toLowerCase() ?: "" == "deploymentconfig" }
-
-        imageStream?.takeIf { !it.labelChanged("releasedVersion") && it.command.operationType == OperationType.UPDATE }?.let {
-            return openShiftObjectGenerator.generateDeploymentRequest(name)
-        }
-
-        if (imageStream == null) {
-            return deployment?.let {
-                openShiftObjectGenerator.generateDeploymentRequest(name)
-            }
-        }
-        if (dockerImage != null) {
-            return openShiftObjectGenerator.generateImageStreamImport(name, dockerImage)
-        }
-        return null
-    }
-
     fun deployHistory(affiliation: String): List<DeployHistory> {
         val repo = gitService.checkoutRepoForAffiliation(affiliation)
         val res = gitService.tagHistory(repo)
@@ -305,5 +260,4 @@ class DeployService(
         return res
     }
 }
-
 

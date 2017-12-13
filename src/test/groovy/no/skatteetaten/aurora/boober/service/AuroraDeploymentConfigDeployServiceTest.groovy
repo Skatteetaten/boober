@@ -86,19 +86,5 @@ class AuroraDeploymentConfigDeployServiceTest extends AbstractMockedOpenShiftSpe
       def ex = thrown(MultiApplicationValidationException)
       ex.errors[0].throwable.message == "Config for application aos-simple in environment booberdev contains errors. Version must be set as string, Version must be set."
   }
-
-  @Ignore("Need to reimplement dryRun")
-  def "Should get error if we want secrets but there are none "() {
-
-    when:
-
-      def json = mapper.convertValue(["secretVault": "notfound)"], JsonNode.class)
-      def overrideAosFile = new AuroraConfigFile("aos-simple.json", json, true, null)
-      service.dryRun("aos", new DeployParams([aid.environment], [aid.application], [overrideAosFile], false))
-
-    then:
-      thrown(AuroraConfigException)
-  }
-
 }
 
