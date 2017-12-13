@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.fge.jsonpatch.JsonPatch
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.newFixedThreadPoolContext
+import kotlinx.coroutines.experimental.runBlocking
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.mapper.v1.createAuroraDeploymentSpec
@@ -111,16 +114,23 @@ class DeployBundleService(
 
     fun validateDeployBundle(deployBundle: DeployBundle) {
 
-        val deploymentSpecs = tryCreateAuroraDeploymentSpecs(deployBundle, deployBundle.auroraConfig.getApplicationIds())
+        val dispatcher = newFixedThreadPoolContext(6, "validationPool")
 
-        deploymentSpecs.map { spec ->
-            try {
-                deploymentSpecValidator.assertIsValid(spec)
-                Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = spec, second = null)
-            } catch (e: Throwable) {
-                Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = spec, second = ExceptionWrapper(aid(spec.envName, spec.name), e))
+        val applicationIds = deployBundle.auroraConfig.getApplicationIds()
+        runBlocking(dispatcher) {
+            applicationIds.map { aid ->
+                async(dispatcher) {
+                    try {
+                        val spec = createValidAuroraDeploymentSpec(deployBundle, aid)
+                        Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = spec, second = null)
+                    } catch (e: Throwable) {
+                        Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = null, second = ExceptionWrapper(aid, e))
+                    }
+                }
             }
-        }.onErrorThrow(::MultiApplicationValidationException)
+                    .map { it.await() }
+                    .onErrorThrow(::MultiApplicationValidationException)
+        }
     }
 
     fun createAuroraDeploymentSpec(affiliation: String, applicationId: ApplicationId, overrides: List<AuroraConfigFile>): AuroraDeploymentSpec {
@@ -132,6 +142,12 @@ class DeployBundleService(
     fun createAuroraDeploymentSpecs(deployBundle: DeployBundle, applicationIds: List<ApplicationId>): List<AuroraDeploymentSpec> {
 
         return tryCreateAuroraDeploymentSpecs(deployBundle, applicationIds)
+    }
+
+    fun createValidAuroraDeploymentSpec(deployBundle: DeployBundle, aid: ApplicationId): AuroraDeploymentSpec {
+        val spec = createAuroraDeploymentSpec(deployBundle, aid)
+        deploymentSpecValidator.assertIsValid(spec)
+        return spec
     }
 
     fun createAuroraDeploymentSpec(deployBundle: DeployBundle, applicationId: ApplicationId): AuroraDeploymentSpec {
@@ -146,14 +162,18 @@ class DeployBundleService(
     private fun tryCreateAuroraDeploymentSpecs(deployBundle: DeployBundle, applicationIds: List<ApplicationId>): List<AuroraDeploymentSpec> {
 
         return applicationIds.map { aid ->
-            logger.debug("Create ADC for app=${aid.application}, env=${aid.environment}")
-            try {
-                val auroraDeploymentSpec: AuroraDeploymentSpec = createAuroraDeploymentSpec(deployBundle, aid)
-                Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = auroraDeploymentSpec, second = null)
-            } catch (e: Throwable) {
-                Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = null, second = ExceptionWrapper(aid, e))
-            }
+            tryCreateAuroraDeploymentSpec(deployBundle, aid)
         }.onErrorThrow(::MultiApplicationValidationException)
+    }
+
+    private fun tryCreateAuroraDeploymentSpec(deployBundle: DeployBundle, aid: ApplicationId): Pair<AuroraDeploymentSpec?, ExceptionWrapper?> {
+        logger.debug("Create ADC for app=${aid.application}, env=${aid.environment}")
+        return try {
+            val auroraDeploymentSpec: AuroraDeploymentSpec = createAuroraDeploymentSpec(deployBundle, aid)
+            Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = auroraDeploymentSpec, second = null)
+        } catch (e: Throwable) {
+            Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = null, second = ExceptionWrapper(aid, e))
+        }
     }
 
     private fun withAuroraConfig(affiliation: String,
