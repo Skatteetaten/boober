@@ -11,13 +11,13 @@ import org.springframework.beans.factory.annotation.Autowired
 import static no.skatteetaten.aurora.boober.model.TemplateType.*
 import static no.skatteetaten.aurora.boober.service.openshift.OperationType.CREATE
 
-class DeployServiceGenerateRedeployResourceTest extends AbstractMockedOpenShiftSpecification {
+class RedeployServiceGenerateRedeployResourceTest extends AbstractMockedOpenShiftSpecification {
 
     @Autowired
     OpenShiftClient openShiftClient
 
     @Autowired
-    DeployService deployService
+    RedeployService redeployService
 
     @Autowired
     ObjectMapper mapper
@@ -51,7 +51,7 @@ class DeployServiceGenerateRedeployResourceTest extends AbstractMockedOpenShiftS
         def templateType = build
         def name = "boober"
         when:
-        def result = deployService.generateRedeployResource(templateType, name, [])
+        def result = redeployService.generateRedeployResource(templateType, name, [])
 
         then:
         result == null
@@ -63,7 +63,7 @@ class DeployServiceGenerateRedeployResourceTest extends AbstractMockedOpenShiftS
         def name = "boober"
 
         when:
-        def result = deployService.generateRedeployResource(templateType, name, [])
+        def result = redeployService.generateRedeployResource(templateType, name, [])
 
         then:
         result == null
@@ -74,7 +74,7 @@ class DeployServiceGenerateRedeployResourceTest extends AbstractMockedOpenShiftS
         def templateType = deploy
         def name = "boober"
         when:
-        def result = deployService.generateRedeployResource(templateType, name, [dcResponse])
+        def result = redeployService.generateRedeployResource(templateType, name, [dcResponse])
 
         then:
         result.get("kind").asText() == "DeploymentRequest"
@@ -84,7 +84,7 @@ class DeployServiceGenerateRedeployResourceTest extends AbstractMockedOpenShiftS
         expect:
         def templateType = deploy
         def name = "boober"
-        deployService.generateRedeployResource(templateType, name, []) == null
+        redeployService.generateRedeployResource(templateType, name, []) == null
     }
 
 
@@ -94,7 +94,7 @@ class DeployServiceGenerateRedeployResourceTest extends AbstractMockedOpenShiftS
         def name = "boober"
 
         when:
-        def result = deployService.generateRedeployResource(templateType, name, [dcResponse, isResponse])
+        def result = redeployService.generateRedeployResource(templateType, name, [dcResponse, isResponse])
 
         then:
         result.get("kind").asText() == "ImageStreamImport"

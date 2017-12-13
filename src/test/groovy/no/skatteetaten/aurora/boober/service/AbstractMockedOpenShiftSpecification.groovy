@@ -49,7 +49,8 @@ import spock.mock.DetachedMockFactory
     AuroraDeploymentSpecValidator,
     SharedSecretReader,
     VelocityTemplateJsonService,
-    OpenShiftObjectLabelService
+    OpenShiftObjectLabelService,
+    RedeployService
 ])
 class AbstractMockedOpenShiftSpecification extends AbstractSpec {
 
