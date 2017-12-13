@@ -68,7 +68,6 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectG
         }
     }
 
-
     protected fun generateRedeployResourceFromSpec(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>): JsonNode? {
         return generateRedeployResource(deploymentSpec.type, deploymentSpec.name, openShiftResponses)
 
@@ -84,7 +83,6 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectG
         if (imageStream == null && deployment != null) {
             return openShiftObjectGenerator.generateDeploymentRequest(name)
         }
-
 
         findImageInformation(openShiftResponses)?.let { imageInformation ->
             imageStream?.responseBody?.takeIf { it.openshiftName == imageInformation.imageStreamName }?.let {
