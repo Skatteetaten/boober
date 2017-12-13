@@ -211,55 +211,53 @@ class DeployService(
 
         val namespace = deploymentSpec.namespace
 
-        return generateRedeployResourceFromSpec(deploymentSpec, openShiftResponses)
-                ?.let { openShiftClient.createOpenShiftCommand(namespace, it) }
-                ?.let { command ->
-                    try {
-                        val response = openShiftClient.performOpenShiftCommand(namespace, command)
-                        if (response.command.payload.openshiftKind != "imagestreamimport" || didNotImportImage(response, openShiftResponses)) {
-                            listOf(response)
-                        } else {
-                            val cmd = openShiftClient.createOpenShiftCommand(namespace,
-                                    openShiftObjectGenerator.generateDeploymentRequest(deploymentSpec.name))
-                            try {
-                                return listOf(response, openShiftClient.performOpenShiftCommand(namespace, cmd))
-                            } catch (e: OpenShiftException) {
-                                listOf(response, OpenShiftResponse.fromOpenShiftException(e, command))
-                            }
-                        }
-                    } catch (e: OpenShiftException) {
-                        listOf(OpenShiftResponse.fromOpenShiftException(e, command))
-                    }
-                } ?: emptyList()
+        val redeployResourceFromSpec = generateRedeployResourceFromSpec(deploymentSpec, openShiftResponses) ?: return emptyList()
+        val command = openShiftClient.createOpenShiftCommand(namespace, redeployResourceFromSpec)
+
+        try {
+            val response = openShiftClient.performOpenShiftCommand(namespace, command)
+            if (response.command.payload.openshiftKind != "imagestreamimport" || didNotImportImage(response, openShiftResponses)) {
+                return listOf(response)
+            }
+            val cmd = openShiftClient.createOpenShiftCommand(namespace,
+                    openShiftObjectGenerator.generateDeploymentRequest(deploymentSpec.name))
+            try {
+                return listOf(response, openShiftClient.performOpenShiftCommand(namespace, cmd))
+            } catch (e: OpenShiftException) {
+                return listOf(response, OpenShiftResponse.fromOpenShiftException(e, command))
+            }
+        } catch (e: OpenShiftException) {
+            return listOf(OpenShiftResponse.fromOpenShiftException(e, command))
+        }
     }
 
 
     private fun didNotImportImage(response: OpenShiftResponse, openShiftResponses: List<OpenShiftResponse>): Boolean {
-        response.responseBody?.let { body ->
-            findImageInformation(openShiftResponses)?.let { info ->
-                if (info.lastTriggeredImage.isBlank()) {
-                    return true
-                }
-                val tags = body.at("/status/import/status/tags") as ArrayNode
-                tags.find { it["tag"].asText() == info.imageStreamTag }?.let {
-                    val tags = it["items"] as ArrayNode
-                    val tag = tags.first()
-                    return tag["dockerImageReference"].asText() == info.lastTriggeredImage
-                }
-            }
+
+        val body = response.responseBody ?: return false
+        val info = findImageInformation(openShiftResponses) ?: return false
+        if (info.lastTriggeredImage.isBlank()) {
+            return true
         }
+
+        val tags = body.at("/status/import/status/tags") as ArrayNode
+        tags.find { it["tag"].asText() == info.imageStreamTag }?.let {
+            val allTags = it["items"] as ArrayNode
+            val tag = allTags.first()
+            return tag["dockerImageReference"].asText() == info.lastTriggeredImage
+        }
+
         return false
     }
 
     private fun findImageInformation(openShiftResponses: List<OpenShiftResponse>): ImageInformation? {
-        val deployment = openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }
-        return deployment?.responseBody?.let {
-            val triggers = it.at("/spec/triggers") as ArrayNode
-            triggers.find { it["type"].asText().toLowerCase() == "imagechange" }?.let {
-                val (isName, tag) = it.at("/imageChangeParams/from/name").asText().split(':')
-                val lastTriggeredImage = it.at("/imageChangeParams/lastTriggeredImage")?.asText() ?: ""
-                ImageInformation(lastTriggeredImage, isName, tag)
-            }
+        val dc = openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }?.responseBody ?: return null
+
+        val triggers = dc.at("/spec/triggers") as ArrayNode
+        return triggers.find { it["type"].asText().toLowerCase() == "imagechange" }?.let {
+            val (isName, tag) = it.at("/imageChangeParams/from/name").asText().split(':')
+            val lastTriggeredImage = it.at("/imageChangeParams/lastTriggeredImage")?.asText() ?: ""
+            ImageInformation(lastTriggeredImage, isName, tag)
         }
     }
 
