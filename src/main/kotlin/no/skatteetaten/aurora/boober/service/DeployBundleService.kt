@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.fge.jsonpatch.JsonPatch
+import kotlinx.coroutines.experimental.ThreadPoolDispatcher
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.newFixedThreadPoolContext
 import kotlinx.coroutines.experimental.runBlocking
@@ -11,12 +12,12 @@ import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.mapper.v1.createAuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.*
-import no.skatteetaten.aurora.boober.model.ApplicationId.Companion.aid
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.revwalk.RevCommit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import org.springframework.util.StopWatch
 import java.io.File
 
 @Service
@@ -26,7 +27,10 @@ class DeployBundleService(
         val gitService: GitService,
         val mapper: ObjectMapper,
         val secretVaultFacade: VaultFacade,
-        val metrics: AuroraMetrics) {
+        val metrics: AuroraMetrics,
+        @Value("\${boober.validationPoolSize:6}") val validationPoolSize: Int) {
+
+    private val dispatcher: ThreadPoolDispatcher = newFixedThreadPoolContext(validationPoolSize, "validationPool")
 
     private val GIT_SECRET_FOLDER = ".secret"
     private val logger = LoggerFactory.getLogger(DeployBundleService::class.java)
@@ -114,14 +118,22 @@ class DeployBundleService(
 
     fun validateDeployBundle(deployBundle: DeployBundle) {
 
-        val dispatcher = newFixedThreadPoolContext(6, "validationPool")
+        createValidatedAuroraDeploymentSpecs(deployBundle)
+    }
 
+    fun createValidatedAuroraDeploymentSpecs(deployBundle: DeployBundle): List<AuroraDeploymentSpec> {
         val applicationIds = deployBundle.auroraConfig.getApplicationIds()
-        runBlocking(dispatcher) {
+        return createValidatedAuroraDeploymentSpecs(deployBundle, applicationIds)
+    }
+
+    fun createValidatedAuroraDeploymentSpecs(deployBundle: DeployBundle, applicationIds: List<ApplicationId>): List<AuroraDeploymentSpec> {
+
+        val stopWatch = StopWatch().apply { start() }
+        val specs: List<AuroraDeploymentSpec> = runBlocking(dispatcher) {
             applicationIds.map { aid ->
                 async(dispatcher) {
                     try {
-                        val spec = createValidAuroraDeploymentSpec(deployBundle, aid)
+                        val spec = createValidatedAuroraDeploymentSpec(deployBundle, aid)
                         Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = spec, second = null)
                     } catch (e: Throwable) {
                         Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = null, second = ExceptionWrapper(aid, e))
@@ -131,7 +143,23 @@ class DeployBundleService(
                     .map { it.await() }
                     .onErrorThrow(::MultiApplicationValidationException)
         }
+        stopWatch.stop()
+        logger.debug("Created validated DeployBundle for AuroraConfig ${deployBundle.auroraConfig.affiliation} in ${stopWatch.totalTimeMillis} millis")
+        return specs
     }
+
+    fun createValidatedAuroraDeploymentSpec(deployBundle: DeployBundle, aid: ApplicationId): AuroraDeploymentSpec {
+
+        val stopWatch = StopWatch().apply { start() }
+        val spec = createAuroraDeploymentSpec(deployBundle, aid)
+        deploymentSpecValidator.assertIsValid(spec)
+        stopWatch.stop()
+
+        logger.debug("Created ADC for app=${aid.application}, env=${aid.environment} in ${stopWatch.totalTimeMillis} millis")
+
+        return spec
+    }
+
 
     fun createAuroraDeploymentSpec(affiliation: String, applicationId: ApplicationId, overrides: List<AuroraConfigFile>): AuroraDeploymentSpec {
         return withDeployBundle(affiliation, overrides) { _, bundle ->
@@ -141,33 +169,22 @@ class DeployBundleService(
 
     fun createAuroraDeploymentSpecs(deployBundle: DeployBundle, applicationIds: List<ApplicationId>): List<AuroraDeploymentSpec> {
 
-        return tryCreateAuroraDeploymentSpecs(deployBundle, applicationIds)
-    }
-
-    fun createValidAuroraDeploymentSpec(deployBundle: DeployBundle, aid: ApplicationId): AuroraDeploymentSpec {
-        val spec = createAuroraDeploymentSpec(deployBundle, aid)
-        deploymentSpecValidator.assertIsValid(spec)
-        return spec
-    }
-
-    fun createAuroraDeploymentSpec(deployBundle: DeployBundle, applicationId: ApplicationId): AuroraDeploymentSpec {
-
-        val auroraConfig = deployBundle.auroraConfig
-        val overrideFiles = deployBundle.overrideFiles
-        val vaults = deployBundle.vaults
-
-        return createAuroraDeploymentSpec(auroraConfig, applicationId, dockerRegistry, overrideFiles, vaults)
-    }
-
-    private fun tryCreateAuroraDeploymentSpecs(deployBundle: DeployBundle, applicationIds: List<ApplicationId>): List<AuroraDeploymentSpec> {
-
         return applicationIds.map { aid ->
             tryCreateAuroraDeploymentSpec(deployBundle, aid)
         }.onErrorThrow(::MultiApplicationValidationException)
     }
 
+    fun createAuroraDeploymentSpec(deployBundle: DeployBundle, aid: ApplicationId): AuroraDeploymentSpec {
+
+        val auroraConfig = deployBundle.auroraConfig
+        val overrideFiles = deployBundle.overrideFiles
+        val vaults = deployBundle.vaults
+
+        return createAuroraDeploymentSpec(auroraConfig, aid, dockerRegistry, overrideFiles, vaults)
+    }
+
     private fun tryCreateAuroraDeploymentSpec(deployBundle: DeployBundle, aid: ApplicationId): Pair<AuroraDeploymentSpec?, ExceptionWrapper?> {
-        logger.debug("Create ADC for app=${aid.application}, env=${aid.environment}")
+
         return try {
             val auroraDeploymentSpec: AuroraDeploymentSpec = createAuroraDeploymentSpec(deployBundle, aid)
             Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = auroraDeploymentSpec, second = null)

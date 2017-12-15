@@ -139,7 +139,7 @@ class OpenShiftClient(
 
     fun getTemplate(template: String): JsonNode? {
         return try {
-            userClient.get("$baseUrl/oapi/v1/namespaces/openshift/templates/$template")?.body
+            serviceAccountClient.get("$baseUrl/oapi/v1/namespaces/openshift/templates/$template")?.body
         } catch (e: Exception) {
             logger.debug("Failed getting template={}", template)
             null
