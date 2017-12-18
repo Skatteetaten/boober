@@ -80,19 +80,19 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
   def "Should perform release and not generate a deployRequest if imagestream triggers new image"() {
     when:
-    List<AuroraDeployResult> deployResults = deployService.
-            executeDeploy(affiliation, [new ApplicationId("imagestreamtest", "reference")], [], true)
+      List<AuroraDeployResult> deployResults = deployService.
+          executeDeploy(affiliation, [new ApplicationId("imagestreamtest", "reference")], [], true)
 
     then:
-    def result = deployResults[0]
-    result.openShiftResponses.size() == 8
-    result.openShiftResponses[7].responseBody.at("/kind").asText() == "ImageStreamImport"
+      def result = deployResults[0]
+      result.openShiftResponses.size() == 8
+      result.openShiftResponses[7].responseBody.at("/kind").asText() == "ImageStreamImport"
   }
 
   def "Should perform release and generate a imageStreamImport request"() {
     when:
       List<AuroraDeployResult> deployResults = deployService.
-              executeDeploy(affiliation, [new ApplicationId(ENV_NAME, "reference")], [], true)
+          executeDeploy(affiliation, [new ApplicationId(ENV_NAME, "reference")], [], true)
 
     then:
       def result = deployResults[0]
