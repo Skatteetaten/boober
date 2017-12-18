@@ -78,17 +78,15 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
     gitService.closeRepository(git)
   }
 
-  def "Should perform release and generate a deployRequest if imagestream does not trigger new image"() {
+  def "Should perform release and not generate a deployRequest if imagestream triggers new image"() {
     when:
     List<AuroraDeployResult> deployResults = deployService.
             executeDeploy(affiliation, [new ApplicationId("imagestreamtest", "reference")], [], true)
 
     then:
     def result = deployResults[0]
-    result.openShiftResponses.size() == 9
+    result.openShiftResponses.size() == 8
     result.openShiftResponses[7].responseBody.at("/kind").asText() == "ImageStreamImport"
-    result.openShiftResponses[8].responseBody.at("/kind").asText() == "DeploymentRequest"
-
   }
 
   def "Should perform release and generate a imageStreamImport request"() {
@@ -98,9 +96,9 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
     then:
       def result = deployResults[0]
-      result.openShiftResponses.size() == 8
+      result.openShiftResponses.size() == 9
       result.openShiftResponses[7].responseBody.at("/kind").asText() == "ImageStreamImport"
-
+      result.openShiftResponses[8].responseBody.at("/kind").asText() == "DeploymentRequest"
   }
 
   def "Should perform release of paused env and not generate a redploy request"() {
