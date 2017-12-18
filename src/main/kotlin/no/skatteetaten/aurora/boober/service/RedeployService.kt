@@ -24,7 +24,7 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectG
 
         try {
             val response = openShiftClient.performOpenShiftCommand(namespace, command)
-            if (response.command.payload.openshiftKind != "imagestreamimport" || !didNotImportImage(response, openShiftResponses)) {
+            if (response.command.payload.openshiftKind != "imagestreamimport" || didImportImage(response, openShiftResponses)) {
                 return listOf(response)
             }
             val cmd = openShiftClient.createOpenShiftCommand(namespace,
@@ -39,22 +39,22 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectG
         }
     }
 
-    protected fun didNotImportImage(response: OpenShiftResponse, openShiftResponses: List<OpenShiftResponse>): Boolean {
+    protected fun didImportImage(response: OpenShiftResponse, openShiftResponses: List<OpenShiftResponse>): Boolean {
 
-        val body = response.responseBody ?: return false
-        val info = findImageInformation(openShiftResponses) ?: return false
+        val body = response.responseBody ?: return true
+        val info = findImageInformation(openShiftResponses) ?: return true
         if (info.lastTriggeredImage.isBlank()) {
-            return true
+            return false
         }
 
         val tags = body.at("/status/import/status/tags") as ArrayNode
         tags.find { it["tag"].asText() == info.imageStreamTag }?.let {
             val allTags = it["items"] as ArrayNode
             val tag = allTags.first()
-            return tag["dockerImageReference"].asText() == info.lastTriggeredImage
+            return tag["dockerImageReference"].asText() != info.lastTriggeredImage
         }
 
-        return false
+        return true
     }
 
     protected fun findImageInformation(openShiftResponses: List<OpenShiftResponse>): ImageInformation? {
