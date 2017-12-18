@@ -24,7 +24,7 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectG
 
         try {
             val response = openShiftClient.performOpenShiftCommand(namespace, command)
-            if (response.command.payload.openshiftKind != "imagestreamimport" || didNotImportImage(response, openShiftResponses)) {
+            if (response.command.payload.openshiftKind != "imagestreamimport" || !didNotImportImage(response, openShiftResponses)) {
                 return listOf(response)
             }
             val cmd = openShiftClient.createOpenShiftCommand(namespace,
