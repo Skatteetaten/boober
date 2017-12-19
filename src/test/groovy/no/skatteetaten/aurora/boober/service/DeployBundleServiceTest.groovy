@@ -21,7 +21,13 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
   @Autowired
   GitService gitService
 
+  //TODO: move to kotlin
   private AuroraConfig getAuroraConfigFromGit(String affiliation, boolean decryptSecrets) {
+
+    def filesallFilesInRepo: Map<String, Pair<RevCommit?, File>> = gitService.getAllFiles(repo).mapValues {
+      val commit = gitService.getRevCommit(repo, it.key)
+      Pair(commit, it.value)
+    }
 
     def files = gitService.getAllFilesInRepo(git)
     def auroraConfig = deployBundleService.createAuroraConfigFromFiles(files, "aos")

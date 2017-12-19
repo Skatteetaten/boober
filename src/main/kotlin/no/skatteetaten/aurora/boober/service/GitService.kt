@@ -38,13 +38,14 @@ class GitService(
 
     val cp = UsernamePasswordCredentialsProvider(username, password)
 
+    // Try to delete this. Only used in tests.
     fun deleteFiles(affiliation: String) {
         val repoDir = File(checkoutPath + "/" + affiliation)
         if (repoDir.exists()) {
             repoDir.deleteRecursively()
         }
     }
-
+    //only test
     fun openRepo(affiliation: String): Git {
         val repoPath = File("$checkoutPath/$affiliation")
         return Git.open(repoPath)
@@ -84,6 +85,7 @@ class GitService(
         })
     }
 
+    //support multiple patterns
     fun deleteDirectory(git: Git, dirName: String) {
         try {
             git.rm().addFilepattern(dirName).call()
@@ -98,6 +100,7 @@ class GitService(
         }
     }
 
+/*
     fun saveFilesAndClose(git: Git, files: Map<String, String>, keep: (String) -> Boolean) {
         try {
             logger.debug("write add changes")
@@ -118,23 +121,15 @@ class GitService(
             closeRepository(git)
         }
     }
+*/
 
     fun closeRepository(repo: Git) {
         repo.close()
     }
 
-    fun getAllFiles(git: Git): Map<String, File> {
 
-        val folder = git.repository.directory.parentFile
-        val files = folder.walkBottomUp()
-                .onEnter { !it.name.startsWith(".git") }
-                .filter { it.isFile }
-                .associate {
-                    it.relativeTo(folder).path to it
-                }
-        return files
-    }
 
+    //TODO: move out to another abstraction
     fun getAllAuroraConfigFiles(git: Git): Map<String, File> {
         return getAllFiles(git)
                 .filter { !it.key.startsWith(GIT_SECRET_FOLDER) }
@@ -142,13 +137,8 @@ class GitService(
 //                .filter{ it.key.endsWith(".json")}
     }
 
-    fun getAllFilesInRepo(git: Git): Map<String, Pair<RevCommit?, File>> {
-        val files = getAllAuroraConfigFiles(git).mapValues {
-            Pair(getRevCommit(git, it.key), it.value)
-        }
-        return files
-    }
 
+    //TODO: Move out to another abstraction
     fun getAllSecretFilesInRepoList(git: Git): List<AuroraSecretFile> {
         return getAllFiles(git)
                 .filter { it.key.startsWith(GIT_SECRET_FOLDER) }
@@ -157,7 +147,7 @@ class GitService(
                 }
     }
 
-    private fun getRevCommit(git: Git, path: String?): RevCommit? {
+     fun getRevCommit(git: Git, path: String?): RevCommit? {
         val commit = try {
             git.log().addPath(path).setMaxCount(1).call().firstOrNull()
         } catch (e: NoHeadException) {
@@ -167,7 +157,8 @@ class GitService(
         return commit
     }
 
-    private fun writeAndAddChanges(git: Git, files: Map<String, String>) {
+
+    fun writeAndAddChanges(git: Git, files: Map<String, String>) {
 
         files.forEach { (fileName, value) ->
             fileName.split("/")
@@ -181,10 +172,12 @@ class GitService(
 
             FileWriter(file, false).use { it.write(value) }
 
+            //It is more optimal to add all filepatterns at the end?
             git.add().addFilepattern(fileName).call()
         }
     }
 
+/*
     private fun deleteMissingFiles(git: Git, files: Set<String>, keep: (String) -> Boolean) {
         //TODO: If this takes time rewrite to not include File content
         getAllFiles(git)
@@ -193,6 +186,7 @@ class GitService(
                 .filter { !files.contains(it) }
                 .forEach { git.rm().addFilepattern(it).call() }
     }
+*/
 
     private fun commitAllChanges(git: Git, message: String): RevCommit {
 
@@ -267,6 +261,7 @@ class GitService(
     }
 
 
+    //TODO: This and the one below must be joined together somehow.
     fun getFile(git: Git, fileName: String): AuroraSecretFile? {
 
         val folder = git.repository.directory.parentFile
@@ -278,4 +273,20 @@ class GitService(
                     AuroraSecretFile(path, it, getRevCommit(git, path))
                 }.firstOrNull()
     }
+
+
+
+    fun getAllFiles(git: Git): Map<String, File> {
+
+        val folder = git.repository.directory.parentFile
+        val files = folder.walkBottomUp()
+                //TODO: Ignore all files starting with . not just .git
+                .onEnter { !it.name.startsWith(".git") }
+                .filter { it.isFile }
+                .associate {
+                    it.relativeTo(folder).path to it
+                }
+        return files
+    }
+
 }

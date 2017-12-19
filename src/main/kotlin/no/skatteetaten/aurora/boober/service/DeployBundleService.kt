@@ -65,7 +65,10 @@ class DeployBundleService(
         val repo = getRepo(affiliation)
         //TODO: add revCommit
         logger.debug("get all files with revCommit")
-        val allFilesInRepo: Map<String, Pair<RevCommit?, File>> = gitService.getAllFilesInRepo(repo)
+        val allFilesInRepo: Map<String, Pair<RevCommit?, File>> = gitService.getAllFiles(repo).mapValues {
+            val commit = gitService.getRevCommit(repo, it.key)
+            Pair(commit, it.value)
+        }
         logger.debug("create aurora config from files")
         val res = createAuroraConfigFromFiles(allFilesInRepo, affiliation)
         gitService.closeRepository(repo)
@@ -201,7 +204,10 @@ class DeployBundleService(
         val repo = getRepo(affiliation)
 
         logger.debug("Get all files")
-        val allFilesInRepo: Map<String, Pair<RevCommit?, File>> = gitService.getAllFilesInRepo(repo)
+        val allFilesInRepo: Map<String, Pair<RevCommit?, File>> = gitService.getAllFiles(repo).mapValues {
+            val commit = gitService.getRevCommit(repo, it.key)
+            Pair(commit, it.value)
+        }
         logger.debug("Create Aurora config")
         val auroraConfig = createAuroraConfigFromFiles(allFilesInRepo, affiliation)
         logger.debug("/Create Aurora config")
