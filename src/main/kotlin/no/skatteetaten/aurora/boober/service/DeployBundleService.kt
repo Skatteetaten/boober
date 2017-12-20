@@ -49,7 +49,7 @@ class DeployBundleService(
         val auroraConfig = AuroraConfig(auroraConfigFiles = auroraConfigFiles, affiliation = affiliation)
 
         logger.debug("Get all vaults")
-        val vaults = secretVaultService.listAllVaults(repo).associateBy { it.name }
+        val vaults = secretVaultService.findAllVaultsInVaultCollection(affiliation).associateBy { it.name }
         logger.debug("Create deploy bundle")
         val deployBundle = DeployBundle(auroraConfig = auroraConfig, vaults = vaults, overrideFiles = overrideFiles)
         logger.debug("Perform op on deploy bundle")
@@ -107,7 +107,7 @@ class DeployBundleService(
     fun validateDeployBundleWithAuroraConfig(affiliation: String, auroraConfig: AuroraConfig): AuroraConfig {
 
         val repo = getRepo(affiliation)
-        val vaults = secretVaultService.listAllVaults(repo).associateBy { it.name }
+        val vaults = secretVaultService.findAllVaultsInVaultCollection(affiliation).associateBy { it.name }
         val bundle = DeployBundle(auroraConfig = auroraConfig, vaults = vaults)
         try {
             validateDeployBundle(bundle)
@@ -219,7 +219,7 @@ class DeployBundleService(
         }
 
         logger.debug("list all vaults")
-        val vaults = secretVaultService.listAllVaults(repo).associateBy { it.name }
+        val vaults = secretVaultService.findAllVaultsInVaultCollection(affiliation).associateBy { it.name }
         logger.debug("/list all vaults")
 
         val deployBundle = DeployBundle(auroraConfig = newAuroraConfig, vaults = vaults)
@@ -257,7 +257,7 @@ class DeployBundleService(
 
     private fun getRepo(affiliation: String): Git {
 
-        return gitService.checkoutRepoForAffiliation(affiliation)
+        return gitService.checkoutRepository(affiliation)
     }
 
     private fun createAuroraConfigFromFiles(filesFromGit: Map<String, Pair<RevCommit?, File>>, affiliation: String): AuroraConfig {
@@ -282,7 +282,7 @@ class DeployBundleService(
         val keep: (String) -> Boolean = { it -> !it.startsWith(GIT_SECRET_FOLDER) }
 
         logger.debug("save files and close")
-        gitService.saveFilesAndClose(repo, configFiles, keep)
+//        gitService.saveFilesAndClose(repo, configFiles, keep)
     }
 
     fun findAuroraConfigFile(affiliation: String, fileName: String): AuroraConfigFile? {
@@ -290,7 +290,7 @@ class DeployBundleService(
         val repo = getRepo(affiliation)
         val file = gitService.getFile(repo, fileName)
         val jsonFile = file?.let {
-            AuroraConfigFile(it.path, mapper.readValue(it.file), version = it.commit?.abbreviate(7)?.name())
+            AuroraConfigFile(it.path, mapper.readValue(it.file)/*, version = it.commit?.abbreviate(7)?.name()*/)
         }
         gitService.closeRepository(repo)
         logger.debug("/Find aurora config file")

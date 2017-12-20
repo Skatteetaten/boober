@@ -239,7 +239,7 @@ class DeployService(
     }
 
     fun deployHistory(affiliation: String): List<DeployHistory> {
-        val repo = gitService.checkoutRepoForAffiliation(affiliation)
+        val repo = gitService.checkoutRepository(affiliation)
         val res = gitService.tagHistory(repo)
                 .filter { it.tagName.startsWith(DEPLOY_PREFIX) }
                 .map { DeployHistory(it.taggerIdent, mapper.readTree(it.fullMessage)) }
@@ -248,7 +248,7 @@ class DeployService(
     }
 
     fun findDeployResultById(auroraConfigId: String, deployId: String): DeployHistory? {
-        val repo = gitService.checkoutRepoForAffiliation(auroraConfigId)
+        val repo = gitService.checkoutRepository(auroraConfigId)
         val res: DeployHistory? = gitService.tagHistory(repo)
                 .firstOrNull { it.tagName.endsWith(deployId) }
                 ?.let { DeployHistory(it.taggerIdent, mapper.readTree(it.fullMessage)) }

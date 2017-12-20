@@ -61,7 +61,7 @@ class DeployServiceFromGitFailTest extends AbstractMockedOpenShiftSpecification 
       deployService.executeDeploy(affiliation, [new ApplicationId(ENV_NAME, APP_NAME)])
 
     then:
-      def git = gitService.checkoutRepoForAffiliation(affiliation)
+      def git = gitService.checkoutRepository(affiliation)
 
       def history = gitService.tagHistory(git)
       history.size() == 1

@@ -52,7 +52,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
 
 
     then:
-      def git = gitService.checkoutRepoForAffiliation("aos")
+      def git = gitService.checkoutRepository("aos")
       def gitLog = git.log().call().head()
       gitService.closeRepository(git)
       gitLog.authorIdent.name == "Test User"
@@ -70,7 +70,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
       deployBundleService.saveAuroraConfig(newConfig, false)
 
     then:
-      def git = gitService.checkoutRepoForAffiliation("aos")
+      def git = gitService.checkoutRepository("aos")
       def gitLog = git.log().call().head()
       gitService.closeRepository(git)
 
@@ -115,7 +115,7 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
 
       def version = gitAuroraConfig.auroraConfigFiles.find { it.name == filename }.version
       def patchedAuroraConfig = deployBundleService.patchAuroraConfigFile("aos", filename, jsonOp, version, false)
-      def git = gitService.checkoutRepoForAffiliation("aos")
+      def git = gitService.checkoutRepository("aos")
       def gitLog = git.log().call().head()
       gitService.closeRepository(git)
 

@@ -26,7 +26,6 @@ import spock.mock.DetachedMockFactory
     VaultService,
     GitService,
     EncryptionService,
-    SecretVaultService,
     SharedSecretReader,
     Config,
     AuroraMetrics
@@ -174,13 +173,13 @@ class VaultServiceTest extends Specification {
     given:
       permissionService.hasUserAccess(_) >> true
       createRepoAndSaveFiles(affiliation, vault)
-      def storedVault = facade.find(affiliation, vaultName)
+      def storedVault = facade.findVault(affiliation, vaultName)
 
     when:
       def newVault = new AuroraSecretVault(vaultName, secret, null, storedVault.versions)
 
       facade.save(affiliation, newVault, false)
-      def updatedAuroraConfig = facade.find(affiliation, vaultName)
+      def updatedAuroraConfig = facade.findVault(affiliation, vaultName)
 
     then:
       storedVault.versions[secretFile] == updatedAuroraConfig.versions[secretFile]
@@ -190,7 +189,7 @@ class VaultServiceTest extends Specification {
     given:
       permissionService.hasUserAccess(_) >> true
       createRepoAndSaveFiles(affiliation, vault)
-      def storedVault = facade.find(affiliation, vaultName)
+      def storedVault = facade.findVault(affiliation, vaultName)
 
     when:
 
@@ -199,7 +198,7 @@ class VaultServiceTest extends Specification {
       def newVault = new AuroraSecretVault(vaultName, newSecrets, null, storedVault.versions)
 
       facade.save(affiliation, newVault, false)
-      def updatedAuroraConfig = facade.find(affiliation, vaultName)
+      def updatedAuroraConfig = facade.findVault(affiliation, vaultName)
 
     then:
       updatedAuroraConfig.secrets == newSecrets
@@ -212,7 +211,7 @@ class VaultServiceTest extends Specification {
 
       permissionService.hasUserAccess(_) >> true
       createRepoAndSaveFiles(affiliation, newVault)
-      def storedVault = facade.find(affiliation, vaultName)
+      def storedVault = facade.findVault(affiliation, vaultName)
 
     when:
 
@@ -221,7 +220,7 @@ class VaultServiceTest extends Specification {
 
 
       facade.save(affiliation, removeVault, false)
-      def updatedAuroraConfig = facade.find(affiliation, vaultName)
+      def updatedAuroraConfig = facade.findVault(affiliation, vaultName)
 
     then:
       updatedAuroraConfig.secrets.size() == 1
@@ -231,13 +230,13 @@ class VaultServiceTest extends Specification {
     given:
       permissionService.hasUserAccess(_) >> true
       createRepoAndSaveFiles(affiliation, vault)
-      def storedVault = facade.find(affiliation, vaultName)
+      def storedVault = facade.findVault(affiliation, vaultName)
 
     when:
 
       facade.updateSecretFile(affiliation, vaultName, "latest.properties", "OOOHYEAH",
           storedVault.versions['latest.properties'], true)
-      def updatedAuroraConfig = facade.find(affiliation, vaultName)
+      def updatedAuroraConfig = facade.findVault(affiliation, vaultName)
 
     then:
       updatedAuroraConfig.versions['latest.properties'] != storedVault.versions['latest.properties']
@@ -249,7 +248,7 @@ class VaultServiceTest extends Specification {
       createRepoAndSaveFiles(affiliation, vault)
 
     when:
-      facade.find(affiliation, "fo")
+      facade.findVault(affiliation, "fo")
 
     then:
       thrown(IllegalArgumentException)
@@ -262,7 +261,7 @@ class VaultServiceTest extends Specification {
 
     when:
       facade.delete(affiliation, vaultName)
-      facade.find(affiliation, vaultName)
+      facade.findVault(affiliation, vaultName)
 
     then:
 
@@ -278,8 +277,8 @@ class VaultServiceTest extends Specification {
       def newVault = new AuroraSecretVault("vault2", secret, null, [:])
       facade.save(affiliation, newVault, false)
 
-      def vault = facade.find(affiliation, vaultName)
-      def vault2 = facade.find(affiliation, "vault2")
+      def vault = facade.findVault(affiliation, vaultName)
+      def vault2 = facade.findVault(affiliation, "vault2")
 
 
     then:
@@ -297,7 +296,7 @@ class VaultServiceTest extends Specification {
 
     when:
 
-      def vaults = facade.findAllVaultsWithUserAccess(affiliation)
+      def vaults = facade.findAllVaultsWithUserAccessInVaultCollection(affiliation)
 
 
     then:
@@ -322,7 +321,7 @@ class VaultServiceTest extends Specification {
       _ * permissionService.hasUserAccess(opsGroup) >> false
 
     when:
-      def vaults = facade.findAllVaultsWithUserAccess(affiliation)
+      def vaults = facade.findAllVaultsWithUserAccessInVaultCollection(affiliation)
 
 
     then:

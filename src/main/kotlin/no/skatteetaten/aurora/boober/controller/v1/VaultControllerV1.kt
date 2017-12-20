@@ -23,7 +23,7 @@ class VaultControllerV1(val vaultService: VaultService) {
 
     @GetMapping()
     fun listVaults(@PathVariable vaultCollection: String): Response {
-        return Response(items = vaultService.findAllVaultsWithUserAccess(vaultCollection))
+        return Response(items = vaultService.findAllVaultsWithUserAccessInVaultCollection(vaultCollection))
     }
 
     @PutMapping()
@@ -35,7 +35,7 @@ class VaultControllerV1(val vaultService: VaultService) {
 
     @GetMapping("/{vault}")
     fun get(@PathVariable affiliation: String, @PathVariable vault: String): Response {
-        return Response(items = listOf(vaultService.find(affiliation, vault)))
+        return Response(items = listOf(vaultService.findVault(affiliation, vault)))
     }
 
     @PutMapping("/{vault}/secret/**")

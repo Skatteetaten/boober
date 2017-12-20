@@ -1,18 +1,14 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import no.skatteetaten.aurora.boober.model.AuroraPermissions
 import no.skatteetaten.aurora.boober.model.AuroraSecretFile
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
+import no.skatteetaten.aurora.boober.model.AuroraSecretVault.Companion.createVault
+import no.skatteetaten.aurora.boober.model.AuroraSecretVaultWithAccess
+import no.skatteetaten.aurora.boober.model.VaultCollection
 import org.eclipse.jgit.api.Git
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-
-data class AuroraSecretVaultWithAccess @JvmOverloads constructor(
-        val secretVault: AuroraSecretVault,
-        val hasAccess: Boolean = true
-)
 
 @Service
 class VaultService(
@@ -23,36 +19,31 @@ class VaultService(
 ) {
 
     private val logger = LoggerFactory.getLogger(VaultService::class.java)
-    private val GIT_SECRET_FOLDER = ".secret"
-    private val PERMISSION_FILE = ".permissions"
 
+    fun findVaultCollection(vaultCollectionName: String): VaultCollection {
 
-    fun findAllVaultsWithUserAccess(vaultCollection: String): List<AuroraSecretVaultWithAccess> {
+        val repo = gitService.checkoutRepository(vaultCollectionName)
+        val folder = repo.repository.directory.parentFile
+        repo.close()
 
-        val repo = getRepo(vaultCollection)
+        return VaultCollection.fromFolder(folder, encryptionService::decrypt)
+    }
 
-        val vaults = getVaults(repo)
-                .values
+    fun findAllVaultsWithUserAccessInVaultCollection(vaultCollectionName: String): List<AuroraSecretVaultWithAccess> {
+
+        return findAllVaultsInVaultCollection(vaultCollectionName)
                 .map { AuroraSecretVaultWithAccess(it, permissionService.hasUserAccess(it.permissions)) }
-                .toList()
-        gitService.closeRepository(repo)
-        return vaults
     }
 
-    fun listAllVaults(git: Git): List<AuroraSecretVault> {
-        return getVaults(git)
-                .values.toList()
+    fun findAllVaultsInVaultCollection(vaultCollectionName: String): List<AuroraSecretVault> {
+
+        return findVaultCollection(vaultCollectionName).vaults
     }
 
+    fun findVault(vaultCollectionName: String, vaultName: String): AuroraSecretVault {
 
-    fun find(affiliation: String, vault: String): AuroraSecretVault {
-
-        return withAuroraVault(affiliation, vault, false, false, function = {
-            if (it.secrets.isEmpty()) {
-                throw IllegalArgumentException("Vault not found name=${it.name}")
-            }
-            it
-        })
+        return findAllVaultsInVaultCollection(vaultCollectionName).find { it.name == vaultName }
+                ?: throw IllegalArgumentException("Vault not found name=$vaultName")
     }
 
     fun save(affiliation: String, vault: AuroraSecretVault, validateVersions: Boolean): AuroraSecretVault {
@@ -62,9 +53,9 @@ class VaultService(
     }
 
     fun delete(affiliation: String, vault: String): Boolean {
-        val repo = getRepo(affiliation)
+        val repo = gitService.checkoutRepository(affiliation)
 
-        gitService.deleteDirectory(repo, "$GIT_SECRET_FOLDER/$vault/")
+//        gitService.deleteDirectory(repo, "$GIT_SECRET_FOLDER/$vault/")
         return true
     }
 
@@ -89,11 +80,11 @@ class VaultService(
                                 commitChanges: Boolean = true,
                                 function: (AuroraSecretVault) -> AuroraSecretVault = { it -> it }): AuroraSecretVault {
 
-        val repo = getRepo(affiliation)
+        val repo = gitService.checkoutRepository(affiliation)
 
         val vaultFiles = getVaultFiles(repo, vault)
 
-        val oldVault = createVault(vault, vaultFiles)
+        val oldVault = createVault(vault, vaultFiles/*, decryptor*/)
 
         if (!permissionService.hasUserAccess(oldVault.permissions)) {
             throw IllegalAccessError("You do not have permission to operate on this vault ($vault)")
@@ -114,41 +105,9 @@ class VaultService(
     }
 
     private fun getVaultFiles(repo: Git, vault: String): List<AuroraSecretFile> {
-        return gitService.getAllSecretFilesInRepoList(repo)
-                .filter { it.path.startsWith("$GIT_SECRET_FOLDER/$vault/") }
+        return listOf()/*getAllSecretFilesInRepoList(repo)
+                .filter { it.path.startsWith("$GIT_SECRET_FOLDER/$vault/") }*/
 
-    }
-
-    private fun getVaults(repo: Git): Map<String, AuroraSecretVault> {
-
-        val vaultFiles: List<AuroraSecretFile> = gitService.getAllSecretFilesInRepoList(repo)
-
-        return vaultFiles
-                .groupBy { it.path.split("/")[1] } //.secret/<vaultName>/<secretName>
-                .mapValues { createVault(it.key, it.value) }
-
-    }
-
-    private fun createVault(name: String, vaultFiles: List<AuroraSecretFile>): AuroraSecretVault {
-
-        val permissions: AuroraPermissions? = vaultFiles.find { gitFile ->
-            gitFile.file.name == PERMISSION_FILE
-        }?.file?.let { mapper.readValue(it) }
-
-        val files = vaultFiles.filter { it.file.name != PERMISSION_FILE }
-                .associate { gitFile ->
-                    val contents = encryptionService.decrypt(gitFile.file.readText())
-
-                    gitFile.file.name to contents
-                }.toMap()
-
-        val versions = vaultFiles.associate { it.file.name to it.commit?.abbreviate(7)?.name() }
-
-        return AuroraSecretVault(name, files, permissions, versions)
-    }
-
-    private fun getRepo(affiliation: String): Git {
-        return gitService.checkoutRepoForAffiliation(affiliation)
     }
 
     private fun commit(repo: Git,
@@ -161,15 +120,15 @@ class VaultService(
         if (vault.name.isBlank()) {
             throw IllegalArgumentException("Vault name must be set")
         }
-        val vaultPath = "$GIT_SECRET_FOLDER/${vault.name}"
+        val vaultPath = ""//""$GIT_SECRET_FOLDER/${vault.name}"
 
-        val secretFilesForVault = vaultFiles.filter { !it.path.endsWith(PERMISSION_FILE) }
+        val secretFilesForVault = vaultFiles.filter { !it.path.endsWith(""/*PERMISSION_FILE*/) }
 
         val encryptedSecretsFiles: Map<String, String> = encryptSecrets(oldVault.secrets, vault.secrets, secretFilesForVault)
 
         val result = vault.permissions?.let {
             encryptedSecretsFiles +
-                    mapOf(PERMISSION_FILE to mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it))
+                    mapOf(""/*PERMISSION_FILE*/ to mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it))
         } ?: encryptedSecretsFiles
 
         if (validateVersions) {
@@ -182,12 +141,15 @@ class VaultService(
                     }.map { it.key }
 
             if (invalidVersions.isNotEmpty()) {
+/*
 
                 val errors = invalidVersions.map { fileName ->
                     val commit = vaultFiles.find { it.file.name == fileName }?.commit!!//since oldVersion != null above this is safe
                     VersioningError("$vaultPath/$fileName", commit.authorIdent.name, commit.authorIdent.`when`)
                 }
                 throw AuroraVersioningException("Source file has changed since you fetched it", errors)
+*/
+                throw AuroraVersioningException("Source file has changed since you fetched it", listOf())
             }
         }
 
@@ -195,7 +157,7 @@ class VaultService(
 
         //when we save secret files we do not mess with auroraConfig
         val keep: (String) -> Boolean = { it -> it.startsWith(vaultPath) }
-        gitService.saveFilesAndClose(repo, pathResult, keep)
+//        gitService.saveFilesAndClose(repo, pathResult, keep)
     }
 
     private fun encryptSecrets(oldSecrets: Map<String, String>,

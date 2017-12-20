@@ -33,8 +33,6 @@ class GitService(
         @Value("\${boober.git.password}") val password: String,
         val metrics: AuroraMetrics) {
 
-    val GIT_SECRET_FOLDER = ".secret"
-
     val logger: Logger = LoggerFactory.getLogger(GitService::class.java)
 
     val cp = UsernamePasswordCredentialsProvider(username, password)
@@ -53,9 +51,9 @@ class GitService(
         return Git.open(repoPath)
     }
 
-    fun checkoutRepoForAffiliation(affiliation: String): Git {
-        synchronized(affiliation, {
-            val repoPath = File("$checkoutPath/$affiliation")
+    fun checkoutRepository(repositoryName: String): Git {
+        synchronized(repositoryName, {
+            val repoPath = File("$checkoutPath/$repositoryName")
             if (repoPath.exists()) {
                 try {
                     val git = Git.open(repoPath)
@@ -71,7 +69,7 @@ class GitService(
             }
             return metrics.withMetrics("git_checkout", {
                 val dir = repoPath.apply { mkdirs() }
-                val uri = url.format(affiliation)
+                val uri = url.format(repositoryName)
 
                 try {
                     Git.cloneRepository()
@@ -133,19 +131,6 @@ class GitService(
     //TODO: move out to another abstraction
     fun getAllAuroraConfigFiles(git: Git): Map<String, File> {
         return getAllFiles(git)
-                .filter { !it.key.startsWith(GIT_SECRET_FOLDER) }
-        //TODO: Try to add this to only allow json files in AuroraConfig
-//                .filter{ it.key.endsWith(".json")}
-    }
-
-
-    //TODO: Move out to another abstraction
-    fun getAllSecretFilesInRepoList(git: Git): List<AuroraSecretFile> {
-        return getAllFiles(git)
-                .filter { it.key.startsWith(GIT_SECRET_FOLDER) }
-                .map {
-                    AuroraSecretFile(it.key, it.value, getRevCommit(git, it.key))
-                }
     }
 
     fun getRevCommit(git: Git, path: String?): RevCommit? {
@@ -286,7 +271,7 @@ class GitService(
                 .filter { it.isFile && it.relativeTo(folder).path == fileName }
                 .map {
                     val path = it.relativeTo(folder).path
-                    AuroraSecretFile(path, it, getRevCommit(git, path))
+                    AuroraSecretFile(path, it/*, getRevCommit(git, path)*/)
                 }.firstOrNull()
     }
 

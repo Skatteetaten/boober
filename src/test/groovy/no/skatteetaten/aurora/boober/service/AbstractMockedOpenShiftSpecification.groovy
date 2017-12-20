@@ -35,7 +35,6 @@ import spock.mock.DetachedMockFactory
     OpenShiftObjectGenerator,
     OpenShiftTemplateProcessor,
     GitService,
-    SecretVaultService,
     EncryptionService,
     DeployBundleService,
     VaultService,

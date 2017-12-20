@@ -70,7 +70,7 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
     }
     openShiftClient.createOpenShiftDeleteCommands(_, _, _, _) >> []
 
-    git = gitService.checkoutRepoForAffiliation(affiliation)
+    git = gitService.checkoutRepository(affiliation)
   }
 
   def cleanup() {
