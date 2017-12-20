@@ -13,33 +13,23 @@ class VaultCollection private constructor(
     companion object {
 
         fun fromFolder(folder: File, decryptor: Decryptor): VaultCollection {
-            val vaultFiles: List<AuroraSecretFile> = findAllSecretFiles(folder)
+            val vaultFiles = getAllFiles(folder)
             val vaults: List<AuroraSecretVault> = vaultFiles
-                    .groupBy { it.vaultName }
+                    .groupBy { it.name }
                     .map {
-                        val vaultName: String = it.key
-                        val files: List<AuroraSecretFile> = it.value
-                        AuroraSecretVault.createVault(vaultName, files, decryptor)
+                        val files: List<File> = it.value
+                        val name = it.key
+                        AuroraSecretVault.createVault(name, files, decryptor)
                     }
             return VaultCollection(folder, vaults)
         }
 
-        private fun findAllSecretFiles(folder: File): List<AuroraSecretFile> {
-
-            return getAllFiles(folder)
-                    .map {
-                        AuroraSecretFile(it.key, it.value)
-                    }
-        }
-
-        private fun getAllFiles(folder: File): Map<String, File> {
+        private fun getAllFiles(folder: File): List<File> {
 
             return folder.walkBottomUp()
                     .onEnter { !it.name.startsWith(".git") }
                     .filter { it.isFile }
-                    .associate {
-                        it.relativeTo(folder).path to it
-                    }
+                    .toList()
         }
     }
 }
@@ -62,18 +52,18 @@ data class AuroraSecretVault @JvmOverloads constructor(
     companion object {
         private val PERMISSION_FILE = ".permissions"
 
-        fun createVault(name: String, vaultFiles: List<AuroraSecretFile>, decryptor: Decryptor = { it }): AuroraSecretVault {
+        fun createVault(name: String, vaultFiles: List<File>, decryptor: Decryptor = { it }): AuroraSecretVault {
 
             val permissions: AuroraPermissions? = vaultFiles.find { vaultFile ->
-                vaultFile.file.name == PERMISSION_FILE
-            }?.file?.let { jacksonObjectMapper().readValue(it) }
+                vaultFile.name == PERMISSION_FILE
+            }?.let { jacksonObjectMapper().readValue(it) }
 
             val files = vaultFiles
-                    .filter { it.file.name != PERMISSION_FILE }
+                    .filter { it.name != PERMISSION_FILE }
                     .associate { gitFile ->
-                        val contents = decryptor(gitFile.file.readText())
+                        val contents = decryptor(gitFile.readText())
 
-                        gitFile.file.name to contents
+                        gitFile.name to contents
                     }.toMap()
 
             return AuroraSecretVault(name, files, permissions)
@@ -84,17 +74,3 @@ data class AuroraSecretVault @JvmOverloads constructor(
 data class AuroraPermissions @JvmOverloads constructor(
         val groups: List<String>? = listOf()
 )
-
-data class AuroraSecretFile(
-        val path: String,
-        val file: File
-//        val commit: RevCommit?
-) {
-    // path = .secret/<vaultName>/<secretName>
-    val vaultName: String
-        get() = path.split("/")[1]
-
-    val secretName: String
-        get() = path.split("/")[2]
-}
-

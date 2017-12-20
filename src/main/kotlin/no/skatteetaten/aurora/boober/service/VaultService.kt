@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.model.AuroraSecretFile
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault.Companion.createVault
 import no.skatteetaten.aurora.boober.model.AuroraSecretVaultWithAccess
@@ -9,6 +8,7 @@ import no.skatteetaten.aurora.boober.model.VaultCollection
 import org.eclipse.jgit.api.Git
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.io.File
 
 @Service
 class VaultService(
@@ -104,7 +104,7 @@ class VaultService(
         return newVault
     }
 
-    private fun getVaultFiles(repo: Git, vault: String): List<AuroraSecretFile> {
+    private fun getVaultFiles(repo: Git, vault: String): List<File> {
         return listOf()/*getAllSecretFilesInRepoList(repo)
                 .filter { it.path.startsWith("$GIT_SECRET_FOLDER/$vault/") }*/
 
@@ -113,7 +113,7 @@ class VaultService(
     private fun commit(repo: Git,
                        oldVault: AuroraSecretVault,
                        vault: AuroraSecretVault,
-                       vaultFiles: List<AuroraSecretFile>,
+                       vaultFiles: List<File>,
                        validateVersions: Boolean
     ) {
 
@@ -162,7 +162,7 @@ class VaultService(
 
     private fun encryptSecrets(oldSecrets: Map<String, String>,
                                newSecrets: Map<String, String>,
-                               allFilesInRepo: List<AuroraSecretFile>): Map<String, String> {
+                               allFilesInRepo: List<File>): Map<String, String> {
 
 
         val encryptedChangedSecrets = newSecrets
@@ -179,9 +179,9 @@ class VaultService(
         val deleteKeys = oldSecrets.keys - newSecrets.keys
 
         val encryptedOldSecrets = allFilesInRepo
-                .filter { !encryptedSecrets.containsKey(it.file.name) }
-                .filter { !deleteKeys.contains(it.file.name) }
-                .map { it.file.name to it.file.readText() }.toMap()
+                .filter { !encryptedSecrets.containsKey(it.name) }
+                .filter { !deleteKeys.contains(it.name) }
+                .map { it.name to it.readText() }.toMap()
 
         return encryptedSecrets + encryptedOldSecrets
     }

@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.AuroraMetrics
-import no.skatteetaten.aurora.boober.model.AuroraSecretFile
 import no.skatteetaten.aurora.boober.utils.LambdaOutputStream
 import no.skatteetaten.aurora.boober.utils.use
 import org.apache.commons.io.FileUtils
@@ -263,7 +262,7 @@ class GitService(
 
 
     //TODO: This and the one below must be joined together somehow.
-    fun getFile(git: Git, fileName: String): AuroraSecretFile? {
+    fun getFile(git: Git, fileName: String): File? {
 
         val folder = git.repository.directory.parentFile
         return folder.walkBottomUp()
@@ -271,7 +270,7 @@ class GitService(
                 .filter { it.isFile && it.relativeTo(folder).path == fileName }
                 .map {
                     val path = it.relativeTo(folder).path
-                    AuroraSecretFile(path, it/*, getRevCommit(git, path)*/)
+                    it
                 }.firstOrNull()
     }
 

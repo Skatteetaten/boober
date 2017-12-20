@@ -290,7 +290,7 @@ class DeployBundleService(
         val repo = getRepo(affiliation)
         val file = gitService.getFile(repo, fileName)
         val jsonFile = file?.let {
-            AuroraConfigFile(it.path, mapper.readValue(it.file)/*, version = it.commit?.abbreviate(7)?.name()*/)
+            AuroraConfigFile(it.path, mapper.readValue(it)/*, version = it.commit?.abbreviate(7)?.name()*/)
         }
         gitService.closeRepository(repo)
         logger.debug("/Find aurora config file")
