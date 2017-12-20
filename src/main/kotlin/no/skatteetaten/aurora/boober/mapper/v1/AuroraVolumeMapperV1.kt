@@ -4,14 +4,14 @@ import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraSecretVault
+import no.skatteetaten.aurora.boober.model.Vault
 import no.skatteetaten.aurora.boober.model.AuroraVolume
 import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.required
 
 class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>,
-                           val vaults: Map<String, AuroraSecretVault>) {
+                           val vaults: Map<String, Vault>) {
 
 
     val mountHandlers = findMounts()

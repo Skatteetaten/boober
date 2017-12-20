@@ -2,7 +2,7 @@ package no.skatteetaten.aurora.boober.controller.v1
 
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.service.VaultService
-import no.skatteetaten.aurora.boober.model.AuroraSecretVault
+import no.skatteetaten.aurora.boober.model.Vault
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController
 import javax.servlet.http.HttpServletRequest
 import javax.validation.Valid
 
-data class AuroraSecretVaultPayload(val vault: AuroraSecretVault, val validateVersions: Boolean = true)
+data class AuroraSecretVaultPayload(val vault: Vault, val validateVersions: Boolean = true)
 data class UpdateSecretFilePayload(val contents: String, val validateVersions: Boolean = true, val version: String = "")
 
 @RestController

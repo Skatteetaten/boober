@@ -18,7 +18,7 @@ import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
-import no.skatteetaten.aurora.boober.model.AuroraSecretVault
+import no.skatteetaten.aurora.boober.model.Vault
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
@@ -143,7 +143,7 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
 
     if (useAuroraConfig) {
 
-      def vault = new AuroraSecretVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
+      def vault = new Vault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
       userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User")
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples

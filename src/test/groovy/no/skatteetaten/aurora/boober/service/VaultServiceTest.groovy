@@ -16,7 +16,7 @@ import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraPermissions
-import no.skatteetaten.aurora.boober.model.AuroraSecretVault
+import no.skatteetaten.aurora.boober.model.Vault
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
@@ -58,7 +58,7 @@ class VaultServiceTest extends Specification {
   }
 
   @Autowired
-  VaultService facade
+  VaultService vaultService
 
   @Autowired
   UserDetailsProvider userDetailsProvider
@@ -69,9 +69,9 @@ class VaultServiceTest extends Specification {
   @Autowired
   PermissionService permissionService
 
-  private Git createRepoAndSaveFiles(String affiliation, AuroraSecretVault vault) {
+  private Git createRepoAndSaveFiles(String affiliation, Vault vault) {
     userDetailsProvider.authenticatedUser >> new User("test", "", "Test Foo")
-    facade.save(affiliation, vault, false)
+    vaultService.save(affiliation, vault, false)
     return gitService.openRepo(affiliation)
   }
 
@@ -80,7 +80,7 @@ class VaultServiceTest extends Specification {
 
   def secretFile = "latest.properties"
   def secret = ['latest.properties': "FOO=BAR"]
-  def vault = new AuroraSecretVault(vaultName, secret, null, [:])
+  def vault = new Vault(vaultName, secret, null, [:])
 
   def git
 
@@ -117,7 +117,7 @@ class VaultServiceTest extends Specification {
       permissionService.hasUserAccess(_) >> true
 
     when:
-      def vault = new AuroraSecretVault(name, [:], null, [:])
+      def vault = new Vault(name, [:], null, [:])
       createRepoAndSaveFiles(affiliation, vault)
 
     then:
@@ -146,8 +146,8 @@ class VaultServiceTest extends Specification {
       createRepoAndSaveFiles(affiliation, vault)
 
     when:
-      def newVault = new AuroraSecretVault(vaultName, secret, null, ["latest.properties": "INVALID_VERSION"])
-      facade.save(affiliation, newVault, true)
+      def newVault = new Vault(vaultName, secret, null, ["latest.properties": "INVALID_VERSION"])
+      vaultService.save(affiliation, newVault, true)
 
     then:
       def e = thrown(AuroraVersioningException)
@@ -161,8 +161,8 @@ class VaultServiceTest extends Specification {
       createRepoAndSaveFiles(affiliation, vault)
 
     when:
-      def newVault = new AuroraSecretVault(vaultName, secret, null, [:])
-      def result = facade.save(affiliation, newVault, false)
+      def newVault = new Vault(vaultName, secret, null, [:])
+      def result = vaultService.save(affiliation, newVault, false)
 
     then:
       result.name == "foo"
@@ -173,13 +173,13 @@ class VaultServiceTest extends Specification {
     given:
       permissionService.hasUserAccess(_) >> true
       createRepoAndSaveFiles(affiliation, vault)
-      def storedVault = facade.findVault(affiliation, vaultName)
+      def storedVault = vaultService.findVault(affiliation, vaultName)
 
     when:
-      def newVault = new AuroraSecretVault(vaultName, secret, null, storedVault.versions)
+      def newVault = new Vault(vaultName, secret, null, storedVault.versions)
 
-      facade.save(affiliation, newVault, false)
-      def updatedAuroraConfig = facade.findVault(affiliation, vaultName)
+      vaultService.save(affiliation, newVault, false)
+      def updatedAuroraConfig = vaultService.findVault(affiliation, vaultName)
 
     then:
       storedVault.versions[secretFile] == updatedAuroraConfig.versions[secretFile]
@@ -189,16 +189,16 @@ class VaultServiceTest extends Specification {
     given:
       permissionService.hasUserAccess(_) >> true
       createRepoAndSaveFiles(affiliation, vault)
-      def storedVault = facade.findVault(affiliation, vaultName)
+      def storedVault = vaultService.findVault(affiliation, vaultName)
 
     when:
 
       def newSecrets = ['latest.properties': "FOO=BAR", "1.2.3.properties": "BAZ"]
 
-      def newVault = new AuroraSecretVault(vaultName, newSecrets, null, storedVault.versions)
+      def newVault = new Vault(vaultName, newSecrets, null, storedVault.versions)
 
-      facade.save(affiliation, newVault, false)
-      def updatedAuroraConfig = facade.findVault(affiliation, vaultName)
+      vaultService.save(affiliation, newVault, false)
+      def updatedAuroraConfig = vaultService.findVault(affiliation, vaultName)
 
     then:
       updatedAuroraConfig.secrets == newSecrets
@@ -206,21 +206,21 @@ class VaultServiceTest extends Specification {
 
   def "Should remove secret from vault "() {
     given:
-      def newVault = new AuroraSecretVault(vaultName, ['latest.properties': "FOO=BAR", "1.2.3.properties": "BAZ"], null,
+      def newVault = new Vault(vaultName, ['latest.properties': "FOO=BAR", "1.2.3.properties": "BAZ"], null,
           [:])
 
       permissionService.hasUserAccess(_) >> true
       createRepoAndSaveFiles(affiliation, newVault)
-      def storedVault = facade.findVault(affiliation, vaultName)
+      def storedVault = vaultService.findVault(affiliation, vaultName)
 
     when:
 
-      def removeVault = new AuroraSecretVault(vaultName, ['latest.properties': "FOO=BAR"], null,
+      def removeVault = new Vault(vaultName, ['latest.properties': "FOO=BAR"], null,
           ['latest.properties': storedVault.versions['latest.properties']])
 
 
-      facade.save(affiliation, removeVault, false)
-      def updatedAuroraConfig = facade.findVault(affiliation, vaultName)
+      vaultService.save(affiliation, removeVault, false)
+      def updatedAuroraConfig = vaultService.findVault(affiliation, vaultName)
 
     then:
       updatedAuroraConfig.secrets.size() == 1
@@ -230,13 +230,13 @@ class VaultServiceTest extends Specification {
     given:
       permissionService.hasUserAccess(_) >> true
       createRepoAndSaveFiles(affiliation, vault)
-      def storedVault = facade.findVault(affiliation, vaultName)
+      def storedVault = vaultService.findVault(affiliation, vaultName)
 
     when:
 
-      facade.updateSecretFile(affiliation, vaultName, "latest.properties", "OOOHYEAH",
+      vaultService.updateSecretFile(affiliation, vaultName, "latest.properties", "OOOHYEAH",
           storedVault.versions['latest.properties'], true)
-      def updatedAuroraConfig = facade.findVault(affiliation, vaultName)
+      def updatedAuroraConfig = vaultService.findVault(affiliation, vaultName)
 
     then:
       updatedAuroraConfig.versions['latest.properties'] != storedVault.versions['latest.properties']
@@ -248,7 +248,7 @@ class VaultServiceTest extends Specification {
       createRepoAndSaveFiles(affiliation, vault)
 
     when:
-      facade.findVault(affiliation, "fo")
+      vaultService.findVault(affiliation, "fo")
 
     then:
       thrown(IllegalArgumentException)
@@ -260,8 +260,8 @@ class VaultServiceTest extends Specification {
       createRepoAndSaveFiles(affiliation, vault)
 
     when:
-      facade.delete(affiliation, vaultName)
-      facade.findVault(affiliation, vaultName)
+      vaultService.delete(affiliation, vaultName)
+      vaultService.findVault(affiliation, vaultName)
 
     then:
 
@@ -274,11 +274,11 @@ class VaultServiceTest extends Specification {
       createRepoAndSaveFiles(affiliation, vault)
 
     when:
-      def newVault = new AuroraSecretVault("vault2", secret, null, [:])
-      facade.save(affiliation, newVault, false)
+      def newVault = new Vault("vault2", secret, null, [:])
+      vaultService.save(affiliation, newVault, false)
 
-      def vault = facade.findVault(affiliation, vaultName)
-      def vault2 = facade.findVault(affiliation, "vault2")
+      def vault = vaultService.findVault(affiliation, vaultName)
+      def vault2 = vaultService.findVault(affiliation, "vault2")
 
 
     then:
@@ -291,12 +291,12 @@ class VaultServiceTest extends Specification {
     given:
       permissionService.hasUserAccess(_) >> true
       createRepoAndSaveFiles(affiliation, vault)
-      def newVault = new AuroraSecretVault("vault2", secret)
-      facade.save(affiliation, newVault, false)
+      def newVault = new Vault("vault2", secret)
+      vaultService.save(affiliation, newVault, false)
 
     when:
 
-      def vaults = facade.findAllVaultsWithUserAccessInVaultCollection(affiliation)
+      def vaults = vaultService.findAllVaultsWithUserAccessInVaultCollection(affiliation)
 
 
     then:
@@ -315,18 +315,18 @@ class VaultServiceTest extends Specification {
 
       // Only temporarily grant ops access to allow vault to be saved
       1 * permissionService.hasUserAccess(opsGroup) >> true
-      facade.save(affiliation, new AuroraSecretVault("vault2", secret, opsGroup), false)
-      facade.save(affiliation, new AuroraSecretVault("vault3", secret, devGroup), false)
+      vaultService.save(affiliation, new Vault("vault2", secret, opsGroup), false)
+      vaultService.save(affiliation, new Vault("vault3", secret, devGroup), false)
 
       _ * permissionService.hasUserAccess(opsGroup) >> false
 
     when:
-      def vaults = facade.findAllVaultsWithUserAccessInVaultCollection(affiliation)
+      def vaults = vaultService.findAllVaultsWithUserAccessInVaultCollection(affiliation)
 
 
     then:
       vaults.size() == 3
-      vaults.any { (!it.getHasAccess && it.name == "vault2") }
+      vaults.any { (!it.hasAccess && it.vault.name == "vault2") }
 
   }
 }

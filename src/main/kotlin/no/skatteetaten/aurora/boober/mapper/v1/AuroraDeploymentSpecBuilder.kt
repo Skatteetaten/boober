@@ -6,15 +6,13 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.AuroraSecretVault
+import no.skatteetaten.aurora.boober.model.Vault
 import no.skatteetaten.aurora.boober.model.TemplateType
-import no.skatteetaten.aurora.boober.service.DeployBundleService
-import org.slf4j.LoggerFactory
 
 @JvmOverloads
 fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: ApplicationId, dockerRegistry: String,
                                overrideFiles: List<AuroraConfigFile> = listOf(),
-                               vaults: Map<String, AuroraSecretVault> = mapOf()): AuroraDeploymentSpec {
+                               vaults: Map<String, Vault> = mapOf()): AuroraDeploymentSpec {
 
     val applicationFiles = auroraConfig.getFilesForApplication(applicationId, overrideFiles)
 

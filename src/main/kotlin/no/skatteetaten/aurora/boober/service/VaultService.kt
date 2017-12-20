@@ -1,14 +1,18 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.model.AuroraSecretVault
-import no.skatteetaten.aurora.boober.model.AuroraSecretVault.Companion.createVault
-import no.skatteetaten.aurora.boober.model.AuroraSecretVaultWithAccess
+import no.skatteetaten.aurora.boober.model.Vault
+import no.skatteetaten.aurora.boober.model.Vault.Companion.createFromEncryptedFiles
 import no.skatteetaten.aurora.boober.model.VaultCollection
 import org.eclipse.jgit.api.Git
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
+
+data class AuroraSecretVaultWithAccess @JvmOverloads constructor(
+        val vault: Vault,
+        val hasAccess: Boolean = true
+)
 
 @Service
 class VaultService(
@@ -35,18 +39,18 @@ class VaultService(
                 .map { AuroraSecretVaultWithAccess(it, permissionService.hasUserAccess(it.permissions)) }
     }
 
-    fun findAllVaultsInVaultCollection(vaultCollectionName: String): List<AuroraSecretVault> {
+    fun findAllVaultsInVaultCollection(vaultCollectionName: String): List<Vault> {
 
         return findVaultCollection(vaultCollectionName).vaults
     }
 
-    fun findVault(vaultCollectionName: String, vaultName: String): AuroraSecretVault {
+    fun findVault(vaultCollectionName: String, vaultName: String): Vault {
 
         return findAllVaultsInVaultCollection(vaultCollectionName).find { it.name == vaultName }
                 ?: throw IllegalArgumentException("Vault not found name=$vaultName")
     }
 
-    fun save(affiliation: String, vault: AuroraSecretVault, validateVersions: Boolean): AuroraSecretVault {
+    fun save(affiliation: String, vault: Vault, validateVersions: Boolean): Vault {
         return withAuroraVault(affiliation, vault.name, validateVersions, function = {
             vault
         })
@@ -64,7 +68,7 @@ class VaultService(
                          fileName: String,
                          fileContents: String,
                          fileVersion: String,
-                         validateVersions: Boolean): AuroraSecretVault {
+                         validateVersions: Boolean): Vault {
 
         return withAuroraVault(affiliation, vault, validateVersions, function = {
             val newVersions = it.versions + (fileName to fileVersion)
@@ -78,13 +82,13 @@ class VaultService(
                                 vault: String,
                                 validateVersions: Boolean,
                                 commitChanges: Boolean = true,
-                                function: (AuroraSecretVault) -> AuroraSecretVault = { it -> it }): AuroraSecretVault {
+                                function: (Vault) -> Vault = { it -> it }): Vault {
 
         val repo = gitService.checkoutRepository(affiliation)
 
         val vaultFiles = getVaultFiles(repo, vault)
 
-        val oldVault = createVault(vault, vaultFiles/*, decryptor*/)
+        val oldVault = createFromEncryptedFiles(vault, vaultFiles/*, decryptor*/)
 
         if (!permissionService.hasUserAccess(oldVault.permissions)) {
             throw IllegalAccessError("You do not have permission to operate on this vault ($vault)")
@@ -111,8 +115,8 @@ class VaultService(
     }
 
     private fun commit(repo: Git,
-                       oldVault: AuroraSecretVault,
-                       vault: AuroraSecretVault,
+                       oldVault: Vault,
+                       vault: Vault,
                        vaultFiles: List<File>,
                        validateVersions: Boolean
     ) {

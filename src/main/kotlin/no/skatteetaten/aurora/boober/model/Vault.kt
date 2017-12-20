@@ -8,18 +8,18 @@ typealias Decryptor = (String) -> String
 
 class VaultCollection private constructor(
         val vaultPath: File,
-        val vaults: List<AuroraSecretVault>) {
+        val vaults: List<Vault>) {
 
     companion object {
 
         fun fromFolder(folder: File, decryptor: Decryptor): VaultCollection {
             val vaultFiles = getAllFiles(folder)
-            val vaults: List<AuroraSecretVault> = vaultFiles
+            val vaults: List<Vault> = vaultFiles
                     .groupBy { it.name }
                     .map {
                         val files: List<File> = it.value
                         val name = it.key
-                        AuroraSecretVault.createVault(name, files, decryptor)
+                        Vault.createFromEncryptedFiles(name, files, decryptor)
                     }
             return VaultCollection(folder, vaults)
         }
@@ -34,12 +34,7 @@ class VaultCollection private constructor(
     }
 }
 
-data class AuroraSecretVaultWithAccess @JvmOverloads constructor(
-        val secretVault: AuroraSecretVault,
-        val hasAccess: Boolean = true
-)
-
-data class AuroraSecretVault @JvmOverloads constructor(
+data class Vault @JvmOverloads constructor(
         val name: String,
         val secrets: Map<String, String>,
         val permissions: AuroraPermissions? = null,
@@ -52,7 +47,7 @@ data class AuroraSecretVault @JvmOverloads constructor(
     companion object {
         private val PERMISSION_FILE = ".permissions"
 
-        fun createVault(name: String, vaultFiles: List<File>, decryptor: Decryptor = { it }): AuroraSecretVault {
+        fun createFromEncryptedFiles(name: String, vaultFiles: List<File>, decryptor: Decryptor = { it }): Vault {
 
             val permissions: AuroraPermissions? = vaultFiles.find { vaultFile ->
                 vaultFile.name == PERMISSION_FILE
@@ -66,7 +61,7 @@ data class AuroraSecretVault @JvmOverloads constructor(
                         gitFile.name to contents
                     }.toMap()
 
-            return AuroraSecretVault(name, files, permissions)
+            return Vault(name, files, permissions)
         }
     }
 }
