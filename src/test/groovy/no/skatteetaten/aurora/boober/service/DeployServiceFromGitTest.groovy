@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -19,7 +18,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OperationType
 class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
   @Autowired
-  VaultFacade vaultFacade
+  VaultService vaultFacade
 
   @Autowired
   OpenShiftClient openShiftClient

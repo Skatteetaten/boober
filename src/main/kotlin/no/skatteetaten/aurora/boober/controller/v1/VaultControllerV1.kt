@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
 import no.skatteetaten.aurora.boober.controller.internal.Response
-import no.skatteetaten.aurora.boober.facade.VaultFacade
+import no.skatteetaten.aurora.boober.service.VaultService
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -18,24 +18,24 @@ data class AuroraSecretVaultPayload(val vault: AuroraSecretVault, val validateVe
 data class UpdateSecretFilePayload(val contents: String, val validateVersions: Boolean = true, val version: String = "")
 
 @RestController
-@RequestMapping("/v1/vault/{affiliation}")
-class VaultControllerV1(val facade: VaultFacade) {
+@RequestMapping("/v1/vault/{vaultCollection}")
+class VaultControllerV1(val vaultService: VaultService) {
 
     @GetMapping()
-    fun listVaults(@PathVariable affiliation: String): Response {
-        return Response(items = facade.listAllVaultsWithUserAccess(affiliation))
+    fun listVaults(@PathVariable vaultCollection: String): Response {
+        return Response(items = vaultService.findAllVaultsWithUserAccess(vaultCollection))
     }
 
     @PutMapping()
-    fun save(@PathVariable affiliation: String,
+    fun save(@PathVariable vaultCollection: String,
              @RequestBody @Valid vaultPayload: AuroraSecretVaultPayload): Response {
 
-        return Response(items = listOf(facade.save(affiliation, vaultPayload.vault, vaultPayload.validateVersions)))
+        return Response(items = listOf(vaultService.save(vaultCollection, vaultPayload.vault, vaultPayload.validateVersions)))
     }
 
     @GetMapping("/{vault}")
     fun get(@PathVariable affiliation: String, @PathVariable vault: String): Response {
-        return Response(items = listOf(facade.find(affiliation, vault)))
+        return Response(items = listOf(vaultService.find(affiliation, vault)))
     }
 
     @PutMapping("/{vault}/secret/**")
@@ -55,13 +55,13 @@ class VaultControllerV1(val facade: VaultFacade) {
         val path = "affiliation/$affiliation/vault/$vaultName/secret/**"
         val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
 
-        val vault = facade.updateSecretFile(affiliation, vaultName, fileName, fileContents, fileVersion, validateVersions)
+        val vault = vaultService.updateSecretFile(affiliation, vaultName, fileName, fileContents, fileVersion, validateVersions)
         return Response(items = listOf(vault))
     }
 
     @DeleteMapping("/{vault}")
     fun delete(@PathVariable affiliation: String, @PathVariable vault: String): Response {
-        return Response(items = listOf(facade.delete(affiliation, vault)))
+        return Response(items = listOf(vaultService.delete(affiliation, vault)))
     }
 }
 

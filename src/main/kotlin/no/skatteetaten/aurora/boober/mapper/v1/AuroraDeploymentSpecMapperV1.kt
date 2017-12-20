@@ -24,7 +24,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
     val handlers = listOf(
             AuroraConfigFieldHandler("affiliation", validator = { it.pattern("^[a-z]{1,10}$", "Affiliation can only contain letters and must be no longer than 10 characters") }),
             AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
-            AuroraConfigFieldHandler("permissions/admin"),
+            AuroraConfigFieldHandler("permissions/hasAccess"),
             AuroraConfigFieldHandler("permissions/view"),
             AuroraConfigFieldHandler("permissions/adminServiceAccount"),
             AuroraConfigFieldHandler("envName",
@@ -153,11 +153,11 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
             Permission(it)
         }
 
-        //if sa present add to admin users.
+        //if sa present add to hasAccess users.
         val sa = auroraConfigFields.extractOrNull<String?>("permissions/adminServiceAccount")?.let { it.split(" ").toSet() } ?: emptySet()
         val permission = Permissions(
                 admin = Permission(
-                        auroraConfigFields.extract<String>("permissions/admin").let { it.split(" ").filter { !it.isBlank() }.toSet() }, sa),
+                        auroraConfigFields.extract<String>("permissions/hasAccess").let { it.split(" ").filter { !it.isBlank() }.toSet() }, sa),
                 view = view)
         return permission
     }

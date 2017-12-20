@@ -5,7 +5,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import org.springframework.stereotype.Service
 
 @Service
-class SecretVaultPermissionService(
+class PermissionService(
         val openShiftClient: OpenShiftClient,
         val userDetailsProvider: UserDetailsProvider
 ) {
@@ -17,6 +17,5 @@ class SecretVaultPermissionService(
         val user = userDetailsProvider.getAuthenticatedUser().username
 
         return permissions.groups.any { openShiftClient.isUserInGroup(user, it) }
-
     }
 }

@@ -2,10 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ArrayNode
 import no.skatteetaten.aurora.boober.model.*
-import no.skatteetaten.aurora.boober.model.TemplateType.build
-import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
@@ -13,7 +10,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.dockerGroupSafeName
 import no.skatteetaten.aurora.boober.utils.openshiftKind
-import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.eclipse.jgit.api.Git
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -38,7 +34,7 @@ class DeployService(
         val openShiftClient: OpenShiftClient,
         val gitService: GitService,
         val deployBundleService: DeployBundleService,
-        val secretVaultPermissionService: SecretVaultPermissionService,
+        val permissionService: PermissionService,
         val mapper: ObjectMapper,
         val dockerService: DockerService,
         val resourceProvisioner: ExternalResourceProvisioner,
@@ -225,10 +221,10 @@ class DeployService(
     fun hasAccessToAllVolumes(volume: AuroraVolume?): Boolean {
         if (volume == null) return true
 
-        val secretAccess = secretVaultPermissionService.hasUserAccess(volume.permissions)
+        val secretAccess = permissionService.hasUserAccess(volume.permissions)
 
         val mountsWithNoPermissions = volume.mounts?.filter {
-            !secretVaultPermissionService.hasUserAccess(it.permissions)
+            !permissionService.hasUserAccess(it.permissions)
         } ?: emptyList()
         val volumeAccess = mountsWithNoPermissions.isEmpty()
 

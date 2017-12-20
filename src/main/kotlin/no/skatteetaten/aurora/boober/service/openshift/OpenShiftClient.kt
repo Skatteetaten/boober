@@ -109,9 +109,9 @@ class OpenShiftClient(
         if (existingResource == null) {
             return OpenshiftCommand(OperationType.CREATE, payload = newResource)
         }
-        // ProjectRequest will always create an admin rolebinding, so if we get a command to create one, we just
+        // ProjectRequest will always create an hasAccess rolebinding, so if we get a command to create one, we just
         // swap it out with an update command.
-        val isCreateAdminRoleBindingCommand = kind == "rolebinding" && name == "admin"
+        val isCreateAdminRoleBindingCommand = kind == "rolebinding" && name == "hasAccess"
         if (isCreateAdminRoleBindingCommand) {
             return createUpdateRolebindingCommand(newResource, namespace)
         }

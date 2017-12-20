@@ -15,17 +15,8 @@ data class AuroraSecretVault @JvmOverloads constructor(
     }
 }
 
-data class AuroraSecretVaultPayload @JvmOverloads constructor(
-        val name: String,
-        val secrets: List<String>,
-        val permissions: AuroraPermissions? = null,
-        val admin: Boolean = true
-)
-
 data class AuroraPermissions @JvmOverloads constructor(
-        val groups: List<String>? = listOf(),
-        val users: List<String>? = listOf()
-//TODO: users is not taken into consideration locally. Remove when client removes it.
+        val groups: List<String>? = listOf()
 )
 
 data class AuroraSecretFile(

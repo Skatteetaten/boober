@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.facade
+package no.skatteetaten.aurora.boober.service
 
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.treewalk.TreeWalk
@@ -14,23 +14,16 @@ import io.micrometer.core.instrument.Metrics
 import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraPermissions
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
-import no.skatteetaten.aurora.boober.service.AuroraVersioningException
-import no.skatteetaten.aurora.boober.service.EncryptionService
-import no.skatteetaten.aurora.boober.service.GitService
-import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
-import no.skatteetaten.aurora.boober.service.SecretVaultPermissionService
-import no.skatteetaten.aurora.boober.service.SecretVaultService
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
-    VaultFacade,
+    VaultService,
     GitService,
     EncryptionService,
     SecretVaultService,
@@ -38,7 +31,7 @@ import spock.mock.DetachedMockFactory
     Config,
     AuroraMetrics
 ])
-class VaultFacadeTest extends Specification {
+class VaultServiceTest extends Specification {
 
   public static final String ENV_NAME = "secrettest"
   public static final String APP_NAME = "aos-simple"
@@ -60,13 +53,13 @@ class VaultFacadeTest extends Specification {
     }
 
     @Bean
-    SecretVaultPermissionService secretPermissionService() {
-      factory.Mock(SecretVaultPermissionService)
+    PermissionService secretPermissionService() {
+      factory.Mock(PermissionService)
     }
   }
 
   @Autowired
-  VaultFacade facade
+  VaultService facade
 
   @Autowired
   UserDetailsProvider userDetailsProvider
@@ -75,7 +68,7 @@ class VaultFacadeTest extends Specification {
   GitService gitService
 
   @Autowired
-  SecretVaultPermissionService permissionService
+  PermissionService permissionService
 
   private Git createRepoAndSaveFiles(String affiliation, AuroraSecretVault vault) {
     userDetailsProvider.authenticatedUser >> new User("test", "", "Test Foo")
@@ -304,7 +297,7 @@ class VaultFacadeTest extends Specification {
 
     when:
 
-      def vaults = facade.listAllVaultsWithUserAccess(affiliation)
+      def vaults = facade.findAllVaultsWithUserAccess(affiliation)
 
 
     then:
@@ -329,12 +322,12 @@ class VaultFacadeTest extends Specification {
       _ * permissionService.hasUserAccess(opsGroup) >> false
 
     when:
-      def vaults = facade.listAllVaultsWithUserAccess(affiliation)
+      def vaults = facade.findAllVaultsWithUserAccess(affiliation)
 
 
     then:
       vaults.size() == 3
-      vaults.any { (!it.admin && it.name == "vault2") }
+      vaults.any { (!it.getHasAccess && it.name == "vault2") }
 
   }
 }

@@ -16,7 +16,6 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Metrics
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.model.AuroraSecretVault
@@ -28,7 +27,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.service.openshift.UserDetailsTokenProvider
-import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [
@@ -40,9 +38,9 @@ import spock.mock.DetachedMockFactory
     SecretVaultService,
     EncryptionService,
     DeployBundleService,
-    VaultFacade,
+    VaultService,
     ObjectMapper,
-    SecretVaultPermissionService,
+    PermissionService,
     Config,
     AuroraMetrics,
     UserDetailsTokenProvider,
@@ -108,7 +106,7 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
   GitService gitService
 
   @Autowired
-  VaultFacade vaultFacade
+  VaultService vaultFacade
 
   @Autowired
   UserDetailsProvider userDetailsProvider

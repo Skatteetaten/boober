@@ -14,7 +14,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.controller.internal.ErrorHandler
 import no.skatteetaten.aurora.boober.controller.v1.VaultControllerV1
-import no.skatteetaten.aurora.boober.facade.VaultFacade
+import no.skatteetaten.aurora.boober.service.VaultService
 import spock.lang.Specification
 
 class VaultControllerTest extends Specification {
@@ -24,7 +24,7 @@ class VaultControllerTest extends Specification {
 
   MockMvc mockMvc
 
-  def vaultFacade = Mock(VaultFacade)
+  def vaultFacade = Mock(VaultService)
 
   def affiliation = 'aos'
 

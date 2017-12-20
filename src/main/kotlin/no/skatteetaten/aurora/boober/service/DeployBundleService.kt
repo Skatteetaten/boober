@@ -9,7 +9,6 @@ import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.newFixedThreadPoolContext
 import kotlinx.coroutines.experimental.runBlocking
 import no.skatteetaten.aurora.AuroraMetrics
-import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.mapper.v1.createAuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.*
 import org.eclipse.jgit.api.Git
@@ -26,7 +25,7 @@ class DeployBundleService(
         val deploymentSpecValidator: AuroraDeploymentSpecValidator,
         val gitService: GitService,
         val mapper: ObjectMapper,
-        val secretVaultFacade: VaultFacade,
+        val secretVaultService: VaultService,
         val metrics: AuroraMetrics,
         @Value("\${boober.validationPoolSize:6}") val validationPoolSize: Int) {
 
@@ -50,7 +49,7 @@ class DeployBundleService(
         val auroraConfig = AuroraConfig(auroraConfigFiles = auroraConfigFiles, affiliation = affiliation)
 
         logger.debug("Get all vaults")
-        val vaults = secretVaultFacade.listAllVaults(repo).associateBy { it.name }
+        val vaults = secretVaultService.listAllVaults(repo).associateBy { it.name }
         logger.debug("Create deploy bundle")
         val deployBundle = DeployBundle(auroraConfig = auroraConfig, vaults = vaults, overrideFiles = overrideFiles)
         logger.debug("Perform op on deploy bundle")
@@ -108,7 +107,7 @@ class DeployBundleService(
     fun validateDeployBundleWithAuroraConfig(affiliation: String, auroraConfig: AuroraConfig): AuroraConfig {
 
         val repo = getRepo(affiliation)
-        val vaults = secretVaultFacade.listAllVaults(repo).associateBy { it.name }
+        val vaults = secretVaultService.listAllVaults(repo).associateBy { it.name }
         val bundle = DeployBundle(auroraConfig = auroraConfig, vaults = vaults)
         try {
             validateDeployBundle(bundle)
@@ -220,7 +219,7 @@ class DeployBundleService(
         }
 
         logger.debug("list all vaults")
-        val vaults = secretVaultFacade.listAllVaults(repo).associateBy { it.name }
+        val vaults = secretVaultService.listAllVaults(repo).associateBy { it.name }
         logger.debug("/list all vaults")
 
         val deployBundle = DeployBundle(auroraConfig = newAuroraConfig, vaults = vaults)

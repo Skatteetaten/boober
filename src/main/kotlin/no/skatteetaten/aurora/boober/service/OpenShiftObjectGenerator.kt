@@ -75,7 +75,7 @@ class OpenShiftObjectGenerator(
     fun generateRolebindings(permissions: Permissions): List<JsonNode> {
         val admin = mergeVelocityTemplate("rolebinding.json", mapOf(
                 "permission" to permissions.admin,
-                "name" to "admin"
+                "name" to "hasAccess"
         ))
 
         val view = permissions.view?.let {

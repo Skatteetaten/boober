@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
@@ -16,7 +15,7 @@ import no.skatteetaten.aurora.boober.utils.JsonNodeUtilsKt
 class DeployServiceWithExistingRouteTest extends AbstractMockedOpenShiftSpecification {
 
   @Autowired
-  VaultFacade vaultFacade
+  VaultService vaultFacade
 
   @Autowired
   OpenShiftClient openShiftClient
@@ -78,7 +77,7 @@ class DeployServiceWithExistingRouteTest extends AbstractMockedOpenShiftSpecific
       resultSentences ==
           ['CREATE projectrequest aos-mounts',
            'UPDATE namespace foo',
-           'CREATE rolebinding admin',
+           'CREATE rolebinding hasAccess',
            'CREATE deploymentconfig aos-simple',
            'CREATE service aos-simple',
            'CREATE imagestream aos-simple',
