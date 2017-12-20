@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
+import no.skatteetaten.aurora.boober.service.AuroraPermissions
 
 import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 
@@ -52,7 +53,7 @@ data class AuroraVolume(
         val secrets: Map<String, String>?,
         val config: Map<String, Any?>?,
         val mounts: List<Mount>?,
-        val permissions: AuroraPermissions?
+        val permissions:    AuroraPermissions?
 )
 
 data class AuroraRoute(

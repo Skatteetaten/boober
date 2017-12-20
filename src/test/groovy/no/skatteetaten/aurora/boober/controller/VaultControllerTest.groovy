@@ -59,7 +59,7 @@ class VaultControllerTest extends Specification {
       def secretName = "some_secret"
       def fileContents = 'SECRET_PASS=asdlfkjaølfjaøf'
       def payload = [contents: fileContents, validateVersions: false]
-      1 * vaultFacade.updateSecretFile(affiliation, vaultName, secretName, fileContents, _, payload.validateVersions)
+      1 * vaultFacade.updateSecretFile(affiliation, vaultName, secretName, fileContents)
 
     when:
       ResultActions result = mockMvc.perform(

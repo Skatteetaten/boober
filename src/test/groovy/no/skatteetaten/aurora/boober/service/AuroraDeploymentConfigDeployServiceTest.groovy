@@ -6,16 +6,13 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
-import no.skatteetaten.aurora.boober.model.AuroraPermissions
 import no.skatteetaten.aurora.boober.model.AuroraVolume
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType
-import spock.lang.Ignore
 
 class AuroraDeploymentConfigDeployServiceTest extends AbstractMockedOpenShiftSpecification {
 
@@ -84,7 +81,8 @@ class AuroraDeploymentConfigDeployServiceTest extends AbstractMockedOpenShiftSpe
 
     then:
       def ex = thrown(MultiApplicationValidationException)
-      ex.errors[0].throwable.message == "Config for application aos-simple in environment booberdev contains errors. Version must be set as string, Version must be set."
+      ex.errors[0].throwable.message ==
+          "Config for application aos-simple in environment booberdev contains errors. Version must be set as string, Version must be set."
   }
 }
 

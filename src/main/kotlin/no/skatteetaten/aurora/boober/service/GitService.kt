@@ -52,7 +52,7 @@ class GitService(
 
     fun checkoutRepository(repositoryName: String): Git {
         synchronized(repositoryName, {
-            val repoPath = File("$checkoutPath/$repositoryName")
+            val repoPath = File(File("$checkoutPath/$repositoryName").absoluteFile.absolutePath)
             if (repoPath.exists()) {
                 try {
                     val git = Git.open(repoPath)
