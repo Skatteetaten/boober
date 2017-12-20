@@ -4,8 +4,8 @@ import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.model.AuroraSecretFile
 import no.skatteetaten.aurora.boober.utils.LambdaOutputStream
 import no.skatteetaten.aurora.boober.utils.use
+import org.apache.commons.io.FileUtils
 import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.api.errors.EmtpyCommitException
 import org.eclipse.jgit.api.errors.GitAPIException
 import org.eclipse.jgit.api.errors.NoHeadException
 import org.eclipse.jgit.lib.ObjectId
@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service
 import java.io.File
 import java.io.FileWriter
 import java.io.PrintWriter
+import java.nio.charset.Charset
 
 @Service
 class GitService(
@@ -45,6 +46,7 @@ class GitService(
             repoDir.deleteRecursively()
         }
     }
+
     //only test
     fun openRepo(affiliation: String): Git {
         val repoPath = File("$checkoutPath/$affiliation")
@@ -128,7 +130,6 @@ class GitService(
     }
 
 
-
     //TODO: move out to another abstraction
     fun getAllAuroraConfigFiles(git: Git): Map<String, File> {
         return getAllFiles(git)
@@ -147,7 +148,7 @@ class GitService(
                 }
     }
 
-     fun getRevCommit(git: Git, path: String?): RevCommit? {
+    fun getRevCommit(git: Git, path: String?): RevCommit? {
         val commit = try {
             git.log().addPath(path).setMaxCount(1).call().firstOrNull()
         } catch (e: NoHeadException) {
@@ -176,6 +177,21 @@ class GitService(
             git.add().addFilepattern(fileName).call()
         }
     }
+
+    private fun writeAndAddChanges2(git: Git, files: Map<String, String>) {
+
+        files.forEach { (fileName, value) ->
+            File(git.repository.directory.parent, fileName).apply {
+                FileUtils.forceMkdirParent(this)
+                FileUtils.write(this, value, Charset.defaultCharset())
+            }
+        }
+
+        git.add().apply {
+            files.keys.forEach { this.addFilepattern(it) }
+        }.call()
+    }
+
 
 /*
     private fun deleteMissingFiles(git: Git, files: Set<String>, keep: (String) -> Boolean) {
@@ -273,7 +289,6 @@ class GitService(
                     AuroraSecretFile(path, it, getRevCommit(git, path))
                 }.firstOrNull()
     }
-
 
 
     fun getAllFiles(git: Git): Map<String, File> {
