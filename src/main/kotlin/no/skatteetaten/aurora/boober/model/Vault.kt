@@ -7,30 +7,36 @@ import java.io.File
 typealias Decryptor = (String) -> String
 
 class VaultCollection private constructor(
-        val vaultPath: File,
+        val name: String,
+        val path: File,
         val vaults: List<Vault>) {
 
     companion object {
 
         fun fromFolder(folder: File, decryptor: Decryptor): VaultCollection {
+
             val vaultFiles = getAllFiles(folder)
             val vaults: List<Vault> = vaultFiles
-                    .groupBy { it.name }
+                    .groupBy { it.parentFile.name }
                     .map {
                         val files: List<File> = it.value
                         val name = it.key
                         Vault.createFromEncryptedFiles(name, files, decryptor)
                     }
-            return VaultCollection(folder, vaults)
+            return VaultCollection(folder.name, folder, vaults)
         }
 
         private fun getAllFiles(folder: File): List<File> {
 
             return folder.walkBottomUp()
                     .onEnter { !it.name.startsWith(".git") }
-                    .filter { it.isFile }
+                    .filter { it.isFile() }
                     .toList()
         }
+    }
+
+    fun findVaultByName(vaultName: String): Vault? {
+        return vaults.firstOrNull { it.name == vaultName }
     }
 }
 

@@ -1,13 +1,14 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.model.Vault
-import no.skatteetaten.aurora.boober.model.Vault.Companion.createFromEncryptedFiles
 import no.skatteetaten.aurora.boober.model.VaultCollection
+import org.apache.commons.io.FileUtils
 import org.eclipse.jgit.api.Git
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
+import java.nio.charset.Charset
 
 data class AuroraSecretVaultWithAccess @JvmOverloads constructor(
         val vault: Vault,
@@ -17,7 +18,6 @@ data class AuroraSecretVaultWithAccess @JvmOverloads constructor(
 @Service
 class VaultService(
         val gitService: GitService,
-        val mapper: ObjectMapper,
         val encryptionService: EncryptionService,
         val permissionService: PermissionService
 ) {
@@ -50,6 +50,46 @@ class VaultService(
                 ?: throw IllegalArgumentException("Vault not found name=$vaultName")
     }
 
+    fun updateSecretFile(vaultCollectionName: String,
+                         vaultName: String,
+                         fileName: String,
+                         fileContents: String,
+                         fileVersion: String,
+                         validateVersions: Boolean): Vault {
+
+        val vaultCollection = findVaultCollection(vaultCollectionName)
+
+        val vaultPath = File(vaultCollection.path, vaultName)
+        val secretFile = File(vaultPath, fileName)
+        FileUtils.forceMkdirParent(secretFile)
+        FileUtils.write(secretFile, fileContents, Charset.defaultCharset())
+
+        return VaultCollection
+                .fromFolder(File(vaultCollection.path.absolutePath), encryptionService::decrypt)
+                .findVaultByName(vaultName)!!
+/*
+        val vault = vaultCollection.findVaultByName(vaultName)
+        if (vault == null) {
+            val vaultFolder =
+            vaultFolder.mkdirs()
+            File(vaultFolder, ".permissions").createNewFile()
+        }
+
+        if (!permissionService.hasUserAccess(vault.permissions)) {
+            throw IllegalAccessError("You do not have permission to operate on this vaultName ($vaultName)")
+        }
+*/
+/*
+
+        return withAuroraVault(affiliation, vaultName, validateVersions, function = {
+            val newVersions = it.versions + (fileName to fileVersion)
+            val newSecrets = it.secrets + (fileName to fileContents)
+            it.copy(versions = newVersions, secrets = newSecrets)
+        })
+*/
+
+    }
+
     fun save(affiliation: String, vault: Vault, validateVersions: Boolean): Vault {
         return withAuroraVault(affiliation, vault.name, validateVersions, function = {
             vault
@@ -63,49 +103,36 @@ class VaultService(
         return true
     }
 
-    fun updateSecretFile(affiliation: String,
-                         vault: String,
-                         fileName: String,
-                         fileContents: String,
-                         fileVersion: String,
-                         validateVersions: Boolean): Vault {
-
-        return withAuroraVault(affiliation, vault, validateVersions, function = {
-            val newVersions = it.versions + (fileName to fileVersion)
-            val newSecrets = it.secrets + (fileName to fileContents)
-            it.copy(versions = newVersions, secrets = newSecrets)
-        })
-
-    }
-
-    private fun withAuroraVault(affiliation: String,
-                                vault: String,
+    private fun withAuroraVault(vaultCollectionName: String,
+                                vaultName: String,
                                 validateVersions: Boolean,
                                 commitChanges: Boolean = true,
                                 function: (Vault) -> Vault = { it -> it }): Vault {
+        val vaultCollection = findVaultCollection(vaultCollectionName)
 
-        val repo = gitService.checkoutRepository(affiliation)
+        val oldVault = vaultCollection.findVaultByName(vaultName)
 
-        val vaultFiles = getVaultFiles(repo, vault)
-
-        val oldVault = createFromEncryptedFiles(vault, vaultFiles/*, decryptor*/)
+/*
 
         if (!permissionService.hasUserAccess(oldVault.permissions)) {
-            throw IllegalAccessError("You do not have permission to operate on this vault ($vault)")
+            throw IllegalAccessError("You do not have permission to operate on this vault ($vaultName)")
         }
 
         val newVault = function(oldVault)
         if (!permissionService.hasUserAccess(newVault.permissions)) {
-            throw IllegalAccessError("You do not have permission to operate on this vault ($vault)")
+            throw IllegalAccessError("You do not have permission to operate on this vault ($vaultName)")
         }
+*/
+/*
         if (commitChanges) {
             commit(repo, oldVault, newVault, vaultFiles, validateVersions)
         } else {
             gitService.closeRepository(repo)
 
         }
+*/
 
-        return newVault
+        return oldVault!!
     }
 
     private fun getVaultFiles(repo: Git, vault: String): List<File> {
@@ -132,7 +159,7 @@ class VaultService(
 
         val result = vault.permissions?.let {
             encryptedSecretsFiles +
-                    mapOf(""/*PERMISSION_FILE*/ to mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it))
+                    mapOf(""/*PERMISSION_FILE*/ to jacksonObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(it))
         } ?: encryptedSecretsFiles
 
         if (validateVersions) {

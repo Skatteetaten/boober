@@ -5,14 +5,14 @@ import java.io.File
 
 fun createInitRepo(affiliation: String): Git {
 
-    val booberTestFolder = File("/tmp/boobertest/$affiliation.git")
+    val testFolder = File("build/gitrepos/$affiliation.git")
 
-    if (!booberTestFolder.exists()) {
-        booberTestFolder.mkdirs()
+    if (!testFolder.exists()) {
+        testFolder.mkdirs()
     } else {
-        booberTestFolder.deleteRecursively()
-        booberTestFolder.mkdirs()
+        testFolder.deleteRecursively()
+        testFolder.mkdirs()
     }
 
-    return Git.init().setDirectory(booberTestFolder).setBare(true).call()
+    return Git.init().setDirectory(testFolder).setBare(true).call()
 }
