@@ -43,11 +43,10 @@ class VaultCollection private constructor(
     }
 }
 
-data class Vault @JvmOverloads constructor(
+class Vault private constructor(
         val vaultFolder: File,
         val encryptor: Encryptor,
-        val decryptor: Decryptor,
-        val versions: Map<String, String?> = mapOf()
+        val decryptor: Decryptor
 ) {
     init {
         if (!vaultFolder.exists()) throw IllegalArgumentException("Must point to an existing folder ${vaultFolder.absoluteFile.absolutePath} does not exist")
