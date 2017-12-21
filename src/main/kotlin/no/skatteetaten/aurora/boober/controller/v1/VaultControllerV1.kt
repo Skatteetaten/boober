@@ -55,7 +55,7 @@ class VaultControllerV1(val vaultService: VaultService) {
         val path = "affiliation/$affiliation/vault/$vaultName/secret/**"
         val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
 
-        val vault = vaultService.updateSecretFile(affiliation, vaultName, fileName, fileContents)
+        val vault = vaultService.updateFileInVault(affiliation, vaultName, fileName, fileContents)
         return Response(items = listOf(vault))
     }
 

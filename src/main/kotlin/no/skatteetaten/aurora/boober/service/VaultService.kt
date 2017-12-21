@@ -7,7 +7,7 @@ import org.eclipse.jgit.lib.PersonIdent
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
-data class AuroraSecretVaultWithAccess @JvmOverloads constructor(
+data class VaultWithAccess @JvmOverloads constructor(
         val vault: Vault,
         val hasAccess: Boolean = true
 )
@@ -31,10 +31,10 @@ class VaultService(
         return findVaultCollection(vaultCollectionName).vaults
     }
 
-    fun findAllVaultsWithUserAccessInVaultCollection(vaultCollectionName: String): List<AuroraSecretVaultWithAccess> {
+    fun findAllVaultsWithUserAccessInVaultCollection(vaultCollectionName: String): List<VaultWithAccess> {
 
         return findAllVaultsInVaultCollection(vaultCollectionName)
-                .map { AuroraSecretVaultWithAccess(it, permissionService.hasUserAccess(it.permissions)) }
+                .map { VaultWithAccess(it, permissionService.hasUserAccess(it.permissions)) }
     }
 
     fun findVault(vaultCollectionName: String, vaultName: String): Vault {
@@ -43,10 +43,10 @@ class VaultService(
                 ?: throw IllegalArgumentException("Vault not found name=$vaultName")
     }
 
-    fun updateSecretFile(vaultCollectionName: String,
-                         vaultName: String,
-                         fileName: String,
-                         fileContents: String
+    fun updateFileInVault(vaultCollectionName: String,
+                          vaultName: String,
+                          fileName: String,
+                          fileContents: String
     ): Vault {
 
         return withVaultCollectionAndRepo(vaultCollectionName, { vaultCollection, repo ->

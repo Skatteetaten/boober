@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.service
 
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import no.skatteetaten.aurora.AuroraMetrics
-import no.skatteetaten.aurora.boober.model.VaultCollection
 import spock.lang.Specification
 
 class VaultServiceTest extends Specification {
@@ -48,7 +47,7 @@ class VaultServiceTest extends Specification {
       _ * encryptionService.encrypt(_) >> { it[0] }
 
     when:
-      def vault = vaultService.updateSecretFile(COLLECTION_NAME, vaultName, fileName, secret)
+      def vault = vaultService.updateFileInVault(COLLECTION_NAME, vaultName, fileName, secret)
 
     then:
       vault != null
