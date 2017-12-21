@@ -15,7 +15,7 @@ spring:
       name: boober
   cache:
     caffeine:
-      spec: maximumSize=2000,expireAfterAccess=300s
+      spec: maximumSize=2000,expireAfterWrite=300s
     cache-names: groups
   metrics:
     prometheus:
