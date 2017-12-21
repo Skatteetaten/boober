@@ -51,36 +51,34 @@ class GitService(
     }
 
     fun checkoutRepository(repositoryName: String): Git {
-        synchronized(repositoryName, {
-            val repoPath = File(File("$checkoutPath/$repositoryName").absoluteFile.absolutePath)
-            if (repoPath.exists()) {
-                try {
-                    val git = Git.open(repoPath)
-                    git.pull()
-                            .setRebase(true)
-                            .setRemote("origin")
-                            .setCredentialsProvider(cp)
-                            .call()
-                    return git
-                } catch (e: Exception) {
-                    repoPath.deleteRecursively()
-                }
+        val repoPath = File(File("$checkoutPath/$repositoryName").absoluteFile.absolutePath)
+        if (repoPath.exists()) {
+            try {
+                val git = Git.open(repoPath)
+                git.pull()
+                        .setRebase(true)
+                        .setRemote("origin")
+                        .setCredentialsProvider(cp)
+                        .call()
+                return git
+            } catch (e: Exception) {
+                repoPath.deleteRecursively()
             }
-            return metrics.withMetrics("git_checkout", {
-                val dir = repoPath.apply { mkdirs() }
-                val uri = url.format(repositoryName)
+        }
+        return metrics.withMetrics("git_checkout", {
+            val dir = repoPath.apply { mkdirs() }
+            val uri = url.format(repositoryName)
 
-                try {
-                    Git.cloneRepository()
-                            .setURI(uri)
-                            .setCredentialsProvider(cp)
-                            .setDirectory(dir)
-                            .call()
-                } catch (ex: Exception) {
-                    dir.deleteRecursively()
-                    throw ex
-                }
-            })
+            try {
+                Git.cloneRepository()
+                        .setURI(uri)
+                        .setCredentialsProvider(cp)
+                        .setDirectory(dir)
+                        .call()
+            } catch (ex: Exception) {
+                dir.deleteRecursively()
+                throw ex
+            }
         })
     }
 

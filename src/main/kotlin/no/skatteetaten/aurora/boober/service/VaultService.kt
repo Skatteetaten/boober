@@ -53,26 +53,27 @@ class VaultService(
             val vault = vaultCollection.findVaultByName(vaultName) ?: vaultCollection.createVault(vaultName)
 
             if (!permissionService.hasUserAccess(vault.permissions)) {
-                throw IllegalAccessError("You do not have permission to operate on this vaultName ($vaultName)")
+                throw IllegalAccessError("You do not have permission to operate on this vault ($vaultName)")
             }
 
             vault.updateFile(fileName, fileContents)
-            commitAndPushVaultChanges(repo, vaultName)
+            commitAndPushVaultChanges(repo, vault.name)
             vault
         })
     }
 
     private fun <T> withVaultCollectionAndRepo(vaultCollectionName: String, function: (vaultCollection: VaultCollection, repo: Git) -> T): T {
 
-        val repo = gitService.checkoutRepository(vaultCollectionName)
-        val folder = repo.repository.directory.parentFile
-        val vaultCollection = VaultCollection.fromFolder(folder, encryptionService::encrypt, encryptionService::decrypt)
-        val response = function(vaultCollection, repo)
-        repo.close()
+        return synchronized(vaultCollectionName) {
 
-        return response
+            val repo = gitService.checkoutRepository(vaultCollectionName)
+            val folder = repo.repository.directory.parentFile
+            val vaultCollection = VaultCollection.fromFolder(folder, encryptionService::encrypt, encryptionService::decrypt)
+            val response = function(vaultCollection, repo)
+            repo.close()
+            response
+        }
     }
-
 
     private fun commitAndPushVaultChanges(repo: Git, vaultName: String) {
 
