@@ -35,6 +35,11 @@ class VaultCollection private constructor(
         return Vault.createFromFolder(vaultFolder, encryptor, decryptor)
     }
 
+    fun deleteVault(vaultName: String) {
+
+        File(folder, vaultName).deleteRecursively()
+    }
+
     private fun findAllVaultFolders(): List<File> {
 
         return folder.listFiles()
@@ -45,8 +50,8 @@ class VaultCollection private constructor(
 
 class Vault private constructor(
         val vaultFolder: File,
-        val encryptor: Encryptor,
-        val decryptor: Decryptor
+        private val encryptor: Encryptor,
+        private val decryptor: Decryptor
 ) {
     init {
         if (!vaultFolder.exists()) throw IllegalArgumentException("Must point to an existing folder ${vaultFolder.absoluteFile.absolutePath} does not exist")
@@ -83,8 +88,14 @@ class Vault private constructor(
 
     fun updateFile(fileName: String, fileContents: String) {
 
-        val secretFile = File(vaultFolder, fileName)
+        val file = File(vaultFolder, fileName)
         val encryptedContent = encryptor(fileContents)
-        FileUtils.write(secretFile, encryptedContent, Charset.defaultCharset())
+        FileUtils.write(file, encryptedContent, Charset.defaultCharset())
+    }
+
+    fun deleteFile(fileName: String) {
+
+        val file = File(vaultFolder, fileName)
+        file.delete()
     }
 }

@@ -23,7 +23,7 @@ class VaultService(
 
     fun findVaultCollection(vaultCollectionName: String): VaultCollection {
 
-        return withVaultCollectionAndRepo(vaultCollectionName, { vaultCollection, repo -> vaultCollection })
+        return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo -> vaultCollection })
     }
 
     fun findAllVaultsInVaultCollection(vaultCollectionName: String): List<Vault> {
@@ -43,13 +43,13 @@ class VaultService(
                 ?: throw IllegalArgumentException("Vault not found name=$vaultName")
     }
 
-    fun updateFileInVault(vaultCollectionName: String,
-                          vaultName: String,
-                          fileName: String,
-                          fileContents: String
+    fun createOrUpdateFileInVault(vaultCollectionName: String,
+                                  vaultName: String,
+                                  fileName: String,
+                                  fileContents: String
     ): Vault {
 
-        return withVaultCollectionAndRepo(vaultCollectionName, { vaultCollection, repo ->
+        return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
             val vault = vaultCollection.findVaultByName(vaultName) ?: vaultCollection.createVault(vaultName)
 
             if (!permissionService.hasUserAccess(vault.permissions)) {
@@ -62,7 +62,35 @@ class VaultService(
         })
     }
 
-    private fun <T> withVaultCollectionAndRepo(vaultCollectionName: String, function: (vaultCollection: VaultCollection, repo: Git) -> T): T {
+    fun deleteFileInVault(vaultCollectionName: String, vaultName: String, fileName: String): Vault? {
+
+        return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
+            val vault = vaultCollection.findVaultByName(vaultName) ?: return@withVaultCollectionAndRepoForUpdate null
+
+            if (!permissionService.hasUserAccess(vault.permissions)) {
+                throw IllegalAccessError("You do not have permission to operate on this vault ($vaultName)")
+            }
+
+            vault.deleteFile(fileName)
+            commitAndPushVaultChanges(repo, vault.name)
+            vault
+        })
+    }
+
+    fun deleteVault(vaultCollectionName: String, vaultName: String) {
+        return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
+            val vault = vaultCollection.findVaultByName(vaultName) ?: return@withVaultCollectionAndRepoForUpdate
+
+            if (!permissionService.hasUserAccess(vault.permissions)) {
+                throw IllegalAccessError("You do not have permission to operate on this vaultName ($vaultName)")
+            }
+
+            vaultCollection.deleteVault(vaultName)
+            commitAndPushVaultChanges(repo, vault.name)
+        })
+    }
+
+    private fun <T> withVaultCollectionAndRepoForUpdate(vaultCollectionName: String, function: (vaultCollection: VaultCollection, repo: Git) -> T): T {
 
         return synchronized(vaultCollectionName) {
 
@@ -92,12 +120,5 @@ class VaultService(
 
     fun save(affiliation: String, vault: Vault, validateVersions: Boolean): Vault {
         return vault
-    }
-
-    fun delete(affiliation: String, vault: String): Boolean {
-        val repo = gitService.checkoutRepository(affiliation)
-
-//        gitService.deleteDirectory(repo, "$GIT_SECRET_FOLDER/$vault/")
-        return true
     }
 }

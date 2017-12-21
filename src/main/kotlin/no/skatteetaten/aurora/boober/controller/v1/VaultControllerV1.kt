@@ -55,13 +55,14 @@ class VaultControllerV1(val vaultService: VaultService) {
         val path = "affiliation/$affiliation/vault/$vaultName/secret/**"
         val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
 
-        val vault = vaultService.updateFileInVault(affiliation, vaultName, fileName, fileContents)
+        val vault = vaultService.createOrUpdateFileInVault(affiliation, vaultName, fileName, fileContents)
         return Response(items = listOf(vault))
     }
 
     @DeleteMapping("/{vault}")
     fun delete(@PathVariable affiliation: String, @PathVariable vault: String): Response {
-        return Response(items = listOf(vaultService.delete(affiliation, vault)))
+        vaultService.deleteVault(affiliation, vault)
+        return Response(items = listOf())
     }
 }
 
