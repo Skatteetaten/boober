@@ -1,14 +1,16 @@
 package no.skatteetaten.aurora.boober.service.openshift
 
+import static org.springframework.http.HttpStatus.OK
+
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import spock.lang.Specification
+import no.skatteetaten.aurora.boober.service.AbstractSpec
 
-class OpenShiftClientTest extends Specification {
+class OpenShiftClientTest extends AbstractSpec {
 
   def userClient = Mock(OpenShiftResourceClient)
 
@@ -47,5 +49,22 @@ class OpenShiftClientTest extends Specification {
       'service'          | "user"
       'deploymentconfig' | "user"
       'imagestream'      | "user"
+  }
+
+  def "Creates OpenShiftGroup indexes"() {
+
+    given:
+      def response = loadResource("response_groups.json")
+      serviceAccountClient.get("/oapi/v1/groups/", _, _) >> new ResponseEntity(new ObjectMapper().readValue(response, JsonNode), OK)
+
+    when:
+      def openShiftGroups = openShiftClient.getGroups()
+
+    then:
+      openShiftGroups != null
+
+      openShiftGroups.userGroups["k1111111"] == ['APP_PaaS_drift', 'APP_PaaS_utv']
+      openShiftGroups.userGroups["k3222222"] == ['APP_PROJ1_drift']
+      openShiftGroups.groupUsers['APP_PaaS_drift'] == ['k2222222', 'k1111111', 'k3333333', 'k4444444', 'y5555555', 'm6666666', 'm7777777', 'y8888888', 'y9999999']
   }
 }

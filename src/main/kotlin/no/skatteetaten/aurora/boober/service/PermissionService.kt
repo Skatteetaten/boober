@@ -7,6 +7,7 @@ data class AuroraPermissions @JvmOverloads constructor(
         val groups: List<String>? = listOf()
 )
 
+
 @Service
 class PermissionService(
         val openShiftClient: OpenShiftClient,
