@@ -52,7 +52,18 @@ class VaultServiceTest extends Specification {
       def vault = vaultService.updateFileInVault(COLLECTION_NAME, vaultName, fileName, secret)
 
     then:
-      vault != null
+      vault.secrets.size() == 1
+      vault.secrets[fileName] == secret
+
+    and: "Lets make sure the secret was actually saved"
+      GitServiceHelperKt.recreateFolder(new File(CHECKOUT_PATH))
+
+    when:
+      def vaultCollection = vaultService.findVaultCollection(COLLECTION_NAME)
+      vault = vaultCollection.findVaultByName(vaultName)
+
+    then:
+      vault.secrets.size() == 1
       vault.secrets[fileName] == secret
   }
 }
