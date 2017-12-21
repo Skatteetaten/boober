@@ -7,12 +7,14 @@ fun createInitRepo(affiliation: String): Git {
 
     val testFolder = File("build/gitrepos/$affiliation.git")
 
-    if (!testFolder.exists()) {
-        testFolder.mkdirs()
-    } else {
-        testFolder.deleteRecursively()
-        testFolder.mkdirs()
-    }
+    recreateFolder(testFolder)
 
     return Git.init().setDirectory(testFolder).setBare(true).call()
+}
+
+fun recreateFolder(folder: File) {
+    if (folder.exists()) {
+        folder.deleteRecursively()
+    }
+    folder.mkdirs()
 }

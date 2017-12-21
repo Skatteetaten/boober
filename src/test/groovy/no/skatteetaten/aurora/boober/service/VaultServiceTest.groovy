@@ -6,13 +6,14 @@ import spock.lang.Specification
 
 class VaultServiceTest extends Specification {
 
-  static REPO_FOLDER = new File("build/gitrepos").absoluteFile.absolutePath
+  static REMOTE_REPO_FOLDER = new File("build/gitrepos").absoluteFile.absolutePath
+  static CHECKOUT_PATH = new File("build/vaults").absoluteFile.absolutePath
 
   def auroraMetrics = new AuroraMetrics(new SimpleMeterRegistry())
 
   def userDetailsProvider = Mock(UserDetailsProvider)
 
-  def gitService = new GitService(userDetailsProvider, "$REPO_FOLDER/%s", "build/vaults", "", "", auroraMetrics)
+  def gitService = new GitService(userDetailsProvider, "$REMOTE_REPO_FOLDER/%s", CHECKOUT_PATH, "", "", auroraMetrics)
 
   def encryptionService = Mock(EncryptionService)
 
@@ -24,6 +25,7 @@ class VaultServiceTest extends Specification {
 
   def setupSpec() {
     GitServiceHelperKt.createInitRepo(COLLECTION_NAME)
+    GitServiceHelperKt.recreateFolder(new File(CHECKOUT_PATH))
   }
 
   def "Find vault"() {
