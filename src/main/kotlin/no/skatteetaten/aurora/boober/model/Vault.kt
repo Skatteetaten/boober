@@ -66,20 +66,20 @@ class Vault private constructor(
         get() = vaultFolder.name
 
     val permissions: AuroraPermissions?
-        get() = vaultFiles
+        get() = files
                 .find { it.name == PERMISSION_FILE }
                 ?.let { jacksonObjectMapper().readValue(it) }
 
-    val vaultFiles: List<File>
-        get() = vaultFolder.listFiles().filter { it.isFile }
-
     val secrets: Map<String, String>
-        get() = vaultFiles
+        get() = files
                 .filter { it.name != PERMISSION_FILE }
                 .associate { file ->
                     val contents = decryptor(file.readText())
                     file.name to contents
                 }.toMap()
+
+    private val files: List<File>
+        get() = vaultFolder.listFiles().filter { it.isFile }
 
     fun updateFile(fileName: String, fileContents: String) {
 
