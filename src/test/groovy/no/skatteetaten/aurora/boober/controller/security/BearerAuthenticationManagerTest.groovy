@@ -13,15 +13,16 @@ import spock.lang.Specification
 
 class BearerAuthenticationManagerTest extends Specification {
 
-  def USERNAME = "aurora"
-  def GROUPS = ["APP_PaaS_drift", "APP_PaaS_utv"]
+  static USERNAME = "aurora"
+  static GROUPS = ["APP_PaaS_drift", "APP_PaaS_utv"]
+  static TOKEN = 'some_token'
 
   def "Gets authorities from OpenShift groups"() {
 
     given:
       def objectMapper = new ObjectMapper()
       def openShiftClient = Mock(OpenShiftClient)
-      openShiftClient.findCurrentUser('some_token') >> objectMapper.
+      openShiftClient.findCurrentUser(TOKEN) >> objectMapper.
           readValue("""{"kind": "user", "metadata": {"name": "$USERNAME"}, "fullName": "Aurora Test User"}""", JsonNode)
       def GROUPS = ["APP_PaaS_drift", "APP_PaaS_utv"]
       openShiftClient.getGroups() >> new OpenShiftGroups(["aurora": GROUPS], [:])
@@ -29,7 +30,7 @@ class BearerAuthenticationManagerTest extends Specification {
       def authenticationManager = new BearerAuthenticationManager(openShiftClient)
 
     when:
-      Authentication authentication = authenticationManager.authenticate(new TestingAuthenticationToken("Bearer some_token", ""))
+      Authentication authentication = authenticationManager.authenticate(new TestingAuthenticationToken("Bearer $TOKEN", ""))
 
     then:
       authentication.authenticated
