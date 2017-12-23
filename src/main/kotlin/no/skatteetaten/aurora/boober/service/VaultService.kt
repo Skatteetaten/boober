@@ -16,7 +16,7 @@ data class VaultWithAccess @JvmOverloads constructor(
 class VaultService(
         val gitService: GitService,
         val encryptionService: EncryptionService,
-        val permissionService: PermissionService
+        val userDetailsProvider: UserDetailsProvider
 ) {
 
     private val logger = LoggerFactory.getLogger(VaultService::class.java)
@@ -33,8 +33,10 @@ class VaultService(
 
     fun findAllVaultsWithUserAccessInVaultCollection(vaultCollectionName: String): List<VaultWithAccess> {
 
+        val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
+
         return findAllVaultsInVaultCollection(vaultCollectionName)
-                .map { VaultWithAccess(it, permissionService.hasUserAccess(it.permissions)) }
+                .map { VaultWithAccess(it, authenticatedUser.hasAnyRole(it.permissions?.groups)) }
     }
 
     fun findVault(vaultCollectionName: String, vaultName: String): Vault {
@@ -51,10 +53,7 @@ class VaultService(
 
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
             val vault = vaultCollection.findVaultByName(vaultName) ?: vaultCollection.createVault(vaultName)
-
-            if (!permissionService.hasUserAccess(vault.permissions)) {
-                throw IllegalAccessError("You do not have permission to operate on this vault ($vaultName)")
-            }
+            assertCurrentUserHasAccess(vault)
 
             vault.updateFile(fileName, fileContents)
             commitAndPushVaultChanges(repo, vault.name)
@@ -66,10 +65,7 @@ class VaultService(
 
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
             val vault = vaultCollection.findVaultByName(vaultName) ?: return@withVaultCollectionAndRepoForUpdate null
-
-            if (!permissionService.hasUserAccess(vault.permissions)) {
-                throw IllegalAccessError("You do not have permission to operate on this vault ($vaultName)")
-            }
+            assertCurrentUserHasAccess(vault)
 
             vault.deleteFile(fileName)
             commitAndPushVaultChanges(repo, vault.name)
@@ -80,14 +76,17 @@ class VaultService(
     fun deleteVault(vaultCollectionName: String, vaultName: String) {
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
             val vault = vaultCollection.findVaultByName(vaultName) ?: return@withVaultCollectionAndRepoForUpdate
-
-            if (!permissionService.hasUserAccess(vault.permissions)) {
-                throw IllegalAccessError("You do not have permission to operate on this vaultName ($vaultName)")
-            }
+            assertCurrentUserHasAccess(vault)
 
             vaultCollection.deleteVault(vaultName)
             commitAndPushVaultChanges(repo, vault.name)
         })
+    }
+
+    private fun assertCurrentUserHasAccess(vault: Vault) {
+        if (!userDetailsProvider.getAuthenticatedUser().hasAnyRole(vault.permissions?.groups)) {
+            throw IllegalAccessError("You do not have permission to operate on this vault (${vault.name})")
+        }
     }
 
     private fun <T> withVaultCollectionAndRepoForUpdate(vaultCollectionName: String, function: (vaultCollection: VaultCollection, repo: Git) -> T): T {

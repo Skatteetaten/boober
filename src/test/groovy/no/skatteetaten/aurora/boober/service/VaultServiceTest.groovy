@@ -36,7 +36,7 @@ class VaultServiceTest extends Specification {
     _ * encryptionService.encrypt(_) >> { it[0] }
   }
 
-  def "Find vault"() {
+  def "Find vault collection"() {
 
     when:
       def vaultCollection = vaultService.findVaultCollection(COLLECTION_NAME)
