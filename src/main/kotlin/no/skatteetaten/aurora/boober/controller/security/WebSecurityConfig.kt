@@ -39,6 +39,7 @@ class WebSecurityConfig(
     @Bean
     internal fun preAuthenticationProvider() = PreAuthenticatedAuthenticationProvider().apply {
         setPreAuthenticatedUserDetailsService({ it: PreAuthenticatedAuthenticationToken ->
+
             val principal: JsonNode? = it.principal as JsonNode?
             val username: String = principal?.openshiftName ?: throw IllegalArgumentException("Unable to determine username from response")
             val fullName: String? = principal.get("fullName")?.asText()
