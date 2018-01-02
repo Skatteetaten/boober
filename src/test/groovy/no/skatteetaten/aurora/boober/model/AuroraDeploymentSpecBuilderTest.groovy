@@ -10,7 +10,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraConfigTest {
   static AuroraDeploymentSpec createDeploymentSpec(Map<String, String> auroraConfigJson, ApplicationId applicationId) {
 
     AuroraConfig auroraConfig = createAuroraConfig(auroraConfigJson)
-    AuroraDeploymentSpecBuilderKt.createAuroraDeploymentSpec(auroraConfig, applicationId, "", [], [:])
+    AuroraDeploymentSpecBuilderKt.createAuroraDeploymentSpec(auroraConfig, applicationId, [], [:])
   }
 
   def auroraConfigJson = defaultAuroraConfig()

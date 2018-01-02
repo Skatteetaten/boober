@@ -10,7 +10,7 @@ import no.skatteetaten.aurora.boober.model.Vault
 import no.skatteetaten.aurora.boober.model.TemplateType
 
 @JvmOverloads
-fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: ApplicationId, dockerRegistry: String,
+fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: ApplicationId,
                                overrideFiles: List<AuroraConfigFile> = listOf(),
                                vaults: Map<String, Vault> = mapOf()): AuroraDeploymentSpec {
 
@@ -20,7 +20,7 @@ fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: Applic
     val type = headerMapper.type
 
     val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(applicationId)
-    val deployMapper = AuroraDeployMapperV1(applicationId, applicationFiles, overrideFiles, dockerRegistry)
+    val deployMapper = AuroraDeployMapperV1(applicationId, applicationFiles, overrideFiles)
     val volumeMapper = AuroraVolumeMapperV1(applicationFiles, vaults)
     val routeMapper = AuroraRouteMapperV1(applicationId, applicationFiles)
     val localTemplateMapper = AuroraLocalTemplateMapperV1(applicationFiles, auroraConfig)
@@ -42,7 +42,7 @@ fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: Applic
     val volume = if (type == TemplateType.build) null else volumeMapper.auroraDeploymentCore(auroraConfigFields)
     val route = if (type == TemplateType.build) null else routeMapper.route(auroraConfigFields)
 
-    val build = if (type == TemplateType.build || type == TemplateType.development) buildMapper.build(auroraConfigFields, dockerRegistry) else null
+    val build = if (type == TemplateType.build || type == TemplateType.development) buildMapper.build(auroraConfigFields) else null
 
     val deploy = if (type == TemplateType.deploy || type == TemplateType.development) deployMapper.deploy(auroraConfigFields) else null
 

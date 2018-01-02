@@ -136,7 +136,7 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
     boolean useAuroraConfig = defaultOverride ? defaultOverride.auroraConfig() : true
 
     if (useInteractions) {
-      userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User")
+      userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User", [])
 
       openShiftClient.isValidGroup(_) >> true
     }
@@ -144,7 +144,7 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
     if (useAuroraConfig) {
 
       def vault = new Vault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
-      userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User")
+      userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User", [])
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
       gitService.deleteFiles(auroraConfig.affiliation)

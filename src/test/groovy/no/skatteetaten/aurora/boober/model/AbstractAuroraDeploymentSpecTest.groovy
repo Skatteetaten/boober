@@ -12,6 +12,6 @@ abstract class AbstractAuroraDeploymentSpecTest extends AbstractAuroraConfigTest
 
     AuroraConfig auroraConfig = createAuroraConfig(auroraConfigJson)
     AuroraDeploymentSpecBuilderKt.
-        createAuroraDeploymentSpec(auroraConfig, applicationId, "docker-registry.aurora.sits.no:5000", [], [:])
+        createAuroraDeploymentSpec(auroraConfig, applicationId, [], [:])
   }
 }

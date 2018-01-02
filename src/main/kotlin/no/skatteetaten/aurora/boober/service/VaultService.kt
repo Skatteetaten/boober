@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
+import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.Vault
 import no.skatteetaten.aurora.boober.model.VaultCollection
 import org.eclipse.jgit.api.Git
@@ -8,9 +9,17 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 data class VaultWithAccess @JvmOverloads constructor(
-        val vault: Vault,
+        val vault: Vault?, // Will be null if the user does not have access
+        val vaultName: String,
         val hasAccess: Boolean = true
-)
+) {
+    companion object {
+        fun create(vault: Vault, user: User): VaultWithAccess {
+            val hasAccess = user.hasAnyRole(vault.permissions?.groups)
+            return VaultWithAccess(if (hasAccess) vault else null, vault.name, hasAccess)
+        }
+    }
+}
 
 @Service
 class VaultService(
@@ -36,7 +45,7 @@ class VaultService(
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
 
         return findAllVaultsInVaultCollection(vaultCollectionName)
-                .map { VaultWithAccess(it, authenticatedUser.hasAnyRole(it.permissions?.groups)) }
+                .map { VaultWithAccess.create(it, authenticatedUser) }
     }
 
     fun findVault(vaultCollectionName: String, vaultName: String): Vault {
