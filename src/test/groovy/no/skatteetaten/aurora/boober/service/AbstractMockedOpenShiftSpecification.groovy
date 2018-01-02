@@ -34,7 +34,7 @@ import spock.mock.DetachedMockFactory
     DeployService,
     OpenShiftObjectGenerator,
     OpenShiftTemplateProcessor,
-    GitService,
+    GitServices,
     EncryptionService,
     DeployBundleService,
     VaultService,
@@ -105,7 +105,7 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
   GitService gitService
 
   @Autowired
-  VaultService vaultFacade
+  VaultService vaultService
 
   @Autowired
   UserDetailsProvider userDetailsProvider
@@ -143,14 +143,17 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
 
     if (useAuroraConfig) {
 
-      def vault = new EncryptedFileVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
+//      def vault = new EncryptedFileVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
       userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User", [])
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
       gitService.deleteFiles(auroraConfig.affiliation)
       GitServiceHelperKt.createInitRepo(auroraConfig.affiliation)
+      GitServiceHelperKt.recreateRepo(new File("/tmp/vaulttest/aos"))
+      GitServiceHelperKt.recreateRepo(new File("/tmp/boobertest/aos"))
 
-      vaultFacade.save("aos", vault, false)
+      vaultService.createOrUpdateFileInVault("aos", "foo", "latest.properties", "FOO=BAR")
+//      vaultService.save("aos", vault, false)
       deployBundleService.saveAuroraConfig(auroraConfig, false)
       git = gitService.openRepo(auroraConfig.affiliation)
     }

@@ -5,6 +5,7 @@ import no.skatteetaten.aurora.boober.utils.LambdaOutputStream
 import no.skatteetaten.aurora.boober.utils.use
 import org.apache.commons.io.FileUtils
 import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.api.errors.EmtpyCommitException
 import org.eclipse.jgit.api.errors.GitAPIException
 import org.eclipse.jgit.api.errors.NoHeadException
 import org.eclipse.jgit.lib.ObjectId
@@ -16,20 +17,58 @@ import org.eclipse.jgit.revwalk.RevTag
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import java.io.File
 import java.io.FileWriter
 import java.io.PrintWriter
 import java.nio.charset.Charset
 
-@Service
-class GitService(
+@Configuration
+class GitServices(
         val userDetails: UserDetailsProvider,
-        @Value("\${boober.git.urlPattern}") val url: String,
-        @Value("\${boober.git.checkoutPath}") val checkoutPath: String,
-        @Value("\${boober.git.username}") val username: String,
-        @Value("\${boober.git.password}") val password: String,
+        val metrics: AuroraMetrics
+) {
+
+    enum class Domain {
+        AURORA_CONFIG,
+        VAULT
+    }
+
+    @Target(AnnotationTarget.TYPE, AnnotationTarget.FUNCTION, AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
+    @Retention(AnnotationRetention.RUNTIME)
+    @Qualifier
+    annotation class TargetDomain(val value: Domain)
+
+    @Bean
+    @TargetDomain(Domain.AURORA_CONFIG)
+    @Primary
+    fun auroraConfigGitService(@Value("\${boober.git.urlPattern}") url: String,
+                               @Value("\${boober.git.checkoutPath}") checkoutPath: String,
+                               @Value("\${boober.git.username}") username: String,
+                               @Value("\${boober.git.password}") password: String): GitService {
+        return GitService(userDetails, url, checkoutPath, username, password, metrics)
+    }
+
+    @Bean
+    @TargetDomain(Domain.VAULT)
+    fun vaultGitService(@Value("\${vault.git.urlPattern}") url: String,
+                        @Value("\${vault.git.checkoutPath}") checkoutPath: String,
+                        @Value("\${vault.git.username}") username: String,
+                        @Value("\${vault.git.password}") password: String): GitService {
+        return GitService(userDetails, url, checkoutPath, username, password, metrics)
+    }
+}
+
+open class GitService(
+        val userDetails: UserDetailsProvider,
+        val url: String,
+        val checkoutPath: String,
+        val username: String,
+        val password: String,
         val metrics: AuroraMetrics) {
 
     val logger: Logger = LoggerFactory.getLogger(GitService::class.java)
@@ -97,7 +136,7 @@ class GitService(
         }
     }
 
-/*
+    // TODO: Delete this
     fun saveFilesAndClose(git: Git, files: Map<String, String>, keep: (String) -> Boolean) {
         try {
             logger.debug("write add changes")
@@ -118,7 +157,6 @@ class GitService(
             closeRepository(git)
         }
     }
-*/
 
     fun closeRepository(repo: Git) {
         repo.close()
@@ -175,7 +213,6 @@ class GitService(
     }
 
 
-/*
     private fun deleteMissingFiles(git: Git, files: Set<String>, keep: (String) -> Boolean) {
         //TODO: If this takes time rewrite to not include File content
         getAllFiles(git)
@@ -184,7 +221,6 @@ class GitService(
                 .filter { !files.contains(it) }
                 .forEach { git.rm().addFilepattern(it).call() }
     }
-*/
 
     private fun commitAllChanges(git: Git, message: String): RevCommit {
 

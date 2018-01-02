@@ -280,7 +280,7 @@ class DeployBundleService(
         val keep: (String) -> Boolean = { it -> !it.startsWith(GIT_SECRET_FOLDER) }
 
         logger.debug("save files and close")
-//        gitService.saveFilesAndClose(repo, configFiles, keep)
+        gitService.saveFilesAndClose(repo, configFiles, keep)
     }
 
     fun findAuroraConfigFile(affiliation: String, fileName: String): AuroraConfigFile? {

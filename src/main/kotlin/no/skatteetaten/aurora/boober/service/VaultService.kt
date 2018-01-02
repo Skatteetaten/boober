@@ -3,6 +3,8 @@ package no.skatteetaten.aurora.boober.service
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.EncryptedFileVault
 import no.skatteetaten.aurora.boober.model.VaultCollection
+import no.skatteetaten.aurora.boober.service.GitServices.Domain.VAULT
+import no.skatteetaten.aurora.boober.service.GitServices.TargetDomain
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.lib.PersonIdent
 import org.slf4j.LoggerFactory
@@ -23,6 +25,7 @@ data class VaultWithAccess @JvmOverloads constructor(
 
 @Service
 class VaultService(
+        @TargetDomain(VAULT)
         val gitService: GitService,
         val encryptionService: EncryptionService,
         val userDetailsProvider: UserDetailsProvider
@@ -126,7 +129,7 @@ class VaultService(
                 .call()
     }
 
-    fun save(affiliation: String, vault: EncryptedFileVault, validateVersions: Boolean): EncryptedFileVault {
+    fun save(vaultCollectionName: String, vault: EncryptedFileVault, validateVersions: Boolean): EncryptedFileVault {
         return vault
     }
 }

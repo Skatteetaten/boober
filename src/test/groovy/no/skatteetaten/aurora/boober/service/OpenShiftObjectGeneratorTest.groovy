@@ -55,8 +55,9 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
   def "should create openshift objects for #env/#name"() {
 
     given:
-      def vault = new EncryptedFileVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
-      vaultFacade.save(affiliation, vault, false)
+//      def vault = new EncryptedFileVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
+//      vaultService.save(affiliation, vault, false)
+      vaultService.createOrUpdateFileInVault(affiliation, "foo", "latest.properties", "FOO: BAR")
 
       def aid = new ApplicationId(env, name)
       def additionalFile = null

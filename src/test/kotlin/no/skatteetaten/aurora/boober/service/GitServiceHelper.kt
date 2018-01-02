@@ -7,9 +7,12 @@ fun createInitRepo(affiliation: String): Git {
 
     val testFolder = File("build/gitrepos/$affiliation.git")
 
-    recreateFolder(testFolder)
+    return recreateRepo(testFolder)
+}
 
-    return Git.init().setDirectory(testFolder).setBare(true).call()
+fun recreateRepo(folder: File): Git {
+    recreateFolder(folder)
+    return Git.init().setDirectory(folder).setBare(true).call()
 }
 
 fun recreateFolder(folder: File) {
