@@ -22,7 +22,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
   def mapper = new ObjectMapper()
 
   def setup() {
-    udp.authenticatedUser >> new User("hero", "token", "Test User")
+    udp.authenticatedUser >> new User("hero", "token", "Test User", [])
   }
 
   def "Fails when affiliation is too long"() {

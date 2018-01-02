@@ -102,7 +102,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraConfigTest {
           "about.json"         : '''{
   "schemaVersion": "v1",
   "permissions": {
-    "hasAccess": "APP_PaaS_utv"
+    "admin": "APP_PaaS_utv"
   },
   "affiliation" : "aos",
   
