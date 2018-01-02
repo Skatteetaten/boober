@@ -6,13 +6,13 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.Vault
+import no.skatteetaten.aurora.boober.model.EncryptedFileVault
 import no.skatteetaten.aurora.boober.model.TemplateType
 
 @JvmOverloads
 fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: ApplicationId,
                                overrideFiles: List<AuroraConfigFile> = listOf(),
-                               vaults: Map<String, Vault> = mapOf()): AuroraDeploymentSpec {
+                               vaults: Map<String, EncryptedFileVault> = mapOf()): AuroraDeploymentSpec {
 
     val applicationFiles = auroraConfig.getFilesForApplication(applicationId, overrideFiles)
 

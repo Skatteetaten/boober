@@ -14,7 +14,7 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.Vault
+import no.skatteetaten.aurora.boober.model.EncryptedFileVault
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import spock.lang.Shared
 import spock.lang.Unroll
@@ -55,7 +55,7 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
   def "should create openshift objects for #env/#name"() {
 
     given:
-      def vault = new Vault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
+      def vault = new EncryptedFileVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
       vaultFacade.save(affiliation, vault, false)
 
       def aid = new ApplicationId(env, name)

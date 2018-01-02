@@ -23,16 +23,16 @@ class VaultCollection private constructor(
     val name: String
         get() = folder.name
 
-    val vaults: List<Vault>
-        get() = findAllVaultFolders().map { Vault.createFromFolder(it, decryptor) }
+    val vaults: List<EncryptedFileVault>
+        get() = findAllVaultFolders().map { EncryptedFileVault.createFromFolder(it, decryptor) }
 
-    fun findVaultByName(vaultName: String): Vault? {
+    fun findVaultByName(vaultName: String): EncryptedFileVault? {
         return vaults.firstOrNull { it.name == vaultName }
     }
 
-    fun createVault(vaultName: String): Vault {
+    fun createVault(vaultName: String): EncryptedFileVault {
         val vaultFolder = File(folder, vaultName)
-        return Vault.createFromFolder(vaultFolder, encryptor, decryptor)
+        return EncryptedFileVault.createFromFolder(vaultFolder, encryptor, decryptor)
     }
 
     fun deleteVault(vaultName: String) {
@@ -48,7 +48,7 @@ class VaultCollection private constructor(
     }
 }
 
-class Vault private constructor(
+class EncryptedFileVault private constructor(
         val vaultFolder: File,
         private val encryptor: Encryptor,
         private val decryptor: Decryptor
@@ -60,10 +60,10 @@ class Vault private constructor(
     companion object {
         private val PERMISSION_FILE = ".permissions"
 
-        fun createFromFolder(vaultFolder: File, encryptor: Encryptor, decryptor: Decryptor = { it }): Vault {
+        fun createFromFolder(vaultFolder: File, encryptor: Encryptor, decryptor: Decryptor = { it }): EncryptedFileVault {
 
             FileUtils.forceMkdir(vaultFolder)
-            return Vault(vaultFolder, encryptor, decryptor)
+            return EncryptedFileVault(vaultFolder, encryptor, decryptor)
         }
     }
 

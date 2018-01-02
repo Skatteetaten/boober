@@ -15,7 +15,7 @@ import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.Vault
+import no.skatteetaten.aurora.boober.model.EncryptedFileVault
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
@@ -68,7 +68,7 @@ class VaultServiceOldTest extends Specification {
   @Autowired
   PermissionService permissionService
 
-  private Git createRepoAndSaveFiles(String affiliation, Vault vault) {
+  private Git createRepoAndSaveFiles(String affiliation, EncryptedFileVault vault) {
     userDetailsProvider.authenticatedUser >> new User("test", "", "Test Foo")
     vaultService.save(affiliation, vault, false)
     return gitService.openRepo(affiliation)
@@ -79,7 +79,7 @@ class VaultServiceOldTest extends Specification {
 
   def secretFile = "latest.properties"
   def secret = ['latest.properties': "FOO=BAR"]
-  def vault = new Vault(vaultName, secret, null, [:])
+  def vault = new EncryptedFileVault(vaultName, secret, null, [:])
 
   def git
 
@@ -116,7 +116,7 @@ class VaultServiceOldTest extends Specification {
       permissionService.hasUserAccess(_) >> true
 
     when:
-      def vault = new Vault(name, [:], null, [:])
+      def vault = new EncryptedFileVault(name, [:], null, [:])
       createRepoAndSaveFiles(affiliation, vault)
 
     then:
@@ -145,7 +145,7 @@ class VaultServiceOldTest extends Specification {
       createRepoAndSaveFiles(affiliation, vault)
 
     when:
-      def newVault = new Vault(vaultName, secret, null, ["latest.properties": "INVALID_VERSION"])
+      def newVault = new EncryptedFileVault(vaultName, secret, null, ["latest.properties": "INVALID_VERSION"])
       vaultService.save(affiliation, newVault, true)
 
     then:
@@ -160,7 +160,7 @@ class VaultServiceOldTest extends Specification {
       createRepoAndSaveFiles(affiliation, vault)
 
     when:
-      def newVault = new Vault(vaultName, secret, null, [:])
+      def newVault = new EncryptedFileVault(vaultName, secret, null, [:])
       def result = vaultService.save(affiliation, newVault, false)
 
     then:
@@ -175,7 +175,7 @@ class VaultServiceOldTest extends Specification {
       def storedVault = vaultService.findVault(affiliation, vaultName)
 
     when:
-      def newVault = new Vault(vaultName, secret, null, storedVault.versions)
+      def newVault = new EncryptedFileVault(vaultName, secret, null, storedVault.versions)
 
       vaultService.save(affiliation, newVault, false)
       def updatedAuroraConfig = vaultService.findVault(affiliation, vaultName)
@@ -194,7 +194,7 @@ class VaultServiceOldTest extends Specification {
 
       def newSecrets = ['latest.properties': "FOO=BAR", "1.2.3.properties": "BAZ"]
 
-      def newVault = new Vault(vaultName, newSecrets, null, storedVault.versions)
+      def newVault = new EncryptedFileVault(vaultName, newSecrets, null, storedVault.versions)
 
       vaultService.save(affiliation, newVault, false)
       def updatedAuroraConfig = vaultService.findVault(affiliation, vaultName)
@@ -205,7 +205,7 @@ class VaultServiceOldTest extends Specification {
 
   def "Should remove secret from vault "() {
     given:
-      def newVault = new Vault(vaultName, ['latest.properties': "FOO=BAR", "1.2.3.properties": "BAZ"], null,
+      def newVault = new EncryptedFileVault(vaultName, ['latest.properties': "FOO=BAR", "1.2.3.properties": "BAZ"], null,
           [:])
 
       permissionService.hasUserAccess(_) >> true
@@ -214,7 +214,7 @@ class VaultServiceOldTest extends Specification {
 
     when:
 
-      def removeVault = new Vault(vaultName, ['latest.properties': "FOO=BAR"], null,
+      def removeVault = new EncryptedFileVault(vaultName, ['latest.properties': "FOO=BAR"], null,
           ['latest.properties': storedVault.versions['latest.properties']])
 
 
@@ -273,7 +273,7 @@ class VaultServiceOldTest extends Specification {
       createRepoAndSaveFiles(affiliation, vault)
 
     when:
-      def newVault = new Vault("vault2", secret, null, [:])
+      def newVault = new EncryptedFileVault("vault2", secret, null, [:])
       vaultService.save(affiliation, newVault, false)
 
       def vault = vaultService.findVault(affiliation, vaultName)
@@ -290,7 +290,7 @@ class VaultServiceOldTest extends Specification {
     given:
       permissionService.hasUserAccess(_) >> true
       createRepoAndSaveFiles(affiliation, vault)
-      def newVault = new Vault("vault2", secret)
+      def newVault = new EncryptedFileVault("vault2", secret)
       vaultService.save(affiliation, newVault, false)
 
     when:
@@ -314,8 +314,8 @@ class VaultServiceOldTest extends Specification {
 
       // Only temporarily grant ops access to allow vault to be saved
       1 * permissionService.hasUserAccess(opsGroup) >> true
-      vaultService.save(affiliation, new Vault("vault2", secret, opsGroup), false)
-      vaultService.save(affiliation, new Vault("vault3", secret, devGroup), false)
+      vaultService.save(affiliation, new EncryptedFileVault("vault2", secret, opsGroup), false)
+      vaultService.save(affiliation, new EncryptedFileVault("vault3", secret, devGroup), false)
 
       _ * permissionService.hasUserAccess(opsGroup) >> false
 

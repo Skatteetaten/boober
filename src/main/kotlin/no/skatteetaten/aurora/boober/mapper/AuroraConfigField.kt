@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.MissingNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.Vault
+import no.skatteetaten.aurora.boober.model.EncryptedFileVault
 import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType
@@ -53,7 +53,7 @@ inline fun <reified T> AuroraConfigField.value(): T {
 class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
 
-    fun getMounts(extractors: List<AuroraConfigFieldHandler>, vaults: Map<String, Vault>): List<Mount>? {
+    fun getMounts(extractors: List<AuroraConfigFieldHandler>, vaults: Map<String, EncryptedFileVault>): List<Mount>? {
         if (extractors.isEmpty()) {
             return null
         }

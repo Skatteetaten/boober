@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.Vault
+import no.skatteetaten.aurora.boober.model.EncryptedFileVault
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
@@ -149,7 +149,7 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
   def "Should perform release with secret and not include it in git tag"() {
     given:
-      vaultFacade.save(affiliation, new Vault("foo", ["latest.properties": "1.2.3"]), false)
+      vaultFacade.save(affiliation, new EncryptedFileVault("foo", ["latest.properties": "1.2.3"]), false)
 
     when:
       deployService.executeDeploy(affiliation, [new ApplicationId("secrettest", "aos-simple")], [], true)
