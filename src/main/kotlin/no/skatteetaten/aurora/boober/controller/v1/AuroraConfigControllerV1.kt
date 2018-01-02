@@ -25,10 +25,7 @@ data class UpdateAuroraConfigFilePayload(
 
         @JsonRawValue
         val content: String
-) {
-    val contentAsJsonNode: JsonNode
-        get() = jacksonObjectMapper().readValue(this.content, JsonNode::class.java)
-}
+)
 
 @RestController
 @RequestMapping("/v1/auroraconfig/{name}")
@@ -75,8 +72,7 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
         }
         val fileName = extractFileName(affiliation, request)
 
-        val auroraConfig = deployBundleService.updateAuroraConfigFile(affiliation, fileName,
-                payload.contentAsJsonNode, payload.version, payload.validateVersions)
+        val auroraConfig = auroraConfigService.updateAuroraConfigFile(affiliation, fileName, payload.content, payload.version)
         return createAuroraConfigResponse(auroraConfig)
     }
 

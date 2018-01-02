@@ -92,12 +92,6 @@ class DeployBundleService(
         })
     }
 
-    fun updateAuroraConfigFile(affiliation: String, filename: String, fileContents: JsonNode, configFileVersion: String, validateVersions: Boolean): AuroraConfig {
-        return withAuroraConfig(affiliation, validateVersions, { auroraConfig: AuroraConfig ->
-            auroraConfig.updateFile(filename, fileContents, configFileVersion)
-        })
-    }
-
     /**
      * Validates the DeployBundle for affiliation <code>affiliation</code> using the provided AuroraConfig instead
      * of the AuroraConfig already saved for that affiliation.
@@ -190,46 +184,6 @@ class DeployBundleService(
         } catch (e: Throwable) {
             Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = null, second = ExceptionWrapper(aid, e))
         }
-    }
-
-    private fun withAuroraConfig(affiliation: String,
-                                 validateVersions: Boolean,
-                                 function: (AuroraConfig) -> AuroraConfig = { it -> it }): AuroraConfig {
-
-        logger.debug("withAuroraConfig")
-        val repo = getRepo(affiliation)
-
-        logger.debug("Get all files")
-        val allFilesInRepo: Map<String, Pair<RevCommit?, File>> = gitService.getAllFiles(repo).mapValues {
-            val commit = gitService.getRevCommit(repo, it.key)
-            Pair(commit, it.value)
-        }
-        logger.debug("Create Aurora config")
-        val auroraConfig = createAuroraConfigFromFiles(allFilesInRepo, affiliation)
-        logger.debug("/Create Aurora config")
-        val newAuroraConfig = function(auroraConfig)
-
-        if (validateVersions) {
-            logger.debug("validate git version")
-            validateGitVersion(auroraConfig, newAuroraConfig, allFilesInRepo)
-            logger.debug("/validate git version")
-        }
-
-        logger.debug("list all vaults")
-        val vaults = secretVaultService.findAllVaultsInVaultCollection(affiliation).associateBy { it.name }
-        logger.debug("/list all vaults")
-
-        val deployBundle = DeployBundle(auroraConfig = newAuroraConfig, vaults = vaults)
-        logger.debug("validate deploy bundle")
-        validateDeployBundle(deployBundle)
-        logger.debug("/validate deploy bundle")
-
-        logger.debug("commit Aurora config")
-        commitAuroraConfig(repo, newAuroraConfig)
-        logger.debug("/commit Aurora config")
-
-        logger.debug("/withAuroraConfig")
-        return newAuroraConfig
     }
 
     private fun validateGitVersion(auroraConfig: AuroraConfig, newAuroraConfig: AuroraConfig, allFilesInRepo: Map<String, Pair<RevCommit?, File>>) {
