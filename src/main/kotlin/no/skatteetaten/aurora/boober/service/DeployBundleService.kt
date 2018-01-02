@@ -142,8 +142,7 @@ class DeployBundleService(
                 }
             }
                     .map { it.await() }
-                    .onErrorThrow(::MultiApplicationValidationException)
-        }
+        }.onErrorThrow(::MultiApplicationValidationException)
         stopWatch.stop()
         logger.debug("Created validated DeployBundle for AuroraConfig ${deployBundle.auroraConfig.affiliation} with ${applicationIds.size} applications in ${stopWatch.totalTimeMillis} millis")
         return specs
