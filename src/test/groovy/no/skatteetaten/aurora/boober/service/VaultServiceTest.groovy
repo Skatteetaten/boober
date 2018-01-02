@@ -7,7 +7,7 @@ import spock.lang.Specification
 
 class VaultServiceTest extends Specification {
 
-  static REMOTE_REPO_FOLDER = new File("build/gitrepos").absoluteFile.absolutePath
+  static REMOTE_REPO_FOLDER = new File("build/gitrepos_vault_bare").absoluteFile.absolutePath
   static CHECKOUT_PATH = new File("build/vaults").absoluteFile.absolutePath
 
   def auroraMetrics = new AuroraMetrics(new SimpleMeterRegistry())
@@ -25,7 +25,7 @@ class VaultServiceTest extends Specification {
   static VAULT_NAME = "test"
 
   def setup() {
-    GitServiceHelperKt.createInitRepo(COLLECTION_NAME)
+    GitServiceHelperKt.recreateRepo(new File(REMOTE_REPO_FOLDER, "${COLLECTION_NAME}.git"))
     GitServiceHelperKt.recreateFolder(new File(CHECKOUT_PATH))
 
     userDetailsProvider.getAuthenticatedUser() >> new User("aurora", "token", "Aurora Test User", [])

@@ -137,12 +137,12 @@ open class GitService(
     }
 
     // TODO: Delete this
-    fun saveFilesAndClose(git: Git, files: Map<String, String>, keep: (String) -> Boolean) {
+    fun saveFilesAndClose(git: Git, files: Map<String, String>) {
         try {
             logger.debug("write add changes")
             writeAndAddChanges(git, files)
             logger.debug("delete missing files")
-            deleteMissingFiles(git, files.keys, keep)
+            deleteMissingFiles(git, files.keys)
             logger.debug("status")
             val status = git.status().call()
             logger.debug("commit")
@@ -213,11 +213,10 @@ open class GitService(
     }
 
 
-    private fun deleteMissingFiles(git: Git, files: Set<String>, keep: (String) -> Boolean) {
+    private fun deleteMissingFiles(git: Git, files: Set<String>) {
         //TODO: If this takes time rewrite to not include File content
         getAllFiles(git)
                 .map { it.key }
-                .filter { keep.invoke(it) }
                 .filter { !files.contains(it) }
                 .forEach { git.rm().addFilepattern(it).call() }
     }

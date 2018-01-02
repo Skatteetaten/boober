@@ -30,7 +30,6 @@ class DeployBundleService(
 
     private val dispatcher: ThreadPoolDispatcher = newFixedThreadPoolContext(validationPoolSize, "validationPool")
 
-    private val GIT_SECRET_FOLDER = ".secret"
     private val logger = LoggerFactory.getLogger(DeployBundleService::class.java)
 
 
@@ -275,12 +274,8 @@ class DeployBundleService(
             it.name to mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it.contents)
         }.toMap()
 
-
-        //when we save auroraConfig we do not want to mess with secret vault files
-        val keep: (String) -> Boolean = { it -> !it.startsWith(GIT_SECRET_FOLDER) }
-
         logger.debug("save files and close")
-        gitService.saveFilesAndClose(repo, configFiles, keep)
+        gitService.saveFilesAndClose(repo, configFiles)
     }
 
     fun findAuroraConfigFile(affiliation: String, fileName: String): AuroraConfigFile? {
