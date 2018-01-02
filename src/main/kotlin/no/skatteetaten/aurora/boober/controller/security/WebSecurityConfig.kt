@@ -45,7 +45,7 @@ class WebSecurityConfig(
             val fullName: String? = principal.get("fullName")?.asText()
 
             MDC.put("user", username)
-            User(username, it.credentials as String, fullName)
+            User(username, it.credentials as String, fullName, it.authorities)
         })
     }
 

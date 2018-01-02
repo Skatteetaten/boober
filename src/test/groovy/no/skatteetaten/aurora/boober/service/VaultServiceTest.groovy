@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import no.skatteetaten.aurora.AuroraMetrics
+import no.skatteetaten.aurora.boober.controller.security.User
 import spock.lang.Specification
 
 class VaultServiceTest extends Specification {
@@ -17,9 +18,7 @@ class VaultServiceTest extends Specification {
 
   def encryptionService = Mock(EncryptionService)
 
-  def permissionService = Mock(PermissionService)
-
-  def vaultService = new VaultService(gitService, encryptionService, permissionService)
+  def vaultService = new VaultService(gitService, encryptionService, userDetailsProvider)
 
   static COLLECTION_NAME = "paas"
 
@@ -29,8 +28,7 @@ class VaultServiceTest extends Specification {
     GitServiceHelperKt.createInitRepo(COLLECTION_NAME)
     GitServiceHelperKt.recreateFolder(new File(CHECKOUT_PATH))
 
-    permissionService.hasUserAccess(_) >> true
-
+    userDetailsProvider.getAuthenticatedUser() >> new User("aurora", "token", "Aurora Test User", [])
     // No encryption/decryption
     _ * encryptionService.decrypt(_) >> { it[0] }
     _ * encryptionService.encrypt(_) >> { it[0] }
