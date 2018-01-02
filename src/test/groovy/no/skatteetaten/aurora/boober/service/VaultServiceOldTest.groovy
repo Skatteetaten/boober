@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.treewalk.TreeWalk
 import org.eclipse.jgit.treewalk.filter.PathFilter
+import org.junit.Ignore
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
@@ -29,6 +30,7 @@ import spock.mock.DetachedMockFactory
     Config,
     AuroraMetrics
 ])
+@Ignore
 class VaultServiceOldTest extends Specification {
 
   public static final String ENV_NAME = "secrettest"

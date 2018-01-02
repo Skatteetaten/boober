@@ -14,7 +14,6 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.EncryptedFileVault
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import spock.lang.Shared
 import spock.lang.Unroll
@@ -47,7 +46,7 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
 
   @Before
   def "Setup git"() {
-    gitService.deleteFiles(affiliation)
+    auroraConfigGitService.deleteFiles(affiliation)
     GitServiceHelperKt.createInitRepo(affiliation)
   }
 

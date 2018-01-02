@@ -21,6 +21,15 @@ class DeployBundleServiceTest extends AbstractMockedOpenShiftSpecification {
   @Autowired
   GitService gitService
 
+  private AuroraConfig getAuroraConfigFromGit(String affiliation, boolean decryptSecrets) {
+
+    def git = gitService.checkoutRepository(affiliation)
+//    def files = auroraConfigGitService.getAllAuroraConfigFiles(git)
+//    def auroraConfig = deployBundleService.createAuroraConfigFromFiles(files.collectEntries { }, "aos")
+    gitService.closeRepository(git)
+return AuroraConfig.fromFolder(gitService.checkoutPath + "/" + affiliation)
+//    return auroraConfig
+  }
 
   def "Should not update one file in AuroraConfig if version is wrong"() {
     given:

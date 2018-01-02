@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.EncryptedFileVault
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
@@ -18,7 +17,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OperationType
 class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
   @Autowired
-  VaultService vaultFacade
+  VaultService vaultService
 
   @Autowired
   OpenShiftClient openShiftClient
@@ -145,22 +144,6 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
       revTag2.ident != null
       revTag2.result.get("deployId") != null
-  }
-
-  def "Should perform release with secret and not include it in git tag"() {
-    given:
-      vaultFacade.save(affiliation, new EncryptedFileVault("foo", ["latest.properties": "1.2.3"]), false)
-
-    when:
-      deployService.executeDeploy(affiliation, [new ApplicationId("secrettest", "aos-simple")], [], true)
-
-    then:
-      def tags = deployService.deployHistory(affiliation)
-      tags.size() == 1
-      def revTag = tags[0]
-      def resp = revTag.result["openShiftResponses"]
-
-      resp.size() == 9
   }
 
   def "Should perform release and tag in docker repo"() {

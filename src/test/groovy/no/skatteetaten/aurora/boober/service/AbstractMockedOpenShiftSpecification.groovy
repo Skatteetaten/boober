@@ -18,7 +18,6 @@ import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
-import no.skatteetaten.aurora.boober.model.EncryptedFileVault
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
@@ -102,7 +101,7 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
   }
 
   @Autowired
-  GitService gitService
+  GitService auroraConfigGitService
 
   @Autowired
   VaultService vaultService
@@ -123,7 +122,7 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
 
   def cleanup() {
     if (git != null) {
-      gitService.closeRepository(git)
+      auroraConfigGitService.closeRepository(git)
     }
   }
 
@@ -147,7 +146,7 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
       userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User", [])
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-      gitService.deleteFiles(auroraConfig.affiliation)
+      auroraConfigGitService.deleteFiles(auroraConfig.affiliation)
       GitServiceHelperKt.createInitRepo(auroraConfig.affiliation)
       GitServiceHelperKt.recreateRepo(new File("/tmp/vaulttest/aos"))
       GitServiceHelperKt.recreateRepo(new File("/tmp/boobertest/aos"))
@@ -155,13 +154,13 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
       vaultService.createOrUpdateFileInVault("aos", "foo", "latest.properties", "FOO=BAR")
 //      vaultService.save("aos", vault, false)
       deployBundleService.saveAuroraConfig(auroraConfig, false)
-      git = gitService.openRepo(auroraConfig.affiliation)
+      git = auroraConfigGitService.openRepo(auroraConfig.affiliation)
     }
   }
 
   void createRepoAndSaveFiles(AuroraConfig auroraConfig) {
 
-    gitService.deleteFiles(auroraConfig.affiliation)
+    auroraConfigGitService.deleteFiles(auroraConfig.affiliation)
     GitServiceHelperKt.createInitRepo(auroraConfig.affiliation)
     deployBundleService.saveAuroraConfig(auroraConfig, false)
   }

@@ -198,7 +198,8 @@ class OpenShiftObjectGenerator(
             val buildParams = mapOf(
                     "labels" to labels,
                     "buildName" to buildName,
-                    "build" to it
+                    "build" to it,
+                    "dockerRegistry" to dockerRegistry
             )
             val applicationPlatform = it.applicationPlatform
             val template = when (applicationPlatform) {
