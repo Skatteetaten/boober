@@ -1,64 +1,115 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
-import no.skatteetaten.aurora.boober.controller.internal.AuroraConfigPayload
+import com.fasterxml.jackson.annotation.JsonRawValue
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.skatteetaten.aurora.boober.controller.internal.JsonDataFiles
 import no.skatteetaten.aurora.boober.controller.internal.Response
-import no.skatteetaten.aurora.boober.controller.internal.fromAuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.service.DeployBundleService
+import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.utils.logger
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.util.AntPathMatcher
+import org.springframework.web.bind.annotation.*
+import javax.servlet.http.HttpServletRequest
+import javax.validation.Valid
+
+data class AuroraConfigResource(
+        val name: String,
+        val files: JsonDataFiles = mapOf(),
+        val versions: Map<String, String?> = mapOf()
+)
+
+data class UpdateAuroraConfigFilePayload(
+        val version: String = "",
+        val validateVersions: Boolean = true,
+
+        @JsonRawValue
+        val content: String
+) {
+    val contentAsJsonNode: JsonNode
+        get() = jacksonObjectMapper().readValue(this.content, JsonNode::class.java)
+}
 
 @RestController
-@RequestMapping("/v1/auroraconfig/{affiliation}")
-class AuroraConfigControllerV1(val deployBundleService: DeployBundleService) {
+@RequestMapping("/v1/auroraconfig/{name}")
+class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
 
     val logger by logger()
 
+    @GetMapping()
+    fun get(@PathVariable name: String): Response {
+        return createAuroraConfigResponse(auroraConfigService.findAuroraConfig(name))
+    }
+
     @GetMapping("/filenames")
-    fun getFilenames(@PathVariable affiliation: String): Response {
-        logger.info("Henter aurora config filenames affiliation={}", affiliation)
-        val res = Response(items = deployBundleService.findAuroraConfigFileNames(affiliation))
-        logger.debug("/Henter aurora config filenames")
-        return res
+    fun getFilenames(@PathVariable name: String): Response {
+        return Response(items = auroraConfigService.findAuroraConfigFileNames(name))
     }
 
-
-    @PutMapping()
-    fun save(@PathVariable affiliation: String,
-             @RequestBody payload: AuroraConfigPayload): Response {
-
-        logger.info("Save aurora config affilation={}", affiliation)
-        val auroraConfig = deployBundleService.saveAuroraConfig(payload.toAuroraConfig(affiliation), payload.validateVersions)
-        val res = createAuroraConfigResponse(auroraConfig)
-
-        logger.debug("/Save aurora config")
-        return res
-    }
-
+/*
     @PutMapping("/validate")
-    fun validateAuroraConfig(@PathVariable affiliation: String, @RequestBody payload: AuroraConfigPayload): Response {
+    fun validateAuroraConfig(@PathVariable name: String, @RequestBody payload: AuroraConfigResource): Response {
 
-        val auroraConfig = deployBundleService.validateDeployBundleWithAuroraConfig(affiliation, payload.toAuroraConfig(affiliation))
+        val auroraConfig = deployBundleService.validateDeployBundleWithAuroraConfig(name, payload.toAuroraConfig(name))
+        return createAuroraConfigResponse(auroraConfig)
+    }
+*/
+
+    @GetMapping("/**")
+    fun getAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest): Response {
+
+        val fileName = extractFileName(affiliation, request)
+        val configFiles = auroraConfigService.findAuroraConfigFile(affiliation, fileName)
+                ?.let { listOf(it) } ?: emptyList()
+
+        return Response(items = configFiles)
+    }
+
+
+    @PutMapping("/**")
+    fun updateAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest,
+                               @RequestBody @Valid payload: UpdateAuroraConfigFilePayload): Response {
+
+        if (payload.validateVersions && payload.version.isEmpty()) {
+            throw IllegalAccessException("Must specify version");
+        }
+        val fileName = extractFileName(affiliation, request)
+
+        val auroraConfig = deployBundleService.updateAuroraConfigFile(affiliation, fileName,
+                payload.contentAsJsonNode, payload.version, payload.validateVersions)
         return createAuroraConfigResponse(auroraConfig)
     }
 
-    @GetMapping()
-    fun get(@PathVariable affiliation: String): Response {
-        logger.info("Henter aurora config affiliation={}", affiliation)
-        val res = createAuroraConfigResponse(deployBundleService.findAuroraConfig(affiliation))
-        logger.debug("/Henter aurora config")
-        return res
+
+    @PatchMapping("/**")
+    fun patchAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest,
+                              @RequestBody @Valid payload: UpdateAuroraConfigFilePayload): Response {
+
+        if (payload.validateVersions && payload.version.isEmpty()) {
+            throw IllegalAccessException("Must specify version");
+        }
+
+        val fileName = extractFileName(affiliation, request)
+
+        val auroraConfig = deployBundleService.patchAuroraConfigFile(affiliation, fileName,
+                payload.content, payload.version, payload.validateVersions)
+        return createAuroraConfigResponse(auroraConfig)
     }
 
+    private fun extractFileName(affiliation: String, request: HttpServletRequest): String {
+        val path = "v1/auroraconfig/$affiliation/**"
+        return AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
+    }
 
     private fun createAuroraConfigResponse(auroraConfig: AuroraConfig): Response {
-        return Response(items = listOf(auroraConfig).map(::fromAuroraConfig))
+        return Response(items = listOf(auroraConfig).map { fromAuroraConfig(it) })
+    }
+
+
+    fun fromAuroraConfig(auroraConfig: AuroraConfig): AuroraConfigResource {
+
+        val files: JsonDataFiles = auroraConfig.auroraConfigFiles.associate { it.name to it.contents }
+        val versions = auroraConfig.auroraConfigFiles.associate { it.name to it.version }
+        return AuroraConfigResource(auroraConfig.affiliation, files, versions = versions)
     }
 }
-
-

@@ -277,26 +277,4 @@ class DeployBundleService(
         logger.debug("save files and close")
         gitService.saveFilesAndClose(repo, configFiles)
     }
-
-    fun findAuroraConfigFile(affiliation: String, fileName: String): AuroraConfigFile? {
-        logger.debug("Find aurora config filename={}", fileName)
-        val repo = getRepo(affiliation)
-        val file = gitService.getFile(repo, fileName)
-        val jsonFile = file?.let {
-            AuroraConfigFile(it.path, mapper.readValue(it)/*, version = it.commit?.abbreviate(7)?.name()*/)
-        }
-        gitService.closeRepository(repo)
-        logger.debug("/Find aurora config file")
-        return jsonFile
-
-
-    }
-
-    fun findAuroraConfigFileNames(affiliation: String): List<String> {
-        val repo = getRepo(affiliation)
-        val files = gitService.getAllAuroraConfigFiles(repo).map { it.key }
-        gitService.closeRepository(repo)
-        return files
-
-    }
 }

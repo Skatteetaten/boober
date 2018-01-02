@@ -10,34 +10,6 @@ import no.skatteetaten.aurora.boober.service.DeployParams
 
 typealias JsonDataFiles = Map<String, JsonNode>
 
-data class AuroraConfigPayload(
-        val files: JsonDataFiles = mapOf(),
-        val versions: Map<String, String?> = mapOf(),
-        val validateVersions: Boolean = true
-) {
-    fun toAuroraConfig(affiliation: String): AuroraConfig {
-        val auroraConfigFiles = files.map { AuroraConfigFile(it.key, it.value, version = versions[it.key]) }
-        return AuroraConfig(auroraConfigFiles, affiliation)
-    }
-}
-
-data class UpdateAuroraConfigFilePayload(
-        val version: String = "",
-        val validateVersions: Boolean = true,
-
-        @JsonRawValue
-        val content: String
-) {
-    val contentAsJsonNode: JsonNode
-        get() = jacksonObjectMapper().readValue(this.content, JsonNode::class.java)
-}
-
-fun fromAuroraConfig(auroraConfig: AuroraConfig): AuroraConfigPayload {
-
-    val files: JsonDataFiles = auroraConfig.auroraConfigFiles.associate { it.name to it.contents }
-    val versions = auroraConfig.auroraConfigFiles.associate { it.name to it.version }
-    return AuroraConfigPayload(files, versions = versions)
-}
 
 data class SetupParamsPayload(
         val envs: List<String> = listOf(),
