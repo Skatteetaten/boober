@@ -16,10 +16,12 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class OpenShiftObjectGenerator(
+        @Value("\${boober.docker.registry}") val dockerRegistry: String,
         val openShiftObjectLabelService: OpenShiftObjectLabelService,
         val velocityTemplateJsonService: VelocityTemplateJsonService,
         val mapper: ObjectMapper,
@@ -134,7 +136,8 @@ class OpenShiftObjectGenerator(
                     "labels" to labels,
                     "deploy" to it,
                     "name" to auroraDeploymentSpec.name,
-                    "type" to auroraDeploymentSpec.type.name
+                    "type" to auroraDeploymentSpec.type.name,
+                    "dockerRegistry" to dockerRegistry
             ))
         }
     }

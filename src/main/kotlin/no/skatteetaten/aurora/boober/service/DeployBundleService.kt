@@ -21,7 +21,6 @@ import java.io.File
 
 @Service
 class DeployBundleService(
-        @Value("\${boober.docker.registry}") val dockerRegistry: String,
         val deploymentSpecValidator: AuroraDeploymentSpecValidator,
         val gitService: GitService,
         val mapper: ObjectMapper,

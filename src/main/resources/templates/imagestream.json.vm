@@ -15,13 +15,13 @@
 #if (${type} == "deploy")
 ,
 "spec": {
-"dockerImageRepository": "${deploy.dockerImagePath}",
+"dockerImageRepository": "${dockerRegistry}/${deploy.dockerImagePath}",
 "tags": [
 {
 "name": "default",
 "from": {
 "kind": "DockerImage",
-"name": "${deploy.dockerImagePath}:${deploy.dockerTag}"
+"name": "${dockerRegistry}/${deploy.dockerImagePath}:${deploy.dockerTag}"
 },
 "importPolicy": {
 "scheduled": true

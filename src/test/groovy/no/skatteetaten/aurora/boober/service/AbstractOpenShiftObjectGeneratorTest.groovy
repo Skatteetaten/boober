@@ -14,6 +14,7 @@ class AbstractOpenShiftObjectGeneratorTest extends AbstractAuroraDeploymentSpecT
     def userDetailsProvider = Mock(UserDetailsProvider)
     userDetailsProvider.getAuthenticatedUser() >> new User("aurora", "token", "Aurora OpenShift", [])
     new OpenShiftObjectGenerator(
+        "docker-registry.aurora.sits.no:5000",
         new OpenShiftObjectLabelService(userDetailsProvider), new VelocityTemplateJsonService(ve, objectMapper), objectMapper,
         Mock(OpenShiftTemplateProcessor), Mock(OpenShiftResourceClient))
   }
