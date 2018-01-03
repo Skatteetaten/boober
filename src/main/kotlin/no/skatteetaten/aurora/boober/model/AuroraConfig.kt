@@ -11,6 +11,11 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
         fun fromFolder(folderName: String): AuroraConfig {
 
             val folder = File(folderName)
+            return fromFolder(folder)
+        }
+
+        @JvmStatic
+        fun fromFolder(folder: File): AuroraConfig {
             val files = folder.walkBottomUp()
                     .onEnter { !setOf(".secret", ".git").contains(it.name) }
                     .filter { it.isFile }

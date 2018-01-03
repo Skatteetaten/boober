@@ -8,7 +8,10 @@ import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.GitServices.Domain.AURORA_CONFIG
 import no.skatteetaten.aurora.boober.service.GitServices.TargetDomain
+import org.apache.commons.io.FileUtils
+import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.InvalidRemoteException
+import org.eclipse.jgit.lib.PersonIdent
 import org.springframework.stereotype.Service
 import java.io.File
 
@@ -29,10 +32,46 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
 
     fun findAuroraConfigFile(name: String, fileName: String): AuroraConfigFile? {
 
+        // TODO: Implement using AuroraConfig.auroraConfigFiles
         updateLocalFilesFromGit(name)
         val file = getAuroraConfigFile(name, fileName)
         return if (file.exists()) AuroraConfigFile(file.path, jacksonObjectMapper().readValue(file))
         else throw IllegalArgumentException("No such file $fileName in AuroraConfig $name")
+    }
+
+    fun save(auroraConfig: AuroraConfig): AuroraConfig {
+
+        val mapper = jacksonObjectMapper()
+
+        val repo = getUpdatedRepo(auroraConfig.affiliation)
+        val checkoutDir = getAuroraConfigFolder(auroraConfig.affiliation)
+        val existing = AuroraConfig.fromFolder(checkoutDir)
+        existing.auroraConfigFiles.forEach {
+            val outputFile = File(checkoutDir, it.name)
+            FileUtils.deleteQuietly(outputFile)
+        }
+
+        auroraConfig.auroraConfigFiles.forEach {
+            val prettyContent = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it.contents)
+            val outputFile = File(getAuroraConfigFolder(auroraConfig.affiliation), it.name)
+            FileUtils.forceMkdirParent(outputFile)
+            outputFile.writeText(prettyContent)
+        }
+
+        repo.add().addFilepattern(".").call()
+        repo.commit()
+                .setAll(true)
+                .setAllowEmpty(false)
+                .setAuthor(PersonIdent("anonymous", "anonymous@skatteetaten.no"))
+                .setMessage("")
+                .call()
+        repo.push()
+                //                .setCredentialsProvider(cp)
+                .add("refs/heads/master")
+                .call()
+        repo.close()
+
+        return auroraConfig
     }
 
     fun updateAuroraConfigFile(name: String, fileName: String, contents: String, fileHash: String? = null): AuroraConfig {
@@ -66,8 +105,13 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
     private fun getAuroraConfigFolder(name: String) = File(gitService.checkoutPath, name)
 
     private fun updateLocalFilesFromGit(name: String) {
-        try {
-            gitService.checkoutRepository(name).close()
+        val repository = getUpdatedRepo(name)
+        repository.close()
+    }
+
+    private fun getUpdatedRepo(name: String): Git {
+        return try {
+            gitService.checkoutRepository(name)
         } catch (e: InvalidRemoteException) {
             throw IllegalArgumentException("No such AuroraConfig $name")
         } catch (e: Exception) {
