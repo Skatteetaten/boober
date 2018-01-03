@@ -35,6 +35,7 @@ import spock.mock.DetachedMockFactory
     OpenShiftTemplateProcessor,
     GitServices,
     EncryptionService,
+    AuroraConfigService,
     DeployBundleService,
     VaultService,
     ObjectMapper,
@@ -116,6 +117,9 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
   DeployBundleService deployBundleService
 
   @Autowired
+  AuroraConfigService auroraConfigService
+
+  @Autowired
   ObjectMapper mapper
 
   def git
@@ -153,7 +157,7 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
 
       vaultService.createOrUpdateFileInVault("aos", "foo", "latest.properties", "FOO=BAR")
 //      vaultService.save("aos", vault, false)
-      deployBundleService.saveAuroraConfig(auroraConfig, false)
+      auroraConfigService.save(auroraConfig)
       git = auroraConfigGitService.openRepo(auroraConfig.affiliation)
     }
   }
@@ -162,7 +166,7 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
 
     auroraConfigGitService.deleteFiles(auroraConfig.affiliation)
     GitServiceHelperKt.createInitRepo(auroraConfig.affiliation)
-    deployBundleService.saveAuroraConfig(auroraConfig, false)
+    auroraConfigService.save(auroraConfig)
   }
 
   def createOpenShiftResponse(String kind, OperationType operationType, int prevVersion, int currVersion) {

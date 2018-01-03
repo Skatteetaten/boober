@@ -29,7 +29,7 @@ class AuroraConfigTest extends Specification {
       def updates = mapper.convertValue(["version": "4"], JsonNode.class)
 
     when:
-      def updatedAuroraConfig = auroraConfig.updateFile("booberdev/console.json", updates, "123")
+      def updatedAuroraConfig = auroraConfig.updateFile("booberdev/console.json", updates)
 
     then:
       def version = updatedAuroraConfig.getAuroraConfigFiles().stream()
@@ -117,10 +117,10 @@ class AuroraConfigTest extends Specification {
   }
 
   List<AuroraConfigFile> createMockFiles(String... files) {
-    files.collect { new AuroraConfigFile(it, mapper.readValue("{}", JsonNode.class), false, null) }
+    files.collect { new AuroraConfigFile(it, mapper.readValue("{}", JsonNode.class), false) }
   }
 
   def overrideFile(String fileName) {
-    new AuroraConfigFile(fileName, mapper.readValue("{}", JsonNode.class), true, null)
+    new AuroraConfigFile(fileName, mapper.readValue("{}", JsonNode.class), true)
   }
 }

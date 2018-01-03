@@ -59,11 +59,13 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
         }
 
         repo.add().addFilepattern(".").call()
+        val status = repo.status().call()
+        val message = "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}"
         repo.commit()
                 .setAll(true)
                 .setAllowEmpty(false)
                 .setAuthor(PersonIdent("anonymous", "anonymous@skatteetaten.no"))
-                .setMessage("")
+                .setMessage(message)
                 .call()
         repo.push()
                 //                .setCredentialsProvider(cp)
@@ -74,29 +76,28 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
         return auroraConfig
     }
 
-    fun updateAuroraConfigFile(name: String, fileName: String, contents: String, fileHash: String? = null): AuroraConfig {
+    fun updateAuroraConfigFile(name: String, fileName: String, contents: String, previousVersion: String? = null): AuroraConfig {
 
-        updateLocalFilesFromGit(name)
-        jacksonObjectMapper().readValue(contents, JsonNode::class.java)
-        getAuroraConfigFile(name, fileName).writeText(contents)
+        val jsonContents = jacksonObjectMapper().readValue(contents, JsonNode::class.java)
+        val auroraConfig = findAuroraConfig(name).updateFile(fileName, jsonContents, previousVersion)
 
-        // TODO: Commit
-        return findAuroraConfig(name)
+        return save(auroraConfig)
     }
 
-    fun patchAuroraConfigFile(name: String, filename: String, jsonPatchOp: String, configFileVersion: String, validateVersions: Boolean): AuroraConfig {
+    fun patchAuroraConfigFile(name: String, filename: String, jsonPatchOp: String, previousVersion: String? = null): AuroraConfig {
 
         val auroraConfig = findAuroraConfig(name)
         val mapper = jacksonObjectMapper()
         val patch: JsonPatch = mapper.readValue(jsonPatchOp, JsonPatch::class.java)
 
-        val auroraConfigFile = auroraConfig.auroraConfigFiles.filter { it.name == filename }.first()
+        val auroraConfigFile = auroraConfig.findFile(filename)
+                ?: throw IllegalArgumentException("No such file $filename in AuroraConfig ${auroraConfig.affiliation}")
         val originalContentsNode = mapper.convertValue(auroraConfigFile.contents, JsonNode::class.java)
 
         val fileContents = patch.apply(originalContentsNode)
-        auroraConfig.updateFile(filename, fileContents, configFileVersion)
-        // TODO: Save and commit
-        return auroraConfig
+        val updatedAuroraConfig = auroraConfig.updateFile(filename, fileContents, previousVersion)
+
+        return save(updatedAuroraConfig)
     }
 
     private fun getAuroraConfigFile(name: String, fileName: String) =

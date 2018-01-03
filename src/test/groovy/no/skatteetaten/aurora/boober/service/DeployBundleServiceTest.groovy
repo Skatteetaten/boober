@@ -31,116 +31,13 @@ return AuroraConfig.fromFolder(gitService.checkoutPath + "/" + affiliation)
 //    return auroraConfig
   }
 
-  def "Should not update one file in AuroraConfig if version is wrong"() {
-    given:
-      def fileToChange = "secrettest/aos-simple.json"
-
-      def newFile = mapper.convertValue([], JsonNode.class)
-
-    when:
-
-      deployBundleService.updateAuroraConfigFile("aos", fileToChange, newFile, "wrong version", true)
-    then:
-
-      def e = thrown(AuroraVersioningException)
-      e.errors.size() == 1
-
-  }
-
-  def "Should update one file in AuroraConfig"() {
-    given:
-      def storedConfig = deployBundleService.findAuroraConfig("aos")
-
-      def fileToChange = "secrettest/aos-simple.json"
-      def theFileToChange = storedConfig.auroraConfigFiles.find { it.name == fileToChange }
-
-      def newFile = mapper.convertValue([], JsonNode.class)
-
-    when:
-      deployBundleService.updateAuroraConfigFile("aos", fileToChange, newFile, theFileToChange.version, true)
-
-
-    then:
-      def git = gitService.checkoutRepository("aos")
-      def gitLog = git.log().call().head()
-      gitService.closeRepository(git)
-      gitLog.authorIdent.name == "Test User"
-      gitLog.fullMessage == "Added: 0, Modified: 1, Deleted: 0"
-  }
-
-  def "Should successfully save AuroraConfig"() {
-    given:
-
-      def json = mapper.convertValue(["name": "test%qwe)"], JsonNode.class)
-      def newFile = new AuroraConfigFile("foo", json, false, null)
-      def newConfig = new AuroraConfig([newFile], affiliation)
-
-    when:
-      deployBundleService.saveAuroraConfig(newConfig, false)
-
-    then:
-      def git = gitService.checkoutRepository("aos")
-      def gitLog = git.log().call().head()
-      gitService.closeRepository(git)
-
-      gitLog.fullMessage.contains("Added: 1")
-  }
-
-  def "Should get error trying to set version as int"() {
-    given:
-      def gitAuroraConfig = getAuroraConfigFromGit("aos", false)
-
-      def jsonOp = """[{
-  "op": "replace",
-  "path": "/version",
-  "value": 3
-}]
-"""
-
-    when:
-      def filename = "${aid.environment}/${aid.application}.json"
-
-      def version = gitAuroraConfig.auroraConfigFiles.find { it.name == filename }.version
-      deployBundleService.patchAuroraConfigFile("aos", filename, jsonOp, version, false)
-
-    then:
-      def ex = thrown(MultiApplicationValidationException)
-      ex.errors[0].throwable.message == "Config for application aos-simple in environment secrettest contains errors. Version must be set as string, Version must be set."
-  }
-
-  def "Should patch AuroraConfigFile and push changes to git"() {
-    given:
-      def gitAuroraConfig = getAuroraConfigFromGit("aos", false)
-
-      def jsonOp = """[{
-  "op": "replace",
-  "path": "/version",
-  "value": "3"
-}]
-"""
-
-    when:
-      def filename = "${aid.environment}/${aid.application}.json"
-
-      def version = gitAuroraConfig.auroraConfigFiles.find { it.name == filename }.version
-      def patchedAuroraConfig = deployBundleService.patchAuroraConfigFile("aos", filename, jsonOp, version, false)
-      def git = gitService.checkoutRepository("aos")
-      def gitLog = git.log().call().head()
-      gitService.closeRepository(git)
-
-    then:
-      gitLog.fullMessage == "Added: 0, Modified: 1, Deleted: 0"
-      def patchedFile = patchedAuroraConfig.auroraConfigFiles.find { it.name == filename }
-      patchedFile.contents.at("/version").textValue() == "3"
-  }
-
   def "Should return error when name is too long"() {
 
     given:
       def overrideFile = mapper.
           convertValue(["name": "this-is-a-really-really-very-very-long-name-that-is-not-alloweed-over-40-char"],
               JsonNode.class)
-      def overrides = [new AuroraConfigFile("${aid.environment}/${aid.application}.json", overrideFile, true, null)]
+      def overrides = [new AuroraConfigFile("${aid.environment}/${aid.application}.json", overrideFile, true)]
     when:
       deployBundleService.createAuroraDeploymentSpec("aos", aid, overrides)
 
@@ -153,7 +50,7 @@ return AuroraConfig.fromFolder(gitService.checkoutPath + "/" + affiliation)
 
     given:
       def overrideFile = mapper.convertValue(["name": "test%qwe)"], JsonNode.class)
-      def overrides = [new AuroraConfigFile("${aid.environment}/${aid.application}.json", overrideFile, true, null)]
+      def overrides = [new AuroraConfigFile("${aid.environment}/${aid.application}.json", overrideFile, true)]
     when:
       deployBundleService.createAuroraDeploymentSpec("aos", aid, overrides)
 
@@ -162,11 +59,14 @@ return AuroraConfig.fromFolder(gitService.checkoutPath + "/" + affiliation)
       ex.errors[0].field.handler.name == 'name'
   }
 
+  // The next two tests should probably be covered without having to go through DeployBundleService.
+/*
+
   def "Should return error when there are unmapped paths"() {
 
     given:
       def overrideFile = mapper.convertValue(["foo": "test%qwe)"], JsonNode.class)
-      def overrides = [new AuroraConfigFile("${aid.environment}/${aid.application}.json", overrideFile, true, null)]
+      def overrides = [new AuroraConfigFile("${aid.environment}/${aid.application}.json", overrideFile, true)]
     when:
       deployBundleService.createAuroraDeploymentSpec("aos", aid, overrides)
 
@@ -186,7 +86,7 @@ return AuroraConfig.fromFolder(gitService.checkoutPath + "/" + affiliation)
       (files.get("aos-simple.json") as ObjectNode).remove("version")
       (files.get("$aid.environment/aos-simple.json" as String) as ObjectNode).remove("version")
       AuroraConfig auroraConfig =
-          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false, null) }, "aos")
+          new AuroraConfig(files.collect { new AuroraConfigFile(it.key, it.value, false) }, "aos")
 
       gitService.deleteFiles(auroraConfig.affiliation)
       GitServiceHelperKt.createInitRepo(auroraConfig.affiliation)
@@ -199,4 +99,5 @@ return AuroraConfig.fromFolder(gitService.checkoutPath + "/" + affiliation)
       def ex = thrown(MultiApplicationValidationException)
       ex.errors[0].throwable.message == "Config for application aos-simple in environment booberdev contains errors. Version must be set as string, Version must be set."
   }
+*/
 }

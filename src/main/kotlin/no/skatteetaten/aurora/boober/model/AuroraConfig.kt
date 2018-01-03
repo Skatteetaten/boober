@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.model
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.io.File
+import java.util.*
 
 data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affiliation: String) {
 
@@ -59,16 +60,23 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
         return allFiles
     }
 
-    fun updateFile(name: String, contents: JsonNode, configFileVersion: String): AuroraConfig {
+    fun findFile(filename: String): AuroraConfigFile? = auroraConfigFiles.find { it.name == filename }
+
+    @JvmOverloads
+    fun updateFile(name: String, contents: JsonNode, previousVersion: String? = null): AuroraConfig {
 
         val files = auroraConfigFiles.toMutableList()
         val indexOfFileToUpdate = files.indexOfFirst { it.name == name }
-        val newAuroraConfigFile = AuroraConfigFile(name, contents, version = configFileVersion)
+        val currentFile = files[indexOfFileToUpdate]
+        val newFile = AuroraConfigFile(name, contents)
+        if (previousVersion != null && currentFile.version != previousVersion) {
+            throw AuroraVersioningException(this, currentFile, previousVersion)
+        }
 
         if (indexOfFileToUpdate == -1) {
-            files.add(newAuroraConfigFile)
+            files.add(newFile)
         } else {
-            files[indexOfFileToUpdate] = newAuroraConfigFile
+            files[indexOfFileToUpdate] = newFile
         }
 
         return this.copy(auroraConfigFiles = files)

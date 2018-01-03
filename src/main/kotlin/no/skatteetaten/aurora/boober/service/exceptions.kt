@@ -45,10 +45,6 @@ fun List<Pair<AuroraDeploymentSpec?, ExceptionWrapper?>>.onErrorThrow(block: (Li
     return this.mapNotNull { it.first }
 }
 
-data class VersioningError(val fileName: String, val name: String, val date: Date)
-
-class AuroraVersioningException(message: String, val errors: List<VersioningError>) : ServiceException(message)
-
 class ProvisioningException(message: String, cause: Throwable? = null) : ServiceException(message, cause)
 
 class AuroraConfigServiceException(message: String, cause: Throwable? = null) : ServiceException(message, cause)
