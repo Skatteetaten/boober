@@ -50,10 +50,9 @@ data class AuroraDeploymentSpec(
 }
 
 data class AuroraVolume(
-        val secrets: Map<String, String>?,
+        val secretVaultName: String?,
         val config: Map<String, Any?>?,
-        val mounts: List<Mount>?,
-        val permissions:    AuroraPermissions?
+        val mounts: List<Mount>?
 )
 
 data class AuroraRoute(
@@ -133,8 +132,8 @@ data class Mount(
         val mountName: String,
         val volumeName: String,
         val exist: Boolean,
-        val content: Map<String, Any?>?,
-        val permissions: AuroraPermissions? = null
+        val content: Map<String, Any?>?/*,
+        val permissions: AuroraPermissions? = null*/
 )
 
 

@@ -87,7 +87,7 @@ class VaultServiceOldTest extends Specification {
 
   def setup() {
     gitService.deleteFiles(affiliation)
-    GitServiceHelperKt.createInitRepo(affiliation)
+    GitServiceHelperKt.recreateEmptyBareRepos(affiliation)
   }
 
   def cleanup() {

@@ -3,7 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import org.eclipse.jgit.api.Git
 import java.io.File
 
-fun createInitRepo(affiliation: String) {
+fun recreateEmptyBareRepos(affiliation: String) {
 
     // TODO: Clean up this. We should only use build relative folders.
     recreateRepo(File("/tmp/vaulttest/aos"))
@@ -11,6 +11,11 @@ fun createInitRepo(affiliation: String) {
 
     recreateRepo(File("build/gitrepos/$affiliation.git"))
     recreateRepo(File("build/vaultrepos/$affiliation.git"))
+}
+
+fun recreateCheckoutFolders() {
+    recreateFolder("build/boobercheckout")
+    recreateFolder("build/vaultcheckout")
 }
 
 fun recreateRepo(folder: File): Git {

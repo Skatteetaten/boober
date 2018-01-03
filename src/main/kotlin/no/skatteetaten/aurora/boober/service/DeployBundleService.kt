@@ -163,9 +163,8 @@ class DeployBundleService(
 
         val auroraConfig = deployBundle.auroraConfig
         val overrideFiles = deployBundle.overrideFiles
-        val vaults = deployBundle.vaults
 
-        return createAuroraDeploymentSpec(auroraConfig, aid, overrideFiles, vaults)
+        return createAuroraDeploymentSpec(auroraConfig, aid, overrideFiles)
     }
 
     private fun tryCreateAuroraDeploymentSpec(deployBundle: DeployBundle, aid: ApplicationId): Pair<AuroraDeploymentSpec?, ExceptionWrapper?> {

@@ -56,7 +56,7 @@ class OpenShiftObjectGenerator(
                     .addIfNotNull(generateService(auroraDeploymentSpec, labels))
                     .addIfNotNull(generateImageStream(deployId, auroraDeploymentSpec))
                     .addIfNotNull(generateBuilds(auroraDeploymentSpec, deployId))
-                    .addIfNotNull(generateMount(mounts, labels))
+                    .addIfNotNull(generateMounts(mounts, labels))
                     .addIfNotNull(generateRoute(auroraDeploymentSpec, labels))
                     .addIfNotNull(generateTemplate(auroraDeploymentSpec))
                     .addIfNotNull(generateLocalTemplate(auroraDeploymentSpec))
@@ -170,12 +170,12 @@ class OpenShiftObjectGenerator(
         }
     }
 
-    fun generateMount(deploymentSpec: AuroraDeploymentSpec, deployId: String): List<JsonNode>? {
+    fun generateMounts(deploymentSpec: AuroraDeploymentSpec, deployId: String): List<JsonNode>? {
 
-        return withLabelsAndMounts(deployId, deploymentSpec, null, { labels, mounts -> generateMount(mounts, labels) })
+        return withLabelsAndMounts(deployId, deploymentSpec, null, { labels, mounts -> generateMounts(mounts, labels) })
     }
 
-    private fun generateMount(mounts: List<Mount>?, labels: Map<String, String>): List<JsonNode>? {
+    private fun generateMounts(mounts: List<Mount>?, labels: Map<String, String>): List<JsonNode>? {
         return mounts?.filter { !it.exist }?.map {
             logger.trace("Create manual mount {}", it)
             val mountParams = mapOf(
@@ -235,10 +235,11 @@ class OpenShiftObjectGenerator(
                     volumeName = auroraDeploymentSpec.name,
                     mountName = "config",
                     exist = false,
-                    content = it, permissions = null)
+                    content = it)
         }
 
-        val secretMount = auroraDeploymentSpec.volume?.secrets?.let {
+/*
+        val secretMount = auroraDeploymentSpec.volume?.secretVaultName?.let {
             Mount(path = "/u01/config/secret",
                     type = MountType.Secret,
                     volumeName = auroraDeploymentSpec.name,
@@ -246,6 +247,7 @@ class OpenShiftObjectGenerator(
                     exist = false,
                     content = it)
         }
+*/
 
         val certMount = auroraDeploymentSpec.deploy?.certificateCn?.let {
             Mount(path = "/u01/secrets/app/${auroraDeploymentSpec.name}-cert",
@@ -256,7 +258,7 @@ class OpenShiftObjectGenerator(
                     content = null)
             //TODO: Add sprocket content here
         }
-        return mounts.addIfNotNull(configMount).addIfNotNull(secretMount).addIfNotNull(certMount)
+        return mounts.addIfNotNull(configMount)/*.addIfNotNull(secretMount)*/.addIfNotNull(certMount)
     }
 
     fun createMountsFromProvisioningResult(deploymentSpec: AuroraDeploymentSpec,

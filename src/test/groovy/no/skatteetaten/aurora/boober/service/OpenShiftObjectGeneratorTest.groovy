@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import org.junit.Before
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 
@@ -31,32 +32,36 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
   DeployBundleService deployBundleService
 
   @Autowired
+  AuroraConfigService auroraConfigService
+
+  @Autowired
   DeployService deployService
 
   @Autowired
   ObjectMapper mapper
 
+  @Value("\$")
+  String checkoutFolder
+
   @Shared
   def file = new ObjectMapper().convertValue([version: "1.0.4"], JsonNode.class)
 
   @Shared
-  def booberDevAosSimpleOverrides = [new AuroraConfigFile("booberdev/aos-simple.json", file, true, null)]
+  def booberDevAosSimpleOverrides = [new AuroraConfigFile("booberdev/aos-simple.json", file, true)]
 
   def affiliation = "aos"
 
   @Before
   def "Setup git"() {
-    auroraConfigGitService.deleteFiles(affiliation)
-    GitServiceHelperKt.createInitRepo(affiliation)
+    GitServiceHelperKt.recreateCheckoutFolders()
+    GitServiceHelperKt.recreateEmptyBareRepos(affiliation)
   }
 
   @Unroll
   def "should create openshift objects for #env/#name"() {
 
     given:
-//      def vault = new EncryptedFileVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
-//      vaultService.save(affiliation, vault, false)
-      vaultService.createOrUpdateFileInVault(affiliation, "foo", "latest.properties", "FOO: BAR")
+      vaultService.createOrUpdateFileInVault(affiliation, "foo", "latest.properties", "FOO=BAR")
 
       def aid = new ApplicationId(env, name)
       def additionalFile = null
@@ -74,7 +79,7 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
         }
       }
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, affiliation, additionalFile)
-      deployBundleService.saveAuroraConfig(auroraConfig, false)
+      auroraConfigService.save(auroraConfig)
 
     expect:
 

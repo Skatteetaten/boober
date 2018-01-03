@@ -62,7 +62,7 @@ class DeployService(
             val deploymentSpecs: List<AuroraDeploymentSpec> = deployBundleService.createAuroraDeploymentSpecs(it, applicationIds)
             val deployResults: List<AuroraDeployResult> = deploymentSpecs
                     .filter { it.cluster == cluster }
-                    .filter { hasAccessToAllVolumes(it.volume) }
+//                    .filter { hasAccessToAllVolumes(it.volume) }
                     .map {
                         logger.debug("deploy from spec")
                         val res = deployFromSpec(it, deploy)
@@ -218,8 +218,10 @@ class DeployService(
         gitService.pushTags(repo, refs)
     }
 
+/*
     fun hasAccessToAllVolumes(volume: AuroraVolume?): Boolean {
         if (volume == null) return true
+
 
         val secretAccess = permissionService.hasUserAccess(volume.permissions)
 
@@ -231,6 +233,7 @@ class DeployService(
         return secretAccess && volumeAccess
 
     }
+*/
 
     private fun filterSensitiveInformation(result: AuroraDeployResult): AuroraDeployResult {
 

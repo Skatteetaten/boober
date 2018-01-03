@@ -1,59 +1,33 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
-import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.EncryptedFileVault
 import no.skatteetaten.aurora.boober.model.AuroraVolume
+import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.required
+import org.apache.commons.lang.StringEscapeUtils
 
-class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>,
-                           val vaults: Map<String, EncryptedFileVault>) {
+class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>) {
 
-
-    val mountHandlers = findMounts()
+    val mountHandlers = createMountHandlers()
     val configHandlers = applicationFiles.findConfigFieldHandlers()
 
-    val handlers = configHandlers + mountHandlers + listOf(
-            AuroraConfigFieldHandler("secretVault", validator = validateSecrets())
-    )
+    val handlers = configHandlers + mountHandlers + listOf(AuroraConfigFieldHandler("secretVault"))
 
 
-    fun auroraDeploymentCore(auroraConfigFields: AuroraConfigFields): AuroraVolume {
+    fun createAuroraVolume(auroraConfigFields: AuroraConfigFields): AuroraVolume {
 
         return AuroraVolume(
-                secrets = auroraConfigFields.extractOrNull<String?>("secretVault")?.let {
-                    vaults[it]?.secrets
-                },
-                config = auroraConfigFields.getConfigMap(configHandlers),
-                mounts = auroraConfigFields.getMounts(mountHandlers, vaults),
-                permissions = auroraConfigFields.extractOrNull<String?>("secretVault")?.let {
-                    vaults[it]?.permissions
-                })
+                secretVaultName = auroraConfigFields.extractOrNull("secretVault"),
+                config = getConfigMap(auroraConfigFields),
+                mounts = getMounts(auroraConfigFields))
     }
 
 
-    private fun validateSecrets(): (JsonNode?) -> Exception? {
-        return { json ->
-
-            val secretVault = json?.textValue()
-            val secrets = secretVault?.let {
-                vaults[it]?.secrets
-            }
-
-            if (secretVault != null && (secrets == null || secrets.isEmpty())) {
-                IllegalArgumentException("No secret vault named=$secretVault.")
-            } else {
-                null
-            }
-        }
-    }
-
-
-    fun findMounts(): List<AuroraConfigFieldHandler> {
+    private fun createMountHandlers(): List<AuroraConfigFieldHandler> {
 
         val mountKeys = applicationFiles.findSubKeys("mounts")
 
@@ -72,4 +46,79 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>,
     }
 
 
+    private fun getConfigMap(auroraConfigFields: AuroraConfigFields): Map<String, Any?>? {
+
+        val configMap: MutableMap<String, MutableMap<String, Any?>> = mutableMapOf()
+        configHandlers.filter { it.name.count { it == '/' } > 1 }.forEach {
+
+            val parts = it.name.split("/", limit = 3)
+
+            val (_, configFile, field) = parts
+
+            val value: Any = auroraConfigFields.extract(it.name)
+            val escapedValue = if (value is String) StringEscapeUtils.escapeJavaScript(value) else value
+            val keyValue = mutableMapOf(field to escapedValue)
+
+            val keyProps = if (!configFile.endsWith(".properties")) {
+                "$configFile.properties"
+            } else configFile
+
+            if (configMap.containsKey(keyProps)) configMap[keyProps]?.putAll(keyValue)
+            else configMap.put(keyProps, keyValue)
+        }
+
+        if (configMap.isEmpty()) {
+            return null
+        }
+
+        return configMap.map { (key, value) ->
+            key to value.map {
+                "${it.key}=${it.value}"
+            }.joinToString(separator = "\\n")
+        }.toMap()
+    }
+
+    private fun getMounts(auroraConfigFields: AuroraConfigFields/*, vaults: Map<String, EncryptedFileVault>*/): List<Mount>? {
+        if (mountHandlers.isEmpty()) {
+            return null
+        }
+
+        val mountNames = mountHandlers.map {
+            val (_, name, _) = it.name.split("/", limit = 3)
+            name
+        }.toSet()
+
+        return mountNames.map { mount ->
+            val type: MountType = auroraConfigFields.extract("mounts/$mount/type")
+
+/*
+            val permissions = if (type == MountType.Secret) {
+                extractOrNull<String?>("mounts/$mount/secretVault")?.let {
+                    vaults[it]?.permissions
+                }
+            } else null
+*/
+
+            val content: Map<String, String>? = if (type == MountType.ConfigMap) {
+                auroraConfigFields.extract("mounts/$mount/content")
+            } else {
+/*
+                auroraConfigFields.extractOrNull<String?>("mounts/$mount/secretVault")?.let {
+                    vaults[it]?.secrets
+                }
+*/
+                null
+            }
+
+            Mount(
+                    auroraConfigFields.extract("mounts/$mount/path"),
+                    type,
+                    auroraConfigFields.extract("mounts/$mount/mountName"),
+                    auroraConfigFields.extract("mounts/$mount/volumeName"),
+                    auroraConfigFields.extract("mounts/$mount/exist"),
+                    content/*,
+                    permissions*/
+            )
+        }
+    }
 }

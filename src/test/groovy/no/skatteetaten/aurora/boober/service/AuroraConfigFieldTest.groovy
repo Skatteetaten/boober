@@ -75,7 +75,7 @@ class AuroraConfigFieldTest extends Specification {
 
       def files = auroraConfig.getFilesForApplication(aid)
     when:
-      def mapper = new AuroraVolumeMapperV1(files, [:])
+      def mapper = new AuroraVolumeMapperV1(files)
 
     then:
       mapper.configHandlers.collect { it.path } == ["/config/foo", "/config/bar", "/config/1/bar", "/config/1/foo"]

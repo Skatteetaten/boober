@@ -7,6 +7,8 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 
 class AbstractOpenShiftObjectGeneratorTest extends AbstractAuroraDeploymentSpecTest {
 
+  public static final String DEPLOY_ID = 'deploy-id'
+
   OpenShiftObjectGenerator createObjectGenerator() {
 
     def ve = new Configuration().velocity()

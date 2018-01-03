@@ -6,13 +6,11 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.EncryptedFileVault
 import no.skatteetaten.aurora.boober.model.TemplateType
 
 @JvmOverloads
 fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: ApplicationId,
-                               overrideFiles: List<AuroraConfigFile> = listOf(),
-                               vaults: Map<String, EncryptedFileVault> = mapOf()): AuroraDeploymentSpec {
+                               overrideFiles: List<AuroraConfigFile> = listOf()): AuroraDeploymentSpec {
 
     val applicationFiles = auroraConfig.getFilesForApplication(applicationId, overrideFiles)
 
@@ -21,7 +19,7 @@ fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: Applic
 
     val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(applicationId)
     val deployMapper = AuroraDeployMapperV1(applicationId, applicationFiles, overrideFiles)
-    val volumeMapper = AuroraVolumeMapperV1(applicationFiles, vaults)
+    val volumeMapper = AuroraVolumeMapperV1(applicationFiles)
     val routeMapper = AuroraRouteMapperV1(applicationId, applicationFiles)
     val localTemplateMapper = AuroraLocalTemplateMapperV1(applicationFiles, auroraConfig)
     val templateMapper = AuroraTemplateMapperV1(applicationFiles)
@@ -39,7 +37,7 @@ fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: Applic
     val validator = AuroraConfigValidator(applicationId, applicationFiles, handlers, auroraConfigFields)
     validator.validate()
 
-    val volume = if (type == TemplateType.build) null else volumeMapper.auroraDeploymentCore(auroraConfigFields)
+    val volume = if (type == TemplateType.build) null else volumeMapper.createAuroraVolume(auroraConfigFields)
     val route = if (type == TemplateType.build) null else routeMapper.route(auroraConfigFields)
 
     val build = if (type == TemplateType.build || type == TemplateType.development) buildMapper.build(auroraConfigFields) else null

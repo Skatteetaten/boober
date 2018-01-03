@@ -5,13 +5,7 @@ import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecBuilderKt
 
-class AuroraDeploymentSpecBuilderTest extends AbstractAuroraConfigTest {
-
-  static AuroraDeploymentSpec createDeploymentSpec(Map<String, String> auroraConfigJson, ApplicationId applicationId) {
-
-    AuroraConfig auroraConfig = createAuroraConfig(auroraConfigJson)
-    AuroraDeploymentSpecBuilderKt.createAuroraDeploymentSpec(auroraConfig, applicationId, [], [:])
-  }
+class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
 
   def auroraConfigJson = defaultAuroraConfig()
 

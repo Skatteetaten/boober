@@ -151,7 +151,7 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
       auroraConfigGitService.deleteFiles(auroraConfig.affiliation)
-      GitServiceHelperKt.createInitRepo(auroraConfig.affiliation)
+      GitServiceHelperKt.recreateEmptyBareRepos(auroraConfig.affiliation)
       GitServiceHelperKt.recreateRepo(new File("/tmp/vaulttest/aos"))
       GitServiceHelperKt.recreateRepo(new File("/tmp/boobertest/aos"))
 
@@ -165,7 +165,7 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
   void createRepoAndSaveFiles(AuroraConfig auroraConfig) {
 
     auroraConfigGitService.deleteFiles(auroraConfig.affiliation)
-    GitServiceHelperKt.createInitRepo(auroraConfig.affiliation)
+    GitServiceHelperKt.recreateEmptyBareRepos(auroraConfig.affiliation)
     auroraConfigService.save(auroraConfig)
   }
 

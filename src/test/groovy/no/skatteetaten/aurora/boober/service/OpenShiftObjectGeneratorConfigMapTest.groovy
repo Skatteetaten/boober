@@ -5,7 +5,6 @@ import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 import com.fasterxml.jackson.databind.JsonNode
 
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 
 class OpenShiftObjectGeneratorConfigMapTest extends AbstractOpenShiftObjectGeneratorTest {
 
@@ -36,7 +35,7 @@ class OpenShiftObjectGeneratorConfigMapTest extends AbstractOpenShiftObjectGener
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid("utv", "aos-simple"))
 
     when:
-      def jsonMounts = objectGenerator.generateMount(deploymentSpec, "deploy-id")
+      def jsonMounts = objectGenerator.generateMounts(deploymentSpec, "deploy-id")
 
     then:
       jsonMounts.size() == 1
