@@ -57,6 +57,7 @@ class DeployBundleService(
         return res
     }
 
+/*
     fun findAuroraConfig(affiliation: String): AuroraConfig {
         logger.debug("Find aurora config")
         val repo = getRepo(affiliation)
@@ -72,30 +73,20 @@ class DeployBundleService(
         logger.debug("/Find aurora config")
         return res
     }
-
+*/
+/*
     fun saveAuroraConfig(auroraConfig: AuroraConfig, validateVersions: Boolean): AuroraConfig {
         return withAuroraConfig(auroraConfig.affiliation, validateVersions, {
             auroraConfig
         })
-    }
+    }*/
 
-    fun patchAuroraConfigFile(affiliation: String, filename: String, jsonPatchOp: String, configFileVersion: String, validateVersions: Boolean): AuroraConfig {
-
-        return withAuroraConfig(affiliation, validateVersions, { auroraConfig: AuroraConfig ->
-            val patch: JsonPatch = mapper.readValue(jsonPatchOp, JsonPatch::class.java)
-
-            val auroraConfigFile = auroraConfig.auroraConfigFiles.filter { it.name == filename }.first()
-            val originalContentsNode = mapper.convertValue(auroraConfigFile.contents, JsonNode::class.java)
-
-            val fileContents = patch.apply(originalContentsNode)
-            auroraConfig.updateFile(filename, fileContents, configFileVersion)
-        })
-    }
 
     /**
      * Validates the DeployBundle for affiliation <code>affiliation</code> using the provided AuroraConfig instead
      * of the AuroraConfig already saved for that affiliation.
      */
+/*
     fun validateDeployBundleWithAuroraConfig(affiliation: String, auroraConfig: AuroraConfig): AuroraConfig {
 
         val repo = getRepo(affiliation)
@@ -109,6 +100,7 @@ class DeployBundleService(
 
         return auroraConfig
     }
+*/
 
     fun validateDeployBundle(deployBundle: DeployBundle) {
 
@@ -185,7 +177,7 @@ class DeployBundleService(
             Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = null, second = ExceptionWrapper(aid, e))
         }
     }
-
+/*
     private fun validateGitVersion(auroraConfig: AuroraConfig, newAuroraConfig: AuroraConfig, allFilesInRepo: Map<String, Pair<RevCommit?, File>>) {
         val oldVersions = auroraConfig.getVersions().filterValues { it != null }
         val invalidVersions = newAuroraConfig.getVersions().filter {
@@ -204,13 +196,13 @@ class DeployBundleService(
 
             throw AuroraVersioningException("Source file has changed since you fetched it", errors)
         }
-    }
+    }*/
 
     private fun getRepo(affiliation: String): Git {
 
         return gitService.checkoutRepository(affiliation)
     }
-
+/*
     private fun createAuroraConfigFromFiles(filesFromGit: Map<String, Pair<RevCommit?, File>>, affiliation: String): AuroraConfig {
 
         val auroraConfigFiles = filesFromGit
@@ -230,5 +222,5 @@ class DeployBundleService(
 
         logger.debug("save files and close")
         gitService.saveFilesAndClose(repo, configFiles)
-    }
+    }*/
 }

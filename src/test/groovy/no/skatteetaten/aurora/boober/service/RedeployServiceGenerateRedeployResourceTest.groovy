@@ -5,6 +5,8 @@ import static no.skatteetaten.aurora.boober.model.TemplateType.deploy
 import static no.skatteetaten.aurora.boober.model.TemplateType.development
 import static no.skatteetaten.aurora.boober.service.openshift.OperationType.CREATE
 
+import javax.validation.groups.Default
+
 import org.springframework.beans.factory.annotation.Autowired
 
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -15,6 +17,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 
+@DefaultOverride(auroraConfig = false)
 class RedeployServiceGenerateRedeployResourceTest extends AbstractMockedOpenShiftSpecification {
 
   @Autowired

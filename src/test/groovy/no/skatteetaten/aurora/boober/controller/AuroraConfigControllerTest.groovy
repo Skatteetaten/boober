@@ -16,9 +16,9 @@ import com.fasterxml.jackson.databind.JsonNode
 
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.controller.internal.ErrorHandler
-import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigFileControllerV1
+import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigControllerV1
 import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest
-import no.skatteetaten.aurora.boober.service.DeployBundleService
+import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import spock.lang.Specification
 
 class AuroraConfigControllerTest extends Specification {
@@ -28,10 +28,10 @@ class AuroraConfigControllerTest extends Specification {
 
   MockMvc mockMvc
 
-  def deployBundleService = Mock(DeployBundleService)
+  def auroraConfigService = Mock(AuroraConfigService)
 
   void setup() {
-    def controller = new AuroraConfigFileControllerV1(deployBundleService)
+    def controller = new AuroraConfigControllerV1(auroraConfigService)
     mockMvc = MockMvcBuilders.
         standaloneSetup(controller)
         .setControllerAdvice(new ErrorHandler())
@@ -52,8 +52,8 @@ class AuroraConfigControllerTest extends Specification {
 
     given:
       payload.content = AbstractAuroraConfigTest.DEFAULT_ABOUT
-      deployBundleService.updateAuroraConfigFile(affiliation, fileName,
-          { JsonNode it -> it.get("affiliation").textValue() == affiliation }, payload.version, payload.validateVersions
+      auroraConfigService.updateAuroraConfigFile(affiliation, fileName,
+          { JsonNode it -> it.get("affiliation").textValue() == affiliation }, payload.version
       ) >> auroraConfig
     when:
       ResultActions result = mockMvc.perform(

@@ -87,7 +87,7 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
 
         val fileName = extractFileName(affiliation, request)
 
-        val auroraConfig = deployBundleService.patchAuroraConfigFile(affiliation, fileName,
+        val auroraConfig = auroraConfigService.patchAuroraConfigFile(affiliation, fileName,
                 payload.content, payload.version, payload.validateVersions)
         return createAuroraConfigResponse(auroraConfig)
     }

@@ -122,6 +122,7 @@ open class GitService(
     }
 
     //support multiple patterns
+/*
     fun deleteDirectory(git: Git, dirName: String) {
         try {
             git.rm().addFilepattern(dirName).call()
@@ -135,8 +136,10 @@ open class GitService(
             closeRepository(git)
         }
     }
+*/
 
     // TODO: Delete this
+/*
     fun saveFilesAndClose(git: Git, files: Map<String, String>) {
         try {
             logger.debug("write add changes")
@@ -157,6 +160,7 @@ open class GitService(
             closeRepository(git)
         }
     }
+*/
 
     fun closeRepository(repo: Git) {
         repo.close()
@@ -167,6 +171,7 @@ open class GitService(
     fun getAllAuroraConfigFiles(git: Git): Map<String, File> {
         return getAllFiles(git)
     }
+/*
 
     fun getRevCommit(git: Git, path: String?): RevCommit? {
         val commit = try {
@@ -177,8 +182,10 @@ open class GitService(
         }
         return commit
     }
+*/
 
 
+/*
     fun writeAndAddChanges(git: Git, files: Map<String, String>) {
 
         files.forEach { (fileName, value) ->
@@ -197,7 +204,9 @@ open class GitService(
             git.add().addFilepattern(fileName).call()
         }
     }
+*/
 
+/*
     private fun writeAndAddChanges2(git: Git, files: Map<String, String>) {
 
         files.forEach { (fileName, value) ->
@@ -234,6 +243,7 @@ open class GitService(
                 .setMessage(message)
                 .call()
     }
+*/
 
     fun pushTags(git: Git, tags: List<Ref>) {
 
@@ -254,6 +264,7 @@ open class GitService(
         logger.debug("/push tags to git")
     }
 
+/*
     fun pushMaster(git: Git) {
 
         logger.debug("push config")
@@ -272,6 +283,7 @@ open class GitService(
         })
         logger.debug("/push config")
     }
+*/
 
     fun markRelease(git: Git, tag: String, tagBody: String): Ref {
         val user = userDetails.getAuthenticatedUser().let { PersonIdent(it.fullName ?: it.username, "${it.username}@skatteetaten.no") }
@@ -295,6 +307,7 @@ open class GitService(
 
 
     //TODO: This and the one below must be joined together somehow.
+/*
     fun getFile(git: Git, fileName: String): File? {
 
         val folder = git.repository.directory.parentFile
@@ -306,9 +319,10 @@ open class GitService(
                     it
                 }.firstOrNull()
     }
+*/
 
 
-    fun getAllFiles(git: Git): Map<String, File> {
+    private fun getAllFiles(git: Git): Map<String, File> {
 
         val folder = git.repository.directory.parentFile
         val files = folder.walkBottomUp()
