@@ -7,13 +7,10 @@ import no.skatteetaten.aurora.boober.model.ApplicationPlatform.java
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.web
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Mount
-import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.model.Permissions
-import no.skatteetaten.aurora.boober.service.internal.DbhSecretGenerator
-import no.skatteetaten.aurora.boober.service.internal.DeploymentConfigGenerator
+import no.skatteetaten.aurora.boober.service.internal.*
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -170,9 +167,9 @@ class OpenShiftObjectGenerator(
         }
     }
 
-    fun generateMounts(deploymentSpec: AuroraDeploymentSpec, deployId: String): List<JsonNode>? {
+    fun generateMounts(deployId: String, deploymentSpec: AuroraDeploymentSpec, provisioningResult: ProvisioningResult? = null): List<JsonNode>? {
 
-        return withLabelsAndMounts(deployId, deploymentSpec, null, { labels, mounts -> generateMounts(mounts, labels) })
+        return withLabelsAndMounts(deployId, deploymentSpec, provisioningResult, { labels, mounts -> generateMounts(mounts, labels) })
     }
 
     private fun generateMounts(mounts: List<Mount>?, labels: Map<String, String>): List<JsonNode>? {
@@ -218,88 +215,13 @@ class OpenShiftObjectGenerator(
         }
     }
 
-    fun createMountsFromDeploymentSpec(auroraDeploymentSpec: AuroraDeploymentSpec): List<Mount> {
-        val mounts: List<Mount> = auroraDeploymentSpec.volume?.mounts?.map {
-            if (it.exist) {
-                it
-            } else {
-                it.copy(volumeName = it.volumeName.ensureStartWith(auroraDeploymentSpec.name, "-"))
-            }
-        } ?: emptyList()
-
-
-        val configMount = auroraDeploymentSpec.volume?.config?.let {
-
-            Mount(path = "/u01/config/configmap",
-                    type = MountType.ConfigMap,
-                    volumeName = auroraDeploymentSpec.name,
-                    mountName = "config",
-                    exist = false,
-                    content = it)
-        }
-
-/*
-        val secretMount = auroraDeploymentSpec.volume?.secretVaultName?.let {
-            Mount(path = "/u01/config/secret",
-                    type = MountType.Secret,
-                    volumeName = auroraDeploymentSpec.name,
-                    mountName = "secrets",
-                    exist = false,
-                    content = it)
-        }
-*/
-
-        val certMount = auroraDeploymentSpec.deploy?.certificateCn?.let {
-            Mount(path = "/u01/secrets/app/${auroraDeploymentSpec.name}-cert",
-                    type = MountType.Secret,
-                    volumeName = "${auroraDeploymentSpec.name}-cert",
-                    mountName = "${auroraDeploymentSpec.name}-cert",
-                    exist = true,
-                    content = null)
-            //TODO: Add sprocket content here
-        }
-        return mounts.addIfNotNull(configMount)/*.addIfNotNull(secretMount)*/.addIfNotNull(certMount)
-    }
-
-    fun createMountsFromProvisioningResult(deploymentSpec: AuroraDeploymentSpec,
-                                           provisioningResult: ProvisioningResult): List<Mount> {
-
-/*
-        val certMount = auroraDeploymentSpec.deploy?.certificateCn?.let {
-            Mount(path = "/u01/secrets/app/${auroraDeploymentSpec.name}-cert",
-                    type = MountType.Secret,
-                    volumeName = "${auroraDeploymentSpec.name}-cert",
-                    mountName = "${auroraDeploymentSpec.name}-cert",
-                    exist = true,
-                    content = null)
-            //TODO: Add sprocket content here
-        }
-*/
-        val schemaResults: List<SchemaProvisionResult> = (provisioningResult.schemaProvisionResults?.results ?: emptyList())
-        val databaseMounts = schemaResults.map {
-            val mountPath = "${it.request.schemaName}-db".toLowerCase()
-            val volumeName = "${deploymentSpec.name}-${it.request.schemaName}-db".toLowerCase()
-            Mount(path = "/u01/secrets/app/$mountPath",
-                    type = MountType.Secret,
-                    mountName = mountPath,
-                    volumeName = volumeName,
-                    exist = true,
-                    content = null)
-        }
-
-        return databaseMounts
-    }
-
     private fun <T> withLabelsAndMounts(deployId: String, deploymentSpec: AuroraDeploymentSpec,
                                         provisioningResult: ProvisioningResult? = null,
                                         c: (labels: Map<String, String>, mounts: List<Mount>?) -> T): T {
 
-        val deploymentSpecMounts = createMountsFromDeploymentSpec(deploymentSpec)
-        val provisioningMounts = provisioningResult?.let { createMountsFromProvisioningResult(deploymentSpec, it) }.orEmpty()
-        val allMounts: List<Mount> = deploymentSpecMounts + provisioningMounts
-
+        val mounts: List<Mount> = findAndCreateMounts(deploymentSpec, provisioningResult)
         val labels = openShiftObjectLabelService.createCommonLabels(deploymentSpec, deployId)
-        return c(labels, allMounts)
+        return c(labels, mounts)
     }
 
     fun generateImageStreamImport(name: String, dockerImage: String): JsonNode {

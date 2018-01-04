@@ -53,8 +53,10 @@ class VaultService(
 
     fun findVault(vaultCollectionName: String, vaultName: String): EncryptedFileVault {
 
-        return findAllVaultsInVaultCollection(vaultCollectionName).find { it.name == vaultName }
-                ?: throw IllegalArgumentException("Vault not found name=$vaultName")
+        val vault = (findAllVaultsInVaultCollection(vaultCollectionName).find { it.name == vaultName }
+                ?: throw IllegalArgumentException("Vault not found name=$vaultName"))
+        assertCurrentUserHasAccess(vault)
+        return vault
     }
 
     fun createOrUpdateFileInVault(vaultCollectionName: String,

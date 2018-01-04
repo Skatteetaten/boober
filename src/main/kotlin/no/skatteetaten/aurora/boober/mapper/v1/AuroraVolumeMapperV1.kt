@@ -109,14 +109,15 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>) {
 */
                 null
             }
-
+            val secretVaultName = auroraConfigFields.extractOrNull<String?>("mounts/$mount/secretVault")
             Mount(
                     auroraConfigFields.extract("mounts/$mount/path"),
                     type,
                     auroraConfigFields.extract("mounts/$mount/mountName"),
                     auroraConfigFields.extract("mounts/$mount/volumeName"),
                     auroraConfigFields.extract("mounts/$mount/exist"),
-                    content/*,
+                    content,
+                    secretVaultName/*,
                     permissions*/
             )
         }

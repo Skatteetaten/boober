@@ -1,18 +1,24 @@
 package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.utils.logger
 import org.springframework.stereotype.Service
 
-class ProvisioningResult(val schemaProvisionResults: SchemaProvisionResults?)
+class ProvisioningResult(
+        val schemaProvisionResults: SchemaProvisionResults?,
+        val vaultResults: VaultResults?
+)
 
 @Service
-class ExternalResourceProvisioner(val databaseSchemaProvisioner: DatabaseSchemaProvisioner) {
+class ExternalResourceProvisioner(
+        val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
+        val vaultProvider: VaultProvider
+) {
 
     fun provisionResources(deploymentSpec: AuroraDeploymentSpec): ProvisioningResult {
 
         val schemaProvisionResult = handleSchemaProvisioning(deploymentSpec)
-        return ProvisioningResult(schemaProvisionResult)
+        val schemaResults = handleVaults(deploymentSpec)
+        return ProvisioningResult(schemaProvisionResult, schemaResults)
     }
 
     private fun handleSchemaProvisioning(deploymentSpec: AuroraDeploymentSpec): SchemaProvisionResults? {
@@ -22,6 +28,12 @@ class ExternalResourceProvisioner(val databaseSchemaProvisioner: DatabaseSchemaP
         }
 
         return databaseSchemaProvisioner.provisionSchemas(schemaProvisionRequests)
+    }
+
+    private fun handleVaults(deploymentSpec: AuroraDeploymentSpec): VaultResults? {
+
+        val vaultRequests = createVaultRequests(deploymentSpec)
+        return vaultProvider.findVaultData(vaultRequests)
     }
 
     companion object {
@@ -36,6 +48,16 @@ class ExternalResourceProvisioner(val databaseSchemaProvisioner: DatabaseSchemaP
                     SchemaForAppRequest(deploymentSpec.affiliation, deploymentSpec.envName, deploymentSpec.name, name)
                 }
             }
+        }
+
+        @JvmStatic
+        protected fun createVaultRequests(deploymentSpec: AuroraDeploymentSpec): List<VaultRequest> {
+            val volume = deploymentSpec.volume ?: return listOf()
+
+            val secretVaultNames = volume.mounts?.mapNotNull { it.secretVaultName }.orEmpty()
+            val allVaultNames = volume.secretVaultName?.let { secretVaultNames + listOf(it) } ?: secretVaultNames
+
+            return allVaultNames.map { VaultRequest(deploymentSpec.affiliation, it) }
         }
     }
 }

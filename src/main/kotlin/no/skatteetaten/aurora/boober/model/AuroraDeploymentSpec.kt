@@ -132,7 +132,8 @@ data class Mount(
         val mountName: String,
         val volumeName: String,
         val exist: Boolean,
-        val content: Map<String, Any?>?/*,
+        val content: Map<String, Any?>? = null,
+        val secretVaultName: String? = null/*,
         val permissions: AuroraPermissions? = null*/
 )
 
