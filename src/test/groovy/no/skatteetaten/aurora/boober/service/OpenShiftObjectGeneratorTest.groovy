@@ -1,8 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
-import org.junit.Before
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
+import static no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecBuilderKt.createAuroraDeploymentSpec
+
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 
@@ -15,33 +14,12 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import spock.lang.Shared
 import spock.lang.Unroll
 
-@DefaultOverride(auroraConfig = false)
-class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification {
+class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest {
 
-  @Autowired
-  OpenShiftObjectGenerator openShiftService
-
-  @Autowired
-  OpenShiftResourceClient openShiftResourceClient
-
-  @Autowired
-  DeployBundleService deployBundleService
-
-  @Autowired
-  AuroraConfigService auroraConfigService
-
-  @Autowired
-  DeployService deployService
-
-  @Autowired
-  ObjectMapper mapper
-
-  @Value("\$")
-  String checkoutFolder
+  OpenShiftObjectGenerator objectGenerator = createObjectGenerator("hero")
 
   @Shared
   def file = new ObjectMapper().convertValue([version: "1.0.4"], JsonNode.class)
@@ -49,19 +27,12 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
   @Shared
   def booberDevAosSimpleOverrides = [new AuroraConfigFile("booberdev/aos-simple.json", file, true)]
 
-  def affiliation = "aos"
-
-  @Before
-  def "Setup git"() {
-    GitServiceHelperKt.recreateCheckoutFolders()
-    GitServiceHelperKt.recreateEmptyBareRepos(affiliation)
-  }
-
   @Unroll
   def "should create openshift objects for #env/#name"() {
 
     given:
-      def provisioningResult = new ProvisioningResult(null, new VaultResults([foo: ["latest.properties": "FOO=bar\nBAR=baz\n"]]))
+      def provisioningResult = new ProvisioningResult(null,
+          new VaultResults([foo: ["latest.properties": "FOO=bar\nBAR=baz\n"]]))
 
       def aid = new ApplicationId(env, name)
       def additionalFile = null
@@ -78,17 +49,17 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
           new ResponseEntity<JsonNode>(jsonResult, HttpStatus.OK)
         }
       }
-      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, affiliation, additionalFile)
-      auroraConfigService.save(auroraConfig)
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, additionalFile)
+      AuroraDeploymentSpec deploymentSpec = createAuroraDeploymentSpec(auroraConfig, aid, overrides)
 
-    expect:
+    when:
+      List<JsonNode> generatedObjects = objectGenerator.
+          with {
+            [generateProjectRequest(deploymentSpec)] +
+                generateApplicationObjects(DEPLOY_ID, deploymentSpec, provisioningResult)
+          }
 
-      AuroraDeploymentSpec deploymentSpec = deployBundleService.createAuroraDeploymentSpec("aos", aid, overrides)
-      def deployId = "123"
-
-      List<JsonNode> generatedObjects = openShiftService.
-          with { [generateProjectRequest(deploymentSpec)] + generateApplicationObjects(deployId, deploymentSpec, provisioningResult) }
-
+    then:
       def resultFiles = AuroraConfigHelperKt.getResultFiles(aid)
 
       def keys = resultFiles.keySet()
@@ -101,7 +72,6 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
 
       generatedObjects.collect { getKey(it) } as Set == resultFiles.keySet()
 
-    when:
 
     where:
 
@@ -122,17 +92,15 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
       "secretmount" | "aos-simple"    | null              | []
   }
 
-
   def "generate rolebinding should include serviceaccount "() {
 
     given:
       def aid = new ApplicationId("booberdev", "console")
-      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, affiliation, null)
-      auroraConfigService.save(auroraConfig)
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, null)
 
     when:
-      AuroraDeploymentSpec deploymentSpec = deployBundleService.createAuroraDeploymentSpec("aos", aid, [])
-      def rolebindings = openShiftService.generateRolebindings(deploymentSpec.permissions)
+      AuroraDeploymentSpec deploymentSpec = createAuroraDeploymentSpec(auroraConfig, aid)
+      def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.permissions)
 
     then:
       rolebindings.size() == 1

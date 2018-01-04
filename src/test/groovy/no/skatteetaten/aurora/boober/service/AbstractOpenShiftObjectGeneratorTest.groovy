@@ -7,17 +7,24 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 
 class AbstractOpenShiftObjectGeneratorTest extends AbstractAuroraDeploymentSpecTest {
 
-  public static final String DEPLOY_ID = 'deploy-id'
+  public static final String DEPLOY_ID = '123'
 
-  OpenShiftObjectGenerator createObjectGenerator() {
+  def userDetailsProvider = Mock(UserDetailsProvider)
+
+  def openShiftResourceClient = Mock(OpenShiftResourceClient)
+
+  def mapper = new Configuration().mapper()
+
+  OpenShiftObjectGenerator createObjectGenerator(String username = "aurora") {
 
     def ve = new Configuration().velocity()
-    def objectMapper = new Configuration().mapper()
-    def userDetailsProvider = Mock(UserDetailsProvider)
-    userDetailsProvider.getAuthenticatedUser() >> new User("aurora", "token", "Aurora OpenShift", [])
+    userDetailsProvider.getAuthenticatedUser() >> new User(username, "token", "Aurora OpenShift", [])
+    def templateProcessor = new OpenShiftTemplateProcessor(userDetailsProvider, openShiftResourceClient, mapper)
+
     new OpenShiftObjectGenerator(
         "docker-registry.aurora.sits.no:5000",
-        new OpenShiftObjectLabelService(userDetailsProvider), new VelocityTemplateJsonService(ve, objectMapper), objectMapper,
-        Mock(OpenShiftTemplateProcessor), Mock(OpenShiftResourceClient))
+        new OpenShiftObjectLabelService(userDetailsProvider), new VelocityTemplateJsonService(ve, mapper),
+        mapper,
+        templateProcessor, openShiftResourceClient)
   }
 }

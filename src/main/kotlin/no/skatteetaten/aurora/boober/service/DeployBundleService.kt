@@ -1,9 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.github.fge.jsonpatch.JsonPatch
 import kotlinx.coroutines.experimental.ThreadPoolDispatcher
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.newFixedThreadPoolContext
@@ -12,12 +10,10 @@ import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.mapper.v1.createAuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.*
 import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.revwalk.RevCommit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
-import java.io.File
 
 @Service
 class DeployBundleService(
@@ -56,31 +52,6 @@ class DeployBundleService(
         gitService.closeRepository(repo)
         return res
     }
-
-/*
-    fun findAuroraConfig(affiliation: String): AuroraConfig {
-        logger.debug("Find aurora config")
-        val repo = getRepo(affiliation)
-        //TODO: add revCommit
-        logger.debug("get all files with revCommit")
-        val allFilesInRepo: Map<String, Pair<RevCommit?, File>> = gitService.getAllFiles(repo).mapValues {
-            val commit = gitService.getRevCommit(repo, it.key)
-            Pair(commit, it.value)
-        }
-        logger.debug("create aurora config from files")
-        val res = createAuroraConfigFromFiles(allFilesInRepo, affiliation)
-        gitService.closeRepository(repo)
-        logger.debug("/Find aurora config")
-        return res
-    }
-*/
-/*
-    fun saveAuroraConfig(auroraConfig: AuroraConfig, validateVersions: Boolean): AuroraConfig {
-        return withAuroraConfig(auroraConfig.affiliation, validateVersions, {
-            auroraConfig
-        })
-    }*/
-
 
     /**
      * Validates the DeployBundle for affiliation <code>affiliation</code> using the provided AuroraConfig instead
@@ -176,50 +147,9 @@ class DeployBundleService(
             Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = null, second = ExceptionWrapper(aid, e))
         }
     }
-/*
-    private fun validateGitVersion(auroraConfig: AuroraConfig, newAuroraConfig: AuroraConfig, allFilesInRepo: Map<String, Pair<RevCommit?, File>>) {
-        val oldVersions = auroraConfig.getVersions().filterValues { it != null }
-        val invalidVersions = newAuroraConfig.getVersions().filter {
-            oldVersions[it.key] != it.value
-        }
-
-        if (invalidVersions.isNotEmpty()) {
-            val gitInfo: Map<String, RevCommit> = allFilesInRepo
-                    .filter { it.value.first != null }
-                    .mapValues { it.value.first!! }
-
-            val errors = invalidVersions.map {
-                val commit = gitInfo[it.key]!!
-                VersioningError(it.key, commit.authorIdent.name, commit.authorIdent.`when`)
-            }
-
-            throw AuroraVersioningException("Source file has changed since you fetched it", errors)
-        }
-    }*/
 
     private fun getRepo(affiliation: String): Git {
 
         return gitService.checkoutRepository(affiliation)
     }
-/*
-    private fun createAuroraConfigFromFiles(filesFromGit: Map<String, Pair<RevCommit?, File>>, affiliation: String): AuroraConfig {
-
-        val auroraConfigFiles = filesFromGit
-                .map { AuroraConfigFile(it.key, mapper.readValue(it.value.second), version = it.value.first?.abbreviate(7)?.name()) }
-
-        return AuroraConfig(auroraConfigFiles = auroraConfigFiles, affiliation = affiliation)
-    }
-
-
-    private fun commitAuroraConfig(repo: Git,
-                                   newAuroraConfig: AuroraConfig) {
-
-        logger.debug("create file map")
-        val configFiles: Map<String, String> = newAuroraConfig.auroraConfigFiles.map {
-            it.name to mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it.contents)
-        }.toMap()
-
-        logger.debug("save files and close")
-        gitService.saveFilesAndClose(repo, configFiles)
-    }*/
 }

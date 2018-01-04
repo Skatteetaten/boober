@@ -76,11 +76,6 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
     }
 
     @Bean
-    OpenShiftResourceClient client() {
-      factory.Mock(OpenShiftResourceClient)
-    }
-
-    @Bean
     ExternalResourceProvisioner externalResourceProvisioner() {
         factory.Mock(ExternalResourceProvisioner)
     }
@@ -102,13 +97,13 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
   }
 
   @Autowired
-  GitService auroraConfigGitService
+  private GitService auroraConfigGitService
 
   @Autowired
-  VaultService vaultService
+  private VaultService vaultService
 
   @Autowired
-  UserDetailsProvider userDetailsProvider
+  private UserDetailsProvider userDetailsProvider
 
   @Autowired
   OpenShiftClient openShiftClient
@@ -117,7 +112,7 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
   DeployBundleService deployBundleService
 
   @Autowired
-  AuroraConfigService auroraConfigService
+  private AuroraConfigService auroraConfigService
 
   @Autowired
   ObjectMapper mapper
