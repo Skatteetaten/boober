@@ -172,12 +172,18 @@ class OpenShiftObjectGenerator(
         return withLabelsAndMounts(deployId, deploymentSpec, provisioningResult, { labels, mounts -> generateMounts(mounts, labels) })
     }
 
+    object Base64 {
+        fun encode(str: String): String = org.apache.commons.codec.binary.Base64.encodeBase64String(str.toByteArray())
+    }
+
     private fun generateMounts(mounts: List<Mount>?, labels: Map<String, String>): List<JsonNode>? {
+
         return mounts?.filter { !it.exist }?.map {
             logger.trace("Create manual mount {}", it)
             val mountParams = mapOf(
                     "mount" to it,
-                    "labels" to labels
+                    "labels" to labels,
+                    "base64" to Base64
             )
             mergeVelocityTemplate("mount.json", mountParams)
         }

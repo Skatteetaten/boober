@@ -79,7 +79,6 @@ class AuroraConfigFieldTest extends Specification {
 
     then:
       mapper.configHandlers.collect { it.path } == ["/config/foo", "/config/bar", "/config/1/bar", "/config/1/foo"]
-
   }
 }
 

@@ -23,7 +23,7 @@ fun findAndCreateMounts(deploymentSpec: AuroraDeploymentSpec, provisioningResult
             ?.let { createDatabaseMounts(deploymentSpec, it) }
             .orEmpty()
 
-    return configMounts + vaultMounts + databaseMounts
+    return vaultMounts + configMounts + databaseMounts
 }
 
 private fun createMountsFromDeploymentSpec(deploymentSpec: AuroraDeploymentSpec): List<Mount> {
@@ -74,7 +74,7 @@ private fun populateVaultMounts(deploymentSpec: AuroraDeploymentSpec, vaultResul
                 content = vaultResults.getVaultData(it),
                 secretVaultName = it)
     }
-    val allVaultMounts = mounts.addIfNotNull(secretVaultMount)
+    val allVaultMounts = listOf<Mount>().addIfNotNull(secretVaultMount).addIfNotNull(mounts)
     allVaultMounts.map {
 
     }
@@ -84,17 +84,6 @@ private fun populateVaultMounts(deploymentSpec: AuroraDeploymentSpec, vaultResul
 private fun createDatabaseMounts(deploymentSpec: AuroraDeploymentSpec,
                                  schemaProvisionResults: SchemaProvisionResults): List<Mount> {
 
-/*
-        val certMount = auroraDeploymentSpec.deploy?.certificateCn?.let {
-            Mount(path = "/u01/secrets/app/${auroraDeploymentSpec.name}-cert",
-                    type = MountType.Secret,
-                    volumeName = "${auroraDeploymentSpec.name}-cert",
-                    mountName = "${auroraDeploymentSpec.name}-cert",
-                    exist = true,
-                    content = null)
-            //TODO: Add sprocket content here
-        }
-*/
     val schemaResults: List<SchemaProvisionResult> = schemaProvisionResults.results
     val databaseMounts = schemaResults.map {
         val mountPath = "${it.request.schemaName}-db".toLowerCase()

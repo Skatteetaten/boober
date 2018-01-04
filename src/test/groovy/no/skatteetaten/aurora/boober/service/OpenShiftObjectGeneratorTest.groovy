@@ -61,7 +61,7 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
   def "should create openshift objects for #env/#name"() {
 
     given:
-      vaultService.createOrUpdateFileInVault(affiliation, "foo", "latest.properties", "FOO=BAR")
+      def provisioningResult = new ProvisioningResult(null, new VaultResults([foo: ["latest.properties": "FOO=bar\nBAR=baz\n"]]))
 
       def aid = new ApplicationId(env, name)
       def additionalFile = null
@@ -87,7 +87,7 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
       def deployId = "123"
 
       List<JsonNode> generatedObjects = openShiftService.
-          with { [generateProjectRequest(deploymentSpec)] + generateApplicationObjects(deployId, deploymentSpec, null) }
+          with { [generateProjectRequest(deploymentSpec)] + generateApplicationObjects(deployId, deploymentSpec, provisioningResult) }
 
       def resultFiles = AuroraConfigHelperKt.getResultFiles(aid)
 
@@ -128,7 +128,7 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
     given:
       def aid = new ApplicationId("booberdev", "console")
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, affiliation, null)
-      deployBundleService.saveAuroraConfig(auroraConfig, false)
+      auroraConfigService.save(auroraConfig)
 
     when:
       AuroraDeploymentSpec deploymentSpec = deployBundleService.createAuroraDeploymentSpec("aos", aid, [])

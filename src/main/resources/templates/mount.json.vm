@@ -18,7 +18,7 @@
     #if($velocityCount != 1)
     ,
     #end
-  "${config.key}": "${config.value}"
+  "${config.key}": #if (${mount.type.name()}=="Secret") "${base64.encode(${config.value})}" #else "${config.value}" #end
   #end
 }
 #end

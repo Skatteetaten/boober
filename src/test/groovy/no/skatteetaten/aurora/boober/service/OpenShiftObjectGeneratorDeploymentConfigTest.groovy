@@ -25,7 +25,7 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObje
           new SchemaProvisionResults([new SchemaProvisionResult(
               createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec)[0],
               new DbhSchema("", "", new DatabaseInstance(1512, ""), "", [:], []), "")
-          ]))
+          ]), null)
 
     when:
       def dc = objectGenerator.generateDeploymentConfig("deploy-id", deploymentSpec, provisioningResult)

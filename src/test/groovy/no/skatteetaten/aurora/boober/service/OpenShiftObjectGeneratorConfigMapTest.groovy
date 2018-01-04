@@ -35,7 +35,7 @@ class OpenShiftObjectGeneratorConfigMapTest extends AbstractOpenShiftObjectGener
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid("utv", "aos-simple"))
 
     when:
-      def jsonMounts = objectGenerator.generateMounts(deploymentSpec, "deploy-id")
+      def jsonMounts = objectGenerator.generateMounts("deploy-id", deploymentSpec, null)
 
     then:
       jsonMounts.size() == 1
