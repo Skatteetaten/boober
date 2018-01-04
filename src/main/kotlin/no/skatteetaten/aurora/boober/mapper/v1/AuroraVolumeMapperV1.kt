@@ -41,7 +41,6 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>) {
                     AuroraConfigFieldHandler("mounts/$mountName/content"),
                     AuroraConfigFieldHandler("mounts/$mountName/secretVault")
             )
-
         }
     }
 
@@ -78,7 +77,7 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>) {
         }.toMap()
     }
 
-    private fun getMounts(auroraConfigFields: AuroraConfigFields/*, vaults: Map<String, EncryptedFileVault>*/): List<Mount>? {
+    private fun getMounts(auroraConfigFields: AuroraConfigFields): List<Mount>? {
         if (mountHandlers.isEmpty()) {
             return null
         }
@@ -91,22 +90,9 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>) {
         return mountNames.map { mount ->
             val type: MountType = auroraConfigFields.extract("mounts/$mount/type")
 
-/*
-            val permissions = if (type == MountType.Secret) {
-                extractOrNull<String?>("mounts/$mount/secretVault")?.let {
-                    vaults[it]?.permissions
-                }
-            } else null
-*/
-
             val content: Map<String, String>? = if (type == MountType.ConfigMap) {
                 auroraConfigFields.extract("mounts/$mount/content")
             } else {
-/*
-                auroraConfigFields.extractOrNull<String?>("mounts/$mount/secretVault")?.let {
-                    vaults[it]?.secrets
-                }
-*/
                 null
             }
             val secretVaultName = auroraConfigFields.extractOrNull<String?>("mounts/$mount/secretVault")
@@ -117,8 +103,7 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>) {
                     auroraConfigFields.extract("mounts/$mount/volumeName"),
                     auroraConfigFields.extract("mounts/$mount/exist"),
                     content,
-                    secretVaultName/*,
-                    permissions*/
+                    secretVaultName
             )
         }
     }

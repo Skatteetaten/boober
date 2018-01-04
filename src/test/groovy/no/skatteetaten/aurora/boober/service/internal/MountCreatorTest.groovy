@@ -1,7 +1,5 @@
 package no.skatteetaten.aurora.boober.service.internal
 
-import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
-
 import no.skatteetaten.aurora.boober.model.AbstractAuroraDeploymentSpecTest
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.ProvisioningResult
