@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigValidator
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -34,8 +33,7 @@ fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: Applic
     }).toSet()
 
     val auroraConfigFields = AuroraConfigFields.create(handlers, applicationFiles)
-    val validator = AuroraConfigValidator(applicationId, applicationFiles, handlers, auroraConfigFields)
-    validator.validate()
+    AuroraDeploymentSpecConfigFieldValidator(applicationId, applicationFiles, handlers, auroraConfigFields).validate()
 
     val volume = if (type == TemplateType.build) null else volumeMapper.createAuroraVolume(auroraConfigFields)
     val route = if (type == TemplateType.build) null else routeMapper.route(auroraConfigFields)
