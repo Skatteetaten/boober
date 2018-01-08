@@ -16,6 +16,7 @@ import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.AuroraPermissions
 import no.skatteetaten.aurora.boober.model.EncryptedFileVault
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import spock.lang.Specification
@@ -51,11 +52,6 @@ class VaultServiceOldTest extends Specification {
     UserDetailsProvider userDetailsProvider() {
       factory.Mock(UserDetailsProvider)
     }
-
-    @Bean
-    PermissionService secretPermissionService() {
-      factory.Mock(PermissionService)
-    }
   }
 
   @Autowired
@@ -66,9 +62,6 @@ class VaultServiceOldTest extends Specification {
 
   @Autowired
   GitService gitService
-
-  @Autowired
-  PermissionService permissionService
 
   private Git createRepoAndSaveFiles(String affiliation, EncryptedFileVault vault) {
     userDetailsProvider.authenticatedUser >> new User("test", "", "Test Foo")

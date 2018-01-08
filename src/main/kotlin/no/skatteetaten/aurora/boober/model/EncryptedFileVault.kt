@@ -2,10 +2,14 @@ package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import no.skatteetaten.aurora.boober.service.AuroraPermissions
 import org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.charset.Charset
+
+// TODO: Delete this class (AuroraPermissions)
+data class AuroraPermissions @JvmOverloads constructor(
+        val groups: List<String>? = listOf()
+)
 
 typealias Decryptor = (String) -> String
 typealias Encryptor = (String) -> String

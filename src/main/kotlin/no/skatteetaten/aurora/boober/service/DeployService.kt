@@ -2,13 +2,14 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.dockerGroupSafeName
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.eclipse.jgit.api.Git
 import org.slf4j.Logger
@@ -17,24 +18,12 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.*
 
-data class DeployParams(
-        val envs: List<String> = listOf(),
-        val apps: List<String> = listOf(),
-        val overrides: MutableList<AuroraConfigFile> = mutableListOf(),
-        val deploy: Boolean
-) {
-    val applicationIds: List<ApplicationId>
-        get() = envs.flatMap { env -> apps.map { app -> ApplicationId(env, app) } }
-}
-
-
 @Service
 class DeployService(
+        val deploymentSpecService: DeploymentSpecService,
         val openShiftObjectGenerator: OpenShiftObjectGenerator,
         val openShiftClient: OpenShiftClient,
         val gitService: GitService,
-        val deployBundleService: DeployBundleService,
-        val permissionService: PermissionService,
         val mapper: ObjectMapper,
         val dockerService: DockerService,
         val resourceProvisioner: ExternalResourceProvisioner,
@@ -55,26 +44,13 @@ class DeployService(
             throw IllegalArgumentException("Specify applicationId")
         }
 
-        return deployBundleService.withDeployBundle(affiliation, overrides) { repo, it ->
-            logger.debug("deploy")
-            logger.debug("create deployment spec")
+        val deploymentSpecs = deploymentSpecService.createValidatedAuroraDeploymentSpecs(affiliation, applicationIds, overrides)
 
-            val deploymentSpecs: List<AuroraDeploymentSpec> = deployBundleService.createAuroraDeploymentSpecs(it, applicationIds)
-            val deployResults: List<AuroraDeployResult> = deploymentSpecs
-                    .filter { it.cluster == cluster }
-//                    .filter { hasAccessToAllVolumes(it.volume) }
-                    .map {
-                        logger.debug("deploy from spec")
-                        val res = deployFromSpec(it, deploy)
-                        logger.debug("/deploy from spec")
-                        res
-                    }
-            logger.debug("mark release")
-            markRelease(deployResults, repo)
-            logger.debug("/mark release")
-            logger.debug("/deploy")
-            deployResults
-        }
+        val deployResults: List<AuroraDeployResult> = deploymentSpecs
+                .filter { it.cluster == cluster }
+                .map { deployFromSpec(it, deploy) }
+//        markRelease(deployResults, repo)
+        return deployResults
     }
 
     fun deployFromSpec(deploymentSpec: AuroraDeploymentSpec, shouldDeploy: Boolean): AuroraDeployResult {
@@ -101,7 +77,6 @@ class DeployService(
         if (!success) {
             return result
         }
-
 
         if (deploymentSpec.deploy?.flags?.pause == true) {
             return result

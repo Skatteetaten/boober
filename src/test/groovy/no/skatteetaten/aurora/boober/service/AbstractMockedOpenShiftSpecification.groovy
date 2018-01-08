@@ -36,10 +36,8 @@ import spock.mock.DetachedMockFactory
     GitServices,
     EncryptionService,
     AuroraConfigService,
-    DeployBundleService,
     VaultService,
     ObjectMapper,
-    PermissionService,
     Config,
     AuroraMetrics,
     UserDetailsTokenProvider,
@@ -109,9 +107,6 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
   OpenShiftClient openShiftClient
 
   @Autowired
-  DeployBundleService deployBundleService
-
-  @Autowired
   private AuroraConfigService auroraConfigService
 
   @Autowired
@@ -141,7 +136,6 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
 
     if (useAuroraConfig) {
 
-//      def vault = new EncryptedFileVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
       userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User", [])
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
@@ -151,7 +145,6 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
       GitServiceHelperKt.recreateRepo(new File("/tmp/boobertest/aos"))
 
       vaultService.createOrUpdateFileInVault("aos", "foo", "latest.properties", "FOO=BAR")
-//      vaultService.save("aos", vault, false)
       auroraConfigService.save(auroraConfig)
       git = auroraConfigGitService.openRepo(auroraConfig.affiliation)
     }
