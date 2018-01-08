@@ -130,24 +130,24 @@ class DeployBundleService(
         }.onErrorThrow(::MultiApplicationValidationException)
     }
 
-    fun createAuroraDeploymentSpec(deployBundle: DeployBundle, aid: ApplicationId): AuroraDeploymentSpec {
-
-        val auroraConfig = deployBundle.auroraConfig
-        val overrideFiles = deployBundle.overrideFiles
-
-        return createAuroraDeploymentSpec(auroraConfig, aid, overrideFiles)
-    }
-
     private fun tryCreateAuroraDeploymentSpec(deployBundle: DeployBundle, aid: ApplicationId): Pair<AuroraDeploymentSpec?, ExceptionWrapper?> {
 
         return try {
             val auroraDeploymentSpec: AuroraDeploymentSpec = createAuroraDeploymentSpec(deployBundle, aid)
+            //TODO: We need to validate here
+            //deploymentSpecValidator.assertIsValid(auroraDeploymentSpec)
             Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = auroraDeploymentSpec, second = null)
         } catch (e: Throwable) {
             Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = null, second = ExceptionWrapper(aid, e))
         }
     }
 
+    fun createAuroraDeploymentSpec(deployBundle: DeployBundle, aid: ApplicationId): AuroraDeploymentSpec {
+
+        val auroraConfig = deployBundle.auroraConfig
+        val overrideFiles = deployBundle.overrideFiles
+        return createAuroraDeploymentSpec(auroraConfig, aid, overrideFiles)
+    }
     private fun getRepo(affiliation: String): Git {
 
         return gitService.checkoutRepository(affiliation)

@@ -22,9 +22,17 @@ class AuroraConfigValidator(val applicationId: ApplicationId,
     @JvmOverloads
     fun validate(fullValidation: Boolean = true) {
 
+        val envPointers = listOf("envName", "cluster", "affiliation",
+                "permissions/admin", "permissions/view", "permissions/adminServiceAccount")
+
         val errors: List<ConfigFieldError> = fieldHandlers.mapNotNull { e ->
             val rawField = auroraConfigFields.fields[e.name]!!
 
+            val invalidEnvSource = envPointers.contains(e.name) && rawField.source?.name
+                    ?.let { !it.split("/").last().startsWith("about") }
+                    ?: false
+
+            logger.trace("Validating field=${e.name}")
             logger.trace("Validating field=${e.name}")
             val auroraConfigField: JsonNode? = rawField.valueOrDefault
             logger.trace("value is=${jacksonObjectMapper().writeValueAsString(auroraConfigField)}")
@@ -33,6 +41,7 @@ class AuroraConfigValidator(val applicationId: ApplicationId,
             logger.trace("validator result is=${result}")
 
             val err = when {
+                invalidEnvSource -> ConfigFieldError.illegal("Invalid Source field=${e.name} requires an about source. Actual source is source=${rawField.source?.name}", rawField)
                 result == null -> null
                 auroraConfigField != null -> ConfigFieldError.illegal(result.localizedMessage, rawField)
                 else -> ConfigFieldError.missing(result.localizedMessage, e.name)

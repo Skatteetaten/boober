@@ -24,10 +24,22 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
   def setup() {
     udp.authenticatedUser >> new User("hero", "token", "Test User", [])
   }
+  def "Fails when affiliation is not in about file"() {
+    given:
+    auroraConfigJson["utv/aos-simple.json"] = '''{ "affiliation": "aaregistere" }'''
+
+    when:
+    createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    then:
+    def e = thrown(AuroraConfigException)
+    e.message ==
+            "Config for application aos-simple in environment utv contains errors. Invalid Source field=affiliation requires an about source. Actual source is source=utv/aos-simple.json."
+  }
 
   def "Fails when affiliation is too long"() {
     given:
-      auroraConfigJson["utv/aos-simple.json"] = '''{ "affiliation": "aaregistere" }'''
+      auroraConfigJson["utv/about.json"] = '''{ "affiliation": "aaregistere", "cluster" : "utv" }'''
 
     when:
       createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
@@ -40,7 +52,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
 
   def "Fails when admin groups is empty"() {
     given:
-      auroraConfigJson["utv/aos-simple.json"] = '''{ "permissions": { "admin": "" } }'''
+      auroraConfigJson["utv/about.json"] = '''{ "permissions": { "admin": "" }, "cluster" : "utv" }'''
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
     when:
@@ -52,7 +64,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
 
   def "Fails when admin groups does not exist"() {
     given:
-      auroraConfigJson["utv/aos-simple.json"] = '''{ "permissions": { "admin": "APP_PaaS_utv" } }'''
+      auroraConfigJson["utv/about.json"] = '''{ "permissions": { "admin": "APP_PaaS_utv" }, "cluster" : "utv" }'''
       openShiftClient.isValidGroup("APP_PaaS_utv") >> false
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 

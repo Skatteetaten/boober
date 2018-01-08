@@ -19,13 +19,16 @@ class AuroraDeploymentSpecValidator(val openShiftClient: OpenShiftClient, val op
         validateTemplateIfSet(deploymentSpec)
     }
 
+
     private fun validateAdminGroups(deploymentSpec: AuroraDeploymentSpec) {
 
         val adminGroups: Set<String> = deploymentSpec.permissions.admin.groups ?: setOf()
         adminGroups.takeIf { it.isEmpty() }
                 ?.let { throw AuroraDeploymentSpecValidationException("permissions.admin.groups cannot be empty") }
 
-        adminGroups.filter { !openShiftClient.isValidGroup(it) }
+        adminGroups.filter { !openShiftClient.isValidGroup(it)}
+                //TODO: is this one not better?
+        //adminGroups.filter { !openShiftClient.getGroups().groupUsers.containsKey(it) }
                 .takeIf { it.isNotEmpty() }
                 ?.let { it: List<String> -> throw AuroraDeploymentSpecValidationException("$it is not a valid group") }
     }

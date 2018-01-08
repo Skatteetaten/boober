@@ -16,7 +16,7 @@ spring:
   cache:
     caffeine:
       spec: maximumSize=2000,expireAfterWrite=300s
-    cache-names: groups
+    cache-names: groups, templates
   metrics:
     prometheus:
       timerPercentilesMin: "PT0.1S"

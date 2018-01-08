@@ -51,6 +51,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
     ): AuroraDeploymentSpec {
         val name: String = auroraConfigFields.extract("name")
 
+        //TODO: create AuroraDeployEnvironment containing affiliation, cluster, envName, permissions
         return AuroraDeploymentSpec(
                 schemaVersion = auroraConfigFields.extract("schemaVersion"),
 

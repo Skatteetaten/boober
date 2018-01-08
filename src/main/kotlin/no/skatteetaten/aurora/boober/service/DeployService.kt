@@ -58,13 +58,15 @@ class DeployService(
         return deployBundleService.withDeployBundle(affiliation, overrides) { repo, it ->
             logger.debug("deploy")
             logger.debug("create deployment spec")
-
             val deploymentSpecs: List<AuroraDeploymentSpec> = deployBundleService.createAuroraDeploymentSpecs(it, applicationIds)
+
+            //TODO: find distinct AuroraDeployEnvironments and create them
             val deployResults: List<AuroraDeployResult> = deploymentSpecs
                     .filter { it.cluster == cluster }
 //                    .filter { hasAccessToAllVolumes(it.volume) }
                     .map {
                         logger.debug("deploy from spec")
+                        //TODO: find the result of the namespace command that is valid here and send it to deployFromSpec
                         val res = deployFromSpec(it, deploy)
                         logger.debug("/deploy from spec")
                         res
@@ -85,9 +87,12 @@ class DeployService(
         val provisioningResult = resourceProvisioner.provisionResources(deploymentSpec)
 
         logger.debug("Project exist")
+        //TODO: This will now always be true, analyze the incomming enviromentalResponse
         val projectExist = openShiftClient.projectExists(deploymentSpec.namespace)
         logger.debug("Prepare environment")
+        //TODO: This has already been done.
         val environmentResponses = prepareDeployEnvironment(deploymentSpec, projectExist)
+
         logger.debug("Apply objects")
         val applicationResponses: List<OpenShiftResponse> = applyOpenShiftApplicationObjects(deployId, deploymentSpec, provisioningResult, projectExist)
 
