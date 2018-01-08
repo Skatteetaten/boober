@@ -63,14 +63,14 @@ class DeployServiceFromGitFailTest extends AbstractMockedOpenShiftSpecification 
     then:
       def git = gitService.checkoutRepository(affiliation)
 
-      def history = gitService.tagHistory(git)
+      def history = gitService.getTagHistory(git)
       history.size() == 1
       def revTag = history[0]
 
       revTag.taggerIdent != null
       revTag.fullMessage.startsWith("""{"deployId":""")
       revTag.tagName.startsWith("FAILED/utv.aos-booberdev.aos-simple/")
-      gitService.closeRepository(git)
+      git.close()
 
   }
 

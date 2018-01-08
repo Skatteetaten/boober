@@ -19,7 +19,7 @@ class DeployLogService(@TargetDomain(AURORA_CONFIG) val gitService: GitService, 
             val result = filterSensitiveInformation(it)
             val prefix = if (it.success) DEPLOY_PREFIX else FAILED_PREFIX
 
-            gitService.markRelease(repo, "$prefix/${it.tag}", mapper.writeValueAsString(result))
+            gitService.createAnnotatedTag(repo, "$prefix/${it.tag}", mapper.writeValueAsString(result))
         }
         gitService.pushTags(repo, refs)
     }
@@ -32,19 +32,19 @@ class DeployLogService(@TargetDomain(AURORA_CONFIG) val gitService: GitService, 
 
     fun deployHistory(affiliation: String): List<DeployHistory> {
         val repo = gitService.checkoutRepository(affiliation)
-        val res = gitService.tagHistory(repo)
+        val res = gitService.getTagHistory(repo)
                 .filter { it.tagName.startsWith(DEPLOY_PREFIX) }
                 .map { DeployHistory(it.taggerIdent, mapper.readTree(it.fullMessage)) }
-        gitService.closeRepository(repo)
+        repo.close()
         return res
     }
 
     fun findDeployResultById(auroraConfigId: String, deployId: String): DeployHistory? {
         val repo = gitService.checkoutRepository(auroraConfigId)
-        val res: DeployHistory? = gitService.tagHistory(repo)
+        val res: DeployHistory? = gitService.getTagHistory(repo)
                 .firstOrNull { it.tagName.endsWith(deployId) }
                 ?.let { DeployHistory(it.taggerIdent, mapper.readTree(it.fullMessage)) }
-        gitService.closeRepository(repo)
+        repo.close()
         return res
     }
 }

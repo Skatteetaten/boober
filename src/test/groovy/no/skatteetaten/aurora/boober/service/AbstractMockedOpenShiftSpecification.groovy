@@ -45,7 +45,9 @@ import spock.mock.DetachedMockFactory
     SharedSecretReader,
     VelocityTemplateJsonService,
     OpenShiftObjectLabelService,
-    RedeployService
+    RedeployService,
+    DeploymentSpecService,
+    DeployLogService
 ])
 class AbstractMockedOpenShiftSpecification extends AbstractSpec {
 
@@ -112,14 +114,6 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
   @Autowired
   ObjectMapper mapper
 
-  def git
-
-  def cleanup() {
-    if (git != null) {
-      auroraConfigGitService.closeRepository(git)
-    }
-  }
-
   def setup() {
 
     def currentFeature = specificationContext.currentFeature
@@ -139,20 +133,17 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
       userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User", [])
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-      auroraConfigGitService.deleteFiles(auroraConfig.affiliation)
       GitServiceHelperKt.recreateEmptyBareRepos(auroraConfig.affiliation)
       GitServiceHelperKt.recreateRepo(new File("/tmp/vaulttest/aos"))
       GitServiceHelperKt.recreateRepo(new File("/tmp/boobertest/aos"))
 
       vaultService.createOrUpdateFileInVault("aos", "foo", "latest.properties", "FOO=BAR")
       auroraConfigService.save(auroraConfig)
-      git = auroraConfigGitService.openRepo(auroraConfig.affiliation)
     }
   }
 
   void createRepoAndSaveFiles(AuroraConfig auroraConfig) {
 
-    auroraConfigGitService.deleteFiles(auroraConfig.affiliation)
     GitServiceHelperKt.recreateEmptyBareRepos(auroraConfig.affiliation)
     auroraConfigService.save(auroraConfig)
   }

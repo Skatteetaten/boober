@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.treewalk.TreeWalk
 import org.eclipse.jgit.treewalk.filter.PathFilter
 import org.junit.Ignore
@@ -14,7 +13,6 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Metrics
 import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.AuroraMetrics
-import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraPermissions
 import no.skatteetaten.aurora.boober.model.EncryptedFileVault
@@ -63,12 +61,6 @@ class VaultServiceOldTest extends Specification {
   @Autowired
   GitService gitService
 
-  private Git createRepoAndSaveFiles(String affiliation, EncryptedFileVault vault) {
-    userDetailsProvider.authenticatedUser >> new User("test", "", "Test Foo")
-    vaultService.save(affiliation, vault, false)
-    return gitService.openRepo(affiliation)
-  }
-
   def affiliation = "aos"
   def vaultName = "foo"
 
@@ -79,14 +71,8 @@ class VaultServiceOldTest extends Specification {
   def git
 
   def setup() {
-    gitService.deleteFiles(affiliation)
+    GitServiceHelperKt.recreateCheckoutFolders()
     GitServiceHelperKt.recreateEmptyBareRepos(affiliation)
-  }
-
-  def cleanup() {
-    if (git != null) {
-      gitService.closeRepository(git)
-    }
   }
 
   def "Should successfully save secrets to git"() {
@@ -316,7 +302,6 @@ class VaultServiceOldTest extends Specification {
 
     when:
       def vaults = vaultService.findAllVaultsWithUserAccessInVaultCollection(affiliation)
-
 
     then:
       vaults.size() == 3

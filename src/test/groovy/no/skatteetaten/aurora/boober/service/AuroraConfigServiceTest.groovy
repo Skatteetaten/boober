@@ -58,7 +58,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
     then:
       def git = gitService.checkoutRepository(AURORA_CONFIG_NAME)
       def gitLog = git.log().call().head()
-      gitService.closeRepository(git)
+      git.close()
       gitLog.authorIdent.name == "anonymous"
       gitLog.fullMessage == "Added: 0, Modified: 1, Deleted: 0"
   }
@@ -146,7 +146,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
       GitServiceHelperKt.recreateFolder(CHECKOUT_PATH)
       def git = gitService.checkoutRepository(AURORA_CONFIG_NAME)
       def gitLog = git.log().call().head()
-      gitService.closeRepository(git)
+      git.close()
 
     then:
       gitLog.fullMessage == "Added: 0, Modified: 1, Deleted: 0"
