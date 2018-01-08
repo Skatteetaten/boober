@@ -99,7 +99,7 @@ class VaultService(
 
     private fun assertCurrentUserHasAccess(vault: EncryptedFileVault) {
         if (!userDetailsProvider.getAuthenticatedUser().hasAnyRole(vault.permissions?.groups)) {
-            throw IllegalAccessError("You do not have permission to operate on this vault (${vault.name})")
+            throw UnauthorizedAccessException("You do not have permission to operate on this vault (${vault.name})")
         }
     }
 

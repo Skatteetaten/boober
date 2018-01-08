@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -11,7 +10,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.openshiftKind
-import org.eclipse.jgit.api.Git
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -23,39 +21,35 @@ class DeployService(
         val deploymentSpecService: DeploymentSpecService,
         val openShiftObjectGenerator: OpenShiftObjectGenerator,
         val openShiftClient: OpenShiftClient,
-        val gitService: GitService,
-        val mapper: ObjectMapper,
         val dockerService: DockerService,
         val resourceProvisioner: ExternalResourceProvisioner,
         val redeployService: RedeployService,
+        val deployLogService: DeployLogService,
         @Value("\${openshift.cluster}") val cluster: String,
         @Value("\${boober.docker.registry}") val dockerRegistry: String) {
 
     val logger: Logger = LoggerFactory.getLogger(DeployService::class.java)
 
-    private val DEPLOY_PREFIX = "DEPLOY"
-    private val FAILED_PREFIX = "FAILED"
-
-
     @JvmOverloads
-    fun executeDeploy(affiliation: String, applicationIds: List<ApplicationId>, overrides: List<AuroraConfigFile> = mutableListOf(), deploy: Boolean = true): List<AuroraDeployResult> {
+    fun executeDeploy(auroraConfigName: String, applicationIds: List<ApplicationId>, overrides: List<AuroraConfigFile> = listOf(), deploy: Boolean = true): List<AuroraDeployResult> {
 
         if (applicationIds.isEmpty()) {
             throw IllegalArgumentException("Specify applicationId")
         }
 
-        val deploymentSpecs = deploymentSpecService.createValidatedAuroraDeploymentSpecs(affiliation, applicationIds, overrides)
+        val deploymentSpecs = deploymentSpecService.createValidatedAuroraDeploymentSpecs(auroraConfigName, applicationIds, overrides)
+        val deployResults: List<AuroraDeployResult> = deploymentSpecs.mapNotNull { deployFromSpec(it, deploy) }
+        deployLogService.markRelease(auroraConfigName, deployResults)
 
-        val deployResults: List<AuroraDeployResult> = deploymentSpecs
-                .filter { it.cluster == cluster }
-                .map { deployFromSpec(it, deploy) }
-//        markRelease(deployResults, repo)
         return deployResults
     }
 
-    fun deployFromSpec(deploymentSpec: AuroraDeploymentSpec, shouldDeploy: Boolean): AuroraDeployResult {
+    fun deployFromSpec(deploymentSpec: AuroraDeploymentSpec, shouldDeploy: Boolean): AuroraDeployResult? {
 
         val deployId = UUID.randomUUID().toString()
+        if (deploymentSpec.cluster != cluster) {
+            return null
+        }
 
         logger.debug("Resource provisioning")
         val provisioningResult = resourceProvisioner.provisionResources(deploymentSpec)
@@ -177,61 +171,6 @@ class DeployService(
         val changed = hostChanged || pathChanged
 
         return changed
-    }
-
-    private fun markRelease(res: List<AuroraDeployResult>, repo: Git) {
-
-        val refs = res.map {
-            val result = filterSensitiveInformation(it)
-            val prefix = if (it.success) {
-                DEPLOY_PREFIX
-            } else {
-                FAILED_PREFIX
-            }
-            gitService.markRelease(repo, "$prefix/${it.tag}", mapper.writeValueAsString(result))
-        }
-        gitService.pushTags(repo, refs)
-    }
-
-/*
-    fun hasAccessToAllVolumes(volume: AuroraVolume?): Boolean {
-        if (volume == null) return true
-
-
-        val secretAccess = permissionService.hasUserAccess(volume.permissions)
-
-        val mountsWithNoPermissions = volume.mounts?.filter {
-            !permissionService.hasUserAccess(it.permissions)
-        } ?: emptyList()
-        val volumeAccess = mountsWithNoPermissions.isEmpty()
-
-        return secretAccess && volumeAccess
-
-    }
-*/
-
-    private fun filterSensitiveInformation(result: AuroraDeployResult): AuroraDeployResult {
-
-        val filteredResponses = result.openShiftResponses.filter { it.responseBody?.get("kind")?.asText() != "Secret" }
-        return result.copy(openShiftResponses = filteredResponses)
-    }
-
-    fun deployHistory(affiliation: String): List<DeployHistory> {
-        val repo = gitService.checkoutRepository(affiliation)
-        val res = gitService.tagHistory(repo)
-                .filter { it.tagName.startsWith(DEPLOY_PREFIX) }
-                .map { DeployHistory(it.taggerIdent, mapper.readTree(it.fullMessage)) }
-        gitService.closeRepository(repo)
-        return res
-    }
-
-    fun findDeployResultById(auroraConfigId: String, deployId: String): DeployHistory? {
-        val repo = gitService.checkoutRepository(auroraConfigId)
-        val res: DeployHistory? = gitService.tagHistory(repo)
-                .firstOrNull { it.tagName.endsWith(deployId) }
-                ?.let { DeployHistory(it.taggerIdent, mapper.readTree(it.fullMessage)) }
-        gitService.closeRepository(repo)
-        return res
     }
 }
 

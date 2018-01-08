@@ -14,6 +14,8 @@ class GitException(messages: String?, cause: Throwable?) : ServiceException(mess
 
 class AuroraDeploymentSpecValidationException(message: String) : ServiceException(message)
 
+class UnauthorizedAccessException(message: String): ServiceException(message)
+
 data class ExceptionWrapper(val aid: ApplicationId, val throwable: Throwable)
 
 data class ValidationError(val application: String, val environment: String, val messages: List<Any>)
