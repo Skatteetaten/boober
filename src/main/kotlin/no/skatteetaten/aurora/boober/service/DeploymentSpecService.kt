@@ -5,7 +5,10 @@ import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.newFixedThreadPoolContext
 import kotlinx.coroutines.experimental.runBlocking
 import no.skatteetaten.aurora.boober.mapper.v1.createAuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -33,14 +36,14 @@ class DeploymentSpecService(
         return createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig, overrideFiles), applicationIds)
     }
 
-    fun validateAuroraConfig(auroraConfigName: String, overrideFiles: List<AuroraConfigFile> = listOf()): List<AuroraDeploymentSpec> {
+    fun validateAuroraConfig(auroraConfigName: String, overrideFiles: List<AuroraConfigFile> = listOf()) {
         val auroraConfig = auroraConfigService.findAuroraConfig(auroraConfigName)
-        return validateAuroraConfig(auroraConfig, overrideFiles)
+        validateAuroraConfig(auroraConfig, overrideFiles)
     }
 
-    fun validateAuroraConfig(auroraConfig: AuroraConfig, overrideFiles: List<AuroraConfigFile>): List<AuroraDeploymentSpec> {
+    fun validateAuroraConfig(auroraConfig: AuroraConfig, overrideFiles: List<AuroraConfigFile> = listOf()) {
         val applicationIds = auroraConfig.getApplicationIds()
-        return createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig, overrideFiles), applicationIds)
+        createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig, overrideFiles), applicationIds)
     }
 
     private fun createValidatedAuroraDeploymentSpecs(auroraConfigWithOverrides: AuroraConfigWithOverrides, applicationIds: List<ApplicationId>): List<AuroraDeploymentSpec> {
