@@ -1,12 +1,7 @@
 package no.skatteetaten.aurora.boober.model
 
-import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
-
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-
-import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
-import spock.lang.Specification
 
 class AuroraConfigTest extends AbstractAuroraConfigTest {
 
@@ -122,7 +117,7 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
     given:
       def aid = DEFAULT_AID
       def filename = "${aid.environment}/${aid.application}.json"
-      def auroraConfig = createAuroraConfig(modify(defaultAuroraConfig(), filename, { version = "1.0.0"}))
+      def auroraConfig = createAuroraConfig(modify(defaultAuroraConfig(), filename, { version = "1.0.0" }))
 
       def jsonOp = """[{
   "op": "replace",
