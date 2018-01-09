@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.github.fge.jsonpatch.JsonPatch
 import java.io.File
 import java.util.*
 
@@ -29,8 +30,6 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
             return AuroraConfig(nodes.map { AuroraConfigFile(it.key, it.value!!, false) }, folder.name)
         }
     }
-
-    fun getVersions() = auroraConfigFiles.associate { it.name to it.version }
 
     fun getApplicationIds(): List<ApplicationId> {
 
@@ -80,6 +79,21 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
         }
 
         return this.copy(auroraConfigFiles = files)
+    }
+
+    fun patchFile(filename: String, jsonPatchOp: String, previousVersion: String? = null) : AuroraConfig {
+
+        val mapper = jacksonObjectMapper()
+        val patch: JsonPatch = mapper.readValue(jsonPatchOp, JsonPatch::class.java)
+
+        val auroraConfigFile = findFile(filename)
+                ?: throw IllegalArgumentException("No such file $filename in AuroraConfig ${affiliation}")
+        val originalContentsNode = mapper.convertValue(auroraConfigFile.contents, JsonNode::class.java)
+
+        val fileContents = patch.apply(originalContentsNode)
+        val updatedAuroraConfig = updateFile(filename, fileContents, previousVersion)
+
+        return updatedAuroraConfig
     }
 
     private fun getApplicationFile(applicationId: ApplicationId): AuroraConfigFile {

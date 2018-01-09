@@ -75,15 +75,7 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
     fun patchAuroraConfigFile(name: String, filename: String, jsonPatchOp: String, previousVersion: String? = null): AuroraConfig {
 
         val auroraConfig = findAuroraConfig(name)
-        val mapper = jacksonObjectMapper()
-        val patch: JsonPatch = mapper.readValue(jsonPatchOp, JsonPatch::class.java)
-
-        val auroraConfigFile = auroraConfig.findFile(filename)
-                ?: throw IllegalArgumentException("No such file $filename in AuroraConfig ${auroraConfig.affiliation}")
-        val originalContentsNode = mapper.convertValue(auroraConfigFile.contents, JsonNode::class.java)
-
-        val fileContents = patch.apply(originalContentsNode)
-        val updatedAuroraConfig = auroraConfig.updateFile(filename, fileContents, previousVersion)
+        val updatedAuroraConfig = auroraConfig.patchFile(filename, jsonPatchOp, previousVersion)
 
         return save(updatedAuroraConfig)
     }

@@ -1,11 +1,14 @@
 package no.skatteetaten.aurora.boober.model
 
+import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
+
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
+import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
 import spock.lang.Specification
 
-class AuroraConfigTest extends Specification {
+class AuroraConfigTest extends AbstractAuroraConfigTest {
 
   def mapper = new ObjectMapper()
 
@@ -76,7 +79,6 @@ class AuroraConfigTest extends Specification {
 
   def "Returns files for application with app for env override"() {
     given:
-
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
 
     when:
@@ -114,6 +116,27 @@ class AuroraConfigTest extends Specification {
       def applicationFile = filesForApplication.find { it.name == 'booberdev/aos-complex.json' }
       String baseFile = applicationFile.contents.get("baseFile").textValue()
       filesForApplication.any { it.name == baseFile }
+  }
+
+  def "Patch file"() {
+    given:
+      def aid = DEFAULT_AID
+      def filename = "${aid.environment}/${aid.application}.json"
+      def auroraConfig = createAuroraConfig(modify(defaultAuroraConfig(), filename, { version = "1.0.0"}))
+
+      def jsonOp = """[{
+  "op": "replace",
+  "path": "/version",
+  "value": "3"
+}]
+"""
+    when:
+      def version = auroraConfig.auroraConfigFiles.find { it.name == filename }.version
+      def patchedAuroraConfig = auroraConfig.patchFile(filename, jsonOp, version)
+
+    then:
+      def patchedFile = patchedAuroraConfig.auroraConfigFiles.find { it.name == filename }
+      patchedFile.contents.at("/version").textValue() == "3"
   }
 
   List<AuroraConfigFile> createMockFiles(String... files) {
