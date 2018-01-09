@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.service
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.utils.LambdaOutputStream
 import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.lib.PersonIdent
 import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.lib.TextProgressMonitor
@@ -67,20 +66,6 @@ open class GitService(
 
     val cp = UsernamePasswordCredentialsProvider(username, password)
 
-    // Try to delete this. Only used in tests.
-    fun deleteFiles(affiliation: String) {
-        val repoDir = File(checkoutPath + "/" + affiliation)
-        if (repoDir.exists()) {
-            repoDir.deleteRecursively()
-        }
-    }
-
-    //only test
-    fun openRepo(affiliation: String): Git {
-        val repoPath = File("$checkoutPath/$affiliation")
-        return Git.open(repoPath)
-    }
-
     fun checkoutRepository(repositoryName: String): Git {
         val repoPath = File(File("$checkoutPath/$repositoryName").absoluteFile.absolutePath)
         if (repoPath.exists()) {
@@ -113,15 +98,23 @@ open class GitService(
         })
     }
 
-    fun closeRepository(repo: Git) {
-        repo.close()
-    }
+    fun commitAndPushChanges(repo: Git, commitMessage: String? = null) {
 
-    //TODO: move out to another abstraction
-    fun getAllAuroraConfigFiles(git: Git): Map<String, File> {
-        return getAllFiles(git)
+        repo.add().addFilepattern(".").call()
+        val status = repo.status().call()
+        val message = commitMessage ?: "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}"
+        val authorIdent = getPersonIdentFromUserDetails()
+        repo.commit()
+                .setAll(true)
+                .setAllowEmpty(false)
+                .setAuthor(authorIdent)
+                .setMessage(message)
+                .call()
+        repo.push()
+                .setCredentialsProvider(cp)
+                .add("refs/heads/master")
+                .call()
     }
-
 
     fun pushTags(git: Git, tags: List<Ref>) {
 
@@ -142,55 +135,21 @@ open class GitService(
         logger.debug("/push tags to git")
     }
 
-
-    fun markRelease(git: Git, tag: String, tagBody: String): Ref {
-        val user = userDetails.getAuthenticatedUser().let { PersonIdent(it.fullName ?: it.username, "${it.username}@skatteetaten.no") }
+    fun createAnnotatedTag(git: Git, tag: String, tagBody: String): Ref {
+        val user = getPersonIdentFromUserDetails()
         return git.tag().setTagger(user).setAnnotated(true).setName(tag).setMessage(tagBody).call()
     }
 
-    fun readTag(git: Git, oid: ObjectId): RevTag? {
-
-        val objectLoader = git.repository.open(oid)
-
-        val bytes = objectLoader.getCachedBytes(Int.MAX_VALUE)
-
-        return RevTag.parse(bytes)
-
-    }
-
-    fun tagHistory(git: Git): List<RevTag> {
+    fun getTagHistory(git: Git): List<RevTag> {
         val tags = git.tagList().call()
-        return tags.mapNotNull { readTag(git, it.objectId) }
+        return tags.mapNotNull {
+            val objectLoader = git.repository.open(it.objectId)
+            val bytes = objectLoader.getCachedBytes(Int.MAX_VALUE)
+            RevTag.parse(bytes)
+        }
     }
 
-
-    //TODO: This and the one below must be joined together somehow.
-/*
-    fun getFile(git: Git, fileName: String): File? {
-
-        val folder = git.repository.directory.parentFile
-        return folder.walkBottomUp()
-                .onEnter { !it.name.startsWith(".git") }
-                .filter { it.isFile && it.relativeTo(folder).path == fileName }
-                .map {
-                    val path = it.relativeTo(folder).path
-                    it
-                }.firstOrNull()
-    }
-*/
-
-
-    private fun getAllFiles(git: Git): Map<String, File> {
-
-        val folder = git.repository.directory.parentFile
-        val files = folder.walkBottomUp()
-                //TODO: Ignore all files starting with . not just .git
-                .onEnter { !it.name.startsWith(".git") }
-                .filter { it.isFile }
-                .associate {
-                    it.relativeTo(folder).path to it
-                }
-        return files
-    }
+    private fun getPersonIdentFromUserDetails() =
+            userDetails.getAuthenticatedUser().let { PersonIdent(it.fullName ?: it.username, "${it.username}@skatteetaten.no") }
 
 }

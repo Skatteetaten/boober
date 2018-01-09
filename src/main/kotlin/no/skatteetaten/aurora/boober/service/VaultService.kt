@@ -6,7 +6,6 @@ import no.skatteetaten.aurora.boober.model.VaultCollection
 import no.skatteetaten.aurora.boober.service.GitServices.Domain.VAULT
 import no.skatteetaten.aurora.boober.service.GitServices.TargetDomain
 import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.lib.PersonIdent
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -17,7 +16,7 @@ data class VaultWithAccess @JvmOverloads constructor(
 ) {
     companion object {
         fun create(vault: EncryptedFileVault, user: User): VaultWithAccess {
-            val hasAccess = user.hasAnyRole(vault.permissions?.groups)
+            val hasAccess = user.hasAnyRole(vault.permissions)
             return VaultWithAccess(if (hasAccess) vault else null, vault.name, hasAccess)
         }
     }
@@ -33,16 +32,6 @@ class VaultService(
 
     private val logger = LoggerFactory.getLogger(VaultService::class.java)
 
-    fun findVaultCollection(vaultCollectionName: String): VaultCollection {
-
-        return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo -> vaultCollection })
-    }
-
-    fun findAllVaultsInVaultCollection(vaultCollectionName: String): List<EncryptedFileVault> {
-
-        return findVaultCollection(vaultCollectionName).vaults
-    }
-
     fun findAllVaultsWithUserAccessInVaultCollection(vaultCollectionName: String): List<VaultWithAccess> {
 
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
@@ -53,9 +42,8 @@ class VaultService(
 
     fun findVault(vaultCollectionName: String, vaultName: String): EncryptedFileVault {
 
-        val vault = (findAllVaultsInVaultCollection(vaultCollectionName).find { it.name == vaultName }
-                ?: throw IllegalArgumentException("Vault not found name=$vaultName"))
-        assertCurrentUserHasAccess(vault)
+        val vault = findVaultByNameIfAllowed(findVaultCollection(vaultCollectionName), vaultName)
+                ?: throw IllegalArgumentException("Vault not found name=$vaultName")
         return vault
     }
 
@@ -66,11 +54,10 @@ class VaultService(
     ): EncryptedFileVault {
 
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
-            val vault = vaultCollection.findVaultByName(vaultName) ?: vaultCollection.createVault(vaultName)
-            assertCurrentUserHasAccess(vault)
+            val vault = findVaultByNameIfAllowed(vaultCollection, vaultName) ?: vaultCollection.createVault(vaultName)
 
             vault.updateFile(fileName, fileContents)
-            commitAndPushVaultChanges(repo, vault.name)
+            gitService.commitAndPushChanges(repo)
             vault
         })
     }
@@ -78,28 +65,42 @@ class VaultService(
     fun deleteFileInVault(vaultCollectionName: String, vaultName: String, fileName: String): EncryptedFileVault? {
 
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
-            val vault = vaultCollection.findVaultByName(vaultName) ?: return@withVaultCollectionAndRepoForUpdate null
-            assertCurrentUserHasAccess(vault)
+            val vault = findVaultByNameIfAllowed(vaultCollection, vaultName) ?: return@withVaultCollectionAndRepoForUpdate null
 
             vault.deleteFile(fileName)
-            commitAndPushVaultChanges(repo, vault.name)
+            gitService.commitAndPushChanges(repo)
             vault
         })
     }
 
     fun deleteVault(vaultCollectionName: String, vaultName: String) {
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
-            val vault = vaultCollection.findVaultByName(vaultName) ?: return@withVaultCollectionAndRepoForUpdate
-            assertCurrentUserHasAccess(vault)
+            findVaultByNameIfAllowed(vaultCollection, vaultName) ?: return@withVaultCollectionAndRepoForUpdate
 
             vaultCollection.deleteVault(vaultName)
-            commitAndPushVaultChanges(repo, vault.name)
+            gitService.commitAndPushChanges(repo)
         })
     }
 
+    fun setVaultPermissions(vaultCollectionName: String, vaultName: String, groupPermissions: List<String>) {
+
+        return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
+            val vault = findVaultByNameIfAllowed(vaultCollection, vaultName) ?: return@withVaultCollectionAndRepoForUpdate
+
+            vault.permissions = groupPermissions
+            gitService.commitAndPushChanges(repo)
+        })
+    }
+
+    private fun findVaultByNameIfAllowed(vaultCollection: VaultCollection, vaultName: String) : EncryptedFileVault? {
+
+        val vault = vaultCollection.findVaultByName(vaultName)
+        return vault?.apply { assertCurrentUserHasAccess(this) }
+    }
+
     private fun assertCurrentUserHasAccess(vault: EncryptedFileVault) {
-        if (!userDetailsProvider.getAuthenticatedUser().hasAnyRole(vault.permissions?.groups)) {
-            throw IllegalAccessError("You do not have permission to operate on this vault (${vault.name})")
+        if (!userDetailsProvider.getAuthenticatedUser().hasAnyRole(vault.permissions)) {
+            throw UnauthorizedAccessException("You do not have permission to operate on this vault (${vault.name})")
         }
     }
 
@@ -116,19 +117,14 @@ class VaultService(
         }
     }
 
-    private fun commitAndPushVaultChanges(repo: Git, vaultName: String) {
+    private fun findVaultCollection(vaultCollectionName: String): VaultCollection {
 
-        repo.add().addFilepattern(vaultName).call()
-        repo.commit()
-                .setAll(true)
-                .setAllowEmpty(false)
-                .setAuthor(PersonIdent("anonymous", "anonymous@skatteetaten.no"))
-                .setMessage("")
-                .call()
-        repo.push()
-                //                .setCredentialsProvider(cp)
-                .add("refs/heads/master")
-                .call()
+        return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo -> vaultCollection })
+    }
+
+    private fun findAllVaultsInVaultCollection(vaultCollectionName: String): List<EncryptedFileVault> {
+
+        return findVaultCollection(vaultCollectionName).vaults
     }
 
     fun save(vaultCollectionName: String, vault: EncryptedFileVault, validateVersions: Boolean): EncryptedFileVault {

@@ -1,28 +1,11 @@
 package no.skatteetaten.aurora.boober.controller.internal
 
-import com.fasterxml.jackson.annotation.JsonRawValue
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.service.DeployParams
 
 typealias JsonDataFiles = Map<String, JsonNode>
 
-
-data class SetupParamsPayload(
-        val envs: List<String> = listOf(),
-        val apps: List<String> = listOf(),
-        val overrides: JsonDataFiles = mapOf(),
-        val deploy: Boolean = true
-) {
-    fun toDeployParams(): DeployParams {
-
-        val overrideFiles = overrides.map { AuroraConfigFile(it.key, it.value, true) }.toMutableList()
-        return DeployParams(envs, apps, overrideFiles, deploy)
-    }
-}
 
 data class ApplyPayload(val applicationIds: List<ApplicationId>,
                         val overrides: JsonDataFiles = mapOf(),
@@ -32,7 +15,3 @@ data class ApplyPayload(val applicationIds: List<ApplicationId>,
         return overrides.map { AuroraConfigFile(it.key, it.value, true) }
     }
 }
-
-data class DeployCommand(val affiliation: String,
-                         val setupParams: SetupParamsPayload
-)

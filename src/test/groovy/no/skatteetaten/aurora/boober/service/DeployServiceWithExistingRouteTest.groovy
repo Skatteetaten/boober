@@ -15,9 +15,6 @@ import no.skatteetaten.aurora.boober.utils.JsonNodeUtilsKt
 class DeployServiceWithExistingRouteTest extends AbstractMockedOpenShiftSpecification {
 
   @Autowired
-  VaultService vaultFacade
-
-  @Autowired
   OpenShiftClient openShiftClient
 
   @Autowired
@@ -25,12 +22,6 @@ class DeployServiceWithExistingRouteTest extends AbstractMockedOpenShiftSpecific
 
   @Autowired
   GitService gitService
-
-  @Autowired
-  DockerService dockerService
-
-  @Autowired
-  ObjectMapper mapper
 
   public static final String ENV_NAME = "mounts"
   public static final String APP_NAME = "aos-simple"
@@ -88,7 +79,6 @@ class DeployServiceWithExistingRouteTest extends AbstractMockedOpenShiftSpecific
            'DELETE route aos-simple-bar',
            'CREATE route aos-simple-bar',
           ]
-
   }
 
 }

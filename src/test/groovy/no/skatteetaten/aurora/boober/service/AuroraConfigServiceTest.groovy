@@ -58,7 +58,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
     then:
       def git = gitService.checkoutRepository(AURORA_CONFIG_NAME)
       def gitLog = git.log().call().head()
-      gitService.closeRepository(git)
+      git.close()
       gitLog.authorIdent.name == "anonymous"
       gitLog.fullMessage == "Added: 0, Modified: 1, Deleted: 0"
   }
@@ -123,34 +123,5 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
     then:
       def e = thrown(AuroraVersioningException)
       e.errors.size() == 1
-  }
-
-  def "Should patch AuroraConfigFile and push changes to git"() {
-    given:
-      def filename = "${aid.environment}/${aid.application}.json"
-      def auroraConfig = createAuroraConfig(modify(defaultAuroraConfig(), filename, { version = "1.0.0"}))
-      auroraConfigService.save(auroraConfig)
-
-      def jsonOp = """[{
-  "op": "replace",
-  "path": "/version",
-  "value": "3"
-}]
-"""
-
-    when:
-      def version = auroraConfig.auroraConfigFiles.find { it.name == filename }.version
-      def patchedAuroraConfig = auroraConfigService.patchAuroraConfigFile(AURORA_CONFIG_NAME, filename, jsonOp, version)
-
-    and:
-      GitServiceHelperKt.recreateFolder(CHECKOUT_PATH)
-      def git = gitService.checkoutRepository(AURORA_CONFIG_NAME)
-      def gitLog = git.log().call().head()
-      gitService.closeRepository(git)
-
-    then:
-      gitLog.fullMessage == "Added: 0, Modified: 1, Deleted: 0"
-      def patchedFile = patchedAuroraConfig.auroraConfigFiles.find { it.name == filename }
-      patchedFile.contents.at("/version").textValue() == "3"
   }
 }

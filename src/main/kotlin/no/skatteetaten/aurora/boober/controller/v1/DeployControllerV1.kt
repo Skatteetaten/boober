@@ -23,12 +23,4 @@ class DeployControllerV1(val deployService: DeployService) {
         val success = !auroraDeployResults.any { !it.success }
         return Response(items = auroraDeployResults, success = success)
     }
-
-
-    @GetMapping("/history")
-    fun deployHistory(@PathVariable affiliation: String): Response {
-
-        val applicationResults: List<DeployHistory> = deployService.deployHistory(affiliation)
-        return Response(items = applicationResults)
-    }
 }

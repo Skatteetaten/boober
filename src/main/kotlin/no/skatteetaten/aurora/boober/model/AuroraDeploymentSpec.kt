@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.service.AuroraPermissions
 
 import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 
@@ -139,8 +138,7 @@ data class Mount(
         val volumeName: String,
         val exist: Boolean,
         val content: Map<String, Any?>? = null,
-        val secretVaultName: String? = null/*,
-        val permissions: AuroraPermissions? = null*/
+        val secretVaultName: String? = null
 )
 
 

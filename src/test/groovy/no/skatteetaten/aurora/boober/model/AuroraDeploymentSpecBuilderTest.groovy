@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.model
 import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecBuilderKt
 
 class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
 
@@ -124,5 +123,20 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       createDeploymentSpec(auroraConfigJson, aid("utv", "atomhopper"))
     then:
       noExceptionThrown()
+  }
+
+  def "Should fail when name is not valid DNS952 label"() {
+
+    given:
+      def aid = DEFAULT_AID
+      modify(auroraConfigJson, "${aid.environment}/${aid.application}.json", {
+        name: "test%qwe)"
+      })
+    when:
+      createDeploymentSpec(auroraConfigJson, aid)
+
+    then:
+      def ex = thrown(AuroraConfigException)
+      ex.errors[0].field.handler.name == 'name'
   }
 }

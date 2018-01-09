@@ -1,12 +1,12 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
 import com.fasterxml.jackson.annotation.JsonRawValue
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.controller.internal.JsonDataFiles
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
+import no.skatteetaten.aurora.boober.service.DeploymentSpecService
 import no.skatteetaten.aurora.boober.utils.logger
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.bind.annotation.*
@@ -17,7 +17,13 @@ data class AuroraConfigResource(
         val name: String,
         val files: JsonDataFiles = mapOf(),
         val versions: Map<String, String?> = mapOf()
-)
+) {
+    fun toAuroraConfig(affiliation: String): AuroraConfig {
+        val auroraConfigFiles = files.map { AuroraConfigFile(it.key, it.value) }
+        return AuroraConfig(auroraConfigFiles, affiliation)
+    }
+}
+
 
 data class UpdateAuroraConfigFilePayload(
         val version: String = "",
@@ -29,7 +35,7 @@ data class UpdateAuroraConfigFilePayload(
 
 @RestController
 @RequestMapping("/v1/auroraconfig/{name}")
-class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
+class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService, val deploymentSpecService: DeploymentSpecService) {
 
     val logger by logger()
 
@@ -43,14 +49,13 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
         return Response(items = auroraConfigService.findAuroraConfigFileNames(name))
     }
 
-/*
     @PutMapping("/validate")
     fun validateAuroraConfig(@PathVariable name: String, @RequestBody payload: AuroraConfigResource): Response {
 
-        val auroraConfig = deployBundleService.validateDeployBundleWithAuroraConfig(name, payload.toAuroraConfig(name))
+        val auroraConfig = payload.toAuroraConfig(name)
+        deploymentSpecService.validateAuroraConfig(auroraConfig)
         return createAuroraConfigResponse(auroraConfig)
     }
-*/
 
     @GetMapping("/**")
     fun getAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest): Response {

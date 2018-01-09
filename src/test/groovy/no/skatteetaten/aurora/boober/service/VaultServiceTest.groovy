@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
@@ -28,7 +30,7 @@ class VaultServiceTest extends Specification {
     GitServiceHelperKt.recreateRepo(new File(REMOTE_REPO_FOLDER, "${COLLECTION_NAME}.git"))
     GitServiceHelperKt.recreateFolder(new File(CHECKOUT_PATH))
 
-    userDetailsProvider.getAuthenticatedUser() >> new User("aurora", "token", "Aurora Test User", [])
+    userDetailsProvider.getAuthenticatedUser() >> new User("aurora", "token", "Aurora Test User", [new SimpleGrantedAuthority("UTV")])
     // No encryption/decryption
     _ * encryptionService.decrypt(_) >> { it[0] }
     _ * encryptionService.encrypt(_) >> { it[0] }
@@ -122,5 +124,50 @@ class VaultServiceTest extends Specification {
 
     then:
       thrown(IllegalArgumentException)
+  }
+
+  def "Updates permissions"() {
+
+    given: "A vault with some files"
+      def fileName = "passwords.properties"
+      def contents = "SERVICE_PASSWORD=FOO"
+      def vault = vaultService.createOrUpdateFileInVault(COLLECTION_NAME, VAULT_NAME, fileName, contents)
+
+    and: "Lets remove and check out the local copy of the vault"
+      GitServiceHelperKt.recreateFolder(new File(CHECKOUT_PATH))
+
+    expect:
+      !vault.permissions
+
+    when:
+      vaultService.setVaultPermissions(COLLECTION_NAME, VAULT_NAME, ["UTV"])
+      vault = vaultService.findVault(COLLECTION_NAME, VAULT_NAME)
+
+    then:
+      vault.permissions == ["UTV"]
+  }
+
+  def "Cannot access vault when missing permissions"() {
+
+    given: "A vault with some files"
+      def fileName = "passwords.properties"
+      def contents = "SERVICE_PASSWORD=FOO"
+      vaultService.createOrUpdateFileInVault(COLLECTION_NAME, VAULT_NAME, fileName, contents)
+      vaultService.setVaultPermissions(COLLECTION_NAME, VAULT_NAME, ["OPS"])
+
+    when:
+      vaultService.findVault(COLLECTION_NAME, VAULT_NAME)
+
+    then:
+      thrown(UnauthorizedAccessException)
+
+    and:
+      def vaults = vaultService.findAllVaultsWithUserAccessInVaultCollection(COLLECTION_NAME)
+      def vaultWithAccess = vaults.find { it.vaultName == VAULT_NAME }
+
+    then:
+      vaultWithAccess != null
+      !vaultWithAccess.hasAccess
+      !vaultWithAccess.vault
   }
 }

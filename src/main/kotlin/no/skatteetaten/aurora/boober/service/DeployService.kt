@@ -1,48 +1,35 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
+import no.skatteetaten.aurora.boober.model.ApplicationId
 import kotlinx.coroutines.experimental.ThreadPoolDispatcher
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.newFixedThreadPoolContext
 import kotlinx.coroutines.experimental.runBlocking
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.dockerGroupSafeName
 import no.skatteetaten.aurora.boober.utils.openshiftKind
-import org.eclipse.jgit.api.Git
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.*
 
-data class DeployParams(
-        val envs: List<String> = listOf(),
-        val apps: List<String> = listOf(),
-        val overrides: MutableList<AuroraConfigFile> = mutableListOf(),
-        val deploy: Boolean
-) {
-    val applicationIds: List<ApplicationId>
-        get() = envs.flatMap { env -> apps.map { app -> ApplicationId(env, app) } }
-}
-
-
 @Service
 class DeployService(
+        val deploymentSpecService: DeploymentSpecService,
         val openShiftObjectGenerator: OpenShiftObjectGenerator,
         val openShiftClient: OpenShiftClient,
-        val gitService: GitService,
-        val deployBundleService: DeployBundleService,
-        val permissionService: PermissionService,
-        val mapper: ObjectMapper,
         val dockerService: DockerService,
         val resourceProvisioner: ExternalResourceProvisioner,
         val redeployService: RedeployService,
+        val deployLogService: DeployLogService,
         @Value("\${openshift.cluster}") val cluster: String,
         @Value("\${boober.docker.registry}") val dockerRegistry: String,
         @Value("\${boober.threadpool.namespace:2}") val namespacePoolSize: Int,
@@ -58,49 +45,33 @@ class DeployService(
     val appDispatcher = newFixedThreadPoolContext(appPoolSize, "appPool")
 
     @JvmOverloads
-    fun executeDeploy(affiliation: String, applicationIds: List<ApplicationId>, overrides: List<AuroraConfigFile> = mutableListOf(), deploy: Boolean = true): List<AuroraDeployResult> {
+    fun executeDeploy(auroraConfigName: String, applicationIds: List<ApplicationId>, overrides: List<AuroraConfigFile> = listOf(), deploy: Boolean = true): List<AuroraDeployResult> {
 
         if (applicationIds.isEmpty()) {
             throw IllegalArgumentException("Specify applicationId")
         }
 
-        return deployBundleService.withDeployBundle(affiliation, overrides) { repo, it ->
-            logger.debug("deploy")
-            logger.debug("create deployment spec")
-            val deploymentSpecs: List<AuroraDeploymentSpec> = deployBundleService.createAuroraDeploymentSpecs(it, applicationIds)
+        val deploymentSpecs = deploymentSpecService.createValidatedAuroraDeploymentSpecs(auroraConfigName, applicationIds, overrides)
 
-            //TODO: run in paralell
 
-            val environments = runBlocking(nsDispatcher) {
-                deploymentSpecs.map { it.environment }
-                        .distinct()
-                        .filter { it.cluster == cluster }
-                        .map {
-                            async(nsDispatcher) {
-                                val projectExist = openShiftClient.projectExists(it.namespace)
-                                val environmentResponses = prepareDeployEnvironment(it, projectExist)
-                                Pair(it, AuroraEnvironmentResult(environmentResponses, projectExist))
-                            }
-                        }.map { it.await() }
-                        .toMap()
-            }
-
-            val deployResults: List<AuroraDeployResult> = deploymentSpecs
-                    .filter { it.environment.cluster == cluster }
-//                    .filter { hasAccessToAllVolumes(it.volume) }
+        val environments = runBlocking(nsDispatcher) {
+            deploymentSpecs.map { it.environment }
+                    .distinct()
+                    .filter { it.cluster == cluster }
                     .map {
-                        logger.debug("deploy from spec")
-                        //TODO: find the result of the namespace command that is valid here and send it to deployFromSpec
-                        val res = deployFromSpec(it, deploy, environments[it.environment]!!)
-                        logger.debug("/deploy from spec")
-                        res
-                    }
-            logger.debug("mark release")
-            markRelease(deployResults, repo)
-            logger.debug("/mark release")
-            logger.debug("/deploy")
-            deployResults
+                        async(nsDispatcher) {
+                            val projectExist = openShiftClient.projectExists(it.namespace)
+                            val environmentResponses = prepareDeployEnvironment(it, projectExist)
+                            Pair(it, AuroraEnvironmentResult(environmentResponses, projectExist))
+                        }
+                    }.map { it.await() }
+                    .toMap()
         }
+        val deployResults: List<AuroraDeployResult> = deploymentSpecs
+                .map { deployFromSpec(it, deploy, environments[it.environment]!!) }
+        deployLogService.markRelease(auroraConfigName, deployResults)
+
+        return deployResults
     }
 
     private fun prepareDeployEnvironment(environment: AuroraDeployEnvironment, projectExist: Boolean): List<OpenShiftResponse> {
@@ -123,9 +94,13 @@ class DeployService(
         return listOf(createNamespaceResponse, updateNamespaceResponse) + updateRoleBindingsResponse
     }
 
-    fun deployFromSpec(deploymentSpec: AuroraDeploymentSpec, shouldDeploy: Boolean, auroraEnvironmentResult: AuroraEnvironmentResult): AuroraDeployResult {
+    fun deployFromSpec(deploymentSpec: AuroraDeploymentSpec, shouldDeploy: Boolean, auroraEnvironmentResult: AuroraEnvironmentResult): AuroraDeployResult? {
 
         val deployId = UUID.randomUUID().toString()
+        //TODO: hasAccessToVolumes
+        if (deploymentSpec.environment.cluster != cluster) {
+            return null
+        }
 
         logger.debug("Resource provisioning")
         val provisioningResult = resourceProvisioner.provisionResources(deploymentSpec)
@@ -144,7 +119,6 @@ class DeployService(
         if (!success) {
             return result
         }
-
 
         if (deploymentSpec.deploy?.flags?.pause == true) {
             return result
@@ -226,61 +200,6 @@ class DeployService(
         val changed = hostChanged || pathChanged
 
         return changed
-    }
-
-    private fun markRelease(res: List<AuroraDeployResult>, repo: Git) {
-
-        val refs = res.map {
-            val result = filterSensitiveInformation(it)
-            val prefix = if (it.success) {
-                DEPLOY_PREFIX
-            } else {
-                FAILED_PREFIX
-            }
-            gitService.markRelease(repo, "$prefix/${it.tag}", mapper.writeValueAsString(result))
-        }
-        gitService.pushTags(repo, refs)
-    }
-
-/*
-    fun hasAccessToAllVolumes(volume: AuroraVolume?): Boolean {
-        if (volume == null) return true
-
-
-        val secretAccess = permissionService.hasUserAccess(volume.permissions)
-
-        val mountsWithNoPermissions = volume.mounts?.filter {
-            !permissionService.hasUserAccess(it.permissions)
-        } ?: emptyList()
-        val volumeAccess = mountsWithNoPermissions.isEmpty()
-
-        return secretAccess && volumeAccess
-
-    }
-*/
-
-    private fun filterSensitiveInformation(result: AuroraDeployResult): AuroraDeployResult {
-
-        val filteredResponses = result.openShiftResponses.filter { it.responseBody?.get("kind")?.asText() != "Secret" }
-        return result.copy(openShiftResponses = filteredResponses)
-    }
-
-    fun deployHistory(affiliation: String): List<DeployHistory> {
-        val repo = gitService.checkoutRepository(affiliation)
-        val res = gitService.tagHistory(repo)
-                .filter { it.tagName.startsWith(DEPLOY_PREFIX) }
-                .map { DeployHistory(it.taggerIdent, mapper.readTree(it.fullMessage)) }
-        gitService.closeRepository(repo)
-        return res
-    }
-
-    fun findDeployResultById(auroraConfigId: String, deployId: String): DeployHistory? {
-        val repo = gitService.checkoutRepository(auroraConfigId)
-        val res: DeployHistory? = gitService.tagHistory(repo)
-                .firstOrNull { it.tagName.endsWith(deployId) }
-                ?.let { DeployHistory(it.taggerIdent, mapper.readTree(it.fullMessage)) }
-        gitService.closeRepository(repo)
-        return res
     }
 }
 

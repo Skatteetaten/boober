@@ -26,6 +26,9 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
   DeployService deployService
 
   @Autowired
+  DeployLogService deployLogService
+
+  @Autowired
   GitService gitService
 
   @Autowired
@@ -73,7 +76,7 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
   }
 
   def cleanup() {
-    gitService.closeRepository(git)
+    git.close()
   }
 
   def "Should perform release and not generate a deployRequest if imagestream triggers new image"() {
@@ -117,7 +120,7 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
     then:
 
-      def history = gitService.tagHistory(git)
+      def history = gitService.getTagHistory(git)
       history.size() == 1
       def revTag = history[0]
 
@@ -133,7 +136,7 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
               [], true)
 
     then:
-      def tags = deployService.deployHistory(affiliation)
+      def tags = deployLogService.deployHistory(affiliation)
       tags.size() == 2
       def revTag = tags[0]
 

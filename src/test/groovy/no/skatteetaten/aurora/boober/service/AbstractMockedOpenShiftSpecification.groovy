@@ -36,10 +36,8 @@ import spock.mock.DetachedMockFactory
     GitServices,
     EncryptionService,
     AuroraConfigService,
-    DeployBundleService,
     VaultService,
     ObjectMapper,
-    PermissionService,
     Config,
     AuroraMetrics,
     UserDetailsTokenProvider,
@@ -47,7 +45,9 @@ import spock.mock.DetachedMockFactory
     SharedSecretReader,
     VelocityTemplateJsonService,
     OpenShiftObjectLabelService,
-    RedeployService
+    RedeployService,
+    DeploymentSpecService,
+    DeployLogService
 ])
 class AbstractMockedOpenShiftSpecification extends AbstractSpec {
 
@@ -109,21 +109,10 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
   OpenShiftClient openShiftClient
 
   @Autowired
-  DeployBundleService deployBundleService
-
-  @Autowired
   private AuroraConfigService auroraConfigService
 
   @Autowired
   ObjectMapper mapper
-
-  def git
-
-  def cleanup() {
-    if (git != null) {
-      auroraConfigGitService.closeRepository(git)
-    }
-  }
 
   def setup() {
 
@@ -141,25 +130,20 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
 
     if (useAuroraConfig) {
 
-//      def vault = new EncryptedFileVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
       userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User", [])
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-      auroraConfigGitService.deleteFiles(auroraConfig.affiliation)
       GitServiceHelperKt.recreateEmptyBareRepos(auroraConfig.affiliation)
       GitServiceHelperKt.recreateRepo(new File("/tmp/vaulttest/aos"))
       GitServiceHelperKt.recreateRepo(new File("/tmp/boobertest/aos"))
 
       vaultService.createOrUpdateFileInVault("aos", "foo", "latest.properties", "FOO=BAR")
-//      vaultService.save("aos", vault, false)
       auroraConfigService.save(auroraConfig)
-      git = auroraConfigGitService.openRepo(auroraConfig.affiliation)
     }
   }
 
   void createRepoAndSaveFiles(AuroraConfig auroraConfig) {
 
-    auroraConfigGitService.deleteFiles(auroraConfig.affiliation)
     GitServiceHelperKt.recreateEmptyBareRepos(auroraConfig.affiliation)
     auroraConfigService.save(auroraConfig)
   }
