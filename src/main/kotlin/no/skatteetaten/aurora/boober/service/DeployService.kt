@@ -67,8 +67,9 @@ class DeployService(
                     }.map { it.await() }
                     .toMap()
         }
-        val deployResults: List<AuroraDeployResult> = deploymentSpecs
-                .map { deployFromSpec(it, deploy, environments[it.environment]!!) }
+
+        deploymentSpecs.map|
+        val deployResults: List<AuroraDeployResult> = deploymentSpecs.map { deployFromSpec(it, deploy, environments[it.environment]!!) }
         deployLogService.markRelease(auroraConfigName, deployResults)
 
         return deployResults
