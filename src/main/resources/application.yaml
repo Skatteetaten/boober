@@ -22,6 +22,11 @@ spring:
       timerPercentilesMin: "PT0.1S"
       timerPercentilesMax: "PT5S"
 
+
+vault:
+    git:
+       checkoutPath: "/tmp/boobervault"
+
 boober:
     dbh: http://dbh
     bitbucket:
@@ -68,6 +73,12 @@ boober:
     key: "komogsyngensang"
   git:
     urlPattern: "file:///tmp/boobergit/%s"
+    username: "boober"
+    password: ""
+
+vault:
+  git:
+    urlPattern: "file:///tmp/boobergitvault/%s"
     username: "boober"
     password: ""
 

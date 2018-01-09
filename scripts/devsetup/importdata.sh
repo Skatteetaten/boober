@@ -10,10 +10,10 @@ which http || ( echo "Please install httpie" && sudo apt-get install httpie)
 TOKEN=$(oc whoami -t)
 
 echo "Create test Secret Vault"
-http --timeout 300 PUT :8080/v1/vault/paas Authorization:"bearer $TOKEN"  < ${FILES_DIR}/secretVault_test.json
+#http --timeout 300 PUT :8080/v1/vault/paas Authorization:"bearer $TOKEN"  < ${FILES_DIR}/secretVault_test.json
 
 echo "Create utv Secret Vault"
-http --timeout 300 PUT :8080/v1/vault/paas Authorization:"bearer $TOKEN"  < ${FILES_DIR}/secretVault_utv.json
+#http --timeout 300 PUT :8080/v1/vault/paas Authorization:"bearer $TOKEN"  < ${FILES_DIR}/secretVault_utv.json
 
 echo "Add aurora config for referance app"
 http --timeout 300 PUT :8080/v1/auroraconfig/paas Authorization:"bearer $TOKEN"  < ${FILES_DIR}/reference.json

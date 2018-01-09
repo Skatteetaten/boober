@@ -55,7 +55,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
     when:
       List<JsonNode> generatedObjects = objectGenerator.
           with {
-            [generateProjectRequest(deploymentSpec)] +
+            [generateProjectRequest(deploymentSpec.environment)] +
                 generateApplicationObjects(DEPLOY_ID, deploymentSpec, provisioningResult)
           }
 
@@ -100,7 +100,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
 
     when:
       AuroraDeploymentSpec deploymentSpec = createAuroraDeploymentSpec(auroraConfig, aid)
-      def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.permissions)
+      def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.environment.permissions)
 
     then:
       rolebindings.size() == 1

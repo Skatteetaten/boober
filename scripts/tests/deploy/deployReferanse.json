@@ -1,6 +1,5 @@
 {
   "applicationIds" : [
-    { "environment" : "boober-bugfix", "application" : "wiremock" },
-    { "environment" : "boober-bugfix", "application" : "reference" }
+    { "environment" : "utv", "application" : "whoami" }
   ]
 }

@@ -10,22 +10,30 @@ enum class TemplateType {
     deploy, development, localTemplate, template, build
 }
 
-enum class ApplicationPlatform(val baseImageName:String, val baseImageVersion:String) {
+enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: String) {
     java("flange", "8"),
     web("wrench", "0")
 }
 
 
-data class AuroraDeploymentSpec(
-        val schemaVersion: String,
+data class AuroraDeployEnvironment(
         val affiliation: String,
         val cluster: String,
+        val envName: String,
+        val permissions: Permissions
+) {
+    val namespace: String
+        get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"
+}
+
+
+data class AuroraDeploymentSpec(
+        val schemaVersion: String,
         val type: TemplateType,
         val name: String,
-        val envName: String,
-        val permissions: Permissions,
         val fields: Map<String, Map<String, Any?>>,
 
+        val environment: AuroraDeployEnvironment,
         val volume: AuroraVolume? = null,
         val route: AuroraRoute? = null,
         val build: AuroraBuild? = null,
@@ -33,12 +41,10 @@ data class AuroraDeploymentSpec(
         val template: AuroraTemplate? = null,
         val localTemplate: AuroraLocalTemplate? = null
 ) {
-    val namespace: String
-        get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"
 
     fun assembleRouteHost(hostPrefix: String = name): String {
 
-        val hostSuffix = "$namespace.$cluster.paas.skead.no"
+        val hostSuffix = "${environment.namespace}.${environment.cluster}.paas.skead.no"
 
         return if (hostPrefix.isBlank()) {
             hostSuffix
