@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.service
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.utils.LambdaOutputStream
 import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.lib.PersonIdent
 import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.lib.TextProgressMonitor
@@ -99,6 +98,23 @@ open class GitService(
         })
     }
 
+    fun commitAndPushChanges(repo: Git, commitMessage: String? = null) {
+
+        repo.add().addFilepattern(".").call()
+        val status = repo.status().call()
+        val message = commitMessage ?: "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}"
+        val authorIdent = getPersonIdentFromUserDetails()
+        repo.commit()
+                .setAll(true)
+                .setAllowEmpty(false)
+                .setAuthor(authorIdent)
+                .setMessage(message)
+                .call()
+        repo.push()
+                .setCredentialsProvider(cp)
+                .add("refs/heads/master")
+                .call()
+    }
 
     fun pushTags(git: Git, tags: List<Ref>) {
 
@@ -120,7 +136,7 @@ open class GitService(
     }
 
     fun createAnnotatedTag(git: Git, tag: String, tagBody: String): Ref {
-        val user = userDetails.getAuthenticatedUser().let { PersonIdent(it.fullName ?: it.username, "${it.username}@skatteetaten.no") }
+        val user = getPersonIdentFromUserDetails()
         return git.tag().setTagger(user).setAnnotated(true).setName(tag).setMessage(tagBody).call()
     }
 
@@ -132,4 +148,8 @@ open class GitService(
             RevTag.parse(bytes)
         }
     }
+
+    private fun getPersonIdentFromUserDetails() =
+            userDetails.getAuthenticatedUser().let { PersonIdent(it.fullName ?: it.username, "${it.username}@skatteetaten.no") }
+
 }

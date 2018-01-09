@@ -58,6 +58,13 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
             outputFile.writeText(prettyContent)
         }
 
+        commitAndPushChanges(repo)
+        repo.close()
+
+        return auroraConfig
+    }
+
+    private fun commitAndPushChanges(repo: Git) {
         repo.add().addFilepattern(".").call()
         val status = repo.status().call()
         val message = "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}"
@@ -71,9 +78,6 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
                 //                .setCredentialsProvider(cp)
                 .add("refs/heads/master")
                 .call()
-        repo.close()
-
-        return auroraConfig
     }
 
     fun updateAuroraConfigFile(name: String, fileName: String, contents: String, previousVersion: String? = null): AuroraConfig {

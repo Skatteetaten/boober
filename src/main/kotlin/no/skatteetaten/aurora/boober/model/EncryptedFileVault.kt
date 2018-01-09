@@ -6,7 +6,6 @@ import org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.charset.Charset
 
-// TODO: Delete this class (AuroraPermissions)
 data class AuroraPermissions @JvmOverloads constructor(
         val groups: List<String>? = listOf()
 )
@@ -74,10 +73,16 @@ class EncryptedFileVault private constructor(
     val name: String
         get() = vaultFolder.name
 
-    val permissions: AuroraPermissions?
-        get() = files
-                .find { it.name == PERMISSION_FILE }
-                ?.let { jacksonObjectMapper().readValue(it) }
+    var permissions: List<String>
+        get() {
+            val permissions: AuroraPermissions? = files
+                    .find { it.name == PERMISSION_FILE }
+                    ?.let { jacksonObjectMapper().readValue(it) }
+            return permissions?.groups ?: emptyList()
+        }
+        set(value) {
+            jacksonObjectMapper().writeValue(File(vaultFolder, PERMISSION_FILE), mapOf(Pair("groups", value)))
+        }
 
     val secrets: Map<String, String>
         get() = files
@@ -88,7 +93,7 @@ class EncryptedFileVault private constructor(
                 }.toMap()
 
     private val files: List<File>
-        get() = vaultFolder.listFiles().filter { it.isFile }
+        get() = vaultFolder.listFiles()?.filter { it.isFile } ?: emptyList()
 
     fun updateFile(fileName: String, fileContents: String) {
 
