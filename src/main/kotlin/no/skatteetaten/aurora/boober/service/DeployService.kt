@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.ApplicationId
-import kotlinx.coroutines.experimental.ThreadPoolDispatcher
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.newFixedThreadPoolContext
 import kotlinx.coroutines.experimental.runBlocking
@@ -37,10 +36,6 @@ class DeployService(
 
     val logger: Logger = LoggerFactory.getLogger(DeployService::class.java)
 
-    private val DEPLOY_PREFIX = "DEPLOY"
-    private val FAILED_PREFIX = "FAILED"
-
-
     val nsDispatcher = newFixedThreadPoolContext(namespacePoolSize, "namespacePool")
     val appDispatcher = newFixedThreadPoolContext(appPoolSize, "appPool")
 
@@ -68,8 +63,7 @@ class DeployService(
                     .toMap()
         }
 
-        deploymentSpecs.map|
-        val deployResults: List<AuroraDeployResult> = deploymentSpecs.map { deployFromSpec(it, deploy, environments[it.environment]!!) }
+        val deployResults: List<AuroraDeployResult> = deploymentSpecs.mapNotNull { deployFromSpec(it, deploy, environments[it.environment]!!) }
         deployLogService.markRelease(auroraConfigName, deployResults)
 
         return deployResults
@@ -100,6 +94,7 @@ class DeployService(
         val deployId = UUID.randomUUID().toString()
         //TODO: hasAccessToVolumes
         if (deploymentSpec.environment.cluster != cluster) {
+            //TODO: Return something here to signal that we will not deploy it on this cluster
             return null
         }
 
@@ -130,7 +125,6 @@ class DeployService(
             val cmd = TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
             dockerService.tag(cmd)
         }
-        logger.debug("Redeploy")
         val redeployResponse = redeployService.triggerRedeploy(deploymentSpec, openShiftResponses)
 
         val redeploySuccess = if (redeployResponse.isEmpty()) true else redeployResponse.last().success
