@@ -7,6 +7,7 @@ import no.skatteetaten.aurora.boober.controller.internal.JsonDataFiles
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
+import no.skatteetaten.aurora.boober.service.DeploymentSpecService
 import no.skatteetaten.aurora.boober.utils.logger
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.bind.annotation.*
@@ -29,7 +30,7 @@ data class UpdateAuroraConfigFilePayload(
 
 @RestController
 @RequestMapping("/v1/auroraconfig/{name}")
-class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
+class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService, val deploymentSpecService: DeploymentSpecService) {
 
     val logger by logger()
 
@@ -43,14 +44,12 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
         return Response(items = auroraConfigService.findAuroraConfigFileNames(name))
     }
 
-/*
     @PutMapping("/validate")
     fun validateAuroraConfig(@PathVariable name: String, @RequestBody payload: AuroraConfigResource): Response {
 
-        val auroraConfig = deployBundleService.validateDeployBundleWithAuroraConfig(name, payload.toAuroraConfig(name))
+        val auroraConfig = deploymentSpecService.validateAuroraConfig(payload.toAuroraConfig(name))
         return createAuroraConfigResponse(auroraConfig)
     }
-*/
 
     @GetMapping("/**")
     fun getAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest): Response {

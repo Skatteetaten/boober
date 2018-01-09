@@ -5,14 +5,16 @@ import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.newFixedThreadPoolContext
 import kotlinx.coroutines.experimental.runBlocking
 import no.skatteetaten.aurora.boober.mapper.v1.createAuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.DeployBundle
+import no.skatteetaten.aurora.boober.model.*
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
+
+class AuroraConfigWithOverrides(
+        var auroraConfig: AuroraConfig,
+        val overrideFiles: List<AuroraConfigFile> = listOf()
+)
 
 @Service
 class DeploymentSpecService(
@@ -28,23 +30,27 @@ class DeploymentSpecService(
     fun createValidatedAuroraDeploymentSpecs(auroraConfigName: String, applicationIds: List<ApplicationId>, overrideFiles: List<AuroraConfigFile> = listOf()): List<AuroraDeploymentSpec> {
 
         val auroraConfig = auroraConfigService.findAuroraConfig(auroraConfigName)
-        return createValidatedAuroraDeploymentSpecs(DeployBundle(auroraConfig, overrideFiles), applicationIds)
+        return createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig, overrideFiles), applicationIds)
     }
 
-    fun createValidatedAuroraDeploymentSpecs(auroraConfigName: String, overrideFiles: List<AuroraConfigFile> = listOf()): List<AuroraDeploymentSpec> {
+    fun validateAuroraConfig(auroraConfigName: String, overrideFiles: List<AuroraConfigFile> = listOf()): List<AuroraDeploymentSpec> {
         val auroraConfig = auroraConfigService.findAuroraConfig(auroraConfigName)
-        val applicationIds = auroraConfig.getApplicationIds()
-        return createValidatedAuroraDeploymentSpecs(DeployBundle(auroraConfig, overrideFiles), applicationIds)
+        return validateAuroraConfig(auroraConfig, overrideFiles)
     }
 
-    private fun createValidatedAuroraDeploymentSpecs(deployBundle: DeployBundle, applicationIds: List<ApplicationId>): List<AuroraDeploymentSpec> {
+    fun validateAuroraConfig(auroraConfig: AuroraConfig, overrideFiles: List<AuroraConfigFile>): List<AuroraDeploymentSpec> {
+        val applicationIds = auroraConfig.getApplicationIds()
+        return createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig, overrideFiles), applicationIds)
+    }
+
+    private fun createValidatedAuroraDeploymentSpecs(auroraConfigWithOverrides: AuroraConfigWithOverrides, applicationIds: List<ApplicationId>): List<AuroraDeploymentSpec> {
 
         val stopWatch = StopWatch().apply { start() }
         val specs: List<AuroraDeploymentSpec> = runBlocking(dispatcher) {
             applicationIds.map { aid ->
                 async(dispatcher) {
                     try {
-                        val spec = createValidatedAuroraDeploymentSpec(deployBundle, aid)
+                        val spec = createValidatedAuroraDeploymentSpec(auroraConfigWithOverrides, aid)
                         Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = spec, second = null)
                     } catch (e: Throwable) {
                         Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = null, second = ExceptionWrapper(aid, e))
@@ -54,14 +60,14 @@ class DeploymentSpecService(
                     .map { it.await() }
         }.onErrorThrow(::MultiApplicationValidationException)
         stopWatch.stop()
-        logger.debug("Created validated DeployBundle for AuroraConfig ${deployBundle.auroraConfig.affiliation} with ${applicationIds.size} applications in ${stopWatch.totalTimeMillis} millis")
+        logger.debug("Validated AuroraConfig ${auroraConfigWithOverrides.auroraConfig.affiliation} with ${applicationIds.size} applications in ${stopWatch.totalTimeMillis} millis")
         return specs
     }
 
-    private fun createValidatedAuroraDeploymentSpec(deployBundle: DeployBundle, aid: ApplicationId): AuroraDeploymentSpec {
+    private fun createValidatedAuroraDeploymentSpec(auroraConfigWithOverrides: AuroraConfigWithOverrides, aid: ApplicationId): AuroraDeploymentSpec {
 
         val stopWatch = StopWatch().apply { start() }
-        val spec = createAuroraDeploymentSpec(deployBundle, aid)
+        val spec = createAuroraDeploymentSpec(auroraConfigWithOverrides, aid)
         deploymentSpecValidator.assertIsValid(spec)
         stopWatch.stop()
 
@@ -70,10 +76,10 @@ class DeploymentSpecService(
         return spec
     }
 
-    private fun createAuroraDeploymentSpec(deployBundle: DeployBundle, aid: ApplicationId): AuroraDeploymentSpec {
+    private fun createAuroraDeploymentSpec(auroraConfigWithOverrides: AuroraConfigWithOverrides, aid: ApplicationId): AuroraDeploymentSpec {
 
-        val auroraConfig = deployBundle.auroraConfig
-        val overrideFiles = deployBundle.overrideFiles
+        val auroraConfig = auroraConfigWithOverrides.auroraConfig
+        val overrideFiles = auroraConfigWithOverrides.overrideFiles
 
         return createAuroraDeploymentSpec(auroraConfig, aid, overrideFiles)
     }
