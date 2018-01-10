@@ -50,9 +50,10 @@ class DeployService(
 
 
         val environments = runBlocking(nsDispatcher) {
-            deploymentSpecs.map { it.environment }
-                    .distinct()
+            deploymentSpecs
                     .filter { it.cluster == cluster }
+                    .map { it.environment }
+                    .distinct()
                     .map {
                         async(nsDispatcher) {
                             val projectExist = openShiftClient.projectExists(it.namespace)
@@ -98,7 +99,7 @@ class DeployService(
 
         val deployId = UUID.randomUUID().toString()
         //TODO: hasAccessToVolumes
-        if (deploymentSpec.environment.cluster != cluster) {
+        if (deploymentSpec.cluster != cluster) {
             //TODO: legge med info om at miljø ikke finnes
             return AuroraDeployResult(deployId, deploymentSpec, listOf(), false)
         }

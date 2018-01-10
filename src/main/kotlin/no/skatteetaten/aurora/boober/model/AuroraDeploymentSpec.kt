@@ -17,7 +17,6 @@ enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: 
 
 data class AuroraDeployEnvironment(
         val affiliation: String,
-        val cluster: String,
         val envName: String,
         val permissions: Permissions
 ) {
@@ -32,6 +31,7 @@ data class AuroraDeploymentSpec(
         val name: String,
         val fields: Map<String, Map<String, Any?>>,
 
+        val cluster: String,
         val environment: AuroraDeployEnvironment,
         val volume: AuroraVolume? = null,
         val route: AuroraRoute? = null,
@@ -43,7 +43,7 @@ data class AuroraDeploymentSpec(
 
     fun assembleRouteHost(hostPrefix: String = name): String {
 
-        val hostSuffix = "${environment.namespace}.${environment.cluster}.paas.skead.no"
+        val hostSuffix = "${environment.namespace}.${cluster}.paas.skead.no"
 
         return if (hostPrefix.isBlank()) {
             hostSuffix

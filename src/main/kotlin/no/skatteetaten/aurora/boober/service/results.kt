@@ -19,7 +19,7 @@ data class AuroraDeployResult @JvmOverloads constructor(
         val openShiftResponses: List<OpenShiftResponse> = listOf(),
         val success: Boolean = true,
         val tagResponse: TagResult? = null) {
-    val tag: String = "${auroraDeploymentSpec.environment.cluster}.${auroraDeploymentSpec.environment.namespace}.${auroraDeploymentSpec.name}/${deployId}"
+    val tag: String = "${auroraDeploymentSpec.cluster}.${auroraDeploymentSpec.environment.namespace}.${auroraDeploymentSpec.name}/${deployId}"
 }
 
 data class DeployHistory(val ident: PersonIdent, val result: JsonNode)

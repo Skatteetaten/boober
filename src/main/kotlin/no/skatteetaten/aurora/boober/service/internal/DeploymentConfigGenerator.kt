@@ -136,7 +136,7 @@ class DeploymentConfigGenerator(
         }?.toMap() ?: mapOf()
 
         val envs = mapOf(
-                "OPENSHIFT_CLUSTER" to auroraDeploymentSpec.environment.cluster,
+                "OPENSHIFT_CLUSTER" to auroraDeploymentSpec.cluster,
                 "HTTP_PORT" to "8080",
                 "MANAGEMENT_HTTP_PORT" to "8081",
                 "APP_NAME" to auroraDeploymentSpec.name

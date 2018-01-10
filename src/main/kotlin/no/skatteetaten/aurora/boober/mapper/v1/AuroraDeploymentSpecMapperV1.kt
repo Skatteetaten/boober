@@ -46,9 +46,9 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                 schemaVersion = auroraConfigFields.extract("schemaVersion"),
                 type = auroraConfigFields.extract("type"),
                 name = name,
+                cluster = auroraConfigFields.extract("cluster"),
                 environment = AuroraDeployEnvironment(
                         affiliation = auroraConfigFields.extract("affiliation"),
-                        cluster = auroraConfigFields.extract("cluster"),
                         envName = auroraConfigFields.extract("envName"),
                         permissions = extractPermissions(auroraConfigFields)
                 ),
