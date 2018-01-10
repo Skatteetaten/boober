@@ -102,8 +102,13 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
             = createAuroraDeploymentSpec(this, aid, overrideFiles = overrideFiles)
 
     @JvmOverloads
+    fun getAllAuroraDeploymentSpecs(overrideFiles: List<AuroraConfigFile> = listOf()): List<AuroraDeploymentSpec> {
+        return getApplicationIds().map { createAuroraDeploymentSpec(this, it, overrideFiles) }
+    }
+
+    @JvmOverloads
     fun validate(overrideFiles: List<AuroraConfigFile> = listOf()) {
-        getApplicationIds().forEach { createAuroraDeploymentSpec(this, it, overrideFiles) }
+        getAllAuroraDeploymentSpecs(overrideFiles)
     }
 
     private fun getApplicationFile(applicationId: ApplicationId): AuroraConfigFile {
