@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.java
 import no.skatteetaten.aurora.boober.model.ApplicationPlatform.web
+import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.Permissions
@@ -64,10 +65,10 @@ class OpenShiftObjectGenerator(
     fun generateSecretsForSchemas(deployId: String, deploymentSpec: AuroraDeploymentSpec, schemaProvisionResults: SchemaProvisionResults): List<JsonNode> =
             DbhSecretGenerator(velocityTemplateJsonService, openShiftObjectLabelService, mapper).generateSecretsForSchemas(deployId, deploymentSpec, schemaProvisionResults)
 
-    fun generateProjectRequest(auroraDeploymentSpec: AuroraDeploymentSpec): JsonNode {
+    fun generateProjectRequest(environment: AuroraDeployEnvironment): JsonNode {
 
         return mergeVelocityTemplate("projectrequest.json", mapOf(
-                "namespace" to auroraDeploymentSpec.namespace
+                "namespace" to environment.namespace
         ))
     }
 
@@ -100,7 +101,7 @@ class OpenShiftObjectGenerator(
         return auroraDeploymentSpec.deploy?.let {
 
             val webseal = it.webseal?.let {
-                val host = it.host ?: "${auroraDeploymentSpec.name}-${auroraDeploymentSpec.namespace}"
+                val host = it.host ?: "${auroraDeploymentSpec.name}-${auroraDeploymentSpec.environment.namespace}"
                 "sprocket.sits.no/service.webseal" to host
             }
 

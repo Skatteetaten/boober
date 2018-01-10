@@ -17,7 +17,7 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectG
 
     fun triggerRedeploy(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>): List<OpenShiftResponse> {
 
-        val namespace = deploymentSpec.namespace
+        val namespace = deploymentSpec.environment.namespace
 
         val redeployResourceFromSpec = generateRedeployResourceFromSpec(deploymentSpec, openShiftResponses) ?: return emptyList()
         val command = openShiftClient.createOpenShiftCommand(namespace, redeployResourceFromSpec)

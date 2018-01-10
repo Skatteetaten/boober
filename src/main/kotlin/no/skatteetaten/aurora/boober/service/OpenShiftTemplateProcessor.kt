@@ -41,7 +41,7 @@ class OpenShiftTemplateProcessor(
         val labels = template["labels"] as ObjectNode
 
         if (!labels.has("affiliation")) {
-            labels.put("affiliation", aac.affiliation)
+            labels.put("affiliation", aac.environment.affiliation)
         }
 
         if (!labels.has("app")) {
@@ -51,7 +51,7 @@ class OpenShiftTemplateProcessor(
         labels.put("updatedBy", userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"))
 
 
-        val result = openShiftClient.post("processedtemplate", namespace = aac.namespace, payload = template)
+        val result = openShiftClient.post("processedtemplate", namespace = aac.environment.namespace, payload = template)
 
         return result.body["objects"].asSequence().toList()
     }

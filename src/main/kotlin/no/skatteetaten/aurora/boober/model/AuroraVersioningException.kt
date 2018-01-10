@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.model;
+package no.skatteetaten.aurora.boober.model
 
 data class VersioningError(val auroraConfigName: String, val fileName: String, val currentHash: String, val providedHash: String)
 

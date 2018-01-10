@@ -139,6 +139,7 @@ class OpenShiftClient(
         return getGroups(group) != null
     }
 
+    @Cacheable("templates")
     fun getTemplate(template: String): JsonNode? {
         return try {
             serviceAccountClient.get("$baseUrl/oapi/v1/namespaces/openshift/templates/$template")?.body
