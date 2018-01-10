@@ -16,7 +16,13 @@ import org.springframework.stereotype.Service
 import java.io.File
 
 @Service
-class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitService) {
+class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitService, val bitbucketProjectService: BitbucketProjectService) {
+
+    fun findAllAuroraConfigNames(): List<String> {
+
+        // TODO: Finding the name of all repositories for a given project in bitbucket should probably be hidden behind the GitService service.
+        return bitbucketProjectService.getAllSlugs()
+    }
 
     fun findAuroraConfig(name: String): AuroraConfig {
 

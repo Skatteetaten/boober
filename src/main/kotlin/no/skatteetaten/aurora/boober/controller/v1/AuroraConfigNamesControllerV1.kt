@@ -1,13 +1,13 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
 import no.skatteetaten.aurora.boober.controller.internal.Response
-import no.skatteetaten.aurora.boober.service.BitbucketProjectService
+import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class InformationControllerV1(val bitbucketProjectService: BitbucketProjectService) {
+class AuroraConfigNamesControllerV1(val auroraConfigService: AuroraConfigService) {
 
     @GetMapping("/v1/auroraconfignames")
-    fun auroraConfigs(): Response = Response(items = bitbucketProjectService.getAllSlugs())
+    fun auroraConfigs(): Response = Response(items = auroraConfigService.findAllAuroraConfigNames())
 }
