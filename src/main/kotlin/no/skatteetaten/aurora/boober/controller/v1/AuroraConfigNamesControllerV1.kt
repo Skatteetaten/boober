@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class AuroraConfigNamesControllerV1(val auroraConfigService: AuroraConfigService) {
+class AuroraConfigNameslControllerV1(val auroraConfigService: AuroraConfigService) {
 
     @GetMapping("/v1/auroraconfignames")
     fun auroraConfigs(): Response = Response(items = auroraConfigService.findAllAuroraConfigNames())

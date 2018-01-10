@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.model
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.fge.jsonpatch.JsonPatch
+import no.skatteetaten.aurora.boober.mapper.v1.createAuroraDeploymentSpec
 import java.io.File
 import java.util.*
 
@@ -81,7 +82,7 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
         return this.copy(auroraConfigFiles = files)
     }
 
-    fun patchFile(filename: String, jsonPatchOp: String, previousVersion: String? = null) : AuroraConfig {
+    fun patchFile(filename: String, jsonPatchOp: String, previousVersion: String? = null): AuroraConfig {
 
         val mapper = jacksonObjectMapper()
         val patch: JsonPatch = mapper.readValue(jsonPatchOp, JsonPatch::class.java)
@@ -94,6 +95,15 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
         val updatedAuroraConfig = updateFile(filename, fileContents, previousVersion)
 
         return updatedAuroraConfig
+    }
+
+    @JvmOverloads
+    fun getAuroraDeploymentSpec(aid: ApplicationId, overrideFiles: List<AuroraConfigFile> = listOf()): AuroraDeploymentSpec
+            = createAuroraDeploymentSpec(this, aid, overrideFiles = overrideFiles)
+
+    @JvmOverloads
+    fun validate(overrideFiles: List<AuroraConfigFile> = listOf()) {
+        getApplicationIds().forEach { createAuroraDeploymentSpec(this, it, overrideFiles) }
     }
 
     private fun getApplicationFile(applicationId: ApplicationId): AuroraConfigFile {

@@ -1,5 +1,5 @@
 {
   "applicationIds" : [
-    { "environment" : "utv", "application" : "whoami" }
+    { "environment" : "bas-dev", "application" : "referanse" }
   ]
 }

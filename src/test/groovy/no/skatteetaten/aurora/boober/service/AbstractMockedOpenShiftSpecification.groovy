@@ -21,6 +21,7 @@ import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
+import no.skatteetaten.aurora.boober.service.openshift.LocalKubeConfigTokenProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
@@ -49,7 +50,8 @@ import spock.mock.DetachedMockFactory
     OpenShiftObjectLabelService,
     RedeployService,
     DeploymentSpecService,
-    DeployLogService
+    DeployLogService,
+    BitbucketProjectService
 ])
 class AbstractMockedOpenShiftSpecification extends AbstractSpec {
 
@@ -89,7 +91,7 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
 
     @Bean
     ExternalResourceProvisioner externalResourceProvisioner() {
-        factory.Mock(ExternalResourceProvisioner)
+      factory.Mock(ExternalResourceProvisioner)
     }
 
     @Bean

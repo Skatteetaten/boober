@@ -4,8 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.fge.jsonpatch.JsonPatch
+import no.skatteetaten.aurora.boober.mapper.v1.createAuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.GitServices.Domain.AURORA_CONFIG
 import no.skatteetaten.aurora.boober.service.GitServices.TargetDomain
 import org.apache.commons.io.FileUtils
@@ -47,6 +50,8 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
 
     fun save(auroraConfig: AuroraConfig): AuroraConfig {
 
+        auroraConfig.validate()
+
         val mapper = jacksonObjectMapper()
 
         val repo = getUpdatedRepo(auroraConfig.affiliation)
@@ -85,6 +90,7 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
 
         return save(updatedAuroraConfig)
     }
+
 
     private fun getAuroraConfigFile(name: String, fileName: String) =
             File(getAuroraConfigFolder(name), fileName)

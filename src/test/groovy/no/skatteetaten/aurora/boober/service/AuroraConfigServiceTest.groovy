@@ -15,10 +15,9 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
   def aid = DEFAULT_AID
 
   def userDetailsProvider = Mock(UserDetailsProvider)
-  def bitbucket = Mock(BitbucketProjectService)
-  def auroraMetrics = new AuroraMetrics(new SimpleMeterRegistry() )
+  def auroraMetrics = new AuroraMetrics(new SimpleMeterRegistry())
   def gitService = new GitService(userDetailsProvider, "$REMOTE_REPO_FOLDER/%s", CHECKOUT_PATH, "", "", auroraMetrics)
-  def auroraConfigService = new AuroraConfigService(gitService, bitbucket)
+  def auroraConfigService = new AuroraConfigService(gitService, Mock(BitbucketProjectService))
 
   def setup() {
     GitServiceHelperKt.recreateRepo(new File(REMOTE_REPO_FOLDER, "${AURORA_CONFIG_NAME}.git"))
@@ -60,7 +59,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
       def git = gitService.checkoutRepository(AURORA_CONFIG_NAME)
       def gitLog = git.log().call().head()
       git.close()
-      gitLog.authorIdent.name == "anonymous"
+      gitLog.authorIdent.name == "Aurora Test User"
       gitLog.fullMessage == "Added: 0, Modified: 1, Deleted: 0"
   }
 

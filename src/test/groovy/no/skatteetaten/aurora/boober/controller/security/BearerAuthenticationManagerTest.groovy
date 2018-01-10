@@ -33,7 +33,7 @@ class BearerAuthenticationManagerTest extends Specification {
       Authentication authentication = authenticationManager.authenticate(new TestingAuthenticationToken("Bearer $TOKEN", ""))
 
     then:
-      authentication.authenticated
+      !authentication.authenticated
       authentication.authorities.containsAll(GROUPS.collect { new SimpleGrantedAuthority(it) })
   }
 }
