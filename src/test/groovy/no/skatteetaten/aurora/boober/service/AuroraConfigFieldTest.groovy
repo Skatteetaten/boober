@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
@@ -65,7 +66,7 @@ class AuroraConfigFieldTest extends Specification {
 
   def setup() {
     userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User", [])
-    openShiftClient.isValidGroup(_) >> true
+    openShiftClient.getGroups() >> new OpenShiftGroups([:], ["APP_Paas_UTV": []])
   }
 
   def "Should generate correct config extractors"() {

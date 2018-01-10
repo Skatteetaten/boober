@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
+
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
 
@@ -71,6 +73,16 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
     }
 
     @Bean
+    BitbucketProjectService bitbucketProjectService() {
+      factory.Mock(BitbucketProjectService)
+    }
+
+    @Bean
+    DatabaseSchemaProvisioner dbClient() {
+      factory.Mock(DatabaseSchemaProvisioner)
+    }
+
+    @Bean
     DockerService dockerService() {
       factory.Mock(DockerService)
     }
@@ -125,7 +137,7 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
     if (useInteractions) {
       userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User", [])
 
-      openShiftClient.isValidGroup(_) >> true
+      openShiftClient.getGroups() >> new OpenShiftGroups([:], ["APP_Paas_UTV" : []])
     }
 
     if (useAuroraConfig) {

@@ -116,7 +116,7 @@ class DatabaseSchemaProvisioner(
         return SchemaProvisionResult(request, dbhSchema, responseText)
     }
 
-    private fun findSchemaById(id: String): Pair<DbhSchema, String> {
+    fun findSchemaById(id: String): Pair<DbhSchema, String> {
 
         val response: ResponseEntity<JsonNode> = try {
             restTemplate.getForEntity("{0}/api/v1/schema/{1}", JsonNode::class.java, dbhUrl, id)

@@ -7,7 +7,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
-class AuroraDeploymentSpecValidator(val openShiftClient: OpenShiftClient, val openShiftTemplateProcessor: OpenShiftTemplateProcessor) {
+class AuroraDeploymentSpecValidator(
+        val openShiftClient: OpenShiftClient,
+        val openShiftTemplateProcessor: OpenShiftTemplateProcessor,
+        val databaseSchemaProvisioner: DatabaseSchemaProvisioner) {
 
 
     val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpecValidator::class.java)
@@ -17,8 +20,21 @@ class AuroraDeploymentSpecValidator(val openShiftClient: OpenShiftClient, val op
 
         validateAdminGroups(deploymentSpec)
         validateTemplateIfSet(deploymentSpec)
+        validateDatatbaseId(deploymentSpec)
     }
 
+    private fun validateDatatbaseId(deploymentSpec: AuroraDeploymentSpec) {
+        deploymentSpec.deploy?.database
+                ?.forEach {
+                    it.id?.let {
+                        try {
+                            databaseSchemaProvisioner.findSchemaById(it)
+                        } catch (e: Exception) {
+                            throw AuroraDeploymentSpecValidationException("Database schema with id=$it does not exist")
+                        }
+                    }
+                }
+    }
 
     private fun validateAdminGroups(deploymentSpec: AuroraDeploymentSpec) {
 
@@ -26,9 +42,8 @@ class AuroraDeploymentSpecValidator(val openShiftClient: OpenShiftClient, val op
         adminGroups.takeIf { it.isEmpty() }
                 ?.let { throw AuroraDeploymentSpecValidationException("permissions.admin.groups cannot be empty") }
 
-        adminGroups.filter { !openShiftClient.isValidGroup(it)}
-                //TODO: is this one not better?
-        //adminGroups.filter { !openShiftClient.getGroups().groupUsers.containsKey(it) }
+//        adminGroups.filter { !openShiftClient.isValidGroup(it) }
+        adminGroups.filter { !openShiftClient.getGroups().groupUsers.containsKey(it) }
                 .takeIf { it.isNotEmpty() }
                 ?.let { it: List<String> -> throw AuroraDeploymentSpecValidationException("$it is not a valid group") }
     }
