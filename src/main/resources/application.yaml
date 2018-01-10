@@ -53,7 +53,7 @@ aurora:
 logging:
   level:
     no.skatteetaten: INFO
-    no.skatteetaten.aurora.boober: INFO
+    no.skatteetaten.aurora.boober: DEBUG
     org:
       jboss: INFO
       hibernate: WARN
@@ -77,14 +77,14 @@ boober:
   bitbucket:
     project: "ac-dev"
   git:
-    username: "booberdev"
-    password: "booberdev"
+    username: "boober-dev"
+    password: "boober-dev"
 
 vault:
   git:
     project: "av-dev"
-    username: "booberdev"
-    password: "booberdev"
+    username: "boober-dev"
+    password: "boober-dev"
 
 aurora:
   token:

@@ -65,9 +65,9 @@ class DeployService(
         val deployResults: List<AuroraDeployResult> = runBlocking(appDispatcher) {
             deploymentSpecs.map {
                 async(appDispatcher) {
-                    deployFromSpec(it, deploy, environments[it.environment]!!)
+                    deployFromSpec(it, deploy, environments[it.environment])
                 }
-            }.mapNotNull { it.await() }
+            }.map { it.await() }
         }
         deployLogService.markRelease(auroraConfigName, deployResults)
 
@@ -94,13 +94,19 @@ class DeployService(
         return listOf(createNamespaceResponse, updateNamespaceResponse) + updateRoleBindingsResponse
     }
 
-    fun deployFromSpec(deploymentSpec: AuroraDeploymentSpec, shouldDeploy: Boolean, auroraEnvironmentResult: AuroraEnvironmentResult): AuroraDeployResult? {
+    fun deployFromSpec(deploymentSpec: AuroraDeploymentSpec, shouldDeploy: Boolean, auroraEnvironmentResult: AuroraEnvironmentResult?): AuroraDeployResult {
 
         val deployId = UUID.randomUUID().toString()
         //TODO: hasAccessToVolumes
         if (deploymentSpec.environment.cluster != cluster) {
-            //TODO: Return something here to signal that we will not deploy it on this cluster
-            return null
+            //TODO: legge med info om at miljø ikke finnes
+            return AuroraDeployResult(deployId, deploymentSpec, listOf(), false)
+        }
+
+        if(auroraEnvironmentResult == null) {
+
+            //TODO: legge med info om at miljø ikke finnes
+            return AuroraDeployResult(deployId, deploymentSpec, listOf(), false)
         }
 
         logger.debug("Resource provisioning")
