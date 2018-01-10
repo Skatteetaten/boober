@@ -1,10 +1,10 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.model.ApplicationId
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.newFixedThreadPoolContext
 import kotlinx.coroutines.experimental.runBlocking
+import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -104,7 +104,7 @@ class DeployService(
             return AuroraDeployResult(deployId, deploymentSpec, listOf(), false)
         }
 
-        if(auroraEnvironmentResult == null) {
+        if (auroraEnvironmentResult == null) {
 
             //TODO: legge med info om at miljø ikke finnes
             return AuroraDeployResult(deployId, deploymentSpec, listOf(), false)
@@ -153,16 +153,24 @@ class DeployService(
         val name = deploymentSpec.name
 
         val openShiftApplicationObjects: List<JsonNode> = openShiftObjectGenerator.generateApplicationObjects(deployId, deploymentSpec, provisioningResult)
-        val openShiftApplicationResponses: List<OpenShiftResponse> = openShiftApplicationObjects.flatMap {
-            val openShiftCommand = openShiftClient.createOpenShiftCommand(namespace, it, mergeWithExistingResource)
-            if (updateRouteCommandWithChangedHostOrPath(openShiftCommand, deploymentSpec)) {
-                val deleteCommand = openShiftCommand.copy(operationType = OperationType.DELETE)
-                val createCommand = openShiftCommand.copy(operationType = OperationType.CREATE, payload = openShiftCommand.generated!!)
-                listOf(deleteCommand, createCommand)
-            } else {
-                listOf(openShiftCommand)
-            }
-        }.map { openShiftClient.performOpenShiftCommand(namespace, it) }
+        val openShiftApplicationResponses: List<OpenShiftResponse> =
+
+                runBlocking(appDispatcher) {
+                    openShiftApplicationObjects.flatMap {
+                        val openShiftCommand = openShiftClient.createOpenShiftCommand(namespace, it, mergeWithExistingResource)
+                        if (updateRouteCommandWithChangedHostOrPath(openShiftCommand, deploymentSpec)) {
+                            val deleteCommand = openShiftCommand.copy(operationType = OperationType.DELETE)
+                            val createCommand = openShiftCommand.copy(operationType = OperationType.CREATE, payload = openShiftCommand.generated!!)
+                            listOf(deleteCommand, createCommand)
+                        } else {
+                            listOf(openShiftCommand)
+                        }
+                    }.map {
+                        async(appDispatcher) {
+                            openShiftClient.performOpenShiftCommand(namespace, it)
+                        }
+                    }.map { it.await() }
+                }
 
         if (openShiftApplicationResponses.any { !it.success }) {
             logger.warn("One or more commands failed for $namespace/$name. Will not delete objects from previous deploys.")
