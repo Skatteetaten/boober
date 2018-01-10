@@ -58,10 +58,10 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService, val
     }
 
     @GetMapping("/**")
-    fun getAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest): Response {
+    fun getAuroraConfigFile(@PathVariable name: String, request: HttpServletRequest): Response {
 
-        val fileName = extractFileName(affiliation, request)
-        val configFiles = auroraConfigService.findAuroraConfigFile(affiliation, fileName)
+        val fileName = extractFileName(name, request)
+        val configFiles = auroraConfigService.findAuroraConfigFile(name, fileName)
                 ?.let { listOf(it) } ?: emptyList()
 
         return Response(items = configFiles)
@@ -69,30 +69,30 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService, val
 
 
     @PutMapping("/**")
-    fun updateAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest,
+    fun updateAuroraConfigFile(@PathVariable name: String, request: HttpServletRequest,
                                @RequestBody @Valid payload: UpdateAuroraConfigFilePayload): Response {
 
         if (payload.validateVersions && payload.version.isEmpty()) {
             throw IllegalAccessException("Must specify version");
         }
-        val fileName = extractFileName(affiliation, request)
+        val fileName = extractFileName(name, request)
 
-        val auroraConfig = auroraConfigService.updateAuroraConfigFile(affiliation, fileName, payload.content, payload.version)
+        val auroraConfig = auroraConfigService.updateAuroraConfigFile(name, fileName, payload.content, payload.version)
         return createAuroraConfigResponse(auroraConfig)
     }
 
 
     @PatchMapping("/**")
-    fun patchAuroraConfigFile(@PathVariable affiliation: String, request: HttpServletRequest,
+    fun patchAuroraConfigFile(@PathVariable name: String, request: HttpServletRequest,
                               @RequestBody @Valid payload: UpdateAuroraConfigFilePayload): Response {
 
         if (payload.validateVersions && payload.version.isEmpty()) {
             throw IllegalAccessException("Must specify version");
         }
 
-        val fileName = extractFileName(affiliation, request)
+        val fileName = extractFileName(name, request)
 
-        val auroraConfig = auroraConfigService.patchAuroraConfigFile(affiliation, fileName,
+        val auroraConfig = auroraConfigService.patchAuroraConfigFile(name, fileName,
                 payload.content, payload.version)
         return createAuroraConfigResponse(auroraConfig)
     }
