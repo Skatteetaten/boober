@@ -139,7 +139,7 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
     if (useInteractions) {
       userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User", [])
 
-      openShiftClient.getGroups() >> new OpenShiftGroups([:], ["APP_Paas_UTV" : []])
+      openShiftClient.getGroups() >> new OpenShiftGroups([:], ["APP_PaaS_drift": [], "APP_PaaS_utv": []])
     }
 
     if (useAuroraConfig) {

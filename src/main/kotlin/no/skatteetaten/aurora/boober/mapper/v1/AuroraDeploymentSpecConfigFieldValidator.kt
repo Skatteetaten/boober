@@ -25,7 +25,7 @@ class AuroraDeploymentSpecConfigFieldValidator(val applicationId: ApplicationId,
     @JvmOverloads
     fun validate(fullValidation: Boolean = true) {
 
-        val envPointers = listOf("envName", "cluster", "affiliation",
+        val envPointers = listOf("envName", "affiliation",
                 "permissions/admin", "permissions/view", "permissions/adminServiceAccount")
 
         val errors: List<ConfigFieldError> = fieldHandlers.mapNotNull { e ->
