@@ -41,7 +41,10 @@ class BearerAuthenticationManager(
         val openShiftUser = getOpenShiftUser(token)
         val grantedAuthorities = getGrantedAuthoritiesForUser(openShiftUser)
 
+        // We need to set isAuthenticated to false to ensure that the http authenticationProvider is also called
+        // (don't end the authentication chain).
         return PreAuthenticatedAuthenticationToken(openShiftUser, token, grantedAuthorities)
+                .apply { isAuthenticated = false }
     }
 
     private fun getGrantedAuthoritiesForUser(openShiftUser: JsonNode?): List<SimpleGrantedAuthority> {
