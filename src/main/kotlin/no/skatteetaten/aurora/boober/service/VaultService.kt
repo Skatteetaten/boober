@@ -101,6 +101,18 @@ class VaultService(
         })
     }
 
+    fun import(vaultCollectionName: String, vaultName: String, permissions: List<String>, secrets: Map<String, String>): EncryptedFileVault {
+
+        return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, _ ->
+            vaultCollection.createVault(vaultName).let { vault ->
+                vault.clear()
+                secrets.forEach({ name, contents -> vault.updateFile(name, contents)})
+                vault.permissions = permissions
+                vault
+            }
+        })
+    }
+
     private fun findVaultByNameIfAllowed(vaultCollection: VaultCollection, vaultName: String): EncryptedFileVault? {
 
         val vault = vaultCollection.findVaultByName(vaultName)
@@ -134,9 +146,5 @@ class VaultService(
     private fun findAllVaultsInVaultCollection(vaultCollectionName: String): List<EncryptedFileVault> {
 
         return findVaultCollection(vaultCollectionName).vaults
-    }
-
-    fun save(vaultCollectionName: String, vault: EncryptedFileVault, validateVersions: Boolean): EncryptedFileVault {
-        return vault
     }
 }

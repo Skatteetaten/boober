@@ -110,9 +110,7 @@ class EncryptedFileVault private constructor(
         FileUtils.write(file, encryptedContent, Charset.defaultCharset())
     }
 
-    fun deleteFile(fileName: String) {
+    fun deleteFile(fileName: String) = FileUtils.deleteQuietly(File(vaultFolder, fileName))
 
-        val file = File(vaultFolder, fileName)
-        file.delete()
-    }
+    fun clear() = files.forEach { deleteFile(it.name) }
 }

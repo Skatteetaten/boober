@@ -41,7 +41,7 @@ class VaultControllerTest extends Specification {
 
     given:
       def payload = [vault: [name: 'testvault', secrets: [:], versions: [:], permissions: null], validateVersions: true]
-      1 * vaultService.save(affiliation, _, payload.validateVersions)
+      1 * vaultService.import(affiliation, _, payload.validateVersions)
 
     when:
       ResultActions result = mockMvc.perform(
