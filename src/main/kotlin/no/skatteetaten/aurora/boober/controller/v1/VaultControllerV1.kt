@@ -2,8 +2,8 @@ package no.skatteetaten.aurora.boober.controller.v1
 
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.v1.VaultWithAccessResource.Companion.fromEncryptedFileVault
-import no.skatteetaten.aurora.boober.model.EncryptedFileVault
-import no.skatteetaten.aurora.boober.service.VaultService
+import no.skatteetaten.aurora.boober.service.vault.EncryptedFileVault
+import no.skatteetaten.aurora.boober.service.vault.VaultService
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.bind.annotation.*
 import javax.servlet.http.HttpServletRequest

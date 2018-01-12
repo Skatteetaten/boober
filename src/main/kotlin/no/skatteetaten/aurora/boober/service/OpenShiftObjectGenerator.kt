@@ -11,6 +11,8 @@ import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.service.internal.*
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResults
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

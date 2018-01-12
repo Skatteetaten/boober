@@ -3,10 +3,10 @@ package no.skatteetaten.aurora.boober.service.internal
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType
-import no.skatteetaten.aurora.boober.service.ProvisioningResult
-import no.skatteetaten.aurora.boober.service.SchemaProvisionResult
-import no.skatteetaten.aurora.boober.service.SchemaProvisionResults
-import no.skatteetaten.aurora.boober.service.VaultResults
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResult
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResults
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultResults
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 

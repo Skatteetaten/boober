@@ -1,6 +1,7 @@
-package no.skatteetaten.aurora.boober.service
+package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.service.*
 import org.springframework.stereotype.Service
 
 class ProvisioningResult(

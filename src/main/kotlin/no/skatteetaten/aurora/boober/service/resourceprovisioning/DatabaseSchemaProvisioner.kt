@@ -1,9 +1,11 @@
-package no.skatteetaten.aurora.boober.service
+package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
+import no.skatteetaten.aurora.boober.service.ProvisioningException
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.utils.logger
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity

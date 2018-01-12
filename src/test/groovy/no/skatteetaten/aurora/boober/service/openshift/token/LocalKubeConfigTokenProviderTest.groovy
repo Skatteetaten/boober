@@ -1,6 +1,7 @@
-package no.skatteetaten.aurora.boober.service.openshift
+package no.skatteetaten.aurora.boober.service.openshift.token
 
 import no.skatteetaten.aurora.boober.service.AbstractSpec
+import no.skatteetaten.aurora.boober.service.openshift.token.LocalKubeConfigTokenProvider
 
 class LocalKubeConfigTokenProviderTest extends AbstractSpec {
 

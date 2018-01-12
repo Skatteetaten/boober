@@ -1,5 +1,6 @@
-package no.skatteetaten.aurora.boober.service
+package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
+import no.skatteetaten.aurora.boober.service.vault.VaultService
 import org.springframework.stereotype.Service
 
 data class VaultRequest(val collectionName: String, val name: String)

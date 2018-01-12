@@ -1,10 +1,16 @@
-package no.skatteetaten.aurora.boober.service
+package no.skatteetaten.aurora.boober.service.vault
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
+import no.skatteetaten.aurora.boober.service.EncryptionService
+import no.skatteetaten.aurora.boober.service.GitService
+import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
+import no.skatteetaten.aurora.boober.service.UnauthorizedAccessException
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
+import no.skatteetaten.aurora.boober.service.vault.VaultService
 import spock.lang.Specification
 
 class VaultServiceTest extends Specification {

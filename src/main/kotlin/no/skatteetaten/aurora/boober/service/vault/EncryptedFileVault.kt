@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.model
+package no.skatteetaten.aurora.boober.service.vault
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper

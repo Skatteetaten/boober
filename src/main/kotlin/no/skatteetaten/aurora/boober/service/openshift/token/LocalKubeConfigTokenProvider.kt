@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.service.openshift
+package no.skatteetaten.aurora.boober.service.openshift.token
 
 import org.springframework.stereotype.Component
 import org.yaml.snakeyaml.Yaml
@@ -40,13 +40,13 @@ private class KubeConfig private constructor(config: Map<String, Any>) {
     private val server: String
         get() {
 
-            val currentContext = KubeConfig.getFromMap<String>(config, "current-context")
+            val currentContext = getFromMap<String>(config, "current-context")
             return currentContext.split("/".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1]
         }
 
     private val username: String
         get() {
-            val currentContext = KubeConfig.getFromMap<String>(config, "current-context")
+            val currentContext = getFromMap<String>(config, "current-context")
             return currentContext.split("/".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[2]
         }
 

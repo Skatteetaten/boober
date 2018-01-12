@@ -14,8 +14,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.controller.internal.ErrorHandler
 import no.skatteetaten.aurora.boober.controller.v1.VaultControllerV1
-import no.skatteetaten.aurora.boober.model.EncryptedFileVault
-import no.skatteetaten.aurora.boober.service.VaultService
+import no.skatteetaten.aurora.boober.service.vault.EncryptedFileVault
+import no.skatteetaten.aurora.boober.service.vault.VaultService
 import spock.lang.Specification
 
 class VaultControllerTest extends Specification {

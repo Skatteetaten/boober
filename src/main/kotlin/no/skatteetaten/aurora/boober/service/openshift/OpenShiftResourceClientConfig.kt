@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.service.openshift
 
+import no.skatteetaten.aurora.boober.service.openshift.token.LocalKubeConfigTokenProvider
+import no.skatteetaten.aurora.boober.service.openshift.token.ServiceAccountTokenProvider
+import no.skatteetaten.aurora.boober.service.openshift.token.UserDetailsTokenProvider
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
