@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.controller.internal.ErrorHandler
 import no.skatteetaten.aurora.boober.controller.v1.VaultControllerV1
+import no.skatteetaten.aurora.boober.model.EncryptedFileVault
 import no.skatteetaten.aurora.boober.service.VaultService
 import spock.lang.Specification
 
@@ -26,7 +27,7 @@ class VaultControllerTest extends Specification {
 
   def vaultService = Mock(VaultService)
 
-  def affiliation = 'aos'
+  def vaultCollectionName = 'aos'
 
   void setup() {
     def controller = new VaultControllerV1(vaultService)
@@ -40,12 +41,12 @@ class VaultControllerTest extends Specification {
   def "Simple test that verifies payload is correctly parsed on save"() {
 
     given:
-      def payload = [vault: [name: 'testvault', secrets: [:], versions: [:], permissions: null], validateVersions: true]
-      1 * vaultService.import(affiliation, _, payload.validateVersions)
+      def payload = [name: 'testVault', secrets: [:], permissions: []]
+      1 * vaultService.import(vaultCollectionName, 'testVault', [], [:]) >> EncryptedFileVault.createFromFolder(new File("."))
 
     when:
       ResultActions result = mockMvc.perform(
-          put("/v1/vault/$affiliation").content(JsonOutput.toJson(payload)).
+          put("/v1/vault/$vaultCollectionName").content(JsonOutput.toJson(payload)).
               contentType(APPLICATION_JSON))
 
     then:
@@ -59,11 +60,11 @@ class VaultControllerTest extends Specification {
       def secretName = "some_secret"
       def fileContents = 'SECRET_PASS=asdlfkjaølfjaøf'
       def payload = [contents: fileContents, validateVersions: false]
-      1 * vaultService.createOrUpdateFileInVault(affiliation, vaultName, secretName, fileContents)
+      1 * vaultService.createOrUpdateFileInVault(vaultCollectionName, vaultName, secretName, fileContents) >> EncryptedFileVault.createFromFolder(new File("."))
 
     when:
       ResultActions result = mockMvc.perform(
-          put("/v1/vault/$affiliation/$vaultName/secret/$secretName")
+          put("/v1/vault/$vaultCollectionName/$vaultName/$secretName")
               .content(JsonOutput.toJson(payload))
               .contentType(APPLICATION_JSON))
 

@@ -66,7 +66,9 @@ class EncryptedFileVault private constructor(
     companion object {
         private val PERMISSION_FILE = ".permissions"
 
-        fun createFromFolder(vaultFolder: File, encryptor: Encryptor, decryptor: Decryptor): EncryptedFileVault {
+        @JvmStatic
+        @JvmOverloads
+        fun createFromFolder(vaultFolder: File, encryptor: Encryptor = { it }, decryptor: Decryptor = { it }): EncryptedFileVault {
 
             FileUtils.forceMkdir(vaultFolder)
             return EncryptedFileVault(vaultFolder, encryptor, decryptor)
