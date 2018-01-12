@@ -1,7 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
-
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
 
@@ -22,6 +20,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
@@ -52,7 +51,6 @@ import spock.mock.DetachedMockFactory
     OpenShiftObjectLabelService,
     RedeployService,
     DeploymentSpecService,
-    DeployLogService,
     BitbucketProjectService
 ])
 class AbstractMockedOpenShiftSpecification extends AbstractSpec {
@@ -109,6 +107,11 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
     OpenShiftResourceClient resourceClientSA() {
 
       factory.Mock(OpenShiftResourceClient)
+    }
+
+    @Bean
+    DeployLogService deployLogService() {
+      factory.Mock(DeployLogService)
     }
   }
 

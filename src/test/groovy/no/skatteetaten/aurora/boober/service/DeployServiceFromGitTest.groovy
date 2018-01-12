@@ -29,9 +29,9 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
   @Autowired
   DeployLogService deployLogService
-
+/*
   @Autowired
-  GitService gitService
+  GitService gitService*/
 
   @Autowired
   DockerService dockerService
@@ -45,7 +45,7 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
-  Git git
+//  Git git
 
   def setup() {
 
@@ -74,12 +74,14 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
     }
     openShiftClient.createOpenShiftDeleteCommands(_, _, _, _) >> []
 
-    git = gitService.checkoutRepository(affiliation)
+//    git = gitService.checkoutRepository(affiliation)
   }
+/*
 
   def cleanup() {
     git.close()
   }
+*/
 
   def "Should perform release and not generate a deployRequest if imagestream triggers new image"() {
     when:
@@ -115,6 +117,7 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
       result.openShiftResponses.size() == 9
 
   }
+/*
 
   def "Should perform release and mark it"() {
     when:
@@ -167,5 +170,6 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
       result[0].tagResponse.success
 
   }
+*/
 
 }
