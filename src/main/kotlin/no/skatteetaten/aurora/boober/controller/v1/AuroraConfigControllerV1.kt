@@ -15,8 +15,7 @@ import javax.validation.Valid
 
 data class AuroraConfigResource(
         val name: String,
-        val files: JsonDataFiles = mapOf(),
-        val versions: Map<String, String?> = mapOf()
+        val files: JsonDataFiles = mapOf()
 ) {
     fun toAuroraConfig(affiliation: String): AuroraConfig {
         val auroraConfigFiles = files.map { AuroraConfigFile(it.key, it.value) }
@@ -24,11 +23,7 @@ data class AuroraConfigResource(
     }
 }
 
-
-data class UpdateAuroraConfigFilePayload(
-        val version: String = "",
-        val validateVersions: Boolean = true,
-
+data class ContentPayload(
         @JsonRawValue
         val content: String
 )
@@ -67,33 +62,22 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService, val
         return Response(items = configFiles)
     }
 
-
     @PutMapping("/**")
     fun updateAuroraConfigFile(@PathVariable name: String, request: HttpServletRequest,
-                               @RequestBody @Valid payload: UpdateAuroraConfigFilePayload): Response {
+                               @RequestBody @Valid payload: ContentPayload): Response {
 
-        if (payload.validateVersions && payload.version.isEmpty()) {
-            throw IllegalAccessException("Must specify version");
-        }
         val fileName = extractFileName(name, request)
-
-        val auroraConfig = auroraConfigService.updateAuroraConfigFile(name, fileName, payload.content, payload.version)
+        val auroraConfig = auroraConfigService.updateAuroraConfigFile(name, fileName, payload.content)
         return createAuroraConfigResponse(auroraConfig)
     }
 
-
     @PatchMapping("/**")
     fun patchAuroraConfigFile(@PathVariable name: String, request: HttpServletRequest,
-                              @RequestBody @Valid payload: UpdateAuroraConfigFilePayload): Response {
-
-        if (payload.validateVersions && payload.version.isEmpty()) {
-            throw IllegalAccessException("Must specify version");
-        }
+                              @RequestBody @Valid payload: ContentPayload): Response {
 
         val fileName = extractFileName(name, request)
 
-        val auroraConfig = auroraConfigService.patchAuroraConfigFile(name, fileName,
-                payload.content, payload.version)
+        val auroraConfig = auroraConfigService.patchAuroraConfigFile(name, fileName, payload.content)
         return createAuroraConfigResponse(auroraConfig)
     }
 
@@ -110,7 +94,6 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService, val
     fun fromAuroraConfig(auroraConfig: AuroraConfig): AuroraConfigResource {
 
         val files: JsonDataFiles = auroraConfig.auroraConfigFiles.associate { it.name to it.contents }
-        val versions = auroraConfig.auroraConfigFiles.associate { it.name to it.version }
-        return AuroraConfigResource(auroraConfig.affiliation, files, versions = versions)
+        return AuroraConfigResource(auroraConfig.affiliation, files)
     }
 }

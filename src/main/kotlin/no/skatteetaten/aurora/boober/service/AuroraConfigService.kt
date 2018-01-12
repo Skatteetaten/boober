@@ -2,19 +2,13 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.github.fge.jsonpatch.JsonPatch
-import no.skatteetaten.aurora.boober.mapper.v1.createAuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.GitServices.Domain.AURORA_CONFIG
 import no.skatteetaten.aurora.boober.service.GitServices.TargetDomain
 import org.apache.commons.io.FileUtils
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.InvalidRemoteException
-import org.eclipse.jgit.lib.PersonIdent
 import org.springframework.stereotype.Service
 import java.io.File
 
@@ -41,11 +35,9 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
 
     fun findAuroraConfigFile(name: String, fileName: String): AuroraConfigFile? {
 
-        // TODO: Implement using AuroraConfig.auroraConfigFiles
-        updateLocalFilesFromGit(name)
-        val file = getAuroraConfigFile(name, fileName)
-        return if (file.exists()) AuroraConfigFile(file.path, jacksonObjectMapper().readValue(file))
-        else throw IllegalArgumentException("No such file $fileName in AuroraConfig $name")
+        val auroraConfig = findAuroraConfig(name)
+        return auroraConfig.findFile(fileName)
+                ?: throw IllegalArgumentException("No such file $fileName in AuroraConfig $name")
     }
 
     fun save(auroraConfig: AuroraConfig): AuroraConfig {
