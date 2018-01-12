@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.utils.LambdaOutputStream
 import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.api.errors.EmtpyCommitException
 import org.eclipse.jgit.lib.PersonIdent
 import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.lib.TextProgressMonitor
@@ -104,16 +105,22 @@ open class GitService(
         val status = repo.status().call()
         val message = commitMessage ?: "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}"
         val authorIdent = getPersonIdentFromUserDetails()
-        repo.commit()
-                .setAll(true)
-                .setAllowEmpty(false)
-                .setAuthor(authorIdent)
-                .setMessage(message)
-                .call()
-        repo.push()
-                .setCredentialsProvider(cp)
-                .add("refs/heads/master")
-                .call()
+        try {
+            repo.commit()
+                    .setAll(true)
+                    .setAllowEmpty(false)
+                    .setAuthor(authorIdent)
+                    .setMessage(message)
+                    .call()
+            repo.push()
+                    .setCredentialsProvider(cp)
+                    .add("refs/heads/master")
+                    .call()
+        } catch (e : EmtpyCommitException) {
+            // Ignore empty commits. It's ok.
+        } catch (e : Exception) {
+            throw e
+        }
     }
 
     fun pushTags(git: Git, tags: List<Ref>) {

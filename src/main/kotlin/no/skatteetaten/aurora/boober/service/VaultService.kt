@@ -42,10 +42,13 @@ class VaultService(
 
     fun findVault(vaultCollectionName: String, vaultName: String): EncryptedFileVault {
 
-        val vault = findVaultByNameIfAllowed(findVaultCollection(vaultCollectionName), vaultName)
-                ?: throw IllegalArgumentException("Vault not found name=$vaultName")
-        return vault
+        val vaultCollection = findVaultCollection(vaultCollectionName)
+        return findVault(vaultCollection, vaultName)
     }
+
+    fun findVault(vaultCollection: VaultCollection, vaultName: String) =
+            (findVaultByNameIfAllowed(vaultCollection, vaultName)
+                    ?: throw IllegalArgumentException("Vault not found name=$vaultName"))
 
     fun createOrUpdateFileInVault(vaultCollectionName: String,
                                   vaultName: String,
@@ -62,11 +65,18 @@ class VaultService(
         })
     }
 
+    fun findFileInVault(vaultCollectionName: String,
+                        vaultName: String,
+                        fileName: String): String {
+        val vault = findVault(vaultCollectionName, vaultName)
+        val vaultFile = vault.getFile(fileName)
+        return vaultFile
+    }
+
     fun deleteFileInVault(vaultCollectionName: String, vaultName: String, fileName: String): EncryptedFileVault? {
 
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
-            val vault = findVaultByNameIfAllowed(vaultCollection, vaultName) ?: return@withVaultCollectionAndRepoForUpdate null
-
+            val vault = findVault(vaultCollection, vaultName)
             vault.deleteFile(fileName)
             gitService.commitAndPushChanges(repo)
             vault
@@ -85,14 +95,13 @@ class VaultService(
     fun setVaultPermissions(vaultCollectionName: String, vaultName: String, groupPermissions: List<String>) {
 
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
-            val vault = findVaultByNameIfAllowed(vaultCollection, vaultName) ?: return@withVaultCollectionAndRepoForUpdate
-
+            val vault = findVault(vaultCollection, vaultName)
             vault.permissions = groupPermissions
             gitService.commitAndPushChanges(repo)
         })
     }
 
-    private fun findVaultByNameIfAllowed(vaultCollection: VaultCollection, vaultName: String) : EncryptedFileVault? {
+    private fun findVaultByNameIfAllowed(vaultCollection: VaultCollection, vaultName: String): EncryptedFileVault? {
 
         val vault = vaultCollection.findVaultByName(vaultName)
         return vault?.apply { assertCurrentUserHasAccess(this) }

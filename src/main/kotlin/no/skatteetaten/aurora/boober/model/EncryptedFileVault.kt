@@ -1,11 +1,14 @@
 package no.skatteetaten.aurora.boober.model
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.charset.Charset
 
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class AuroraPermissions @JvmOverloads constructor(
         val groups: List<String>? = listOf()
 )
@@ -27,7 +30,7 @@ class VaultCollection private constructor(
         get() = folder.name
 
     val vaults: List<EncryptedFileVault>
-        get() = findAllVaultFolders().map { EncryptedFileVault.createFromFolder(it, decryptor) }
+        get() = findAllVaultFolders().map { EncryptedFileVault.createFromFolder(it, encryptor, decryptor) }
 
     fun findVaultByName(vaultName: String): EncryptedFileVault? {
         return vaults.firstOrNull { it.name == vaultName }
@@ -63,7 +66,7 @@ class EncryptedFileVault private constructor(
     companion object {
         private val PERMISSION_FILE = ".permissions"
 
-        fun createFromFolder(vaultFolder: File, encryptor: Encryptor, decryptor: Decryptor = { it }): EncryptedFileVault {
+        fun createFromFolder(vaultFolder: File, encryptor: Encryptor, decryptor: Decryptor): EncryptedFileVault {
 
             FileUtils.forceMkdir(vaultFolder)
             return EncryptedFileVault(vaultFolder, encryptor, decryptor)
@@ -94,6 +97,11 @@ class EncryptedFileVault private constructor(
 
     private val files: List<File>
         get() = vaultFolder.listFiles()?.filter { it.isFile } ?: emptyList()
+
+    fun getFile(fileName: String): String {
+
+        return secrets.getOrElse(fileName, { throw IllegalArgumentException("No such file $fileName in vault $name") })
+    }
 
     fun updateFile(fileName: String, fileContents: String) {
 

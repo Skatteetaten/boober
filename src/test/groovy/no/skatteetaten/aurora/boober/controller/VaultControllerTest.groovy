@@ -24,12 +24,12 @@ class VaultControllerTest extends Specification {
 
   MockMvc mockMvc
 
-  def vaultFacade = Mock(VaultService)
+  def vaultService = Mock(VaultService)
 
   def affiliation = 'aos'
 
   void setup() {
-    def controller = new VaultControllerV1(vaultFacade)
+    def controller = new VaultControllerV1(vaultService)
     mockMvc = MockMvcBuilders.
         standaloneSetup(controller)
         .setControllerAdvice(new ErrorHandler())
@@ -41,7 +41,7 @@ class VaultControllerTest extends Specification {
 
     given:
       def payload = [vault: [name: 'testvault', secrets: [:], versions: [:], permissions: null], validateVersions: true]
-      1 * vaultFacade.save(affiliation, _, payload.validateVersions)
+      1 * vaultService.save(affiliation, _, payload.validateVersions)
 
     when:
       ResultActions result = mockMvc.perform(
@@ -59,7 +59,7 @@ class VaultControllerTest extends Specification {
       def secretName = "some_secret"
       def fileContents = 'SECRET_PASS=asdlfkjaølfjaøf'
       def payload = [contents: fileContents, validateVersions: false]
-      1 * vaultFacade.createOrUpdateFileInVault(affiliation, vaultName, secretName, fileContents)
+      1 * vaultService.createOrUpdateFileInVault(affiliation, vaultName, secretName, fileContents)
 
     when:
       ResultActions result = mockMvc.perform(
