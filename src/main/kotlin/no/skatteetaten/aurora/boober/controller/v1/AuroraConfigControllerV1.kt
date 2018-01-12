@@ -1,8 +1,9 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
 import com.fasterxml.jackson.annotation.JsonRawValue
-import no.skatteetaten.aurora.boober.controller.internal.JsonDataFiles
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.controller.internal.Response
+import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigResource.Companion.fromAuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
@@ -15,13 +16,24 @@ import javax.validation.Valid
 
 data class AuroraConfigResource(
         val name: String,
-        val files: JsonDataFiles = mapOf()
+        val files: List<AuroraConfigFileResource> = listOf()
 ) {
     fun toAuroraConfig(affiliation: String): AuroraConfig {
-        val auroraConfigFiles = files.map { AuroraConfigFile(it.key, it.value) }
+        val auroraConfigFiles = files.map { AuroraConfigFile(it.name, jacksonObjectMapper().readTree(it.contents)) }
         return AuroraConfig(auroraConfigFiles, affiliation)
     }
+
+    companion object {
+        fun fromAuroraConfig(auroraConfig: AuroraConfig): AuroraConfigResource {
+            return AuroraConfigResource(auroraConfig.affiliation, auroraConfig.auroraConfigFiles.map { AuroraConfigFileResource(it.name, it.contents.toString()) })
+        }
+    }
 }
+
+data class AuroraConfigFileResource(
+        val name: String,
+        val contents: String
+)
 
 data class ContentPayload(
         @JsonRawValue
@@ -56,10 +68,8 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService, val
     fun getAuroraConfigFile(@PathVariable name: String, request: HttpServletRequest): Response {
 
         val fileName = extractFileName(name, request)
-        val configFiles = auroraConfigService.findAuroraConfigFile(name, fileName)
-                ?.let { listOf(it) } ?: emptyList()
-
-        return Response(items = configFiles)
+        val auroraConfigFile = auroraConfigService.findAuroraConfigFile(name, fileName)
+        return createAuroraConfigFileResponse(auroraConfigFile)
     }
 
     @PutMapping("/**")
@@ -86,14 +96,14 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService, val
         return AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
     }
 
-    private fun createAuroraConfigResponse(auroraConfig: AuroraConfig): Response {
-        return Response(items = listOf(auroraConfig).map { fromAuroraConfig(it) })
+    private fun createAuroraConfigFileResponse(auroraConfigFile: AuroraConfigFile?): Response {
+        val configFiles = auroraConfigFile
+                ?.let { listOf(AuroraConfigFileResource(it.name, it.contents.toString())) } ?: emptyList()
+
+        return Response(items = configFiles)
     }
 
-
-    fun fromAuroraConfig(auroraConfig: AuroraConfig): AuroraConfigResource {
-
-        val files: JsonDataFiles = auroraConfig.auroraConfigFiles.associate { it.name to it.contents }
-        return AuroraConfigResource(auroraConfig.affiliation, files)
+    private fun createAuroraConfigResponse(auroraConfig: AuroraConfig): Response {
+        return Response(items = listOf(auroraConfig).map { fromAuroraConfig(it) })
     }
 }
