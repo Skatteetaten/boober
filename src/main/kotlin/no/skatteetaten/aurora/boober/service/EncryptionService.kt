@@ -5,6 +5,7 @@ import org.encryptor4j.Encryptor
 import org.encryptor4j.factory.KeyFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.nio.charset.Charset
 import java.security.Security
 import java.util.*
 
@@ -46,7 +47,8 @@ class EncryptionService(
             val cipherTextBase64: String = split[1]
             val cipherText: ByteArray = Base64.getDecoder().decode(cipherTextBase64)
             val decrypted = String(encryptor.decrypt(cipherText))
-            decrypted
+            //TODO: Secretes are double base64 encoded
+            Base64.getDecoder().decode(decrypted).toString(Charset.defaultCharset())
         })
     }
 }
