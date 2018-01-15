@@ -52,10 +52,12 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
         auroraConfig.validate()
         watch.stop()
 
-
-        watch.start("getConfig")
-        val mapper = jacksonObjectMapper()
+        watch.start("updateRepo")
         val repo = getUpdatedRepo(auroraConfig.affiliation)
+        watch.stop()
+
+        watch.start("createAuroraConfig")
+        val mapper = jacksonObjectMapper()
         val checkoutDir = getAuroraConfigFolder(auroraConfig.affiliation)
         val existing = AuroraConfig.fromFolder(checkoutDir)
         watch.stop()
@@ -88,7 +90,8 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
     fun updateAuroraConfigFile(name: String, fileName: String, contents: String, previousVersion: String? = null): AuroraConfig {
 
         val jsonContents = jacksonObjectMapper().readValue(contents, JsonNode::class.java)
-        val auroraConfig = findAuroraConfig(name).updateFile(fileName, jsonContents, previousVersion)
+        val oldAuroraConfig = findAuroraConfig(name)
+        val auroraConfig = oldAuroraConfig.updateFile(fileName, jsonContents, previousVersion)
 
         return save(auroraConfig)
     }
