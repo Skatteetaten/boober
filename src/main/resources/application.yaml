@@ -15,12 +15,19 @@ spring:
       name: boober
   cache:
     caffeine:
-      spec: maximumSize=2000,expireAfterAccess=300s
-    cache-names: groups
+      spec: maximumSize=2000,expireAfterWrite=300s
+    cache-names: groups, templates
   metrics:
     prometheus:
       timerPercentilesMin: "PT0.1S"
       timerPercentilesMax: "PT5S"
+
+
+vault:
+  git:
+    project: av
+    checkoutPath: "/tmp/boobervault"
+    urlPattern: https://git.aurora.skead.no/scm/${vault.git.project}/%s.git
 
 boober:
     dbh: http://dbh
@@ -29,6 +36,7 @@ boober:
         url: "https://git.aurora.skead.no/rest/api/1.0"
     git:
        checkoutPath: "/tmp/boober"
+       urlPattern: https://git.aurora.skead.no/scm/${boober.bitbucket.project}/%s.git
     docker:
         registry: "docker-registry.aurora.sits.no:5000"
     openshift:
@@ -66,10 +74,17 @@ boober:
     tokenLocation: /opt/boober
   encrypt:
     key: "komogsyngensang"
+  bitbucket:
+    project: "ac-dev"
   git:
-    urlPattern: "file:///tmp/boobergit/%s"
-    username: "boober"
-    password: ""
+    username: "boober-dev"
+    password: "boober-dev"
+
+vault:
+  git:
+    project: "av-dev"
+    username: "boober-dev"
+    password: "boober-dev"
 
 aurora:
   token:

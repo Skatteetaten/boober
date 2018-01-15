@@ -39,7 +39,6 @@ class DeployServiceProjectTerminatingTest extends AbstractMockedOpenShiftSpecifi
 
     then:
       thrown(IllegalStateException)
-
   }
 
 }

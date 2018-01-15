@@ -56,6 +56,8 @@ data class OpenShiftResponse @JvmOverloads constructor(
     }
 }
 
+data class OpenShiftGroups(val userGroups: Map<String, List<String>>, val groupUsers: Map<String, List<String>>)
+
 @Service
 class OpenShiftClient(
         @Value("\${openshift.url}") val baseUrl: String,
@@ -137,6 +139,7 @@ class OpenShiftClient(
         return getGroups(group) != null
     }
 
+    @Cacheable("templates")
     fun getTemplate(template: String): JsonNode? {
         return try {
             serviceAccountClient.get("$baseUrl/oapi/v1/namespaces/openshift/templates/$template")?.body
@@ -150,6 +153,25 @@ class OpenShiftClient(
 
         val url = "$baseUrl/oapi/v1/groups/$group"
         return serviceAccountClient.get(url)
+    }
+
+    @Cacheable("groups")
+    fun getGroups(): OpenShiftGroups {
+
+        val url = "$baseUrl/oapi/v1/groups/"
+        val groupsResponse: ResponseEntity<JsonNode> = serviceAccountClient.get(url)!!
+
+        val body = groupsResponse.body
+        val items = body["items"] as ArrayNode
+        val map = items.flatMap {
+            val name = it["metadata"]["name"].asText()
+            val users = it["users"] as ArrayNode
+            users.map { Pair(it.asText(), name) }
+        }
+        val userGroupIndex = map.groupBy({ it.first }, { it.second })
+        val groupUserIndex = map.groupBy({ it.second }, { it.first })
+
+        return OpenShiftGroups(userGroupIndex, groupUserIndex)
     }
 
     @Cacheable("groups")

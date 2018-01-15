@@ -9,22 +9,30 @@ enum class TemplateType {
     deploy, development, localTemplate, template, build
 }
 
-enum class ApplicationPlatform(val baseImageName:String, val baseImageVersion:String) {
+enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: String) {
     java("flange", "8"),
     web("wrench", "0")
 }
 
 
+data class AuroraDeployEnvironment(
+        val affiliation: String,
+        val envName: String,
+        val permissions: Permissions
+) {
+    val namespace: String
+        get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"
+}
+
+
 data class AuroraDeploymentSpec(
         val schemaVersion: String,
-        val affiliation: String,
-        val cluster: String,
         val type: TemplateType,
         val name: String,
-        val envName: String,
-        val permissions: Permissions,
         val fields: Map<String, Map<String, Any?>>,
 
+        val cluster: String,
+        val environment: AuroraDeployEnvironment,
         val volume: AuroraVolume? = null,
         val route: AuroraRoute? = null,
         val build: AuroraBuild? = null,
@@ -32,12 +40,10 @@ data class AuroraDeploymentSpec(
         val template: AuroraTemplate? = null,
         val localTemplate: AuroraLocalTemplate? = null
 ) {
-    val namespace: String
-        get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"
 
     fun assembleRouteHost(hostPrefix: String = name): String {
 
-        val hostSuffix = "$namespace.$cluster.paas.skead.no"
+        val hostSuffix = "${environment.namespace}.${cluster}.paas.skead.no"
 
         return if (hostPrefix.isBlank()) {
             hostSuffix
@@ -49,10 +55,9 @@ data class AuroraDeploymentSpec(
 }
 
 data class AuroraVolume(
-        val secrets: Map<String, String>?,
+        val secretVaultName: String?,
         val config: Map<String, Any?>?,
-        val mounts: List<Mount>?,
-        val permissions: AuroraPermissions?
+        val mounts: List<Mount>?
 )
 
 data class AuroraRoute(
@@ -132,8 +137,8 @@ data class Mount(
         val mountName: String,
         val volumeName: String,
         val exist: Boolean,
-        val content: Map<String, Any?>?,
-        val permissions: AuroraPermissions? = null
+        val content: Map<String, Any?>? = null,
+        val secretVaultName: String? = null
 )
 
 

@@ -16,9 +16,10 @@ import com.fasterxml.jackson.databind.JsonNode
 
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.controller.internal.ErrorHandler
-import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigFileControllerV1
+import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigControllerV1
 import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest
-import no.skatteetaten.aurora.boober.service.DeployBundleService
+import no.skatteetaten.aurora.boober.service.AuroraConfigService
+import no.skatteetaten.aurora.boober.service.DeploymentSpecService
 import spock.lang.Specification
 
 class AuroraConfigControllerTest extends Specification {
@@ -28,10 +29,11 @@ class AuroraConfigControllerTest extends Specification {
 
   MockMvc mockMvc
 
-  def deployBundleService = Mock(DeployBundleService)
+  def auroraConfigService = Mock(AuroraConfigService)
+  def deploymentSpecService = Mock(DeploymentSpecService)
 
   void setup() {
-    def controller = new AuroraConfigFileControllerV1(deployBundleService)
+    def controller = new AuroraConfigControllerV1(auroraConfigService, deploymentSpecService)
     mockMvc = MockMvcBuilders.
         standaloneSetup(controller)
         .setControllerAdvice(new ErrorHandler())
@@ -39,12 +41,10 @@ class AuroraConfigControllerTest extends Specification {
         .build()
   }
 
-  def affiliation = 'aos'
+  def auroraConfigName = 'aos'
   def fileName = 'about.json'
   def payload = [
-      version         : "LJLØ",
-      validateVersions: true,
-      content         : ""
+      contents         : ""
   ]
   def auroraConfig = AbstractAuroraConfigTest.createAuroraConfig([(fileName): AbstractAuroraConfigTest.DEFAULT_ABOUT])
 
@@ -52,12 +52,10 @@ class AuroraConfigControllerTest extends Specification {
 
     given:
       payload.content = AbstractAuroraConfigTest.DEFAULT_ABOUT
-      deployBundleService.updateAuroraConfigFile(affiliation, fileName,
-          { JsonNode it -> it.get("affiliation").textValue() == affiliation }, payload.version, payload.validateVersions
-      ) >> auroraConfig
+      auroraConfigService.updateAuroraConfigFile(auroraConfigName, fileName, _, payload.version) >> auroraConfig
     when:
       ResultActions result = mockMvc.perform(
-          put("/v1/auroraconfigfile/$affiliation/$fileName").content(JsonOutput.toJson(payload)).
+          put("/v1/auroraconfig/$auroraConfigName/$fileName").content(JsonOutput.toJson(payload)).
               contentType(APPLICATION_JSON))
 
     then:
@@ -73,12 +71,12 @@ class AuroraConfigControllerTest extends Specification {
   "value": 3
 }]"""
 
-      deployBundleService.
-          patchAuroraConfigFile(affiliation, fileName, payload.content, payload.version, payload.validateVersions) >>
+      auroraConfigService.
+          patchAuroraConfigFile(auroraConfigName, fileName, payload.content, payload.version) >>
           auroraConfig
     when:
       ResultActions result = mockMvc.perform(
-          patch("/v1/auroraconfigfile/$affiliation/$fileName").content(JsonOutput.toJson(payload)).
+          patch("/v1/auroraconfig/$auroraConfigName/$fileName").content(JsonOutput.toJson(payload)).
               contentType(APPLICATION_JSON))
 
     then:

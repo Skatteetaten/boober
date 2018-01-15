@@ -1,13 +1,16 @@
 package no.skatteetaten.aurora.boober.controller.security;
 
+import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.CredentialsExpiredException
 import org.springframework.security.core.Authentication
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken
 import org.springframework.stereotype.Component
 import java.util.regex.Pattern
@@ -18,25 +21,45 @@ class BearerAuthenticationManager(
 ) : AuthenticationManager {
 
     val logger: Logger = LoggerFactory.getLogger(BearerAuthenticationManager::class.java)
-    private val headerPattern: Pattern = Pattern.compile("Bearer\\s+(.*)", Pattern.CASE_INSENSITIVE)
+
+    companion object {
+        private val headerPattern: Pattern = Pattern.compile("Bearer\\s+(.*)", Pattern.CASE_INSENSITIVE)
+
+        private fun getBearerTokenFromAuthentication(authentication: Authentication?): String {
+            val authenticationHeaderValue = authentication?.principal?.toString()
+            val matcher = headerPattern.matcher(authenticationHeaderValue)
+            if (!matcher.find()) {
+                throw BadCredentialsException("Unexpected Authorization header format")
+            }
+            return matcher.group(1)
+        }
+    }
 
     override fun authenticate(authentication: Authentication?): Authentication {
-        val authenticationHeaderValue = authentication?.principal?.toString()
-        val matcher = headerPattern.matcher(authenticationHeaderValue)
-        if (!matcher.find()) {
-            throw BadCredentialsException("Unexpected Authorization header format")
-        }
-        val token = matcher.group(1)
 
-        logger.debug("Find user")
-        val response = try {
+        val token = getBearerTokenFromAuthentication(authentication)
+        val openShiftUser = getOpenShiftUser(token)
+        val grantedAuthorities = getGrantedAuthoritiesForUser(openShiftUser)
+
+        // We need to set isAuthenticated to false to ensure that the http authenticationProvider is also called
+        // (don't end the authentication chain).
+        return PreAuthenticatedAuthenticationToken(openShiftUser, token, grantedAuthorities)
+                .apply { isAuthenticated = false }
+    }
+
+    private fun getGrantedAuthoritiesForUser(openShiftUser: JsonNode?): List<SimpleGrantedAuthority> {
+        val username: String = openShiftUser?.openshiftName ?: throw IllegalArgumentException("Unable to determine username from response")
+
+        val openShiftGroups = openShiftClient.getGroups()
+        val groupsForUser = openShiftGroups.userGroups[username]
+        return groupsForUser?.map { SimpleGrantedAuthority(it) } ?: emptyList()
+    }
+
+    private fun getOpenShiftUser(token: String): JsonNode {
+        return try {
             openShiftClient.findCurrentUser(token)
         } catch (e: OpenShiftException) {
-            logger.debug("failed getting user", e)
             throw CredentialsExpiredException("An unexpected error occurred while getting OpenShift user", e)
-        }
-        logger.debug("/Find user")
-
-        return PreAuthenticatedAuthenticationToken(response, token)
+        } ?: throw BadCredentialsException("No user information found for the current token")
     }
 }

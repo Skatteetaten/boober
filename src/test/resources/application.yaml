@@ -23,6 +23,13 @@ boober:
   openshift:
     token: foo
 
+vault:
+  git:
+    urlPattern: "file:///tmp/vaulttest/%s"
+    checkoutPath: "build/vaultcheckout"
+    username: "foo"
+    password: "bar"
+
 management:
     port: 0
 

@@ -4,12 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.MissingNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.model.Database
-import no.skatteetaten.aurora.boober.model.Mount
-import no.skatteetaten.aurora.boober.model.MountType
-import no.skatteetaten.aurora.boober.utils.toPrimitiveType
-import no.skatteetaten.aurora.boober.utils.nullOnEmpty
 import org.apache.commons.lang.StringEscapeUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -55,96 +50,20 @@ inline fun <reified T> AuroraConfigField.value(): T {
 class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
 
-    fun getMounts(extractors: List<AuroraConfigFieldHandler>, vaults: Map<String, AuroraSecretVault>): List<Mount>? {
-        if (extractors.isEmpty()) {
-            return null
-        }
-
-        val mountNames = extractors.map {
-            val (_, name, _) = it.name.split("/", limit = 3)
-            name
-        }.toSet()
-
-        return mountNames.map { mount ->
-            val type: MountType = extract("mounts/$mount/type")
-
-            val permissions = if (type == MountType.Secret) {
-                extractOrNull<String?>("mounts/$mount/secretVault")?.let {
-                    vaults[it]?.permissions
-                }
-            } else null
-
-            val content = if (type == MountType.ConfigMap) {
-                extract("mounts/$mount/content")
-            } else {
-                extractOrNull<String?>("mounts/$mount/secretVault")?.let {
-                    vaults[it]?.secrets
-                }
-            }
-
-            Mount(
-                    extract("mounts/$mount/path"),
-                    type,
-                    extract("mounts/$mount/mountName"),
-                    extract("mounts/$mount/volumeName"),
-                    extract("mounts/$mount/exist"),
-                    content,
-                    permissions
-            )
-        }
-    }
-
     fun getConfigEnv(configExtractors: List<AuroraConfigFieldHandler>): Map<String, String> {
         val env = configExtractors.filter { it.name.count { it == '/' } == 1 }.map {
             val (_, field) = it.name.split("/", limit = 2)
             val value: Any = extract(it.name)
-            //TODO: er det rett å escape her?
             val escapedValue: String = when (value) {
                 is String -> StringEscapeUtils.escapeJavaScript(value)
                 is Number -> value.toString()
                 is Boolean -> value.toString()
-                else  ->  StringEscapeUtils.escapeJavaScript(jacksonObjectMapper().writeValueAsString(value))
+                else -> StringEscapeUtils.escapeJavaScript(jacksonObjectMapper().writeValueAsString(value))
             }
             field to escapedValue
         }
 
         return env.filter { !it.second.isBlank() }.toMap()
-    }
-
-
-    fun getConfigMap(configExtractors: List<AuroraConfigFieldHandler>): Map<String, Any?>? {
-
-
-        val configMap: MutableMap<String, MutableMap<String, Any?>> = mutableMapOf()
-        configExtractors.filter { it.name.count { it == '/' } > 1 }.forEach {
-
-            val parts = it.name.split("/", limit = 3)
-
-            val (_, configFile, field) = parts
-
-            val value: Any = extract(it.name)
-            val escapedValue = if (value is String) StringEscapeUtils.escapeJavaScript(value) else value
-            val keyValue = mutableMapOf(field to escapedValue)
-
-            val keyProps = if (!configFile.endsWith(".properties")) {
-                "$configFile.properties"
-            } else configFile
-
-            if (configMap.containsKey(keyProps)) configMap[keyProps]?.putAll(keyValue)
-            else configMap.put(keyProps, keyValue)
-        }
-
-        if (configMap.isEmpty()) {
-            return null
-        }
-
-        return configMap.map { (key, value) ->
-            key to value.map {
-                "${it.key}=${it.value}"
-            }.joinToString(separator = "\\n")
-        }.toMap()
-
-
     }
 
     fun getRouteAnnotations(prefix: String, extractors: List<AuroraConfigFieldHandler>): Map<String, String> {

@@ -48,7 +48,7 @@ class SpringTestUtils {
   @Configuration
   static class SecurityMock {
 
-    def users = [new User("aurora", "some-token", "Aurora OpenShift Test User")]
+    def users = [new User("aurora", "some-token", "Aurora OpenShift Test User", [])]
 
     @Bean
     UserDetailsService userDetailsService() {

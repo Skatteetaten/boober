@@ -1,11 +1,18 @@
 package no.skatteetaten.aurora.boober.service
 
 import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
-import static no.skatteetaten.aurora.boober.service.ExternalResourceProvisioner.createSchemaProvisionRequestsFromDeploymentSpec
+import static no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner.createSchemaProvisionRequestsFromDeploymentSpec
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseInstance
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisionerTest
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhUser
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResult
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResults
 
 class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpenShiftObjectGeneratorTest {
 
@@ -32,7 +39,7 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
           [new DbhUser("VCLFVAPKGOMBCFTWEVKZDYBGVTMYDP", "yYGmRnUPBORxMoMcPptGvDYgKxmRSm", "SCHEMA")]
       )
       def responseText =
-          loadResource(DatabaseSchemaProvisionerTest.simpleName, "schema_fd59dba9-7d67-4ea2-bb98-081a5df8c387.json")
+          loadResource("resourceprovisioning/" + DatabaseSchemaProvisionerTest.simpleName, "schema_fd59dba9-7d67-4ea2-bb98-081a5df8c387.json")
       def responseJson = new JsonSlurper().parseText(responseText)
       def schemaInfo = responseJson.items[0]
       def expectedInfo = [database: [
@@ -50,7 +57,7 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
       def provisioningResult = new ProvisioningResult(
           new SchemaProvisionResults([new SchemaProvisionResult(
               createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec)[0], schema, responseText
-          )]))
+          )]), null)
 
     when:
       def objects = objectGenerator.generateApplicationObjects('deploy-id', deploymentSpec, provisioningResult)

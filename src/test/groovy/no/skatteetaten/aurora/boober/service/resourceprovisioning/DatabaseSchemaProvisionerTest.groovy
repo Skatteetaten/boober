@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.service
+package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method
@@ -17,7 +17,15 @@ import org.springframework.test.web.client.MockRestServiceServer
 
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.Configuration
+import no.skatteetaten.aurora.boober.service.AbstractSpec
+import no.skatteetaten.aurora.boober.service.ProvisioningException
+import no.skatteetaten.aurora.boober.service.SpringTestUtils
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaIdRequest
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResults
 
 @WithUserDetails("aurora")
 @RestClientTest

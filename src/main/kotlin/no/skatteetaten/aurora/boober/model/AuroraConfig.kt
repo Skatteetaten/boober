@@ -2,7 +2,10 @@ package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.github.fge.jsonpatch.JsonPatch
+import no.skatteetaten.aurora.boober.mapper.v1.createAuroraDeploymentSpec
 import java.io.File
+import java.util.*
 
 data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affiliation: String) {
 
@@ -11,6 +14,11 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
         fun fromFolder(folderName: String): AuroraConfig {
 
             val folder = File(folderName)
+            return fromFolder(folder)
+        }
+
+        @JvmStatic
+        fun fromFolder(folder: File): AuroraConfig {
             val files = folder.walkBottomUp()
                     .onEnter { !setOf(".secret", ".git").contains(it.name) }
                     .filter { it.isFile }
@@ -23,8 +31,6 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
             return AuroraConfig(nodes.map { AuroraConfigFile(it.key, it.value!!, false) }, folder.name)
         }
     }
-
-    fun getVersions() = auroraConfigFiles.associate { it.name to it.version }
 
     fun getApplicationIds(): List<ApplicationId> {
 
@@ -54,19 +60,55 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
         return allFiles
     }
 
-    fun updateFile(name: String, contents: JsonNode, configFileVersion: String): AuroraConfig {
+    fun findFile(filename: String): AuroraConfigFile? = auroraConfigFiles.find { it.name == filename }
+
+    @JvmOverloads
+    fun updateFile(name: String, contents: JsonNode, previousVersion: String? = null): AuroraConfig {
 
         val files = auroraConfigFiles.toMutableList()
         val indexOfFileToUpdate = files.indexOfFirst { it.name == name }
-        val newAuroraConfigFile = AuroraConfigFile(name, contents, version = configFileVersion)
+        val newFile = AuroraConfigFile(name, contents)
 
         if (indexOfFileToUpdate == -1) {
-            files.add(newAuroraConfigFile)
+            files.add(newFile)
         } else {
-            files[indexOfFileToUpdate] = newAuroraConfigFile
+            val currentFile = files[indexOfFileToUpdate]
+            if (previousVersion != null && currentFile.version != previousVersion) {
+                throw AuroraVersioningException(this, currentFile, previousVersion)
+            }
+            files[indexOfFileToUpdate] = newFile
         }
 
         return this.copy(auroraConfigFiles = files)
+    }
+
+    fun patchFile(filename: String, jsonPatchOp: String, previousVersion: String? = null): AuroraConfig {
+
+        val mapper = jacksonObjectMapper()
+        val patch: JsonPatch = mapper.readValue(jsonPatchOp, JsonPatch::class.java)
+
+        val auroraConfigFile = findFile(filename)
+                ?: throw IllegalArgumentException("No such file $filename in AuroraConfig ${affiliation}")
+        val originalContentsNode = mapper.convertValue(auroraConfigFile.contents, JsonNode::class.java)
+
+        val fileContents = patch.apply(originalContentsNode)
+        val updatedAuroraConfig = updateFile(filename, fileContents, previousVersion)
+
+        return updatedAuroraConfig
+    }
+
+    @JvmOverloads
+    fun getAuroraDeploymentSpec(aid: ApplicationId, overrideFiles: List<AuroraConfigFile> = listOf()): AuroraDeploymentSpec
+            = createAuroraDeploymentSpec(this, aid, overrideFiles = overrideFiles)
+
+    @JvmOverloads
+    fun getAllAuroraDeploymentSpecs(overrideFiles: List<AuroraConfigFile> = listOf()): List<AuroraDeploymentSpec> {
+        return getApplicationIds().map { createAuroraDeploymentSpec(this, it, overrideFiles) }
+    }
+
+    @JvmOverloads
+    fun validate(overrideFiles: List<AuroraConfigFile> = listOf()) {
+        getAllAuroraDeploymentSpecs(overrideFiles)
     }
 
     private fun getApplicationFile(applicationId: ApplicationId): AuroraConfigFile {

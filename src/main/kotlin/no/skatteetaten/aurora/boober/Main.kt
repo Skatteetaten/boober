@@ -14,5 +14,6 @@ import org.springframework.context.annotation.Import
 class Application
 
 fun main(args: Array<String>) {
+    System.setProperty("spring.security.strategy", "MODE_INHERITABLETHREADLOCAL")
     SpringApplication.run(Application::class.java, *args)
 }

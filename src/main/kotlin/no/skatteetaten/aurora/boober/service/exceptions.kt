@@ -8,11 +8,13 @@ abstract class ServiceException(message: String?, cause: Throwable?) : RuntimeEx
     constructor(message: String) : this(message, null)
 }
 
-class OpenShiftException(messages: String?, cause: Throwable?) : ServiceException(messages, cause)
+class OpenShiftException(messages: String?, cause: Throwable? = null) : ServiceException(messages, cause)
 
 class GitException(messages: String?, cause: Throwable?) : ServiceException(messages, cause)
 
 class AuroraDeploymentSpecValidationException(message: String) : ServiceException(message)
+
+class UnauthorizedAccessException(message: String): ServiceException(message)
 
 data class ExceptionWrapper(val aid: ApplicationId, val throwable: Throwable)
 
@@ -45,10 +47,8 @@ fun List<Pair<AuroraDeploymentSpec?, ExceptionWrapper?>>.onErrorThrow(block: (Li
     return this.mapNotNull { it.first }
 }
 
-data class VersioningError(val fileName: String, val name: String, val date: Date)
-
-class AuroraVersioningException(message: String, val errors: List<VersioningError>) : ServiceException(message)
-
 class ProvisioningException(message: String, cause: Throwable? = null) : ServiceException(message, cause)
+
+class AuroraConfigServiceException(message: String, cause: Throwable? = null) : ServiceException(message, cause)
 
 

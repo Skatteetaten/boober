@@ -14,7 +14,10 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import spock.lang.Ignore
 
+@Ignore
+//TODO: We mock log service so does this add value at all?
 class DeployServiceFromGitFailTest extends AbstractMockedOpenShiftSpecification {
 
   @Autowired
@@ -61,16 +64,16 @@ class DeployServiceFromGitFailTest extends AbstractMockedOpenShiftSpecification 
       deployService.executeDeploy(affiliation, [new ApplicationId(ENV_NAME, APP_NAME)])
 
     then:
-      def git = gitService.checkoutRepoForAffiliation(affiliation)
+      def git = gitService.checkoutRepository(affiliation)
 
-      def history = gitService.tagHistory(git)
+      def history = gitService.getTagHistory(git)
       history.size() == 1
       def revTag = history[0]
 
       revTag.taggerIdent != null
       revTag.fullMessage.startsWith("""{"deployId":""")
       revTag.tagName.startsWith("FAILED/utv.aos-booberdev.aos-simple/")
-      gitService.closeRepository(git)
+      git.close()
 
   }
 

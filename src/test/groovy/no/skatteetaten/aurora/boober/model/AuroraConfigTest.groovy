@@ -3,9 +3,7 @@ package no.skatteetaten.aurora.boober.model
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import spock.lang.Specification
-
-class AuroraConfigTest extends Specification {
+class AuroraConfigTest extends AbstractAuroraConfigTest {
 
   def mapper = new ObjectMapper()
 
@@ -29,7 +27,7 @@ class AuroraConfigTest extends Specification {
       def updates = mapper.convertValue(["version": "4"], JsonNode.class)
 
     when:
-      def updatedAuroraConfig = auroraConfig.updateFile("booberdev/console.json", updates, "123")
+      def updatedAuroraConfig = auroraConfig.updateFile("booberdev/console.json", updates)
 
     then:
       def version = updatedAuroraConfig.getAuroraConfigFiles().stream()
@@ -76,7 +74,6 @@ class AuroraConfigTest extends Specification {
 
   def "Returns files for application with app for env override"() {
     given:
-
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
 
     when:
@@ -116,11 +113,32 @@ class AuroraConfigTest extends Specification {
       filesForApplication.any { it.name == baseFile }
   }
 
+  def "Patch file"() {
+    given:
+      def aid = DEFAULT_AID
+      def filename = "${aid.environment}/${aid.application}.json"
+      def auroraConfig = createAuroraConfig(modify(defaultAuroraConfig(), filename, { version = "1.0.0" }))
+
+      def jsonOp = """[{
+  "op": "replace",
+  "path": "/version",
+  "value": "3"
+}]
+"""
+    when:
+      def version = auroraConfig.auroraConfigFiles.find { it.name == filename }.version
+      def patchedAuroraConfig = auroraConfig.patchFile(filename, jsonOp, version)
+
+    then:
+      def patchedFile = patchedAuroraConfig.auroraConfigFiles.find { it.name == filename }
+      patchedFile.contents.at("/version").textValue() == "3"
+  }
+
   List<AuroraConfigFile> createMockFiles(String... files) {
-    files.collect { new AuroraConfigFile(it, mapper.readValue("{}", JsonNode.class), false, null) }
+    files.collect { new AuroraConfigFile(it, mapper.readValue("{}", JsonNode.class), false) }
   }
 
   def overrideFile(String fileName) {
-    new AuroraConfigFile(fileName, mapper.readValue("{}", JsonNode.class), true, null)
+    new AuroraConfigFile(fileName, mapper.readValue("{}", JsonNode.class), true)
   }
 }

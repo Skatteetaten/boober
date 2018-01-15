@@ -1,11 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
-import static no.skatteetaten.aurora.boober.model.TemplateType.deploy
-import static no.skatteetaten.aurora.boober.service.openshift.OperationType.CREATE
-import static no.skatteetaten.aurora.boober.service.openshift.OperationType.UPDATE
+import static no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecBuilderKt.createAuroraDeploymentSpec
 
-import org.junit.Before
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 
@@ -18,49 +14,27 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.AuroraSecretVault
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultResults
 import spock.lang.Shared
 import spock.lang.Unroll
 
-@DefaultOverride(auroraConfig = false)
-class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification {
+class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest {
 
-  @Autowired
-  OpenShiftObjectGenerator openShiftService
-
-  @Autowired
-  OpenShiftResourceClient openShiftResourceClient
-
-  @Autowired
-  DeployBundleService deployBundleService
-
-  @Autowired
-  DeployService deployService
-
-  @Autowired
-  ObjectMapper mapper
+  OpenShiftObjectGenerator objectGenerator = createObjectGenerator("hero")
 
   @Shared
   def file = new ObjectMapper().convertValue([version: "1.0.4"], JsonNode.class)
 
   @Shared
-  def booberDevAosSimpleOverrides = [new AuroraConfigFile("booberdev/aos-simple.json", file, true, null)]
-
-  def affiliation = "aos"
-
-  @Before
-  def "Setup git"() {
-    gitService.deleteFiles(affiliation)
-    GitServiceHelperKt.createInitRepo(affiliation)
-  }
+  def booberDevAosSimpleOverrides = [new AuroraConfigFile("booberdev/aos-simple.json", file, true)]
 
   @Unroll
   def "should create openshift objects for #env/#name"() {
 
     given:
-      def vault = new AuroraSecretVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
-      vaultFacade.save(affiliation, vault, false)
+      def provisioningResult = new ProvisioningResult(null,
+          new VaultResults([foo: ["latest.properties": "FOO=bar\nBAR=baz\n"]]))
 
       def aid = new ApplicationId(env, name)
       def additionalFile = null
@@ -77,17 +51,17 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
           new ResponseEntity<JsonNode>(jsonResult, HttpStatus.OK)
         }
       }
-      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, affiliation, additionalFile)
-      deployBundleService.saveAuroraConfig(auroraConfig, false)
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, additionalFile)
+      AuroraDeploymentSpec deploymentSpec = createAuroraDeploymentSpec(auroraConfig, aid, overrides)
 
-    expect:
+    when:
+      List<JsonNode> generatedObjects = objectGenerator.
+          with {
+            [generateProjectRequest(deploymentSpec.environment)] +
+                generateApplicationObjects(DEPLOY_ID, deploymentSpec, provisioningResult)
+          }
 
-      AuroraDeploymentSpec deploymentSpec = deployBundleService.createAuroraDeploymentSpec("aos", aid, overrides)
-      def deployId = "123"
-
-      List<JsonNode> generatedObjects = openShiftService.
-          with { [generateProjectRequest(deploymentSpec)] + generateApplicationObjects(deployId, deploymentSpec, null) }
-
+    then:
       def resultFiles = AuroraConfigHelperKt.getResultFiles(aid)
 
       def keys = resultFiles.keySet()
@@ -100,7 +74,6 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
 
       generatedObjects.collect { getKey(it) } as Set == resultFiles.keySet()
 
-    when:
 
     where:
 
@@ -121,17 +94,15 @@ class OpenShiftObjectGeneratorTest extends AbstractMockedOpenShiftSpecification 
       "secretmount" | "aos-simple"    | null              | []
   }
 
-
   def "generate rolebinding should include serviceaccount "() {
 
     given:
       def aid = new ApplicationId("booberdev", "console")
-      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, affiliation, null)
-      deployBundleService.saveAuroraConfig(auroraConfig, false)
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, null)
 
     when:
-      AuroraDeploymentSpec deploymentSpec = deployBundleService.createAuroraDeploymentSpec("aos", aid, [])
-      def rolebindings = openShiftService.generateRolebindings(deploymentSpec.permissions)
+      AuroraDeploymentSpec deploymentSpec = createAuroraDeploymentSpec(auroraConfig, aid)
+      def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.environment.permissions)
 
     then:
       rolebindings.size() == 1

@@ -5,18 +5,15 @@ import org.springframework.beans.factory.annotation.Autowired
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.JsonNodeUtilsKt
 
 class DeployServiceWithExistingRouteTest extends AbstractMockedOpenShiftSpecification {
-
-  @Autowired
-  VaultFacade vaultFacade
 
   @Autowired
   OpenShiftClient openShiftClient
@@ -26,12 +23,6 @@ class DeployServiceWithExistingRouteTest extends AbstractMockedOpenShiftSpecific
 
   @Autowired
   GitService gitService
-
-  @Autowired
-  DockerService dockerService
-
-  @Autowired
-  ObjectMapper mapper
 
   public static final String ENV_NAME = "mounts"
   public static final String APP_NAME = "aos-simple"
@@ -89,7 +80,6 @@ class DeployServiceWithExistingRouteTest extends AbstractMockedOpenShiftSpecific
            'DELETE route aos-simple-bar',
            'CREATE route aos-simple-bar',
           ]
-
   }
 
 }

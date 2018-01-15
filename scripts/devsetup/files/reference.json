@@ -56,14 +56,12 @@
       }
     },
     "boober-bjarte/about.json": {
-      "cluster": "qa",
-      "secretVault": "utv"
+      "cluster": "qa"
     },
     "boober-bjarte/reference.json": {
     },
     "boober-utv/about.json": {
       "cluster": "qa",
-      "secretVault": "utv",
       "type": "development"
     },
     "boober-utv/reference.json": {

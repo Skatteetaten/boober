@@ -45,7 +45,8 @@ class EncryptionService(
             //If/when we use new versions of encryption here we can use an encryptor for that specific version when we decode.
             val cipherTextBase64: String = split[1]
             val cipherText: ByteArray = Base64.getDecoder().decode(cipherTextBase64)
-            String(encryptor.decrypt(cipherText))
+            val decrypted = String(encryptor.decrypt(cipherText))
+            decrypted
         })
     }
 }

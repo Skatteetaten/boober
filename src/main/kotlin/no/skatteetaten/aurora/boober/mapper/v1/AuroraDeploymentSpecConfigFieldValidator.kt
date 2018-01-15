@@ -1,7 +1,10 @@
-package no.skatteetaten.aurora.boober.mapper
+package no.skatteetaten.aurora.boober.mapper.v1
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.ConfigFieldError
@@ -9,11 +12,11 @@ import no.skatteetaten.aurora.boober.utils.findAllPointers
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class AuroraConfigValidator(val applicationId: ApplicationId,
-                            val applicationFiles: List<AuroraConfigFile>,
-                            val fieldHandlers: Set<AuroraConfigFieldHandler>,
-                            val auroraConfigFields: AuroraConfigFields) {
-    val logger: Logger = LoggerFactory.getLogger(AuroraConfigValidator::class.java)
+class AuroraDeploymentSpecConfigFieldValidator(val applicationId: ApplicationId,
+                                               val applicationFiles: List<AuroraConfigFile>,
+                                               val fieldHandlers: Set<AuroraConfigFieldHandler>,
+                                               val auroraConfigFields: AuroraConfigFields) {
+    val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpecConfigFieldValidator::class.java)
 
     companion object {
         val namePattern = "^[a-z][-a-z0-9]{0,38}[a-z0-9]$"
@@ -22,8 +25,15 @@ class AuroraConfigValidator(val applicationId: ApplicationId,
     @JvmOverloads
     fun validate(fullValidation: Boolean = true) {
 
+        val envPointers = listOf("envName", "affiliation",
+                "permissions/admin", "permissions/view", "permissions/adminServiceAccount")
+
         val errors: List<ConfigFieldError> = fieldHandlers.mapNotNull { e ->
             val rawField = auroraConfigFields.fields[e.name]!!
+
+            val invalidEnvSource = envPointers.contains(e.name) && rawField.source?.name
+                    ?.let { !it.split("/").last().startsWith("about") }
+                    ?: false
 
             logger.trace("Validating field=${e.name}")
             val auroraConfigField: JsonNode? = rawField.valueOrDefault
@@ -33,6 +43,7 @@ class AuroraConfigValidator(val applicationId: ApplicationId,
             logger.trace("validator result is=${result}")
 
             val err = when {
+                invalidEnvSource -> ConfigFieldError.illegal("Invalid Source field=${e.name} requires an about source. Actual source is source=${rawField.source?.name}", rawField)
                 result == null -> null
                 auroraConfigField != null -> ConfigFieldError.illegal(result.localizedMessage, rawField)
                 else -> ConfigFieldError.missing(result.localizedMessage, e.name)

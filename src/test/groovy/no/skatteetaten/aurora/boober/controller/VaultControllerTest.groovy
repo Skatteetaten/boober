@@ -14,7 +14,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.controller.internal.ErrorHandler
 import no.skatteetaten.aurora.boober.controller.v1.VaultControllerV1
-import no.skatteetaten.aurora.boober.facade.VaultFacade
+import no.skatteetaten.aurora.boober.service.vault.EncryptedFileVault
+import no.skatteetaten.aurora.boober.service.vault.VaultService
 import spock.lang.Specification
 
 class VaultControllerTest extends Specification {
@@ -24,12 +25,12 @@ class VaultControllerTest extends Specification {
 
   MockMvc mockMvc
 
-  def vaultFacade = Mock(VaultFacade)
+  def vaultService = Mock(VaultService)
 
-  def affiliation = 'aos'
+  def vaultCollectionName = 'aos'
 
   void setup() {
-    def controller = new VaultControllerV1(vaultFacade)
+    def controller = new VaultControllerV1(vaultService)
     mockMvc = MockMvcBuilders.
         standaloneSetup(controller)
         .setControllerAdvice(new ErrorHandler())
@@ -40,12 +41,12 @@ class VaultControllerTest extends Specification {
   def "Simple test that verifies payload is correctly parsed on save"() {
 
     given:
-      def payload = [vault: [name: 'testvault', secrets: [:], versions: [:], permissions: null], validateVersions: true]
-      1 * vaultFacade.save(affiliation, _, payload.validateVersions)
+      def payload = [name: 'testVault', secrets: [:], permissions: []]
+      1 * vaultService.import(vaultCollectionName, 'testVault', [], [:]) >> EncryptedFileVault.createFromFolder(new File("."))
 
     when:
       ResultActions result = mockMvc.perform(
-          put("/v1/vault/$affiliation").content(JsonOutput.toJson(payload)).
+          put("/v1/vault/$vaultCollectionName").content(JsonOutput.toJson(payload)).
               contentType(APPLICATION_JSON))
 
     then:
@@ -59,11 +60,11 @@ class VaultControllerTest extends Specification {
       def secretName = "some_secret"
       def fileContents = 'SECRET_PASS=asdlfkjaølfjaøf'
       def payload = [contents: fileContents, validateVersions: false]
-      1 * vaultFacade.updateSecretFile(affiliation, vaultName, secretName, fileContents, _, payload.validateVersions)
+      1 * vaultService.createOrUpdateFileInVault(vaultCollectionName, vaultName, secretName, fileContents) >> EncryptedFileVault.createFromFolder(new File("."))
 
     when:
       ResultActions result = mockMvc.perform(
-          put("/v1/vault/$affiliation/$vaultName/secret/$secretName")
+          put("/v1/vault/$vaultCollectionName/$vaultName/$secretName")
               .content(JsonOutput.toJson(payload))
               .contentType(APPLICATION_JSON))
 

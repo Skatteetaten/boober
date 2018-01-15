@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.mapper.v1
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigValidator
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.TemplateType
@@ -30,7 +29,7 @@ class HeaderMapper(val fields: AuroraConfigFields) {
         fun create(applicationFiles: List<AuroraConfigFile>, applicationId: ApplicationId): HeaderMapper {
 
             val fields = AuroraConfigFields.create(handlers, applicationFiles)
-            AuroraConfigValidator(applicationId, applicationFiles, handlers, fields)
+            AuroraDeploymentSpecConfigFieldValidator(applicationId, applicationFiles, handlers, fields)
                     .validate(false)
 
             return HeaderMapper(fields)

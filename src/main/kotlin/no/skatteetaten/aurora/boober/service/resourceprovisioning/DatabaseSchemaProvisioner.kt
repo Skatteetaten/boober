@@ -1,9 +1,11 @@
-package no.skatteetaten.aurora.boober.service
+package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
+import no.skatteetaten.aurora.boober.service.ProvisioningException
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.utils.logger
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
@@ -116,7 +118,7 @@ class DatabaseSchemaProvisioner(
         return SchemaProvisionResult(request, dbhSchema, responseText)
     }
 
-    private fun findSchemaById(id: String): Pair<DbhSchema, String> {
+    fun findSchemaById(id: String): Pair<DbhSchema, String> {
 
         val response: ResponseEntity<JsonNode> = try {
             restTemplate.getForEntity("{0}/api/v1/schema/{1}", JsonNode::class.java, dbhUrl, id)
