@@ -9,11 +9,17 @@ import no.skatteetaten.aurora.boober.service.GitServices.TargetDomain
 import org.apache.commons.io.FileUtils
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.InvalidRemoteException
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory.getLogger
 import org.springframework.stereotype.Service
+import org.springframework.util.StopWatch
 import java.io.File
 
 @Service
 class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitService, val bitbucketProjectService: BitbucketProjectService) {
+
+
+    val logger: Logger = getLogger(AuroraConfigService::class.java)
 
     fun findAllAuroraConfigNames(): List<String> {
 
@@ -49,6 +55,9 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
         val repo = getUpdatedRepo(auroraConfig.affiliation)
         val checkoutDir = getAuroraConfigFolder(auroraConfig.affiliation)
         val existing = AuroraConfig.fromFolder(checkoutDir)
+        val watch = StopWatch().apply{
+            this.start()
+        }
         existing.auroraConfigFiles.forEach {
             val outputFile = File(checkoutDir, it.name)
             FileUtils.deleteQuietly(outputFile)
@@ -61,6 +70,8 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
             outputFile.writeText(prettyContent)
         }
 
+        watch.stop()
+        logger.debug("Took {} milis to add/delete files. files={}", watch.totalTimeMillis, auroraConfig.auroraConfigFiles.size)
         gitService.commitAndPushChanges(repo)
         repo.close()
 

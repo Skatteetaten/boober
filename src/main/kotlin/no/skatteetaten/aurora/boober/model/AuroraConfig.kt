@@ -67,15 +67,15 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
 
         val files = auroraConfigFiles.toMutableList()
         val indexOfFileToUpdate = files.indexOfFirst { it.name == name }
-        val currentFile = files[indexOfFileToUpdate]
         val newFile = AuroraConfigFile(name, contents)
-        if (previousVersion != null && currentFile.version != previousVersion) {
-            throw AuroraVersioningException(this, currentFile, previousVersion)
-        }
 
         if (indexOfFileToUpdate == -1) {
             files.add(newFile)
         } else {
+            val currentFile = files[indexOfFileToUpdate]
+            if (previousVersion != null && currentFile.version != previousVersion) {
+                throw AuroraVersioningException(this, currentFile, previousVersion)
+            }
             files[indexOfFileToUpdate] = newFile
         }
 
