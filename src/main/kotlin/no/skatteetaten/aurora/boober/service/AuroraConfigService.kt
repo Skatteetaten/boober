@@ -47,24 +47,25 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
     }
 
     fun save(auroraConfig: AuroraConfig): AuroraConfig {
-        val watch = StopWatch().apply{
-            this.start()
-        }
-
+        val watch = StopWatch()
         watch.start("validate")
         auroraConfig.validate()
+        watch.stop()
+
 
         watch.start("getConfig")
         val mapper = jacksonObjectMapper()
         val repo = getUpdatedRepo(auroraConfig.affiliation)
         val checkoutDir = getAuroraConfigFolder(auroraConfig.affiliation)
         val existing = AuroraConfig.fromFolder(checkoutDir)
+        watch.stop()
 
         watch.start("delete")
         existing.auroraConfigFiles.forEach {
             val outputFile = File(checkoutDir, it.name)
             FileUtils.deleteQuietly(outputFile)
         }
+        watch.stop()
 
         watch.start("add")
         auroraConfig.auroraConfigFiles.forEach {
@@ -73,12 +74,13 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
             FileUtils.forceMkdirParent(outputFile)
             outputFile.writeText(prettyContent)
         }
+        watch.stop()
 
         watch.start("git")
         gitService.commitAndPushChanges(repo)
         repo.close()
-
         watch.stop()
+
         logger.debug(watch.prettyPrint())
         return auroraConfig
     }
