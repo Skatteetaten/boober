@@ -47,22 +47,26 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
     }
 
     fun save(auroraConfig: AuroraConfig): AuroraConfig {
-
-        auroraConfig.validate()
-
-        val mapper = jacksonObjectMapper()
-
-        val repo = getUpdatedRepo(auroraConfig.affiliation)
-        val checkoutDir = getAuroraConfigFolder(auroraConfig.affiliation)
-        val existing = AuroraConfig.fromFolder(checkoutDir)
         val watch = StopWatch().apply{
             this.start()
         }
+
+        watch.start("validate")
+        auroraConfig.validate()
+
+        watch.start("getConfig")
+        val mapper = jacksonObjectMapper()
+        val repo = getUpdatedRepo(auroraConfig.affiliation)
+        val checkoutDir = getAuroraConfigFolder(auroraConfig.affiliation)
+        val existing = AuroraConfig.fromFolder(checkoutDir)
+
+        watch.start("delete")
         existing.auroraConfigFiles.forEach {
             val outputFile = File(checkoutDir, it.name)
             FileUtils.deleteQuietly(outputFile)
         }
 
+        watch.start("add")
         auroraConfig.auroraConfigFiles.forEach {
             val prettyContent = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it.contents)
             val outputFile = File(getAuroraConfigFolder(auroraConfig.affiliation), it.name)
@@ -70,11 +74,12 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
             outputFile.writeText(prettyContent)
         }
 
-        watch.stop()
-        logger.debug("Took {} milis to add/delete files. files={}", watch.totalTimeMillis, auroraConfig.auroraConfigFiles.size)
+        watch.start("git")
         gitService.commitAndPushChanges(repo)
         repo.close()
 
+        watch.stop()
+        logger.debug(watch.prettyPrint())
         return auroraConfig
     }
 
