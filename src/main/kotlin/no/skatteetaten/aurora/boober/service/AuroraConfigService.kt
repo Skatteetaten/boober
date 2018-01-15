@@ -52,13 +52,10 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
         auroraConfig.validate()
         watch.stop()
 
-        watch.start("updateRepo")
-        val repo = getUpdatedRepo(auroraConfig.affiliation)
-        watch.stop()
-
         watch.start("createAuroraConfig")
         val mapper = jacksonObjectMapper()
         val checkoutDir = getAuroraConfigFolder(auroraConfig.affiliation)
+        val repo = Git.open(checkoutDir)
         val existing = AuroraConfig.fromFolder(checkoutDir)
         watch.stop()
 
