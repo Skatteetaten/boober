@@ -63,6 +63,7 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
                 ?: throw IllegalArgumentException("No such file $fileName in AuroraConfig $name")
     }
 
+    //TODO: This is now only used in test. So maybe add back method to get repo here again?
     fun save(auroraConfig: AuroraConfig): AuroraConfig {
         val watch = StopWatch()
         watch.start("validate")
@@ -105,32 +106,32 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
 
         val jsonContents = jacksonObjectMapper().readValue(contents, JsonNode::class.java)
         val oldAuroraConfig = findAuroraConfig(name)
-        val auroraConfig = oldAuroraConfig.updateFile(fileName, jsonContents, previousVersion)
+        val (newFile, auroraConfig) = oldAuroraConfig.updateFile(fileName, jsonContents, previousVersion)
 
-        return saveFile(fileName, auroraConfig)
+        return saveFile(newFile, auroraConfig)
     }
 
     fun patchAuroraConfigFile(name: String, filename: String, jsonPatchOp: String, previousVersion: String? = null): AuroraConfig {
 
         val auroraConfig = findAuroraConfig(name)
-        val updatedAuroraConfig = auroraConfig.patchFile(filename, jsonPatchOp, previousVersion)
+        val (newFile, updatedAuroraConfig) = auroraConfig.patchFile(filename, jsonPatchOp, previousVersion)
 
 
-        return saveFile(filename, updatedAuroraConfig)
+        return saveFile(newFile, updatedAuroraConfig)
     }
 
-    private fun saveFile(fileName: String, auroraConfig: AuroraConfig): AuroraConfig {
+    private fun saveFile(newFile: AuroraConfigFile, auroraConfig: AuroraConfig): AuroraConfig {
 
         val watch = StopWatch()
         watch.start("find affected aid")
         val affectedAid = auroraConfig.getApplicationIds().filter {
             val files = auroraConfig.getFilesForApplication(it)
-            files.any { it.name == fileName }
+            files.any { it.name == newFile.name }
         }
 
         watch.stop()
         watch.start("validate")
-        logger.debug("Affected AID for file={} aid={}", fileName, affectedAid)
+        logger.debug("Affected AID for file={} aid={}", newFile, affectedAid)
         //This will validate both AuororaConfig and External validation for the affected AID
         createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig), affectedAid)
         watch.stop()
@@ -138,12 +139,10 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
         val mapper = jacksonObjectMapper()
         val checkoutDir = getAuroraConfigFolder(auroraConfig.affiliation)
         watch.start("write file")
-        auroraConfig.auroraConfigFiles.filter { it.name == fileName }.map {
-            val prettyContent = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it.contents)
-            val outputFile = File(checkoutDir, it.name)
-            FileUtils.forceMkdirParent(outputFile)
-            outputFile.writeText(prettyContent)
-        }
+        val prettyContent = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(newFile.contents)
+        val outputFile = File(checkoutDir, newFile.name)
+        FileUtils.forceMkdirParent(outputFile)
+        outputFile.writeText(prettyContent)
         watch.stop()
 
         watch.start("git")
