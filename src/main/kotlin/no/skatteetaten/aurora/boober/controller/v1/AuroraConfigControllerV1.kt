@@ -7,7 +7,6 @@ import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigResource.Companio
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
-import no.skatteetaten.aurora.boober.service.DeploymentSpecService
 import no.skatteetaten.aurora.boober.utils.logger
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.bind.annotation.*
@@ -42,7 +41,7 @@ data class ContentPayload(
 
 @RestController
 @RequestMapping("/v1/auroraconfig/{name}")
-class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService, val deploymentSpecService: DeploymentSpecService) {
+class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService){
 
     val logger by logger()
 
@@ -60,7 +59,7 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService, val
     fun validateAuroraConfig(@PathVariable name: String, @RequestBody payload: AuroraConfigResource): Response {
 
         val auroraConfig = payload.toAuroraConfig(name)
-        deploymentSpecService.validateAuroraConfig(auroraConfig)
+        auroraConfigService.validateAuroraConfig(auroraConfig)
         return createAuroraConfigResponse(auroraConfig)
     }
 

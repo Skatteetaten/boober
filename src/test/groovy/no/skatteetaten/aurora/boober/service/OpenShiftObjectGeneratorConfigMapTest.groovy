@@ -10,7 +10,6 @@ class OpenShiftObjectGeneratorConfigMapTest extends AbstractOpenShiftObjectGener
 
   OpenShiftObjectGenerator objectGenerator = createObjectGenerator()
 
-  //TODO: BAS blir dette rett nå? Skal vi virkelig escape alle Config fields som er strings?
   def "Verify properties entries contains a line for each property"() {
 
     given:
