@@ -63,7 +63,7 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
     fun findFile(filename: String): AuroraConfigFile? = auroraConfigFiles.find { it.name == filename }
 
     @JvmOverloads
-    fun updateFile(name: String, contents: JsonNode, previousVersion: String? = null): AuroraConfig {
+    fun updateFile(name: String, contents: JsonNode, previousVersion: String? = null): Pair<AuroraConfigFile, AuroraConfig> {
 
         val files = auroraConfigFiles.toMutableList()
         val indexOfFileToUpdate = files.indexOfFirst { it.name == name }
@@ -79,10 +79,10 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
             files[indexOfFileToUpdate] = newFile
         }
 
-        return this.copy(auroraConfigFiles = files)
+        return Pair(newFile, this.copy(auroraConfigFiles = files))
     }
 
-    fun patchFile(filename: String, jsonPatchOp: String, previousVersion: String? = null): AuroraConfig {
+    fun patchFile(filename: String, jsonPatchOp: String, previousVersion: String? = null): Pair<AuroraConfigFile, AuroraConfig> {
 
         val mapper = jacksonObjectMapper()
         val patch: JsonPatch = mapper.readValue(jsonPatchOp, JsonPatch::class.java)
@@ -92,9 +92,7 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
         val originalContentsNode = mapper.convertValue(auroraConfigFile.contents, JsonNode::class.java)
 
         val fileContents = patch.apply(originalContentsNode)
-        val updatedAuroraConfig = updateFile(filename, fileContents, previousVersion)
-
-        return updatedAuroraConfig
+        return updateFile(filename, fileContents, previousVersion)
     }
 
     @JvmOverloads
