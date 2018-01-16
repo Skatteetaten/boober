@@ -50,7 +50,6 @@ import spock.mock.DetachedMockFactory
     VelocityTemplateJsonService,
     OpenShiftObjectLabelService,
     RedeployService,
-    DeploymentSpecService,
     BitbucketProjectService
 ])
 class AbstractMockedOpenShiftSpecification extends AbstractSpec {
