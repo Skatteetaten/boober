@@ -11,15 +11,12 @@ import org.springframework.restdocs.JUnitRestDocumentation
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
-
-import com.fasterxml.jackson.databind.JsonNode
-
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.controller.internal.ErrorHandler
 import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigControllerV1
 import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
-import no.skatteetaten.aurora.boober.service.DeploymentSpecService
+
 import spock.lang.Specification
 
 class AuroraConfigControllerTest extends Specification {
@@ -30,10 +27,9 @@ class AuroraConfigControllerTest extends Specification {
   MockMvc mockMvc
 
   def auroraConfigService = Mock(AuroraConfigService)
-  def deploymentSpecService = Mock(DeploymentSpecService)
 
   void setup() {
-    def controller = new AuroraConfigControllerV1(auroraConfigService, deploymentSpecService)
+    def controller = new AuroraConfigControllerV1(auroraConfigService)
     mockMvc = MockMvcBuilders.
         standaloneSetup(controller)
         .setControllerAdvice(new ErrorHandler())

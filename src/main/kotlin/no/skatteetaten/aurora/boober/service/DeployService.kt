@@ -24,7 +24,7 @@ import java.util.*
 
 @Service
 class DeployService(
-        val deploymentSpecService: DeploymentSpecService,
+        val auroraConfigService: AuroraConfigService,
         val openShiftObjectGenerator: OpenShiftObjectGenerator,
         val openShiftClient: OpenShiftClient,
         val dockerService: DockerService,
@@ -48,7 +48,7 @@ class DeployService(
             throw IllegalArgumentException("Specify applicationId")
         }
 
-        val deploymentSpecs = deploymentSpecService.createValidatedAuroraDeploymentSpecs(auroraConfigName, applicationIds, overrides)
+        val deploymentSpecs = auroraConfigService.createValidatedAuroraDeploymentSpecs(auroraConfigName, applicationIds, overrides)
 
 
         val environments = runBlocking(nsDispatcher) {
