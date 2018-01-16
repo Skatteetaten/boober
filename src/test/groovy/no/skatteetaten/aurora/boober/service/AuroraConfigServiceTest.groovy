@@ -46,6 +46,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
   def "Should update one file in AuroraConfig"() {
     given:
       def auroraConfig = createAuroraConfig(defaultAuroraConfig())
+      auroraConfigService.getUpdatedRepo(auroraConfig.affiliation)
       auroraConfigService.save(auroraConfig)
 
       def fileToChange = "utv/aos-simple.json"
@@ -90,6 +91,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
 
     given:
       def auroraConfig = createAuroraConfig(defaultAuroraConfig())
+      auroraConfigService.getUpdatedRepo(auroraConfig.affiliation).close()
       auroraConfigService.save(auroraConfig)
 
     when:
@@ -114,6 +116,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
     given:
       def fileToChange = "${aid.environment}/${aid.application}.json"
       def auroraConfig = createAuroraConfig(defaultAuroraConfig())
+     auroraConfigService.getUpdatedRepo(auroraConfig.affiliation).close()
       auroraConfigService.save(auroraConfig)
 
     when:
