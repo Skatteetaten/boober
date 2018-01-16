@@ -27,8 +27,9 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
       def updates = mapper.convertValue(["version": "4"], JsonNode.class)
 
     when:
-      def updatedAuroraConfig = auroraConfig.updateFile("booberdev/console.json", updates)
 
+      def updateFileResponse= auroraConfig.updateFile("booberdev/console.json", updates)
+      def updatedAuroraConfig=updateFileResponse.second
     then:
       def version = updatedAuroraConfig.getAuroraConfigFiles().stream()
           .filter({ it.configName == "booberdev/console.json" })
@@ -127,7 +128,8 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
 """
     when:
       def version = auroraConfig.auroraConfigFiles.find { it.name == filename }.version
-      def patchedAuroraConfig = auroraConfig.patchFile(filename, jsonOp, version)
+      def patchFileResponse = auroraConfig.patchFile(filename, jsonOp, version)
+      def patchedAuroraConfig=patchFileResponse.second
 
     then:
       def patchedFile = patchedAuroraConfig.auroraConfigFiles.find { it.name == filename }

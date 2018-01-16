@@ -43,7 +43,6 @@ class AuroraDeploymentSpecValidator(
         adminGroups.takeIf { it.isEmpty() }
                 ?.let { throw AuroraDeploymentSpecValidationException("permissions.admin.groups cannot be empty") }
 
-//        adminGroups.filter { !openShiftClient.isValidGroup(it) }
         val groupUsers = openShiftClient.getGroups().groupUsers
         adminGroups.filter { !groupUsers.containsKey(it) }
                 .takeIf { it.isNotEmpty() }
