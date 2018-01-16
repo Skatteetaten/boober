@@ -37,6 +37,40 @@
     "source": "default",
     "value": false
   },
+  "prometheus": {
+    "source": "default",
+    "value": true,
+    "path": {
+      "source": "default",
+      "value": "/prometheus"
+    },
+    "port": {
+      "source": "default",
+      "value": 8081
+    }
+  },
+  "management": {
+    "source": "default",
+    "value": true,
+    "path": {
+      "source": "default",
+      "value": "actuator"
+    },
+    "port": {
+      "source": "default",
+      "value": "8081"
+    }
+  },
+  "deployStrategy": {
+    "type": {
+      "source": "default",
+      "value": "rolling"
+    },
+    "timeout": {
+      "source": "default",
+      "value": 180
+    }
+  },
   "artifactId": {
     "source": "fileName",
     "value": "reference"
@@ -52,16 +86,6 @@
   "applicationPlatform": {
     "source": "default",
     "value": "java"
-  },
-  "deployStrategy": {
-    "type": {
-      "source": "default",
-      "value": "rolling"
-    },
-    "timeout": {
-      "source": "default",
-      "value": 180
-    }
   },
   "resources": {
     "cpu": {
@@ -88,30 +112,6 @@
   "replicas": {
     "source": "reference.json",
     "value": 1
-  },
-  "prometheus": {
-    "source": "default",
-    "value": true,
-    "path": {
-      "source": "default",
-      "value": "/prometheus"
-    },
-    "port": {
-      "source": "default",
-      "value": 8081
-    }
-  },
-  "management": {
-    "source": "default",
-    "value": true,
-    "path": {
-      "source": "default",
-      "value": "actuator"
-    },
-    "port": {
-      "source": "default",
-      "value": "8081"
-    }
   },
   "readiness": {
     "source": "default",
