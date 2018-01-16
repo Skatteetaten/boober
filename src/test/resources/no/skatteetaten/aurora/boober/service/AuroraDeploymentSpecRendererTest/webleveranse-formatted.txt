@@ -8,17 +8,17 @@
   }
   envName:             "utv"                       // folderName
   name:                "webleveranse"              // webleveranse.json
-  artifactId:          "openshift-referanse-react" // webleveranse.json
-  groupId:             "no.skatteetaten.aurora"    // webleveranse.json
-  version:             "1"                         // utv/webleveranse.json
-  applicationPlatform: "web"                       // webleveranse.json
-  deployStrategy: {
-    type:              "rolling"                   // webleveranse.json
-  }
-  replicas:            1                           // webleveranse.json
   management: {
     path:              ""                          // webleveranse.json
     port:              "8081"                      // webleveranse.json
   }
+  deployStrategy: {
+    type:              "rolling"                   // webleveranse.json
+  }
+  artifactId:          "openshift-referanse-react" // webleveranse.json
+  groupId:             "no.skatteetaten.aurora"    // webleveranse.json
+  version:             "1"                         // utv/webleveranse.json
+  applicationPlatform: "web"                       // webleveranse.json
+  replicas:            1                           // webleveranse.json
   route:               true                        // webleveranse.json
 }

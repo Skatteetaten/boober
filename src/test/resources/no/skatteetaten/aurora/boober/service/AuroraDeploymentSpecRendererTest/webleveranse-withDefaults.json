@@ -7,7 +7,7 @@
     "source": "utv/webleveranse.json",
     "value": "development"
   },
-    "affiliation": {
+  "affiliation": {
     "source": "about.json",
     "value": "aos"
   },
@@ -37,6 +37,38 @@
     "source": "default",
     "value": false
   },
+  "prometheus": {
+    "source": "default",
+    "value": true,
+    "path": {
+      "source": "default",
+      "value": "/prometheus"
+    },
+    "port": {
+      "source": "default",
+      "value": 8081
+    }
+  },
+  "management": {
+    "path": {
+      "source": "webleveranse.json",
+      "value": ""
+    },
+    "port": {
+      "source": "webleveranse.json",
+      "value": "8081"
+    }
+  },
+  "deployStrategy": {
+    "type": {
+      "source": "webleveranse.json",
+      "value": "rolling"
+    },
+    "timeout": {
+      "source": "default",
+      "value": 180
+    }
+  },
   "artifactId": {
     "source": "webleveranse.json",
     "value": "openshift-referanse-react"
@@ -52,16 +84,6 @@
   "applicationPlatform": {
     "source": "webleveranse.json",
     "value": "web"
-  },
-  "deployStrategy": {
-    "type": {
-      "source": "webleveranse.json",
-      "value": "rolling"
-    },
-    "timeout": {
-      "source": "default",
-      "value": 180
-    }
   },
   "resources": {
     "cpu": {
@@ -88,28 +110,6 @@
   "replicas": {
     "source": "webleveranse.json",
     "value": 1
-  },
-  "prometheus": {
-    "source": "default",
-    "value": true,
-    "path": {
-      "source": "default",
-      "value": "/prometheus"
-    },
-    "port": {
-      "source": "default",
-      "value": 8081
-    }
-  },
-  "management": {
-    "path": {
-      "source": "webleveranse.json",
-      "value": ""
-    },
-    "port": {
-      "source": "webleveranse.json",
-      "value": "8081"
-    }
   },
   "readiness": {
     "source": "default",
