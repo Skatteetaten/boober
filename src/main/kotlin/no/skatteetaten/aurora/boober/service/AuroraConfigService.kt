@@ -98,6 +98,16 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
         val auroraConfig = findAuroraConfig(name)
         val updatedAuroraConfig = auroraConfig.patchFile(filename, jsonPatchOp, previousVersion)
 
+        val aid = updatedAuroraConfig.getApplicationIds().filter{
+            val files = updatedAuroraConfig.getFilesForApplication(it)
+            files.any{ it.name == filename}
+        }
+
+        //du har filen du har endet
+        //modifisere gammel auroraConfig med fila.
+        //hente alle AID. Og alle filer de har.
+        //filtrer på at de inneholder filen vi har endret.
+
         return save(updatedAuroraConfig)
     }
 
