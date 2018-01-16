@@ -68,7 +68,18 @@ class DeployService(
         val deployResults: List<AuroraDeployResult> = runBlocking(appDispatcher) {
             deploymentSpecs.map {
                 async(appDispatcher) {
-                    deployFromSpec(it, deploy, environments[it.environment])
+
+                    val env = environments[it.environment]
+                    val deployId = UUID.randomUUID().toString()
+                    when {
+                        env == null -> AuroraDeployResult(deployId, it, listOf(), false, "Environment was not created.")
+                        //TODO: If we do not have access to this namespace there will be a failed response in here in the below line
+                        env.openShiftResponses.any { !it.success } -> AuroraDeployResult(deployId, it, env.openShiftResponses, false)
+                        else -> {
+                            val result=deployFromSpec(it, deploy, env.newNamespace)
+                            result.copy(openShiftResponses = env.openShiftResponses.addIfNotNull(result.openShiftResponses))
+                        }
+                    }
                 }
             }.map { it.await() }
         }
@@ -97,29 +108,21 @@ class DeployService(
         return listOf(createNamespaceResponse, updateNamespaceResponse) + updateRoleBindingsResponse
     }
 
-    fun deployFromSpec(deploymentSpec: AuroraDeploymentSpec, shouldDeploy: Boolean, auroraEnvironmentResult: AuroraEnvironmentResult?): AuroraDeployResult {
+    fun deployFromSpec(deploymentSpec: AuroraDeploymentSpec, shouldDeploy: Boolean, namespaceCreated: Boolean): AuroraDeployResult {
 
         val deployId = UUID.randomUUID().toString()
-        //TODO: hasAccessToVolumes
         if (deploymentSpec.cluster != cluster) {
-            //TODO: legge med info om at miljø ikke finnes
-            return AuroraDeployResult(deployId, deploymentSpec, listOf(), false)
-        }
-
-        if (auroraEnvironmentResult == null) {
-
-            //TODO: legge med info om at miljø ikke finnes
-            return AuroraDeployResult(deployId, deploymentSpec, listOf(), false)
+            return AuroraDeployResult(deployId, deploymentSpec, listOf(), false, "Not valid in this cluster.")
         }
 
         logger.debug("Resource provisioning")
         val provisioningResult = resourceProvisioner.provisionResources(deploymentSpec)
+        //TODO: Need to verify that user has access to all Vaults.
 
         logger.debug("Apply objects")
-        val applicationResponses: List<OpenShiftResponse> = applyOpenShiftApplicationObjects(
-                deployId, deploymentSpec, provisioningResult, auroraEnvironmentResult.newNamespace)
+        val openShiftResponses: List<OpenShiftResponse> = applyOpenShiftApplicationObjects(
+                deployId, deploymentSpec, provisioningResult, namespaceCreated)
 
-        val openShiftResponses = auroraEnvironmentResult.openShiftResponses + applicationResponses
         val success = openShiftResponses.all { it.success }
         val result = AuroraDeployResult(deployId, deploymentSpec, openShiftResponses, success)
         if (!shouldDeploy) {
