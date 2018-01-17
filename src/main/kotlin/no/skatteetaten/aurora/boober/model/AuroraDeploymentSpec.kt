@@ -128,7 +128,7 @@ data class AuroraTemplate(
 
 
 enum class MountType {
-    ConfigMap, Secret
+    ConfigMap, Secret, PVC
 }
 
 data class Mount(

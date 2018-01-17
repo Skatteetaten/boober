@@ -84,6 +84,10 @@
       "secret": {
       "secretName": "${mount.volumeName}"
       }
+      #elseif(${mount.type} == "PVC")
+      "persistentVolumeClaim": {
+      "claimName": "${mount.volumeName}"
+      }
       #end
     },
     #end
