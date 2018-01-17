@@ -9,25 +9,25 @@ openshift:
     url: https://${openshift.cluster}-master.paas.skead.no:8443
 
 spring:
-  profiles:
-    active: local
-  application:
-      name: boober
-  cache:
-    caffeine:
-      spec: maximumSize=2000,expireAfterWrite=300s
-    cache-names: groups, templates
-  metrics:
-    prometheus:
-      timerPercentilesMin: "PT0.1S"
-      timerPercentilesMax: "PT5S"
+    profiles:
+        active: local
+    application:
+        name: boober
+    cache:
+        caffeine:
+            spec: maximumSize=2000,expireAfterWrite=300s
+            cache-names: groups, templates
+    metrics:
+        prometheus:
+            timerPercentilesMin: "PT0.1S"
+            timerPercentilesMax: "PT5S"
 
 
 vault:
-  git:
-    project: av
-    checkoutPath: "/tmp/boobervault"
-    urlPattern: https://git.aurora.skead.no/scm/${vault.git.project}/%s.git
+    git:
+        project: av
+        checkoutPath: "/tmp/boobervault"
+        urlPattern: https://git.aurora.skead.no/scm/${vault.git.project}/%s.git
 
 boober:
     dbh: http://dbh
@@ -35,32 +35,32 @@ boober:
         project: "ac"
         url: "https://git.aurora.skead.no/rest/api/1.0"
     git:
-       checkoutPath: "/tmp/boober"
-       urlPattern: https://git.aurora.skead.no/scm/${boober.bitbucket.project}/%s.git
+        checkoutPath: "/tmp/boober"
+        urlPattern: https://git.aurora.skead.no/scm/${boober.bitbucket.project}/%s.git
     docker:
         registry: "docker-registry.aurora.sits.no:5000"
     openshift:
         tokenLocation: /var/run/secrets/kubernetes.io/serviceaccount/token
 
 aurora:
-  token:
-    location: /u01/secrets/app/aurora-token/token
+    token:
+        location: /u01/secrets/app/aurora-token/token
 
-  starter:
-    headerfilter:
-      enabled: false
+    starter:
+        headerfilter:
+            enabled: false
 
 logging:
-  level:
-    no.skatteetaten: INFO
-    no.skatteetaten.aurora.boober: DEBUG
-    org:
-      jboss: INFO
-      hibernate: WARN
-      springframework: WARN
-      apache:
-        catalina:  WARN
-        velocity:  WARN
+    level:
+        no.skatteetaten: INFO
+        no.skatteetaten.aurora.boober: DEBUG
+        org:
+            jboss: INFO
+            hibernate: WARN
+            springframework: WARN
+            apache:
+                catalina:  WARN
+                velocity:  WARN
 ---
 spring:
     profiles: local
@@ -69,30 +69,30 @@ openshift:
     cluster: qa
 
 boober:
-  dbh: http://dbh-aurora.qa.paas.skead.no
-  openshift:
-    tokenLocation: /opt/boober
-  encrypt:
-    key: "komogsyngensang"
-  bitbucket:
-    project: "ac-dev"
-  git:
-    username: "boober-dev"
-    password: "boober-dev"
+    dbh: http://dbh-aurora.qa.paas.skead.no
+    openshift:
+        tokenLocation: /opt/boober
+    encrypt:
+        key: "komogsyngensang"
+    bitbucket:
+        project: "ac-dev"
+    git:
+        username: "boober-dev"
+        password: "boober-dev"
 
 vault:
-  git:
-    project: "av-dev"
-    username: "boober-dev"
-    password: "boober-dev"
+    git:
+        project: "av-dev"
+        username: "boober-dev"
+        password: "boober-dev"
 
 aurora:
-  token:
-    value: token
+    token:
+        value: token
 
 management:
     port: 8081
 
 ---
 spring:
-  profiles: openshift
+    profiles: openshift

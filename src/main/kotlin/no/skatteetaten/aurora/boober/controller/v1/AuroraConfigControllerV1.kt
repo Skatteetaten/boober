@@ -7,7 +7,6 @@ import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigResource.Companion.fromAuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraVersioningException
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.utils.logger
 import org.springframework.http.HttpHeaders
@@ -81,22 +80,26 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
     fun updateAuroraConfigFile(@PathVariable name: String,
                                @RequestBody @Valid payload: ContentPayload,
                                @RequestHeader(value = HttpHeaders.IF_MATCH, required = false) ifMatchHeader: String?,
-                               request: HttpServletRequest): Response {
+                               request: HttpServletRequest): ResponseEntity<Response> {
 
         val fileName = extractFileName(name, request)
-        val auroraConfig: AuroraConfig = auroraConfigService.updateAuroraConfigFile(name, fileName, payload.content, ifMatchHeader)
-        return createAuroraConfigResponse(auroraConfig)
+        val auroraConfig: AuroraConfig = auroraConfigService.updateAuroraConfigFile(name, fileName, payload.content, clearQuotes(ifMatchHeader))
+        val auroraConfigFile = auroraConfig.findFile(fileName)!!
+        return createAuroraConfigFileResponse(auroraConfigFile)
     }
 
     @PatchMapping("/**")
     fun patchAuroraConfigFile(@PathVariable name: String, request: HttpServletRequest,
-                              @RequestBody @Valid payload: ContentPayload): Response {
+                              @RequestBody @Valid payload: ContentPayload): ResponseEntity<Response> {
 
         val fileName = extractFileName(name, request)
 
         val auroraConfig = auroraConfigService.patchAuroraConfigFile(name, fileName, payload.content)
-        return createAuroraConfigResponse(auroraConfig)
+        val auroraConfigFile = auroraConfig.findFile(fileName)!!
+        return createAuroraConfigFileResponse(auroraConfigFile)
     }
+
+    private fun clearQuotes(str: String?) = str?.replace("\"", "")
 
     private fun extractFileName(affiliation: String, request: HttpServletRequest): String {
         val path = "v1/auroraconfig/$affiliation/**"
