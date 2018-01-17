@@ -30,23 +30,23 @@ class EncryptionService(
         setAlgorithmProvider(providerName)
     }
 
-    fun encrypt(message: String): String {
+    fun encrypt(message: ByteArray): String {
         return metrics.withMetrics("encrypt", {
-            val result = encryptor.encrypt(message.toByteArray())
+            val result = encryptor.encrypt(message)
             val encoded = Base64.getEncoder().encodeToString(result)
 
             "$version$LINE_SEPERATOR$encoded"
         })
     }
 
-    fun decrypt(source: String): String {
+    fun decrypt(source: String): ByteArray {
 
         return metrics.withMetrics("decrypt", {
             val split = source.split(LINE_SEPERATOR)
             //If/when we use new versions of encryption here we can use an encryptor for that specific version when we decode.
             val cipherTextBase64: String = split[1]
             val cipherText: ByteArray = Base64.getDecoder().decode(cipherTextBase64)
-            String(encryptor.decrypt(cipherText))
+            encryptor.decrypt(cipherText)
         })
     }
 }

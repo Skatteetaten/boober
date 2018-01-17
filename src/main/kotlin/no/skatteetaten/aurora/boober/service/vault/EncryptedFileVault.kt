@@ -13,8 +13,8 @@ data class AuroraPermissions @JvmOverloads constructor(
         val groups: List<String>? = listOf()
 )
 
-typealias Decryptor = (String) -> String
-typealias Encryptor = (String) -> String
+typealias Decryptor = (String) -> ByteArray
+typealias Encryptor = (ByteArray) -> String
 
 class VaultCollection private constructor(
         val folder: File,
@@ -68,7 +68,7 @@ class EncryptedFileVault private constructor(
 
         @JvmStatic
         @JvmOverloads
-        fun createFromFolder(vaultFolder: File, encryptor: Encryptor = { it }, decryptor: Decryptor = { it }): EncryptedFileVault {
+        fun createFromFolder(vaultFolder: File, encryptor: Encryptor = { String(it) }, decryptor: Decryptor = { it.toByteArray() }): EncryptedFileVault {
 
             FileUtils.forceMkdir(vaultFolder)
             return EncryptedFileVault(vaultFolder, encryptor, decryptor)
@@ -89,7 +89,7 @@ class EncryptedFileVault private constructor(
             jacksonObjectMapper().writeValue(File(vaultFolder, PERMISSION_FILE), mapOf(Pair("groups", value)))
         }
 
-    val secrets: Map<String, String>
+    val secrets: Map<String, ByteArray>
         get() = files
                 .filter { it.name != PERMISSION_FILE }
                 .associate { file ->
@@ -100,16 +100,16 @@ class EncryptedFileVault private constructor(
     private val files: List<File>
         get() = vaultFolder.listFiles()?.filter { it.isFile } ?: emptyList()
 
-    fun getFile(fileName: String): String {
+    fun getFile(fileName: String): ByteArray {
 
         return secrets.getOrElse(fileName, { throw IllegalArgumentException("No such file $fileName in vault $name") })
     }
 
-    fun updateFile(fileName: String, fileContents: String) {
+    fun updateFile(fileName: String, fileContents: ByteArray) {
 
         val file = File(vaultFolder, fileName)
         val encryptedContent = encryptor(fileContents)
-        FileUtils.write(file, encryptedContent, Charset.defaultCharset())
+        file.writeText(encryptedContent)
     }
 
     fun deleteFile(fileName: String) = FileUtils.deleteQuietly(File(vaultFolder, fileName))
