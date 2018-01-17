@@ -53,7 +53,7 @@ class AuroraConfigControllerTest extends AbstractAuroraConfigTest {
 
     given:
       def payload = [content: DEFAULT_ABOUT]
-      auroraConfigService.updateAuroraConfigFile(auroraConfigName, fileName, _) >> auroraConfig
+      auroraConfigService.updateAuroraConfigFile(auroraConfigName, fileName, _, _) >> auroraConfig
     when:
       ResultActions result = mockMvc.perform(
           put("/v1/auroraconfig/$auroraConfigName/$fileName").content(JsonOutput.toJson(payload)).
@@ -84,7 +84,7 @@ class AuroraConfigControllerTest extends AbstractAuroraConfigTest {
       def fileToUpdate = DEFAULT_ABOUT
       def auroraConfigFile = new AuroraConfigFile("about.json", new ObjectMapper().readValue(fileToUpdate, JsonNode),
           false)
-      def eTag = "\"THIS_IS_NOT_THE_EXPECTED_ETAG\""
+      def eTag = "THIS_IS_NOT_THE_EXPECTED_ETAG"
       def payload = [content: modify(fileToUpdate, { route: true })]
       auroraConfigService.updateAuroraConfigFile(auroraConfigName, fileName, _ as String, eTag) >> {
         throw new AuroraVersioningException(auroraConfig, auroraConfigFile, eTag)
@@ -94,7 +94,7 @@ class AuroraConfigControllerTest extends AbstractAuroraConfigTest {
       ResultActions result = mockMvc.perform(
           put("/v1/auroraconfig/$auroraConfigName/$fileName").content(JsonOutput.toJson(payload))
               .contentType(APPLICATION_JSON)
-              .header(HttpHeaders.IF_MATCH, eTag)
+              .header(HttpHeaders.IF_MATCH, "\"$eTag\"")
       )
 
     then:
