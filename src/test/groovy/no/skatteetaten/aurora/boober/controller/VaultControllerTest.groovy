@@ -32,6 +32,12 @@ class VaultControllerTest extends Specification {
 
   def vaultCollectionName = 'aos'
 
+  def vaultName = "some_vault"
+
+  def secretName = "some_secret"
+
+  def fileContents = 'SECRET_PASS=asdlfkjaølfjaøf'
+
   void setup() {
     def controller = new VaultControllerV1(vaultService)
     mockMvc = MockMvcBuilders.
@@ -60,9 +66,6 @@ class VaultControllerTest extends Specification {
   def "Fails when provided secret file payload is not Base64 encoded"() {
 
     given:
-      def vaultName = "some_vault"
-      def secretName = "some_secret"
-      def fileContents = 'SECRET_PASS=asdlfkjaølfjaøf'
       def payload = [contents: fileContents]
 
     when:
@@ -72,15 +75,12 @@ class VaultControllerTest extends Specification {
               .contentType(APPLICATION_JSON))
 
     then:
-      result.andExpect(status().isOk())
+      result.andExpect(status().isBadRequest())
   }
 
   def "Succeeds when provided secret file payload is Base64 encoded"() {
 
     given:
-      def vaultName = "some_vault"
-      def secretName = "some_secret"
-      def fileContents = 'SECRET_PASS=asdlfkjaølfjaøf'
       def payload = [contents: fileContents.bytes.encodeBase64().toString()]
       1 * vaultService.createOrUpdateFileInVault(vaultCollectionName, vaultName, secretName, fileContents.bytes) >>
           EncryptedFileVault.createFromFolder(new File("."))
@@ -98,9 +98,6 @@ class VaultControllerTest extends Specification {
   def "Get vault returns Base64 encoded content"() {
 
     given:
-      def vaultName = "some_vault"
-      def secretName = "some_secret"
-      def fileContents = 'SECRET_PASS=asdlfkjaølfjaøf'
       EncryptedFileVault vault = createTestVault(vaultName, secretName, fileContents)
       1 * vaultService.findVault(vaultCollectionName, vaultName) >> vault
 

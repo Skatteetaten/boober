@@ -105,11 +105,12 @@ class VaultService(
 
     fun import(vaultCollectionName: String, vaultName: String, permissions: List<String>, secrets: Map<String, ByteArray>): EncryptedFileVault {
 
-        return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, _ ->
+        return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
             vaultCollection.createVault(vaultName).let { vault ->
                 vault.clear()
                 secrets.forEach({ name, contents -> vault.updateFile(name, contents) })
                 vault.permissions = permissions
+                gitService.commitAndPushChanges(repo)
                 vault
             }
         })

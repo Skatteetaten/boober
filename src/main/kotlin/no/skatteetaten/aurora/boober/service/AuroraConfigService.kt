@@ -64,7 +64,6 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
                 ?: throw IllegalArgumentException("No such file $fileName in AuroraConfig $name")
     }
 
-    //TODO: This is now only used in test. So maybe add back method to get repo here again?
     fun save(auroraConfig: AuroraConfig): AuroraConfig {
         auroraConfig.validate()
 
