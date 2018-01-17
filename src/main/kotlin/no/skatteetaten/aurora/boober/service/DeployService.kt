@@ -51,7 +51,79 @@ class DeployService(
         }
 
         val deploymentSpecs = auroraConfigService.createValidatedAuroraDeploymentSpecs(auroraConfigName, applicationIds, overrides)
+        val environments = prepareDeployEnvironments(deploymentSpecs)
+        val deployResults: List<AuroraDeployResult> = deployFromSpecs(deploymentSpecs, environments, deploy)
 
+        deployLogService.markRelease(auroraConfigName, deployResults)
+
+        return deployResults
+    }
+
+    fun deployFromSpec(deploymentSpec: AuroraDeploymentSpec, mergeWithExistingOpenShiftObjects: Boolean = true, shouldDeploy: Boolean = true): AuroraDeployResult {
+
+        val deployId = UUID.randomUUID().toString().substring(0, 7)
+        if (deploymentSpec.cluster != cluster) {
+            return AuroraDeployResult(deploymentSpec, deployId, listOf(), false, "Not valid in this cluster.")
+        }
+
+        logger.debug("Resource provisioning")
+        val provisioningResult = try {
+            resourceProvisioner.provisionResources(deploymentSpec)
+        } catch (e: Exception) {
+            return AuroraDeployResult(deploymentSpec, deployId, success = false, reason = e.message)
+        }
+
+        logger.debug("Apply objects")
+        val openShiftResponses: List<OpenShiftResponse> = applyOpenShiftApplicationObjects(
+                deployId, deploymentSpec, provisioningResult, mergeWithExistingOpenShiftObjects)
+
+        val success = openShiftResponses.all { it.success }
+        val result = AuroraDeployResult(deploymentSpec, deployId, openShiftResponses, success)
+        if (!shouldDeploy) {
+            return result
+        }
+
+        if (!success) {
+            return result
+        }
+
+        if (deploymentSpec.deploy?.flags?.pause == true) {
+            return result
+        }
+
+        val tagResult = deploymentSpec.deploy?.takeIf { it.releaseTo != null }?.let {
+            val dockerGroup = it.groupId.dockerGroupSafeName()
+            val cmd = TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
+            dockerService.tag(cmd)
+        }
+        val redeployResponse = redeployService.triggerRedeploy(deploymentSpec, openShiftResponses)
+
+        val redeploySuccess = if (redeployResponse.isEmpty()) true else redeployResponse.last().success
+        val totalSuccess = listOf(success, tagResult?.success, redeploySuccess).filterNotNull().all { it }
+
+        return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResponse), tagResponse = tagResult, success = totalSuccess)
+    }
+
+    private fun deployFromSpecs(deploymentSpecs: List<AuroraDeploymentSpec>, environments: Map<AuroraDeployEnvironment, AuroraDeployResult>, deploy: Boolean): List<AuroraDeployResult> {
+        return runBlocking(appDispatcher) {
+            deploymentSpecs.map {
+                async(appDispatcher) {
+
+                    val environmentDeployResult = environments[it.environment]
+                    when {
+                        environmentDeployResult == null -> AuroraDeployResult(auroraDeploymentSpec = it, success = false, reason = "Environment was not created.")
+                        !environmentDeployResult.success -> environmentDeployResult.copy(auroraDeploymentSpec = it)
+                        else -> {
+                            val result = deployFromSpec(it, environmentDeployResult.projectExist, deploy)
+                            result.copy(openShiftResponses = environmentDeployResult.openShiftResponses.addIfNotNull(result.openShiftResponses))
+                        }
+                    }
+                }
+            }.map { it.await() }
+        }
+    }
+
+    private fun prepareDeployEnvironments(deploymentSpecs: List<AuroraDeploymentSpec>): Map<AuroraDeployEnvironment, AuroraDeployResult> {
         val environments = runBlocking(nsDispatcher) {
             deploymentSpecs
                     .filter { it.cluster == cluster }
@@ -79,30 +151,11 @@ class DeployService(
                                     success = success,
                                     reason = message,
                                     projectExist = projectExist))
-
                         }
                     }.map { it.await() }
                     .toMap()
         }
-        val deployResults: List<AuroraDeployResult> = runBlocking(appDispatcher) {
-            deploymentSpecs.map {
-                async(appDispatcher) {
-
-                    val env = environments[it.environment]
-                    when {
-                        env == null -> AuroraDeployResult(auroraDeploymentSpec = it, success = false, reason = "Environment was not created.")
-                        !env.success -> env.copy(auroraDeploymentSpec = it)
-                        else -> {
-                            val result = deployFromSpec(it, deploy, env.projectExist)
-                            result.copy(openShiftResponses = env.openShiftResponses.addIfNotNull(result.openShiftResponses))
-                        }
-                    }
-                }
-            }.map { it.await() }
-        }
-        deployLogService.markRelease(auroraConfigName, deployResults)
-
-        return deployResults
+        return environments
     }
 
     private fun prepareDeployEnvironment(environment: AuroraDeployEnvironment, projectExist: Boolean): List<OpenShiftResponse> {
@@ -123,48 +176,6 @@ class DeployService(
         }.map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         return listOf(createNamespaceResponse, updateNamespaceResponse) + updateRoleBindingsResponse
-    }
-
-    fun deployFromSpec(deploymentSpec: AuroraDeploymentSpec, shouldDeploy: Boolean, namespaceCreated: Boolean): AuroraDeployResult {
-
-        val deployId = UUID.randomUUID().toString().substring(0, 7)
-        if (deploymentSpec.cluster != cluster) {
-            return AuroraDeployResult(deploymentSpec, deployId, listOf(), false, "Not valid in this cluster.")
-        }
-
-        logger.debug("Resource provisioning")
-        val provisioningResult = resourceProvisioner.provisionResources(deploymentSpec)
-        //TODO: Need to verify that user has access to all Vaults.
-
-        logger.debug("Apply objects")
-        val openShiftResponses: List<OpenShiftResponse> = applyOpenShiftApplicationObjects(
-                deployId, deploymentSpec, provisioningResult, namespaceCreated)
-
-        val success = openShiftResponses.all { it.success }
-        val result = AuroraDeployResult(deploymentSpec, deployId, openShiftResponses, success)
-        if (!shouldDeploy) {
-            return result
-        }
-
-        if (!success) {
-            return result
-        }
-
-        if (deploymentSpec.deploy?.flags?.pause == true) {
-            return result
-        }
-
-        val tagResult = deploymentSpec.deploy?.takeIf { it.releaseTo != null }?.let {
-            val dockerGroup = it.groupId.dockerGroupSafeName()
-            val cmd = TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
-            dockerService.tag(cmd)
-        }
-        val redeployResponse = redeployService.triggerRedeploy(deploymentSpec, openShiftResponses)
-
-        val redeploySuccess = if (redeployResponse.isEmpty()) true else redeployResponse.last().success
-        val totalSuccess = listOf(success, tagResult?.success, redeploySuccess).filterNotNull().all { it }
-
-        return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResponse), tagResponse = tagResult, success = totalSuccess)
     }
 
     private fun applyOpenShiftApplicationObjects(deployId: String, deploymentSpec: AuroraDeploymentSpec,
