@@ -6,12 +6,11 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.service.EncryptionService
+import no.skatteetaten.aurora.boober.service.FolderHelperKt
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.GitServiceHelperKt
 import no.skatteetaten.aurora.boober.service.UnauthorizedAccessException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
-import no.skatteetaten.aurora.boober.service.vault.VaultService
-import spock.lang.Ignore
 import spock.lang.Specification
 
 class VaultServiceTest extends Specification {
@@ -37,10 +36,11 @@ class VaultServiceTest extends Specification {
     GitServiceHelperKt.recreateRepo(new File(REMOTE_REPO_FOLDER, "${COLLECTION_NAME}.git"))
     //GitServiceHelperKt.recreateFolder(new File(CHECKOUT_PATH))
 
-    userDetailsProvider.getAuthenticatedUser() >> new User("aurora", "token", "Aurora Test User", [new SimpleGrantedAuthority("UTV")])
+    userDetailsProvider.getAuthenticatedUser() >>
+        new User("aurora", "token", "Aurora Test User", [new SimpleGrantedAuthority("UTV")])
     // No encryption/decryption
-    _ * encryptionService.decrypt(_) >> { it[0] }
-    _ * encryptionService.encrypt(_) >> { it[0] }
+    _ * encryptionService.decrypt(_) >> { it[0].bytes }
+    _ * encryptionService.encrypt(_) >> { new String(it[0]) }
   }
 
   def "Find vault collection"() {
@@ -53,8 +53,6 @@ class VaultServiceTest extends Specification {
       vaultCollection.vaults.size() == 0
   }
 
-  @Ignore
-  //TODO: BAS se på test
   def "Update file"() {
 
     given:
@@ -69,7 +67,7 @@ class VaultServiceTest extends Specification {
       vault.secrets[fileName] == contents.bytes
 
     and: "Lets make sure the contents was actually saved"
-    //  GitServiceHelperKt.recreateFolder(new File(CHECKOUT_PATH))
+      FolderHelperKt.recreateFolder(new File(CHECKOUT_PATH))
 
     when:
       def vaultCollection = vaultService.findVaultCollection(COLLECTION_NAME)
@@ -80,8 +78,6 @@ class VaultServiceTest extends Specification {
       vault.secrets[fileName] == contents.bytes
   }
 
-  @Ignore
-  //TODO: BAS se på test
   def "Delete file"() {
 
     given: "A vault with some files"
@@ -100,7 +96,7 @@ class VaultServiceTest extends Specification {
       vault.secrets.size() == 1
 
     and: "Lets make sure the secret was actually deleted"
-      //GitServiceHelperKt.recreateFolder(new File(CHECKOUT_PATH))
+      FolderHelperKt.recreateFolder(new File(CHECKOUT_PATH))
 
     when:
       def vaultCollection = vaultService.findVaultCollection(COLLECTION_NAME)
@@ -128,7 +124,7 @@ class VaultServiceTest extends Specification {
       thrown(IllegalArgumentException)
 
     and: "Lets make sure the vault was actually deleted"
-     // GitServiceHelperKt.recreateFolder(new File(CHECKOUT_PATH))
+      // GitServiceHelperKt.recreateFolder(new File(CHECKOUT_PATH))
 
     when:
       vaultService.findVault(COLLECTION_NAME, VAULT_NAME) == null
@@ -145,7 +141,7 @@ class VaultServiceTest extends Specification {
       def vault = vaultService.createOrUpdateFileInVault(COLLECTION_NAME, VAULT_NAME, fileName, contents.bytes)
 
     and: "Lets remove and check out the local copy of the vault"
-   //   GitServiceHelperKt.recreateFolder(new File(CHECKOUT_PATH))
+      //   GitServiceHelperKt.recreateFolder(new File(CHECKOUT_PATH))
 
     expect:
       !vault.permissions
