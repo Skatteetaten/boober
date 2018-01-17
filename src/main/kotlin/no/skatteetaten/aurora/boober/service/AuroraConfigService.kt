@@ -90,6 +90,7 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
         return auroraConfig
     }
 
+    @JvmOverloads
     fun updateAuroraConfigFile(name: String, fileName: String, contents: String, previousVersion: String? = null): AuroraConfig {
 
         val jsonContents = jacksonObjectMapper().readValue(contents, JsonNode::class.java)

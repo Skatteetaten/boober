@@ -10,8 +10,6 @@ abstract class ServiceException(message: String?, cause: Throwable?) : RuntimeEx
 
 class OpenShiftException(messages: String?, cause: Throwable? = null) : ServiceException(messages, cause)
 
-class GitException(messages: String?, cause: Throwable?) : ServiceException(messages, cause)
-
 class AuroraDeploymentSpecValidationException(message: String) : ServiceException(message)
 
 class UnauthorizedAccessException(message: String): ServiceException(message)
