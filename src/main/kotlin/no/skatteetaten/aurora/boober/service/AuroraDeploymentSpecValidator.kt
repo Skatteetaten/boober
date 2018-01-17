@@ -1,8 +1,10 @@
 package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
+import no.skatteetaten.aurora.boober.service.vault.VaultService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -13,6 +15,7 @@ class AuroraDeploymentSpecValidator(
         val openShiftClient: OpenShiftClient,
         val openShiftTemplateProcessor: OpenShiftTemplateProcessor,
         val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
+        val vaultService: VaultService,
         @Value("\${openshift.cluster}") val cluster: String) {
 
 
@@ -24,6 +27,23 @@ class AuroraDeploymentSpecValidator(
         validateAdminGroups(deploymentSpec)
         validateTemplateIfSet(deploymentSpec)
         validateDatabaseId(deploymentSpec)
+        validateVaultExistence(deploymentSpec)
+    }
+
+    protected fun validateVaultExistence(deploymentSpec: AuroraDeploymentSpec) {
+
+        val vaultNames = (deploymentSpec.volume?.mounts
+                ?.filter { it.type == MountType.Secret }
+                ?.mapNotNull { it.secretVaultName }
+                ?: emptyList())
+                .toMutableList()
+        deploymentSpec.volume?.secretVaultName?.let { vaultNames.add(it) }
+
+        vaultNames.forEach {
+            val vaultCollectionName = deploymentSpec.environment.affiliation
+            if (!vaultService.vaultExists(vaultCollectionName, it))
+                throw AuroraDeploymentSpecValidationException("Referenced Vault $it in Vault Collection $vaultCollectionName does not exist")
+        }
     }
 
     protected fun validateDatabaseId(deploymentSpec: AuroraDeploymentSpec) {

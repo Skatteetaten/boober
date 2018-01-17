@@ -52,6 +52,12 @@ class VaultService(
             (findVaultByNameIfAllowed(vaultCollection, vaultName)
                     ?: throw IllegalArgumentException("Vault not found name=$vaultName"))
 
+    fun vaultExists(vaultCollectionName: String, vaultName: String): Boolean {
+        return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, _ ->
+            vaultCollection.findVaultByName(vaultName) != null
+        })
+    }
+
     @JvmOverloads
     fun createOrUpdateFileInVault(vaultCollectionName: String,
                                   vaultName: String,

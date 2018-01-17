@@ -10,6 +10,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
+import no.skatteetaten.aurora.boober.service.vault.VaultService
 
 class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest {
 
@@ -18,9 +19,10 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
     def udp = Mock(UserDetailsProvider)
     def openShiftClient = Mock(OpenShiftClient)
     def dbClient = Mock(DatabaseSchemaProvisioner)
+    def vaultService = Mock(VaultService)
 
     def processor = new OpenShiftTemplateProcessor(udp, Mock(OpenShiftResourceClient), new ObjectMapper())
-    def specValidator = new AuroraDeploymentSpecValidator(openShiftClient, processor, dbClient, "utv")
+    def specValidator = new AuroraDeploymentSpecValidator(openShiftClient, processor, dbClient, vaultService, "utv")
 
     def mapper = new ObjectMapper()
 
@@ -160,5 +162,38 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
         then:
         def e = thrown(AuroraDeploymentSpecValidationException)
         e.message == "Required template parameters [FEED_NAME, DATABASE] not set"
+    }
+
+    def "Fails when vault does not exist"() {
+      given:
+        auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": "test", "mounts": { "secret": { "type": "Secret", "secretVault": "test2", "path": "/tmp" } } }'''
+        AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+        def vaultCollection = deploymentSpec.environment.affiliation
+
+        vaultService.vaultExists(vaultCollection, "test2") >> true
+        vaultService.vaultExists(vaultCollection, "test") >> false
+
+      when:
+        specValidator.validateVaultExistence(deploymentSpec)
+
+      then:
+        def e = thrown(AuroraDeploymentSpecValidationException)
+        e.message == "Referenced Vault test in Vault Collection $vaultCollection does not exist"
+    }
+
+    def "Succeeds when vault exists"() {
+      given:
+        auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": "test", "mounts": { "secret": { "type": "Secret", "secretVault": "test2", "path": "/tmp" } } }'''
+        AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+        def vaultCollection = deploymentSpec.environment.affiliation
+
+        vaultService.vaultExists(vaultCollection, "test2") >> true
+        vaultService.vaultExists(vaultCollection, "test") >> true
+
+      when:
+        specValidator.validateVaultExistence(deploymentSpec)
+
+      then:
+        true
     }
 }

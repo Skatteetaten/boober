@@ -57,16 +57,16 @@ class DeployService(
                     .filter { it.cluster == cluster }
                     .map { it.environment }
                     .distinct()
-                    .map {
+                    .map { environment: AuroraDeployEnvironment ->
                         async(nsDispatcher) {
 
                             val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
-                            if (!authenticatedUser.hasAnyRole(it.permissions.admin.groups)) {
-                                Pair(it, AuroraDeployResult(success = false, reason = "User=${authenticatedUser.fullName} does not have access to admin this environment from the groups=${it.permissions.admin.groups}"))
+                            if (!authenticatedUser.hasAnyRole(environment.permissions.admin.groups)) {
+                                Pair(environment, AuroraDeployResult(success = false, reason = "User=${authenticatedUser.fullName} does not have access to admin this environment from the groups=${environment.permissions.admin.groups}"))
                             }
 
-                            val projectExist = openShiftClient.projectExists(it.namespace)
-                            val environmentResponses = prepareDeployEnvironment(it, projectExist)
+                            val projectExist = openShiftClient.projectExists(environment.namespace)
+                            val environmentResponses = prepareDeployEnvironment(environment, projectExist)
 
                             val success = environmentResponses.all { it.success }
 
@@ -74,7 +74,7 @@ class DeployService(
                                 "One or more http calls to OpenShift failed"
                             } else null
 
-                            Pair(it, AuroraDeployResult(
+                            Pair(environment, AuroraDeployResult(
                                     openShiftResponses = environmentResponses,
                                     success = success,
                                     reason = message,
