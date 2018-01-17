@@ -21,7 +21,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
 
   def setup() {
     GitServiceHelperKt.recreateRepo(new File(REMOTE_REPO_FOLDER, "${AURORA_CONFIG_NAME}.git"))
-    FolderHelperKt.recreateFolder(new File(CHECKOUT_PATH))
+//    GitServiceHelperKt.recreateFolder(new File(CHECKOUT_PATH))
 
     userDetailsProvider.getAuthenticatedUser() >> new User("aurora", "token", "Aurora Test User", [])
   }
@@ -46,7 +46,6 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
   def "Should update one file in AuroraConfig"() {
     given:
       def auroraConfig = createAuroraConfig(defaultAuroraConfig())
-      auroraConfigService.getUpdatedRepo(auroraConfig.affiliation)
       auroraConfigService.save(auroraConfig)
 
       def fileToChange = "utv/aos-simple.json"
@@ -77,7 +76,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
       auroraConfigService.save(auroraConfig)
 
     and:
-      FolderHelperKt.recreateFolder(new File(CHECKOUT_PATH))
+//      GitServiceHelperKt.recreateFolder(new File(CHECKOUT_PATH))
       auroraConfig = auroraConfigService.findAuroraConfig(AURORA_CONFIG_NAME)
 
     then:
@@ -91,7 +90,6 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
 
     given:
       def auroraConfig = createAuroraConfig(defaultAuroraConfig())
-      auroraConfigService.getUpdatedRepo(auroraConfig.affiliation).close()
       auroraConfigService.save(auroraConfig)
 
     when:
@@ -102,7 +100,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
       auroraConfigService.save(auroraConfig)
 
     and:
-      FolderHelperKt.recreateFolder(new File(CHECKOUT_PATH))
+   //   GitServiceHelperKt.recreateFolder(new File(CHECKOUT_PATH))
       auroraConfig = auroraConfigService.findAuroraConfig(AURORA_CONFIG_NAME)
 
     then:
@@ -116,7 +114,6 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
     given:
       def fileToChange = "${aid.environment}/${aid.application}.json"
       def auroraConfig = createAuroraConfig(defaultAuroraConfig())
-     auroraConfigService.getUpdatedRepo(auroraConfig.affiliation).close()
       auroraConfigService.save(auroraConfig)
 
     when:
