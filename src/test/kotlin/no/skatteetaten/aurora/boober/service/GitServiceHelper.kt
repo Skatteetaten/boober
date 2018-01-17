@@ -22,12 +22,3 @@ fun recreateRepo(folder: File): Git {
     recreateFolder(folder)
     return Git.init().setDirectory(folder).setBare(true).call()
 }
-
-fun recreateFolder(folder: String) = recreateFolder(File(folder))
-
-fun recreateFolder(folder: File) {
-    if (folder.exists()) {
-        folder.deleteRecursively()
-    }
-    folder.mkdirs()
-}
