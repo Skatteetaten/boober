@@ -156,7 +156,6 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
       GitServiceHelperKt.recreateRepo(new File("/tmp/boobertest/aos"))
 
       vaultService.createOrUpdateFileInVault("aos", "foo", "latest.properties", "FOO=BAR")
-      auroraConfigService.getUpdatedRepo(auroraConfig.affiliation).close()
       auroraConfigService.save(auroraConfig)
     }
   }
@@ -164,7 +163,6 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
   void createRepoAndSaveFiles(AuroraConfig auroraConfig) {
 
     GitServiceHelperKt.recreateEmptyBareRepos(auroraConfig.affiliation)
-    auroraConfigService.getUpdatedRepo(auroraConfig.affiliation).close()
     auroraConfigService.save(auroraConfig)
   }
 

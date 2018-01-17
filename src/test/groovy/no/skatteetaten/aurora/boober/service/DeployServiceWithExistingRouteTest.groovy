@@ -61,6 +61,7 @@ class DeployServiceWithExistingRouteTest extends AbstractMockedOpenShiftSpecific
 
     then:
       def result = deployResults[0]
+    //TODO: This way of testing is very nice!
       def resultSentences = result.openShiftResponses.collect {
         def name = JsonNodeUtilsKt.getOpenshiftName(it.command.payload)
         def kind = JsonNodeUtilsKt.getOpenshiftKind(it.command.payload)
