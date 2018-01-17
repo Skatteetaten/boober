@@ -5,6 +5,12 @@
       "type": "Secret",
       "path": "/u01/foo",
       "secretVault": "foo"
+    },
+    "pvc" : {
+      "type" : "PVC",
+      "exist" : true,
+      "path" : "/foo"
     }
+
   }
 }
