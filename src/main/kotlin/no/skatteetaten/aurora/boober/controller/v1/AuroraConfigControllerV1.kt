@@ -80,7 +80,7 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
     @PutMapping("/**")
     fun updateAuroraConfigFile(@PathVariable name: String,
                                @RequestBody @Valid payload: ContentPayload,
-                               @RequestHeader(HttpHeaders.IF_MATCH) ifMatchHeader: String,
+                               @RequestHeader(value = HttpHeaders.IF_MATCH, required = false) ifMatchHeader: String?,
                                request: HttpServletRequest): Response {
 
         val fileName = extractFileName(name, request)
