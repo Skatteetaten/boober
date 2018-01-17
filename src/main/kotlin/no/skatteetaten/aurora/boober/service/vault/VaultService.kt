@@ -1,8 +1,6 @@
 package no.skatteetaten.aurora.boober.service.vault
 
 import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.service.vault.EncryptedFileVault
-import no.skatteetaten.aurora.boober.service.vault.VaultCollection
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.GitServices.Domain.VAULT
@@ -57,7 +55,7 @@ class VaultService(
     fun createOrUpdateFileInVault(vaultCollectionName: String,
                                   vaultName: String,
                                   fileName: String,
-                                  fileContents: String
+                                  fileContents: ByteArray
     ): EncryptedFileVault {
 
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
@@ -71,7 +69,7 @@ class VaultService(
 
     fun findFileInVault(vaultCollectionName: String,
                         vaultName: String,
-                        fileName: String): String {
+                        fileName: String): ByteArray {
         val vault = findVault(vaultCollectionName, vaultName)
         val vaultFile = vault.getFile(fileName)
         return vaultFile
@@ -105,12 +103,12 @@ class VaultService(
         })
     }
 
-    fun import(vaultCollectionName: String, vaultName: String, permissions: List<String>, secrets: Map<String, String>): EncryptedFileVault {
+    fun import(vaultCollectionName: String, vaultName: String, permissions: List<String>, secrets: Map<String, ByteArray>): EncryptedFileVault {
 
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, _ ->
             vaultCollection.createVault(vaultName).let { vault ->
                 vault.clear()
-                secrets.forEach({ name, contents -> vault.updateFile(name, contents)})
+                secrets.forEach({ name, contents -> vault.updateFile(name, contents) })
                 vault.permissions = permissions
                 vault
             }
