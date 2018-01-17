@@ -32,6 +32,7 @@ class AuroraConfigWithOverrides(
 class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitService,
                           val bitbucketProjectService: BitbucketProjectService,
                           val deploymentSpecValidator: AuroraDeploymentSpecValidator,
+                          @Value("\${openshift.cluster}") val cluster: String,
                           @Value("\${boober.validationPoolSize:6}") val validationPoolSize: Int) {
 
 
@@ -65,40 +66,27 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
 
     //TODO: This is now only used in test. So maybe add back method to get repo here again?
     fun save(auroraConfig: AuroraConfig): AuroraConfig {
-        val watch = StopWatch()
-        watch.start("validate")
         auroraConfig.validate()
-        watch.stop()
 
-        watch.start("createAuroraConfig")
         val mapper = jacksonObjectMapper()
         val checkoutDir = getAuroraConfigFolder(auroraConfig.affiliation)
-        val repo = Git.open(checkoutDir)
-        val existing = AuroraConfig.fromFolder(checkoutDir)
-        watch.stop()
 
-        watch.start("delete")
+        val repo = getUpdatedRepo(auroraConfig.affiliation)
+        val existing = AuroraConfig.fromFolder(checkoutDir)
+
         existing.auroraConfigFiles.forEach {
             val outputFile = File(checkoutDir, it.name)
             FileUtils.deleteQuietly(outputFile)
         }
-        watch.stop()
-
-        watch.start("add")
         auroraConfig.auroraConfigFiles.forEach {
             val prettyContent = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it.contents)
             val outputFile = File(getAuroraConfigFolder(auroraConfig.affiliation), it.name)
             FileUtils.forceMkdirParent(outputFile)
             outputFile.writeText(prettyContent)
         }
-        watch.stop()
 
-        watch.start("git")
         gitService.commitAndPushChanges(repo)
         repo.close()
-        watch.stop()
-
-        logger.debug(watch.prettyPrint())
         return auroraConfig
     }
 
@@ -208,7 +196,9 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
 
         val stopWatch = StopWatch().apply { start() }
         val spec = createAuroraDeploymentSpec(auroraConfigWithOverrides.auroraConfig, aid, auroraConfigWithOverrides.overrideFiles)
-        deploymentSpecValidator.assertIsValid(spec)
+        if (spec.cluster == cluster) {
+            deploymentSpecValidator.assertIsValid(spec)
+        }
         stopWatch.stop()
 
         logger.debug("Created ADC for app=${aid.application}, env=${aid.environment} in ${stopWatch.totalTimeMillis} millis")
