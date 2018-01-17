@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service
 import java.util.*
 
 @Service
+//TODO:Split up. Service is to large
 class DeployService(
         val auroraConfigService: AuroraConfigService,
         val openShiftObjectGenerator: OpenShiftObjectGenerator,
@@ -30,6 +31,7 @@ class DeployService(
         val dockerService: DockerService,
         val resourceProvisioner: ExternalResourceProvisioner,
         val redeployService: RedeployService,
+        val userDetailsProvider: UserDetailsProvider,
         val deployLogService: DeployLogService,
         @Value("\${openshift.cluster}") val cluster: String,
         @Value("\${boober.docker.registry}") val dockerRegistry: String,
@@ -50,7 +52,6 @@ class DeployService(
 
         val deploymentSpecs = auroraConfigService.createValidatedAuroraDeploymentSpecs(auroraConfigName, applicationIds, overrides)
 
-
         val environments = runBlocking(nsDispatcher) {
             deploymentSpecs
                     .filter { it.cluster == cluster }
@@ -58,9 +59,27 @@ class DeployService(
                     .distinct()
                     .map {
                         async(nsDispatcher) {
+
+                            val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
+                            if (!authenticatedUser.hasAnyRole(it.permissions.admin.groups)) {
+                                Pair(it, AuroraDeployResult(success = false, reason = "User=${authenticatedUser.fullName} does not have access to admin this environment from the groups=${it.permissions.admin.groups}"))
+                            }
+
                             val projectExist = openShiftClient.projectExists(it.namespace)
                             val environmentResponses = prepareDeployEnvironment(it, projectExist)
-                            Pair(it, AuroraEnvironmentResult(environmentResponses, projectExist))
+
+                            val success = environmentResponses.all { it.success }
+
+                            val message = if (!success) {
+                                "One or more http calls to OpenShift failed"
+                            } else null
+
+                            Pair(it, AuroraDeployResult(
+                                    openShiftResponses = environmentResponses,
+                                    success = success,
+                                    reason = message,
+                                    projectExist = projectExist))
+
                         }
                     }.map { it.await() }
                     .toMap()
@@ -70,13 +89,11 @@ class DeployService(
                 async(appDispatcher) {
 
                     val env = environments[it.environment]
-                    val deployId = UUID.randomUUID().toString()
                     when {
-                        env == null -> AuroraDeployResult(deployId, it, listOf(), false, "Environment was not created.")
-                        //TODO: If we do not have access to this namespace there will be a failed response in here in the below line
-                        env.openShiftResponses.any { !it.success } -> AuroraDeployResult(deployId, it, env.openShiftResponses, false)
+                        env == null -> AuroraDeployResult(auroraDeploymentSpec = it, success = false, reason = "Environment was not created.")
+                        !env.success -> env.copy(auroraDeploymentSpec = it)
                         else -> {
-                            val result=deployFromSpec(it, deploy, env.newNamespace)
+                            val result = deployFromSpec(it, deploy, env.projectExist)
                             result.copy(openShiftResponses = env.openShiftResponses.addIfNotNull(result.openShiftResponses))
                         }
                     }
@@ -110,9 +127,9 @@ class DeployService(
 
     fun deployFromSpec(deploymentSpec: AuroraDeploymentSpec, shouldDeploy: Boolean, namespaceCreated: Boolean): AuroraDeployResult {
 
-        val deployId = UUID.randomUUID().toString()
+        val deployId = UUID.randomUUID().toString().substring(0, 7)
         if (deploymentSpec.cluster != cluster) {
-            return AuroraDeployResult(deployId, deploymentSpec, listOf(), false, "Not valid in this cluster.")
+            return AuroraDeployResult(deploymentSpec, deployId, listOf(), false, "Not valid in this cluster.")
         }
 
         logger.debug("Resource provisioning")
@@ -124,7 +141,7 @@ class DeployService(
                 deployId, deploymentSpec, provisioningResult, namespaceCreated)
 
         val success = openShiftResponses.all { it.success }
-        val result = AuroraDeployResult(deployId, deploymentSpec, openShiftResponses, success)
+        val result = AuroraDeployResult(deploymentSpec, deployId, openShiftResponses, success)
         if (!shouldDeploy) {
             return result
         }
