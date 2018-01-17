@@ -20,7 +20,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
     def dbClient = Mock(DatabaseSchemaProvisioner)
 
     def processor = new OpenShiftTemplateProcessor(udp, Mock(OpenShiftResourceClient), new ObjectMapper())
-    def specValidator = new AuroraDeploymentSpecValidator(openShiftClient, processor, dbClient)
+    def specValidator = new AuroraDeploymentSpecValidator(openShiftClient, processor, dbClient, "utv")
 
     def mapper = new ObjectMapper()
 
@@ -79,7 +79,6 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
         thrown(AuroraDeploymentSpecValidationException)
     }
 
-
     def "Fails when databaseId does not exist"() {
         given:
         auroraConfigJson["utv/aos-simple.json"] = '''{ "database": { "foo" : "123-123-123" } }'''
@@ -94,6 +93,19 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
         then:
         def e =thrown(AuroraDeploymentSpecValidationException)
         e.message == "Database schema with id=123-123-123 does not exist"
+    }
+
+    def "Succeeds when databaseId does not exist when not on current cluster"() {
+      given:
+        auroraConfigJson["utv/aos-simple.json"] = '''{ "cluster": "qa", "database": { "foo" : "123-123-123" } }'''
+        AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+        dbClient.findSchemaById("123-123-123") >> { throw new ProvisioningException("") }
+
+      when:
+        specValidator.validateDatabaseId(deploymentSpec)
+
+      then:
+        true
     }
 
     def "Fails when template does not exist"() {

@@ -5,13 +5,15 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class AuroraDeploymentSpecValidator(
         val openShiftClient: OpenShiftClient,
         val openShiftTemplateProcessor: OpenShiftTemplateProcessor,
-        val databaseSchemaProvisioner: DatabaseSchemaProvisioner) {
+        val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
+        @Value("\${openshift.cluster}") val cluster: String) {
 
 
     val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpecValidator::class.java)
@@ -21,18 +23,19 @@ class AuroraDeploymentSpecValidator(
 
         validateAdminGroups(deploymentSpec)
         validateTemplateIfSet(deploymentSpec)
-        validateDatatbaseId(deploymentSpec)
+        validateDatabaseId(deploymentSpec)
     }
 
-    private fun validateDatatbaseId(deploymentSpec: AuroraDeploymentSpec) {
-        deploymentSpec.deploy?.database
-                ?.forEach {
-                    it.id?.let {
-                        try {
-                            databaseSchemaProvisioner.findSchemaById(it)
-                        } catch (e: Exception) {
-                            throw AuroraDeploymentSpecValidationException("Database schema with id=$it does not exist")
-                        }
+    protected fun validateDatabaseId(deploymentSpec: AuroraDeploymentSpec) {
+        // We cannot validate database schemas for applications that are not deployed on the current cluster.
+        if (deploymentSpec.cluster != cluster) return
+        val databases = deploymentSpec.deploy?.database ?: return
+        databases.mapNotNull { it.id }
+                .forEach {
+                    try {
+                        databaseSchemaProvisioner.findSchemaById(it)
+                    } catch (e: Exception) {
+                        throw AuroraDeploymentSpecValidationException("Database schema with id=$it does not exist")
                     }
                 }
     }
