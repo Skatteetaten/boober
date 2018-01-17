@@ -100,7 +100,6 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
     then:
 
       def history = gitService.tagHistory(git)
-      history.size() == 1
       def revTag = history[0]
 
       revTag.taggerIdent != null
@@ -116,7 +115,6 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
     then:
       def tags = deployService.deployHistory(affiliation)
-      tags.size() == 2
       def revTag = tags[0]
 
       revTag.ident != null
@@ -137,7 +135,6 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
     then:
       def tags = deployService.deployHistory(affiliation)
-      tags.size() == 1
       def revTag = tags[0]
       def resp = revTag.result["openShiftResponses"]
 
