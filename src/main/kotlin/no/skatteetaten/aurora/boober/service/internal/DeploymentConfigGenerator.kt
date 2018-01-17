@@ -107,7 +107,7 @@ class DeploymentConfigGenerator(
 
         val debugEnv = auroraDeploymentSpec.deploy?.flags?.takeIf { it.debug }?.let {
             mapOf(
-                    "REMOTE_DEBUG" to "true",
+                    "ENABLE_REMOTE_DEBUG" to "true",
                     "DEBUG_PORT" to "5005"
             )
         } ?: mapOf()
