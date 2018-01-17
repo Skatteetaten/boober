@@ -4,6 +4,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.controller.NoSuchResourceException
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraVersioningException
+import no.skatteetaten.aurora.boober.model.PreconditionFailureException
 import no.skatteetaten.aurora.boober.service.*
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -33,8 +34,8 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
     @ExceptionHandler(UnauthorizedAccessException::class)
     fun handleAccessRequest(ex: UnauthorizedAccessException, req: WebRequest) = handleException(ex, req, FORBIDDEN)
 
-    @ExceptionHandler(AuroraVersioningException::class)
-    fun handleAccessRequest(ex: AuroraVersioningException, req: WebRequest) = handleException(ex, req, PRECONDITION_FAILED)
+    @ExceptionHandler(PreconditionFailureException::class)
+    fun handleAccessRequest(ex: PreconditionFailureException, req: WebRequest) = handleException(ex, req, PRECONDITION_FAILED)
 
     @ExceptionHandler(NoSuchResourceException::class)
     fun handleAccessRequest(ex: NoSuchResourceException, req: WebRequest) = handleException(ex, req, NOT_FOUND)

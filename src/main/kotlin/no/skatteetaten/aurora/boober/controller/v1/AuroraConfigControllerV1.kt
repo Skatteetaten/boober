@@ -99,8 +99,6 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
         return createAuroraConfigFileResponse(auroraConfigFile)
     }
 
-    private fun clearQuotes(str: String?) = str?.replace("\"", "")
-
     private fun extractFileName(affiliation: String, request: HttpServletRequest): String {
         val path = "v1/auroraconfig/$affiliation/**"
         return AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
