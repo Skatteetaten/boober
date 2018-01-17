@@ -15,7 +15,14 @@ class EncryptionService(
         keyFactory: KeyFactory,
         val metrics: AuroraMetrics) {
 
-    val version = "Boober:1"
+    // Version 1 of the file format always contained base64 content (after the file was decrypted).
+    val VERSION1 = "Boober:1"
+
+    // Version 2 does not (necessarily) contain string based contents at all (makes no assumptions - it's all bytes).
+    val VERSION2 = "Boober:2"
+
+    val version = VERSION2
+
     val LINE_SEPERATOR = "\n"
 
     final val providerName: String
@@ -43,10 +50,13 @@ class EncryptionService(
 
         return metrics.withMetrics("decrypt", {
             val split = source.split(LINE_SEPERATOR)
+            val fileFormatVersion = split[0]
             //If/when we use new versions of encryption here we can use an encryptor for that specific version when we decode.
             val cipherTextBase64: String = split[1]
             val cipherText: ByteArray = Base64.getDecoder().decode(cipherTextBase64)
-            encryptor.decrypt(cipherText)
+            val decrypted = encryptor.decrypt(cipherText)
+
+            if (fileFormatVersion == VERSION1) Base64.getDecoder().decode(decrypted) else decrypted
         })
     }
 }
