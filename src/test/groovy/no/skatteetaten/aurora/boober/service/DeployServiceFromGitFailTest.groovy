@@ -64,8 +64,7 @@ class DeployServiceFromGitFailTest extends AbstractMockedOpenShiftSpecification 
       def git = gitService.checkoutRepoForAffiliation(affiliation)
 
       def history = gitService.tagHistory(git)
-      history.size() == 1
-      def revTag = history[0]
+      def revTag = history.last()
 
       revTag.taggerIdent != null
       revTag.fullMessage.startsWith("""{"deployId":""")

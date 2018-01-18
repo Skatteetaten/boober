@@ -1,5 +1,5 @@
 buildscript {
-  ext.kotlin_version = '1.1.60'
+  ext.kotlin_version = '1.2.10'
   ext.springBootVersion = '1.5.8.RELEASE'
   ext.auroraStartersVersion = '3.3.0'
 
@@ -59,7 +59,7 @@ dependencies {
       "org.springframework.boot:spring-boot-starter-aop",
       "org.springframework.boot:spring-boot-starter-security",
       "org.springframework.retry:spring-retry",
-      "com.fasterxml.jackson.module:jackson-module-kotlin:2.8.10",
+      "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.2",
       'org.eclipse.jgit:org.eclipse.jgit:4.6.1.201703071140-r',
       'org.apache.velocity:velocity:1.7',
       'com.github.fge:json-patch:1.9',
