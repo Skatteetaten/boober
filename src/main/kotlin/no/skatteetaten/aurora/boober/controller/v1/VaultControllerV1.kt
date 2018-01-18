@@ -1,12 +1,17 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.v1.VaultWithAccessResource.Companion.fromEncryptedFileVault
 import no.skatteetaten.aurora.boober.controller.v1.VaultWithAccessResource.Companion.fromVaultWithAccess
 import no.skatteetaten.aurora.boober.service.vault.EncryptedFileVault
 import no.skatteetaten.aurora.boober.service.vault.VaultService
 import no.skatteetaten.aurora.boober.service.vault.VaultWithAccess
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.util.AntPathMatcher
+import org.springframework.util.DigestUtils
 import org.springframework.web.bind.annotation.*
 import java.util.*
 import javax.servlet.http.HttpServletRequest
@@ -51,8 +56,11 @@ data class VaultWithAccessResource(val name: String, val hasAccess: Boolean, val
 }
 
 data class VaultFileResource(val contents: String) {
+
     val decodedContents: ByteArray
+        @JsonIgnore
         get() = B64.decode(contents)
+
 
     companion object {
         fun fromDecodedBytes(decodedBytes: ByteArray): VaultFileResource {
@@ -89,26 +97,26 @@ class VaultControllerV1(val vaultService: VaultService) {
     }
 
     @GetMapping("/{vault}/**")
-    fun getVaultFile(@PathVariable vaultCollection: String, @PathVariable vault: String, request: HttpServletRequest): Response {
+    fun getVaultFile(@PathVariable vaultCollection: String, @PathVariable vault: String, request: HttpServletRequest): ResponseEntity<Response> {
 
         val fileName = getVaultFileNameFromRequestUri(vaultCollection, vault, request)
         val vaultFile = vaultService.findFileInVault(vaultCollection, vault, fileName)
 
-        return Response(items = listOf(VaultFileResource.fromDecodedBytes(vaultFile)))
+        return createVaultFileResponse(vaultFile)
     }
 
     @PutMapping("/{vault}/**")
     fun updateVaultFile(@PathVariable vaultCollection: String,
                         @PathVariable("vault") vaultName: String,
-                        request: HttpServletRequest,
-                        @RequestBody payload: VaultFileResource): Response {
+                        @RequestBody payload: VaultFileResource,
+                        @RequestHeader(value = HttpHeaders.IF_MATCH, required = false) ifMatchHeader: String?,
+                        request: HttpServletRequest): ResponseEntity<Response> {
 
         val fileContents: ByteArray = payload.decodedContents
         val fileName = getVaultFileNameFromRequestUri(vaultCollection, vaultName, request)
 
-        val resources = listOf(vaultService.createOrUpdateFileInVault(vaultCollection, vaultName, fileName, fileContents))
-                .map(::fromEncryptedFileVault)
-        return Response(items = listOf(resources))
+        vaultService.createOrUpdateFileInVault(vaultCollection, vaultName, fileName, fileContents, clearQuotes(ifMatchHeader))
+        return createVaultFileResponse(fileContents)
     }
 
     @DeleteMapping("/{vault}/**")
@@ -131,6 +139,13 @@ class VaultControllerV1(val vaultService: VaultService) {
         val path = "/v1/vault/$vaultCollection/$vault/**"
         val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
         return fileName
+    }
+
+    private fun createVaultFileResponse(vaultFile: ByteArray): ResponseEntity<Response> {
+        val response = Response(items = listOf(VaultFileResource.fromDecodedBytes(vaultFile)))
+        val eTagHex: String = DigestUtils.md5DigestAsHex(vaultFile)
+        val headers = HttpHeaders().apply { eTag = "\"${eTagHex}\"" }
+        return ResponseEntity(response, headers, HttpStatus.OK)
     }
 }
 

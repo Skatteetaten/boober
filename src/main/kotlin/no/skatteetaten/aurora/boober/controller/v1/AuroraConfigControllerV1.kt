@@ -2,12 +2,16 @@ package no.skatteetaten.aurora.boober.controller.v1
 
 import com.fasterxml.jackson.annotation.JsonRawValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.skatteetaten.aurora.boober.controller.NoSuchResourceException
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigResource.Companion.fromAuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.utils.logger
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.bind.annotation.*
 import javax.servlet.http.HttpServletRequest
@@ -41,7 +45,7 @@ data class ContentPayload(
 
 @RestController
 @RequestMapping("/v1/auroraconfig/{name}")
-class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService){
+class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
 
     val logger by logger()
 
@@ -64,30 +68,35 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService){
     }
 
     @GetMapping("/**")
-    fun getAuroraConfigFile(@PathVariable name: String, request: HttpServletRequest): Response {
+    fun getAuroraConfigFile(@PathVariable name: String, request: HttpServletRequest): ResponseEntity<Response> {
 
         val fileName = extractFileName(name, request)
         val auroraConfigFile = auroraConfigService.findAuroraConfigFile(name, fileName)
+                ?: throw NoSuchResourceException("No such file $fileName in AuroraConfig $name")
         return createAuroraConfigFileResponse(auroraConfigFile)
     }
 
     @PutMapping("/**")
-    fun updateAuroraConfigFile(@PathVariable name: String, request: HttpServletRequest,
-                               @RequestBody @Valid payload: ContentPayload): Response {
+    fun updateAuroraConfigFile(@PathVariable name: String,
+                               @RequestBody @Valid payload: ContentPayload,
+                               @RequestHeader(value = HttpHeaders.IF_MATCH, required = false) ifMatchHeader: String?,
+                               request: HttpServletRequest): ResponseEntity<Response> {
 
         val fileName = extractFileName(name, request)
-        val auroraConfig = auroraConfigService.updateAuroraConfigFile(name, fileName, payload.content)
-        return createAuroraConfigResponse(auroraConfig)
+        val auroraConfig: AuroraConfig = auroraConfigService.updateAuroraConfigFile(name, fileName, payload.content, clearQuotes(ifMatchHeader))
+        val auroraConfigFile = auroraConfig.findFile(fileName)!!
+        return createAuroraConfigFileResponse(auroraConfigFile)
     }
 
     @PatchMapping("/**")
     fun patchAuroraConfigFile(@PathVariable name: String, request: HttpServletRequest,
-                              @RequestBody @Valid payload: ContentPayload): Response {
+                              @RequestBody @Valid payload: ContentPayload): ResponseEntity<Response> {
 
         val fileName = extractFileName(name, request)
 
         val auroraConfig = auroraConfigService.patchAuroraConfigFile(name, fileName, payload.content)
-        return createAuroraConfigResponse(auroraConfig)
+        val auroraConfigFile = auroraConfig.findFile(fileName)!!
+        return createAuroraConfigFileResponse(auroraConfigFile)
     }
 
     private fun extractFileName(affiliation: String, request: HttpServletRequest): String {
@@ -95,11 +104,13 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService){
         return AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
     }
 
-    private fun createAuroraConfigFileResponse(auroraConfigFile: AuroraConfigFile?): Response {
+    private fun createAuroraConfigFileResponse(auroraConfigFile: AuroraConfigFile): ResponseEntity<Response> {
         val configFiles = auroraConfigFile
-                ?.let { listOf(AuroraConfigFileResource(it.name, it.contents.toString())) } ?: emptyList()
+                .let { listOf(AuroraConfigFileResource(it.name, it.contents.toString())) }
 
-        return Response(items = configFiles)
+        val response = Response(items = configFiles)
+        val headers = HttpHeaders().apply { eTag = "\"${auroraConfigFile.version}\"" }
+        return ResponseEntity(response, headers, HttpStatus.OK)
     }
 
     private fun createAuroraConfigResponse(auroraConfig: AuroraConfig): Response {
