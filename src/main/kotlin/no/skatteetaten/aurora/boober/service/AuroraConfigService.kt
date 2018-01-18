@@ -89,6 +89,7 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
         return auroraConfig
     }
 
+    @JvmOverloads
     fun updateAuroraConfigFile(name: String, fileName: String, contents: String, previousVersion: String? = null): AuroraConfig {
 
         val jsonContents = jacksonObjectMapper().readValue(contents, JsonNode::class.java)
@@ -102,7 +103,6 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
 
         val auroraConfig = findAuroraConfig(name)
         val (newFile, updatedAuroraConfig) = auroraConfig.patchFile(filename, jsonPatchOp, previousVersion)
-
 
         return saveFile(newFile, updatedAuroraConfig)
     }
@@ -119,7 +119,7 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
         watch.stop()
         watch.start("validate")
         logger.debug("Affected AID for file={} aid={}", newFile, affectedAid)
-        //This will validate both AuororaConfig and External validation for the affected AID
+        //This will validate both AuroraConfig and External validation for the affected AID
         createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig), affectedAid)
         watch.stop()
 
@@ -142,6 +142,17 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
         return auroraConfig
     }
 
+    fun createValidatedAuroraDeploymentSpecs(auroraConfigName: String, applicationIds: List<ApplicationId>, overrideFiles: List<AuroraConfigFile> = listOf()): List<AuroraDeploymentSpec> {
+
+        val auroraConfig = findAuroraConfig(auroraConfigName)
+        return createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig, overrideFiles), applicationIds)
+    }
+
+    fun validateAuroraConfig(auroraConfig: AuroraConfig, overrideFiles: List<AuroraConfigFile> = listOf()) {
+        val applicationIds = auroraConfig.getApplicationIds()
+        createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig, overrideFiles), applicationIds)
+    }
+
     private fun getAuroraConfigFolder(name: String) = File(gitService.checkoutPath, name)
 
     private fun updateLocalFilesFromGit(name: String) {
@@ -157,17 +168,6 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
         } catch (e: Exception) {
             throw AuroraConfigServiceException("An unexpected error occurred when checking out AuroraConfig with name $name", e)
         }
-    }
-
-    fun createValidatedAuroraDeploymentSpecs(auroraConfigName: String, applicationIds: List<ApplicationId>, overrideFiles: List<AuroraConfigFile> = listOf()): List<AuroraDeploymentSpec> {
-
-        val auroraConfig = findAuroraConfig(auroraConfigName)
-        return createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig, overrideFiles), applicationIds)
-    }
-
-    fun validateAuroraConfig(auroraConfig: AuroraConfig, overrideFiles: List<AuroraConfigFile> = listOf()) {
-        val applicationIds = auroraConfig.getApplicationIds()
-        createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig, overrideFiles), applicationIds)
     }
 
     private fun createValidatedAuroraDeploymentSpecs(auroraConfigWithOverrides: AuroraConfigWithOverrides, applicationIds: List<ApplicationId>): List<AuroraDeploymentSpec> {
@@ -204,5 +204,4 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
 
         return spec
     }
-
 }

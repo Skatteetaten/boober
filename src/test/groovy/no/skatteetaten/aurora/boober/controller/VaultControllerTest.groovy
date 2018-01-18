@@ -82,7 +82,7 @@ class VaultControllerTest extends Specification {
 
     given:
       def payload = [contents: fileContents.bytes.encodeBase64().toString()]
-      1 * vaultService.createOrUpdateFileInVault(vaultCollectionName, vaultName, secretName, fileContents.bytes) >>
+      1 * vaultService.createOrUpdateFileInVault(vaultCollectionName, vaultName, secretName, fileContents.bytes, null) >>
           EncryptedFileVault.createFromFolder(new File("."))
 
     when:
