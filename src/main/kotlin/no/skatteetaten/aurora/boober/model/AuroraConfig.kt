@@ -67,7 +67,7 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
 
         val files = auroraConfigFiles.toMutableList()
         val indexOfFileToUpdate = files.indexOfFirst { it.name == name }
-        if (indexOfFileToUpdate == -1) throw IllegalArgumentException("No such file $name in AuroraConfig $affiliation")
+        if (indexOfFileToUpdate == -1 && previousVersion != null) throw IllegalArgumentException("No such file $name in AuroraConfig $affiliation")
         val newFile = AuroraConfigFile(name, contents)
 
         if (indexOfFileToUpdate == -1) {

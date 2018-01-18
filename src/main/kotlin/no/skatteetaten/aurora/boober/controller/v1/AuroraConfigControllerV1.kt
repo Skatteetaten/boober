@@ -88,6 +88,17 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
         return createAuroraConfigFileResponse(auroraConfigFile)
     }
 
+    @PostMapping("/**")
+    fun saveAuroraConfigFile(@PathVariable name: String,
+                               @RequestBody @Valid payload: ContentPayload,
+                               request: HttpServletRequest): ResponseEntity<Response> {
+
+        val fileName = extractFileName(name, request)
+        val auroraConfig: AuroraConfig = auroraConfigService.updateAuroraConfigFile(name, fileName, payload.content, null)
+        val auroraConfigFile = auroraConfig.findFile(fileName)!!
+        return createAuroraConfigFileResponse(auroraConfigFile)
+    }
+
     @PatchMapping("/**")
     fun patchAuroraConfigFile(@PathVariable name: String, request: HttpServletRequest,
                               @RequestBody @Valid payload: ContentPayload): ResponseEntity<Response> {
