@@ -7,7 +7,7 @@
     "source": "utv/webleveranse.json",
     "value": "development"
   },
-    "affiliation": {
+  "affiliation": {
     "source": "about.json",
     "value": "aos"
   },
@@ -29,6 +29,22 @@
     "source": "webleveranse.json",
     "value": "webleveranse"
   },
+  "management": {
+    "path": {
+      "source": "webleveranse.json",
+      "value": ""
+    },
+    "port": {
+      "source": "webleveranse.json",
+      "value": "8081"
+    }
+  },
+  "deployStrategy": {
+    "type": {
+      "source": "webleveranse.json",
+      "value": "rolling"
+    }
+  },
   "artifactId": {
     "source": "webleveranse.json",
     "value": "openshift-referanse-react"
@@ -45,25 +61,9 @@
     "source": "webleveranse.json",
     "value": "web"
   },
-  "deployStrategy": {
-    "type": {
-      "source": "webleveranse.json",
-      "value": "rolling"
-    }
-  },
   "replicas": {
     "source": "webleveranse.json",
     "value": 1
-  },
-  "management": {
-    "path": {
-      "source": "webleveranse.json",
-      "value": ""
-    },
-    "port": {
-      "source": "webleveranse.json",
-      "value": "8081"
-    }
   },
   "route": {
     "source": "webleveranse.json",

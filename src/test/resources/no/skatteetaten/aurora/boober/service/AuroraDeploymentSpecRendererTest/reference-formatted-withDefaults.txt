@@ -10,14 +10,22 @@
   name:                "reference"              // fileName
   certificate:         false                    // default
   database:            false                    // default
-  artifactId:          "reference"              // fileName
-  groupId:             "no.skatteetaten.aurora" // reference.json
-  version:             "1"                      // reference.json
-  applicationPlatform: "java"                   // default
+  prometheus: {
+    path:              "/prometheus"            // default
+    port:              8081                     // default
+  }
+  management: {
+    path:              "actuator"               // default
+    port:              "8081"                   // default
+  }
   deployStrategy: {
     type:              "rolling"                // default
     timeout:           180                      // default
   }
+  artifactId:          "reference"              // fileName
+  groupId:             "no.skatteetaten.aurora" // reference.json
+  version:             "1"                      // reference.json
+  applicationPlatform: "java"                   // default
   resources: {
     cpu: {
       min:             "100m"                   // default
@@ -29,14 +37,6 @@
     }
   }
   replicas:            1                        // reference.json
-  prometheus: {
-    path:              "/prometheus"            // default
-    port:              8081                     // default
-  }
-  management: {
-    path:              "actuator"               // default
-    port:              "8081"                   // default
-  }
   readiness: {
     port:              8080                     // default
     delay:             10                       // default

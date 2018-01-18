@@ -7,6 +7,7 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecConfigFieldValidator.Companion.namePattern
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.utils.notBlank
+import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.pattern
 
 class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
@@ -29,7 +30,15 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
             AuroraConfigFieldHandler("splunkIndex"),
             AuroraConfigFieldHandler("certificate/commonName"),
             AuroraConfigFieldHandler("certificate"),
-            AuroraConfigFieldHandler("database")
+            AuroraConfigFieldHandler("database"),
+            AuroraConfigFieldHandler("prometheus", defaultValue = true),
+            AuroraConfigFieldHandler("prometheus/path", defaultValue = "/prometheus"),
+            AuroraConfigFieldHandler("prometheus/port", defaultValue = 8081),
+            AuroraConfigFieldHandler("management", defaultValue = true),
+            AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
+            AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
+            AuroraConfigFieldHandler("deployStrategy/type", defaultValue = "rolling", validator = { it.oneOf(listOf("recreate", "rolling")) }),
+            AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = 180)
     )
 
     fun createAuroraDeploymentSpec(auroraConfigFields: AuroraConfigFields,
