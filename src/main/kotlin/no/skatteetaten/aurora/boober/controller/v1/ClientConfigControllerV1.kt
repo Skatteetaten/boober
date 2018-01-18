@@ -19,7 +19,8 @@ class ClientConfigControllerV1(
         return Response(items = listOf(mapOf(
                 Pair("gitUrlPattern", gitUrlPattern),
                 Pair("openshiftCluster", openshiftCluster),
-                Pair("openshiftUrl", openshiftUrl)
+                Pair("openshiftUrl", openshiftUrl),
+                Pair("apiVersion", "2")
         )))
     }
 }

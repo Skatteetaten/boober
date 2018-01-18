@@ -29,7 +29,7 @@ class WebSecurityConfig(
                 .addFilter(requestHeaderAuthenticationFilter())
                 .authorizeRequests()
                 .requestMatchers(forPort(managementPort)).permitAll()
-                .antMatchers("/clientconfig/").permitAll()
+                .antMatchers("/v1/clientconfig/").permitAll()
                 .antMatchers("/v1/auroraconfignames").permitAll()
                 .anyRequest().authenticated()
     }
