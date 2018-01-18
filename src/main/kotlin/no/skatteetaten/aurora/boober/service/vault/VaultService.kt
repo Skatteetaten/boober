@@ -52,16 +52,18 @@ class VaultService(
             (findVaultByNameIfAllowed(vaultCollection, vaultName)
                     ?: throw IllegalArgumentException("Vault not found name=$vaultName"))
 
+    @JvmOverloads
     fun createOrUpdateFileInVault(vaultCollectionName: String,
                                   vaultName: String,
                                   fileName: String,
-                                  fileContents: ByteArray
+                                  fileContents: ByteArray,
+                                  previousSignature: String? = null
     ): EncryptedFileVault {
 
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
             val vault = findVaultByNameIfAllowed(vaultCollection, vaultName) ?: vaultCollection.createVault(vaultName)
 
-            vault.updateFile(fileName, fileContents)
+            vault.updateFile(fileName, fileContents, previousSignature)
             gitService.commitAndPushChanges(repo)
             vault
         })

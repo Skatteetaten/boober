@@ -1,0 +1,4 @@
+GET {{apiUrl}}/v1/vault/paas/secret/foobar.prop
+Authorization:Bearer {{token}}
+
+###

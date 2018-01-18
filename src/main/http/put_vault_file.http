@@ -1,0 +1,9 @@
+PUT {{apiUrl}}/v1/vault/paas/secret/foobar.prop
+Authorization: Bearer {{token}}
+Content-Type: application/json
+If-Match: "dd4843dbd7f8672280db56c527f352d3"
+
+{
+  "contents": "RGV0dGUgZXIgZW4gdGVrc3RmaWwgc29tIGVyIGJhc2U2NCBlbmNvZGVk"
+}
+###

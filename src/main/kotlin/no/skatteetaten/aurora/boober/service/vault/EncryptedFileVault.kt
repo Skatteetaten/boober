@@ -3,9 +3,10 @@ package no.skatteetaten.aurora.boober.service.vault
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import no.skatteetaten.aurora.boober.model.PreconditionFailureException
 import org.apache.commons.io.FileUtils
+import org.springframework.util.DigestUtils
 import java.io.File
-import java.nio.charset.Charset
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -105,7 +106,10 @@ class EncryptedFileVault private constructor(
         return secrets.getOrElse(fileName, { throw IllegalArgumentException("No such file $fileName in vault $name") })
     }
 
-    fun updateFile(fileName: String, fileContents: ByteArray) {
+    @JvmOverloads
+    fun updateFile(fileName: String, fileContents: ByteArray, previousSignature: String? = null) {
+
+        validateSignature(fileName, previousSignature)
 
         val file = File(vaultFolder, fileName)
         val encryptedContent = encryptor(fileContents)
@@ -115,4 +119,12 @@ class EncryptedFileVault private constructor(
     fun deleteFile(fileName: String) = FileUtils.deleteQuietly(File(vaultFolder, fileName))
 
     fun clear() = files.forEach { deleteFile(it.name) }
+
+    private fun validateSignature(fileName: String, previousSignature: String?) {
+        if (previousSignature != null) {
+            val currentSignature = DigestUtils.md5DigestAsHex(getFile(fileName))
+            if (currentSignature != previousSignature)
+                throw PreconditionFailureException("Unexpected signature provided for current file version, $currentSignature!=$previousSignature")
+        }
+    }
 }
