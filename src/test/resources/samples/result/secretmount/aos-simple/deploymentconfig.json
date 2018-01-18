@@ -67,6 +67,12 @@
             }
           },
           {
+            "name": "pvc",
+            "persistentVolumeClaim": {
+              "claimName": "pvc"
+            }
+          },
+          {
             "name": "aos-simple-cert",
             "secret": {
               "secretName": "aos-simple-cert"
@@ -162,6 +168,10 @@
                 "value": "/u01/foo"
               },
               {
+                "name": "VOLUME_PVC",
+                "value": "/foo"
+              },
+              {
                 "name": "VOLUME_AOS_SIMPLE_CERT",
                 "value": "/u01/secrets/app/aos-simple-cert"
               }
@@ -180,6 +190,10 @@
               {
                 "name": "secret-mount",
                 "mountPath": "/u01/foo"
+              },
+              {
+                "name": "pvc",
+                "mountPath": "/foo"
               },
               {
                 "name": "aos-simple-cert",
