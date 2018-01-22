@@ -41,7 +41,7 @@ class VaultControllerTest extends Specification {
   def fileContents = 'SECRET_PASS=asdlfkjaølfjaøf'
 
   void setup() {
-    def controller = new VaultControllerV1(vaultService)
+    def controller = new VaultControllerV1(vaultService, false)
     mockMvc = MockMvcBuilders.
         standaloneSetup(controller)
         .setControllerAdvice(new ErrorHandler())
@@ -65,9 +65,6 @@ class VaultControllerTest extends Specification {
       result.andExpect(status().isOk())
   }
 
-
-  @Ignore
-  //TODO: BAS se på test
   def "Fails when provided secret file payload is not Base64 encoded"() {
 
     given:
