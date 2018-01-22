@@ -4,9 +4,12 @@ import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 
 import com.fasterxml.jackson.databind.JsonNode
 
+import groovy.json.JsonSlurper
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultResults
 
-class OpenShiftObjectGeneratorConfigMapTest extends AbstractOpenShiftObjectGeneratorTest {
+class OpenShiftObjectGeneratorMountTest extends AbstractOpenShiftObjectGeneratorTest {
 
   OpenShiftObjectGenerator objectGenerator = createObjectGenerator()
 
@@ -76,6 +79,38 @@ class OpenShiftObjectGeneratorConfigMapTest extends AbstractOpenShiftObjectGener
       env["ARRAY"] == '''[4.2,\\"STRING\\",true]'''
       env["JSON_STRING"] == '''{\\"key\\": \\"value\\"}'''
       env["URL"] == '''https:\\/\\/int-at.skead.no:13110\\/felles\\/sikkerhet\\/stsSikkerhet\\/v1\\/validerSaml'''
+  }
+
+  def "Creates secret from secretVault"() {
+
+    given:
+
+      def auroraConfigJson = [
+          "about.json"         : DEFAULT_ABOUT,
+          "utv/about.json"     : DEFAULT_UTV_ABOUT,
+          "aos-simple.json"    : AOS_SIMPLE_JSON,
+          "utv/aos-simple.json": '''{
+            "certificate": false,
+            "secretVault": "test"
+}'''
+      ]
+
+      def vaultFileName = "latest.properties"
+      def vaultFileContents = "FOO=BAR"
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid("utv", "aos-simple"))
+      def provisioningResult = new ProvisioningResult(null,
+          new VaultResults([test: [(vaultFileName): vaultFileContents.bytes]]))
+
+    when:
+      List<JsonNode> jsonMounts = objectGenerator.generateMounts("deploy-id", deploymentSpec, provisioningResult)
+
+    then:
+      jsonMounts.size() == 1
+      def mount = new JsonSlurper().parseText(jsonMounts.first().toString())
+      mount.kind == "Secret"
+
+    and: "data for file should be base64 encoded file contents"
+      new String((mount.data[vaultFileName] as String).decodeBase64()) == vaultFileContents
   }
 
   void assertFileHasLinesWithProperties(String latestProperties, List<String> propertyNames) {

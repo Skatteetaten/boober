@@ -176,7 +176,7 @@ class OpenShiftObjectGenerator(
     }
 
     object Base64 {
-        fun encode(str: String): String = org.apache.commons.codec.binary.Base64.encodeBase64String(str.toByteArray())
+        fun encode(bytes: ByteArray): String = org.apache.commons.codec.binary.Base64.encodeBase64String(bytes)
     }
 
     private fun generateMounts(mounts: List<Mount>?, labels: Map<String, String>): List<JsonNode>? {
