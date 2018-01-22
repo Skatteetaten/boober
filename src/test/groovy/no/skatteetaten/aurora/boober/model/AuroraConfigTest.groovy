@@ -3,6 +3,8 @@ package no.skatteetaten.aurora.boober.model
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
+import kotlin.Pair
+
 class AuroraConfigTest extends AbstractAuroraConfigTest {
 
   def mapper = new ObjectMapper()
@@ -33,6 +35,28 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
     then:
       def version = updatedAuroraConfig.getAuroraConfigFiles().stream()
           .filter({ it.configName == "booberdev/console.json" })
+          .map({ it.contents.get("version").asText() })
+          .findFirst()
+
+      version.isPresent()
+      "4" == version.get()
+  }
+
+  def "Should create file when updating nonexisting file"() {
+    given:
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
+      def updates = mapper.convertValue(["version": "4"], JsonNode.class)
+      def fileName = "boobertest/console.json"
+
+    expect:
+      !auroraConfig.findFile(fileName)
+
+    when:
+      AuroraConfig updatedAuroraConfig = auroraConfig.updateFile(fileName, updates).second
+
+    then:
+      def version = updatedAuroraConfig.getAuroraConfigFiles().stream()
+          .filter({ it.configName == fileName })
           .map({ it.contents.get("version").asText() })
           .findFirst()
 
