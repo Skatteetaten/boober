@@ -12,7 +12,7 @@ import java.util.*
 @Service
 class EncryptionService(
         @Value("\${boober.encrypt.key}") val key: String,
-        keyFactory: KeyFactory,
+        val keyFactory: KeyFactory,
         val metrics: AuroraMetrics) {
 
     // Version 1 of the file format always contained base64 content (after the file was decrypted).

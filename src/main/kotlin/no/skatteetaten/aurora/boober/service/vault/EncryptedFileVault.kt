@@ -98,7 +98,7 @@ class EncryptedFileVault private constructor(
                     file.name to contents
                 }.toMap()
 
-    private val files: List<File>
+    val files: List<File>
         get() = vaultFolder.listFiles()?.filter { it.isFile } ?: emptyList()
 
     fun getFile(fileName: String): ByteArray {
