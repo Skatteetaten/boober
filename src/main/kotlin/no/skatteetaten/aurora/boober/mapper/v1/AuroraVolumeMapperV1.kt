@@ -15,13 +15,19 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>) {
     val mountHandlers = createMountHandlers()
     val configHandlers = applicationFiles.findConfigFieldHandlers()
 
-    val handlers = configHandlers + mountHandlers + listOf(AuroraConfigFieldHandler("secretVault"))
+    val handlers = configHandlers + mountHandlers + listOf(
+            AuroraConfigFieldHandler("secretVault"),
+            AuroraConfigFieldHandler("secretVaultKeys")
+    )
 
 
     fun createAuroraVolume(auroraConfigFields: AuroraConfigFields): AuroraVolume {
 
         return AuroraVolume(
                 secretVaultName = auroraConfigFields.extractOrNull("secretVault"),
+                secretVaultKeys = auroraConfigFields.extractOrNull<String?>("secretVaultKeys")?.let {
+                    it.split(",").map { key -> key.trim() }
+                },
                 config = getConfigMap(auroraConfigFields),
                 mounts = getMounts(auroraConfigFields))
     }

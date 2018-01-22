@@ -1,9 +1,11 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
 import no.skatteetaten.aurora.boober.service.vault.VaultService
+import no.skatteetaten.aurora.boober.utils.PropertiesException
+import no.skatteetaten.aurora.boober.utils.filterProperties
 import org.springframework.stereotype.Service
 
-data class VaultRequest(val collectionName: String, val name: String)
+data class VaultRequest(val collectionName: String, val name: String, val keys: List<String> )
 
 typealias VaultData = Map<String, ByteArray>
 typealias VaultIndex = Map<String, VaultData>
@@ -20,10 +22,36 @@ class VaultProvider(val vaultService: VaultService) {
 
     fun findVaultData(vaultRequests: List<VaultRequest>): VaultResults? {
 
-        val vaultIndex: VaultIndex = vaultRequests.associateBy(
-                { it.name },
-                { vaultService.findVault(it.collectionName, it.name).secrets }
+        val filteredVaultIndex = vaultRequests.associateBy(
+            { it.name },
+            {
+                val vaultContents = vaultService.findVault(it.collectionName, it.name).secrets
+                try {
+                    filterVaultData(vaultContents, it.keys)
+                } catch (pe : PropertiesException) {
+                    val propName = it.name
+                    throw RuntimeException("Error when reading properties from $propName.", pe)
+                }
+            }
         )
-        return VaultResults(vaultIndex)
+
+        return VaultResults(filteredVaultIndex)
     }
+
+    private fun filterVaultData(vaultData : VaultData, secretVaultKeys : List<String>) : VaultData {
+
+        //if there are no secretVaultKeys specified, use all the keys
+        if (secretVaultKeys.isEmpty()) return vaultData
+
+        return vaultData
+                .map { entry ->
+                    //if the vault contain a .properties-file, we filter based on secretVaultKeys
+                    if (entry.key.contains(".properties")){
+                        entry.key to filterProperties(entry.value, secretVaultKeys)
+                    } else {
+                        entry.key to entry.value
+                    }
+                }.toMap()
+    }
+
 }
