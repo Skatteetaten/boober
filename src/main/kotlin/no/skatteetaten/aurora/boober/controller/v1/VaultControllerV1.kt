@@ -2,11 +2,14 @@ package no.skatteetaten.aurora.boober.controller.v1
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import no.skatteetaten.aurora.boober.controller.internal.Response
+import no.skatteetaten.aurora.boober.controller.v1.VaultOperation.reencrypt
 import no.skatteetaten.aurora.boober.controller.v1.VaultWithAccessResource.Companion.fromEncryptedFileVault
 import no.skatteetaten.aurora.boober.controller.v1.VaultWithAccessResource.Companion.fromVaultWithAccess
+import no.skatteetaten.aurora.boober.service.UnauthorizedAccessException
 import no.skatteetaten.aurora.boober.service.vault.EncryptedFileVault
 import no.skatteetaten.aurora.boober.service.vault.VaultService
 import no.skatteetaten.aurora.boober.service.vault.VaultWithAccess
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -69,9 +72,27 @@ data class VaultFileResource(val contents: String) {
     }
 }
 
+enum class VaultOperation {
+    reencrypt
+}
+
+data class VaultOperationPayload(val operationName: VaultOperation, val parameters: Map<String, Any>)
+
 @RestController
 @RequestMapping("/v1/vault/{vaultCollection}")
-class VaultControllerV1(val vaultService: VaultService) {
+class VaultControllerV1(val vaultService: VaultService,
+                        private @Value("\${vault.operations.enabled:false}") val operationsEnabled: Boolean) {
+
+    @PostMapping("/")
+    fun vaultOperation(@PathVariable vaultCollection: String, @RequestBody @Valid operationPayload: VaultOperationPayload) {
+
+        if (!operationsEnabled) {
+            throw UnauthorizedAccessException("Vault operations has been disabled")
+        }
+        when (operationPayload.operationName) {
+            reencrypt -> vaultService.reencryptVaultCollection(vaultCollection, operationPayload.parameters["encryptionKey"] as String)
+        }
+    }
 
     @GetMapping()
     fun listVaults(@PathVariable vaultCollection: String): Response {
@@ -85,7 +106,8 @@ class VaultControllerV1(val vaultService: VaultService) {
     fun save(@PathVariable vaultCollection: String,
              @RequestBody @Valid vaultPayload: AuroraSecretVaultPayload): Response {
 
-        val vault = vaultService.import(vaultCollection, vaultPayload.name, vaultPayload.permissions, vaultPayload.secretsDecoded ?: emptyMap())
+        val vault = vaultService.import(vaultCollection, vaultPayload.name, vaultPayload.permissions, vaultPayload.secretsDecoded
+                ?: emptyMap())
         return Response(items = listOf(vault).map(::fromEncryptedFileVault))
     }
 

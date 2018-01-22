@@ -81,6 +81,8 @@ boober:
         password: "boober-dev"
 
 vault:
+    operations:
+        enabled: true
     git:
         project: "av-dev"
         username: "boober-dev"

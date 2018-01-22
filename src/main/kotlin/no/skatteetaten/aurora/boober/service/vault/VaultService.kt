@@ -118,6 +118,16 @@ class VaultService(
         })
     }
 
+    fun reencryptVaultCollection(vaultCollectionName: String, newKey: String) {
+
+        val vaults = findAllVaultsInVaultCollection(vaultCollectionName)
+        vaults.forEach { vault: EncryptedFileVault ->
+            val newEncryptionService = EncryptionService(newKey, encryptionService.keyFactory, encryptionService.metrics)
+            val vaultCopy = EncryptedFileVault.createFromFolder(vault.vaultFolder, newEncryptionService::encrypt, encryptionService::decrypt)
+            vaultCopy.secrets.forEach { t, u -> vaultCopy.updateFile(t, u) }
+        }
+    }
+
     private fun findVaultByNameIfAllowed(vaultCollection: VaultCollection, vaultName: String): EncryptedFileVault? {
 
         val vault = vaultCollection.findVaultByName(vaultName)
