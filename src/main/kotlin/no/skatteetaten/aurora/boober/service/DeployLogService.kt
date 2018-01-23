@@ -15,12 +15,14 @@ class DeployLogService(@TargetDomain(AURORA_CONFIG) val gitService: GitService, 
     fun markRelease(auroraConfigName: String, deployResult: List<AuroraDeployResult>) {
 
         val repo = gitService.checkoutRepository(auroraConfigName)
-        val refs = deployResult.map {
-            val result = filterSensitiveInformation(it)
-            val prefix = if (it.success) DEPLOY_PREFIX else FAILED_PREFIX
+        val refs = deployResult
+                .filter { !it.ignored }
+                .map {
+                    val result = filterSensitiveInformation(it)
+                    val prefix = if (it.success) DEPLOY_PREFIX else FAILED_PREFIX
 
-            gitService.createAnnotatedTag(repo, "$prefix/${it.tag}", mapper.writeValueAsString(result))
-        }
+                    gitService.createAnnotatedTag(repo, "$prefix/${it.tag}", mapper.writeValueAsString(result))
+                }
         gitService.pushTags(repo, refs)
     }
 

@@ -35,8 +35,8 @@ class DeployService(
         val deployLogService: DeployLogService,
         @Value("\${openshift.cluster}") val cluster: String,
         @Value("\${boober.docker.registry}") val dockerRegistry: String,
-        @Value("\${boober.threadpool.namespace:2}") val namespacePoolSize: Int,
-        @Value("\${boober.threadpool.app:2}") val appPoolSize: Int) {
+        @Value("\${boober.threadpool.namespace:4}") val namespacePoolSize: Int,
+        @Value("\${boober.threadpool.app:4}") val appPoolSize: Int) {
 
     val logger: Logger = LoggerFactory.getLogger(DeployService::class.java)
 
@@ -59,72 +59,9 @@ class DeployService(
         return deployResults
     }
 
-    fun deployFromSpec(deploymentSpec: AuroraDeploymentSpec, mergeWithExistingOpenShiftObjects: Boolean = true, shouldDeploy: Boolean = true): AuroraDeployResult {
-
-        val deployId = UUID.randomUUID().toString().substring(0, 7)
-        if (deploymentSpec.cluster != cluster) {
-            return AuroraDeployResult(deploymentSpec, deployId, listOf(), false, "Not valid in this cluster.")
-        }
-
-        logger.debug("Resource provisioning")
-        val provisioningResult = try {
-            resourceProvisioner.provisionResources(deploymentSpec)
-        } catch (e: Exception) {
-            return AuroraDeployResult(deploymentSpec, deployId, success = false, reason = e.message)
-        }
-
-        logger.debug("Apply objects")
-        val openShiftResponses: List<OpenShiftResponse> = applyOpenShiftApplicationObjects(
-                deployId, deploymentSpec, provisioningResult, mergeWithExistingOpenShiftObjects)
-
-        val success = openShiftResponses.all { it.success }
-        val result = AuroraDeployResult(deploymentSpec, deployId, openShiftResponses, success)
-        if (!shouldDeploy) {
-            return result
-        }
-
-        if (!success) {
-            return result
-        }
-
-        if (deploymentSpec.deploy?.flags?.pause == true) {
-            return result
-        }
-
-        val tagResult = deploymentSpec.deploy?.takeIf { it.releaseTo != null }?.let {
-            val dockerGroup = it.groupId.dockerGroupSafeName()
-            val cmd = TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
-            dockerService.tag(cmd)
-        }
-        val redeployResponse = redeployService.triggerRedeploy(deploymentSpec, openShiftResponses)
-
-        val redeploySuccess = if (redeployResponse.isEmpty()) true else redeployResponse.last().success
-        val totalSuccess = listOf(success, tagResult?.success, redeploySuccess).filterNotNull().all { it }
-
-        return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResponse), tagResponse = tagResult, success = totalSuccess)
-    }
-
-    private fun deployFromSpecs(deploymentSpecs: List<AuroraDeploymentSpec>, environments: Map<AuroraDeployEnvironment, AuroraDeployResult>, deploy: Boolean): List<AuroraDeployResult> {
-        return runBlocking(appDispatcher) {
-            deploymentSpecs.map {
-                async(appDispatcher) {
-
-                    val environmentDeployResult = environments[it.environment]
-                    when {
-                        environmentDeployResult == null -> AuroraDeployResult(auroraDeploymentSpec = it, success = false, reason = "Environment was not created.")
-                        !environmentDeployResult.success -> environmentDeployResult.copy(auroraDeploymentSpec = it)
-                        else -> {
-                            val result = deployFromSpec(it, environmentDeployResult.projectExist, deploy)
-                            result.copy(openShiftResponses = environmentDeployResult.openShiftResponses.addIfNotNull(result.openShiftResponses))
-                        }
-                    }
-                }
-            }.map { it.await() }
-        }
-    }
 
     private fun prepareDeployEnvironments(deploymentSpecs: List<AuroraDeploymentSpec>): Map<AuroraDeployEnvironment, AuroraDeployResult> {
-        val environments = runBlocking(nsDispatcher) {
+        return runBlocking(nsDispatcher) {
             deploymentSpecs
                     .filter { it.cluster == cluster }
                     .map { it.environment }
@@ -144,7 +81,7 @@ class DeployService(
 
                             val message = if (!success) {
                                 "One or more http calls to OpenShift failed"
-                            } else null
+                            } else "Namespace created successfully."
 
                             Pair(environment, AuroraDeployResult(
                                     openShiftResponses = environmentResponses,
@@ -152,10 +89,13 @@ class DeployService(
                                     reason = message,
                                     projectExist = projectExist))
                         }
-                    }.map { it.await() }
+                    }.map {
+                        it.await().also {
+                            logger.info("Environment done. namespace=${it.first.namespace} success=${it.second.success} reason=${it.second.reason} admins=${it.first.permissions.admin.groups} viewers=${it.first.permissions.view?.groups}")
+                        }
+                    }
                     .toMap()
         }
-        return environments
     }
 
     private fun prepareDeployEnvironment(environment: AuroraDeployEnvironment, projectExist: Boolean): List<OpenShiftResponse> {
@@ -176,6 +116,77 @@ class DeployService(
         }.map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         return listOf(createNamespaceResponse, updateNamespaceResponse) + updateRoleBindingsResponse
+    }
+
+    private fun deployFromSpecs(deploymentSpecs: List<AuroraDeploymentSpec>, environments: Map<AuroraDeployEnvironment, AuroraDeployResult>, deploy: Boolean): List<AuroraDeployResult> {
+        return runBlocking(appDispatcher) {
+            deploymentSpecs.map {
+                async(appDispatcher) {
+
+                    val env = environments[it.environment]
+                    when {
+                        env == null -> {
+                            if (it.cluster != cluster) {
+                                AuroraDeployResult(auroraDeploymentSpec = it, ignored = true, reason = "Not valid in this cluster.")
+                            } else {
+                                AuroraDeployResult(auroraDeploymentSpec = it, success = false, reason = "Environment was not created.")
+                            }
+                        }
+                        !env.success -> env.copy(auroraDeploymentSpec = it)
+                        else -> {
+                            val result = deployFromSpec(it, deploy, env.projectExist)
+                            result.copy(openShiftResponses = env.openShiftResponses.addIfNotNull(result.openShiftResponses))
+
+                        }
+                    }
+                }
+            }.map {
+                        it.await().also {
+                            logger.info("Deploy done deployId=${it.deployId} app=${it.auroraDeploymentSpec?.name} namespace=${it.auroraDeploymentSpec?.environment?.namespace} success=${it.success} ignored=${it.ignored} reason=${it.reason}")
+                        }
+                    }
+        }
+    }
+
+    fun deployFromSpec(deploymentSpec: AuroraDeploymentSpec, shouldDeploy: Boolean, namespaceCreated: Boolean): AuroraDeployResult {
+
+        val deployId = UUID.randomUUID().toString().substring(0, 7)
+        if (deploymentSpec.cluster != cluster) {
+            return AuroraDeployResult(auroraDeploymentSpec = deploymentSpec, ignored = true, reason = "Not valid in this cluster.")
+        }
+
+        logger.debug("Resource provisioning")
+        val provisioningResult = resourceProvisioner.provisionResources(deploymentSpec)
+
+        logger.debug("Apply objects")
+        val openShiftResponses: List<OpenShiftResponse> = applyOpenShiftApplicationObjects(
+                deployId, deploymentSpec, provisioningResult, namespaceCreated)
+
+        val success = openShiftResponses.all { it.success }
+        val result = AuroraDeployResult(deploymentSpec, deployId, openShiftResponses, success)
+        if (!shouldDeploy) {
+            return result.copy(reason = "Deploy explicitly turned of.")
+        }
+
+        if (!success) {
+            return result.copy(reason = "One or more resources did not complete correctly.")
+        }
+
+        if (deploymentSpec.deploy?.flags?.pause == true) {
+            return result.copy(reason = "Deployment is paused.")
+        }
+
+        val tagResult = deploymentSpec.deploy?.takeIf { it.releaseTo != null }?.let {
+            val dockerGroup = it.groupId.dockerGroupSafeName()
+            val cmd = TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
+            dockerService.tag(cmd)
+        }
+        val redeployResponse = redeployService.triggerRedeploy(deploymentSpec, openShiftResponses)
+
+        val redeploySuccess = if (redeployResponse.isEmpty()) true else redeployResponse.last().success
+        val totalSuccess = listOf(success, tagResult?.success, redeploySuccess).filterNotNull().all { it }
+
+        return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResponse), tagResponse = tagResult, success = totalSuccess, reason = "Deployment success.")
     }
 
     private fun applyOpenShiftApplicationObjects(deployId: String, deploymentSpec: AuroraDeploymentSpec,
@@ -199,10 +210,10 @@ class DeployService(
                             listOf(openShiftCommand)
                         }
                     }.map {
-                        async(appDispatcher) {
-                            openShiftClient.performOpenShiftCommand(namespace, it)
-                        }
-                    }.map { it.await() }
+                                async(appDispatcher) {
+                                    openShiftClient.performOpenShiftCommand(namespace, it)
+                                }
+                            }.map { it.await() }
                 }
 
         if (openShiftApplicationResponses.any { !it.success }) {
