@@ -61,6 +61,8 @@ class DeployService(
 
 
     private fun prepareDeployEnvironments(deploymentSpecs: List<AuroraDeploymentSpec>): Map<AuroraDeployEnvironment, AuroraDeployResult> {
+
+        val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
         return runBlocking(nsDispatcher) {
             deploymentSpecs
                     .filter { it.cluster == cluster }
@@ -69,7 +71,6 @@ class DeployService(
                     .map { environment: AuroraDeployEnvironment ->
                         async(nsDispatcher) {
 
-                            val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
                             if (!authenticatedUser.hasAnyRole(environment.permissions.admin.groups)) {
                                 Pair(environment, AuroraDeployResult(success = false, reason = "User=${authenticatedUser.fullName} does not have access to admin this environment from the groups=${environment.permissions.admin.groups}"))
                             }
@@ -91,7 +92,7 @@ class DeployService(
                         }
                     }.map {
                         it.await().also {
-                            logger.info("Environment done. namespace=${it.first.namespace} success=${it.second.success} reason=${it.second.reason} admins=${it.first.permissions.admin.groups} viewers=${it.first.permissions.view?.groups}")
+                            logger.info("Environment done. user=${authenticatedUser.fullName} namespace=${it.first.namespace} success=${it.second.success} reason=${it.second.reason} admins=${it.first.permissions.admin.groups} viewers=${it.first.permissions.view?.groups}")
                         }
                     }
                     .toMap()
@@ -119,6 +120,8 @@ class DeployService(
     }
 
     private fun deployFromSpecs(deploymentSpecs: List<AuroraDeploymentSpec>, environments: Map<AuroraDeployEnvironment, AuroraDeployResult>, deploy: Boolean): List<AuroraDeployResult> {
+
+        val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
         return runBlocking(appDispatcher) {
             deploymentSpecs.map {
                 async(appDispatcher) {
@@ -142,7 +145,7 @@ class DeployService(
                 }
             }.map {
                         it.await().also {
-                            logger.info("Deploy done deployId=${it.deployId} app=${it.auroraDeploymentSpec?.name} namespace=${it.auroraDeploymentSpec?.environment?.namespace} success=${it.success} ignored=${it.ignored} reason=${it.reason}")
+                            logger.info("Deploy done user=${authenticatedUser.fullName} deployId=${it.deployId} app=${it.auroraDeploymentSpec?.name} namespace=${it.auroraDeploymentSpec?.environment?.namespace} success=${it.success} ignored=${it.ignored} reason=${it.reason}")
                         }
                     }
         }
