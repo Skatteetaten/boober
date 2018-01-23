@@ -34,7 +34,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
 
     given:
       def provisioningResult = new ProvisioningResult(null,
-          new VaultResults([foo: ["latest.properties": "FOO=bar\nBAR=baz\n"]]))
+          new VaultResults([foo: ["latest.properties": "FOO=bar\nBAR=baz\n".bytes]]))
 
       def aid = new ApplicationId(env, name)
       def additionalFile = null
