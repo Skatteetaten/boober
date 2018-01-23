@@ -63,7 +63,6 @@ class AuroraDeploymentSpecConfigFieldValidator(val applicationId: ApplicationId,
         }
 
         (errors + unmappedErrors).takeIf { it.isNotEmpty() }?.let {
-            logger.debug("{}", it)
             val aid = applicationId
             throw AuroraConfigException(
                     "Config for application ${aid.application} in environment ${aid.environment} contains errors",
