@@ -21,7 +21,11 @@ data class AuroraDeployEnvironment(
         val permissions: Permissions
 ) {
     val namespace: String
-        get() = if (envName.isBlank()) affiliation else "$affiliation-$envName"
+        get() = when {
+            envName.isBlank() -> affiliation
+            envName.startsWith("-") -> "${affiliation}${envName}"
+            else -> "$affiliation-$envName"
+        }
 }
 
 
