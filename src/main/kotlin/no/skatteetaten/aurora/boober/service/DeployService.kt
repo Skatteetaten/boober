@@ -84,17 +84,14 @@ class DeployService(
                                 "One or more http calls to OpenShift failed"
                             } else "Namespace created successfully."
 
+                            logger.info("Environment done. user=${authenticatedUser.fullName} namespace=${environment.namespace} success=${success} reason=${message} admins=${environment.permissions.admin.groups} viewers=${environment.permissions.view?.groups}")
                             Pair(environment, AuroraDeployResult(
                                     openShiftResponses = environmentResponses,
                                     success = success,
                                     reason = message,
                                     projectExist = projectExist))
                         }
-                    }.map {
-                        it.await().also {
-                            logger.info("Environment done. user=${authenticatedUser.fullName} namespace=${it.first.namespace} success=${it.second.success} reason=${it.second.reason} admins=${it.first.permissions.admin.groups} viewers=${it.first.permissions.view?.groups}")
-                        }
-                    }
+                    }.map { it.await() }
                     .toMap()
         }
     }
@@ -122,7 +119,7 @@ class DeployService(
     private fun deployFromSpecs(deploymentSpecs: List<AuroraDeploymentSpec>, environments: Map<AuroraDeployEnvironment, AuroraDeployResult>, deploy: Boolean): List<AuroraDeployResult> {
 
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
-        return runBlocking(appDispatcher) {
+        return runBlocking {
             deploymentSpecs.map {
                 async(appDispatcher) {
 
@@ -141,13 +138,11 @@ class DeployService(
                             result.copy(openShiftResponses = env.openShiftResponses.addIfNotNull(result.openShiftResponses))
 
                         }
+                    }.also {
+                        logger.info("Deploy done user=${authenticatedUser.fullName} deployId=${it.deployId} app=${it.auroraDeploymentSpec?.name} namespace=${it.auroraDeploymentSpec?.environment?.namespace} success=${it.success} ignored=${it.ignored} reason=${it.reason}")
                     }
                 }
-            }.map {
-                        it.await().also {
-                            logger.info("Deploy done user=${authenticatedUser.fullName} deployId=${it.deployId} app=${it.auroraDeploymentSpec?.name} namespace=${it.auroraDeploymentSpec?.environment?.namespace} success=${it.success} ignored=${it.ignored} reason=${it.reason}")
-                        }
-                    }
+            }.map { it.await() }
         }
     }
 
@@ -165,6 +160,7 @@ class DeployService(
         val openShiftResponses: List<OpenShiftResponse> = applyOpenShiftApplicationObjects(
                 deployId, deploymentSpec, provisioningResult, namespaceCreated)
 
+        logger.debug("done applying objects")
         val success = openShiftResponses.all { it.success }
         val result = AuroraDeployResult(deploymentSpec, deployId, openShiftResponses, success)
         if (!shouldDeploy) {
@@ -201,23 +197,16 @@ class DeployService(
 
         val openShiftApplicationObjects: List<JsonNode> = openShiftObjectGenerator.generateApplicationObjects(deployId, deploymentSpec, provisioningResult)
         val openShiftApplicationResponses: List<OpenShiftResponse> =
-
-                runBlocking(appDispatcher) {
-                    openShiftApplicationObjects.flatMap {
-                        val openShiftCommand = openShiftClient.createOpenShiftCommand(namespace, it, mergeWithExistingResource)
-                        if (updateRouteCommandWithChangedHostOrPath(openShiftCommand, deploymentSpec)) {
-                            val deleteCommand = openShiftCommand.copy(operationType = OperationType.DELETE)
-                            val createCommand = openShiftCommand.copy(operationType = OperationType.CREATE, payload = openShiftCommand.generated!!)
-                            listOf(deleteCommand, createCommand)
-                        } else {
-                            listOf(openShiftCommand)
-                        }
-                    }.map {
-                                async(appDispatcher) {
-                                    openShiftClient.performOpenShiftCommand(namespace, it)
-                                }
-                            }.map { it.await() }
-                }
+                openShiftApplicationObjects.flatMap {
+                    val openShiftCommand = openShiftClient.createOpenShiftCommand(namespace, it, mergeWithExistingResource)
+                    if (updateRouteCommandWithChangedHostOrPath(openShiftCommand, deploymentSpec)) {
+                        val deleteCommand = openShiftCommand.copy(operationType = OperationType.DELETE)
+                        val createCommand = openShiftCommand.copy(operationType = OperationType.CREATE, payload = openShiftCommand.generated!!)
+                        listOf(deleteCommand, createCommand)
+                    } else {
+                        listOf(openShiftCommand)
+                    }
+                }.map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         if (openShiftApplicationResponses.any { !it.success }) {
             logger.warn("One or more commands failed for $namespace/$name. Will not delete objects from previous deploys.")

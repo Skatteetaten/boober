@@ -129,17 +129,17 @@ open class GitService(
         val cmd = git.push()
         logger.debug("added tag")
         tags.forEach { cmd.add(it) }
-        logger.debug("/added tag")
+        logger.trace("/added tag")
         metrics.withMetrics("git_push_tags", {
             cmd.setCredentialsProvider(cp)
-            if (logger.isDebugEnabled) {
+            if (logger.isTraceEnabled) {
                 cmd.progressMonitor = TextProgressMonitor(PrintWriter(LambdaOutputStream {
-                    logger.debug(it)
+                    logger.trace(it)
                 }))
             }
             cmd.call()
         })
-        logger.debug("/push tags to git")
+        logger.trace("/push tags to git")
     }
 
     fun createAnnotatedTag(git: Git, tag: String, tagBody: String): Ref {
