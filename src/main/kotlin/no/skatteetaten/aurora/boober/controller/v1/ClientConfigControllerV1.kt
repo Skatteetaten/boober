@@ -20,7 +20,7 @@ class ClientConfigControllerV1(
                 Pair("gitUrlPattern", gitUrlPattern),
                 Pair("openshiftCluster", openshiftCluster),
                 Pair("openshiftUrl", openshiftUrl),
-                Pair("apiVersion", "2")
+                Pair("apiVersion", 2)
         )))
     }
 }
