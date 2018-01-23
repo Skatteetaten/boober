@@ -20,8 +20,8 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
             AuroraConfigFieldHandler("permissions/view"),
             AuroraConfigFieldHandler("permissions/adminServiceAccount"),
             // Max length of OpenShift project names is 63 characters. Project name = affiliation + "-" + envName.
-            AuroraConfigFieldHandler("envName", validator = { it.pattern("^[a-z0-9]{1}[a-z0-9\\-]{1,50}[a-z0-9]{1}$",
-                    "Environment must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character. It must be no longer than 52 characters.") },
+            AuroraConfigFieldHandler("envName", validator = { it.pattern("^[a-z0-9\\-]{0,52}$",
+                    "Environment must consist of lower case alphanumeric characters or '-'. It must be no longer than 52 characters.") },
                     defaultSource = "folderName",
                     defaultValue = applicationId.environment
             ),
