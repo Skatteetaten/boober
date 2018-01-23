@@ -84,7 +84,7 @@ class DeployService(
                                 "One or more http calls to OpenShift failed"
                             } else "Namespace created successfully."
 
-                            logger.info("Environment done. user=${authenticatedUser.fullName} namespace=${environment.namespace} success=${success} reason=${message} admins=${environment.permissions.admin.groups} viewers=${environment.permissions.view?.groups}")
+                            logger.info("Environment done. user='${authenticatedUser.fullName}' namespace=${environment.namespace} success=${success} reason=${message} admins=${environment.permissions.admin.groups} viewers=${environment.permissions.view?.groups}")
                             Pair(environment, AuroraDeployResult(
                                     openShiftResponses = environmentResponses,
                                     success = success,
@@ -139,7 +139,7 @@ class DeployService(
 
                         }
                     }.also {
-                        logger.info("Deploy done user=${authenticatedUser.fullName} deployId=${it.deployId} app=${it.auroraDeploymentSpec?.name} namespace=${it.auroraDeploymentSpec?.environment?.namespace} success=${it.success} ignored=${it.ignored} reason=${it.reason}")
+                        logger.info("Deploy done user='${authenticatedUser.fullName}' deployId=${it.deployId} app=${it.auroraDeploymentSpec?.name} namespace=${it.auroraDeploymentSpec?.environment?.namespace} success=${it.success} ignored=${it.ignored} reason=${it.reason}")
                     }
                 }
             }.map { it.await() }
