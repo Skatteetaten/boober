@@ -35,8 +35,8 @@ class DeployService(
         val deployLogService: DeployLogService,
         @Value("\${openshift.cluster}") val cluster: String,
         @Value("\${boober.docker.registry}") val dockerRegistry: String,
-        @Value("\${boober.threadpool.namespace:2}") val namespacePoolSize: Int,
-        @Value("\${boober.threadpool.app:2}") val appPoolSize: Int) {
+        @Value("\${boober.threadpool.namespace:4}") val namespacePoolSize: Int,
+        @Value("\${boober.threadpool.app:4}") val appPoolSize: Int) {
 
     val logger: Logger = LoggerFactory.getLogger(DeployService::class.java)
 
