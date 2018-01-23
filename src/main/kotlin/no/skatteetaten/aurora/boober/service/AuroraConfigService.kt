@@ -143,15 +143,19 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
         return auroraConfig
     }
 
-    fun createValidatedAuroraDeploymentSpecs(auroraConfigName: String, applicationIds: List<ApplicationId>, overrideFiles: List<AuroraConfigFile> = listOf()): List<AuroraDeploymentSpec> {
+    fun createValidatedAuroraDeploymentSpecs(
+            auroraConfigName: String,
+            applicationIds: List<ApplicationId>,
+            overrideFiles: List<AuroraConfigFile> = listOf(),
+            resourceValidation: Boolean = true): List<AuroraDeploymentSpec> {
 
         val auroraConfig = findAuroraConfig(auroraConfigName)
         return createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig, overrideFiles), applicationIds)
     }
 
-    fun validateAuroraConfig(auroraConfig: AuroraConfig, overrideFiles: List<AuroraConfigFile> = listOf()) {
+    fun validateAuroraConfig(auroraConfig: AuroraConfig, overrideFiles: List<AuroraConfigFile> = listOf(), resourceValidation: Boolean = true) {
         val applicationIds = auroraConfig.getApplicationIds()
-        createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig, overrideFiles), applicationIds)
+        createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig, overrideFiles), applicationIds, resourceValidation)
     }
 
     private fun getAuroraConfigFolder(name: String) = File(gitService.checkoutPath, name)
@@ -171,14 +175,14 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
         }
     }
 
-    private fun createValidatedAuroraDeploymentSpecs(auroraConfigWithOverrides: AuroraConfigWithOverrides, applicationIds: List<ApplicationId>): List<AuroraDeploymentSpec> {
+    private fun createValidatedAuroraDeploymentSpecs(auroraConfigWithOverrides: AuroraConfigWithOverrides, applicationIds: List<ApplicationId>, resourceValidation: Boolean = true): List<AuroraDeploymentSpec> {
 
         val stopWatch = StopWatch().apply { start() }
         val specs: List<AuroraDeploymentSpec> = runBlocking(dispatcher) {
             applicationIds.map { aid ->
                 async(dispatcher) {
                     try {
-                        val spec = createValidatedAuroraDeploymentSpec(auroraConfigWithOverrides, aid)
+                        val spec = createValidatedAuroraDeploymentSpec(auroraConfigWithOverrides, aid, resourceValidation)
                         Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = spec, second = null)
                     } catch (e: Throwable) {
                         Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = null, second = ExceptionWrapper(aid, e))
@@ -192,11 +196,11 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
         return specs
     }
 
-    private fun createValidatedAuroraDeploymentSpec(auroraConfigWithOverrides: AuroraConfigWithOverrides, aid: ApplicationId): AuroraDeploymentSpec {
+    private fun createValidatedAuroraDeploymentSpec(auroraConfigWithOverrides: AuroraConfigWithOverrides, aid: ApplicationId, resourceValidation: Boolean = true): AuroraDeploymentSpec {
 
         val stopWatch = StopWatch().apply { start() }
         val spec = createAuroraDeploymentSpec(auroraConfigWithOverrides.auroraConfig, aid, auroraConfigWithOverrides.overrideFiles)
-        if (spec.cluster == cluster) {
+        if (spec.cluster == cluster && resourceValidation) {
             deploymentSpecValidator.assertIsValid(spec)
         }
         stopWatch.stop()

@@ -60,10 +60,12 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
     }
 
     @PutMapping("/validate")
-    fun validateAuroraConfig(@PathVariable name: String, @RequestBody payload: AuroraConfigResource): Response {
+    fun validateAuroraConfig(@PathVariable name: String,
+                             @RequestParam("resourceValidation", required = false, defaultValue = "false") resourceValidation: Boolean,
+                             @RequestBody payload: AuroraConfigResource): Response {
 
         val auroraConfig = payload.toAuroraConfig(name)
-        auroraConfigService.validateAuroraConfig(auroraConfig)
+        auroraConfigService.validateAuroraConfig(auroraConfig, resourceValidation = resourceValidation)
         return createAuroraConfigResponse(auroraConfig)
     }
 
