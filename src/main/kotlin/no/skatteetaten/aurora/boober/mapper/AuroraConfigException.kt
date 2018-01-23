@@ -1,10 +1,10 @@
 package no.skatteetaten.aurora.boober.mapper
 
-import no.skatteetaten.aurora.boober.model.ConfigFieldError
+import no.skatteetaten.aurora.boober.model.ConfigFieldErrorDetail
 
 class AuroraConfigException(
         message: String,
-        val errors: List<ConfigFieldError> = listOf()
+        val errors: List<ConfigFieldErrorDetail> = listOf()
 ) : RuntimeException(message) {
     override val message: String?
         get() {

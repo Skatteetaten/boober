@@ -7,7 +7,7 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.ConfigFieldError
+import no.skatteetaten.aurora.boober.model.ConfigFieldErrorDetail
 import no.skatteetaten.aurora.boober.utils.findAllPointers
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -28,7 +28,7 @@ class AuroraDeploymentSpecConfigFieldValidator(val applicationId: ApplicationId,
         val envPointers = listOf("envName", "affiliation",
                 "permissions/admin", "permissions/view", "permissions/adminServiceAccount")
 
-        val errors: List<ConfigFieldError> = fieldHandlers.mapNotNull { e ->
+        val errors: List<ConfigFieldErrorDetail> = fieldHandlers.mapNotNull { e ->
             val rawField = auroraConfigFields.fields[e.name]!!
 
             val invalidEnvSource = envPointers.contains(e.name) && rawField.source?.name
@@ -43,10 +43,10 @@ class AuroraDeploymentSpecConfigFieldValidator(val applicationId: ApplicationId,
             logger.trace("validator result is=${result}")
 
             val err = when {
-                invalidEnvSource -> ConfigFieldError.illegal("Invalid Source field=${e.name} requires an about source. Actual source is source=${rawField.source?.name}", rawField)
+                invalidEnvSource -> ConfigFieldErrorDetail.illegal("Invalid Source field=${e.name} requires an about source. Actual source is source=${rawField.source?.name}", rawField)
                 result == null -> null
-                auroraConfigField != null -> ConfigFieldError.illegal(result.localizedMessage, rawField)
-                else -> ConfigFieldError.missing(result.localizedMessage, e.name)
+                auroraConfigField != null -> ConfigFieldErrorDetail.illegal(result.localizedMessage, rawField)
+                else -> ConfigFieldErrorDetail.missing(result.localizedMessage, e.name)
             }
             if (err != null) {
                 logger.trace("Error=$err message=${err.message}")
@@ -56,7 +56,7 @@ class AuroraDeploymentSpecConfigFieldValidator(val applicationId: ApplicationId,
 
         val unmappedErrors = if (fullValidation) {
             getUnmappedPointers().flatMap { pointerError ->
-                pointerError.value.map { ConfigFieldError.invalid(pointerError.key, it) }
+                pointerError.value.map { ConfigFieldErrorDetail.invalid(pointerError.key, it) }
             }
         } else {
             emptyList()

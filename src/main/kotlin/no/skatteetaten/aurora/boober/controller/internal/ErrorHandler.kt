@@ -4,6 +4,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.controller.NoSuchResourceException
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraVersioningException
+import no.skatteetaten.aurora.boober.model.ErrorDetail
 import no.skatteetaten.aurora.boober.model.PreconditionFailureException
 import no.skatteetaten.aurora.boober.service.*
 import org.springframework.http.HttpHeaders
@@ -57,7 +58,7 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
             is AuroraConfigException -> e.errors
             is AuroraVersioningException -> e.errors
             is MultiApplicationValidationException -> e.toValidationErrors()
-            else -> listOf(GenericError(e.message!!))
+            else -> listOf(ErrorDetail(message = e.message!!))
         }
 
         if (httpStatus.is5xxServerError) {
