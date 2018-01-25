@@ -1,0 +1,3 @@
+GET {{apiUrl}}/v1/clientconfig
+
+###

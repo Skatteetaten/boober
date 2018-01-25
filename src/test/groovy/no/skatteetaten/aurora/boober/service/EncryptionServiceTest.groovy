@@ -30,14 +30,26 @@ class EncryptionServiceTest extends Specification {
   @Autowired
   EncryptionService service
 
+  def message = "FOO=BAR".bytes
+
   def "test encrypt and decrypt"() {
-    def message = "FOO=BAR"
     when:
       def encrypted = service.encrypt(message)
 
     then:
       def result = service.decrypt(encrypted)
       result == message
+  }
 
+  def "decrypt version 1"() {
+    given:
+      def base64Message = message.encodeBase64().toString().bytes
+      def encrypted = service.encrypt(base64Message).replace("Boober:2", "Boober:1")
+
+    when:
+      def decrypted = service.decrypt(encrypted)
+
+    then:
+      decrypted == message
   }
 }

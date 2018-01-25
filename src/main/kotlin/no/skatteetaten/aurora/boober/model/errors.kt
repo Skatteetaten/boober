@@ -3,35 +3,34 @@ package no.skatteetaten.aurora.boober.model
 import com.fasterxml.jackson.databind.node.TextNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import java.util.*
 
-enum class ConfigErrorType {
+enum class ErrorType {
     ILLEGAL,
     MISSING,
-    INVALID
+    INVALID,
+    GENERIC
 }
 
-sealed class Error
+data class ApplicationError(val application: String, val environment: String, val details: List<ErrorDetail>, val type : String = "APPLICATION")
 
-data class ValidationError(val application: String, val environment: String, val messages: List<Error>) : Error()
+open class ErrorDetail(val type: ErrorType = ErrorType.GENERIC, val message: String)
 
-data class VersioningError(val fileName: String, val name: String, val date: Date) : Error()
-
-data class ConfigFieldError(val type: ConfigErrorType, val message: String, val field: AuroraConfigField? = null) : Error() {
+class ConfigFieldErrorDetail(type: ErrorType, message: String, val field: AuroraConfigField? = null)
+    : ErrorDetail(type, message) {
 
     companion object {
-        fun illegal(message: String, auroraConfigField: AuroraConfigField? = null): ConfigFieldError {
-            return ConfigFieldError(ConfigErrorType.ILLEGAL, message, auroraConfigField)
+        fun illegal(message: String, auroraConfigField: AuroraConfigField? = null): ConfigFieldErrorDetail {
+            return ConfigFieldErrorDetail(ErrorType.ILLEGAL, message, auroraConfigField)
         }
 
-        fun missing(message: String, name: String): ConfigFieldError {
+        fun missing(message: String, name: String): ConfigFieldErrorDetail {
             val acf = AuroraConfigField(AuroraConfigFieldHandler(name))
-            return ConfigFieldError(ConfigErrorType.MISSING, message, acf)
+            return ConfigFieldErrorDetail(ErrorType.MISSING, message, acf)
         }
 
-        fun invalid(filename: String, path: String): ConfigFieldError {
+        fun invalid(filename: String, path: String): ConfigFieldErrorDetail {
             val acf = AuroraConfigField(AuroraConfigFieldHandler(path.substring(1)), AuroraConfigFile(filename, TextNode("")))
-            return ConfigFieldError(ConfigErrorType.INVALID, "$path is not a valid config field pointer", acf)
+            return ConfigFieldErrorDetail(ErrorType.INVALID, "$path is not a valid config field pointer", acf)
         }
     }
 }

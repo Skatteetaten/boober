@@ -11,7 +11,6 @@ abstract class AbstractAuroraDeploymentSpecTest extends AbstractAuroraConfigTest
   static AuroraDeploymentSpec createDeploymentSpec(Map<String, String> auroraConfigJson, ApplicationId applicationId) {
 
     AuroraConfig auroraConfig = createAuroraConfig(auroraConfigJson)
-    AuroraDeploymentSpecBuilderKt.
-        createAuroraDeploymentSpec(auroraConfig, applicationId, "docker-registry.aurora.sits.no:5000", [], [:])
+    AuroraDeploymentSpecBuilderKt.createAuroraDeploymentSpec(auroraConfig, applicationId)
   }
 }

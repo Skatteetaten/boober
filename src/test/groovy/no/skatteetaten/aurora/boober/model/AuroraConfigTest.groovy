@@ -3,9 +3,9 @@ package no.skatteetaten.aurora.boober.model
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import spock.lang.Specification
+import kotlin.Pair
 
-class AuroraConfigTest extends Specification {
+class AuroraConfigTest extends AbstractAuroraConfigTest {
 
   def mapper = new ObjectMapper()
 
@@ -29,11 +29,34 @@ class AuroraConfigTest extends Specification {
       def updates = mapper.convertValue(["version": "4"], JsonNode.class)
 
     when:
-      def updatedAuroraConfig = auroraConfig.updateFile("booberdev/console.json", updates, "123")
 
+      def updateFileResponse= auroraConfig.updateFile("booberdev/console.json", updates)
+      def updatedAuroraConfig=updateFileResponse.second
     then:
       def version = updatedAuroraConfig.getAuroraConfigFiles().stream()
           .filter({ it.configName == "booberdev/console.json" })
+          .map({ it.contents.get("version").asText() })
+          .findFirst()
+
+      version.isPresent()
+      "4" == version.get()
+  }
+
+  def "Should create file when updating nonexisting file"() {
+    given:
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
+      def updates = mapper.convertValue(["version": "4"], JsonNode.class)
+      def fileName = "boobertest/console.json"
+
+    expect:
+      !auroraConfig.findFile(fileName)
+
+    when:
+      AuroraConfig updatedAuroraConfig = auroraConfig.updateFile(fileName, updates).second
+
+    then:
+      def version = updatedAuroraConfig.getAuroraConfigFiles().stream()
+          .filter({ it.configName == fileName })
           .map({ it.contents.get("version").asText() })
           .findFirst()
 
@@ -76,7 +99,6 @@ class AuroraConfigTest extends Specification {
 
   def "Returns files for application with app for env override"() {
     given:
-
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
 
     when:
@@ -116,11 +138,33 @@ class AuroraConfigTest extends Specification {
       filesForApplication.any { it.name == baseFile }
   }
 
+  def "Patch file"() {
+    given:
+      def aid = DEFAULT_AID
+      def filename = "${aid.environment}/${aid.application}.json"
+      def auroraConfig = createAuroraConfig(modify(defaultAuroraConfig(), filename, { version = "1.0.0" }))
+
+      def jsonOp = """[{
+  "op": "replace",
+  "path": "/version",
+  "value": "3"
+}]
+"""
+    when:
+      def version = auroraConfig.auroraConfigFiles.find { it.name == filename }.version
+      def patchFileResponse = auroraConfig.patchFile(filename, jsonOp, version)
+      def patchedAuroraConfig=patchFileResponse.second
+
+    then:
+      def patchedFile = patchedAuroraConfig.auroraConfigFiles.find { it.name == filename }
+      patchedFile.contents.at("/version").textValue() == "3"
+  }
+
   List<AuroraConfigFile> createMockFiles(String... files) {
-    files.collect { new AuroraConfigFile(it, mapper.readValue("{}", JsonNode.class), false, null) }
+    files.collect { new AuroraConfigFile(it, mapper.readValue("{}", JsonNode.class), false) }
   }
 
   def overrideFile(String fileName) {
-    new AuroraConfigFile(fileName, mapper.readValue("{}", JsonNode.class), true, null)
+    new AuroraConfigFile(fileName, mapper.readValue("{}", JsonNode.class), true)
   }
 }

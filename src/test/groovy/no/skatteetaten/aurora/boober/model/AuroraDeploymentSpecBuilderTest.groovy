@@ -2,16 +2,12 @@ package no.skatteetaten.aurora.boober.model
 
 import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecBuilderKt
-import no.skatteetaten.aurora.boober.service.AuroraConfigException
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ObjectNode
 
-class AuroraDeploymentSpecBuilderTest extends AbstractAuroraConfigTest {
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 
-  static AuroraDeploymentSpec createDeploymentSpec(Map<String, String> auroraConfigJson, ApplicationId applicationId) {
-
-    AuroraConfig auroraConfig = createAuroraConfig(auroraConfigJson)
-    AuroraDeploymentSpecBuilderKt.createAuroraDeploymentSpec(auroraConfig, applicationId, "", [], [:])
-  }
+class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
 
   def auroraConfigJson = defaultAuroraConfig()
 
@@ -131,4 +127,36 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraConfigTest {
     then:
       noExceptionThrown()
   }
+
+  def "Should fail when name is not valid DNS952 label"() {
+
+    given:
+      def aid = DEFAULT_AID
+      modify(auroraConfigJson, "${aid.environment}/${aid.application}.json", {
+        put("name", "test%qwe)")
+      })
+    when:
+      def deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
+      println deploymentSpec
+
+    then:
+      def ex = thrown(AuroraConfigException)
+      ex.errors[0].field.handler.name == 'name'
+  }
+
+  def "Should throw AuroraConfigException due to missing required properties"() {
+
+    given:
+      def aid = DEFAULT_AID
+      modify(auroraConfigJson, "${aid.application}.json", {
+        remove("version")
+      })
+    when:
+      createDeploymentSpec(auroraConfigJson, aid)
+
+    then:
+      def ex = thrown(AuroraConfigException)
+      ex.errors[0].message == "Version must be set as string"
+  }
+
 }

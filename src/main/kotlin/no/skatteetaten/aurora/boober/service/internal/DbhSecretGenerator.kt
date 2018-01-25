@@ -3,9 +3,9 @@ package no.skatteetaten.aurora.boober.service.internal
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.service.DbhSchema
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
-import no.skatteetaten.aurora.boober.service.SchemaProvisionResults
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResults
 import no.skatteetaten.aurora.boober.service.VelocityTemplateJsonService
 import java.io.ByteArrayOutputStream
 import java.util.*

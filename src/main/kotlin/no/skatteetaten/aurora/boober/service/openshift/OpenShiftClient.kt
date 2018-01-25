@@ -37,12 +37,6 @@ data class OpenShiftResponse @JvmOverloads constructor(
         val responseBody: JsonNode? = null,
         val success: Boolean = true,
         val exception: String? = null) {
-    fun labelChanged(name: String): Boolean {
-        val pointer = "/metadata/labels/$name"
-        val response = responseBody?.at(pointer)?.asText()
-        val previous = command.previous?.at(pointer)?.asText() ?: ""
-        return response != previous
-    }
 
     companion object {
         fun fromOpenShiftException(e: OpenShiftException, command: OpenshiftCommand): OpenShiftResponse {
@@ -61,6 +55,8 @@ data class OpenShiftResponse @JvmOverloads constructor(
 
     }
 }
+
+data class OpenShiftGroups(val userGroups: Map<String, List<String>>, val groupUsers: Map<String, List<String>>)
 
 @Service
 class OpenShiftClient(
@@ -143,9 +139,10 @@ class OpenShiftClient(
         return getGroups(group) != null
     }
 
+    @Cacheable("templates")
     fun getTemplate(template: String): JsonNode? {
         return try {
-            userClient.get("$baseUrl/oapi/v1/namespaces/openshift/templates/$template")?.body
+            serviceAccountClient.get("$baseUrl/oapi/v1/namespaces/openshift/templates/$template")?.body
         } catch (e: Exception) {
             logger.debug("Failed getting template={}", template)
             null
@@ -156,6 +153,25 @@ class OpenShiftClient(
 
         val url = "$baseUrl/oapi/v1/groups/$group"
         return serviceAccountClient.get(url)
+    }
+
+    @Cacheable("groups")
+    fun getGroups(): OpenShiftGroups {
+
+        val url = "$baseUrl/oapi/v1/groups/"
+        val groupsResponse: ResponseEntity<JsonNode> = serviceAccountClient.get(url)!!
+
+        val body = groupsResponse.body
+        val items = body["items"] as ArrayNode
+        val map = items.flatMap {
+            val name = it["metadata"]["name"].asText()
+            val users = it["users"] as ArrayNode
+            users.map { Pair(it.asText(), name) }
+        }
+        val userGroupIndex = map.groupBy({ it.first }, { it.second })
+        val groupUserIndex = map.groupBy({ it.second }, { it.first })
+
+        return OpenShiftGroups(userGroupIndex, groupUserIndex)
     }
 
     @Cacheable("groups")

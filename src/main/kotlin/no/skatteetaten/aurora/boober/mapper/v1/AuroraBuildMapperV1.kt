@@ -12,7 +12,7 @@ import no.skatteetaten.aurora.boober.utils.oneOf
 
 class AuroraBuildMapperV1(val applicationId: ApplicationId) {
 
-    fun build(auroraConfigFields: AuroraConfigFields, dockerRegistry: String): AuroraBuild {
+    fun build(auroraConfigFields: AuroraConfigFields): AuroraBuild {
 
         val type: TemplateType = auroraConfigFields.extract("type")
         val applicationPlatform: ApplicationPlatform = auroraConfigFields.extract("applicationPlatform")
@@ -33,7 +33,7 @@ class AuroraBuildMapperV1(val applicationId: ApplicationId) {
 
         val outputName = if (type == TemplateType.build) {
             val dockerGroup = groupId.replace(".", "_")
-            "$dockerRegistry/$dockerGroup/$artifactId:default"
+            "$dockerGroup/$artifactId:default"
         } else {
             "$name:latest"
         }

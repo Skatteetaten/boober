@@ -2,36 +2,42 @@ package no.skatteetaten.aurora.boober.controller
 
 import static org.springframework.http.MediaType.APPLICATION_JSON
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.patch
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.put
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 import org.junit.Rule
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
 import org.springframework.restdocs.JUnitRestDocumentation
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.controller.internal.ErrorHandler
-import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigFileControllerV1
+import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigControllerV1
 import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest
-import no.skatteetaten.aurora.boober.service.DeployBundleService
-import spock.lang.Specification
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraVersioningException
+import no.skatteetaten.aurora.boober.service.AuroraConfigService
 
-class AuroraConfigControllerTest extends Specification {
+class AuroraConfigControllerTest extends AbstractAuroraConfigTest {
 
   @Rule
   JUnitRestDocumentation restDocumentation = new JUnitRestDocumentation('test/docs/generated-snippets')
 
   MockMvc mockMvc
 
-  def deployBundleService = Mock(DeployBundleService)
+  def auroraConfigService = Mock(AuroraConfigService)
 
   void setup() {
-    def controller = new AuroraConfigFileControllerV1(deployBundleService)
+    def controller = new AuroraConfigControllerV1(auroraConfigService)
     mockMvc = MockMvcBuilders.
         standaloneSetup(controller)
         .setControllerAdvice(new ErrorHandler())
@@ -39,46 +45,77 @@ class AuroraConfigControllerTest extends Specification {
         .build()
   }
 
-  def affiliation = 'aos'
+  def auroraConfigName = 'aos'
   def fileName = 'about.json'
-  def payload = [
-      version         : "LJLØ",
-      validateVersions: true,
-      content         : ""
-  ]
-  def auroraConfig = AbstractAuroraConfigTest.createAuroraConfig([(fileName): AbstractAuroraConfigTest.DEFAULT_ABOUT])
+  def auroraConfig = createAuroraConfig([(fileName): DEFAULT_ABOUT])
 
   def "A simple test that verifies that put payload is parsed correctly server side"() {
 
     given:
-      payload.content = AbstractAuroraConfigTest.DEFAULT_ABOUT
-      deployBundleService.updateAuroraConfigFile(affiliation, fileName,
-          { JsonNode it -> it.get("affiliation").textValue() == affiliation }, payload.version, payload.validateVersions
-      ) >> auroraConfig
+      def payload = [content: DEFAULT_ABOUT]
+      auroraConfigService.updateAuroraConfigFile(auroraConfigName, fileName, _, _) >> auroraConfig
     when:
       ResultActions result = mockMvc.perform(
-          put("/v1/auroraconfigfile/$affiliation/$fileName").content(JsonOutput.toJson(payload)).
+          put("/v1/auroraconfig/$auroraConfigName/$fileName").content(JsonOutput.toJson(payload)).
               contentType(APPLICATION_JSON))
 
     then:
       result.andExpect(status().isOk())
   }
 
+  def "Provides eTag on single file requests"() {
+
+    given:
+      def payload = [content: DEFAULT_ABOUT]
+      def auroraConfigFile = auroraConfig.findFile(fileName)
+      auroraConfigService.findAuroraConfigFile(auroraConfigName, fileName) >> auroraConfigFile
+
+    when:
+      ResultActions result = mockMvc.perform(get("/v1/auroraconfig/$auroraConfigName/$fileName"))
+
+    then:
+      result.andExpect(status().isOk())
+          .andExpect(header().string("ETAG", "\"$auroraConfigFile.version\""))
+  }
+
+  def "Passes on IF-MATCH header"() {
+
+    given:
+      def fileToUpdate = DEFAULT_ABOUT
+      def auroraConfigFile = new AuroraConfigFile("about.json", new ObjectMapper().readValue(fileToUpdate, JsonNode),
+          false)
+      def eTag = "THIS_IS_NOT_THE_EXPECTED_ETAG"
+      def payload = [content: modify(fileToUpdate, { route: true })]
+      auroraConfigService.updateAuroraConfigFile(auroraConfigName, fileName, _ as String, eTag) >> {
+        throw new AuroraVersioningException(auroraConfig, auroraConfigFile, eTag)
+      }
+
+    when:
+      ResultActions result = mockMvc.perform(
+          put("/v1/auroraconfig/$auroraConfigName/$fileName").content(JsonOutput.toJson(payload))
+              .contentType(APPLICATION_JSON)
+              .header(HttpHeaders.IF_MATCH, "\"$eTag\"")
+      )
+
+    then:
+      result.andExpect(status().is(HttpStatus.PRECONDITION_FAILED.value()))
+  }
+
   def "A simple test that verifies that patch payload is parsed correctly server side"() {
 
     given:
-      payload.content = """[{
+      def payload = [content: """[{
   "op": "replace",
   "path": "/version",
   "value": 3
-}]"""
+}]"""]
 
-      deployBundleService.
-          patchAuroraConfigFile(affiliation, fileName, payload.content, payload.version, payload.validateVersions) >>
+      auroraConfigService.
+          patchAuroraConfigFile(auroraConfigName, fileName, payload.content, payload.version) >>
           auroraConfig
     when:
       ResultActions result = mockMvc.perform(
-          patch("/v1/auroraconfigfile/$affiliation/$fileName").content(JsonOutput.toJson(payload)).
+          patch("/v1/auroraconfig/$auroraConfigName/$fileName").content(JsonOutput.toJson(payload)).
               contentType(APPLICATION_JSON))
 
     then:

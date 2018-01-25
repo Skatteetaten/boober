@@ -29,7 +29,6 @@ class WebSecurityConfig(
                 .addFilter(requestHeaderAuthenticationFilter())
                 .authorizeRequests()
                 .requestMatchers(forPort(managementPort)).permitAll()
-                .antMatchers("/clientconfig").permitAll()
                 .antMatchers("/v1/clientconfig").permitAll()
                 .antMatchers("/v1/auroraconfignames").permitAll()
                 .anyRequest().authenticated()
@@ -40,12 +39,13 @@ class WebSecurityConfig(
     @Bean
     internal fun preAuthenticationProvider() = PreAuthenticatedAuthenticationProvider().apply {
         setPreAuthenticatedUserDetailsService({ it: PreAuthenticatedAuthenticationToken ->
+
             val principal: JsonNode? = it.principal as JsonNode?
             val username: String = principal?.openshiftName ?: throw IllegalArgumentException("Unable to determine username from response")
             val fullName: String? = principal.get("fullName")?.asText()
 
             MDC.put("user", username)
-            User(username, it.credentials as String, fullName)
+            User(username, it.credentials as String, fullName, it.authorities)
         })
     }
 

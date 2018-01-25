@@ -10,14 +10,22 @@
   name:                "webleveranse"              // webleveranse.json
   certificate:         false                       // default
   database:            false                       // default
-  artifactId:          "openshift-referanse-react" // webleveranse.json
-  groupId:             "no.skatteetaten.aurora"    // webleveranse.json
-  version:             "1"                         // utv/webleveranse.json
-  applicationPlatform: "web"                       // webleveranse.json
+  prometheus: {
+    path:              "/prometheus"               // default
+    port:              8081                        // default
+  }
+  management: {
+    path:              ""                          // webleveranse.json
+    port:              "8081"                      // webleveranse.json
+  }
   deployStrategy: {
     type:              "rolling"                   // webleveranse.json
     timeout:           180                         // default
   }
+  artifactId:          "openshift-referanse-react" // webleveranse.json
+  groupId:             "no.skatteetaten.aurora"    // webleveranse.json
+  version:             "1"                         // utv/webleveranse.json
+  applicationPlatform: "web"                       // webleveranse.json
   resources: {
     cpu: {
       min:             "100m"                      // default
@@ -29,14 +37,6 @@
     }
   }
   replicas:            1                           // webleveranse.json
-  prometheus: {
-    path:              "/prometheus"               // default
-    port:              8081                        // default
-  }
-  management: {
-    path:              ""                          // webleveranse.json
-    port:              "8081"                      // webleveranse.json
-  }
   readiness: {
     port:              8080                        // default
     delay:             10                          // default

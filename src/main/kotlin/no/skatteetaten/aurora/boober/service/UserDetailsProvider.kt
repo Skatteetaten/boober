@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component
 @Component
 class UserDetailsProvider {
 
+
     fun getAuthenticatedUser(): User {
 
         val authentication = SecurityContextHolder.getContext().authentication

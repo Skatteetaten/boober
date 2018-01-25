@@ -8,6 +8,7 @@ def overrides = [
     piTests: false,
     checkstyle: false,
     docs: false,
+    sonarqube: false,
     credentialsId: "github"
 ]
 

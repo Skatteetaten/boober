@@ -76,7 +76,11 @@
 "output": {
 "to": {
 "kind": "${build.outputKind}",
+#if ($build.outputKind == "DockerImage")
+"name": "$dockerRegistry/${build.outputName}"
+#else
 "name": "${build.outputName}"
+#end
 }
 }
 }

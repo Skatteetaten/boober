@@ -16,19 +16,20 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Metrics
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.facade.VaultFacade
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
-import no.skatteetaten.aurora.boober.model.AuroraSecretVault
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
-import no.skatteetaten.aurora.boober.service.openshift.UserDetailsTokenProvider
-import spock.lang.Specification
+import no.skatteetaten.aurora.boober.service.openshift.token.UserDetailsTokenProvider
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
+import no.skatteetaten.aurora.boober.service.vault.VaultService
 import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [
@@ -36,22 +37,22 @@ import spock.mock.DetachedMockFactory
     DeployService,
     OpenShiftObjectGenerator,
     OpenShiftTemplateProcessor,
-    GitService,
-    SecretVaultService,
+    GitServices,
     EncryptionService,
-    DeployBundleService,
-    VaultFacade,
+    AuroraConfigService,
+    VaultService,
     ObjectMapper,
-    SecretVaultPermissionService,
     Config,
     AuroraMetrics,
     UserDetailsTokenProvider,
     AuroraDeploymentSpecValidator,
     SharedSecretReader,
     VelocityTemplateJsonService,
-    OpenShiftObjectLabelService
+    OpenShiftObjectLabelService,
+    RedeployService,
+    BitbucketProjectService
 ])
-class AbstractMockedOpenShiftSpecification extends Specification {
+class AbstractMockedOpenShiftSpecification extends AbstractSpec {
 
   @Configuration
   static class Config {
@@ -73,18 +74,23 @@ class AbstractMockedOpenShiftSpecification extends Specification {
     }
 
     @Bean
+    BitbucketProjectService bitbucketProjectService() {
+      factory.Mock(BitbucketProjectService)
+    }
+
+    @Bean
+    DatabaseSchemaProvisioner dbClient() {
+      factory.Mock(DatabaseSchemaProvisioner)
+    }
+
+    @Bean
     DockerService dockerService() {
       factory.Mock(DockerService)
     }
 
     @Bean
-    OpenShiftResourceClient client() {
-      factory.Mock(OpenShiftResourceClient)
-    }
-
-    @Bean
     ExternalResourceProvisioner externalResourceProvisioner() {
-        factory.Mock(ExternalResourceProvisioner)
+      factory.Mock(ExternalResourceProvisioner)
     }
 
     @Bean
@@ -101,33 +107,30 @@ class AbstractMockedOpenShiftSpecification extends Specification {
 
       factory.Mock(OpenShiftResourceClient)
     }
+
+    @Bean
+    DeployLogService deployLogService() {
+      factory.Mock(DeployLogService)
+    }
   }
 
   @Autowired
-  GitService gitService
+  private GitService auroraConfigGitService
 
   @Autowired
-  VaultFacade vaultFacade
+  private VaultService vaultService
 
   @Autowired
-  UserDetailsProvider userDetailsProvider
+  private UserDetailsProvider userDetailsProvider
 
   @Autowired
   OpenShiftClient openShiftClient
 
   @Autowired
-  DeployBundleService deployBundleService
+  private AuroraConfigService auroraConfigService
 
   @Autowired
   ObjectMapper mapper
-
-  def git
-
-  def cleanup() {
-    if (git != null) {
-      gitService.closeRepository(git)
-    }
-  }
 
   def setup() {
 
@@ -138,31 +141,29 @@ class AbstractMockedOpenShiftSpecification extends Specification {
     boolean useAuroraConfig = defaultOverride ? defaultOverride.auroraConfig() : true
 
     if (useInteractions) {
-      userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User")
+      userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User", [])
 
-      openShiftClient.isValidGroup(_) >> true
+      openShiftClient.getGroups() >> new OpenShiftGroups([:], ["APP_PaaS_drift": [], "APP_PaaS_utv": []])
     }
 
     if (useAuroraConfig) {
 
-      def vault = new AuroraSecretVault("foo", ["latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="], null, [:])
-      userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User")
+      userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User", [])
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-      gitService.deleteFiles(auroraConfig.affiliation)
-      GitServiceHelperKt.createInitRepo(auroraConfig.affiliation)
+      GitServiceHelperKt.recreateEmptyBareRepos(auroraConfig.affiliation)
+      GitServiceHelperKt.recreateRepo(new File("/tmp/vaulttest/aos"))
+      GitServiceHelperKt.recreateRepo(new File("/tmp/boobertest/aos"))
 
-      vaultFacade.save("aos", vault, false)
-      deployBundleService.saveAuroraConfig(auroraConfig, false)
-      git = gitService.openRepo(auroraConfig.affiliation)
+      vaultService.createOrUpdateFileInVault("aos", "foo", "latest.properties", "FOO=BAR".bytes as byte[])
+      auroraConfigService.save(auroraConfig)
     }
   }
 
   void createRepoAndSaveFiles(AuroraConfig auroraConfig) {
 
-    gitService.deleteFiles(auroraConfig.affiliation)
-    GitServiceHelperKt.createInitRepo(auroraConfig.affiliation)
-    deployBundleService.saveAuroraConfig(auroraConfig, false)
+    GitServiceHelperKt.recreateEmptyBareRepos(auroraConfig.affiliation)
+    auroraConfigService.save(auroraConfig)
   }
 
   def createOpenShiftResponse(String kind, OperationType operationType, int prevVersion, int currVersion) {

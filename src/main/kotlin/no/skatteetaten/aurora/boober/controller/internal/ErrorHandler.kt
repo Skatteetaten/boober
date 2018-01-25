@@ -1,15 +1,15 @@
 package no.skatteetaten.aurora.boober.controller.internal
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.service.AuroraConfigException
-import no.skatteetaten.aurora.boober.service.AuroraVersioningException
-import no.skatteetaten.aurora.boober.service.OpenShiftException
-import no.skatteetaten.aurora.boober.service.ServiceException
-import no.skatteetaten.aurora.boober.service.ValidationException
+import no.skatteetaten.aurora.boober.controller.NoSuchResourceException
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
+import no.skatteetaten.aurora.boober.model.AuroraVersioningException
+import no.skatteetaten.aurora.boober.model.ErrorDetail
+import no.skatteetaten.aurora.boober.model.PreconditionFailureException
+import no.skatteetaten.aurora.boober.service.*
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
-import org.springframework.http.HttpStatus.BAD_REQUEST
-import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
+import org.springframework.http.HttpStatus.*
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ControllerAdvice
@@ -23,6 +23,9 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
     @ExceptionHandler(ServiceException::class)
     fun handleValidationErrors(ex: ServiceException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
 
+    @ExceptionHandler(AuroraConfigException::class)
+    fun handleValidationErrors(ex: AuroraConfigException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
+
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleBadRequest(ex: IllegalArgumentException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
 
@@ -31,6 +34,15 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
 
     @ExceptionHandler(IllegalAccessException::class)
     fun handleAccessRequest(ex: IllegalAccessException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
+
+    @ExceptionHandler(UnauthorizedAccessException::class)
+    fun handleAccessRequest(ex: UnauthorizedAccessException, req: WebRequest) = handleException(ex, req, FORBIDDEN)
+
+    @ExceptionHandler(PreconditionFailureException::class)
+    fun handleAccessRequest(ex: PreconditionFailureException, req: WebRequest) = handleException(ex, req, PRECONDITION_FAILED)
+
+    @ExceptionHandler(NoSuchResourceException::class)
+    fun handleAccessRequest(ex: NoSuchResourceException, req: WebRequest) = handleException(ex, req, NOT_FOUND)
 
     @ExceptionHandler(OpenShiftException::class)
     fun handleOpenShiftErrors(ex: OpenShiftException, req: WebRequest) = handleException(ex, req, INTERNAL_SERVER_ERROR)
@@ -48,8 +60,8 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
         val items = when (e) {
             is AuroraConfigException -> e.errors
             is AuroraVersioningException -> e.errors
-            is ValidationException -> e.errors
-            else -> listOf()
+            is MultiApplicationValidationException -> e.toValidationErrors()
+            else -> listOf(ErrorDetail(message = e.message!!))
         }
 
         if (httpStatus.is5xxServerError) {

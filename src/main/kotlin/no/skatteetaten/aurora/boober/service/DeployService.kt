@@ -1,113 +1,178 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.model.*
-import no.skatteetaten.aurora.boober.model.TemplateType.build
-import no.skatteetaten.aurora.boober.model.TemplateType.development
-import no.skatteetaten.aurora.boober.service.internal.AuroraDeployResult
-import no.skatteetaten.aurora.boober.service.internal.DeployHistory
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.newFixedThreadPoolContext
+import kotlinx.coroutines.experimental.runBlocking
+import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.dockerGroupSafeName
 import no.skatteetaten.aurora.boober.utils.openshiftKind
-import org.eclipse.jgit.api.Git
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.*
 
-data class DeployParams(
-        val envs: List<String> = listOf(),
-        val apps: List<String> = listOf(),
-        val overrides: MutableList<AuroraConfigFile> = mutableListOf(),
-        val deploy: Boolean
-) {
-    val applicationIds: List<ApplicationId>
-        get() = envs.flatMap { env -> apps.map { app -> ApplicationId(env, app) } }
-}
-
-
 @Service
+//TODO:Split up. Service is to large
 class DeployService(
+        val auroraConfigService: AuroraConfigService,
         val openShiftObjectGenerator: OpenShiftObjectGenerator,
         val openShiftClient: OpenShiftClient,
-        val gitService: GitService,
-        val deployBundleService: DeployBundleService,
-        val secretVaultPermissionService: SecretVaultPermissionService,
-        val mapper: ObjectMapper,
         val dockerService: DockerService,
         val resourceProvisioner: ExternalResourceProvisioner,
+        val redeployService: RedeployService,
+        val userDetailsProvider: UserDetailsProvider,
+        val deployLogService: DeployLogService,
         @Value("\${openshift.cluster}") val cluster: String,
-        @Value("\${boober.docker.registry}") val dockerRegistry: String) {
+        @Value("\${boober.docker.registry}") val dockerRegistry: String,
+        @Value("\${boober.threadpool.namespace:4}") val namespacePoolSize: Int,
+        @Value("\${boober.threadpool.app:4}") val appPoolSize: Int) {
 
     val logger: Logger = LoggerFactory.getLogger(DeployService::class.java)
 
-    private val DEPLOY_PREFIX = "DEPLOY"
-    private val FAILED_PREFIX = "FAILED"
-
+    val nsDispatcher = newFixedThreadPoolContext(namespacePoolSize, "namespacePool")
+    val appDispatcher = newFixedThreadPoolContext(appPoolSize, "appPool")
 
     @JvmOverloads
-    fun executeDeploy(affiliation: String, applicationIds: List<ApplicationId>, overrides: List<AuroraConfigFile> = mutableListOf(), deploy: Boolean = true): List<AuroraDeployResult> {
+    fun executeDeploy(auroraConfigName: String, applicationIds: List<ApplicationId>, overrides: List<AuroraConfigFile> = listOf(), deploy: Boolean = true): List<AuroraDeployResult> {
 
         if (applicationIds.isEmpty()) {
             throw IllegalArgumentException("Specify applicationId")
         }
 
-        return deployBundleService.withDeployBundle(affiliation, overrides) { repo, it ->
-            logger.debug("deploy")
-            logger.debug("create deployment spec")
+        val deploymentSpecs = auroraConfigService.createValidatedAuroraDeploymentSpecs(auroraConfigName, applicationIds, overrides)
+        val environments = prepareDeployEnvironments(deploymentSpecs)
+        val deployResults: List<AuroraDeployResult> = deployFromSpecs(deploymentSpecs, environments, deploy)
 
-            val deploymentSpecs: List<AuroraDeploymentSpec> = deployBundleService.createAuroraDeploymentSpecs(it, applicationIds)
-            val deployResults: List<AuroraDeployResult> = deploymentSpecs
+        deployLogService.markRelease(auroraConfigName, deployResults)
+
+        return deployResults
+    }
+
+
+    private fun prepareDeployEnvironments(deploymentSpecs: List<AuroraDeploymentSpec>): Map<AuroraDeployEnvironment, AuroraDeployResult> {
+
+        val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
+        return runBlocking(nsDispatcher) {
+            deploymentSpecs
                     .filter { it.cluster == cluster }
-                    .filter { hasAccessToAllVolumes(it.volume) }
-                    .map {
-                        logger.debug("deploy from spec")
-                        val res = deployFromSpec(it, deploy)
-                        logger.debug("/deploy from spec")
-                        res
-                    }
-            logger.debug("mark release")
-            markRelease(deployResults, repo)
-            logger.debug("/mark release")
-            logger.debug("/deploy")
-            deployResults
+                    .map { it.environment }
+                    .distinct()
+                    .map { environment: AuroraDeployEnvironment ->
+                        async(nsDispatcher) {
+
+                            if (!authenticatedUser.hasAnyRole(environment.permissions.admin.groups)) {
+                                Pair(environment, AuroraDeployResult(success = false, reason = "User=${authenticatedUser.fullName} does not have access to admin this environment from the groups=${environment.permissions.admin.groups}"))
+                            }
+
+                            val projectExist = openShiftClient.projectExists(environment.namespace)
+                            val environmentResponses = prepareDeployEnvironment(environment, projectExist)
+
+                            val success = environmentResponses.all { it.success }
+
+                            val message = if (!success) {
+                                "One or more http calls to OpenShift failed"
+                            } else "Namespace created successfully."
+
+                            logger.info("Environment done. user='${authenticatedUser.fullName}' namespace=${environment.namespace} success=${success} reason=${message} admins=${environment.permissions.admin.groups} viewers=${environment.permissions.view?.groups}")
+                            Pair(environment, AuroraDeployResult(
+                                    openShiftResponses = environmentResponses,
+                                    success = success,
+                                    reason = message,
+                                    projectExist = projectExist))
+                        }
+                    }.map { it.await() }
+                    .toMap()
         }
     }
 
-    fun deployFromSpec(deploymentSpec: AuroraDeploymentSpec, shouldDeploy: Boolean): AuroraDeployResult {
+    private fun prepareDeployEnvironment(environment: AuroraDeployEnvironment, projectExist: Boolean): List<OpenShiftResponse> {
 
-        val deployId = UUID.randomUUID().toString()
+        val affiliation = environment.affiliation
+        val namespace = environment.namespace
+
+        val createNamespaceResponse = openShiftObjectGenerator.generateProjectRequest(environment).let {
+            openShiftClient.createOpenShiftCommand(namespace, it, projectExist)
+        }.let { openShiftClient.performOpenShiftCommand(namespace, it) }
+
+        val updateNamespaceResponse = openShiftClient.createUpdateNamespaceCommand(namespace, affiliation).let {
+            openShiftClient.performOpenShiftCommand(namespace, it)
+        }
+
+        val updateRoleBindingsResponse = openShiftObjectGenerator.generateRolebindings(environment.permissions).map {
+            openShiftClient.createOpenShiftCommand(namespace, it, createNamespaceResponse.success, true)
+        }.map { openShiftClient.performOpenShiftCommand(namespace, it) }
+
+        return listOf(createNamespaceResponse, updateNamespaceResponse) + updateRoleBindingsResponse
+    }
+
+    private fun deployFromSpecs(deploymentSpecs: List<AuroraDeploymentSpec>, environments: Map<AuroraDeployEnvironment, AuroraDeployResult>, deploy: Boolean): List<AuroraDeployResult> {
+
+        val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
+        return runBlocking {
+            deploymentSpecs.map {
+                async(appDispatcher) {
+
+                    val env = environments[it.environment]
+                    when {
+                        env == null -> {
+                            if (it.cluster != cluster) {
+                                AuroraDeployResult(auroraDeploymentSpec = it, ignored = true, reason = "Not valid in this cluster.")
+                            } else {
+                                AuroraDeployResult(auroraDeploymentSpec = it, success = false, reason = "Environment was not created.")
+                            }
+                        }
+                        !env.success -> env.copy(auroraDeploymentSpec = it)
+                        else -> {
+                            val result = deployFromSpec(it, deploy, env.projectExist)
+                            result.copy(openShiftResponses = env.openShiftResponses.addIfNotNull(result.openShiftResponses))
+
+                        }
+                    }.also {
+                        logger.info("Deploy done user='${authenticatedUser.fullName}' deployId=${it.deployId} app=${it.auroraDeploymentSpec?.name} namespace=${it.auroraDeploymentSpec?.environment?.namespace} success=${it.success} ignored=${it.ignored} reason=${it.reason}")
+                    }
+                }
+            }.map { it.await() }
+        }
+    }
+
+    fun deployFromSpec(deploymentSpec: AuroraDeploymentSpec, shouldDeploy: Boolean, namespaceCreated: Boolean): AuroraDeployResult {
+
+        val deployId = UUID.randomUUID().toString().substring(0, 7)
+        if (deploymentSpec.cluster != cluster) {
+            return AuroraDeployResult(auroraDeploymentSpec = deploymentSpec, ignored = true, reason = "Not valid in this cluster.")
+        }
 
         logger.debug("Resource provisioning")
         val provisioningResult = resourceProvisioner.provisionResources(deploymentSpec)
 
-        logger.debug("Project exist")
-        val projectExist = openShiftClient.projectExists(deploymentSpec.namespace)
-        logger.debug("Prepare environment")
-        val environmentResponses = prepareDeployEnvironment(deploymentSpec, projectExist)
         logger.debug("Apply objects")
-        val applicationResponses: List<OpenShiftResponse> = applyOpenShiftApplicationObjects(deployId, deploymentSpec, provisioningResult, projectExist)
+        val openShiftResponses: List<OpenShiftResponse> = applyOpenShiftApplicationObjects(
+                deployId, deploymentSpec, provisioningResult, namespaceCreated)
 
-        val openShiftResponses = environmentResponses + applicationResponses
+        logger.debug("done applying objects")
         val success = openShiftResponses.all { it.success }
-        val result = AuroraDeployResult(deployId, deploymentSpec, openShiftResponses, success)
+        val result = AuroraDeployResult(deploymentSpec, deployId, openShiftResponses, success)
         if (!shouldDeploy) {
-            return result
+            return result.copy(reason = "Deploy explicitly turned of.")
         }
 
         if (!success) {
-            return result
+            return result.copy(reason = "One or more resources did not complete correctly.")
         }
 
-
-        if (deploymentSpec.deploy?.flags?.pause == true){
-            return result
+        if (deploymentSpec.deploy?.flags?.pause == true) {
+            return result.copy(reason = "Deployment is paused.")
         }
 
         val tagResult = deploymentSpec.deploy?.takeIf { it.releaseTo != null }?.let {
@@ -115,32 +180,33 @@ class DeployService(
             val cmd = TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
             dockerService.tag(cmd)
         }
-        logger.debug("Redeploy")
-        val redeployResponse = triggerRedeploy(deploymentSpec, openShiftResponses)
+        val redeployResponse = redeployService.triggerRedeploy(deploymentSpec, openShiftResponses)
 
-        val totalSuccess = listOf(success, tagResult?.success, redeployResponse?.success).filterNotNull().all { it }
+        val redeploySuccess = if (redeployResponse.isEmpty()) true else redeployResponse.last().success
+        val totalSuccess = listOf(success, tagResult?.success, redeploySuccess).filterNotNull().all { it }
 
-        return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResponse), tagResponse = tagResult, success = totalSuccess)
+        return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResponse), tagResponse = tagResult, success = totalSuccess, reason = "Deployment success.")
     }
 
     private fun applyOpenShiftApplicationObjects(deployId: String, deploymentSpec: AuroraDeploymentSpec,
                                                  provisioningResult: ProvisioningResult? = null,
                                                  mergeWithExistingResource: Boolean): List<OpenShiftResponse> {
 
-        val namespace = deploymentSpec.namespace
+        val namespace = deploymentSpec.environment.namespace
         val name = deploymentSpec.name
 
         val openShiftApplicationObjects: List<JsonNode> = openShiftObjectGenerator.generateApplicationObjects(deployId, deploymentSpec, provisioningResult)
-        val openShiftApplicationResponses: List<OpenShiftResponse> = openShiftApplicationObjects.flatMap {
-            val openShiftCommand = openShiftClient.createOpenShiftCommand(namespace, it, mergeWithExistingResource)
-            if (updateRouteCommandWithChangedHostOrPath(openShiftCommand, deploymentSpec)) {
-                val deleteCommand = openShiftCommand.copy(operationType = OperationType.DELETE)
-                val createCommand = openShiftCommand.copy(operationType = OperationType.CREATE, payload = openShiftCommand.generated!!)
-                listOf(deleteCommand, createCommand)
-            } else {
-                listOf(openShiftCommand)
-            }
-        }.map { openShiftClient.performOpenShiftCommand(namespace, it) }
+        val openShiftApplicationResponses: List<OpenShiftResponse> =
+                openShiftApplicationObjects.flatMap {
+                    val openShiftCommand = openShiftClient.createOpenShiftCommand(namespace, it, mergeWithExistingResource)
+                    if (updateRouteCommandWithChangedHostOrPath(openShiftCommand, deploymentSpec)) {
+                        val deleteCommand = openShiftCommand.copy(operationType = OperationType.DELETE)
+                        val createCommand = openShiftCommand.copy(operationType = OperationType.CREATE, payload = openShiftCommand.generated!!)
+                        listOf(deleteCommand, createCommand)
+                    } else {
+                        listOf(openShiftCommand)
+                    }
+                }.map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         if (openShiftApplicationResponses.any { !it.success }) {
             logger.warn("One or more commands failed for $namespace/$name. Will not delete objects from previous deploys.")
@@ -154,25 +220,6 @@ class DeployService(
         return openShiftApplicationResponses.addIfNotNull(deleteOldObjectResponses)
     }
 
-    private fun prepareDeployEnvironment(deploymentSpec: AuroraDeploymentSpec, projectExist: Boolean): List<OpenShiftResponse> {
-
-        val affiliation = deploymentSpec.affiliation
-        val namespace = deploymentSpec.namespace
-
-        val createNamespaceResponse = openShiftObjectGenerator.generateProjectRequest(deploymentSpec).let {
-            openShiftClient.createOpenShiftCommand(namespace, it, projectExist)
-        }.let { openShiftClient.performOpenShiftCommand(namespace, it) }
-
-        val updateNamespaceResponse = openShiftClient.createUpdateNamespaceCommand(namespace, affiliation).let {
-            openShiftClient.performOpenShiftCommand(namespace, it)
-        }
-
-        val updateRoleBindingsResponse = openShiftObjectGenerator.generateRolebindings(deploymentSpec.permissions).map {
-            openShiftClient.createOpenShiftCommand(namespace, it, createNamespaceResponse.success, true)
-        }.map { openShiftClient.performOpenShiftCommand(namespace, it) }
-
-        return listOf(createNamespaceResponse, updateNamespaceResponse) + updateRoleBindingsResponse
-    }
 
     private fun updateRouteCommandWithChangedHostOrPath(openShiftCommand: OpenshiftCommand, deploymentSpec: AuroraDeploymentSpec): Boolean {
 
@@ -205,107 +252,5 @@ class DeployService(
 
         return changed
     }
-
-    private fun triggerRedeploy(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>): OpenShiftResponse? {
-
-        val namespace = deploymentSpec.namespace
-
-        return generateRedeployResourceFromSpec(deploymentSpec, openShiftResponses)
-                ?.let { openShiftClient.createOpenShiftCommand(namespace, it) }
-                ?.let { command ->
-                    try {
-                        openShiftClient.performOpenShiftCommand(namespace, command)
-                    } catch (e: OpenShiftException) {
-                        OpenShiftResponse.fromOpenShiftException(e, command)
-                    }
-                }
-    }
-
-    private fun markRelease(res: List<AuroraDeployResult>, repo: Git) {
-
-        val refs=res.map {
-            val result = filterSensitiveInformation(it)
-            val prefix = if (it.success) {
-                DEPLOY_PREFIX
-            } else {
-                FAILED_PREFIX
-            }
-            gitService.markRelease(repo, "$prefix/${it.tag}", mapper.writeValueAsString(result))
-        }
-        gitService.pushTags(repo, refs)
-    }
-
-    fun hasAccessToAllVolumes(volume: AuroraVolume?): Boolean {
-        if (volume == null) return true
-
-        val secretAccess = secretVaultPermissionService.hasUserAccess(volume.permissions)
-
-        val mountsWithNoPermissions = volume.mounts?.filter {
-            !secretVaultPermissionService.hasUserAccess(it.permissions)
-        } ?: emptyList()
-        val volumeAccess = mountsWithNoPermissions.isEmpty()
-
-        return secretAccess && volumeAccess
-
-    }
-
-    private fun filterSensitiveInformation(result: AuroraDeployResult): AuroraDeployResult {
-
-        val filteredResponses = result.openShiftResponses.filter { it.responseBody?.get("kind")?.asText() != "Secret" }
-        return result.copy(openShiftResponses = filteredResponses)
-    }
-
-
-    fun generateRedeployResourceFromSpec(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>): JsonNode? {
-
-        val type: TemplateType = deploymentSpec.type
-        val name: String = deploymentSpec.name
-        val dockerImage: String? = deploymentSpec.deploy?.dockerImage
-
-        return generateRedeployResource(type, name, dockerImage, openShiftResponses)
-
-    }
-
-    fun generateRedeployResource(type: TemplateType, name: String, dockerImage: String?, openShiftResponses: List<OpenShiftResponse>): JsonNode? {
-        if (type == build || type == development) {
-            return null
-        }
-
-        val imageStream = openShiftResponses.find { it.responseBody?.get("kind")?.asText()?.toLowerCase() ?: "" == "imagestream" }
-        val deployment = openShiftResponses.find { it.responseBody?.get("kind")?.asText()?.toLowerCase() ?: "" == "deploymentconfig" }
-
-        imageStream?.takeIf { !it.labelChanged("releasedVersion") && it.command.operationType == OperationType.UPDATE }?.let {
-            return openShiftObjectGenerator.generateDeploymentRequest(name)
-        }
-
-        if (imageStream == null) {
-            return deployment?.let {
-                openShiftObjectGenerator.generateDeploymentRequest(name)
-            }
-        }
-        if (dockerImage != null) {
-            return openShiftObjectGenerator.generateImageStreamImport(name, dockerImage)
-        }
-        return null
-    }
-
-    fun deployHistory(affiliation: String): List<DeployHistory> {
-        val repo = gitService.checkoutRepoForAffiliation(affiliation)
-        val res = gitService.tagHistory(repo)
-                .filter { it.tagName.startsWith(DEPLOY_PREFIX) }
-                .map { DeployHistory(it.taggerIdent, mapper.readTree(it.fullMessage)) }
-        gitService.closeRepository(repo)
-        return res
-    }
-
-    fun findDeployResultById(auroraConfigId: String, deployId: String): DeployHistory? {
-        val repo = gitService.checkoutRepoForAffiliation(auroraConfigId)
-        val res: DeployHistory? = gitService.tagHistory(repo)
-                .firstOrNull { it.tagName.endsWith(deployId) }
-                ?.let { DeployHistory(it.taggerIdent, mapper.readTree(it.fullMessage)) }
-        gitService.closeRepository(repo)
-        return res
-    }
 }
-
 

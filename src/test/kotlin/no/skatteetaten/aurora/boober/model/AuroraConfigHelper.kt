@@ -29,7 +29,7 @@ fun findAllPointers(node: JsonNode, maxLevel: Int) = node.findAllPointers(maxLev
 fun createAuroraConfig(aid: ApplicationId, affiliation: String = "aos", additionalFile: String? = null): AuroraConfig {
     val files = getSampleFiles(aid, additionalFile)
 
-    return AuroraConfig(files.map { AuroraConfigFile(it.key, it.value!!, false, version = null) }, affiliation)
+    return AuroraConfig(files.map { AuroraConfigFile(it.key, it.value!!, false) }, affiliation)
 }
 
 @JvmOverloads

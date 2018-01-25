@@ -1,0 +1,4 @@
+GET {{apiUrl}}/v1/auroraconfig/paas/verify-github-users/about.json
+Authorization:Bearer {{token}}
+
+###

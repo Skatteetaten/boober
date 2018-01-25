@@ -134,7 +134,7 @@
                 "value": "http://openshift-console-api-aos-booberdev.utv.paas.skead.no"
               },
               {
-                "name": "REMOTE_DEBUG",
+                "name": "ENABLE_REMOTE_DEBUG",
                 "value": "true"
               },
               {

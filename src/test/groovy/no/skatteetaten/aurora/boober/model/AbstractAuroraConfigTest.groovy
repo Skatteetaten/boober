@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import no.skatteetaten.aurora.boober.service.AbstractSpec
-import spock.lang.Specification
 
 abstract class AbstractAuroraConfigTest extends AbstractSpec {
 
@@ -87,7 +86,7 @@ abstract class AbstractAuroraConfigTest extends AbstractSpec {
   }
 }'''
 
-  static defaultAuroraConfig() {
+  static Map<String, String> defaultAuroraConfig() {
     [
         "about.json"         : DEFAULT_ABOUT,
         "utv/about.json"     : DEFAULT_UTV_ABOUT,
@@ -101,19 +100,24 @@ abstract class AbstractAuroraConfigTest extends AbstractSpec {
   static AuroraConfig createAuroraConfig(Map<String, String> auroraConfigJson) {
     def objectMapper = new ObjectMapper()
     def auroraConfigFiles = auroraConfigJson.collect { name, contents ->
-      new AuroraConfigFile(name, objectMapper.readValue(contents, JsonNode), false, null)
+      new AuroraConfigFile(name, objectMapper.readValue(contents, JsonNode), false)
     }
     def auroraConfig = new AuroraConfig(auroraConfigFiles, "aos")
     auroraConfig
   }
 
-  static modify(Map<String, String> auroraConfig, String fileName, Closure modifier) {
+  static Map<String, String> modify(Map<String, String> auroraConfig, String fileName, Closure modifier) {
     def configFile = auroraConfig[fileName]
+    String modifiedJson = modify(configFile, modifier)
+    auroraConfig[fileName] = modifiedJson
+    return auroraConfig
+  }
+
+  static String modify(String configFile, Closure modifier) {
     def asJson = new JsonSlurper().parseText(configFile)
     modifier.resolveStrategy = Closure.DELEGATE_FIRST
     modifier.delegate = asJson
     modifier()
-    def modifiedJson = JsonOutput.prettyPrint(JsonOutput.toJson(asJson))
-    auroraConfig[fileName] = modifiedJson
+    JsonOutput.prettyPrint(JsonOutput.toJson(asJson))
   }
 }
