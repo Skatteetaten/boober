@@ -1,4 +1,7 @@
-GET {{apiUrl}}/v1/vault/paas/secret/foobar.prop
+#GET {{apiUrl}}/v1/vault/paas/secret/foobar.prop
+#GET {{apiUrl}}/v1/vault/paas/flotus/yo.json
+GET {{apiUrl}}/v1/vault/paas/flotus/potus.txt
+#GET {{apiUrl}}/v1/vault/paas/flotus/potus
 Authorization:Bearer {{token}}
 
 ###
