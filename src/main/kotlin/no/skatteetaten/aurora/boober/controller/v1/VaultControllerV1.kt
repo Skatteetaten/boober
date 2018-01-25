@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.v1.VaultOperation.reencrypt
 import no.skatteetaten.aurora.boober.controller.v1.VaultWithAccessResource.Companion.fromEncryptedFileVault
@@ -11,13 +12,13 @@ import no.skatteetaten.aurora.boober.service.vault.VaultService
 import no.skatteetaten.aurora.boober.service.vault.VaultWithAccess
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
+import org.springframework.http.MediaType
 import org.springframework.util.AntPathMatcher
 import org.springframework.util.DigestUtils
 import org.springframework.web.bind.annotation.*
 import java.util.*
 import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 import javax.validation.Valid
 
 object B64 {
@@ -119,12 +120,13 @@ class VaultControllerV1(val vaultService: VaultService,
     }
 
     @GetMapping("/{vault}/**")
-    fun getVaultFile(@PathVariable vaultCollection: String, @PathVariable vault: String, request: HttpServletRequest): ResponseEntity<Response> {
+    fun getVaultFile(@PathVariable vaultCollection: String, @PathVariable vault: String,
+                     request: HttpServletRequest, response: HttpServletResponse) {
 
         val fileName = getVaultFileNameFromRequestUri(vaultCollection, vault, request)
         val vaultFile = vaultService.findFileInVault(vaultCollection, vault, fileName)
 
-        return createVaultFileResponse(vaultFile)
+        writeVaultFileResponse(vaultFile, response)
     }
 
     @PutMapping("/{vault}/**")
@@ -132,13 +134,13 @@ class VaultControllerV1(val vaultService: VaultService,
                         @PathVariable("vault") vaultName: String,
                         @RequestBody payload: VaultFileResource,
                         @RequestHeader(value = HttpHeaders.IF_MATCH, required = false) ifMatchHeader: String?,
-                        request: HttpServletRequest): ResponseEntity<Response> {
+                        request: HttpServletRequest, response: HttpServletResponse) {
 
         val fileContents: ByteArray = payload.decodedContents
         val fileName = getVaultFileNameFromRequestUri(vaultCollection, vaultName, request)
 
         vaultService.createOrUpdateFileInVault(vaultCollection, vaultName, fileName, fileContents, clearQuotes(ifMatchHeader))
-        return createVaultFileResponse(fileContents)
+        writeVaultFileResponse(fileContents, response)
     }
 
     @DeleteMapping("/{vault}/**")
@@ -163,11 +165,22 @@ class VaultControllerV1(val vaultService: VaultService,
         return fileName
     }
 
-    private fun createVaultFileResponse(vaultFile: ByteArray): ResponseEntity<Response> {
-        val response = Response(items = listOf(VaultFileResource.fromDecodedBytes(vaultFile)))
+    /**
+     * Since the request path of the vaultFile can contain any file name (like somefile.txt, otherfile.xml) we need
+     * to take full control of the response to make sure we still always set content-type to application/json and do
+     * not rely on any of the default conventions of spring.
+     */
+    private fun writeVaultFileResponse(vaultFile: ByteArray, response: HttpServletResponse) {
+
+        val body = Response(items = listOf(VaultFileResource.fromDecodedBytes(vaultFile)))
         val eTagHex: String = DigestUtils.md5DigestAsHex(vaultFile)
-        val headers = HttpHeaders().apply { eTag = "\"${eTagHex}\"" }
-        return ResponseEntity(response, headers, HttpStatus.OK)
+
+        response.contentType = MediaType.APPLICATION_JSON_VALUE
+        response.characterEncoding = "UTF8"
+        response.setHeader(HttpHeaders.ETAG, "\"${eTagHex}\"")
+        jacksonObjectMapper().writeValue(response.writer, body)
+        response.writer.flush()
+        response.writer.close()
     }
 }
 
