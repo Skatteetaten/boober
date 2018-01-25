@@ -1,0 +1,92 @@
+{
+  "kind": "ImageStreamImport",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "referanse",
+    "namespace": "paas-bjarte-dev",
+    "selfLink": "/oapi/v1/namespaces/paas-bjarte-dev/imagestreamimports/referanse",
+    "uid": "d9ace2df-df12-11e7-8131-005056833ec1",
+    "creationTimestamp": "2017-12-12T08:02:51Z"
+  },
+  "spec": {
+    "import": true,
+    "images": [
+      {
+        "from": {
+          "kind": "DockerImage",
+          "name": "docker-registry.aurora.sits.no:5000/no_skatteetaten_aurora_openshift/openshift-reference-springboot-server:1"
+        },
+        "to": {
+          "name": "default"
+        },
+        "importPolicy": {
+          "scheduled": true
+        }
+      }
+    ]
+  },
+  "status": {
+    "import": {
+      "metadata": {
+        "name": "referanse",
+        "namespace": "paas-bjarte-dev",
+        "uid": "5bb1887a-df10-11e7-8131-005056833ec1",
+        "resourceVersion": "162199260",
+        "generation": 6,
+        "creationTimestamp": "2017-12-12T07:45:00Z",
+        "labels": {
+          "affiliation": "paas",
+          "app": "referanse",
+          "booberDeployId": "d7eaa436-02e1-48dd-8e4d-d658ed5fdfdc",
+          "releasedVersion": "1",
+          "updatedBy": "m89870"
+        },
+        "annotations": {
+          "openshift.io/image.dockerRepositoryCheck": "2017-12-12T08:02:51Z"
+        }
+      },
+      "spec": {
+        "dockerImageRepository": "docker-registry.aurora.sits.no:5000/no_skatteetaten_aurora_openshift/openshift-reference-springboot-server",
+        "tags": [
+          {
+            "name": "default",
+            "annotations": null,
+            "from": {
+              "kind": "DockerImage",
+              "name": "docker-registry.aurora.sits.no:5000/no_skatteetaten_aurora_openshift/openshift-reference-springboot-server:1"
+            },
+            "generation": 6,
+            "importPolicy": {
+              "scheduled": true
+            },
+            "referencePolicy": {
+              "type": "Source"
+            }
+          }
+        ]
+      },
+      "status": {
+        "dockerImageRepository": "172.30.79.77:5000/paas-bjarte-dev/referanse",
+        "tags": [
+          {
+            "tag": "default",
+            "items": [
+              {
+                "created": "2017-12-12T07:46:07Z",
+                "dockerImageReference": "docker-registry.aurora.sits.no:5000/no_skatteetaten_aurora_openshift/openshift-reference-springboot-server@sha256:c43f2d51969457a6a085c0fb921ac22090588ca254a78014bf62834802108baf",
+                "image": "sha256:c43f2d51969457a6a085c0fb921ac22090588ca254a78014bf62834802108baf",
+                "generation": 6
+              },
+              {
+                "created": "2017-12-12T07:45:01Z",
+                "dockerImageReference": "docker-registry.aurora.sits.no:5000/no_skatteetaten_aurora_openshift/openshift-reference-springboot-server@sha256:47e5c7378cef1076384aeacb2f6adb18ebcaf09c81a4fac2f3d311f4c4d54759",
+                "image": "sha256:47e5c7378cef1076384aeacb2f6adb18ebcaf09c81a4fac2f3d311f4c4d54759",
+                "generation": 2
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

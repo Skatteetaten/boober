@@ -1,8 +1,11 @@
 package no.skatteetaten.aurora.boober.utils
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.JsonNodeType
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 
 
 fun JsonNode.findAllPointers(maxLevel: Int): List<String> {
@@ -143,3 +146,5 @@ fun JsonNode.toPrimitiveType(): Any? {
         else -> this.toString()
     }
 }
+
+fun jacksonYamlObjectMapper(): ObjectMapper = ObjectMapper(YAMLFactory()).registerKotlinModule()

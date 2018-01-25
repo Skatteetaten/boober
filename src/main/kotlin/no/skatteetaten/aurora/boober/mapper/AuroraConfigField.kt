@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.MissingNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.Database
+import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import org.apache.commons.lang.StringEscapeUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

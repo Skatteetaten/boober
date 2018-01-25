@@ -1,11 +1,12 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.fge.jsonpatch.JsonPatch
 import no.skatteetaten.aurora.boober.mapper.v1.createAuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
+import no.skatteetaten.aurora.boober.utils.removeExtension
 import java.io.File
-import java.util.*
+import java.util.HashSet
 
 data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affiliation: String) {
 
@@ -19,13 +20,14 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
 
         @JvmStatic
         fun fromFolder(folder: File): AuroraConfig {
+            val mapper = jacksonYamlObjectMapper()
             val files = folder.walkBottomUp()
                     .onEnter { !setOf(".secret", ".git").contains(it.name) }
-                    .filter { it.isFile }
+                    .filter { it.isFile && listOf("json", "yaml").contains(it.extension) }
                     .associate { it.relativeTo(folder).path to it }
 
             val nodes = files.map {
-                it.key to jacksonObjectMapper().readValue(it.value, JsonNode::class.java)
+                it.key to mapper.readValue(it.value, JsonNode::class.java)
             }.toMap()
 
             return AuroraConfig(nodes.map { AuroraConfigFile(it.key, it.value!!, false) }, folder.name)
@@ -35,8 +37,7 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
     fun getApplicationIds(): List<ApplicationId> {
 
         return auroraConfigFiles
-
-                .map { it.name.removeSuffix(".json") }
+                .map { it.name.removeExtension() }
                 .filter { it.contains("/") && !it.contains("about") && !it.startsWith("templates") }
                 .map { val (environment, application) = it.split("/"); ApplicationId(environment, application) }
     }
@@ -45,16 +46,21 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
     fun getFilesForApplication(applicationId: ApplicationId, overrideFiles: List<AuroraConfigFile> = listOf()): List<AuroraConfigFile> {
 
         val requiredFiles = requiredFilesForApplication(applicationId)
-        val filesForApplication = requiredFiles.mapNotNull { fileName -> auroraConfigFiles.find { it.name == fileName } }
+        val filesForApplication = requiredFiles.mapNotNull { fileName ->
+            auroraConfigFiles.find { it.name.removeExtension() == fileName }
+        }
 
-        val overrides = requiredFiles.mapNotNull { fileName -> overrideFiles.find { it.name == fileName } }
+        val overrides = requiredFiles.mapNotNull { fileName ->
+            overrideFiles.find { it.name.removeExtension() == fileName }
+        }
 
         val allFiles = filesForApplication + overrides
 
         val uniqueFileNames = HashSet(allFiles.map { it.name })
         if (uniqueFileNames.size != requiredFiles.size) {
             val missingFiles = requiredFiles.filter { it !in uniqueFileNames }
-            throw IllegalArgumentException("Unable to merge files because some required files are missing. Missing $missingFiles.")
+            val missingFilesWithExtension = missingFiles.map { "$it.(json|yaml)" }
+            throw IllegalArgumentException("Unable to merge files because some required files are missing. Missing $missingFilesWithExtension.")
         }
 
         return allFiles
@@ -84,7 +90,7 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
 
     fun patchFile(filename: String, jsonPatchOp: String, previousVersion: String? = null): Pair<AuroraConfigFile, AuroraConfig> {
 
-        val mapper = jacksonObjectMapper()
+        val mapper = jacksonYamlObjectMapper()
         val patch: JsonPatch = mapper.readValue(jsonPatchOp, JsonPatch::class.java)
 
         val auroraConfigFile = findFile(filename)
@@ -96,8 +102,7 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
     }
 
     @JvmOverloads
-    fun getAuroraDeploymentSpec(aid: ApplicationId, overrideFiles: List<AuroraConfigFile> = listOf()): AuroraDeploymentSpec
-            = createAuroraDeploymentSpec(this, aid, overrideFiles = overrideFiles)
+    fun getAuroraDeploymentSpec(aid: ApplicationId, overrideFiles: List<AuroraConfigFile> = listOf()): AuroraDeploymentSpec = createAuroraDeploymentSpec(this, aid, overrideFiles = overrideFiles)
 
     @JvmOverloads
     fun getAllAuroraDeploymentSpecs(overrideFiles: List<AuroraConfigFile> = listOf()): List<AuroraDeploymentSpec> {
@@ -110,26 +115,26 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
     }
 
     private fun getApplicationFile(applicationId: ApplicationId): AuroraConfigFile {
-        val fileName = "${applicationId.environment}/${applicationId.application}.json"
-        val file = auroraConfigFiles.find { it.name == fileName && !it.override }
-        return file ?: throw IllegalArgumentException("Should find applicationFile $fileName")
+        val fileName = "${applicationId.environment}/${applicationId.application}"
+        val file = auroraConfigFiles.find { it.name.removeExtension() == fileName && !it.override }
+        return file ?: throw IllegalArgumentException("Should find applicationFile $fileName.(json|yaml)")
     }
 
 
     private fun requiredFilesForApplication(applicationId: ApplicationId): Set<String> {
 
         val implementationFile = getApplicationFile(applicationId)
-        val baseFile = implementationFile.contents.get("baseFile")?.asText()
-                ?: "${applicationId.application}.json"
+        val baseFile = implementationFile.contents.get("baseFile")?.asText()?.removeExtension()
+                ?: applicationId.application
 
-        val envFile = implementationFile.contents.get("envFile")?.asText()
-                ?: "about.json"
+        val envFile = implementationFile.contents.get("envFile")?.asText()?.removeExtension()
+                ?: "about"
 
         return setOf(
-                "about.json",
+                "about",
                 baseFile,
                 "${applicationId.environment}/$envFile",
-                "${applicationId.environment}/${applicationId.application}.json")
+                "${applicationId.environment}/${applicationId.application}")
     }
 }
 

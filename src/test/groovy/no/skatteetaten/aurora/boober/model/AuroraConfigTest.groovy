@@ -118,9 +118,9 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
     when:
       auroraConfig.getFilesForApplication(referanseAid)
 
-    then: "Should be missing utv/referanse.json"
+      then: "Should be missing utv/referanse"
       def ex = thrown(IllegalArgumentException)
-      ex.message.contains("utv/referanse.json")
+      ex.message.contains("utv/referanse")
   }
 
   def "Includes base file in files for application when set"() {
