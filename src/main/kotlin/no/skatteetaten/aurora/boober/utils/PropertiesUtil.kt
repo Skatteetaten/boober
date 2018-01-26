@@ -8,27 +8,39 @@ import java.util.*
 
 // function that filters out everything except the lines with the provided keys from a .properties ByteArray
 fun filterProperties(properties: ByteArray, keys: List<String>) : ByteArray {
-    Properties().let { props ->
+
+    val props= Properties().let {
         try {
-            props.load(ByteArrayInputStream(properties))
+            it.load(ByteArrayInputStream(properties))
         } catch(ioe : IOException) {
             throw PropertiesException("Encountered a problem while reading properties.", ioe)
         } catch(iae : IllegalArgumentException) {
             throw PropertiesException("Encountered a problem while reading properties. The input stream contains a " +
                     "malformed Unicode escape sequence.", iae)
         }
+        it
+    }
 
-        Properties().let { newProps ->
-            keys.forEach( { key ->
-                if (props.stringPropertyNames().contains(key)) {
-                    props.getProperty(key).let { newProps.put(key, it) }
-                }
-            })
-            ByteArrayOutputStream().let { baos ->
-                newProps.store(baos, "Properties filtered.")
-                return baos.toByteArray()
+    val filtered= props.filter(keys)
+
+    return filtered.toByteArray()
+}
+
+fun Properties.filter(keys : List<String>) : Properties {
+    Properties().let { newProps ->
+        keys.forEach( { key ->
+            if (this.stringPropertyNames().contains(key)) {
+                this.getProperty(key).let { newProps.put(key, it) }
             }
-        }
+        })
+        return newProps
+    }
+}
+
+fun Properties.toByteArray() : ByteArray {
+    ByteArrayOutputStream().let { baos ->
+        this.store(baos, "Properties filtered.")
+        return baos.toByteArray()
     }
 }
 
