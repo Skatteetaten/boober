@@ -25,9 +25,9 @@ class AuroraVolumeMapperV1(val applicationFiles: List<AuroraConfigFile>) {
 
         return AuroraVolume(
                 secretVaultName = auroraConfigFields.extractOrNull("secretVault"),
-                secretVaultKeys = auroraConfigFields.extractOrNull<String?>("secretVaultKeys")?.let {
-                    it.split(",").map { key -> key.trim() }
-                },
+                secretVaultKeys = auroraConfigFields.extractOrNull<String>("secretVaultKeys")
+                        ?.let { it.split(",").map { key -> key.trim() }}
+                        ?: listOf(),
                 config = getConfigMap(auroraConfigFields),
                 mounts = getMounts(auroraConfigFields))
     }

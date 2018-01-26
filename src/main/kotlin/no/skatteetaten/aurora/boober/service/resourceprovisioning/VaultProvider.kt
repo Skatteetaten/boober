@@ -42,14 +42,14 @@ class VaultProvider(val vaultService: VaultService) {
 
         //if there are no secretVaultKeys specified, use all the keys
         if (secretVaultKeys.isEmpty()) return vaultData
-
+        
         return vaultData
-                .map { entry ->
+                .mapValues {
                     //if the vault contain a .properties-file, we filter based on secretVaultKeys
-                    if (entry.key.contains(".properties")){
-                        entry.key to filterProperties(entry.value, secretVaultKeys)
+                    if (it.key.contains(".properties")){
+                        filterProperties(it.value, secretVaultKeys)
                     } else {
-                        entry.key to entry.value
+                        it.value
                     }
                 }.toMap()
     }

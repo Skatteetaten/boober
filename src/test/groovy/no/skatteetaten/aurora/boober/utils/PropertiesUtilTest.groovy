@@ -1,9 +1,6 @@
 package no.skatteetaten.aurora.boober.utils
 
-
-import spock.lang.Specification
-
-class CollectionUtilsTest extends Specification {
+class PropertiesUtilTest {
 
   final String props = "#a text line\nfoo=bar\nusername=user\npassword=pass\nsomething=sameting\n"
 
@@ -58,4 +55,3 @@ class CollectionUtilsTest extends Specification {
       filteredProps.stringPropertyNames().contains("username")
   }
 }
-

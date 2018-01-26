@@ -56,7 +56,7 @@ class ExternalResourceProvisioner(
             val volume = deploymentSpec.volume ?: return listOf()
 
             val secretVaultNames = volume.mounts?.mapNotNull { it.secretVaultName }.orEmpty()
-            val secretVaultKeys = volume.secretVaultKeys?.mapNotNull { it }.orEmpty()
+            val secretVaultKeys = volume.secretVaultKeys
             val allVaultNames = volume.secretVaultName?.let { secretVaultNames + listOf(it) } ?: secretVaultNames
 
             return allVaultNames.map { VaultRequest(deploymentSpec.environment.affiliation, it, secretVaultKeys) }
