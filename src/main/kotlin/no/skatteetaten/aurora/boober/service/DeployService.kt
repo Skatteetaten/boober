@@ -1,9 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.newFixedThreadPoolContext
-import kotlinx.coroutines.experimental.runBlocking
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
@@ -34,14 +31,9 @@ class DeployService(
         val userDetailsProvider: UserDetailsProvider,
         val deployLogService: DeployLogService,
         @Value("\${openshift.cluster}") val cluster: String,
-        @Value("\${boober.docker.registry}") val dockerRegistry: String,
-        @Value("\${boober.threadpool.namespace:4}") val namespacePoolSize: Int,
-        @Value("\${boober.threadpool.app:4}") val appPoolSize: Int) {
+        @Value("\${boober.docker.registry}") val dockerRegistry: String) {
 
     val logger: Logger = LoggerFactory.getLogger(DeployService::class.java)
-
-    val nsDispatcher = newFixedThreadPoolContext(namespacePoolSize, "namespacePool")
-    val appDispatcher = newFixedThreadPoolContext(appPoolSize, "appPool")
 
     @JvmOverloads
     fun executeDeploy(auroraConfigName: String, applicationIds: List<ApplicationId>, overrides: List<AuroraConfigFile> = listOf(), deploy: Boolean = true): List<AuroraDeployResult> {
@@ -63,38 +55,35 @@ class DeployService(
     private fun prepareDeployEnvironments(deploymentSpecs: List<AuroraDeploymentSpec>): Map<AuroraDeployEnvironment, AuroraDeployResult> {
 
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
-        return runBlocking(nsDispatcher) {
-            deploymentSpecs
-                    .filter { it.cluster == cluster }
-                    .map { it.environment }
-                    .distinct()
-                    .map { environment: AuroraDeployEnvironment ->
-                        async(nsDispatcher) {
 
-                            if (!authenticatedUser.hasAnyRole(environment.permissions.admin.groups)) {
-                                Pair(environment, AuroraDeployResult(success = false, reason = "User=${authenticatedUser.fullName} does not have access to admin this environment from the groups=${environment.permissions.admin.groups}"))
-                            }
+        return deploymentSpecs
+                .filter { it.cluster == cluster }
+                .map { it.environment }
+                .distinct()
+                .map { environment: AuroraDeployEnvironment ->
 
-                            val projectExist = openShiftClient.projectExists(environment.namespace)
-                            val environmentResponses = prepareDeployEnvironment(environment, projectExist)
+                    if (!authenticatedUser.hasAnyRole(environment.permissions.admin.groups)) {
+                        Pair(environment, AuroraDeployResult(success = false, reason = "User=${authenticatedUser.fullName} does not have access to admin this environment from the groups=${environment.permissions.admin.groups}"))
+                    }
 
-                            val success = environmentResponses.all { it.success }
+                    val projectExist = openShiftClient.projectExists(environment.namespace)
+                    val environmentResponses = prepareDeployEnvironment(environment, projectExist)
 
-                            val message = if (!success) {
-                                "One or more http calls to OpenShift failed"
-                            } else "Namespace created successfully."
+                    val success = environmentResponses.all { it.success }
 
-                            logger.info("Environment done. user='${authenticatedUser.fullName}' namespace=${environment.namespace} success=${success} reason=${message} admins=${environment.permissions.admin.groups} viewers=${environment.permissions.view?.groups}")
-                            Pair(environment, AuroraDeployResult(
-                                    openShiftResponses = environmentResponses,
-                                    success = success,
-                                    reason = message,
-                                    projectExist = projectExist))
-                        }
-                    }.map { it.await() }
-                    .toMap()
-        }
+                    val message = if (!success) {
+                        "One or more http calls to OpenShift failed"
+                    } else "Namespace created successfully."
+
+                    logger.info("Environment done. user='${authenticatedUser.fullName}' namespace=${environment.namespace} success=${success} reason=${message} admins=${environment.permissions.admin.groups} viewers=${environment.permissions.view?.groups}")
+                    Pair(environment, AuroraDeployResult(
+                            openShiftResponses = environmentResponses,
+                            success = success,
+                            reason = message,
+                            projectExist = projectExist))
+                }.toMap()
     }
+
 
     private fun prepareDeployEnvironment(environment: AuroraDeployEnvironment, projectExist: Boolean): List<OpenShiftResponse> {
 
@@ -119,30 +108,26 @@ class DeployService(
     private fun deployFromSpecs(deploymentSpecs: List<AuroraDeploymentSpec>, environments: Map<AuroraDeployEnvironment, AuroraDeployResult>, deploy: Boolean): List<AuroraDeployResult> {
 
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
-        return runBlocking {
-            deploymentSpecs.map {
-                async(appDispatcher) {
 
-                    val env = environments[it.environment]
-                    when {
-                        env == null -> {
-                            if (it.cluster != cluster) {
-                                AuroraDeployResult(auroraDeploymentSpec = it, ignored = true, reason = "Not valid in this cluster.")
-                            } else {
-                                AuroraDeployResult(auroraDeploymentSpec = it, success = false, reason = "Environment was not created.")
-                            }
-                        }
-                        !env.success -> env.copy(auroraDeploymentSpec = it)
-                        else -> {
-                            val result = deployFromSpec(it, deploy, env.projectExist)
-                            result.copy(openShiftResponses = env.openShiftResponses.addIfNotNull(result.openShiftResponses))
-
-                        }
-                    }.also {
-                        logger.info("Deploy done username=${authenticatedUser.username} fullName='${authenticatedUser.fullName}' deployId=${it.deployId} app=${it.auroraDeploymentSpec?.name} namespace=${it.auroraDeploymentSpec?.environment?.namespace} success=${it.success} ignored=${it.ignored} reason=${it.reason}")
+        return deploymentSpecs.map {
+            val env = environments[it.environment]
+            when {
+                env == null -> {
+                    if (it.cluster != cluster) {
+                        AuroraDeployResult(auroraDeploymentSpec = it, ignored = true, reason = "Not valid in this cluster.")
+                    } else {
+                        AuroraDeployResult(auroraDeploymentSpec = it, success = false, reason = "Environment was not created.")
                     }
                 }
-            }.map { it.await() }
+                !env.success -> env.copy(auroraDeploymentSpec = it)
+                else -> {
+                    val result = deployFromSpec(it, deploy, env.projectExist)
+                    result.copy(openShiftResponses = env.openShiftResponses.addIfNotNull(result.openShiftResponses))
+
+                }
+            }.also {
+                logger.info("Deploy done username=${authenticatedUser.username} fullName='${authenticatedUser.fullName}' deployId=${it.deployId} app=${it.auroraDeploymentSpec?.name} namespace=${it.auroraDeploymentSpec?.environment?.namespace} success=${it.success} ignored=${it.ignored} reason=${it.reason}")
+            }
         }
     }
 
