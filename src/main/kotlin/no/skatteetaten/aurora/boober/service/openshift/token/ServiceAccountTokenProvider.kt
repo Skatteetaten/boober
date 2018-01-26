@@ -37,7 +37,7 @@ class ServiceAccountTokenProvider(
      */
     override fun getToken() = tokenSupplier.get()
 
-    fun readToken(): String {
+    private fun readToken(): String {
         return if (tokenOverride.isBlank()) {
             readTokenFromFile()
         } else {
@@ -45,7 +45,7 @@ class ServiceAccountTokenProvider(
         }
     }
 
-    fun readTokenFromFile(): String {
+    private fun readTokenFromFile(): String {
         logger.info("Reading application token from tokenLocation={}", tokenLocation)
         try {
             val token: String = Files.toString(File(tokenLocation), Charsets.UTF_8).trimEnd()

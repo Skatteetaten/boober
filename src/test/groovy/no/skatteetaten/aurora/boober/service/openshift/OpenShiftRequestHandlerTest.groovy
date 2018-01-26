@@ -9,6 +9,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpHeaders
 import org.springframework.http.RequestEntity
 import org.springframework.http.ResponseEntity
 import org.springframework.test.web.client.MockRestServiceServer
@@ -80,5 +81,17 @@ class OpenShiftRequestHandlerTest extends AbstractAuroraDeploymentSpecSpringTest
 
     then:
       thrown(OpenShiftException)
+  }
+
+  def "Get token snippet from auth header"() {
+    expect:
+      RetryLogger.getTokenSnippetFromAuthHeader(new HttpHeaders().with {
+        it.add(org.springframework.http.HttpHeaders.AUTHORIZATION, "Authorization $token" as String)
+        it
+      }) == snippet
+
+    where:
+      token | snippet
+      "some_long_token" | "some_"
   }
 }

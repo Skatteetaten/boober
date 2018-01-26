@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.controller.security
 
 import org.springframework.security.core.GrantedAuthority
+import kotlin.math.min
 import org.springframework.security.core.userdetails.User as SpringSecurityUser
 
 
@@ -22,4 +23,10 @@ class User(
 
         return authorities.any { roles.contains(it.authority) }
     }
+
+    val tokenSnippet: String
+        get() = token.substring(0, min(token.length, 5))
+
+    val groupNames: List<String>
+        get() = authorities.map { it.authority }
 }

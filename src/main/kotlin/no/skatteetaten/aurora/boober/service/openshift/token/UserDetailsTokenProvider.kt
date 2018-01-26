@@ -5,5 +5,6 @@ import org.springframework.stereotype.Component
 
 @Component
 class UserDetailsTokenProvider(val userDetailsProvider: UserDetailsProvider) : TokenProvider {
+
     override fun getToken(): String = userDetailsProvider.getAuthenticatedUser().token
 }

@@ -141,8 +141,11 @@ class VaultService(
     }
 
     private fun assertCurrentUserHasAccess(vault: EncryptedFileVault) {
-        if (!userDetailsProvider.getAuthenticatedUser().hasAnyRole(vault.permissions)) {
-            throw UnauthorizedAccessException("You do not have permission to operate on this vault (${vault.name})")
+        val user = userDetailsProvider.getAuthenticatedUser()
+        if (!user.hasAnyRole(vault.permissions)) {
+            val message = "You (${user.username}) do not have required permissions (${vault.permissions}) to " +
+                    "operate on this vault (${vault.name}). You have ${user.authorities.map { it.authority }}"
+            throw UnauthorizedAccessException(message)
         }
     }
 

@@ -1,9 +1,12 @@
 package no.skatteetaten.aurora.boober.service.openshift
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.utils.logger
 import org.slf4j.Logger
+import org.springframework.http.HttpHeaders
 import org.springframework.http.RequestEntity
 import org.springframework.http.ResponseEntity
 import org.springframework.retry.RetryCallback
@@ -16,6 +19,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestClientResponseException
 import org.springframework.web.client.RestTemplate
+import java.lang.Integer.min
 
 
 @Component
@@ -76,7 +80,8 @@ class RetryLogger(val logger: Logger) : RetryListenerSupport() {
         if (context.getAttribute(RetryContext.EXHAUSTED)?.let { it as Boolean } == true) {
             logger.error("Request failed. Giving up. url=${requestEntity.url}, method=${requestEntity.method}")
         } else {
-            logger.debug("Requested url=${requestEntity.url}, method=${requestEntity.method}")
+            val tokenSnippet = getTokenSnippetFromAuthHeader(requestEntity.headers)
+            logger.debug("Requested url=${requestEntity.url}, method=${requestEntity.method}, tokenSnippet=${tokenSnippet}")
         }
         super.close(context, callback, throwable)
     }
@@ -97,10 +102,26 @@ class RetryLogger(val logger: Logger) : RetryListenerSupport() {
         if (cause is RestClientResponseException) {
             params.put("code", cause.rawStatusCode)
             params.put("statusText", cause.statusText)
+            val messageFromResponse = try {
+                val response = jacksonObjectMapper().readValue<JsonNode>(cause.responseBodyAsString)
+                response.get("message")?.textValue()
+            } catch (e: Exception) {
+                "<N/A>"
+            }
+            params.put("messageFromResponse", messageFromResponse)
         }
 
         val message = StringBuilder("Request failed. ")
         params.map { "${it.key}=${it.value}" }.joinTo(message, ", ")
         logger.warn(message.toString())
+    }
+
+    companion object {
+        @JvmStatic
+        fun getTokenSnippetFromAuthHeader(headers: HttpHeaders) =
+                headers.get(HttpHeaders.AUTHORIZATION)
+                        ?.firstOrNull()
+                        ?.split(" ")
+                        ?.get(1)?.let { it.substring(0, min(it.length, 5)) }
     }
 }
