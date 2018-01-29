@@ -11,32 +11,65 @@ import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.springframework.stereotype.Service
 
 @Service
-class RedeployService(val openShiftClient: OpenShiftClient, val openShiftCommandBuilder: OpenShiftCommandBuilder, val openShiftObjectGenerator: OpenShiftObjectGenerator) {
+class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectGenerator: OpenShiftObjectGenerator) {
 
     data class ImageInformation(val lastTriggeredImage: String, val imageStreamName: String, val imageStreamTag: String)
 
-    fun triggerRedeploy(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>): List<OpenShiftResponse> {
+    data class VerificationResult(val success: Boolean = true, val message: String? = null)
+
+    data class RedeployResult @JvmOverloads constructor(
+            val openShiftResponses: List<OpenShiftResponse> = listOf(),
+            val success: Boolean = true,
+            val message: String? = null) {
+
+        companion object {
+            fun fromOpenShiftResponses(openShiftResponses: List<OpenShiftResponse>): RedeployResult {
+                val success = openShiftResponses?.all { it.success }
+                val message = if (success) "Redeploy succeeded" else "Redeploy failed"
+                return RedeployResult(openShiftResponses = openShiftResponses, success = success, message = message)
+            }
+        }
+    }
+
+    fun triggerRedeploy(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>): RedeployResult {
 
         val namespace = deploymentSpec.environment.namespace
 
-        val redeployResourceFromSpec = generateRedeployResourceFromSpec(deploymentSpec, openShiftResponses) ?: return emptyList()
-        val command = openShiftCommandBuilder.createOpenShiftCommand(namespace, redeployResourceFromSpec)
+        val redeployResourceFromSpec = generateRedeployResourceFromSpec(deploymentSpec, openShiftResponses) ?: return RedeployResult()
+        val command = openShiftClient.createOpenShiftCommand(namespace, redeployResourceFromSpec)
 
         try {
             val response = openShiftClient.performOpenShiftCommand(namespace, command)
-            if (response.command.payload.openshiftKind != "imagestreamimport" || didImportImage(response, openShiftResponses)) {
-                return listOf(response)
+
+            verifyResponse(response).takeUnless { it.success }?.let {
+                return RedeployResult(success = false, message = it?.message, openShiftResponses = listOf(response))
             }
-            val cmd = openShiftCommandBuilder.createOpenShiftCommand(namespace,
+
+            if (response.command.payload.openshiftKind != "imagestreamimport" || didImportImage(response, openShiftResponses)) {
+                return RedeployResult.fromOpenShiftResponses(listOf(response))
+            }
+            val cmd = openShiftClient.createOpenShiftCommand(namespace,
                     openShiftObjectGenerator.generateDeploymentRequest(deploymentSpec.name))
+
             try {
-                return listOf(response, openShiftClient.performOpenShiftCommand(namespace, cmd))
+                return RedeployResult.fromOpenShiftResponses(listOf(response, openShiftClient.performOpenShiftCommand(namespace, cmd)))
             } catch (e: OpenShiftException) {
-                return listOf(response, OpenShiftResponse.fromOpenShiftException(e, command))
+                return RedeployResult.fromOpenShiftResponses(listOf(response, OpenShiftResponse.fromOpenShiftException(e, command)))
             }
         } catch (e: OpenShiftException) {
-            return listOf(OpenShiftResponse.fromOpenShiftException(e, command))
+            return RedeployResult.fromOpenShiftResponses(listOf(OpenShiftResponse.fromOpenShiftException(e, command)))
         }
+    }
+
+    protected fun verifyResponse(response: OpenShiftResponse): VerificationResult {
+        val body = response.responseBody ?: return VerificationResult(success = false, message = "No response found")
+        val images = body.at("/status/images") as? ArrayNode
+
+        images?.find { it["status"]["status"].textValue()?.toLowerCase().equals("failure") }?.let {
+            return VerificationResult(success = false, message = it["status"]["message"]?.textValue())
+        }
+
+        return VerificationResult(success = true)
     }
 
     protected fun didImportImage(response: OpenShiftResponse, openShiftResponses: List<OpenShiftResponse>): Boolean {

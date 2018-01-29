@@ -162,12 +162,17 @@ class DeployService(
             val cmd = TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
             dockerService.tag(cmd)
         }
-        val redeployResponse = redeployService.triggerRedeploy(deploymentSpec, openShiftResponses)
+        val redeployResult = redeployService.triggerRedeploy(deploymentSpec, openShiftResponses)
 
-        val redeploySuccess = if (redeployResponse.isEmpty()) true else redeployResponse.last().success
-        val totalSuccess = listOf(success, tagResult?.success, redeploySuccess).filterNotNull().all { it }
+        if (!redeployResult.success) {
+            return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses),
+                    tagResponse = tagResult, success = false, reason = redeployResult.message)
+        }
 
-        return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResponse), tagResponse = tagResult, success = totalSuccess, reason = "Deployment success.")
+        val totalSuccess = listOf(success, tagResult?.success, redeployResult.success).filterNotNull().all { it }
+
+        return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses), tagResponse = tagResult,
+                success = totalSuccess, reason = "Deployment success.")
     }
 
     private fun applyOpenShiftApplicationObjects(deployId: String, deploymentSpec: AuroraDeploymentSpec,
