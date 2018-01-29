@@ -21,7 +21,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
 
   def setup() {
     GitServiceHelperKt.recreateRepo(new File(REMOTE_REPO_FOLDER, "${AURORA_CONFIG_NAME}.git"))
-//    GitServiceHelperKt.recreateFolder(new File(CHECKOUT_PATH))
+    FolderHelperKt.recreateFolder(new File(CHECKOUT_PATH))
 
     userDetailsProvider.getAuthenticatedUser() >> new User("aurora", "token", "Aurora Test User", [])
   }
