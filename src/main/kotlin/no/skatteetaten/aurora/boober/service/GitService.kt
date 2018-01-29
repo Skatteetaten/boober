@@ -72,27 +72,39 @@ open class GitService(
     @JvmOverloads
     fun checkoutRepository(repositoryName: String, checkoutFolder: String = repositoryName, deleteUnpushedCommits: Boolean = true): Git {
         val repoPath = File(File("$checkoutPath/$checkoutFolder").absoluteFile.absolutePath)
-        if (repoPath.exists()) {
+        val git = if (repoPath.exists()) {
             try {
-                val git = Git.open(repoPath)
-                git.pull()
-                        .setRebase(true)
-                        .setRemote("origin")
-                        .setCredentialsProvider(cp)
-                        .call()
-
-                if (deleteUnpushedCommits) {
-                    val trackingStatus = BranchTrackingStatus.of(git.repository, git.repository.fullBranch)
-                    if (trackingStatus.aheadCount != 0 || trackingStatus.behindCount != 0) {
-                        throw IllegalStateException("We are ${trackingStatus.aheadCount} commit(s) ahead and ${trackingStatus.behindCount} behind ${trackingStatus.remoteTrackingBranch}")
-                    }
-                }
-                return git
+                updateRepository(repoPath, deleteUnpushedCommits)
             } catch (e: Exception) {
                 logger.warn("Deleting local repository because of update failure. Cause: ${e.message}.")
                 repoPath.deleteRecursively()
+                null
+            }
+        } else null
+
+        if (git != null) return git
+
+        return checkoutRepository(repositoryName, repoPath)
+    }
+
+    private fun updateRepository(repoPath: File, failOnUnpushedCommits: Boolean): Git? {
+        val git = Git.open(repoPath)
+        git.pull()
+                .setRebase(true)
+                .setRemote("origin")
+                .setCredentialsProvider(cp)
+                .call()
+
+        if (failOnUnpushedCommits) {
+            val trackingStatus = BranchTrackingStatus.of(git.repository, git.repository.fullBranch)
+            if (trackingStatus.aheadCount != 0 || trackingStatus.behindCount != 0) {
+                throw IllegalStateException("We are ${trackingStatus.aheadCount} commit(s) ahead and ${trackingStatus.behindCount} behind ${trackingStatus.remoteTrackingBranch}")
             }
         }
+        return git
+    }
+
+    private fun checkoutRepository(repositoryName: String, repoPath: File): Git {
         return metrics.withMetrics("git_checkout", {
             val dir = repoPath.apply { mkdirs() }
             val uri = url.format(repositoryName)
@@ -172,5 +184,4 @@ open class GitService(
             userDetails.getAuthenticatedUser().let {
                 PersonIdent(it.fullName ?: it.username, "${it.username}@skatteetaten.no")
             }
-
 }
