@@ -4,6 +4,7 @@ import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.utils.LambdaOutputStream
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.EmtpyCommitException
+import org.eclipse.jgit.lib.BranchTrackingStatus
 import org.eclipse.jgit.lib.PersonIdent
 import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.lib.TextProgressMonitor
@@ -18,6 +19,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import java.io.File
 import java.io.PrintWriter
+
 
 @Configuration
 class GitServices(
@@ -67,21 +69,42 @@ open class GitService(
 
     val cp = UsernamePasswordCredentialsProvider(username, password)
 
-    fun checkoutRepository(repositoryName: String): Git {
-        val repoPath = File(File("$checkoutPath/$repositoryName").absoluteFile.absolutePath)
-        if (repoPath.exists()) {
+    @JvmOverloads
+    fun checkoutRepository(repositoryName: String, checkoutFolder: String = repositoryName, deleteUnpushedCommits: Boolean = true): Git {
+        val repoPath = File(File("$checkoutPath/$checkoutFolder").absoluteFile.absolutePath)
+        val git = if (repoPath.exists()) {
             try {
-                val git = Git.open(repoPath)
-                git.pull()
-                        .setRebase(true)
-                        .setRemote("origin")
-                        .setCredentialsProvider(cp)
-                        .call()
-                return git
+                updateRepository(repoPath, deleteUnpushedCommits)
             } catch (e: Exception) {
+                logger.warn("Deleting local repository because of update failure. Cause: ${e.message}.")
                 repoPath.deleteRecursively()
+                null
+            }
+        } else null
+
+        if (git != null) return git
+
+        return checkoutRepository(repositoryName, repoPath)
+    }
+
+    private fun updateRepository(repoPath: File, failOnUnpushedCommits: Boolean): Git? {
+        val git = Git.open(repoPath)
+        git.pull()
+                .setRebase(true)
+                .setRemote("origin")
+                .setCredentialsProvider(cp)
+                .call()
+
+        if (failOnUnpushedCommits) {
+            val trackingStatus = BranchTrackingStatus.of(git.repository, git.repository.fullBranch)
+            if (trackingStatus.aheadCount != 0 || trackingStatus.behindCount != 0) {
+                throw IllegalStateException("We are ${trackingStatus.aheadCount} commit(s) ahead and ${trackingStatus.behindCount} behind ${trackingStatus.remoteTrackingBranch}")
             }
         }
+        return git
+    }
+
+    private fun checkoutRepository(repositoryName: String, repoPath: File): Git {
         return metrics.withMetrics("git_checkout", {
             val dir = repoPath.apply { mkdirs() }
             val uri = url.format(repositoryName)
@@ -103,7 +126,8 @@ open class GitService(
 
         repo.add().addFilepattern(".").call()
         val status = repo.status().call()
-        val message = commitMessage ?: "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}"
+        val message = commitMessage
+                ?: "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}"
         val authorIdent = getPersonIdentFromUserDetails()
         try {
             repo.commit()
@@ -116,9 +140,9 @@ open class GitService(
                     .setCredentialsProvider(cp)
                     .add("refs/heads/master")
                     .call()
-        } catch (e : EmtpyCommitException) {
+        } catch (e: EmtpyCommitException) {
             // Ignore empty commits. It's ok.
-        } catch (e : Exception) {
+        } catch (e: Exception) {
             throw e
         }
     }
@@ -157,6 +181,7 @@ open class GitService(
     }
 
     private fun getPersonIdentFromUserDetails() =
-            userDetails.getAuthenticatedUser().let { PersonIdent(it.fullName ?: it.username, "${it.username}@skatteetaten.no") }
-
+            userDetails.getAuthenticatedUser().let {
+                PersonIdent(it.fullName ?: it.username, "${it.username}@skatteetaten.no")
+            }
 }
