@@ -16,10 +16,7 @@ class AuroraVolumeMapperV1(private val applicationFiles: List<AuroraConfigFile>)
     val configHandlers = applicationFiles.findConfigFieldHandlers()
     private val secretVaultHandlers = createSecretVaultHandlers()
 
-    //Supporting deprecated format for "secretVault" AuroraConfig parameter.
-    private val oldSecretVaultHandlers = createOldSecretVaultHandlers()
-
-    val handlers = configHandlers + mountHandlers + secretVaultHandlers + oldSecretVaultHandlers
+    val handlers = configHandlers + mountHandlers + secretVaultHandlers
 
     fun createAuroraVolume(auroraConfigFields: AuroraConfigFields): AuroraVolume {
 
@@ -30,7 +27,7 @@ class AuroraVolumeMapperV1(private val applicationFiles: List<AuroraConfigFile>)
                 mounts = getMounts(auroraConfigFields))
     }
 
-    private fun createOldSecretVaultHandlers(): List<AuroraConfigFieldHandler> {
+    private fun createSecretVaultHandlers(): List<AuroraConfigFieldHandler> {
         val secretVaultSubKeys = applicationFiles.findSubKeys("secretVault")
 
         //no subkeys means this is the old format. Return fieldHandler for "secretVault"
@@ -39,11 +36,6 @@ class AuroraVolumeMapperV1(private val applicationFiles: List<AuroraConfigFile>)
                     AuroraConfigFieldHandler("secretVault")
             )
         }
-        return listOf()
-    }
-
-    private fun createSecretVaultHandlers(): List<AuroraConfigFieldHandler> {
-        val secretVaultSubKeys = applicationFiles.findSubKeys("secretVault")
 
         return secretVaultSubKeys.flatMap { secretVaultSubKey ->
             listOf(
@@ -102,22 +94,14 @@ class AuroraVolumeMapperV1(private val applicationFiles: List<AuroraConfigFile>)
         }.toMap()
     }
 
-    private fun getSecretVault(auroraConfigFields: AuroraConfigFields): String? {
-        if (!secretVaultHandlers.isEmpty()) {
-            return auroraConfigFields.extract("secretVault/name")
-        } else if (!oldSecretVaultHandlers.isEmpty()) {
-            return auroraConfigFields.extract("secretVault")
-        }
-        return null
-    }
+    private fun getSecretVault(auroraConfigFields: AuroraConfigFields): String? =
+            auroraConfigFields.extractIfExistsOrNull("secretVault/name")
+                    ?: auroraConfigFields.extractIfExistsOrNull("secretVault")
 
-    private fun getSecretVaultKeys(auroraConfigFields: AuroraConfigFields): List<String> {
-        if (secretVaultHandlers.isEmpty()) {
-            return listOf()
-        }
 
-        return auroraConfigFields.extract("secretVault/keys")
-    }
+    private fun getSecretVaultKeys(auroraConfigFields: AuroraConfigFields): List<String> =
+            auroraConfigFields.extractIfExistsOrNull("secretVault/keys") ?: listOf()
+
 
     private fun getMounts(auroraConfigFields: AuroraConfigFields): List<Mount>? {
         if (mountHandlers.isEmpty()) {

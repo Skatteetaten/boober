@@ -196,4 +196,56 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
       then:
         true
     }
+
+  def "createDeploymentSpec has correctly parsed AuroraConfig secretVault with old syntax"() {
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": "vaultName" }'''
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    when:
+      deploymentSpec.getVolume().secretVaultName == "vaultName"
+      deploymentSpec.getVolume().secretVaultKeys.size() == 0
+
+    then:
+      true
+  }
+
+  def "createDeploymentSpec has correctly parsed AuroraConfig secretVault with new syntax (without keys)"() {
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": {"name": "test"} }'''
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    when:
+      deploymentSpec.getVolume().secretVaultName == "test"
+      deploymentSpec.getVolume().secretVaultKeys.size() == 0
+
+    then:
+      true
+  }
+
+  def "createDeploymentSpec has correctly parsed AuroraConfig secretVault with new syntax (with empty keys)"() {
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": {"name": "test", "keys": []} }'''
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    when:
+      deploymentSpec.getVolume().secretVaultName == "test"
+      deploymentSpec.getVolume().secretVaultKeys.size() == 0
+
+    then:
+      true
+  }
+
+  def "createDeploymentSpec has correctly parsed AuroraConfig secretVault with new syntax (with keys)"() {
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": {"name": "test", "keys": ["test1", "test2"]} }'''
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    when:
+      deploymentSpec.getVolume().secretVaultName == "test"
+      deploymentSpec.getVolume().secretVaultKeys.size() == 2
+
+    then:
+      true
+  }
 }
