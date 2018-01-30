@@ -30,32 +30,6 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
         udp.authenticatedUser >> new User("hero", "token", "Test User", [])
     }
 
-    def "Fails when affiliation is not in about file"() {
-        given:
-        auroraConfigJson["utv/aos-simple.json"] = '''{ "affiliation": "aaregistere" }'''
-
-        when:
-        createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
-
-        then:
-        def e = thrown(AuroraConfigException)
-        e.message ==
-                "Config for application aos-simple in environment utv contains errors. Invalid Source field=affiliation requires an about source. Actual source is source=utv/aos-simple.json."
-    }
-
-    def "Fails when affiliation is too long"() {
-        given:
-        auroraConfigJson["utv/about.json"] = '''{ "affiliation": "aaregistere", "cluster" : "utv" }'''
-
-        when:
-        createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
-
-        then:
-        def e = thrown(AuroraConfigException)
-        e.message ==
-                "Config for application aos-simple in environment utv contains errors. Affiliation can only contain letters and must be no longer than 10 characters."
-    }
-
     def "Fails when admin groups is empty"() {
         given:
         auroraConfigJson["utv/about.json"] = '''{ "permissions": { "admin": "" }, "cluster" : "utv" }'''
@@ -190,10 +164,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
         vaultService.vaultExists(vaultCollection, "test2") >> true
         vaultService.vaultExists(vaultCollection, "test") >> true
 
-      when:
+      expect:
         specValidator.validateVaultExistence(deploymentSpec)
-
-      then:
-        true
     }
 }

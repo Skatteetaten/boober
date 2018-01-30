@@ -124,6 +124,10 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
     inline fun <reified T> extractOrNull(name: String): T? = fields[name]!!.getNullableValue()
 
+    inline fun <reified T> extractIfExistsOrNull(name: String) : T? = fields[name]?.let { it.getNullableValue() }
+
+
+
 
     companion object {
 

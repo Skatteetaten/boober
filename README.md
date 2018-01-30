@@ -143,7 +143,10 @@ Below is an json with all possible values ( and some comments)
     }
 
   },
-  "secretVault": "test" //all secrets in the vault test are added as fields in a secret,
+  "secretVault" : {
+      "name" : "test",            //all secrets in the vault are added as fields in a secret,
+      "keys" : ["key1", "key2"]   //UNLESS keys is set to a subset of the fields in the .properties file, in which case only those keys listed that exist in the vault will be added to the secret
+      }
   "releseTo: : "prod" //when doing a deploy will not update imagestream but will share tag in docker registry. Imagestream listens to prod not version
   "mount" : {
       "mount-name" : {

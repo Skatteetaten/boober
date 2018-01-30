@@ -1,5 +1,12 @@
 package no.skatteetaten.aurora.boober.utils
 
+import no.skatteetaten.aurora.boober.model.ConfigFieldErrorDetail
+import no.skatteetaten.aurora.boober.model.ErrorDetail
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.IOException
+import java.util.*
+
 fun <K, V> Map<K, V>.addIfNotNull(value: Pair<K, V>?): Map<K, V> {
     return value?.let {
         this + it
@@ -44,3 +51,4 @@ fun <T> Collection<T>?.nullOnEmpty(): Collection<T>? {
 
     return this
 }
+

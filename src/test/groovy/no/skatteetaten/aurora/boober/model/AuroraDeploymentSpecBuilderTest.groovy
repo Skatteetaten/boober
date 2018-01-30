@@ -2,9 +2,6 @@ package no.skatteetaten.aurora.boober.model
 
 import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 
 class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
@@ -159,4 +156,46 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       ex.errors[0].message == "Version must be set as string"
   }
 
+  def "Fails when affiliation is not in about file"() {
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "affiliation": "aaregistere" }'''
+
+    when:
+      createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    then:
+      def e = thrown(AuroraConfigException)
+      e.message ==
+          "Config for application aos-simple in environment utv contains errors. Invalid Source field=affiliation requires an about source. Actual source is source=utv/aos-simple.json."
+  }
+
+  def "Fails when affiliation is too long"() {
+    given:
+      auroraConfigJson["utv/about.json"] = '''{ "affiliation": "aaregistere", "cluster" : "utv" }'''
+
+    when:
+      createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    then:
+      def e = thrown(AuroraConfigException)
+      e.message ==
+          "Config for application aos-simple in environment utv contains errors. Affiliation can only contain letters and must be no longer than 10 characters."
+  }
+
+  def "Parses variants of secretVault config correctly"() {
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = configFile
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    expect:
+      deploymentSpec.getVolume().secretVaultName == vaultName
+      deploymentSpec.getVolume().secretVaultKeys == keys
+
+    where:
+      configFile                                                            | vaultName   | keys
+      '''{ "secretVault": "vaultName" }'''                                  | "vaultName" | []
+      '''{ "secretVault": {"name": "test"} }'''                             | "test"      | []
+      '''{ "secretVault": {"name": "test", "keys": []} }'''                 | "test"      | []
+      '''{ "secretVault": {"name": "test", "keys": ["test1", "test2"]} }''' | "test"      | ["test1", "test2"]
+  }
 }
