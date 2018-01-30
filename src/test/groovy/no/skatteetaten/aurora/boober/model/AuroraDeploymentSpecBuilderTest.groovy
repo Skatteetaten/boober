@@ -159,4 +159,81 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       ex.errors[0].message == "Version must be set as string"
   }
 
+  def "Fails when affiliation is not in about file"() {
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "affiliation": "aaregistere" }'''
+
+    when:
+      createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    then:
+      def e = thrown(AuroraConfigException)
+      e.message ==
+          "Config for application aos-simple in environment utv contains errors. Invalid Source field=affiliation requires an about source. Actual source is source=utv/aos-simple.json."
+  }
+
+  def "Fails when affiliation is too long"() {
+    given:
+      auroraConfigJson["utv/about.json"] = '''{ "affiliation": "aaregistere", "cluster" : "utv" }'''
+
+    when:
+      createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    then:
+      def e = thrown(AuroraConfigException)
+      e.message ==
+          "Config for application aos-simple in environment utv contains errors. Affiliation can only contain letters and must be no longer than 10 characters."
+  }
+
+  def "createDeploymentSpec has correctly parsed AuroraConfig secretVault with old syntax"() {
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": "vaultName" }'''
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    when:
+      deploymentSpec.getVolume().secretVaultName == "vaultName"
+      deploymentSpec.getVolume().secretVaultKeys.size() == 0
+
+    then:
+      true
+  }
+
+  def "createDeploymentSpec has correctly parsed AuroraConfig secretVault with new syntax (without keys)"() {
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": {"name": "test"} }'''
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    when:
+      deploymentSpec.getVolume().secretVaultName == "test"
+      deploymentSpec.getVolume().secretVaultKeys.size() == 0
+
+    then:
+      true
+  }
+
+  def "createDeploymentSpec has correctly parsed AuroraConfig secretVault with new syntax (with empty keys)"() {
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": {"name": "test", "keys": []} }'''
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    when:
+      deploymentSpec.getVolume().secretVaultName == "test"
+      deploymentSpec.getVolume().secretVaultKeys.size() == 0
+
+    then:
+      true
+  }
+
+  def "createDeploymentSpec has correctly parsed AuroraConfig secretVault with new syntax (with keys)"() {
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": {"name": "test", "keys": ["test1", "test2"]} }'''
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    when:
+      deploymentSpec.getVolume().secretVaultName == "test"
+      deploymentSpec.getVolume().secretVaultKeys.size() == 2
+
+    then:
+      true
+  }
 }
