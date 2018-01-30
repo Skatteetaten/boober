@@ -2,9 +2,6 @@ package no.skatteetaten.aurora.boober.model
 
 import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 
 class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
@@ -185,55 +182,20 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
           "Config for application aos-simple in environment utv contains errors. Affiliation can only contain letters and must be no longer than 10 characters."
   }
 
-  def "createDeploymentSpec has correctly parsed AuroraConfig secretVault with old syntax"() {
+  def "Parses variants of secretVault config correctly"() {
     given:
-      auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": "vaultName" }'''
+      auroraConfigJson["utv/aos-simple.json"] = configFile
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
-    when:
-      deploymentSpec.getVolume().secretVaultName == "vaultName"
-      deploymentSpec.getVolume().secretVaultKeys.size() == 0
+    expect:
+      deploymentSpec.getVolume().secretVaultName == vaultName
+      deploymentSpec.getVolume().secretVaultKeys == keys
 
-    then:
-      true
-  }
-
-  def "createDeploymentSpec has correctly parsed AuroraConfig secretVault with new syntax (without keys)"() {
-    given:
-      auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": {"name": "test"} }'''
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
-
-    when:
-      deploymentSpec.getVolume().secretVaultName == "test"
-      deploymentSpec.getVolume().secretVaultKeys.size() == 0
-
-    then:
-      true
-  }
-
-  def "createDeploymentSpec has correctly parsed AuroraConfig secretVault with new syntax (with empty keys)"() {
-    given:
-      auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": {"name": "test", "keys": []} }'''
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
-
-    when:
-      deploymentSpec.getVolume().secretVaultName == "test"
-      deploymentSpec.getVolume().secretVaultKeys.size() == 0
-
-    then:
-      true
-  }
-
-  def "createDeploymentSpec has correctly parsed AuroraConfig secretVault with new syntax (with keys)"() {
-    given:
-      auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": {"name": "test", "keys": ["test1", "test2"]} }'''
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
-
-    when:
-      deploymentSpec.getVolume().secretVaultName == "test"
-      deploymentSpec.getVolume().secretVaultKeys.size() == 2
-
-    then:
-      true
+    where:
+      configFile                                                            | vaultName   | keys
+      '''{ "secretVault": "vaultName" }'''                                  | "vaultName" | []
+      '''{ "secretVault": {"name": "test"} }'''                             | "test"      | []
+      '''{ "secretVault": {"name": "test", "keys": []} }'''                 | "test"      | []
+      '''{ "secretVault": {"name": "test", "keys": ["test1", "test2"]} }''' | "test"      | ["test1", "test2"]
   }
 }
