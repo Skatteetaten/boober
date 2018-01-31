@@ -198,4 +198,38 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       '''{ "secretVault": {"name": "test", "keys": []} }'''                 | "test"      | []
       '''{ "secretVault": {"name": "test", "keys": ["test1", "test2"]} }''' | "test"      | ["test1", "test2"]
   }
+
+  def "Permissions supports both space separated string and array"() {
+    given:
+      modify(auroraConfigJson, "about.json", {
+        put("permissions", ["admin": adminPermissions])
+      })
+
+    when:
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    then:
+      def adminGroups = deploymentSpec.environment.permissions.admin.groups
+      adminGroups == ["APP_PaaS_utv", "APP_PaaS_drift"] as Set
+
+    where:
+      adminPermissions << ["APP_PaaS_utv APP_PaaS_drift", ["APP_PaaS_utv", "APP_PaaS_drift"]]
+  }
+
+  def "Webseal roles supports both comma separated string and array"() {
+    given:
+      modify(auroraConfigJson, "utv/aos-simple.json") {
+        put("webseal", [ "roles": roleConfig ])
+      }
+
+    when:
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    then:
+      def roles = deploymentSpec.deploy.webseal.roles
+      roles == "role1,role2,3"
+
+    where:
+      roleConfig << ["role1,role2,3", "role1, role2, 3", ["role1", "role2", 3]]
+  }
 }

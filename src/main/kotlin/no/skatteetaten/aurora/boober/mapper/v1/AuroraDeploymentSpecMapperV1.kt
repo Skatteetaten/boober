@@ -20,8 +20,10 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
             AuroraConfigFieldHandler("permissions/view"),
             AuroraConfigFieldHandler("permissions/adminServiceAccount"),
             // Max length of OpenShift project names is 63 characters. Project name = affiliation + "-" + envName.
-            AuroraConfigFieldHandler("envName", validator = { it.pattern("^[a-z0-9\\-]{0,52}$",
-                    "Environment must consist of lower case alphanumeric characters or '-'. It must be no longer than 52 characters.") },
+            AuroraConfigFieldHandler("envName", validator = {
+                it.pattern("^[a-z0-9\\-]{0,52}$",
+                        "Environment must consist of lower case alphanumeric characters or '-'. It must be no longer than 52 characters.")
+            },
                     defaultSource = "folderName",
                     defaultValue = applicationId.environment
             ),
@@ -148,20 +150,17 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
         return configFields + fields
     }
 
-    private fun extractPermissions(auroraConfigFields: AuroraConfigFields): Permissions {
-        val view = auroraConfigFields.extractOrNull<String?>("permissions/view")?.let {
-            it.split(" ").toSet()
-        }?.let {
-            Permission(it)
-        }
+    private fun extractPermissions(configFields: AuroraConfigFields): Permissions {
 
+        val viewGroups = configFields.extractDelimitedStringOrArrayAsStringList("permissions/view").toSet()
+        val adminGroups = configFields.extractDelimitedStringOrArrayAsStringList("permissions/admin", " ")
         //if sa present add to admin users.
-        val sa = auroraConfigFields.extractOrNull<String?>("permissions/adminServiceAccount")?.let { it.split(" ").toSet() } ?: emptySet()
-        val permission = Permissions(
-                admin = Permission(
-                        auroraConfigFields.extract<String>("permissions/admin").let { it.split(" ").filter { !it.isBlank() }.toSet() }, sa),
-                view = view)
-        return permission
+        val adminUsers = configFields.extractDelimitedStringOrArrayAsStringList("permissions/adminServiceAccount", " ").toSet()
+
+        val adminPermission = Permission(adminGroups.toSet(), adminUsers)
+        val viewPermission = viewGroups.takeIf { !it.isEmpty() }?.let { Permission(it) }
+
+        return Permissions(admin = adminPermission, view = viewPermission)
     }
 }
 
