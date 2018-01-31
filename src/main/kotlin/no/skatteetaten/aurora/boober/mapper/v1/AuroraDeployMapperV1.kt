@@ -158,7 +158,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
 
         return Webseal(
                 auroraConfigFields.extractOrNull("$name/host"),
-                auroraConfigFields.extractOrNull("$name/roles")
+                auroraConfigFields.extractDelimitedStringOrArrayAsStringList("$name/roles", ",").joinToString(",")
         )
 
     }

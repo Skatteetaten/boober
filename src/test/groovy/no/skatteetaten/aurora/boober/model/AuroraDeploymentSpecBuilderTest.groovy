@@ -215,4 +215,21 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
     where:
       adminPermissions << ["APP_PaaS_utv APP_PaaS_drift", ["APP_PaaS_utv", "APP_PaaS_drift"]]
   }
+
+  def "Webseal roles supports both comma separated string and array"() {
+    given:
+      modify(auroraConfigJson, "utv/aos-simple.json") {
+        put("webseal", [ "roles": roleConfig ])
+      }
+
+    when:
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    then:
+      def roles = deploymentSpec.deploy.webseal.roles
+      roles == "role1,role2,3"
+
+    where:
+      roleConfig << ["role1,role2,3", "role1, role2, 3", ["role1", "role2", 3]]
+  }
 }
