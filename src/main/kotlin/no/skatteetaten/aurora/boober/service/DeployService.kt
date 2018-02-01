@@ -17,7 +17,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.*
+import java.util.UUID
 
 @Service
 //TODO:Split up. Service is to large
@@ -165,6 +165,11 @@ class DeployService(
             val cmd = TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
             dockerService.tag(cmd)
         }
+
+        tagResult?.takeIf { !it.success }?.let {
+            return result.copy(tagResponse = it, reason = "Tag command failed")
+        }
+
         val redeployResult = redeployService.triggerRedeploy(deploymentSpec, openShiftResponses)
 
         if (!redeployResult.success) {
@@ -172,10 +177,9 @@ class DeployService(
                     tagResponse = tagResult, success = false, reason = redeployResult.message)
         }
 
-        val totalSuccess = listOf(success, tagResult?.success, redeployResult.success).filterNotNull().all { it }
 
         return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses), tagResponse = tagResult,
-                success = totalSuccess, reason = "Deployment success.")
+                reason = "Deployment success.")
     }
 
     private fun applyOpenShiftApplicationObjects(deployId: String, deploymentSpec: AuroraDeploymentSpec,
