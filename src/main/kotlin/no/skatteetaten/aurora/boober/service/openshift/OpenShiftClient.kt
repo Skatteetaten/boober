@@ -56,7 +56,17 @@ data class OpenShiftResponse @JvmOverloads constructor(
     }
 }
 
-data class OpenShiftGroups(val userGroups: Map<String, List<String>>, val groupUsers: Map<String, List<String>>)
+private typealias GroupName = String
+private typealias UserId = String
+
+data class OpenShiftGroups(private val groupUserPairs: List<Pair<GroupName, UserId>>) {
+
+    val groupUsers: Map<String, List<String>>
+        get() = groupUserPairs.groupBy({ it.first }, { it.second })
+
+    val userGroups: Map<String, List<String>>
+        get() = groupUserPairs.groupBy({ it.second }, { it.first })
+}
 
 @Service
 class OpenShiftClient(
@@ -147,30 +157,29 @@ class OpenShiftClient(
     @Cacheable("groups")
     fun getGroups(): OpenShiftGroups {
 
-        val url = "$baseUrl/oapi/v1/groups/"
-        val groupsResponse: ResponseEntity<JsonNode> = serviceAccountClient.get(url)!!
-        val userUrl="$baseUrl/oapi/v1/users"
-        val users: ResponseEntity<JsonNode> = serviceAccountClient.get(userUrl)!!
-        val userItems= users.body["items"] as ArrayNode
-        val allUsers = userItems.map { it["metadata"]["name"].asText() }
+        data class GroupUsers(val name: String, val userIds: List<String>)
+
+        fun getAllGroupUsers(): List<GroupUsers> {
+            val groupItems = getResponseBodyItems("${baseUrl}/oapi/v1/groups/")
+            return groupItems.map {
+                val name = it["metadata"]["name"].asText()
+                val users = (it["users"] as ArrayNode).map { it.asText() }
+                GroupUsers(name, users)
+            }
+        }
+
+        fun getAllUserIds(): List<String> {
+            val userItems = getResponseBodyItems("${baseUrl}/oapi/v1/users")
+            return userItems.map { it["metadata"]["name"].asText() }
+        }
 
         val implicitGroup = "system:authenticated"
+        val allGroupUsers = getAllGroupUsers() + GroupUsers(implicitGroup, getAllUserIds())
+        val groupsWithUsers = allGroupUsers.flatMap {
+            it.userIds.map { userId -> Pair(it.name, userId) }
+        }
 
-        val body = groupsResponse.body
-        val items = body["items"] as ArrayNode
-
-
-        val groupsWithUsers = items.flatMap {
-            val name = it["metadata"]["name"].asText()
-            val users = it["users"] as ArrayNode
-            users.map { Pair(name, it.asText()) }
-        } + allUsers.map{ Pair(implicitGroup, it)}
-
-
-        val userGroupIndex = groupsWithUsers.groupBy({ it.second }, { it.first })
-        val groupUserIndex = groupsWithUsers.groupBy({ it.first }, { it.second })
-
-        return OpenShiftGroups(userGroupIndex, groupUserIndex)
+        return OpenShiftGroups(groupsWithUsers)
     }
 
 
@@ -245,5 +254,10 @@ class OpenShiftClient(
         } else {
             userClient
         }
+    }
+
+    private fun getResponseBodyItems(url: String): ArrayNode {
+        val response: ResponseEntity<JsonNode> = serviceAccountClient.get(url)!!
+        return response.body["items"] as ArrayNode
     }
 }
