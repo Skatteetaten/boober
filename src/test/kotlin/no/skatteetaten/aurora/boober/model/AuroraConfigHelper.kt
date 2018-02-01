@@ -24,7 +24,6 @@ fun getAuroraConfigSamples(): AuroraConfig {
     return AuroraConfig(nodes.map { AuroraConfigFile(it.key, it.value, false) }, "aos")
 }
 
-fun findAllPointers(node: JsonNode, maxLevel: Int) = node.findAllPointers(maxLevel)
 
 @JvmOverloads
 fun createAuroraConfig(aid: ApplicationId, affiliation: String = "aos", additionalFile: String? = null): AuroraConfig {
@@ -36,7 +35,7 @@ fun createAuroraConfig(aid: ApplicationId, affiliation: String = "aos", addition
 @JvmOverloads
 fun getSampleFiles(aid: ApplicationId, additionalFile: String? = null): Map<String, String> {
 
-    return collectFilesToMapOfJsonNode(
+    return collectFiles(
             "about.json",
             "${aid.application}.json",
             "${aid.environment}/about.json",
@@ -52,22 +51,6 @@ fun getResultFiles(aid: ApplicationId): Map<String, JsonNode?> {
     return getFiles(baseFolder)
 }
 
-fun getDeployResultFiles(aid: ApplicationId): Map<String, JsonNode?> {
-    val baseFolder = File(AuroraConfigHelper::class.java
-            .getResource("/samples/deployresult/${aid.environment}/${aid.application}").file)
-
-    return getFiles(baseFolder, aid.application)
-}
-
-fun getRendererResultFiles(aid: ApplicationId): Map<String, JsonNode?> {
-    val baseFolder = File(AuroraConfigHelper::class.java
-            .getResource("/samples/rendererresult/${aid.environment}").file)
-
-    return baseFolder.listFiles().toHashSet().map {
-        val json = convertFileToJsonNode(it)
-        it.name to json
-    }.toMap()
-}
 
 private fun getFiles(baseFolder: File, name: String = ""): Map<String, JsonNode?> {
     return baseFolder.listFiles().toHashSet().map {
@@ -83,7 +66,7 @@ private fun getFiles(baseFolder: File, name: String = ""): Map<String, JsonNode?
     }.toMap()
 }
 
-private fun collectFilesToMapOfJsonNode(vararg fileNames: String): Map<String, String> {
+private fun collectFiles(vararg fileNames: String): Map<String, String> {
 
     return fileNames.filter { !it.isBlank() }.map { it to File(folder, it).readText(Charset.defaultCharset()) }.toMap()
 }
