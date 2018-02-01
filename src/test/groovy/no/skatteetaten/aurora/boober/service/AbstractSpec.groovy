@@ -11,6 +11,9 @@ abstract class AbstractSpec extends Specification {
 
   String loadResource(String folder, String resourceName) {
     def resourcePath = "${folder}/$resourceName"
-    this.getClass().getResource(resourcePath)?.text ?: { throw new IllegalArgumentException("No such resource $resourcePath")}()
+
+    def path = "src/test/resources/" +this.getClass().package.getName().replace(".", "/") + "/$resourcePath"
+    
+    this.getClass().getResource(resourcePath)?.text ?: { throw new IllegalArgumentException("No such resource $path")}()
   }
 }
