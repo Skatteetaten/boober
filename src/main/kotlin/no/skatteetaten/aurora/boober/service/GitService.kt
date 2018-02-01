@@ -72,17 +72,17 @@ open class GitService(
     @JvmOverloads
     fun checkoutRepository(repositoryName: String, checkoutFolder: String = repositoryName, deleteUnpushedCommits: Boolean = true): Git {
         val repoPath = File(File("$checkoutPath/$checkoutFolder").absoluteFile.absolutePath)
-        if (!repoPath.exists()) {
-            return cloneRepository(repositoryName, repoPath)
-        }
-        return try {
-            updateRepository(repoPath, deleteUnpushedCommits)
-        } catch (e: Exception) {
-            logger.warn("Deleting local repository because of update failure. Cause: ${e.message}.")
-            repoPath.deleteRecursively()
-            cloneRepository(repositoryName, repoPath)
+        val git: Git? = repoPath.takeIf(File::exists).let {
+            try {
+                updateRepository(repoPath, deleteUnpushedCommits)
+            } catch (e: Exception) {
+                logger.warn("Local repository update failed. Cause: ${e.message}.")
+                repoPath.deleteRecursively()
+                null
+            }
         }
 
+        return git ?: cloneRepository(repositoryName, repoPath)
     }
 
     private fun updateRepository(repoPath: File, failOnUnpushedCommits: Boolean): Git {
