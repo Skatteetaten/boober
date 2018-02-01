@@ -1,16 +1,21 @@
 package no.skatteetaten.aurora.boober.model
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.github.fge.jsonpatch.JsonPatch
 import no.skatteetaten.aurora.boober.mapper.v1.createAuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
+import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.removeExtension
 import java.io.File
+import java.nio.charset.Charset
 import java.util.HashSet
 
 data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affiliation: String) {
 
     companion object {
+
+        val yamlMapper = jacksonYamlObjectMapper()
+        val jsonMapper = jsonMapper()
+
         @JvmStatic
         fun fromFolder(folderName: String): AuroraConfig {
 
@@ -20,14 +25,13 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
 
         @JvmStatic
         fun fromFolder(folder: File): AuroraConfig {
-            val mapper = jacksonYamlObjectMapper()
             val files = folder.walkBottomUp()
                     .onEnter { !setOf(".secret", ".git").contains(it.name) }
                     .filter { it.isFile && listOf("json", "yaml").contains(it.extension) }
                     .associate { it.relativeTo(folder).path to it }
 
             val nodes = files.map {
-                it.key to mapper.readValue(it.value, JsonNode::class.java)
+                it.key to it.value.readText(Charset.defaultCharset())
             }.toMap()
 
             return AuroraConfig(nodes.map { AuroraConfigFile(it.key, it.value!!, false) }, folder.name)
@@ -69,10 +73,11 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
     fun findFile(filename: String): AuroraConfigFile? = auroraConfigFiles.find { it.name == filename }
 
     @JvmOverloads
-    fun updateFile(name: String, contents: JsonNode, previousVersion: String? = null): Pair<AuroraConfigFile, AuroraConfig> {
+    fun updateFile(name: String, contents: String, previousVersion: String? = null): Pair<AuroraConfigFile, AuroraConfig> {
 
         val files = auroraConfigFiles.toMutableList()
         val indexOfFileToUpdate = files.indexOfFirst { it.name == name }
+
         val newFile = AuroraConfigFile(name, contents)
 
         if (indexOfFileToUpdate == -1) {
@@ -90,15 +95,20 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
 
     fun patchFile(filename: String, jsonPatchOp: String, previousVersion: String? = null): Pair<AuroraConfigFile, AuroraConfig> {
 
-        val mapper = jacksonYamlObjectMapper()
-        val patch: JsonPatch = mapper.readValue(jsonPatchOp, JsonPatch::class.java)
+        val patch: JsonPatch = yamlMapper.readValue(jsonPatchOp, JsonPatch::class.java)
 
         val auroraConfigFile = findFile(filename)
                 ?: throw IllegalArgumentException("No such file $filename in AuroraConfig ${affiliation}")
-        val originalContentsNode = mapper.convertValue(auroraConfigFile.contents, JsonNode::class.java)
 
-        val fileContents = patch.apply(originalContentsNode)
-        return updateFile(filename, fileContents, previousVersion)
+        val fileContents = patch.apply(auroraConfigFile.asJsonNode)
+
+        val writeMapper = if (filename.endsWith(".yaml")) {
+            yamlMapper
+        } else jsonMapper
+
+        val rawContents = writeMapper.writerWithDefaultPrettyPrinter().writeValueAsString(fileContents)
+        //TODO how do we handle this with regards to yaml/json.
+        return updateFile(filename, rawContents, previousVersion)
     }
 
     @JvmOverloads
@@ -124,10 +134,10 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
     private fun requiredFilesForApplication(applicationId: ApplicationId): Set<String> {
 
         val implementationFile = getApplicationFile(applicationId)
-        val baseFile = implementationFile.contents.get("baseFile")?.asText()?.removeExtension()
+        val baseFile = implementationFile.asJsonNode.get("baseFile")?.asText()?.removeExtension()
                 ?: applicationId.application
 
-        val envFile = implementationFile.contents.get("envFile")?.asText()?.removeExtension()
+        val envFile = implementationFile.asJsonNode.get("envFile")?.asText()?.removeExtension()
                 ?: "about"
 
         return setOf(

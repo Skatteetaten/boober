@@ -57,7 +57,7 @@ class AuroraRouteMapperV1(val applicationId: ApplicationId, val applicationFiles
     fun findRouteAnnotaionHandlers(prefix: String): List<AuroraConfigFieldHandler> {
 
         return applicationFiles.flatMap { ac ->
-            ac.contents.at("/$prefix/annotations")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
+            ac.asJsonNode.at("/$prefix/annotations")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
         }.toSet().map { key ->
             AuroraConfigFieldHandler("$prefix/annotations/$key")
         }

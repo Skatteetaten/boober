@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.Configuration
 import no.skatteetaten.aurora.boober.utils.findAllPointers
 import java.io.File
+import java.nio.charset.Charset
 
 class AuroraConfigHelper
 
@@ -17,10 +18,10 @@ fun getAuroraConfigSamples(): AuroraConfig {
             .associate { it.relativeTo(folder).path to it }
 
     val nodes = files.map {
-        it.key to convertFileToJsonNode(it.value)
+        it.key to it.value.readText(Charset.defaultCharset())
     }.toMap()
 
-    return AuroraConfig(nodes.map { AuroraConfigFile(it.key, it.value!!, false) }, "aos")
+    return AuroraConfig(nodes.map { AuroraConfigFile(it.key, it.value, false) }, "aos")
 }
 
 fun findAllPointers(node: JsonNode, maxLevel: Int) = node.findAllPointers(maxLevel)
@@ -29,11 +30,11 @@ fun findAllPointers(node: JsonNode, maxLevel: Int) = node.findAllPointers(maxLev
 fun createAuroraConfig(aid: ApplicationId, affiliation: String = "aos", additionalFile: String? = null): AuroraConfig {
     val files = getSampleFiles(aid, additionalFile)
 
-    return AuroraConfig(files.map { AuroraConfigFile(it.key, it.value!!, false) }, affiliation)
+    return AuroraConfig(files.map { AuroraConfigFile(it.key, it.value, false) }, affiliation)
 }
 
 @JvmOverloads
-fun getSampleFiles(aid: ApplicationId, additionalFile: String? = null): Map<String, JsonNode?> {
+fun getSampleFiles(aid: ApplicationId, additionalFile: String? = null): Map<String, String> {
 
     return collectFilesToMapOfJsonNode(
             "about.json",
@@ -82,9 +83,9 @@ private fun getFiles(baseFolder: File, name: String = ""): Map<String, JsonNode?
     }.toMap()
 }
 
-private fun collectFilesToMapOfJsonNode(vararg fileNames: String): Map<String, JsonNode?> {
+private fun collectFilesToMapOfJsonNode(vararg fileNames: String): Map<String, String> {
 
-    return fileNames.filter { !it.isBlank() }.map { it to convertFileToJsonNode(File(folder, it)) }.toMap()
+    return fileNames.filter { !it.isBlank() }.map { it to File(folder, it).readText(Charset.defaultCharset()) }.toMap()
 }
 
 private fun convertFileToJsonNode(file: File): JsonNode? {

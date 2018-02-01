@@ -22,13 +22,13 @@ data class AuroraConfigResource(
         val files: List<AuroraConfigFileResource> = listOf()
 ) {
     fun toAuroraConfig(affiliation: String): AuroraConfig {
-        val auroraConfigFiles = files.map { AuroraConfigFile(it.name, jacksonYamlObjectMapper().readTree(it.contents)) }
+        val auroraConfigFiles = files.map { AuroraConfigFile(it.name,  it.contents) }
         return AuroraConfig(auroraConfigFiles, affiliation)
     }
 
     companion object {
         fun fromAuroraConfig(auroraConfig: AuroraConfig): AuroraConfigResource {
-            return AuroraConfigResource(auroraConfig.affiliation, auroraConfig.auroraConfigFiles.map { AuroraConfigFileResource(it.name, it.contents.toString()) })
+            return AuroraConfigResource(auroraConfig.affiliation, auroraConfig.auroraConfigFiles.map { AuroraConfigFileResource(it.name, it.contents) })
         }
     }
 }

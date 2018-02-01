@@ -57,6 +57,7 @@ class DeploymentConfigGenerator(
                 "boober.skatteetaten.no/applicationFile" to deploy.applicationFile,
                 "console.skatteetaten.no/alarm" to deploy.flags.alarm.toString()
         )
+        //TODO: I am not sure if this takeIf ever works. Since we write all the override files as a json string
         val overrides = StringEscapeUtils.escapeJavaScript(mapper.writeValueAsString(deploy.overrideFiles)).takeIf { it != "{}" }?.let {
             "boober.skatteetaten.no/overrides" to it
         }
