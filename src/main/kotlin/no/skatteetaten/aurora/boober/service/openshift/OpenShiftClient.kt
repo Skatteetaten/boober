@@ -160,7 +160,7 @@ class OpenShiftClient(
     @Cacheable("groups")
     fun getGroups(): OpenShiftGroups {
 
-        fun getAllGroupUsers(): List<UserGroup> {
+        fun getAllDeclaredUserGroups(): List<UserGroup> {
             val groupItems = getResponseBodyItems("${baseUrl}/oapi/v1/groups/")
             return groupItems.flatMap {
                 val name = it["metadata"]["name"].asText()
@@ -171,13 +171,13 @@ class OpenShiftClient(
             }
         }
 
-        fun getAllAuthenticatedUsers(): List<UserGroup> {
+        fun getAllImplicitUserGroups(): List<UserGroup> {
             val implicitGroup = "system:authenticated"
             val userItems = getResponseBodyItems("${baseUrl}/oapi/v1/users")
             return userItems.map { it["metadata"]["name"].asText() }.map { UserGroup(it,implicitGroup) }
         }
 
-        return OpenShiftGroups(getAllGroupUsers() + getAllAuthenticatedUsers())
+        return OpenShiftGroups(getAllDeclaredUserGroups() + getAllImplicitUserGroups())
     }
 
 
