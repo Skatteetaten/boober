@@ -56,16 +56,19 @@ data class OpenShiftResponse @JvmOverloads constructor(
     }
 }
 
-private typealias GroupName = String
-private typealias UserId = String
+data class UserGroup(val user:String, val group:String)
+typealias StringMultiMap = Map<String, List<String>>
 
-data class OpenShiftGroups(private val groupUserPairs: List<Pair<GroupName, UserId>>) {
 
-    val groupUsers: Map<String, List<String>>
-        get() = groupUserPairs.groupBy({ it.first }, { it.second })
+data class OpenShiftGroups(private val groupUserPairs: List<UserGroup>) {
 
-    val userGroups: Map<String, List<String>>
-        get() = groupUserPairs.groupBy({ it.second }, { it.first })
+    val groupUsers: StringMultiMap by lazy {
+        groupUserPairs.groupBy({ it.group }, { it.user })
+    }
+
+    val userGroups: StringMultiMap by lazy {
+        groupUserPairs.groupBy({ it.user }, { it.group })
+    }
 }
 
 @Service
@@ -157,29 +160,24 @@ class OpenShiftClient(
     @Cacheable("groups")
     fun getGroups(): OpenShiftGroups {
 
-        data class GroupUsers(val name: String, val userIds: List<String>)
-
-        fun getAllGroupUsers(): List<GroupUsers> {
+        fun getAllGroupUsers(): List<UserGroup> {
             val groupItems = getResponseBodyItems("${baseUrl}/oapi/v1/groups/")
-            return groupItems.map {
+            return groupItems.flatMap {
                 val name = it["metadata"]["name"].asText()
-                val users = (it["users"] as ArrayNode).map { it.asText() }
-                GroupUsers(name, users)
+                (it["users"] as ArrayNode)
+                        .map { it.asText() }
+                        .map { UserGroup(it, name) }
+
             }
         }
 
-        fun getAllUserIds(): List<String> {
+        fun getAllAuthenticatedUsers(): List<UserGroup> {
+            val implicitGroup = "system:authenticated"
             val userItems = getResponseBodyItems("${baseUrl}/oapi/v1/users")
-            return userItems.map { it["metadata"]["name"].asText() }
+            return userItems.map { it["metadata"]["name"].asText() }.map { UserGroup(it,implicitGroup) }
         }
 
-        val implicitGroup = "system:authenticated"
-        val allGroupUsers = getAllGroupUsers() + GroupUsers(implicitGroup, getAllUserIds())
-        val groupsWithUsers = allGroupUsers.flatMap {
-            it.userIds.map { userId -> Pair(it.name, userId) }
-        }
-
-        return OpenShiftGroups(groupsWithUsers)
+        return OpenShiftGroups(getAllGroupUsers() + getAllAuthenticatedUsers())
     }
 
 
