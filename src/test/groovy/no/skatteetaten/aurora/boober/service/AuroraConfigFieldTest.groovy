@@ -17,6 +17,7 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.service.openshift.UserGroup
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -66,7 +67,7 @@ class AuroraConfigFieldTest extends Specification {
 
   def setup() {
     userDetailsProvider.getAuthenticatedUser() >> new User("test", "test", "Test User", [])
-    openShiftClient.getGroups() >> new OpenShiftGroups([:], ["APP_Paas_UTV": []])
+    openShiftClient.getGroups() >> new OpenShiftGroups([new UserGroup("foo", "APP_PaaS_utv")])
   }
 
   def "Should generate correct config extractors"() {

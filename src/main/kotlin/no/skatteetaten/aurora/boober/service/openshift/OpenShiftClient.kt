@@ -56,17 +56,22 @@ data class OpenShiftResponse @JvmOverloads constructor(
     }
 }
 
-data class UserGroup(val user:String, val group:String)
+data class UserGroup(val user: String, val group: String)
 
 data class OpenShiftGroups(private val groupUserPairs: List<UserGroup>) {
 
-    val groupUsers: Map<String, List<String>> by lazy {
+    private val groupUsers: Map<String, List<String>> by lazy {
         groupUserPairs.groupBy({ it.group }, { it.user })
     }
 
-    val userGroups: Map<String, List<String>> by lazy {
+
+    private val userGroups: Map<String, List<String>> by lazy {
         groupUserPairs.groupBy({ it.user }, { it.group })
     }
+
+    fun getGroupsForUser(user: String) = userGroups[user] ?: emptyList()
+
+    fun groupExist(group: String) = groupUsers.containsKey(group)
 }
 
 @Service
@@ -162,9 +167,7 @@ class OpenShiftClient(
             val groupItems = getResponseBodyItems("${baseUrl}/oapi/v1/groups/")
             return groupItems.flatMap {
                 val name = it["metadata"]["name"].asText()
-                (it["users"] as ArrayNode)
-                        .map { it.asText() }
-                        .map { UserGroup(it, name) }
+                (it["users"] as ArrayNode).map { UserGroup(it.asText(), name) }
 
             }
         }
@@ -172,7 +175,7 @@ class OpenShiftClient(
         fun getAllImplicitUserGroups(): List<UserGroup> {
             val implicitGroup = "system:authenticated"
             val userItems = getResponseBodyItems("${baseUrl}/oapi/v1/users")
-            return userItems.map { it["metadata"]["name"].asText() }.map { UserGroup(it,implicitGroup) }
+            return userItems.map { UserGroup(it["metadata"]["name"].asText(), implicitGroup) }
         }
 
         return OpenShiftGroups(getAllDeclaredUserGroups() + getAllImplicitUserGroups())
