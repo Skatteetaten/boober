@@ -99,9 +99,8 @@ abstract class AbstractAuroraConfigTest extends AbstractSpec {
 
     static AuroraConfig createAuroraConfig(Map<String, String> auroraConfigJson) {
 
-        def yamlMapperMapper = jacksonYamlObjectMapper()
         def auroraConfigFiles = auroraConfigJson.collect { name, contents ->
-          new AuroraConfigFile(name, yamlMapperMapper.readValue(contents, JsonNode), false)
+          new AuroraConfigFile(name, contents, false)
         }
         def auroraConfig = new AuroraConfig(auroraConfigFiles, "aos")
         auroraConfig

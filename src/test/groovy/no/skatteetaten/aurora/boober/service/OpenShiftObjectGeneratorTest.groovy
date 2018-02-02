@@ -24,7 +24,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
   OpenShiftObjectGenerator objectGenerator = createObjectGenerator("hero")
 
   @Shared
-  def file = new ObjectMapper().convertValue([version: "1.0.4"], JsonNode.class)
+  def file = '''{ "version": "1.0.4"}'''
 
   @Shared
   def booberDevAosSimpleOverrides = [new AuroraConfigFile("booberdev/aos-simple.json", file, true)]

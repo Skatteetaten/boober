@@ -81,14 +81,9 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
             FileUtils.deleteQuietly(outputFile)
         }
         auroraConfig.auroraConfigFiles.forEach {
-            val writeMapper = if(it.configName.endsWith(".yaml")) {
-               yamlMapper
-            } else mapper
-
-            val prettyContent = writeMapper.writerWithDefaultPrettyPrinter().writeValueAsString(it.contents)
             val outputFile = File(getAuroraConfigFolder(auroraConfig.affiliation), it.name)
             FileUtils.forceMkdirParent(outputFile)
-            outputFile.writeText(prettyContent)
+            outputFile.writeText(it.contents)
         }
 
         gitService.commitAndPushChanges(repo)
@@ -99,9 +94,8 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
     @JvmOverloads
     fun updateAuroraConfigFile(name: String, fileName: String, contents: String, previousVersion: String? = null): AuroraConfig {
 
-        val jsonContents = yamlMapper.readValue(contents, JsonNode::class.java)
         val oldAuroraConfig = findAuroraConfig(name)
-        val (newFile, auroraConfig) = oldAuroraConfig.updateFile(fileName, jsonContents, previousVersion)
+        val (newFile, auroraConfig) = oldAuroraConfig.updateFile(fileName, contents , previousVersion)
 
         return saveFile(newFile, auroraConfig)
     }
@@ -133,14 +127,9 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
         val checkoutDir = getAuroraConfigFolder(auroraConfig.affiliation)
         watch.start("write file")
 
-        val writeMapper = if(newFile.configName.endsWith(".yaml")) {
-            yamlMapper
-        } else mapper
-
-        val prettyContent = writeMapper.writerWithDefaultPrettyPrinter().writeValueAsString(newFile.contents)
         val outputFile = File(checkoutDir, newFile.name)
         FileUtils.forceMkdirParent(outputFile)
-        outputFile.writeText(prettyContent)
+        outputFile.writeText(newFile.contents)
         watch.stop()
 
         watch.start("git")

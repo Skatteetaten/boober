@@ -1,10 +1,12 @@
 package no.skatteetaten.aurora.boober.utils
 
+import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.JsonNodeType
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 
 
@@ -147,4 +149,6 @@ fun JsonNode.toPrimitiveType(): Any? {
     }
 }
 
-fun jacksonYamlObjectMapper(): ObjectMapper = ObjectMapper(YAMLFactory()).registerKotlinModule()
+fun jacksonYamlObjectMapper(): ObjectMapper = ObjectMapper(YAMLFactory().enable(JsonParser.Feature.ALLOW_COMMENTS)).registerKotlinModule()
+
+fun jsonMapper(): ObjectMapper = jacksonObjectMapper().enable(JsonParser.Feature.ALLOW_COMMENTS)

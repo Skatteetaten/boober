@@ -74,7 +74,7 @@ class AuroraDeploymentSpecConfigFieldValidator(val applicationId: ApplicationId,
     private fun getUnmappedPointers(): Map<String, List<String>> {
         val allPaths = fieldHandlers.map { it.path }
 
-        val filePointers = applicationFiles.associateBy({ it.configName }, { it.contents.findAllPointers(3) })
+        val filePointers = applicationFiles.associateBy({ it.configName }, { it.asJsonNode.findAllPointers(3) })
 
         return filePointers.mapValues { it.value - allPaths }.filterValues { it.isNotEmpty() }
     }

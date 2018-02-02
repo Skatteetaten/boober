@@ -90,7 +90,7 @@ data class AuroraBuild(
 
 data class AuroraDeploy(
         val applicationFile: String,
-        val overrideFiles: Map<String, JsonNode>,
+        val overrideFiles: Map<String, String>,
         val releaseTo: String?,
         val flags: AuroraDeploymentConfigFlags,
         val resources: AuroraDeploymentConfigResources,
