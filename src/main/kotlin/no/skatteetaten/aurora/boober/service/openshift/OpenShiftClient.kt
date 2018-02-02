@@ -56,7 +56,7 @@ data class OpenShiftResponse @JvmOverloads constructor(
     }
 }
 
-data class UserGroup(val user:String, val group:String)
+data class UserGroup(val user: String, val group: String)
 
 data class OpenShiftGroups(private val groupUserPairs: List<UserGroup>) {
 
@@ -158,24 +158,26 @@ class OpenShiftClient(
     @Cacheable("groups")
     fun getGroups(): OpenShiftGroups {
 
-        fun getAllDeclaredUserGroups(): List<UserGroup> {
-            val groupItems = getResponseBodyItems("${baseUrl}/oapi/v1/groups/")
-            return groupItems.flatMap {
-                val name = it["metadata"]["name"].asText()
-                (it["users"] as ArrayNode)
-                        .map { it.asText() }
-                        .map { UserGroup(it, name) }
+        data class GroupUsers(val name: String, val users: List<String>)
 
+        fun getAllDeclaredGroupUsers(): List<GroupUsers> {
+            val groupItems = getResponseBodyItems("${baseUrl}/oapi/v1/groups/")
+            return groupItems.map {
+                val name = it["metadata"]["name"].asText()
+                val users = (it["users"] as ArrayNode).map { it.asText() }
+                GroupUsers(name, users)
             }
         }
 
-        fun getAllImplicitUserGroups(): List<UserGroup> {
+        fun getImplicitGroupUsers(): GroupUsers {
             val implicitGroup = "system:authenticated"
             val userItems = getResponseBodyItems("${baseUrl}/oapi/v1/users")
-            return userItems.map { it["metadata"]["name"].asText() }.map { UserGroup(it,implicitGroup) }
+            return GroupUsers(implicitGroup, userItems.map { it["metadata"]["name"].asText() })
         }
 
-        return OpenShiftGroups(getAllDeclaredUserGroups() + getAllImplicitUserGroups())
+        val allUserGroups = (getAllDeclaredGroupUsers() + getImplicitGroupUsers())
+                .flatMap { it.users.map { user -> UserGroup(user, it.name) } }
+        return OpenShiftGroups(allUserGroups)
     }
 
 
