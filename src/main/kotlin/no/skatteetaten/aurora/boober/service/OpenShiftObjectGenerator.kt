@@ -75,6 +75,14 @@ class OpenShiftObjectGenerator(
         ))
     }
 
+    fun generateNamespace(environment: AuroraDeployEnvironment): JsonNode {
+
+        return mergeVelocityTemplate("namespace.json", mapOf(
+                "namespace" to environment.namespace,
+                "affiliation" to environment.affiliation
+        ))
+    }
+
     fun generateRolebindings(permissions: Permissions): List<JsonNode> {
         val admin = mergeVelocityTemplate("rolebinding.json", mapOf(
                 "permission" to permissions.admin,

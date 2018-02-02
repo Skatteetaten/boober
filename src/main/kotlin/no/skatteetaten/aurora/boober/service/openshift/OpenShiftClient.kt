@@ -236,7 +236,7 @@ class OpenShiftClient(
         //do we really need to sleep here?
         val prev = (existing as ObjectNode).deepCopy()
 
-        val labels = mapper.convertValue<JsonNode>(mapOf("affiliation" to affiliation))
+        val labels = mapper.convertValue<JsonNode>(mapOf("affiliation" tlo affiliation))
 
         val metadata = existing.at("/metadata") as ObjectNode
         metadata.set("labels", labels)
