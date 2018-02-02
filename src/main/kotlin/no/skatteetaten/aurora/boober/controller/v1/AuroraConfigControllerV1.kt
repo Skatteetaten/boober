@@ -1,13 +1,13 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
 import com.fasterxml.jackson.annotation.JsonRawValue
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.controller.NoSuchResourceException
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigResource.Companion.fromAuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
+import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import no.skatteetaten.aurora.boober.utils.logger
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -22,13 +22,13 @@ data class AuroraConfigResource(
         val files: List<AuroraConfigFileResource> = listOf()
 ) {
     fun toAuroraConfig(affiliation: String): AuroraConfig {
-        val auroraConfigFiles = files.map { AuroraConfigFile(it.name, jacksonObjectMapper().readTree(it.contents)) }
+        val auroraConfigFiles = files.map { AuroraConfigFile(it.name,  it.contents) }
         return AuroraConfig(auroraConfigFiles, affiliation)
     }
 
     companion object {
         fun fromAuroraConfig(auroraConfig: AuroraConfig): AuroraConfigResource {
-            return AuroraConfigResource(auroraConfig.affiliation, auroraConfig.auroraConfigFiles.map { AuroraConfigFileResource(it.name, it.contents.toString()) })
+            return AuroraConfigResource(auroraConfig.affiliation, auroraConfig.auroraConfigFiles.map { AuroraConfigFileResource(it.name, it.contents) })
         }
     }
 }

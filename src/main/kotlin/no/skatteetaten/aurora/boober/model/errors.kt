@@ -29,7 +29,7 @@ class ConfigFieldErrorDetail(type: ErrorType, message: String, val field: Aurora
         }
 
         fun invalid(filename: String, path: String): ConfigFieldErrorDetail {
-            val acf = AuroraConfigField(AuroraConfigFieldHandler(path.substring(1)), AuroraConfigFile(filename, TextNode("")))
+            val acf = AuroraConfigField(AuroraConfigFieldHandler(path.substring(1)), AuroraConfigFile(filename, ""))
             return ConfigFieldErrorDetail(ErrorType.INVALID, "$path is not a valid config field pointer", acf)
         }
     }

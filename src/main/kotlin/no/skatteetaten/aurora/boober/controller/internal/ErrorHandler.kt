@@ -6,7 +6,10 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraVersioningException
 import no.skatteetaten.aurora.boober.model.ErrorDetail
 import no.skatteetaten.aurora.boober.model.PreconditionFailureException
-import no.skatteetaten.aurora.boober.service.*
+import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
+import no.skatteetaten.aurora.boober.service.OpenShiftException
+import no.skatteetaten.aurora.boober.service.ServiceException
+import no.skatteetaten.aurora.boober.service.UnauthorizedAccessException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.*

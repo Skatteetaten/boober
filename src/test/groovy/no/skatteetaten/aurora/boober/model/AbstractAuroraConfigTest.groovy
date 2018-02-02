@@ -1,9 +1,9 @@
 package no.skatteetaten.aurora.boober.model
 
+import static no.skatteetaten.aurora.boober.utils.JsonNodeUtilsKt.jacksonYamlObjectMapper
 import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
@@ -11,9 +11,9 @@ import no.skatteetaten.aurora.boober.service.AbstractSpec
 
 abstract class AbstractAuroraConfigTest extends AbstractSpec {
 
-  static final AFFILIATION = "aos"
+    static final AFFILIATION = "aos"
 
-  static final DEFAULT_ABOUT = """{
+    static final DEFAULT_ABOUT = """{
   "schemaVersion": "v1",
   "permissions": {
     "admin": "APP_PaaS_utv"
@@ -21,11 +21,11 @@ abstract class AbstractAuroraConfigTest extends AbstractSpec {
   "affiliation" : "$AFFILIATION"
 }"""
 
-  static final String DEFAULT_UTV_ABOUT = '''{
+    static final String DEFAULT_UTV_ABOUT = '''{
   "cluster": "utv"
 }'''
 
-  static final String AOS_SIMPLE_JSON = '''{
+    static final String AOS_SIMPLE_JSON = '''{
   "certificate": true,
   "groupId": "ske.aurora.openshift",
   "artifactId": "aos-simple",
@@ -34,7 +34,7 @@ abstract class AbstractAuroraConfigTest extends AbstractSpec {
   "route": true,
   "type": "deploy"
 }'''
-  static final String REFERENCE = '''{
+    static final String REFERENCE = '''{
   "groupId" : "no.skatteetaten.aurora",
   "replicas" : 1,
   "version" : "1",
@@ -42,7 +42,7 @@ abstract class AbstractAuroraConfigTest extends AbstractSpec {
   "type" : "deploy"
 }'''
 
-  public static final String REF_APP_JSON = '''{
+    public static final String REF_APP_JSON = '''{
   "name" : "reference",
   "groupId" : "no.skatteetaten.aurora.openshift",
   "artifactId" : "openshift-reference-springboot-server",
@@ -55,7 +55,7 @@ abstract class AbstractAuroraConfigTest extends AbstractSpec {
   "route" : true
 }'''
 
-  static final String WEB_LEVERANSE = '''{
+    static final String WEB_LEVERANSE = '''{
   "applicationPlatform" : "web",
   "name" : "webleveranse",
   "groupId" : "no.skatteetaten.aurora",
@@ -71,7 +71,7 @@ abstract class AbstractAuroraConfigTest extends AbstractSpec {
   }
 }'''
 
-  static final ATOMHOPPER = '''{
+    static final ATOMHOPPER = '''{
   "name": "atomhopper",
   "type" : "template",
   "template" : "atomhopper",
@@ -86,38 +86,38 @@ abstract class AbstractAuroraConfigTest extends AbstractSpec {
   }
 }'''
 
-  static Map<String, String> defaultAuroraConfig() {
-    [
-        "about.json"         : DEFAULT_ABOUT,
-        "utv/about.json"     : DEFAULT_UTV_ABOUT,
-        "aos-simple.json"    : AOS_SIMPLE_JSON,
-        "utv/aos-simple.json": '''{ }'''
-    ]
-  }
-
-  static final DEFAULT_AID = aid("utv", "aos-simple")
-
-  static AuroraConfig createAuroraConfig(Map<String, String> auroraConfigJson) {
-    def objectMapper = new ObjectMapper()
-    def auroraConfigFiles = auroraConfigJson.collect { name, contents ->
-      new AuroraConfigFile(name, objectMapper.readValue(contents, JsonNode), false)
+    static Map<String, String> defaultAuroraConfig() {
+        [
+                "about.json"         : DEFAULT_ABOUT,
+                "utv/about.json"     : DEFAULT_UTV_ABOUT,
+                "aos-simple.json"    : AOS_SIMPLE_JSON,
+                "utv/aos-simple.json": '''{ }'''
+        ]
     }
-    def auroraConfig = new AuroraConfig(auroraConfigFiles, "aos")
-    auroraConfig
-  }
 
-  static Map<String, String> modify(Map<String, String> auroraConfig, String fileName, Closure modifier) {
-    def configFile = auroraConfig[fileName]
-    String modifiedJson = modify(configFile, modifier)
-    auroraConfig[fileName] = modifiedJson
-    return auroraConfig
-  }
+    static final DEFAULT_AID = aid("utv", "aos-simple")
 
-  static String modify(String configFile, Closure modifier) {
-    def asJson = new JsonSlurper().parseText(configFile)
-    modifier.resolveStrategy = Closure.DELEGATE_FIRST
-    modifier.delegate = asJson
-    modifier()
-    JsonOutput.prettyPrint(JsonOutput.toJson(asJson))
-  }
+    static AuroraConfig createAuroraConfig(Map<String, String> auroraConfigJson) {
+
+        def auroraConfigFiles = auroraConfigJson.collect { name, contents ->
+          new AuroraConfigFile(name, contents, false)
+        }
+        def auroraConfig = new AuroraConfig(auroraConfigFiles, "aos")
+        auroraConfig
+    }
+
+    static Map<String, String> modify(Map<String, String> auroraConfig, String fileName, Closure modifier) {
+        def configFile = auroraConfig[fileName]
+        String modifiedJson = modify(configFile, modifier)
+        auroraConfig[fileName] = modifiedJson
+        return auroraConfig
+    }
+
+    static String modify(String configFile, Closure modifier) {
+        def asJson = new JsonSlurper().parseText(configFile)
+        modifier.resolveStrategy = Closure.DELEGATE_FIRST
+        modifier.delegate = asJson
+        modifier()
+        JsonOutput.prettyPrint(JsonOutput.toJson(asJson))
+    }
 }

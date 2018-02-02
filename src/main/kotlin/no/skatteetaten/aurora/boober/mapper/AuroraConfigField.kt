@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.MissingNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.Database
+import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import org.apache.commons.lang.StringEscapeUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -12,7 +13,7 @@ import org.slf4j.LoggerFactory
 
 data class AuroraConfigField(val handler: AuroraConfigFieldHandler, val source: AuroraConfigFile? = null) {
     val value: JsonNode
-        get() = source?.contents?.at(handler.path) ?: MissingNode.getInstance()
+        get() = source?.asJsonNode?.at(handler.path) ?: MissingNode.getInstance()
     val valueOrDefault: JsonNode?
         get() =
             value.let {
@@ -41,7 +42,7 @@ inline fun <reified T> AuroraConfigField.value(): T {
         return this.handler.defaultValue as T
     }
 
-    val value = this.source.contents.at(this.handler.path)
+    val value = this.source.asJsonNode.at(this.handler.path)
 
     return jacksonObjectMapper().convertValue(value, T::class.java)
 
@@ -111,7 +112,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         if (field.source == null) {
             return field.handler.defaultValue is Boolean
         }
-        val value = field.source.contents.at(field.handler.path)
+        val value = field.source.asJsonNode.at(field.handler.path)
 
         if (value.isBoolean) {
             return true
@@ -149,7 +150,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
             val fields: Map<String, AuroraConfigField> = handlers.map { handler ->
                 val matches = files.reversed().mapNotNull {
                     logger.trace("Check if  ${handler.path} exist in file  ${it.contents}")
-                    val value = it.contents.at(handler.path)
+                    val value = it.asJsonNode.at(handler.path)
 
                     if (!value.isMissingNode) {
                         logger.trace("Match $value i fil ${it.configName}")

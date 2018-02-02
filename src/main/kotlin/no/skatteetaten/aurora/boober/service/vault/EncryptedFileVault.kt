@@ -23,8 +23,7 @@ class VaultCollection private constructor(
         private val decryptor: Decryptor) {
 
     companion object {
-        fun fromFolder(folder: File, encryptor: Encryptor, decryptor: Decryptor): VaultCollection
-                = VaultCollection(folder, encryptor, decryptor)
+        fun fromFolder(folder: File, encryptor: Encryptor, decryptor: Decryptor): VaultCollection = VaultCollection(folder, encryptor, decryptor)
     }
 
     val name: String

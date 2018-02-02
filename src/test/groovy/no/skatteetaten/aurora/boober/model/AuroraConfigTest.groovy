@@ -26,7 +26,7 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
   def "Should update file"() {
     given:
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
-      def updates = mapper.convertValue(["version": "4"], JsonNode.class)
+      def updates = '''{ "version": "4"}'''
 
     when:
 
@@ -35,7 +35,7 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
     then:
       def version = updatedAuroraConfig.getAuroraConfigFiles().stream()
           .filter({ it.configName == "booberdev/console.json" })
-          .map({ it.contents.get("version").asText() })
+          .map({ it.asJsonNode.get("version").asText() })
           .findFirst()
 
       version.isPresent()
@@ -45,7 +45,8 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
   def "Should create file when updating nonexisting file"() {
     given:
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
-      def updates = mapper.convertValue(["version": "4"], JsonNode.class)
+
+      def updates = '''{ "version": "4"}'''
       def fileName = "boobertest/console.json"
 
     expect:
@@ -57,7 +58,7 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
     then:
       def version = updatedAuroraConfig.getAuroraConfigFiles().stream()
           .filter({ it.configName == fileName })
-          .map({ it.contents.get("version").asText() })
+          .map({ it.asJsonNode.get("version").asText() })
           .findFirst()
 
       version.isPresent()
@@ -118,9 +119,9 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
     when:
       auroraConfig.getFilesForApplication(referanseAid)
 
-    then: "Should be missing utv/referanse.json"
+      then: "Should be missing utv/referanse"
       def ex = thrown(IllegalArgumentException)
-      ex.message.contains("utv/referanse.json")
+      ex.message.contains("utv/referanse")
   }
 
   def "Includes base file in files for application when set"() {
@@ -134,7 +135,7 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
     then:
       filesForApplication.size() == 4
       def applicationFile = filesForApplication.find { it.name == 'booberdev/aos-complex.json' }
-      String baseFile = applicationFile.contents.get("baseFile").textValue()
+      String baseFile = applicationFile.asJsonNode.get("baseFile").textValue()
       filesForApplication.any { it.name == baseFile }
   }
 
@@ -157,14 +158,14 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
 
     then:
       def patchedFile = patchedAuroraConfig.auroraConfigFiles.find { it.name == filename }
-      patchedFile.contents.at("/version").textValue() == "3"
+      patchedFile.asJsonNode.at("/version").textValue() == "3"
   }
 
   List<AuroraConfigFile> createMockFiles(String... files) {
-    files.collect { new AuroraConfigFile(it, mapper.readValue("{}", JsonNode.class), false) }
+    files.collect { new AuroraConfigFile(it, "{}", false) }
   }
 
   def overrideFile(String fileName) {
-    new AuroraConfigFile(fileName, mapper.readValue("{}", JsonNode.class), true)
+    new AuroraConfigFile(fileName, "{}", true)
   }
 }

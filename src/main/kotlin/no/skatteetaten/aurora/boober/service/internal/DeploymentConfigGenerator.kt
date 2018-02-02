@@ -57,7 +57,9 @@ class DeploymentConfigGenerator(
                 "boober.skatteetaten.no/applicationFile" to deploy.applicationFile,
                 "console.skatteetaten.no/alarm" to deploy.flags.alarm.toString()
         )
-        val overrides = StringEscapeUtils.escapeJavaScript(mapper.writeValueAsString(deploy.overrideFiles)).takeIf { it != "{}" }?.let {
+        val files = deploy.overrideFiles.mapValues{ mapper.readValue(it.value, JsonNode::class.java)}
+        val content = mapper.writeValueAsString(files)
+        val overrides = StringEscapeUtils.escapeJavaScript(content).takeIf { it != "{}" }?.let {
             "boober.skatteetaten.no/overrides" to it
         }
 

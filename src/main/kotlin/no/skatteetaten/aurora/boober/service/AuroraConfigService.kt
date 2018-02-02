@@ -13,6 +13,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.GitServices.Domain.AURORA_CONFIG
 import no.skatteetaten.aurora.boober.service.GitServices.TargetDomain
+import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import org.apache.commons.io.FileUtils
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.InvalidRemoteException
@@ -37,6 +38,8 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
 
 
     val logger: Logger = getLogger(AuroraConfigService::class.java)
+    val yamlMapper = jacksonYamlObjectMapper()
+    val mapper = jacksonObjectMapper()
 
     private val dispatcher: ThreadPoolDispatcher = newFixedThreadPoolContext(validationPoolSize, "validationPool")
 
@@ -64,11 +67,10 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
                 ?: throw IllegalArgumentException("No such file $fileName in AuroraConfig $name")
     }
 
-    //TODO: This is now only used in test. So maybe add back method to get repo here again?
     fun save(auroraConfig: AuroraConfig): AuroraConfig {
         auroraConfig.validate()
 
-        val mapper = jacksonObjectMapper()
+
         val checkoutDir = getAuroraConfigFolder(auroraConfig.affiliation)
 
         val repo = getUpdatedRepo(auroraConfig.affiliation)
@@ -79,10 +81,9 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
             FileUtils.deleteQuietly(outputFile)
         }
         auroraConfig.auroraConfigFiles.forEach {
-            val prettyContent = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(it.contents)
             val outputFile = File(getAuroraConfigFolder(auroraConfig.affiliation), it.name)
             FileUtils.forceMkdirParent(outputFile)
-            outputFile.writeText(prettyContent)
+            outputFile.writeText(it.contents)
         }
 
         gitService.commitAndPushChanges(repo)
@@ -93,9 +94,8 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
     @JvmOverloads
     fun updateAuroraConfigFile(name: String, fileName: String, contents: String, previousVersion: String? = null): AuroraConfig {
 
-        val jsonContents = jacksonObjectMapper().readValue(contents, JsonNode::class.java)
         val oldAuroraConfig = findAuroraConfig(name)
-        val (newFile, auroraConfig) = oldAuroraConfig.updateFile(fileName, jsonContents, previousVersion)
+        val (newFile, auroraConfig) = oldAuroraConfig.updateFile(fileName, contents , previousVersion)
 
         return saveFile(newFile, auroraConfig)
     }
@@ -124,13 +124,12 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
         createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig), affectedAid)
         watch.stop()
 
-        val mapper = jacksonObjectMapper()
         val checkoutDir = getAuroraConfigFolder(auroraConfig.affiliation)
         watch.start("write file")
-        val prettyContent = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(newFile.contents)
+
         val outputFile = File(checkoutDir, newFile.name)
         FileUtils.forceMkdirParent(outputFile)
-        outputFile.writeText(prettyContent)
+        outputFile.writeText(newFile.contents)
         watch.stop()
 
         watch.start("git")
