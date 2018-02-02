@@ -5,10 +5,7 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
-import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
-import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import no.skatteetaten.aurora.boober.service.openshift.*
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
@@ -18,6 +15,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.*
+import kotlin.collections.ArrayList
 
 @Service
 //TODO:Split up. Service is to large
@@ -133,6 +131,7 @@ class DeployService(
 
     fun deployFromSpec(deploymentSpec: AuroraDeploymentSpec, shouldDeploy: Boolean, namespaceCreated: Boolean): AuroraDeployResult {
 
+        val openShiftStatus = OpenShiftStatus(ArrayList<OpenShiftResponse>())
         val deployId = UUID.randomUUID().toString().substring(0, 7)
         if (deploymentSpec.cluster != cluster) {
             return AuroraDeployResult(auroraDeploymentSpec = deploymentSpec, ignored = true, reason = "Not valid in this cluster.")
@@ -142,12 +141,12 @@ class DeployService(
         val provisioningResult = resourceProvisioner.provisionResources(deploymentSpec)
 
         logger.debug("Apply objects")
-        val openShiftResponses: List<OpenShiftResponse> = applyOpenShiftApplicationObjects(
-                deployId, deploymentSpec, provisioningResult, namespaceCreated)
+        openShiftStatus.addResponses(applyOpenShiftApplicationObjects(
+                deployId, deploymentSpec, provisioningResult, namespaceCreated))
 
         logger.debug("done applying objects")
-        val success = openShiftResponses.all { it.success }
-        val result = AuroraDeployResult(deploymentSpec, deployId, openShiftResponses, success)
+        val success = openShiftStatus.openShiftResponses.all { it.success }
+        val result = AuroraDeployResult(deploymentSpec, deployId, openShiftStatus.openShiftResponses, success)
         if (!shouldDeploy) {
             return result.copy(reason = "Deploy explicitly turned of.")
         }
@@ -165,16 +164,15 @@ class DeployService(
             val cmd = TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
             dockerService.tag(cmd)
         }
-        val redeployResult = redeployService.triggerRedeploy(deploymentSpec, openShiftResponses)
+        val redeployResult = redeployService.triggerRedeploy(deploymentSpec, openShiftStatus)
 
         if (!redeployResult.success) {
-            return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses),
-                    tagResponse = tagResult, success = false, reason = redeployResult.message)
+            return result.copy(openShiftResponses = openShiftStatus.openShiftResponses, tagResponse = tagResult, success = false, reason = redeployResult.message)
         }
 
         val totalSuccess = listOf(success, tagResult?.success, redeployResult.success).filterNotNull().all { it }
 
-        return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses), tagResponse = tagResult,
+        return result.copy(openShiftResponses = openShiftStatus.openShiftResponses, tagResponse = tagResult,
                 success = totalSuccess, reason = "Deployment success.")
     }
 

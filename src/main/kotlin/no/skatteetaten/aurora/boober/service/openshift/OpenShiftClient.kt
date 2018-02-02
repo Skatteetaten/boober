@@ -8,9 +8,11 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.service.OpenShiftException
+import no.skatteetaten.aurora.boober.service.RedeployService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
 import no.skatteetaten.aurora.boober.utils.updateField
@@ -20,10 +22,98 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
+import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
 
 enum class OperationType { CREATE, UPDATE, DELETE, NOOP }
+
+@Component
+class OpenShiftStatus(val openShiftResponses: List<OpenShiftResponse>) {
+
+    fun didImportImage(): Boolean {
+            val response = findResponse("imagestreamimport")
+
+            val body = response?.responseBody ?: return true
+            val info = findImageInformation() ?: return true
+            if (info.lastTriggeredImage.isBlank()) {
+                return false
+            }
+
+            val tags = body.at("/status/import/status/tags") as ArrayNode
+            tags.find { it["tag"].asText() == info.imageStreamTag }?.let {
+                val allTags = it["items"] as ArrayNode
+                val tag = allTags.first()
+                return tag["dockerImageReference"].asText() != info.lastTriggeredImage
+            }
+
+            return true
+        }
+
+        fun findImageInformation(): ImageInformation? {
+            val dc = openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }?.responseBody ?: return null
+
+            val triggers = dc.at("/spec/triggers") as ArrayNode
+            return triggers.find { it["type"].asText().toLowerCase() == "imagechange" }?.let {
+                val (isName, tag) = it.at("/imageChangeParams/from/name").asText().split(':')
+                val lastTriggeredImage = it.at("/imageChangeParams/lastTriggeredImage")?.asText() ?: ""
+                ImageInformation(lastTriggeredImage, isName, tag)
+            }
+        }
+
+        fun verifyImageStreamImport(): VerificationResult {
+            val response = findResponse("imagestreamimport")
+            val body = response?.responseBody ?: return VerificationResult(success = false, message = "No response found")
+            val images = body.at("/status/images") as? ArrayNode
+
+            images?.find { it["status"]["status"].textValue()?.toLowerCase().equals("failure") }?.let {
+                return VerificationResult(success = false, message = it["status"]["message"]?.textValue())
+            }
+
+            return VerificationResult(success = true)
+        }
+
+        protected fun findResponse(kind: String): OpenShiftResponse? {
+            return openShiftResponses.find { it.responseBody?.openshiftKind == kind } ?: return null
+        }
+
+        fun hasResponse(kind: String): Boolean {
+            openShiftResponses.find { it.responseBody?.openshiftKind == kind }?.let {
+                return true
+            }
+            return false
+        }
+
+        fun addResponse(response: OpenShiftResponse) {
+            openShiftResponses.addIfNotNull(response)
+        }
+
+        fun addResponses(responses: List<OpenShiftResponse>) {
+            openShiftResponses.addIfNotNull(responses)
+        }
+
+         fun findImageStreamInformation(): ImageStreamInformation? {
+            val imageStream = findResponse("imagestream" )
+
+            findImageInformation()?.let { imageInformation ->
+                imageStream?.responseBody?.takeIf { it.openshiftName == imageInformation.imageStreamName }?.let {
+                    val tags = it.at("/spec/tags") as ArrayNode
+                    tags.find { it["name"].asText() == imageInformation.imageStreamTag }?.let {
+                        val dockerImageName = it.at("/from/name").asText()
+                        return ImageStreamInformation(imageInformation.imageStreamName, dockerImageName)
+                    }
+                }
+            }
+
+            return null
+        }
+}
+
+data class ImageInformation(val lastTriggeredImage: String, val imageStreamName: String, val imageStreamTag: String)
+
+data class ImageStreamInformation(val name: String, val dockerImageName: String)
+
+data class VerificationResult(val success: Boolean = true, val message: String? = null)
 
 data class OpenshiftCommand @JvmOverloads constructor(
         val operationType: OperationType,
