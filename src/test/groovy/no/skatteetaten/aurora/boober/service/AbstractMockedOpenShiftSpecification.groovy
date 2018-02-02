@@ -51,7 +51,8 @@ import spock.mock.DetachedMockFactory
     VelocityTemplateJsonService,
     OpenShiftObjectLabelService,
     RedeployService,
-    BitbucketProjectService
+    BitbucketProjectService,
+    OpenShiftClient
 ])
 class AbstractMockedOpenShiftSpecification extends AbstractSpec {
 
@@ -63,11 +64,13 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
     MeterRegistry meterRegistry() {
       Metrics.globalRegistry
     }
+/*
 
     @Bean
     OpenShiftClient openShiftClient() {
       factory.Mock(OpenShiftClient)
     }
+*/
 
     @Bean
     UserDetailsProvider userDetailsProvider() {

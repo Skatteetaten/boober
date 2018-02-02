@@ -1,33 +1,113 @@
 package no.skatteetaten.aurora.boober.service
 
+import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
+import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
+
+import org.spockframework.mock.MockNature
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Metrics
+import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
+import no.skatteetaten.aurora.boober.model.Permission
+import no.skatteetaten.aurora.boober.model.Permissions
+import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
-import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
-import no.skatteetaten.aurora.boober.service.openshift.OperationType
-import no.skatteetaten.aurora.boober.service.vault.VaultService
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
+import spock.mock.DetachedMockFactory
 
-class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
+@SpringBootTest(classes = [
+    no.skatteetaten.aurora.boober.Configuration,
+    DeployService,
+    OpenShiftObjectGenerator,
+    OpenShiftTemplateProcessor,
+    GitServices,
+    ObjectMapper,
+    Config,
+    AuroraMetrics,
+    SharedSecretReader,
+    VelocityTemplateJsonService,
+    OpenShiftObjectLabelService,
+    RedeployService,
+    OpenShiftClient
+])
+class DeployServiceTest extends AbstractSpec {
 
-  @Autowired
-  VaultService vaultService
+  @Configuration
+  static class Config {
+    private DetachedMockFactory factory = new DetachedMockFactory()
 
-  @Autowired
-  OpenShiftClient openShiftClient
+    @Bean
+    AuroraConfigService auroraConfigService() {
+      factory.Mock(AuroraConfigService)
+    }
+
+    @Bean
+    MeterRegistry meterRegistry() {
+      Metrics.globalRegistry
+    }
+
+    @Bean
+    UserDetailsProvider userDetailsProvider() {
+      factory.Mock(UserDetailsProvider)
+    }
+
+    @Bean
+    DatabaseSchemaProvisioner dbClient() {
+      factory.Mock(DatabaseSchemaProvisioner)
+    }
+
+    @Bean
+    DockerService dockerService() {
+      factory.Mock(DockerService)
+    }
+
+    @Bean
+    ExternalResourceProvisioner externalResourceProvisioner() {
+      factory.Mock(ExternalResourceProvisioner)
+    }
+
+    @Bean
+    @OpenShiftResourceClientConfig.ClientType(API_USER)
+    @Primary
+    OpenShiftResourceClient resourceClient() {
+
+      factory.createMock("resourceClientUser", OpenShiftResourceClient, MockNature.MOCK, [:])
+    }
+
+    @Bean
+    @OpenShiftResourceClientConfig.ClientType(SERVICE_ACCOUNT)
+    OpenShiftResourceClient resourceClientSA() {
+
+      factory.createMock("resourceClientSA", OpenShiftResourceClient, MockNature.MOCK, [:])
+    }
+
+    @Bean
+    DeployLogService deployLogService() {
+      factory.Mock(DeployLogService)
+    }
+  }
 
   @Autowired
   DeployService deployService
 
   @Autowired
-  DeployLogService deployLogService
-
-  @Autowired
-  DockerService dockerService
+  @OpenShiftResourceClientConfig.ClientType(SERVICE_ACCOUNT)
+  OpenShiftResourceClient resourceClientSA
 
   @Autowired
   ObjectMapper mapper
@@ -40,6 +120,20 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
 
   def setup() {
 
+    def namespaceJson = mapper.
+        convertValue(["kind": "namespace", "metadata": ["labels": ["affiliation": affiliation]]], JsonNode.class)
+//    resourceClientSA.get('namespace', '', "$affiliation-$ENV_NAME" as String) >> new ResponseEntity<JsonNode>(namespaceJson,
+//        HttpStatus.OK)
+    _ * deployService.openShiftClient.serviceAccountClient.get(_, _, _) >> new ResponseEntity<JsonNode>(namespaceJson, HttpStatus.OK)
+
+    println resourceClientSA.get("namespace", "", "aos-booberdev")
+    println resourceClientSA.get("namespace", "", "aos-booberdev")
+    println resourceClientSA.get("namespace", "", "aos-booberdev")
+/*
+    def resourceClient = Mock(OpenShiftResourceClient)
+    openShiftClient = new OpenShiftClient("", resourceClient, resourceClient, mapper)
+*/
+/*
     def namespaceJson = mapper.
         convertValue(["kind": "namespace", "metadata": ["labels": ["affiliation": affiliation]]], JsonNode.class)
     openShiftClient.createOpenShiftCommand(_, _, _, _) >> { new OpenshiftCommand(OperationType.CREATE, it[1]) }
@@ -64,6 +158,7 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
       }
     }
     openShiftClient.createOpenShiftDeleteCommands(_, _, _, _) >> []
+*/
   }
 
   def "Should perform release and not generate a deployRequest if imagestream triggers new image"() {
@@ -98,5 +193,19 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
       def result = deployResults[0]
       result.auroraDeploymentSpec.deploy.flags.pause
       result.openShiftResponses.size() == 9
+  }
+
+  def "A"() {
+    given:
+      def permission = new Permission([] as Set, [] as Set)
+      def permissions = new Permissions(permission, permission)
+      def deployEnvironment = new AuroraDeployEnvironment(affiliation, ENV_NAME, permissions)
+
+    when:
+      def responses = deployService.prepareDeployEnvironment(deployEnvironment, true)
+
+    then:
+      println responses
+      true
   }
 }

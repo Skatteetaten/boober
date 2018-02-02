@@ -193,7 +193,7 @@ class OpenShiftClient(
             val body = userClient.get(url)?.body
 
             val items = body?.get("items")?.toList() ?: emptyList()
-            items.filterIsInstance<ObjectNode>()
+              items.filterIsInstance<ObjectNode>()
                     .onEach { it.put("kind", kind) }
         }.map {
                     OpenshiftCommand(OperationType.DELETE, payload = it, previous = it)
@@ -228,7 +228,8 @@ class OpenShiftClient(
     }
 
     fun createUpdateNamespaceCommand(namespace: String, affiliation: String): OpenshiftCommand {
-        val existing = serviceAccountClient.get("namespace", "", namespace)?.body
+        val responseEntity = serviceAccountClient.get("namespace", "", namespace)
+        val existing = responseEntity?.body
                 ?: throw IllegalArgumentException("Namespace should exist")
         //do we really need to sleep here?
         val prev = (existing as ObjectNode).deepCopy()
