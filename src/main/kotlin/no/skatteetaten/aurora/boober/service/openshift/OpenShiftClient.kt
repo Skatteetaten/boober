@@ -56,7 +56,23 @@ data class OpenShiftResponse @JvmOverloads constructor(
     }
 }
 
-data class OpenShiftGroups(val userGroups: Map<String, List<String>>, val groupUsers: Map<String, List<String>>)
+data class UserGroup(val user: String, val group: String)
+
+data class OpenShiftGroups(private val groupUserPairs: List<UserGroup>) {
+
+    private val groupUsers: Map<String, List<String>> by lazy {
+        groupUserPairs.groupBy({ it.group }, { it.user })
+    }
+
+
+    private val userGroups: Map<String, List<String>> by lazy {
+        groupUserPairs.groupBy({ it.user }, { it.group })
+    }
+
+    fun getGroupsForUser(user: String) = userGroups[user] ?: emptyList()
+
+    fun groupExist(group: String) = groupUsers.containsKey(group)
+}
 
 @Service
 class OpenShiftClient(
@@ -134,11 +150,6 @@ class OpenShiftClient(
     }
 
 
-    @Cacheable("groups")
-    fun isValidGroup(group: String): Boolean {
-        return getGroups(group) != null
-    }
-
     @Cacheable("templates")
     fun getTemplate(template: String): JsonNode? {
         return try {
@@ -149,36 +160,27 @@ class OpenShiftClient(
         }
     }
 
-    fun getGroups(group: String): ResponseEntity<JsonNode>? {
-
-        val url = "$baseUrl/oapi/v1/groups/$group"
-        return serviceAccountClient.get(url)
-    }
-
     @Cacheable("groups")
     fun getGroups(): OpenShiftGroups {
 
-        val url = "$baseUrl/oapi/v1/groups/"
-        val groupsResponse: ResponseEntity<JsonNode> = serviceAccountClient.get(url)!!
+        fun getAllDeclaredUserGroups(): List<UserGroup> {
+            val groupItems = getResponseBodyItems("${baseUrl}/oapi/v1/groups/")
+            return groupItems.flatMap {
+                val name = it["metadata"]["name"].asText()
+                (it["users"] as ArrayNode).map { UserGroup(it.asText(), name) }
 
-        val body = groupsResponse.body
-        val items = body["items"] as ArrayNode
-        val map = items.flatMap {
-            val name = it["metadata"]["name"].asText()
-            val users = it["users"] as ArrayNode
-            users.map { Pair(it.asText(), name) }
+            }
         }
-        val userGroupIndex = map.groupBy({ it.first }, { it.second })
-        val groupUserIndex = map.groupBy({ it.second }, { it.first })
 
-        return OpenShiftGroups(userGroupIndex, groupUserIndex)
+        fun getAllImplicitUserGroups(): List<UserGroup> {
+            val implicitGroup = "system:authenticated"
+            val userItems = getResponseBodyItems("${baseUrl}/oapi/v1/users")
+            return userItems.map { UserGroup(it["metadata"]["name"].asText(), implicitGroup) }
+        }
+
+        return OpenShiftGroups(getAllDeclaredUserGroups() + getAllImplicitUserGroups())
     }
 
-    @Cacheable("groups")
-    fun isUserInGroup(user: String, group: String): Boolean {
-        val resource = getGroups(group)
-        return resource?.body?.get("users")?.any { it.textValue() == user } ?: false
-    }
 
     @JvmOverloads
     fun createOpenShiftDeleteCommands(name: String, namespace: String, deployId: String,
@@ -194,8 +196,8 @@ class OpenShiftClient(
             items.filterIsInstance<ObjectNode>()
                     .onEach { it.put("kind", kind) }
         }.map {
-            OpenshiftCommand(OperationType.DELETE, payload = it, previous = it)
-        }
+                    OpenshiftCommand(OperationType.DELETE, payload = it, previous = it)
+                }
     }
 
 
@@ -217,7 +219,8 @@ class OpenShiftClient(
         val name = json.openshiftName
 
         val generated = json.deepCopy<JsonNode>()
-        val existing = userClient.get(kind, namespace, name)?.body ?: throw IllegalArgumentException("Admin rolebinding should exist")
+        val existing = userClient.get(kind, namespace, name)?.body
+                ?: throw IllegalArgumentException("Admin rolebinding should exist")
 
         json.updateField(existing, "/metadata", "resourceVersion")
 
@@ -225,7 +228,8 @@ class OpenShiftClient(
     }
 
     fun createUpdateNamespaceCommand(namespace: String, affiliation: String): OpenshiftCommand {
-        val existing = serviceAccountClient.get("namespace", "", namespace)?.body ?: throw IllegalArgumentException("Namespace should exist")
+        val existing = serviceAccountClient.get("namespace", "", namespace)?.body
+                ?: throw IllegalArgumentException("Namespace should exist")
         //do we really need to sleep here?
         val prev = (existing as ObjectNode).deepCopy()
 
@@ -249,5 +253,10 @@ class OpenShiftClient(
         } else {
             userClient
         }
+    }
+
+    private fun getResponseBodyItems(url: String): ArrayNode {
+        val response: ResponseEntity<JsonNode> = serviceAccountClient.get(url)!!
+        return response.body["items"] as ArrayNode
     }
 }

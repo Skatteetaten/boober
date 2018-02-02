@@ -26,6 +26,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientCo
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import no.skatteetaten.aurora.boober.service.openshift.UserGroup
 import no.skatteetaten.aurora.boober.service.openshift.token.UserDetailsTokenProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
@@ -143,7 +144,9 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
     if (useInteractions) {
       userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User", [])
 
-      openShiftClient.getGroups() >> new OpenShiftGroups([:], ["APP_PaaS_drift": [], "APP_PaaS_utv": []])
+      openShiftClient.getGroups() >> new OpenShiftGroups([
+          new UserGroup("foo", "APP_PaaS_drift"),
+          new UserGroup("foo", "APP_PaaS_utv")])
     }
 
     if (useAuroraConfig) {

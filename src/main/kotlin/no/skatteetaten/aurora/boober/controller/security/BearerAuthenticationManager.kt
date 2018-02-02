@@ -48,11 +48,11 @@ class BearerAuthenticationManager(
     }
 
     private fun getGrantedAuthoritiesForUser(openShiftUser: JsonNode?): List<SimpleGrantedAuthority> {
-        val username: String = openShiftUser?.openshiftName ?: throw IllegalArgumentException("Unable to determine username from response")
+        val username: String = openShiftUser?.openshiftName
+                ?: throw IllegalArgumentException("Unable to determine username from response")
 
-        val openShiftGroups = openShiftClient.getGroups()
-        val groupsForUser = openShiftGroups.userGroups[username]
-        return groupsForUser?.map { SimpleGrantedAuthority(it) } ?: emptyList()
+        return openShiftClient.getGroups().getGroupsForUser(username)
+                .map { SimpleGrantedAuthority(it) }
     }
 
     private fun getOpenShiftUser(token: String): JsonNode {

@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
+import no.skatteetaten.aurora.boober.service.openshift.UserGroup
 import spock.lang.Specification
 
 class BearerAuthenticationManagerTest extends Specification {
@@ -24,8 +25,11 @@ class BearerAuthenticationManagerTest extends Specification {
       def openShiftClient = Mock(OpenShiftClient)
       openShiftClient.findCurrentUser(TOKEN) >> objectMapper.
           readValue("""{"kind": "user", "metadata": {"name": "$USERNAME"}, "fullName": "Aurora Test User"}""", JsonNode)
-      def GROUPS = ["APP_PaaS_drift", "APP_PaaS_utv"]
-      openShiftClient.getGroups() >> new OpenShiftGroups(["aurora": GROUPS], [:])
+
+
+      openShiftClient.getGroups() >> new OpenShiftGroups([
+          new UserGroup("aurora", "APP_PaaS_drift"),
+          new UserGroup("aurora", "APP_PaaS_utv")])
 
       def authenticationManager = new BearerAuthenticationManager(openShiftClient)
 

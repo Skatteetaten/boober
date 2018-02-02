@@ -66,10 +66,12 @@ class AuroraDeploymentSpecValidator(
         adminGroups.takeIf { it.isEmpty() }
                 ?.let { throw AuroraDeploymentSpecValidationException("permissions.admin.groups cannot be empty") }
 
-        val groupUsers = openShiftClient.getGroups().groupUsers
-        adminGroups.filter { !groupUsers.containsKey(it) }
-                .takeIf { it.isNotEmpty() }
-                ?.let { it: List<String> -> throw AuroraDeploymentSpecValidationException("$it is not a valid group") }
+        val openShiftGroups = openShiftClient.getGroups()
+
+        val nonExistantDeclaredGroups = adminGroups.filter { !openShiftGroups.groupExist(it) }
+        if (nonExistantDeclaredGroups.isNotEmpty()) {
+            throw AuroraDeploymentSpecValidationException("$nonExistantDeclaredGroups are not valid groupNames")
+        }
     }
 
     private fun validateTemplateIfSet(deploymentSpec: AuroraDeploymentSpec) {
@@ -81,7 +83,8 @@ class AuroraDeploymentSpecValidator(
         }
 
         deploymentSpec.template?.let {
-            val templateJson = openShiftClient.getTemplate(it.template) ?: throw AuroraDeploymentSpecValidationException("Template ${it.template} does not exist")
+            val templateJson = openShiftClient.getTemplate(it.template)
+                    ?: throw AuroraDeploymentSpecValidationException("Template ${it.template} does not exist")
             openShiftTemplateProcessor.validateTemplateParameters(templateJson, it.parameters ?: emptyMap())
                     .takeIf { it.isNotEmpty() }
                     ?.let { throw AuroraDeploymentSpecValidationException(it.joinToString(". ").trim()) }
