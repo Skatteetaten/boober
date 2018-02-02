@@ -1,0 +1,31 @@
+{
+  "apiVersion": "v1",
+  "kind": "Namespace",
+  "metadata": {
+    "annotations": {
+      "openshift.io/description": "",
+      "openshift.io/display-name": "",
+      "openshift.io/requester": "k77319",
+      "openshift.io/sa.scc.mcs": "s0:c21,c10",
+      "openshift.io/sa.scc.supplemental-groups": "1000440000/10000",
+      "openshift.io/sa.scc.uid-range": "1000440000/10000"
+    },
+    "creationTimestamp": "2018-01-22T14:36:29Z",
+    "labels": {
+      "affiliation": "paas"
+    },
+    "name": "paas-bas-dev",
+    "resourceVersion": "49775364",
+    "selfLink": "/api/v1/namespaces/paas-bas-dev",
+    "uid": "a258de03-ff81-11e7-9e28-0050568311e1"
+  },
+  "spec": {
+    "finalizers": [
+      "openshift.io/origin",
+      "kubernetes"
+    ]
+  },
+  "status": {
+    "phase": "Active"
+  }
+}
