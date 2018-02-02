@@ -30,6 +30,7 @@ class OpenShiftObjectGenerator(
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftObjectGenerator::class.java)
 
+
     fun generateBuildRequest(name: String): JsonNode {
         logger.trace("Generating build request for name $name")
         return mergeVelocityTemplate("buildrequest.json", mapOf("name" to name))

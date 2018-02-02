@@ -18,7 +18,7 @@ open class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: Stri
                                    val openShiftRequestHandler: OpenShiftRequestHandler) {
 
 
-    fun put(kind: String, namespace: String, name: String, payload: JsonNode): ResponseEntity<JsonNode> {
+    open fun put(kind: String, namespace: String, name: String, payload: JsonNode): ResponseEntity<JsonNode> {
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, namespace, name)
         val headers: HttpHeaders = getAuthorizationHeaders()
         return openShiftRequestHandler.exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.PUT, URI(urls.update)))

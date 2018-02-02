@@ -2,6 +2,9 @@ package no.skatteetaten.aurora.boober.service
 
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
+import static no.skatteetaten.aurora.boober.service.openshift.OperationType.CREATE
+import static no.skatteetaten.aurora.boober.service.openshift.OperationType.NOOP
+import static no.skatteetaten.aurora.boober.service.openshift.OperationType.UPDATE
 
 import org.spockframework.mock.MockNature
 import org.springframework.beans.factory.annotation.Autowired
@@ -26,6 +29,7 @@ import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
+import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
 import spock.mock.DetachedMockFactory
@@ -110,6 +114,10 @@ class DeployServiceTest extends AbstractSpec {
   OpenShiftResourceClient resourceClientSA
 
   @Autowired
+  @OpenShiftResourceClientConfig.ClientType(API_USER)
+  OpenShiftResourceClient resourceClientUser
+
+  @Autowired
   ObjectMapper mapper
 
   public static final String ENV_NAME = "booberdev"
@@ -120,15 +128,13 @@ class DeployServiceTest extends AbstractSpec {
 
   def setup() {
 
-    def namespaceJson = mapper.
-        convertValue(["kind": "namespace", "metadata": ["labels": ["affiliation": affiliation]]], JsonNode.class)
-//    resourceClientSA.get('namespace', '', "$affiliation-$ENV_NAME" as String) >> new ResponseEntity<JsonNode>(namespaceJson,
-//        HttpStatus.OK)
-    _ * deployService.openShiftClient.serviceAccountClient.get(_, _, _) >> new ResponseEntity<JsonNode>(namespaceJson, HttpStatus.OK)
+    def name = "$affiliation-$ENV_NAME" as String
+    def namespaceJson = mapper.convertValue(["kind": "namespace", "metadata": [name: name, "labels": []]], JsonNode)
+    resourceClientSA.get("namespace", "", name, _) >> new ResponseEntity<JsonNode>(namespaceJson, HttpStatus.OK)
+    resourceClientSA.put(_, _, _, _) >> new ResponseEntity<JsonNode>(mapper.convertValue([:], JsonNode), HttpStatus.OK)
+    resourceClientSA.post(_, _, _, _) >> new ResponseEntity<JsonNode>(mapper.convertValue([:], JsonNode), HttpStatus.OK)
+    resourceClientUser.post(_, _, _, _) >> new ResponseEntity<JsonNode>(mapper.convertValue([:], JsonNode), HttpStatus.OK)
 
-    println resourceClientSA.get("namespace", "", "aos-booberdev")
-    println resourceClientSA.get("namespace", "", "aos-booberdev")
-    println resourceClientSA.get("namespace", "", "aos-booberdev")
 /*
     def resourceClient = Mock(OpenShiftResourceClient)
     openShiftClient = new OpenShiftClient("", resourceClient, resourceClient, mapper)
@@ -195,7 +201,21 @@ class DeployServiceTest extends AbstractSpec {
       result.openShiftResponses.size() == 9
   }
 
-  def "A"() {
+  def "When namespace does not exist we should create it and then update it appropriately"() {
+    given:
+      def permission = new Permission([] as Set, [] as Set)
+      def permissions = new Permissions(permission, permission)
+      def deployEnvironment = new AuroraDeployEnvironment(affiliation, ENV_NAME, permissions)
+
+    when:
+      def responses = deployService.prepareDeployEnvironment(deployEnvironment, false)
+
+    then:
+      responses.find { it.command.payload.get("kind").asText() == "ProjectRequest" }.command.operationType == CREATE
+      responses.find { it.command.payload.get("kind").asText() == "namespace" }.command.operationType == UPDATE
+  }
+
+  def "When namespace already exists we should not try to create or update it"() {
     given:
       def permission = new Permission([] as Set, [] as Set)
       def permissions = new Permissions(permission, permission)
@@ -205,7 +225,7 @@ class DeployServiceTest extends AbstractSpec {
       def responses = deployService.prepareDeployEnvironment(deployEnvironment, true)
 
     then:
-      println responses
-      true
+      responses.find { it.command.payload.get("kind").asText() == "ProjectRequest" }.command.operationType == NOOP
+      responses.find { it.command.payload.get("kind").asText() == "namespace" }.command.operationType == NOOP
   }
 }

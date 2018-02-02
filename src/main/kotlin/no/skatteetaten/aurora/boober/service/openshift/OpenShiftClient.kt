@@ -105,7 +105,7 @@ class OpenShiftClient(
     }
 
     /**
-     * @param projectExist Whether the OpenShift project the object belongs to exists. If it does, some object types
+     * @param mergeWithExistingResource Whether the OpenShift project the object belongs to exists. If it does, some object types
      * will be updated with information from the existing object to support the update.
      * @param retryGetResourceOnFailure Whether the GET request for the existing resource should be retried on errors
      * or not. You may want to retry the request if you are trying to update an object that has recently been created
@@ -118,7 +118,9 @@ class OpenShiftClient(
         val kind = newResource.openshiftKind
         val name = newResource.openshiftName
 
-        //we do not update project objects
+        val unsupportedKinds = setOf("namespace")
+        if (kind in unsupportedKinds) throw IllegalArgumentException("This method does not support creating commands for kind=$kind")
+
         if (kind == "projectrequest" && mergeWithExistingResource) {
             return OpenshiftCommand(OperationType.NOOP, payload = newResource)
         }
@@ -193,7 +195,7 @@ class OpenShiftClient(
             val body = userClient.get(url)?.body
 
             val items = body?.get("items")?.toList() ?: emptyList()
-              items.filterIsInstance<ObjectNode>()
+            items.filterIsInstance<ObjectNode>()
                     .onEach { it.put("kind", kind) }
         }.map {
                     OpenshiftCommand(OperationType.DELETE, payload = it, previous = it)
