@@ -57,16 +57,14 @@ data class OpenShiftResponse @JvmOverloads constructor(
 }
 
 data class UserGroup(val user:String, val group:String)
-typealias StringMultiMap = Map<String, List<String>>
-
 
 data class OpenShiftGroups(private val groupUserPairs: List<UserGroup>) {
 
-    val groupUsers: StringMultiMap by lazy {
+    val groupUsers: Map<String, List<String>> by lazy {
         groupUserPairs.groupBy({ it.group }, { it.user })
     }
 
-    val userGroups: StringMultiMap by lazy {
+    val userGroups: Map<String, List<String>> by lazy {
         groupUserPairs.groupBy({ it.user }, { it.group })
     }
 }
