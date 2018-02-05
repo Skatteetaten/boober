@@ -12,11 +12,16 @@ import org.springframework.test.web.client.MockRestServiceServer
 
 import com.fasterxml.jackson.databind.JsonNode
 
+import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AbstractAuroraDeploymentSpecSpringTest
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 
 class OpenShiftClientCreateOpenShiftCommandTest extends AbstractAuroraDeploymentSpecSpringTest {
+
+  String ENVIRONMENT = "utv"
+
+  String NAMESPACE = "$AFFILIATION-$ENVIRONMENT"
 
   @Value('${openshift.url}')
   String openShiftUrl
@@ -40,30 +45,20 @@ class OpenShiftClientCreateOpenShiftCommandTest extends AbstractAuroraDeployment
   @Autowired
   OpenShiftClient client
 
-  def "Updates the generated DeploymentConfig with relevant existing data"() {
+  def "Gets existing resource from OpenShift and merges"() {
 
     given:
-      osClusterMock.expect(requestTo("$openShiftUrl/oapi/v1/namespaces/aos/deploymentconfigs/webleveranse")).
-          andRespond(withSuccess(loadResource("webleveranse.json"), MediaType.APPLICATION_JSON))
+      osClusterMock.expect(requestTo("$openShiftUrl/oapi/v1/namespaces/$NAMESPACE/deploymentconfigs/webleveranse")).
+          andRespond(withSuccess(loadResource("dc-webleveranse.json"), MediaType.APPLICATION_JSON))
 
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid("utv", "webleveranse"))
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid(ENVIRONMENT, "webleveranse"))
       JsonNode deploymentConfig = objectGenerator.generateDeploymentConfig("deploy-id", deploymentSpec, null)
 
     when:
-      OpenshiftCommand command = client.createOpenShiftCommand("aos", deploymentConfig, true, false)
+      OpenshiftCommand command = client.createOpenShiftCommand(NAMESPACE, deploymentConfig, true, false)
 
-    then: "Preserves the lastTriggeredImage"
-      def lastTriggeredImagePath = "/spec/triggers/0/imageChangeParams/lastTriggeredImage"
-      command.generated.at(lastTriggeredImagePath).missingNode
-      command.previous.at(lastTriggeredImagePath).textValue() != null
-      command.payload.at(lastTriggeredImagePath).textValue() == command.previous.at(lastTriggeredImagePath).textValue()
-
-    and: "Preserves the container image attributes"
-      (0..1).forEach {
-        def imagePath = "/spec/template/spec/containers/$it/image"
-        assert command.generated.at(imagePath).missingNode
-        assert command.previous.at(imagePath).textValue() != null
-        assert command.payload.at(imagePath).textValue() == command.previous.at(imagePath).textValue()
-      }
+    then:
+      def resourceVersion = "/metadata/resourceVersion"
+      command.payload.at(resourceVersion).textValue() == command.previous.at(resourceVersion).textValue()
   }
 }

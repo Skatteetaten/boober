@@ -89,7 +89,7 @@ class DeployService(
 
         val namespace = environment.namespace
 
-        val createNamespaceResponse = openShiftObjectGenerator.generateProjectRequest(environment)
+        val projectRequestResponse = openShiftObjectGenerator.generateProjectRequest(environment)
                 .let { openShiftClient.createOpenShiftCommand(namespace, it, projectExist) }
                 .let { openShiftClient.performOpenShiftCommand(namespace, it) }
 
@@ -98,10 +98,10 @@ class DeployService(
                 .let { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         val updateRoleBindingsResponse = openShiftObjectGenerator.generateRolebindings(environment.permissions)
-                .map { openShiftClient.createOpenShiftCommand(namespace, it, createNamespaceResponse.success, true) }
+                .map { openShiftClient.createOpenShiftCommand(namespace, it, projectRequestResponse.success, true) }
                 .map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
-        return listOf(createNamespaceResponse, updateNamespaceResponse) + updateRoleBindingsResponse
+        return listOf(projectRequestResponse, updateNamespaceResponse) + updateRoleBindingsResponse
     }
 
     private fun deployFromSpecs(deploymentSpecs: List<AuroraDeploymentSpec>, environments: Map<AuroraDeployEnvironment, AuroraDeployResult>, deploy: Boolean): List<AuroraDeployResult> {

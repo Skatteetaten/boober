@@ -118,9 +118,6 @@ class OpenShiftClient(
         val kind = newResource.openshiftKind
         val name = newResource.openshiftName
 
-        val unsupportedKinds = setOf("namespace")
-        if (kind in unsupportedKinds) throw IllegalArgumentException("This method does not support creating commands for kind=$kind")
-
         if (kind == "projectrequest" && mergeWithExistingResource) {
             return OpenshiftCommand(OperationType.NOOP, payload = newResource)
         }
@@ -236,7 +233,7 @@ class OpenShiftClient(
         //do we really need to sleep here?
         val prev = (existing as ObjectNode).deepCopy()
 
-        val labels = mapper.convertValue<JsonNode>(mapOf("affiliation" tlo affiliation))
+        val labels = mapper.convertValue<JsonNode>(mapOf("affiliation" to affiliation))
 
         val metadata = existing.at("/metadata") as ObjectNode
         metadata.set("labels", labels)
