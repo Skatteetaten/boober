@@ -172,7 +172,7 @@ class DeployService(
         return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResponse), tagResponse = tagResult, success = totalSuccess, reason = "Deployment success.")
     }
 
-    private fun applyOpenShiftApplicationObjects(deployId: String, deploymentSpec: AuroraDeploymentSpec,
+    protected fun applyOpenShiftApplicationObjects(deployId: String, deploymentSpec: AuroraDeploymentSpec,
                                                  provisioningResult: ProvisioningResult? = null,
                                                  mergeWithExistingResource: Boolean): List<OpenShiftResponse> {
 

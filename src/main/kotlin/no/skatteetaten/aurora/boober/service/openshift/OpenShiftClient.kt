@@ -122,15 +122,22 @@ class OpenShiftClient(
             return OpenshiftCommand(OperationType.NOOP, payload = newResource)
         }
 
-        val existingResource = if (mergeWithExistingResource) userClient.get(kind, namespace, name, retryGetResourceOnFailure) else null
-        if (existingResource == null) {
-            return OpenshiftCommand(OperationType.CREATE, payload = newResource)
+        data class OpenShiftResourceRef(val kind: String, val name: String?=null) {
+            fun matches(kind: String, name: String?): Boolean = this == OpenShiftResourceRef(kind, name)
         }
-        // ProjectRequest will always create an admin rolebinding, so if we get a command to create one, we just
-        // swap it out with an update command.
-        val isCreateAdminRoleBindingCommand = kind == "rolebinding" && name == "admin"
-        if (isCreateAdminRoleBindingCommand) {
-            return createUpdateRolebindingCommand(newResource, namespace)
+        val resourcesToAlwaysUpdate = listOf(
+                // ProjectRequest will always create admin rolebinding and namespace, so any command must be an UPDATE command
+                OpenShiftResourceRef("rolebinding", "admin"),
+                OpenShiftResourceRef("namespace")
+        )
+
+        val existingResource = if (mergeWithExistingResource)
+            userClient.get(kind, namespace, name, retryGetResourceOnFailure)
+        else null
+
+        if (existingResource == null) {
+            if (resourcesToAlwaysUpdate.any { it.matches(kind, name) }) throw IllegalArgumentException("Resource should exist")
+            else return OpenshiftCommand(OperationType.CREATE, payload = newResource)
         }
 
         val existing = existingResource.body
@@ -147,7 +154,6 @@ class OpenShiftClient(
         val currentUser = userClient.get(url, headers)
         return currentUser?.body
     }
-
 
     @Cacheable("templates")
     fun getTemplate(template: String): JsonNode? {
@@ -210,35 +216,6 @@ class OpenShiftClient(
             }
         }
         return false
-    }
-
-    fun createUpdateRolebindingCommand(json: JsonNode, namespace: String): OpenshiftCommand {
-
-        val kind = json.openshiftKind
-        val name = json.openshiftName
-
-        val generated = json.deepCopy<JsonNode>()
-        val existing = userClient.get(kind, namespace, name)?.body
-                ?: throw IllegalArgumentException("Admin rolebinding should exist")
-
-        json.updateField(existing, "/metadata", "resourceVersion")
-
-        return OpenshiftCommand(OperationType.UPDATE, json, existing, generated)
-    }
-
-    fun createUpdateNamespaceCommand(namespace: String, affiliation: String): OpenshiftCommand {
-        val responseEntity = serviceAccountClient.get("namespace", "", namespace)
-        val existing = responseEntity?.body
-                ?: throw IllegalArgumentException("Namespace should exist")
-        //do we really need to sleep here?
-        val prev = (existing as ObjectNode).deepCopy()
-
-        val labels = mapper.convertValue<JsonNode>(mapOf("affiliation" to affiliation))
-
-        val metadata = existing.at("/metadata") as ObjectNode
-        metadata.set("labels", labels)
-
-        return OpenshiftCommand(OperationType.UPDATE, existing, previous = prev)
     }
 
     /**

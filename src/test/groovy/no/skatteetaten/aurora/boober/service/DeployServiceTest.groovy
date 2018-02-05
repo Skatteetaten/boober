@@ -2,9 +2,6 @@ package no.skatteetaten.aurora.boober.service
 
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
-import static no.skatteetaten.aurora.boober.service.openshift.OperationType.CREATE
-import static no.skatteetaten.aurora.boober.service.openshift.OperationType.NOOP
-import static no.skatteetaten.aurora.boober.service.openshift.OperationType.UPDATE
 
 import org.spockframework.mock.MockNature
 import org.springframework.beans.factory.annotation.Autowired
@@ -12,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 
@@ -21,17 +19,16 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Metrics
 import no.skatteetaten.aurora.AuroraMetrics
+import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
-import no.skatteetaten.aurora.boober.model.Permission
-import no.skatteetaten.aurora.boober.model.Permissions
+import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
-import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
+import no.skatteetaten.aurora.boober.utils.JsonNodeUtilsKt
 import spock.mock.DetachedMockFactory
 
 @SpringBootTest(classes = [
@@ -39,7 +36,6 @@ import spock.mock.DetachedMockFactory
     DeployService,
     OpenShiftObjectGenerator,
     OpenShiftTemplateProcessor,
-    GitServices,
     ObjectMapper,
     Config,
     AuroraMetrics,
@@ -120,20 +116,22 @@ class DeployServiceTest extends AbstractSpec {
   @Autowired
   ObjectMapper mapper
 
-  public static final String ENV_NAME = "booberdev"
-  public static final String APP_NAME = "aos-simple"
-  def affiliation = "aos"
+  @Autowired
+  AuroraConfigService auroraConfigService
 
-  final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
+  @Autowired
+  UserDetailsProvider userDetailsProvider
+
+  def affiliation = "aos"
 
   def setup() {
 
-    def name = "$affiliation-$ENV_NAME" as String
-    def namespaceJson = mapper.convertValue(["kind": "namespace", "metadata": [name: name, "labels": []]], JsonNode)
-    resourceClientSA.get("namespace", "", name, _) >> new ResponseEntity<JsonNode>(namespaceJson, HttpStatus.OK)
-    resourceClientSA.put(_, _, _, _) >> new ResponseEntity<JsonNode>(mapper.convertValue([:], JsonNode), HttpStatus.OK)
-    resourceClientSA.post(_, _, _, _) >> new ResponseEntity<JsonNode>(mapper.convertValue([:], JsonNode), HttpStatus.OK)
-    resourceClientUser.post(_, _, _, _) >> new ResponseEntity<JsonNode>(mapper.convertValue([:], JsonNode), HttpStatus.OK)
+    userDetailsProvider.getAuthenticatedUser() >> new User("aurora", "-", "-", [])
+
+    resourceClientSA.put(_, _, _, _) >> { new ResponseEntity<JsonNode>(it[3], HttpStatus.OK) }
+    resourceClientUser.put(_, _, _, _) >> { new ResponseEntity<JsonNode>(it[3], HttpStatus.OK) }
+    resourceClientSA.post(_, _, _, _) >> { new ResponseEntity<JsonNode>(it[3], HttpStatus.OK) }
+    resourceClientUser.post(_, _, _, _) >> { new ResponseEntity<JsonNode>(it[3], HttpStatus.OK) }
 
 /*
     def resourceClient = Mock(OpenShiftResourceClient)
@@ -168,9 +166,27 @@ class DeployServiceTest extends AbstractSpec {
   }
 
   def "Should perform release and not generate a deployRequest if imagestream triggers new image"() {
+    given:
+      def aid = ApplicationId.aid("imagestreamtest", "reference")
+      def namespaceName = "$affiliation-$aid.environment"
+
+      def namespaceJson = mapper.convertValue(["kind": "namespace", "metadata": [name: namespaceName, "labels": []]], JsonNode)
+      def roleBinding = mapper.convertValue([kind: "rolebinding"], JsonNode)
+      resourceClientSA.get(_ as String, _ as HttpHeaders, _ as Boolean) >> { new ResponseEntity<JsonNode>(mapper.convertValue([status: [phase: "Active"]], JsonNode), HttpStatus.OK) }
+      resourceClientSA.get("namespace", "", namespaceName, _) >> new ResponseEntity<JsonNode>(namespaceJson, HttpStatus.OK)
+      resourceClientUser.get("rolebinding", namespaceName, "admin", _) >> new ResponseEntity<JsonNode>(roleBinding, HttpStatus.OK)
+      resourceClientUser.get("deploymentconfig", namespaceName, aid.application, _) >> {
+        new ResponseEntity<JsonNode>(loadJsonResource("$affiliation-$aid.environment-$aid.application-deploymentconfig.json"), HttpStatus.OK)
+      }
+      resourceClientUser.post("imagestreamimport", namespaceName, aid.application, _) >> new ResponseEntity<JsonNode>(loadJsonResource("$affiliation-$aid.environment-$aid.application-imagestreamimport.json"), HttpStatus.OK)
+
+      def auroraConfig = AuroraConfig.
+          fromFolder("/home/k77319/projects/github/boober/src/test/resources/samples/config")
+      def deploymentSpec = auroraConfig.getAuroraDeploymentSpec(aid)
+      auroraConfigService.createValidatedAuroraDeploymentSpecs(affiliation, _, _, _) >> [deploymentSpec]
+
     when:
-      List<AuroraDeployResult> deployResults = deployService.
-          executeDeploy(affiliation, [new ApplicationId("imagestreamtest", "reference")], [], true)
+      List<AuroraDeployResult> deployResults = deployService.executeDeploy(affiliation, [aid], [], true)
 
     then:
       def result = deployResults[0]
@@ -199,5 +215,34 @@ class DeployServiceTest extends AbstractSpec {
       def result = deployResults[0]
       result.auroraDeploymentSpec.deploy.flags.pause
       result.openShiftResponses.size() == 9
+  }
+
+  def "Should delete and create route"() {
+    when:
+      List<AuroraDeployResult> deployResults = deployService.
+          executeDeploy(affiliation, [new ApplicationId(ENV_NAME, APP_NAME)], [], true)
+
+    then:
+      def result = deployResults[0]
+      //TODO: This way of testing is very nice!
+      def resultSentences = result.openShiftResponses.collect {
+        def name = JsonNodeUtilsKt.getOpenshiftName(it.command.payload)
+        def kind = JsonNodeUtilsKt.getOpenshiftKind(it.command.payload)
+        "${it.command.operationType} $kind $name".trim()
+      }
+      resultSentences ==
+          ['CREATE projectrequest aos-mounts',
+           'UPDATE namespace aos-mounts',
+           'CREATE rolebinding admin',
+           'CREATE deploymentconfig aos-simple',
+           'CREATE service aos-simple',
+           'CREATE imagestream aos-simple',
+           'CREATE buildconfig aos-simple',
+           'CREATE configmap aos-simple',
+           'DELETE route aos-simple',
+           'CREATE route aos-simple',
+           'DELETE route aos-simple-bar',
+           'CREATE route aos-simple-bar',
+          ]
   }
 }
