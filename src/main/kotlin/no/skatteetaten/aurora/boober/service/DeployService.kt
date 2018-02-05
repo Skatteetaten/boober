@@ -85,7 +85,7 @@ class DeployService(
     }
 
 
-    fun prepareDeployEnvironment(environment: AuroraDeployEnvironment, projectExist: Boolean): List<OpenShiftResponse> {
+    private fun prepareDeployEnvironment(environment: AuroraDeployEnvironment, projectExist: Boolean): List<OpenShiftResponse> {
 
         val namespace = environment.namespace
 
@@ -172,7 +172,7 @@ class DeployService(
         return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResponse), tagResponse = tagResult, success = totalSuccess, reason = "Deployment success.")
     }
 
-    protected fun applyOpenShiftApplicationObjects(deployId: String, deploymentSpec: AuroraDeploymentSpec,
+    private fun applyOpenShiftApplicationObjects(deployId: String, deploymentSpec: AuroraDeploymentSpec,
                                                  provisioningResult: ProvisioningResult? = null,
                                                  mergeWithExistingResource: Boolean): List<OpenShiftResponse> {
 

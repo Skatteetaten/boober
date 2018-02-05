@@ -18,13 +18,12 @@ open class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: Stri
                                    val openShiftRequestHandler: OpenShiftRequestHandler) {
 
 
-    open fun put(kind: String, namespace: String, name: String, payload: JsonNode): ResponseEntity<JsonNode> {
+    fun put(kind: String, namespace: String, name: String, payload: JsonNode): ResponseEntity<JsonNode> {
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, namespace, name)
         val headers: HttpHeaders = getAuthorizationHeaders()
         return openShiftRequestHandler.exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.PUT, URI(urls.update)))
     }
 
-    @JvmOverloads
     open fun get(kind: String, namespace: String, name: String, retry: Boolean = true): ResponseEntity<JsonNode>? {
 
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, namespace, name)
