@@ -200,32 +200,4 @@ class DeployServiceTest extends AbstractSpec {
       result.auroraDeploymentSpec.deploy.flags.pause
       result.openShiftResponses.size() == 9
   }
-
-  def "When namespace does not exist we should create it and then update it appropriately"() {
-    given:
-      def permission = new Permission([] as Set, [] as Set)
-      def permissions = new Permissions(permission, permission)
-      def deployEnvironment = new AuroraDeployEnvironment(affiliation, ENV_NAME, permissions)
-
-    when:
-      def responses = deployService.prepareDeployEnvironment(deployEnvironment, false)
-
-    then:
-      responses.find { it.command.payload.get("kind").asText() == "ProjectRequest" }.command.operationType == CREATE
-      responses.find { it.command.payload.get("kind").asText() == "namespace" }.command.operationType == UPDATE
-  }
-
-  def "When namespace already exists we should not try to create or update it"() {
-    given:
-      def permission = new Permission([] as Set, [] as Set)
-      def permissions = new Permissions(permission, permission)
-      def deployEnvironment = new AuroraDeployEnvironment(affiliation, ENV_NAME, permissions)
-
-    when:
-      def responses = deployService.prepareDeployEnvironment(deployEnvironment, true)
-
-    then:
-      responses.find { it.command.payload.get("kind").asText() == "ProjectRequest" }.command.operationType == NOOP
-      responses.find { it.command.payload.get("kind").asText() == "namespace" }.command.operationType == NOOP
-  }
 }
