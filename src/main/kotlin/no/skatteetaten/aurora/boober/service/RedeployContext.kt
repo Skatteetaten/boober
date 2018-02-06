@@ -7,13 +7,11 @@ import no.skatteetaten.aurora.boober.utils.openshiftName
 
 open class RedeployContext(private val openShiftResponses: List<OpenShiftResponse>) {
 
-    open fun getImageStream(): OpenShiftResponse? {
-        return openShiftResponses.find { it.responseBody?.openshiftKind == "imagestream" }
-    }
+    open fun getImageStream(): OpenShiftResponse? =
+            openShiftResponses.find { it.responseBody?.openshiftKind == "imagestream" }
 
-    open fun getDeploymentConfig(): OpenShiftResponse? {
-        return openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }
-    }
+    open fun getDeploymentConfig(): OpenShiftResponse? =
+            openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }
 
     private fun findImageInformation(openShiftResponses: List<OpenShiftResponse>): RedeployService.ImageInformation? {
         val dc = openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }?.responseBody

@@ -35,7 +35,7 @@ class RedeployServiceTest extends Specification {
     openshiftClient.performOpenShiftCommand('', null) >> emptyOpenShiftResponse
   }
 
-  def "Trigger redeploy"() {
+  def "Trigger redeploy given valid input returns redeploy success"() {
     given:
       def deploymentSpec = createAuroraDeploymentSpec()
 
