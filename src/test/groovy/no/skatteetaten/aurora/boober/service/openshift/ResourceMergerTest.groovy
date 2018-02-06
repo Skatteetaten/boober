@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.service.openshift
 import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.test.web.client.MockRestServiceServer
 
 import com.fasterxml.jackson.databind.JsonNode
 
@@ -14,9 +13,6 @@ import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 class ResourceMergerTest extends AbstractAuroraDeploymentSpecSpringTest {
 
   String ENVIRONMENT = "utv"
-
-  @Autowired
-  MockRestServiceServer osClusterMock
 
   def auroraConfigJson = [
       "about.json"           : DEFAULT_ABOUT,
