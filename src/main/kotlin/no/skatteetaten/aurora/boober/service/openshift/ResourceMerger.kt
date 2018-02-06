@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service.openshift
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import no.skatteetaten.aurora.boober.utils.mergeField
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.updateField
 
@@ -53,14 +54,5 @@ private fun updateService(mergedResource: JsonNode, existingResource: JsonNode) 
     mergedResource.updateField(existingResource, "/spec", "clusterIP")
 }
 
-private fun updateNamespace(mergedResource: ObjectNode, existingResource: ObjectNode) {
-
-    val existingAnnotations = existingResource.at("/metadata/annotations") as ObjectNode
-
-    val allAnnotations = existingAnnotations.deepCopy()
-    mergedResource.at("/metadata/annotations")
-            .takeIf { it is ObjectNode }
-            ?.also { allAnnotations.setAll(it as ObjectNode) }
-
-    (mergedResource.at("/metadata") as ObjectNode).set("annotations", allAnnotations)
-}
+private fun updateNamespace(mergedResource: ObjectNode, existingResource: ObjectNode) =
+        mergedResource.mergeField(existingResource, "/metadata", "annotations")
