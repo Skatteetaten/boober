@@ -5,8 +5,6 @@ import static no.skatteetaten.aurora.boober.model.TemplateType.deploy
 import static no.skatteetaten.aurora.boober.model.TemplateType.development
 import static no.skatteetaten.aurora.boober.service.openshift.OperationType.CREATE
 
-import javax.validation.groups.Default
-
 import org.springframework.beans.factory.annotation.Autowired
 
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -49,15 +47,16 @@ class RedeployServiceGenerateRedeployResourceTest extends AbstractMockedOpenShif
   def mockedCommand = new OpenshiftCommand(CREATE, dc, null, null)
   def dcResponse = new OpenShiftResponse(mockedCommand, dc)
   def isResponse = new OpenShiftResponse(mockedCommand, imageStream)
+  def redeployContext = new RedeployContext([])
 
   def docker = "docker/foo/bar:baz"
 
-  def "Should  not create any resource on build flow"() {
+  def "Should not create any resource on build flow"() {
     given:
       def templateType = build
       def name = "boober"
     when:
-      def result = redeployService.generateRedeployResource(templateType, name, [])
+      def result = redeployService.generateRedeployResource(templateType, name, redeployContext)
 
     then:
       result == null
@@ -69,7 +68,7 @@ class RedeployServiceGenerateRedeployResourceTest extends AbstractMockedOpenShif
       def name = "boober"
 
     when:
-      def result = redeployService.generateRedeployResource(templateType, name, [])
+      def result = redeployService.generateRedeployResource(templateType, name, redeployContext)
 
     then:
       result == null
@@ -79,8 +78,9 @@ class RedeployServiceGenerateRedeployResourceTest extends AbstractMockedOpenShif
     given:
       def templateType = deploy
       def name = "boober"
+      def context = new RedeployContext([dcResponse])
     when:
-      def result = redeployService.generateRedeployResource(templateType, name, [dcResponse])
+      def result = redeployService.generateRedeployResource(templateType, name, context)
 
     then:
       result.get("kind").asText() == "DeploymentRequest"
@@ -90,16 +90,17 @@ class RedeployServiceGenerateRedeployResourceTest extends AbstractMockedOpenShif
     expect:
       def templateType = deploy
       def name = "boober"
-      redeployService.generateRedeployResource(templateType, name, []) == null
+      redeployService.generateRedeployResource(templateType, name, redeployContext) == null
   }
 
   def "Should create imagestream import resource when objects are created and template is deploy"() {
     given:
       def templateType = deploy
       def name = "boober"
+      def context = new RedeployContext([dcResponse, isResponse])
 
     when:
-      def result = redeployService.generateRedeployResource(templateType, name, [dcResponse, isResponse])
+      def result = redeployService.generateRedeployResource(templateType, name, context)
 
     then:
       result.get("kind").asText() == "ImageStreamImport"

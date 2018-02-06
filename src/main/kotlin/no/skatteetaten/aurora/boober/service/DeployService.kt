@@ -165,8 +165,8 @@ class DeployService(
             val cmd = TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
             dockerService.tag(cmd)
         }
-        val redeployContext = RedeployContext(openShiftResponses, deploymentSpec, openShiftObjectGenerator)
-        val redeployResult = redeployService.triggerRedeploy(redeployContext)
+        val redeployContext = RedeployContext(openShiftResponses)
+        val redeployResult = redeployService.triggerRedeploy(deploymentSpec, redeployContext)
 
         if (!redeployResult.success) {
             return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses),

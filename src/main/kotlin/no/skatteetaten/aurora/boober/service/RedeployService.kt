@@ -1,6 +1,8 @@
 package no.skatteetaten.aurora.boober.service
 
+import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import org.springframework.stereotype.Service
@@ -26,29 +28,49 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectG
         }
     }
 
-    fun triggerRedeploy(redeployContext: RedeployContext): RedeployResult {
-        redeployContext.generateRedeployResource()
-        if(redeployContext::redeployResource.isInitialized) {
-
-        }
-
-        val imageStreamImportResponse = runImageStreamImport(redeployContext)
+    fun triggerRedeploy(deploymentSpec: AuroraDeploymentSpec, redeployContext: RedeployContext): RedeployResult {
+        val redeployResourceFromSpec = generateRedeployResourceFromSpec(deploymentSpec, redeployContext) ?: return RedeployResult()
+        val imageStreamImportResponse = runImageStreamImport(deploymentSpec, redeployResourceFromSpec)
 
         redeployContext.verifyResponse(imageStreamImportResponse).takeUnless { it.success }?.let {
             return RedeployResult(success = false, message = it.message, openShiftResponses = listOf(imageStreamImportResponse))
         }
 
-        if (redeployContext.didNotImportImageStream(imageStreamImportResponse)) {
+        if (redeployContext.noImageStreamImportRequired(imageStreamImportResponse)) {
             return RedeployResult.fromOpenShiftResponses(listOf(imageStreamImportResponse))
         }
 
-        val deploymentRequestResponse = runDeploymentRequest(redeployContext.deploymentSpec)
+        val deploymentRequestResponse = runDeploymentRequest(deploymentSpec)
         return RedeployResult.fromOpenShiftResponses(listOf(imageStreamImportResponse, deploymentRequestResponse))
     }
 
-    private fun runImageStreamImport(redeployContext: RedeployContext): OpenShiftResponse {
-        val namespace = redeployContext.deploymentSpec.environment.namespace
-        val command = openShiftClient.createOpenShiftCommand(namespace, redeployContext.redeployResource)
+    protected fun generateRedeployResourceFromSpec(deploymentSpec: AuroraDeploymentSpec, redeployContext: RedeployContext): JsonNode? {
+        return generateRedeployResource(deploymentSpec.type, deploymentSpec.name, redeployContext)
+    }
+
+    protected fun generateRedeployResource(type: TemplateType, name: String, redeployContext: RedeployContext): JsonNode? {
+        if (type == TemplateType.build || type == TemplateType.development) {
+            return null
+        }
+
+        val imageStream = redeployContext.getImageStream()
+        val deployment = redeployContext.getDeploymentConfig()
+        if (imageStream == null && deployment != null) {
+            return openShiftObjectGenerator.generateDeploymentRequest(name)
+        }
+
+        val imageInformation = redeployContext.findImageInformation()
+        val imageName = redeployContext.findImageName()
+        if(imageInformation != null && imageName != null) {
+            return openShiftObjectGenerator.generateImageStreamImport(imageInformation.imageStreamName, imageName)
+        }
+
+        return null
+    }
+
+    private fun runImageStreamImport(deploymentSpec: AuroraDeploymentSpec, redeployResource: JsonNode): OpenShiftResponse {
+        val namespace = deploymentSpec.environment.namespace
+        val command = openShiftClient.createOpenShiftCommand(namespace, redeployResource)
         return try {
             openShiftClient.performOpenShiftCommand(namespace, command)
         } catch (e: OpenShiftException) {
