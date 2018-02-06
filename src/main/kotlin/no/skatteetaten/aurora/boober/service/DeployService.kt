@@ -87,21 +87,25 @@ class DeployService(
 
     private fun prepareDeployEnvironment(environment: AuroraDeployEnvironment, projectExist: Boolean): List<OpenShiftResponse> {
 
-        val namespace = environment.namespace
+        val namespaceName = environment.namespace
 
-        val projectRequestResponse = openShiftObjectGenerator.generateProjectRequest(environment)
-                .let { openShiftClient.createOpenShiftCommand(namespace, it, projectExist) }
-                .let { openShiftClient.performOpenShiftCommand(namespace, it) }
+        val responses = mutableListOf<OpenShiftResponse>()
+        if (!projectExist) {
+            val projectRequestResponse = openShiftObjectGenerator.generateProjectRequest(environment)
+                    .let { openShiftClient.createOpenShiftCommand(namespaceName, it, false) }
+                    .let { openShiftClient.performOpenShiftCommand(namespaceName, it) }
+            responses.add(projectRequestResponse)
+        }
 
-        val updateNamespaceResponse = openShiftObjectGenerator.generateNamespace(environment)
-                .let { openShiftClient.createOpenShiftCommand(namespace, it, projectExist) }
-                .let { openShiftClient.performOpenShiftCommand(namespace, it) }
+        val namespace = openShiftObjectGenerator.generateNamespace(environment)
+        val roleBindings = openShiftObjectGenerator.generateRolebindings(environment.permissions)
+        (roleBindings + namespace)
+                .map { openShiftClient.createOpenShiftCommand(namespaceName, it, true, true) }
+                .map { it.copy(operationType = OperationType.UPDATE) }
+                .map { openShiftClient.performOpenShiftCommand(namespaceName, it) }
+                .forEach { responses.add(it) }
 
-        val updateRoleBindingsResponse = openShiftObjectGenerator.generateRolebindings(environment.permissions)
-                .map { openShiftClient.createOpenShiftCommand(namespace, it, projectRequestResponse.success, true) }
-                .map { openShiftClient.performOpenShiftCommand(namespace, it) }
-
-        return listOf(projectRequestResponse, updateNamespaceResponse) + updateRoleBindingsResponse
+        return responses.toList()
     }
 
     private fun deployFromSpecs(deploymentSpecs: List<AuroraDeploymentSpec>, environments: Map<AuroraDeployEnvironment, AuroraDeployResult>, deploy: Boolean): List<AuroraDeployResult> {

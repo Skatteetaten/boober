@@ -13,7 +13,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientCo
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
-import no.skatteetaten.aurora.boober.utils.updateField
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -118,32 +117,16 @@ class OpenShiftClient(
         val kind = newResource.openshiftKind
         val name = newResource.openshiftName
 
-        if (kind == "projectrequest" && mergeWithExistingResource) {
-            return OpenshiftCommand(OperationType.NOOP, payload = newResource)
-        }
-
-        data class OpenShiftResourceRef(val kind: String, val name: String?=null) {
-            fun matches(kind: String, name: String?): Boolean = this == OpenShiftResourceRef(kind, name)
-        }
-        val resourcesToAlwaysUpdate = listOf(
-                // ProjectRequest will always create admin rolebinding and namespace, so any command must be an UPDATE command
-                OpenShiftResourceRef("rolebinding", "admin"),
-                OpenShiftResourceRef("namespace")
-        )
-
         val existingResource = if (mergeWithExistingResource)
             userClient.get(kind, namespace, name, retryGetResourceOnFailure)
         else null
 
-        if (existingResource == null) {
-            if (resourcesToAlwaysUpdate.any { it.matches(kind, name) }) throw IllegalArgumentException("Resource should exist")
-            else return OpenshiftCommand(OperationType.CREATE, payload = newResource)
+        return if (existingResource == null) {
+            OpenshiftCommand(OperationType.CREATE, payload = newResource)
+        } else {
+            val mergedResource = mergeWithExistingResource(newResource, existingResource.body)
+            OpenshiftCommand(OperationType.UPDATE, mergedResource, existingResource.body, newResource)
         }
-
-        val existing = existingResource.body
-        val mergedResource = mergeWithExistingResource(newResource, existing)
-
-        return OpenshiftCommand(OperationType.UPDATE, mergedResource, existing, newResource)
     }
 
     fun findCurrentUser(token: String): JsonNode? {
