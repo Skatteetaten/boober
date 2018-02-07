@@ -5,25 +5,12 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
 
-open class RedeployContext(private val openShiftResponses: List<OpenShiftResponse>) {
+open class RedeployContext(openShiftResponses: List<OpenShiftResponse>) {
 
-    open fun getImageStream(): OpenShiftResponse? =
-            openShiftResponses.find { it.responseBody?.openshiftKind == "imagestream" }
+    private val imageStream: OpenShiftResponse? = openShiftResponses.find { it.responseBody?.openshiftKind == "imagestream" }
+    private val deploymentConfig: OpenShiftResponse? = openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }
 
-    open fun getDeploymentConfig(): OpenShiftResponse? =
-            openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }
-
-    private fun findImageInformation(openShiftResponses: List<OpenShiftResponse>): RedeployService.ImageInformation? {
-        val dc = openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }?.responseBody
-                ?: return null
-
-        val triggers = dc.at("/spec/triggers") as ArrayNode
-        return triggers.find { it["type"].asText().toLowerCase() == "imagechange" }?.let {
-            val (isName, tag) = it.at("/imageChangeParams/from/name").asText().split(':')
-            val lastTriggeredImage = it.at("/imageChangeParams/lastTriggeredImage")?.asText() ?: ""
-            RedeployService.ImageInformation(lastTriggeredImage, isName, tag)
-        }
-    }
+    open fun containsDeploymentConfig(): Boolean = imageStream == null && deploymentConfig != null
 
     open fun verifyResponse(response: OpenShiftResponse): RedeployService.VerificationResult {
         val body = response.responseBody
@@ -42,7 +29,7 @@ open class RedeployContext(private val openShiftResponses: List<OpenShiftRespons
 
     private fun didImportImage(response: OpenShiftResponse): Boolean {
         val body = response.responseBody ?: return true
-        val info = findImageInformation(openShiftResponses) ?: return true
+        val info = findImageInformation() ?: return true
         if (info.lastTriggeredImage.isBlank()) {
             return false
         }
@@ -58,8 +45,7 @@ open class RedeployContext(private val openShiftResponses: List<OpenShiftRespons
     }
 
     open fun findImageInformation(): RedeployService.ImageInformation? {
-        val dc = openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }?.responseBody
-                ?: return null
+        val dc = deploymentConfig?.responseBody ?: return null
 
         val triggers = dc.at("/spec/triggers") as ArrayNode
         return triggers.find { it["type"].asText().toLowerCase() == "imagechange" }?.let {
@@ -72,7 +58,7 @@ open class RedeployContext(private val openShiftResponses: List<OpenShiftRespons
     open fun findImageName(): String? {
         val imageInformation = findImageInformation()
         imageInformation?.let { img ->
-            getImageStream()?.responseBody?.takeIf { it.openshiftName == img.imageStreamName }?.let {
+            imageStream?.responseBody?.takeIf { it.openshiftName == img.imageStreamName }?.let {
                 val tags = it.at("/spec/tags") as ArrayNode
                 tags.find { it["name"].asText() == img.imageStreamTag }?.let {
                     return it.at("/from/name").asText()

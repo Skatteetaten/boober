@@ -53,9 +53,7 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectG
             return null
         }
 
-        val imageStream = redeployContext.getImageStream()
-        val deployment = redeployContext.getDeploymentConfig()
-        if (imageStream == null && deployment != null) {
+        if (redeployContext.containsDeploymentConfig()) {
             return openShiftObjectGenerator.generateDeploymentRequest(name)
         }
 
