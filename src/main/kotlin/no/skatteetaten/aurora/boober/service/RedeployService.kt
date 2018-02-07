@@ -29,7 +29,8 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectG
     }
 
     fun triggerRedeploy(deploymentSpec: AuroraDeploymentSpec, redeployContext: RedeployContext): RedeployResult {
-        val redeployResourceFromSpec = generateRedeployResourceFromSpec(deploymentSpec, redeployContext) ?: return RedeployResult()
+        val redeployResourceFromSpec = generateRedeployResourceFromSpec(deploymentSpec, redeployContext)
+                ?: return RedeployResult()
         val imageStreamImportResponse = runImageStreamImport(deploymentSpec, redeployResourceFromSpec)
 
         redeployContext.verifyResponse(imageStreamImportResponse).takeUnless { it.success }?.let {
@@ -53,13 +54,13 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectG
             return null
         }
 
-        if (redeployContext.containsDeploymentConfig()) {
+        if (redeployContext.isDeploymentRequest()) {
             return openShiftObjectGenerator.generateDeploymentRequest(name)
         }
 
         val imageInformation = redeployContext.findImageInformation()
         val imageName = redeployContext.findImageName()
-        if(imageInformation != null && imageName != null) {
+        if (imageInformation != null && imageName != null) {
             return openShiftObjectGenerator.generateImageStreamImport(imageInformation.imageStreamName, imageName)
         }
 

@@ -10,7 +10,7 @@ open class RedeployContext(openShiftResponses: List<OpenShiftResponse>) {
     private val imageStream: OpenShiftResponse? = openShiftResponses.find { it.responseBody?.openshiftKind == "imagestream" }
     private val deploymentConfig: OpenShiftResponse? = openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }
 
-    open fun containsDeploymentConfig(): Boolean = imageStream == null && deploymentConfig != null
+    open fun isDeploymentRequest(): Boolean = imageStream == null && deploymentConfig != null
 
     open fun verifyResponse(response: OpenShiftResponse): RedeployService.VerificationResult {
         val body = response.responseBody

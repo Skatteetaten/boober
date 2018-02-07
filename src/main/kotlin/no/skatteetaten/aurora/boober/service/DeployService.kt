@@ -173,7 +173,7 @@ class DeployService(
                     tagResponse = tagResult, success = false, reason = redeployResult.message)
         }
 
-        val totalSuccess = listOf(success, tagResult?.success, redeployResult.success).filterNotNull().all { it }
+        val totalSuccess = listOfNotNull(success, tagResult?.success, redeployResult.success).all { it }
 
         return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses), tagResponse = tagResult,
                 success = totalSuccess, reason = "Deployment success.")

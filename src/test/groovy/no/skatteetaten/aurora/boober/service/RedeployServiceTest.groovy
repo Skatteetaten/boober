@@ -14,27 +14,28 @@ import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import spock.lang.Specification
 
 class RedeployServiceTest extends Specification {
-  def openShiftResponse = new OpenShiftResponse(new OpenshiftCommand(OperationType.CREATE, Mock(JsonNode)))
+  def jsonNode = Mock(JsonNode)
+  def openShiftResponse = new OpenShiftResponse(new OpenshiftCommand(OperationType.CREATE, jsonNode))
   def deploymentSpec = new AuroraDeploymentSpec('', TemplateType.deploy, '', [:], '',
-      new AuroraDeployEnvironment('', '', new Permissions(new Permission(null, null), null)), null, null, null,
-      null, null, null)
+      new AuroraDeployEnvironment('affiliation', '', new Permissions(new Permission(null, null), null)),
+      null, null, null, null, null, null)
 
   def verificationSuccess = new RedeployService.VerificationResult()
-  def verificationFailed = new RedeployService.VerificationResult(false, '')
+  def verificationFailed = new RedeployService.VerificationResult(false, 'verification failed')
 
-  def openshiftClient = Mock(OpenShiftClient)
-  def openshiftObjectGenerator = Mock(OpenShiftObjectGenerator)
+  def openShiftClient = Mock(OpenShiftClient)
+  def openShiftObjectGenerator = Mock(OpenShiftObjectGenerator)
   def redeployContext = Mock(RedeployContext)
 
   def redeployService
 
   void setup() {
-    redeployService = new RedeployService(openshiftClient, openshiftObjectGenerator)
-    redeployContext.findImageInformation() >> new RedeployService.ImageInformation('', '', '')
-    redeployContext.findImageName() >> ''
+    redeployService = new RedeployService(openShiftClient, openShiftObjectGenerator)
+    redeployContext.findImageInformation() >> new RedeployService.ImageInformation('', 'image-stream-name', '')
+    redeployContext.findImageName() >> 'docker-image'
 
-    openshiftObjectGenerator.generateImageStreamImport('', '') >> Mock(JsonNode)
-    openshiftClient.performOpenShiftCommand('', null) >> openShiftResponse
+    openShiftObjectGenerator.generateImageStreamImport('image-stream-name', 'docker-image') >> jsonNode
+    openShiftClient.performOpenShiftCommand('affiliation', null) >> openShiftResponse
   }
 
   def "Trigger redeploy given no image stream import required return success"() {
@@ -73,5 +74,6 @@ class RedeployServiceTest extends Specification {
     then:
       !response.success
       response.openShiftResponses.size() == 1
+      response.message == 'verification failed'
   }
 }
