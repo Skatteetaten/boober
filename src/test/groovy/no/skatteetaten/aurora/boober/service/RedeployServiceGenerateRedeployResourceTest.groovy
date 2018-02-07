@@ -7,9 +7,8 @@ import spock.lang.Specification
 
 class RedeployServiceGenerateRedeployResourceTest extends Specification {
 
-  RedeployService redeployService
-  RedeployContext redeployContext
-  OpenShiftObjectGenerator openShiftObjectGenerator = Mock(OpenShiftObjectGenerator)
+  def openShiftObjectGenerator = Mock(OpenShiftObjectGenerator)
+  def redeployService
 
   void setup() {
     redeployService = new RedeployService(Mock(OpenShiftClient), openShiftObjectGenerator)

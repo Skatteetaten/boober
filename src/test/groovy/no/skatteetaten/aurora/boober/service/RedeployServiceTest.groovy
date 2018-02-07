@@ -37,6 +37,18 @@ class RedeployServiceTest extends Specification {
     openShiftClient.performOpenShiftCommand('affiliation', null) >> openShiftResponse
   }
 
+  def "Trigger redeploy given deploymentConfig return success"() {
+    given:
+      redeployContext.isDeploymentRequest() >> true
+
+    when:
+      def response = redeployService.triggerRedeploy(deployDeploymentSpec, redeployContext)
+
+    then:
+      response.success
+      response.openShiftResponses.size() == 1
+  }
+
   def "Trigger redeploy given no image stream import required return success"() {
     given:
       redeployContext.verifyResponse(openShiftResponse) >> verificationSuccess
