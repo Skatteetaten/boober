@@ -9,9 +9,10 @@ enum class TemplateType {
     deploy, development, localTemplate, template, build
 }
 
-enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: String) {
-    java("flange", "8"),
-    web("wrench", "0")
+
+enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: String, val container: List<String>) {
+    java("flange", "8", listOf("java")),
+    web("wrench", "0", listOf("node", "nginx"))
 }
 
 

@@ -34,7 +34,7 @@
         "imageChangeParams": {
           "automatic": true,
           "containerNames": [
-            "sprocket"
+            "sprocket-java"
           ],
           "from": {
             "name": "sprocket:default",
@@ -80,7 +80,7 @@
         ],
         "containers": [
           {
-            "name": "sprocket",
+            "name": "sprocket-java",
             "ports": [
               {
                 "containerPort": 8080,

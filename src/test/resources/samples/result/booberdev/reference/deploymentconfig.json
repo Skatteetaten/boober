@@ -35,7 +35,7 @@
         "imageChangeParams": {
           "automatic": true,
           "containerNames": [
-            "reference"
+            "reference-java"
           ],
           "from": {
             "name": "reference:default",
@@ -76,7 +76,7 @@
         ],
         "containers": [
           {
-            "name": "reference",
+            "name": "reference-java",
             "ports": [
               {
                 "containerPort": 8080,
