@@ -16,9 +16,8 @@ import spock.lang.Specification
 class RedeployServiceTest extends Specification {
   def jsonNode = Mock(JsonNode)
   def openShiftResponse = new OpenShiftResponse(new OpenshiftCommand(OperationType.CREATE, jsonNode))
-  def deploymentSpec = new AuroraDeploymentSpec('', TemplateType.deploy, '', [:], '',
-      new AuroraDeployEnvironment('affiliation', '', new Permissions(new Permission(null, null), null)),
-      null, null, null, null, null, null)
+  def deployDeploymentSpec = createDeploymentSpec(TemplateType.deploy)
+  def developmentDeploymentSpec = createDeploymentSpec(TemplateType.development)
 
   def verificationSuccess = new RedeployService.VerificationResult()
   def verificationFailed = new RedeployService.VerificationResult(false, 'verification failed')
@@ -44,7 +43,7 @@ class RedeployServiceTest extends Specification {
       redeployContext.noImageStreamImportRequired(openShiftResponse) >> false
 
     when:
-      def response = redeployService.triggerRedeploy(deploymentSpec, redeployContext)
+      def response = redeployService.triggerRedeploy(deployDeploymentSpec, redeployContext)
 
     then:
       response.success
@@ -57,7 +56,7 @@ class RedeployServiceTest extends Specification {
       redeployContext.noImageStreamImportRequired(openShiftResponse) >> true
 
     when:
-      def response = redeployService.triggerRedeploy(deploymentSpec, redeployContext)
+      def response = redeployService.triggerRedeploy(deployDeploymentSpec, redeployContext)
 
     then:
       response.success
@@ -69,11 +68,25 @@ class RedeployServiceTest extends Specification {
       redeployContext.verifyResponse(openShiftResponse) >> verificationFailed
 
     when:
-      def response = redeployService.triggerRedeploy(deploymentSpec, redeployContext)
+      def response = redeployService.triggerRedeploy(deployDeploymentSpec, redeployContext)
 
     then:
       !response.success
       response.openShiftResponses.size() == 1
       response.message == 'verification failed'
+  }
+
+  def "Trigger redeploy given development template type return success"() {
+    when:
+      def response = redeployService.triggerRedeploy(developmentDeploymentSpec, redeployContext)
+
+    then:
+      response.success
+  }
+
+  private static AuroraDeploymentSpec createDeploymentSpec(TemplateType type) {
+    new AuroraDeploymentSpec('', type, '', [:], '',
+        new AuroraDeployEnvironment('affiliation', '', new Permissions(new Permission(null, null), null)),
+        null, null, null, null, null, null)
   }
 }

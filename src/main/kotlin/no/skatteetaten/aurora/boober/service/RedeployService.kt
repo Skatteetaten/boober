@@ -29,6 +29,11 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectG
     }
 
     fun triggerRedeploy(deploymentSpec: AuroraDeploymentSpec, redeployContext: RedeployContext): RedeployResult {
+        val type = deploymentSpec.type
+        if (type == TemplateType.build || type == TemplateType.development) {
+            return RedeployResult(message = "No deploy was made with $type type")
+        }
+
         val redeployResourceFromSpec = generateRedeployResourceFromSpec(deploymentSpec, redeployContext)
                 ?: return RedeployResult()
         val imageStreamImportResponse = runImageStreamImport(deploymentSpec, redeployResourceFromSpec)
@@ -50,10 +55,6 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectG
     }
 
     protected fun generateRedeployResource(type: TemplateType, name: String, redeployContext: RedeployContext): JsonNode? {
-        if (type == TemplateType.build || type == TemplateType.development) {
-            return null
-        }
-
         if (redeployContext.isDeploymentRequest()) {
             return openShiftObjectGenerator.generateDeploymentRequest(name)
         }
