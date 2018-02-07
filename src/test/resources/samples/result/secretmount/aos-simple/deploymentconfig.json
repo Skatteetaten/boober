@@ -34,7 +34,7 @@
         "imageChangeParams": {
           "automatic": true,
           "containerNames": [
-            "aos-simple"
+            "aos-simple-java"
           ],
           "from": {
             "name": "aos-simple:latest",
@@ -87,7 +87,7 @@
         ],
         "containers": [
           {
-            "name": "aos-simple",
+            "name": "aos-simple-java",
             "ports": [
               {
                 "containerPort": 8080,

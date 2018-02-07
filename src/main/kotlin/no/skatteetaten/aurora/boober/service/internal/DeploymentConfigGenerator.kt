@@ -2,7 +2,10 @@ package no.skatteetaten.aurora.boober.service.internal
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.AuroraDeploy
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.Database
+import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.service.VelocityTemplateJsonService
@@ -19,20 +22,34 @@ class DeploymentConfigGenerator(
 
         if (auroraDeploymentSpec.deploy == null) return null
 
-        val params: Map<String, Any?> = createTemplateParams(auroraDeploymentSpec, labels, mounts)
 
-        val template = when (auroraDeploymentSpec.deploy.applicationPlatform) {
-            ApplicationPlatform.java -> "deployment-config.json"
-            ApplicationPlatform.web -> "deployment-config-web.json"
-        }
-        return velocityTemplateJsonService.renderToJson(template, params)
+        val containers = auroraDeploymentSpec.deploy.applicationPlatform.container.map {
+            val containerName = "${auroraDeploymentSpec.name}-$it"
+            val params = createContianerParams(containerName, auroraDeploymentSpec, mounts)
+            val renderToJson = velocityTemplateJsonService.renderToJson("container-$it.json", params)
+            val content = mapper.writeValueAsString(renderToJson)
+            containerName to content
+        }.toMap()
+
+        val params: Map<String, Any?> = createTemplateParams(auroraDeploymentSpec, labels, mounts, containers)
+
+        return velocityTemplateJsonService.renderToJson("deployment-config.json", params)
     }
 
-    private fun createTemplateParams(auroraDeploymentSpec: AuroraDeploymentSpec, commonLabels: Map<String, String>, mounts: List<Mount>?): Map<String, Any?> {
+    private fun createContianerParams(name: String, auroraDeploymentSpec: AuroraDeploymentSpec, mounts: List<Mount>?): Map<String, Any?> {
+
+        return mapOf(
+                "name" to name,
+                "deploy" to auroraDeploymentSpec.deploy,
+                "mounts" to mounts,
+                "env" to createEnvVars(mounts, auroraDeploymentSpec)
+        )
+    }
+
+    private fun createTemplateParams(auroraDeploymentSpec: AuroraDeploymentSpec, commonLabels: Map<String, String>, mounts: List<Mount>?, containers: Map<String, String>): Map<String, Any?> {
 
         val annotations = createAnnotations(auroraDeploymentSpec.deploy!!)
         val labels = createLabels(auroraDeploymentSpec, commonLabels)
-        val envVars = createEnvVars(mounts, auroraDeploymentSpec)
 
         val tag = when (auroraDeploymentSpec.type) {
             development -> "latest"
@@ -45,7 +62,7 @@ class DeploymentConfigGenerator(
                 "name" to auroraDeploymentSpec.name,
                 "deploy" to auroraDeploymentSpec.deploy,
                 "mounts" to mounts,
-                "env" to envVars,
+                "containers" to containers,
                 "imageStreamTag" to tag
         )
         return params
@@ -57,7 +74,7 @@ class DeploymentConfigGenerator(
                 "boober.skatteetaten.no/applicationFile" to deploy.applicationFile,
                 "console.skatteetaten.no/alarm" to deploy.flags.alarm.toString()
         )
-        val files = deploy.overrideFiles.mapValues{ mapper.readValue(it.value, JsonNode::class.java)}
+        val files = deploy.overrideFiles.mapValues { mapper.readValue(it.value, JsonNode::class.java) }
         val content = mapper.writeValueAsString(files)
         val overrides = StringEscapeUtils.escapeJavaScript(content).takeIf { it != "{}" }?.let {
             "boober.skatteetaten.no/overrides" to it

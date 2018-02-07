@@ -46,7 +46,12 @@
 "imageChangeParams": {
 "automatic": true,
 "containerNames": [
-"${name}"
+    #foreach ($container  in $containers.entrySet())
+        #if($velocityCount != 1)
+        ,
+        #end
+    "${container.key}"
+    #end
 ],
 "from": {
 "name": "${name}:${imageStreamTag}",
@@ -99,112 +104,12 @@
 }
 ],
 "containers": [
-{
-"name": "${name}",
-"ports": [
-{
-"containerPort": 8080,
-"protocol": "TCP",
-"name": "http"
-},
-{
-"containerPort": 8081,
-"protocol": "TCP",
-"name": "management"
-},
-{
-"containerPort": 8778,
-"name": "jolokia"
-}
-],
-"env": [
-{
-"name": "POD_NAME",
-"valueFrom": {
-"fieldRef": {
-"apiVersion": "v1",
-"fieldPath": "metadata.name"
-}
-}
-},
-{
-"name": "POD_NAMESPACE",
-"valueFrom": {
-"fieldRef": {
-"apiVersion": "v1",
-"fieldPath": "metadata.namespace"
-}
-}
-}
-  #foreach ($var  in $env.entrySet())
-  , {
-  "name": "$var.key",
-  "value": "$var.value"
-  }
-  #end
-],
-"resources": {
-"limits": {
-"cpu": "${deploy.resources.cpu.max}",
-"memory": "${deploy.resources.memory.max}"
-},
-"requests": {
-"cpu": "${deploy.resources.cpu.min}",
-"memory": "${deploy.resources.memory.min}"
-}
-},
-"volumeMounts": [
-  #if (${mounts})
-    #foreach ($mount in $mounts)
-    {
-    "name": "${mount.mountName}",
-    "mountPath": "${mount.path}"
-    },
+    #foreach ($container in $containers.entrySet())
+        #if($velocityCount != 1)
+        ,
     #end
+        ${container.value}
   #end
-{
-"name": "application-log-volume",
-"mountPath": "/u01/logs"
-}
-],
-"terminationMessagePath": "/dev/termination-log",
-"imagePullPolicy": "IfNotPresent",
-"capabilities": {
-},
-"securityContext": {
-"capabilities": {
-},
-"privileged": false
-}
-  #if (${deploy.liveness})
-  , "livenessProbe": {
-    #if(${deploy.liveness.path} && "$!{deploy.liveness.path}" != "")
-    "httpGet": {
-    "path": "${deploy.liveness.path}",
-    #else
-    "tcpSocket": {
-    #end
-  "port": ${deploy.liveness.port}
-  },
-  "initialDelaySeconds": ${deploy.liveness.delay},
-  "timeoutSeconds": ${deploy.liveness.timeout}
-  }
-  #end
-  #if (${deploy.readiness})
-  ,"readinessProbe": {
-    #if(${deploy.readiness.path} && "$!{deploy.readiness.path}" != "")
-    "httpGet": {
-    "path": "${deploy.readiness.path}",
-    #else
-    "tcpSocket": {
-    #end
-  "port": ${deploy.readiness.port}
-  },
-  "initialDelaySeconds": ${deploy.readiness.delay},
-  "timeoutSeconds": ${deploy.readiness.timeout}
-  }
-  #end
-}
 ],
 "restartPolicy": "Always",
 "dnsPolicy": "ClusterFirst"

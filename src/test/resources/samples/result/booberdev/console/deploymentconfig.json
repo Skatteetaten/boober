@@ -34,7 +34,7 @@
         "imageChangeParams": {
           "automatic": true,
           "containerNames": [
-            "openshift-console-api"
+            "openshift-console-api-java"
           ],
           "from": {
             "name": "openshift-console-api:default",
@@ -69,7 +69,7 @@
         ],
         "containers": [
           {
-            "name": "openshift-console-api",
+            "name": "openshift-console-api-java",
             "ports": [
               {
                 "containerPort": 8080,

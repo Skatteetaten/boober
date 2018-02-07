@@ -277,8 +277,8 @@
             }
           }
         ],
-        "dnsPolicy": "ClusterFirst",
-        "restartPolicy": "Always"
+        "restartPolicy": "Always",
+        "dnsPolicy": "ClusterFirst"
       }
     }
   }
