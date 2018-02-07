@@ -34,10 +34,20 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectG
             return RedeployResult(message = "No deploy was made with $type type")
         }
 
-        val redeployResourceFromSpec = generateRedeployResourceFromSpec(deploymentSpec, redeployContext)
-                ?: return RedeployResult()
-        val imageStreamImportResponse = runImageStreamImport(deploymentSpec, redeployResourceFromSpec)
+        return if (redeployContext.isDeploymentRequest()) {
+            requestDeployment(deploymentSpec)
+        } else {
+            importImageStream(deploymentSpec, redeployContext)
+        }
+    }
 
+    private fun requestDeployment(deploymentSpec: AuroraDeploymentSpec) =
+            RedeployResult.fromOpenShiftResponses(listOf(performDeploymentRequestCommand(deploymentSpec)))
+
+    private fun importImageStream(deploymentSpec: AuroraDeploymentSpec, redeployContext: RedeployContext): RedeployResult {
+        val imageStreamImportResource = generateImageStreamImportResource(redeployContext)
+                ?: return RedeployResult()
+        val imageStreamImportResponse = performImageStreamImportCommand(deploymentSpec, imageStreamImportResource)
         redeployContext.verifyResponse(imageStreamImportResponse).takeUnless { it.success }?.let {
             return RedeployResult(success = false, message = it.message, openShiftResponses = listOf(imageStreamImportResponse))
         }
@@ -46,19 +56,11 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectG
             return RedeployResult.fromOpenShiftResponses(listOf(imageStreamImportResponse))
         }
 
-        val deploymentRequestResponse = runDeploymentRequest(deploymentSpec)
+        val deploymentRequestResponse = performDeploymentRequestCommand(deploymentSpec)
         return RedeployResult.fromOpenShiftResponses(listOf(imageStreamImportResponse, deploymentRequestResponse))
     }
 
-    protected fun generateRedeployResourceFromSpec(deploymentSpec: AuroraDeploymentSpec, redeployContext: RedeployContext): JsonNode? {
-        return generateRedeployResource(deploymentSpec.type, deploymentSpec.name, redeployContext)
-    }
-
-    protected fun generateRedeployResource(type: TemplateType, name: String, redeployContext: RedeployContext): JsonNode? {
-        if (redeployContext.isDeploymentRequest()) {
-            return openShiftObjectGenerator.generateDeploymentRequest(name)
-        }
-
+    fun generateImageStreamImportResource(redeployContext: RedeployContext): JsonNode? {
         val imageInformation = redeployContext.findImageInformation()
         val imageName = redeployContext.findImageName()
         if (imageInformation != null && imageName != null) {
@@ -68,7 +70,7 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectG
         return null
     }
 
-    private fun runImageStreamImport(deploymentSpec: AuroraDeploymentSpec, redeployResource: JsonNode): OpenShiftResponse {
+    private fun performImageStreamImportCommand(deploymentSpec: AuroraDeploymentSpec, redeployResource: JsonNode): OpenShiftResponse {
         val namespace = deploymentSpec.environment.namespace
         val command = openShiftClient.createOpenShiftCommand(namespace, redeployResource)
         return try {
@@ -78,7 +80,7 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectG
         }
     }
 
-    private fun runDeploymentRequest(deploymentSpec: AuroraDeploymentSpec): OpenShiftResponse {
+    private fun performDeploymentRequestCommand(deploymentSpec: AuroraDeploymentSpec): OpenShiftResponse {
         val namespace = deploymentSpec.environment.namespace
         val command = openShiftClient.createOpenShiftCommand(namespace,
                 openShiftObjectGenerator.generateDeploymentRequest(deploymentSpec.name))
