@@ -10,9 +10,39 @@ enum class TemplateType {
 }
 
 
-enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: String, val container: List<String>) {
-    java("flange", "8", listOf("java")),
-    web("wrench", "0", listOf("node", "nginx"))
+data class Container(val name: String, val ports: List<ContainerPort>, val args: List<String>? = null, val env: Map<String, String>? = null)
+
+data class ContainerPort(val name: String, val number: Int, val protocol: ContainerPortType = ContainerPortType.TCP)
+
+enum class ContainerPortType {
+    TCP, UDP
+}
+
+enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: String, val container: List<Container>) {
+    java("flange", "8", listOf(
+            Container("java", listOf(
+                    ContainerPort("http", 8080),
+                    ContainerPort("management", 8081),
+                    ContainerPort("jolokia", 8778)),
+                    env = mapOf(
+                            "HTTP_PORT" to "8080",
+                            "MANAGEMENT_HTTP_PORT" to "8081")
+            )
+    )),
+    web("wrench", "0", listOf(
+            Container("node", listOf(
+                    ContainerPort("http", 9090),
+                    ContainerPort("management", 8081)),
+                    listOf("/u01/bin/run_node"),
+                    mapOf("HTTP_PORT" to "9090",
+                            "MANAGEMENT_HTTP_PORT" to "8081")
+            ),
+            Container("nginx", listOf(
+                    ContainerPort("http", 8080)),
+                    listOf("/u01/bin/run_nginx"),
+                    mapOf("HTTP_PORT" to "8080")
+            )
+    ))
 }
 
 

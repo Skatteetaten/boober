@@ -74,27 +74,19 @@
             "ports": [
               {
                 "containerPort": 9090,
-                "name": "http",
-                "protocol": "TCP"
+                "protocol": "TCP",
+                "name": "http"
               },
               {
                 "containerPort": 8081,
-                "name": "management",
-                "protocol": "TCP"
+                "protocol": "TCP",
+                "name": "management"
               }
             ],
             "args": [
               "/u01/bin/run_node"
             ],
             "env": [
-              {
-                "name": "HTTP_PORT",
-                "value": "9090"
-              },
-              {
-                "name": "MANAGEMENT_HTTP_PORT",
-                "value": "8081"
-              },
               {
                 "name": "POD_NAME",
                 "valueFrom": {
@@ -117,14 +109,7 @@
                 "name": "OPENSHIFT_CLUSTER",
                 "value": "utv"
               },
-              {
-                "name": "HTTP_PORT",
-                "value": "8080"
-              },
-              {
-                "name": "MANAGEMENT_HTTP_PORT",
-                "value": "8081"
-              },
+
               {
                 "name": "APP_NAME",
                 "value": "openshift-referanse-react"
@@ -140,6 +125,14 @@
               {
                 "name": "foo2",
                 "value": "baz"
+              },
+              {
+                "name": "HTTP_PORT",
+                "value": "9090"
+              },
+              {
+                "name": "MANAGEMENT_HTTP_PORT",
+                "value": "8081"
               }
             ],
             "resources": {
@@ -182,18 +175,14 @@
             "ports": [
               {
                 "containerPort": 8080,
-                "name": "http",
-                "protocol": "TCP"
+                "protocol": "TCP",
+                "name": "http"
               }
             ],
             "args": [
               "/u01/bin/run_nginx"
             ],
             "env": [
-              {
-                "name": "HTTP_PORT",
-                "value": "8080"
-              },
               {
                 "name": "POD_NAME",
                 "valueFrom": {
@@ -217,14 +206,6 @@
                 "value": "utv"
               },
               {
-                "name": "HTTP_PORT",
-                "value": "8080"
-              },
-              {
-                "name": "MANAGEMENT_HTTP_PORT",
-                "value": "8081"
-              },
-              {
                 "name": "APP_NAME",
                 "value": "openshift-referanse-react"
               },
@@ -239,6 +220,10 @@
               {
                 "name": "foo2",
                 "value": "baz"
+              },
+              {
+                "name": "HTTP_PORT",
+                "value": "8080"
               }
             ],
             "resources": {

@@ -2,10 +2,7 @@ package no.skatteetaten.aurora.boober.service.internal
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.model.AuroraDeploy
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.Database
-import no.skatteetaten.aurora.boober.model.Mount
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.service.VelocityTemplateJsonService
@@ -24,9 +21,9 @@ class DeploymentConfigGenerator(
 
 
         val containers = auroraDeploymentSpec.deploy.applicationPlatform.container.map {
-            val containerName = "${auroraDeploymentSpec.name}-$it"
-            val params = createContianerParams(containerName, auroraDeploymentSpec, mounts)
-            val renderToJson = velocityTemplateJsonService.renderToJson("container-$it.json", params)
+            val containerName = "${auroraDeploymentSpec.name}-${it.name}"
+            val params = createContianerParams(containerName, auroraDeploymentSpec, mounts, it)
+            val renderToJson = velocityTemplateJsonService.renderToJson("container.json", params)
             val content = mapper.writeValueAsString(renderToJson)
             containerName to content
         }.toMap()
@@ -36,13 +33,15 @@ class DeploymentConfigGenerator(
         return velocityTemplateJsonService.renderToJson("deployment-config.json", params)
     }
 
-    private fun createContianerParams(name: String, auroraDeploymentSpec: AuroraDeploymentSpec, mounts: List<Mount>?): Map<String, Any?> {
+    private fun createContianerParams(name: String, auroraDeploymentSpec: AuroraDeploymentSpec, mounts: List<Mount>?, container: Container): Map<String, Any?> {
 
         return mapOf(
                 "name" to name,
                 "deploy" to auroraDeploymentSpec.deploy,
                 "mounts" to mounts,
-                "env" to createEnvVars(mounts, auroraDeploymentSpec)
+                "ports" to container.ports,
+                "args" to container.args,
+                "env" to createEnvVars(mounts, auroraDeploymentSpec).addIfNotNull(container.env)
         )
     }
 
@@ -156,8 +155,6 @@ class DeploymentConfigGenerator(
 
         val envs = mapOf(
                 "OPENSHIFT_CLUSTER" to auroraDeploymentSpec.cluster,
-                "HTTP_PORT" to "8080",
-                "MANAGEMENT_HTTP_PORT" to "8081",
                 "APP_NAME" to auroraDeploymentSpec.name
         ).addIfNotNull(splunkIndex) + routeName + certEnv + debugEnv + dbEnv + mountEnv + configEnv
 

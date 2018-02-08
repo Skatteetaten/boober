@@ -1,29 +1,27 @@
 {
   "name": "${name}",
   "ports": [
-    {
-      "containerPort": 9090,
-      "name": "http",
-      "protocol": "TCP"
-    },
-    {
-      "containerPort": 8081,
-      "name": "management",
-      "protocol": "TCP"
-    }
+#foreach ($port in $ports)
+    #if($velocityCount != 1)
+      ,
+    #end
+{
+  "containerPort": ${port.number},
+  "protocol": "${port.protocol.toString()}",
+  "name": "${port.name}"
+}
+#end
   ],
-  "args": [
-    "/u01/bin/run_node"
-  ],
+    #if (${args})
+    "args":[
+        #foreach ($arg in $args)
+            #if($velocityCount != 1)
+            , #end
+        "$arg"
+        #end
+    ],
+    #end
   "env": [
-    {
-      "name": "HTTP_PORT",
-      "value": "9090"
-    },
-    {
-      "name": "MANAGEMENT_HTTP_PORT",
-      "value": "8081"
-    },
     {
       "name": "POD_NAME",
       "valueFrom": {
