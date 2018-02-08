@@ -11,7 +11,7 @@ import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.springframework.stereotype.Service
 
 @Service
-class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectGenerator: OpenShiftObjectGenerator) {
+class RedeployService(val openShiftClient: OpenShiftClient, val openShiftCommandBuilder: OpenShiftCommandBuilder, val openShiftObjectGenerator: OpenShiftObjectGenerator) {
 
     data class ImageInformation(val lastTriggeredImage: String, val imageStreamName: String, val imageStreamTag: String)
 
@@ -20,14 +20,14 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectG
         val namespace = deploymentSpec.environment.namespace
 
         val redeployResourceFromSpec = generateRedeployResourceFromSpec(deploymentSpec, openShiftResponses) ?: return emptyList()
-        val command = openShiftClient.createOpenShiftCommand(namespace, redeployResourceFromSpec)
+        val command = openShiftCommandBuilder.createOpenShiftCommand(namespace, redeployResourceFromSpec)
 
         try {
             val response = openShiftClient.performOpenShiftCommand(namespace, command)
             if (response.command.payload.openshiftKind != "imagestreamimport" || didImportImage(response, openShiftResponses)) {
                 return listOf(response)
             }
-            val cmd = openShiftClient.createOpenShiftCommand(namespace,
+            val cmd = openShiftCommandBuilder.createOpenShiftCommand(namespace,
                     openShiftObjectGenerator.generateDeploymentRequest(deploymentSpec.name))
             try {
                 return listOf(response, openShiftClient.performOpenShiftCommand(namespace, cmd))

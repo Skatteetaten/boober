@@ -103,32 +103,6 @@ class OpenShiftClient(
         }
     }
 
-    /**
-     * @param mergeWithExistingResource Whether the OpenShift project the object belongs to exists. If it does, some object types
-     * will be updated with information from the existing object to support the update.
-     * @param retryGetResourceOnFailure Whether the GET request for the existing resource should be retried on errors
-     * or not. You may want to retry the request if you are trying to update an object that has recently been created
-     * by another task/process and you are not entirely sure it exists yet, for instance. The default is
-     * <code>false</code>, because retrying everything will significantly impact performance of creating or updating
-     * many objects.
-     */
-    fun createOpenShiftCommand(namespace: String, newResource: JsonNode, mergeWithExistingResource: Boolean = true, retryGetResourceOnFailure: Boolean = false): OpenshiftCommand {
-
-        val kind = newResource.openshiftKind
-        val name = newResource.openshiftName
-
-        val existingResource = if (mergeWithExistingResource)
-            userClient.get(kind, namespace, name, retryGetResourceOnFailure)
-        else null
-
-        return if (existingResource == null) {
-            OpenshiftCommand(OperationType.CREATE, payload = newResource)
-        } else {
-            val mergedResource = mergeWithExistingResource(newResource, existingResource.body)
-            OpenshiftCommand(OperationType.UPDATE, mergedResource, existingResource.body, newResource)
-        }
-    }
-
     fun findCurrentUser(token: String): JsonNode? {
 
         val url = "$baseUrl/oapi/v1/users/~"
@@ -168,26 +142,6 @@ class OpenShiftClient(
 
         return OpenShiftGroups(getAllDeclaredUserGroups() + getAllImplicitUserGroups())
     }
-
-
-    @JvmOverloads
-    fun createOpenShiftDeleteCommands(name: String, namespace: String, deployId: String,
-                                      apiResources: List<String> = listOf("BuildConfig", "DeploymentConfig", "ConfigMap", "Secret", "Service", "Route", "ImageStream")): List<OpenshiftCommand> {
-
-        return apiResources.flatMap { kind ->
-            val queryString = "labelSelector=app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
-            val apiUrl = OpenShiftApiUrls.getCollectionPathForResource(baseUrl, kind, namespace)
-            val url = "$apiUrl?$queryString"
-            val body = userClient.get(url)?.body
-
-            val items = body?.get("items")?.toList() ?: emptyList()
-            items.filterIsInstance<ObjectNode>()
-                    .onEach { it.put("kind", kind) }
-        }.map {
-                    OpenshiftCommand(OperationType.DELETE, payload = it, previous = it)
-                }
-    }
-
 
     fun projectExists(name: String): Boolean {
         serviceAccountClient.get("${baseUrl}/oapi/v1/projects/$name", retry = false)?.body?.let {

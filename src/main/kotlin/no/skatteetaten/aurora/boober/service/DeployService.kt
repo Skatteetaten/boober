@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
@@ -23,7 +22,7 @@ import java.util.*
 //TODO:Split up. Service is to large
 class DeployService(
         val auroraConfigService: AuroraConfigService,
-        val openShiftObjectGenerator: OpenShiftObjectGenerator,
+        val openShiftCommandBuilder: OpenShiftCommandBuilder,
         val openShiftClient: OpenShiftClient,
         val dockerService: DockerService,
         val resourceProvisioner: ExternalResourceProvisioner,
@@ -91,17 +90,14 @@ class DeployService(
 
         val responses = mutableListOf<OpenShiftResponse>()
         if (!projectExist) {
-            val projectRequestResponse = openShiftObjectGenerator.generateProjectRequest(environment)
-                    .let { openShiftClient.createOpenShiftCommand(namespaceName, it, false) }
+            val projectRequestResponse = openShiftCommandBuilder.generateProjectRequest(environment)
                     .let { openShiftClient.performOpenShiftCommand(namespaceName, it) }
             responses.add(projectRequestResponse)
         }
 
-        val namespace = openShiftObjectGenerator.generateNamespace(environment)
-        val roleBindings = openShiftObjectGenerator.generateRolebindings(environment.permissions)
+        val namespace = openShiftCommandBuilder.generateNamespace(environment)
+        val roleBindings = openShiftCommandBuilder.generateRolebindings(environment)
         (roleBindings + namespace)
-                .map { openShiftClient.createOpenShiftCommand(namespaceName, it, true, true) }
-                .map { it.copy(operationType = OperationType.UPDATE) }
                 .map { openShiftClient.performOpenShiftCommand(namespaceName, it) }
                 .forEach { responses.add(it) }
 
@@ -183,10 +179,9 @@ class DeployService(
         val namespace = deploymentSpec.environment.namespace
         val name = deploymentSpec.name
 
-        val openShiftApplicationObjects: List<JsonNode> = openShiftObjectGenerator.generateApplicationObjects(deployId, deploymentSpec, provisioningResult)
+        val openShiftApplicationObjects: List<OpenshiftCommand> = openShiftCommandBuilder.generateApplicationObjects(deployId, deploymentSpec, provisioningResult, mergeWithExistingResource)
         val openShiftApplicationResponses: List<OpenShiftResponse> =
-                openShiftApplicationObjects.flatMap {
-                    val openShiftCommand = openShiftClient.createOpenShiftCommand(namespace, it, mergeWithExistingResource)
+                openShiftApplicationObjects.flatMap {openShiftCommand ->
                     if (updateRouteCommandWithChangedHostOrPath(openShiftCommand, deploymentSpec)) {
                         val deleteCommand = openShiftCommand.copy(operationType = OperationType.DELETE)
                         val createCommand = openShiftCommand.copy(operationType = OperationType.CREATE, payload = openShiftCommand.generated!!)
@@ -201,7 +196,7 @@ class DeployService(
             return openShiftApplicationResponses
         }
 
-        val deleteOldObjectResponses = openShiftClient
+        val deleteOldObjectResponses = openShiftCommandBuilder
                 .createOpenShiftDeleteCommands(name, namespace, deployId)
                 .map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
