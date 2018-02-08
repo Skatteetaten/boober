@@ -1,10 +1,9 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftApiUrls
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
@@ -18,8 +17,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class OpenShiftCommandBuilder(
-        @Value("\${openshift.url}") val baseUrl: String,
-        @ClientType(API_USER) val userClient: OpenShiftResourceClient,
+        val openShiftClient: OpenShiftClient,
         val openShiftObjectGenerator: OpenShiftObjectGenerator
 ) {
 
@@ -80,7 +78,7 @@ class OpenShiftCommandBuilder(
         val name = newResource.openshiftName
 
         val existingResource = if (mergeWithExistingResource)
-            userClient.get(kind, namespace, name, retryGetResourceOnFailure)
+            openShiftClient.get(kind, namespace, name, retryGetResourceOnFailure)
         else null
 
         return if (existingResource == null) {
@@ -95,16 +93,10 @@ class OpenShiftCommandBuilder(
     fun createOpenShiftDeleteCommands(name: String, namespace: String, deployId: String,
                                       apiResources: List<String> = listOf("BuildConfig", "DeploymentConfig", "ConfigMap", "Secret", "Service", "Route", "ImageStream")): List<OpenshiftCommand> {
 
-        return apiResources.flatMap { kind ->
-            val queryString = "labelSelector=app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
-            val apiUrl = OpenShiftApiUrls.getCollectionPathForResource(baseUrl, kind, namespace)
-            val url = "$apiUrl?$queryString"
-            val body = userClient.get(url)?.body
-
-            val items = body?.get("items")?.toList() ?: emptyList()
-            items.filterIsInstance<ObjectNode>()
-                    .onEach { it.put("kind", kind) }
-        }.map { OpenshiftCommand(DELETE, payload = it, previous = it) }
+        val labelSelectors = listOf("app=$name", "booberDeployId", "booberDeployId!=$deployId")
+        return apiResources
+                .flatMap { kind -> openShiftClient.getByLabels(kind, namespace, labelSelectors) }
+                .map { OpenshiftCommand(DELETE, payload = it, previous = it) }
     }
 
     private fun mustRecreateRoute(newRoute: JsonNode, previousRoute: JsonNode): Boolean {

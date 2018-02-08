@@ -13,6 +13,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientCo
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
+import org.apache.http.client.utils.URLEncodedUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -162,6 +163,22 @@ class OpenShiftClient(
         return false
     }
 
+    fun get(kind: String, namespace: String, name: String, retry: Boolean = true): ResponseEntity<JsonNode>? {
+        return getClientForKind(kind).get(kind, namespace, name, retry)
+    }
+
+    fun getByLabels(kind: String, namespace: String, labelSelectors: List<String>): List<JsonNode> {
+        val queryString = "labelSelector=${urlEncodeSelectors(labelSelectors)}"
+        val apiUrl = OpenShiftApiUrls.getCollectionPathForResource(baseUrl, kind, namespace)
+        val url = "$apiUrl?$queryString"
+        val body = getClientForKind(kind).get(url)?.body
+
+        val items = body?.get("items")?.toList() ?: emptyList()
+        return items.filterIsInstance<ObjectNode>()
+                .onEach { it.put("kind", kind) }
+
+    }
+
     /**
      * Some operations that users need to perform require privileges that they typically do not have. Therefore, for
      * some OpenShift kinds, we use a client that is based on the token of the service account of the current
@@ -179,5 +196,16 @@ class OpenShiftClient(
     private fun getResponseBodyItems(url: String): ArrayNode {
         val response: ResponseEntity<JsonNode> = serviceAccountClient.get(url)!!
         return response.body["items"] as ArrayNode
+    }
+
+    companion object {
+
+        @JvmStatic
+        fun urlEncodeSelectors(labelSelectors: List<String>): String {
+
+            return labelSelectors.map{}.joinToString(",")
+//            "app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
+//            val labelSelectors = listOf("app=$name", "booberDeployId", "booberDeployId!=$deployId")
+        }
     }
 }
