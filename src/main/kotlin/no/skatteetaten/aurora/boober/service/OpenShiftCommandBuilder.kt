@@ -9,7 +9,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
-import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import no.skatteetaten.aurora.boober.service.openshift.OperationType.*
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
@@ -32,14 +32,14 @@ class OpenShiftCommandBuilder(
     fun generateNamespace(environment: AuroraDeployEnvironment): OpenshiftCommand {
         val namespace = openShiftObjectGenerator.generateNamespace(environment)
         return createOpenShiftCommand(environment.namespace, namespace, true, true)
-                .copy(operationType = OperationType.UPDATE)
+                .copy(operationType = UPDATE)
     }
 
     fun generateRolebindings(environment: AuroraDeployEnvironment): List<OpenshiftCommand> {
         val roleBindings = openShiftObjectGenerator.generateRolebindings(environment.permissions)
         return roleBindings.map {
             createOpenShiftCommand(environment.namespace, it, true, true)
-                    .copy(operationType = OperationType.UPDATE)
+                    .copy(operationType = UPDATE)
         }
     }
 
@@ -54,13 +54,13 @@ class OpenShiftCommandBuilder(
 
         return openShiftObjectGenerator.generateApplicationObjects(deployId, deploymentSpec, provisioningResult)
                 .map { createOpenShiftCommand(namespace, it, mergeWithExistingResource, false) }
-                .flatMap { openShiftCommand ->
-                    if (updateRouteCommandWithChangedHostOrPath(openShiftCommand, deploymentSpec)) {
-                        val deleteCommand = openShiftCommand.copy(operationType = OperationType.DELETE)
-                        val createCommand = openShiftCommand.copy(operationType = OperationType.CREATE, payload = openShiftCommand.generated!!)
+                .flatMap { command ->
+                    if (command.isType(UPDATE, "route") && mustRecreateRoute(command.payload, command.previous!!)) {
+                        val deleteCommand = command.copy(operationType = DELETE)
+                        val createCommand = command.copy(operationType = CREATE, payload = command.generated!!)
                         listOf(deleteCommand, createCommand)
                     } else {
-                        listOf(openShiftCommand)
+                        listOf(command)
                     }
                 }
     }
@@ -84,10 +84,10 @@ class OpenShiftCommandBuilder(
         else null
 
         return if (existingResource == null) {
-            OpenshiftCommand(OperationType.CREATE, payload = newResource)
+            OpenshiftCommand(CREATE, payload = newResource)
         } else {
             val mergedResource = no.skatteetaten.aurora.boober.service.openshift.mergeWithExistingResource(newResource, existingResource.body)
-            OpenshiftCommand(OperationType.UPDATE, mergedResource, existingResource.body, newResource)
+            OpenshiftCommand(UPDATE, mergedResource, existingResource.body, newResource)
         }
     }
 
@@ -104,40 +104,17 @@ class OpenShiftCommandBuilder(
             val items = body?.get("items")?.toList() ?: emptyList()
             items.filterIsInstance<ObjectNode>()
                     .onEach { it.put("kind", kind) }
-        }.map {
-                    OpenshiftCommand(OperationType.DELETE, payload = it, previous = it)
-                }
+        }.map { OpenshiftCommand(DELETE, payload = it, previous = it) }
     }
 
-    private fun updateRouteCommandWithChangedHostOrPath(openShiftCommand: OpenshiftCommand, deploymentSpec: AuroraDeploymentSpec): Boolean {
-
-        if (openShiftCommand.payload.openshiftKind != "route") {
-            return false
-        }
-
-        if (openShiftCommand.operationType != OperationType.UPDATE) {
-            return false
-        }
-        val previous = openShiftCommand.previous!!
-        val payload = openShiftCommand.payload
-
+    private fun mustRecreateRoute(newRoute: JsonNode, previousRoute: JsonNode): Boolean {
 
         val hostPointer = "/spec/host"
         val pathPointer = "/spec/path"
 
-        val newHost = payload.at(hostPointer)
-        val expectedHost = if (newHost.isMissingNode) {
-            deploymentSpec.assembleRouteHost()
-        } else {
-            newHost.textValue()
-        }
-        val prevHost = previous.at(hostPointer).textValue()
+        val hostChanged = previousRoute.at(hostPointer).textValue() != newRoute.at(hostPointer).textValue()
+        val pathChanged = previousRoute.at(pathPointer) != newRoute.at(pathPointer)
 
-        val hostChanged = prevHost != expectedHost
-        val pathChanged = previous.at(pathPointer) != payload.at(pathPointer)
-
-        val changed = hostChanged || pathChanged
-
-        return changed
+        return hostChanged || pathChanged
     }
 }

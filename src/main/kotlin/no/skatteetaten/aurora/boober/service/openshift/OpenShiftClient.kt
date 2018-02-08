@@ -29,7 +29,14 @@ data class OpenshiftCommand @JvmOverloads constructor(
         val payload: JsonNode,
         val previous: JsonNode? = null,
         val generated: JsonNode? = null
-)
+) {
+    fun isType(operationType: OperationType, kind: String): Boolean {
+
+        if (payload.openshiftKind != kind) return false
+        if (operationType != operationType) return false
+        return true
+    }
+}
 
 data class OpenShiftResponse @JvmOverloads constructor(
         val command: OpenshiftCommand,
