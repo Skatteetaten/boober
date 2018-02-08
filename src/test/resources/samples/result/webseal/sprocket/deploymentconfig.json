@@ -80,24 +80,7 @@
         ],
         "containers": [
           {
-            "name": "sprocket-java",
-            "ports": [
-              {
-                "containerPort": 8080,
-                "protocol": "TCP",
-                "name": "http"
-              },
-              {
-                "containerPort": 8081,
-                "protocol": "TCP",
-                "name": "management"
-              },
-              {
-                "containerPort": 8778,
-                "protocol": "TCP",
-                "name": "jolokia"
-              }
-            ],
+
             "env": [
               {
                 "name": "POD_NAME",
@@ -171,6 +154,32 @@
                 "value": "8081"
               }
             ],
+            "imagePullPolicy": "IfNotPresent",
+            "name": "sprocket-java",
+            "ports": [
+              {
+                "containerPort": 8080,
+                "name": "http",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8081,
+                "name": "management",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8778,
+                "name": "jolokia",
+                "protocol": "TCP"
+              }
+            ],
+            "readinessProbe": {
+              "initialDelaySeconds": 10,
+              "tcpSocket": {
+                "port": 8080
+              },
+              "timeoutSeconds": 1
+            },
             "resources": {
               "limits": {
                 "cpu": "2000m",
@@ -181,36 +190,24 @@
                 "memory": "128Mi"
               }
             },
-            "volumeMounts": [
-              {
-                "name": "aurora-token",
-                "mountPath": "/u01/secrets/app/aurora-token"
-              },
-              {
-                "name": "sprocket-config",
-                "mountPath": "/u01/foo"
-              },
-              {
-                "name": "application-log-volume",
-                "mountPath": "/u01/logs"
-              }
-            ],
-            "terminationMessagePath": "/dev/termination-log",
-            "imagePullPolicy": "IfNotPresent",
-            "capabilities": {
-            },
             "securityContext": {
-              "capabilities": {
-              },
               "privileged": false
             },
-            "readinessProbe": {
-              "tcpSocket": {
-                "port": 8080
+            "terminationMessagePath": "/dev/termination-log",
+            "volumeMounts": [
+              {
+                "mountPath": "/u01/logs",
+                "name": "application-log-volume"
               },
-              "initialDelaySeconds": 10,
-              "timeoutSeconds": 1
-            }
+              {
+                "mountPath": "/u01/secrets/app/aurora-token",
+                "name": "aurora-token"
+              },
+              {
+                "mountPath": "/u01/foo",
+                "name": "sprocket-config"
+              }
+            ]
           }
         ],
         "restartPolicy": "Always",

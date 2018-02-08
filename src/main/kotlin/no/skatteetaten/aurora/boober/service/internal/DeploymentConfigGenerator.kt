@@ -2,7 +2,11 @@ package no.skatteetaten.aurora.boober.service.internal
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fkorotkov.kubernetes.*
+import io.fabric8.kubernetes.api.model.*
+import io.fabric8.kubernetes.api.model.Container
 import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.Probe
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.service.VelocityTemplateJsonService
@@ -20,11 +24,47 @@ class DeploymentConfigGenerator(
         if (auroraDeploymentSpec.deploy == null) return null
 
 
-        val containers = auroraDeploymentSpec.deploy.applicationPlatform.container.map {
-            val containerName = "${auroraDeploymentSpec.name}-${it.name}"
-            val params = createContianerParams(containerName, auroraDeploymentSpec, mounts, it)
-            val renderToJson = velocityTemplateJsonService.renderToJson("container.json", params)
-            val content = mapper.writeValueAsString(renderToJson)
+        val resources = auroraDeploymentSpec.deploy.resources
+        val containers = auroraDeploymentSpec.deploy.applicationPlatform.container.map { adcContainer ->
+
+
+            val containerName = "${auroraDeploymentSpec.name}-${adcContainer.name}"
+            val container = container {
+
+                auroraConntainer()
+                name = containerName
+                ports = adcContainer.ports
+                args = adcContainer.args
+
+                env = env.addIfNotNull(createEnvVars(mounts, auroraDeploymentSpec)).addIfNotNull(adcContainer.env)
+
+                resources {
+                    limits = mapOf(
+                            "cpu" to quantity(resources.cpu.max),
+                            "memory" to quantity(resources.memory.max))
+
+                    requests = mapOf(
+                            "cpu" to quantity(resources.cpu.min),
+                            "memory" to quantity(resources.memory.min))
+                }
+
+                volumeMounts = volumeMounts.addIfNotNull(mounts?.map {
+                    volumeMount {
+                        name = it.mountName
+                        mountPath = it.path
+                    }
+                })
+
+                livenessProbe {
+                    auroraDeploymentSpec.deploy.liveness?.let { toKubernetesProbe(it) }
+                }
+                readinessProbe {
+                    auroraDeploymentSpec.deploy.readiness?.let { toKubernetesProbe(it) }
+                }
+            }
+
+
+            val content = mapper.writeValueAsString(container)
             containerName to content
         }.toMap()
 
@@ -33,17 +73,56 @@ class DeploymentConfigGenerator(
         return velocityTemplateJsonService.renderToJson("deployment-config.json", params)
     }
 
-    private fun createContianerParams(name: String, auroraDeploymentSpec: AuroraDeploymentSpec, mounts: List<Mount>?, container: Container): Map<String, Any?> {
+    private fun quantity(str: String) =
+            QuantityBuilder().withAmount(str).build()
 
-        return mapOf(
-                "name" to name,
-                "deploy" to auroraDeploymentSpec.deploy,
-                "mounts" to mounts,
-                "ports" to container.ports,
-                "args" to container.args,
-                "env" to createEnvVars(mounts, auroraDeploymentSpec).addIfNotNull(container.env)
+    private fun io.fabric8.kubernetes.api.model.Probe.toKubernetesProbe(it: Probe) {
+        tcpSocket {
+            port = IntOrStringBuilder().withIntVal(it.port).build()
+        }
+        it.path?.let {
+            httpGet {
+                path = it
+            }
+        }
+        initialDelaySeconds = it.delay
+        timeoutSeconds = it.timeout
+    }
+
+    private fun Container.auroraConntainer() {
+        envFrom = null
+        command = null
+        terminationMessagePath = "/dev/termination-log"
+        imagePullPolicy = "IfNotPresent"
+        securityContext {
+            privileged = false
+        }
+        volumeMounts = listOf(volumeMount {
+            name = "application-log-volume"
+            mountPath = "/u01/logs"
+        })
+        env = listOf(
+                envVar {
+                    name = "POD_NAME"
+                    valueFrom {
+                        fieldRef {
+                            apiVersion = "v1"
+                            fieldPath = "metadata.name"
+                        }
+                    }
+                },
+                envVar {
+                    name = "POD_NAMESPACE"
+                    valueFrom {
+                        fieldRef {
+                            apiVersion = "v1"
+                            fieldPath = "metadata.namespace"
+                        }
+                    }
+                }
         )
     }
+
 
     private fun createTemplateParams(auroraDeploymentSpec: AuroraDeploymentSpec, commonLabels: Map<String, String>, mounts: List<Mount>?, containers: Map<String, String>): Map<String, Any?> {
 
@@ -106,7 +185,7 @@ class DeploymentConfigGenerator(
         return OpenShiftObjectLabelService.toOpenShiftLabelNameSafeMap(allLabels)
     }
 
-    private fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpec: AuroraDeploymentSpec): Map<String, String> {
+    private fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpec: AuroraDeploymentSpec): List<EnvVar> {
 
         val mountEnv = mounts?.map {
             "VOLUME_${it.mountName.toUpperCase().replace("-", "_")}" to it.path
@@ -158,7 +237,9 @@ class DeploymentConfigGenerator(
                 "APP_NAME" to auroraDeploymentSpec.name
         ).addIfNotNull(splunkIndex) + routeName + certEnv + debugEnv + dbEnv + mountEnv + configEnv
 
-        return envs.mapKeys { it.key.replace(".", "_").replace("-", "_") }
+        val vars = envs.mapKeys { it.key.replace(".", "_").replace("-", "_") }
+
+        return vars.map { EnvVarBuilder().withName(it.key).withValue(it.value).build() }
     }
 
     private inline fun <R> String.withNonBlank(block: (String) -> R?): R? {
