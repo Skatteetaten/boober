@@ -94,6 +94,7 @@
               },
               {
                 "containerPort": 8778,
+                "protocol": "TCP",
                 "name": "jolokia"
               }
             ],
@@ -120,14 +121,7 @@
                 "name": "OPENSHIFT_CLUSTER",
                 "value": "utv"
               },
-              {
-                "name": "HTTP_PORT",
-                "value": "8080"
-              },
-              {
-                "name": "MANAGEMENT_HTTP_PORT",
-                "value": "8081"
-              },
+
               {
                 "name": "APP_NAME",
                 "value": "sprocket"
@@ -167,6 +161,14 @@
               {
                 "name": "VOLUME_SPROCKET_CONFIG",
                 "value": "/u01/foo"
+              },
+              {
+                "name": "HTTP_PORT",
+                "value": "8080"
+              },
+              {
+                "name": "MANAGEMENT_HTTP_PORT",
+                "value": "8081"
               }
             ],
             "resources": {
