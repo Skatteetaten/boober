@@ -4,6 +4,7 @@
   "metadata": {
     "annotations": {
       "boober.skatteetaten.no/applicationFile": "booberdev/console.json",
+      "boober.skatteetaten.no/applicationFile": "booberdev/console.json",
       "console.skatteetaten.no/alarm": "true",
       "console.skatteetaten.no/management-path": ":8082/actuator"
     },
@@ -63,30 +64,11 @@
           {
             "name": "application-log-volume",
             "emptyDir": {
-
             }
           }
         ],
         "containers": [
           {
-            "name": "openshift-console-api-java",
-            "ports": [
-              {
-                "containerPort": 8080,
-                "protocol": "TCP",
-                "name": "http"
-              },
-              {
-                "containerPort": 8081,
-                "protocol": "TCP",
-                "name": "management"
-              },
-              {
-                "containerPort": 8778,
-                "protocol": "TCP",
-                "name": "jolokia"
-              }
-            ],
             "env": [
               {
                 "name": "POD_NAME",
@@ -159,6 +141,32 @@
                 "value": "8081"
               }
             ],
+            "imagePullPolicy": "IfNotPresent",
+            "name": "openshift-console-api-java",
+            "ports": [
+              {
+                "containerPort": 8080,
+                "name": "http",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8081,
+                "name": "management",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8778,
+                "name": "jolokia",
+                "protocol": "TCP"
+              }
+            ],
+            "readinessProbe": {
+              "initialDelaySeconds": 10,
+              "tcpSocket": {
+                "port": 8080
+              },
+              "timeoutSeconds": 1
+            },
             "resources": {
               "limits": {
                 "cpu": "2000m",
@@ -169,28 +177,16 @@
                 "memory": "128Mi"
               }
             },
-            "volumeMounts": [
-              {
-                "name": "application-log-volume",
-                "mountPath": "/u01/logs"
-              }
-            ],
-            "terminationMessagePath": "/dev/termination-log",
-            "imagePullPolicy": "IfNotPresent",
-            "capabilities": {
-            },
             "securityContext": {
-              "capabilities": {
-              },
               "privileged": false
             },
-            "readinessProbe": {
-              "tcpSocket": {
-                "port": 8080
-              },
-              "initialDelaySeconds": 10,
-              "timeoutSeconds": 1
-            }
+            "terminationMessagePath": "/dev/termination-log",
+            "volumeMounts": [
+              {
+                "mountPath": "/u01/logs",
+                "name": "application-log-volume"
+              }
+            ]
           }
         ],
         "restartPolicy": "Always",

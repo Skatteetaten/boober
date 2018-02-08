@@ -1,6 +1,10 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fkorotkov.kubernetes.containerPort
+import com.fkorotkov.kubernetes.envVar
+import io.fabric8.kubernetes.api.model.ContainerPort
+import io.fabric8.kubernetes.api.model.EnvVar
 
 import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 
@@ -10,9 +14,8 @@ enum class TemplateType {
 }
 
 
-data class Container(val name: String, val ports: List<ContainerPort>, val args: List<String>? = null, val env: Map<String, String>? = null)
+data class Container(val name: String, val ports: List<ContainerPort>, val args: List<String>? = null, val env: List<EnvVar>? = null)
 
-data class ContainerPort(val name: String, val number: Int, val protocol: ContainerPortType = ContainerPortType.TCP)
 
 enum class ContainerPortType {
     TCP, UDP
@@ -21,26 +24,68 @@ enum class ContainerPortType {
 enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: String, val container: List<Container>) {
     java("flange", "8", listOf(
             Container("java", listOf(
-                    ContainerPort("http", 8080),
-                    ContainerPort("management", 8081),
-                    ContainerPort("jolokia", 8778)),
-                    env = mapOf(
-                            "HTTP_PORT" to "8080",
-                            "MANAGEMENT_HTTP_PORT" to "8081")
-            )
-    )),
+                    containerPort {
+                        containerPort = 8080
+                        protocol = "TCP"
+                        name = "http"
+                    },
+                    containerPort {
+                        containerPort = 8081
+                        protocol = "TCP"
+                        name = "management"
+                    },
+                    containerPort {
+                        containerPort = 8778
+                        protocol = "TCP"
+                        name = "jolokia"
+                    }),
+                    env = listOf(
+                            envVar {
+                                name = "HTTP_PORT"
+                                value = "8080"
+                            },
+                            envVar {
+                                name = "MANAGEMENT_HTTP_PORT"
+                                value = "8081"
+                            }
+                    )))),
     web("wrench", "0", listOf(
             Container("node", listOf(
-                    ContainerPort("http", 9090),
-                    ContainerPort("management", 8081)),
+                    containerPort {
+                        containerPort = 9090
+                        protocol = "TCP"
+                        name = "http"
+                    },
+                    containerPort {
+                        containerPort = 8081
+                        protocol = "TCP"
+                        name = "management"
+                    }),
                     listOf("/u01/bin/run_node"),
-                    mapOf("HTTP_PORT" to "9090",
-                            "MANAGEMENT_HTTP_PORT" to "8081")
+                    env = listOf(
+                            envVar {
+                                name = "HTTP_PORT"
+                                value = "9090"
+                            },
+                            envVar {
+                                name = "MANAGEMENT_HTTP_PORT"
+                                value = "8081"
+                            }
+                    )
             ),
             Container("nginx", listOf(
-                    ContainerPort("http", 8080)),
+                    containerPort {
+                        containerPort = 8080
+                        protocol = "TCP"
+                        name = "http"
+                    }),
                     listOf("/u01/bin/run_nginx"),
-                    mapOf("HTTP_PORT" to "8080")
+                    env = listOf(
+                            envVar {
+                                name = "HTTP_PORT"
+                                value = "8080"
+                            }
+                    )
             )
     ))
 }
