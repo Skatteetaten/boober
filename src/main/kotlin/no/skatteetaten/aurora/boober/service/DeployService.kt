@@ -180,16 +180,7 @@ class DeployService(
         val name = deploymentSpec.name
 
         val openShiftApplicationObjects: List<OpenshiftCommand> = openShiftCommandBuilder.generateApplicationObjects(deployId, deploymentSpec, provisioningResult, mergeWithExistingResource)
-        val openShiftApplicationResponses: List<OpenShiftResponse> =
-                openShiftApplicationObjects.flatMap {openShiftCommand ->
-                    if (updateRouteCommandWithChangedHostOrPath(openShiftCommand, deploymentSpec)) {
-                        val deleteCommand = openShiftCommand.copy(operationType = OperationType.DELETE)
-                        val createCommand = openShiftCommand.copy(operationType = OperationType.CREATE, payload = openShiftCommand.generated!!)
-                        listOf(deleteCommand, createCommand)
-                    } else {
-                        listOf(openShiftCommand)
-                    }
-                }.map { openShiftClient.performOpenShiftCommand(namespace, it) }
+        val openShiftApplicationResponses: List<OpenShiftResponse> = openShiftApplicationObjects.map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         if (openShiftApplicationResponses.any { !it.success }) {
             logger.warn("One or more commands failed for $namespace/$name. Will not delete objects from previous deploys.")
@@ -201,39 +192,6 @@ class DeployService(
                 .map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         return openShiftApplicationResponses.addIfNotNull(deleteOldObjectResponses)
-    }
-
-
-    private fun updateRouteCommandWithChangedHostOrPath(openShiftCommand: OpenshiftCommand, deploymentSpec: AuroraDeploymentSpec): Boolean {
-
-        if (openShiftCommand.payload.openshiftKind != "route") {
-            return false
-        }
-
-        if (openShiftCommand.operationType != OperationType.UPDATE) {
-            return false
-        }
-        val previous = openShiftCommand.previous!!
-        val payload = openShiftCommand.payload
-
-
-        val hostPointer = "/spec/host"
-        val pathPointer = "/spec/path"
-
-        val newHost = payload.at(hostPointer)
-        val expectedHost = if (newHost.isMissingNode) {
-            deploymentSpec.assembleRouteHost()
-        } else {
-            newHost.textValue()
-        }
-        val prevHost = previous.at(hostPointer).textValue()
-
-        val hostChanged = prevHost != expectedHost
-        val pathChanged = previous.at(pathPointer) != payload.at(pathPointer)
-
-        val changed = hostChanged || pathChanged
-
-        return changed
     }
 }
 
