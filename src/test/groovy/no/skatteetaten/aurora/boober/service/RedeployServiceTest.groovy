@@ -49,22 +49,9 @@ class RedeployServiceTest extends Specification {
       response.openShiftResponses.size() == 1
   }
 
-  def "Trigger redeploy given invalid deployment request return failed"() {
-    given:
-      redeployContext.verifyResponse(openShiftResponse) >> verificationFailed
-      redeployContext.isDeploymentRequest() >> true
-
-    when:
-      def response = redeployService.triggerRedeploy(deployDeploymentSpec, redeployContext)
-
-    then:
-      !response.success
-  }
-
   def "Trigger redeploy given no image stream import required return success"() {
     given:
       redeployContext.verifyResponse(openShiftResponse) >> verificationSuccess
-      redeployContext.noDeploymentRequestRequired(openShiftResponse) >> false
 
     when:
       def response = redeployService.triggerRedeploy(deployDeploymentSpec, redeployContext)
@@ -77,7 +64,7 @@ class RedeployServiceTest extends Specification {
   def "Trigger redeploy given image stream import required return success"() {
     given:
       redeployContext.verifyResponse(openShiftResponse) >> verificationSuccess
-      redeployContext.noDeploymentRequestRequired(openShiftResponse) >> true
+      redeployContext.didImportImage(openShiftResponse) >> true
 
     when:
       def response = redeployService.triggerRedeploy(deployDeploymentSpec, redeployContext)

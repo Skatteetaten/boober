@@ -24,10 +24,7 @@ open class RedeployContext(openShiftResponses: List<OpenShiftResponse>) {
         return RedeployService.VerificationResult(success = true)
     }
 
-    open fun noDeploymentRequestRequired(imageStreamImportResponse: OpenShiftResponse) =
-            imageStreamImportResponse.command.payload.openshiftKind != "imagestreamimport" || didImportImage(imageStreamImportResponse)
-
-    private fun didImportImage(response: OpenShiftResponse): Boolean {
+    open fun didImportImage(response: OpenShiftResponse): Boolean {
         val body = response.responseBody ?: return true
         val info = findImageInformation() ?: return true
         if (info.lastTriggeredImage.isBlank()) {

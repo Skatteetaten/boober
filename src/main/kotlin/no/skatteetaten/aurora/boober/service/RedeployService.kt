@@ -35,39 +35,36 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectG
         }
 
         return if (redeployContext.isDeploymentRequest()) {
-            requestDeployment(deploymentSpec, redeployContext)
+            RedeployResult.fromOpenShiftResponses(listOf(requestDeployment(deploymentSpec)))
         } else {
-            importImageStream(deploymentSpec, redeployContext)
+            val imageStreamImportResponse = importImageStream(deploymentSpec, redeployContext)
+                    ?: return RedeployResult()
+            redeployContext.verifyResponse(imageStreamImportResponse).takeUnless { it.success }?.let {
+                return createFailedRedeployResult(it, imageStreamImportResponse)
+            }
+
+            if (redeployContext.didImportImage(imageStreamImportResponse)) {
+                return RedeployResult.fromOpenShiftResponses(listOf(imageStreamImportResponse))
+            }
+
+            val deploymentRequestResponse = requestDeployment(deploymentSpec)
+            return RedeployResult.fromOpenShiftResponses(listOf(imageStreamImportResponse, deploymentRequestResponse))
         }
-    }
-
-    private fun requestDeployment(deploymentSpec: AuroraDeploymentSpec, redeployContext: RedeployContext): RedeployResult {
-        val deploymentRequestResponse = performDeploymentRequestCommand(deploymentSpec)
-        redeployContext.verifyResponse(deploymentRequestResponse).takeUnless { it.success }?.let {
-            return createFailedRedeployResult(it, deploymentRequestResponse)
-        }
-        return RedeployResult.fromOpenShiftResponses(listOf(deploymentRequestResponse))
-
-    }
-
-    private fun importImageStream(deploymentSpec: AuroraDeploymentSpec, redeployContext: RedeployContext): RedeployResult {
-        val imageStreamImportResource = generateImageStreamImportResource(redeployContext)
-                ?: return RedeployResult()
-        val imageStreamImportResponse = performImageStreamImportCommand(deploymentSpec, imageStreamImportResource)
-        redeployContext.verifyResponse(imageStreamImportResponse).takeUnless { it.success }?.let {
-            return createFailedRedeployResult(it, imageStreamImportResponse)
-        }
-
-        if (redeployContext.noDeploymentRequestRequired(imageStreamImportResponse)) {
-            return RedeployResult.fromOpenShiftResponses(listOf(imageStreamImportResponse))
-        }
-
-        val deploymentRequestResponse = performDeploymentRequestCommand(deploymentSpec)
-        return RedeployResult.fromOpenShiftResponses(listOf(imageStreamImportResponse, deploymentRequestResponse))
     }
 
     private fun createFailedRedeployResult(it: VerificationResult, deploymentRequestResponse: OpenShiftResponse) =
             RedeployResult(success = false, message = it.message, openShiftResponses = listOf(deploymentRequestResponse))
+
+    private fun importImageStream(deploymentSpec: AuroraDeploymentSpec, redeployContext: RedeployContext): OpenShiftResponse? {
+        val imageStreamImportResource = generateImageStreamImportResource(redeployContext) ?: return null
+        val namespace = deploymentSpec.environment.namespace
+        val command = openShiftClient.createOpenShiftCommand(namespace, imageStreamImportResource)
+        return try {
+            openShiftClient.performOpenShiftCommand(namespace, command)
+        } catch (e: OpenShiftException) {
+            OpenShiftResponse.fromOpenShiftException(e, command)
+        }
+    }
 
     fun generateImageStreamImportResource(redeployContext: RedeployContext): JsonNode? {
         val imageInformation = redeployContext.findImageInformation()
@@ -79,17 +76,7 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectG
         return null
     }
 
-    private fun performImageStreamImportCommand(deploymentSpec: AuroraDeploymentSpec, redeployResource: JsonNode): OpenShiftResponse {
-        val namespace = deploymentSpec.environment.namespace
-        val command = openShiftClient.createOpenShiftCommand(namespace, redeployResource)
-        return try {
-            openShiftClient.performOpenShiftCommand(namespace, command)
-        } catch (e: OpenShiftException) {
-            OpenShiftResponse.fromOpenShiftException(e, command)
-        }
-    }
-
-    private fun performDeploymentRequestCommand(deploymentSpec: AuroraDeploymentSpec): OpenShiftResponse {
+    private fun requestDeployment(deploymentSpec: AuroraDeploymentSpec): OpenShiftResponse {
         val namespace = deploymentSpec.environment.namespace
         val command = openShiftClient.createOpenShiftCommand(namespace,
                 openShiftObjectGenerator.generateDeploymentRequest(deploymentSpec.name))
