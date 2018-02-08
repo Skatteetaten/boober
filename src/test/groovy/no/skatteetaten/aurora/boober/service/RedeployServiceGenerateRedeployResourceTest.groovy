@@ -8,11 +8,7 @@ import spock.lang.Specification
 class RedeployServiceGenerateRedeployResourceTest extends Specification {
 
   def openShiftObjectGenerator = Mock(OpenShiftObjectGenerator)
-  def redeployService
-
-  void setup() {
-    redeployService = new RedeployService(Mock(OpenShiftClient), openShiftObjectGenerator)
-  }
+  def redeployService = new RedeployService(Mock(OpenShiftClient), openShiftObjectGenerator)
 
   def "Should not create any resource given on null values for imageInformation or imageName"() {
     given:

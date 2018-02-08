@@ -26,10 +26,9 @@ class RedeployServiceTest extends Specification {
   def openShiftObjectGenerator = Mock(OpenShiftObjectGenerator)
   def redeployContext = Mock(RedeployContext)
 
-  def redeployService
+  def redeployService = new RedeployService(openShiftClient, openShiftObjectGenerator)
 
   void setup() {
-    redeployService = new RedeployService(openShiftClient, openShiftObjectGenerator)
     redeployContext.findImageInformation() >> new RedeployService.ImageInformation('', 'image-stream-name', '')
     redeployContext.findImageName() >> 'docker-image'
 
@@ -37,8 +36,9 @@ class RedeployServiceTest extends Specification {
     openShiftClient.performOpenShiftCommand('affiliation', null) >> openShiftResponse
   }
 
-  def "Trigger redeploy given deploymentConfig return success"() {
+  def "Trigger redeploy given deployment request return success"() {
     given:
+      redeployContext.verifyResponse(openShiftResponse) >> verificationSuccess
       redeployContext.isDeploymentRequest() >> true
 
     when:
@@ -49,10 +49,22 @@ class RedeployServiceTest extends Specification {
       response.openShiftResponses.size() == 1
   }
 
+  def "Trigger redeploy given invalid deployment request return failed"() {
+    given:
+      redeployContext.verifyResponse(openShiftResponse) >> verificationFailed
+      redeployContext.isDeploymentRequest() >> true
+
+    when:
+      def response = redeployService.triggerRedeploy(deployDeploymentSpec, redeployContext)
+
+    then:
+      !response.success
+  }
+
   def "Trigger redeploy given no image stream import required return success"() {
     given:
       redeployContext.verifyResponse(openShiftResponse) >> verificationSuccess
-      redeployContext.noImageStreamImportRequired(openShiftResponse) >> false
+      redeployContext.noDeploymentRequestRequired(openShiftResponse) >> false
 
     when:
       def response = redeployService.triggerRedeploy(deployDeploymentSpec, redeployContext)
@@ -65,7 +77,7 @@ class RedeployServiceTest extends Specification {
   def "Trigger redeploy given image stream import required return success"() {
     given:
       redeployContext.verifyResponse(openShiftResponse) >> verificationSuccess
-      redeployContext.noImageStreamImportRequired(openShiftResponse) >> true
+      redeployContext.noDeploymentRequestRequired(openShiftResponse) >> true
 
     when:
       def response = redeployService.triggerRedeploy(deployDeploymentSpec, redeployContext)

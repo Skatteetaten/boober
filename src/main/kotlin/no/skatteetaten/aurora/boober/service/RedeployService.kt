@@ -21,7 +21,7 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectG
 
         companion object {
             fun fromOpenShiftResponses(openShiftResponses: List<OpenShiftResponse>): RedeployResult {
-                val success = openShiftResponses?.all { it.success }
+                val success = openShiftResponses.all { it.success }
                 val message = if (success) "Redeploy succeeded" else "Redeploy failed"
                 return RedeployResult(openShiftResponses = openShiftResponses, success = success, message = message)
             }
@@ -35,30 +35,39 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectG
         }
 
         return if (redeployContext.isDeploymentRequest()) {
-            requestDeployment(deploymentSpec)
+            requestDeployment(deploymentSpec, redeployContext)
         } else {
             importImageStream(deploymentSpec, redeployContext)
         }
     }
 
-    private fun requestDeployment(deploymentSpec: AuroraDeploymentSpec) =
-            RedeployResult.fromOpenShiftResponses(listOf(performDeploymentRequestCommand(deploymentSpec)))
+    private fun requestDeployment(deploymentSpec: AuroraDeploymentSpec, redeployContext: RedeployContext): RedeployResult {
+        val deploymentRequestResponse = performDeploymentRequestCommand(deploymentSpec)
+        redeployContext.verifyResponse(deploymentRequestResponse).takeUnless { it.success }?.let {
+            return createFailedRedeployResult(it, deploymentRequestResponse)
+        }
+        return RedeployResult.fromOpenShiftResponses(listOf(deploymentRequestResponse))
+
+    }
 
     private fun importImageStream(deploymentSpec: AuroraDeploymentSpec, redeployContext: RedeployContext): RedeployResult {
         val imageStreamImportResource = generateImageStreamImportResource(redeployContext)
                 ?: return RedeployResult()
         val imageStreamImportResponse = performImageStreamImportCommand(deploymentSpec, imageStreamImportResource)
         redeployContext.verifyResponse(imageStreamImportResponse).takeUnless { it.success }?.let {
-            return RedeployResult(success = false, message = it.message, openShiftResponses = listOf(imageStreamImportResponse))
+            return createFailedRedeployResult(it, imageStreamImportResponse)
         }
 
-        if (redeployContext.noImageStreamImportRequired(imageStreamImportResponse)) {
+        if (redeployContext.noDeploymentRequestRequired(imageStreamImportResponse)) {
             return RedeployResult.fromOpenShiftResponses(listOf(imageStreamImportResponse))
         }
 
         val deploymentRequestResponse = performDeploymentRequestCommand(deploymentSpec)
         return RedeployResult.fromOpenShiftResponses(listOf(imageStreamImportResponse, deploymentRequestResponse))
     }
+
+    private fun createFailedRedeployResult(it: VerificationResult, deploymentRequestResponse: OpenShiftResponse) =
+            RedeployResult(success = false, message = it.message, openShiftResponses = listOf(deploymentRequestResponse))
 
     fun generateImageStreamImportResource(redeployContext: RedeployContext): JsonNode? {
         val imageInformation = redeployContext.findImageInformation()
