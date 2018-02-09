@@ -137,16 +137,6 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
 
         val fields: MutableMap<String, AuroraConfigField> = mutableMapOf()
         val configFields = auroraConfigFields.fields.filterValues { it.source != null || it.handler.defaultValue != null }
-
-        build?.let {
-            if (!fields.containsKey("baseImage/name")) {
-                fields.put("baseImage/name", AuroraConfigField(AuroraConfigFieldHandler("baseImage/name", defaultValue = it.applicationPlatform.baseImageName)))
-            }
-
-            if (!fields.containsKey("baseImage/version")) {
-                fields.put("baseImage/version", AuroraConfigField(AuroraConfigFieldHandler("baseImage/version", defaultValue = it.applicationPlatform.baseImageVersion)))
-            }
-        }
         return configFields + fields
     }
 

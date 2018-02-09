@@ -13,6 +13,18 @@ fun <K, V> Map<K, V>.addIfNotNull(value: Map<K, V>?): Map<K, V> {
     } ?: this
 }
 
+fun <T> Set<T>.addIfNotNull(value: T?): Set<T> {
+    return value?.let {
+        this + it
+    } ?: this
+}
+
+fun <T> Set<T>.addIfNotNull(value: Set<T>?): Set<T> {
+    return value?.let {
+        this + it
+    } ?: this
+}
+
 fun <T> List<T>.addIfNotNull(value: T?): List<T> {
     return value?.let {
         this + it

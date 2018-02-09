@@ -1,10 +1,9 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fkorotkov.kubernetes.containerPort
-import com.fkorotkov.kubernetes.envVar
 import io.fabric8.kubernetes.api.model.ContainerPort
 import io.fabric8.kubernetes.api.model.EnvVar
+import no.skatteetaten.aurora.boober.platform.ApplicationPlatform
 
 import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 
@@ -16,74 +15,6 @@ enum class TemplateType {
 
 data class Container(val name: String, val ports: List<ContainerPort>, val args: List<String>? = null, val env: List<EnvVar>? = null)
 
-enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: String, val container: List<Container>) {
-    java("flange", "8", listOf(
-            Container("java", listOf(
-                    containerPort {
-                        containerPort = 8080
-                        protocol = "TCP"
-                        name = "http"
-                    },
-                    containerPort {
-                        containerPort = 8081
-                        protocol = "TCP"
-                        name = "management"
-                    },
-                    containerPort {
-                        containerPort = 8778
-                        protocol = "TCP"
-                        name = "jolokia"
-                    }),
-                    env = listOf(
-                            envVar {
-                                name = "HTTP_PORT"
-                                value = "8080"
-                            },
-                            envVar {
-                                name = "MANAGEMENT_HTTP_PORT"
-                                value = "8081"
-                            }
-                    )))),
-    web("wrench", "0", listOf(
-            Container("node", listOf(
-                    containerPort {
-                        containerPort = 9090
-                        protocol = "TCP"
-                        name = "http"
-                    },
-                    containerPort {
-                        containerPort = 8081
-                        protocol = "TCP"
-                        name = "management"
-                    }),
-                    listOf("/u01/bin/run_node"),
-                    env = listOf(
-                            envVar {
-                                name = "HTTP_PORT"
-                                value = "9090"
-                            },
-                            envVar {
-                                name = "MANAGEMENT_HTTP_PORT"
-                                value = "8081"
-                            }
-                    )
-            ),
-            Container("nginx", listOf(
-                    containerPort {
-                        containerPort = 8080
-                        protocol = "TCP"
-                        name = "http"
-                    }),
-                    listOf("/u01/bin/run_nginx"),
-                    env = listOf(
-                            envVar {
-                                name = "HTTP_PORT"
-                                value = "8080"
-                            }
-                    )
-            )
-    ))
-}
 
 
 data class AuroraDeployEnvironment(

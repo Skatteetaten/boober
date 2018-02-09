@@ -7,6 +7,10 @@
     "source": "reference.json",
     "value": "deploy"
   },
+  "applicationPlatform": {
+    "source": "default",
+    "value": "java"
+  },
   "affiliation": {
     "source": "about.json",
     "value": "aos"
@@ -82,10 +86,6 @@
   "version": {
     "source": "reference.json",
     "value": "1"
-  },
-  "applicationPlatform": {
-    "source": "default",
-    "value": "java"
   },
   "resources": {
     "cpu": {

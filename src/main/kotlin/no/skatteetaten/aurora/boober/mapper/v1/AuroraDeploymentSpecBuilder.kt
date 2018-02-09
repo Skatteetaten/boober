@@ -11,6 +11,11 @@ fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: Applic
 
     val headerMapper = HeaderMapper.create(applicationFiles, applicationId)
     val type = headerMapper.type
+    val platform = headerMapper.platform
+
+    val applicationHandler = platform.handler
+
+
 
     val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(applicationId)
     val deployMapper = AuroraDeployMapperV1(applicationId, applicationFiles, overrideFiles)
@@ -20,7 +25,7 @@ fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: Applic
     val templateMapper = AuroraTemplateMapperV1(applicationFiles)
     val buildMapper = AuroraBuildMapperV1(applicationId)
 
-    val handlers = (HeaderMapper.handlers + deploymentSpecMapper.handlers + when (type) {
+    val rawHandlers = (HeaderMapper.handlers + deploymentSpecMapper.handlers + when (type) {
         TemplateType.deploy -> deployMapper.handlers + routeMapper.handlers + volumeMapper.handlers
         TemplateType.development -> deployMapper.handlers + routeMapper.handlers + volumeMapper.handlers + buildMapper.handlers
         TemplateType.localTemplate -> routeMapper.handlers + volumeMapper.handlers + localTemplateMapper.handlers
@@ -28,8 +33,10 @@ fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: Applic
         TemplateType.build -> buildMapper.handlers
     }).toSet()
 
+    val handlers = applicationHandler.handlers(rawHandlers)
     val auroraConfigFields = AuroraConfigFields.create(handlers, applicationFiles)
     AuroraDeploymentSpecConfigFieldValidator(applicationId, applicationFiles, handlers, auroraConfigFields).validate()
+    applicationHandler.validate(applicationId, applicationFiles, handlers, auroraConfigFields)
 
     val volume = if (type == TemplateType.build) null else volumeMapper.createAuroraVolume(auroraConfigFields)
     val route = if (type == TemplateType.build) null else routeMapper.route(auroraConfigFields)
