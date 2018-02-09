@@ -12,7 +12,7 @@ class RedeployServiceGenerateRedeployResourceTest extends Specification {
 
   def "Should not create any resource given on null values for imageInformation or imageName"() {
     given:
-      def redeployContext = new RedeployContext([])
+      def redeployContext = new RedeployContext(null, null)
 
     when:
       def result = redeployService.generateImageStreamImportResource(redeployContext)
@@ -24,7 +24,7 @@ class RedeployServiceGenerateRedeployResourceTest extends Specification {
   def "Should create ImageStreamImport when imageInformation and imageName is set"() {
     given:
       def redeployContext = Mock(RedeployContext) {
-        findImageInformation() >> new RedeployService.ImageInformation('', 'image-stream-name', '')
+        findImageInformation() >> new RedeployContext.ImageInformation('', 'image-stream-name', '')
         findImageName() >> 'image-name'
       }
 

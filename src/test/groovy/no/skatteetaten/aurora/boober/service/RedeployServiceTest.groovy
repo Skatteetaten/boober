@@ -19,8 +19,8 @@ class RedeployServiceTest extends Specification {
   def deployDeploymentSpec = createDeploymentSpec(TemplateType.deploy)
   def developmentDeploymentSpec = createDeploymentSpec(TemplateType.development)
 
-  def verificationSuccess = new RedeployService.VerificationResult()
-  def verificationFailed = new RedeployService.VerificationResult(false, 'verification failed')
+  def verificationSuccess = new RedeployContext.VerificationResult()
+  def verificationFailed = new RedeployContext.VerificationResult(false, 'verification failed')
 
   def openShiftClient = Mock(OpenShiftClient)
   def openShiftObjectGenerator = Mock(OpenShiftObjectGenerator)
@@ -29,7 +29,7 @@ class RedeployServiceTest extends Specification {
   def redeployService = new RedeployService(openShiftClient, openShiftObjectGenerator)
 
   void setup() {
-    redeployContext.findImageInformation() >> new RedeployService.ImageInformation('', 'image-stream-name', '')
+    redeployContext.findImageInformation() >> new RedeployContext.ImageInformation('', 'image-stream-name', '')
     redeployContext.findImageName() >> 'docker-image'
 
     openShiftObjectGenerator.generateImageStreamImport('image-stream-name', 'docker-image') >> jsonNode
