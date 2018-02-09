@@ -46,7 +46,7 @@ class AuroraDeploymentSpecConfigFieldValidator(val applicationId: ApplicationId,
                 invalidEnvSource -> ConfigFieldErrorDetail.illegal("Invalid Source field=${e.name} requires an about source. Actual source is source=${rawField.source?.name}", rawField)
                 result == null -> null
                 auroraConfigField != null -> ConfigFieldErrorDetail.illegal(result.localizedMessage, rawField)
-                else -> ConfigFieldErrorDetail.missing(result.localizedMessage, e.name)
+                else -> ConfigFieldErrorDetail.missing(result.localizedMessage, e.path)
             }
             if (err != null) {
                 logger.trace("Error=$err message=${err.message}")
