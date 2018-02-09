@@ -8,6 +8,9 @@ import no.skatteetaten.aurora.boober.model.Container
 
 abstract class AbstractHandler {
     open fun handlers(handlers: Set<AuroraConfigFieldHandler>): Set<AuroraConfigFieldHandler> = handlers
+    /*
+     * This method should throw a AuroraConfigException on errors
+     */
     open fun validate(applicationId: ApplicationId,
                       applicationFiles: List<AuroraConfigFile>,
                       handlers: Set<AuroraConfigFieldHandler>,
