@@ -2,8 +2,22 @@ package no.skatteetaten.aurora.boober.mapper.v1
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.model.*
-import no.skatteetaten.aurora.boober.utils.*
+import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraDeploy
+import no.skatteetaten.aurora.boober.model.AuroraDeployStrategy
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigFlags
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResources
+import no.skatteetaten.aurora.boober.model.Database
+import no.skatteetaten.aurora.boober.model.HttpEndpoint
+import no.skatteetaten.aurora.boober.model.Probe
+import no.skatteetaten.aurora.boober.model.Webseal
+import no.skatteetaten.aurora.boober.utils.ensureStartWith
+import no.skatteetaten.aurora.boober.utils.length
+import no.skatteetaten.aurora.boober.utils.notBlank
+import no.skatteetaten.aurora.boober.utils.oneOf
+import no.skatteetaten.aurora.boober.utils.removeExtension
 
 class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFiles: List<AuroraConfigFile>, val overrideFiles: List<AuroraConfigFile>) {
 
