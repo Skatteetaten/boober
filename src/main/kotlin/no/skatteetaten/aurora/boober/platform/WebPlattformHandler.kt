@@ -50,7 +50,7 @@ class WebPlattformHandler : AbstractHandler() {
 
     override fun handlers(handlers: Set<AuroraConfigFieldHandler>): Set<AuroraConfigFieldHandler> {
 
-        val buildHandlers = handlers.find { it.path.startsWith("/baseImage") }?.let {
+        val buildHandlers = handlers.find { it.name.startsWith("baseImage") }?.let {
             setOf(AuroraConfigFieldHandler("baseImage/name", defaultValue = "wrench"),
                     AuroraConfigFieldHandler("baseImage/version", defaultValue = "0"))
         }

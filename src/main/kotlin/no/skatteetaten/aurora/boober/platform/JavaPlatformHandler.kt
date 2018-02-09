@@ -38,7 +38,10 @@ class JavaPlatformHandler : AbstractHandler() {
     override fun handlers(handlers: Set<AuroraConfigFieldHandler>): Set<AuroraConfigFieldHandler> {
 
 
-        val buildHandlers = handlers.find { it.path.startsWith("/baseImage") }?.let {
+        //TODO: Should we send in the baseHandlers here and look for Type.build|development instead? Theen we can remove
+        // the handlers from buildMapper
+
+        val buildHandlers = handlers.find { it.name.startsWith("baseImage") }?.let {
             setOf(
                     AuroraConfigFieldHandler("baseImage/name", defaultValue = "flange"),
                     AuroraConfigFieldHandler("baseImage/version", defaultValue = "8")
