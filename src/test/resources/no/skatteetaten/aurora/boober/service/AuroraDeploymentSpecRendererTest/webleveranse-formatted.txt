@@ -1,6 +1,7 @@
 {
   schemaVersion:       "v1"                        // about.json
   type:                "development"               // utv/webleveranse.json
+  applicationPlatform: "web"                       // webleveranse.json
   affiliation:         "aos"                       // about.json
   cluster:             "utv"                       // utv/about.json
   permissions: {
@@ -18,7 +19,6 @@
   artifactId:          "openshift-referanse-react" // webleveranse.json
   groupId:             "no.skatteetaten.aurora"    // webleveranse.json
   version:             "1"                         // utv/webleveranse.json
-  applicationPlatform: "web"                       // webleveranse.json
   replicas:            1                           // webleveranse.json
   route:               true                        // webleveranse.json
 }

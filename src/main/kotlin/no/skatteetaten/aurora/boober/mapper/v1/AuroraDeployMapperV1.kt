@@ -19,7 +19,6 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
             AuroraConfigFieldHandler("groupId", validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
             AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set as string") }),
             AuroraConfigFieldHandler("releaseTo"),
-            AuroraConfigFieldHandler("applicationPlatform", defaultValue = ApplicationPlatform.java, validator = { it.oneOf(ApplicationPlatform.values().map { it.name }) }),
             AuroraConfigFieldHandler("deployStrategy/type", defaultValue = "rolling", validator = { it.oneOf(listOf("recreate", "rolling")) }),
             AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = 180),
             AuroraConfigFieldHandler("database", defaultValue = false),

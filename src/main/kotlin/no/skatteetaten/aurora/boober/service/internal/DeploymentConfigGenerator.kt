@@ -23,7 +23,9 @@ class DeploymentConfigGenerator(
 
         if (auroraDeploymentSpec.deploy == null) return null
 
-        val containers = auroraDeploymentSpec.deploy.applicationPlatform.container.map { adcContainer ->
+        val applicationHandler = auroraDeploymentSpec.deploy.applicationPlatform.handler
+
+        val containers = applicationHandler.container.map { adcContainer ->
             auroraContainer {
 
                 name = "${auroraDeploymentSpec.name}-${adcContainer.name}"
