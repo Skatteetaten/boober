@@ -26,8 +26,7 @@ class GitServiceTest extends Specification {
     userDetailsProvider.getAuthenticatedUser() >> new User("aurora", "token", "Aurora Test User", [])
   }
 
-  @Ignore
-  //does not work on mac
+  @Ignore("test fails on mac")
   def "Verify local unpushed commits are deleted when checking out repo"() {
 
     final String USER1_FOLDER = "test_user1"

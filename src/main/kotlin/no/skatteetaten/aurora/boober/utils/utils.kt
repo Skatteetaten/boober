@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.utils
 
+
 inline fun <T : AutoCloseable, R> T.use(block: (T) -> R): R {
 
     var currentThrowable: Throwable? = null
@@ -19,4 +20,13 @@ inline fun <T : AutoCloseable, R> T.use(block: (T) -> R): R {
             this.close()
         }
     }
+}
+
+
+abstract class Foo {
+    open fun bar() = "string"
+}
+
+class Bar : Foo() {
+    override fun bar() = "lkaj"
 }

@@ -23,60 +23,51 @@ class DeploymentConfigGenerator(
 
         if (auroraDeploymentSpec.deploy == null) return null
 
-
-        val resources = auroraDeploymentSpec.deploy.resources
         val containers = auroraDeploymentSpec.deploy.applicationPlatform.container.map { adcContainer ->
+            auroraContainer {
 
-
-            val containerName = "${auroraDeploymentSpec.name}-${adcContainer.name}"
-            val container = container {
-
-                auroraConntainer()
-                name = containerName
+                name = "${auroraDeploymentSpec.name}-${adcContainer.name}"
                 ports = adcContainer.ports
                 args = adcContainer.args
 
-                env = env.addIfNotNull(createEnvVars(mounts, auroraDeploymentSpec)).addIfNotNull(adcContainer.env)
+                env = createEnvVars(mounts, auroraDeploymentSpec).addIfNotNull(adcContainer.env)
 
                 resources {
-                    limits = mapOf(
-                            "cpu" to quantity(resources.cpu.max),
-                            "memory" to quantity(resources.memory.max))
-
-                    requests = mapOf(
-                            "cpu" to quantity(resources.cpu.min),
-                            "memory" to quantity(resources.memory.min))
+                    limits = fromAdcResource(auroraDeploymentSpec.deploy.resources.limit)
+                    requests = fromAdcResource(auroraDeploymentSpec.deploy.resources.request)
                 }
 
-                volumeMounts = volumeMounts.addIfNotNull(mounts?.map {
+                volumeMounts = mounts?.map {
                     volumeMount {
                         name = it.mountName
                         mountPath = it.path
                     }
-                })
+                }
 
-                livenessProbe {
-                    auroraDeploymentSpec.deploy.liveness?.let { toKubernetesProbe(it) }
+                auroraDeploymentSpec.deploy.liveness?.let { probe ->
+                    livenessProbe = fromProbe(probe)
                 }
-                readinessProbe {
-                    auroraDeploymentSpec.deploy.readiness?.let { toKubernetesProbe(it) }
+                auroraDeploymentSpec.deploy.readiness?.let { probe ->
+                    readinessProbe = fromProbe(probe)
                 }
+            }.let {
+                it.name to mapper.writeValueAsString(it)
             }
-
-
-            val content = mapper.writeValueAsString(container)
-            containerName to content
         }.toMap()
 
         val params: Map<String, Any?> = createTemplateParams(auroraDeploymentSpec, labels, mounts, containers)
 
         return velocityTemplateJsonService.renderToJson("deployment-config.json", params)
+
     }
 
-    private fun quantity(str: String) =
-            QuantityBuilder().withAmount(str).build()
+    private fun fromAdcResource(resource: AuroraDeploymentConfigResource): Map<String, Quantity> = mapOf(
+            "cpu" to quantity(resource.cpu),
+            "memory" to quantity(resource.memory))
 
-    private fun io.fabric8.kubernetes.api.model.Probe.toKubernetesProbe(it: Probe) {
+    private fun quantity(str: String) = QuantityBuilder().withAmount(str).build()
+
+    private fun fromProbe(it: Probe): io.fabric8.kubernetes.api.model.Probe = probe {
         tcpSocket {
             port = IntOrStringBuilder().withIntVal(it.port).build()
         }
@@ -89,19 +80,22 @@ class DeploymentConfigGenerator(
         timeoutSeconds = it.timeout
     }
 
-    private fun Container.auroraConntainer() {
-        envFrom = null
-        command = null
-        terminationMessagePath = "/dev/termination-log"
-        imagePullPolicy = "IfNotPresent"
-        securityContext {
+    fun auroraContainer(block: Container.() -> Unit = {}): Container {
+        val instance = Container()
+        instance.envFrom = null
+        instance.command = null
+        instance.block()
+        instance.terminationMessagePath = "/dev/termination-log"
+        instance.imagePullPolicy = "IfNotPresent"
+        instance.securityContext {
             privileged = false
         }
-        volumeMounts = listOf(volumeMount {
+        instance.volumeMounts = listOf(volumeMount {
             name = "application-log-volume"
             mountPath = "/u01/logs"
-        })
-        env = listOf(
+        }) + instance.volumeMounts
+
+        instance.env = listOf(
                 envVar {
                     name = "POD_NAME"
                     valueFrom {
@@ -120,9 +114,9 @@ class DeploymentConfigGenerator(
                         }
                     }
                 }
-        )
+        ) + instance.env
+        return instance
     }
-
 
     private fun createTemplateParams(auroraDeploymentSpec: AuroraDeploymentSpec, commonLabels: Map<String, String>, mounts: List<Mount>?, containers: Map<String, String>): Map<String, Any?> {
 

@@ -16,11 +16,6 @@ enum class TemplateType {
 
 data class Container(val name: String, val ports: List<ContainerPort>, val args: List<String>? = null, val env: List<EnvVar>? = null)
 
-
-enum class ContainerPortType {
-    TCP, UDP
-}
-
 enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: String, val container: List<Container>) {
     java("flange", "8", listOf(
             Container("java", listOf(
@@ -253,13 +248,13 @@ data class AuroraDeploymentConfigFlags(
 )
 
 data class AuroraDeploymentConfigResource(
-        val min: String,
-        val max: String
+        val cpu: String,
+        val memory: String
 )
 
 data class AuroraDeploymentConfigResources(
-        val memory: AuroraDeploymentConfigResource,
-        val cpu: AuroraDeploymentConfigResource
+        val limit: AuroraDeploymentConfigResource,
+        val request: AuroraDeploymentConfigResource
 )
 
 data class HttpEndpoint(
