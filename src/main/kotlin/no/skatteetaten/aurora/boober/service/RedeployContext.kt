@@ -1,10 +1,11 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.node.ArrayNode
+import io.fabric8.openshift.api.model.DeploymentConfig
+import io.fabric8.openshift.api.model.ImageStream
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
-import no.skatteetaten.aurora.boober.utils.openshiftName
 
-open class RedeployContext(private val imageStream: OpenShiftResponse?, private val deploymentConfig: OpenShiftResponse?) {
+open class RedeployContext(private val imageStream: ImageStream?, private val deploymentConfig: DeploymentConfig?) {
 
     data class VerificationResult(val success: Boolean = true, val message: String? = null)
 
@@ -42,27 +43,20 @@ open class RedeployContext(private val imageStream: OpenShiftResponse?, private 
     }
 
     open fun findImageInformation(): ImageInformation? {
-        val dc = deploymentConfig?.responseBody ?: return null
-
-        val triggers = dc.at("/spec/triggers") as ArrayNode
-        return triggers.find { it["type"].asText().toLowerCase() == "imagechange" }?.let {
-            val (isName, tag) = it.at("/imageChangeParams/from/name").asText().split(':')
-            val lastTriggeredImage = it.at("/imageChangeParams/lastTriggeredImage")?.asText() ?: ""
-            ImageInformation(lastTriggeredImage, isName, tag)
+        deploymentConfig?.spec?.triggers?.get(0)?.imageChangeParams?.let {
+            val name = it.from?.name
+            if (name != null) {
+                val (isName, tag) = name.split(':')
+                val lastTriggeredImage = it.lastTriggeredImage ?: ""
+                return ImageInformation(lastTriggeredImage, isName, tag)
+            }
         }
+
+        return null
     }
 
     open fun findImageName(): String? {
-        val imageInformation = findImageInformation()
-        imageInformation?.let { img ->
-            imageStream?.responseBody?.takeIf { it.openshiftName == img.imageStreamName }?.let {
-                val tags = it.at("/spec/tags") as ArrayNode
-                tags.find { it["name"].asText() == img.imageStreamTag }?.let {
-                    return it.at("/from/name").asText()
-                }
-            }
-        }
-        return null
+        return imageStream?.spec?.tags?.get(0)?.from?.name
     }
 
 }

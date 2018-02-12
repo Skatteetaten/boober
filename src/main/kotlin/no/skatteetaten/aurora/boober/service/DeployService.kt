@@ -1,6 +1,10 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import io.fabric8.openshift.api.model.DeploymentConfig
+import io.fabric8.openshift.api.model.ImageStream
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
@@ -17,7 +21,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.UUID
+import java.util.*
 
 @Service
 //TODO:Split up. Service is to large
@@ -170,9 +174,9 @@ class DeployService(
             return result.copy(tagResponse = it, reason = "Tag command failed")
         }
 
-        val imageStream: OpenShiftResponse? = openShiftResponses.find { it.responseBody?.openshiftKind == "imagestream" }
-        val deploymentConfig: OpenShiftResponse? = openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }
-        val redeployContext = RedeployContext(imageStream, deploymentConfig)
+        val imgStream = createImageStream(openShiftResponses)
+        val deplConfig = createDeploymentConfig(openShiftResponses)
+        val redeployContext = RedeployContext(imgStream, deplConfig)
         val redeployResult = redeployService.triggerRedeploy(deploymentSpec, redeployContext)
 
         if (!redeployResult.success) {
@@ -182,6 +186,22 @@ class DeployService(
 
         return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses), tagResponse = tagResult,
                 reason = "Deployment success.")
+    }
+
+    private fun createImageStream(openShiftResponses: List<OpenShiftResponse>): ImageStream? {
+        val deploymentConfig: OpenShiftResponse? = openShiftResponses.find { it.responseBody?.openshiftKind == "imagestream" }
+        if (deploymentConfig != null) {
+            return jacksonObjectMapper().readValue(deploymentConfig.responseBody.toString())
+        }
+        return null
+    }
+
+    private fun createDeploymentConfig(openShiftResponses: List<OpenShiftResponse>): DeploymentConfig? {
+        val deploymentConfig: OpenShiftResponse? = openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }
+        if (deploymentConfig != null) {
+            return jacksonObjectMapper().readValue(deploymentConfig.responseBody.toString())
+        }
+        return null
     }
 
     private fun applyOpenShiftApplicationObjects(deployId: String, deploymentSpec: AuroraDeploymentSpec,
