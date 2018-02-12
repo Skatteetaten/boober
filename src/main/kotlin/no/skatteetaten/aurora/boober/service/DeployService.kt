@@ -167,13 +167,15 @@ class DeployService(
             return result.copy(tagResponse = it, reason = "Tag command failed")
         }
 
-        val redeployResult = redeployService.triggerRedeploy(deploymentSpec, openShiftResponses)
+        val imageStream: OpenShiftResponse? = openShiftResponses.find { it.responseBody?.openshiftKind == "imagestream" }
+        val deploymentConfig: OpenShiftResponse? = openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }
+        val redeployContext = RedeployContext(imageStream, deploymentConfig)
+        val redeployResult = redeployService.triggerRedeploy(deploymentSpec, redeployContext)
 
         if (!redeployResult.success) {
             return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses),
                     tagResponse = tagResult, success = false, reason = redeployResult.message)
         }
-
 
         return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses), tagResponse = tagResult,
                 reason = "Deployment success.")

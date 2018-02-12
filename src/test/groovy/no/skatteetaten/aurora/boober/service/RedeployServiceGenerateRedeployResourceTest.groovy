@@ -1,107 +1,38 @@
 package no.skatteetaten.aurora.boober.service
 
-import static no.skatteetaten.aurora.boober.model.TemplateType.build
-import static no.skatteetaten.aurora.boober.model.TemplateType.deploy
-import static no.skatteetaten.aurora.boober.model.TemplateType.development
-import static no.skatteetaten.aurora.boober.service.openshift.OperationType.CREATE
+import com.fasterxml.jackson.databind.JsonNode
 
-import javax.validation.groups.Default
-
-import org.springframework.beans.factory.annotation.Autowired
-
-import com.fasterxml.jackson.databind.ObjectMapper
-
-import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
-import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
+import spock.lang.Specification
 
-@DefaultOverride(auroraConfig = false)
-class RedeployServiceGenerateRedeployResourceTest extends AbstractMockedOpenShiftSpecification {
+class RedeployServiceGenerateRedeployResourceTest extends Specification {
 
-  @Autowired
-  OpenShiftClient openShiftClient
+  def openShiftObjectGenerator = Mock(OpenShiftObjectGenerator)
+  def redeployService = new RedeployService(Mock(OpenShiftClient), openShiftObjectGenerator)
 
-  @Autowired
-  RedeployService redeployService
-
-  @Autowired
-  ObjectMapper mapper
-
-  public static final String ENV_NAME = "booberdev"
-  public static final String APP_NAME = "aos-simple"
-  final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
-
-  def setup() {
-    openShiftClient.createOpenShiftCommand(_, _, _) >> { new OpenshiftCommand(CREATE, it[1]) }
-    openShiftClient.performOpenShiftCommand(_, _) >> {
-      OpenshiftCommand cmd = it[1]
-      new OpenShiftResponse(cmd, cmd.payload)
-    }
-  }
-
-  def resultFiles = AuroraConfigHelperKt.getResultFiles(new ApplicationId("booberdev", "reference"))
-
-  def imageStream = resultFiles["imagestream/reference"]
-  def dc = resultFiles["deploymentconfig/reference"]
-
-  def mockedCommand = new OpenshiftCommand(CREATE, dc, null, null)
-  def dcResponse = new OpenShiftResponse(mockedCommand, dc)
-  def isResponse = new OpenShiftResponse(mockedCommand, imageStream)
-
-  def docker = "docker/foo/bar:baz"
-
-  def "Should  not create any resource on build flow"() {
+  def "Should not create any resource given on null values for imageInformation or imageName"() {
     given:
-      def templateType = build
-      def name = "boober"
+      def redeployContext = new RedeployContext(null, null)
+
     when:
-      def result = redeployService.generateRedeployResource(templateType, name, [])
+      def result = redeployService.generateImageStreamImportResource(redeployContext)
 
     then:
       result == null
   }
 
-  def "Should not create redeploy resource when development flow and we create bc"() {
+  def "Should create ImageStreamImport when imageInformation and imageName is set"() {
     given:
-      def templateType = development
-      def name = "boober"
+      def redeployContext = Mock(RedeployContext) {
+        findImageInformation() >> new RedeployContext.ImageInformation('', 'image-stream-name', '')
+        findImageName() >> 'image-name'
+      }
 
     when:
-      def result = redeployService.generateRedeployResource(templateType, name, [])
+      def result = redeployService.generateImageStreamImportResource(redeployContext)
 
     then:
-      result == null
-  }
-
-  def "Should create DeploymentRequest when no ImageStream is present and DeploymentConfig has changed and template is deploy"() {
-    given:
-      def templateType = deploy
-      def name = "boober"
-    when:
-      def result = redeployService.generateRedeployResource(templateType, name, [dcResponse])
-
-    then:
-      result.get("kind").asText() == "DeploymentRequest"
-  }
-
-  def "Should not create redeploy resource if there is no ImageStream and DeploymentConfig"() {
-    expect:
-      def templateType = deploy
-      def name = "boober"
-      redeployService.generateRedeployResource(templateType, name, []) == null
-  }
-
-  def "Should create imagestream import resource when objects are created and template is deploy"() {
-    given:
-      def templateType = deploy
-      def name = "boober"
-
-    when:
-      def result = redeployService.generateRedeployResource(templateType, name, [dcResponse, isResponse])
-
-    then:
-      result.get("kind").asText() == "ImageStreamImport"
+      1 * openShiftObjectGenerator.generateImageStreamImport('image-stream-name', 'image-name') >> Mock(JsonNode)
+      result != null
   }
 }
