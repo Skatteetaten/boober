@@ -28,20 +28,11 @@ class AuroraVolumeMapperV1(private val applicationFiles: List<AuroraConfigFile>)
     }
 
     private fun createSecretVaultHandlers(): List<AuroraConfigFieldHandler> {
-        val secretVaultSubKeys = applicationFiles.findSubKeys("secretVault")
-
-        //no subkeys means this is the old format. Return fieldHandler for "secretVault"
-        if (secretVaultSubKeys.isEmpty()) {
-            return listOf(
-                    AuroraConfigFieldHandler("secretVault")
-            )
-        }
-
-        return secretVaultSubKeys.flatMap { secretVaultSubKey ->
-            listOf(
-                    AuroraConfigFieldHandler("secretVault/$secretVaultSubKey")
-            )
-        }
+        return listOf(
+                AuroraConfigFieldHandler("secretVault"),
+                AuroraConfigFieldHandler("secretVault/name"),
+                AuroraConfigFieldHandler("secretVault/keys")
+        )
     }
 
     private fun createMountHandlers(): List<AuroraConfigFieldHandler> {

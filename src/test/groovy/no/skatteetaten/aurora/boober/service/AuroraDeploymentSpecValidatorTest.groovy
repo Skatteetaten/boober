@@ -169,4 +169,16 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
     expect:
       specValidator.validateVaultExistence(deploymentSpec)
   }
+
+  def "should handle overrides of secretVaultKeys with different syntax"() {
+    given:
+      auroraConfigJson["utv/about.json"] = '''{ "secretVault": "foo", "cluster" : "utv" }'''
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": { "name":"foo2" }}'''
+
+    when:
+      def deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    then:
+      deploymentSpec.volume.secretVaultName == "foo2"
+  }
 }
