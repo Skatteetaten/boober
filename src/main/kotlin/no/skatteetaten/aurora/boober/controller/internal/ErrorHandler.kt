@@ -38,6 +38,9 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
     @ExceptionHandler(IllegalAccessException::class)
     fun handleAccessRequest(ex: IllegalAccessException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
 
+    @ExceptionHandler(MultiApplicationValidationException::class)
+    fun handleAccessRequest(ex: MultiApplicationValidationException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
+
     @ExceptionHandler(UnauthorizedAccessException::class)
     fun handleAccessRequest(ex: UnauthorizedAccessException, req: WebRequest) = handleException(ex, req, FORBIDDEN)
 

@@ -138,7 +138,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
 
     then:
       def ex = thrown(AuroraConfigException)
-      ex.errors[0].field.handler.name == 'name'
+      ex.errors[0].field.path == '/name'
   }
 
   def "Should throw AuroraConfigException due to missing required properties"() {
