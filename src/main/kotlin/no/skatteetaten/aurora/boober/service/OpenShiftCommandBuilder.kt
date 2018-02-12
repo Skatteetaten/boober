@@ -37,11 +37,10 @@ class OpenShiftCommandBuilder(
         }
     }
 
-    fun generateApplicationObjects(
-            deployId: String,
-            deploymentSpec: AuroraDeploymentSpec,
-            provisioningResult: ProvisioningResult?,
-            mergeWithExistingResource: Boolean
+    fun generateApplicationObjects(deployId: String,
+                                   deploymentSpec: AuroraDeploymentSpec,
+                                   provisioningResult: ProvisioningResult?,
+                                   mergeWithExistingResource: Boolean
     ): List<OpenshiftCommand> {
 
         val namespace = deploymentSpec.environment.namespace

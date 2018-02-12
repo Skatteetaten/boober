@@ -7,11 +7,9 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
-import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -83,23 +81,21 @@ class DeployService(
                 }.toMap()
     }
 
-
     private fun prepareDeployEnvironment(environment: AuroraDeployEnvironment, projectExist: Boolean): List<OpenShiftResponse> {
 
         val namespaceName = environment.namespace
 
         val responses = mutableListOf<OpenShiftResponse>()
         if (!projectExist) {
-            val projectRequestResponse = openShiftCommandBuilder.generateProjectRequest(environment)
-                    .let { openShiftClient.performOpenShiftCommand(namespaceName, it) }
-            responses.add(projectRequestResponse)
+            val projectRequest = openShiftCommandBuilder.generateProjectRequest(environment)
+            responses.add(openShiftClient.performOpenShiftCommand(namespaceName, projectRequest))
         }
 
         val namespace = openShiftCommandBuilder.generateNamespace(environment)
         val roleBindings = openShiftCommandBuilder.generateRolebindings(environment)
-        (roleBindings + namespace)
-                .map { openShiftClient.performOpenShiftCommand(namespaceName, it) }
-                .forEach { responses.add(it) }
+        (roleBindings + namespace).forEach {
+            responses.add(openShiftClient.performOpenShiftCommand(namespaceName, it))
+        }
 
         return responses.toList()
     }
