@@ -6,7 +6,6 @@ import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
-import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
@@ -175,8 +174,9 @@ class DeployService(
         val namespace = deploymentSpec.environment.namespace
         val name = deploymentSpec.name
 
-        val openShiftApplicationObjects: List<OpenshiftCommand> = openShiftCommandBuilder.generateApplicationObjects(deployId, deploymentSpec, provisioningResult, mergeWithExistingResource)
-        val openShiftApplicationResponses: List<OpenShiftResponse> = openShiftApplicationObjects.map { openShiftClient.performOpenShiftCommand(namespace, it) }
+        val openShiftApplicationResponses: List<OpenShiftResponse> = openShiftCommandBuilder
+                .generateApplicationObjects(deployId, deploymentSpec, provisioningResult, mergeWithExistingResource)
+                .map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         if (openShiftApplicationResponses.any { !it.success }) {
             logger.warn("One or more commands failed for $namespace/$name. Will not delete objects from previous deploys.")

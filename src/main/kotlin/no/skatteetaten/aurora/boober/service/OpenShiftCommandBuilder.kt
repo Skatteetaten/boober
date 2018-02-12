@@ -26,17 +26,16 @@ class OpenShiftCommandBuilder(
 
     fun generateNamespace(environment: AuroraDeployEnvironment): OpenshiftCommand {
         val namespace = openShiftObjectGenerator.generateNamespace(environment)
-        return createOpenShiftCommand(environment.namespace, namespace, true, true)
-                .copy(operationType = UPDATE)
+        return createMergedUpdateCommand(environment.namespace, namespace)
     }
 
     fun generateRolebindings(environment: AuroraDeployEnvironment): List<OpenshiftCommand> {
-        val roleBindings = openShiftObjectGenerator.generateRolebindings(environment.permissions)
-        return roleBindings.map {
-            createOpenShiftCommand(environment.namespace, it, true, true)
-                    .copy(operationType = UPDATE)
-        }
+        return openShiftObjectGenerator.generateRolebindings(environment.permissions)
+                .map { createMergedUpdateCommand(environment.namespace, it) }
     }
+
+    private fun createMergedUpdateCommand(namespace: String, it: JsonNode) =
+            createOpenShiftCommand(namespace, it, true, true).copy(operationType = UPDATE)
 
     fun generateApplicationObjects(deployId: String,
                                    deploymentSpec: AuroraDeploymentSpec,
