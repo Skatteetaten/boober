@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.utils.openshiftName
 
-open class RedeployContext(val imageStream: OpenShiftResponse?, val deploymentConfig: OpenShiftResponse?) {
+open class RedeployContext(private val imageStream: OpenShiftResponse?, private val deploymentConfig: OpenShiftResponse?) {
 
     data class VerificationResult(val success: Boolean = true, val message: String? = null)
 
