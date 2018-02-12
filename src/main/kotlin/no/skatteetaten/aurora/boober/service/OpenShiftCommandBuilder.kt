@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType.*
+import no.skatteetaten.aurora.boober.service.openshift.mergeWithExistingResource
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
@@ -79,7 +80,7 @@ class OpenShiftCommandBuilder(
         return if (existingResource == null) {
             OpenshiftCommand(CREATE, payload = newResource)
         } else {
-            val mergedResource = no.skatteetaten.aurora.boober.service.openshift.mergeWithExistingResource(newResource, existingResource.body)
+            val mergedResource = mergeWithExistingResource(newResource, existingResource.body)
             OpenshiftCommand(UPDATE, mergedResource, existingResource.body, newResource)
         }
     }

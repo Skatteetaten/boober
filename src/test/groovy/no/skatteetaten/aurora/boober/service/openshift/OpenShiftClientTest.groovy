@@ -2,14 +2,18 @@ package no.skatteetaten.aurora.boober.service.openshift
 
 import static org.springframework.http.HttpStatus.OK
 
+import java.nio.charset.Charset
+
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.web.client.HttpClientErrorException
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import kotlin.Pair
 import no.skatteetaten.aurora.boober.service.AbstractSpec
+import no.skatteetaten.aurora.boober.service.OpenShiftException
 
 class OpenShiftClientTest extends AbstractSpec {
 
@@ -83,5 +87,54 @@ class OpenShiftClientTest extends AbstractSpec {
           ["app=$name" as String, "booberDeployId", "booberDeployId!=$deployId" as String].join(","))
     expect:
       OpenShiftClient.urlEncode(queryParam) == "labelSelector=app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
+  }
+
+  def "Should record exception when command fails"() {
+    given:
+      JsonNode payload = mapper.convertValue([
+          kind    : "service",
+          metadata: [
+              "name": "bar"
+          ]
+      ], JsonNode.class)
+
+      def cmd = new OpenshiftCommand(OperationType.CREATE, payload)
+      userClient.post("service", "foo", "bar", payload) >> {
+        throw new OpenShiftException("Does not exist",
+            new HttpClientErrorException(HttpStatus.SERVICE_UNAVAILABLE, "not available",
+                '''{ "failed" : "true"}'''.bytes,
+                Charset.defaultCharset()))
+      }
+    when:
+
+      def result = openShiftClient.performOpenShiftCommand("foo", cmd)
+    then:
+      !result.success
+      result.responseBody.get("failed").asText() == "true"
+
+  }
+
+  def "Should record exception when command fails with non json body"() {
+    given:
+      JsonNode payload = mapper.convertValue([
+          kind    : "service",
+          metadata: [
+              "name": "bar"
+          ]
+      ], JsonNode.class)
+
+      def cmd = new OpenshiftCommand(OperationType.CREATE, payload)
+      userClient.post("service", "foo", "bar", payload) >> {
+        throw new OpenShiftException("Does not exist",
+            new HttpClientErrorException(HttpStatus.SERVICE_UNAVAILABLE, "not available", "failed".bytes,
+                Charset.defaultCharset()))
+      }
+    when:
+
+      def result = openShiftClient.performOpenShiftCommand("foo", cmd)
+    then:
+      !result.success
+      result.responseBody.get("error").asText() == "failed"
+
   }
 }

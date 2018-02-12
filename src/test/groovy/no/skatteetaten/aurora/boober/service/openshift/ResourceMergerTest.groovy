@@ -5,10 +5,12 @@ import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 import org.springframework.beans.factory.annotation.Autowired
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AbstractAuroraDeploymentSpecSpringTest
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
+import spock.lang.Unroll
 
 class ResourceMergerTest extends AbstractAuroraDeploymentSpecSpringTest {
 
@@ -65,6 +67,27 @@ class ResourceMergerTest extends AbstractAuroraDeploymentSpecSpringTest {
 
     then: "Preserves all existing annotations"
       existing.at("/metadata/annotations") == merged.at("/metadata/annotations")
+  }
+
+  @Unroll
+  def "Should update #type"() {
+
+    given:
+      def oldResource = loadJsonResource("openshift-objects/${type}.json")
+      def newResource = loadJsonResource("openshift-objects/$type-new.json")
+
+    expect:
+      JsonNode merged = ResourceMergerKt.mergeWithExistingResource(newResource, oldResource)
+      fields.each { assert merged.at(it) == oldResource.at(it) }
+
+    where:
+      type               | fields
+      "service"          | ["/metadata/resourceVersion", "/spec/clusterIP"]
+      "deploymentconfig" | ["/metadata/resourceVersion", "/spec/template/spec/containers/0/image"]
+      "buildconfig"      |
+          ["/metadata/resourceVersion", "/spec/triggers/0/imageChange/lastTriggeredImageID", "/spec/triggers/1/imageChange/lastTriggeredImageID"]
+      "configmap"        | ["/metadata/resourceVersion"]
+
   }
 
   private <T> T withDeploySpec(Closure<T> c) {

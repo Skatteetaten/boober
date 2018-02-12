@@ -18,6 +18,7 @@
       "kind": "Service",
       "name": "aos-simple"
     },
+    "host": "aos-simple-aos-secretmount.utv.paas.skead.no",
     "path": "/foo"
   }
 }
