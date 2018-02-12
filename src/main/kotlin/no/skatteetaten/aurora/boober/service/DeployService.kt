@@ -1,18 +1,14 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
-import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
-import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -23,7 +19,7 @@ import java.util.*
 //TODO:Split up. Service is to large
 class DeployService(
         val auroraConfigService: AuroraConfigService,
-        val openShiftObjectGenerator: OpenShiftObjectGenerator,
+        val openShiftCommandBuilder: OpenShiftCommandBuilder,
         val openShiftClient: OpenShiftClient,
         val dockerService: DockerService,
         val resourceProvisioner: ExternalResourceProvisioner,
@@ -52,7 +48,7 @@ class DeployService(
     }
 
 
-    private fun prepareDeployEnvironments(deploymentSpecs: List<AuroraDeploymentSpec>): Map<AuroraDeployEnvironment, AuroraDeployResult> {
+    fun prepareDeployEnvironments(deploymentSpecs: List<AuroraDeploymentSpec>): Map<AuroraDeployEnvironment, AuroraDeployResult> {
 
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
 
@@ -84,25 +80,23 @@ class DeployService(
                 }.toMap()
     }
 
-
     private fun prepareDeployEnvironment(environment: AuroraDeployEnvironment, projectExist: Boolean): List<OpenShiftResponse> {
 
-        val affiliation = environment.affiliation
-        val namespace = environment.namespace
+        val namespaceName = environment.namespace
 
-        val createNamespaceResponse = openShiftObjectGenerator.generateProjectRequest(environment).let {
-            openShiftClient.createOpenShiftCommand(namespace, it, projectExist)
-        }.let { openShiftClient.performOpenShiftCommand(namespace, it) }
-
-        val updateNamespaceResponse = openShiftClient.createUpdateNamespaceCommand(namespace, affiliation).let {
-            openShiftClient.performOpenShiftCommand(namespace, it)
+        val responses = mutableListOf<OpenShiftResponse>()
+        if (!projectExist) {
+            val projectRequest = openShiftCommandBuilder.generateProjectRequest(environment)
+            responses.add(openShiftClient.performOpenShiftCommand(namespaceName, projectRequest))
         }
 
-        val updateRoleBindingsResponse = openShiftObjectGenerator.generateRolebindings(environment.permissions).map {
-            openShiftClient.createOpenShiftCommand(namespace, it, createNamespaceResponse.success, true)
-        }.map { openShiftClient.performOpenShiftCommand(namespace, it) }
+        val namespace = openShiftCommandBuilder.generateNamespace(environment)
+        val roleBindings = openShiftCommandBuilder.generateRolebindings(environment)
+        (roleBindings + namespace).forEach {
+            responses.add(openShiftClient.performOpenShiftCommand(namespaceName, it))
+        }
 
-        return listOf(createNamespaceResponse, updateNamespaceResponse) + updateRoleBindingsResponse
+        return responses.toList()
     }
 
     private fun deployFromSpecs(deploymentSpecs: List<AuroraDeploymentSpec>, environments: Map<AuroraDeployEnvironment, AuroraDeployResult>, deploy: Boolean): List<AuroraDeployResult> {
@@ -180,62 +174,20 @@ class DeployService(
         val namespace = deploymentSpec.environment.namespace
         val name = deploymentSpec.name
 
-        val openShiftApplicationObjects: List<JsonNode> = openShiftObjectGenerator.generateApplicationObjects(deployId, deploymentSpec, provisioningResult)
-        val openShiftApplicationResponses: List<OpenShiftResponse> =
-                openShiftApplicationObjects.flatMap {
-                    val openShiftCommand = openShiftClient.createOpenShiftCommand(namespace, it, mergeWithExistingResource)
-                    if (updateRouteCommandWithChangedHostOrPath(openShiftCommand, deploymentSpec)) {
-                        val deleteCommand = openShiftCommand.copy(operationType = OperationType.DELETE)
-                        val createCommand = openShiftCommand.copy(operationType = OperationType.CREATE, payload = openShiftCommand.generated!!)
-                        listOf(deleteCommand, createCommand)
-                    } else {
-                        listOf(openShiftCommand)
-                    }
-                }.map { openShiftClient.performOpenShiftCommand(namespace, it) }
+        val openShiftApplicationResponses: List<OpenShiftResponse> = openShiftCommandBuilder
+                .generateApplicationObjects(deployId, deploymentSpec, provisioningResult, mergeWithExistingResource)
+                .map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         if (openShiftApplicationResponses.any { !it.success }) {
             logger.warn("One or more commands failed for $namespace/$name. Will not delete objects from previous deploys.")
             return openShiftApplicationResponses
         }
 
-        val deleteOldObjectResponses = openShiftClient
+        val deleteOldObjectResponses = openShiftCommandBuilder
                 .createOpenShiftDeleteCommands(name, namespace, deployId)
                 .map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         return openShiftApplicationResponses.addIfNotNull(deleteOldObjectResponses)
-    }
-
-
-    private fun updateRouteCommandWithChangedHostOrPath(openShiftCommand: OpenshiftCommand, deploymentSpec: AuroraDeploymentSpec): Boolean {
-
-        if (openShiftCommand.payload.openshiftKind != "route") {
-            return false
-        }
-
-        if (openShiftCommand.operationType != OperationType.UPDATE) {
-            return false
-        }
-        val previous = openShiftCommand.previous!!
-        val payload = openShiftCommand.payload
-
-
-        val hostPointer = "/spec/host"
-        val pathPointer = "/spec/path"
-
-        val newHost = payload.at(hostPointer)
-        val expectedHost = if (newHost.isMissingNode) {
-            deploymentSpec.assembleRouteHost()
-        } else {
-            newHost.textValue()
-        }
-        val prevHost = previous.at(hostPointer).textValue()
-
-        val hostChanged = prevHost != expectedHost
-        val pathChanged = previous.at(pathPointer) != payload.at(pathPointer)
-
-        val changed = hostChanged || pathChanged
-
-        return changed
     }
 }
 

@@ -1,0 +1,328 @@
+{
+    "apiVersion": "v1",
+    "kind": "DeploymentConfig",
+    "metadata": {
+        "annotations": {
+            "boober.skatteetaten.no/applicationFile": "",
+            "console.skatteetaten.no/alarm": "true",
+            "console.skatteetaten.no/management-path": ":8081/"
+        },
+        "creationTimestamp": "2017-10-16T10:48:12Z",
+        "generation": 4,
+        "labels": {
+            "affiliation": "aos",
+            "app": "webleveranse",
+            "booberDeployId": "69fe5811-6cf0-4af7-9519-c31f308acf70",
+            "deployTag": "dev-SNAPSHOT",
+            "name": "webleveranse",
+            "updatedBy": "m86862"
+        },
+        "name": "webleveranse",
+        "namespace": "aos-dev",
+        "resourceVersion": "129973855",
+        "selfLink": "/oapi/v1/namespaces/aos-utv/deploymentconfigs/webleveranse",
+        "uid": "81da2d7f-b25f-11e7-934f-00505683244e"
+    },
+    "spec": {
+        "replicas": 1,
+        "selector": {
+            "name": "webleveranse"
+        },
+        "strategy": {
+            "activeDeadlineSeconds": 21600,
+            "resources": {},
+            "rollingParams": {
+                "intervalSeconds": 1,
+                "maxSurge": "25%",
+                "maxUnavailable": 0,
+                "timeoutSeconds": 120,
+                "updatePeriodSeconds": 1
+            },
+            "type": "Rolling"
+        },
+        "template": {
+            "metadata": {
+                "creationTimestamp": null,
+                "labels": {
+                    "affiliation": "paas",
+                    "app": "webleveranse",
+                    "booberDeployId": "69fe5811-6cf0-4af7-9519-c31f308acf70",
+                    "deployTag": "dev-SNAPSHOT",
+                    "name": "webleveranse",
+                    "updatedBy": "m86862"
+                }
+            },
+            "spec": {
+                "containers": [
+                    {
+                        "args": [
+                            "/u01/bin/run_node"
+                        ],
+                        "env": [
+                            {
+                                "name": "HTTP_PORT",
+                                "value": "9090"
+                            },
+                            {
+                                "name": "MANAGEMENT_HTTP_PORT",
+                                "value": "8081"
+                            },
+                            {
+                                "name": "POD_NAME",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.name"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "POD_NAMESPACE",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.namespace"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "OPENSHIFT_CLUSTER",
+                                "value": "utv"
+                            },
+                            {
+                                "name": "HTTP_PORT",
+                                "value": "8080"
+                            },
+                            {
+                                "name": "MANAGEMENT_HTTP_PORT",
+                                "value": "8081"
+                            },
+                            {
+                                "name": "APP_NAME",
+                                "value": "webleveranse"
+                            },
+                            {
+                                "name": "SPLUNK_INDEX",
+                                "value": "openshift-test"
+                            },
+                            {
+                                "name": "ROUTE_NAME",
+                                "value": "http://webleveranse-aos-dev.utv.paas.skead.no"
+                            }
+                        ],
+                        "image": "172.30.79.77:5000/aos-dev/webleveranse@sha256:5d9c1ba0105bd9878f4846e019e750bbdf8c4e37abefea9eba447b9ed83d68b6",
+                        "imagePullPolicy": "IfNotPresent",
+                        "name": "webleveranse-node",
+                        "ports": [
+                            {
+                                "containerPort": 9090,
+                                "name": "http",
+                                "protocol": "TCP"
+                            },
+                            {
+                                "containerPort": 8081,
+                                "name": "management",
+                                "protocol": "TCP"
+                            }
+                        ],
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 10,
+                            "successThreshold": 1,
+                            "tcpSocket": {
+                                "port": 8080
+                            },
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "2",
+                                "memory": "256Mi"
+                            },
+                            "requests": {
+                                "cpu": "0",
+                                "memory": "128Mi"
+                            }
+                        },
+                        "securityContext": {
+                            "capabilities": {},
+                            "privileged": false
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/u01/logs",
+                                "name": "application-log-volume"
+                            }
+                        ]
+                    },
+                    {
+                        "args": [
+                            "/u01/bin/run_nginx"
+                        ],
+                        "env": [
+                            {
+                                "name": "HTTP_PORT",
+                                "value": "8080"
+                            },
+                            {
+                                "name": "POD_NAME",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.name"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "POD_NAMESPACE",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.namespace"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "OPENSHIFT_CLUSTER",
+                                "value": "utv"
+                            },
+                            {
+                                "name": "HTTP_PORT",
+                                "value": "8080"
+                            },
+                            {
+                                "name": "MANAGEMENT_HTTP_PORT",
+                                "value": "8081"
+                            },
+                            {
+                                "name": "APP_NAME",
+                                "value": "webleveranse"
+                            },
+                            {
+                                "name": "SPLUNK_INDEX",
+                                "value": "openshift-test"
+                            },
+                            {
+                                "name": "ROUTE_NAME",
+                                "value": "http://webleveranse-aos-dev.utv.paas.skead.no"
+                            }
+                        ],
+                        "image": "172.30.79.77:5000/aos-dev/webleveranse@sha256:5d9c1ba0105bd9878f4846e019e750bbdf8c4e37abefea9eba447b9ed83d68b6",
+                        "imagePullPolicy": "IfNotPresent",
+                        "name": "webleveranse-nginx",
+                        "ports": [
+                            {
+                                "containerPort": 8080,
+                                "name": "http",
+                                "protocol": "TCP"
+                            }
+                        ],
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 10,
+                            "successThreshold": 1,
+                            "tcpSocket": {
+                                "port": 8080
+                            },
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "2",
+                                "memory": "256Mi"
+                            },
+                            "requests": {
+                                "cpu": "0",
+                                "memory": "128Mi"
+                            }
+                        },
+                        "securityContext": {
+                            "capabilities": {},
+                            "privileged": false
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/u01/logs",
+                                "name": "application-log-volume"
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "restartPolicy": "Always",
+                "securityContext": {},
+                "terminationGracePeriodSeconds": 30,
+                "volumes": [
+                    {
+                        "emptyDir": {},
+                        "name": "application-log-volume"
+                    }
+                ]
+            }
+        },
+        "test": false,
+        "triggers": [
+            {
+                "imageChangeParams": {
+                    "automatic": true,
+                    "containerNames": [
+                        "webleveranse-node",
+                        "webleveranse-nginx"
+                    ],
+                    "from": {
+                        "kind": "ImageStreamTag",
+                        "name": "webleveranse:latest",
+                        "namespace": "aos-dev"
+                    },
+                    "lastTriggeredImage": "172.30.79.77:5000/aos-dev/webleveranse@sha256:5d9c1ba0105bd9878f4846e019e750bbdf8c4e37abefea9eba447b9ed83d68b6"
+                },
+                "type": "ImageChange"
+            }
+        ]
+    },
+    "status": {
+        "availableReplicas": 1,
+        "conditions": [
+            {
+                "lastTransitionTime": "2017-10-16T10:52:32Z",
+                "lastUpdateTime": "2017-10-16T10:52:32Z",
+                "message": "Deployment config has minimum availability.",
+                "status": "True",
+                "type": "Available"
+            },
+            {
+                "lastTransitionTime": "2017-10-16T11:18:44Z",
+                "lastUpdateTime": "2017-10-16T11:18:47Z",
+                "message": "replication controller \"webleveranse-3\" successfully rolled out",
+                "reason": "NewReplicationControllerAvailable",
+                "status": "True",
+                "type": "Progressing"
+            }
+        ],
+        "details": {
+            "causes": [
+                {
+                    "imageTrigger": {
+                        "from": {
+                            "kind": "ImageStreamTag",
+                            "name": "webleveranse:latest",
+                            "namespace": "aos-dev"
+                        }
+                    },
+                    "type": "ImageChange"
+                }
+            ],
+            "message": "image change"
+        },
+        "latestVersion": 3,
+        "observedGeneration": 4,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "unavailableReplicas": 0,
+        "updatedReplicas": 1
+    }
+}

@@ -13,7 +13,8 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientCo
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
-import no.skatteetaten.aurora.boober.utils.updateField
+import org.apache.http.client.utils.URLEncodedUtils
+import org.apache.http.message.BasicNameValuePair
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -30,7 +31,14 @@ data class OpenshiftCommand @JvmOverloads constructor(
         val payload: JsonNode,
         val previous: JsonNode? = null,
         val generated: JsonNode? = null
-)
+) {
+    fun isType(operationType: OperationType, kind: String): Boolean {
+
+        if (payload.openshiftKind != kind) return false
+        if (operationType != operationType) return false
+        return true
+    }
+}
 
 data class OpenShiftResponse @JvmOverloads constructor(
         val command: OpenshiftCommand,
@@ -104,42 +112,6 @@ class OpenShiftClient(
         }
     }
 
-    /**
-     * @param projectExist Whether the OpenShift project the object belongs to exists. If it does, some object types
-     * will be updated with information from the existing object to support the update.
-     * @param retryGetResourceOnFailure Whether the GET request for the existing resource should be retried on errors
-     * or not. You may want to retry the request if you are trying to update an object that has recently been created
-     * by another task/process and you are not entirely sure it exists yet, for instance. The default is
-     * <code>false</code>, because retrying everything will significantly impact performance of creating or updating
-     * many objects.
-     */
-    fun createOpenShiftCommand(namespace: String, newResource: JsonNode, mergeWithExistingResource: Boolean = true, retryGetResourceOnFailure: Boolean = false): OpenshiftCommand {
-
-        val kind = newResource.openshiftKind
-        val name = newResource.openshiftName
-
-        //we do not update project objects
-        if (kind == "projectrequest" && mergeWithExistingResource) {
-            return OpenshiftCommand(OperationType.NOOP, payload = newResource)
-        }
-
-        val existingResource = if (mergeWithExistingResource) userClient.get(kind, namespace, name, retryGetResourceOnFailure) else null
-        if (existingResource == null) {
-            return OpenshiftCommand(OperationType.CREATE, payload = newResource)
-        }
-        // ProjectRequest will always create an admin rolebinding, so if we get a command to create one, we just
-        // swap it out with an update command.
-        val isCreateAdminRoleBindingCommand = kind == "rolebinding" && name == "admin"
-        if (isCreateAdminRoleBindingCommand) {
-            return createUpdateRolebindingCommand(newResource, namespace)
-        }
-
-        val existing = existingResource.body
-        val mergedResource = mergeWithExistingResource(newResource, existing)
-
-        return OpenshiftCommand(OperationType.UPDATE, mergedResource, existing, newResource)
-    }
-
     fun findCurrentUser(token: String): JsonNode? {
 
         val url = "$baseUrl/oapi/v1/users/~"
@@ -148,7 +120,6 @@ class OpenShiftClient(
         val currentUser = userClient.get(url, headers)
         return currentUser?.body
     }
-
 
     @Cacheable("templates")
     fun getTemplate(template: String): JsonNode? {
@@ -181,26 +152,6 @@ class OpenShiftClient(
         return OpenShiftGroups(getAllDeclaredUserGroups() + getAllImplicitUserGroups())
     }
 
-
-    @JvmOverloads
-    fun createOpenShiftDeleteCommands(name: String, namespace: String, deployId: String,
-                                      apiResources: List<String> = listOf("BuildConfig", "DeploymentConfig", "ConfigMap", "Secret", "Service", "Route", "ImageStream")): List<OpenshiftCommand> {
-
-        return apiResources.flatMap { kind ->
-            val queryString = "labelSelector=app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
-            val apiUrl = OpenShiftApiUrls.getCollectionPathForResource(baseUrl, kind, namespace)
-            val url = "$apiUrl?$queryString"
-            val body = userClient.get(url)?.body
-
-            val items = body?.get("items")?.toList() ?: emptyList()
-            items.filterIsInstance<ObjectNode>()
-                    .onEach { it.put("kind", kind) }
-        }.map {
-                    OpenshiftCommand(OperationType.DELETE, payload = it, previous = it)
-                }
-    }
-
-
     fun projectExists(name: String): Boolean {
         serviceAccountClient.get("${baseUrl}/oapi/v1/projects/$name", retry = false)?.body?.let {
             val phase = it.at("/status/phase").textValue()
@@ -213,32 +164,22 @@ class OpenShiftClient(
         return false
     }
 
-    fun createUpdateRolebindingCommand(json: JsonNode, namespace: String): OpenshiftCommand {
-
-        val kind = json.openshiftKind
-        val name = json.openshiftName
-
-        val generated = json.deepCopy<JsonNode>()
-        val existing = userClient.get(kind, namespace, name)?.body
-                ?: throw IllegalArgumentException("Admin rolebinding should exist")
-
-        json.updateField(existing, "/metadata", "resourceVersion")
-
-        return OpenshiftCommand(OperationType.UPDATE, json, existing, generated)
+    fun get(kind: String, namespace: String, name: String, retry: Boolean = true): ResponseEntity<JsonNode>? {
+        return getClientForKind(kind).get(kind, namespace, name, retry)
     }
 
-    fun createUpdateNamespaceCommand(namespace: String, affiliation: String): OpenshiftCommand {
-        val existing = serviceAccountClient.get("namespace", "", namespace)?.body
-                ?: throw IllegalArgumentException("Namespace should exist")
-        //do we really need to sleep here?
-        val prev = (existing as ObjectNode).deepCopy()
+    /**
+     * @param labelSelectors examples: name=someapp, name!=someapp (name label not like), name (name label must be set)
+     */
+    fun getByLabelSelectors(kind: String, namespace: String, labelSelectors: List<String>): List<JsonNode> {
+        val queryString = urlEncode(Pair("labelSelector", labelSelectors.joinToString(",")))
+        val apiUrl = OpenShiftApiUrls.getCollectionPathForResource(baseUrl, kind, namespace)
+        val url = "$apiUrl?$queryString"
+        val body = getClientForKind(kind).get(url)?.body
 
-        val labels = mapper.convertValue<JsonNode>(mapOf("affiliation" to affiliation))
-
-        val metadata = existing.at("/metadata") as ObjectNode
-        metadata.set("labels", labels)
-
-        return OpenshiftCommand(OperationType.UPDATE, existing, previous = prev)
+        val items = body?.get("items")?.toList() ?: emptyList()
+        return items.filterIsInstance<ObjectNode>()
+                .onEach { it.put("kind", kind) }
     }
 
     /**
@@ -258,5 +199,12 @@ class OpenShiftClient(
     private fun getResponseBodyItems(url: String): ArrayNode {
         val response: ResponseEntity<JsonNode> = serviceAccountClient.get(url)!!
         return response.body["items"] as ArrayNode
+    }
+
+    companion object {
+
+        @JvmStatic
+        fun urlEncode(vararg queryParams: Pair<String, String>) =
+                URLEncodedUtils.format(queryParams.map { BasicNameValuePair(it.first, it.second) }, Charsets.UTF_8)
     }
 }

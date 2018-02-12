@@ -30,6 +30,7 @@ class OpenShiftObjectGenerator(
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftObjectGenerator::class.java)
 
+
     fun generateBuildRequest(name: String): JsonNode {
         logger.trace("Generating build request for name $name")
         return mergeVelocityTemplate("buildrequest.json", mapOf("name" to name))
@@ -71,6 +72,14 @@ class OpenShiftObjectGenerator(
 
         return mergeVelocityTemplate("projectrequest.json", mapOf(
                 "namespace" to environment.namespace
+        ))
+    }
+
+    fun generateNamespace(environment: AuroraDeployEnvironment): JsonNode {
+
+        return mergeVelocityTemplate("namespace.json", mapOf(
+                "namespace" to environment.namespace,
+                "affiliation" to environment.affiliation
         ))
     }
 
@@ -158,9 +167,7 @@ class OpenShiftObjectGenerator(
     fun generateRoute(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>): List<JsonNode>? {
         return auroraDeploymentSpec.route?.route?.map {
             logger.trace("Route is {}", it)
-            val host = it.host?.let {
-                auroraDeploymentSpec.assembleRouteHost(it)
-            }
+            val host = auroraDeploymentSpec.assembleRouteHost(it.host ?: auroraDeploymentSpec.name)
             val routeParams = mapOf(
                     "name" to auroraDeploymentSpec.name,
                     "route" to it,
