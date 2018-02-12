@@ -15,9 +15,10 @@ import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AbstractAuroraDeploymentSpecSpringTest
+import no.skatteetaten.aurora.boober.service.OpenShiftCommandBuilder
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 
-class OpenShiftClientCreateOpenShiftCommandTest extends AbstractAuroraDeploymentSpecSpringTest {
+class OpenShiftCommandBuilderTest extends AbstractAuroraDeploymentSpecSpringTest {
 
   String ENVIRONMENT = "utv"
 
@@ -45,6 +46,12 @@ class OpenShiftClientCreateOpenShiftCommandTest extends AbstractAuroraDeployment
   @Autowired
   OpenShiftClient client
 
+  OpenShiftCommandBuilder commandBuilder
+
+  def setup() {
+    commandBuilder = new OpenShiftCommandBuilder(client, objectGenerator)
+  }
+
   def "Gets existing resource from OpenShift and merges"() {
 
     given:
@@ -55,7 +62,7 @@ class OpenShiftClientCreateOpenShiftCommandTest extends AbstractAuroraDeployment
       JsonNode deploymentConfig = objectGenerator.generateDeploymentConfig("deploy-id", deploymentSpec, null)
 
     when:
-      OpenshiftCommand command = client.createOpenShiftCommand(NAMESPACE, deploymentConfig, true, false)
+      OpenshiftCommand command = commandBuilder.createOpenShiftCommand(NAMESPACE, deploymentConfig, true, false)
 
     then:
       def resourceVersion = "/metadata/resourceVersion"
