@@ -4,15 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType.*
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -95,7 +91,7 @@ class OpenShiftCommandBuilder(
 
         val labelSelectors = listOf("app=$name", "booberDeployId", "booberDeployId!=$deployId")
         return apiResources
-                .flatMap { kind -> openShiftClient.getByLabels(kind, namespace, labelSelectors) }
+                .flatMap { kind -> openShiftClient.getByLabelSelectors(kind, namespace, labelSelectors) }
                 .map { OpenshiftCommand(DELETE, payload = it, previous = it) }
     }
 

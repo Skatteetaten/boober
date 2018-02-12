@@ -14,6 +14,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientCo
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.apache.http.client.utils.URLEncodedUtils
+import org.apache.http.message.BasicNameValuePair
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -167,8 +168,11 @@ class OpenShiftClient(
         return getClientForKind(kind).get(kind, namespace, name, retry)
     }
 
-    fun getByLabels(kind: String, namespace: String, labelSelectors: List<String>): List<JsonNode> {
-        val queryString = "labelSelector=${urlEncodeSelectors(labelSelectors)}"
+    /**
+     * @param labelSelectors examples: name=someapp, name!=someapp (name label not like), name (name label must be set)
+     */
+    fun getByLabelSelectors(kind: String, namespace: String, labelSelectors: List<String>): List<JsonNode> {
+        val queryString = urlEncode(Pair("labelSelector", labelSelectors.joinToString(",")))
         val apiUrl = OpenShiftApiUrls.getCollectionPathForResource(baseUrl, kind, namespace)
         val url = "$apiUrl?$queryString"
         val body = getClientForKind(kind).get(url)?.body
@@ -176,7 +180,6 @@ class OpenShiftClient(
         val items = body?.get("items")?.toList() ?: emptyList()
         return items.filterIsInstance<ObjectNode>()
                 .onEach { it.put("kind", kind) }
-
     }
 
     /**
@@ -201,11 +204,7 @@ class OpenShiftClient(
     companion object {
 
         @JvmStatic
-        fun urlEncodeSelectors(labelSelectors: List<String>): String {
-
-            return labelSelectors.map{}.joinToString(",")
-//            "app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
-//            val labelSelectors = listOf("app=$name", "booberDeployId", "booberDeployId!=$deployId")
-        }
+        fun urlEncode(vararg queryParams: Pair<String, String>) =
+                URLEncodedUtils.format(queryParams.map { BasicNameValuePair(it.first, it.second) }, Charsets.UTF_8)
     }
 }

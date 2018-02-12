@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
+import kotlin.Pair
 import no.skatteetaten.aurora.boober.service.AbstractSpec
 
 class OpenShiftClientTest extends AbstractSpec {
@@ -78,8 +79,9 @@ class OpenShiftClientTest extends AbstractSpec {
     given:
       def name = "someappname"
       def deployId = "adeployid"
-
+      def queryParam = new Pair("labelSelector",
+          ["app=$name" as String, "booberDeployId", "booberDeployId!=$deployId" as String].join(","))
     expect:
-      OpenShiftClient.urlEncodeSelectors(["app=$name", "booberDeployId", "booberDeployId!=$deployId"]) == "app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
+      OpenShiftClient.urlEncode(queryParam) == "labelSelector=app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
   }
 }
