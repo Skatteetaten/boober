@@ -1,9 +1,7 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
-import io.fabric8.kubernetes.api.model.ContainerPort
-import io.fabric8.kubernetes.api.model.EnvVar
-import no.skatteetaten.aurora.boober.platform.ApplicationPlatform
+import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatform
 
 import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 
@@ -13,8 +11,7 @@ enum class TemplateType {
 }
 
 
-data class Container(val name: String, val ports: List<ContainerPort>, val args: List<String>? = null, val env: List<EnvVar>? = null)
-
+data class Container(val name: String, val tcpPorts: Map<String, Int>, val args: List<String>? = null)
 
 
 data class AuroraDeployEnvironment(

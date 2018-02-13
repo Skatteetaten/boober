@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service.internal
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fkorotkov.kubernetes.containerPort
 import com.fkorotkov.kubernetes.envVar
 import com.fkorotkov.kubernetes.fieldRef
 import com.fkorotkov.kubernetes.httpGet
@@ -45,10 +46,21 @@ class DeploymentConfigGenerator(
             auroraContainer {
 
                 name = "${auroraDeploymentSpec.name}-${adcContainer.name}"
-                ports = adcContainer.ports
+                ports = adcContainer.tcpPorts.map {
+                    containerPort {
+                        name = it.key
+                        containerPort = it.value
+                        protocol = "TCP"
+                    }
+                }
+
                 args = adcContainer.args
 
-                env = createEnvVars(mounts, auroraDeploymentSpec).addIfNotNull(adcContainer.env)
+                val portEnv = adcContainer.tcpPorts.map {
+                    val portName = if (it.key == "http") "HTTP_PORT" else "${it.key}_HTTP_PORT".toUpperCase()
+                    EnvVarBuilder().withName(portName).withValue(it.value.toString()).build()
+                }
+                env = createEnvVars(mounts, auroraDeploymentSpec).addIfNotNull(portEnv)
 
                 resources {
                     limits = fromAdcResource(auroraDeploymentSpec.deploy.resources.limit)
