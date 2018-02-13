@@ -5,6 +5,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
+import no.skatteetaten.aurora.boober.utils.VerificationResult
 import org.springframework.stereotype.Service
 
 @Service
@@ -48,7 +49,7 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectG
         return RedeployResult.fromOpenShiftResponses(listOf(imageStreamImportResponse, deploymentRequestResponse))
     }
 
-    private fun createFailedRedeployResult(verificationResult: RedeployContext.VerificationResult, deploymentRequestResponse: OpenShiftResponse) =
+    private fun createFailedRedeployResult(verificationResult: VerificationResult, deploymentRequestResponse: OpenShiftResponse) =
             RedeployResult(success = false, message = verificationResult.message, openShiftResponses = listOf(deploymentRequestResponse))
 
     private fun importImageStream(deploymentSpec: AuroraDeploymentSpec, redeployContext: RedeployContext): OpenShiftResponse? {

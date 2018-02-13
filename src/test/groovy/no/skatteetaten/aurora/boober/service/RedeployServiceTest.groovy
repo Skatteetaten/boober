@@ -11,16 +11,17 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import no.skatteetaten.aurora.boober.utils.ImageInformation
+import no.skatteetaten.aurora.boober.utils.VerificationResult
 import spock.lang.Specification
 
 class RedeployServiceTest extends Specification {
-  def jsonNode = Mock(JsonNode)
-  def openShiftResponse = new OpenShiftResponse(new OpenshiftCommand(OperationType.CREATE, jsonNode))
+  def openShiftResponse = new OpenShiftResponse(new OpenshiftCommand(OperationType.CREATE, Mock(JsonNode)))
   def deployDeploymentSpec = createDeploymentSpec(TemplateType.deploy)
   def developmentDeploymentSpec = createDeploymentSpec(TemplateType.development)
 
-  def verificationSuccess = new RedeployContext.VerificationResult()
-  def verificationFailed = new RedeployContext.VerificationResult(false, 'verification failed')
+  def verificationSuccess = new VerificationResult()
+  def verificationFailed = new VerificationResult(false, 'verification failed')
 
   def openShiftClient = Mock(OpenShiftClient)
   def openShiftObjectGenerator = Mock(OpenShiftObjectGenerator)
@@ -29,10 +30,10 @@ class RedeployServiceTest extends Specification {
   def redeployService = new RedeployService(openShiftClient, openShiftObjectGenerator)
 
   void setup() {
-    redeployContext.findImageInformation() >> new RedeployContext.ImageInformation('', 'image-stream-name', '')
+    redeployContext.findImageInformation() >> new ImageInformation('', 'image-stream-name', '')
     redeployContext.findImageName() >> 'docker-image'
 
-    openShiftObjectGenerator.generateImageStreamImport('image-stream-name', 'docker-image') >> jsonNode
+    openShiftObjectGenerator.generateImageStreamImport('image-stream-name', 'docker-image') >> Mock(JsonNode)
     openShiftClient.performOpenShiftCommand('affiliation', null) >> openShiftResponse
   }
 

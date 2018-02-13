@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.utils.ImageInformation
 import spock.lang.Specification
 
 class RedeployServiceGenerateRedeployResourceTest extends Specification {
@@ -24,7 +25,7 @@ class RedeployServiceGenerateRedeployResourceTest extends Specification {
   def "Should create ImageStreamImport when imageInformation and imageName is set"() {
     given:
       def redeployContext = Mock(RedeployContext) {
-        findImageInformation() >> new RedeployContext.ImageInformation('', 'image-stream-name', '')
+        findImageInformation() >> new ImageInformation('', 'image-stream-name', '')
         findImageName() >> 'image-name'
       }
 
