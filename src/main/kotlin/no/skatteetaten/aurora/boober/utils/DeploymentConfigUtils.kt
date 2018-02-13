@@ -7,16 +7,12 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 data class ImageInformation(val lastTriggeredImage: String, val imageStreamName: String, val imageStreamTag: String)
 
 fun DeploymentConfig.findImageInformation(): ImageInformation? {
-    this.spec?.triggers?.get(0)?.imageChangeParams?.let {
-        val name = it.from?.name
-        if (name != null) {
-            val (isName, tag) = name.split(':')
-            val lastTriggeredImage = it.lastTriggeredImage ?: ""
-            return ImageInformation(lastTriggeredImage, isName, tag)
-        }
+    val imageChangeParams = this.spec?.triggers?.get(0)?.imageChangeParams
+    val lastTriggeredImage = imageChangeParams?.lastTriggeredImage ?: ""
+    return imageChangeParams?.from?.name?.let {
+        val (isName, tag) = it.split(':')
+        ImageInformation(lastTriggeredImage, isName, tag)
     }
-
-    return null
 }
 
 fun DeploymentConfig.didImportImage(response: OpenShiftResponse): Boolean {

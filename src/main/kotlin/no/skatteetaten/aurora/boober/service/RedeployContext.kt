@@ -16,8 +16,7 @@ open class RedeployContext(private val imageStream: ImageStream?, private val de
 
     open fun findImageInformation(): ImageInformation? = deploymentConfig?.findImageInformation()
 
-    open fun verifyResponse(openShiftResponse: OpenShiftResponse): VerificationResult {
-        return imageStream?.verifyResponse() ?: VerificationResult(success = false, message = "No response found")
-    }
+    open fun verifyResponse(openShiftResponse: OpenShiftResponse): VerificationResult =
+            imageStream?.verifyResponse() ?: VerificationResult(success = false, message = "No response found")
 
 }

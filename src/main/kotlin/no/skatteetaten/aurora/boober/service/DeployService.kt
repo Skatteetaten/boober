@@ -254,15 +254,15 @@ class DeployService(
     }
 
     private fun createImageStream(openShiftResponses: List<OpenShiftResponse>): ImageStream? {
-        val imageStream: OpenShiftResponse = openShiftResponses.find { it.responseBody?.openshiftKind == "imagestream" }
-                ?: return null
-        return jacksonObjectMapper().readValue(imageStream.responseBody.toString())
+        return openShiftResponses.find { it.responseBody?.openshiftKind == "imagestream" }?.let {
+            jacksonObjectMapper().readValue(it.responseBody.toString())
+        }
     }
 
     private fun createDeploymentConfig(openShiftResponses: List<OpenShiftResponse>): DeploymentConfig? {
-        val deploymentConfig: OpenShiftResponse = openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }
-                ?: return null
-        return jacksonObjectMapper().readValue(deploymentConfig.responseBody.toString())
+        return openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }?.let {
+            jacksonObjectMapper().readValue(it.responseBody.toString())
+        }
     }
 }
 

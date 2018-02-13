@@ -62,7 +62,7 @@ class RedeployServiceTest extends Specification {
       response.openShiftResponses.size() == 2
   }
 
-  def "Trigger redeploy given image stream import required return success"() {
+  def "Trigger redeploy given image already imported return success"() {
     given:
       redeployContext.verifyResponse(openShiftResponse) >> verificationSuccess
       redeployContext.didImportImage(openShiftResponse) >> true
