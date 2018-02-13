@@ -52,7 +52,7 @@ class DockerService(val httpClient: RestTemplate) {
 
     }
 
-    fun generateManifestURI(registryUrl: String, name: String, tag: String) = URI("https://$registryUrl/v1/$name/manifests/$tag")
+    fun generateManifestURI(registryUrl: String, name: String, tag: String) = URI("https://$registryUrl/v2/$name/manifests/$tag")
 }
 
 fun String.dockerGroupSafeName() = this.replace(".", "_")
