@@ -51,12 +51,6 @@ class OpenShiftObjectGenerator(
 
         return withLabelsAndMounts(deployId, auroraDeploymentSpec, provisioningResult, { labels, mounts ->
 
-
-            /*
-              TODO: What do we do here when we now have the Handler? Right now the handler is used inside the
-              generateDeploymentConfig method. Should we just use it the same way inside all the otheer objects
-              or should it be the one driving the process that is below?
-             */
             val schemaSecrets = if (provisioningResult?.schemaProvisionResults != null) {
                 generateSecretsForSchemas(deployId, auroraDeploymentSpec, provisioningResult.schemaProvisionResults)
             } else null
