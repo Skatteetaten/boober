@@ -101,8 +101,6 @@ class OpenShiftObjectGenerator(
         return listOf(admin).addIfNotNull(view)
     }
 
-
-    //TODO: This is only used in tests. Should we have it here?
     fun generateDeploymentConfig(deployId: String, deploymentSpec: AuroraDeploymentSpec, provisioningResult: ProvisioningResult? = null): JsonNode? =
             withLabelsAndMounts(deployId, deploymentSpec, provisioningResult) { labels, mounts ->
                 generateDeploymentConfig(deploymentSpec, labels, mounts)
