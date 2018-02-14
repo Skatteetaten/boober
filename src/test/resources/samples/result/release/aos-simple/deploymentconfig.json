@@ -138,6 +138,10 @@
               {
                 "name": "MANAGEMENT_HTTP_PORT",
                 "value": "8081"
+              },
+              {
+                "name": "JOLOKIA_HTTP_PORT",
+                "value": "8778"
               }
             ],
             "imagePullPolicy": "IfNotPresent",
