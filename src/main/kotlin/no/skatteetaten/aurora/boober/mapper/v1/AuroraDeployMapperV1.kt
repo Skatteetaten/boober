@@ -123,7 +123,6 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
                         )
                 ),
                 replicas = if (pause) 0 else replicas,
-                applicationPlatform = auroraConfigFields.extract("applicationPlatform"),
                 groupId = groupId,
                 artifactId = artifactId,
                 version = version,

@@ -3,11 +3,13 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.module.kotlin.convertValue
 import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatform
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.Permissions
+import no.skatteetaten.aurora.boober.service.internal.ContainerGenerator
 import no.skatteetaten.aurora.boober.service.internal.DbhSecretGenerator
 import no.skatteetaten.aurora.boober.service.internal.DeploymentConfigGenerator
 import no.skatteetaten.aurora.boober.service.internal.findAndCreateMounts
@@ -114,8 +116,22 @@ class OpenShiftObjectGenerator(
 
     fun generateDeploymentConfig(auroraDeploymentSpec: AuroraDeploymentSpec,
                                  labels: Map<String, String>,
-                                 mounts: List<Mount>?): JsonNode? =
-            DeploymentConfigGenerator(mapper, velocityTemplateJsonService).create(auroraDeploymentSpec, labels, mounts)
+                                 mounts: List<Mount>?): JsonNode? {
+
+        if (auroraDeploymentSpec.deploy == null) {
+            return null
+        }
+        val deployment = auroraDeploymentSpec.applicationPlatform.handler.handleAuroraDeployment(auroraDeploymentSpec, labels, mounts)
+
+
+        val containerGenerator = ContainerGenerator()
+
+        val container = deployment.containers.map { containerGenerator.create(it) }
+
+        val dc = DeploymentConfigGenerator().create(deployment, container)
+
+        return mapper.convertValue(dc)
+    }
 
     fun generateService(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>): JsonNode? {
         return auroraDeploymentSpec.deploy?.let {

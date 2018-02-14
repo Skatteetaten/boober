@@ -11,7 +11,7 @@ enum class TemplateType {
 }
 
 
-data class Container(val name: String, val tcpPorts: Map<String, Int>, val args: List<String>? = null)
+
 
 
 data class AuroraDeployEnvironment(
@@ -33,7 +33,7 @@ data class AuroraDeploymentSpec(
         val type: TemplateType,
         val name: String,
         val fields: Map<String, Map<String, Any?>>,
-
+        val applicationPlatform: ApplicationPlatform = ApplicationPlatform.java,
         val cluster: String,
         val environment: AuroraDeployEnvironment,
         val volume: AuroraVolume? = null,
@@ -93,8 +93,7 @@ data class AuroraDeploy(
         val releaseTo: String?,
         val flags: AuroraDeploymentConfigFlags,
         val resources: AuroraDeploymentConfigResources,
-        val replicas: Int?,
-        val applicationPlatform: ApplicationPlatform = ApplicationPlatform.java,
+        val replicas: Int,
         val groupId: String,
         val artifactId: String,
         val version: String,

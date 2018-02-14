@@ -1,6 +1,6 @@
 {
+  "apiVersion": "apps.openshift.io/v1",
   "kind": "DeploymentConfig",
-  "apiVersion": "v1",
   "metadata": {
     "annotations": {
       "boober.skatteetaten.no/applicationFile": "booberdev/reference-web.json",
@@ -18,35 +18,19 @@
     "name": "openshift-referanse-react"
   },
   "spec": {
+    "replicas": 1,
+    "selector": {
+      "name": "openshift-referanse-react"
+    },
     "strategy": {
-      "type": "Rolling",
       "rollingParams": {
         "intervalSeconds": 1,
         "maxSurge": "25%",
         "maxUnavailable": 0,
         "timeoutSeconds": 180,
         "updatePeriodSeconds": 1
-      }
-    },
-    "triggers": [
-      {
-        "type": "ImageChange",
-        "imageChangeParams": {
-          "automatic": true,
-          "containerNames": [
-            "openshift-referanse-react-node",
-            "openshift-referanse-react-nginx"
-          ],
-          "from": {
-            "name": "openshift-referanse-react:latest",
-            "kind": "ImageStreamTag"
-          }
-        }
-      }
-    ],
-    "replicas": 1,
-    "selector": {
-      "name": "openshift-referanse-react"
+      },
+      "type": "Rolling"
     },
     "template": {
       "metadata": {
@@ -60,13 +44,6 @@
         }
       },
       "spec": {
-        "volumes": [
-          {
-            "name": "application-log-volume",
-            "emptyDir": {
-            }
-          }
-        ],
         "containers": [
           {
             "args": [
@@ -163,7 +140,6 @@
             ]
           },
           {
-
             "args": [
               "/u01/bin/run_nginx"
             ],
@@ -247,12 +223,35 @@
                 "name": "application-log-volume"
               }
             ]
-
           }
         ],
+        "dnsPolicy": "ClusterFirst",
         "restartPolicy": "Always",
-        "dnsPolicy": "ClusterFirst"
+        "volumes": [
+          {
+            "emptyDir": {
+            },
+            "name": "application-log-volume"
+          }
+        ]
       }
-    }
+    },
+    "triggers": [
+      {
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "openshift-referanse-react-node",
+            "openshift-referanse-react-nginx"
+          ],
+          "from": {
+            "kind": "ImageStreamTag",
+            "name": "openshift-referanse-react:latest"
+          }
+        },
+        "type": "ImageChange"
+      }
+    ]
   }
 }
+

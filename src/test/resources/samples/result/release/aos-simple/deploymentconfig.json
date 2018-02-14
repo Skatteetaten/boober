@@ -1,6 +1,6 @@
 {
+  "apiVersion": "apps.openshift.io/v1",
   "kind": "DeploymentConfig",
-  "apiVersion": "v1",
   "metadata": {
     "annotations": {
       "boober.skatteetaten.no/applicationFile": "release/aos-simple.json",
@@ -19,34 +19,19 @@
     "name": "aos-simple"
   },
   "spec": {
+    "replicas": 1,
+    "selector": {
+      "name": "aos-simple"
+    },
     "strategy": {
-      "type": "Rolling",
       "rollingParams": {
         "intervalSeconds": 1,
         "maxSurge": "25%",
         "maxUnavailable": 0,
         "timeoutSeconds": 180,
         "updatePeriodSeconds": 1
-      }
-    },
-    "triggers": [
-      {
-        "type": "ImageChange",
-        "imageChangeParams": {
-          "automatic": true,
-          "containerNames": [
-            "aos-simple-java"
-          ],
-          "from": {
-            "name": "aos-simple:default",
-            "kind": "ImageStreamTag"
-          }
-        }
-      }
-    ],
-    "replicas": 1,
-    "selector": {
-      "name": "aos-simple"
+      },
+      "type": "Rolling"
     },
     "template": {
       "metadata": {
@@ -60,20 +45,6 @@
         }
       },
       "spec": {
-        "volumes": [
-          {
-            "name": "aos-simple-cert",
-            "secret": {
-              "secretName": "aos-simple-cert"
-            }
-          },
-          {
-            "name": "application-log-volume",
-            "emptyDir": {
-
-            }
-          }
-        ],
         "containers": [
           {
             "env": [
@@ -196,9 +167,38 @@
             ]
           }
         ],
+        "dnsPolicy": "ClusterFirst",
         "restartPolicy": "Always",
-        "dnsPolicy": "ClusterFirst"
+        "volumes": [
+          {
+            "name": "aos-simple-cert",
+            "secret": {
+              "secretName": "aos-simple-cert"
+            }
+          },
+          {
+            "emptyDir": {
+            },
+            "name": "application-log-volume"
+          }
+        ]
       }
-    }
+    },
+    "triggers": [
+      {
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "aos-simple-java"
+          ],
+          "from": {
+            "kind": "ImageStreamTag",
+            "name": "aos-simple:default"
+          }
+        },
+        "type": "ImageChange"
+      }
+    ]
   }
 }
+

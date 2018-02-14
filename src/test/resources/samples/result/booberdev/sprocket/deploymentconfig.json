@@ -1,6 +1,6 @@
 {
+  "apiVersion": "apps.openshift.io/v1",
   "kind": "DeploymentConfig",
-  "apiVersion": "v1",
   "metadata": {
     "annotations": {
       "boober.skatteetaten.no/applicationFile": "booberdev/sprocket.json",
@@ -18,34 +18,19 @@
     "name": "sprocket"
   },
   "spec": {
+    "replicas": 1,
+    "selector": {
+      "name": "sprocket"
+    },
     "strategy": {
-      "type": "Rolling",
       "rollingParams": {
         "intervalSeconds": 1,
         "maxSurge": "25%",
         "maxUnavailable": 0,
         "timeoutSeconds": 180,
         "updatePeriodSeconds": 1
-      }
-    },
-    "triggers": [
-      {
-        "type": "ImageChange",
-        "imageChangeParams": {
-          "automatic": true,
-          "containerNames": [
-            "sprocket-java"
-          ],
-          "from": {
-            "name": "sprocket:default",
-            "kind": "ImageStreamTag"
-          }
-        }
-      }
-    ],
-    "replicas": 1,
-    "selector": {
-      "name": "sprocket"
+      },
+      "type": "Rolling"
     },
     "template": {
       "metadata": {
@@ -59,28 +44,8 @@
         }
       },
       "spec": {
-        "volumes": [
-          {
-            "name": "aurora-token",
-            "secret": {
-              "secretName": "aurora-token"
-            }
-          },
-          {
-            "name": "sprocket-config",
-            "configMap": {
-              "name": "sprocket-config"
-            }
-          },
-          {
-            "name": "application-log-volume",
-            "emptyDir": {
-            }
-          }
-        ],
         "containers": [
           {
-
             "env": [
               {
                 "name": "POD_NAME",
@@ -104,7 +69,6 @@
                 "name": "OPENSHIFT_CLUSTER",
                 "value": "utv"
               },
-
               {
                 "name": "APP_NAME",
                 "value": "sprocket"
@@ -214,10 +178,44 @@
             ]
           }
         ],
-        "restartPolicy": "Always",
         "dnsPolicy": "ClusterFirst",
-        "serviceAccountName": "aurora-fraggle"
+        "restartPolicy": "Always",
+        "serviceAccount": "aurora-fraggle",
+        "volumes": [
+          {
+            "name": "aurora-token",
+            "secret": {
+              "secretName": "aurora-token"
+            }
+          },
+          {
+            "configMap": {
+              "name": "sprocket-config"
+            },
+            "name": "sprocket-config"
+          },
+          {
+            "emptyDir": {
+            },
+            "name": "application-log-volume"
+          }
+        ]
       }
-    }
+    },
+    "triggers": [
+      {
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "sprocket-java"
+          ],
+          "from": {
+            "kind": "ImageStreamTag",
+            "name": "sprocket:default"
+          }
+        },
+        "type": "ImageChange"
+      }
+    ]
   }
 }

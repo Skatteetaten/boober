@@ -1,6 +1,6 @@
 {
+  "apiVersion": "apps.openshift.io/v1",
   "kind": "DeploymentConfig",
-  "apiVersion": "v1",
   "metadata": {
     "annotations": {
       "boober.skatteetaten.no/applicationFile": "booberdev/reference.json",
@@ -19,34 +19,19 @@
     "name": "reference"
   },
   "spec": {
+    "replicas": 1,
+    "selector": {
+      "name": "reference"
+    },
     "strategy": {
-      "type": "Rolling",
       "rollingParams": {
         "intervalSeconds": 1,
         "maxSurge": "25%",
         "maxUnavailable": 0,
         "timeoutSeconds": 180,
         "updatePeriodSeconds": 1
-      }
-    },
-    "triggers": [
-      {
-        "type": "ImageChange",
-        "imageChangeParams": {
-          "automatic": true,
-          "containerNames": [
-            "reference-java"
-          ],
-          "from": {
-            "name": "reference:default",
-            "kind": "ImageStreamTag"
-          }
-        }
-      }
-    ],
-    "replicas": 1,
-    "selector": {
-      "name": "reference"
+      },
+      "type": "Rolling"
     },
     "template": {
       "metadata": {
@@ -60,20 +45,6 @@
         }
       },
       "spec": {
-        "volumes": [
-          {
-            "name": "reference-cert",
-            "secret": {
-              "secretName": "reference-cert"
-            }
-          },
-          {
-            "name": "application-log-volume",
-            "emptyDir": {
-
-            }
-          }
-        ],
         "containers": [
           {
             "env": [
@@ -99,7 +70,6 @@
                 "name": "OPENSHIFT_CLUSTER",
                 "value": "utv"
               },
-
               {
                 "name": "APP_NAME",
                 "value": "reference"
@@ -197,9 +167,37 @@
             ]
           }
         ],
+        "dnsPolicy": "ClusterFirst",
         "restartPolicy": "Always",
-        "dnsPolicy": "ClusterFirst"
+        "volumes": [
+          {
+            "name": "reference-cert",
+            "secret": {
+              "secretName": "reference-cert"
+            }
+          },
+          {
+            "emptyDir": {
+            },
+            "name": "application-log-volume"
+          }
+        ]
       }
-    }
+    },
+    "triggers": [
+      {
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "reference-java"
+          ],
+          "from": {
+            "kind": "ImageStreamTag",
+            "name": "reference:default"
+          }
+        },
+        "type": "ImageChange"
+      }
+    ]
   }
 }
