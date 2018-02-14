@@ -10,10 +10,6 @@ enum class TemplateType {
     deploy, development, localTemplate, template, build
 }
 
-
-
-
-
 data class AuroraDeployEnvironment(
         val affiliation: String,
         val envName: String,
@@ -26,7 +22,6 @@ data class AuroraDeployEnvironment(
             else -> "$affiliation-$envName"
         }
 }
-
 
 data class AuroraDeploymentSpec(
         val schemaVersion: String,
