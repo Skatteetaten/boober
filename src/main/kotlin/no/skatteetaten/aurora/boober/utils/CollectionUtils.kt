@@ -65,3 +65,12 @@ fun <T> Collection<T>?.nullOnEmpty(): Collection<T>? {
 }
 
 
+inline fun <K, V> Map<out K, V?>.filterNullValues(): Map<K, V> {
+    val result = LinkedHashMap<K, V>()
+    for (entry in this) {
+        entry.value?.let {
+            result[entry.key] = it
+        }
+    }
+    return result
+}

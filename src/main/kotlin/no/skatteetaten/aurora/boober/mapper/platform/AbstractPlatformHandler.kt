@@ -13,6 +13,7 @@ import no.skatteetaten.aurora.boober.model.Probe
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
+import no.skatteetaten.aurora.boober.utils.filterNullValues
 import org.apache.commons.lang.StringEscapeUtils
 
 abstract class AbstractPlatformHandler {
@@ -92,7 +93,7 @@ abstract class AbstractPlatformHandler {
                 "console.skatteetaten.no/management-path" to deploy.managementPath,
                 "boober.skatteetaten.no/releaseTo" to deploy.releaseTo,
                 "sprocket.sits.no/deployment-config.certificate" to deploy.certificateCn
-        ).filterValues { !it.isNullOrBlank() }.mapValues { it.value!! }
+        ).filterNullValues().filterValues { it.isBlank() }
     }
 
     fun createLabels(name: String, deploy: AuroraDeploy, labels: Map<String, String>): Map<String, String> {
