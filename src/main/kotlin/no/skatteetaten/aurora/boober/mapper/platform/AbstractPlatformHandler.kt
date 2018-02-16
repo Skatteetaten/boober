@@ -93,7 +93,7 @@ abstract class AbstractPlatformHandler {
                 "console.skatteetaten.no/management-path" to deploy.managementPath,
                 "boober.skatteetaten.no/releaseTo" to deploy.releaseTo,
                 "sprocket.sits.no/deployment-config.certificate" to deploy.certificateCn
-        ).filterNullValues().filterValues { it.isBlank() }
+        ).filterNullValues().filterValues { !it.isBlank() }
     }
 
     fun createLabels(name: String, deploy: AuroraDeploy, labels: Map<String, String>): Map<String, String> {
