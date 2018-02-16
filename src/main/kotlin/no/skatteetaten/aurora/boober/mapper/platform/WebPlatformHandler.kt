@@ -5,8 +5,10 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import org.springframework.stereotype.Component
 
-class WebPlatformHandler : AbstractPlatformHandler() {
+@Component
+class WebPlatformHandler : ApplicationPlatformHandler("web") {
     override fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?): AuroraDeployment {
 
         val tag = when (auroraDeploymentSpec.type) {

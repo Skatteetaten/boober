@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatform
 
 import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 
@@ -28,7 +27,7 @@ data class AuroraDeploymentSpec(
         val type: TemplateType,
         val name: String,
         val fields: Map<String, Map<String, Any?>>,
-        val applicationPlatform: ApplicationPlatform = ApplicationPlatform.java,
+        val applicationPlatform: String = "java",
         val cluster: String,
         val environment: AuroraDeployEnvironment,
         val volume: AuroraVolume? = null,
@@ -78,7 +77,7 @@ data class AuroraBuild(
         val outputName: String,
         val triggers: Boolean,
         val buildSuffix: String?,
-        val applicationPlatform: ApplicationPlatform
+        val applicationPlatform: String
 )
 
 

@@ -1,6 +1,8 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
+import no.skatteetaten.aurora.boober.Boober.Companion
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
+import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -17,9 +19,8 @@ fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: Applic
     val type = headerMapper.type
     val platform = headerMapper.platform
 
-    val applicationHandler = platform.handler
-
-
+    val applicationHandler: ApplicationPlatformHandler = Companion.APPLICATION_PLATFORM_HANDLERS[platform]
+            ?: throw IllegalArgumentException("ApplicationPlattformHandler $platform is not present")
 
     val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(applicationId)
     val deployMapper = AuroraDeployMapperV1(applicationId, applicationFiles, overrideFiles)

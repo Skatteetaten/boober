@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.convertValue
-import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatform
+import no.skatteetaten.aurora.boober.Boober
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Mount
@@ -113,7 +113,10 @@ class OpenShiftObjectGenerator(
         if (auroraDeploymentSpec.deploy == null) {
             return null
         }
-        val deployment = auroraDeploymentSpec.applicationPlatform.handler.handleAuroraDeployment(auroraDeploymentSpec, labels, mounts)
+
+        val applicationPlatformHandler = Boober.APPLICATION_PLATFORM_HANDLERS[auroraDeploymentSpec.applicationPlatform]
+                ?: throw IllegalArgumentException("ApplicationPlattformHanndler ${auroraDeploymentSpec.applicationPlatform} is not present")
+        val deployment = applicationPlatformHandler.handleAuroraDeployment(auroraDeploymentSpec, labels, mounts)
 
 
         val containerGenerator = ContainerGenerator()
@@ -233,8 +236,8 @@ class OpenShiftObjectGenerator(
             )
             val applicationPlatform = it.applicationPlatform
             val template = when (applicationPlatform) {
-                ApplicationPlatform.java -> "build-config.json"
-                ApplicationPlatform.web -> "build-config-web.json"
+                "java" -> "build-config.json"
+                else -> "build-config-web.json"
             }
             val bc = mergeVelocityTemplate(template, buildParams)
 

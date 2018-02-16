@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.mapper.v1
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatform
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.TemplateType
@@ -24,7 +23,7 @@ class HeaderMapper(val fields: AuroraConfigFields) {
                 AuroraConfigFieldHandler("type", validator = { it.oneOf(TemplateType.values().map { it.toString() }) }),
                 AuroraConfigFieldHandler("baseFile"),
 
-                AuroraConfigFieldHandler("applicationPlatform", defaultValue = ApplicationPlatform.java, validator = { it.oneOf(ApplicationPlatform.values().map { it.name }) }),
+                AuroraConfigFieldHandler("applicationPlatform", defaultValue = "java", validator = { it.oneOf(no.skatteetaten.aurora.boober.Boober.Companion.APPLICATION_PLATFORM_HANDLERS.keys.toList()) }),
                 AuroraConfigFieldHandler("envFile", validator = {
                     it?.startsWith("about-", "envFile must start with about")
                 }))
@@ -42,6 +41,6 @@ class HeaderMapper(val fields: AuroraConfigFields) {
     val type: TemplateType
         get() = fields.extract("type")
 
-    val platform: ApplicationPlatform
+    val platform: String
         get () = fields.extract("applicationPlatform")
 }
