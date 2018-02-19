@@ -67,7 +67,7 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
             is AuroraConfigException -> e.errors
             is AuroraVersioningException -> e.errors
             is MultiApplicationValidationException -> e.toValidationErrors()
-            else -> listOf(ErrorDetail(message = e.message!!))
+            else -> listOf(ErrorDetail(message = e.message ?: "Unknown"))
         }
 
         if (httpStatus.is5xxServerError) {

@@ -48,7 +48,7 @@ class OpenShiftCommandBuilder(
         return openShiftObjectGenerator.generateApplicationObjects(deployId, deploymentSpec, provisioningResult)
                 .map { createOpenShiftCommand(namespace, it, mergeWithExistingResource, false) }
                 .flatMap { command ->
-                    if (command.isType(UPDATE, "route") && mustRecreateRoute(command.payload, command.previous!!)) {
+                    if (command.isType(UPDATE, "route") && mustRecreateRoute(command.payload, command.previous)) {
                         val deleteCommand = command.copy(operationType = DELETE)
                         val createCommand = command.copy(operationType = CREATE, payload = command.generated!!)
                         listOf(deleteCommand, createCommand)
@@ -94,7 +94,10 @@ class OpenShiftCommandBuilder(
                 .map { OpenshiftCommand(DELETE, payload = it, previous = it) }
     }
 
-    private fun mustRecreateRoute(newRoute: JsonNode, previousRoute: JsonNode): Boolean {
+    private fun mustRecreateRoute(newRoute: JsonNode, previousRoute: JsonNode?): Boolean {
+        if (previousRoute == null) {
+            return false
+        }
 
         val hostPointer = "/spec/host"
         val pathPointer = "/spec/path"
