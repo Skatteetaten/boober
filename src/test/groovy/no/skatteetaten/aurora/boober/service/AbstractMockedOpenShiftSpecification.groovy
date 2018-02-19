@@ -37,6 +37,7 @@ import spock.mock.DetachedMockFactory
     no.skatteetaten.aurora.boober.Configuration,
     DeployService,
     OpenShiftObjectGenerator,
+    OpenShiftCommandBuilder,
     OpenShiftTemplateProcessor,
     GitServices,
     EncryptionService,

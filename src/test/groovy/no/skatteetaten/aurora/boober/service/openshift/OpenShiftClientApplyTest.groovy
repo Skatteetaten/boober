@@ -18,6 +18,7 @@ import org.springframework.web.client.HttpClientErrorException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
+import no.skatteetaten.aurora.boober.service.OpenShiftCommandBuilder
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.OpenShiftException
@@ -34,6 +35,7 @@ import spock.mock.DetachedMockFactory
     OpenShiftClient,
     OpenShiftObjectGenerator,
     OpenShiftTemplateProcessor,
+    OpenShiftCommandBuilder,
     VelocityTemplateJsonService,
     SharedSecretReader,
     Config,
@@ -66,6 +68,9 @@ class OpenShiftClientApplyTest extends Specification {
   OpenShiftClient openShiftClient
 
   @Autowired
+  OpenShiftCommandBuilder commandBuilder
+
+  @Autowired
   @ClientType(API_USER)
   OpenShiftResourceClient userClient
 
@@ -75,125 +80,5 @@ class OpenShiftClientApplyTest extends Specification {
 
   @Autowired
   ObjectMapper mapper
-
-  def "Should throw exception if unknown error occurred"() {
-
-    given:
-      def prFile = this.getClass().getResource("/openshift-objects/project.json")
-
-      def projectRequest = mapper.readTree(prFile)
-
-      serviceAccountClient.get(_, _) >> new ResponseEntity<JsonNode>(HttpStatus.OK)
-      userClient.get("project", "foobar", "foobar", false) >> {
-        throw new OpenShiftException("Does not exist", new HttpClientErrorException(HttpStatus.SERVICE_UNAVAILABLE))
-      }
-
-    when:
-      openShiftClient.createOpenShiftCommand("foobar", projectRequest, true, false)
-
-    then:
-      thrown(OpenShiftException)
-  }
-
-  def "Should create project if it does not exist"() {
-
-    given:
-      def prFile = this.getClass().getResource("/openshift-objects/project.json")
-
-      def projectRequest = mapper.readTree(prFile)
-
-    when:
-
-      userClient.get("projectrequest", "foobar", "foobar", false) >> null
-
-      userClient.post("projectrequest", "foobar", "foobar", projectRequest) >>
-          new ResponseEntity(projectRequest, HttpStatus.OK)
-      def result = openShiftClient.createOpenShiftCommand("foobar", projectRequest, false, false)
-
-    then:
-
-      result.operationType == OperationType.CREATE
-  }
-
-  @Unroll
-  def "Should update #type"() {
-
-    given:
-      def oldResource = mapper.readTree(this.getClass().getResource("/openshift-objects/${type}.json"))
-      def newResource = mapper.readTree(this.getClass().getResource("/openshift-objects/$type-new.json"))
-
-      serviceAccountClient.get(_, _) >> new ResponseEntity<JsonNode>(HttpStatus.OK)
-
-      userClient.get(type, "foobar", "referanse", false) >>
-          new ResponseEntity(oldResource, HttpStatus.OK)
-
-      userClient.put(type, "foobar", "referanse", _) >>
-          new ResponseEntity(oldResource, HttpStatus.OK)
-
-    expect:
-      def result = openShiftClient.createOpenShiftCommand("foobar", newResource, true, false)
-      result.operationType == OperationType.UPDATE
-      fields.each { assert result.payload.at(it) == result.previous.at(it) }
-
-
-
-    where:
-      type               | fields
-      "service"          | ["/metadata/resourceVersion", "/spec/clusterIP"]
-      "deploymentconfig" | ["/metadata/resourceVersion", "/spec/template/spec/containers/0/image"]
-      "buildconfig"      |
-          ["/metadata/resourceVersion", "/spec/triggers/0/imageChange/lastTriggeredImageID", "/spec/triggers/1/imageChange/lastTriggeredImageID"]
-      "configmap"        | ["/metadata/resourceVersion"]
-
-  }
-
-  def "Should record exception when command fails"() {
-    given:
-      JsonNode payload = mapper.convertValue([
-          kind    : "service",
-          metadata: [
-              "name": "bar"
-          ]
-      ], JsonNode.class)
-
-      def cmd = new OpenshiftCommand(OperationType.CREATE, payload)
-      userClient.post("service", "foo", "bar", payload) >> {
-        throw new OpenShiftException("Does not exist",
-            new HttpClientErrorException(HttpStatus.SERVICE_UNAVAILABLE, "not available",
-                '''{ "failed" : "true"}'''.bytes,
-                Charset.defaultCharset()))
-      }
-    when:
-
-      def result = openShiftClient.performOpenShiftCommand("foo", cmd)
-    then:
-      !result.success
-      result.responseBody.get("failed").asText() == "true"
-
-  }
-
-  def "Should record exception when command fails with non json body"() {
-    given:
-      JsonNode payload = mapper.convertValue([
-          kind    : "service",
-          metadata: [
-              "name": "bar"
-          ]
-      ], JsonNode.class)
-
-      def cmd = new OpenshiftCommand(OperationType.CREATE, payload)
-      userClient.post("service", "foo", "bar", payload) >> {
-        throw new OpenShiftException("Does not exist",
-            new HttpClientErrorException(HttpStatus.SERVICE_UNAVAILABLE, "not available", "failed".bytes,
-                Charset.defaultCharset()))
-      }
-    when:
-
-      def result = openShiftClient.performOpenShiftCommand("foo", cmd)
-    then:
-      !result.success
-      result.responseBody.get("error").asText() == "failed"
-
-  }
 
 }

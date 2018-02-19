@@ -44,7 +44,7 @@ class OpenShiftRequestHandlerTest extends AbstractAuroraDeploymentSpecSpringTest
   def "Succeeds even if the request fails a couple of times"() {
 
     given:
-      def resource = loadResource(OpenShiftClientCreateOpenShiftCommandTest.simpleName, "webleveranse.json")
+      def resource = loadResource(ResourceMergerTest.simpleName, "dc-webleveranse.json")
       2.times { osClusterMock.expect(requestTo(resourceUrl)).andRespond(withBadRequest()) }
       osClusterMock.expect(requestTo(resourceUrl)).andRespond(withSuccess(resource, APPLICATION_JSON))
 

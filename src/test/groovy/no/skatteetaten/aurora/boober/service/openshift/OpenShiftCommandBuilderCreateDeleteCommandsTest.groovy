@@ -16,6 +16,7 @@ import org.springframework.test.context.TestPropertySource
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
+import no.skatteetaten.aurora.boober.service.OpenShiftCommandBuilder
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
@@ -37,9 +38,10 @@ import spock.mock.DetachedMockFactory
     UserDetailsProvider,
     SharedSecretReader,
     VelocityTemplateJsonService,
-    OpenShiftObjectLabelService
+    OpenShiftObjectLabelService,
+    OpenShiftCommandBuilder
 ])
-class OpenShiftClientCommandTest extends Specification {
+class OpenShiftCommandBuilderCreateDeleteCommandsTest extends Specification {
 
   @Configuration
   static class Config {
@@ -62,7 +64,7 @@ class OpenShiftClientCommandTest extends Specification {
   }
 
   @Autowired
-  OpenShiftClient openShiftClient
+  OpenShiftCommandBuilder openShiftCommandBuilder
 
   @Autowired
   @ClientType(API_USER)
@@ -95,7 +97,7 @@ class OpenShiftClientCommandTest extends Specification {
       }
 
     when:
-      def commands = openShiftClient.createOpenShiftDeleteCommands(name, namespace, deployId)
+      def commands = openShiftCommandBuilder.createOpenShiftDeleteCommands(name, namespace, deployId)
 
     then:
       ["BuildConfig", "DeploymentConfig", "ConfigMap", "ImageStream", "Route", "Service"].forEach {

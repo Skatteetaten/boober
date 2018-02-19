@@ -142,6 +142,7 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
         return auroraConfig
     }
 
+    @JvmOverloads
     fun createValidatedAuroraDeploymentSpecs(
             auroraConfigName: String,
             applicationIds: List<ApplicationId>,
