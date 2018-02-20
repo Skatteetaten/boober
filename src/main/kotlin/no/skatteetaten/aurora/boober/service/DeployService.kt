@@ -1,8 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
 import no.skatteetaten.aurora.boober.model.ApplicationId
@@ -16,6 +14,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.from
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -174,10 +173,9 @@ class DeployService(
             return result.copy(tagResponse = it, reason = "Tag command failed")
         }
 
-        val imageStream = createImageStream(openShiftResponses)
-        val deploymentConfig = createDeploymentConfig(openShiftResponses)
-        val redeployContext = RedeployContext(imageStream, deploymentConfig)
-        val redeployResult = redeployService.triggerRedeploy(deploymentSpec, redeployContext)
+        val imageStream = findImageStreamResponse(openShiftResponses)
+        val deploymentConfig = findDeploymentConfigResponse(openShiftResponses)
+        val redeployResult = redeployService.triggerRedeploy(deploymentSpec, imageStream, deploymentConfig)
 
         if (!redeployResult.success) {
             return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses),
@@ -253,15 +251,15 @@ class DeployService(
         return changed
     }
 
-    private fun createImageStream(openShiftResponses: List<OpenShiftResponse>): ImageStream? {
+    private fun findImageStreamResponse(openShiftResponses: List<OpenShiftResponse>): ImageStream? {
         return openShiftResponses.find { it.responseBody?.openshiftKind == "imagestream" }?.let {
-            jacksonObjectMapper().readValue(it.responseBody.toString())
+            ImageStream().from(it)
         }
     }
 
-    private fun createDeploymentConfig(openShiftResponses: List<OpenShiftResponse>): DeploymentConfig? {
+    private fun findDeploymentConfigResponse(openShiftResponses: List<OpenShiftResponse>): DeploymentConfig? {
         return openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }?.let {
-            jacksonObjectMapper().readValue(it.responseBody.toString())
+            DeploymentConfig().from(it)
         }
     }
 }

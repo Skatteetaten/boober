@@ -1,26 +1,29 @@
 package no.skatteetaten.aurora.boober.utils
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.fabric8.openshift.api.model.ImageStream
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 
-data class VerificationResult(val success: Boolean = true, val message: String? = null)
+fun ImageStream.findImageName(): String? = this.spec?.tags?.get(0)?.from?.name
 
-fun ImageStream.verifyResponse(): VerificationResult {
-    this.status?.let {
-        @Suppress("UNCHECKED_CAST")
-        val images = it.additionalProperties["images"] as? ArrayList<LinkedHashMap<String, LinkedHashMap<String, String>>>
+fun ImageStream.findTagName(): String? = this.spec?.tags?.get(0)?.name
 
-        val statusValues = images?.get(0)?.get("status")
-        val status = statusValues?.get("status")
-        val message = statusValues?.get("message")
+fun ImageStream.isSameImage(imageStream: ImageStream): Boolean =
+        this.findCurrentImageHash() == imageStream.findCurrentImageHash()
 
-        if (status?.toLowerCase() == "failure") {
-            return VerificationResult(false, message)
+fun ImageStream.findCurrentImageHash(): String? {
+    return this.status?.tags?.firstOrNull()?.items?.firstOrNull()?.image
+}
+
+fun ImageStream.findErrorMessage(): String? {
+    this.status?.tags?.firstOrNull()?.conditions?.let {
+        if (it.size > 0 && it[0].status.toLowerCase() == "false") {
+            return it[0].message
         }
     }
-
-    return VerificationResult()
+    return null
 }
 
-fun ImageStream.findImageName(): String? {
-    return this.spec?.tags?.get(0)?.from?.name
-}
+fun ImageStream.from(openShiftResponse: OpenShiftResponse): ImageStream =
+        jacksonObjectMapper().readValue(openShiftResponse.responseBody.toString())
