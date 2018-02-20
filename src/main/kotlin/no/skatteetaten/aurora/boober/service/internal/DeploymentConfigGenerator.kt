@@ -20,8 +20,8 @@ import com.fkorotkov.openshift.template
 import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.openshift.api.model.DeploymentConfig
-import no.skatteetaten.aurora.boober.mapper.platform.AuroraDeployment
 import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.platform.AuroraDeployment
 
 class DeploymentConfigGenerator {
 
