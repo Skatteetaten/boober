@@ -133,7 +133,11 @@ class DeployService(
         }
 
         logger.debug("Resource provisioning")
-        val provisioningResult = resourceProvisioner.provisionResources(deploymentSpec)
+        val provisioningResult = try {
+            resourceProvisioner.provisionResources(deploymentSpec)
+        } catch (e: Exception) {
+            return AuroraDeployResult(auroraDeploymentSpec = deploymentSpec, success = false, reason = e.message)
+        }
 
         logger.debug("Apply objects")
         val openShiftResponses: List<OpenShiftResponse> = applyOpenShiftApplicationObjects(
