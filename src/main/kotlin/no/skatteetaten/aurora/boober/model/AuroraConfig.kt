@@ -43,13 +43,7 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
         return auroraConfigFiles
                 .map { it.name.removeExtension() }
                 .filter { it.contains("/") && !it.contains("about") && !it.startsWith("templates") }
-                .map {
-                    val segments = it.split("/")
-                    val application = segments.last()
-                    val environment = segments.subList(0, segments.size - 1).joinToString("/")
-
-                    ApplicationId(environment, application)
-                }
+                .map { ApplicationId(it.substringBeforeLast("/"), it.substringAfterLast("/")) }
     }
 
     @JvmOverloads
