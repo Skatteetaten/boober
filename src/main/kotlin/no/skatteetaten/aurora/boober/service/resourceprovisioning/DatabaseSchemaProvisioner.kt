@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.service.ProvisioningException
@@ -35,17 +34,9 @@ data class DbhUser(val username: String, val password: String, val type: String)
 
 data class DatabaseInstance(val port: Long, val host: String?)
 
-data class DbhError(val errorMessage: String) {
-    companion object {
-        val logger by logger()
-        fun from(responseMessage: String): DbhError = try {
-            jacksonObjectMapper().readValue(responseMessage, DbhError::class.java)
-        } catch (e: Exception) {
-            logger.debug("Failed to unmarshal dbh response {}", responseMessage, e)
-            DbhError("Unknown")
-        }
-    }
-}
+data class DbApiEnvelope(val status: String, val items: List<DbhSchema> = listOf())
+
+data class DbhErrorResponse(val errorMessage: String)
 
 data class DbhSchema(
     val id: String,
@@ -72,22 +63,6 @@ data class DbhSchema(
 
     val service: String
         get() = jdbcUrl.split("/").last()
-}
-
-data class DbApiEnvelope(
-    val status: String,
-    val items: List<DbhSchema> = listOf()
-) {
-    val dbhSchema: DbhSchema
-        get() {
-            if (items.size != 1) {
-                val labels = items.first().labels
-                    .map { "${it.key}=${it.value}" }
-                    .joinToString()
-                throw ProvisioningException("Matched multiple database schemas for labels $labels")
-            }
-            return items[0]
-        }
 }
 
 @Service
@@ -119,6 +94,17 @@ class DatabaseSchemaProvisioner(
         return SchemaProvisionResult(request, dbhSchema, responseText)
     }
 
+    fun findSchemaById(id: String): Pair<DbhSchema, String> {
+
+        val response: ResponseEntity<JsonNode> = try {
+            restTemplate.getForEntity("{0}/api/v1/schema/{1}", JsonNode::class.java, dbhUrl, id)
+        } catch (e: Exception) {
+            throw createProvisioningException("Unable to get information on schema with id $id", e)
+        }
+
+        return parseResponseFailIfEmpty(response)
+    }
+
     private fun provisionForApplication(request: SchemaForAppRequest): SchemaProvisionResult {
 
         val user = userDetailsProvider.getAuthenticatedUser()
@@ -129,20 +115,15 @@ class DatabaseSchemaProvisioner(
             "name" to request.schemaName,
             "userId" to user.username
         )
-        val (dbhSchema, responseText) = findOrCreateSchemaByLabels(labels)
-        return SchemaProvisionResult(request, dbhSchema, responseText)
-    }
 
-    fun findSchemaById(id: String): Pair<DbhSchema, String> {
-
-        val response: ResponseEntity<JsonNode> = try {
-            restTemplate.getForEntity("{0}/api/v1/schema/{1}", JsonNode::class.java, dbhUrl, id)
-        } catch (e: HttpClientErrorException) {
-            val dbhError = DbhError.from(e.responseBodyAsString)
-            val message = "Unable to get information on schema with id $id cause=${dbhError.errorMessage}"
+        val (dbhSchema, responseText) = try {
+            findOrCreateSchemaByLabels(labels)
+        } catch (e: Exception) {
+            val message = e.message.orEmpty() + " Schema query: ${toLabelsString(labels)}"
             throw ProvisioningException(message, e)
         }
-        return parseResponseFailIfEmpty(response)
+
+        return SchemaProvisionResult(request, dbhSchema, responseText)
     }
 
     private fun findOrCreateSchemaByLabels(labels: Map<String, String>): Pair<DbhSchema, String> {
@@ -151,15 +132,12 @@ class DatabaseSchemaProvisioner(
     }
 
     private fun findSchemaByLabels(labels: Map<String, String>): Pair<DbhSchema, String>? {
-        val labelsString = labels
-            .filterKeys { it != "userId" }
-            .map { "${it.key}=${it.value}" }.joinToString(",")
+
+        val labelsString = toLabelsString(labels)
         val response: ResponseEntity<JsonNode> = try {
             restTemplate.getForEntity("{0}/api/v1/schema/?labels={1}", JsonNode::class.java, dbhUrl, labelsString)
-        } catch (e: HttpClientErrorException) {
-            val dbhError = DbhError.from(e.responseBodyAsString)
-            val message = "Unable to get information on schema with labels $labelsString cause=${dbhError.errorMessage}"
-            throw ProvisioningException(message, e)
+        } catch (e: Exception) {
+            throw createProvisioningException("Unable to get database schema.", e)
         }
 
         return parseResponse(response)
@@ -170,28 +148,48 @@ class DatabaseSchemaProvisioner(
         val payload = mapOf("labels" to labels)
         val response: ResponseEntity<JsonNode> = try {
             restTemplate.postForEntity("{0}/api/v1/schema/", payload, JsonNode::class.java, dbhUrl)
-        } catch (e: HttpClientErrorException) {
-            val labelsString = labels.map { "${it.key}=${it.value}" }.joinToString(",")
-            val dbhError = DbhError.from(e.responseBodyAsString)
-            val message =
-                "Unable to create database schema for application $labelsString cause=${dbhError.errorMessage}"
-            throw ProvisioningException(message, e)
+        } catch (e: Exception) {
+            throw createProvisioningException("Unable to create database schema.", e)
         }
 
         return parseResponseFailIfEmpty(response)
     }
 
     private fun parseResponseFailIfEmpty(response: ResponseEntity<JsonNode>): Pair<DbhSchema, String> {
-        return parseResponse(response) ?: throw ProvisioningException("Expected dbh response to contain schema info")
+        return parseResponse(response) ?: throw ProvisioningException("Expected dbh response to contain schema info.")
     }
 
     private fun parseResponse(response: ResponseEntity<JsonNode>): Pair<DbhSchema, String>? {
 
         val responseBody = response.body.toString()
         val dbApiEnvelope: DbApiEnvelope = mapper.readValue(responseBody, DbApiEnvelope::class.java)
-        if (dbApiEnvelope.items.isEmpty()) {
-            return null
+        val size = dbApiEnvelope.items.size
+        return when (size) {
+            0 -> null
+            1 -> Pair(dbApiEnvelope.items[0], responseBody)
+            else -> throw ProvisioningException("Matched $size database schemas, should be exactly one.")
         }
-        return Pair(dbApiEnvelope.dbhSchema, responseBody)
     }
+
+    private fun createProvisioningException(message: String, e: Exception): ProvisioningException {
+        fun parseErrorResponse(responseMessage: String?): String {
+            return try {
+                val dbhResponse = mapper.readValue(responseMessage, DbhErrorResponse::class.java)
+                dbhResponse.errorMessage
+            } catch (e: Exception) {
+                ""
+            }
+        }
+        return when (e) {
+            is HttpClientErrorException -> {
+                val dbhErrorResponse = parseErrorResponse(e.responseBodyAsString)
+                ProvisioningException(message + " cause=$dbhErrorResponse", e)
+            }
+            else -> ProvisioningException(message, e)
+        }
+    }
+
+    private fun toLabelsString(labels: Map<String, String>) = labels.filterKeys { it != "userId" }
+        .map { "${it.key}=${it.value}" }
+        .joinToString(",")
 }
