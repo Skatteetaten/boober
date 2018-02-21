@@ -38,6 +38,10 @@ repositories {
   }
 }
 
+test {
+  maxHeapSize = "1024m"
+}
+
 ext.aurora = [
     requireStaging: false
 ]
