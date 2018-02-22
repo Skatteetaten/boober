@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.fabric8.openshift.api.model.ImageStreamTag
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 
 fun ImageStreamTag.findErrorMessage(): String? {
     this.conditions?.let {
@@ -18,5 +17,5 @@ fun ImageStreamTag.findErrorMessage(): String? {
 
 fun ImageStreamTag.toJsonNode(): JsonNode = jacksonObjectMapper().valueToTree(this)
 
-fun ImageStreamTag.from(openShiftResponse: OpenShiftResponse): ImageStreamTag =
-        jacksonObjectMapper().readValue(openShiftResponse.responseBody.toString())
+fun ImageStreamTag.from(jsonNode: JsonNode?): ImageStreamTag =
+        jacksonObjectMapper().readValue(jsonNode.toString())

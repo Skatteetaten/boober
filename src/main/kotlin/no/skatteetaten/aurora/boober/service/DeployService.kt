@@ -3,10 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
-import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
@@ -175,7 +172,12 @@ class DeployService(
 
         val imageStream = findImageStreamResponse(openShiftResponses)
         val deploymentConfig = findDeploymentConfigResponse(openShiftResponses)
-        val redeployResult = redeployService.triggerRedeploy(deploymentSpec, imageStream, deploymentConfig)
+                ?: throw IllegalArgumentException("Missing DeploymentConfig") // TODO should this issue be handled differently?
+        val redeployResult = if (deploymentSpec.type == TemplateType.development) {
+            RedeployService.RedeployResult(message = "No deploy was made with ${deploymentSpec.type} type")
+        } else {
+            redeployService.triggerRedeploy(deploymentConfig, imageStream)
+        }
 
         if (!redeployResult.success) {
             return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses),
@@ -253,13 +255,13 @@ class DeployService(
 
     private fun findImageStreamResponse(openShiftResponses: List<OpenShiftResponse>): ImageStream? {
         return openShiftResponses.find { it.responseBody?.openshiftKind == "imagestream" }?.let {
-            ImageStream().from(it)
+            ImageStream().from(it.responseBody)
         }
     }
 
     private fun findDeploymentConfigResponse(openShiftResponses: List<OpenShiftResponse>): DeploymentConfig? {
         return openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }?.let {
-            DeploymentConfig().from(it)
+            DeploymentConfig().from(it.responseBody)
         }
     }
 }

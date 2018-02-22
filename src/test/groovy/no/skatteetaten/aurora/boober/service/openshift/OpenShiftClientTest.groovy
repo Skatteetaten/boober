@@ -67,4 +67,23 @@ class OpenShiftClientTest extends AbstractSpec {
       openShiftGroups.userGroups["k3222222"] == ['APP_PROJ1_drift']
       openShiftGroups.groupUsers['APP_PaaS_drift'] == ['k2222222', 'k1111111', 'k3333333', 'k4444444', 'y5555555', 'm6666666', 'm7777777', 'y8888888', 'y9999999']
   }
+
+  def "Get image stream given ok response return JsonNode"() {
+    when:
+      def imageStream = openShiftClient.getImageStream('namespace', 'name')
+
+    then:
+      1 * userClient.get('/oapi/v1/namespaces/namespace/imagestreams/name', _, _) >> ResponseEntity.ok(Mock(JsonNode))
+      imageStream != null
+  }
+
+  def "Get image stream given exception return null"() {
+    when:
+      def imageStream = openShiftClient.getImageStream('namespace', 'name')
+
+    then:
+      1 * userClient.get('/oapi/v1/namespaces/namespace/imagestreams/name', _, _) >>
+          { throw new RuntimeException('Test exception') }
+      imageStream == null
+  }
 }

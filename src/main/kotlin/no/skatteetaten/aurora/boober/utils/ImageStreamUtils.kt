@@ -1,20 +1,20 @@
 package no.skatteetaten.aurora.boober.utils
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.fabric8.openshift.api.model.ImageStream
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 
-fun ImageStream.findImageName(): String? = this.spec?.tags?.get(0)?.from?.name
+fun ImageStream.findImageName(): String = this.spec.tags[0].from.name
 
-fun ImageStream.findTagName(): String? = this.spec?.tags?.get(0)?.name
+fun ImageStream.findTagName(): String = this.spec.tags[0].name
 
 fun ImageStream.isSameImage(imageStream: ImageStream): Boolean =
         this.findCurrentImageHash() == imageStream.findCurrentImageHash()
 
-fun ImageStream.findCurrentImageHash(): String? {
-    return this.status?.tags?.firstOrNull()?.items?.firstOrNull()?.image
-}
+fun ImageStream.findCurrentImageHash(): String? =
+        this.status?.tags?.firstOrNull()?.items?.firstOrNull()?.image
+
 
 fun ImageStream.findErrorMessage(): String? {
     this.status?.tags?.firstOrNull()?.conditions?.let {
@@ -25,5 +25,7 @@ fun ImageStream.findErrorMessage(): String? {
     return null
 }
 
-fun ImageStream.from(openShiftResponse: OpenShiftResponse): ImageStream =
-        jacksonObjectMapper().readValue(openShiftResponse.responseBody.toString())
+fun ImageStream.toJsonNode(): JsonNode = jacksonObjectMapper().valueToTree(this)
+
+fun ImageStream.from(jsonNode: JsonNode?): ImageStream =
+        jacksonObjectMapper().readValue(jsonNode.toString())

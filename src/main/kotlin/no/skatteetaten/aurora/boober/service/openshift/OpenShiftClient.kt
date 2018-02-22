@@ -150,9 +150,18 @@ class OpenShiftClient(
     }
 
     fun getGroups(group: String): ResponseEntity<JsonNode>? {
-
         val url = "$baseUrl/oapi/v1/groups/$group"
         return serviceAccountClient.get(url)
+    }
+
+    fun getImageStream(namespace: String, name: String): JsonNode? {
+        return try {
+            val url = "$baseUrl/oapi/v1/namespaces/$namespace/imagestreams/$name"
+            userClient.get(url)?.body
+        } catch (e: Exception) {
+            logger.debug("Failed getting imagestream={} (namespace={})", name, namespace)
+            null
+        }
     }
 
     @Cacheable("groups")
