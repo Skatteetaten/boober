@@ -26,7 +26,7 @@ import org.springframework.web.client.HttpClientErrorException
 
 enum class OperationType { GET, CREATE, UPDATE, DELETE, NOOP }
 
-class OpenshiftCommand @JvmOverloads constructor(
+data class OpenshiftCommand @JvmOverloads constructor(
         val operationType: OperationType,
         val payload: JsonNode = NullNode.getInstance(),
         val previous: JsonNode? = null,
