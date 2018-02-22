@@ -115,9 +115,12 @@ class DeployService(
                 }
                 !env.success -> env.copy(auroraDeploymentSpec = it)
                 else -> {
-                    val result = deployFromSpec(it, deploy, env.projectExist)
-                    result.copy(openShiftResponses = env.openShiftResponses.addIfNotNull(result.openShiftResponses))
-
+                    try {
+                        val result = deployFromSpec(it, deploy, env.projectExist)
+                        result.copy(openShiftResponses = env.openShiftResponses.addIfNotNull(result.openShiftResponses))
+                    } catch (e: Exception) {
+                        AuroraDeployResult(auroraDeploymentSpec = it, success = false, reason = e.message)
+                    }
                 }
             }.also {
                 logger.info("Deploy done username=${authenticatedUser.username} fullName='${authenticatedUser.fullName}' deployId=${it.deployId} app=${it.auroraDeploymentSpec?.name} namespace=${it.auroraDeploymentSpec?.environment?.namespace} success=${it.success} ignored=${it.ignored} reason=${it.reason}")
