@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service.openshift
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -23,11 +24,11 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
 
-enum class OperationType { CREATE, UPDATE, DELETE, NOOP }
+enum class OperationType { GET, CREATE, UPDATE, DELETE, NOOP }
 
-data class OpenshiftCommand @JvmOverloads constructor(
+class OpenshiftCommand @JvmOverloads constructor(
         val operationType: OperationType,
-        val payload: JsonNode,
+        val payload: JsonNode = NullNode.getInstance(),
         val previous: JsonNode? = null,
         val generated: JsonNode? = null
 )
@@ -76,7 +77,8 @@ class OpenShiftClient(
         val performClient = getClientForKind(kind)
 
         return try {
-            val res: JsonNode = when (command.operationType) {
+            val res: JsonNode? = when (command.operationType) {
+                OperationType.GET -> throw OpenShiftException("GET is unsupported") // We should probably consider implementing it, though
                 OperationType.CREATE -> performClient.post(kind, namespace, name, command.payload).body
                 OperationType.UPDATE -> performClient.put(kind, namespace, name, command.payload).body
                 OperationType.DELETE -> performClient.delete(kind, namespace, name).body
@@ -154,13 +156,15 @@ class OpenShiftClient(
         return serviceAccountClient.get(url)
     }
 
-    fun getImageStream(namespace: String, name: String): JsonNode? {
+    fun getImageStream(namespace: String, name: String): OpenShiftResponse {
+
+        val performClient = getClientForKind("imagestream")
+        val command = OpenshiftCommand(OperationType.GET)
         return try {
-            val url = "$baseUrl/oapi/v1/namespaces/$namespace/imagestreams/$name"
-            userClient.get(url)?.body
-        } catch (e: Exception) {
-            logger.debug("Failed getting imagestream={} (namespace={})", name, namespace)
-            null
+            val res: JsonNode? = performClient.get("imagestream", namespace, name)?.body
+            OpenShiftResponse(command, res)
+        } catch (e: OpenShiftException) {
+            OpenShiftResponse.fromOpenShiftException(e, command)
         }
     }
 
@@ -203,8 +207,8 @@ class OpenShiftClient(
             items.filterIsInstance<ObjectNode>()
                     .onEach { it.put("kind", kind) }
         }.map {
-            OpenshiftCommand(OperationType.DELETE, payload = it, previous = it)
-        }
+                    OpenshiftCommand(OperationType.DELETE, payload = it, previous = it)
+                }
     }
 
 
@@ -226,7 +230,8 @@ class OpenShiftClient(
         val name = json.openshiftName
 
         val generated = json.deepCopy<JsonNode>()
-        val existing = userClient.get(kind, namespace, name)?.body ?: throw IllegalArgumentException("Admin rolebinding should exist")
+        val existing = userClient.get(kind, namespace, name)?.body
+                ?: throw IllegalArgumentException("Admin rolebinding should exist")
 
         json.updateField(existing, "/metadata", "resourceVersion")
 
@@ -234,7 +239,8 @@ class OpenShiftClient(
     }
 
     fun createUpdateNamespaceCommand(namespace: String, affiliation: String): OpenshiftCommand {
-        val existing = serviceAccountClient.get("namespace", "", namespace)?.body ?: throw IllegalArgumentException("Namespace should exist")
+        val existing = serviceAccountClient.get("namespace", "", namespace)?.body
+                ?: throw IllegalArgumentException("Namespace should exist")
         //do we really need to sleep here?
         val prev = (existing as ObjectNode).deepCopy()
 
