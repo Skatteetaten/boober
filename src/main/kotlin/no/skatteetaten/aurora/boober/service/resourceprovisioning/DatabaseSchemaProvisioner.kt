@@ -34,10 +34,6 @@ data class DbhUser(val username: String, val password: String, val type: String)
 
 data class DatabaseInstance(val port: Long, val host: String?)
 
-data class DbApiEnvelope(val status: String, val items: List<DbhSchema> = listOf())
-
-data class DbhErrorResponse(val errorMessage: String)
-
 data class DbhSchema(
     val id: String,
     val type: String,
@@ -192,4 +188,8 @@ class DatabaseSchemaProvisioner(
     private fun toLabelsString(labels: Map<String, String>) = labels.filterKeys { it != "userId" }
         .map { "${it.key}=${it.value}" }
         .joinToString(",")
+
+    data class DbApiEnvelope(val status: String, val items: List<DbhSchema> = listOf())
+
+    data class DbhErrorResponse(val errorMessage: String)
 }
