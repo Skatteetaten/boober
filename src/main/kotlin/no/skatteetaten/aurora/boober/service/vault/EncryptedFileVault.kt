@@ -8,19 +8,18 @@ import org.apache.commons.io.FileUtils
 import org.springframework.util.DigestUtils
 import java.io.File
 
-
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class AuroraPermissions @JvmOverloads constructor(
-        val groups: List<String>? = listOf()
+    val groups: List<String>? = listOf()
 )
 
 typealias Decryptor = (String) -> ByteArray
 typealias Encryptor = (ByteArray) -> String
 
 class VaultCollection private constructor(
-        val folder: File,
-        private val encryptor: Encryptor,
-        private val decryptor: Decryptor) {
+    val folder: File,
+    private val encryptor: Encryptor,
+    private val decryptor: Decryptor) {
 
     companion object {
         fun fromFolder(folder: File, encryptor: Encryptor, decryptor: Decryptor): VaultCollection = VaultCollection(folder, encryptor, decryptor)
@@ -49,15 +48,15 @@ class VaultCollection private constructor(
     private fun findAllVaultFolders(): List<File> {
 
         return folder.listFiles()
-                .filter { it.isDirectory }
-                .filter { !it.name.startsWith(".git") }
+          .filter { it.isDirectory }
+          .filter { !it.name.startsWith(".git") }
     }
 }
 
 class EncryptedFileVault private constructor(
-        val vaultFolder: File,
-        private val encryptor: Encryptor,
-        private val decryptor: Decryptor
+    val vaultFolder: File,
+    private val encryptor: Encryptor,
+    private val decryptor: Decryptor
 ) {
     init {
         if (!vaultFolder.exists()) throw IllegalArgumentException("Must point to an existing folder ${vaultFolder.absoluteFile.absolutePath} does not exist")
@@ -81,8 +80,8 @@ class EncryptedFileVault private constructor(
     var permissions: List<String>
         get() {
             val permissions: AuroraPermissions? = files
-                    .find { it.name == PERMISSION_FILE }
-                    ?.let { jacksonObjectMapper().readValue(it) }
+              .find { it.name == PERMISSION_FILE }
+              ?.let { jacksonObjectMapper().readValue(it) }
             return permissions?.groups ?: emptyList()
         }
         set(value) {
@@ -91,11 +90,11 @@ class EncryptedFileVault private constructor(
 
     val secrets: Map<String, ByteArray>
         get() = files
-                .filter { it.name != PERMISSION_FILE }
-                .associate { file ->
-                    val contents = decryptor(file.readText())
-                    file.name to contents
-                }.toMap()
+          .filter { it.name != PERMISSION_FILE }
+          .associate { file ->
+              val contents = decryptor(file.readText())
+              file.name to contents
+          }.toMap()
 
     val files: List<File>
         get() = vaultFolder.listFiles()?.filter { it.isFile } ?: emptyList()

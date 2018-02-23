@@ -9,19 +9,17 @@ import no.skatteetaten.aurora.boober.model.AuroraLocalTemplate
 
 class AuroraLocalTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>, val auroraConfig: AuroraConfig) {
 
-
     val parameterHandlers = findParameters()
     val handlers = parameterHandlers + listOf(
-            AuroraConfigFieldHandler("templateFile", validator = { json ->
-                val fileName = json?.textValue()
-                if (auroraConfig.auroraConfigFiles.none { it.name == fileName }) {
-                    IllegalArgumentException("The file named $fileName does not exist in AuroraConfig")
-                } else {
-                    null
-                }
-            })
+      AuroraConfigFieldHandler("templateFile", validator = { json ->
+          val fileName = json?.textValue()
+          if (auroraConfig.auroraConfigFiles.none { it.name == fileName }) {
+              IllegalArgumentException("The file named $fileName does not exist in AuroraConfig")
+          } else {
+              null
+          }
+      })
     )
-
 
     fun findParameters(): List<AuroraConfigFieldHandler> {
 
@@ -34,8 +32,8 @@ class AuroraLocalTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>, 
 
     fun localTemplate(auroraConfigFields: AuroraConfigFields): AuroraLocalTemplate {
         return AuroraLocalTemplate(
-                parameters = auroraConfigFields.getParameters(parameterHandlers),
-                templateJson = extractTemplateJson(auroraConfigFields)
+          parameters = auroraConfigFields.getParameters(parameterHandlers),
+          templateJson = extractTemplateJson(auroraConfigFields)
         )
     }
 
@@ -45,5 +43,4 @@ class AuroraLocalTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>, 
         }
         return templateFile ?: throw IllegalArgumentException("templateFile is required")
     }
-
 }

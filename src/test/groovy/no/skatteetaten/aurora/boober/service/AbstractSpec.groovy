@@ -15,9 +15,10 @@ abstract class AbstractSpec extends Specification {
   String loadResource(String folder, String resourceName) {
     def resourcePath = "${folder}/$resourceName"
 
-    def path = "src/test/resources/" +this.getClass().package.getName().replace(".", "/") + "/$resourcePath"
-    
-    this.getClass().getResource(resourcePath)?.text ?: { throw new IllegalArgumentException("No such resource $path")}()
+    def path = "src/test/resources/" + this.getClass().package.getName().replace(".", "/") + "/$resourcePath"
+
+    this.getClass().getResource(resourcePath)?.text ?:
+        { throw new IllegalArgumentException("No such resource $path") }()
   }
 
   JsonNode loadJsonResource(String resourceName) {

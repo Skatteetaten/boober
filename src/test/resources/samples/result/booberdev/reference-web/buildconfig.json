@@ -12,7 +12,6 @@
   },
   "spec": {
     "triggers": [
-
     ],
     "strategy": {
       "type": "Custom",

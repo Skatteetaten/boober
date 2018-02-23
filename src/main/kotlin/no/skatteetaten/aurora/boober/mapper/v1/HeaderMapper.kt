@@ -19,18 +19,18 @@ class HeaderMapper(val fields: AuroraConfigFields) {
         private val VALID_SCHEMA_VERSIONS = listOf("v1")
 
         val handlers = setOf(
-                AuroraConfigFieldHandler("schemaVersion", validator = { it.oneOf(VALID_SCHEMA_VERSIONS) }),
-                AuroraConfigFieldHandler("type", validator = { it.oneOf(TemplateType.values().map { it.toString() }) }),
-                AuroraConfigFieldHandler("baseFile"),
-                AuroraConfigFieldHandler("envFile", validator = {
-                    it?.startsWith("about-", "envFile must start with about")
-                }))
+          AuroraConfigFieldHandler("schemaVersion", validator = { it.oneOf(VALID_SCHEMA_VERSIONS) }),
+          AuroraConfigFieldHandler("type", validator = { it.oneOf(TemplateType.values().map { it.toString() }) }),
+          AuroraConfigFieldHandler("baseFile"),
+          AuroraConfigFieldHandler("envFile", validator = {
+              it?.startsWith("about-", "envFile must start with about")
+          }))
 
         fun create(applicationFiles: List<AuroraConfigFile>, applicationId: ApplicationId): HeaderMapper {
 
             val fields = AuroraConfigFields.create(handlers, applicationFiles)
             AuroraDeploymentSpecConfigFieldValidator(applicationId, applicationFiles, handlers, fields)
-                    .validate(false)
+              .validate(false)
 
             return HeaderMapper(fields)
         }

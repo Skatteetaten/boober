@@ -2,7 +2,11 @@ package no.skatteetaten.aurora.boober.service.internal
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.ApplicationPlatform
+import no.skatteetaten.aurora.boober.model.AuroraDeploy
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.Database
+import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.service.VelocityTemplateJsonService
@@ -11,8 +15,8 @@ import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import org.apache.commons.lang.StringEscapeUtils
 
 class DeploymentConfigGenerator(
-        private val mapper: ObjectMapper,
-        private val velocityTemplateJsonService: VelocityTemplateJsonService
+    private val mapper: ObjectMapper,
+    private val velocityTemplateJsonService: VelocityTemplateJsonService
 ) {
 
     fun create(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?): JsonNode? {
@@ -40,13 +44,13 @@ class DeploymentConfigGenerator(
         }
 
         val params = mapOf(
-                "annotations" to annotations,
-                "labels" to labels,
-                "name" to auroraDeploymentSpec.name,
-                "deploy" to auroraDeploymentSpec.deploy,
-                "mounts" to mounts,
-                "env" to envVars,
-                "imageStreamTag" to tag
+          "annotations" to annotations,
+          "labels" to labels,
+          "name" to auroraDeploymentSpec.name,
+          "deploy" to auroraDeploymentSpec.deploy,
+          "mounts" to mounts,
+          "env" to envVars,
+          "imageStreamTag" to tag
         )
         return params
     }
@@ -54,10 +58,10 @@ class DeploymentConfigGenerator(
     private fun createAnnotations(deploy: AuroraDeploy): Map<String, String> {
 
         val annotations = mapOf(
-                "boober.skatteetaten.no/applicationFile" to deploy.applicationFile,
-                "console.skatteetaten.no/alarm" to deploy.flags.alarm.toString()
+          "boober.skatteetaten.no/applicationFile" to deploy.applicationFile,
+          "console.skatteetaten.no/alarm" to deploy.flags.alarm.toString()
         )
-        val files = deploy.overrideFiles.mapValues{ mapper.readValue(it.value, JsonNode::class.java)}
+        val files = deploy.overrideFiles.mapValues { mapper.readValue(it.value, JsonNode::class.java) }
         val content = mapper.writeValueAsString(files)
         val overrides = StringEscapeUtils.escapeJavaScript(content).takeIf { it != "{}" }?.let {
             "boober.skatteetaten.no/overrides" to it
@@ -68,10 +72,10 @@ class DeploymentConfigGenerator(
         val releaseToAnnotation = deploy.releaseTo?.withNonBlank { "boober.skatteetaten.no/releaseTo" to it }
 
         return annotations
-                .addIfNotNull(releaseToAnnotation)
-                .addIfNotNull(overrides)
-                .addIfNotNull(managementPath)
-                .addIfNotNull(cert)
+          .addIfNotNull(releaseToAnnotation)
+          .addIfNotNull(overrides)
+          .addIfNotNull(managementPath)
+          .addIfNotNull(cert)
     }
 
     private fun createLabels(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>): Map<String, String> {
@@ -84,8 +88,8 @@ class DeploymentConfigGenerator(
         } else null
 
         val allLabels = labels + mapOf(
-                "name" to auroraDeploymentSpec.name,
-                deployTag
+          "name" to auroraDeploymentSpec.name,
+          deployTag
         ).addIfNotNull(pauseLabel)
         return OpenShiftObjectLabelService.toOpenShiftLabelNameSafeMap(allLabels)
     }
@@ -101,16 +105,16 @@ class DeploymentConfigGenerator(
         val certEnv = auroraDeploymentSpec.deploy?.certificateCn?.let {
             val baseUrl = "/u01/secrets/app/${auroraDeploymentSpec.name}-cert"
             mapOf(
-                    "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
-                    "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
-                    "STS_KEYSTORE_DESCRIPTOR" to "$baseUrl/descriptor.properties"
+              "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
+              "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
+              "STS_KEYSTORE_DESCRIPTOR" to "$baseUrl/descriptor.properties"
             )
         } ?: mapOf()
 
         val debugEnv = auroraDeploymentSpec.deploy?.flags?.takeIf { it.debug }?.let {
             mapOf(
-                    "ENABLE_REMOTE_DEBUG" to "true",
-                    "DEBUG_PORT" to "5005"
+              "ENABLE_REMOTE_DEBUG" to "true",
+              "DEBUG_PORT" to "5005"
             )
         } ?: mapOf()
 
@@ -129,8 +133,8 @@ class DeploymentConfigGenerator(
                 val envName = envName.replace("-", "_").toUpperCase()
 
                 return listOf(
-                        envName to "$path/info",
-                        "${envName}_PROPERTIES" to "$path/db.properties"
+                  envName to "$path/info",
+                  "${envName}_PROPERTIES" to "$path/db.properties"
                 )
             }
 
@@ -138,10 +142,10 @@ class DeploymentConfigGenerator(
         }?.toMap() ?: mapOf()
 
         val envs = mapOf(
-                "OPENSHIFT_CLUSTER" to auroraDeploymentSpec.cluster,
-                "HTTP_PORT" to "8080",
-                "MANAGEMENT_HTTP_PORT" to "8081",
-                "APP_NAME" to auroraDeploymentSpec.name
+          "OPENSHIFT_CLUSTER" to auroraDeploymentSpec.cluster,
+          "HTTP_PORT" to "8080",
+          "MANAGEMENT_HTTP_PORT" to "8081",
+          "APP_NAME" to auroraDeploymentSpec.name
         ).addIfNotNull(splunkIndex) + routeName + certEnv + debugEnv + dbEnv + mountEnv + configEnv
 
         return envs.mapKeys { it.key.replace(".", "_").replace("-", "_") }

@@ -1,9 +1,7 @@
 package no.skatteetaten.aurora.boober.model
 
-
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.Configuration
-import no.skatteetaten.aurora.boober.utils.findAllPointers
 import java.io.File
 import java.nio.charset.Charset
 
@@ -13,9 +11,9 @@ val folder = File(AuroraConfigHelper::class.java.getResource("/samples/config").
 
 fun getAuroraConfigSamples(): AuroraConfig {
     val files = folder.walkBottomUp()
-            .onEnter { it.name != "secret" }
-            .filter { it.isFile }
-            .associate { it.relativeTo(folder).path to it }
+      .onEnter { it.name != "secret" }
+      .filter { it.isFile }
+      .associate { it.relativeTo(folder).path to it }
 
     val nodes = files.map {
         it.key to it.value.readText(Charset.defaultCharset())
@@ -23,7 +21,6 @@ fun getAuroraConfigSamples(): AuroraConfig {
 
     return AuroraConfig(nodes.map { AuroraConfigFile(it.key, it.value, false) }, "aos")
 }
-
 
 @JvmOverloads
 fun createAuroraConfig(aid: ApplicationId, affiliation: String = "aos", additionalFile: String? = null): AuroraConfig {
@@ -36,21 +33,20 @@ fun createAuroraConfig(aid: ApplicationId, affiliation: String = "aos", addition
 fun getSampleFiles(aid: ApplicationId, additionalFile: String? = null): Map<String, String> {
 
     return collectFiles(
-            "about.json",
-            "${aid.application}.json",
-            "${aid.environment}/about.json",
-            "${aid.environment}/${aid.application}.json",
-            additionalFile?.let { it } ?: ""
+      "about.json",
+      "${aid.application}.json",
+      "${aid.environment}/about.json",
+      "${aid.environment}/${aid.application}.json",
+      additionalFile?.let { it } ?: ""
     )
 }
 
 fun getResultFiles(aid: ApplicationId): Map<String, JsonNode?> {
     val baseFolder = File(AuroraConfigHelper::class.java
-            .getResource("/samples/result/${aid.environment}/${aid.application}").file)
+      .getResource("/samples/result/${aid.environment}/${aid.application}").file)
 
     return getFiles(baseFolder)
 }
-
 
 private fun getFiles(baseFolder: File, name: String = ""): Map<String, JsonNode?> {
     return baseFolder.listFiles().toHashSet().map {

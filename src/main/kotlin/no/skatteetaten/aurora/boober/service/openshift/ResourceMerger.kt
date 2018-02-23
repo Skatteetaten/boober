@@ -55,4 +55,4 @@ private fun updateService(mergedResource: JsonNode, existingResource: JsonNode) 
 }
 
 private fun updateNamespace(mergedResource: ObjectNode, existingResource: ObjectNode) =
-        mergedResource.mergeField(existingResource, "/metadata", "annotations")
+  mergedResource.mergeField(existingResource, "/metadata", "annotations")

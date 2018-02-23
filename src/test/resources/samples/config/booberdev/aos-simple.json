@@ -2,7 +2,7 @@
   "version": "1.0.3-SNAPSHOT",
   "config": {
     "FOO": "baaaar",
-    "1.properties" : {
+    "1.properties": {
       "BAZ": "BAR"
     }
   },

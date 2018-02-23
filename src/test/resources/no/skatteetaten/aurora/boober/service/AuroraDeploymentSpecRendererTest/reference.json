@@ -7,7 +7,7 @@
     "source": "reference.json",
     "value": "deploy"
   },
-    "affiliation": {
+  "affiliation": {
     "source": "about.json",
     "value": "aos"
   },

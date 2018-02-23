@@ -16,9 +16,6 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.controller.internal.ErrorHandler
 import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigControllerV1

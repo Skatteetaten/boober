@@ -64,7 +64,6 @@
           {
             "name": "application-log-volume",
             "emptyDir": {
-
             }
           }
         ],
@@ -161,11 +160,9 @@
             "terminationMessagePath": "/dev/termination-log",
             "imagePullPolicy": "IfNotPresent",
             "capabilities": {
-
             },
             "securityContext": {
               "capabilities": {
-
               },
               "privileged": false
             },
@@ -260,11 +257,9 @@
             "terminationMessagePath": "/dev/termination-log",
             "imagePullPolicy": "IfNotPresent",
             "capabilities": {
-
             },
             "securityContext": {
               "capabilities": {
-
               },
               "privileged": false
             },

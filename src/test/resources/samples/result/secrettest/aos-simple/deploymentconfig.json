@@ -75,7 +75,6 @@
           {
             "name": "application-log-volume",
             "emptyDir": {
-
             }
           }
         ],

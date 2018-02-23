@@ -19,7 +19,8 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftCommand
 
         val namespace = deploymentSpec.environment.namespace
 
-        val redeployResourceFromSpec = generateRedeployResourceFromSpec(deploymentSpec, openShiftResponses) ?: return emptyList()
+        val redeployResourceFromSpec = generateRedeployResourceFromSpec(deploymentSpec, openShiftResponses)
+          ?: return emptyList()
         val command = openShiftCommandBuilder.createOpenShiftCommand(namespace, redeployResourceFromSpec)
 
         try {
@@ -28,7 +29,7 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftCommand
                 return listOf(response)
             }
             val cmd = openShiftCommandBuilder.createOpenShiftCommand(namespace,
-                    openShiftObjectGenerator.generateDeploymentRequest(deploymentSpec.name))
+              openShiftObjectGenerator.generateDeploymentRequest(deploymentSpec.name))
             try {
                 return listOf(response, openShiftClient.performOpenShiftCommand(namespace, cmd))
             } catch (e: OpenShiftException) {
@@ -58,7 +59,8 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftCommand
     }
 
     protected fun findImageInformation(openShiftResponses: List<OpenShiftResponse>): ImageInformation? {
-        val dc = openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }?.responseBody ?: return null
+        val dc = openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }?.responseBody
+          ?: return null
 
         val triggers = dc.at("/spec/triggers") as ArrayNode
         return triggers.find { it["type"].asText().toLowerCase() == "imagechange" }?.let {
@@ -70,7 +72,6 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftCommand
 
     protected fun generateRedeployResourceFromSpec(deploymentSpec: AuroraDeploymentSpec, openShiftResponses: List<OpenShiftResponse>): JsonNode? {
         return generateRedeployResource(deploymentSpec.type, deploymentSpec.name, openShiftResponses)
-
     }
 
     protected fun generateRedeployResource(type: TemplateType, name: String, openShiftResponses: List<OpenShiftResponse>): JsonNode? {
