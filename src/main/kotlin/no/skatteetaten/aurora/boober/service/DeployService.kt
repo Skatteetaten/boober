@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.databind.JsonNode
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
 import no.skatteetaten.aurora.boober.model.*

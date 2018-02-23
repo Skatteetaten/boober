@@ -16,8 +16,7 @@
       "name": "reference",
       "deployTag": "1"
     },
-    "name": "reference",
-    "namespace": "aos-booberdev"
+    "name": "reference"
   },
   "spec": {
     "replicas": 1,

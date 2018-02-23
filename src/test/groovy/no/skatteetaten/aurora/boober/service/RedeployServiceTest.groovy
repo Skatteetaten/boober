@@ -26,7 +26,7 @@ class RedeployServiceTest extends Specification {
   def deploymentConfig = createDeploymentConfig()
 
   def openShiftClient = Mock(OpenShiftClient)
-  def redeployService = new RedeployService(openShiftClient, Mock(OpenShiftObjectGenerator))
+  def redeployService = new RedeployService(openShiftClient, Mock(OpenShiftCommandBuilder), Mock(OpenShiftObjectGenerator))
 
   void setup() {
     openShiftClient.performOpenShiftCommand('affiliation', null) >>

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class RedeployService(val openShiftClient: OpenShiftClient,
+                      val openShiftCommandBuilder: OpenShiftCommandBuilder,
                       val openShiftObjectGenerator: OpenShiftObjectGenerator) {
 
     data class RedeployResult @JvmOverloads constructor(
@@ -77,13 +78,13 @@ class RedeployService(val openShiftClient: OpenShiftClient,
 
     private fun performImageStreamTag(namespace: String, imageName: String, tagName: String): OpenShiftResponse {
         val imageStreamTag = ImageStreamTagGenerator().create(imageName, tagName)
-        val command = openShiftClient.createOpenShiftCommand(namespace, imageStreamTag.toJsonNode())
+        val command = openShiftCommandBuilder.createOpenShiftCommand(namespace, imageStreamTag.toJsonNode())
         return openShiftClient.performOpenShiftCommand(namespace, command)
     }
 
     private fun performDeploymentRequest(namespace: String, name: String): OpenShiftResponse {
         val deploymentRequest = openShiftObjectGenerator.generateDeploymentRequest(name)
-        val command = openShiftClient.createOpenShiftCommand(namespace, deploymentRequest)
+        val command = openShiftCommandBuilder.createOpenShiftCommand(name, deploymentRequest)
         return openShiftClient.performOpenShiftCommand(namespace, command)
     }
 }
