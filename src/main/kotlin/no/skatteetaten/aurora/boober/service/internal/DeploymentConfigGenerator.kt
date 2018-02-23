@@ -1,157 +1,118 @@
 package no.skatteetaten.aurora.boober.service.internal
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.model.*
-import no.skatteetaten.aurora.boober.model.TemplateType.development
-import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
-import no.skatteetaten.aurora.boober.service.VelocityTemplateJsonService
-import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.ensureStartWith
-import org.apache.commons.lang.StringEscapeUtils
+import com.fkorotkov.kubernetes.configMap
+import com.fkorotkov.kubernetes.emptyDir
+import com.fkorotkov.kubernetes.metadata
+import com.fkorotkov.kubernetes.persistentVolumeClaim
+import com.fkorotkov.kubernetes.secret
+import com.fkorotkov.kubernetes.spec
+import com.fkorotkov.kubernetes.volume
+import com.fkorotkov.openshift.deploymentConfig
+import com.fkorotkov.openshift.deploymentTriggerPolicy
+import com.fkorotkov.openshift.from
+import com.fkorotkov.openshift.imageChangeParams
+import com.fkorotkov.openshift.metadata
+import com.fkorotkov.openshift.recreateParams
+import com.fkorotkov.openshift.rollingParams
+import com.fkorotkov.openshift.spec
+import com.fkorotkov.openshift.strategy
+import com.fkorotkov.openshift.template
+import io.fabric8.kubernetes.api.model.Container
+import io.fabric8.kubernetes.api.model.IntOrString
+import io.fabric8.openshift.api.model.DeploymentConfig
+import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.platform.AuroraDeployment
 
-class DeploymentConfigGenerator(
-        private val mapper: ObjectMapper,
-        private val velocityTemplateJsonService: VelocityTemplateJsonService
-) {
+class DeploymentConfigGenerator {
 
-    fun create(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?): JsonNode? {
+    fun create(auroraDeployment: AuroraDeployment, container: List<Container>): DeploymentConfig {
 
-        if (auroraDeploymentSpec.deploy == null) return null
-
-        val params: Map<String, Any?> = createTemplateParams(auroraDeploymentSpec, labels, mounts)
-
-        val template = when (auroraDeploymentSpec.deploy.applicationPlatform) {
-            ApplicationPlatform.java -> "deployment-config.json"
-            ApplicationPlatform.web -> "deployment-config-web.json"
-        }
-        return velocityTemplateJsonService.renderToJson(template, params)
-    }
-
-    private fun createTemplateParams(auroraDeploymentSpec: AuroraDeploymentSpec, commonLabels: Map<String, String>, mounts: List<Mount>?): Map<String, Any?> {
-
-        val annotations = createAnnotations(auroraDeploymentSpec.deploy!!)
-        val labels = createLabels(auroraDeploymentSpec, commonLabels)
-        val envVars = createEnvVars(mounts, auroraDeploymentSpec)
-
-        val tag = when (auroraDeploymentSpec.type) {
-            development -> "latest"
-            else -> "default"
-        }
-
-        val params = mapOf(
-                "annotations" to annotations,
-                "labels" to labels,
-                "name" to auroraDeploymentSpec.name,
-                "deploy" to auroraDeploymentSpec.deploy,
-                "mounts" to mounts,
-                "env" to envVars,
-                "imageStreamTag" to tag
-        )
-        return params
-    }
-
-    private fun createAnnotations(deploy: AuroraDeploy): Map<String, String> {
-
-        val annotations = mapOf(
-                "boober.skatteetaten.no/applicationFile" to deploy.applicationFile,
-                "console.skatteetaten.no/alarm" to deploy.flags.alarm.toString()
-        )
-        val files = deploy.overrideFiles.mapValues{ mapper.readValue(it.value, JsonNode::class.java)}
-        val content = mapper.writeValueAsString(files)
-        val overrides = StringEscapeUtils.escapeJavaScript(content).takeIf { it != "{}" }?.let {
-            "boober.skatteetaten.no/overrides" to it
-        }
-
-        val cert = deploy.certificateCn?.withNonBlank { "sprocket.sits.no/deployment-config.certificate" to it }
-        val managementPath = deploy.managementPath?.withNonBlank { "console.skatteetaten.no/management-path" to it }
-        val releaseToAnnotation = deploy.releaseTo?.withNonBlank { "boober.skatteetaten.no/releaseTo" to it }
-
-        return annotations
-                .addIfNotNull(releaseToAnnotation)
-                .addIfNotNull(overrides)
-                .addIfNotNull(managementPath)
-                .addIfNotNull(cert)
-    }
-
-    private fun createLabels(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>): Map<String, String> {
-
-        val deploy = auroraDeploymentSpec.deploy!!
-
-        val deployTag = "deployTag" to (deploy.releaseTo?.withNonBlank { it } ?: deploy.version)
-        val pauseLabel = if (deploy.flags.pause) {
-            "paused" to "true"
-        } else null
-
-        val allLabels = labels + mapOf(
-                "name" to auroraDeploymentSpec.name,
-                deployTag
-        ).addIfNotNull(pauseLabel)
-        return OpenShiftObjectLabelService.toOpenShiftLabelNameSafeMap(allLabels)
-    }
-
-    private fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpec: AuroraDeploymentSpec): Map<String, String> {
-
-        val mountEnv = mounts?.map {
-            "VOLUME_${it.mountName.toUpperCase().replace("-", "_")}" to it.path
-        }?.toMap() ?: mapOf()
-
-        val splunkIndex = auroraDeploymentSpec.deploy?.splunkIndex?.let { "SPLUNK_INDEX" to it }
-
-        val certEnv = auroraDeploymentSpec.deploy?.certificateCn?.let {
-            val baseUrl = "/u01/secrets/app/${auroraDeploymentSpec.name}-cert"
-            mapOf(
-                    "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
-                    "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
-                    "STS_KEYSTORE_DESCRIPTOR" to "$baseUrl/descriptor.properties"
-            )
-        } ?: mapOf()
-
-        val debugEnv = auroraDeploymentSpec.deploy?.flags?.takeIf { it.debug }?.let {
-            mapOf(
-                    "ENABLE_REMOTE_DEBUG" to "true",
-                    "DEBUG_PORT" to "5005"
-            )
-        } ?: mapOf()
-
-        val configEnv = auroraDeploymentSpec.deploy?.env ?: emptyMap()
-
-        val routeName = auroraDeploymentSpec.route?.route?.takeIf { it.isNotEmpty() }?.first()?.let {
-            val host = auroraDeploymentSpec.assembleRouteHost(it.host ?: auroraDeploymentSpec.name)
-
-            val url = "$host${it.path?.ensureStartWith("/") ?: ""}"
-            mapOf("ROUTE_NAME" to url, "ROUTE_URL" to "http://$url")
-        } ?: mapOf()
-
-        val dbEnv = auroraDeploymentSpec.deploy?.database?.takeIf { it.isNotEmpty() }?.let {
-            fun createDbEnv(db: Database, envName: String): List<Pair<String, String>> {
-                val path = "/u01/secrets/app/${db.name.toLowerCase()}-db"
-                val envName = envName.replace("-", "_").toUpperCase()
-
-                return listOf(
-                        envName to "$path/info",
-                        "${envName}_PROPERTIES" to "$path/db.properties"
-                )
+        return deploymentConfig {
+            metadata {
+                annotations = auroraDeployment.annotations
+                labels = auroraDeployment.labels
+                name = auroraDeployment.name
+                finalizers = null
+                ownerReferences = null
             }
+            spec {
+                strategy {
+                    if (auroraDeployment.deployStrategy.type == "rolling") {
+                        type = "Rolling"
+                        rollingParams {
+                            intervalSeconds = 1
+                            maxSurge = IntOrString("25%")
+                            maxUnavailable = IntOrString(0)
+                            timeoutSeconds = auroraDeployment.deployStrategy.timeout.toLong()
+                            updatePeriodSeconds = 1L
+                        }
+                    } else {
+                        type = "Recreate"
+                        recreateParams {
+                            timeoutSeconds = auroraDeployment.deployStrategy.timeout.toLong()
+                        }
+                    }
+                }
+                triggers = listOf(
+                        deploymentTriggerPolicy {
+                            type = "ImageChange"
+                            imageChangeParams {
+                                automatic = true
+                                containerNames = auroraDeployment.containers
+                                        .filter { it.shouldHaveImageChange }
+                                        .map { it.name }
 
-            it.flatMap { createDbEnv(it, "${it.name}_db") } + createDbEnv(it.first(), "db")
-        }?.toMap() ?: mapOf()
+                                from {
+                                    name = "${auroraDeployment.name}:${auroraDeployment.tag}"
+                                    kind = "ImageStreamTag"
+                                }
+                            }
+                        }
 
-        val envs = mapOf(
-                "OPENSHIFT_CLUSTER" to auroraDeploymentSpec.cluster,
-                "HTTP_PORT" to "8080",
-                "MANAGEMENT_HTTP_PORT" to "8081",
-                "APP_NAME" to auroraDeploymentSpec.name
-        ).addIfNotNull(splunkIndex) + routeName + certEnv + debugEnv + dbEnv + mountEnv + configEnv
+                )
+                replicas = auroraDeployment.replicas
+                selector = mapOf("name" to auroraDeployment.name)
+                template {
+                    metadata {
+                        finalizers = null
+                        ownerReferences = null
+                        labels = auroraDeployment.labels
+                    }
 
-        return envs.mapKeys { it.key.replace(".", "_").replace("-", "_") }
-    }
-
-    private inline fun <R> String.withNonBlank(block: (String) -> R?): R? {
-
-        if (this.isBlank()) {
-            return null
+                    spec {
+                        volumes = auroraDeployment.mounts?.map {
+                            volume {
+                                name = it.mountName
+                                when (it.type) {
+                                    MountType.ConfigMap -> configMap {
+                                        name = it.volumeName
+                                        items = null
+                                    }
+                                    MountType.Secret -> secret {
+                                        secretName = it.volumeName
+                                        items = null
+                                    }
+                                    MountType.PVC -> persistentVolumeClaim {
+                                        claimName = it.volumeName
+                                    }
+                                }
+                            }
+                        } ?: emptyList()
+                        volumes = volumes + volume {
+                            name = "application-log-volume"
+                            emptyDir()
+                        }
+                        containers = container
+                        restartPolicy = "Always"
+                        dnsPolicy = "ClusterFirst"
+                        auroraDeployment.serviceAccount?.let { serviceAccount = it }
+                        hostAliases = null
+                        imagePullSecrets = null
+                        tolerations = null
+                        initContainers = null
+                    }
+                }
+            }
         }
-        return block(this)
     }
 }

@@ -5,7 +5,17 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecConfigFieldValidator.Companion.namePattern
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.AuroraBuild
+import no.skatteetaten.aurora.boober.model.AuroraDeploy
+import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraLocalTemplate
+import no.skatteetaten.aurora.boober.model.AuroraRoute
+import no.skatteetaten.aurora.boober.model.AuroraTemplate
+import no.skatteetaten.aurora.boober.model.AuroraVolume
+import no.skatteetaten.aurora.boober.model.Permission
+import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.pattern
@@ -57,6 +67,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
 
         return AuroraDeploymentSpec(
                 schemaVersion = auroraConfigFields.extract("schemaVersion"),
+                applicationPlatform = auroraConfigFields.extract("applicationPlatform"),
                 type = auroraConfigFields.extract("type"),
                 name = name,
                 cluster = auroraConfigFields.extract("cluster"),
@@ -135,19 +146,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
 
     private fun createFieldsWithValues(auroraConfigFields: AuroraConfigFields, build: AuroraBuild?): Map<String, AuroraConfigField> {
 
-        val fields: MutableMap<String, AuroraConfigField> = mutableMapOf()
-        val configFields = auroraConfigFields.fields.filterValues { it.source != null || it.handler.defaultValue != null }
-
-        build?.let {
-            if (!fields.containsKey("baseImage/name")) {
-                fields.put("baseImage/name", AuroraConfigField(AuroraConfigFieldHandler("baseImage/name", defaultValue = it.applicationPlatform.baseImageName)))
-            }
-
-            if (!fields.containsKey("baseImage/version")) {
-                fields.put("baseImage/version", AuroraConfigField(AuroraConfigFieldHandler("baseImage/version", defaultValue = it.applicationPlatform.baseImageVersion)))
-            }
-        }
-        return configFields + fields
+        return auroraConfigFields.fields.filterValues { it.source != null || it.handler.defaultValue != null }
     }
 
     private fun extractPermissions(configFields: AuroraConfigFields): Permissions {

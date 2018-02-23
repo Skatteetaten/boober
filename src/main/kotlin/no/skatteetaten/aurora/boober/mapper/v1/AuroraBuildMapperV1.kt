@@ -3,19 +3,16 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.ApplicationPlatform
 import no.skatteetaten.aurora.boober.model.AuroraBuild
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.utils.length
 import no.skatteetaten.aurora.boober.utils.notBlank
-import no.skatteetaten.aurora.boober.utils.oneOf
 
 class AuroraBuildMapperV1(val applicationId: ApplicationId) {
 
     fun build(auroraConfigFields: AuroraConfigFields): AuroraBuild {
 
         val type: TemplateType = auroraConfigFields.extract("type")
-        val applicationPlatform: ApplicationPlatform = auroraConfigFields.extract("applicationPlatform")
         val name: String = auroraConfigFields.extract("name")
 
         val groupId: String = auroraConfigFields.extract("groupId")
@@ -43,8 +40,8 @@ class AuroraBuildMapperV1(val applicationId: ApplicationId) {
                 applicationPlatform = auroraConfigFields.extract("applicationPlatform"),
                 testGitUrl = testGitUrl,
                 testTag = auroraConfigFields.extractOrNull("test/tag"),
-                baseName = auroraConfigFields.extractOrNull("baseImage/name") ?: applicationPlatform.baseImageName,
-                baseVersion = auroraConfigFields.extractOrNull("baseImage/version") ?: applicationPlatform.baseImageVersion,
+                baseName = auroraConfigFields.extract("baseImage/name"),
+                baseVersion = auroraConfigFields.extract("baseImage/version"),
                 builderName = auroraConfigFields.extract("builder/name"),
                 builderVersion = auroraConfigFields.extract("builder/version"),
                 extraTags = auroraConfigFields.extract("extraTags"),
@@ -60,7 +57,6 @@ class AuroraBuildMapperV1(val applicationId: ApplicationId) {
 
     val handlers = listOf(
             AuroraConfigFieldHandler("extraTags", defaultValue = "latest,major,minor,patch"),
-            AuroraConfigFieldHandler("applicationPlatform", defaultValue = ApplicationPlatform.java, validator = { it.oneOf(ApplicationPlatform.values().map { it.name }) }),
             AuroraConfigFieldHandler("buildSuffix"),
             AuroraConfigFieldHandler("builder/name", defaultValue = "architect"),
             AuroraConfigFieldHandler("builder/version", defaultValue = "1"),

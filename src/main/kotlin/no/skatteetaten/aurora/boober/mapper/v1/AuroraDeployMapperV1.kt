@@ -2,7 +2,17 @@ package no.skatteetaten.aurora.boober.mapper.v1
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraDeploy
+import no.skatteetaten.aurora.boober.model.AuroraDeployStrategy
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigFlags
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResources
+import no.skatteetaten.aurora.boober.model.Database
+import no.skatteetaten.aurora.boober.model.HttpEndpoint
+import no.skatteetaten.aurora.boober.model.Probe
+import no.skatteetaten.aurora.boober.model.Webseal
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.length
 import no.skatteetaten.aurora.boober.utils.notBlank
@@ -23,7 +33,6 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
             AuroraConfigFieldHandler("groupId", validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
             AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set as string") }),
             AuroraConfigFieldHandler("releaseTo"),
-            AuroraConfigFieldHandler("applicationPlatform", defaultValue = ApplicationPlatform.java, validator = { it.oneOf(ApplicationPlatform.values().map { it.name }) }),
             AuroraConfigFieldHandler("deployStrategy/type", defaultValue = "rolling", validator = { it.oneOf(listOf("recreate", "rolling")) }),
             AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = 180),
             AuroraConfigFieldHandler("database", defaultValue = false),
@@ -104,17 +113,16 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
 
                 ),
                 resources = AuroraDeploymentConfigResources(
-                        memory = AuroraDeploymentConfigResource(
-                                min = auroraConfigFields.extract("resources/memory/min"),
-                                max = auroraConfigFields.extract("resources/memory/max")
+                        request = AuroraDeploymentConfigResource(
+                                cpu = auroraConfigFields.extract("resources/cpu/min"),
+                                memory = auroraConfigFields.extract("resources/memory/min")
                         ),
-                        cpu = AuroraDeploymentConfigResource(
-                                min = auroraConfigFields.extract("resources/cpu/min"),
-                                max = auroraConfigFields.extract("resources/cpu/max")
+                        limit = AuroraDeploymentConfigResource(
+                                cpu = auroraConfigFields.extract("resources/cpu/max"),
+                                memory = auroraConfigFields.extract("resources/memory/max")
                         )
                 ),
                 replicas = if (pause) 0 else replicas,
-                applicationPlatform = auroraConfigFields.extract("applicationPlatform"),
                 groupId = groupId,
                 artifactId = artifactId,
                 version = version,

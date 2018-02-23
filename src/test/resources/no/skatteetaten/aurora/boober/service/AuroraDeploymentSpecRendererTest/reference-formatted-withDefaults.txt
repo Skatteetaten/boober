@@ -1,6 +1,7 @@
 {
   schemaVersion:       "v1"                     // about.json
   type:                "deploy"                 // reference.json
+  applicationPlatform: "java"                   // default
   affiliation:         "aos"                    // about.json
   cluster:             "utv"                    // utv/about.json
   permissions: {
@@ -25,7 +26,6 @@
   artifactId:          "reference"              // fileName
   groupId:             "no.skatteetaten.aurora" // reference.json
   version:             "1"                      // reference.json
-  applicationPlatform: "java"                   // default
   resources: {
     cpu: {
       min:             "100m"                   // default

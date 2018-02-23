@@ -9,12 +9,6 @@ enum class TemplateType {
     deploy, development, localTemplate, template, build
 }
 
-enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: String) {
-    java("flange", "8"),
-    web("wrench", "0")
-}
-
-
 data class AuroraDeployEnvironment(
         val affiliation: String,
         val envName: String,
@@ -28,13 +22,12 @@ data class AuroraDeployEnvironment(
         }
 }
 
-
 data class AuroraDeploymentSpec(
         val schemaVersion: String,
         val type: TemplateType,
         val name: String,
         val fields: Map<String, Map<String, Any?>>,
-
+        val applicationPlatform: String = "java",
         val cluster: String,
         val environment: AuroraDeployEnvironment,
         val volume: AuroraVolume? = null,
@@ -84,7 +77,7 @@ data class AuroraBuild(
         val outputName: String,
         val triggers: Boolean,
         val buildSuffix: String?,
-        val applicationPlatform: ApplicationPlatform
+        val applicationPlatform: String
 )
 
 
@@ -94,8 +87,7 @@ data class AuroraDeploy(
         val releaseTo: String?,
         val flags: AuroraDeploymentConfigFlags,
         val resources: AuroraDeploymentConfigResources,
-        val replicas: Int?,
-        val applicationPlatform: ApplicationPlatform = ApplicationPlatform.java,
+        val replicas: Int,
         val groupId: String,
         val artifactId: String,
         val version: String,
@@ -177,13 +169,13 @@ data class AuroraDeploymentConfigFlags(
 )
 
 data class AuroraDeploymentConfigResource(
-        val min: String,
-        val max: String
+        val cpu: String,
+        val memory: String
 )
 
 data class AuroraDeploymentConfigResources(
-        val memory: AuroraDeploymentConfigResource,
-        val cpu: AuroraDeploymentConfigResource
+        val limit: AuroraDeploymentConfigResource,
+        val request: AuroraDeploymentConfigResource
 )
 
 data class HttpEndpoint(
