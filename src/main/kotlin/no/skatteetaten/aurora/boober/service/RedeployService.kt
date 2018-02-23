@@ -1,14 +1,17 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.TemplateType
+import io.fabric8.openshift.api.model.DeploymentConfig
+import io.fabric8.openshift.api.model.ImageStream
+import io.fabric8.openshift.api.model.ImageStreamTag
+import no.skatteetaten.aurora.boober.service.internal.ImageStreamTagGenerator
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
+import no.skatteetaten.aurora.boober.utils.*
 import org.springframework.stereotype.Service
 
 @Service
-class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectGenerator: OpenShiftObjectGenerator) {
+class RedeployService(val openShiftClient: OpenShiftClient,
+                      val openShiftObjectGenerator: OpenShiftObjectGenerator) {
 
     data class RedeployResult @JvmOverloads constructor(
             val openShiftResponses: List<OpenShiftResponse> = listOf(),
@@ -24,62 +27,63 @@ class RedeployService(val openShiftClient: OpenShiftClient, val openShiftObjectG
         }
     }
 
-    fun triggerRedeploy(deploymentSpec: AuroraDeploymentSpec, redeployContext: RedeployContext): RedeployResult {
-        val type = deploymentSpec.type
-        if (type == TemplateType.build || type == TemplateType.development) {
-            return RedeployResult(message = "No deploy was made with $type type")
-        }
-
-        if (redeployContext.isDeploymentRequest()) {
-            return RedeployResult.fromOpenShiftResponses(listOf(requestDeployment(deploymentSpec)))
-        }
-
-        val imageStreamImportResponse = importImageStream(deploymentSpec, redeployContext)
-                ?: return RedeployResult()
-        redeployContext.verifyResponse(imageStreamImportResponse).takeUnless { it.success }?.let {
-            return createFailedRedeployResult(it, imageStreamImportResponse)
-        }
-
-        if (redeployContext.didImportImage(imageStreamImportResponse)) {
-            return RedeployResult.fromOpenShiftResponses(listOf(imageStreamImportResponse))
-        }
-
-        val deploymentRequestResponse = requestDeployment(deploymentSpec)
-        return RedeployResult.fromOpenShiftResponses(listOf(imageStreamImportResponse, deploymentRequestResponse))
-    }
-
-    private fun createFailedRedeployResult(verificationResult: RedeployContext.VerificationResult, deploymentRequestResponse: OpenShiftResponse) =
-            RedeployResult(success = false, message = verificationResult.message, openShiftResponses = listOf(deploymentRequestResponse))
-
-    private fun importImageStream(deploymentSpec: AuroraDeploymentSpec, redeployContext: RedeployContext): OpenShiftResponse? {
-        val imageStreamImportResource = generateImageStreamImportResource(redeployContext) ?: return null
-        val namespace = deploymentSpec.environment.namespace
-        val command = openShiftClient.createOpenShiftCommand(namespace, imageStreamImportResource)
-        return try {
-            openShiftClient.performOpenShiftCommand(namespace, command)
-        } catch (e: OpenShiftException) {
-            OpenShiftResponse.fromOpenShiftException(e, command)
+    fun triggerRedeploy(deploymentConfig: DeploymentConfig, imageStream: ImageStream?): RedeployResult {
+        val namespace = deploymentConfig.metadata.namespace
+        val name = deploymentConfig.metadata.name
+        return if (imageStream == null) {
+            requestDeployment(namespace, name)
+        } else {
+            rolloutDeployment(imageStream, namespace, name)
         }
     }
 
-    fun generateImageStreamImportResource(redeployContext: RedeployContext): JsonNode? {
-        val imageInformation = redeployContext.findImageInformation()
-        val imageName = redeployContext.findImageName()
-        if (imageInformation != null && imageName != null) {
-            return openShiftObjectGenerator.generateImageStreamImport(imageInformation.imageStreamName, imageName)
-        }
-
-        return null
+    fun requestDeployment(namespace: String, name: String): RedeployResult {
+        val deploymentRequestResponse = performDeploymentRequest(namespace, name)
+        return RedeployResult.fromOpenShiftResponses(listOf(deploymentRequestResponse))
     }
 
-    private fun requestDeployment(deploymentSpec: AuroraDeploymentSpec): OpenShiftResponse {
-        val namespace = deploymentSpec.environment.namespace
-        val command = openShiftClient.createOpenShiftCommand(namespace,
-                openShiftObjectGenerator.generateDeploymentRequest(deploymentSpec.name))
-        return try {
-            openShiftClient.performOpenShiftCommand(namespace, command)
-        } catch (e: OpenShiftException) {
-            OpenShiftResponse.fromOpenShiftException(e, command)
+    fun rolloutDeployment(imageStream: ImageStream, namespace: String, name: String): RedeployResult {
+        val openShiftResponses = mutableListOf<OpenShiftResponse>()
+
+        val imageStreamTagResponse = performImageStreamTag(namespace, imageStream.findImageName(), imageStream.findTagName())
+                .also { openShiftResponses.add(it) }
+        if (!imageStreamTagResponse.success) {
+            return createFailedRedeployResult(imageStreamTagResponse.exception, openShiftResponses)
         }
+
+        ImageStreamTag().from(imageStreamTagResponse.responseBody).findErrorMessage()?.let {
+            return createFailedRedeployResult(it, openShiftResponses)
+        }
+
+        val updatedImageStream = openShiftClient.getImageStream(namespace, name)
+                .also { openShiftResponses.add(it) }
+                .responseBody
+                ?.let { ImageStream().from(it) }
+                ?: return createFailedRedeployResult("Missing information in deployment spec", openShiftResponses)
+
+        updatedImageStream.findErrorMessage()
+                ?.let { return createFailedRedeployResult(it, openShiftResponses) }
+
+        if (updatedImageStream.isSameImage(imageStream)) {
+            performDeploymentRequest(namespace, name).also { openShiftResponses.add(it) }
+            return RedeployResult.fromOpenShiftResponses(openShiftResponses)
+        }
+
+        return RedeployResult.fromOpenShiftResponses(openShiftResponses)
+    }
+
+    private fun createFailedRedeployResult(message: String?, openShiftResponses: List<OpenShiftResponse>) =
+            RedeployResult(success = false, message = message, openShiftResponses = openShiftResponses.toList())
+
+    private fun performImageStreamTag(namespace: String, imageName: String, tagName: String): OpenShiftResponse {
+        val imageStreamTag = ImageStreamTagGenerator().create(imageName, tagName)
+        val command = openShiftClient.createOpenShiftCommand(namespace, imageStreamTag.toJsonNode())
+        return openShiftClient.performOpenShiftCommand(namespace, command)
+    }
+
+    private fun performDeploymentRequest(namespace: String, name: String): OpenShiftResponse {
+        val deploymentRequest = openShiftObjectGenerator.generateDeploymentRequest(name)
+        val command = openShiftClient.createOpenShiftCommand(namespace, deploymentRequest)
+        return openShiftClient.performOpenShiftCommand(namespace, command)
     }
 }

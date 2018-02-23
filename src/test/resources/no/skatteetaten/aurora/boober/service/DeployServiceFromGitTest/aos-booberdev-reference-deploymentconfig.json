@@ -1,9 +1,9 @@
 {
-  "apiVersion": "v1",
   "kind": "DeploymentConfig",
+  "apiVersion": "v1",
   "metadata": {
     "annotations": {
-      "boober.skatteetaten.no/applicationFile": "booberdev/reference.json",
+      "boober.skatteetaten.no/applicationFile": "imagestreamtest/reference.json",
       "console.skatteetaten.no/alarm": "true",
       "console.skatteetaten.no/management-path": ":8081/actuator",
       "sprocket.sits.no/deployment-config.certificate": "no.skatteetaten.aurora.openshift.reference"
@@ -12,7 +12,7 @@
       "app": "reference",
       "updatedBy": "hero",
       "affiliation": "aos",
-      "booberDeployId": "123",
+      "booberDeployId": "b6dfcef1-b80f-4087-be87-547266b0fcdf",
       "name": "reference",
       "deployTag": "1"
     },
@@ -20,19 +20,35 @@
     "namespace": "aos-booberdev"
   },
   "spec": {
-    "replicas": 1,
-    "selector": {
-      "name": "reference"
-    },
     "strategy": {
+      "type": "Rolling",
       "rollingParams": {
         "intervalSeconds": 1,
         "maxSurge": "25%",
         "maxUnavailable": 0,
         "timeoutSeconds": 180,
         "updatePeriodSeconds": 1
-      },
-      "type": "Rolling"
+      }
+    },
+    "triggers": [
+      {
+        "type": "ImageChange",
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "reference"
+          ],
+          "from": {
+            "name": "reference:default",
+            "kind": "ImageStreamTag"
+          },
+          "lastTriggeredImage": "docker-registry.aurora.sits.no:5000/no_skatteetaten_aurora_openshift/openshift-reference-springboot-server@sha256:c43f2d51969457a6a085c0fb921ac22090588ca254a78014bf62834baf"
+        }
+      }
+    ],
+    "replicas": 1,
+    "selector": {
+      "name": "reference"
     },
     "template": {
       "metadata": {
@@ -40,14 +56,43 @@
           "app": "reference",
           "updatedBy": "hero",
           "affiliation": "aos",
-          "booberDeployId": "123",
+          "booberDeployId": "b6dfcef1-b80f-4087-be87-547266b0fcdf",
           "name": "reference",
           "deployTag": "1"
         }
       },
       "spec": {
+        "volumes": [
+          {
+            "name": "reference-cert",
+            "secret": {
+              "secretName": "reference-cert"
+            }
+          },
+          {
+            "name": "application-log-volume",
+            "emptyDir": {}
+          }
+        ],
         "containers": [
           {
+            "name": "reference",
+            "ports": [
+              {
+                "containerPort": 8080,
+                "protocol": "TCP",
+                "name": "http"
+              },
+              {
+                "containerPort": 8081,
+                "protocol": "TCP",
+                "name": "management"
+              },
+              {
+                "containerPort": 8778,
+                "name": "jolokia"
+              }
+            ],
             "env": [
               {
                 "name": "POD_NAME",
@@ -72,6 +117,14 @@
                 "value": "utv"
               },
               {
+                "name": "HTTP_PORT",
+                "value": "8080"
+              },
+              {
+                "name": "MANAGEMENT_HTTP_PORT",
+                "value": "8081"
+              },
+              {
                 "name": "APP_NAME",
                 "value": "reference"
               },
@@ -81,11 +134,11 @@
               },
               {
                 "name": "ROUTE_NAME",
-                "value": "reference-aos-booberdev.utv.paas.skead.no"
+                "value": "reference-aos-imagestreamtest.utv.paas.skead.no"
               },
               {
                 "name": "ROUTE_URL",
-                "value": "http://reference-aos-booberdev.utv.paas.skead.no"
+                "value": "http://reference-aos-imagestreamtest.utv.paas.skead.no"
               },
               {
                 "name": "STS_CERTIFICATE_URL",
@@ -102,46 +155,8 @@
               {
                 "name": "VOLUME_REFERENCE_CERT",
                 "value": "/u01/secrets/app/reference-cert"
-              },
-              {
-                "name": "HTTP_PORT",
-                "value": "8080"
-              },
-              {
-                "name": "MANAGEMENT_HTTP_PORT",
-                "value": "8081"
-              },
-              {
-                "name": "JOLOKIA_HTTP_PORT",
-                "value": "8778"
               }
             ],
-            "imagePullPolicy": "IfNotPresent",
-            "name": "reference-java",
-            "ports": [
-              {
-                "containerPort": 8080,
-                "name": "http",
-                "protocol": "TCP"
-              },
-              {
-                "containerPort": 8081,
-                "name": "management",
-                "protocol": "TCP"
-              },
-              {
-                "containerPort": 8778,
-                "name": "jolokia",
-                "protocol": "TCP"
-              }
-            ],
-            "readinessProbe": {
-              "initialDelaySeconds": 10,
-              "tcpSocket": {
-                "port": 8080
-              },
-              "timeoutSeconds": 1
-            },
             "resources": {
               "limits": {
                 "cpu": "2000m",
@@ -152,53 +167,35 @@
                 "memory": "128Mi"
               }
             },
-            "securityContext": {
-              "privileged": false
-            },
-            "terminationMessagePath": "/dev/termination-log",
             "volumeMounts": [
               {
-                "mountPath": "/u01/logs",
-                "name": "application-log-volume"
+                "name": "reference-cert",
+                "mountPath": "/u01/secrets/app/reference-cert"
               },
               {
-                "mountPath": "/u01/secrets/app/reference-cert",
-                "name": "reference-cert"
+                "name": "application-log-volume",
+                "mountPath": "/u01/logs"
               }
-            ]
+            ],
+            "terminationMessagePath": "/dev/termination-log",
+            "imagePullPolicy": "IfNotPresent",
+            "capabilities": {},
+            "securityContext": {
+              "capabilities": {},
+              "privileged": false
+            },
+            "readinessProbe": {
+              "tcpSocket": {
+                "port": 8080
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 1
+            }
           }
         ],
-        "dnsPolicy": "ClusterFirst",
         "restartPolicy": "Always",
-        "volumes": [
-          {
-            "name": "reference-cert",
-            "secret": {
-              "secretName": "reference-cert"
-            }
-          },
-          {
-            "emptyDir": {
-            },
-            "name": "application-log-volume"
-          }
-        ]
+        "dnsPolicy": "ClusterFirst"
       }
-    },
-    "triggers": [
-      {
-        "imageChangeParams": {
-          "automatic": true,
-          "containerNames": [
-            "reference-java"
-          ],
-          "from": {
-            "kind": "ImageStreamTag",
-            "name": "reference:default"
-          }
-        },
-        "type": "ImageChange"
-      }
-    ]
+    }
   }
 }

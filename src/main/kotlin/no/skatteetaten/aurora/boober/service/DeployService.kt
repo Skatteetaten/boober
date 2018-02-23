@@ -1,5 +1,9 @@
 package no.skatteetaten.aurora.boober.service
 
+import com.fasterxml.jackson.databind.JsonNode
+import io.fabric8.openshift.api.model.DeploymentConfig
+import io.fabric8.openshift.api.model.ImageStream
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
@@ -9,6 +13,8 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.from
+import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -167,10 +173,14 @@ class DeployService(
             return result.copy(tagResponse = it, reason = "Tag command failed")
         }
 
-        val imageStream: OpenShiftResponse? = openShiftResponses.find { it.responseBody?.openshiftKind == "imagestream" }
-        val deploymentConfig: OpenShiftResponse? = openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }
-        val redeployContext = RedeployContext(imageStream, deploymentConfig)
-        val redeployResult = redeployService.triggerRedeploy(deploymentSpec, redeployContext)
+        val imageStream = findImageStreamResponse(openShiftResponses)
+        val deploymentConfig = findDeploymentConfigResponse(openShiftResponses)
+                ?: throw IllegalArgumentException("Missing DeploymentConfig") // TODO should this issue be handled differently?
+        val redeployResult = if (deploymentSpec.type == TemplateType.development) {
+            RedeployService.RedeployResult(message = "No deploy was made with ${deploymentSpec.type} type")
+        } else {
+            redeployService.triggerRedeploy(deploymentConfig, imageStream)
+        }
 
         if (!redeployResult.success) {
             return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses),
@@ -202,6 +212,18 @@ class DeployService(
                 .map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         return openShiftApplicationResponses.addIfNotNull(deleteOldObjectResponses)
+    }
+
+    private fun findImageStreamResponse(openShiftResponses: List<OpenShiftResponse>): ImageStream? {
+        return openShiftResponses.find { it.responseBody?.openshiftKind == "imagestream" }?.let {
+            ImageStream().from(it.responseBody)
+        }
+    }
+
+    private fun findDeploymentConfigResponse(openShiftResponses: List<OpenShiftResponse>): DeploymentConfig? {
+        return openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }?.let {
+            DeploymentConfig().from(it.responseBody)
+        }
     }
 }
 

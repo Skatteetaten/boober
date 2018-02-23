@@ -2,102 +2,83 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
 
-import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.Permission
-import no.skatteetaten.aurora.boober.model.Permissions
-import no.skatteetaten.aurora.boober.model.TemplateType
+import io.fabric8.kubernetes.api.model.ObjectMeta
+import io.fabric8.kubernetes.api.model.ObjectReference
+import io.fabric8.openshift.api.model.DeploymentConfig
+import io.fabric8.openshift.api.model.DeploymentConfigSpec
+import io.fabric8.openshift.api.model.DeploymentTriggerImageChangeParams
+import io.fabric8.openshift.api.model.DeploymentTriggerPolicy
+import io.fabric8.openshift.api.model.ImageStream
+import io.fabric8.openshift.api.model.ImageStreamSpec
+import io.fabric8.openshift.api.model.ImageStreamStatus
+import io.fabric8.openshift.api.model.NamedTagEventList
+import io.fabric8.openshift.api.model.TagEvent
+import io.fabric8.openshift.api.model.TagReference
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import no.skatteetaten.aurora.boober.utils.ImageStreamUtilsKt
 import spock.lang.Specification
 
 class RedeployServiceTest extends Specification {
-  def jsonNode = Mock(JsonNode)
-  def openShiftResponse = new OpenShiftResponse(new OpenshiftCommand(OperationType.CREATE, jsonNode))
-  def deployDeploymentSpec = createDeploymentSpec(TemplateType.deploy)
-  def developmentDeploymentSpec = createDeploymentSpec(TemplateType.development)
-
-  def verificationSuccess = new RedeployContext.VerificationResult()
-  def verificationFailed = new RedeployContext.VerificationResult(false, 'verification failed')
+  def imageStream = createImageStream('123')
+  def deploymentConfig = createDeploymentConfig()
 
   def openShiftClient = Mock(OpenShiftClient)
-  def openShiftObjectGenerator = Mock(OpenShiftObjectGenerator)
-  def redeployContext = Mock(RedeployContext)
-
-  def redeployService = new RedeployService(openShiftClient, openShiftObjectGenerator)
+  def redeployService = new RedeployService(openShiftClient, Mock(OpenShiftObjectGenerator))
 
   void setup() {
-    redeployContext.findImageInformation() >> new RedeployContext.ImageInformation('', 'image-stream-name', '')
-    redeployContext.findImageName() >> 'docker-image'
-
-    openShiftObjectGenerator.generateImageStreamImport('image-stream-name', 'docker-image') >> jsonNode
-    openShiftClient.performOpenShiftCommand('affiliation', null) >> openShiftResponse
+    openShiftClient.performOpenShiftCommand('affiliation', null) >>
+        createOpenShiftResponse(imageStream)
   }
 
   def "Trigger redeploy given deployment request return success"() {
-    given:
-      redeployContext.verifyResponse(openShiftResponse) >> verificationSuccess
-      redeployContext.isDeploymentRequest() >> true
-
     when:
-      def response = redeployService.triggerRedeploy(deployDeploymentSpec, redeployContext)
+      def response = redeployService.triggerRedeploy(deploymentConfig, null)
 
     then:
       response.success
       response.openShiftResponses.size() == 1
   }
 
-  def "Trigger redeploy given no image stream import required return success"() {
-    given:
-      redeployContext.verifyResponse(openShiftResponse) >> verificationSuccess
-
+  def "Trigger redeploy given dc and is and image is already imported return success"() {
     when:
-      def response = redeployService.triggerRedeploy(deployDeploymentSpec, redeployContext)
+      def response = redeployService.triggerRedeploy(deploymentConfig, imageStream)
 
     then:
+      1 * openShiftClient.getImageStream('affiliation', 'name') >> createOpenShiftResponse(imageStream)
+      response.success
+      response.openShiftResponses.size() == 3
+  }
+
+  def "Trigger redeploy given dc and is and image is not imported return success"() {
+    when:
+      def response = redeployService.triggerRedeploy(deploymentConfig, imageStream)
+
+    then:
+      1 * openShiftClient.getImageStream('affiliation', 'name') >> createOpenShiftResponse(createImageStream('234'))
       response.success
       response.openShiftResponses.size() == 2
   }
 
-  def "Trigger redeploy given image stream import required return success"() {
-    given:
-      redeployContext.verifyResponse(openShiftResponse) >> verificationSuccess
-      redeployContext.didImportImage(openShiftResponse) >> true
-
-    when:
-      def response = redeployService.triggerRedeploy(deployDeploymentSpec, redeployContext)
-
-    then:
-      response.success
-      response.openShiftResponses.size() == 1
+  private static ImageStream createImageStream(def imageHash) {
+    return new ImageStream(
+        status: new ImageStreamStatus(tags: [new NamedTagEventList(items: [new TagEvent(image: imageHash)])]),
+        spec: new ImageStreamSpec(
+            tags: [new TagReference(name: 'tag-name', from: new ObjectReference(name: 'imagestream-name'))]))
   }
 
-  def "Trigger redeploy given invalid image stream import response return failed"() {
-    given:
-      redeployContext.verifyResponse(openShiftResponse) >> verificationFailed
-
-    when:
-      def response = redeployService.triggerRedeploy(deployDeploymentSpec, redeployContext)
-
-    then:
-      !response.success
-      response.openShiftResponses.size() == 1
-      response.message == 'verification failed'
+  private static DeploymentConfig createDeploymentConfig() {
+    def imageChangeParams = new DeploymentTriggerImageChangeParams(
+        from: new ObjectReference(name: 'deploymentconfig-name:version'))
+    return new DeploymentConfig(metadata: new ObjectMeta(namespace: 'affiliation', name: 'name'),
+        spec: new DeploymentConfigSpec(triggers: [new DeploymentTriggerPolicy(imageChangeParams: imageChangeParams)]))
   }
 
-  def "Trigger redeploy given development template type return success"() {
-    when:
-      def response = redeployService.triggerRedeploy(developmentDeploymentSpec, redeployContext)
-
-    then:
-      response.success
-  }
-
-  private static AuroraDeploymentSpec createDeploymentSpec(TemplateType type) {
-    new AuroraDeploymentSpec('', type, '', [:], '',
-        new AuroraDeployEnvironment('affiliation', '', new Permissions(new Permission(null, null), null)),
-        null, null, null, null, null, null)
+  private OpenShiftResponse createOpenShiftResponse(def imageStream) {
+    return new OpenShiftResponse(
+        new OpenshiftCommand(OperationType.CREATE, Mock(JsonNode)), ImageStreamUtilsKt.toJsonNode(imageStream)
+    )
   }
 }
