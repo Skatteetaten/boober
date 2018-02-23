@@ -19,7 +19,6 @@ class OpenshiftApiUrlsTest extends Specification {
 
     where:
       kind                | name  | namespace | url
-      "buildrequest"      | "foo" | "bar"     | "/oapi/v1/namespaces/bar/buildconfigs/foo/instantiate"
       "deploymentrequest" | "foo" | "bar"     | "/oapi/v1/namespaces/bar/deploymentconfigs/foo/instantiate"
       "user"              | "foo" | null      | "/oapi/v1/users"
       "processedtemplate" | "foo" | "bar"     | "/oapi/v1/namespaces/bar/processedtemplates"
@@ -39,7 +38,6 @@ class OpenshiftApiUrlsTest extends Specification {
 
     where:
       kind                | name  | namespace | result
-      "buildrequest"      | "foo" | "bar"     | null
       "deploymentrequest" | "foo" | "bar"     | null
       "user"              | "foo" | null      | "/oapi/v1/users/foo"
       "project"           | "foo" | null      | "/oapi/v1/projects/foo"

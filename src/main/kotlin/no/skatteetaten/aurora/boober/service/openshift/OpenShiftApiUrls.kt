@@ -18,12 +18,6 @@ class OpenShiftApiUrls(
                         create = "$bcBaseUrl"
                 )
             }
-            if (kind == "buildrequest") {
-                val bcBaseUrl = getCollectionPathForResource(baseUrl, "buildconfig", namespace)
-                return OpenShiftApiUrls(
-                        create = "$bcBaseUrl/$name/instantiate"
-                )
-            }
             if (kind == "deploymentrequest") {
                 val dcBaseUrl = getCollectionPathForResource(baseUrl, "deploymentconfig", namespace)
                 return OpenShiftApiUrls(
@@ -46,7 +40,7 @@ class OpenShiftApiUrls(
             val endpointKey = kind.toLowerCase() + "s"
 
             val apiType = getApiType(endpointKey)
-            val namespacePrefix = if (endpointKey !in listOf("namespaces", "projects", "projectrequests", "buildrequests", "deploymentreqeusts", "users", "groups")) {
+            val namespacePrefix = if (endpointKey !in listOf("namespaces", "projects", "projectrequests", "deploymentreqeusts", "users", "groups")) {
                 namespace ?: throw IllegalArgumentException("namespace required for resource kind ${kind}")
                 "/namespaces/$namespace"
             } else ""

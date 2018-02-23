@@ -34,11 +34,6 @@ class OpenShiftObjectGenerator(
     val logger: Logger = LoggerFactory.getLogger(OpenShiftObjectGenerator::class.java)
 
 
-    fun generateBuildRequest(name: String): JsonNode {
-        logger.trace("Generating build request for name $name")
-        return mergeVelocityTemplate("buildrequest.json", mapOf("name" to name))
-
-    }
 
     fun generateDeploymentRequest(name: String): JsonNode {
         logger.trace("Generating deploy request for name $name")
@@ -260,10 +255,6 @@ class OpenShiftObjectGenerator(
         return c(labels, mounts)
     }
 
-    fun generateImageStreamImport(name: String, dockerImage: String): JsonNode {
-
-        return mergeVelocityTemplate("imagestreamimport.json", mapOf("name" to name, "docker" to dockerImage))
-    }
 
     fun mergeVelocityTemplate(template: String, content: Map<String, Any?>): JsonNode {
         return velocityTemplateJsonService.renderToJson(template, content)
