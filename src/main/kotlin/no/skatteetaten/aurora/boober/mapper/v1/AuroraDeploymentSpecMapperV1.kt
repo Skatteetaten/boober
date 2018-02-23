@@ -22,7 +22,6 @@ import no.skatteetaten.aurora.boober.utils.pattern
 
 class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
 
-
     val handlers = listOf(
             AuroraConfigFieldHandler("affiliation", validator = { it.pattern("^[a-z]{1,10}$", "Affiliation can only contain letters and must be no longer than 10 characters") }),
             AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
@@ -83,7 +82,6 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                 deploy = deploy,
                 template = template,
                 localTemplate = localTemplate)
-
     }
 
     private fun createIncludeSubKeysMap(fields: Map<String, AuroraConfigField>): Map<String, Boolean> {
@@ -102,7 +100,6 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
 
         return includeSubKeys
     }
-
 
     fun createMapForAuroraDeploymentSpecPointers(auroraConfigFields: Map<String, AuroraConfigField>): Map<String, Map<String, Any?>> {
         val fields = mutableMapOf<String, Any?>()
@@ -151,13 +148,16 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
 
     private fun extractPermissions(configFields: AuroraConfigFields): Permissions {
 
-        val viewGroups = configFields.extractDelimitedStringOrArrayAsStringList("permissions/view").toSet()
+        val viewGroups = configFields.extractDelimitedStringOrArrayAsStringList("permissions/view")
+                .toSet()
         val adminGroups = configFields.extractDelimitedStringOrArrayAsStringList("permissions/admin", " ")
         //if sa present add to admin users.
-        val adminUsers = configFields.extractDelimitedStringOrArrayAsStringList("permissions/adminServiceAccount", " ").toSet()
+        val adminUsers = configFields.extractDelimitedStringOrArrayAsStringList("permissions/adminServiceAccount", " ")
+                .toSet()
 
         val adminPermission = Permission(adminGroups.toSet(), adminUsers)
-        val viewPermission = viewGroups.takeIf { !it.isEmpty() }?.let { Permission(it) }
+        val viewPermission = viewGroups.takeIf { !it.isEmpty() }
+                ?.let { Permission(it) }
 
         return Permissions(admin = adminPermission, view = viewPermission)
     }

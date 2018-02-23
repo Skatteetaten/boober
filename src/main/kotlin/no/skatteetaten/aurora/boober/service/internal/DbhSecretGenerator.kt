@@ -3,17 +3,17 @@ package no.skatteetaten.aurora.boober.service.internal
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResults
 import no.skatteetaten.aurora.boober.service.VelocityTemplateJsonService
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResults
 import java.io.ByteArrayOutputStream
-import java.util.*
+import java.util.Properties
 
 class DbhSecretGenerator(
-        private val velocityTemplateJsonService: VelocityTemplateJsonService,
-        private val openShiftObjectLabelService: OpenShiftObjectLabelService,
-        private val mapper: ObjectMapper
+    private val velocityTemplateJsonService: VelocityTemplateJsonService,
+    private val openShiftObjectLabelService: OpenShiftObjectLabelService,
+    private val mapper: ObjectMapper
 ) {
 
     object Base64 {
@@ -29,13 +29,13 @@ class DbhSecretGenerator(
             val connectionProperties = createConnectionProperties(it.dbhSchema)
             val infoFile = createInfoFile(it.dbhSchema)
             velocityTemplateJsonService.renderToJson("secret.json", mapOf(
-                    "base64" to Base64,
-                    "labels" to labels,
-                    "deploymentSpec" to deploymentSpec,
-                    "dbhSchema" to it.dbhSchema,
-                    "request" to it.request,
-                    "connectionProperties" to connectionProperties,
-                    "infoFile" to infoFile
+                "base64" to Base64,
+                "labels" to labels,
+                "deploymentSpec" to deploymentSpec,
+                "dbhSchema" to it.dbhSchema,
+                "request" to it.request,
+                "connectionProperties" to connectionProperties,
+                "infoFile" to infoFile
             ))
         }
     }
@@ -43,20 +43,20 @@ class DbhSecretGenerator(
     private fun createInfoFile(dbhSchema: DbhSchema): String {
 
         val infoFile = mapOf("database" to mapOf(
-                "id" to dbhSchema.id,
-                "name" to dbhSchema.username,
-                "createdDate" to null,
-                "lastUsedDate" to null,
-                "host" to dbhSchema.databaseInstance.host,
-                "port" to dbhSchema.databaseInstance.port,
-                "service" to dbhSchema.service,
-                "jdbcUrl" to dbhSchema.jdbcUrl,
-                "users" to listOf(mapOf(
-                        "username" to dbhSchema.username,
-                        "password" to dbhSchema.password,
-                        "type" to dbhSchema.userType
-                )),
-                "labels" to dbhSchema.labels
+            "id" to dbhSchema.id,
+            "name" to dbhSchema.username,
+            "createdDate" to null,
+            "lastUsedDate" to null,
+            "host" to dbhSchema.databaseInstance.host,
+            "port" to dbhSchema.databaseInstance.port,
+            "service" to dbhSchema.service,
+            "jdbcUrl" to dbhSchema.jdbcUrl,
+            "users" to listOf(mapOf(
+                "username" to dbhSchema.username,
+                "password" to dbhSchema.password,
+                "type" to dbhSchema.userType
+            )),
+            "labels" to dbhSchema.labels
         ))
         return mapper.writeValueAsString(infoFile)
     }

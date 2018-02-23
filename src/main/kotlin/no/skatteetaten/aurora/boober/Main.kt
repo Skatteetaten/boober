@@ -18,7 +18,6 @@ import org.springframework.context.annotation.Import
 @Import(StringToDurationConverter::class)
 class Boober(val aphBeans: List<ApplicationPlatformHandler>) : ApplicationListener<ApplicationReadyEvent> {
 
-
     companion object {
         val logger: Logger = LoggerFactory.getLogger(Boober::class.java)
 
@@ -31,7 +30,6 @@ class Boober(val aphBeans: List<ApplicationPlatformHandler>) : ApplicationListen
         APPLICATION_PLATFORM_HANDLERS = aphBeans.associateBy { it.name }
         logger.info("Boober started with applicationPlatformHandlers ${APPLICATION_PLATFORM_HANDLERS.keys}")
     }
-
 }
 
 fun main(args: Array<String>) {

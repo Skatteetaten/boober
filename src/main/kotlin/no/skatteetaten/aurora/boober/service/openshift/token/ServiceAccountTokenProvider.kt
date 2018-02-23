@@ -20,8 +20,8 @@ import java.io.IOException
  */
 @Component
 class ServiceAccountTokenProvider(
-        @Value("\${boober.openshift.tokenLocation}") val tokenLocation: String,
-        @Value("\${boober.openshift.token:}") val tokenOverride: String
+    @Value("\${boober.openshift.tokenLocation}") val tokenLocation: String,
+    @Value("\${boober.openshift.token:}") val tokenOverride: String
 ) : TokenProvider {
 
     private val logger: Logger = LoggerFactory.getLogger(ServiceAccountTokenProvider::class.java)
@@ -48,9 +48,10 @@ class ServiceAccountTokenProvider(
     private fun readTokenFromFile(): String {
         logger.info("Reading application token from tokenLocation={}", tokenLocation)
         try {
-            val token: String = Files.toString(File(tokenLocation), Charsets.UTF_8).trimEnd()
+            val token: String = Files.toString(File(tokenLocation), Charsets.UTF_8)
+                .trimEnd()
             logger.trace("Read token with length={}, firstLetter={}, lastLetter={}", token.length,
-                    token[0], token[token.length - 1])
+                token[0], token[token.length - 1])
             return token
         } catch (e: IOException) {
             throw IllegalStateException("tokenLocation=$tokenLocation could not be read", e)

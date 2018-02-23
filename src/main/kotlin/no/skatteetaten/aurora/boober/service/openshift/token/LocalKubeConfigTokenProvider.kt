@@ -15,7 +15,8 @@ class LocalKubeConfigTokenProvider() : TokenProvider {
     }
 
     fun getTokenFromKubeConfig(path: File): String {
-        return KubeConfig.create(path).token
+        return KubeConfig.create(path)
+            .token
     }
 }
 
@@ -28,13 +29,14 @@ private class KubeConfig private constructor(config: Map<String, Any>) {
         get() {
             val users = getFromMap<List<Map<String, Any>>>(config, "users")
             val user = users.stream()
-                    .filter { u -> u["name"] == username + "/" + server }
-                    .findFirst()
-                    .get()
+                .filter { u -> u["name"] == username + "/" + server }
+                .findFirst()
+                .get()
 
             val userProps = getFromMap<Map<String, String>>(user, "user")
 
-            return userProps["token"] ?: throw IllegalStateException("Unable to find token in provided kube config file")
+            return userProps["token"]
+                ?: throw IllegalStateException("Unable to find token in provided kube config file")
         }
 
     private val server: String

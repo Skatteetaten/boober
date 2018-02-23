@@ -6,7 +6,11 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.filterDefaultFields
 import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/v1/auroradeployspec/{auroraConfigName}")
@@ -14,9 +18,9 @@ class AuroraDeploymentSpecControllerV1(val auroraConfigService: AuroraConfigServ
 
     @GetMapping("/")
     fun findAllDeploymentSpecs(
-            @PathVariable auroraConfigName: String,
-            @RequestParam(name = "aid", required = false) aidStrings: List<String>,
-            @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
+        @PathVariable auroraConfigName: String,
+        @RequestParam(name = "aid", required = false) aidStrings: List<String>,
+        @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
     ): Response {
 
         val aids = aidStrings.map(ApplicationId.Companion::fromString)
@@ -35,26 +39,26 @@ class AuroraDeploymentSpecControllerV1(val auroraConfigService: AuroraConfigServ
 
     @GetMapping("/{environment}/")
     fun findAllDeploymentSpecsForEnvironment(
-            @PathVariable auroraConfigName: String,
-            @PathVariable environment: String,
-            @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
+        @PathVariable auroraConfigName: String,
+        @PathVariable environment: String,
+        @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
     ): Response {
 
         val auroraConfig = auroraConfigService.findAuroraConfig(auroraConfigName)
         val fields = auroraConfig.getApplicationIds()
-                .filter { it.environment == environment }
-                .map { auroraConfig.getAuroraDeploymentSpec(it) }
-                .map { if (includeDefaults) it.fields else filterDefaultFields(it.fields) }
+            .filter { it.environment == environment }
+            .map { auroraConfig.getAuroraDeploymentSpec(it) }
+            .map { if (includeDefaults) it.fields else filterDefaultFields(it.fields) }
 
         return Response(items = fields)
     }
 
     @GetMapping("/{environment}/{application}")
     fun get(
-            @PathVariable auroraConfigName: String,
-            @PathVariable environment: String,
-            @PathVariable application: String,
-            @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
+        @PathVariable auroraConfigName: String,
+        @PathVariable environment: String,
+        @PathVariable application: String,
+        @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
     ): Response {
 
         val auroraConfig = auroraConfigService.findAuroraConfig(auroraConfigName)
@@ -67,10 +71,10 @@ class AuroraDeploymentSpecControllerV1(val auroraConfigService: AuroraConfigServ
 
     @GetMapping("/{environment}/{application}/formatted")
     fun getJsonForMapOfPointers(
-            @PathVariable auroraConfigName: String,
-            @PathVariable environment: String,
-            @PathVariable application: String,
-            @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
+        @PathVariable auroraConfigName: String,
+        @PathVariable environment: String,
+        @PathVariable application: String,
+        @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
     ): Response {
 
         val auroraConfig = auroraConfigService.findAuroraConfig(auroraConfigName)

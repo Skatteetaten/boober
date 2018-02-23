@@ -9,7 +9,8 @@ class UserDetailsProvider {
 
     fun getAuthenticatedUser(): User {
 
-        val authentication = SecurityContextHolder.getContext().authentication
+        val authentication = SecurityContextHolder.getContext()
+            .authentication
         val user: User = authentication.principal as User
         return user
     }

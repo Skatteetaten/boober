@@ -37,9 +37,15 @@ class ContainerGenerator {
 
             val portEnv = adcContainer.tcpPorts.map {
                 val portName = if (it.key == "http") "HTTP_PORT" else "${it.key}_HTTP_PORT".toUpperCase()
-                EnvVarBuilder().withName(portName).withValue(it.value.toString()).build()
+                EnvVarBuilder().withName(portName)
+                    .withValue(it.value.toString())
+                    .build()
             }
-            env = adcContainer.env.map { EnvVarBuilder().withName(it.key).withValue(it.value).build() } + portEnv
+            env = adcContainer.env.map {
+                EnvVarBuilder().withName(it.key)
+                    .withValue(it.value)
+                    .build()
+            } + portEnv
 
             resources {
                 limits = fromAdcResource(adcContainer.limit)
@@ -62,16 +68,16 @@ class ContainerGenerator {
         }
     }
 
-
     private fun fromAdcResource(resource: AuroraDeploymentConfigResource): Map<String, Quantity> = mapOf(
-            "cpu" to quantity(resource.cpu),
-            "memory" to quantity(resource.memory))
+        "cpu" to quantity(resource.cpu),
+        "memory" to quantity(resource.memory))
 
     private fun quantity(str: String) = QuantityBuilder().withAmount(str).build()
 
     private fun fromProbe(it: Probe): io.fabric8.kubernetes.api.model.Probe = probe {
         tcpSocket {
-            port = IntOrStringBuilder().withIntVal(it.port).build()
+            port = IntOrStringBuilder().withIntVal(it.port)
+                .build()
         }
         it.path?.let {
             httpGet {
@@ -98,24 +104,24 @@ class ContainerGenerator {
         }) + instance.volumeMounts
 
         instance.env = listOf(
-                envVar {
-                    name = "POD_NAME"
-                    valueFrom {
-                        fieldRef {
-                            apiVersion = "v1"
-                            fieldPath = "metadata.name"
-                        }
-                    }
-                },
-                envVar {
-                    name = "POD_NAMESPACE"
-                    valueFrom {
-                        fieldRef {
-                            apiVersion = "v1"
-                            fieldPath = "metadata.namespace"
-                        }
+            envVar {
+                name = "POD_NAME"
+                valueFrom {
+                    fieldRef {
+                        apiVersion = "v1"
+                        fieldPath = "metadata.name"
                     }
                 }
+            },
+            envVar {
+                name = "POD_NAMESPACE"
+                valueFrom {
+                    fieldRef {
+                        apiVersion = "v1"
+                        fieldPath = "metadata.namespace"
+                    }
+                }
+            }
         ) + instance.env
         return instance
     }

@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.experimental.ThreadPoolDispatcher
 import kotlinx.coroutines.experimental.async
@@ -25,8 +24,8 @@ import org.springframework.util.StopWatch
 import java.io.File
 
 class AuroraConfigWithOverrides(
-        var auroraConfig: AuroraConfig,
-        val overrideFiles: List<AuroraConfigFile> = listOf()
+    var auroraConfig: AuroraConfig,
+    val overrideFiles: List<AuroraConfigFile> = listOf()
 )
 
 @Service
@@ -35,7 +34,6 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
                           val deploymentSpecValidator: AuroraDeploymentSpecValidator,
                           @Value("\${openshift.cluster}") val cluster: String,
                           @Value("\${boober.validationPoolSize:6}") val validationPoolSize: Int) {
-
 
     val logger: Logger = getLogger(AuroraConfigService::class.java)
     val yamlMapper = jacksonYamlObjectMapper()
@@ -64,12 +62,11 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
 
         val auroraConfig = findAuroraConfig(name)
         return auroraConfig.findFile(fileName)
-                ?: throw IllegalArgumentException("No such file $fileName in AuroraConfig $name")
+            ?: throw IllegalArgumentException("No such file $fileName in AuroraConfig $name")
     }
 
     fun save(auroraConfig: AuroraConfig): AuroraConfig {
         auroraConfig.validate()
-
 
         val checkoutDir = getAuroraConfigFolder(auroraConfig.affiliation)
 
@@ -95,7 +92,7 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
     fun updateAuroraConfigFile(name: String, fileName: String, contents: String, previousVersion: String? = null): AuroraConfig {
 
         val oldAuroraConfig = findAuroraConfig(name)
-        val (newFile, auroraConfig) = oldAuroraConfig.updateFile(fileName, contents , previousVersion)
+        val (newFile, auroraConfig) = oldAuroraConfig.updateFile(fileName, contents, previousVersion)
 
         return saveFile(newFile, auroraConfig)
     }
@@ -112,10 +109,11 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
 
         val watch = StopWatch()
         watch.start("find affected aid")
-        val affectedAid = auroraConfig.getApplicationIds().filter {
-            val files = auroraConfig.getFilesForApplication(it)
-            files.any { it.name == newFile.name }
-        }
+        val affectedAid = auroraConfig.getApplicationIds()
+            .filter {
+                val files = auroraConfig.getFilesForApplication(it)
+                files.any { it.name == newFile.name }
+            }
 
         watch.stop()
         watch.start("validate")
@@ -144,10 +142,10 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
 
     @JvmOverloads
     fun createValidatedAuroraDeploymentSpecs(
-            auroraConfigName: String,
-            applicationIds: List<ApplicationId>,
-            overrideFiles: List<AuroraConfigFile> = listOf(),
-            resourceValidation: Boolean = true): List<AuroraDeploymentSpec> {
+        auroraConfigName: String,
+        applicationIds: List<ApplicationId>,
+        overrideFiles: List<AuroraConfigFile> = listOf(),
+        resourceValidation: Boolean = true): List<AuroraDeploymentSpec> {
 
         val auroraConfig = findAuroraConfig(auroraConfigName)
         return createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig, overrideFiles), applicationIds)
@@ -189,7 +187,7 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
                     }
                 }
             }
-                    .map { it.await() }
+                .map { it.await() }
         }.onErrorThrow(::MultiApplicationValidationException)
         stopWatch.stop()
         logger.debug("Validated AuroraConfig ${auroraConfigWithOverrides.auroraConfig.affiliation} with ${applicationIds.size} applications in ${stopWatch.totalTimeMillis} millis")
