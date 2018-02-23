@@ -1,12 +1,12 @@
 package no.skatteetaten.aurora.boober.service
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+
 import no.skatteetaten.aurora.boober.Boober
 import no.skatteetaten.aurora.boober.mapper.platform.JavaPlatformHandler
 import no.skatteetaten.aurora.boober.mapper.platform.WebPlatformHandler
 import no.skatteetaten.aurora.boober.platform.ApplicationPlatformHandler
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-
 import spock.lang.Specification
 
 abstract class AbstractSpec extends Specification {

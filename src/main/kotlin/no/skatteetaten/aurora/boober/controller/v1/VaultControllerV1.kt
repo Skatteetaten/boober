@@ -15,8 +15,16 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.util.AntPathMatcher
 import org.springframework.util.DigestUtils
-import org.springframework.web.bind.annotation.*
-import java.util.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
+import java.util.Base64
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.validation.Valid
@@ -65,7 +73,6 @@ data class VaultFileResource(val contents: String) {
         @JsonIgnore
         get() = B64.decode(contents)
 
-
     companion object {
         fun fromDecodedBytes(decodedBytes: ByteArray): VaultFileResource {
             return VaultFileResource(B64.encode(decodedBytes))
@@ -99,7 +106,7 @@ class VaultControllerV1(val vaultService: VaultService,
     fun listVaults(@PathVariable vaultCollection: String): Response {
 
         val resources = vaultService.findAllVaultsWithUserAccessInVaultCollection(vaultCollection)
-                .map(::fromVaultWithAccess)
+          .map(::fromVaultWithAccess)
         return Response(items = resources)
     }
 
@@ -108,14 +115,14 @@ class VaultControllerV1(val vaultService: VaultService,
              @RequestBody @Valid vaultPayload: AuroraSecretVaultPayload): Response {
 
         val vault = vaultService.import(vaultCollection, vaultPayload.name, vaultPayload.permissions, vaultPayload.secretsDecoded
-                ?: emptyMap())
+          ?: emptyMap())
         return Response(items = listOf(vault).map(::fromEncryptedFileVault))
     }
 
     @GetMapping("/{vault}")
     fun getVault(@PathVariable vaultCollection: String, @PathVariable vault: String): Response {
         val resources = listOf(vaultService.findVault(vaultCollection, vault))
-                .map(::fromEncryptedFileVault)
+          .map(::fromEncryptedFileVault)
         return Response(items = resources)
     }
 

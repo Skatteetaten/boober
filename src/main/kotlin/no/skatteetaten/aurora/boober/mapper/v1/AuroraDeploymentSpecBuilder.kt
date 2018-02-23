@@ -20,7 +20,7 @@ fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: Applic
     val platform = headerMapper.platform
 
     val applicationHandler: ApplicationPlatformHandler = Companion.APPLICATION_PLATFORM_HANDLERS[platform]
-            ?: throw IllegalArgumentException("ApplicationPlattformHandler $platform is not present")
+      ?: throw IllegalArgumentException("ApplicationPlattformHandler $platform is not present")
 
     val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(applicationId)
     val deployMapper = AuroraDeployMapperV1(applicationId, applicationFiles, overrideFiles)

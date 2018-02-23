@@ -91,7 +91,7 @@ class OpenShiftRequestHandlerTest extends AbstractAuroraDeploymentSpecSpringTest
       }) == snippet
 
     where:
-      token | snippet
+      token             | snippet
       "some_long_token" | "some_"
   }
 }

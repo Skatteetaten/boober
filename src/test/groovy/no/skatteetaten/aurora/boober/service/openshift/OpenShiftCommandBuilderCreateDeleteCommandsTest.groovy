@@ -16,13 +16,13 @@ import org.springframework.test.context.TestPropertySource
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import no.skatteetaten.aurora.boober.service.OpenShiftCommandBuilder
-import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
-import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
+import no.skatteetaten.aurora.boober.service.OpenShiftCommandBuilder
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
+import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.service.OpenShiftTemplateProcessor
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.VelocityTemplateJsonService
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import spock.lang.Specification

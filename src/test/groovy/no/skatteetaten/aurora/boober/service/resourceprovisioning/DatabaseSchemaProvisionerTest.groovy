@@ -22,10 +22,6 @@ import no.skatteetaten.aurora.boober.service.ProvisioningException
 import no.skatteetaten.aurora.boober.service.SpringTestUtils
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaIdRequest
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResults
 
 @WithUserDetails("aurora")
 @RestClientTest
@@ -114,7 +110,6 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
     then:
       assertSchemaIsCorrect(provisionResult)
   }
-
 
   private static assertSchemaIsCorrect(SchemaProvisionResults provisionResult) {
 

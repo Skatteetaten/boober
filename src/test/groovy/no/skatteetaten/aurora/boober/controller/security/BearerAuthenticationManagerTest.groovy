@@ -34,7 +34,8 @@ class BearerAuthenticationManagerTest extends Specification {
       def authenticationManager = new BearerAuthenticationManager(openShiftClient)
 
     when:
-      Authentication authentication = authenticationManager.authenticate(new TestingAuthenticationToken("Bearer $TOKEN", ""))
+      Authentication authentication = authenticationManager.
+          authenticate(new TestingAuthenticationToken("Bearer $TOKEN", ""))
 
     then:
       !authentication.authenticated

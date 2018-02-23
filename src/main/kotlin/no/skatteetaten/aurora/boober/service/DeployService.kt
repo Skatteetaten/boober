@@ -13,21 +13,21 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.*
+import java.util.UUID
 
 @Service
 //TODO:Split up. Service is to large
 class DeployService(
-        val auroraConfigService: AuroraConfigService,
-        val openShiftCommandBuilder: OpenShiftCommandBuilder,
-        val openShiftClient: OpenShiftClient,
-        val dockerService: DockerService,
-        val resourceProvisioner: ExternalResourceProvisioner,
-        val redeployService: RedeployService,
-        val userDetailsProvider: UserDetailsProvider,
-        val deployLogService: DeployLogService,
-        @Value("\${openshift.cluster}") val cluster: String,
-        @Value("\${boober.docker.registry}") val dockerRegistry: String) {
+    val auroraConfigService: AuroraConfigService,
+    val openShiftCommandBuilder: OpenShiftCommandBuilder,
+    val openShiftClient: OpenShiftClient,
+    val dockerService: DockerService,
+    val resourceProvisioner: ExternalResourceProvisioner,
+    val redeployService: RedeployService,
+    val userDetailsProvider: UserDetailsProvider,
+    val deployLogService: DeployLogService,
+    @Value("\${openshift.cluster}") val cluster: String,
+    @Value("\${boober.docker.registry}") val dockerRegistry: String) {
 
     val logger: Logger = LoggerFactory.getLogger(DeployService::class.java)
 
@@ -47,37 +47,36 @@ class DeployService(
         return deployResults
     }
 
-
     fun prepareDeployEnvironments(deploymentSpecs: List<AuroraDeploymentSpec>): Map<AuroraDeployEnvironment, AuroraDeployResult> {
 
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
 
         return deploymentSpecs
-                .filter { it.cluster == cluster }
-                .map { it.environment }
-                .distinct()
-                .map { environment: AuroraDeployEnvironment ->
+          .filter { it.cluster == cluster }
+          .map { it.environment }
+          .distinct()
+          .map { environment: AuroraDeployEnvironment ->
 
-                    if (!authenticatedUser.hasAnyRole(environment.permissions.admin.groups)) {
-                        Pair(environment, AuroraDeployResult(success = false, reason = "User=${authenticatedUser.fullName} does not have access to admin this environment from the groups=${environment.permissions.admin.groups}"))
-                    }
+              if (!authenticatedUser.hasAnyRole(environment.permissions.admin.groups)) {
+                  Pair(environment, AuroraDeployResult(success = false, reason = "User=${authenticatedUser.fullName} does not have access to admin this environment from the groups=${environment.permissions.admin.groups}"))
+              }
 
-                    val projectExist = openShiftClient.projectExists(environment.namespace)
-                    val environmentResponses = prepareDeployEnvironment(environment, projectExist)
+              val projectExist = openShiftClient.projectExists(environment.namespace)
+              val environmentResponses = prepareDeployEnvironment(environment, projectExist)
 
-                    val success = environmentResponses.all { it.success }
+              val success = environmentResponses.all { it.success }
 
-                    val message = if (!success) {
-                        "One or more http calls to OpenShift failed"
-                    } else "Namespace created successfully."
+              val message = if (!success) {
+                  "One or more http calls to OpenShift failed"
+              } else "Namespace created successfully."
 
-                    logger.info("Environment done. user='${authenticatedUser.fullName}' namespace=${environment.namespace} success=${success} reason=${message} admins=${environment.permissions.admin.groups} viewers=${environment.permissions.view?.groups}")
-                    Pair(environment, AuroraDeployResult(
-                            openShiftResponses = environmentResponses,
-                            success = success,
-                            reason = message,
-                            projectExist = projectExist))
-                }.toMap()
+              logger.info("Environment done. user='${authenticatedUser.fullName}' namespace=${environment.namespace} success=${success} reason=${message} admins=${environment.permissions.admin.groups} viewers=${environment.permissions.view?.groups}")
+              Pair(environment, AuroraDeployResult(
+                openShiftResponses = environmentResponses,
+                success = success,
+                reason = message,
+                projectExist = projectExist))
+          }.toMap()
     }
 
     private fun prepareDeployEnvironment(environment: AuroraDeployEnvironment, projectExist: Boolean): List<OpenShiftResponse> {
@@ -140,7 +139,7 @@ class DeployService(
 
         logger.debug("Apply objects")
         val openShiftResponses: List<OpenShiftResponse> = applyOpenShiftApplicationObjects(
-                deployId, deploymentSpec, provisioningResult, namespaceCreated)
+          deployId, deploymentSpec, provisioningResult, namespaceCreated)
 
         logger.debug("done applying objects")
         val success = openShiftResponses.all { it.success }
@@ -178,8 +177,8 @@ class DeployService(
         val name = deploymentSpec.name
 
         val openShiftApplicationResponses: List<OpenShiftResponse> = openShiftCommandBuilder
-                .generateApplicationObjects(deployId, deploymentSpec, provisioningResult, mergeWithExistingResource)
-                .map { openShiftClient.performOpenShiftCommand(namespace, it) }
+          .generateApplicationObjects(deployId, deploymentSpec, provisioningResult, mergeWithExistingResource)
+          .map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         if (openShiftApplicationResponses.any { !it.success }) {
             logger.warn("One or more commands failed for $namespace/$name. Will not delete objects from previous deploys.")
@@ -187,8 +186,8 @@ class DeployService(
         }
 
         val deleteOldObjectResponses = openShiftCommandBuilder
-                .createOpenShiftDeleteCommands(name, namespace, deployId)
-                .map { openShiftClient.performOpenShiftCommand(namespace, it) }
+          .createOpenShiftDeleteCommands(name, namespace, deployId)
+          .map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         return openShiftApplicationResponses.addIfNotNull(deleteOldObjectResponses)
     }
