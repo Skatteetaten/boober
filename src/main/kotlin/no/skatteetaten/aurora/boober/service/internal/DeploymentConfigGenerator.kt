@@ -30,6 +30,7 @@ class DeploymentConfigGenerator {
         return deploymentConfig {
             metadata {
                 annotations = auroraDeployment.annotations
+                apiVersion = "v1"
                 labels = auroraDeployment.labels
                 name = auroraDeployment.name
                 finalizers = null
