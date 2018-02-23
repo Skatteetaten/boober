@@ -46,54 +46,47 @@ class RedeployService(val openShiftClient: OpenShiftClient,
         val namespace = deploymentConfig.metadata.namespace
         val name = deploymentConfig.metadata.name
 
+        val openShiftResponses = mutableListOf<OpenShiftResponse>()
+
         val imageStreamTagResponse = performImageStreamTag(namespace, imageStream.findImageName(), imageStream.findTagName())
+                .also { openShiftResponses.add(it) }
         if (!imageStreamTagResponse.success) {
-            return createFailedRedeployResult(imageStreamTagResponse.exception, imageStreamTagResponse)
+            return createFailedRedeployResult(imageStreamTagResponse.exception, openShiftResponses)
         }
 
         ImageStreamTag().from(imageStreamTagResponse.responseBody).findErrorMessage()?.let {
-            return createFailedRedeployResult(it, imageStreamTagResponse)
+            return createFailedRedeployResult(it, openShiftResponses)
         }
 
-        val updatedImageStream = getUpdatedImageStream(namespace, name)
-                ?: return createFailedRedeployResult("Missing information in deployment spec", imageStreamTagResponse)
-        updatedImageStream.findErrorMessage()?.let {
-            return createFailedRedeployResult(it, imageStreamTagResponse)
-        }
+        val updatedImageStream = openShiftClient.getImageStream(namespace, name)
+                .also { openShiftResponses.add(it) }
+                .responseBody
+                ?.let { ImageStream().from(it) }
+                ?: return createFailedRedeployResult("Missing information in deployment spec", openShiftResponses)
+
+        updatedImageStream.findErrorMessage()
+                ?.let { return createFailedRedeployResult(it, openShiftResponses) }
 
         if (updatedImageStream.isSameImage(imageStream)) {
-            val deploymentRequestResponse = performDeploymentRequest(namespace, name)
-            return RedeployResult.fromOpenShiftResponses(listOf(imageStreamTagResponse, deploymentRequestResponse))
+            performDeploymentRequest(namespace, name).also { openShiftResponses.add(it) }
+            return RedeployResult.fromOpenShiftResponses(openShiftResponses)
         }
 
-        return RedeployResult.fromOpenShiftResponses(listOf(imageStreamTagResponse))
+        return RedeployResult.fromOpenShiftResponses(openShiftResponses)
     }
 
-    private fun createFailedRedeployResult(message: String?, vararg openShiftResponses: OpenShiftResponse) =
+    private fun createFailedRedeployResult(message: String?, openShiftResponses: List<OpenShiftResponse>) =
             RedeployResult(success = false, message = message, openShiftResponses = openShiftResponses.toList())
 
     private fun performImageStreamTag(namespace: String, imageName: String, tagName: String): OpenShiftResponse {
         val imageStreamTag = ImageStreamTagGenerator().create(imageName, tagName)
         val command = openShiftClient.createOpenShiftCommand(namespace, imageStreamTag.toJsonNode())
-        return try {
-            openShiftClient.performOpenShiftCommand(namespace, command)
-        } catch (e: OpenShiftException) {
-            OpenShiftResponse.fromOpenShiftException(e, command)
-        }
-    }
-
-    private fun getUpdatedImageStream(namespace: String, name: String): ImageStream? {
-        val imageStream = openShiftClient.getImageStream(namespace, name) ?: return null
-        return ImageStream().from(imageStream)
+        return openShiftClient.performOpenShiftCommand(namespace, command)
     }
 
     private fun performDeploymentRequest(namespace: String, name: String): OpenShiftResponse {
         val deploymentRequest = openShiftObjectGenerator.generateDeploymentRequest(name)
         val command = openShiftClient.createOpenShiftCommand(namespace, deploymentRequest)
-        return try {
-            openShiftClient.performOpenShiftCommand(namespace, command)
-        } catch (e: OpenShiftException) {
-            OpenShiftResponse.fromOpenShiftException(e, command)
-        }
+        return openShiftClient.performOpenShiftCommand(namespace, command)
     }
 }
