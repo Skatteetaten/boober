@@ -26,14 +26,14 @@ class AuroraDeploymentSpecConfigFieldValidator(val applicationId: ApplicationId,
     fun validate(fullValidation: Boolean = true) {
 
         val envPointers = listOf("envName", "affiliation",
-                "permissions/admin", "permissions/view", "permissions/adminServiceAccount")
+            "permissions/admin", "permissions/view", "permissions/adminServiceAccount")
 
         val errors: List<ConfigFieldErrorDetail> = fieldHandlers.mapNotNull { e ->
             val rawField = auroraConfigFields.fields[e.name]!!
 
             val invalidEnvSource = envPointers.contains(e.name) && rawField.source?.name
-                    ?.let { !it.split("/").last().startsWith("about") }
-                    ?: false
+                ?.let { !it.split("/").last().startsWith("about") }
+                ?: false
 
             logger.trace("Validating field=${e.name}")
             val auroraConfigField: JsonNode? = rawField.valueOrDefault
@@ -62,13 +62,14 @@ class AuroraDeploymentSpecConfigFieldValidator(val applicationId: ApplicationId,
             emptyList()
         }
 
-        (errors + unmappedErrors).takeIf { it.isNotEmpty() }?.let {
-            val aid = applicationId
-            throw AuroraConfigException(
+        (errors + unmappedErrors).takeIf { it.isNotEmpty() }
+            ?.let {
+                val aid = applicationId
+                throw AuroraConfigException(
                     "Config for application ${aid.application} in environment ${aid.environment} contains errors",
                     errors = it
-            )
-        }
+                )
+            }
     }
 
     private fun getUnmappedPointers(): Map<String, List<String>> {
@@ -76,6 +77,7 @@ class AuroraDeploymentSpecConfigFieldValidator(val applicationId: ApplicationId,
 
         val filePointers = applicationFiles.associateBy({ it.configName }, { it.asJsonNode.findAllPointers(3) })
 
-        return filePointers.mapValues { it.value - allPaths }.filterValues { it.isNotEmpty() }
+        return filePointers.mapValues { it.value - allPaths }
+            .filterValues { it.isNotEmpty() }
     }
 }

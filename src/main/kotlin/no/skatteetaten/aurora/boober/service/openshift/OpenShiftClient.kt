@@ -27,10 +27,10 @@ import org.springframework.web.client.HttpClientErrorException
 enum class OperationType { CREATE, UPDATE, DELETE, NOOP }
 
 data class OpenshiftCommand @JvmOverloads constructor(
-        val operationType: OperationType,
-        val payload: JsonNode,
-        val previous: JsonNode? = null,
-        val generated: JsonNode? = null
+    val operationType: OperationType,
+    val payload: JsonNode,
+    val previous: JsonNode? = null,
+    val generated: JsonNode? = null
 ) {
     fun isType(operationType: OperationType, kind: String): Boolean {
 
@@ -41,10 +41,10 @@ data class OpenshiftCommand @JvmOverloads constructor(
 }
 
 data class OpenShiftResponse @JvmOverloads constructor(
-        val command: OpenshiftCommand,
-        val responseBody: JsonNode? = null,
-        val success: Boolean = true,
-        val exception: String? = null) {
+    val command: OpenshiftCommand,
+    val responseBody: JsonNode? = null,
+    val success: Boolean = true,
+    val exception: String? = null) {
 
     companion object {
         fun fromOpenShiftException(e: OpenShiftException, command: OpenshiftCommand): OpenShiftResponse {
@@ -60,7 +60,6 @@ data class OpenShiftResponse @JvmOverloads constructor(
             }
             return OpenShiftResponse(command, response, success = false, exception = e.message)
         }
-
     }
 }
 
@@ -71,7 +70,6 @@ data class OpenShiftGroups(private val groupUserPairs: List<UserGroup>) {
     private val groupUsers: Map<String, List<String>> by lazy {
         groupUserPairs.groupBy({ it.group }, { it.user })
     }
-
 
     private val userGroups: Map<String, List<String>> by lazy {
         groupUserPairs.groupBy({ it.user }, { it.group })
@@ -84,10 +82,10 @@ data class OpenShiftGroups(private val groupUserPairs: List<UserGroup>) {
 
 @Service
 class OpenShiftClient(
-        @Value("\${openshift.url}") val baseUrl: String,
-        @ClientType(API_USER) val userClient: OpenShiftResourceClient,
-        @ClientType(SERVICE_ACCOUNT) val serviceAccountClient: OpenShiftResourceClient,
-        val mapper: ObjectMapper
+    @Value("\${openshift.url}") val baseUrl: String,
+    @ClientType(API_USER) val userClient: OpenShiftResourceClient,
+    @ClientType(SERVICE_ACCOUNT) val serviceAccountClient: OpenShiftResourceClient,
+    val mapper: ObjectMapper
 ) {
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftClient::class.java)
@@ -124,7 +122,8 @@ class OpenShiftClient(
     @Cacheable("templates")
     fun getTemplate(template: String): JsonNode? {
         return try {
-            serviceAccountClient.get("$baseUrl/oapi/v1/namespaces/openshift/templates/$template")?.body
+            serviceAccountClient.get("$baseUrl/oapi/v1/namespaces/openshift/templates/$template")
+                ?.body
         } catch (e: Exception) {
             logger.debug("Failed getting template={}", template)
             null
@@ -153,8 +152,10 @@ class OpenShiftClient(
     }
 
     fun projectExists(name: String): Boolean {
-        serviceAccountClient.get("${baseUrl}/oapi/v1/projects/$name", retry = false)?.body?.let {
-            val phase = it.at("/status/phase").textValue()
+        serviceAccountClient.get("${baseUrl}/oapi/v1/projects/$name", retry = false)
+            ?.body?.let {
+            val phase = it.at("/status/phase")
+                .textValue()
             if (phase == "Active") {
                 return true
             } else {
@@ -175,11 +176,12 @@ class OpenShiftClient(
         val queryString = urlEncode(Pair("labelSelector", labelSelectors.joinToString(",")))
         val apiUrl = OpenShiftApiUrls.getCollectionPathForResource(baseUrl, kind, namespace)
         val url = "$apiUrl?$queryString"
-        val body = getClientForKind(kind).get(url)?.body
+        val body = getClientForKind(kind).get(url)
+            ?.body
 
         val items = body?.get("items")?.toList() ?: emptyList()
         return items.filterIsInstance<ObjectNode>()
-                .onEach { it.put("kind", kind) }
+            .onEach { it.put("kind", kind) }
     }
 
     /**
@@ -205,6 +207,6 @@ class OpenShiftClient(
 
         @JvmStatic
         fun urlEncode(vararg queryParams: Pair<String, String>) =
-                URLEncodedUtils.format(queryParams.map { BasicNameValuePair(it.first, it.second) }, Charsets.UTF_8)
+            URLEncodedUtils.format(queryParams.map { BasicNameValuePair(it.first, it.second) }, Charsets.UTF_8)
     }
 }

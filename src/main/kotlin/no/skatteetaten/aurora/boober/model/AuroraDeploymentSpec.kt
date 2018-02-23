@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode
 
 import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 
-
 enum class TemplateType {
     deploy, development, localTemplate, template, build
 }
@@ -47,7 +46,6 @@ data class AuroraDeploymentSpec(
         } else {
             hostPrefix.ensureEndsWith(hostSuffix, "-")
         }
-
     }
 }
 
@@ -79,7 +77,6 @@ data class AuroraBuild(
         val buildSuffix: String?,
         val applicationPlatform: String
 )
-
 
 data class AuroraDeploy(
         val applicationFile: String,
@@ -123,7 +120,6 @@ data class AuroraTemplate(
         val template: String
 )
 
-
 enum class MountType {
     ConfigMap, Secret, PVC
 }
@@ -137,7 +133,6 @@ data class Mount(
         val content: Map<String, Any?>? = null,
         val secretVaultName: String? = null
 )
-
 
 data class Database(
         val name: String,
@@ -153,7 +148,6 @@ data class Database(
 }
 
 data class Probe(val path: String? = null, val port: Int, val delay: Int, val timeout: Int)
-
 
 data class Route(
         val name: String,
@@ -187,7 +181,6 @@ data class Webseal(
         val host: String?,
         val roles: String?
 )
-
 
 data class Permissions(
         val admin: Permission,

@@ -26,13 +26,14 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
         @JvmStatic
         fun fromFolder(folder: File): AuroraConfig {
             val files = folder.walkBottomUp()
-                    .onEnter { !setOf(".secret", ".git").contains(it.name) }
-                    .filter { it.isFile && listOf("json", "yaml").contains(it.extension) }
-                    .associate { it.relativeTo(folder).path to it }
+                .onEnter { !setOf(".secret", ".git").contains(it.name) }
+                .filter { it.isFile && listOf("json", "yaml").contains(it.extension) }
+                .associate { it.relativeTo(folder).path to it }
 
             val nodes = files.map {
                 it.key to it.value.readText(Charset.defaultCharset())
-            }.toMap()
+            }
+                .toMap()
 
             return AuroraConfig(nodes.map { AuroraConfigFile(it.key, it.value!!, false) }, folder.name)
         }
@@ -41,9 +42,9 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
     fun getApplicationIds(): List<ApplicationId> {
 
         return auroraConfigFiles
-                .map { it.name.removeExtension() }
-                .filter { it.contains("/") && !it.contains("about") && !it.startsWith("templates") }
-                .map { val (environment, application) = it.split("/"); ApplicationId(environment, application) }
+            .map { it.name.removeExtension() }
+            .filter { it.contains("/") && !it.contains("about") && !it.startsWith("templates") }
+            .map { val (environment, application) = it.split("/"); ApplicationId(environment, application) }
     }
 
     @JvmOverloads
@@ -98,7 +99,7 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
         val patch: JsonPatch = yamlMapper.readValue(jsonPatchOp, JsonPatch::class.java)
 
         val auroraConfigFile = findFile(filename)
-                ?: throw IllegalArgumentException("No such file $filename in AuroraConfig ${affiliation}")
+            ?: throw IllegalArgumentException("No such file $filename in AuroraConfig ${affiliation}")
 
         val fileContents = patch.apply(auroraConfigFile.asJsonNode)
 
@@ -106,7 +107,8 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
             yamlMapper
         } else jsonMapper
 
-        val rawContents = writeMapper.writerWithDefaultPrettyPrinter().writeValueAsString(fileContents)
+        val rawContents = writeMapper.writerWithDefaultPrettyPrinter()
+            .writeValueAsString(fileContents)
         //TODO how do we handle this with regards to yaml/json.
         return updateFile(filename, rawContents, previousVersion)
     }
@@ -130,21 +132,20 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
         return file ?: throw IllegalArgumentException("Should find applicationFile $fileName.(json|yaml)")
     }
 
-
     private fun requiredFilesForApplication(applicationId: ApplicationId): Set<String> {
 
         val implementationFile = getApplicationFile(applicationId)
         val baseFile = implementationFile.asJsonNode.get("baseFile")?.asText()?.removeExtension()
-                ?: applicationId.application
+            ?: applicationId.application
 
         val envFile = implementationFile.asJsonNode.get("envFile")?.asText()?.removeExtension()
-                ?: "about"
+            ?: "about"
 
         return setOf(
-                "about",
-                baseFile,
-                "${applicationId.environment}/$envFile",
-                "${applicationId.environment}/${applicationId.application}")
+            "about",
+            baseFile,
+            "${applicationId.environment}/$envFile",
+            "${applicationId.environment}/${applicationId.application}")
     }
 }
 

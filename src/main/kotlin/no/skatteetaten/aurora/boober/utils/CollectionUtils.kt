@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.utils
 
-
 fun <K, V> Map<K, V>.addIfNotNull(value: Pair<K, V>?): Map<K, V> {
     return value?.let {
         this + it
@@ -41,7 +40,6 @@ fun <T> List<T>.addIf(condition: Boolean, value: T): List<T> = if (condition) th
 
 fun <T> List<T>.addIf(condition: Boolean, values: List<T>): List<T> = if (condition) this + values else this
 
-
 fun <K, V> Map<K, V>?.nullOnEmpty(): Map<K, V>? {
     if (this == null) {
         return this
@@ -63,7 +61,6 @@ fun <T> Collection<T>?.nullOnEmpty(): Collection<T>? {
 
     return this
 }
-
 
 inline fun <K, V> Map<out K, V?>.filterNullValues(): Map<K, V> {
     val result = LinkedHashMap<K, V>()

@@ -21,7 +21,6 @@ import org.springframework.web.client.RestClientResponseException
 import org.springframework.web.client.RestTemplate
 import java.lang.Integer.min
 
-
 @Component
 class OpenShiftRequestHandler(val restTemplate: RestTemplate) {
 
@@ -94,17 +93,18 @@ class RetryLogger(val logger: Logger) : RetryListenerSupport() {
         val requestEntity: RequestEntity<*> = context?.getAttribute(OpenShiftRequestHandler.REQUEST_ENTITY) as RequestEntity<*>
         val cause = e?.cause
         val params = mutableMapOf(
-                "attempt" to context.retryCount,
-                "url" to requestEntity.url,
-                "method" to requestEntity.method,
-                "message" to cause?.message
+            "attempt" to context.retryCount,
+            "url" to requestEntity.url,
+            "method" to requestEntity.method,
+            "message" to cause?.message
         )
         if (cause is RestClientResponseException) {
             params.put("code", cause.rawStatusCode)
             params.put("statusText", cause.statusText)
             val messageFromResponse = try {
                 val response = jacksonObjectMapper().readValue<JsonNode>(cause.responseBodyAsString)
-                response.get("message")?.textValue()
+                response.get("message")
+                    ?.textValue()
             } catch (e: Exception) {
                 "<N/A>"
             }
@@ -112,16 +112,17 @@ class RetryLogger(val logger: Logger) : RetryListenerSupport() {
         }
 
         val message = StringBuilder("Request failed. ")
-        params.map { "${it.key}=${it.value}" }.joinTo(message, ", ")
+        params.map { "${it.key}=${it.value}" }
+            .joinTo(message, ", ")
         logger.warn(message.toString())
     }
 
     companion object {
         @JvmStatic
         fun getTokenSnippetFromAuthHeader(headers: HttpHeaders) =
-                headers.get(HttpHeaders.AUTHORIZATION)
-                        ?.firstOrNull()
-                        ?.split(" ")
-                        ?.get(1)?.let { it.substring(0, min(it.length, 5)) }
+            headers.get(HttpHeaders.AUTHORIZATION)
+                ?.firstOrNull()
+                ?.split(" ")
+                ?.get(1)?.let { it.substring(0, min(it.length, 5)) }
     }
 }

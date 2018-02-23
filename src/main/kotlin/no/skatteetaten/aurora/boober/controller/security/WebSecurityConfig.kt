@@ -17,23 +17,28 @@ import javax.servlet.http.HttpServletRequest
 
 @EnableWebSecurity
 class WebSecurityConfig(
-        val authenticationManager: BearerAuthenticationManager,
-        @Value("\${management.port}") val managementPort: Int
+    val authenticationManager: BearerAuthenticationManager,
+    @Value("\${management.port}") val managementPort: Int
 ) : WebSecurityConfigurerAdapter() {
 
     private val logger = LoggerFactory.getLogger(WebSecurityConfig::class.java)
 
     override fun configure(http: HttpSecurity) {
 
-        http.csrf().disable()
+        http.csrf()
+            .disable()
 
         http.authenticationProvider(preAuthenticationProvider())
-                .addFilter(requestHeaderAuthenticationFilter())
-                .authorizeRequests()
-                .requestMatchers(forPort(managementPort)).permitAll()
-                .antMatchers("/v1/clientconfig").permitAll()
-                .antMatchers("/v1/auroraconfignames").permitAll()
-                .anyRequest().authenticated()
+            .addFilter(requestHeaderAuthenticationFilter())
+            .authorizeRequests()
+            .requestMatchers(forPort(managementPort))
+            .permitAll()
+            .antMatchers("/v1/clientconfig")
+            .permitAll()
+            .antMatchers("/v1/auroraconfignames")
+            .permitAll()
+            .anyRequest()
+            .authenticated()
     }
 
     private fun forPort(port: Int) = RequestMatcher { request: HttpServletRequest -> port == request.localPort }
@@ -44,8 +49,9 @@ class WebSecurityConfig(
 
             val principal: JsonNode? = it.principal as JsonNode?
             val username: String = principal?.openshiftName
-                    ?: throw IllegalArgumentException("Unable to determine username from response")
-            val fullName: String? = principal.get("fullName")?.asText()
+                ?: throw IllegalArgumentException("Unable to determine username from response")
+            val fullName: String? = principal.get("fullName")
+                ?.asText()
 
             MDC.put("user", username)
             User(username, it.credentials as String, fullName, it.authorities).also {

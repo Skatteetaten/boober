@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 
-
 fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean): String {
 
     val fields = deploymentSpec.fields
@@ -27,24 +26,22 @@ fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSp
         } else {
             val nextObject = indents + "$key: {\n"
             val nextObjectResult = entry.value
-                    .entries
-                    .filter { defaultKeys.indexOf(it.key) == -1 }
-                    .fold(nextObject) { res, e ->
-                        res + renderJson(level + 1, "", e as Map.Entry<String, Map<String, Any?>>)
-                    }
+                .entries
+                .filter { defaultKeys.indexOf(it.key) == -1 }
+                .fold(nextObject) { res, e ->
+                    res + renderJson(level + 1, "", e as Map.Entry<String, Map<String, Any?>>)
+                }
             result + nextObjectResult + indents + "}\n"
         }
     }
-
 
     val filteredFields = if (includeDefaults) fields else filterDefaultFields(fields)
 
 
     return filteredFields.entries
-            .fold("{\n") { result, entry ->
-                renderJson(1, result, entry)
-            } + "}"
-
+        .fold("{\n") { result, entry ->
+            renderJson(1, result, entry)
+        } + "}"
 }
 
 fun findMaxKeyLength(fields: Map<String, Any>, indent: Int, accumulated: Int = 0): Int {
@@ -58,35 +55,34 @@ fun findMaxKeyLength(fields: Map<String, Any>, indent: Int, accumulated: Int = 0
     }.max()?.let { it + 1 } ?: 0
 }
 
-
 fun findMaxValueLength(fields: Map<String, Any>): Int {
     return fields.map {
         val value = it.value as Map<String, Any>
         if (value.containsKey("value")) {
-            value["value"].toString().length
+            value["value"].toString()
+                .length
         } else {
             findMaxValueLength(value)
         }
     }.max() ?: 0
 }
 
-
 fun filterDefaultFields(fields: Map<String, Map<String, Any?>>): Map<String, Map<String, Any?>> {
 
     return fields
-            .filter {
-                it.value["source"].toString() != "default"
+        .filter {
+            it.value["source"].toString() != "default"
+        }
+        .mapValues {
+            if (it.value.containsKey("source")) {
+                it.value
+            } else {
+                filterDefaultFields(it.value as Map<String, Map<String, Any?>>)
             }
-            .mapValues {
-                if (it.value.containsKey("source")) {
-                    it.value
-                } else {
-                    filterDefaultFields(it.value as Map<String, Map<String, Any?>>)
-                }
-            }.filter {
-        !it.value.isEmpty()
-    }
-
+        }
+        .filter {
+            !it.value.isEmpty()
+        }
 }
 
 

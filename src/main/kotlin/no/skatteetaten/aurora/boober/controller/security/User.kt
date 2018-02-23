@@ -4,12 +4,11 @@ import org.springframework.security.core.GrantedAuthority
 import kotlin.math.min
 import org.springframework.security.core.userdetails.User as SpringSecurityUser
 
-
 class User(
-        username: String,
-        val token: String,
-        val fullName: String? = null,
-        grantedAuthorities: Collection<GrantedAuthority> = listOf()
+    username: String,
+    val token: String,
+    val fullName: String? = null,
+    grantedAuthorities: Collection<GrantedAuthority> = listOf()
 ) : SpringSecurityUser(username, token, true, true, true, true, grantedAuthorities.toList()) {
 
     fun hasRole(role: String): Boolean {

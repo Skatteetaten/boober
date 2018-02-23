@@ -17,7 +17,7 @@ import java.util.regex.Pattern
 
 @Component
 class BearerAuthenticationManager(
-        val openShiftClient: OpenShiftClient
+    val openShiftClient: OpenShiftClient
 ) : AuthenticationManager {
 
     val logger: Logger = LoggerFactory.getLogger(BearerAuthenticationManager::class.java)
@@ -44,15 +44,16 @@ class BearerAuthenticationManager(
         // We need to set isAuthenticated to false to ensure that the http authenticationProvider is also called
         // (don't end the authentication chain).
         return PreAuthenticatedAuthenticationToken(openShiftUser, token, grantedAuthorities)
-                .apply { isAuthenticated = false }
+            .apply { isAuthenticated = false }
     }
 
     private fun getGrantedAuthoritiesForUser(openShiftUser: JsonNode?): List<SimpleGrantedAuthority> {
         val username: String = openShiftUser?.openshiftName
-                ?: throw IllegalArgumentException("Unable to determine username from response")
+            ?: throw IllegalArgumentException("Unable to determine username from response")
 
-        return openShiftClient.getGroups().getGroupsForUser(username)
-                .map { SimpleGrantedAuthority(it) }
+        return openShiftClient.getGroups()
+            .getGroupsForUser(username)
+            .map { SimpleGrantedAuthority(it) }
     }
 
     private fun getOpenShiftUser(token: String): JsonNode {

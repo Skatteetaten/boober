@@ -10,18 +10,17 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultResults
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 
-
 fun findAndCreateMounts(deploymentSpec: AuroraDeploymentSpec, provisioningResult: ProvisioningResult?): List<Mount> {
 
     val configMounts = createMountsFromDeploymentSpec(deploymentSpec)
 
     val vaultMounts: List<Mount> = provisioningResult?.vaultResults
-            ?.let { populateVaultMounts(deploymentSpec, it) }
-            .orEmpty()
+        ?.let { populateVaultMounts(deploymentSpec, it) }
+        .orEmpty()
 
     val databaseMounts = provisioningResult?.schemaProvisionResults
-            ?.let { createDatabaseMounts(deploymentSpec, it) }
-            .orEmpty()
+        ?.let { createDatabaseMounts(deploymentSpec, it) }
+        .orEmpty()
 
     return vaultMounts + configMounts + databaseMounts
 }
@@ -31,23 +30,24 @@ private fun createMountsFromDeploymentSpec(deploymentSpec: AuroraDeploymentSpec)
     val configMount = deploymentSpec.volume?.config?.let {
 
         Mount(path = "/u01/config/configmap",
-                type = MountType.ConfigMap,
-                volumeName = deploymentSpec.name,
-                mountName = "config",
-                exist = false,
-                content = it)
+            type = MountType.ConfigMap,
+            volumeName = deploymentSpec.name,
+            mountName = "config",
+            exist = false,
+            content = it)
     }
 
     val certMount = deploymentSpec.deploy?.certificateCn?.let {
         Mount(path = "/u01/secrets/app/${deploymentSpec.name}-cert",
-                type = MountType.Secret,
-                volumeName = "${deploymentSpec.name}-cert",
-                mountName = "${deploymentSpec.name}-cert",
-                exist = true,
-                content = null)
+            type = MountType.Secret,
+            volumeName = "${deploymentSpec.name}-cert",
+            mountName = "${deploymentSpec.name}-cert",
+            exist = true,
+            content = null)
         //TODO: Add sprocket content here
     }
-    return listOf<Mount>().addIfNotNull(configMount).addIfNotNull(certMount)
+    return listOf<Mount>().addIfNotNull(configMount)
+        .addIfNotNull(certMount)
 }
 
 private fun populateVaultMounts(deploymentSpec: AuroraDeploymentSpec, vaultResults: VaultResults): List<Mount> {
@@ -59,22 +59,23 @@ private fun populateVaultMounts(deploymentSpec: AuroraDeploymentSpec, vaultResul
                 vaultResults.getVaultData(it.secretVaultName)
             else it.content
             it.copy(
-                    volumeName = it.volumeName.ensureStartWith(deploymentSpec.name, "-"),
-                    content = content
+                volumeName = it.volumeName.ensureStartWith(deploymentSpec.name, "-"),
+                content = content
             )
         }
     } ?: emptyList()
 
     val secretVaultMount = deploymentSpec.volume?.secretVaultName?.let {
         Mount(path = "/u01/config/secret",
-                type = MountType.Secret,
-                volumeName = deploymentSpec.name,
-                mountName = "secrets",
-                exist = false,
-                content = vaultResults.getVaultData(it),
-                secretVaultName = it)
+            type = MountType.Secret,
+            volumeName = deploymentSpec.name,
+            mountName = "secrets",
+            exist = false,
+            content = vaultResults.getVaultData(it),
+            secretVaultName = it)
     }
-    val allVaultMounts = listOf<Mount>().addIfNotNull(secretVaultMount).addIfNotNull(mounts)
+    val allVaultMounts = listOf<Mount>().addIfNotNull(secretVaultMount)
+        .addIfNotNull(mounts)
     allVaultMounts.map {
 
     }
@@ -89,11 +90,11 @@ private fun createDatabaseMounts(deploymentSpec: AuroraDeploymentSpec,
         val mountPath = "${it.request.schemaName}-db".toLowerCase()
         val volumeName = "${deploymentSpec.name}-${it.request.schemaName}-db".toLowerCase()
         Mount(path = "/u01/secrets/app/$mountPath",
-                type = MountType.Secret,
-                mountName = mountPath,
-                volumeName = volumeName,
-                exist = true,
-                content = null)
+            type = MountType.Secret,
+            mountName = mountPath,
+            volumeName = volumeName,
+            exist = true,
+            content = null)
     }
 
     return databaseMounts

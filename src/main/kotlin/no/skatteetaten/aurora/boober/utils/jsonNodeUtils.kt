@@ -9,7 +9,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 
-
 fun JsonNode.findAllPointers(maxLevel: Int): List<String> {
 
     fun inner(root: String, node: ObjectNode): List<String> {
@@ -37,15 +36,17 @@ fun JsonNode.findAllPointers(maxLevel: Int): List<String> {
 }
 
 val JsonNode.openshiftKind: String
-    get() = this.get("kind")?.asText()?.toLowerCase() ?: throw IllegalArgumentException("Kind must be set in file=$this")
+    get() = this.get("kind")?.asText()?.toLowerCase()
+        ?: throw IllegalArgumentException("Kind must be set in file=$this")
 
 val JsonNode.openshiftName: String
     get() = if (this.openshiftKind == "deploymentrequest") {
-        this.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource kind=${this.openshiftKind}")
+        this.get("name")?.asText()
+            ?: throw IllegalArgumentException("name not specified for resource kind=${this.openshiftKind}")
     } else {
-        this.get("metadata")?.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource kind=${this.openshiftKind}")
+        this.get("metadata")?.get("name")?.asText()
+            ?: throw IllegalArgumentException("name not specified for resource kind=${this.openshiftKind}")
     }
-
 
 fun JsonNode.updateField(source: JsonNode, root: String, field: String, required: Boolean = false) {
     val sourceField = source.at("$root/$field")
@@ -75,8 +76,8 @@ fun JsonNode.mergeField(source: ObjectNode, root: String, field: String) {
 
     val mergedObject = sourceObject.deepCopy()
     this.at(jsonPtrExpr)
-            .takeIf { it is ObjectNode }
-            ?.also { mergedObject.setAll(it as ObjectNode) }
+        .takeIf { it is ObjectNode }
+        ?.also { mergedObject.setAll(it as ObjectNode) }
 
     (this.at(root) as ObjectNode).set(field, mergedObject)
 }
@@ -87,7 +88,6 @@ fun JsonNode?.startsWith(pattern: String, message: String): Exception? {
     }
     if (!this.textValue().startsWith(pattern)) {
         return IllegalArgumentException(message)
-
     }
 
     return null

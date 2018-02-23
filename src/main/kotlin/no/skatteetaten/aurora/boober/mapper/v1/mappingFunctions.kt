@@ -6,11 +6,14 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 fun List<AuroraConfigFile>.findSubKeys(name: String): Set<String> {
     return this.flatMap {
         if (it.asJsonNode.has(name)) {
-            it.asJsonNode[name].fieldNames().asSequence().toList()
+            it.asJsonNode[name].fieldNames()
+                .asSequence()
+                .toList()
         } else {
             emptyList()
         }
-    }.toSet()
+    }
+        .toSet()
 }
 
 fun List<AuroraConfigFile>.findConfigFieldHandlers(): List<AuroraConfigFieldHandler> {
@@ -22,10 +25,12 @@ fun List<AuroraConfigFile>.findConfigFieldHandlers(): List<AuroraConfigFieldHand
         //find all unique keys in a configFile
         val keys = this.flatMap { ac ->
             ac.asJsonNode.at("/$name/$configFileName")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
-        }.toSet()
+        }
+            .toSet()
 
         configFileName to keys
-    }.toMap()
+    }
+        .toMap()
 
     return configKeys.flatMap { configFile ->
         val value = configFile.value

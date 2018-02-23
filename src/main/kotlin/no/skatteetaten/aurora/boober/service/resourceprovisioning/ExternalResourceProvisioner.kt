@@ -1,18 +1,17 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.service.*
 import org.springframework.stereotype.Service
 
 class ProvisioningResult(
-        val schemaProvisionResults: SchemaProvisionResults?,
-        val vaultResults: VaultResults?
+    val schemaProvisionResults: SchemaProvisionResults?,
+    val vaultResults: VaultResults?
 )
 
 @Service
 class ExternalResourceProvisioner(
-        val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
-        val vaultProvider: VaultProvider
+    val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
+    val vaultProvider: VaultProvider
 ) {
 
     fun provisionResources(deploymentSpec: AuroraDeploymentSpec): ProvisioningResult {
@@ -55,7 +54,8 @@ class ExternalResourceProvisioner(
         protected fun createVaultRequests(deploymentSpec: AuroraDeploymentSpec): List<VaultRequest> {
             val volume = deploymentSpec.volume ?: return listOf()
 
-            val secretVaultNames = volume.mounts?.mapNotNull { it.secretVaultName }.orEmpty()
+            val secretVaultNames = volume.mounts?.mapNotNull { it.secretVaultName }
+                .orEmpty()
             val secretVaultKeys = volume.secretVaultKeys
             val allVaultNames = volume.secretVaultName?.let { secretVaultNames + listOf(it) } ?: secretVaultNames
 
