@@ -170,11 +170,13 @@ class DeployService(
 
         val imageStream = findImageStreamResponse(openShiftResponses)
         val deploymentConfig = findDeploymentConfigResponse(openShiftResponses)
-                ?: throw IllegalArgumentException("Missing DeploymentConfig") // TODO should this issue be handled differently?
+                ?: throw IllegalArgumentException("Missing DeploymentConfig")
         val redeployResult = if (deploymentSpec.type == TemplateType.development) {
             RedeployService.RedeployResult(message = "No deploy was made with ${deploymentSpec.type} type")
         } else {
-            redeployService.triggerRedeploy(deploymentConfig, imageStream)
+            val namespace = deploymentConfig.metadata.namespace
+            val name = deploymentConfig.metadata.name
+            redeployService.triggerRedeploy(namespace, name, imageStream)
         }
 
         if (!redeployResult.success) {

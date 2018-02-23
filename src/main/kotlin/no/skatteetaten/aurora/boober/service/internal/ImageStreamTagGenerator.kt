@@ -11,6 +11,7 @@ class ImageStreamTagGenerator {
     fun create(imageStreamName: String, tagName: String): ImageStreamTag {
         return imageStreamTag {
             metadata {
+                apiVersion = "v1"
                 name = tagName
             }
             tag {

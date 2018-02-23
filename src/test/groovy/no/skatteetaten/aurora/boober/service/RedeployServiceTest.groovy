@@ -2,12 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
 
-import io.fabric8.kubernetes.api.model.ObjectMeta
 import io.fabric8.kubernetes.api.model.ObjectReference
-import io.fabric8.openshift.api.model.DeploymentConfig
-import io.fabric8.openshift.api.model.DeploymentConfigSpec
-import io.fabric8.openshift.api.model.DeploymentTriggerImageChangeParams
-import io.fabric8.openshift.api.model.DeploymentTriggerPolicy
 import io.fabric8.openshift.api.model.ImageStream
 import io.fabric8.openshift.api.model.ImageStreamSpec
 import io.fabric8.openshift.api.model.ImageStreamStatus
@@ -23,7 +18,6 @@ import spock.lang.Specification
 
 class RedeployServiceTest extends Specification {
   def imageStream = createImageStream('123')
-  def deploymentConfig = createDeploymentConfig()
 
   def openShiftClient = Mock(OpenShiftClient)
   def redeployService = new RedeployService(openShiftClient, Mock(OpenShiftCommandBuilder), Mock(OpenShiftObjectGenerator))
@@ -35,7 +29,7 @@ class RedeployServiceTest extends Specification {
 
   def "Trigger redeploy given deployment request return success"() {
     when:
-      def response = redeployService.triggerRedeploy(deploymentConfig, null)
+      def response = redeployService.triggerRedeploy('affiliation', 'name', null)
 
     then:
       response.success
@@ -44,7 +38,7 @@ class RedeployServiceTest extends Specification {
 
   def "Trigger redeploy given dc and is and image is already imported return success"() {
     when:
-      def response = redeployService.triggerRedeploy(deploymentConfig, imageStream)
+      def response = redeployService.triggerRedeploy('affiliation', 'name', imageStream)
 
     then:
       1 * openShiftClient.getImageStream('affiliation', 'name') >> createOpenShiftResponse(imageStream)
@@ -54,7 +48,7 @@ class RedeployServiceTest extends Specification {
 
   def "Trigger redeploy given dc and is and image is not imported return success"() {
     when:
-      def response = redeployService.triggerRedeploy(deploymentConfig, imageStream)
+      def response = redeployService.triggerRedeploy('affiliation', 'name', imageStream)
 
     then:
       1 * openShiftClient.getImageStream('affiliation', 'name') >> createOpenShiftResponse(createImageStream('234'))
@@ -67,13 +61,6 @@ class RedeployServiceTest extends Specification {
         status: new ImageStreamStatus(tags: [new NamedTagEventList(items: [new TagEvent(image: imageHash)])]),
         spec: new ImageStreamSpec(
             tags: [new TagReference(name: 'tag-name', from: new ObjectReference(name: 'imagestream-name'))]))
-  }
-
-  private static DeploymentConfig createDeploymentConfig() {
-    def imageChangeParams = new DeploymentTriggerImageChangeParams(
-        from: new ObjectReference(name: 'deploymentconfig-name:version'))
-    return new DeploymentConfig(metadata: new ObjectMeta(namespace: 'affiliation', name: 'name'),
-        spec: new DeploymentConfigSpec(triggers: [new DeploymentTriggerPolicy(imageChangeParams: imageChangeParams)]))
   }
 
   private OpenShiftResponse createOpenShiftResponse(def imageStream) {
