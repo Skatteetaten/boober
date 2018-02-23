@@ -1,0 +1,15 @@
+{
+  "version": "1.0.3-SNAPSHOT",
+  "config": {
+    "FOO": "baaaar",
+    "1.properties": {
+      "BAZ": "BAR"
+    }
+  },
+  "liveness": true,
+  "readiness": false,
+  "deployStrategy": {
+    "type": "recreate"
+  },
+  "pause": true
+}

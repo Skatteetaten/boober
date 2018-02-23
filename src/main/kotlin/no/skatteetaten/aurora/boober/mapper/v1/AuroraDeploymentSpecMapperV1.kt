@@ -25,7 +25,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                         "Environment must consist of lower case alphanumeric characters or '-'. It must be no longer than 52 characters.")
             },
                     defaultSource = "folderName",
-                    defaultValue = applicationId.environment
+                    defaultValue = applicationId.environment.substringAfterLast("/")
             ),
             AuroraConfigFieldHandler("name",
                     defaultValue = applicationId.application,

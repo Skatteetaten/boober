@@ -1,0 +1,8 @@
+{
+  "schemaVersion": "v1",
+  "type": "development",
+  "cluster": "utv",
+  "permissions": {
+    "adminServiceAccount": "system:serviceaccount:paas:jenkinsbuilder"
+  }
+}

@@ -1,0 +1,14 @@
+PUT {{apiUrl}}/v1/apply/hirarki
+Authorization: Bearer {{token}}
+Content-Type: application/json
+If-Match: "ae584afdfdebe2dae1e87c506aa2c200"
+
+{
+  "applicationIds": [
+    {
+    "environment" : "foo/bar",
+    "application" : "whoami"
+    }
+  ]
+}
+###
