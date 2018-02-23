@@ -28,24 +28,21 @@ class RedeployService(val openShiftClient: OpenShiftClient,
     }
 
     fun triggerRedeploy(deploymentConfig: DeploymentConfig, imageStream: ImageStream?): RedeployResult {
+        val namespace = deploymentConfig.metadata.namespace
+        val name = deploymentConfig.metadata.name
         return if (imageStream == null) {
-            requestDeployment(deploymentConfig)
+            requestDeployment(namespace, name)
         } else {
-            rolloutDeployment(imageStream, deploymentConfig)
+            rolloutDeployment(imageStream, namespace, name)
         }
     }
 
-    fun requestDeployment(deploymentConfig: DeploymentConfig): RedeployResult {
-        val namespace = deploymentConfig.metadata.namespace
-        val name = deploymentConfig.metadata.name
+    fun requestDeployment(namespace: String, name: String): RedeployResult {
         val deploymentRequestResponse = performDeploymentRequest(namespace, name)
         return RedeployResult.fromOpenShiftResponses(listOf(deploymentRequestResponse))
     }
 
-    fun rolloutDeployment(imageStream: ImageStream, deploymentConfig: DeploymentConfig): RedeployResult {
-        val namespace = deploymentConfig.metadata.namespace
-        val name = deploymentConfig.metadata.name
-
+    fun rolloutDeployment(imageStream: ImageStream, namespace: String, name: String): RedeployResult {
         val openShiftResponses = mutableListOf<OpenShiftResponse>()
 
         val imageStreamTagResponse = performImageStreamTag(namespace, imageStream.findImageName(), imageStream.findTagName())

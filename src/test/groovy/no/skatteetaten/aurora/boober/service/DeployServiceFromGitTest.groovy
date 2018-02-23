@@ -75,7 +75,8 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
     given:
       def updatedImageStream = new ImageStream(
           status: new ImageStreamStatus(tags: [new NamedTagEventList(items: [new TagEvent(image: '123')])]))
-      openShiftClient.getImageStream('aos-booberdev', 'reference') >> ImageStreamUtilsKt.toJsonNode(updatedImageStream)
+      openShiftClient.getImageStream('aos-booberdev', 'reference') >>
+          new OpenShiftResponse(new OpenshiftCommand(OperationType.CREATE, Mock(JsonNode)), ImageStreamUtilsKt.toJsonNode(updatedImageStream))
 
 
     when:
@@ -84,13 +85,15 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
     then:
       def result = deployResults[0]
-      result.openShiftResponses.size() == 8
+      result.openShiftResponses.size() == 9
       result.openShiftResponses[7].responseBody.at("/kind").asText() == "ImageStreamTag"
+      result.openShiftResponses[8].responseBody.at("/kind").asText() == "ImageStream"
   }
 
   def "Should perform release and generate a imageStreamTag and deployRequest given the same image"() {
     given:
-      openShiftClient.getImageStream('aos-booberdev', 'reference') >> ImageStreamUtilsKt.toJsonNode(new ImageStream())
+      openShiftClient.getImageStream('aos-booberdev', 'reference') >>
+          new OpenShiftResponse(new OpenshiftCommand(OperationType.CREATE, Mock(JsonNode)), ImageStreamUtilsKt.toJsonNode(new ImageStream()))
 
     when:
       List<AuroraDeployResult> deployResults = deployService.
@@ -98,9 +101,10 @@ class DeployServiceFromGitTest extends AbstractMockedOpenShiftSpecification {
 
     then:
       def result = deployResults[0]
-      result.openShiftResponses.size() == 9
+      result.openShiftResponses.size() == 10
       result.openShiftResponses[7].responseBody.at("/kind").asText() == "ImageStreamTag"
-      result.openShiftResponses[8].responseBody.at("/kind").asText() == "DeploymentRequest"
+      result.openShiftResponses[8].responseBody.at("/kind").asText() == "ImageStream"
+      result.openShiftResponses[9].responseBody.at("/kind").asText() == "DeploymentRequest"
   }
 
   def "Should perform release of paused env and not generate a redeploy request"() {

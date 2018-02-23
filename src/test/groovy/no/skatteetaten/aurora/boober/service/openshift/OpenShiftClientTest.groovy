@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.service.AbstractSpec
+import no.skatteetaten.aurora.boober.service.OpenShiftException
 
 class OpenShiftClientTest extends AbstractSpec {
 
@@ -68,22 +69,22 @@ class OpenShiftClientTest extends AbstractSpec {
       openShiftGroups.groupUsers['APP_PaaS_drift'] == ['k2222222', 'k1111111', 'k3333333', 'k4444444', 'y5555555', 'm6666666', 'm7777777', 'y8888888', 'y9999999']
   }
 
-  def "Get image stream given ok response return JsonNode"() {
+  def "Get image stream given ok response return success"() {
     when:
-      def imageStream = openShiftClient.getImageStream('namespace', 'name')
+      def openShiftResponse = openShiftClient.getImageStream('namespace', 'name')
 
     then:
-      1 * userClient.get('/oapi/v1/namespaces/namespace/imagestreams/name', _, _) >> ResponseEntity.ok(Mock(JsonNode))
-      imageStream != null
+      1 * userClient.get('imagestream', 'namespace', 'name', true) >> ResponseEntity.ok(Mock(JsonNode))
+      openShiftResponse.success
   }
 
-  def "Get image stream given exception return null"() {
+  def "Get image stream given exception return failed"() {
     when:
-      def imageStream = openShiftClient.getImageStream('namespace', 'name')
+      def openShiftResponse = openShiftClient.getImageStream('namespace', 'name')
 
     then:
-      1 * userClient.get('/oapi/v1/namespaces/namespace/imagestreams/name', _, _) >>
-          { throw new RuntimeException('Test exception') }
-      imageStream == null
+      1 * userClient.get('imagestream', 'namespace', 'name', true) >>
+          { throw new OpenShiftException('Test exception', new RuntimeException()) }
+      !openShiftResponse.success
   }
 }

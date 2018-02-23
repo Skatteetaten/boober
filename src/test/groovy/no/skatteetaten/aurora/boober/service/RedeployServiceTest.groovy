@@ -30,8 +30,7 @@ class RedeployServiceTest extends Specification {
 
   void setup() {
     openShiftClient.performOpenShiftCommand('affiliation', null) >>
-        new OpenShiftResponse(new OpenshiftCommand(OperationType.CREATE, Mock(JsonNode)),
-            ImageStreamUtilsKt.toJsonNode(imageStream))
+        createOpenShiftResponse(imageStream)
   }
 
   def "Trigger redeploy given deployment request return success"() {
@@ -48,22 +47,19 @@ class RedeployServiceTest extends Specification {
       def response = redeployService.triggerRedeploy(deploymentConfig, imageStream)
 
     then:
-      1 * openShiftClient.getImageStream('affiliation', 'name') >> ImageStreamUtilsKt.toJsonNode(imageStream)
+      1 * openShiftClient.getImageStream('affiliation', 'name') >> createOpenShiftResponse(imageStream)
       response.success
-      response.openShiftResponses.size() == 2
+      response.openShiftResponses.size() == 3
   }
 
   def "Trigger redeploy given dc and is and image is not imported return success"() {
-    given:
-      def updatedImageStream = createImageStream('234')
-
     when:
       def response = redeployService.triggerRedeploy(deploymentConfig, imageStream)
 
     then:
-      1 * openShiftClient.getImageStream('affiliation', 'name') >> ImageStreamUtilsKt.toJsonNode(updatedImageStream)
+      1 * openShiftClient.getImageStream('affiliation', 'name') >> createOpenShiftResponse(createImageStream('234'))
       response.success
-      response.openShiftResponses.size() == 1
+      response.openShiftResponses.size() == 2
   }
 
   private static ImageStream createImageStream(def imageHash) {
@@ -78,5 +74,11 @@ class RedeployServiceTest extends Specification {
         from: new ObjectReference(name: 'deploymentconfig-name:version'))
     return new DeploymentConfig(metadata: new ObjectMeta(namespace: 'affiliation', name: 'name'),
         spec: new DeploymentConfigSpec(triggers: [new DeploymentTriggerPolicy(imageChangeParams: imageChangeParams)]))
+  }
+
+  private OpenShiftResponse createOpenShiftResponse(def imageStream) {
+    return new OpenShiftResponse(
+        new OpenshiftCommand(OperationType.CREATE, Mock(JsonNode)), ImageStreamUtilsKt.toJsonNode(imageStream)
+    )
   }
 }
