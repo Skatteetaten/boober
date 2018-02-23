@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-
 import com.fasterxml.jackson.databind.JsonNode
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -14,11 +13,11 @@ import java.net.URI
 data class TagResult(val cmd: TagCommand, val response: ResponseEntity<JsonNode>, val success: Boolean)
 
 data class TagCommand @JvmOverloads constructor(
-        val name: String,
-        val from: String,
-        val to: String,
-        val fromRegistry: String,
-        val toRegistry: String = fromRegistry)
+    val name: String,
+    val from: String,
+    val to: String,
+    val fromRegistry: String,
+    val toRegistry: String = fromRegistry)
 
 @Service
 class DockerService(val httpClient: RestTemplate) {
@@ -40,7 +39,6 @@ class DockerService(val httpClient: RestTemplate) {
         val req = RequestEntity<JsonNode>(headers, HttpMethod.GET, manifestURI)
 
         return httpClient.exchange(req, JsonNode::class.java)
-
     }
 
     fun putManifest(registryUrl: String, name: String, tag: String, payload: JsonNode): ResponseEntity<JsonNode> {
@@ -49,7 +47,6 @@ class DockerService(val httpClient: RestTemplate) {
         headers.contentType = DOCKER_MANIFEST_V2
         val req = RequestEntity<JsonNode>(payload, headers, HttpMethod.PUT, manifestURI)
         return httpClient.exchange(req, JsonNode::class.java)
-
     }
 
     fun generateManifestURI(registryUrl: String, name: String, tag: String) = URI("https://$registryUrl/v2/$name/manifests/$tag")

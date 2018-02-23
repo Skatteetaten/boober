@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
@@ -17,6 +16,7 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
 import no.skatteetaten.aurora.boober.service.openshift.UserGroup
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory

@@ -7,22 +7,20 @@ import no.skatteetaten.aurora.boober.model.AuroraTemplate
 
 class AuroraTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>) {
 
-
     val parameterHandlers = findParameters()
 
     val handlers = parameterHandlers + listOf(
-            AuroraConfigFieldHandler("template", validator = { json ->
+      AuroraConfigFieldHandler("template", validator = { json ->
 
-                val template = json?.textValue()
+          val template = json?.textValue()
 
-                if (template == null) {
-                    IllegalArgumentException("Template is required")
-                } else {
-                    null
-                }
-            })
+          if (template == null) {
+              IllegalArgumentException("Template is required")
+          } else {
+              null
+          }
+      })
     )
-
 
     fun findParameters(): List<AuroraConfigFieldHandler> {
 
@@ -35,8 +33,8 @@ class AuroraTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>) {
 
     fun template(auroraConfigFields: AuroraConfigFields): AuroraTemplate {
         return AuroraTemplate(
-                parameters = auroraConfigFields.getParameters(parameterHandlers),
-                template = auroraConfigFields.extract("template")
+          parameters = auroraConfigFields.getParameters(parameterHandlers),
+          template = auroraConfigFields.extract("template")
         )
     }
 }

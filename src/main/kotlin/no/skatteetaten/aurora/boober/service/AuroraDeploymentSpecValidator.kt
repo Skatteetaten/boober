@@ -12,12 +12,11 @@ import org.springframework.stereotype.Service
 
 @Service
 class AuroraDeploymentSpecValidator(
-        val openShiftClient: OpenShiftClient,
-        val openShiftTemplateProcessor: OpenShiftTemplateProcessor,
-        val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
-        val vaultService: VaultService,
-        @Value("\${openshift.cluster}") val cluster: String) {
-
+    val openShiftClient: OpenShiftClient,
+    val openShiftTemplateProcessor: OpenShiftTemplateProcessor,
+    val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
+    val vaultService: VaultService,
+    @Value("\${openshift.cluster}") val cluster: String) {
 
     val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpecValidator::class.java)
 
@@ -33,10 +32,10 @@ class AuroraDeploymentSpecValidator(
     protected fun validateVaultExistence(deploymentSpec: AuroraDeploymentSpec) {
 
         val vaultNames = (deploymentSpec.volume?.mounts
-                ?.filter { it.type == MountType.Secret }
-                ?.mapNotNull { it.secretVaultName }
-                ?: emptyList())
-                .toMutableList()
+          ?.filter { it.type == MountType.Secret }
+          ?.mapNotNull { it.secretVaultName }
+          ?: emptyList())
+          .toMutableList()
         deploymentSpec.volume?.secretVaultName?.let { vaultNames.add(it) }
 
         vaultNames.forEach {
@@ -51,20 +50,20 @@ class AuroraDeploymentSpecValidator(
         if (deploymentSpec.cluster != cluster) return
         val databases = deploymentSpec.deploy?.database ?: return
         databases.mapNotNull { it.id }
-                .forEach {
-                    try {
-                        databaseSchemaProvisioner.findSchemaById(it)
-                    } catch (e: Exception) {
-                        throw AuroraDeploymentSpecValidationException("Database schema with id=$it does not exist")
-                    }
-                }
+          .forEach {
+              try {
+                  databaseSchemaProvisioner.findSchemaById(it)
+              } catch (e: Exception) {
+                  throw AuroraDeploymentSpecValidationException("Database schema with id=$it does not exist")
+              }
+          }
     }
 
     private fun validateAdminGroups(deploymentSpec: AuroraDeploymentSpec) {
 
         val adminGroups: Set<String> = deploymentSpec.environment.permissions.admin.groups ?: setOf()
         adminGroups.takeIf { it.isEmpty() }
-                ?.let { throw AuroraDeploymentSpecValidationException("permissions.admin.groups cannot be empty") }
+          ?.let { throw AuroraDeploymentSpecValidationException("permissions.admin.groups cannot be empty") }
 
         val openShiftGroups = openShiftClient.getGroups()
 
@@ -78,16 +77,16 @@ class AuroraDeploymentSpecValidator(
 
         deploymentSpec.localTemplate?.let {
             openShiftTemplateProcessor.validateTemplateParameters(it.templateJson, it.parameters ?: emptyMap())
-                    .takeIf { it.isNotEmpty() }
-                    ?.let { throw AuroraDeploymentSpecValidationException(it.joinToString(". ").trim()) }
+              .takeIf { it.isNotEmpty() }
+              ?.let { throw AuroraDeploymentSpecValidationException(it.joinToString(". ").trim()) }
         }
 
         deploymentSpec.template?.let {
             val templateJson = openShiftClient.getTemplate(it.template)
-                    ?: throw AuroraDeploymentSpecValidationException("Template ${it.template} does not exist")
+              ?: throw AuroraDeploymentSpecValidationException("Template ${it.template} does not exist")
             openShiftTemplateProcessor.validateTemplateParameters(templateJson, it.parameters ?: emptyMap())
-                    .takeIf { it.isNotEmpty() }
-                    ?.let { throw AuroraDeploymentSpecValidationException(it.joinToString(". ").trim()) }
+              .takeIf { it.isNotEmpty() }
+              ?.let { throw AuroraDeploymentSpecValidationException(it.joinToString(". ").trim()) }
         }
     }
 }

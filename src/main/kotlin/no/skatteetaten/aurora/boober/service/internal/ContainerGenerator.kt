@@ -62,10 +62,9 @@ class ContainerGenerator {
         }
     }
 
-
     private fun fromAdcResource(resource: AuroraDeploymentConfigResource): Map<String, Quantity> = mapOf(
-            "cpu" to quantity(resource.cpu),
-            "memory" to quantity(resource.memory))
+      "cpu" to quantity(resource.cpu),
+      "memory" to quantity(resource.memory))
 
     private fun quantity(str: String) = QuantityBuilder().withAmount(str).build()
 
@@ -98,24 +97,24 @@ class ContainerGenerator {
         }) + instance.volumeMounts
 
         instance.env = listOf(
-                envVar {
-                    name = "POD_NAME"
-                    valueFrom {
-                        fieldRef {
-                            apiVersion = "v1"
-                            fieldPath = "metadata.name"
-                        }
-                    }
-                },
-                envVar {
-                    name = "POD_NAMESPACE"
-                    valueFrom {
-                        fieldRef {
-                            apiVersion = "v1"
-                            fieldPath = "metadata.namespace"
-                        }
-                    }
-                }
+          envVar {
+              name = "POD_NAME"
+              valueFrom {
+                  fieldRef {
+                      apiVersion = "v1"
+                      fieldPath = "metadata.name"
+                  }
+              }
+          },
+          envVar {
+              name = "POD_NAMESPACE"
+              valueFrom {
+                  fieldRef {
+                      apiVersion = "v1"
+                      fieldPath = "metadata.namespace"
+                  }
+              }
+          }
         ) + instance.env
         return instance
     }

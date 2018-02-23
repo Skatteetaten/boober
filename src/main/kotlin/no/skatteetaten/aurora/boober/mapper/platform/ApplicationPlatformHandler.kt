@@ -16,7 +16,7 @@ import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterNullValues
 import org.apache.commons.lang.StringEscapeUtils
 
-abstract class ApplicationPlatformHandler(val name:String) {
+abstract class ApplicationPlatformHandler(val name: String) {
     open fun handlers(handlers: Set<AuroraConfigFieldHandler>): Set<AuroraConfigFieldHandler> = handlers
 
     abstract fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?): AuroraDeployment
@@ -32,16 +32,16 @@ abstract class ApplicationPlatformHandler(val name:String) {
         val certEnv = auroraDeploymentSpec.deploy?.certificateCn?.let {
             val baseUrl = "/u01/secrets/app/${auroraDeploymentSpec.name}-cert"
             mapOf(
-                    "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
-                    "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
-                    "STS_KEYSTORE_DESCRIPTOR" to "$baseUrl/descriptor.properties"
+              "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
+              "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
+              "STS_KEYSTORE_DESCRIPTOR" to "$baseUrl/descriptor.properties"
             )
         } ?: mapOf()
 
         val debugEnv = auroraDeploymentSpec.deploy?.flags?.takeIf { it.debug }?.let {
             mapOf(
-                    "ENABLE_REMOTE_DEBUG" to "true",
-                    "DEBUG_PORT" to "5005"
+              "ENABLE_REMOTE_DEBUG" to "true",
+              "DEBUG_PORT" to "5005"
             )
         } ?: mapOf()
 
@@ -60,8 +60,8 @@ abstract class ApplicationPlatformHandler(val name:String) {
                 val envName = envName.replace("-", "_").toUpperCase()
 
                 return listOf(
-                        envName to "$path/info",
-                        "${envName}_PROPERTIES" to "$path/db.properties"
+                  envName to "$path/info",
+                  "${envName}_PROPERTIES" to "$path/db.properties"
                 )
             }
 
@@ -69,16 +69,14 @@ abstract class ApplicationPlatformHandler(val name:String) {
         }?.toMap() ?: mapOf()
 
         val envs = mapOf(
-                "OPENSHIFT_CLUSTER" to auroraDeploymentSpec.cluster,
-                "APP_NAME" to auroraDeploymentSpec.name
+          "OPENSHIFT_CLUSTER" to auroraDeploymentSpec.cluster,
+          "APP_NAME" to auroraDeploymentSpec.name
         ).addIfNotNull(splunkIndex) + routeName + certEnv + debugEnv + dbEnv + mountEnv + configEnv
 
         return envs.mapKeys { it.key.replace(".", "_").replace("-", "_") }
-
     }
 
     fun createAnnotations(deploy: AuroraDeploy): Map<String, String> {
-
 
         fun escapeOverrides(): String? {
             val files = deploy.overrideFiles.mapValues { jacksonObjectMapper().readValue(it.value, JsonNode::class.java) }
@@ -87,17 +85,16 @@ abstract class ApplicationPlatformHandler(val name:String) {
         }
 
         return mapOf(
-                "boober.skatteetaten.no/applicationFile" to deploy.applicationFile,
-                "console.skatteetaten.no/alarm" to deploy.flags.alarm.toString(),
-                "boober.skatteetaten.no/overrides" to escapeOverrides(),
-                "console.skatteetaten.no/management-path" to deploy.managementPath,
-                "boober.skatteetaten.no/releaseTo" to deploy.releaseTo,
-                "sprocket.sits.no/deployment-config.certificate" to deploy.certificateCn
+          "boober.skatteetaten.no/applicationFile" to deploy.applicationFile,
+          "console.skatteetaten.no/alarm" to deploy.flags.alarm.toString(),
+          "boober.skatteetaten.no/overrides" to escapeOverrides(),
+          "console.skatteetaten.no/management-path" to deploy.managementPath,
+          "boober.skatteetaten.no/releaseTo" to deploy.releaseTo,
+          "sprocket.sits.no/deployment-config.certificate" to deploy.certificateCn
         ).filterNullValues().filterValues { !it.isBlank() }
     }
 
     fun createLabels(name: String, deploy: AuroraDeploy, labels: Map<String, String>): Map<String, String> {
-
 
         val deployTag = "deployTag" to (deploy.releaseTo?.withNonBlank { it } ?: deploy.version)
         val pauseLabel = if (deploy.flags.pause) {
@@ -105,8 +102,8 @@ abstract class ApplicationPlatformHandler(val name:String) {
         } else null
 
         val allLabels = labels + mapOf(
-                "name" to name,
-                deployTag
+          "name" to name,
+          deployTag
         ).addIfNotNull(pauseLabel)
         return OpenShiftObjectLabelService.toOpenShiftLabelNameSafeMap(allLabels)
     }
@@ -119,7 +116,6 @@ abstract class ApplicationPlatformHandler(val name:String) {
         return block(this)
     }
 }
-
 
 data class AuroraContainer(val name: String,
                            val tcpPorts: Map<String, Int>,
@@ -141,7 +137,6 @@ data class AuroraDeployment(val name: String,
                             val deployStrategy: AuroraDeployStrategy,
                             val replicas: Int,
                             val serviceAccount: String?)
-
 
 enum class DeploymentState {
     Stateless, Stateful, Daemon

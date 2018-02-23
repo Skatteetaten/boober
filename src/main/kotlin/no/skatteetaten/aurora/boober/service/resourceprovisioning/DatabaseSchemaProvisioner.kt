@@ -105,11 +105,11 @@ class DatabaseSchemaProvisioner(
 
         val user = userDetailsProvider.getAuthenticatedUser()
         val labels = mapOf(
-            "affiliation" to request.affiliation,
-            "environment" to "${request.affiliation}-${request.environment}",
-            "application" to request.application,
-            "name" to request.schemaName,
-            "userId" to user.username
+          "affiliation" to request.affiliation,
+          "environment" to "${request.affiliation}-${request.environment}",
+          "application" to request.application,
+          "name" to request.schemaName,
+          "userId" to user.username
         )
 
         val (dbhSchema, responseText) = try {
@@ -186,8 +186,8 @@ class DatabaseSchemaProvisioner(
     }
 
     private fun toLabelsString(labels: Map<String, String>) = labels.filterKeys { it != "userId" }
-        .map { "${it.key}=${it.value}" }
-        .joinToString(",")
+      .map { "${it.key}=${it.value}" }
+      .joinToString(",")
 
     data class DbApiEnvelope(val status: String, val items: List<DbhSchema> = listOf())
 

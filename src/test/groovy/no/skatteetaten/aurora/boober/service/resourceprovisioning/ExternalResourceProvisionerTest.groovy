@@ -4,10 +4,6 @@ import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 
 import no.skatteetaten.aurora.boober.model.AbstractAuroraDeploymentSpecTest
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaIdRequest
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionRequest
 
 class ExternalResourceProvisionerTest extends AbstractAuroraDeploymentSpecTest {
 

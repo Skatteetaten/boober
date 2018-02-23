@@ -12,10 +12,9 @@ import org.springframework.stereotype.Service
 
 @Service
 class OpenShiftTemplateProcessor(
-        val userDetailsProvider: UserDetailsProvider,
-        val openShiftClient: OpenShiftResourceClient,
-        val mapper: ObjectMapper) {
-
+    val userDetailsProvider: UserDetailsProvider,
+    val openShiftClient: OpenShiftResourceClient,
+    val mapper: ObjectMapper) {
 
     fun generateObjects(template: ObjectNode, parameters: Map<String, String>?, aac: AuroraDeploymentSpec): List<JsonNode> {
 
@@ -27,11 +26,11 @@ class OpenShiftTemplateProcessor(
 
             //mutation in progress. stay away.
             parameters
-                    .filter { adcParameterKeys.contains(it["name"].textValue()) }
-                    .forEach {
-                        val node = it as ObjectNode
-                        node.put("value", adcParameters[it["name"].textValue()] as String)
-                    }
+              .filter { adcParameterKeys.contains(it["name"].textValue()) }
+              .forEach {
+                  val node = it as ObjectNode
+                  node.put("value", adcParameters[it["name"].textValue()] as String)
+              }
         }
 
         if (!template.has("labels")) {
@@ -50,13 +49,12 @@ class OpenShiftTemplateProcessor(
 
         labels.put("updatedBy", userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"))
 
-
         val result = openShiftClient.post("processedtemplate", namespace = aac.environment.namespace, payload = template)
 
         return result.body["objects"].asSequence().toList()
     }
 
-    fun validateTemplateParameters(templateJson: JsonNode, parameters: Map<String, String>) : List<String> {
+    fun validateTemplateParameters(templateJson: JsonNode, parameters: Map<String, String>): List<String> {
 
         val templateParameters = templateJson[PARAMETERS_ATTRIBUTE] as ArrayNode
 
@@ -68,10 +66,10 @@ class OpenShiftTemplateProcessor(
             val noDefaultValueSpecified = it[VALUE_ATTRIBUTE] == null
             isRequiredParameter && noDefaultValueSpecified
         }.map {
-            it[NAME_ATTRIBUTE].textValue()
-        }.filter {
-            !parameters.containsKey(it)
-        }
+              it[NAME_ATTRIBUTE].textValue()
+          }.filter {
+              !parameters.containsKey(it)
+          }
 
         val notMappedParameterNames = parameters.keys - templateParameterNames
 

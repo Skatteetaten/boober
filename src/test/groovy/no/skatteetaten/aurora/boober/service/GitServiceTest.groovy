@@ -1,11 +1,12 @@
 package no.skatteetaten.aurora.boober.service
 
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry
-import no.skatteetaten.aurora.AuroraMetrics
-import no.skatteetaten.aurora.boober.controller.security.User
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.ResetCommand
 import org.eclipse.jgit.revwalk.RevCommit
+
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
+import no.skatteetaten.aurora.AuroraMetrics
+import no.skatteetaten.aurora.boober.controller.security.User
 import spock.lang.Ignore
 import spock.lang.Specification
 

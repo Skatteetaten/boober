@@ -5,7 +5,6 @@ import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 import org.springframework.beans.factory.annotation.Autowired
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AbstractAuroraDeploymentSpecSpringTest

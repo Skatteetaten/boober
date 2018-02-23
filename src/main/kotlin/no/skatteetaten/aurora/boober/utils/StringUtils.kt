@@ -7,7 +7,6 @@ fun String.ensureEndsWith(endsWith: String, seperator: String = ""): String {
         return this
     }
     return "$this$seperator$endsWith"
-
 }
 
 fun String.ensureStartWith(startWith: String, seperator: String = ""): String {
@@ -15,7 +14,6 @@ fun String.ensureStartWith(startWith: String, seperator: String = ""): String {
         return this
     }
     return "$startWith$seperator$this"
-
 }
 
 fun String.removeExtension(): String = FilenameUtils.removeExtension(this)

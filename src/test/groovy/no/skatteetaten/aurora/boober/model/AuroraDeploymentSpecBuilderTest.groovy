@@ -219,7 +219,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
   def "Webseal roles supports both comma separated string and array"() {
     given:
       modify(auroraConfigJson, "utv/aos-simple.json") {
-        put("webseal", [ "roles": roleConfig ])
+        put("webseal", ["roles": roleConfig])
       }
 
     when:

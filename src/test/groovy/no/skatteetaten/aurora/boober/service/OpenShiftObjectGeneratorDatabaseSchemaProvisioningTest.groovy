@@ -39,7 +39,8 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
           [new DbhUser("VCLFVAPKGOMBCFTWEVKZDYBGVTMYDP", "yYGmRnUPBORxMoMcPptGvDYgKxmRSm", "SCHEMA")]
       )
       def responseText =
-          loadResource("resourceprovisioning/" + DatabaseSchemaProvisionerTest.simpleName, "schema_fd59dba9-7d67-4ea2-bb98-081a5df8c387.json")
+          loadResource("resourceprovisioning/" + DatabaseSchemaProvisionerTest.simpleName,
+              "schema_fd59dba9-7d67-4ea2-bb98-081a5df8c387.json")
       def responseJson = new JsonSlurper().parseText(responseText)
       def schemaInfo = responseJson.items[0]
       def expectedInfo = [database: [

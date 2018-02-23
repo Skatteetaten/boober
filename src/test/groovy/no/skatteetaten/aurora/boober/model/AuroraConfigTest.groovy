@@ -1,9 +1,6 @@
 package no.skatteetaten.aurora.boober.model
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-
-import kotlin.Pair
 
 class AuroraConfigTest extends AbstractAuroraConfigTest {
 
@@ -30,8 +27,8 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
 
     when:
 
-      def updateFileResponse= auroraConfig.updateFile("booberdev/console.json", updates)
-      def updatedAuroraConfig=updateFileResponse.second
+      def updateFileResponse = auroraConfig.updateFile("booberdev/console.json", updates)
+      def updatedAuroraConfig = updateFileResponse.second
     then:
       def version = updatedAuroraConfig.getAuroraConfigFiles().stream()
           .filter({ it.configName == "booberdev/console.json" })
@@ -119,7 +116,7 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
     when:
       auroraConfig.getFilesForApplication(referanseAid)
 
-      then: "Should be missing utv/referanse"
+    then: "Should be missing utv/referanse"
       def ex = thrown(IllegalArgumentException)
       ex.message.contains("utv/referanse")
   }
@@ -154,7 +151,7 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
     when:
       def version = auroraConfig.auroraConfigFiles.find { it.name == filename }.version
       def patchFileResponse = auroraConfig.patchFile(filename, jsonOp, version)
-      def patchedAuroraConfig=patchFileResponse.second
+      def patchedAuroraConfig = patchFileResponse.second
 
     then:
       def patchedFile = patchedAuroraConfig.auroraConfigFiles.find { it.name == filename }

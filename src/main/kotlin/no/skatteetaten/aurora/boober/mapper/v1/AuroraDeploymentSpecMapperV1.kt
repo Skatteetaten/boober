@@ -22,37 +22,36 @@ import no.skatteetaten.aurora.boober.utils.pattern
 
 class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
 
-
     val handlers = listOf(
-            AuroraConfigFieldHandler("affiliation", validator = { it.pattern("^[a-z]{1,10}$", "Affiliation can only contain letters and must be no longer than 10 characters") }),
-            AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
-            AuroraConfigFieldHandler("permissions/admin"),
-            AuroraConfigFieldHandler("permissions/view"),
-            AuroraConfigFieldHandler("permissions/adminServiceAccount"),
-            // Max length of OpenShift project names is 63 characters. Project name = affiliation + "-" + envName.
-            AuroraConfigFieldHandler("envName", validator = {
-                it.pattern("^[a-z0-9\\-]{0,52}$",
-                        "Environment must consist of lower case alphanumeric characters or '-'. It must be no longer than 52 characters.")
-            },
-                    defaultSource = "folderName",
-                    defaultValue = applicationId.environment
-            ),
-            AuroraConfigFieldHandler("name",
-                    defaultValue = applicationId.application,
-                    defaultSource = "fileName",
-                    validator = { it.pattern(namePattern, "Name must be alphanumeric and no more than 40 characters", false) }),
-            AuroraConfigFieldHandler("splunkIndex"),
-            AuroraConfigFieldHandler("certificate/commonName"),
-            AuroraConfigFieldHandler("certificate"),
-            AuroraConfigFieldHandler("database"),
-            AuroraConfigFieldHandler("prometheus", defaultValue = true),
-            AuroraConfigFieldHandler("prometheus/path", defaultValue = "/prometheus"),
-            AuroraConfigFieldHandler("prometheus/port", defaultValue = 8081),
-            AuroraConfigFieldHandler("management", defaultValue = true),
-            AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
-            AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
-            AuroraConfigFieldHandler("deployStrategy/type", defaultValue = "rolling", validator = { it.oneOf(listOf("recreate", "rolling")) }),
-            AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = 180)
+      AuroraConfigFieldHandler("affiliation", validator = { it.pattern("^[a-z]{1,10}$", "Affiliation can only contain letters and must be no longer than 10 characters") }),
+      AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
+      AuroraConfigFieldHandler("permissions/admin"),
+      AuroraConfigFieldHandler("permissions/view"),
+      AuroraConfigFieldHandler("permissions/adminServiceAccount"),
+      // Max length of OpenShift project names is 63 characters. Project name = affiliation + "-" + envName.
+      AuroraConfigFieldHandler("envName", validator = {
+          it.pattern("^[a-z0-9\\-]{0,52}$",
+            "Environment must consist of lower case alphanumeric characters or '-'. It must be no longer than 52 characters.")
+      },
+        defaultSource = "folderName",
+        defaultValue = applicationId.environment
+      ),
+      AuroraConfigFieldHandler("name",
+        defaultValue = applicationId.application,
+        defaultSource = "fileName",
+        validator = { it.pattern(namePattern, "Name must be alphanumeric and no more than 40 characters", false) }),
+      AuroraConfigFieldHandler("splunkIndex"),
+      AuroraConfigFieldHandler("certificate/commonName"),
+      AuroraConfigFieldHandler("certificate"),
+      AuroraConfigFieldHandler("database"),
+      AuroraConfigFieldHandler("prometheus", defaultValue = true),
+      AuroraConfigFieldHandler("prometheus/path", defaultValue = "/prometheus"),
+      AuroraConfigFieldHandler("prometheus/port", defaultValue = 8081),
+      AuroraConfigFieldHandler("management", defaultValue = true),
+      AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
+      AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
+      AuroraConfigFieldHandler("deployStrategy/type", defaultValue = "rolling", validator = { it.oneOf(listOf("recreate", "rolling")) }),
+      AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = 180)
     )
 
     fun createAuroraDeploymentSpec(auroraConfigFields: AuroraConfigFields,
@@ -66,24 +65,23 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
         val name: String = auroraConfigFields.extract("name")
 
         return AuroraDeploymentSpec(
-                schemaVersion = auroraConfigFields.extract("schemaVersion"),
-                applicationPlatform = auroraConfigFields.extract("applicationPlatform"),
-                type = auroraConfigFields.extract("type"),
-                name = name,
-                cluster = auroraConfigFields.extract("cluster"),
-                environment = AuroraDeployEnvironment(
-                        affiliation = auroraConfigFields.extract("affiliation"),
-                        envName = auroraConfigFields.extract("envName"),
-                        permissions = extractPermissions(auroraConfigFields)
-                ),
-                fields = createMapForAuroraDeploymentSpecPointers(createFieldsWithValues(auroraConfigFields, build)),
-                volume = volume,
-                route = route,
-                build = build,
-                deploy = deploy,
-                template = template,
-                localTemplate = localTemplate)
-
+          schemaVersion = auroraConfigFields.extract("schemaVersion"),
+          applicationPlatform = auroraConfigFields.extract("applicationPlatform"),
+          type = auroraConfigFields.extract("type"),
+          name = name,
+          cluster = auroraConfigFields.extract("cluster"),
+          environment = AuroraDeployEnvironment(
+            affiliation = auroraConfigFields.extract("affiliation"),
+            envName = auroraConfigFields.extract("envName"),
+            permissions = extractPermissions(auroraConfigFields)
+          ),
+          fields = createMapForAuroraDeploymentSpecPointers(createFieldsWithValues(auroraConfigFields, build)),
+          volume = volume,
+          route = route,
+          build = build,
+          deploy = deploy,
+          template = template,
+          localTemplate = localTemplate)
     }
 
     private fun createIncludeSubKeysMap(fields: Map<String, AuroraConfigField>): Map<String, Boolean> {
@@ -91,18 +89,17 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
         val includeSubKeys = mutableMapOf<String, Boolean>()
 
         fields.entries
-                .filter { it.key.split("/").size == 1 }
-                .forEach {
-                    val key = it.key.split("/")[0]
-                    val shouldIncludeSubKeys = it.value.valueOrDefault?.let {
-                        !it.isBoolean || it.booleanValue()
-                    } ?: false
-                    includeSubKeys.put(key, shouldIncludeSubKeys)
-                }
+          .filter { it.key.split("/").size == 1 }
+          .forEach {
+              val key = it.key.split("/")[0]
+              val shouldIncludeSubKeys = it.value.valueOrDefault?.let {
+                  !it.isBoolean || it.booleanValue()
+              } ?: false
+              includeSubKeys.put(key, shouldIncludeSubKeys)
+          }
 
         return includeSubKeys
     }
-
 
     fun createMapForAuroraDeploymentSpecPointers(auroraConfigFields: Map<String, AuroraConfigField>): Map<String, Map<String, Any?>> {
         val fields = mutableMapOf<String, Any?>()
@@ -126,8 +123,8 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
             keys.forEachIndexed { index, key ->
                 if (index == keys.lastIndex) {
                     next[key] = mutableMapOf(
-                            "source" to (configField.source?.configName ?: configField.handler.defaultSource),
-                            "value" to configField.valueOrDefault
+                      "source" to (configField.source?.configName ?: configField.handler.defaultSource),
+                      "value" to configField.valueOrDefault
                     )
                 } else {
                     if (next[key] == null) {
