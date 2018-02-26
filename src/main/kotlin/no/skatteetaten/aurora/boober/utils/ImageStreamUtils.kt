@@ -27,5 +27,5 @@ fun ImageStream.findErrorMessage(): String? {
 
 fun ImageStream.toJsonNode(): JsonNode = jacksonObjectMapper().valueToTree(this)
 
-fun ImageStream.from(jsonNode: JsonNode?): ImageStream =
+fun imageStreamFromJson(jsonNode: JsonNode?): ImageStream =
         jacksonObjectMapper().readValue(jsonNode.toString())

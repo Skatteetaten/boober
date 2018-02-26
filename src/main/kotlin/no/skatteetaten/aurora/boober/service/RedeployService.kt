@@ -49,14 +49,13 @@ class RedeployService(val openShiftClient: OpenShiftClient,
             return createFailedRedeployResult(imageStreamTagResponse.exception, openShiftResponses)
         }
 
-        ImageStreamTag().from(imageStreamTagResponse.responseBody).findErrorMessage()?.let {
-            return createFailedRedeployResult(it, openShiftResponses)
-        }
+        ImageStreamTag().from(imageStreamTagResponse.responseBody).findErrorMessage()
+                ?.let { return createFailedRedeployResult(it, openShiftResponses) }
 
         val updatedImageStream = openShiftClient.getImageStream(namespace, name)
                 .also { openShiftResponses.add(it) }
                 .responseBody
-                ?.let { ImageStream().from(it) }
+                ?.let { imageStreamFromJson(it) }
                 ?: return createFailedRedeployResult("Missing information in deployment spec", openShiftResponses)
 
         updatedImageStream.findErrorMessage()

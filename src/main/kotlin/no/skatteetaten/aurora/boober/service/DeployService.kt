@@ -8,7 +8,8 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.from
+import no.skatteetaten.aurora.boober.utils.deploymentConfigFromJson
+import no.skatteetaten.aurora.boober.utils.imageStreamFromJson
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -212,12 +213,12 @@ class DeployService(
 
     private fun findImageStreamResponse(openShiftResponses: List<OpenShiftResponse>): ImageStream? {
         return openShiftResponses.find { it.responseBody?.openshiftKind == "imagestream" }
-                ?.let { ImageStream().from(it.responseBody) }
+                ?.let { imageStreamFromJson(it.responseBody) }
     }
 
     private fun findDeploymentConfigResponse(openShiftResponses: List<OpenShiftResponse>): DeploymentConfig? {
         return openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }
-                ?.let { DeploymentConfig().from(it.responseBody) }
+                ?.let { deploymentConfigFromJson(it.responseBody) }
     }
 }
 
