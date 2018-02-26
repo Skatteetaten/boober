@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
 import io.fabric8.openshift.api.model.ImageStreamTag
 import no.skatteetaten.aurora.boober.service.internal.ImageStreamTagGenerator

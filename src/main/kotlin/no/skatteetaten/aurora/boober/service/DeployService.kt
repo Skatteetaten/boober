@@ -164,9 +164,8 @@ class DeployService(
             dockerService.tag(cmd)
         }
 
-        tagResult?.takeIf { !it.success }?.let {
-            return result.copy(tagResponse = it, reason = "Tag command failed")
-        }
+        tagResult?.takeIf { !it.success }
+                ?.let { return result.copy(tagResponse = it, reason = "Tag command failed") }
 
         val imageStream = findImageStreamResponse(openShiftResponses)
         val deploymentConfig = findDeploymentConfigResponse(openShiftResponses)
