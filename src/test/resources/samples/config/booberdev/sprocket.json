@@ -11,7 +11,7 @@
   },
   "database": {
     "referanse": "auto",
-    "foo": "123-456"
+    "foo_bar": "123-456"
   }
 }
 

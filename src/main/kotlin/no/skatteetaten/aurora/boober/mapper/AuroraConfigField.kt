@@ -5,11 +5,9 @@ import com.fasterxml.jackson.databind.node.MissingNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.Database
-import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import org.apache.commons.lang.StringEscapeUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
 
 data class AuroraConfigField(val handler: AuroraConfigFieldHandler, val source: AuroraConfigFile? = null) {
     val value: JsonNode
@@ -84,7 +82,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
             val (_, field) = it.name.split("/", limit = 2)
 
             val value: String = extract(it.name)
-            Database(field, if (value == "auto" || value.isBlank()) null else value)
+            Database(field.replace("_", "-"), if (value == "auto" || value.isBlank()) null else value)
         }
     }
 

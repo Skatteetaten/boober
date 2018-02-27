@@ -195,7 +195,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
         val simplified = auroraConfigFields.isSimplifiedConfig("database")
 
         if (simplified && auroraConfigFields.extract("database")) {
-            return listOf(Database(name = name))
+            return listOf(Database(name = name.replace("_", "-")))
         }
 
         return auroraConfigFields.getDatabases(dbHandlers)
