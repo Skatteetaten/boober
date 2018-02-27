@@ -7,13 +7,9 @@ import com.fkorotkov.openshift.metadata
 import com.fkorotkov.openshift.spec
 import com.fkorotkov.openshift.tagReference
 import io.fabric8.openshift.api.model.ImageStream
+import no.skatteetaten.aurora.boober.model.AuroraVersion
 
-class ImageStreamGenerator {
-
-    //TODO: Should this include that the second to last block should be a valid base image for the plattform?
-    private fun isExactAuroraVersion(tag: String): Boolean {
-        return Regex("^.*-b(.*)-([a-z]*)-(.*)$").matches(tag)
-    }
+object ImageStreamGenerator {
 
     fun createLocalImageStream(isName: String, isLabels: Map<String, String>): ImageStream {
         return imageStream {
@@ -43,18 +39,18 @@ class ImageStreamGenerator {
             spec {
                 dockerImageRepository = "$dockerRegistry/$dockerImagePath"
                 tags = listOf(
-                    tagReference {
-                        name = "default"
-                        from {
-                            kind = "DockerImage"
-                            name = "$dockerRegistry/$dockerImagePath:$dockerTag"
-                        }
-                        if (!isExactAuroraVersion(dockerTag)) {
-                            importPolicy {
-                                scheduled = true
+                        tagReference {
+                            name = "default"
+                            from {
+                                kind = "DockerImage"
+                                name = "$dockerRegistry/$dockerImagePath:$dockerTag"
+                            }
+                            if (!AuroraVersion.isFullAuroraVersion(dockerTag)) {
+                                importPolicy {
+                                    scheduled = true
+                                }
                             }
                         }
-                    }
                 )
             }
         }

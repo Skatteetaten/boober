@@ -23,7 +23,7 @@ import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.platform.AuroraDeployment
 
-class DeploymentConfigGenerator {
+object DeploymentConfigGenerator {
 
     fun create(auroraDeployment: AuroraDeployment, container: List<Container>): DeploymentConfig {
 

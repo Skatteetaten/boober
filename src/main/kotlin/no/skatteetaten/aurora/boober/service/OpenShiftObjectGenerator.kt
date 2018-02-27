@@ -116,11 +116,9 @@ class OpenShiftObjectGenerator(
         val deployment = applicationPlatformHandler.handleAuroraDeployment(auroraDeploymentSpec, labels, mounts)
 
 
-        val containerGenerator = ContainerGenerator()
+        val container = deployment.containers.map { ContainerGenerator.create(it) }
 
-        val container = deployment.containers.map { containerGenerator.create(it) }
-
-        val dc = DeploymentConfigGenerator().create(deployment, container)
+        val dc = DeploymentConfigGenerator.create(deployment, container)
 
         return mapper.convertValue(dc)
     }
@@ -160,11 +158,10 @@ class OpenShiftObjectGenerator(
             val labels = openShiftObjectLabelService.createCommonLabels(auroraDeploymentSpec, deployId,
                     mapOf("releasedVersion" to it.version))
 
-            val generator = ImageStreamGenerator()
             val imageStream = if (auroraDeploymentSpec.type == TemplateType.development) {
-                generator.createLocalImageStream(auroraDeploymentSpec.name, labels)
+                ImageStreamGenerator.createLocalImageStream(auroraDeploymentSpec.name, labels)
             } else {
-                generator.createRemoteImageStream(auroraDeploymentSpec.name, labels, dockerRegistry, it.dockerImagePath, it.dockerTag)
+                ImageStreamGenerator.createRemoteImageStream(auroraDeploymentSpec.name, labels, dockerRegistry, it.dockerImagePath, it.dockerTag)
             }
 
             return mapper.convertValue(imageStream)
