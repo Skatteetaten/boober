@@ -1,3 +1,5 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
 buildscript {
   ext.kotlin_version = '1.2.21'
   ext.springBootVersion = '1.5.8.RELEASE'
@@ -100,6 +102,12 @@ compileTestGroovy.dependsOn compileTestKotlin
 compileTestGroovy.classpath += files(compileTestKotlin.destinationDir)
 testClasses.dependsOn compileTestGroovy
 
+processResources {
+  filter ReplaceTokens, tokens: [
+      version: version,
+      name   : project.name
+  ]
+}
 
 task wrapper(type: Wrapper) {
   gradleVersion = '3.4.1'

@@ -8,11 +8,14 @@ openshift:
     cluster: utv
     url: https://${openshift.cluster}-master.paas.skead.no:8443
 
+application:
+    name: boober
+    version: "${AURORA_VERSION:@version@}"
+
 spring:
     profiles:
         active: local
-    application:
-        name: boober
+
     cache:
         caffeine:
             spec: maximumSize=2000,expireAfterWrite=300s
