@@ -1,28 +1,28 @@
 {
-  "kind": "ImageStream",
   "apiVersion": "v1",
+  "kind": "ImageStream",
   "metadata": {
-    "name": "aos-simple",
     "labels": {
       "app": "aos-simple",
       "updatedBy": "hero",
       "affiliation": "aos",
       "booberDeployId": "123",
       "releasedVersion": "1.0.3-b1.1.0-flange-1.0.0"
-    }
+    },
+    "name": "aos-simple"
   },
   "spec": {
     "dockerImageRepository": "docker-registry.aurora.sits.no:5000/ske_aurora_openshift/aos-simple",
     "tags": [
       {
-        "name": "default",
         "from": {
           "kind": "DockerImage",
           "name": "docker-registry.aurora.sits.no:5000/ske_aurora_openshift/aos-simple:ref"
         },
         "importPolicy": {
           "scheduled": true
-        }
+        },
+        "name": "default"
       }
     ]
   }

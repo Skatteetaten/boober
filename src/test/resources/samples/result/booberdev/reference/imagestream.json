@@ -1,28 +1,25 @@
 {
-  "kind": "ImageStream",
   "apiVersion": "v1",
+  "kind": "ImageStream",
   "metadata": {
-    "name": "reference",
     "labels": {
       "app": "reference",
       "updatedBy": "hero",
       "affiliation": "aos",
       "booberDeployId": "123",
-      "releasedVersion": "1"
-    }
+      "releasedVersion": "1.0.0-b1.5.3-flange-8.152.18"
+    },
+    "name": "reference"
   },
   "spec": {
     "dockerImageRepository": "docker-registry.aurora.sits.no:5000/no_skatteetaten_aurora_openshift/reference",
     "tags": [
       {
-        "name": "default",
         "from": {
           "kind": "DockerImage",
-          "name": "docker-registry.aurora.sits.no:5000/no_skatteetaten_aurora_openshift/reference:1"
+          "name": "docker-registry.aurora.sits.no:5000/no_skatteetaten_aurora_openshift/reference:1.0.0-b1.5.3-flange-8.152.18"
         },
-        "importPolicy": {
-          "scheduled": true
-        }
+        "name": "default"
       }
     ]
   }

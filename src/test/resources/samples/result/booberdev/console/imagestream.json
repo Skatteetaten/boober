@@ -1,28 +1,28 @@
 {
-  "kind": "ImageStream",
   "apiVersion": "v1",
+  "kind": "ImageStream",
   "metadata": {
-    "name": "openshift-console-api",
     "labels": {
       "app": "openshift-console-api",
       "updatedBy": "hero",
       "affiliation": "aos",
       "booberDeployId": "123",
       "releasedVersion": "3"
-    }
+    },
+    "name": "openshift-console-api"
   },
   "spec": {
     "dockerImageRepository": "docker-registry.aurora.sits.no:5000/ske_openshift_aurora/openshift-console-api",
     "tags": [
       {
-        "name": "default",
         "from": {
           "kind": "DockerImage",
           "name": "docker-registry.aurora.sits.no:5000/ske_openshift_aurora/openshift-console-api:3"
         },
         "importPolicy": {
           "scheduled": true
-        }
+        },
+        "name": "default"
       }
     ]
   }
