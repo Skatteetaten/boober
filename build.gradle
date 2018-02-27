@@ -2,8 +2,8 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 buildscript {
   ext.kotlin_version = '1.2.21'
-  ext.springBootVersion = '1.5.8.RELEASE'
-  ext.auroraStartersVersion = '3.3.0'
+  ext.springBootVersion = '1.5.10.RELEASE'
+  ext.auroraStartersVersion = '3.5.0'
 
   repositories {
     maven {
