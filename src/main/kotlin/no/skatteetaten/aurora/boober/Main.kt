@@ -36,8 +36,6 @@ class Boober(val aphBeans: List<ApplicationPlatformHandler>) : ApplicationListen
 }
 
 fun main(args: Array<String>) {
-
-    System.getenv()
     SpringApplication.run(Boober::class.java, *args)
 }
 
