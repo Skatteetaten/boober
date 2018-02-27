@@ -4,7 +4,13 @@ import io.fabric8.openshift.api.model.ImageStream
 import no.skatteetaten.aurora.boober.service.internal.ImageStreamTagGenerator
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
-import no.skatteetaten.aurora.boober.utils.*
+import no.skatteetaten.aurora.boober.utils.findErrorMessage
+import no.skatteetaten.aurora.boober.utils.findImageName
+import no.skatteetaten.aurora.boober.utils.findTagName
+import no.skatteetaten.aurora.boober.utils.imageStreamFromJson
+import no.skatteetaten.aurora.boober.utils.imageStreamTagFromJson
+import no.skatteetaten.aurora.boober.utils.isSameImage
+import no.skatteetaten.aurora.boober.utils.toJsonNode
 import org.springframework.stereotype.Service
 
 @Service
@@ -75,7 +81,7 @@ class RedeployService(val openShiftClient: OpenShiftClient,
             RedeployResult(success = false, message = message, openShiftResponses = openShiftResponses.toList())
 
     private fun performImageStreamTag(namespace: String, imageName: String, tagName: String): OpenShiftResponse {
-        val imageStreamTag = ImageStreamTagGenerator().create(imageName, tagName)
+        val imageStreamTag = ImageStreamTagGenerator.create(imageName, tagName)
         val command = openShiftCommandBuilder.createOpenShiftCommand(namespace, imageStreamTag.toJsonNode())
         return openShiftClient.performOpenShiftCommand(namespace, command)
     }

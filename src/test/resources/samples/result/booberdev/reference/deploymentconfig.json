@@ -14,7 +14,7 @@
       "affiliation": "aos",
       "booberDeployId": "123",
       "name": "reference",
-      "deployTag": "1"
+      "deployTag": "1.0.0-b1.5.3-flange-8.152.18"
     },
     "name": "reference"
   },
@@ -41,7 +41,7 @@
           "affiliation": "aos",
           "booberDeployId": "123",
           "name": "reference",
-          "deployTag": "1"
+          "deployTag": "1.0.0-b1.5.3-flange-8.152.18"
         }
       },
       "spec": {

@@ -1,14 +1,14 @@
 {
-  "kind": "ImageStream",
   "apiVersion": "v1",
+  "kind": "ImageStream",
   "metadata": {
-    "name": "openshift-referanse-react",
     "labels": {
       "app": "openshift-referanse-react",
       "updatedBy": "hero",
       "affiliation": "aos",
       "booberDeployId": "123",
       "releasedVersion": "develop-SNAPSHOT"
-    }
+    },
+    "name": "openshift-referanse-react"
   }
 }

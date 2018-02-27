@@ -9,9 +9,11 @@ import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.Permissions
+import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.internal.ContainerGenerator
 import no.skatteetaten.aurora.boober.service.internal.DbhSecretGenerator
 import no.skatteetaten.aurora.boober.service.internal.DeploymentConfigGenerator
+import no.skatteetaten.aurora.boober.service.internal.ImageStreamGenerator
 import no.skatteetaten.aurora.boober.service.internal.findAndCreateMounts
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
@@ -114,11 +116,9 @@ class OpenShiftObjectGenerator(
         val deployment = applicationPlatformHandler.handleAuroraDeployment(auroraDeploymentSpec, labels, mounts)
 
 
-        val containerGenerator = ContainerGenerator()
+        val container = deployment.containers.map { ContainerGenerator.create(it) }
 
-        val container = deployment.containers.map { containerGenerator.create(it) }
-
-        val dc = DeploymentConfigGenerator().create(deployment, container)
+        val dc = DeploymentConfigGenerator.create(deployment, container)
 
         return mapper.convertValue(dc)
     }
@@ -154,15 +154,17 @@ class OpenShiftObjectGenerator(
 
     fun generateImageStream(deployId: String, auroraDeploymentSpec: AuroraDeploymentSpec): JsonNode? {
         return auroraDeploymentSpec.deploy?.let {
+
             val labels = openShiftObjectLabelService.createCommonLabels(auroraDeploymentSpec, deployId,
                     mapOf("releasedVersion" to it.version))
-            mergeVelocityTemplate("imagestream.json", mapOf(
-                    "labels" to labels,
-                    "deploy" to it,
-                    "name" to auroraDeploymentSpec.name,
-                    "type" to auroraDeploymentSpec.type.name,
-                    "dockerRegistry" to dockerRegistry
-            ))
+
+            val imageStream = if (auroraDeploymentSpec.type == TemplateType.development) {
+                ImageStreamGenerator.createLocalImageStream(auroraDeploymentSpec.name, labels)
+            } else {
+                ImageStreamGenerator.createRemoteImageStream(auroraDeploymentSpec.name, labels, dockerRegistry, it.dockerImagePath, it.dockerTag)
+            }
+
+            return mapper.convertValue(imageStream)
         }
     }
 

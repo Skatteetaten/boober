@@ -1,3 +1,4 @@
 {
-  "type" : "deploy"
+  "type": "deploy",
+  "version": "1.0.0-b1.5.3-flange-8.152.18"
 }

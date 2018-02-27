@@ -19,7 +19,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
 import no.skatteetaten.aurora.boober.model.Probe
 import no.skatteetaten.aurora.boober.platform.AuroraContainer
 
-class ContainerGenerator {
+object ContainerGenerator {
     fun create(adcContainer: AuroraContainer): Container {
 
         return auroraContainer {
