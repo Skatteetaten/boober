@@ -7,6 +7,7 @@ import io.fabric8.kubernetes.api.model.ObjectReference
 import io.fabric8.openshift.api.model.ImageStream
 import io.fabric8.openshift.api.model.ImageStreamSpec
 import io.fabric8.openshift.api.model.ImageStreamStatus
+import io.fabric8.openshift.api.model.ImageStreamTag
 import io.fabric8.openshift.api.model.NamedTagEventList
 import io.fabric8.openshift.api.model.TagEvent
 import io.fabric8.openshift.api.model.TagEventCondition
@@ -15,6 +16,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import no.skatteetaten.aurora.boober.utils.ImageStreamTagUtilsKt
 import no.skatteetaten.aurora.boober.utils.ImageStreamUtilsKt
 import spock.lang.Specification
 
@@ -69,56 +71,90 @@ class RedeployServiceTest extends Specification {
 
   def "Rollout deployment given failure from ImageStreamTag command return failed"() {
     given:
-      openShiftClient.performOpenShiftCommand('affiliation', null) >> createFailedImageStreamResponse()
+      def errorMessage = 'failed ImageStreamTag'
+      openShiftClient.performOpenShiftCommand('affiliation', null) >> failedResponse(errorMessage)
 
     when:
       def response = redeployService.triggerRedeploy('affiliation', 'name', imageStream)
 
     then:
       !response.success
+      response.message == errorMessage
       response.openShiftResponses.size() == 1
   }
 
-  def "Rollout deployment given failure when getting ImageStream response return failed"() {
+  def "Rollout deployment given null response body in ImageStream response return failed"() {
     given:
       openShiftClient.performOpenShiftCommand('affiliation', null) >> imageStreamResponse
-      openShiftClient.getImageStream('affiliation', 'name') >> createFailedImageStreamResponse(null)
+      openShiftClient.getImageStream('affiliation', 'name') >> nullBodyResponse()
 
     when:
       def response = redeployService.triggerRedeploy('affiliation', 'name', imageStream)
 
     then:
       !response.success
+      response.message == 'Missing information in deployment spec'
       response.openShiftResponses.size() == 2
   }
 
-  def "Rollout deployment given error message in updated ImageStream return failed"() {
+  def "Rollout deployment given failure from ImageStream response return failed"() {
     given:
+      def errorMessage = 'ImageStream error message'
       openShiftClient.performOpenShiftCommand('affiliation', null) >> imageStreamResponse
-      openShiftClient.getImageStream('affiliation', 'name') >> createImageStreamResponse('234', 'false')
+      openShiftClient.getImageStream('affiliation', 'name') >> failedResponse(errorMessage)
 
     when:
       def response = redeployService.triggerRedeploy('affiliation', 'name', imageStream)
 
     then:
       !response.success
+      response.message == errorMessage
       response.openShiftResponses.size() == 2
   }
 
-  private ImageStream createImageStream(String imageHash = defaultImageHash, String status = '') {
+  def "Rollout deployment given error message in ImageStream response return failed"() {
+    given:
+      def errorMessage = 'ImageStream error message'
+      openShiftClient.performOpenShiftCommand('affiliation', null) >> imageStreamResponse
+      openShiftClient.getImageStream('affiliation', 'name') >> failedImageStreamResponse(errorMessage)
+
+    when:
+      def response = redeployService.triggerRedeploy('affiliation', 'name', imageStream)
+
+    then:
+      !response.success
+      response.message == errorMessage
+      response.openShiftResponses.size() == 2
+  }
+
+  def "Rollout deployment given error message in ImageStreamTag response return failed"() {
+    given:
+      def errorMessage = 'ImageStreamTag error message'
+      openShiftClient.performOpenShiftCommand('affiliation', null) >> failedImageStreamTagResponse(errorMessage)
+
+    when:
+      def response = redeployService.triggerRedeploy('affiliation', 'name', imageStream)
+
+    then:
+      !response.success
+      response.message == errorMessage
+      response.openShiftResponses.size() == 1
+  }
+
+  private ImageStream createImageStream(String imageHash = defaultImageHash, boolean status = true,
+      String errorMessage = '') {
     return new ImageStream(
         status: new ImageStreamStatus(
             tags: [new NamedTagEventList(
-                conditions: [new TagEventCondition(status: status, message: '')],
+                conditions: [new TagEventCondition(status: Boolean.toString(status), message: errorMessage)],
                 items: [new TagEvent(image: imageHash)])]
         ),
         spec: new ImageStreamSpec(
             tags: [new TagReference(name: 'tag-name', from: new ObjectReference(name: 'imagestream-name'))]))
   }
 
-  private OpenShiftResponse createImageStreamResponse(String imageHash = defaultImageHash,
-      String status = '') {
-    def jsonNode = ImageStreamUtilsKt.toJsonNode(createImageStream(imageHash, status))
+  private OpenShiftResponse createImageStreamResponse(String imageHash = defaultImageHash) {
+    def jsonNode = ImageStreamUtilsKt.toJsonNode(createImageStream(imageHash))
     return new OpenShiftResponse(
         new OpenshiftCommand(OperationType.CREATE, emptyJsonNode), jsonNode
     )
@@ -128,11 +164,27 @@ class RedeployServiceTest extends Specification {
     return new OpenShiftResponse(new OpenshiftCommand(OperationType.CREATE, emptyJsonNode))
   }
 
-  private OpenShiftResponse createFailedImageStreamResponse(JsonNode responseBody = emptyJsonNode) {
+  private OpenShiftResponse nullBodyResponse() {
     return new OpenShiftResponse(
-        new OpenshiftCommand(OperationType.CREATE, emptyJsonNode, ImageStreamUtilsKt.toJsonNode(imageStream)),
-        responseBody,
-        false
+        new OpenshiftCommand(OperationType.CREATE, emptyJsonNode), null, true, ''
     )
+  }
+
+  private OpenShiftResponse failedResponse(JsonNode jsonNode = emptyJsonNode, String errorMessage) {
+    return new OpenShiftResponse(
+        new OpenshiftCommand(OperationType.CREATE, emptyJsonNode), jsonNode, false, errorMessage
+    )
+  }
+
+  private OpenShiftResponse failedImageStreamResponse(String errorMessage) {
+    def imageStream = createImageStream(defaultImageHash, false, errorMessage)
+    return failedResponse(ImageStreamUtilsKt.toJsonNode(imageStream), errorMessage)
+  }
+
+  private OpenShiftResponse failedImageStreamTagResponse(String errorMessage) {
+    def imageStreamTag = new ImageStreamTag(
+        conditions: [new TagEventCondition(status: 'failure', message: errorMessage)]
+    )
+    return failedResponse(ImageStreamTagUtilsKt.toJsonNode(imageStreamTag), errorMessage)
   }
 }

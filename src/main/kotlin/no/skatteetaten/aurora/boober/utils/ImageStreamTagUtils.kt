@@ -17,5 +17,5 @@ fun ImageStreamTag.findErrorMessage(): String? {
 
 fun ImageStreamTag.toJsonNode(): JsonNode = jacksonObjectMapper().valueToTree(this)
 
-fun ImageStreamTag.from(jsonNode: JsonNode?): ImageStreamTag =
+fun imageStreamTagFromJson(jsonNode: JsonNode?): ImageStreamTag =
         jacksonObjectMapper().readValue(jsonNode.toString())

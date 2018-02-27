@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
 import io.fabric8.openshift.api.model.ImageStream
-import io.fabric8.openshift.api.model.ImageStreamTag
 import no.skatteetaten.aurora.boober.service.internal.ImageStreamTagGenerator
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
@@ -49,12 +48,15 @@ class RedeployService(val openShiftClient: OpenShiftClient,
             return createFailedRedeployResult(imageStreamTagResponse.exception, openShiftResponses)
         }
 
-        ImageStreamTag().from(imageStreamTagResponse.responseBody).findErrorMessage()
+        imageStreamTagFromJson(imageStreamTagResponse.responseBody).findErrorMessage()
                 ?.let { return createFailedRedeployResult(it, openShiftResponses) }
 
-        val updatedImageStream = openShiftClient.getImageStream(namespace, name)
+        val updatedImageStreamResponse = openShiftClient.getImageStream(namespace, name)
                 .also { openShiftResponses.add(it) }
-                .responseBody
+        if (!updatedImageStreamResponse.success) {
+            return createFailedRedeployResult(updatedImageStreamResponse.exception, openShiftResponses)
+        }
+        val updatedImageStream = updatedImageStreamResponse.responseBody
                 ?.let { imageStreamFromJson(it) }
                 ?: return createFailedRedeployResult("Missing information in deployment spec", openShiftResponses)
 
