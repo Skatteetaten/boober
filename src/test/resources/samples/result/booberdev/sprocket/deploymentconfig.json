@@ -86,12 +86,12 @@
                 "value": "/u01/secrets/app/referanse-db/db.properties"
               },
               {
-                "name": "FOO_DB",
-                "value": "/u01/secrets/app/foo-db/info"
+                "name": "FOO_BAR_DB",
+                "value": "/u01/secrets/app/foo-bar-db/info"
               },
               {
-                "name": "FOO_DB_PROPERTIES",
-                "value": "/u01/secrets/app/foo-db/db.properties"
+                "name": "FOO_BAR_DB_PROPERTIES",
+                "value": "/u01/secrets/app/foo-bar-db/db.properties"
               },
               {
                 "name": "DB",
