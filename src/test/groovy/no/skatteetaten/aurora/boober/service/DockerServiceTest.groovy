@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -28,6 +29,7 @@ class DockerServiceTest extends Specification {
 
     @Bean
     @Primary
+    @Qualifier("docker")
     RestTemplate restTemplate() {
       factory.Mock(RestTemplate)
     }
@@ -46,10 +48,10 @@ class DockerServiceTest extends Specification {
   def "Should tag from one tag to another"() {
     given:
       def manifest = mapper.convertValue([manifest: "foo"], JsonNode.class)
-      httpClient.exchange(_, _) >> new ResponseEntity<JsonNode>(manifest, HttpStatus.OK)
+      httpClient.exchange(_, _, _, _, _) >> new ResponseEntity<JsonNode>(manifest, HttpStatus.OK)
 
     when:
-      def response = service.tag(new TagCommand("foo/bar", "1.2.3", "latest", "registry"))
+      def response = service.tag(new TagCommand("foo/bar", "1.2.3", "latest", "registry", "toregistry"))
 
     then:
       response.success
@@ -59,10 +61,10 @@ class DockerServiceTest extends Specification {
   def "Should not tag if we cannot find manifest"() {
     given:
       def manifest = mapper.convertValue([manifest: "foo"], JsonNode.class)
-      httpClient.exchange(_, _) >> new ResponseEntity<JsonNode>(manifest, HttpStatus.BAD_REQUEST)
+      httpClient.exchange(_, _, _, _, _) >> new ResponseEntity<JsonNode>(manifest, HttpStatus.BAD_REQUEST)
 
     when:
-      def response = service.tag(new TagCommand("foo/bar", "1.2.3", "latest", "registry"))
+      def response = service.tag(new TagCommand("foo/bar", "1.2.3", "latest", "registry", "toregistry"))
 
     then:
       !response.success
