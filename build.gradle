@@ -1,9 +1,7 @@
-import org.apache.tools.ant.filters.ReplaceTokens
-
 buildscript {
   ext.kotlin_version = '1.2.21'
   ext.springBootVersion = '1.5.10.RELEASE'
-  ext.auroraStartersVersion = '3.5.0'
+  ext.auroraStartersVersion = '3.5.2'
 
   repositories {
     maven {
@@ -101,13 +99,6 @@ compileTestKotlin.dependsOn = compileTestKotlin.taskDependencies.values - 'compi
 compileTestGroovy.dependsOn compileTestKotlin
 compileTestGroovy.classpath += files(compileTestKotlin.destinationDir)
 testClasses.dependsOn compileTestGroovy
-
-processResources {
-  filter ReplaceTokens, tokens: [
-      version: version,
-      name   : project.name
-  ]
-}
 
 task wrapper(type: Wrapper) {
   gradleVersion = '3.4.1'
