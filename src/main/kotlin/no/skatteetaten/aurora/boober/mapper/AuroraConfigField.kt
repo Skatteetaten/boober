@@ -82,7 +82,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
             val (_, field) = it.name.split("/", limit = 2)
 
             val value: String = extract(it.name)
-            Database(field.replace("_", "-"), if (value == "auto" || value.isBlank()) null else value)
+            Database(field, if (value == "auto" || value.isBlank()) null else value)
         }
     }
 

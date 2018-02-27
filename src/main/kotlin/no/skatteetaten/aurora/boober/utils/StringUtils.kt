@@ -19,3 +19,4 @@ fun String.ensureStartWith(startWith: String, seperator: String = ""): String {
 }
 
 fun String.removeExtension(): String = FilenameUtils.removeExtension(this)
+

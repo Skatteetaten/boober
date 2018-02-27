@@ -26,6 +26,7 @@ class Boober(val aphBeans: List<ApplicationPlatformHandler>) : ApplicationListen
         var APPLICATION_PLATFORM_HANDLERS: Map<String, ApplicationPlatformHandler> = emptyMap()
     }
 
+
     override fun onApplicationEvent(event: ApplicationReadyEvent?) {
 
         APPLICATION_PLATFORM_HANDLERS = aphBeans.associateBy { it.name }
@@ -35,6 +36,8 @@ class Boober(val aphBeans: List<ApplicationPlatformHandler>) : ApplicationListen
 }
 
 fun main(args: Array<String>) {
+
+    System.getenv()
     SpringApplication.run(Boober::class.java, *args)
 }
 
