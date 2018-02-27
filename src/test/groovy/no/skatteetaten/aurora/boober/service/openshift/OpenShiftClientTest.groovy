@@ -137,4 +137,23 @@ class OpenShiftClientTest extends AbstractSpec {
       result.responseBody.get("error").asText() == "failed"
 
   }
+
+  def "Get image stream given ok response return success"() {
+    when:
+      def openShiftResponse = openShiftClient.getImageStream('namespace', 'name')
+
+    then:
+      1 * userClient.get('imagestream', 'namespace', 'name', true) >> ResponseEntity.ok(Mock(JsonNode))
+      openShiftResponse.success
+  }
+
+  def "Get image stream given exception return failed"() {
+    when:
+      def openShiftResponse = openShiftClient.getImageStream('namespace', 'name')
+
+    then:
+      1 * userClient.get('imagestream', 'namespace', 'name', true) >>
+          { throw new OpenShiftException('Test exception', new RuntimeException()) }
+      !openShiftResponse.success
+  }
 }

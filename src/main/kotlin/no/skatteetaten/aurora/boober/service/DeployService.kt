@@ -1,19 +1,21 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import io.fabric8.openshift.api.model.DeploymentConfig
+import io.fabric8.openshift.api.model.ImageStream
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.deploymentConfigFromJson
+import no.skatteetaten.aurora.boober.utils.imageStreamFromJson
+import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.*
+import java.util.UUID
 
 @Service
 //TODO:Split up. Service is to large
@@ -162,12 +164,28 @@ class DeployService(
             val cmd = TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
             dockerService.tag(cmd)
         }
-        val redeployResponse = redeployService.triggerRedeploy(deploymentSpec, openShiftResponses)
 
-        val redeploySuccess = if (redeployResponse.isEmpty()) true else redeployResponse.last().success
-        val totalSuccess = listOf(success, tagResult?.success, redeploySuccess).filterNotNull().all { it }
+        tagResult?.takeIf { !it.success }
+                ?.let { return result.copy(tagResponse = it, reason = "Tag command failed") }
 
-        return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResponse), tagResponse = tagResult, success = totalSuccess, reason = "Deployment success.")
+        val imageStream = findImageStreamResponse(openShiftResponses)
+        val deploymentConfig = findDeploymentConfigResponse(openShiftResponses)
+                ?: throw IllegalArgumentException("Missing DeploymentConfig")
+        val redeployResult = if (deploymentSpec.type == TemplateType.development) {
+            RedeployService.RedeployResult(message = "No deploy was made with ${deploymentSpec.type} type")
+        } else {
+            val namespace = deploymentConfig.metadata.namespace
+            val name = deploymentConfig.metadata.name
+            redeployService.triggerRedeploy(namespace, name, imageStream)
+        }
+
+        if (!redeployResult.success) {
+            return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses),
+                    tagResponse = tagResult, success = false, reason = redeployResult.message)
+        }
+
+        return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses), tagResponse = tagResult,
+                reason = "Deployment success.")
     }
 
     private fun applyOpenShiftApplicationObjects(deployId: String, deploymentSpec: AuroraDeploymentSpec,
@@ -191,6 +209,16 @@ class DeployService(
                 .map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         return openShiftApplicationResponses.addIfNotNull(deleteOldObjectResponses)
+    }
+
+    private fun findImageStreamResponse(openShiftResponses: List<OpenShiftResponse>): ImageStream? {
+        return openShiftResponses.find { it.responseBody?.openshiftKind == "imagestream" }
+                ?.let { imageStreamFromJson(it.responseBody) }
+    }
+
+    private fun findDeploymentConfigResponse(openShiftResponses: List<OpenShiftResponse>): DeploymentConfig? {
+        return openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }
+                ?.let { deploymentConfigFromJson(it.responseBody) }
     }
 }
 
