@@ -31,7 +31,7 @@ import org.springframework.web.client.RestTemplate
 import java.security.cert.X509Certificate
 
 enum class ServiceTypes {
-    BITBUCKET, GENERAL, AURORA
+    BITBUCKET, GENERAL, AURORA, DOCKER
 }
 
 @Target(AnnotationTarget.TYPE, AnnotationTarget.FUNCTION, AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
@@ -93,6 +93,23 @@ class Configuration {
                 .rootUri(bitbucketUrl)
                 .basicAuthorization(username, password)
                 .build()
+    }
+
+    @Bean
+    @Qualifier("docker")
+    @TargetService(ServiceTypes.DOCKER)
+    fun dockerRestTemplate(@Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
+                           @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
+                           @Value("\${boober.docker.username}") username: String,
+                           @Value("\${boober.docker.password}") password: String
+
+    ): RestTemplate {
+
+        val clientHttpRequestFactory = defaultHttpComponentsClientHttpRequestFactory(readTimeout, connectTimeout)
+        return RestTemplateBuilder()
+            .requestFactory(clientHttpRequestFactory)
+            .basicAuthorization(username, password)
+            .build()
     }
 
     @Bean

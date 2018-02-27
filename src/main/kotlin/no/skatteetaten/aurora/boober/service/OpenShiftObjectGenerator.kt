@@ -24,12 +24,12 @@ import org.springframework.stereotype.Service
 
 @Service
 class OpenShiftObjectGenerator(
-        @Value("\${boober.docker.registry}") val dockerRegistry: String,
-        val openShiftObjectLabelService: OpenShiftObjectLabelService,
-        val velocityTemplateJsonService: VelocityTemplateJsonService,
-        val mapper: ObjectMapper,
-        val openShiftTemplateProcessor: OpenShiftTemplateProcessor,
-        val openShiftClient: OpenShiftResourceClient) {
+    @Value("\${boober.docker.registry.pull}") val dockerRegistry: String,
+    val openShiftObjectLabelService: OpenShiftObjectLabelService,
+    val velocityTemplateJsonService: VelocityTemplateJsonService,
+    val mapper: ObjectMapper,
+    val openShiftTemplateProcessor: OpenShiftTemplateProcessor,
+    val openShiftClient: OpenShiftResourceClient) {
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftObjectGenerator::class.java)
 
