@@ -25,7 +25,7 @@ class RedeployServiceTest extends Specification {
   def emptyJsonNode = new ObjectMapper().readTree('{}')
 
   def imageStream = createImageStream()
-  def imageStreamResponse = createImageStreamResponse()
+  def imageStreamResponse = imageStreamResponse()
 
   def openShiftClient = Mock(OpenShiftClient)
   def redeployService = new RedeployService(openShiftClient, Mock(OpenShiftCommandBuilder),
@@ -33,7 +33,7 @@ class RedeployServiceTest extends Specification {
 
   def "Request deployment given null ImageStream return success"() {
     given:
-      openShiftClient.performOpenShiftCommand('affiliation', null) >> createDeploymentRequestResponse()
+      openShiftClient.performOpenShiftCommand('affiliation', null) >> openShiftResponse()
 
     when:
       def response = redeployService.triggerRedeploy('affiliation', 'name', null)
@@ -59,7 +59,7 @@ class RedeployServiceTest extends Specification {
   def "Rollout deployment given image is not imported return success"() {
     given:
       openShiftClient.performOpenShiftCommand('affiliation', null) >> imageStreamResponse
-      openShiftClient.getImageStream('affiliation', 'name') >> createImageStreamResponse('234')
+      openShiftClient.getImageStream('affiliation', 'name') >> imageStreamResponse('234')
 
     when:
       def response = redeployService.triggerRedeploy('affiliation', 'name', imageStream)
@@ -153,15 +153,15 @@ class RedeployServiceTest extends Specification {
             tags: [new TagReference(name: 'tag-name', from: new ObjectReference(name: 'imagestream-name'))]))
   }
 
-  private OpenShiftResponse createImageStreamResponse(String imageHash = defaultImageHash) {
+  private OpenShiftResponse imageStreamResponse(String imageHash = defaultImageHash) {
     def jsonNode = ImageStreamUtilsKt.toJsonNode(createImageStream(imageHash))
     return new OpenShiftResponse(
         new OpenshiftCommand(OperationType.CREATE, emptyJsonNode), jsonNode
     )
   }
 
-  private OpenShiftResponse createDeploymentRequestResponse() {
-    return new OpenShiftResponse(new OpenshiftCommand(OperationType.CREATE, emptyJsonNode))
+  private OpenShiftResponse openShiftResponse(JsonNode responseBody = emptyJsonNode) {
+    return new OpenShiftResponse(new OpenshiftCommand(OperationType.CREATE, emptyJsonNode), responseBody)
   }
 
   private OpenShiftResponse nullBodyResponse() {
@@ -178,13 +178,13 @@ class RedeployServiceTest extends Specification {
 
   private OpenShiftResponse failedImageStreamResponse(String errorMessage) {
     def imageStream = createImageStream(defaultImageHash, false, errorMessage)
-    return failedResponse(ImageStreamUtilsKt.toJsonNode(imageStream), errorMessage)
+    return openShiftResponse(ImageStreamUtilsKt.toJsonNode(imageStream))
   }
 
   private OpenShiftResponse failedImageStreamTagResponse(String errorMessage) {
     def imageStreamTag = new ImageStreamTag(
         conditions: [new TagEventCondition(status: 'failure', message: errorMessage)]
     )
-    return failedResponse(ImageStreamTagUtilsKt.toJsonNode(imageStreamTag), errorMessage)
+    return openShiftResponse(ImageStreamTagUtilsKt.toJsonNode(imageStreamTag))
   }
 }
