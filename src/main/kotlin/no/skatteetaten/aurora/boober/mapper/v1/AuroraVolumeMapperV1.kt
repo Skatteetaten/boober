@@ -7,6 +7,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraVolume
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.required
 import org.apache.commons.lang.StringEscapeUtils
@@ -24,7 +25,7 @@ class AuroraVolumeMapperV1(private val applicationFiles: List<AuroraConfigFile>)
         return AuroraVolume(
                 secretVaultName = getSecretVault(auroraConfigFields),
                 secretVaultKeys = getSecretVaultKeys(auroraConfigFields),
-                config = getConfigMap(auroraConfigFields),
+                config = getApplicationConfigFiles(auroraConfigFields),
                 mounts = getMounts(auroraConfigFields))
     }
 
@@ -54,41 +55,37 @@ class AuroraVolumeMapperV1(private val applicationFiles: List<AuroraConfigFile>)
     }
 
 
-    private fun getConfigMap(auroraConfigFields: AuroraConfigFields): Map<String, String>? {
+    private fun getApplicationConfigFiles(auroraConfigFields: AuroraConfigFields): Map<String, String>? {
 
-        val configMap: MutableMap<String, MutableMap<String, String>> = mutableMapOf()
-        configHandlers.filter { it.name.count { it == '/' } > 1 }.forEach {
+        data class ConfigFieldValue(val fileName: String, val field: String, val escapedValue: String)
 
-            val parts = it.name.split("/", limit = 3)
-
-            val (_, configFile, field) = parts
-
-            val value: Any = auroraConfigFields.extract(it.name)
-            val escapedValue: String = when (value) {
-                is String -> StringEscapeUtils.escapeJavaScript(value)
-                is Number -> value.toString()
-                is Boolean -> value.toString()
-                else -> StringEscapeUtils.escapeJavaScript(jacksonObjectMapper().writeValueAsString(value))
-            }
-
-            val keyValue = mutableMapOf(field to escapedValue)
-            val keyProps = if (!configFile.endsWith(".properties")) {
-                "$configFile.properties"
-            } else configFile
-
-            if (configMap.containsKey(keyProps)) configMap[keyProps]?.putAll(keyValue)
-            else configMap.put(keyProps, keyValue)
+        fun extractConfigFieldValues(): List<ConfigFieldValue> {
+            return configHandlers
+                    .map { it.name }
+                    .filter { it.count { it == '/' } > 1 }
+                    .map { name ->
+                        val value: Any = auroraConfigFields.extract(name)
+                        val escapedValue: String = convertValueToString(value)
+                        val (_, configFile, field) = name.split("/", limit = 3)
+                        val fileName = configFile.ensureEndsWith(".properties")
+                        ConfigFieldValue(fileName, field, escapedValue)
+                    }
         }
 
-        if (configMap.isEmpty()) {
+        val configFieldValues = extractConfigFieldValues()
+        if (configFieldValues.isEmpty()) {
             return null
         }
 
-        return configMap.map { (key, value) ->
-            key to value.map {
-                "${it.key}=${it.value}"
-            }.joinToString(separator = "\\n")
-        }.toMap()
+        val configFileIndex: MutableMap<String, MutableMap<String, String>> = mutableMapOf()
+        configFieldValues.forEach {
+            configFileIndex.getOrPut(it.fileName, { mutableMapOf() })[it.field] = it.escapedValue
+        }
+
+        fun Map<String, String>.toPropertiesFile(): String = this
+                .map { "${it.key}=${it.value}" }
+                .joinToString(separator = System.getProperty("line.separator"))
+        return configFileIndex.map { it.key to it.value.toPropertiesFile() }.toMap()
     }
 
     private fun getSecretVault(auroraConfigFields: AuroraConfigFields): String? =
