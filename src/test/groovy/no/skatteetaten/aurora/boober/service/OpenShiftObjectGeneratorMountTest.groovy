@@ -37,7 +37,7 @@ class OpenShiftObjectGeneratorMountTest extends AbstractOpenShiftObjectGenerator
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid("utv", "aos-simple"))
 
     when:
-      def jsonMounts = objectGenerator.generateMountsInTest("deploy-id", deploymentSpec, null, deploymentSpec.name)
+      def jsonMounts = objectGenerator.generateSecretsAndConfigMapsInTest("deploy-id", deploymentSpec, null, deploymentSpec.name)
 
     then:
       jsonMounts.size() == 1
@@ -103,7 +103,7 @@ class OpenShiftObjectGeneratorMountTest extends AbstractOpenShiftObjectGenerator
 
     when:
       List<JsonNode> jsonMounts = objectGenerator.
-          generateMountsInTest("deploy-id", deploymentSpec, provisioningResult, deploymentSpec.name)
+          generateSecretsAndConfigMapsInTest("deploy-id", deploymentSpec, provisioningResult, deploymentSpec.name)
 
     then:
       jsonMounts.size() == 1
