@@ -54,7 +54,7 @@ data class AuroraDeploymentSpec(
 data class AuroraVolume(
         val secretVaultName: String?,
         val secretVaultKeys: List<String>,
-        val config: Map<String, Any?>?,
+        val config: Map<String, String>?,
         val mounts: List<Mount>?
 )
 
@@ -134,7 +134,7 @@ data class Mount(
         val mountName: String,
         val volumeName: String,
         val exist: Boolean,
-        val content: Map<String, Any?>? = null,
+        val content: Map<String, String>? = null,
         val secretVaultName: String? = null
 )
 
