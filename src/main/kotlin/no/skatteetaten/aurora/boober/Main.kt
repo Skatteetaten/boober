@@ -2,7 +2,6 @@
 
 package no.skatteetaten.aurora.boober
 
-import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.boober.platform.ApplicationPlatformHandler
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -11,11 +10,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.ApplicationListener
-import org.springframework.context.annotation.Import
 
 @SpringBootApplication
 @EnableCaching
-@Import(StringToDurationConverter::class)
 class Boober(val aphBeans: List<ApplicationPlatformHandler>) : ApplicationListener<ApplicationReadyEvent> {
 
 

@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
+import org.springframework.boot.test.autoconfigure.web.client.AutoConfigureWebClient
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.test.context.support.WithUserDetails
@@ -14,7 +15,7 @@ import no.skatteetaten.aurora.boober.service.openshift.token.ServiceAccountToken
 import no.skatteetaten.aurora.boober.service.openshift.token.UserDetailsTokenProvider
 
 @WithUserDetails("aurora")
-@RestClientTest
+@AutoConfigureWebClient
 @SpringBootTest(classes = [
     SpringTestUtils.MockRestServiceServiceInitializer,
     SpringTestUtils.SecurityMock,

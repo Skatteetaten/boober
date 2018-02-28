@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 
@@ -11,6 +12,7 @@ import no.skatteetaten.aurora.boober.Configuration
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import spock.lang.Specification
 
+@RestClientTest
 @SpringBootTest(classes = [
     Configuration,
     Config,

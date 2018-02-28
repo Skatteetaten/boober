@@ -7,6 +7,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.web.client.AutoConfigureWebClient
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpMethod
@@ -28,7 +29,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaIdReques
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResults
 
 @WithUserDetails("aurora")
-@RestClientTest
+@AutoConfigureWebClient
 @SpringBootTest(classes = [
     Configuration,
     SharedSecretReader,

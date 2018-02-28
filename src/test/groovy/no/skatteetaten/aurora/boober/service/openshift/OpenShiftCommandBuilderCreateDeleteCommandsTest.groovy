@@ -5,6 +5,8 @@ import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceC
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.web.client.AutoConfigureWebClient
+import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -28,6 +30,7 @@ import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
+@AutoConfigureWebClient
 @TestPropertySource(properties = ["openshift.url = http://localhost"])
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
