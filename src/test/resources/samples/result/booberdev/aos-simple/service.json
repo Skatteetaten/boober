@@ -1,8 +1,7 @@
 {
-  "kind": "Service",
   "apiVersion": "v1",
+  "kind": "Service",
   "metadata": {
-    "name": "aos-simple",
     "annotations": {
       "prometheus.io/scrape": "false",
       "sprocket.sits.no/service.webseal": "test",
@@ -13,22 +12,29 @@
       "updatedBy": "hero",
       "affiliation": "aos",
       "booberDeployId": "123"
-    }
+    },
+    "name": "aos-simple"
   },
   "spec": {
+    "externalIPs": [
+
+    ],
+    "loadBalancerSourceRanges": [
+
+    ],
     "ports": [
       {
         "name": "http",
-        "protocol": "TCP",
+        "nodePort": 0,
         "port": 80,
-        "targetPort": 8080,
-        "nodePort": 0
+        "protocol": "TCP",
+        "targetPort": 8080
       }
     ],
     "selector": {
       "name": "aos-simple"
     },
-    "type": "ClusterIP",
-    "sessionAffinity": "None"
+    "sessionAffinity": "None",
+    "type": "ClusterIP"
   }
 }

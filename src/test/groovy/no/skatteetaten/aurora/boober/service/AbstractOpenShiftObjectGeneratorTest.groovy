@@ -17,13 +17,12 @@ class AbstractOpenShiftObjectGeneratorTest extends AbstractAuroraDeploymentSpecT
 
   OpenShiftObjectGenerator createObjectGenerator(String username = "aurora") {
 
-    def ve = new Configuration().velocity()
     userDetailsProvider.getAuthenticatedUser() >> new User(username, "token", "Aurora OpenShift", [])
     def templateProcessor = new OpenShiftTemplateProcessor(userDetailsProvider, openShiftResourceClient, mapper)
 
     new OpenShiftObjectGenerator(
         "docker-registry.aurora.sits.no:5000",
-        new OpenShiftObjectLabelService(userDetailsProvider), new VelocityTemplateJsonService(ve, mapper),
+        new OpenShiftObjectLabelService(userDetailsProvider),
         mapper,
         templateProcessor, openShiftResourceClient)
   }

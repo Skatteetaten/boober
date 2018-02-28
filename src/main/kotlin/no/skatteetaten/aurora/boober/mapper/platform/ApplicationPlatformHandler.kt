@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.platform
+package no.skatteetaten.aurora.boober.mapper.platform
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper

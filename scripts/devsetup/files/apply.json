@@ -1,9 +1,0 @@
-{
-  "affiliation": "paas",
-  "applicationId": [
-    {
-      "environment": "reference",
-      "application": "boober-utv"
-    }
-  ]
-}

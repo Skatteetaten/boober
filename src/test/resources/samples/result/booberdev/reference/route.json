@@ -1,20 +1,23 @@
 {
-  "kind": "Route",
   "apiVersion": "v1",
+  "kind": "Route",
   "metadata": {
-    "name": "reference",
     "labels": {
       "app": "reference",
       "updatedBy": "hero",
       "affiliation": "aos",
       "booberDeployId": "123"
-    }
+    },
+    "name": "reference"
   },
   "spec": {
+    "alternateBackends": [
+
+    ],
+    "host": "reference-aos-booberdev.utv.paas.skead.no",
     "to": {
       "kind": "Service",
       "name": "reference"
-    },
-    "host": "reference-aos-booberdev.utv.paas.skead.no"
+    }
   }
 }

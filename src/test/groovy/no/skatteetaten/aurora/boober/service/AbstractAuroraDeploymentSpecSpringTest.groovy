@@ -29,7 +29,6 @@ import no.skatteetaten.aurora.boober.service.openshift.token.UserDetailsTokenPro
     OpenShiftClient,
     OpenShiftObjectGenerator,
     OpenShiftTemplateProcessor,
-    VelocityTemplateJsonService,
     OpenShiftObjectLabelService,
     LocalKubeConfigTokenProvider
 ], webEnvironment = SpringBootTest.WebEnvironment.NONE)

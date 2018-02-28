@@ -1,27 +1,24 @@
 {
-  "kind": "BuildConfig",
   "apiVersion": "v1",
+  "kind": "BuildConfig",
   "metadata": {
-    "name": "openshift-referanse-react",
     "labels": {
       "app": "openshift-referanse-react",
       "updatedBy": "hero",
       "affiliation": "aos",
       "booberDeployId": "123"
-    }
+    },
+    "name": "openshift-referanse-react"
   },
   "spec": {
-    "triggers": [
-
-    ],
+    "output": {
+      "to": {
+        "kind": "ImageStreamTag",
+        "name": "openshift-referanse-react:latest"
+      }
+    },
     "strategy": {
-      "type": "Custom",
       "customStrategy": {
-        "from": {
-          "kind": "ImageStreamTag",
-          "namespace": "openshift",
-          "name": "architect:1"
-        },
         "env": [
           {
             "name": "ARTIFACT_ID",
@@ -41,7 +38,7 @@
           },
           {
             "name": "DOCKER_BASE_IMAGE",
-            "value": "aurora/wrench"
+            "value": "wrench"
           },
           {
             "name": "PUSH_EXTRA_TAGS",
@@ -52,14 +49,20 @@
             "value": "nodejs"
           }
         ],
-        "exposeDockerSocket": true
-      }
+        "exposeDockerSocket": true,
+        "from": {
+          "kind": "ImageStreamTag",
+          "name": "architect:1",
+          "namespace": "openshift"
+        },
+        "secrets": [
+
+        ]
+      },
+      "type": "Custom"
     },
-    "output": {
-      "to": {
-        "kind": "ImageStreamTag",
-        "name": "openshift-referanse-react:latest"
-      }
-    }
+    "triggers": [
+
+    ]
   }
 }
