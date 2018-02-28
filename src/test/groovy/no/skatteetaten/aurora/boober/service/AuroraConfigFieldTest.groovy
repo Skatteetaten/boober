@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
+import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
+
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -21,6 +23,7 @@ import no.skatteetaten.aurora.boober.service.openshift.UserGroup
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
+@RestClientTest
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
     EncryptionService,

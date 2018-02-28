@@ -1,14 +1,12 @@
 package no.skatteetaten.aurora.boober.service
 
-import org.springframework.beans.factory.InitializingBean
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.web.client.MockServerRestTemplateCustomizer
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.UsernameNotFoundException
-import org.springframework.stereotype.Component
+import org.springframework.test.web.client.MockRestServiceServer
 import org.springframework.web.client.RestTemplate
 
 import no.skatteetaten.aurora.boober.ServiceTypes
@@ -16,32 +14,28 @@ import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.controller.security.User
 
 class SpringTestUtils {
-  @Component
-  static class MockRestServiceServiceInitializer implements InitializingBean {
-    @Autowired
-    MockServerRestTemplateCustomizer customizer
+  @Configuration
+  static class MockRestServiceServiceInitializer {
 
     @Autowired
     RestTemplate restTemplate
 
-    @Override
-    void afterPropertiesSet() throws Exception {
-      customizer.customize(restTemplate)
+    @Bean
+    MockRestServiceServer mockRestServiceServer() {
+      MockRestServiceServer.createServer(restTemplate)
     }
   }
 
-  @Component
-  static class AuroraMockRestServiceServiceInitializer implements InitializingBean {
-    @Autowired
-    MockServerRestTemplateCustomizer customizer
+  @Configuration
+  static class AuroraMockRestServiceServiceInitializer {
 
     @Autowired
     @TargetService(ServiceTypes.AURORA)
     RestTemplate restTemplate
 
-    @Override
-    void afterPropertiesSet() throws Exception {
-      customizer.customize(restTemplate)
+    @Bean
+    MockRestServiceServer mockRestServiceServer() {
+      MockRestServiceServer.createServer(restTemplate)
     }
   }
 
