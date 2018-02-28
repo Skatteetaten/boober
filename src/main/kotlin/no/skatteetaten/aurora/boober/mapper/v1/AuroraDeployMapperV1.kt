@@ -196,13 +196,10 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
 
         val simplified = auroraConfigFields.isSimplifiedConfig("database")
 
-        val dbs = if (simplified && auroraConfigFields.extract("database")) {
-            listOf(Database(name = name))
-        } else {
-            auroraConfigFields.getDatabases(dbHandlers)
+        if (simplified && auroraConfigFields.extract("database")) {
+            return listOf(Database(name = name))
         }
-
-        return dbs.map { it.copy(name = name.replace("_", "-")) }
+        return auroraConfigFields.getDatabases(dbHandlers)
     }
 
     fun findDbHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {

@@ -39,18 +39,18 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObje
     then:
       def appName = deploymentSpec.name
       def dbName = deploymentSpec.deploy.database.first().name.toLowerCase()
-      def dbNameUpper = dbName.toUpperCase()
+      def dbNameEnv = dbName.toUpperCase().replaceAll("-", "_")
 
       def spec = dc.spec.template.spec
       spec.volumes.find { it == [name: "$dbName-db", secret: [secretName: "$appName-$dbName-db"]] }
       def container = spec.containers[0]
       container.volumeMounts.find { it == [mountPath: "/u01/secrets/app/$dbName-db", name: "$dbName-db"] }
       def expectedEnvs = [
-          ("${dbNameUpper}_DB")           : "/u01/secrets/app/${dbName}-db/info",
-          ("${dbNameUpper}_DB_PROPERTIES"): "/u01/secrets/app/${dbName}-db/db.properties",
+          ("${dbNameEnv}_DB")           : "/u01/secrets/app/${dbName}-db/info",
+          ("${dbNameEnv}_DB_PROPERTIES"): "/u01/secrets/app/${dbName}-db/db.properties",
           DB                              : "/u01/secrets/app/${dbName}-db/info",
           DB_PROPERTIES                   : "/u01/secrets/app/${dbName}-db/db.properties",
-          ("VOLUME_${dbNameUpper}_DB")    : "/u01/secrets/app/${dbName}-db"
+          ("VOLUME_${dbNameEnv}_DB")    : "/u01/secrets/app/${dbName}-db"
       ]
       expectedEnvs.every { envName, envValue -> container.env.find { it.name == envName && it.value == envValue } }
   }

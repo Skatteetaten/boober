@@ -145,11 +145,6 @@ data class Database(
 ) {
     val spec: String
         get():String = (id?.let { "$name:$id" } ?: name).toLowerCase()
-    val envName: String
-        get(): String = "${name}_db".toUpperCase()
-
-    val dbName: String
-        get(): String = "$name-db".toLowerCase()
 }
 
 data class Probe(val path: String? = null, val port: Int, val delay: Int, val timeout: Int)
