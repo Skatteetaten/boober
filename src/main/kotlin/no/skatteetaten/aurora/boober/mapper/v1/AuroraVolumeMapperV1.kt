@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -53,9 +54,9 @@ class AuroraVolumeMapperV1(private val applicationFiles: List<AuroraConfigFile>)
     }
 
 
-    private fun getConfigMap(auroraConfigFields: AuroraConfigFields): Map<String, Any?>? {
+    private fun getConfigMap(auroraConfigFields: AuroraConfigFields): Map<String, String>? {
 
-        val configMap: MutableMap<String, MutableMap<String, Any?>> = mutableMapOf()
+        val configMap: MutableMap<String, MutableMap<String, String>> = mutableMapOf()
         configHandlers.filter { it.name.count { it == '/' } > 1 }.forEach {
 
             val parts = it.name.split("/", limit = 3)
@@ -63,9 +64,14 @@ class AuroraVolumeMapperV1(private val applicationFiles: List<AuroraConfigFile>)
             val (_, configFile, field) = parts
 
             val value: Any = auroraConfigFields.extract(it.name)
-            val escapedValue = if (value is String) StringEscapeUtils.escapeJavaScript(value) else value
-            val keyValue = mutableMapOf(field to escapedValue)
+            val escapedValue: String = when (value) {
+                is String -> StringEscapeUtils.escapeJavaScript(value)
+                is Number -> value.toString()
+                is Boolean -> value.toString()
+                else -> StringEscapeUtils.escapeJavaScript(jacksonObjectMapper().writeValueAsString(value))
+            }
 
+            val keyValue = mutableMapOf(field to escapedValue)
             val keyProps = if (!configFile.endsWith(".properties")) {
                 "$configFile.properties"
             } else configFile

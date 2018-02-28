@@ -26,7 +26,7 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec([
           "about.json"        : DEFAULT_ABOUT,
           "utv/about.json"    : DEFAULT_UTV_ABOUT,
-          "reference.json"    : REF_APP_JSON,
+          "reference.json"    : REF_APP_JSON_LONG_DB_NAME,
           "utv/reference.json": '''{}'''
       ], aid("utv", appName))
 
@@ -70,7 +70,7 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
       secret != null
       def d = secret.data
 
-      secret.metadata.name == 'reference-reference-db'
+      secret.metadata.name == 'reference-reference-name-db'
       b64d(d.jdbcurl) == 'jdbc:oracle:thin:@some-db-server01.skead.no:1521/dbhotel'
       b64d(d.name) == 'VCLFVAPKGOMBCFTWEVKZDYBGVTMYDP'
       b64d(d.id) == 'fd59dba9-7d67-4ea2-bb98-081a5df8c387'
