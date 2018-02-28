@@ -1,20 +1,23 @@
 {
-  "kind": "Route",
   "apiVersion": "v1",
+  "kind": "Route",
   "metadata": {
-    "name": "openshift-console-api",
     "labels": {
       "app": "openshift-console-api",
       "updatedBy": "hero",
       "affiliation": "aos",
       "booberDeployId": "123"
-    }
+    },
+    "name": "openshift-console-api"
   },
   "spec": {
+    "alternateBackends": [
+
+    ],
+    "host": "openshift-console-api-aos-booberdev.utv.paas.skead.no",
     "to": {
       "kind": "Service",
       "name": "openshift-console-api"
-    },
-    "host": "openshift-console-api-aos-booberdev.utv.paas.skead.no"
+    }
   }
 }

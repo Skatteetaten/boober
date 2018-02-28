@@ -25,7 +25,6 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 import no.skatteetaten.aurora.boober.service.OpenShiftTemplateProcessor
-import no.skatteetaten.aurora.boober.service.VelocityTemplateJsonService
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
@@ -40,7 +39,6 @@ import spock.mock.DetachedMockFactory
     Config,
     UserDetailsProvider,
     SharedSecretReader,
-    VelocityTemplateJsonService,
     OpenShiftObjectLabelService,
     OpenShiftCommandBuilder
 ])

@@ -1,20 +1,26 @@
 {
-  "kind": "Route",
   "apiVersion": "v1",
+  "kind": "Route",
   "metadata": {
-    "name": "openshift-referanse-react",
+    "annotations": {
+
+    },
     "labels": {
       "app": "openshift-referanse-react",
       "updatedBy": "hero",
       "affiliation": "aos",
       "booberDeployId": "123"
-    }
+    },
+    "name": "openshift-referanse-react"
   },
   "spec": {
+    "alternateBackends": [
+
+    ],
+    "host": "openshift-referanse-react-aos-booberdev.utv.paas.skead.no",
     "to": {
       "kind": "Service",
       "name": "openshift-referanse-react"
-    },
-    "host": "openshift-referanse-react-aos-booberdev.utv.paas.skead.no"
+    }
   }
 }

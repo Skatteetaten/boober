@@ -1,40 +1,24 @@
 {
-  "kind": "BuildConfig",
   "apiVersion": "v1",
+  "kind": "BuildConfig",
   "metadata": {
-    "name": "build",
     "labels": {
       "app": "build",
       "updatedBy": "hero",
       "affiliation": "aos",
       "booberDeployId": "123"
-    }
+    },
+    "name": "build"
   },
   "spec": {
-    "triggers": [
-      {
-        "type": "ImageChange",
-        "imageChange": {
-          "from": {
-            "kind": "ImageStreamTag",
-            "namespace": "openshift",
-            "name": "flange:8"
-          }
-        }
-      },
-      {
-        "type": "ImageChange",
-        "imageChange": {}
+    "output": {
+      "to": {
+        "kind": "DockerImage",
+        "name": "docker-registry.aurora.sits.no:5000/ske_aurora_openshift/aos-simple:default"
       }
-    ],
+    },
     "strategy": {
-      "type": "Custom",
       "customStrategy": {
-        "from": {
-          "kind": "ImageStreamTag",
-          "namespace": "openshift",
-          "name": "architect:1"
-        },
         "env": [
           {
             "name": "ARTIFACT_ID",
@@ -54,21 +38,42 @@
           },
           {
             "name": "DOCKER_BASE_IMAGE",
-            "value": "aurora/flange"
+            "value": "flange"
           },
           {
             "name": "PUSH_EXTRA_TAGS",
             "value": "latest,major,minor,patch"
           }
         ],
-        "exposeDockerSocket": true
-      }
+        "exposeDockerSocket": true,
+        "from": {
+          "kind": "ImageStreamTag",
+          "name": "architect:1",
+          "namespace": "openshift"
+        },
+        "secrets": [
+
+        ]
+      },
+      "type": "Custom"
     },
-    "output": {
-      "to": {
-        "kind": "DockerImage",
-        "name": "docker-registry.aurora.sits.no:5000/ske_aurora_openshift/aos-simple:default"
+    "triggers": [
+      {
+        "imageChange": {
+          "from": {
+            "kind": "ImageStreamTag",
+            "name": "flange:8",
+            "namespace": "openshift"
+          }
+        },
+        "type": "ImageChange"
+      },
+      {
+        "imageChange": {
+
+        },
+        "type": "ImageChange"
       }
-    }
+    ]
   }
 }

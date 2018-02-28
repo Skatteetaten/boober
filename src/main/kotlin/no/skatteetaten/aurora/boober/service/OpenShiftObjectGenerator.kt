@@ -5,6 +5,25 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fkorotkov.kubernetes.envVar
+import com.fkorotkov.kubernetes.metadata
+import com.fkorotkov.kubernetes.namespace
+import com.fkorotkov.kubernetes.service
+import com.fkorotkov.kubernetes.servicePort
+import com.fkorotkov.kubernetes.spec
+import com.fkorotkov.openshift.buildConfig
+import com.fkorotkov.openshift.buildTriggerPolicy
+import com.fkorotkov.openshift.customStrategy
+import com.fkorotkov.openshift.from
+import com.fkorotkov.openshift.imageChange
+import com.fkorotkov.openshift.metadata
+import com.fkorotkov.openshift.output
+import com.fkorotkov.openshift.projectRequest
+import com.fkorotkov.openshift.route
+import com.fkorotkov.openshift.spec
+import com.fkorotkov.openshift.strategy
+import com.fkorotkov.openshift.to
+import io.fabric8.kubernetes.api.model.IntOrString
 import no.skatteetaten.aurora.boober.Boober
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -17,6 +36,7 @@ import no.skatteetaten.aurora.boober.service.internal.ContainerGenerator
 import no.skatteetaten.aurora.boober.service.internal.DbhSecretGenerator
 import no.skatteetaten.aurora.boober.service.internal.DeploymentConfigGenerator
 import no.skatteetaten.aurora.boober.service.internal.ImageStreamGenerator
+import no.skatteetaten.aurora.boober.service.internal.RolebindingGenerator
 import no.skatteetaten.aurora.boober.service.internal.findAndCreateMounts
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
@@ -32,7 +52,6 @@ import org.springframework.stereotype.Service
 class OpenShiftObjectGenerator(
         @Value("\${boober.docker.registry}") val dockerRegistry: String,
         val openShiftObjectLabelService: OpenShiftObjectLabelService,
-        val velocityTemplateJsonService: VelocityTemplateJsonService,
         val mapper: ObjectMapper,
         val openShiftTemplateProcessor: OpenShiftTemplateProcessor,
         val openShiftClient: OpenShiftResourceClient) {
@@ -41,8 +60,16 @@ class OpenShiftObjectGenerator(
 
 
     fun generateDeploymentRequest(name: String): JsonNode {
-        logger.trace("Generating deploy request for name $name")
-        return mergeVelocityTemplate("deploymentrequest.json", mapOf("name" to name))
+
+        val deploymentRequest = mapOf(
+                "kind" to "DeploymentRequest",
+                "apiVersion" to "v1",
+                "name" to name,
+                "latest" to true,
+                "force" to true
+        )
+
+        return mapper.convertValue(deploymentRequest)
 
     }
 
@@ -66,32 +93,42 @@ class OpenShiftObjectGenerator(
 
     fun generateProjectRequest(environment: AuroraDeployEnvironment): JsonNode {
 
-        return mergeVelocityTemplate("projectrequest.json", mapOf(
-                "namespace" to environment.namespace
-        ))
+        val projectRequest = projectRequest {
+            apiVersion = "v1"
+            metadata {
+                name = environment.namespace
+                finalizers = null
+                ownerReferences = null
+            }
+        }
+
+        return mapper.convertValue(projectRequest)
     }
 
     fun generateNamespace(environment: AuroraDeployEnvironment): JsonNode {
 
-        return mergeVelocityTemplate("namespace.json", mapOf(
-                "namespace" to environment.namespace,
-                "affiliation" to environment.affiliation
-        ))
+        val namespace = namespace {
+            apiVersion = "v1"
+            metadata {
+                labels = mapOf("affiliation" to environment.affiliation)
+                name = environment.namespace
+                finalizers = null
+                ownerReferences = null
+            }
+        }
+
+        return mapper.convertValue(namespace)
     }
 
     fun generateRolebindings(permissions: Permissions): List<JsonNode> {
-        val admin = mergeVelocityTemplate("rolebinding.json", mapOf(
-                "permission" to permissions.admin,
-                "name" to "admin"
-        ))
+
+        val admin = RolebindingGenerator.create("admin", permissions.admin)
 
         val view = permissions.view?.let {
-            mergeVelocityTemplate("rolebinding.json", mapOf(
-                    "permission" to it,
-                    "name" to "view"))
+            RolebindingGenerator.create("view", it)
         }
 
-        return listOf(admin).addIfNotNull(view)
+        return listOf(admin).addIfNotNull(view).map { mapper.convertValue<JsonNode>(it) }
     }
 
     fun generateDeploymentConfig(deployId: String, deploymentSpec: AuroraDeploymentSpec, provisioningResult: ProvisioningResult? = null): JsonNode? =
@@ -119,7 +156,7 @@ class OpenShiftObjectGenerator(
         return mapper.convertValue(dc)
     }
 
-    fun generateService(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>): JsonNode? {
+    fun generateService(auroraDeploymentSpec: AuroraDeploymentSpec, serviceLabels: Map<String, String>): JsonNode? {
         return auroraDeploymentSpec.deploy?.let {
 
             val webseal = it.webseal?.let {
@@ -135,16 +172,40 @@ class OpenShiftObjectGenerator(
                 mapOf("prometheus.io/scheme" to "http",
                         "prometheus.io/scrape" to "true",
                         "prometheus.io/path" to it.path,
-                        "prometheus.io/port" to it.port
+                        "prometheus.io/port" to "${it.port}"
                 )
             } ?: mapOf("prometheus.io/scrape" to "false")
 
 
-            mergeVelocityTemplate("service.json", mapOf(
-                    "labels" to labels,
-                    "name" to auroraDeploymentSpec.name,
-                    "annotations" to prometheusAnnotations.addIfNotNull(webseal).addIfNotNull(websealRoles)
-            ))
+            val service = service {
+                apiVersion = "v1"
+                metadata {
+                    name = auroraDeploymentSpec.name
+                    finalizers = null
+                    ownerReferences = null
+                    annotations = prometheusAnnotations.addIfNotNull(webseal).addIfNotNull(websealRoles)
+                    labels = serviceLabels
+                }
+
+                spec {
+                    ports = listOf(
+                            servicePort {
+                                name = "http"
+                                protocol = "TCP"
+                                port = 80
+                                targetPort = IntOrString(8080)
+                                nodePort = 0
+                            }
+                    )
+
+                    selector = mapOf("name" to auroraDeploymentSpec.name)
+                    type = "ClusterIP"
+                    sessionAffinity = "None"
+
+                }
+            }
+            mapper.convertValue(service)
+
         }
     }
 
@@ -177,16 +238,33 @@ class OpenShiftObjectGenerator(
         }
     }
 
-    fun generateRoute(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>): List<JsonNode>? {
+    fun generateRoute(auroraDeploymentSpec: AuroraDeploymentSpec, routeLabels: Map<String, String>): List<JsonNode>? {
         return auroraDeploymentSpec.route?.route?.map {
-            logger.trace("Route is {}", it)
-            val host = auroraDeploymentSpec.assembleRouteHost(it.host ?: auroraDeploymentSpec.name)
-            val routeParams = mapOf(
-                    "name" to auroraDeploymentSpec.name,
-                    "route" to it,
-                    "host" to host,
-                    "labels" to labels)
-            mergeVelocityTemplate("route.json", routeParams)
+
+            val route = route {
+                apiVersion = "v1"
+                metadata {
+                    name = it.name
+                    labels = routeLabels
+                    ownerReferences = null
+                    finalizers = null
+                    it.annotations?.let {
+                        annotations = it.mapKeys { it.key.replace("|", "/") }
+                    }
+                }
+                spec {
+                    to {
+                        kind = "Service"
+                        name = auroraDeploymentSpec.name
+                    }
+                    host = auroraDeploymentSpec.assembleRouteHost(it.host ?: auroraDeploymentSpec.name)
+                    it.path?.let {
+                        path = it
+                    }
+                }
+
+            }
+            mapper.convertValue<JsonNode>(route)
         }
     }
 
@@ -241,27 +319,88 @@ class OpenShiftObjectGenerator(
                 deploymentSpec.name
             }
 
-            val labels = openShiftObjectLabelService.createCommonLabels(deploymentSpec, deployId, name = buildName)
-            val buildParams = mapOf(
-                    "labels" to labels,
-                    "buildName" to buildName,
-                    "build" to it,
-                    "dockerRegistry" to dockerRegistry
-            )
-            val applicationPlatform = it.applicationPlatform
-            val template = when (applicationPlatform) {
-                "java" -> "build-config.json"
-                else -> "build-config-web.json"
-            }
-            val bc = mergeVelocityTemplate(template, buildParams)
 
-            val testBc = if (it.testGitUrl != null) {
-                mergeVelocityTemplate("jenkins-build-config.json", buildParams)
-            } else {
-                null
-            }
+            val build = buildConfig {
+                apiVersion = "v1"
+                metadata {
+                    name = buildName
+                    labels = openShiftObjectLabelService.createCommonLabels(deploymentSpec, deployId, name = buildName)
+                    ownerReferences = null
+                    finalizers = null
+                }
 
-            listOf(bc).addIfNotNull(testBc)
+                spec {
+                    if (it.triggers) {
+                        triggers = listOf(
+                                buildTriggerPolicy {
+                                    type = "ImageChange"
+                                    imageChange {
+                                        from {
+                                            kind = "ImageStreamTag"
+                                            namespace = "openshift"
+                                            name = "${it.baseName}:${it.baseVersion}"
+                                        }
+                                    }
+                                },
+                                buildTriggerPolicy {
+                                    type="ImageChange"
+                                    imageChange {
+
+                                    }
+                                }
+                        )
+                    }
+                    strategy {
+                        type = "Custom"
+                        customStrategy {
+                            from {
+                                kind = "ImageStreamTag"
+                                namespace = "openshift"
+                                name = "${it.builderName}:${it.builderVersion}"
+                            }
+
+                            val envMap = mapOf(
+                                    "ARTIFACT_ID" to it.artifactId,
+                                    "GROUP_ID" to it.groupId,
+                                    "VERSION" to it.version,
+                                    "DOCKER_BASE_VERSION" to it.baseVersion,
+                                    "DOCKER_BASE_IMAGE" to it.baseName,
+                                    "PUSH_EXTRA_TAGS" to it.extraTags
+                            )
+
+                            env = envMap.map {
+                                envVar {
+                                    name = it.key
+                                    value = it.value
+                                }
+                            }
+
+                            if (it.applicationPlatform == "web") {
+                                env = env + envVar {
+                                    name = "APPLICATION_TYPE"
+                                    value = "nodejs"
+                                }
+                            }
+
+                            exposeDockerSocket = true
+                        }
+                        output {
+                            imageLabels = null
+                            to {
+                                kind = it.outputKind
+                                if (it.outputKind == "DockerImage") {
+                                    name = "$dockerRegistry/${it.outputName}"
+                                } else {
+                                    name = it.outputName
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            val bc = mapper.convertValue<JsonNode>(build)
+            //TODO: Handle jenkinsfile buildConfig
+            listOf(bc)
         }
     }
 
@@ -274,8 +413,4 @@ class OpenShiftObjectGenerator(
         return c(labels, mounts)
     }
 
-
-    fun mergeVelocityTemplate(template: String, content: Map<String, Any?>): JsonNode {
-        return velocityTemplateJsonService.renderToJson(template, content)
-    }
 }

@@ -11,25 +11,9 @@ The component is named after the Boober Fraggle (http://muppet.wikia.com/wiki/Bo
 
 ### Setup the API
 
-Boober maintains configuration files (called Aurora Config) in sets (called Affiliations) in git repositories. The 
-location of these repositories (either a local folder or remote via http) is a configuration parameter in boober and
-when running the API locally, the git path is a local folder. This folder must be created and initialized before
-boober can be started for the first time. Run
-
-    scripts/devsetup/initdev.sh
-   
-You are now ready to start boober;    
-
-    ./gradlew run
-
-or run from your ide.
-
-Then run the script 
-
-    scripts/devsetup/importdata.sh
-     
-to import some dev/test data.
-
+Boober reads AuroraConfig and Vaults from git repositories. When running locally the standard setup is to use a seperate
+project in bitbucket suffixed by `-dev`.
+ 
 By default, boober during development will deploy to the qa cluster.
 
 ### Setup ao
@@ -74,102 +58,5 @@ utv/about.json     | environment   | Environment configuration that is shared by
 reference.json     | application   | Configuration shared by all instances of an application in all projects
 utv/reference.json | override      | Configuration specific to one application in one openshift project
 
-All properties in AuroraConfig can be set inn all files.
+AuroraConfig is at the moment only documented internally but will be available externally soon.
 
-Below is an json with all possible values ( and some comments)
-```
-{
-  "schemaVersion" : "v1", //only supported version for now. Will get bumped if/when breaking changes occur
-  "type" : "deploy",  //valid types are deploy,development,localTemplate, template
-  "name" : "reference",
-  "cluster" : "utv", //what cluster to run on. We have 6 clusters utv,test,prod and utv-relay, test-relay, prod-relay
-  "groupId": "ske.aurora.openshift.referanse", //groupId for what to deploy
-  "artifactId": "openshift-referanse-springboot-server", //artifactId for what to deploy
-  "version": "0", //version to follow
-  "replicas": 3, //run application in 3 replicas
-  "envFile" : "about-template.json", ca be set in the override file, if set will use this value instead of about.json
-  "baseFile" : "new-base.json", must be set in the override file, if set will use this value instead of 
-  "flags": {
-    "cert": true, //generate keystore with cn=$groupId.$artifactId
-    "rolling": true, //we want rolling upgrade
-    "debug" : true, //turn on remote debugging. NB Should only be used in development
-    "alarm" : true //should this installation trigger alarms. Set to false to avoid alarms when setting up. In Prod it is always on
-  },
-  "permissions": {
-    "admin": {
-      "groups": "APP_PaaS_drift APP_PaaS_utv" //what AD groups can admin this project in openshift
-      "users" : "User1 user2" //what users can admin this project in openshift
-     },
-     "view" : {
-     "groups": "APP_PaaS_drift APP_PaaS_utv" //what AD groups can view this project in openshift
-           "users" : "User1 user2" //what users can view this project in openshift
-     }
-  },
-  "route": {
-    "generate": true, //will set host to $name-$namespace.
-    "path" : "/foo",
-    "host" : "custom-host", //will get cluster prefix added
-    "annotations" : {
-       "balance" : "lastconn" //set haproxy annotations. https://docs.openshift.com/container-platform/3.5/architecture/core_concepts/routes.html#route-specific-annotations
-     }
-  },
-  "resources" : { //set memory/cpu request and limit
-    "cpu": {
-      "max": "2000m",
-      "min" : "0"
-    },
-    "memory": {
-      "max": "256Mi",
-      "min" : "128Mi"
-    }
-  },
-
-  "prometheus": { //where is prometheus located, this is the default
-    "port": "8081",
-    "path": "/prometheus"
-  },
-  "webseal": { //open up firewall with webseal
-    "host": "webseal-hostprefix",
-    "roles": "role1, role2"
-  },
-  "managementPath": ":8081/actuator", //where is the management interface located, this is the default
-  "database": "referanseapp", //fetch or create database with this name from DatabaseHotel
-  "config": {
-    "1.properties" : { //all applications that run in the 1 tree will get this
-           "FOO": "bar" //this will be an ENV var
-          },
-    "latest.properties": { //all other applications will get this
-      "FOO": "baz"  //this will be an ENV var
-    }
-
-  },
-  "secretVault" : {
-      "name" : "test",            //all secrets in the vault are added as fields in a secret,
-      "keys" : ["key1", "key2"]   //UNLESS keys is set to a subset of the fields in the .properties file, in which case only those keys listed that exist in the vault will be added to the secret
-      }
-  "releseTo: : "prod" //when doing a deploy will not update imagestream but will share tag in docker registry. Imagestream listens to prod not version
-  "mount" : {
-      "mount-name" : {
-        "type" : "Secret", //"Secret or ConfigMap"
-        "existing" : true/false, //does the secret/configmap already exist in the cluster?
-        "path" : "/u01/volume/mount-name", //where the files are mounted
-        "content": "any content", //content to put in configmap
-        "secretVault" : "my-vault", //secret vault to use
-      }
-  }
-}
-
-```
-
-### Cluster role
-
-oc get clusterrole -o json system:aurora:aurora-fraggle > aurora-fraggle.json
-Change name to "system:paas-boober:aurora-fraggle"
-oc create -f aurora-fraggle.json
-oc adm policy add-cluster-role-to-user system:paas-boober:aurora-fraggle system:serviceaccount:paas-boober:aurora-fraggle
-
-### AuroraDeploymentConfiguration
-An internal represetantion of AuroraConfig that is normalized from an AuroraConfig via a AuroraConfigMapper abstraction.
-The mapping process knows which part of the AuroraConfig a given property is from.
-
-Knowing the source off all properties makes it easy to create good UI experience on top of the API.

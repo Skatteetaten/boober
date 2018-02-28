@@ -1,7 +1,0 @@
-{
-  "kind": "DeploymentRequest",
-  "apiVersion": "v1",
-  "name": "${name}",
-  "latest": true,
-  "force": true
-}

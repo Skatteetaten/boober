@@ -11,9 +11,6 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.ssl.SSLContexts
-import org.apache.velocity.app.VelocityEngine
-import org.apache.velocity.runtime.RuntimeConstants
-import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader
 import org.encryptor4j.factory.AbsKeyFactory
 import org.encryptor4j.factory.KeyFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -49,15 +46,6 @@ class Configuration {
         return jacksonObjectMapper()
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL)
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-    }
-
-    @Bean
-    fun velocity(): VelocityEngine {
-        return VelocityEngine().apply {
-            setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath")
-            setProperty("classpath.resource.loader.class", ClasspathResourceLoader::class.java.name)
-            init()
-        }
     }
 
     @Bean
