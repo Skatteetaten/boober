@@ -1,3 +1,5 @@
+package no.skatteetaten.aurora.boober.service.internal
+
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.secret
 import io.fabric8.kubernetes.api.model.Secret

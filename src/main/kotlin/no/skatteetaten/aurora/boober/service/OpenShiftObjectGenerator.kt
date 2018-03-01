@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import SecretGenerator
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
@@ -37,6 +36,7 @@ import no.skatteetaten.aurora.boober.service.internal.DbhSecretGenerator
 import no.skatteetaten.aurora.boober.service.internal.DeploymentConfigGenerator
 import no.skatteetaten.aurora.boober.service.internal.ImageStreamGenerator
 import no.skatteetaten.aurora.boober.service.internal.RolebindingGenerator
+import no.skatteetaten.aurora.boober.service.internal.SecretGenerator
 import no.skatteetaten.aurora.boober.service.internal.findAndCreateMounts
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult

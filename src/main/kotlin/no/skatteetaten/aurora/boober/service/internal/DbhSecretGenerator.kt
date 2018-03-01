@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service.internal
 
-import SecretGenerator
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.Secret
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
@@ -10,6 +9,7 @@ import java.util.Properties
 
 object DbhSecretGenerator {
 
+    @JvmStatic
     fun create(appName: String, schemaProvisionResults: SchemaProvisionResults, labels: Map<String, String>): List<Secret> {
 
         return schemaProvisionResults.results.map {
