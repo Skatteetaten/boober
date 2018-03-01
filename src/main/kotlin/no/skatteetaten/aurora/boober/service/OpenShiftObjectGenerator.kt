@@ -28,7 +28,7 @@ import no.skatteetaten.aurora.boober.Boober
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Mount
-import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.model.MountType.*
 import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.internal.ConfigMapGenerator
@@ -83,7 +83,7 @@ class OpenShiftObjectGenerator(
                     .addIfNotNull(generateService(auroraDeploymentSpec, labels))
                     .addIfNotNull(generateImageStream(deployId, auroraDeploymentSpec))
                     .addIfNotNull(generateBuilds(auroraDeploymentSpec, deployId))
-                    .addIfNotNull(generateMounts(mounts, labels, provisioningResult, auroraDeploymentSpec.name))
+                    .addIfNotNull(generateSecretsAndConfigMaps(auroraDeploymentSpec.name, mounts ?: emptyList(), labels, provisioningResult))
                     .addIfNotNull(generateRoute(auroraDeploymentSpec, labels))
                     .addIfNotNull(generateTemplate(auroraDeploymentSpec))
                     .addIfNotNull(generateLocalTemplate(auroraDeploymentSpec))
@@ -145,13 +145,13 @@ class OpenShiftObjectGenerator(
         }
 
         val applicationPlatformHandler = Boober.APPLICATION_PLATFORM_HANDLERS[auroraDeploymentSpec.applicationPlatform]
-                ?: throw IllegalArgumentException("ApplicationPlattformHanndler ${auroraDeploymentSpec.applicationPlatform} is not present")
+                ?: throw IllegalArgumentException("ApplicationPlatformHandler ${auroraDeploymentSpec.applicationPlatform} is not present")
         val deployment = applicationPlatformHandler.handleAuroraDeployment(auroraDeploymentSpec, labels, mounts)
 
 
-        val container = deployment.containers.map { ContainerGenerator.create(it) }
+        val containers = deployment.containers.map { ContainerGenerator.create(it) }
 
-        val dc = DeploymentConfigGenerator.create(deployment, container)
+        val dc = DeploymentConfigGenerator.create(deployment, containers)
 
         return mapper.convertValue(dc)
     }
@@ -268,47 +268,38 @@ class OpenShiftObjectGenerator(
         }
     }
 
-    fun generateMountsInTest(deployId: String, deploymentSpec: AuroraDeploymentSpec, provisioningResult: ProvisioningResult? = null, name: String): List<JsonNode>? {
+    fun generateSecretsAndConfigMapsInTest(deployId: String, deploymentSpec: AuroraDeploymentSpec, provisioningResult: ProvisioningResult? = null, name: String): List<JsonNode>? {
 
-        return withLabelsAndMounts(deployId, deploymentSpec, provisioningResult, { labels, mounts -> generateMounts(mounts, labels, provisioningResult, name) })
+        return withLabelsAndMounts(deployId, deploymentSpec, provisioningResult, { labels, mounts ->
+            generateSecretsAndConfigMaps(name, mounts ?: emptyList(), labels, provisioningResult)
+        })
     }
 
-    private fun generateMounts(mounts: List<Mount>?, labels: Map<String, String>, provisioningResult: ProvisioningResult?, appName: String): List<JsonNode>? {
+    private fun generateSecretsAndConfigMaps(appName: String, mounts: List<Mount>, labels: Map<String, String>, provisioningResult: ProvisioningResult?): List<JsonNode> {
 
+        fun Mount.getNamespacedVolumeName(): String = this.volumeName.ensureStartWith(appName, "-")
 
-        val schemaSecrets = provisioningResult?.schemaProvisionResults?.let { DbhSecretGenerator.create(appName, it, labels) }
+        val schemaSecrets = provisioningResult?.schemaProvisionResults
+                ?.let { DbhSecretGenerator.create(appName, it, labels) }
+                ?: emptyList()
 
-        val schemaSecretNames = schemaSecrets?.map { it.metadata.name } ?: emptyList()
+        val schemaSecretNames = schemaSecrets.map { it.metadata.name }
 
-        val objects = mounts?.filter { !it.exist }
-                ?.filter { !schemaSecretNames.contains(it.volumeName) }
-                ?.mapNotNull {
-
-                    when (it.type) {
-
-                        MountType.ConfigMap -> {
-
-                            val content = it.content?.let {
-                                it.filterNullValues().mapValues { it.value }
-                            } ?: mapOf()
-
-                            ConfigMapGenerator.create(it.volumeName.ensureStartWith(appName, "-"), labels, content)
-                                    .let { mapper.convertValue<JsonNode>(it) }
-                        }
-                        MountType.Secret -> {
-
-                            val content = it.secretVaultName?.let {
-                                provisioningResult?.vaultResults?.getVaultData(it)
-                            }
-                            SecretGenerator.create(it.volumeName.ensureStartWith(appName, "-"), labels, content)
-                                    .let { mapper.convertValue<JsonNode>(it) }
-
-                        }
-                        MountType.PVC -> null
+        return mounts
+                .filter { !it.exist }
+                .filter { !schemaSecretNames.contains(it.volumeName) }
+                .mapNotNull { mount: Mount ->
+                    when (mount.type) {
+                        ConfigMap -> mount.content
+                                ?.let { ConfigMapGenerator.create(mount.getNamespacedVolumeName(), labels, it) }
+                        Secret -> mount.secretVaultName
+                                ?.let { provisioningResult?.vaultResults?.getVaultData(it) }
+                                ?.let { SecretGenerator.create(mount.getNamespacedVolumeName(), labels, it) }
+                        PVC -> null
                     }
-                } ?: emptyList()
-
-        return objects.addIfNotNull(schemaSecrets?.map { mapper.convertValue<JsonNode>(it) })
+                }
+                .plus(schemaSecrets)
+                .map { mapper.convertValue<JsonNode>(it) }
     }
 
     private fun generateBuilds(deploymentSpec: AuroraDeploymentSpec, deployId: String): List<JsonNode>? {

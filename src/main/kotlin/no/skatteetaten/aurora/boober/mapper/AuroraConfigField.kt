@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.mapper
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.MissingNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.skatteetaten.aurora.boober.mapper.v1.convertValueToString
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.Database
 import org.apache.commons.lang.StringEscapeUtils
@@ -53,12 +54,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         val env = configExtractors.filter { it.name.count { it == '/' } == 1 }.map {
             val (_, field) = it.name.split("/", limit = 2)
             val value: Any = extract(it.name)
-            val escapedValue: String = when (value) {
-                is String -> StringEscapeUtils.escapeJavaScript(value)
-                is Number -> value.toString()
-                is Boolean -> value.toString()
-                else -> StringEscapeUtils.escapeJavaScript(jacksonObjectMapper().writeValueAsString(value))
-            }
+            val escapedValue: String = convertValueToString(value)
             field to escapedValue
         }
 
