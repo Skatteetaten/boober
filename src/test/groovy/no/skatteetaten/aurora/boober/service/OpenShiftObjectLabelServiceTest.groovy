@@ -1,16 +1,15 @@
 package no.skatteetaten.aurora.boober.service
 
+import static no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService.toOpenShiftSafeLabel
+
 import spock.lang.Specification
 
 class OpenShiftObjectLabelServiceTest extends Specification {
 
   def "Truncates labels when too long"() {
-    when:
-      def safeLabel = OpenShiftObjectLabelService.toOpenShiftSafeLabel(label)
-    then:
-      safeLabel.matches(OpenShiftObjectLabelService.LABEL_PATTERN)
-      safeLabel.length() <= OpenShiftObjectLabelService.MAX_LABEL_VALUE_LENGTH
-      safeLabel == expectedLabel
+
+    expect:
+      toOpenShiftSafeLabel(label) == expectedLabel
 
     where:
       label                                                                             | expectedLabel
