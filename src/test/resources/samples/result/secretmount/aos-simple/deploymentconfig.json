@@ -98,6 +98,10 @@
                 "value": "/u01/secrets/app/aos-simple-cert/descriptor.properties"
               },
               {
+                "name": "VOLUME_AOS_SIMPLE_CERT",
+                "value": "/u01/secrets/app/aos-simple-cert"
+              },
+              {
                 "name": "VOLUME_SECRET_MOUNT",
                 "value": "/u01/foo"
               },
@@ -105,10 +109,7 @@
                 "name": "VOLUME_PVC",
                 "value": "/foo"
               },
-              {
-                "name": "VOLUME_AOS_SIMPLE_CERT",
-                "value": "/u01/secrets/app/aos-simple-cert"
-              },
+
               {
                 "name": "HTTP_PORT",
                 "value": "8080"
@@ -168,16 +169,16 @@
                 "name": "application-log-volume"
               },
               {
+                "mountPath": "/u01/secrets/app/aos-simple-cert",
+                "name": "aos-simple-cert"
+              },
+              {
                 "mountPath": "/u01/foo",
                 "name": "secret-mount"
               },
               {
                 "mountPath": "/foo",
                 "name": "pvc"
-              },
-              {
-                "mountPath": "/u01/secrets/app/aos-simple-cert",
-                "name": "aos-simple-cert"
               }
             ]
           }
@@ -186,21 +187,21 @@
         "restartPolicy": "Always",
         "volumes": [
           {
+            "name": "aos-simple-cert",
+            "secret": {
+              "secretName": "aos-simple-cert"
+            }
+          },
+          {
             "name": "secret-mount",
             "secret": {
-              "secretName": "aos-simple-secret-mount"
+              "secretName": "secret-mount"
             }
           },
           {
             "name": "pvc",
             "persistentVolumeClaim": {
               "claimName": "pvc"
-            }
-          },
-          {
-            "name": "aos-simple-cert",
-            "secret": {
-              "secretName": "aos-simple-cert"
             }
           },
           {

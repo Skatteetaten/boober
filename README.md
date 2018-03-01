@@ -11,25 +11,9 @@ The component is named after the Boober Fraggle (http://muppet.wikia.com/wiki/Bo
 
 ### Setup the API
 
-Boober maintains configuration files (called Aurora Config) in sets (called Affiliations) in git repositories. The 
-location of these repositories (either a local folder or remote via http) is a configuration parameter in boober and
-when running the API locally, the git path is a local folder. This folder must be created and initialized before
-boober can be started for the first time. Run
-
-    scripts/devsetup/initdev.sh
-   
-You are now ready to start boober;    
-
-    ./gradlew run
-
-or run from your ide.
-
-Then run the script 
-
-    scripts/devsetup/importdata.sh
-     
-to import some dev/test data.
-
+Boober reads AuroraConfig and Vaults from git repositories. When running locally the standard setup is to use a seperate
+project in bitbucket suffixed by `-dev`.
+ 
 By default, boober during development will deploy to the qa cluster.
 
 ### Setup ao
@@ -43,29 +27,21 @@ data)
 
 ## Architecture
 
-Boober uses Git as a storage mechanism for its config files. Boober owns this repository and it should be the only
-component writing to it. It will ensure that the files written are valid and that secrets are encrypted.
 
-### How AuroraConfig is saved into git
-![save](docs/images/boober.png "Save AuroraConfig")
-
-
-### How objects in OpenShift are created
-![deploy](docs/images/boober-deploy.png "Deploy application")
-
-## Concepts
-
-### Affiliation
-An affiliation is a group of projects and environments that are managed by the same team. Each affiliation has a
-seperate git repo where their configuration is stored.
-
-All projects created in openshift start with the name of the affiliation.
-
-The affiliation project (has the same name as affiliation) is set up when a project has its Onboarding.
+Boober contains the followin main parts
 
 ### AuroraConfig
-A set of versioned files (all files in one affiliation must have the same version) to express how to create projects
-and deploy applications on OpenShift
+A set of json/yaml files stored in a git repository under a single project/organization. Boober needs commit access to it.
+Users can directly push to the AuroraConfig repository, in order to ensure that files are validated Boober provides a 
+validation endpoint
+
+Boober itself can modify single files in the AuroraConfig. For more complex operations on AuroraConfig just use git directly.
+
+When Boober does a deploy a deployTag is created in the AuroraConfig repository.
+
+AuroraConfig is versioned with a schemaVersion. All files in a single AuroraConfig must have the same schemaVersion.
+
+The following file types are in an AuroraConfig
 
 filename           | name          | description  
 -------------------|---------------|:-----------------------------------------------------------------
@@ -74,102 +50,37 @@ utv/about.json     | environment   | Environment configuration that is shared by
 reference.json     | application   | Configuration shared by all instances of an application in all projects
 utv/reference.json | override      | Configuration specific to one application in one openshift project
 
-All properties in AuroraConfig can be set inn all files.
+AuroraConfig is at the moment only documented internally but will be available externally soon.
 
-Below is an json with all possible values ( and some comments)
-```
-{
-  "schemaVersion" : "v1", //only supported version for now. Will get bumped if/when breaking changes occur
-  "type" : "deploy",  //valid types are deploy,development,localTemplate, template
-  "name" : "reference",
-  "cluster" : "utv", //what cluster to run on. We have 6 clusters utv,test,prod and utv-relay, test-relay, prod-relay
-  "groupId": "ske.aurora.openshift.referanse", //groupId for what to deploy
-  "artifactId": "openshift-referanse-springboot-server", //artifactId for what to deploy
-  "version": "0", //version to follow
-  "replicas": 3, //run application in 3 replicas
-  "envFile" : "about-template.json", ca be set in the override file, if set will use this value instead of about.json
-  "baseFile" : "new-base.json", must be set in the override file, if set will use this value instead of 
-  "flags": {
-    "cert": true, //generate keystore with cn=$groupId.$artifactId
-    "rolling": true, //we want rolling upgrade
-    "debug" : true, //turn on remote debugging. NB Should only be used in development
-    "alarm" : true //should this installation trigger alarms. Set to false to avoid alarms when setting up. In Prod it is always on
-  },
-  "permissions": {
-    "admin": {
-      "groups": "APP_PaaS_drift APP_PaaS_utv" //what AD groups can admin this project in openshift
-      "users" : "User1 user2" //what users can admin this project in openshift
-     },
-     "view" : {
-     "groups": "APP_PaaS_drift APP_PaaS_utv" //what AD groups can view this project in openshift
-           "users" : "User1 user2" //what users can view this project in openshift
-     }
-  },
-  "route": {
-    "generate": true, //will set host to $name-$namespace.
-    "path" : "/foo",
-    "host" : "custom-host", //will get cluster prefix added
-    "annotations" : {
-       "balance" : "lastconn" //set haproxy annotations. https://docs.openshift.com/container-platform/3.5/architecture/core_concepts/routes.html#route-specific-annotations
-     }
-  },
-  "resources" : { //set memory/cpu request and limit
-    "cpu": {
-      "max": "2000m",
-      "min" : "0"
-    },
-    "memory": {
-      "max": "256Mi",
-      "min" : "128Mi"
-    }
-  },
+### AuroraVaults
+Secrets are stored in another git repo encrypted. Boober is the only one who should write/read from this repo since
+it has the encryption keys.
 
-  "prometheus": { //where is prometheus located, this is the default
-    "port": "8081",
-    "path": "/prometheus"
-  },
-  "webseal": { //open up firewall with webseal
-    "host": "webseal-hostprefix",
-    "roles": "role1, role2"
-  },
-  "managementPath": ":8081/actuator", //where is the management interface located, this is the default
-  "database": "referanseapp", //fetch or create database with this name from DatabaseHotel
-  "config": {
-    "1.properties" : { //all applications that run in the 1 tree will get this
-           "FOO": "bar" //this will be an ENV var
-          },
-    "latest.properties": { //all other applications will get this
-      "FOO": "baz"  //this will be an ENV var
-    }
 
-  },
-  "secretVault" : {
-      "name" : "test",            //all secrets in the vault are added as fields in a secret,
-      "keys" : ["key1", "key2"]   //UNLESS keys is set to a subset of the fields in the .properties file, in which case only those keys listed that exist in the vault will be added to the secret
-      }
-  "releseTo: : "prod" //when doing a deploy will not update imagestream but will share tag in docker registry. Imagestream listens to prod not version
-  "mount" : {
-      "mount-name" : {
-        "type" : "Secret", //"Secret or ConfigMap"
-        "existing" : true/false, //does the secret/configmap already exist in the cluster?
-        "path" : "/u01/volume/mount-name", //where the files are mounted
-        "content": "any content", //content to put in configmap
-        "secretVault" : "my-vault", //secret vault to use
-      }
-  }
-}
+### AuroraDeploymentSpec
+An unversioned abstraction between AuroraConfig and the ObjectGeneration processes via ApplicationId.
 
-```
+Given an applicationId that is deployed from an AuroraConfig the following process will happen:
+ 
+ - find the files in an AuroraConfig that is relevant for this ApplicationId
+ - convert the AuroraConfig into an AuroraDeploymentSpec using a versioned process
+ - the mapping logic will retain information about what file a given config item is retrieved from
+  
+### External resources provisioning
+External resources that are needed for an application to start is processed in Boober and given to the ObjectGeneration 
+process
 
-### Cluster role
+### OpenShiftObjectGeneration
+Boober user [kubernetes-model](https://github.com/fabric8io/kubernetes-model) and [kubernetes-dsl](https://github.com/fkorotkov/k8s-kotlin-dsl) in order to transfer input into OpenShift objects.
 
-oc get clusterrole -o json system:aurora:aurora-fraggle > aurora-fraggle.json
-Change name to "system:paas-boober:aurora-fraggle"
-oc create -f aurora-fraggle.json
-oc adm policy add-cluster-role-to-user system:paas-boober:aurora-fraggle system:serviceaccount:paas-boober:aurora-fraggle
+### ObjectObjectUpdate
+When creating/updating state in OpenShift Boober has a very opinoinated approach. We do not use apply on the objects we
+put/update the new objects into the cluster conditionally on resourceVersion. 
 
-### AuroraDeploymentConfiguration
-An internal represetantion of AuroraConfig that is normalized from an AuroraConfig via a AuroraConfigMapper abstraction.
-The mapping process knows which part of the AuroraConfig a given property is from.
+We do this because we want the truth of the state to be in AuroraConfig not in the cluster. If somebody fiddles with an
+object and want it back to desired state they only need to run the deploy process in Boober.
 
-Knowing the source off all properties makes it easy to create good UI experience on top of the API.
+Immutable fields on objects are retained.
+
+
+

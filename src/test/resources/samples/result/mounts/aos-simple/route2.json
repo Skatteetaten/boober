@@ -1,24 +1,27 @@
 {
-  "kind": "Route",
   "apiVersion": "v1",
+  "kind": "Route",
   "metadata": {
-    "name": "aos-simple-bar",
+    "annotations": {
+      "haproxy.router.openshift.io/timeout": "30s"
+    },
     "labels": {
       "app": "aos-simple",
       "updatedBy": "hero",
       "affiliation": "aos",
       "booberDeployId": "123"
     },
-    "annotations": {
-      "haproxy.router.openshift.io/timeout": "30s"
-    }
+    "name": "aos-simple-bar"
   },
   "spec": {
+    "alternateBackends": [
+
+    ],
+    "host": "aos-mounts.utv.paas.skead.no",
+    "path": "/bar",
     "to": {
       "kind": "Service",
       "name": "aos-simple"
-    },
-    "host": "aos-mounts.utv.paas.skead.no",
-    "path": "/bar"
+    }
   }
 }

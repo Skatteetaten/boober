@@ -4,9 +4,6 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.TemplateType.development
-import no.skatteetaten.aurora.boober.platform.ApplicationPlatformHandler
-import no.skatteetaten.aurora.boober.platform.AuroraContainer
-import no.skatteetaten.aurora.boober.platform.AuroraDeployment
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.springframework.stereotype.Component
 

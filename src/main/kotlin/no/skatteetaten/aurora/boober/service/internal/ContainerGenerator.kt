@@ -17,7 +17,7 @@ import io.fabric8.kubernetes.api.model.Quantity
 import io.fabric8.kubernetes.api.model.QuantityBuilder
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
 import no.skatteetaten.aurora.boober.model.Probe
-import no.skatteetaten.aurora.boober.platform.AuroraContainer
+import no.skatteetaten.aurora.boober.mapper.platform.AuroraContainer
 
 object ContainerGenerator {
     fun create(adcContainer: AuroraContainer): Container {

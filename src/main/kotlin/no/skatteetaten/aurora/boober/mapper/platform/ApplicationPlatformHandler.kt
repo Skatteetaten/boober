@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.platform
+package no.skatteetaten.aurora.boober.mapper.platform
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -14,7 +14,7 @@ import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterNullValues
-import org.apache.commons.lang.StringEscapeUtils
+import org.apache.commons.text.StringEscapeUtils
 
 abstract class ApplicationPlatformHandler(val name:String) {
     open fun handlers(handlers: Set<AuroraConfigFieldHandler>): Set<AuroraConfigFieldHandler> = handlers
@@ -83,7 +83,7 @@ abstract class ApplicationPlatformHandler(val name:String) {
         fun escapeOverrides(): String? {
             val files = deploy.overrideFiles.mapValues { jacksonObjectMapper().readValue(it.value, JsonNode::class.java) }
             val content = jacksonObjectMapper().writeValueAsString(files)
-            return StringEscapeUtils.escapeJavaScript(content).takeIf { it != "{}" }
+            return StringEscapeUtils.escapeEcmaScript(content).takeIf { it != "{}" }
         }
 
         return mapOf(

@@ -2,7 +2,7 @@
 
 package no.skatteetaten.aurora.boober
 
-import no.skatteetaten.aurora.boober.platform.ApplicationPlatformHandler
+import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.SpringApplication

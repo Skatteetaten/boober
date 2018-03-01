@@ -7,7 +7,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.TemplateType
-import no.skatteetaten.aurora.boober.platform.ApplicationPlatformHandler
+import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
 
 @JvmOverloads
 fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig, applicationId: ApplicationId,

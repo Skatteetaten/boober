@@ -51,7 +51,6 @@ import spock.mock.DetachedMockFactory
     UserDetailsTokenProvider,
     AuroraDeploymentSpecValidator,
     SharedSecretReader,
-    VelocityTemplateJsonService,
     OpenShiftObjectLabelService,
     RedeployService,
     BitbucketProjectService

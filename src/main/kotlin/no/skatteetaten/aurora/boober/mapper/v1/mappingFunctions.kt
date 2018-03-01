@@ -1,7 +1,9 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import org.apache.commons.text.StringEscapeUtils
 
 fun List<AuroraConfigFile>.findSubKeys(name: String): Set<String> {
     return this.flatMap {
@@ -36,5 +38,14 @@ fun List<AuroraConfigFile>.findConfigFieldHandlers(): List<AuroraConfigFieldHand
                 AuroraConfigFieldHandler("$name/${configFile.key}/$field")
             }
         }
+    }
+}
+
+fun convertValueToString(value: Any): String {
+    return when (value) {
+        is String -> StringEscapeUtils.escapeEcmaScript(value)
+        is Number -> value.toString()
+        is Boolean -> value.toString()
+        else -> StringEscapeUtils.escapeEcmaScript(jacksonObjectMapper().writeValueAsString(value))
     }
 }

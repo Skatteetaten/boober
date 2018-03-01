@@ -1,42 +1,33 @@
 package no.skatteetaten.aurora.boober.service.internal
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.fabric8.kubernetes.api.model.Secret
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
-import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResults
-import no.skatteetaten.aurora.boober.service.VelocityTemplateJsonService
 import java.io.ByteArrayOutputStream
-import java.util.*
+import java.util.Properties
 
-class DbhSecretGenerator(
-        private val velocityTemplateJsonService: VelocityTemplateJsonService,
-        private val openShiftObjectLabelService: OpenShiftObjectLabelService,
-        private val mapper: ObjectMapper
-) {
+object DbhSecretGenerator {
 
-    object Base64 {
-        fun encode(str: String): String = org.apache.commons.codec.binary.Base64.encodeBase64String(str.toByteArray())
-    }
+    @JvmStatic
+    fun create(appName: String, schemaProvisionResults: SchemaProvisionResults, labels: Map<String, String>): List<Secret> {
 
-    fun generateSecretsForSchemas(deployId: String, deploymentSpec: AuroraDeploymentSpec,
-                                  schemaProvisionResults: SchemaProvisionResults): List<JsonNode> {
-
-        val labels = openShiftObjectLabelService.createCommonLabels(deploymentSpec, deployId)
         return schemaProvisionResults.results.map {
 
             val connectionProperties = createConnectionProperties(it.dbhSchema)
             val infoFile = createInfoFile(it.dbhSchema)
-            velocityTemplateJsonService.renderToJson("secret.json", mapOf(
-                    "base64" to Base64,
-                    "labels" to labels,
-                    "deploymentSpec" to deploymentSpec,
-                    "dbhSchema" to it.dbhSchema,
-                    "request" to it.request,
-                    "connectionProperties" to connectionProperties,
-                    "infoFile" to infoFile
-            ))
+
+            SecretGenerator.create(
+                    secretName = "${appName}-${it.request.schemaName}-db",
+                    secretLabels = labels,
+                    secretData = mapOf(
+                            "db.properties" to connectionProperties,
+                            "id" to it.dbhSchema.id,
+                            "info" to infoFile,
+                            "jdbcurl" to it.dbhSchema.jdbcUrl,
+                            "name" to it.dbhSchema.username)
+                            .mapValues { it.value.toByteArray() }
+            )
         }
     }
 
@@ -58,7 +49,7 @@ class DbhSecretGenerator(
                 )),
                 "labels" to dbhSchema.labels
         ))
-        return mapper.writeValueAsString(infoFile)
+        return jacksonObjectMapper().writeValueAsString(infoFile)
     }
 
     private fun createConnectionProperties(dbhSchema: DbhSchema): String {

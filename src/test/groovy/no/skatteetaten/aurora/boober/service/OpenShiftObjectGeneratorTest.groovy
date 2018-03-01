@@ -83,7 +83,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       "webseal"     | "sprocket"      | null              | []
       "booberdev"   | "sprocket"      | null              | []
       "booberdev"   | "tvinn"         | "atomhopper.json" | []
-      "jenkins"     | "build"         | null              | []
+     // "jenkins"     | "build"         | null              | []
       "booberdev"   | "reference-web" | null              | []
       "booberdev"   | "build"         | null              | []
       "booberdev"   | "aos-simple"    | null              | booberDevAosSimpleOverrides
