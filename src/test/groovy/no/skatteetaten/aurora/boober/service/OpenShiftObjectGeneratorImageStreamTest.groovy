@@ -27,7 +27,7 @@ class OpenShiftObjectGeneratorImageStreamTest extends AbstractOpenShiftObjectGen
 
     then:
       def labels = imageStream.metadata.labels
-      AFFILIATION == AFFILIATION
+      labels.affiliation == AFFILIATION
       labels.app == 'aos-simple'
       labels.booberDeployId == 'deploy-id'
       labels.releasedVersion == 'APSHOT-feature_MFU_3056-20171122.091423-23-b2.2.5-oracle8-1.4.0'

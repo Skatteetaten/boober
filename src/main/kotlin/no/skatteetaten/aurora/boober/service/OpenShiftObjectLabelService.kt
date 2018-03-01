@@ -10,6 +10,7 @@ class OpenShiftObjectLabelService(private val userDetailsProvider: UserDetailsPr
         @JvmStatic
         val MAX_LABEL_VALUE_LENGTH = 63
 
+        @JvmStatic
         val LABEL_PATTERN = "(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?"
 
         /**
