@@ -36,7 +36,7 @@ class AuroraConfigControllerTest extends AbstractAuroraConfigTest {
 
   def auroraConfigService = Mock(AuroraConfigService)
 
-  void setup() {
+  def setup() {
     def controller = new AuroraConfigControllerV1(auroraConfigService)
     mockMvc = MockMvcBuilders.
         standaloneSetup(controller)
