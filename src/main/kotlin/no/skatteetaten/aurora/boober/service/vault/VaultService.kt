@@ -104,6 +104,7 @@ class VaultService(
 
     fun setVaultPermissions(vaultCollectionName: String, vaultName: String, groupPermissions: List<String>) {
 
+        assertCurrentUserHasAccess(groupPermissions)
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
             val vault = findVault(vaultCollection, vaultName)
             vault.permissions = groupPermissions
@@ -113,6 +114,7 @@ class VaultService(
 
     fun import(vaultCollectionName: String, vaultName: String, permissions: List<String>, secrets: Map<String, ByteArray>): EncryptedFileVault {
 
+        assertCurrentUserHasAccess(permissions)
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
             vaultCollection.createVault(vaultName).let { vault ->
                 vault.clear()
@@ -137,14 +139,14 @@ class VaultService(
     private fun findVaultByNameIfAllowed(vaultCollection: VaultCollection, vaultName: String): EncryptedFileVault? {
 
         val vault = vaultCollection.findVaultByName(vaultName)
-        return vault?.apply { assertCurrentUserHasAccess(this) }
+        return vault?.apply { assertCurrentUserHasAccess(this.permissions) }
     }
 
-    private fun assertCurrentUserHasAccess(vault: EncryptedFileVault) {
+    private fun assertCurrentUserHasAccess(permissions: List<String>) {
         val user = userDetailsProvider.getAuthenticatedUser()
-        if (!user.hasAnyRole(vault.permissions)) {
-            val message = "You (${user.username}) do not have required permissions (${vault.permissions}) to " +
-                    "operate on this vault (${vault.name}). You have ${user.authorities.map { it.authority }}"
+        if (!user.hasAnyRole(permissions)) {
+            val message = "You (${user.username}) do not have required permissions ($permissions) to " +
+                "operate on this vault. You have ${user.authorities.map { it.authority }}"
             throw UnauthorizedAccessException(message)
         }
     }
