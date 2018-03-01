@@ -27,29 +27,21 @@ data)
 
 ## Architecture
 
-Boober uses Git as a storage mechanism for its config files. Boober owns this repository and it should be the only
-component writing to it. It will ensure that the files written are valid and that secrets are encrypted.
 
-### How AuroraConfig is saved into git
-![save](docs/images/boober.png "Save AuroraConfig")
-
-
-### How objects in OpenShift are created
-![deploy](docs/images/boober-deploy.png "Deploy application")
-
-## Concepts
-
-### Affiliation
-An affiliation is a group of projects and environments that are managed by the same team. Each affiliation has a
-seperate git repo where their configuration is stored.
-
-All projects created in openshift start with the name of the affiliation.
-
-The affiliation project (has the same name as affiliation) is set up when a project has its Onboarding.
+Boober contains the followin main parts
 
 ### AuroraConfig
-A set of versioned files (all files in one affiliation must have the same version) to express how to create projects
-and deploy applications on OpenShift
+A set of json/yaml files stored in a git repository under a single project/organization. Boober needs commit access to it.
+Users can directly push to the AuroraConfig repository, in order to ensure that files are validated Boober provides a 
+validation endpoint
+
+Boober itself can modify single files in the AuroraConfig. For more complex operations on AuroraConfig just use git directly.
+
+When Boober does a deploy a deployTag is created in the AuroraConfig repository.
+
+AuroraConfig is versioned with a schemaVersion. All files in a single AuroraConfig must have the same schemaVersion.
+
+The following file types are in an AuroraConfig
 
 filename           | name          | description  
 -------------------|---------------|:-----------------------------------------------------------------
@@ -59,4 +51,36 @@ reference.json     | application   | Configuration shared by all instances of an
 utv/reference.json | override      | Configuration specific to one application in one openshift project
 
 AuroraConfig is at the moment only documented internally but will be available externally soon.
+
+### AuroraVaults
+Secrets are stored in another git repo encrypted. Boober is the only one who should write/read from this repo since
+it has the encryption keys.
+
+
+### AuroraDeploymentSpec
+An unversioned abstraction between AuroraConfig and the ObjectGeneration processes via ApplicationId.
+
+Given an applicationId that is deployed from an AuroraConfig the following process will happen:
+ 
+ - find the files in an AuroraConfig that is relevant for this ApplicationId
+ - convert the AuroraConfig into an AuroraDeploymentSpec using a versioned process
+ - the mapping logic will retain information about what file a given config item is retrieved from
+  
+### External resources provisioning
+External resources that are needed for an application to start is processed in Boober and given to the ObjectGeneration 
+process
+
+### OpenShiftObjectGeneration
+Boober user [kubernetes-model](https://github.com/fabric8io/kubernetes-model) and [kubernetes-dsl](https://github.com/fkorotkov/k8s-kotlin-dsl) in order to transfer input into OpenShift objects.
+
+### ObjectObjectUpdate
+When creating/updating state in OpenShift Boober has a very opinoinated approach. We do not use apply on the objects we
+put/update the new objects into the cluster conditionally on resourceVersion. 
+
+We do this because we want the truth of the state to be in AuroraConfig not in the cluster. If somebody fiddles with an
+object and want it back to desired state they only need to run the deploy process in Boober.
+
+Immutable fields on objects are retained.
+
+
 
