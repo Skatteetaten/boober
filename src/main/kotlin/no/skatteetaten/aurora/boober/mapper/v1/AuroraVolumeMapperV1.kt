@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -10,7 +9,6 @@ import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.required
-import org.apache.commons.lang.StringEscapeUtils
 
 class AuroraVolumeMapperV1(private val applicationFiles: List<AuroraConfigFile>) {
 
