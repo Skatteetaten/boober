@@ -1,7 +1,9 @@
 package no.skatteetaten.aurora.boober.service.internal
 
 import com.fkorotkov.openshift.from
+import com.fkorotkov.openshift.image
 import com.fkorotkov.openshift.imageStreamTag
+import com.fkorotkov.openshift.importPolicy
 import com.fkorotkov.openshift.metadata
 import com.fkorotkov.openshift.tag
 import io.fabric8.openshift.api.model.ImageStreamTag
@@ -12,14 +14,19 @@ object ImageStreamTagGenerator {
         return imageStreamTag {
             metadata {
                 apiVersion = "v1"
-                name = tagName
-                labels = mapOf("imageStreamName" to isName)
+                name = "$isName:$tagName"
             }
             tag {
+                name = tagName
                 from {
+                    kind = "DockerImage"
                     name = imageStreamName
                 }
+                importPolicy {
+                    scheduled = true
+                }
             }
+            image {}
         }
     }
 }

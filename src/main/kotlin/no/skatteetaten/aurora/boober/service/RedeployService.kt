@@ -8,7 +8,6 @@ import no.skatteetaten.aurora.boober.utils.findErrorMessage
 import no.skatteetaten.aurora.boober.utils.findImageName
 import no.skatteetaten.aurora.boober.utils.findTagName
 import no.skatteetaten.aurora.boober.utils.imageStreamFromJson
-import no.skatteetaten.aurora.boober.utils.imageStreamTagFromJson
 import no.skatteetaten.aurora.boober.utils.isSameImage
 import no.skatteetaten.aurora.boober.utils.toJsonNode
 import org.springframework.stereotype.Service
@@ -54,8 +53,7 @@ class RedeployService(val openShiftClient: OpenShiftClient,
             return createFailedRedeployResult(imageStreamTagResponse.exception, openShiftResponses)
         }
 
-        imageStreamTagFromJson(imageStreamTagResponse.responseBody).findErrorMessage()
-                ?.let { return createFailedRedeployResult(it, openShiftResponses) }
+        imageStreamTagResponse.responseBody?.at("/image/dockerImageMetadata") ?: return createFailedRedeployResult("Redeploy failed", openShiftResponses)
 
         val updatedImageStreamResponse = openShiftClient.getImageStream(namespace, name)
                 .also { openShiftResponses.add(it) }

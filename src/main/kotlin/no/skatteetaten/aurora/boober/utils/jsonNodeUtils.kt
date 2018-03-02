@@ -44,11 +44,6 @@ val JsonNode.openshiftName: String
     get() = when (this.openshiftKind) {
         "deploymentrequest" -> this.get("name")?.asText()
                 ?: throw IllegalArgumentException("name not specified for resource kind=${this.openshiftKind}")
-        "imagestreamtag" -> {
-            val isName = this.at("/metadata/labels/imageStreamName").textValue()
-            val tagName = this.get("name").asText()
-            "$isName:$tagName"
-        }
         else -> this.get("metadata")?.get("name")?.asText()
                 ?: throw IllegalArgumentException("name not specified for resource kind=${this.openshiftKind}")
     }
