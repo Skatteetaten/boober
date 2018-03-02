@@ -37,13 +37,20 @@ fun JsonNode.findAllPointers(maxLevel: Int): List<String> {
 }
 
 val JsonNode.openshiftKind: String
-    get() = this.get("kind")?.asText()?.toLowerCase() ?: throw IllegalArgumentException("Kind must be set in file=$this")
+    get() = this.get("kind")?.asText()?.toLowerCase()
+            ?: throw IllegalArgumentException("Kind must be set in file=$this")
 
 val JsonNode.openshiftName: String
-    get() = if (this.openshiftKind == "deploymentrequest") {
-        this.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource kind=${this.openshiftKind}")
-    } else {
-        this.get("metadata")?.get("name")?.asText() ?: throw IllegalArgumentException("name not specified for resource kind=${this.openshiftKind}")
+    get() = when (this.openshiftKind) {
+        "deploymentrequest" -> this.get("name")?.asText()
+                ?: throw IllegalArgumentException("name not specified for resource kind=${this.openshiftKind}")
+        "imagestreamtag" -> {
+            val isName = this.at("/metadata/labels/imageStreamName").textValue()
+            val tagName = this.get("name").asText()
+            "$isName:$tagName"
+        }
+        else -> this.get("metadata")?.get("name")?.asText()
+                ?: throw IllegalArgumentException("name not specified for resource kind=${this.openshiftKind}")
     }
 
 

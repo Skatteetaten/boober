@@ -48,7 +48,7 @@ class RedeployService(val openShiftClient: OpenShiftClient,
     fun rolloutDeployment(namespace: String, name: String, imageStream: ImageStream): RedeployResult {
         val openShiftResponses = mutableListOf<OpenShiftResponse>()
 
-        val imageStreamTagResponse = performImageStreamTag(namespace, imageStream.findImageName(), imageStream.findTagName())
+        val imageStreamTagResponse = performImageStreamTag(namespace, imageStream.findImageName(), imageStream.findTagName(), name)
                 .also { openShiftResponses.add(it) }
         if (!imageStreamTagResponse.success) {
             return createFailedRedeployResult(imageStreamTagResponse.exception, openShiftResponses)
@@ -80,8 +80,8 @@ class RedeployService(val openShiftClient: OpenShiftClient,
     private fun createFailedRedeployResult(message: String?, openShiftResponses: List<OpenShiftResponse>) =
             RedeployResult(success = false, message = message, openShiftResponses = openShiftResponses.toList())
 
-    private fun performImageStreamTag(namespace: String, imageName: String, tagName: String): OpenShiftResponse {
-        val imageStreamTag = ImageStreamTagGenerator.create(imageName, tagName)
+    private fun performImageStreamTag(namespace: String, imageName: String, tagName: String, isName: String): OpenShiftResponse {
+        val imageStreamTag = ImageStreamTagGenerator.create(imageName, tagName, isName)
         val command = openShiftCommandBuilder.createOpenShiftCommand(namespace, imageStreamTag.toJsonNode())
         return openShiftClient.performOpenShiftCommand(namespace, command)
     }

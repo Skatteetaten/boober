@@ -8,11 +8,12 @@ import io.fabric8.openshift.api.model.ImageStreamTag
 
 object ImageStreamTagGenerator {
 
-    fun create(imageStreamName: String, tagName: String): ImageStreamTag {
+    fun create(imageStreamName: String, tagName: String, isName: String): ImageStreamTag {
         return imageStreamTag {
             metadata {
                 apiVersion = "v1"
                 name = tagName
+                labels = mapOf("imageStreamName" to isName)
             }
             tag {
                 from {
