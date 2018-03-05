@@ -97,6 +97,18 @@ class RedeployServiceTest extends Specification {
       response.openShiftResponses.size() == 2
   }
 
+  def "Rollout deployment given null response body in ImageStreamTag response return failed"() {
+    given:
+      openShiftClient.performOpenShiftCommand('affiliation', null) >> nullBodyResponse()
+
+    when:
+      redeployService.triggerRedeploy('affiliation', 'name', imageStream)
+
+    then:
+      def e = thrown(IllegalArgumentException)
+      e.message == 'Missing ImageStreamTag response body'
+  }
+
   def "Rollout deployment given failure from ImageStream response return failed"() {
     given:
       def errorMessage = 'ImageStream error message'
