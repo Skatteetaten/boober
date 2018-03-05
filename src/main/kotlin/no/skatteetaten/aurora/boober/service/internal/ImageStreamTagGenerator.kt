@@ -10,7 +10,7 @@ import io.fabric8.openshift.api.model.ImageStreamTag
 
 object ImageStreamTagGenerator {
 
-    fun create(imageStreamName: String, tagName: String, isName: String): ImageStreamTag {
+    fun create(dockerImageUrl: String, tagName: String, isName: String): ImageStreamTag {
         return imageStreamTag {
             metadata {
                 apiVersion = "v1"
@@ -20,7 +20,7 @@ object ImageStreamTagGenerator {
                 name = tagName
                 from {
                     kind = "DockerImage"
-                    name = imageStreamName
+                    name = dockerImageUrl
                 }
                 importPolicy {
                     scheduled = true
