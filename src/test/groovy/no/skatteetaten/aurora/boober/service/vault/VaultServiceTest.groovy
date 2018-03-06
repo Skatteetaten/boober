@@ -154,15 +154,16 @@ class VaultServiceTest extends Specification {
       vault.permissions == ["UTV"]
   }
 
-  def "Cannot access vault when missing permissions"() {
-
+  def "Get vault when user has no access should throw UnauthorizedAccessException"() {
     given: "A vault with some files"
       def fileName = "passwords.properties"
       def contents = "SERVICE_PASSWORD=FOO"
       vaultService.createOrUpdateFileInVault(COLLECTION_NAME, VAULT_NAME, fileName, contents.bytes)
-      vaultService.setVaultPermissions(COLLECTION_NAME, VAULT_NAME, ["OPS"])
+      vaultService.setVaultPermissions(COLLECTION_NAME, VAULT_NAME, [])
 
     when:
+      def vault = vaultService.findVault(COLLECTION_NAME, VAULT_NAME)
+      vault.permissions = ["admin"]
       vaultService.findVault(COLLECTION_NAME, VAULT_NAME)
 
     then:
@@ -176,5 +177,28 @@ class VaultServiceTest extends Specification {
       vaultWithAccess != null
       !vaultWithAccess.hasAccess
       !vaultWithAccess.vault
+  }
+
+  def "Set vault permissions when user are not in any group should throw UnauthorizedAccessException"() {
+    when:
+      vaultService.setVaultPermissions(COLLECTION_NAME, VAULT_NAME, ["admin"])
+
+    then:
+      def e = thrown(UnauthorizedAccessException)
+      e.message == "You (aurora) do not have required permissions ([admin]) to operate on this vault. You have [UTV]"
+  }
+
+  def "Set vault permissions when user are in one or more groups should update vault permissions"() {
+    given:
+      def fileName = "passwords.properties"
+      def contents = "SERVICE_PASSWORD=FOO"
+      vaultService.createOrUpdateFileInVault(COLLECTION_NAME, VAULT_NAME, fileName, contents.bytes)
+
+    when:
+      vaultService.setVaultPermissions(COLLECTION_NAME, VAULT_NAME, ["admin", "UTV"])
+
+    then:
+      def vault = vaultService.findVault(COLLECTION_NAME, VAULT_NAME)
+      vault.permissions == ["admin", "UTV"]
   }
 }
