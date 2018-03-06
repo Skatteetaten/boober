@@ -55,7 +55,8 @@ class RedeployService(val openShiftClient: OpenShiftClient,
         }
 
         imageStreamTagFromJson(imageStreamTagResponse.responseBody).findErrorMessage()
-                ?.let { return createFailedRedeployResult(it, openShiftResponses) }
+            ?.let { return createFailedRedeployResult(it, openShiftResponses) }
+
 
         val updatedImageStreamResponse = openShiftClient.getImageStream(namespace, name)
                 .also { openShiftResponses.add(it) }
