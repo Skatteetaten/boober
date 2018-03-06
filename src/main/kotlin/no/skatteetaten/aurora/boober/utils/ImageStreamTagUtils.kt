@@ -18,6 +18,7 @@ fun ImageStreamTag.findErrorMessage(): String? {
 
 fun ImageStreamTag.toJsonNode(): JsonNode = jacksonObjectMapper().valueToTree(this)
 
+// TODO: fabric8io/kubernetes-model#296
 fun imageStreamTagFromJson(jsonNode: JsonNode?): ImageStreamTag {
 
     if (jsonNode == null) throw IllegalArgumentException("Missing ImageStreamTag response body")
