@@ -7,8 +7,9 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import io.fabric8.openshift.api.model.ImageStreamTag
 
 fun ImageStreamTag.findErrorMessage(): String? {
+    val errorStatus = listOf("failure", "false")
     this.conditions?.let {
-        if (it.size > 0 && it[0].status.toLowerCase() == "failure") {
+        if (it.size > 0 && errorStatus.contains(it[0].status.toLowerCase())) {
             return it[0].message
         }
 

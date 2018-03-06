@@ -7,10 +7,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
-import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.deploymentConfigFromJson
-import no.skatteetaten.aurora.boober.utils.imageStreamFromJson
-import no.skatteetaten.aurora.boober.utils.openshiftKind
+import no.skatteetaten.aurora.boober.utils.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -174,9 +171,7 @@ class DeployService(
         val redeployResult = if (deploymentSpec.type == TemplateType.development) {
             RedeployService.RedeployResult(message = "No deploy was made with ${deploymentSpec.type} type")
         } else {
-            val namespace = deploymentConfig.metadata.namespace
-            val name = deploymentConfig.metadata.name
-            redeployService.triggerRedeploy(namespace, name, imageStream)
+            redeployService.triggerRedeploy(deploymentConfig, imageStream)
         }
 
         if (!redeployResult.success) {
