@@ -1,17 +1,20 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.NullNode
 
+import io.fabric8.kubernetes.api.model.ObjectMeta
 import io.fabric8.kubernetes.api.model.ObjectReference
+import io.fabric8.openshift.api.model.DeploymentConfig
+import io.fabric8.openshift.api.model.DeploymentConfigSpec
+import io.fabric8.openshift.api.model.DeploymentTriggerImageChangeParams
+import io.fabric8.openshift.api.model.DeploymentTriggerPolicy
 import io.fabric8.openshift.api.model.ImageStream
-import io.fabric8.openshift.api.model.ImageStreamSpec
 import io.fabric8.openshift.api.model.ImageStreamStatus
 import io.fabric8.openshift.api.model.ImageStreamTag
 import io.fabric8.openshift.api.model.NamedTagEventList
 import io.fabric8.openshift.api.model.TagEvent
 import io.fabric8.openshift.api.model.TagEventCondition
-import io.fabric8.openshift.api.model.TagReference
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
@@ -22,21 +25,25 @@ import spock.lang.Specification
 
 class RedeployServiceTest extends Specification {
   def defaultImageHash = '123'
-  def emptyJsonNode = new ObjectMapper().readTree('{}')
+  def emptyJsonNode = NullNode.getInstance()
+
+  def deploymentConfig = createDeploymentConfig()
 
   def imageStream = createImageStream()
   def imageStreamResponse = imageStreamResponse()
 
   def openShiftClient = Mock(OpenShiftClient)
-  def redeployService = new RedeployService(openShiftClient, Mock(OpenShiftCommandBuilder),
-      Mock(OpenShiftObjectGenerator))
+  def openShiftObjectGenerator = Mock(OpenShiftObjectGenerator) {
+    generateDeploymentRequest('name') >> emptyJsonNode
+  }
+  def redeployService = new RedeployService(openShiftClient, openShiftObjectGenerator)
 
   def "Request deployment given null ImageStream return success"() {
     given:
-      openShiftClient.performOpenShiftCommand('affiliation', null) >> openShiftResponse()
+      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> openShiftResponse()
 
     when:
-      def response = redeployService.triggerRedeploy('affiliation', 'name', null)
+      def response = redeployService.triggerRedeploy(deploymentConfig, null)
 
     then:
       response.success
@@ -45,11 +52,11 @@ class RedeployServiceTest extends Specification {
 
   def "Rollout deployment given image is already imported return success"() {
     given:
-      openShiftClient.performOpenShiftCommand('affiliation', null) >> imageStreamResponse
-      openShiftClient.getImageStream('affiliation', 'name') >> imageStreamResponse
+      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> imageStreamResponse
+      openShiftClient.getUpdatedImageStream('affiliation', 'name', '123') >> imageStreamResponse
 
     when:
-      def response = redeployService.triggerRedeploy('affiliation', 'name', imageStream)
+      def response = redeployService.triggerRedeploy(deploymentConfig, imageStream)
 
     then:
       response.success
@@ -58,11 +65,11 @@ class RedeployServiceTest extends Specification {
 
   def "Rollout deployment given image is not imported return success"() {
     given:
-      openShiftClient.performOpenShiftCommand('affiliation', null) >> imageStreamResponse
-      openShiftClient.getImageStream('affiliation', 'name') >> imageStreamResponse('234')
+      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> imageStreamResponse
+      openShiftClient.getUpdatedImageStream('affiliation', 'name', '123') >> imageStreamResponse('234')
 
     when:
-      def response = redeployService.triggerRedeploy('affiliation', 'name', imageStream)
+      def response = redeployService.triggerRedeploy(deploymentConfig, imageStream)
 
     then:
       response.success
@@ -72,10 +79,10 @@ class RedeployServiceTest extends Specification {
   def "Rollout deployment given failure from ImageStreamTag command return failed"() {
     given:
       def errorMessage = 'failed ImageStreamTag'
-      openShiftClient.performOpenShiftCommand('affiliation', null) >> failedResponse(errorMessage)
+      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> failedResponse(errorMessage)
 
     when:
-      def response = redeployService.triggerRedeploy('affiliation', 'name', imageStream)
+      def response = redeployService.triggerRedeploy(deploymentConfig, imageStream)
 
     then:
       !response.success
@@ -85,11 +92,11 @@ class RedeployServiceTest extends Specification {
 
   def "Rollout deployment given null response body in ImageStream response return failed"() {
     given:
-      openShiftClient.performOpenShiftCommand('affiliation', null) >> imageStreamResponse
-      openShiftClient.getImageStream('affiliation', 'name') >> nullBodyResponse()
+      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> imageStreamResponse
+      openShiftClient.getUpdatedImageStream('affiliation', 'name', '123') >> nullBodyResponse()
 
     when:
-      def response = redeployService.triggerRedeploy('affiliation', 'name', imageStream)
+      def response = redeployService.triggerRedeploy(deploymentConfig, imageStream)
 
     then:
       !response.success
@@ -99,10 +106,10 @@ class RedeployServiceTest extends Specification {
 
   def "Rollout deployment given null response body in ImageStreamTag response return failed"() {
     given:
-      openShiftClient.performOpenShiftCommand('affiliation', null) >> nullBodyResponse()
+      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> nullBodyResponse()
 
     when:
-      redeployService.triggerRedeploy('affiliation', 'name', imageStream)
+      redeployService.triggerRedeploy(deploymentConfig, imageStream)
 
     then:
       def e = thrown(IllegalArgumentException)
@@ -112,11 +119,11 @@ class RedeployServiceTest extends Specification {
   def "Rollout deployment given failure from ImageStream response return failed"() {
     given:
       def errorMessage = 'ImageStream error message'
-      openShiftClient.performOpenShiftCommand('affiliation', null) >> imageStreamResponse
-      openShiftClient.getImageStream('affiliation', 'name') >> failedResponse(errorMessage)
+      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> imageStreamResponse
+      openShiftClient.getUpdatedImageStream('affiliation', 'name', '123') >> failedResponse(errorMessage)
 
     when:
-      def response = redeployService.triggerRedeploy('affiliation', 'name', imageStream)
+      def response = redeployService.triggerRedeploy(deploymentConfig, imageStream)
 
     then:
       !response.success
@@ -127,11 +134,11 @@ class RedeployServiceTest extends Specification {
   def "Rollout deployment given error message in ImageStream response return failed"() {
     given:
       def errorMessage = 'ImageStream error message'
-      openShiftClient.performOpenShiftCommand('affiliation', null) >> imageStreamResponse
-      openShiftClient.getImageStream('affiliation', 'name') >> failedImageStreamResponse(errorMessage)
+      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> imageStreamResponse
+      openShiftClient.getUpdatedImageStream('affiliation', 'name', '123') >> failedImageStreamResponse(errorMessage)
 
     when:
-      def response = redeployService.triggerRedeploy('affiliation', 'name', imageStream)
+      def response = redeployService.triggerRedeploy(deploymentConfig, imageStream)
 
     then:
       !response.success
@@ -142,10 +149,10 @@ class RedeployServiceTest extends Specification {
   def "Rollout deployment given error message in ImageStreamTag response return failed"() {
     given:
       def errorMessage = 'ImageStreamTag error message'
-      openShiftClient.performOpenShiftCommand('affiliation', null) >> failedImageStreamTagResponse(errorMessage)
+      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> failedImageStreamTagResponse(errorMessage)
 
     when:
-      def response = redeployService.triggerRedeploy('affiliation', 'name', imageStream)
+      def response = redeployService.triggerRedeploy(deploymentConfig, imageStream)
 
     then:
       !response.success
@@ -153,16 +160,26 @@ class RedeployServiceTest extends Specification {
       response.openShiftResponses.size() == 1
   }
 
+  private static DeploymentConfig createDeploymentConfig() {
+    return new DeploymentConfig(
+        metadata: new ObjectMeta(namespace: 'affiliation', name: 'name'),
+        spec: new DeploymentConfigSpec(
+            triggers: [new DeploymentTriggerPolicy(type: 'ImageChange',
+                imageChangeParams: new DeploymentTriggerImageChangeParams(
+                    from: new ObjectReference(name: 'referanse:default')))])
+    )
+  }
+
   private ImageStream createImageStream(String imageHash = defaultImageHash, boolean status = true,
       String errorMessage = '') {
     return new ImageStream(
+        metadata: new ObjectMeta(name: 'name', resourceVersion: '123'),
         status: new ImageStreamStatus(
             tags: [new NamedTagEventList(
+                tag: 'default',
                 conditions: [new TagEventCondition(status: Boolean.toString(status), message: errorMessage)],
                 items: [new TagEvent(image: imageHash)])]
-        ),
-        spec: new ImageStreamSpec(
-            tags: [new TagReference(name: 'tag-name', from: new ObjectReference(name: 'imagestream-name'))]))
+        ))
   }
 
   private OpenShiftResponse imageStreamResponse(String imageHash = defaultImageHash) {

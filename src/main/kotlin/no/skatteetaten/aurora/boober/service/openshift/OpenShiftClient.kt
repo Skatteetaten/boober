@@ -22,6 +22,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
+import org.springframework.retry.annotation.Backoff
+import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
 
@@ -152,6 +154,16 @@ class OpenShiftClient(
         }
 
         return OpenShiftGroups(getAllDeclaredUserGroups() + getAllImplicitUserGroups())
+    }
+
+    @Retryable(maxAttempts = 3, backoff = Backoff(delay = 1000))
+    fun getUpdatedImageStream(namespace: String, name: String, resourceVersion: String): OpenShiftResponse {
+        val response = getImageStream(namespace, name)
+        val updatedResourceVersion = response.responseBody?.at("/metadata/resourceVersion")?.asText()
+        if (updatedResourceVersion == resourceVersion) {
+            throw IllegalStateException("No updated ImageStream found")
+        }
+        return response
     }
 
     fun getImageStream(namespace: String, name: String): OpenShiftResponse {
