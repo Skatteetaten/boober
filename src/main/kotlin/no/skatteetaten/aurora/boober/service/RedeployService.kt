@@ -53,8 +53,8 @@ class RedeployService(val openShiftClient: OpenShiftClient,
     fun rolloutDeployment(namespace: String, name: String, tagName: String, imageStream: ImageStream): RedeployResult {
         val openShiftResponses = mutableListOf<OpenShiftResponse>()
 
-        val resourceVersion = imageStream.metadata.resourceVersion
-        val imageStreamTagResponse = performImageStreamTag(namespace, imageStream.metadata.name, tagName, name)
+        val dockerImageUrl = imageStream.metadata.name
+        val imageStreamTagResponse = performImageStreamTag(namespace, dockerImageUrl, tagName, name)
                 .also { openShiftResponses.add(it) }
         if (!imageStreamTagResponse.success) {
             return createFailedRedeployResult(imageStreamTagResponse.exception, openShiftResponses)
@@ -63,7 +63,7 @@ class RedeployService(val openShiftClient: OpenShiftClient,
         imageStreamTagFromJson(imageStreamTagResponse.responseBody).findErrorMessage()
                 ?.let { return createFailedRedeployResult(it, openShiftResponses) }
 
-
+        val resourceVersion = imageStream.metadata.resourceVersion
         val updatedImageStreamResponse = openShiftClient.getUpdatedImageStream(namespace, name, resourceVersion)
                 .also { openShiftResponses.add(it) }
         if (!updatedImageStreamResponse.success) {
@@ -87,8 +87,8 @@ class RedeployService(val openShiftClient: OpenShiftClient,
     private fun createFailedRedeployResult(message: String?, openShiftResponses: List<OpenShiftResponse>) =
             RedeployResult(success = false, message = message, openShiftResponses = openShiftResponses.toList())
 
-    private fun performImageStreamTag(namespace: String, imageName: String, tagName: String, isName: String): OpenShiftResponse {
-        val imageStreamTag = ImageStreamTagGenerator.create(imageName, tagName, isName)
+    private fun performImageStreamTag(namespace: String, dockerImageUrl: String, tagName: String, isName: String): OpenShiftResponse {
+        val imageStreamTag = ImageStreamTagGenerator.create(dockerImageUrl, tagName, isName)
         val command = OpenshiftCommand(OperationType.UPDATE, imageStreamTag.toJsonNode())
         return openShiftClient.performOpenShiftCommand(namespace, command)
     }
