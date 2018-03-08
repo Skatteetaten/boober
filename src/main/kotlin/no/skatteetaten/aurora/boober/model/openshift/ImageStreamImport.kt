@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 
-
+// Only a partial representation of ImageStreamImport
+// For more details: https://github.com/fabric8io/kubernetes-client/issues/1025
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class ImageStreamImport(val metadata: Metadata? = null,
                              val apiVersion: String = "v1",
