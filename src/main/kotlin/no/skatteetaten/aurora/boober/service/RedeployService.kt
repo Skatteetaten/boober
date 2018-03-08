@@ -1,21 +1,19 @@
 package no.skatteetaten.aurora.boober.service
 
+import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
-import no.skatteetaten.aurora.boober.service.internal.ImageStreamTagGenerator
+import no.skatteetaten.aurora.boober.service.internal.ImageStreamImportGenerator
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
-import no.skatteetaten.aurora.boober.utils.findErrorMessage
-import no.skatteetaten.aurora.boober.utils.findImageName
-import no.skatteetaten.aurora.boober.utils.findTagName
-import no.skatteetaten.aurora.boober.utils.imageStreamFromJson
-import no.skatteetaten.aurora.boober.utils.imageStreamTagFromJson
-import no.skatteetaten.aurora.boober.utils.isSameImage
-import no.skatteetaten.aurora.boober.utils.toJsonNode
+import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
+import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import no.skatteetaten.aurora.boober.utils.findCurrentImageHash
+import no.skatteetaten.aurora.boober.utils.findImageChangeTriggerTagName
+import no.skatteetaten.aurora.boober.utils.imageStreamImportFromJson
 import org.springframework.stereotype.Service
 
 @Service
 class RedeployService(val openShiftClient: OpenShiftClient,
-                      val openShiftCommandBuilder: OpenShiftCommandBuilder,
                       val openShiftObjectGenerator: OpenShiftObjectGenerator) {
 
     data class RedeployResult @JvmOverloads constructor(
@@ -32,11 +30,16 @@ class RedeployService(val openShiftClient: OpenShiftClient,
         }
     }
 
-    fun triggerRedeploy(namespace: String, name: String, imageStream: ImageStream?): RedeployResult {
+    fun triggerRedeploy(deploymentConfig: DeploymentConfig, imageStream: ImageStream?): RedeployResult {
+        val namespace = deploymentConfig.metadata.namespace
+        val name = deploymentConfig.metadata.name
+        val imageChangeTriggerTagName = deploymentConfig.findImageChangeTriggerTagName()
+                ?: throw IllegalArgumentException("No imageChangeTriggerName found")
+
         return if (imageStream == null) {
             requestDeployment(namespace, name)
         } else {
-            rolloutDeployment(namespace, name, imageStream)
+            rolloutDeployment(namespace, name, imageChangeTriggerTagName, imageStream)
         }
     }
 
@@ -45,32 +48,22 @@ class RedeployService(val openShiftClient: OpenShiftClient,
         return RedeployResult.fromOpenShiftResponses(listOf(deploymentRequestResponse))
     }
 
-    fun rolloutDeployment(namespace: String, name: String, imageStream: ImageStream): RedeployResult {
+    fun rolloutDeployment(namespace: String, name: String, tagName: String, imageStream: ImageStream): RedeployResult {
         val openShiftResponses = mutableListOf<OpenShiftResponse>()
 
-        val imageStreamTagResponse = performImageStreamTag(namespace, imageStream.findImageName(), imageStream.findTagName(), name)
+        val dockerImageUrl = imageStream.metadata.name
+        val imageStreamImportResponse = performImageStreamImport(namespace, dockerImageUrl, name)
                 .also { openShiftResponses.add(it) }
-        if (!imageStreamTagResponse.success) {
-            return createFailedRedeployResult(imageStreamTagResponse.exception, openShiftResponses)
+        if (!imageStreamImportResponse.success) {
+            return createFailedRedeployResult(imageStreamImportResponse.exception, openShiftResponses)
         }
 
-        imageStreamTagFromJson(imageStreamTagResponse.responseBody).findErrorMessage()
-            ?.let { return createFailedRedeployResult(it, openShiftResponses) }
-
-
-        val updatedImageStreamResponse = openShiftClient.getImageStream(namespace, name)
-                .also { openShiftResponses.add(it) }
-        if (!updatedImageStreamResponse.success) {
-            return createFailedRedeployResult(updatedImageStreamResponse.exception, openShiftResponses)
-        }
-        val updatedImageStream = updatedImageStreamResponse.responseBody
-                ?.let { imageStreamFromJson(it) }
-                ?: return createFailedRedeployResult("Missing information in deployment spec", openShiftResponses)
-
-        updatedImageStream.findErrorMessage()
+        val imageStreamImport = imageStreamImportFromJson(imageStreamImportResponse.responseBody)
+        imageStreamImport.findErrorMessage(tagName)
                 ?.let { return createFailedRedeployResult(it, openShiftResponses) }
 
-        if (updatedImageStream.isSameImage(imageStream)) {
+
+        if (imageStreamImport.isSameImage(imageStream.findCurrentImageHash())) {
             performDeploymentRequest(namespace, name).also { openShiftResponses.add(it) }
             return RedeployResult.fromOpenShiftResponses(openShiftResponses)
         }
@@ -81,15 +74,15 @@ class RedeployService(val openShiftClient: OpenShiftClient,
     private fun createFailedRedeployResult(message: String?, openShiftResponses: List<OpenShiftResponse>) =
             RedeployResult(success = false, message = message, openShiftResponses = openShiftResponses.toList())
 
-    private fun performImageStreamTag(namespace: String, imageName: String, tagName: String, isName: String): OpenShiftResponse {
-        val imageStreamTag = ImageStreamTagGenerator.create(imageName, tagName, isName)
-        val command = openShiftCommandBuilder.createOpenShiftCommand(namespace, imageStreamTag.toJsonNode())
+    private fun performImageStreamImport(namespace: String, dockerImageUrl: String, imageStreamName: String): OpenShiftResponse {
+        val imageStreamImport = ImageStreamImportGenerator.create(dockerImageUrl, imageStreamName)
+        val command = OpenshiftCommand(OperationType.CREATE, imageStreamImport.toJsonNode())
         return openShiftClient.performOpenShiftCommand(namespace, command)
     }
 
     private fun performDeploymentRequest(namespace: String, name: String): OpenShiftResponse {
         val deploymentRequest = openShiftObjectGenerator.generateDeploymentRequest(name)
-        val command = openShiftCommandBuilder.createOpenShiftCommand(name, deploymentRequest)
+        val command = OpenshiftCommand(OperationType.CREATE, deploymentRequest)
         return openShiftClient.performOpenShiftCommand(namespace, command)
     }
 }

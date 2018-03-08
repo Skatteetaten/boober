@@ -174,9 +174,7 @@ class DeployService(
         val redeployResult = if (deploymentSpec.type == TemplateType.development) {
             RedeployService.RedeployResult(message = "No deploy was made with ${deploymentSpec.type} type")
         } else {
-            val namespace = deploymentConfig.metadata.namespace
-            val name = deploymentConfig.metadata.name
-            redeployService.triggerRedeploy(namespace, name, imageStream)
+            redeployService.triggerRedeploy(deploymentConfig, imageStream)
         }
 
         if (!redeployResult.success) {

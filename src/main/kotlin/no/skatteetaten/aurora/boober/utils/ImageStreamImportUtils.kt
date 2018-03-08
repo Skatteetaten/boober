@@ -3,11 +3,7 @@ package no.skatteetaten.aurora.boober.utils
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import io.fabric8.openshift.api.model.ImageStream
+import no.skatteetaten.aurora.boober.model.openshift.ImageStreamImport
 
-fun ImageStream.findCurrentImageHash(): String? =
-        this.status?.tags?.firstOrNull()?.items?.firstOrNull()?.image
-
-
-fun imageStreamFromJson(jsonNode: JsonNode?): ImageStream =
+fun imageStreamImportFromJson(jsonNode: JsonNode?): ImageStreamImport =
         jacksonObjectMapper().readValue(jsonNode.toString())
