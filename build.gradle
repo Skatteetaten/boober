@@ -94,6 +94,10 @@ compileKotlin {
   }
 }
 
+test{
+  maxHeapSize = "512m"
+}
+
 compileTestKotlin.dependsOn = compileTestKotlin.taskDependencies.values - 'compileTestJava'
 compileTestGroovy.dependsOn compileTestKotlin
 compileTestGroovy.classpath += files(compileTestKotlin.destinationDir)
