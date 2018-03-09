@@ -1,11 +1,13 @@
 package no.skatteetaten.aurora.boober.model.openshift
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 
 // Only a partial representation of ImageStreamImport
 // For more details: https://github.com/fabric8io/kubernetes-client/issues/1025
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class ImageStreamImport(val metadata: Metadata? = null,
                              val apiVersion: String = "v1",
@@ -25,19 +27,22 @@ data class ImageStreamImport(val metadata: Metadata? = null,
                 ?.message
     }
 
-    fun isSameImage(imageHash: String?): Boolean =
+    fun isDifferentImage(imageHash: String?): Boolean =
             this.status?.import?.status?.tags?.firstOrNull()?.items?.firstOrNull()?.image
-                    ?.let { return it == imageHash } ?: false
+                    ?.let { return it != imageHash } ?: true
 }
 
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class Metadata(val name: String = "")
 
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class Spec(val import: Boolean = true,
                 val images: List<ImagesItem> = emptyList())
 
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class ImagesItem(val from: From? = null,
                       val to: To? = null,
@@ -56,6 +61,7 @@ data class To(val name: String = "")
 data class ImportPolicy(val scheduled: Boolean = false)
 
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class Status(val images: List<ImagesItem>? = emptyList(),
                   val import: Import? = null)

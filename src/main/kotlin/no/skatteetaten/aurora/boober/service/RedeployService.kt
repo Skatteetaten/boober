@@ -48,32 +48,30 @@ class RedeployService(val openShiftClient: OpenShiftClient,
     }
 
     fun redeploy(imageStream: ImageStream, tagName: String): RedeployResult {
-        val openShiftResponses = mutableListOf<OpenShiftResponse>()
-
         val namespace = imageStream.metadata.namespace
         val name = imageStream.metadata.name
-        val dockerImageUrl = imageStream.findDockerImageUrl(tagName) ?: throw IllegalArgumentException("Missing docker image url")
+        val dockerImageUrl = imageStream.findDockerImageUrl(tagName)
+                ?: throw IllegalArgumentException("Missing docker image url")
         val imageStreamImportResponse = performImageStreamImport(namespace, dockerImageUrl, name)
-                .also { openShiftResponses.add(it) }
         if (!imageStreamImportResponse.success) {
-            return createFailedRedeployResult(imageStreamImportResponse.exception, openShiftResponses)
+            return createFailedRedeployResult(imageStreamImportResponse.exception, imageStreamImportResponse)
         }
 
         val imageStreamImport = imageStreamImportFromJson(imageStreamImportResponse.responseBody)
         imageStreamImport.findErrorMessage(tagName)
-                ?.let { return createFailedRedeployResult(it, openShiftResponses) }
+                ?.let { return createFailedRedeployResult(it, imageStreamImportResponse) }
 
 
-        if (imageStreamImport.isSameImage(imageStream.findCurrentImageHash())) {
-            performDeploymentRequest(namespace, name).also { openShiftResponses.add(it) }
-            return RedeployResult.fromOpenShiftResponses(openShiftResponses)
+        if (imageStreamImport.isDifferentImage(imageStream.findCurrentImageHash())) {
+            return RedeployResult.fromOpenShiftResponses(listOf(imageStreamImportResponse))
         }
 
-        return RedeployResult.fromOpenShiftResponses(openShiftResponses)
+        val deploymentRequestResponse = performDeploymentRequest(namespace, name)
+        return RedeployResult.fromOpenShiftResponses(listOf(imageStreamImportResponse, deploymentRequestResponse))
     }
 
-    private fun createFailedRedeployResult(message: String?, openShiftResponses: List<OpenShiftResponse>) =
-            RedeployResult(success = false, message = message, openShiftResponses = openShiftResponses.toList())
+    private fun createFailedRedeployResult(message: String?, openShiftResponse: OpenShiftResponse) =
+            RedeployResult(success = false, message = message, openShiftResponses = listOf(openShiftResponse))
 
     private fun performImageStreamImport(namespace: String, dockerImageUrl: String, imageStreamName: String): OpenShiftResponse {
         val imageStreamImport = ImageStreamImportGenerator.create(dockerImageUrl, imageStreamName)

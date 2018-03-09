@@ -4,14 +4,14 @@ import spock.lang.Specification
 
 class ImageStreamImportTest extends Specification {
 
-  def "isSameImage given null return false"() {
+  def "isDifferentImage given null return true"() {
     given:
       def imageStreamImport = new ImageStreamImport()
 
     when:
-      def sameImage = imageStreamImport.isSameImage(null)
+      def differentImage = imageStreamImport.isDifferentImage(null)
 
     then:
-      !sameImage
+      differentImage
   }
 }
