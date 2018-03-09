@@ -83,22 +83,12 @@ class DeployService(
     }
 
     private fun prepareDeployEnvironment(environment: AuroraDeployEnvironment, projectExist: Boolean): List<OpenShiftResponse> {
-
         val namespaceName = environment.namespace
-
-        val responses = mutableListOf<OpenShiftResponse>()
-        if (!projectExist) {
-            val projectRequest = openShiftCommandBuilder.generateProjectRequest(environment)
-            responses.add(openShiftClient.performOpenShiftCommand(namespaceName, projectRequest))
-        }
-
         val namespace = openShiftCommandBuilder.generateNamespace(environment)
         val roleBindings = openShiftCommandBuilder.generateRolebindings(environment)
-        (roleBindings + namespace).forEach {
-            responses.add(openShiftClient.performOpenShiftCommand(namespaceName, it))
-        }
-
-        return responses.toList()
+        val projectCmd = if (!projectExist) openShiftCommandBuilder.generateProjectRequest(environment) else null
+        return listOfNotNull(projectCmd).addIfNotNull(roleBindings).addIfNotNull(namespace)
+                .map { openShiftClient.performOpenShiftCommand(namespaceName, it) }
     }
 
     private fun deployFromSpecs(deploymentSpecs: List<AuroraDeploymentSpec>, environments: Map<AuroraDeployEnvironment, AuroraDeployResult>, deploy: Boolean): List<AuroraDeployResult> {
@@ -174,9 +164,7 @@ class DeployService(
         val redeployResult = if (deploymentSpec.type == TemplateType.development) {
             RedeployService.RedeployResult(message = "No deploy was made with ${deploymentSpec.type} type")
         } else {
-            val namespace = deploymentConfig.metadata.namespace
-            val name = deploymentConfig.metadata.name
-            redeployService.triggerRedeploy(namespace, name, imageStream)
+            redeployService.triggerRedeploy(deploymentConfig, imageStream)
         }
 
         if (!redeployResult.success) {
