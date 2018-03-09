@@ -51,9 +51,7 @@ logging:
             jboss: INFO
             hibernate: WARN
             springframework: WARN
-            apache:
-                catalina:  WARN
-                velocity:  WARN
+            apache: WARN
 ---
 spring:
     profiles: local
