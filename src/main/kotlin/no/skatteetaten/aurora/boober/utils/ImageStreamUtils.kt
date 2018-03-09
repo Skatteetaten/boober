@@ -9,5 +9,9 @@ fun ImageStream.findCurrentImageHash(): String? =
         this.status?.tags?.firstOrNull()?.items?.firstOrNull()?.image
 
 
+fun ImageStream.findDockerImageUrl(tagName: String): String? =
+        this.spec?.tags?.firstOrNull { it.name == tagName }?.from?.name
+
+
 fun imageStreamFromJson(jsonNode: JsonNode?): ImageStream =
         jacksonObjectMapper().readValue(jsonNode.toString())

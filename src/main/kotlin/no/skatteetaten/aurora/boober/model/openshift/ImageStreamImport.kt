@@ -25,10 +25,9 @@ data class ImageStreamImport(val metadata: Metadata? = null,
                 ?.message
     }
 
-    fun isSameImage(imageHash: String?): Boolean {
-        val updatedImageHash = this.status?.import?.status?.tags?.firstOrNull()?.items?.firstOrNull()?.image
-        return updatedImageHash == imageHash
-    }
+    fun isSameImage(imageHash: String?): Boolean =
+            this.status?.import?.status?.tags?.firstOrNull()?.items?.firstOrNull()?.image
+                    ?.let { return it == imageHash } ?: false
 }
 
 

@@ -8,6 +8,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.findCurrentImageHash
+import no.skatteetaten.aurora.boober.utils.findDockerImageUrl
 import no.skatteetaten.aurora.boober.utils.findImageChangeTriggerTagName
 import no.skatteetaten.aurora.boober.utils.imageStreamImportFromJson
 import org.springframework.stereotype.Service
@@ -31,27 +32,27 @@ class RedeployService(val openShiftClient: OpenShiftClient,
     }
 
     fun triggerRedeploy(deploymentConfig: DeploymentConfig, imageStream: ImageStream?): RedeployResult {
-        val namespace = deploymentConfig.metadata.namespace
-        val name = deploymentConfig.metadata.name
         val imageChangeTriggerTagName = deploymentConfig.findImageChangeTriggerTagName()
-                ?: throw IllegalArgumentException("No imageChangeTriggerName found")
-
-        return if (imageStream == null) {
-            requestDeployment(namespace, name)
+        return if (imageStream == null || imageChangeTriggerTagName == null) {
+            redeploy(deploymentConfig)
         } else {
-            rolloutDeployment(namespace, name, imageChangeTriggerTagName, imageStream)
+            redeploy(imageStream, imageChangeTriggerTagName)
         }
     }
 
-    fun requestDeployment(namespace: String, name: String): RedeployResult {
+    fun redeploy(deploymentConfig: DeploymentConfig): RedeployResult {
+        val namespace = deploymentConfig.metadata.namespace
+        val name = deploymentConfig.metadata.name
         val deploymentRequestResponse = performDeploymentRequest(namespace, name)
         return RedeployResult.fromOpenShiftResponses(listOf(deploymentRequestResponse))
     }
 
-    fun rolloutDeployment(namespace: String, name: String, tagName: String, imageStream: ImageStream): RedeployResult {
+    fun redeploy(imageStream: ImageStream, tagName: String): RedeployResult {
         val openShiftResponses = mutableListOf<OpenShiftResponse>()
 
-        val dockerImageUrl = imageStream.metadata.name
+        val namespace = imageStream.metadata.namespace
+        val name = imageStream.metadata.name
+        val dockerImageUrl = imageStream.findDockerImageUrl(tagName) ?: throw IllegalArgumentException("Missing docker image url")
         val imageStreamImportResponse = performImageStreamImport(namespace, dockerImageUrl, name)
                 .also { openShiftResponses.add(it) }
         if (!imageStreamImportResponse.success) {

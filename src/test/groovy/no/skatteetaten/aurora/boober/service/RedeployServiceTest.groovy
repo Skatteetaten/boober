@@ -10,9 +10,11 @@ import io.fabric8.openshift.api.model.DeploymentConfigSpec
 import io.fabric8.openshift.api.model.DeploymentTriggerImageChangeParams
 import io.fabric8.openshift.api.model.DeploymentTriggerPolicy
 import io.fabric8.openshift.api.model.ImageStream
+import io.fabric8.openshift.api.model.ImageStreamSpec
 import io.fabric8.openshift.api.model.ImageStreamStatus
 import io.fabric8.openshift.api.model.NamedTagEventList
 import io.fabric8.openshift.api.model.TagEvent
+import io.fabric8.openshift.api.model.TagReference
 import no.skatteetaten.aurora.boober.model.openshift.ConditionsItem
 import no.skatteetaten.aurora.boober.model.openshift.ImageStreamImport
 import no.skatteetaten.aurora.boober.model.openshift.Import
@@ -30,10 +32,8 @@ class RedeployServiceTest extends Specification {
   def defaultImageHash = '123'
   def emptyJsonNode = NullNode.getInstance()
 
-  def deploymentConfig = createDeploymentConfig()
-
-  def imageStream = createImageStream()
-  def imageStreamImportResponse = imageStreamImportResponse()
+  def imageStream = imageStream()
+  def deploymentConfig = deploymentConfig()
 
   def openShiftObjectGenerator = Mock(OpenShiftObjectGenerator) {
     generateDeploymentRequest('name') >> emptyJsonNode
@@ -41,7 +41,7 @@ class RedeployServiceTest extends Specification {
   def openShiftClient = Mock(OpenShiftClient)
   def redeployService = new RedeployService(openShiftClient, openShiftObjectGenerator)
 
-  def "Request deployment given null ImageStream return success"() {
+  def "Redeploy given null ImageStream return success"() {
     given:
       openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> openShiftResponse()
 
@@ -53,9 +53,9 @@ class RedeployServiceTest extends Specification {
       response.openShiftResponses.size() == 1
   }
 
-  def "Rollout deployment given image is already imported return success"() {
+  def "Redeploy given image is already imported return success"() {
     given:
-      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> imageStreamImportResponse
+      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> imageStreamImportResponse()
 
     when:
       def response = redeployService.triggerRedeploy(deploymentConfig, imageStream)
@@ -65,7 +65,7 @@ class RedeployServiceTest extends Specification {
       response.openShiftResponses.size() == 2
   }
 
-  def "Rollout deployment given image is not imported return success"() {
+  def "Redeploy given image is not imported return success"() {
     given:
       openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> imageStreamImportResponse('234')
 
@@ -77,7 +77,7 @@ class RedeployServiceTest extends Specification {
       response.openShiftResponses.size() == 1
   }
 
-  def "Rollout deployment given failure from ImageStreamImport command return failed"() {
+  def "Redeploy given failure from ImageStreamImport command return failed"() {
     given:
       def errorMessage = 'failed ImageStreamImport'
       openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> failedResponse(errorMessage)
@@ -91,7 +91,7 @@ class RedeployServiceTest extends Specification {
       response.openShiftResponses.size() == 1
   }
 
-  def "Rollout deployment given error message in ImageStreamImport response return failed"() {
+  def "Redeploy given error message in ImageStreamImport response return failed"() {
     given:
       def errorMessage = 'ImageStreamImport error message'
       openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >>
@@ -106,39 +106,53 @@ class RedeployServiceTest extends Specification {
       response.openShiftResponses.size() == 1
   }
 
-  def "Trigger redeploy given deploymentConfig without tag name throw IllegalArgumentException"() {
+  def "Redeploy given no type in DeploymentConfig perform deployment request and return success"() {
     given:
-      def deploymentConfigWithoutTagName = new DeploymentConfig(
-          metadata: new ObjectMeta(namespace: 'affiliation', name: 'name'))
+      def deploymentConfigWithoutType = deploymentConfig(null)
+      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> openShiftResponse()
 
     when:
-      redeployService.triggerRedeploy(deploymentConfigWithoutTagName, imageStream)
+      def response = redeployService.triggerRedeploy(deploymentConfigWithoutType, imageStream)
+
+    then:
+      response.success
+      response.openShiftResponses.size() == 1
+  }
+
+  def "Redeploy given no docker image url throw IllegalArgumentException"() {
+    given:
+      def imageStreamWithoutDockerImageUrl = imageStream(null)
+
+    when:
+      redeployService.triggerRedeploy(deploymentConfig, imageStreamWithoutDockerImageUrl)
 
     then:
       def e = thrown(IllegalArgumentException)
-      e.message == 'No imageChangeTriggerName found'
+      e.message == 'Missing docker image url'
   }
 
-  private static DeploymentConfig createDeploymentConfig() {
+  private static DeploymentConfig deploymentConfig(String type = 'ImageChange') {
     return new DeploymentConfig(
         metadata: new ObjectMeta(namespace: 'affiliation', name: 'name'),
         spec: new DeploymentConfigSpec(
-            triggers: [new DeploymentTriggerPolicy(type: 'ImageChange',
+            triggers: [new DeploymentTriggerPolicy(type: type,
                 imageChangeParams: new DeploymentTriggerImageChangeParams(
                     from: new ObjectReference(name: 'referanse:default')))])
     )
   }
 
-  private ImageStream createImageStream() {
+  private ImageStream imageStream(String dockerImageUrl = 'dockerImageUrl') {
     return new ImageStream(
-        metadata: new ObjectMeta(name: 'name', resourceVersion: '123'),
+        metadata: new ObjectMeta(namespace: 'affiliation', name: 'name', resourceVersion: '123'),
         status: new ImageStreamStatus(
-            tags: [new NamedTagEventList(
-                items: [new TagEvent(image: defaultImageHash)])]
+            tags: [new NamedTagEventList(items: [new TagEvent(image: defaultImageHash)])]
+        ),
+        spec: new ImageStreamSpec(
+            tags: [new TagReference(name: 'default', from: new ObjectReference(name: dockerImageUrl))]
         ))
   }
 
-  private ImageStreamImport createImageStreamImport(String imageHash = defaultImageHash, boolean status = true,
+  private ImageStreamImport imageStreamImport(String imageHash = defaultImageHash, boolean status = true,
       String errorMessage = '') {
     return new ImageStreamImport(null, '', '', null,
         new Status([], new Import(null, null,
@@ -151,7 +165,7 @@ class RedeployServiceTest extends Specification {
   }
 
   private OpenShiftResponse imageStreamImportResponse(String imageHash = defaultImageHash) {
-    def imageStreamImport = createImageStreamImport(imageHash)
+    def imageStreamImport = imageStreamImport(imageHash)
     return new OpenShiftResponse(
         new OpenshiftCommand(OperationType.CREATE, emptyJsonNode), imageStreamImport.toJsonNode()
     )
@@ -168,7 +182,7 @@ class RedeployServiceTest extends Specification {
   }
 
   private OpenShiftResponse failedImageStreamImportResponse(String errorMessage) {
-    def imageStreamImport = createImageStreamImport(defaultImageHash, false, errorMessage)
+    def imageStreamImport = imageStreamImport(defaultImageHash, false, errorMessage)
     return openShiftResponse(imageStreamImport.toJsonNode())
   }
 }
