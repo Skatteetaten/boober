@@ -20,8 +20,8 @@ import com.fkorotkov.openshift.template
 import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.openshift.api.model.DeploymentConfig
-import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.mapper.platform.AuroraDeployment
+import no.skatteetaten.aurora.boober.model.MountType
 
 object DeploymentConfigGenerator {
 
@@ -82,19 +82,20 @@ object DeploymentConfigGenerator {
 
                     spec {
                         volumes = auroraDeployment.mounts?.map {
+                            val volumeName = it.getNamespacedVolumeName(auroraDeployment.name)
                             volume {
-                                name = it.mountName
+                                name = it.normalizeMountName()
                                 when (it.type) {
                                     MountType.ConfigMap -> configMap {
-                                        name = it.volumeName
+                                        name = volumeName
                                         items = null
                                     }
                                     MountType.Secret -> secret {
-                                        secretName = it.volumeName
+                                        secretName = volumeName
                                         items = null
                                     }
                                     MountType.PVC -> persistentVolumeClaim {
-                                        claimName = it.volumeName
+                                        claimName = volumeName
                                     }
                                 }
                             }

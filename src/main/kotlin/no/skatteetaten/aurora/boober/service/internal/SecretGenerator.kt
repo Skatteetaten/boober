@@ -14,7 +14,7 @@ object SecretGenerator {
 
             metadata {
                 labels = secretLabels
-                name = secretName.replace("_", "-").toLowerCase()
+                name = secretName
                 finalizers = null
                 ownerReferences = null
             }

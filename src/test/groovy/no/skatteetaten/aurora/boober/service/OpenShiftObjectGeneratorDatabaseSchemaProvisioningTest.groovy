@@ -62,6 +62,7 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
     when:
       def objects = objectGenerator.generateApplicationObjects('deploy-id', deploymentSpec, provisioningResult)
       def deploymentConfig = objects.find { it.get("kind").textValue().toLowerCase() == "deploymentconfig" }
+      deploymentConfig = new JsonSlurper().parseText(deploymentConfig.toString())
       def secret = objects.find { it.get("kind").textValue().toLowerCase() == "secret" }
       secret = new JsonSlurper().parseText(secret.toString())
 
@@ -70,7 +71,15 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
       secret != null
       def d = secret.data
 
-      secret.metadata.name == 'reference-reference-name-db'
+      secret.metadata.name=="reference-reference-name-db"
+
+      def container = deploymentConfig.spec.template.spec.containers[0]
+      def volumes=deploymentConfig.spec.template.spec.volumes
+      def volumeMount = container.volumeMounts.find{ it.name == "reference-name-db" }
+      assert volumeMount != null, "Cannot find volumeMount with expected name"
+      volumes.find{ it.name == volumeMount.name && it.secret.secretName == secret.metadata.name}
+
+
       b64d(d.jdbcurl) == 'jdbc:oracle:thin:@some-db-server01.skead.no:1521/dbhotel'
       b64d(d.name) == 'VCLFVAPKGOMBCFTWEVKZDYBGVTMYDP'
       b64d(d.id) == 'fd59dba9-7d67-4ea2-bb98-081a5df8c387'

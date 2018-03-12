@@ -14,7 +14,7 @@ object ConfigMapGenerator {
 
             metadata {
                 labels = cmLabels
-                name = cmName.replace("_", "-").toLowerCase()
+                name = cmName
 
                 finalizers = null
                 ownerReferences = null
