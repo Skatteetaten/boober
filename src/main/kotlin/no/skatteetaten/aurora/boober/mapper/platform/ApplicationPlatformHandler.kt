@@ -14,7 +14,6 @@ import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterNullValues
-import org.apache.commons.text.StringEscapeUtils
 
 abstract class ApplicationPlatformHandler(val name:String) {
     open fun handlers(handlers: Set<AuroraConfigFieldHandler>): Set<AuroraConfigFieldHandler> = handlers
@@ -83,7 +82,7 @@ abstract class ApplicationPlatformHandler(val name:String) {
         fun escapeOverrides(): String? {
             val files = deploy.overrideFiles.mapValues { jacksonObjectMapper().readValue(it.value, JsonNode::class.java) }
             val content = jacksonObjectMapper().writeValueAsString(files)
-            return StringEscapeUtils.escapeEcmaScript(content).takeIf { it != "{}" }
+            return content.takeIf { it != "{}" }
         }
 
         return mapOf(
