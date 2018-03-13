@@ -84,11 +84,15 @@ class DeployService(
 
     private fun prepareDeployEnvironment(environment: AuroraDeployEnvironment, projectExist: Boolean): List<OpenShiftResponse> {
         val namespaceName = environment.namespace
+        val projectResponse = if (!projectExist) openShiftCommandBuilder.generateProjectRequest(environment).let {
+            openShiftClient.performOpenShiftCommand(namespaceName, it)
+        } else null
         val namespace = openShiftCommandBuilder.generateNamespace(environment)
         val roleBindings = openShiftCommandBuilder.generateRolebindings(environment)
-        val projectCmd = if (!projectExist) openShiftCommandBuilder.generateProjectRequest(environment) else null
-        return listOfNotNull(projectCmd).addIfNotNull(roleBindings).addIfNotNull(namespace)
+
+        val resourceResponse = roleBindings.addIfNotNull(namespace)
                 .map { openShiftClient.performOpenShiftCommand(namespaceName, it) }
+        return listOfNotNull(projectResponse).addIfNotNull(resourceResponse)
     }
 
     private fun deployFromSpecs(deploymentSpecs: List<AuroraDeploymentSpec>, environments: Map<AuroraDeployEnvironment, AuroraDeployResult>, deploy: Boolean): List<AuroraDeployResult> {
