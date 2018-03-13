@@ -18,7 +18,7 @@ data class AuroraConfigFile(val name: String, val contents: String, val override
         try {
             jacksonYamlObjectMapper().readValue(contents, JsonNode::class.java)
         } catch (e: Exception) {
-            val message = "AuroraConfigFile=$name is not valid erroMessage=${e.message}"
+            val message = "AuroraConfigFile=$name is not valid errorMessage=${e.message}"
             throw AuroraConfigException(message, listOf(ConfigFieldErrorDetail(INVALID, message)))
         }
     }
