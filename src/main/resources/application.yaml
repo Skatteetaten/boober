@@ -16,6 +16,7 @@ spring:
             spec: maximumSize=2000,expireAfterWrite=300s
             cache-names: groups, templates
 
+
 vault:
     git:
         project: av
@@ -57,7 +58,7 @@ spring:
     profiles: local
 
 openshift:
-    cluster: qa
+    cluster: utv
 
 boober:
     dbh: http://dbh-aurora.qa.paas.skead.no

@@ -54,7 +54,8 @@ class OpenShiftObjectGenerator(
         val openShiftObjectLabelService: OpenShiftObjectLabelService,
         val mapper: ObjectMapper,
         val openShiftTemplateProcessor: OpenShiftTemplateProcessor,
-        val openShiftClient: OpenShiftResourceClient) {
+        val openShiftClient: OpenShiftResourceClient,
+        val clock: ClockService) {
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftObjectGenerator::class.java)
 
@@ -83,7 +84,8 @@ class OpenShiftObjectGenerator(
                     .addIfNotNull(generateService(auroraDeploymentSpec, labels))
                     .addIfNotNull(generateImageStream(deployId, auroraDeploymentSpec))
                     .addIfNotNull(generateBuilds(auroraDeploymentSpec, deployId))
-                    .addIfNotNull(generateSecretsAndConfigMaps(auroraDeploymentSpec.name, mounts ?: emptyList(), labels, provisioningResult))
+                    .addIfNotNull(generateSecretsAndConfigMaps(auroraDeploymentSpec.name, mounts
+                            ?: emptyList(), labels, provisioningResult))
                     .addIfNotNull(generateRoute(auroraDeploymentSpec, labels))
                     .addIfNotNull(generateTemplate(auroraDeploymentSpec))
                     .addIfNotNull(generateLocalTemplate(auroraDeploymentSpec))
@@ -107,10 +109,15 @@ class OpenShiftObjectGenerator(
 
     fun generateNamespace(environment: AuroraDeployEnvironment): JsonNode {
 
+        val now = clock.getNow()
         val namespace = namespace {
             apiVersion = "v1"
             metadata {
-                labels = mapOf("affiliation" to environment.affiliation)
+                val ttl = environment.envTTL?.let {
+                    val removeInstant = now + it
+                    "removeAfter" to removeInstant.toString()
+                }
+                labels = mapOf("affiliation" to environment.affiliation).addIfNotNull(ttl)
                 name = environment.namespace
                 finalizers = null
                 ownerReferences = null
@@ -151,7 +158,7 @@ class OpenShiftObjectGenerator(
 
         val containers = deployment.containers.map { ContainerGenerator.create(it) }
 
-        val dc = DeploymentConfigGenerator.create(deployment, containers)
+        val dc = DeploymentConfigGenerator.create(deployment, containers, clock.getNow())
 
         return mapper.convertValue(dc)
     }
@@ -333,7 +340,7 @@ class OpenShiftObjectGenerator(
                                     }
                                 },
                                 buildTriggerPolicy {
-                                    type="ImageChange"
+                                    type = "ImageChange"
                                     imageChange {
 
                                     }

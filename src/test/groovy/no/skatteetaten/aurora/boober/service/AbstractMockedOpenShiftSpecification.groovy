@@ -3,9 +3,10 @@ package no.skatteetaten.aurora.boober.service
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
 
+import java.time.Instant
+
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.client.AutoConfigureWebClient
-import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -34,6 +35,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchema
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
 import no.skatteetaten.aurora.boober.service.vault.VaultService
 import spock.mock.DetachedMockFactory
+
 @AutoConfigureWebClient(registerRestTemplate = true)
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
@@ -74,6 +76,11 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
     @Bean
     UserDetailsProvider userDetailsProvider() {
       factory.Mock(UserDetailsProvider)
+    }
+
+    @Bean
+    ClockService clock() {
+      factory.Mock(ClockService)
     }
 
     @Bean
@@ -135,7 +142,12 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
   @Autowired
   ObjectMapper mapper
 
+  @Autowired
+  ClockService clock;
+
   def setup() {
+
+    clock.getNow() >> Instant.EPOCH
 
     def currentFeature = specificationContext.currentFeature
     DefaultOverride defaultOverride = currentFeature.featureMethod.getAnnotation(DefaultOverride)

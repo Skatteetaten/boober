@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 
 import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
+import java.time.Duration
 
 enum class TemplateType {
     deploy, development, localTemplate, template, build
@@ -12,7 +13,8 @@ enum class TemplateType {
 data class AuroraDeployEnvironment(
         val affiliation: String,
         val envName: String,
-        val permissions: Permissions
+        val permissions: Permissions,
+        val envTTL: Duration?
 ) {
     val namespace: String
         get() = when {
@@ -103,7 +105,8 @@ data class AuroraDeploy(
         val dockerImagePath: String,
         val dockerTag: String,
         val deployStrategy: AuroraDeployStrategy,
-        val env: Map<String, String>
+        val env: Map<String, String>,
+        val ttl: Duration?
 ) {
     val dockerImage: String
         get() = "${dockerImagePath}:${dockerTag}"

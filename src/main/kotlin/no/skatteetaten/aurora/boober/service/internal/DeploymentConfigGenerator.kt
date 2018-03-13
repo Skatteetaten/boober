@@ -21,17 +21,25 @@ import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.platform.AuroraDeployment
-import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.model.MountType.ConfigMap
+import no.skatteetaten.aurora.boober.model.MountType.PVC
+import no.skatteetaten.aurora.boober.model.MountType.Secret
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import java.time.Instant
 
 object DeploymentConfigGenerator {
 
-    fun create(auroraDeployment: AuroraDeployment, container: List<Container>): DeploymentConfig {
+    fun create(auroraDeployment: AuroraDeployment, container: List<Container>, now: Instant): DeploymentConfig {
 
+        val ttl = auroraDeployment.ttl?.let {
+            val removeInstant = now + it
+            "removeAfter" to removeInstant.toString()
+        }
         return deploymentConfig {
             metadata {
                 annotations = auroraDeployment.annotations
                 apiVersion = "v1"
-                labels = auroraDeployment.labels
+                labels = auroraDeployment.labels.addIfNotNull(ttl)
                 name = auroraDeployment.name
                 finalizers = null
                 ownerReferences = null
@@ -86,15 +94,15 @@ object DeploymentConfigGenerator {
                             volume {
                                 name = it.normalizeMountName()
                                 when (it.type) {
-                                    MountType.ConfigMap -> configMap {
+                                    ConfigMap -> configMap {
                                         name = volumeName
                                         items = null
                                     }
-                                    MountType.Secret -> secret {
+                                    Secret -> secret {
                                         secretName = volumeName
                                         items = null
                                     }
-                                    MountType.PVC -> persistentVolumeClaim {
+                                    PVC -> persistentVolumeClaim {
                                         claimName = volumeName
                                     }
                                 }

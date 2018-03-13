@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
 import com.fasterxml.jackson.databind.node.ObjectNode
+import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
@@ -16,6 +17,7 @@ import no.skatteetaten.aurora.boober.model.AuroraTemplate
 import no.skatteetaten.aurora.boober.model.AuroraVolume
 import no.skatteetaten.aurora.boober.model.Permission
 import no.skatteetaten.aurora.boober.model.Permissions
+import no.skatteetaten.aurora.boober.utils.durationString
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.pattern
@@ -37,10 +39,16 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                     defaultSource = "folderName",
                     defaultValue = applicationId.environment
             ),
+            AuroraConfigFieldHandler("env/name", validator = {
+                it.pattern("^[a-z0-9\\-]{0,52}$",
+                        "Environment must consist of lower case alphanumeric characters or '-'. It must be no longer than 52 characters.", false)
+            }),
+            AuroraConfigFieldHandler("env/ttl", validator = { it.durationString() }),
             AuroraConfigFieldHandler("name",
                     defaultValue = applicationId.application,
                     defaultSource = "fileName",
                     validator = { it.pattern(namePattern, "Name must be alphanumeric and no more than 40 characters", false) }),
+
             AuroraConfigFieldHandler("splunkIndex"),
             AuroraConfigFieldHandler("certificate/commonName"),
             AuroraConfigFieldHandler("certificate"),
@@ -70,10 +78,14 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                 applicationPlatform = auroraConfigFields.extract("applicationPlatform"),
                 type = auroraConfigFields.extract("type"),
                 name = name,
+
                 cluster = auroraConfigFields.extract("cluster"),
                 environment = AuroraDeployEnvironment(
                         affiliation = auroraConfigFields.extract("affiliation"),
-                        envName = auroraConfigFields.extract("envName"),
+                        envName = auroraConfigFields.extractIfExistsOrNull("env/name")
+                                ?: auroraConfigFields.extract("envName"),
+                        envTTL = auroraConfigFields.extractOrNull<String>("env/ttl")
+                                ?.let { StringToDurationConverter().convert(it) },
                         permissions = extractPermissions(auroraConfigFields)
                 ),
                 fields = createMapForAuroraDeploymentSpecPointers(createFieldsWithValues(auroraConfigFields, build)),

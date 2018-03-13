@@ -5,8 +5,11 @@ import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import no.skatteetaten.aurora.boober.service.AbstractSpec
+import no.skatteetaten.aurora.boober.service.ClockService
 
 abstract class AbstractAuroraConfigTest extends AbstractSpec {
+
+  def clockService = Mock(ClockService)
 
   static final AFFILIATION = "aos"
 

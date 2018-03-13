@@ -17,7 +17,7 @@
     "alternateBackends": [
 
     ],
-    "host": "aos-simple-aos-secrettest.utv.paas.skead.no",
+    "host": "aos-simple-aos-st.utv.paas.skead.no",
     "path": "/foo",
     "to": {
       "kind": "Service",

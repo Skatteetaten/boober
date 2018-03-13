@@ -14,6 +14,7 @@ import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterNullValues
+import java.time.Duration
 
 abstract class ApplicationPlatformHandler(val name:String) {
     open fun handlers(handlers: Set<AuroraConfigFieldHandler>): Set<AuroraConfigFieldHandler> = handlers
@@ -139,7 +140,8 @@ data class AuroraDeployment(val name: String,
                             val annotations: Map<String, String>,
                             val deployStrategy: AuroraDeployStrategy,
                             val replicas: Int,
-                            val serviceAccount: String?)
+                            val serviceAccount: String?,
+                            val ttl: Duration?)
 
 
 enum class DeploymentState {
