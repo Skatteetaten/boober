@@ -68,8 +68,8 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
         AuroraConfigFieldHandler("webseal/roles"),
         AuroraConfigFieldHandler("debug", defaultValue = false),
         AuroraConfigFieldHandler("pause", defaultValue = false),
-            AuroraConfigFieldHandler("alarm", defaultValue = true),
-            AuroraConfigFieldHandler("ttl", validator = { it.durationString() })
+        AuroraConfigFieldHandler("alarm", defaultValue = true),
+        AuroraConfigFieldHandler("ttl", validator = { it.durationString() })
 
     ) + configHandlers
 
