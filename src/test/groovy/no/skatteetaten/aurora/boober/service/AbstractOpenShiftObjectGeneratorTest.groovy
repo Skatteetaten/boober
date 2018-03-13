@@ -15,7 +15,6 @@ class AbstractOpenShiftObjectGeneratorTest extends AbstractAuroraDeploymentSpecT
 
   def openShiftResourceClient = Mock(OpenShiftResourceClient)
 
-
   def mapper = new Configuration().mapper()
 
   OpenShiftObjectGenerator createObjectGenerator(String username = "aurora") {

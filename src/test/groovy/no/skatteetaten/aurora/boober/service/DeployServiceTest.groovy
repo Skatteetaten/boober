@@ -50,7 +50,7 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
       new OpenshiftCommand(OperationType.UPDATE, namespaceJson, null, namespaceJson)
     }
     */
-
+    //This code is copied from the old now removed DeployServiceFromGitTest
     openShiftClient.performOpenShiftCommand(_, _) >> {
       def cmd = it[1]
       def namespace = it[0]
