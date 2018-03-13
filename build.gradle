@@ -66,8 +66,7 @@ dependencies {
       'com.github.fge:json-patch:1.9',
       'com.github.martinwithaar:encryptor4j:0.1',
       'com.github.ben-manes.caffeine:caffeine',
-      'com.fkorotkov:kubernetes-dsl:0.9',
-      'org.apache.commons:commons-text:1.2'
+      'com.fkorotkov:kubernetes-dsl:0.9'
   )
 
   testCompile(

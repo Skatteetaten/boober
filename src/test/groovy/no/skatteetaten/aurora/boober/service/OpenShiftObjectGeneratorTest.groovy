@@ -6,7 +6,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 
 import groovy.json.JsonOutput
@@ -83,7 +82,6 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       "webseal"     | "sprocket"      | null              | []
       "booberdev"   | "sprocket"      | null              | []
       "booberdev"   | "tvinn"         | "atomhopper.json" | []
-     // "jenkins"     | "build"         | null              | []
       "booberdev"   | "reference-web" | null              | []
       "booberdev"   | "build"         | null              | []
       "booberdev"   | "aos-simple"    | null              | booberDevAosSimpleOverrides

@@ -27,7 +27,9 @@ import no.skatteetaten.aurora.boober.Boober
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Mount
-import no.skatteetaten.aurora.boober.model.MountType.*
+import no.skatteetaten.aurora.boober.model.MountType.ConfigMap
+import no.skatteetaten.aurora.boober.model.MountType.PVC
+import no.skatteetaten.aurora.boober.model.MountType.Secret
 import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.internal.ConfigMapGenerator
@@ -41,8 +43,6 @@ import no.skatteetaten.aurora.boober.service.internal.findAndCreateMounts
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.ensureStartWith
-import no.skatteetaten.aurora.boober.utils.filterNullValues
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -277,7 +277,6 @@ class OpenShiftObjectGenerator(
 
     private fun generateSecretsAndConfigMaps(appName: String, mounts: List<Mount>, labels: Map<String, String>, provisioningResult: ProvisioningResult?): List<JsonNode> {
 
-        fun Mount.getNamespacedVolumeName(): String = this.volumeName.ensureStartWith(appName, "-")
 
         val schemaSecrets = provisioningResult?.schemaProvisionResults
                 ?.let { DbhSecretGenerator.create(appName, it, labels) }
@@ -291,10 +290,10 @@ class OpenShiftObjectGenerator(
                 .mapNotNull { mount: Mount ->
                     when (mount.type) {
                         ConfigMap -> mount.content
-                                ?.let { ConfigMapGenerator.create(mount.getNamespacedVolumeName(), labels, it) }
+                                ?.let { ConfigMapGenerator.create(mount.getNamespacedVolumeName(appName), labels, it) }
                         Secret -> mount.secretVaultName
                                 ?.let { provisioningResult?.vaultResults?.getVaultData(it) }
-                                ?.let { SecretGenerator.create(mount.getNamespacedVolumeName(), labels, it) }
+                                ?.let { SecretGenerator.create(mount.getNamespacedVolumeName(appName), labels, it) }
                         PVC -> null
                     }
                 }

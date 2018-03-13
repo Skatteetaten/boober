@@ -3,7 +3,7 @@ package no.skatteetaten.aurora.boober.model
 import com.fasterxml.jackson.databind.JsonNode
 
 import no.skatteetaten.aurora.boober.utils.ensureEndsWith
-
+import no.skatteetaten.aurora.boober.utils.ensureStartWith
 
 enum class TemplateType {
     deploy, development, localTemplate, template, build
@@ -136,7 +136,18 @@ data class Mount(
         val exist: Boolean,
         val content: Map<String, String>? = null,
         val secretVaultName: String? = null
-)
+) {
+    fun getNamespacedVolumeName(appName:String): String  {
+        val name= if(exist) {
+            this.volumeName
+        } else {
+            this.volumeName.ensureStartWith(appName, "-")
+        }
+        return name.replace("_", "-").toLowerCase()
+    }
+
+    fun normalizeMountName() = mountName.replace("_", "-").toLowerCase()
+}
 
 
 data class Database(
