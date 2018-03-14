@@ -79,7 +79,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                         affiliation = auroraConfigFields.extract("affiliation"),
                         envName = auroraConfigFields.extractIfExistsOrNull("env/name")
                                 ?: auroraConfigFields.extract("envName"),
-                        envTTL = auroraConfigFields.extractOrNull<String>("env/ttl")
+                        ttl = auroraConfigFields.extractOrNull<String>("env/ttl")
                                 ?.let { StringToDurationConverter().convert(it) },
                         permissions = extractPermissions(auroraConfigFields)
                 ),

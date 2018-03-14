@@ -32,6 +32,7 @@ import no.skatteetaten.aurora.boober.model.MountType.PVC
 import no.skatteetaten.aurora.boober.model.MountType.Secret
 import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.utils.Instants.now
 import no.skatteetaten.aurora.boober.service.internal.ConfigMapGenerator
 import no.skatteetaten.aurora.boober.service.internal.ContainerGenerator
 import no.skatteetaten.aurora.boober.service.internal.DbhSecretGenerator
@@ -54,8 +55,7 @@ class OpenShiftObjectGenerator(
         val openShiftObjectLabelService: OpenShiftObjectLabelService,
         val mapper: ObjectMapper,
         val openShiftTemplateProcessor: OpenShiftTemplateProcessor,
-        val openShiftClient: OpenShiftResourceClient,
-        val clock: ClockService) {
+        val openShiftClient: OpenShiftResourceClient) {
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftObjectGenerator::class.java)
 
@@ -109,11 +109,10 @@ class OpenShiftObjectGenerator(
 
     fun generateNamespace(environment: AuroraDeployEnvironment): JsonNode {
 
-        val now = clock.getNow()
         val namespace = namespace {
             apiVersion = "v1"
             metadata {
-                val ttl = environment.envTTL?.let {
+                val ttl = environment.ttl?.let {
                     val removeInstant = now + it
                     "removeAfter" to removeInstant.toString()
                 }
@@ -158,7 +157,7 @@ class OpenShiftObjectGenerator(
 
         val containers = deployment.containers.map { ContainerGenerator.create(it) }
 
-        val dc = DeploymentConfigGenerator.create(deployment, containers, clock.getNow())
+        val dc = DeploymentConfigGenerator.create(deployment, containers)
 
         return mapper.convertValue(dc)
     }

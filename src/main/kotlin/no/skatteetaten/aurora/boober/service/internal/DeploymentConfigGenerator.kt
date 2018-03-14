@@ -24,12 +24,12 @@ import no.skatteetaten.aurora.boober.mapper.platform.AuroraDeployment
 import no.skatteetaten.aurora.boober.model.MountType.ConfigMap
 import no.skatteetaten.aurora.boober.model.MountType.PVC
 import no.skatteetaten.aurora.boober.model.MountType.Secret
+import no.skatteetaten.aurora.boober.utils.Instants.now
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import java.time.Instant
 
 object DeploymentConfigGenerator {
 
-    fun create(auroraDeployment: AuroraDeployment, container: List<Container>, now: Instant): DeploymentConfig {
+    fun create(auroraDeployment: AuroraDeployment, container: List<Container>): DeploymentConfig {
 
         val ttl = auroraDeployment.ttl?.let {
             val removeInstant = now + it

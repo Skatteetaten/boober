@@ -26,7 +26,6 @@ import no.skatteetaten.aurora.boober.service.openshift.token.UserDetailsTokenPro
     UserDetailsTokenProvider,
     ServiceAccountTokenProvider,
     OpenShiftClient,
-    ClockService,
     OpenShiftObjectGenerator,
     OpenShiftTemplateProcessor,
     OpenShiftObjectLabelService,

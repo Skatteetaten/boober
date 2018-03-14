@@ -34,6 +34,7 @@ import no.skatteetaten.aurora.boober.service.openshift.token.UserDetailsTokenPro
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
 import no.skatteetaten.aurora.boober.service.vault.VaultService
+import no.skatteetaten.aurora.boober.utils.Instants
 import spock.mock.DetachedMockFactory
 
 @AutoConfigureWebClient(registerRestTemplate = true)
@@ -76,11 +77,6 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
     @Bean
     UserDetailsProvider userDetailsProvider() {
       factory.Mock(UserDetailsProvider)
-    }
-
-    @Bean
-    ClockService clock() {
-      factory.Mock(ClockService)
     }
 
     @Bean
@@ -142,12 +138,10 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
   @Autowired
   ObjectMapper mapper
 
-  @Autowired
-  ClockService clock;
 
   def setup() {
 
-    clock.getNow() >> Instant.EPOCH
+    Instants.determineNow = {Instant.EPOCH }
 
     def currentFeature = specificationContext.currentFeature
     DefaultOverride defaultOverride = currentFeature.featureMethod.getAnnotation(DefaultOverride)

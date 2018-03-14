@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
-import no.skatteetaten.aurora.boober.service.ClockService
+import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.service.OpenShiftCommandBuilder
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
@@ -50,10 +50,6 @@ class OpenShiftCommandBuilderCreateDeleteCommandsTest extends Specification {
   static class Config {
     private DetachedMockFactory factory = new DetachedMockFactory()
 
-    @Bean
-    ClockService clock() {
-      factory.Mock(ClockService)
-    }
 
     @Bean
     @ClientType(API_USER)
@@ -81,12 +77,9 @@ class OpenShiftCommandBuilderCreateDeleteCommandsTest extends Specification {
   @Autowired
   ObjectMapper mapper
 
-  @Autowired
-  ClockService clock;
-
   def setup() {
     userClient.getAuthorizationHeaders() >> new HttpHeaders()
-    clock.getNow() >> Instant.EPOCH
+    Instants.determineNow = { Instant.EPOCH }
   }
 
   def "Should create delete command for all resources with given deployId"() {

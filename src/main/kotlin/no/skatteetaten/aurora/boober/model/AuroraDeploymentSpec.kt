@@ -14,7 +14,7 @@ data class AuroraDeployEnvironment(
         val affiliation: String,
         val envName: String,
         val permissions: Permissions,
-        val envTTL: Duration?
+        val ttl: Duration?
 ) {
     val namespace: String
         get() = when {

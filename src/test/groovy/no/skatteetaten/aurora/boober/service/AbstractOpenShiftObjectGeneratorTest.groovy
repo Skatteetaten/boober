@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.boober.Configuration
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.AbstractAuroraDeploymentSpecTest
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import no.skatteetaten.aurora.boober.utils.Instants
 
 class AbstractOpenShiftObjectGeneratorTest extends AbstractAuroraDeploymentSpecTest {
 
@@ -19,7 +20,7 @@ class AbstractOpenShiftObjectGeneratorTest extends AbstractAuroraDeploymentSpecT
 
   OpenShiftObjectGenerator createObjectGenerator(String username = "aurora") {
 
-    clockService.getNow() >> Instant.EPOCH
+    Instants.determineNow = {Instant.EPOCH }
     userDetailsProvider.getAuthenticatedUser() >> new User(username, "token", "Aurora OpenShift", [])
     def templateProcessor = new OpenShiftTemplateProcessor(userDetailsProvider, openShiftResourceClient, mapper)
 
@@ -27,6 +28,6 @@ class AbstractOpenShiftObjectGeneratorTest extends AbstractAuroraDeploymentSpecT
         "docker-registry.aurora.sits.no:5000",
         new OpenShiftObjectLabelService(userDetailsProvider),
         mapper,
-        templateProcessor, openShiftResourceClient, clockService)
+        templateProcessor, openShiftResourceClient)
   }
 }
