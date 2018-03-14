@@ -44,7 +44,6 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                     defaultValue = applicationId.application,
                     defaultSource = "fileName",
                     validator = { it.pattern(namePattern, "Name must be alphanumeric and no more than 40 characters", false) }),
-
             AuroraConfigFieldHandler("splunkIndex"),
             AuroraConfigFieldHandler("certificate/commonName"),
             AuroraConfigFieldHandler("certificate"),
