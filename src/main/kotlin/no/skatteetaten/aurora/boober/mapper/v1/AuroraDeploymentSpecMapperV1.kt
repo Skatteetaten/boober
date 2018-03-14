@@ -25,6 +25,8 @@ import no.skatteetaten.aurora.boober.utils.pattern
 class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
 
 
+    val envNamePattern = "^[a-z0-9\\-]{0,52}$"
+    val envNameMessage = "Environment must consist of lower case alphanumeric characters or '-'. It must be no longer than 52 characters."
     val handlers = listOf(
             AuroraConfigFieldHandler("affiliation", validator = { it.pattern("^[a-z]{1,10}$", "Affiliation can only contain letters and must be no longer than 10 characters") }),
             AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
@@ -32,17 +34,11 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
             AuroraConfigFieldHandler("permissions/view"),
             AuroraConfigFieldHandler("permissions/adminServiceAccount"),
             // Max length of OpenShift project names is 63 characters. Project name = affiliation + "-" + envName.
-            AuroraConfigFieldHandler("envName", validator = {
-                it.pattern("^[a-z0-9\\-]{0,52}$",
-                        "Environment must consist of lower case alphanumeric characters or '-'. It must be no longer than 52 characters.")
-            },
+            AuroraConfigFieldHandler("envName", validator = { it.pattern(envNamePattern, envNameMessage) },
                     defaultSource = "folderName",
                     defaultValue = applicationId.environment
             ),
-            AuroraConfigFieldHandler("env/name", validator = {
-                it.pattern("^[a-z0-9\\-]{0,52}$",
-                        "Environment must consist of lower case alphanumeric characters or '-'. It must be no longer than 52 characters.", false)
-            }),
+            AuroraConfigFieldHandler("env/name", validator = { it.pattern(envNamePattern, envNameMessage, false) }),
             AuroraConfigFieldHandler("env/ttl", validator = { it.durationString() }),
             AuroraConfigFieldHandler("name",
                     defaultValue = applicationId.application,
