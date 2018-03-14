@@ -81,7 +81,7 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
     then:
       deployResults.size() == 1
       def env = deployResults.keySet().first()
-      env.getTtl == Duration.ofDays(1)
+      env.ttl == Duration.ofDays(1)
 
       def deployResult = deployResults.values().first()
       def namespace = deployResult.openShiftResponses.find { it.command.payload.at("/kind").textValue() == "Namespace" }
