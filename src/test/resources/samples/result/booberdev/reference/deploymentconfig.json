@@ -15,7 +15,7 @@
       "booberDeployId": "123",
       "name": "reference",
       "deployTag": "1.0.0-b1.5.3-flange-8.152.18",
-      "removeAfter": "1970-01-02T00:00:00Z"
+      "removeAfter": "86400"
     },
     "name": "reference"
   },

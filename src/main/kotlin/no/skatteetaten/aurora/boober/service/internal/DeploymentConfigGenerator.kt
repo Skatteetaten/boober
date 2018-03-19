@@ -33,7 +33,7 @@ object DeploymentConfigGenerator {
 
         val ttl = auroraDeployment.ttl?.let {
             val removeInstant = now + it
-            "removeAfter" to removeInstant.toString()
+            "removeAfter" to removeInstant.epochSecond.toString()
         }
         return deploymentConfig {
             metadata {

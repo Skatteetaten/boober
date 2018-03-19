@@ -86,7 +86,7 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
       def deployResult = deployResults.values().first()
       def namespace = deployResult.openShiftResponses.find { it.command.payload.at("/kind").textValue() == "Namespace" }
       namespace != null
-      namespace.command.payload.at("/metadata/labels/removeAfter").textValue() == "1970-01-02T00:00:00Z"
+      namespace.command.payload.at("/metadata/labels/removeAfter").textValue() == "86400"
   }
 
 }

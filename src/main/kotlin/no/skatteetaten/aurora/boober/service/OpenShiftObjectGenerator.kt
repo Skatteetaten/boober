@@ -23,6 +23,7 @@ import com.fkorotkov.openshift.spec
 import com.fkorotkov.openshift.strategy
 import com.fkorotkov.openshift.to
 import io.fabric8.kubernetes.api.model.IntOrString
+import io.micrometer.core.instrument.util.TimeUtils
 import no.skatteetaten.aurora.boober.Boober
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -114,7 +115,7 @@ class OpenShiftObjectGenerator(
             metadata {
                 val ttl = environment.ttl?.let {
                     val removeInstant = now + it
-                    "removeAfter" to removeInstant.toString()
+                    "removeAfter" to removeInstant.epochSecond.toString()
                 }
                 labels = mapOf("affiliation" to environment.affiliation).addIfNotNull(ttl)
                 name = environment.namespace
