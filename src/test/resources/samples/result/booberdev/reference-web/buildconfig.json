@@ -38,7 +38,7 @@
           },
           {
             "name": "DOCKER_BASE_IMAGE",
-            "value": "wrench"
+            "value": "aurora/wrench"
           },
           {
             "name": "PUSH_EXTRA_TAGS",

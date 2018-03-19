@@ -354,7 +354,7 @@ class OpenShiftObjectGenerator(
                                     "GROUP_ID" to it.groupId,
                                     "VERSION" to it.version,
                                     "DOCKER_BASE_VERSION" to it.baseVersion,
-                                    "DOCKER_BASE_IMAGE" to it.baseName,
+                                    "DOCKER_BASE_IMAGE" to "aurora/${it.baseName}",
                                     "PUSH_EXTRA_TAGS" to it.extraTags
                             )
 
