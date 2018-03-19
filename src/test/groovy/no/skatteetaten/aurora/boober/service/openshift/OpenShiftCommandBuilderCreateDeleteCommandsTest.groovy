@@ -4,9 +4,10 @@ import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceC
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
 
+import java.time.Instant
+
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.client.AutoConfigureWebClient
-import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -18,13 +19,14 @@ import org.springframework.test.context.TestPropertySource
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import no.skatteetaten.aurora.boober.service.OpenShiftCommandBuilder
-import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
-import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
+import no.skatteetaten.aurora.boober.utils.Instants
+import no.skatteetaten.aurora.boober.service.OpenShiftCommandBuilder
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
+import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.service.OpenShiftTemplateProcessor
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
@@ -47,6 +49,7 @@ class OpenShiftCommandBuilderCreateDeleteCommandsTest extends Specification {
   @Configuration
   static class Config {
     private DetachedMockFactory factory = new DetachedMockFactory()
+
 
     @Bean
     @ClientType(API_USER)
@@ -76,6 +79,7 @@ class OpenShiftCommandBuilderCreateDeleteCommandsTest extends Specification {
 
   def setup() {
     userClient.getAuthorizationHeaders() >> new HttpHeaders()
+    Instants.determineNow = { Instant.EPOCH }
   }
 
   def "Should create delete command for all resources with given deployId"() {

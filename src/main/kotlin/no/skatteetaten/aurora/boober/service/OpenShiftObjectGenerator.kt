@@ -32,6 +32,7 @@ import no.skatteetaten.aurora.boober.model.MountType.PVC
 import no.skatteetaten.aurora.boober.model.MountType.Secret
 import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.utils.Instants.now
 import no.skatteetaten.aurora.boober.service.internal.ConfigMapGenerator
 import no.skatteetaten.aurora.boober.service.internal.ContainerGenerator
 import no.skatteetaten.aurora.boober.service.internal.DbhSecretGenerator
@@ -83,7 +84,8 @@ class OpenShiftObjectGenerator(
                     .addIfNotNull(generateService(auroraDeploymentSpec, labels))
                     .addIfNotNull(generateImageStream(deployId, auroraDeploymentSpec))
                     .addIfNotNull(generateBuilds(auroraDeploymentSpec, deployId))
-                    .addIfNotNull(generateSecretsAndConfigMaps(auroraDeploymentSpec.name, mounts ?: emptyList(), labels, provisioningResult))
+                    .addIfNotNull(generateSecretsAndConfigMaps(auroraDeploymentSpec.name, mounts
+                            ?: emptyList(), labels, provisioningResult))
                     .addIfNotNull(generateRoute(auroraDeploymentSpec, labels))
                     .addIfNotNull(generateTemplate(auroraDeploymentSpec))
                     .addIfNotNull(generateLocalTemplate(auroraDeploymentSpec))
@@ -110,7 +112,11 @@ class OpenShiftObjectGenerator(
         val namespace = namespace {
             apiVersion = "v1"
             metadata {
-                labels = mapOf("affiliation" to environment.affiliation)
+                val ttl = environment.ttl?.let {
+                    val removeInstant = now + it
+                    "removeAfter" to removeInstant.toString()
+                }
+                labels = mapOf("affiliation" to environment.affiliation).addIfNotNull(ttl)
                 name = environment.namespace
                 finalizers = null
                 ownerReferences = null
@@ -333,7 +339,7 @@ class OpenShiftObjectGenerator(
                                     }
                                 },
                                 buildTriggerPolicy {
-                                    type="ImageChange"
+                                    type = "ImageChange"
                                     imageChange {
 
                                     }

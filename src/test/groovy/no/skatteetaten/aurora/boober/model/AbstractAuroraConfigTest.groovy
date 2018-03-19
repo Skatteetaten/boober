@@ -6,7 +6,9 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import no.skatteetaten.aurora.boober.service.AbstractSpec
 
+
 abstract class AbstractAuroraConfigTest extends AbstractSpec {
+
 
   static final AFFILIATION = "aos"
 

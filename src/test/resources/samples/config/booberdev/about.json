@@ -4,5 +4,8 @@
   "cluster": "utv",
    "permissions": {
     "adminServiceAccount": "system:serviceaccount:paas:jenkinsbuilder"
+   },
+  "env": {
+    "ttl": "1d"
   }
 }

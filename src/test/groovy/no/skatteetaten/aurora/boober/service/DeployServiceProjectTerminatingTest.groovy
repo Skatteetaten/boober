@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 import com.fasterxml.jackson.databind.ObjectMapper
 
+import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 
@@ -40,5 +41,4 @@ class DeployServiceProjectTerminatingTest extends AbstractMockedOpenShiftSpecifi
     then:
       thrown(IllegalStateException)
   }
-
 }

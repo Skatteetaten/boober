@@ -4,5 +4,8 @@
   "cluster": "utv",
   "permissions": {
     "view": "APP_PaaS_utv"
+  },
+  "env": {
+    "name": "st"
   }
 }

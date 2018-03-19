@@ -3,11 +3,11 @@ package no.skatteetaten.aurora.boober.utils
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.JsonNodeType
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 
 
 fun JsonNode.findAllPointers(maxLevel: Int): List<String> {
@@ -110,6 +110,15 @@ fun JsonNode?.pattern(pattern: String, message: String, required: Boolean = true
     return null
 }
 
+fun JsonNode?.durationString(): Exception? {
+    if (this == null || !this.isTextual) {
+        return null
+    }
+
+    StringToDurationConverter().convert(this.textValue())
+    return null
+}
+
 fun JsonNode?.oneOf(candidates: List<String>): Exception? {
     if (this == null || !this.isTextual) {
         return IllegalArgumentException("Must be one of [" + candidates.joinToString() + "]")
@@ -147,20 +156,6 @@ fun JsonNode?.length(length: Int, message: String, required: Boolean = true): Ex
     }
 
     return null
-}
-
-/**
- * Will check the node type of the current node and return the value with appropriate native Kotlin type.
- * Complex objects (like arrays and objects) will be returned as escaped JSON.
- */
-fun JsonNode.toPrimitiveType(): Any? {
-    return when (this.nodeType) {
-        JsonNodeType.BOOLEAN -> this.booleanValue()
-        JsonNodeType.STRING -> this.asText()
-        JsonNodeType.NUMBER -> this.numberValue()
-        JsonNodeType.MISSING -> null
-        else -> this.toString()
-    }
 }
 
 fun jacksonYamlObjectMapper(): ObjectMapper = ObjectMapper(YAMLFactory().enable(JsonParser.Feature.ALLOW_COMMENTS)).registerKotlinModule()
