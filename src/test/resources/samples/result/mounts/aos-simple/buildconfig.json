@@ -38,7 +38,7 @@
           },
           {
             "name": "DOCKER_BASE_IMAGE",
-            "value": "flange"
+            "value": "aurora/flange"
           },
           {
             "name": "PUSH_EXTRA_TAGS",
