@@ -106,7 +106,8 @@ data class AuroraDeploy(
         val dockerTag: String,
         val deployStrategy: AuroraDeployStrategy,
         val env: Map<String, String>,
-        val ttl: Duration?
+        val ttl: Duration?,
+        val toxiProxy: ToxiProxy?
 ) {
     val dockerImage: String
         get() = "${dockerImagePath}:${dockerTag}"
@@ -215,4 +216,10 @@ data class Permission(
             return userPart + groupPart
         }
 }
+
+data class ToxiProxy(
+        val name: String,
+        val listen: String,
+        val upstream: String
+)
 

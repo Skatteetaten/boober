@@ -3,17 +3,7 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraDeploy
-import no.skatteetaten.aurora.boober.model.AuroraDeployStrategy
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigFlags
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResources
-import no.skatteetaten.aurora.boober.model.Database
-import no.skatteetaten.aurora.boober.model.HttpEndpoint
-import no.skatteetaten.aurora.boober.model.Probe
-import no.skatteetaten.aurora.boober.model.Webseal
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.utils.durationString
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.length
@@ -69,7 +59,8 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
         AuroraConfigFieldHandler("debug", defaultValue = false),
         AuroraConfigFieldHandler("pause", defaultValue = false),
         AuroraConfigFieldHandler("alarm", defaultValue = true),
-        AuroraConfigFieldHandler("ttl", validator = { it.durationString() })
+        AuroraConfigFieldHandler("ttl", validator = { it.durationString() }),
+        AuroraConfigFieldHandler("toxiproxy", defaultValue = false)
 
     ) + configHandlers
 
@@ -140,9 +131,10 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
             managementPath = findManagementPath(auroraConfigFields),
             liveness = getProbe(auroraConfigFields, "liveness"),
             readiness = getProbe(auroraConfigFields, "readiness"),
-                env = auroraConfigFields.getConfigEnv(configHandlers),
-                ttl = auroraConfigFields.extractOrNull<String>("ttl")
-                        ?.let { StringToDurationConverter().convert(it) }
+            env = auroraConfigFields.getConfigEnv(configHandlers),
+            ttl = auroraConfigFields.extractOrNull<String>("ttl")
+                        ?.let { StringToDurationConverter().convert(it) },
+            toxiProxy = ToxiProxy("app", "0.0.0.0:8090", "0.0.0.0:8080")
         )
     }
 
