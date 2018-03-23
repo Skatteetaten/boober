@@ -4,6 +4,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.put
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 import org.junit.Rule
@@ -15,6 +16,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import no.skatteetaten.aurora.boober.controller.internal.ErrorHandler
+import no.skatteetaten.aurora.boober.controller.v1.AuroraSecretVaultPayload
+import no.skatteetaten.aurora.boober.controller.v1.B64
 import no.skatteetaten.aurora.boober.controller.v1.VaultControllerV1
 import no.skatteetaten.aurora.boober.service.FolderHelperKt
 import no.skatteetaten.aurora.boober.service.vault.EncryptedFileVault
@@ -63,9 +66,26 @@ class VaultControllerTest extends Specification {
       result.andExpect(status().isOk())
   }
 
+  def "Fails when provided secret key is invalid"() {
+
+    given:
+      def payload = new AuroraSecretVaultPayload(vaultName, [], ["latest.properties" : B64.encoder.encodeToString("foo\\ bar=baz".bytes)])
+
+    when:
+      ResultActions result = mockMvc.perform(
+          put("/v1/vault/$vaultCollectionName")
+              .content(JsonOutput.toJson(payload))
+              .contentType(APPLICATION_JSON))
+
+    then:
+      result.andExpect(status().isBadRequest())
+      result.andExpect(content().string(""))
+  }
+
   def "Fails when provided secret file payload is not Base64 encoded"() {
 
     given:
+
       def payload = [contents: fileContents]
 
     when:

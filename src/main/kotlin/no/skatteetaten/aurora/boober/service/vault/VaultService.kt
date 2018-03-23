@@ -9,6 +9,8 @@ import no.skatteetaten.aurora.boober.service.UnauthorizedAccessException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import org.eclipse.jgit.api.Git
 import org.slf4j.LoggerFactory
+import org.springframework.core.io.ByteArrayResource
+import org.springframework.core.io.support.PropertiesLoaderUtils.loadProperties
 import org.springframework.stereotype.Service
 
 data class VaultWithAccess @JvmOverloads constructor(
@@ -66,6 +68,7 @@ class VaultService(
                                   previousSignature: String? = null
     ): EncryptedFileVault {
 
+        assertSecretKeysAreValid(mapOf(fileName to fileContents))
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
             val vault = findVaultByNameIfAllowed(vaultCollection, vaultName) ?: vaultCollection.createVault(vaultName)
 
@@ -115,6 +118,8 @@ class VaultService(
     fun import(vaultCollectionName: String, vaultName: String, permissions: List<String>, secrets: Map<String, ByteArray>): EncryptedFileVault {
 
         assertCurrentUserHasAccess(permissions)
+
+        assertSecretKeysAreValid(secrets)
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
             vaultCollection.createVault(vaultName).let { vault ->
                 vault.clear()
@@ -124,6 +129,24 @@ class VaultService(
                 vault
             }
         })
+    }
+
+    private fun assertSecretKeysAreValid(secrets: Map<String, ByteArray>) {
+        val rePattern = "[-._a-zA-Z0-9]+"
+        val re = Regex(rePattern)
+        val propertiesMap = secrets.filter { it.key.endsWith(".properties") }
+                .mapValues {
+                    loadProperties(ByteArrayResource(it.value))
+                }
+
+        val invalidKeys = propertiesMap.flatMap { propertyFile ->
+            propertyFile.value.filter { !it.key.toString().matches(re) }
+                    .map { propertyFile.key to it.key.toString() }
+        }.map{ "${it.first}/${it.second}"}
+
+        if (invalidKeys.isNotEmpty()) {
+            throw IllegalArgumentException("Vault key=${invalidKeys} is not valid. Regex used for matching $rePattern")
+        }
     }
 
     fun reencryptVaultCollection(vaultCollectionName: String, newKey: String) {
@@ -146,7 +169,7 @@ class VaultService(
         val user = userDetailsProvider.getAuthenticatedUser()
         if (!user.hasAnyRole(permissions)) {
             val message = "You (${user.username}) do not have required permissions ($permissions) to " +
-                "operate on this vault. You have ${user.authorities.map { it.authority }}"
+                    "operate on this vault. You have ${user.authorities.map { it.authority }}"
             throw UnauthorizedAccessException(message)
         }
     }
