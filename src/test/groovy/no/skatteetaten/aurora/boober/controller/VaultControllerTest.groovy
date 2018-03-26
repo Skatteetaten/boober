@@ -69,7 +69,8 @@ class VaultControllerTest extends Specification {
   def "Fails when provided secret key is invalid"() {
 
     given:
-      def payload = new AuroraSecretVaultPayload(vaultName, [], ["latest.properties" : B64.encoder.encodeToString("foo\\ bar=baz".bytes)])
+      def payload = new AuroraSecretVaultPayload(vaultName, [],
+          ["latest.properties": B64.encoder.encodeToString("foo bar=baz".bytes)])
 
     when:
       ResultActions result = mockMvc.perform(
