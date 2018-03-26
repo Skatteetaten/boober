@@ -9,8 +9,6 @@ import no.skatteetaten.aurora.boober.service.UnauthorizedAccessException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import org.eclipse.jgit.api.Git
 import org.slf4j.LoggerFactory
-import org.springframework.core.io.ByteArrayResource
-import org.springframework.core.io.support.PropertiesLoaderUtils.loadProperties
 import org.springframework.stereotype.Service
 
 data class VaultWithAccess @JvmOverloads constructor(
@@ -131,18 +129,21 @@ class VaultService(
         })
     }
 
+    //Note that a properties file can be delimitered by space and =, very few people know this so we check for it
     private fun assertSecretKeysAreValid(secrets: Map<String, ByteArray>) {
-        val rePattern = "[-._a-zA-Z0-9]+"
+        val rePattern = "^[-._a-zA-Z0-9]+$"
         val re = Regex(rePattern)
-        val propertiesMap = secrets.filter { it.key.endsWith(".properties") }
+        val filesToKeys = secrets.filter { it.key.endsWith(".properties") }
                 .mapValues {
-                    loadProperties(ByteArrayResource(it.value))
+                    String(it.value)
+                            .lines()
+                            .map { it.substringBefore("=") }
+                            .filter { !it.matches(re) }
                 }
 
-        val invalidKeys = propertiesMap.flatMap { propertyFile ->
-            propertyFile.value.filter { !it.key.toString().matches(re) }
-                    .map { propertyFile.key to it.key.toString() }
-        }.map{ "${it.first}/${it.second}"}
+        val invalidKeys = filesToKeys.flatMap { fileToKey ->
+            fileToKey.value.map { "${fileToKey.key}/$it" }
+        }
 
         if (invalidKeys.isNotEmpty()) {
             throw IllegalArgumentException("Vault key=${invalidKeys} is not valid. Regex used for matching $rePattern")

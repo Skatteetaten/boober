@@ -34,7 +34,6 @@ class VaultServiceTest extends Specification {
 
   def setup() {
     GitServiceHelperKt.recreateRepo(new File(REMOTE_REPO_FOLDER, "${COLLECTION_NAME}.git"))
-    //GitServiceHelperKt.recreateFolder(new File(CHECKOUT_PATH))
 
     userDetailsProvider.getAuthenticatedUser() >>
         new User("aurora", "token", "Aurora Test User", [new SimpleGrantedAuthority("UTV")])
@@ -80,14 +79,14 @@ class VaultServiceTest extends Specification {
   def "Secret vault keys must have correct name"() {
 
     given:
-      def contents = ["latest.properties" : "INVALID\\ KEY=FOO".bytes]
+      def contents = ["latest.properties": "INVALID KEY=FOO".bytes]
 
     when:
       vaultService.import(COLLECTION_NAME, VAULT_NAME, [], contents)
 
     then:
       def e = thrown(IllegalArgumentException)
-      e.message=="Vault key=[latest.properties/INVALID KEY] is not valid. Regex used for matching [-._a-zA-Z0-9]+"
+      e.message == "Vault key=[latest.properties/INVALID KEY] is not valid. Regex used for matching ^[-._a-zA-Z0-9]+\$"
   }
 
   def "Delete file"() {
@@ -151,9 +150,6 @@ class VaultServiceTest extends Specification {
       def fileName = "passwords.properties"
       def contents = "SERVICE_PASSWORD=FOO"
       def vault = vaultService.createOrUpdateFileInVault(COLLECTION_NAME, VAULT_NAME, fileName, contents.bytes)
-
-    and: "Lets remove and check out the local copy of the vault"
-      //   GitServiceHelperKt.recreateFolder(new File(CHECKOUT_PATH))
 
     expect:
       !vault.permissions
