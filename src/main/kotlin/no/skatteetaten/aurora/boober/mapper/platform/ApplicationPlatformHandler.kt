@@ -120,29 +120,39 @@ abstract class ApplicationPlatformHandler(val name:String) {
     }
 }
 
+data class AuroraServicePort(
+        val name: String,
+        val protocol: String = "TCP",
+        val port: Int,
+        val targetPort: Int,
+        val nodePort: Int = 0
+)
 
-data class AuroraContainer(val name: String,
-                           val tcpPorts: Map<String, Int>,
-                           val args: List<String>? = null,
-                           val readiness: Probe?,
-                           val liveness: Probe?,
-                           val limit: AuroraDeploymentConfigResource,
-                           val request: AuroraDeploymentConfigResource,
-                           val env: Map<String, String>,
-                           val mounts: List<Mount>? = null,
-                           val shouldHaveImageChange: Boolean = true)
+data class AuroraContainer(
+        val name: String,
+        val tcpPorts: Map<String, Int>,
+        val args: List<String>? = null,
+        val readiness: Probe?,
+        val liveness: Probe?,
+        val limit: AuroraDeploymentConfigResource,
+        val request: AuroraDeploymentConfigResource,
+        val env: Map<String, String>,
+        val mounts: List<Mount>? = null,
+        val shouldHaveImageChange: Boolean = true
+)
 
-data class AuroraDeployment(val name: String,
-                            val tag: String,
-                            val containers: List<AuroraContainer>,
-                            val labels: Map<String, String>,
-                            val mounts: List<Mount>? = null,
-                            val annotations: Map<String, String>,
-                            val deployStrategy: AuroraDeployStrategy,
-                            val replicas: Int,
-                            val serviceAccount: String?,
-                            val ttl: Duration?)
-
+data class AuroraDeployment(
+        val name: String,
+        val tag: String,
+        val containers: List<AuroraContainer>,
+        val labels: Map<String, String>,
+        val mounts: List<Mount>? = null,
+        val annotations: Map<String, String>,
+        val deployStrategy: AuroraDeployStrategy,
+        val replicas: Int,
+        val serviceAccount: String?,
+        val ttl: Duration?
+)
 
 enum class DeploymentState {
     Stateless, Stateful, Daemon

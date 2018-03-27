@@ -220,7 +220,8 @@ data class Permission(
 
 data class ToxiProxy(
         val name: String,
-        val listen: String,
-        val upstream: String
+        val listen: Int,
+        val upstream: Int,
+        val management: Int
 )
 

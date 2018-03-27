@@ -134,7 +134,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
             env = auroraConfigFields.getConfigEnv(configHandlers),
             ttl = auroraConfigFields.extractOrNull<String>("ttl")
                         ?.let { StringToDurationConverter().convert(it) },
-            toxiProxy = ToxiProxy("app", "0.0.0.0:8090", "0.0.0.0:8080")
+            toxiProxy = ToxiProxy("app", 8090, 8090, management = 8474)
         )
     }
 

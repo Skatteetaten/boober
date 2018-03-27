@@ -25,6 +25,7 @@ import com.fkorotkov.openshift.to
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.micrometer.core.instrument.util.TimeUtils
 import no.skatteetaten.aurora.boober.Boober
+import no.skatteetaten.aurora.boober.mapper.platform.AuroraServicePort
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Mount
@@ -33,15 +34,8 @@ import no.skatteetaten.aurora.boober.model.MountType.PVC
 import no.skatteetaten.aurora.boober.model.MountType.Secret
 import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.service.internal.*
 import no.skatteetaten.aurora.boober.utils.Instants.now
-import no.skatteetaten.aurora.boober.service.internal.ConfigMapGenerator
-import no.skatteetaten.aurora.boober.service.internal.ContainerGenerator
-import no.skatteetaten.aurora.boober.service.internal.DbhSecretGenerator
-import no.skatteetaten.aurora.boober.service.internal.DeploymentConfigGenerator
-import no.skatteetaten.aurora.boober.service.internal.ImageStreamGenerator
-import no.skatteetaten.aurora.boober.service.internal.RolebindingGenerator
-import no.skatteetaten.aurora.boober.service.internal.SecretGenerator
-import no.skatteetaten.aurora.boober.service.internal.findAndCreateMounts
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
@@ -183,6 +177,18 @@ class OpenShiftObjectGenerator(
                 )
             } ?: mapOf("prometheus.io/scrape" to "false")
 
+            val auroraServicePorts = auroraDeploymentSpec.deploy.toxiProxy?.let {
+                createToxiProxyServicePorts(it)
+            } ?: listOf(AuroraServicePort("http", port= 80, targetPort = 8080))
+
+            val servicePorts = auroraServicePorts.map { servicePort {
+                    name = it.name
+                    protocol = it.protocol
+                    port = it.port
+                    targetPort = IntOrString(it.targetPort)
+                    nodePort = it.nodePort
+                }
+            }
 
             val service = service {
                 apiVersion = "v1"
@@ -195,20 +201,10 @@ class OpenShiftObjectGenerator(
                 }
 
                 spec {
-                    ports = listOf(
-                            servicePort {
-                                name = "http"
-                                protocol = "TCP"
-                                port = 80
-                                targetPort = IntOrString(8080)
-                                nodePort = 0
-                            }
-                    )
-
+                    ports = servicePorts
                     selector = mapOf("name" to auroraDeploymentSpec.name)
                     type = "ClusterIP"
                     sessionAffinity = "None"
-
                 }
             }
             mapper.convertValue(service)
