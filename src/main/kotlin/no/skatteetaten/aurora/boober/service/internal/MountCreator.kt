@@ -17,7 +17,11 @@ fun findAndCreateMounts(deploymentSpec: AuroraDeploymentSpec, provisioningResult
             ?.let { createDatabaseMounts(deploymentSpec, it) }
             .orEmpty()
 
-    return configMounts + databaseMounts
+    val toxiProxyMounts = deploymentSpec.deploy?.toxiProxy
+            ?.let { createToxiProxyMounts(deploymentSpec)}
+            .orEmpty()
+
+    return configMounts + databaseMounts + toxiProxyMounts
 }
 
 private fun createMountsFromDeploymentSpec(deploymentSpec: AuroraDeploymentSpec): List<Mount> {
@@ -72,3 +76,4 @@ private fun createDatabaseMounts(deploymentSpec: AuroraDeploymentSpec,
 
     return databaseMounts
 }
+

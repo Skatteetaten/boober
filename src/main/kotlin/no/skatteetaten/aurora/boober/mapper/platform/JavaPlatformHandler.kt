@@ -4,6 +4,9 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.TemplateType.development
+import no.skatteetaten.aurora.boober.service.internal.buildToxiProxyContainer
+import no.skatteetaten.aurora.boober.service.internal.createToxiProxyMounts
+import no.skatteetaten.aurora.boober.utils.addIf
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.springframework.stereotype.Component
 
@@ -11,12 +14,11 @@ import org.springframework.stereotype.Component
 class JavaPlatformHandler : ApplicationPlatformHandler("java") {
     override fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?): AuroraDeployment {
 
-
         val tag = when (auroraDeploymentSpec.type) {
             development -> "latest"
             else -> "default"
         }
-        val container = listOf(AuroraContainer(
+        val mainContainers = listOf(AuroraContainer(
                 name = "${auroraDeploymentSpec.name}-java",
                 tcpPorts = mapOf("http" to 8080, "management" to 8081, "jolokia" to 8778),
                 readiness = auroraDeploymentSpec.deploy!!.readiness,
@@ -24,9 +26,14 @@ class JavaPlatformHandler : ApplicationPlatformHandler("java") {
                 limit = auroraDeploymentSpec.deploy.resources.limit,
                 request = auroraDeploymentSpec.deploy.resources.request,
                 env = createEnvVars(mounts, auroraDeploymentSpec),
-                mounts = mounts
+                mounts = mounts?.filter { it.targetContainer.equals("main") }
         ))
 
+        val toxiProxyContainers = auroraDeploymentSpec.deploy?.toxiProxy
+                ?.let { listOf(buildToxiProxyContainer(auroraDeploymentSpec, mounts)) }
+                .orEmpty()
+
+        val container= mainContainers + toxiProxyContainers
 
         return AuroraDeployment(
                 name = auroraDeploymentSpec.name,
@@ -39,9 +46,7 @@ class JavaPlatformHandler : ApplicationPlatformHandler("java") {
                 replicas = auroraDeploymentSpec.deploy.replicas,
                 serviceAccount = auroraDeploymentSpec.deploy.serviceAccount,
                 ttl = auroraDeploymentSpec.deploy.ttl)
-
     }
-
 
     override fun handlers(handlers: Set<AuroraConfigFieldHandler>): Set<AuroraConfigFieldHandler> {
 

@@ -33,6 +33,10 @@ object ContainerGenerator {
                 }
             }
 
+            if (! adcContainer.  shouldHaveImageChange) { // TODO Finne på noe lurt her
+                image = "shopify/toxiproxy"
+            }
+
             args = adcContainer.args
 
             val portEnv = adcContainer.tcpPorts.map {
