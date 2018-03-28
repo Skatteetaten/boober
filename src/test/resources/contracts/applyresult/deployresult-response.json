@@ -1,0 +1,11 @@
+{
+  "success": true,
+  "message": "OK",
+  "items": [
+    {
+      "ident": {
+        "name": "Aurora Test User",
+        "emailAddress": "aurora@skatteetaten.no"
+      }
+    }]
+}
