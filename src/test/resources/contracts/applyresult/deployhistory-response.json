@@ -1,0 +1,13 @@
+{
+  "success": true,
+  "message": "OK",
+  "items": [
+    {
+      "ident": {
+        "name": "Aurora Test User",
+        "emailAddress": "aurora@skatteetaten.no",
+        "when": 1522224413819,
+        "tzOffset": 120
+      }
+    }]
+}

@@ -4,15 +4,13 @@ buildscript {
   ext.auroraStartersVersion = '3.5.3'
 
   repositories {
-    maven {
-      url "http://repo1.maven.org/maven2"
-    }
-
-    maven {
-      url "http://jcenter.bintray.com/"
-    }
-
+    mavenCentral()
+    jcenter()
     mavenLocal()
+
+    maven {
+      url 'https://repo.spring.io/libs-milestone'
+    }
   }
 
   dependencies {
@@ -21,20 +19,19 @@ buildscript {
         "org.jetbrains.kotlin:kotlin-noarg:$kotlin_version",
         "org.jetbrains.kotlin:kotlin-allopen:$kotlin_version",
         "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion",
-        'no.skatteetaten.aurora.gradle.plugins:aurora-gradle-plugin:1.2.1'
+        'no.skatteetaten.aurora.gradle.plugins:aurora-gradle-plugin:1.2.1',
+        'org.springframework.cloud:spring-cloud-contract-gradle-plugin:2.0.0.M8'
     )
   }
 }
 
 repositories {
-  maven {
-    url "http://repo1.maven.org/maven2"
-  }
-
+  mavenCentral()
+  jcenter()
   mavenLocal()
 
   maven {
-    url "http://jcenter.bintray.com/"
+    url 'https://repo.spring.io/libs-milestone'
   }
 }
 
@@ -45,10 +42,18 @@ apply plugin: 'no.skatteetaten.plugins.aurora'
 apply plugin: 'kotlin'
 apply plugin: 'kotlin-spring'
 apply plugin: 'org.springframework.boot'
+apply plugin: 'spring-cloud-contract'
 
 group = 'no.skatteetaten.aurora'
 
 ext['logback.version'] = '1.2.3'
+
+
+dependencyManagement {
+  imports {
+    mavenBom 'org.springframework.cloud:spring-cloud-contract-dependencies:2.0.0.M8'
+  }
+}
 
 dependencies {
   compile(
@@ -56,12 +61,12 @@ dependencies {
       "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version",
       'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.19.3',
       "no.skatteetaten.aurora.springboot:aurora-spring-boot-starter:$auroraStartersVersion",
-      "org.springframework.boot:spring-boot-starter-cache",
-      "org.springframework.boot:spring-boot-starter-aop",
-      "org.springframework.boot:spring-boot-starter-security",
-      "org.springframework.retry:spring-retry",
-      "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.2",
-      "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml",
+      'org.springframework.boot:spring-boot-starter-cache',
+      'org.springframework.boot:spring-boot-starter-aop',
+      'org.springframework.boot:spring-boot-starter-security',
+      'org.springframework.retry:spring-retry',
+      'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.2',
+      'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml',
       'org.eclipse.jgit:org.eclipse.jgit:4.6.1.201703071140-r',
       'com.github.fge:json-patch:1.9',
       'com.github.martinwithaar:encryptor4j:0.1',
@@ -70,15 +75,17 @@ dependencies {
   )
 
   testCompile(
-      "org.springframework.boot:spring-boot-starter-test",
-      "org.codehaus.groovy:groovy-all",
-      "org.spockframework:spock-core:1.1-groovy-2.4",
-      "org.spockframework:spock-spring:1.1-groovy-2.4",
-      "org.springframework.restdocs:spring-restdocs-mockmvc",
-      "cglib:cglib-nodep:3.1",
-      "org.objenesis:objenesis:2.1",
-      "org.springframework.security:spring-security-test"
+      'org.springframework.boot:spring-boot-starter-test',
+      'org.spockframework:spock-core:1.1-groovy-2.4',
+      'org.spockframework:spock-spring:1.1-groovy-2.4',
+      'org.springframework.restdocs:spring-restdocs-mockmvc',
+      'cglib:cglib-nodep:3.1',
+      'org.objenesis:objenesis:2.1',
+      'org.springframework.security:spring-security-test'
   )
+  testCompile('org.springframework.cloud:spring-cloud-starter-contract-verifier') {
+    exclude group: 'org.codehaus.groovy'
+  }
 }
 
 kotlin {
@@ -104,4 +111,9 @@ testClasses.dependsOn compileTestGroovy
 
 task wrapper(type: Wrapper) {
   gradleVersion = '3.4.1'
+}
+
+contracts {
+  packageWithBaseClasses = 'no.skatteetaten.aurora.boober.contracts'
+  targetFramework = 'Spock'
 }
