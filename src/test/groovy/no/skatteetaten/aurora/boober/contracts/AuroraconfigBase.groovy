@@ -12,16 +12,21 @@ class AuroraconfigBase extends AbstractContractBase {
     def auroraConfigService = Mock(AuroraConfigService) {
       findAuroraConfig(_ as String) >> createAuroraConfig()
       findAuroraConfigFileNames(_ as String) >> createFileNames()
+      findAuroraConfigFile(_ as String, _ as String) >> createAuroraConfigFile()
+      updateAuroraConfigFile(_ as String, _ as String, _ as String, null) >> createAuroraConfig()
     }
     AuroraConfigControllerV1 controller = new AuroraConfigControllerV1(auroraConfigService)
     setupMockMvc(controller)
   }
 
-  AuroraConfig createAuroraConfig() {
+  AuroraConfigFile createAuroraConfigFile() {
     def files = responseMap('auroraconfig', '$.items[0].files[0]')
+    new AuroraConfigFile(files.name, files.contents, false)
+  }
+
+  AuroraConfig createAuroraConfig() {
     def affiliation = responseString('auroraconfig', '$.items[0].name')
-    AuroraConfigFile auroraConfigFile = new AuroraConfigFile(files.name, files.contents, false)
-    new AuroraConfig([auroraConfigFile], affiliation)
+    new AuroraConfig([createAuroraConfigFile()], affiliation)
   }
 
   List<String> createFileNames() {
