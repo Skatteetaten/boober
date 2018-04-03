@@ -1,3 +1,5 @@
+package auroraconfig
+
 import org.springframework.cloud.contract.spec.Contract
 
 Contract.make {
@@ -7,9 +9,9 @@ Contract.make {
   }
   response {
     status 200
-    body(file('filenames-response.json'))
     headers {
       contentType(applicationJson())
     }
+    body(file('responses/filenames.json'))
   }
 }

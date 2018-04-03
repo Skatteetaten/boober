@@ -13,15 +13,15 @@ abstract class AbstractContractBase extends Specification {
   protected Map<String, DocumentContext> jsonResponses = [:]
 
   void loadJsonResponses(String baseName) {
-    def fileName = "/contracts/${baseName}"
-    def files = loadFiles(fileName)
+    def files = loadFiles(baseName)
     populateResponses(files)
   }
 
-  private static loadFiles(String fileName) {
-    def resource = getClass().getResource(fileName)
+  private static loadFiles(String baseName) {
+    def folderName = "/contracts/${baseName}/responses"
+    def resource = getClass().getResource(folderName)
     if (resource == null) {
-      throw new IllegalArgumentException("Unable to read the file ${fileName}")
+      throw new IllegalArgumentException("Unable to read the file ${folderName}")
     }
 
     def files = []
@@ -33,7 +33,7 @@ abstract class AbstractContractBase extends Specification {
 
   private List populateResponses(List files) {
     files.each {
-      def name = it.name.replace('-response.json', '')
+      def name = it.name.replace('.json', '')
       def json = JsonPath.parse(it)
       jsonResponses.put(name, json)
     }

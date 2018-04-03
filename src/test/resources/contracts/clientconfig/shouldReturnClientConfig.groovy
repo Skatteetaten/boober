@@ -9,7 +9,7 @@ Contract.make {
   }
   response {
     status 200
-    body(file('clientconfig-response.json'))
+    body(file('responses/clientconfig.json'))
     headers {
       contentType(applicationJson())
     }

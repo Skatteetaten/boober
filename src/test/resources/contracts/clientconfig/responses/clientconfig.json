@@ -7,5 +7,6 @@
       "openshiftCluster": "utv",
       "openshiftUrl": "https://openshift",
       "apiVersion": 2
-    }]
+    }
+  ]
 }
