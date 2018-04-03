@@ -6,7 +6,7 @@ class ClientconfigBase extends AbstractContractBase {
 
   void setup() {
     loadJsonResponses('clientconfig')
-    def item = responseObject('$.items[0]')
+    def item = responseMap('$.items[0]')
     ClientConfigControllerV1 controller = new ClientConfigControllerV1(
         item.gitUrlPattern,
         item.openshiftCluster,

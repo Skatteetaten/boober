@@ -1,7 +1,5 @@
 package no.skatteetaten.aurora.boober.contracts
 
-import static org.mockito.Matchers.anyString
-
 import org.eclipse.jgit.lib.PersonIdent
 
 import com.fasterxml.jackson.databind.node.NullNode
@@ -15,7 +13,7 @@ class ApplyresultBase extends AbstractContractBase {
   void setup() {
     loadJsonResponses('applyresult')
     def deployLogService = Mock(DeployLogService) {
-      deployHistory(anyString()) >> []
+      deployHistory(_ as String) >> []
       findDeployResultById('aos', '123') >> createDeployResult()
     }
     ApplyResultController controller = new ApplyResultController(deployLogService)
@@ -23,7 +21,7 @@ class ApplyresultBase extends AbstractContractBase {
   }
 
   DeployHistory createDeployResult() {
-    def ident = responseObject('deployresult', '$.items[0].ident')
+    def ident = responseMap('deployresult', '$.items[0].ident')
     new DeployHistory(new PersonIdent(ident.name, ident.emailAddress), NullNode.instance)
   }
 }

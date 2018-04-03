@@ -1,0 +1,10 @@
+{
+  "success": true,
+  "message": "OK",
+  "items": [
+    "file1",
+    "file2",
+    "file3"
+  ],
+  "count": 3
+}

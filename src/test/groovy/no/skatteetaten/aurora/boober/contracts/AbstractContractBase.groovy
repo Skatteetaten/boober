@@ -39,16 +39,16 @@ abstract class AbstractContractBase extends Specification {
     }
   }
 
-  private def responseData(String responseName, String jsonPath) {
-    return jsonResponses[responseName].read(jsonPath)
+  def <T> T response(String responseName = jsonResponses.keySet().first(), String jsonPath, Class<T> type) {
+    jsonResponses[responseName].read(jsonPath, type)
   }
 
   String responseString(String responseName = jsonResponses.keySet().first(), String jsonPath) {
-    return responseData(responseName, jsonPath)
+    jsonResponses[responseName].read(jsonPath, String)
   }
 
-  LinkedHashMap<String, String> responseObject(String responseName = jsonResponses.keySet().first(), String jsonPath) {
-    return (LinkedHashMap) responseData(responseName, jsonPath)
+  LinkedHashMap<String, String> responseMap(String responseName = jsonResponses.keySet().first(), String jsonPath) {
+    jsonResponses[responseName].read(jsonPath, LinkedHashMap)
   }
 
   def setupMockMvc(Object controller) {
