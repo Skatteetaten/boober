@@ -14,6 +14,7 @@ class AuroraconfigBase extends AbstractContractBase {
       findAuroraConfigFileNames(_ as String) >> createFileNames()
       findAuroraConfigFile(_ as String, _ as String) >> createAuroraConfigFile()
       updateAuroraConfigFile(_ as String, _ as String, _ as String, null) >> createAuroraConfig()
+      patchAuroraConfigFile(_ as String, _ as String, _ as String, null) >> createAuroraConfig()
     }
     AuroraConfigControllerV1 controller = new AuroraConfigControllerV1(auroraConfigService)
     setupMockMvc(controller)
