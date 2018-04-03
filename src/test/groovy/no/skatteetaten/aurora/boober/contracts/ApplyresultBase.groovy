@@ -23,9 +23,7 @@ class ApplyresultBase extends AbstractContractBase {
   }
 
   DeployHistory createDeployResult() {
-    new DeployHistory(new PersonIdent(
-        jsonPath('deployresult', '$.items[0].ident.name'),
-        jsonPath('deployresult', '$.items[0].ident.emailAddress')
-    ), NullNode.instance)
+    def ident = responseObject('deployresult', '$.items[0].ident')
+    new DeployHistory(new PersonIdent(ident.name, ident.emailAddress), NullNode.instance)
   }
 }

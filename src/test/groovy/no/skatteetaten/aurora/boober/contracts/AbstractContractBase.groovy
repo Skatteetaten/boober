@@ -39,16 +39,16 @@ abstract class AbstractContractBase extends Specification {
     }
   }
 
-  String jsonPath(String jsonPath) {
-    if (jsonResponses.isEmpty()) {
-      throw new IllegalStateException("JsonPath not initialized, call loadResponseJson(baseName)")
-    }
-
-    return jsonResponses.values().first().read(jsonPath)
+  private def responseData(String responseName, String jsonPath) {
+    return jsonResponses[responseName].read(jsonPath)
   }
 
-  String jsonPath(String responseName, String jsonPath) {
-    return jsonResponses[responseName].read(jsonPath)
+  String responseString(String responseName = jsonResponses.keySet().first(), String jsonPath) {
+    return responseData(responseName, jsonPath)
+  }
+
+  LinkedHashMap<String, String> responseObject(String responseName = jsonResponses.keySet().first(), String jsonPath) {
+    return (LinkedHashMap) responseData(responseName, jsonPath)
   }
 
   def setupMockMvc(Object controller) {

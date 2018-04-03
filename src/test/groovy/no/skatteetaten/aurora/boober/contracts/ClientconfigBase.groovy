@@ -6,10 +6,11 @@ class ClientconfigBase extends AbstractContractBase {
 
   void setup() {
     loadJsonResponses('clientconfig')
+    def item = responseObject('$.items[0]')
     ClientConfigControllerV1 controller = new ClientConfigControllerV1(
-        jsonPath('$.items[0].gitUrlPattern'),
-        jsonPath('$.items[0].openshiftCluster'),
-        jsonPath('$.items[0].openshiftUrl'))
+        item.gitUrlPattern,
+        item.openshiftCluster,
+        item.openshiftUrl)
     setupMockMvc(controller)
   }
 
