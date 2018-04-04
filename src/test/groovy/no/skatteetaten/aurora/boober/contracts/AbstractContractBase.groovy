@@ -43,14 +43,6 @@ abstract class AbstractContractBase extends Specification {
     jsonResponses[responseName].read(jsonPath, type)
   }
 
-  String responseString(String responseName = jsonResponses.keySet().first(), String jsonPath) {
-    jsonResponses[responseName].read(jsonPath, String)
-  }
-
-  LinkedHashMap<String, String> responseMap(String responseName = jsonResponses.keySet().first(), String jsonPath) {
-    jsonResponses[responseName].read(jsonPath, LinkedHashMap)
-  }
-
   def setupMockMvc(Object controller) {
     RestAssuredMockMvc.standaloneSetup(MockMvcBuilders.standaloneSetup(controller))
   }

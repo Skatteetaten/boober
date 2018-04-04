@@ -1,0 +1,8 @@
+{
+  "success": true,
+  "message": "OK",
+  "items": [
+    "{\n  key1: null  // {value=value}\n}"
+  ],
+  "count": 1
+}
