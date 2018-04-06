@@ -12,7 +12,13 @@ Contract.make {
     headers {
       contentType(applicationJson())
     }
-    body(name: 'name', files: [])
+    body(
+        name: $(
+            consumer(~/.+/),
+            producer('name')
+        ),
+        files: []
+    )
   }
   response {
     status 200

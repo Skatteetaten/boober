@@ -13,7 +13,10 @@ Contract.make {
       contentType(applicationJson())
     }
     body(
-        contents: 'dGVzdA=='
+        contents: $(
+            consumer(~/.+/),
+            producer('dGVzdA==')
+        )
     )
   }
   response {

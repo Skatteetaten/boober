@@ -15,7 +15,10 @@ Contract.make {
     body(
         operationName: 'reencrypt',
         parameters: [
-          'encryptionKey': 'key'
+          'encryptionKey': $(
+              consumer(~/.+/),
+              producer('key')
+          )
         ]
     )
   }

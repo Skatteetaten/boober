@@ -13,7 +13,10 @@ Contract.make {
       contentType(applicationJson())
     }
     body(
-        content: 'test-content'
+        content: $(
+            consumer(~/.*/),
+            producer('test-content')
+        )
     )
   }
   response {
