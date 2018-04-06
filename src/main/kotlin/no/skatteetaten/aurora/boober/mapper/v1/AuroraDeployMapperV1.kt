@@ -72,26 +72,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
         AuroraConfigFieldHandler("alarm", defaultValue = true),
         AuroraConfigFieldHandler("ttl", validator = { it.durationString() }),
         AuroraConfigFieldHandler("toxiproxy", defaultValue = false),
-        AuroraConfigFieldHandler("toxiproxy/name", defaultValue = "app"),
-        AuroraConfigFieldHandler("toxiproxy/listen", defaultValue = 8090),
-        AuroraConfigFieldHandler("toxiproxy/upstream", defaultValue = 8080),
-        AuroraConfigFieldHandler("toxiproxy/version", defaultValue = "2.1.3"),
-        AuroraConfigFieldHandler("toxiproxy/repository", defaultValue = "shopify/toxiproxy"),
-        AuroraConfigFieldHandler("toxiproxy/resources/cpu/min", defaultValue = "100m"),
-        AuroraConfigFieldHandler("toxiproxy/resources/cpu/max", defaultValue = "2000m"),
-        AuroraConfigFieldHandler("toxiproxy/resources/memory/min", defaultValue = "128Mi"),
-        AuroraConfigFieldHandler("toxiproxy/resources/memory/max", defaultValue = "256Mi"),
-        AuroraConfigFieldHandler("toxiproxy/readiness", defaultValue = true),
-        AuroraConfigFieldHandler("toxiproxy/readiness/port", defaultValue = 8090),
-        AuroraConfigFieldHandler("toxiproxy/readiness/path", defaultValue= "/"),
-        AuroraConfigFieldHandler("toxiproxy/readiness/delay", defaultValue = 10),
-        AuroraConfigFieldHandler("toxiproxy/readiness/timeout", defaultValue = 1),
-        AuroraConfigFieldHandler("toxiproxy/liveness", defaultValue = false),
-        AuroraConfigFieldHandler("toxiproxy/liveness/port", defaultValue = 8090),
-        AuroraConfigFieldHandler("toxiproxy/liveness/path", defaultValue= "/"),
-        AuroraConfigFieldHandler("toxiproxy/liveness/delay", defaultValue = 10),
-        AuroraConfigFieldHandler("toxiproxy/liveness/timeout", defaultValue = 1)
-
+        AuroraConfigFieldHandler("toxiproxy/version", defaultValue = "2.1.3")
     ) + configHandlers
 
     fun deploy(auroraConfigFields: AuroraConfigFields): AuroraDeploy? {
