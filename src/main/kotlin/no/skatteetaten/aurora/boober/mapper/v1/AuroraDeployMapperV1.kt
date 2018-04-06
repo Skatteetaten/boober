@@ -3,7 +3,18 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraDeploy
+import no.skatteetaten.aurora.boober.model.AuroraDeployStrategy
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigFlags
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResources
+import no.skatteetaten.aurora.boober.model.Database
+import no.skatteetaten.aurora.boober.model.HttpEndpoint
+import no.skatteetaten.aurora.boober.model.Probe
+import no.skatteetaten.aurora.boober.model.ToxiProxy
+import no.skatteetaten.aurora.boober.model.Webseal
 import no.skatteetaten.aurora.boober.utils.durationString
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.length
@@ -60,7 +71,26 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
         AuroraConfigFieldHandler("pause", defaultValue = false),
         AuroraConfigFieldHandler("alarm", defaultValue = true),
         AuroraConfigFieldHandler("ttl", validator = { it.durationString() }),
-        AuroraConfigFieldHandler("toxiproxy", defaultValue = false)
+        AuroraConfigFieldHandler("toxiproxy", defaultValue = false),
+        AuroraConfigFieldHandler("toxiproxy/name", defaultValue = "app"),
+        AuroraConfigFieldHandler("toxiproxy/listen", defaultValue = 8090),
+        AuroraConfigFieldHandler("toxiproxy/upstream", defaultValue = 8080),
+        AuroraConfigFieldHandler("toxiproxy/version", defaultValue = "2.1.3"),
+        AuroraConfigFieldHandler("toxiproxy/repository", defaultValue = "shopify/toxiproxy"),
+        AuroraConfigFieldHandler("toxiproxy/resources/cpu/min", defaultValue = "100m"),
+        AuroraConfigFieldHandler("toxiproxy/resources/cpu/max", defaultValue = "2000m"),
+        AuroraConfigFieldHandler("toxiproxy/resources/memory/min", defaultValue = "128Mi"),
+        AuroraConfigFieldHandler("toxiproxy/resources/memory/max", defaultValue = "256Mi"),
+        AuroraConfigFieldHandler("toxiproxy/readiness", defaultValue = true),
+        AuroraConfigFieldHandler("toxiproxy/readiness/port", defaultValue = 8090),
+        AuroraConfigFieldHandler("toxiproxy/readiness/path", defaultValue= "/"),
+        AuroraConfigFieldHandler("toxiproxy/readiness/delay", defaultValue = 10),
+        AuroraConfigFieldHandler("toxiproxy/readiness/timeout", defaultValue = 1),
+        AuroraConfigFieldHandler("toxiproxy/liveness", defaultValue = false),
+        AuroraConfigFieldHandler("toxiproxy/liveness/port", defaultValue = 8090),
+        AuroraConfigFieldHandler("toxiproxy/liveness/path", defaultValue= "/"),
+        AuroraConfigFieldHandler("toxiproxy/liveness/delay", defaultValue = 10),
+        AuroraConfigFieldHandler("toxiproxy/liveness/timeout", defaultValue = 1)
 
     ) + configHandlers
 
@@ -133,8 +163,8 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
             readiness = getProbe(auroraConfigFields, "readiness"),
             env = auroraConfigFields.getConfigEnv(configHandlers),
             ttl = auroraConfigFields.extractOrNull<String>("ttl")
-                        ?.let { StringToDurationConverter().convert(it) },
-            toxiProxy = ToxiProxy("app", 8090, 8090, management = 8474)
+                ?.let { StringToDurationConverter().convert(it) },
+            toxiProxy = getToxiProxy(auroraConfigFields, "toxiproxy")
         )
     }
 
@@ -224,5 +254,13 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
             auroraConfigFields.extract("$name/delay"),
             auroraConfigFields.extract("$name/timeout")
         )
+    }
+
+    fun getToxiProxy(auroraConfigFields: AuroraConfigFields, name: String): ToxiProxy? {
+        if (auroraConfigFields.disabledAndNoSubKeys(name)) {
+            return null
+        }
+
+        return ToxiProxy(auroraConfigFields.extract("$name/version"))
     }
 }

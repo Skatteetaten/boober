@@ -219,9 +219,6 @@ data class Permission(
 }
 
 data class ToxiProxy(
-        val name: String,
-        val listen: Int,
-        val upstream: Int,
-        val management: Int
+        val version: String
 )
 

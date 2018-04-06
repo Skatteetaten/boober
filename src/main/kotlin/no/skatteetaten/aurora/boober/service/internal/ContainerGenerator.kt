@@ -33,8 +33,8 @@ object ContainerGenerator {
                 }
             }
 
-            if (! adcContainer.  shouldHaveImageChange) { // TODO Finne på noe lurt her
-                image = "shopify/toxiproxy"
+            adcContainer.image?.let {
+                image = adcContainer.image
             }
 
             args = adcContainer.args

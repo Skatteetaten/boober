@@ -3,6 +3,10 @@ package no.skatteetaten.aurora.boober.mapper.platform
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.v1.ToxiProxyDefaults
+import no.skatteetaten.aurora.boober.mapper.v1.getToxiProxyArgs
+import no.skatteetaten.aurora.boober.mapper.v1.getToxiProxyEnv
+import no.skatteetaten.aurora.boober.mapper.v1.getToxiProxyImage
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeployStrategy
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
@@ -111,6 +115,25 @@ abstract class ApplicationPlatformHandler(val name:String) {
         return OpenShiftObjectLabelService.toOpenShiftLabelNameSafeMap(allLabels)
     }
 
+    fun createToxiProxyContainer(auroraDeploymentSpec: AuroraDeploymentSpec, mounts: List<Mount>?): AuroraContainer? {
+
+        return auroraDeploymentSpec?.deploy?.toxiProxy?.let {
+            AuroraContainer(
+                name = "${auroraDeploymentSpec.name}-toxiproxy",
+                tcpPorts = mapOf("http" to ToxiProxyDefaults.LISTEN_PORT, "management" to ToxiProxyDefaults.ADMIN_PORT),
+                readiness = ToxiProxyDefaults.READINESS_PROBE,
+                liveness = ToxiProxyDefaults.LIVENESS_PROBE,
+                limit = ToxiProxyDefaults.RESOURCE_LIMIT,
+                request = ToxiProxyDefaults.RESOURCE_REQUEST,
+                env = getToxiProxyEnv(),
+                mounts = mounts?.filter { it.targetContainer == ToxiProxyDefaults.NAME },
+                shouldHaveImageChange = false,
+                args = getToxiProxyArgs(),
+                image = getToxiProxyImage(auroraDeploymentSpec.deploy.toxiProxy?.version)
+            )
+        } ?: null
+    }
+
     private inline fun <R> String.withNonBlank(block: (String) -> R?): R? {
 
         if (this.isBlank()) {
@@ -138,7 +161,8 @@ data class AuroraContainer(
         val request: AuroraDeploymentConfigResource,
         val env: Map<String, String>,
         val mounts: List<Mount>? = null,
-        val shouldHaveImageChange: Boolean = true
+        val shouldHaveImageChange: Boolean = true,
+        val image: String? = null
 )
 
 data class AuroraDeployment(

@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service.internal
 
+import no.skatteetaten.aurora.boober.mapper.v1.getToxiProxyConfig
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType
@@ -17,9 +18,7 @@ fun findAndCreateMounts(deploymentSpec: AuroraDeploymentSpec, provisioningResult
             ?.let { createDatabaseMounts(deploymentSpec, it) }
             .orEmpty()
 
-    val toxiProxyMounts = deploymentSpec.deploy?.toxiProxy
-            ?.let { createToxiProxyMounts(deploymentSpec)}
-            .orEmpty()
+    val toxiProxyMounts = createToxiProxyMounts(deploymentSpec)
 
     return configMounts + databaseMounts + toxiProxyMounts
 }
@@ -35,6 +34,7 @@ private fun createMountsFromDeploymentSpec(deploymentSpec: AuroraDeploymentSpec)
                 exist = false,
                 content = it)
     }
+
     val secretVaultMount = deploymentSpec.volume?.secretVaultName?.let {
         Mount(path = "/u01/config/secret",
                 type = MountType.Secret,
@@ -57,8 +57,6 @@ private fun createMountsFromDeploymentSpec(deploymentSpec: AuroraDeploymentSpec)
     return listOf<Mount>().addIfNotNull(secretVaultMount).addIfNotNull(configMount).addIfNotNull(certMount).addIfNotNull(deploymentSpec.volume?.mounts)
 }
 
-
-
 private fun createDatabaseMounts(deploymentSpec: AuroraDeploymentSpec,
                                  schemaProvisionResults: SchemaProvisionResults): List<Mount> {
 
@@ -76,4 +74,21 @@ private fun createDatabaseMounts(deploymentSpec: AuroraDeploymentSpec,
 
     return databaseMounts
 }
+
+private fun createToxiProxyMounts(deploymentSpec: AuroraDeploymentSpec): List<Mount> {
+    val sidecar = "toxiproxy"
+
+    return deploymentSpec.deploy?.toxiProxy?.let {
+        listOf(Mount(
+            path = "/u01/config",
+            type = MountType.ConfigMap,
+            mountName = "${sidecar}-volume",
+            volumeName = "${sidecar}-config",
+            exist = false,
+            content = mapOf("config.json" to getToxiProxyConfig()),
+            targetContainer = sidecar))
+    }
+        .orEmpty()
+}
+
 
