@@ -1,12 +1,10 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.experimental.ThreadPoolDispatcher
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.newFixedThreadPoolContext
 import kotlinx.coroutines.experimental.runBlocking
-import no.skatteetaten.aurora.boober.mapper.v1.createAuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -68,9 +66,6 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
     }
 
     fun save(auroraConfig: AuroraConfig): AuroraConfig {
-        auroraConfig.validate()
-
-
         val checkoutDir = getAuroraConfigFolder(auroraConfig.affiliation)
 
         val repo = getUpdatedRepo(auroraConfig.affiliation)
@@ -95,7 +90,7 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
     fun updateAuroraConfigFile(name: String, fileName: String, contents: String, previousVersion: String? = null): AuroraConfig {
 
         val oldAuroraConfig = findAuroraConfig(name)
-        val (newFile, auroraConfig) = oldAuroraConfig.updateFile(fileName, contents , previousVersion)
+        val (newFile, auroraConfig) = oldAuroraConfig.updateFile(fileName, contents, previousVersion)
 
         return saveFile(newFile, auroraConfig)
     }
@@ -199,7 +194,7 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
     private fun createValidatedAuroraDeploymentSpec(auroraConfigWithOverrides: AuroraConfigWithOverrides, aid: ApplicationId, resourceValidation: Boolean = true): AuroraDeploymentSpec {
 
         val stopWatch = StopWatch().apply { start() }
-        val spec = createAuroraDeploymentSpec(auroraConfigWithOverrides.auroraConfig, aid, auroraConfigWithOverrides.overrideFiles)
+        val spec = AuroraDeploymentSpecService.createAuroraDeploymentSpec(auroraConfigWithOverrides.auroraConfig, aid, auroraConfigWithOverrides.overrideFiles)
         if (spec.cluster == cluster && resourceValidation) {
             deploymentSpecValidator.assertIsValid(spec)
         }

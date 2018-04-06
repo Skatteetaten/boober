@@ -1,4 +1,4 @@
-package auroraconfig
+package auroradeploymentspec
 
 import org.springframework.cloud.contract.spec.Contract
 
@@ -6,8 +6,8 @@ Contract.make {
   request {
     method 'GET'
     url $(
-        consumer(~/\/v1\/auroraconfig\/[a-z]+\/filenames/),
-        producer('/v1/auroraconfig/auroraconfigname/filenames')
+        consumer(~/\/v1\/auroradeployspec\/[a-z]+\/[a-z]+\//),
+        producer('/v1/auroradeployspec/auroraconfigname/utv/')
     )
   }
   response {
@@ -15,6 +15,6 @@ Contract.make {
     headers {
       contentType(applicationJson())
     }
-    body(file('responses/filenames.json'))
+    body(file('responses/deploymentspec.json'))
   }
 }

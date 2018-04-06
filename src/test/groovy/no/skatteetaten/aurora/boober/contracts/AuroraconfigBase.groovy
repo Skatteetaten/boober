@@ -21,16 +21,16 @@ class AuroraconfigBase extends AbstractContractBase {
   }
 
   AuroraConfigFile createAuroraConfigFile() {
-    def files = responseMap('auroraconfig', '$.items[0].files[0]')
+    def files = response('auroraconfig', '$.items[0].files[0]', Map)
     new AuroraConfigFile(files.name, files.contents, false)
   }
 
   AuroraConfig createAuroraConfig() {
-    def affiliation = responseString('auroraconfig', '$.items[0].name')
+    def affiliation = response('auroraconfig', '$.items[0].name', String)
     new AuroraConfig([createAuroraConfigFile()], affiliation)
   }
 
   List<String> createFileNames() {
-    response('filenames', '$.items', List)
+    (List) response('filenames', '$.items', List)
   }
 }

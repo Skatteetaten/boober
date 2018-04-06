@@ -6,7 +6,7 @@
       "name": "paas",
       "files": [
         {
-          "name": "file-name",
+          "name": "filename",
           "contents": "contents"
         }
       ]

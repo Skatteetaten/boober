@@ -1,7 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import static no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecBuilderKt.createAuroraDeploymentSpec
-
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 
@@ -51,7 +49,8 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
         }
       }
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, additionalFile)
-      AuroraDeploymentSpec deploymentSpec = createAuroraDeploymentSpec(auroraConfig, aid, overrides)
+      AuroraDeploymentSpec deploymentSpec = AuroraDeploymentSpecService.
+          createAuroraDeploymentSpec(auroraConfig, aid, overrides)
 
     when:
       List<JsonNode> generatedObjects = objectGenerator.
@@ -99,7 +98,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, null)
 
     when:
-      AuroraDeploymentSpec deploymentSpec = createAuroraDeploymentSpec(auroraConfig, aid)
+      AuroraDeploymentSpec deploymentSpec = AuroraDeploymentSpecService.createAuroraDeploymentSpec(auroraConfig, aid)
       def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.environment.permissions)
 
     then:

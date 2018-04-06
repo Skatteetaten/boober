@@ -1,19 +1,18 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.boober.Boober
-import no.skatteetaten.aurora.boober.mapper.platform.JavaPlatformHandler
-import no.skatteetaten.aurora.boober.mapper.platform.WebPlatformHandler
-import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
+import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
+import no.skatteetaten.aurora.boober.mapper.platform.JavaPlatformHandler
+import no.skatteetaten.aurora.boober.mapper.platform.WebPlatformHandler
 import spock.lang.Specification
 
 abstract class AbstractSpec extends Specification {
 
   def setup() {
     Map<String, ApplicationPlatformHandler> handlers = ["java": new JavaPlatformHandler(), "web": new WebPlatformHandler()]
-    Boober.APPLICATION_PLATFORM_HANDLERS = handlers
+    AuroraDeploymentSpecService.APPLICATION_PLATFORM_HANDLERS = handlers
   }
 
   String loadResource(String resourceName) {

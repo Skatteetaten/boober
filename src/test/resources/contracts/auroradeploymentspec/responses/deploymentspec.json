@@ -1,0 +1,167 @@
+{
+  "success": true,
+  "message": "OK",
+  "items": [
+    {
+      "schemaVersion": {
+        "source": "about.json",
+        "value": "v1"
+      },
+      "type": {
+        "source": "dev/referanse.json",
+        "value": "deploy"
+      },
+      "applicationPlatform": {
+        "source": "default",
+        "value": "java"
+      },
+      "affiliation": {
+        "source": "about.json",
+        "value": "paas"
+      },
+      "cluster": {
+        "source": "dev/about.json",
+        "value": "qa"
+      },
+      "permissions": {
+        "admin": {
+          "source": "about.json",
+          "value": "APP"
+        }
+      },
+      "envName": {
+        "source": "folderName",
+        "value": "dev"
+      },
+      "name": {
+        "source": "referanse.json",
+        "value": "referanse"
+      },
+      "splunkIndex": {
+        "source": "about.json",
+        "value": "openshift-test"
+      },
+      "certificate": {
+        "source": "referanse.json",
+        "value": true
+      },
+      "database": {
+        "source": "referanse.json",
+        "value": true
+      },
+      "prometheus": {
+        "source": "default",
+        "value": true,
+        "path": {
+          "source": "default",
+          "value": "/prometheus"
+        },
+        "port": {
+          "source": "default",
+          "value": 8081
+        }
+      },
+      "management": {
+        "source": "default",
+        "value": true,
+        "path": {
+          "source": "default",
+          "value": "actuator"
+        },
+        "port": {
+          "source": "default",
+          "value": "8081"
+        }
+      },
+      "deployStrategy": {
+        "type": {
+          "source": "default",
+          "value": "rolling"
+        },
+        "timeout": {
+          "source": "default",
+          "value": 180
+        }
+      },
+      "artifactId": {
+        "source": "referanse.json",
+        "value": "openshift-reference-springboot-server"
+      },
+      "groupId": {
+        "source": "referanse.json",
+        "value": "no.test"
+      },
+      "version": {
+        "source": "dev/referanse.json",
+        "value": "1.3.1"
+      },
+      "resources": {
+        "cpu": {
+          "min": {
+            "source": "default",
+            "value": "100m"
+          },
+          "max": {
+            "source": "default",
+            "value": "2000m"
+          }
+        },
+        "memory": {
+          "min": {
+            "source": "default",
+            "value": "128Mi"
+          },
+          "max": {
+            "source": "referanse.json",
+            "value": "512Mi"
+          }
+        }
+      },
+      "replicas": {
+        "source": "default",
+        "value": 1
+      },
+      "readiness": {
+        "source": "default",
+        "value": true,
+        "port": {
+          "source": "default",
+          "value": 8080
+        },
+        "delay": {
+          "source": "default",
+          "value": 10
+        },
+        "timeout": {
+          "source": "default",
+          "value": 1
+        }
+      },
+      "liveness": {
+        "source": "default",
+        "value": false
+      },
+      "webseal": {
+        "source": "default",
+        "value": false
+      },
+      "debug": {
+        "source": "default",
+        "value": false
+      },
+      "pause": {
+        "source": "default",
+        "value": false
+      },
+      "alarm": {
+        "source": "default",
+        "value": true
+      },
+      "route": {
+        "source": "referanse.json",
+        "value": true
+      }
+    }
+  ],
+  "count": 1
+}
