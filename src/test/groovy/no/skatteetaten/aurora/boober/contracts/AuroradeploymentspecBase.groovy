@@ -11,7 +11,7 @@ import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService
 class AuroradeploymentspecBase extends AbstractContractBase {
 
   void setup() {
-    loadJsonResponses('auroradeploymentspec')
+    loadJsonResponses(this)
     def auroraDeploymentSpec = createAuroraDeploymentSpec()
     def auroraDeploymentSpecService = Mock(AuroraDeploymentSpecService) {
       getAuroraDeploymentSpecs(_ as String, _ as List) >> [auroraDeploymentSpec]

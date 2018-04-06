@@ -7,7 +7,7 @@ Contract.make {
     method 'PUT'
     url $(
         consumer(~/\/v1\/apply\/[a-z]+/),
-        producer('/v1/apply/paas')
+        producer('/v1/apply/invalid')
     )
     headers {
       contentType(applicationJson())
@@ -20,7 +20,7 @@ Contract.make {
   }
   response {
     status 200
-    body(file('responses/deploy.json'))
+    body(file('responses/deploy-failed.json'))
     headers {
       contentType(applicationJson())
     }

@@ -9,9 +9,9 @@ Contract.make {
   }
   response {
     status 200
-    body(file('responses/clientconfig.json'))
     headers {
       contentType(applicationJson())
     }
+    body(file('responses/clientconfig.json'))
   }
 }

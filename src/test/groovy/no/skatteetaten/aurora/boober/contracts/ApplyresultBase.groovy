@@ -11,7 +11,7 @@ import no.skatteetaten.aurora.boober.service.DeployLogService
 class ApplyresultBase extends AbstractContractBase {
 
   void setup() {
-    loadJsonResponses('applyresult')
+    loadJsonResponses(this)
     def deployLogService = Mock(DeployLogService) {
       deployHistory(_ as String) >> []
       findDeployResultById(_ as String, _ as String) >> { arguments -> (arguments[1] == 'invalid-id') ? null : createDeployResult() }

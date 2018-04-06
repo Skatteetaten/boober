@@ -12,7 +12,8 @@ import spock.lang.Specification
 abstract class AbstractContractBase extends Specification {
   protected Map<String, DocumentContext> jsonResponses = [:]
 
-  void loadJsonResponses(String baseName) {
+  void loadJsonResponses(def baseObject) {
+    def baseName = baseObject.getClass().getSimpleName().toLowerCase().replaceFirst('spec$', '')
     def files = loadFiles(baseName)
     populateResponses(files)
   }
@@ -21,7 +22,7 @@ abstract class AbstractContractBase extends Specification {
     def folderName = "/contracts/${baseName}/responses"
     def resource = getClass().getResource(folderName)
     if (resource == null) {
-      throw new IllegalArgumentException("Unable to read the file ${folderName}")
+      return []
     }
 
     def files = []

@@ -83,4 +83,17 @@ object and want it back to desired state they only need to run the deploy proces
 Immutable fields on objects are retained.
 
 
+## Developing Boober
 
+### Spring cloud contract
+
+[Spring cloud contract](https://cloud.spring.io/spring-cloud-contract/) helps implement [Consumer Driven Contracts](https://martinfowler.com/articles/consumerDrivenContracts.html).
+
+Boober is setup to generate Spock tests from the contracts. There is a convention to follow when adding new tests.
+
+- Create a package in `src/test/resources/contract` that contains the name of the controller. If the controller is called `ClientConfigControllerV1` the package should be named `clientconfig`.
+- Create a contract inside this folder. If you need a json-response body, this can be added as a separate json-file inside the responses folder. In the clientconfig example these files are put into `src/test/resources/contract/clientconfig/responses`.
+- In the folder `src/test/groovy` and the package `no.skatteetaten.aurora.boober.contracts` create a groovy class called [name]Base.
+In the example it will be `ClientconfigBase`. This is picked up by [spring cloud contract automatically](http://cloud.spring.io/spring-cloud-static/spring-cloud-contract/2.0.0.M8/single/spring-cloud-contract.html#maven-different-base) and added as a base class to the generated test.
+- In the Base-class add the required setup code, such as creating mock services. It should also extend `AbstractContractBase`, which provides a few helpful helper methods available to get the content of the response-json files and setting up the mock controller.
+- Run `./gradlew generateContractTests` to generate the Spock tests from the contracts. The tests will be automatically generated and run with the normal `./gradlew build` command.

@@ -8,7 +8,7 @@ import no.skatteetaten.aurora.boober.service.AuroraConfigService
 class AuroraconfigBase extends AbstractContractBase {
 
   void setup() {
-    loadJsonResponses('auroraconfig')
+    loadJsonResponses(this)
     def auroraConfigService = Mock(AuroraConfigService) {
       findAuroraConfig(_ as String) >> createAuroraConfig()
       findAuroraConfigFileNames(_ as String) >> createFileNames()
