@@ -5,7 +5,10 @@ import org.springframework.cloud.contract.spec.Contract
 Contract.make {
   request {
     method 'GET'
-    url '/v1/auroraconfig/aurora-config-name/file-name'
+    url $(
+        consumer(~/\/v1\/auroraconfig\/[a-z]+\/[a-z]+/),
+        producer('/v1/auroraconfig/auroraconfigname/filename')
+    )
     headers {
       contentType(applicationJson())
     }

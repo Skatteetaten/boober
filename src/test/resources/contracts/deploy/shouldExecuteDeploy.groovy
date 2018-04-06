@@ -1,4 +1,4 @@
-package auroraconfig
+package deploy
 
 import org.springframework.cloud.contract.spec.Contract
 
@@ -6,19 +6,23 @@ Contract.make {
   request {
     method 'PUT'
     url $(
-        consumer(~/\/v1\/auroraconfig\/[a-z]+\/validate/),
-        producer('/v1/auroraconfig/auroraconfigname/validate')
+        consumer(~/\/v1\/apply\/[a-z]+/),
+        producer('/v1/apply/paas')
     )
     headers {
       contentType(applicationJson())
     }
-    body(name: 'name', files: [])
+    body(
+        applicationIds: [],
+        overrides: {},
+        deploy: true
+    )
   }
   response {
     status 200
+    body(file('responses/deploy.json'))
     headers {
       contentType(applicationJson())
     }
-    body(file('responses/validate.json'))
   }
 }

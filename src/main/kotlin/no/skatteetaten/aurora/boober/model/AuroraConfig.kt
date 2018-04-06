@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.github.fge.jsonpatch.JsonPatch
-import no.skatteetaten.aurora.boober.mapper.v1.createAuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.removeExtension
@@ -111,25 +110,11 @@ data class AuroraConfig(val auroraConfigFiles: List<AuroraConfigFile>, val affil
         return updateFile(filename, rawContents, previousVersion)
     }
 
-    @JvmOverloads
-    fun getAuroraDeploymentSpec(aid: ApplicationId, overrideFiles: List<AuroraConfigFile> = listOf()): AuroraDeploymentSpec = createAuroraDeploymentSpec(this, aid, overrideFiles = overrideFiles)
-
-    @JvmOverloads
-    fun getAllAuroraDeploymentSpecs(overrideFiles: List<AuroraConfigFile> = listOf()): List<AuroraDeploymentSpec> {
-        return getApplicationIds().map { createAuroraDeploymentSpec(this, it, overrideFiles) }
-    }
-
-    @JvmOverloads
-    fun validate(overrideFiles: List<AuroraConfigFile> = listOf()) {
-        getAllAuroraDeploymentSpecs(overrideFiles)
-    }
-
     private fun getApplicationFile(applicationId: ApplicationId): AuroraConfigFile {
         val fileName = "${applicationId.environment}/${applicationId.application}"
         val file = auroraConfigFiles.find { it.name.removeExtension() == fileName && !it.override }
         return file ?: throw IllegalArgumentException("Should find applicationFile $fileName.(json|yaml)")
     }
-
 
     private fun requiredFilesForApplication(applicationId: ApplicationId): Set<String> {
 

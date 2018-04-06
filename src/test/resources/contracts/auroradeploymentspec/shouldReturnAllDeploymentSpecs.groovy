@@ -5,7 +5,10 @@ import org.springframework.cloud.contract.spec.Contract
 Contract.make {
   request {
     method 'GET'
-    url '/v1/auroradeployspec/aurora-config-name/?aid=env/application'
+    url $(
+        consumer(~/\/v1\/auroradeployspec\/[a-z]+\/(\?aid=.+)?/),
+        producer('/v1/auroradeployspec/auroraconfigname/?aid=env/application')
+    )
   }
   response {
     status 200

@@ -3,7 +3,7 @@
   "message": "OK",
   "items": [
     {
-      "name": "file-name",
+      "name": "filename",
       "contents": "contents"
     }
   ],

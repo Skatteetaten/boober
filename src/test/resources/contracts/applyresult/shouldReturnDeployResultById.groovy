@@ -5,7 +5,10 @@ import org.springframework.cloud.contract.spec.Contract
 Contract.make {
   request {
     method 'GET'
-    url '/v1/apply-result/aos/123'
+    url $(
+        consumer(~/\/v1\/apply-result\/[a-z]+\/.+/),
+        producer('/v1/apply-result/aos/123')
+    )
   }
   response {
     status 200
