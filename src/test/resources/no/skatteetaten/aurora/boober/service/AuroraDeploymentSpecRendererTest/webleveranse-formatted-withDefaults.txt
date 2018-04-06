@@ -48,6 +48,12 @@
   pause:               false                       // default
   alarm:               true                        // default
   route:               true                        // webleveranse.json
+  routeDefaults: {
+    name:              "webleveranse"              // default
+    affiliation:       "aos"                       // default
+    env:               "utv"                       // default
+    separator:         "-"                         // default
+  }
   extraTags:           "latest,major,minor,patch"  // default
   builder: {
     name:              "architect"                 // default

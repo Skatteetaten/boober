@@ -23,7 +23,6 @@ import com.fkorotkov.openshift.spec
 import com.fkorotkov.openshift.strategy
 import com.fkorotkov.openshift.to
 import io.fabric8.kubernetes.api.model.IntOrString
-import io.micrometer.core.instrument.util.TimeUtils
 import no.skatteetaten.aurora.boober.Boober
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -33,7 +32,6 @@ import no.skatteetaten.aurora.boober.model.MountType.PVC
 import no.skatteetaten.aurora.boober.model.MountType.Secret
 import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.TemplateType
-import no.skatteetaten.aurora.boober.utils.Instants.now
 import no.skatteetaten.aurora.boober.service.internal.ConfigMapGenerator
 import no.skatteetaten.aurora.boober.service.internal.ContainerGenerator
 import no.skatteetaten.aurora.boober.service.internal.DbhSecretGenerator
@@ -44,6 +42,7 @@ import no.skatteetaten.aurora.boober.service.internal.SecretGenerator
 import no.skatteetaten.aurora.boober.service.internal.findAndCreateMounts
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
+import no.skatteetaten.aurora.boober.utils.Instants.now
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -56,7 +55,9 @@ class OpenShiftObjectGenerator(
         val openShiftObjectLabelService: OpenShiftObjectLabelService,
         val mapper: ObjectMapper,
         val openShiftTemplateProcessor: OpenShiftTemplateProcessor,
-        val openShiftClient: OpenShiftResourceClient) {
+        val openShiftClient: OpenShiftResourceClient,
+        @Value("\${boober.route.suffix}") val routeSuffix: String
+) {
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftObjectGenerator::class.java)
 
@@ -153,7 +154,7 @@ class OpenShiftObjectGenerator(
 
         val applicationPlatformHandler = Boober.APPLICATION_PLATFORM_HANDLERS[auroraDeploymentSpec.applicationPlatform]
                 ?: throw IllegalArgumentException("ApplicationPlatformHandler ${auroraDeploymentSpec.applicationPlatform} is not present")
-        val deployment = applicationPlatformHandler.handleAuroraDeployment(auroraDeploymentSpec, labels, mounts)
+        val deployment = applicationPlatformHandler.handleAuroraDeployment(auroraDeploymentSpec, labels, mounts, routeSuffix)
 
 
         val containers = deployment.containers.map { ContainerGenerator.create(it) }
@@ -251,7 +252,7 @@ class OpenShiftObjectGenerator(
             val route = route {
                 apiVersion = "v1"
                 metadata {
-                    name = it.name
+                    name = it.objectName
                     labels = routeLabels
                     ownerReferences = null
                     finalizers = null
@@ -264,7 +265,7 @@ class OpenShiftObjectGenerator(
                         kind = "Service"
                         name = auroraDeploymentSpec.name
                     }
-                    host = auroraDeploymentSpec.assembleRouteHost(it.host ?: auroraDeploymentSpec.name)
+                    host = "${it.host}${routeSuffix}"
                     it.path?.let {
                         path = it
                     }

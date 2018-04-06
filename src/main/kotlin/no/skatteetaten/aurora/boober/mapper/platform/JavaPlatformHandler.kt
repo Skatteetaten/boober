@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class JavaPlatformHandler : ApplicationPlatformHandler("java") {
-    override fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?): AuroraDeployment {
+    override fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?, routeSuffix: String): AuroraDeployment {
 
 
         val tag = when (auroraDeploymentSpec.type) {
@@ -23,7 +23,7 @@ class JavaPlatformHandler : ApplicationPlatformHandler("java") {
                 liveness = auroraDeploymentSpec.deploy.liveness,
                 limit = auroraDeploymentSpec.deploy.resources.limit,
                 request = auroraDeploymentSpec.deploy.resources.request,
-                env = createEnvVars(mounts, auroraDeploymentSpec),
+                env = createEnvVars(mounts, auroraDeploymentSpec, routeSuffix),
                 mounts = mounts
         ))
 
@@ -34,7 +34,7 @@ class JavaPlatformHandler : ApplicationPlatformHandler("java") {
                 containers = container,
                 labels = createLabels(auroraDeploymentSpec.name, auroraDeploymentSpec.deploy, labels),
                 mounts = mounts,
-                annotations = createAnnotations(auroraDeploymentSpec.deploy),
+                annotations = createAnnotations(auroraDeploymentSpec),
                 deployStrategy = auroraDeploymentSpec.deploy.deployStrategy,
                 replicas = auroraDeploymentSpec.deploy.replicas,
                 serviceAccount = auroraDeploymentSpec.deploy.serviceAccount,

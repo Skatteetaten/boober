@@ -152,5 +152,23 @@
   "route": {
     "source": "reference.json",
     "value": true
+  },
+  "routeDefaults": {
+    "name": {
+      "source": "default",
+      "value": "reference"
+    },
+    "affiliation": {
+      "source": "default",
+      "value": "aos"
+    },
+    "env": {
+      "source": "default",
+      "value": "utv"
+    },
+    "separator": {
+      "source": "default",
+      "value": "-"
+    }
   }
 }

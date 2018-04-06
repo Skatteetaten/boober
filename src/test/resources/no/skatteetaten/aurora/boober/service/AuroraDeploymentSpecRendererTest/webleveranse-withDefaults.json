@@ -151,6 +151,24 @@
     "source": "webleveranse.json",
     "value": true
   },
+  "routeDefaults": {
+    "name": {
+      "source": "default",
+      "value": "webleveranse"
+    },
+    "affiliation": {
+      "source": "default",
+      "value": "aos"
+    },
+    "env": {
+      "source": "default",
+      "value": "utv"
+    },
+    "separator": {
+      "source": "default",
+      "value": "-"
+    }
+  },
   "extraTags": {
     "source": "default",
     "value": "latest,major,minor,patch"

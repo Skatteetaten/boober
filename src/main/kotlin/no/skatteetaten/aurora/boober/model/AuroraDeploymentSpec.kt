@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
 
-import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import java.time.Duration
 
@@ -37,21 +36,9 @@ data class AuroraDeploymentSpec(
         val build: AuroraBuild? = null,
         val deploy: AuroraDeploy? = null,
         val template: AuroraTemplate? = null,
-        val localTemplate: AuroraLocalTemplate? = null
-) {
-
-    fun assembleRouteHost(hostPrefix: String = name): String {
-
-        val hostSuffix = "${environment.namespace}.${cluster}.paas.skead.no"
-
-        return if (hostPrefix.isBlank()) {
-            hostSuffix
-        } else {
-            hostPrefix.ensureEndsWith(hostSuffix, "-")
-        }
-
-    }
-}
+        val localTemplate: AuroraLocalTemplate? = null,
+        val applicationFile: AuroraConfigFile
+)
 
 data class AuroraVolume(
         val secretVaultName: String?,
@@ -84,7 +71,6 @@ data class AuroraBuild(
 
 
 data class AuroraDeploy(
-        val applicationFile: String,
         val overrideFiles: Map<String, String>,
         val releaseTo: String?,
         val flags: AuroraDeploymentConfigFlags,
@@ -165,11 +151,17 @@ data class Probe(val path: String? = null, val port: Int, val delay: Int, val ti
 
 
 data class Route(
+        val objectName: String,
         val name: String,
-        val host: String? = null,
+        val affiliation: String,
+        val env: String,
+        val seperator: String,
         val path: String? = null,
         val annotations: Map<String, String>? = null
-)
+) {
+    val host: String
+        get():String = listOf(name, affiliation, env).filter { !it.isBlank() }.joinToString(seperator)
+}
 
 data class AuroraDeploymentConfigFlags(
         val debug: Boolean = false,

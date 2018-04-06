@@ -1,13 +1,11 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
 import com.fasterxml.jackson.databind.node.ObjectNode
-import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecConfigFieldValidator.Companion.namePattern
-import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraBuild
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -15,35 +13,12 @@ import no.skatteetaten.aurora.boober.model.AuroraLocalTemplate
 import no.skatteetaten.aurora.boober.model.AuroraRoute
 import no.skatteetaten.aurora.boober.model.AuroraTemplate
 import no.skatteetaten.aurora.boober.model.AuroraVolume
-import no.skatteetaten.aurora.boober.model.Permission
-import no.skatteetaten.aurora.boober.model.Permissions
-import no.skatteetaten.aurora.boober.utils.durationString
-import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.oneOf
-import no.skatteetaten.aurora.boober.utils.pattern
 
-class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
+class AuroraDeploymentSpecMapperV1 {
 
 
-    val envNamePattern = "^[a-z0-9\\-]{0,52}$"
-    val envNameMessage = "Environment must consist of lower case alphanumeric characters or '-'. It must be no longer than 52 characters."
     val handlers = listOf(
-            AuroraConfigFieldHandler("affiliation", validator = { it.pattern("^[a-z]{1,10}$", "Affiliation can only contain letters and must be no longer than 10 characters") }),
-            AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
-            AuroraConfigFieldHandler("permissions/admin"),
-            AuroraConfigFieldHandler("permissions/view"),
-            AuroraConfigFieldHandler("permissions/adminServiceAccount"),
-            // Max length of OpenShift project names is 63 characters. Project name = affiliation + "-" + envName.
-            AuroraConfigFieldHandler("envName", validator = { it.pattern(envNamePattern, envNameMessage) },
-                    defaultSource = "folderName",
-                    defaultValue = applicationId.environment
-            ),
-            AuroraConfigFieldHandler("env/name", validator = { it.pattern(envNamePattern, envNameMessage, false) }),
-            AuroraConfigFieldHandler("env/ttl", validator = { it.durationString() }),
-            AuroraConfigFieldHandler("name",
-                    defaultValue = applicationId.application,
-                    defaultSource = "fileName",
-                    validator = { it.pattern(namePattern, "Name must be alphanumeric and no more than 40 characters", false) }),
             AuroraConfigFieldHandler("splunkIndex"),
             AuroraConfigFieldHandler("certificate/commonName"),
             AuroraConfigFieldHandler("certificate"),
@@ -64,7 +39,9 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                                    build: AuroraBuild?,
                                    deploy: AuroraDeploy?,
                                    template: AuroraTemplate?,
-                                   localTemplate: AuroraLocalTemplate?
+                                   localTemplate: AuroraLocalTemplate?,
+                                   env: AuroraDeployEnvironment,
+                                   applicationFile: AuroraConfigFile
     ): AuroraDeploymentSpec {
         val name: String = auroraConfigFields.extract("name")
 
@@ -73,23 +50,16 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                 applicationPlatform = auroraConfigFields.extract("applicationPlatform"),
                 type = auroraConfigFields.extract("type"),
                 name = name,
-
                 cluster = auroraConfigFields.extract("cluster"),
-                environment = AuroraDeployEnvironment(
-                        affiliation = auroraConfigFields.extract("affiliation"),
-                        envName = auroraConfigFields.extractIfExistsOrNull("env/name")
-                                ?: auroraConfigFields.extract("envName"),
-                        ttl = auroraConfigFields.extractOrNull<String>("env/ttl")
-                                ?.let { StringToDurationConverter().convert(it) },
-                        permissions = extractPermissions(auroraConfigFields)
-                ),
+                environment = env,
                 fields = createMapForAuroraDeploymentSpecPointers(createFieldsWithValues(auroraConfigFields, build)),
                 volume = volume,
                 route = route,
                 build = build,
                 deploy = deploy,
                 template = template,
-                localTemplate = localTemplate)
+                localTemplate = localTemplate,
+                applicationFile = applicationFile)
 
     }
 
@@ -156,17 +126,5 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
         return auroraConfigFields.fields.filterValues { it.source != null || it.handler.defaultValue != null }
     }
 
-    private fun extractPermissions(configFields: AuroraConfigFields): Permissions {
-
-        val viewGroups = configFields.extractDelimitedStringOrArrayAsStringList("permissions/view").toSet()
-        val adminGroups = configFields.extractDelimitedStringOrArrayAsStringList("permissions/admin", " ")
-        //if sa present add to admin users.
-        val adminUsers = configFields.extractDelimitedStringOrArrayAsStringList("permissions/adminServiceAccount", " ").toSet()
-
-        val adminPermission = Permission(adminGroups.toSet(), adminUsers)
-        val viewPermission = viewGroups.takeIf { !it.isEmpty() }?.let { Permission(it) }
-
-        return Permissions(admin = adminPermission, view = viewPermission)
-    }
 }
 

@@ -48,4 +48,10 @@
   pause:               false                    // default
   alarm:               true                     // default
   route:               true                     // reference.json
+  routeDefaults: {
+    name:              "reference"              // default
+    affiliation:       "aos"                    // default
+    env:               "utv"                    // default
+    separator:         "-"                      // default
+  }
 }

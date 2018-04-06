@@ -28,6 +28,6 @@ class AbstractOpenShiftObjectGeneratorTest extends AbstractAuroraDeploymentSpecT
         "docker-registry.aurora.sits.no:5000",
         new OpenShiftObjectLabelService(userDetailsProvider),
         mapper,
-        templateProcessor, openShiftResourceClient)
+        templateProcessor, openShiftResourceClient, ".utv.paas.skead.no")
   }
 }

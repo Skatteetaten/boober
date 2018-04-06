@@ -11,6 +11,7 @@ abstract class AbstractAuroraDeploymentSpecTest extends AbstractAuroraConfigTest
   static AuroraDeploymentSpec createDeploymentSpec(Map<String, String> auroraConfigJson, ApplicationId applicationId) {
 
     AuroraConfig auroraConfig = createAuroraConfig(auroraConfigJson)
-    AuroraDeploymentSpecBuilderKt.createAuroraDeploymentSpec(auroraConfig, applicationId)
+    def spec = AuroraDeploymentSpecBuilderKt.createAuroraDeploymentSpec(auroraConfig, applicationId)
+    spec
   }
 }

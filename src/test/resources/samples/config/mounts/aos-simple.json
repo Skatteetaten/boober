@@ -7,11 +7,11 @@
   },
   "route": {
     "aos-simple": {
-      "host": ""
+      "name": ""
     },
     "bar": {
       "path": "/bar",
-      "host": "",
+      "name": "",
       "annotations": {
         "haproxy.router.openshift.io|timeout": "30s"
       }
