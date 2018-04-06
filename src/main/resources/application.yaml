@@ -60,8 +60,8 @@ spring:
     profiles: local
 
 openshift:
-    cluster: utv2
-    port: 443
+    cluster: qa
+    port: 8443
 
 boober:
     dbh: http://dbh-aurora.qa.paas.skead.no
