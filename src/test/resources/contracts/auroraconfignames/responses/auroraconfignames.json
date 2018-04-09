@@ -4,7 +4,8 @@
   "items": [
     "file1",
     "file2",
-    "file3"
+    "file3",
+    "paas"
   ],
-  "count": 3
+  "count": 4
 }
