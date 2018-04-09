@@ -13,11 +13,11 @@ Contract.make {
       contentType(applicationJson())
     }
     body(
-        contents: $(
-            consumer(~/.+/),
-            producer('dGVzdA==')
-        )
+        contents: 'dGVzdA=='
     )
+    stubMatchers {
+      jsonPath('$.contents', byRegex(nonEmpty()))
+    }
   }
   response {
     status 200

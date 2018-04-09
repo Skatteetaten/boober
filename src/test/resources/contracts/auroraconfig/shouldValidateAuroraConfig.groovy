@@ -13,12 +13,14 @@ Contract.make {
       contentType(applicationJson())
     }
     body(
-        name: $(
-            consumer(~/.+/),
-            producer('name')
-        ),
+        name: 'name',
         files: []
     )
+    stubMatchers {
+      jsonPath('$.name', byRegex(nonEmpty()))
+      jsonPath('$.files[?@name]', byRegex(nonEmpty()))
+      jsonPath('$.files[?@contents]', byRegex(nonEmpty()))
+    }
   }
   response {
     status 200

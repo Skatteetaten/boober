@@ -15,12 +15,13 @@ Contract.make {
     body(
         operationName: 'reencrypt',
         parameters: [
-          'encryptionKey': $(
-              consumer(~/.+/),
-              producer('key')
-          )
+          'encryptionKey': 'key'
         ]
     )
+    stubMatchers {
+      jsonPath('$.operationName', byEquality())
+      jsonPath('$.parameters[?@encryptionKey]', byRegex(nonEmpty()))
+    }
   }
   response {
     status 200

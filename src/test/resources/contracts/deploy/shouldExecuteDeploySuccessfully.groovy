@@ -17,6 +17,11 @@ Contract.make {
         overrides: {},
         deploy: true
     )
+    stubMatchers {
+      jsonPath('$.applicationIds[?@environment]', byRegex(nonEmpty()))
+      jsonPath('$.applicationIds[?@application]', byRegex(nonEmpty()))
+      jsonPath('$.deploy', byRegex(anyBoolean()))
+    }
   }
   response {
     status 200

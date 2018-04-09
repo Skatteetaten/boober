@@ -17,6 +17,9 @@ Contract.make {
         permissions: [],
         secrets: {}
     )
+    stubMatchers {
+      jsonPath('$.name', byRegex(nonEmpty()))
+    }
   }
   response {
     status 200
