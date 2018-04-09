@@ -155,12 +155,12 @@ data class Route(
         val name: String,
         val affiliation: String,
         val env: String,
-        val seperator: String,
+        val separator: String,
         val path: String? = null,
         val annotations: Map<String, String>? = null
 ) {
     val host: String
-        get():String = listOf(name, affiliation, env).filter { !it.isBlank() }.joinToString(seperator)
+        get():String = listOf(name, affiliation, env).filter { !it.isBlank() }.joinToString(separator)
 }
 
 data class AuroraDeploymentConfigFlags(

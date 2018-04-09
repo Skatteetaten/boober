@@ -19,7 +19,7 @@ class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>, val env:
             AuroraConfigFieldHandler("routeDefaults/affiliation", defaultValue = env.affiliation),
             AuroraConfigFieldHandler("routeDefaults/env", defaultValue = env.envName),
             AuroraConfigFieldHandler("routeDefaults/separator", defaultValue = "-")) +
-            findRouteAnnotaionHandlers("routeDefaults")
+            findRouteAnnotationHandlers("routeDefaults")
 
 
     fun route(auroraConfigFields: AuroraConfigFields): AuroraRoute {
@@ -32,12 +32,16 @@ class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>, val env:
 
 
         val simplified = auroraConfigFields.isSimplifiedConfig("route")
-        if (simplified && auroraConfigFields.extract("route")) {
-            return listOf(Route(objectName = name,
-                    name = auroraConfigFields.extract("routeDefaults/name"),
-                    affiliation = auroraConfigFields.extract("routeDefaults/affiliation"),
-                    env = auroraConfigFields.extract("routeDefaults/env"),
-                    seperator = auroraConfigFields.extract("routeDefaults/separator")))
+
+        if (simplified) {
+            if (auroraConfigFields.extract("route")) {
+                return listOf(Route(objectName = name,
+                        name = auroraConfigFields.extract("routeDefaults/name"),
+                        affiliation = auroraConfigFields.extract("routeDefaults/affiliation"),
+                        env = auroraConfigFields.extract("routeDefaults/env"),
+                        separator = auroraConfigFields.extract("routeDefaults/separator")))
+            }
+            return listOf()
         }
         val routes = applicationFiles.findSubKeys("route")
 
@@ -67,11 +71,11 @@ class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>, val env:
                     AuroraConfigFieldHandler("route/$routeName/env"),
                     AuroraConfigFieldHandler("route/$routeName/separator"),
                     AuroraConfigFieldHandler("route/$routeName/path", validator = { it?.startsWith("/", "Path must start with /") })
-            ) + findRouteAnnotaionHandlers("route/$routeName")
+            ) + findRouteAnnotationHandlers("route/$routeName")
         }
     }
 
-    fun findRouteAnnotaionHandlers(prefix: String): List<AuroraConfigFieldHandler> {
+    fun findRouteAnnotationHandlers(prefix: String): List<AuroraConfigFieldHandler> {
 
         return applicationFiles.flatMap { ac ->
             ac.asJsonNode.at("/$prefix/annotations")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
