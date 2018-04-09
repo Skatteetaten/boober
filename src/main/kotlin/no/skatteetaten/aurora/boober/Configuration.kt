@@ -1,9 +1,9 @@
 package no.skatteetaten.aurora.boober
 
-import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import no.skatteetaten.aurora.filter.logging.AuroraHeaderFilter
 import no.skatteetaten.aurora.filter.logging.RequestKorrelasjon
@@ -15,6 +15,7 @@ import org.encryptor4j.factory.AbsKeyFactory
 import org.encryptor4j.factory.KeyFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.beans.factory.config.BeanPostProcessor
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -38,14 +39,18 @@ annotation class TargetService(val value: ServiceTypes)
 
 @Configuration
 @EnableRetry
-class Configuration {
+class Configuration: BeanPostProcessor {
 
-    @Bean
-    @Primary
-    fun mapper(): ObjectMapper {
-        return jacksonObjectMapper()
-                .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    override fun postProcessBeforeInitialization(bean: Any, beanName: String?): Any = bean
+
+    override fun postProcessAfterInitialization(bean: Any, beanName: String?): Any {
+        if (beanName == "_halObjectMapper" && bean is ObjectMapper) {
+            bean.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+            bean.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            bean.registerModules(JavaTimeModule())
+        }
+
+        return bean
     }
 
     @Bean
