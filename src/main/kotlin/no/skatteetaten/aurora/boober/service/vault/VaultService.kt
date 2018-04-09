@@ -129,27 +129,6 @@ class VaultService(
         })
     }
 
-    //Note that a properties file can be delimitered by space and =, very few people know this so we check for it
-    private fun assertSecretKeysAreValid(secrets: Map<String, ByteArray>) {
-        val rePattern = "^[-._a-zA-Z0-9]+$"
-        val re = Regex(rePattern)
-        val filesToKeys = secrets.filter { it.key.endsWith(".properties") }
-                .mapValues {
-                    String(it.value)
-                            .lines()
-                            .map { it.substringBefore("=") }
-                            .filter { !it.matches(re) }
-                }
-
-        val invalidKeys = filesToKeys.flatMap { fileToKey ->
-            fileToKey.value.map { "${fileToKey.key}/$it" }
-        }
-
-        if (invalidKeys.isNotEmpty()) {
-            throw IllegalArgumentException("Vault key=${invalidKeys} is not valid. Regex used for matching $rePattern")
-        }
-    }
-
     fun reencryptVaultCollection(vaultCollectionName: String, newKey: String) {
 
         val vaults = findAllVaultsInVaultCollection(vaultCollectionName)
@@ -196,5 +175,30 @@ class VaultService(
     private fun findAllVaultsInVaultCollection(vaultCollectionName: String): List<EncryptedFileVault> {
 
         return findVaultCollection(vaultCollectionName).vaults
+    }
+
+    companion object {
+        val rePattern = "^[-._a-zA-Z0-9]+$"
+        val re = Regex(rePattern)
+
+        //Note that a properties file can be delimitered by space and =, very few people know this so we check for it
+        @JvmStatic
+        protected fun assertSecretKeysAreValid(secrets: Map<String, ByteArray>) {
+            val filesToKeys = secrets.filter { it.key.endsWith(".properties") }
+                    .mapValues {
+                        String(it.value)
+                                .lines()
+                                .map { it.substringBefore("=") }
+                                .filter { !it.matches(re) }
+                    }
+
+            val invalidKeys = filesToKeys.flatMap { fileToKey ->
+                fileToKey.value.map { "${fileToKey.key}/$it" }
+            }
+
+            if (invalidKeys.isNotEmpty()) {
+                throw IllegalArgumentException("Vault key=${invalidKeys} is not valid. Regex used for matching $rePattern")
+            }
+        }
     }
 }

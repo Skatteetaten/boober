@@ -76,6 +76,7 @@ class VaultServiceTest extends Specification {
       vault.secrets.size() == 1
       vault.secrets[fileName] == contents.bytes
   }
+
   def "Secret vault keys must have correct name"() {
 
     given:
@@ -87,6 +88,29 @@ class VaultServiceTest extends Specification {
     then:
       def e = thrown(IllegalArgumentException)
       e.message == "Vault key=[latest.properties/INVALID KEY] is not valid. Regex used for matching ^[-._a-zA-Z0-9]+\$"
+  }
+
+  def "Verify secret file invalid lines"() {
+    when:
+      VaultService.assertSecretKeysAreValid(["latest.properties": line.bytes])
+    then:
+      thrown(IllegalArgumentException)
+    where:
+      line << [
+          "SOME-KEY = SOME VALUE",
+          " SOME-KEY=SOME VALUE",
+          " SOME-KEY = SOME VALUE"
+      ]
+  }
+
+  def "Verify secret file valid lines"() {
+    expect:
+      VaultService.assertSecretKeysAreValid(["latest.properties": line.bytes])
+    where:
+      line << [
+          "SOME_KEY=SOME VALUE",
+          "SOME-KEY=SOME VALUE"
+      ]
   }
 
   def "Delete file"() {
