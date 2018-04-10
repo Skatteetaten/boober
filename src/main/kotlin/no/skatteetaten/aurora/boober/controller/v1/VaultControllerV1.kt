@@ -97,7 +97,7 @@ data class VaultOperationPayload(val operationName: VaultOperation, val paramete
 @RestController
 @RequestMapping("/v1/vault/{vaultCollection}")
 class VaultControllerV1(val vaultService: VaultService,
-                        private @Value("\${vault.operations.enabled:false}") val operationsEnabled: Boolean) {
+                        @Value("\${vault.operations.enabled:false}") private val operationsEnabled: Boolean) {
 
     @PostMapping("/")
     fun vaultOperation(@PathVariable vaultCollection: String, @RequestBody @Valid operationPayload: VaultOperationPayload) {
@@ -110,7 +110,7 @@ class VaultControllerV1(val vaultService: VaultService,
         }
     }
 
-    @GetMapping()
+    @GetMapping
     fun listVaults(@PathVariable vaultCollection: String): Response {
 
         val resources = vaultService.findAllVaultsWithUserAccessInVaultCollection(vaultCollection)
@@ -118,7 +118,7 @@ class VaultControllerV1(val vaultService: VaultService,
         return Response(items = resources)
     }
 
-    @PutMapping()
+    @PutMapping
     fun save(@PathVariable vaultCollection: String,
              @RequestBody @Valid vaultPayload: AuroraSecretVaultPayload): Response {
 
@@ -176,8 +176,7 @@ class VaultControllerV1(val vaultService: VaultService,
 
     private fun getVaultFileNameFromRequestUri(vaultCollection: String, vault: String, request: HttpServletRequest): String {
         val path = "/v1/vault/$vaultCollection/$vault/**"
-        val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
-        return fileName
+        return AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
     }
 
     /**

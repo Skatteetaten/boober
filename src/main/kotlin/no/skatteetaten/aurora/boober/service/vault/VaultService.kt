@@ -80,8 +80,7 @@ class VaultService(
                         vaultName: String,
                         fileName: String): ByteArray {
         val vault = findVault(vaultCollectionName, vaultName)
-        val vaultFile = vault.getFile(fileName)
-        return vaultFile
+        return vault.getFile(fileName)
     }
 
     fun deleteFileInVault(vaultCollectionName: String, vaultName: String, fileName: String): EncryptedFileVault? {
