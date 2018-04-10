@@ -1,12 +1,13 @@
 package no.skatteetaten.aurora.boober.contracts
 
-import org.eclipse.jgit.lib.PersonIdent
+import java.time.Instant
 
 import com.fasterxml.jackson.databind.node.NullNode
 
 import no.skatteetaten.aurora.boober.controller.v1.ApplyResultController
 import no.skatteetaten.aurora.boober.service.DeployHistory
 import no.skatteetaten.aurora.boober.service.DeployLogService
+import no.skatteetaten.aurora.boober.service.Deployer
 
 class ApplyresultBase extends AbstractContractBase {
 
@@ -21,7 +22,8 @@ class ApplyresultBase extends AbstractContractBase {
   }
 
   DeployHistory createDeployResult() {
-    def ident = response('deployresult', '$.items[0].ident', Map)
-    new DeployHistory(new PersonIdent(ident.name, ident.emailAddress), NullNode.instance)
+    def ident = response('deployresult', '$.items[0].deployer', Map)
+    //TODO: Fetch epoch from response here?
+    new DeployHistory(new Deployer(ident.name, ident.emailAddress), Instant.EPOCH, NullNode.instance)
   }
 }
