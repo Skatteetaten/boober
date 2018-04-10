@@ -1,5 +1,11 @@
 package no.skatteetaten.aurora.boober.contracts
 
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.KotlinModule
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
 import com.jayway.jsonpath.DocumentContext
@@ -45,7 +51,16 @@ abstract class AbstractContractBase extends Specification {
   }
 
   def setupMockMvc(Object controller) {
-    RestAssuredMockMvc.standaloneSetup(MockMvcBuilders.standaloneSetup(controller))
+    def objectMapper = new ObjectMapper()
+    objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    objectMapper.registerModule(new KotlinModule())
+    objectMapper.registerModule(new JavaTimeModule())
+
+    def converter = new MappingJackson2HttpMessageConverter()
+    converter.setObjectMapper(objectMapper)
+
+    RestAssuredMockMvc.standaloneSetup(MockMvcBuilders.standaloneSetup(controller).setMessageConverters(converter))
   }
 
 }
