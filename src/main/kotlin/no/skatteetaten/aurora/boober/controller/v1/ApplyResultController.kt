@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RestController
 class ApplyResultController(val deployLogService: DeployLogService) {
 
     @GetMapping("/")
-    fun deployHistory(@PathVariable affiliation: String): Response {
+    fun deployHistory(@PathVariable auroraConfigName: String): Response {
 
-        val applicationResults: List<DeployHistory> = deployLogService.deployHistory(affiliation)
+        val applicationResults: List<DeployHistory> = deployLogService.deployHistory(auroraConfigName)
         return Response(items = applicationResults)
     }
 
@@ -27,6 +27,6 @@ class ApplyResultController(val deployLogService: DeployLogService) {
         val deployResult = deployLogService.findDeployResultById(auroraConfigName, deployId)
         return deployResult?.let {
             ResponseEntity(Response(items = listOf(deployResult)), HttpStatus.OK)
-        } ?: ResponseEntity<Response>(HttpStatus.NOT_FOUND)
+        } ?: ResponseEntity(HttpStatus.NOT_FOUND)
     }
 }

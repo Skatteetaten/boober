@@ -8,7 +8,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 
 class OpenShiftTemplateProcessorTest extends AbstractSpec {
 
-  ObjectMapper mapper = new Configuration().mapper()
+  ObjectMapper mapper = new ObjectMapper()
   def templateProcessor = new OpenShiftTemplateProcessor(Mock(UserDetailsProvider), Mock(OpenShiftResourceClient),
       mapper)
   String template = loadResource("jenkins-cluster-persistent-2.0.json")

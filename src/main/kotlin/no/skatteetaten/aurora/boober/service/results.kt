@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import org.eclipse.jgit.lib.PersonIdent
+import java.time.Instant
 import java.util.*
 
 
@@ -21,4 +22,6 @@ data class AuroraDeployResult @JvmOverloads constructor(
 
 
 
-data class DeployHistory(val ident: PersonIdent, val result: JsonNode)
+data class DeployHistory(val deployer: Deployer, val time: Instant, val result: JsonNode)
+
+data class Deployer(val name: String, val email: String)
