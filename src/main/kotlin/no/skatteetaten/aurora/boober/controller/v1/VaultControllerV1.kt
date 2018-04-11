@@ -15,8 +15,16 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.util.AntPathMatcher
 import org.springframework.util.DigestUtils
-import org.springframework.web.bind.annotation.*
-import java.util.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
+import java.util.Base64
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.validation.Valid
@@ -38,11 +46,18 @@ object B64 {
     }
 }
 
+/*
+  @param secrets: A map of fileNames to Base64 encoded content
+ */
 data class AuroraSecretVaultPayload(val name: String, val permissions: List<String>, val secrets: Map<String, String>?) {
     val secretsDecoded: Map<String, ByteArray>?
         get() = secrets?.map { Pair(it.key, B64.decode(it.value)) }?.toMap()
 }
 
+
+/*
+  @param secrets: A map of fileNames to Base64 encoded content
+ */
 data class VaultWithAccessResource(val name: String, val hasAccess: Boolean, val secrets: Map<String, String>?, val permissions: List<String>?) {
     companion object {
         fun fromEncryptedFileVault(it: EncryptedFileVault): VaultWithAccessResource {
@@ -82,7 +97,7 @@ data class VaultOperationPayload(val operationName: VaultOperation, val paramete
 @RestController
 @RequestMapping("/v1/vault/{vaultCollection}")
 class VaultControllerV1(val vaultService: VaultService,
-                        private @Value("\${vault.operations.enabled:false}") val operationsEnabled: Boolean) {
+                        @Value("\${vault.operations.enabled:false}") private val operationsEnabled: Boolean) {
 
     @PostMapping("/")
     fun vaultOperation(@PathVariable vaultCollection: String, @RequestBody @Valid operationPayload: VaultOperationPayload) {
@@ -95,7 +110,7 @@ class VaultControllerV1(val vaultService: VaultService,
         }
     }
 
-    @GetMapping()
+    @GetMapping
     fun listVaults(@PathVariable vaultCollection: String): Response {
 
         val resources = vaultService.findAllVaultsWithUserAccessInVaultCollection(vaultCollection)
@@ -103,7 +118,7 @@ class VaultControllerV1(val vaultService: VaultService,
         return Response(items = resources)
     }
 
-    @PutMapping()
+    @PutMapping
     fun save(@PathVariable vaultCollection: String,
              @RequestBody @Valid vaultPayload: AuroraSecretVaultPayload): Response {
 
@@ -161,8 +176,7 @@ class VaultControllerV1(val vaultService: VaultService,
 
     private fun getVaultFileNameFromRequestUri(vaultCollection: String, vault: String, request: HttpServletRequest): String {
         val path = "/v1/vault/$vaultCollection/$vault/**"
-        val fileName = AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
-        return fileName
+        return AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
     }
 
     /**

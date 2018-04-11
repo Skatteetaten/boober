@@ -7,6 +7,7 @@ import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecConfigFieldVa
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Permission
 import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.TemplateType
@@ -32,8 +33,7 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
     val handlers = setOf(
             AuroraConfigFieldHandler("schemaVersion", validator = { it.oneOf(VALID_SCHEMA_VERSIONS) }),
             AuroraConfigFieldHandler("type", validator = { it.oneOf(TemplateType.values().map { it.toString() }) }),
-            AuroraConfigFieldHandler("applicationPlatform", defaultValue = "java",
-                    validator = { it.oneOf(no.skatteetaten.aurora.boober.Boober.Companion.APPLICATION_PLATFORM_HANDLERS.keys.toList()) }),
+            AuroraConfigFieldHandler("applicationPlatform", defaultValue = "java", validator = { it.oneOf(AuroraDeploymentSpecService.APPLICATION_PLATFORM_HANDLERS.keys.toList()) }),
             AuroraConfigFieldHandler("affiliation", validator = {
                 it.pattern("^[a-z]{1,10}$",
                         "Affiliation can only contain letters and must be no longer than 10 characters")

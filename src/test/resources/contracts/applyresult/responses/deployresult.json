@@ -1,0 +1,12 @@
+{
+  "success": true,
+  "message": "OK",
+  "items": [
+    {
+      "deployer": {
+        "name": "Aurora Test User",
+        "email": "aurora@skatteetaten.no"
+      },
+      "time": "1970-01-01T00:00:00Z"
+    }]
+}

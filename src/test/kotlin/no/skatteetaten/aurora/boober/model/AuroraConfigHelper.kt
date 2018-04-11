@@ -2,8 +2,7 @@ package no.skatteetaten.aurora.boober.model
 
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.Configuration
-import no.skatteetaten.aurora.boober.utils.findAllPointers
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.io.File
 import java.nio.charset.Charset
 
@@ -73,7 +72,7 @@ private fun collectFiles(vararg fileNames: String): Map<String, String> {
 
 private fun convertFileToJsonNode(file: File): JsonNode? {
 
-    val mapper = Configuration().mapper()
+    val mapper = jacksonObjectMapper()
     return mapper.readValue(file, JsonNode::class.java)
 }
 
