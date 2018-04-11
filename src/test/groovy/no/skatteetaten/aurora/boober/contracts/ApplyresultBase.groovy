@@ -15,7 +15,8 @@ class ApplyresultBase extends AbstractContractBase {
     loadJsonResponses(this)
     def deployLogService = Mock(DeployLogService) {
       deployHistory(_ as String) >> []
-      findDeployResultById(_ as String, _ as String) >> { arguments -> (arguments[1] == 'invalid-id') ? null : createDeployResult() }
+      findDeployResultById(_ as String, _ as String) >>
+          { arguments -> (arguments[1] == 'invalid-id') ? null : createDeployResult() }
     }
     ApplyResultController controller = new ApplyResultController(deployLogService)
     setupMockMvc(controller)

@@ -39,7 +39,7 @@ annotation class TargetService(val value: ServiceTypes)
 
 @Configuration
 @EnableRetry
-class Configuration: BeanPostProcessor {
+class Configuration : BeanPostProcessor {
 
     override fun postProcessBeforeInitialization(bean: Any, beanName: String?): Any = bean
 

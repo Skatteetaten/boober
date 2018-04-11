@@ -1,13 +1,13 @@
 package no.skatteetaten.aurora.boober.contracts
 
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
+import org.springframework.test.web.servlet.setup.MockMvcBuilders
+
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
-import org.springframework.test.web.servlet.setup.MockMvcBuilders
-
 import com.jayway.jsonpath.DocumentContext
 import com.jayway.jsonpath.JsonPath
 

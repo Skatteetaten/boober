@@ -24,7 +24,7 @@ class DeployBase extends AbstractContractBase {
 
   AuroraDeployResult createAuroraDeployResult(Boolean success) {
     String reason
-    if(success) {
+    if (success) {
       reason = response('deploy', '$.message', String)
     } else {
       reason = response('deploy-failed', '$.message', String)
@@ -34,6 +34,6 @@ class DeployBase extends AbstractContractBase {
         new AuroraDeployEnvironment('', '',
             new Permissions(new Permission(Collections.emptySet(), Collections.emptySet()), null), null),
         null, null, null, null, null, null)
-    return new AuroraDeployResult(spec, UUID.randomUUID().toString().substring(0,7), [], success, false, reason)
+    return new AuroraDeployResult(spec, UUID.randomUUID().toString().substring(0, 7), [], success, false, reason)
   }
 }
