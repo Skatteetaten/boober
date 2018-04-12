@@ -129,7 +129,7 @@ abstract class ApplicationPlatformHandler(val name:String) {
                 mounts = mounts?.filter { it.targetContainer == ToxiProxyDefaults.NAME },
                 shouldHaveImageChange = false,
                 args = getToxiProxyArgs(),
-                image = getToxiProxyImage(auroraDeploymentSpec.deploy.toxiProxy?.version)
+                image = getToxiProxyImage(it.version)
             )
         } ?: null
     }

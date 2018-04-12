@@ -40,8 +40,7 @@ class WebPlatformHandler : ApplicationPlatformHandler("web") {
                         env = createEnvVars(mounts, auroraDeploymentSpec),
                         mounts = mounts
                 )
-        )
-
+        ).addIfNotNull(createToxiProxyContainer(auroraDeploymentSpec, mounts))
 
         return AuroraDeployment(
                 name = auroraDeploymentSpec.name,
