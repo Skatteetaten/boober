@@ -186,6 +186,7 @@ class VaultService(
             val filesToKeys = secrets.filter { it.key.endsWith(".properties") }
                     .mapValues {
                         String(it.value)
+                                .trim()
                                 .lines()
                                 .map { it.substringBefore("=") }
                                 .filter { !it.matches(re) }
