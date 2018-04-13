@@ -24,7 +24,7 @@ class ApplyresultBase extends AbstractContractBase {
 
   DeployHistory createDeployResult() {
     def ident = response('deployresult', '$.items[0].deployer', Map)
-    //TODO: Fetch epoch from response here?
-    new DeployHistory(new Deployer(ident.name, ident.email), Instant.EPOCH, NullNode.instance)
+    def time = response('deployresult', '$.items[0].time', String)
+    new DeployHistory(new Deployer(ident.name, ident.email), Instant.parse(time), NullNode.instance)
   }
 }
