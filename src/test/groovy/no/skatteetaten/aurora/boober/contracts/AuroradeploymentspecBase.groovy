@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.contracts
 
 import no.skatteetaten.aurora.boober.controller.v1.AuroraDeploymentSpecControllerV1
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Permission
@@ -27,6 +28,6 @@ class AuroradeploymentspecBase extends AbstractContractBase {
     new AuroraDeploymentSpec('', TemplateType.development, '', deploymentSpecs, '', '',
         new AuroraDeployEnvironment('', '',
             new Permissions(new Permission(Collections.emptySet(), Collections.emptySet()), null), null),
-        null, null, null, null, null, null)
+        null, null, null, null, null, null, new AuroraConfigFile('name', 'content', true))
   }
 }
