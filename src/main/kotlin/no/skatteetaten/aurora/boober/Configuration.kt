@@ -1,9 +1,6 @@
 package no.skatteetaten.aurora.boober
 
-import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import no.skatteetaten.aurora.filter.logging.AuroraHeaderFilter
 import no.skatteetaten.aurora.filter.logging.RequestKorrelasjon
@@ -45,9 +42,7 @@ class Configuration: BeanPostProcessor {
 
     override fun postProcessAfterInitialization(bean: Any, beanName: String?): Any {
         if (beanName == "_halObjectMapper" && bean is ObjectMapper) {
-            bean.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-            bean.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            bean.registerModules(JavaTimeModule())
+            configureObjectMapper(bean)
         }
 
         return bean
