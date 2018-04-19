@@ -102,9 +102,26 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.environment.permissions)
 
     then:
-      rolebindings.size() == 1
+      rolebindings.size() == 2
       def rolebinding = rolebindings[0]
       getArray(rolebinding, "/userNames") == ["system:serviceaccount:paas:jenkinsbuilder"]
+      getArray(rolebinding, "/groupNames") == ["APP_PaaS_utv", "APP_PaaS_drift"]
+
+  }
+
+  def "generate rolebinding view should split groups"() {
+
+    given:
+      def aid = new ApplicationId("booberdev", "console")
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, null)
+
+    when:
+      AuroraDeploymentSpec deploymentSpec = AuroraDeploymentSpecService.createAuroraDeploymentSpec(auroraConfig, aid)
+      def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.environment.permissions)
+
+    then:
+      rolebindings.size() == 2
+      def rolebinding = rolebindings[1]
       getArray(rolebinding, "/groupNames") == ["APP_PaaS_utv", "APP_PaaS_drift"]
 
   }

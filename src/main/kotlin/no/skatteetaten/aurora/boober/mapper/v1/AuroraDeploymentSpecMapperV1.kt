@@ -158,7 +158,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
 
     private fun extractPermissions(configFields: AuroraConfigFields): Permissions {
 
-        val viewGroups = configFields.extractDelimitedStringOrArrayAsStringList("permissions/view").toSet()
+        val viewGroups = configFields.extractDelimitedStringOrArrayAsStringList("permissions/view", " ").toSet()
         val adminGroups = configFields.extractDelimitedStringOrArrayAsStringList("permissions/admin", " ")
         //if sa present add to admin users.
         val adminUsers = configFields.extractDelimitedStringOrArrayAsStringList("permissions/adminServiceAccount", " ").toSet()
