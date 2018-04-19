@@ -5,7 +5,9 @@ import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
-import no.skatteetaten.aurora.boober.service.openshift.OperationType.*
+import no.skatteetaten.aurora.boober.service.openshift.OperationType.CREATE
+import no.skatteetaten.aurora.boober.service.openshift.OperationType.DELETE
+import no.skatteetaten.aurora.boober.service.openshift.OperationType.UPDATE
 import no.skatteetaten.aurora.boober.service.openshift.mergeWithExistingResource
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.openshiftKind
@@ -31,7 +33,7 @@ class OpenShiftCommandBuilder(
 
     fun generateRolebindings(environment: AuroraDeployEnvironment): List<OpenshiftCommand> {
         return openShiftObjectGenerator.generateRolebindings(environment.permissions)
-                .map { createMergedUpdateCommand(environment.namespace, it) }
+                .map { createOpenShiftCommand(environment.namespace, it, true, true) }
     }
 
     private fun createMergedUpdateCommand(namespace: String, it: JsonNode) =
