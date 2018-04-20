@@ -187,6 +187,7 @@ class VaultService(
                     .mapValues {
                         String(it.value)
                                 .lines()
+                                .filter{ !it.isBlank()}
                                 .map { it.substringBefore("=") }
                                 .filter { !it.matches(re) }
                     }

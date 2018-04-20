@@ -150,7 +150,7 @@ class AuroraDeployMapperV1(val name: String, val applicationFiles: List<AuroraCo
             return null
         }
 
-        val roles = auroraConfigFields.extractDelimitedStringOrArrayAsStringList("$name/roles", ",")
+        val roles = auroraConfigFields.extractDelimitedStringOrArrayAsSet("$name/roles", ",")
             .takeIf { it.isNotEmpty() }
             ?.joinToString(",")
         return Webseal(

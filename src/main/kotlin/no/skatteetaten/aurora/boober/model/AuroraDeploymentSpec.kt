@@ -198,13 +198,4 @@ data class Permissions(
 data class Permission(
         val groups: Set<String>?,
         val users: Set<String>? = emptySet()
-) {
-    //In use in velocity template
-    val rolebindings: Map<String, String>
-        get(): Map<String, String> {
-            val userPart = users?.map { Pair(it, "User") }?.toMap() ?: mapOf()
-            val groupPart = groups?.map { Pair(it, "Group") }?.toMap() ?: mapOf()
-            return userPart + groupPart
-        }
-}
-
+)
