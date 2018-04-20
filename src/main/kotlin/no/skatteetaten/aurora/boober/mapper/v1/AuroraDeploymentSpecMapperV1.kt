@@ -164,7 +164,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
         val adminUsers = configFields.extractDelimitedStringOrArrayAsSet("permissions/adminServiceAccount", " ")
 
         val adminPermission = Permission(adminGroups, adminUsers)
-        val viewPermission = if (viewGroups.isEmpty()) Permission(viewGroups) else null
+        val viewPermission = if (viewGroups.isNotEmpty()) Permission(viewGroups) else null
 
         return Permissions(admin = adminPermission, view = viewPermission)
     }

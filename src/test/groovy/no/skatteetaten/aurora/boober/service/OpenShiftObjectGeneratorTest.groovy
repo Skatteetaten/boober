@@ -102,11 +102,18 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.environment.permissions)
 
     then:
-      rolebindings.size() == 2
-      def rolebinding = rolebindings[0]
-      getArray(rolebinding, "/userNames") == ["system:serviceaccount:paas:jenkinsbuilder"]
-      getArray(rolebinding, "/groupNames") == ["APP_PaaS_utv", "APP_PaaS_drift"]
+      def adminRolebinding = rolebindings.find { it.at("/metadata/name").asText() == "admin" }
+      adminRolebinding != null
 
+      getArray(adminRolebinding, "/userNames") == ["system:serviceaccount:paas:jenkinsbuilder"]
+      getArray(adminRolebinding, "/groupNames") == ["APP_PaaS_utv", "APP_PaaS_drift"]
+
+    and:
+      def viewRolebinding = rolebindings.find { it.at("/metadata/name").asText() == "view" }
+      viewRolebinding != null
+
+    and:
+      rolebindings.size() == 2
   }
 
   def "generate rolebinding view should split groups"() {
@@ -120,10 +127,15 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.environment.permissions)
 
     then:
-      rolebindings.size() == 2
-      def rolebinding = rolebindings[1]
-      getArray(rolebinding, "/groupNames") == ["APP_PaaS_utv", "APP_PaaS_drift"]
+      def adminRolebinding = rolebindings.find { it.at("/metadata/name").asText() == "admin" }
+      getArray(adminRolebinding, "/groupNames") == ["APP_PaaS_utv", "APP_PaaS_drift"]
 
+    and:
+      def viewRolebinding = rolebindings.find { it.at("/metadata/name").asText() == "view" }
+      viewRolebinding != null
+
+    and:
+      rolebindings.size() == 2
   }
 
   private List<String> getArray(JsonNode rolebinding, String path) {
