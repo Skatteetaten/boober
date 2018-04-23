@@ -16,6 +16,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -52,9 +53,9 @@ class AuroraDeploymentSpecService(val auroraConfigService: AuroraConfigService,
                     ?: throw IllegalArgumentException("ApplicationPlattformHandler $platform is not present")
 
             val env = headerMapper.createEnvironment(fields)
-
-
             val name = fields.extract<String>("name")
+            val cluster = fields.extract<String>("cluster")
+
             val deploymentSpecMapper = AuroraDeploymentSpecMapperV1()
             val deployMapper = AuroraDeployMapperV1(applicationId.application, applicationFiles, overrideFiles)
             val volumeMapper = AuroraVolumeMapperV1(applicationFiles)
@@ -72,7 +73,19 @@ class AuroraDeploymentSpecService(val auroraConfigService: AuroraConfigService,
             }).toSet()
 
             val handlers = applicationHandler.handlers(rawHandlers)
-            val auroraConfigFields = AuroraConfigFields.create(handlers, applicationFiles)
+
+            val segmentPair = fields.extractIfExistsOrNull<String>("segment")?.let {
+                "segment" to it
+            }
+            val placeholders = mapOf(
+
+                    "name" to name,
+                    "env" to env.envName,
+                    "affiliation" to env.affiliation,
+                    "cluster" to cluster
+            ).addIfNotNull(segmentPair)
+
+            val auroraConfigFields = AuroraConfigFields.create(handlers, applicationFiles, placeholders)
 
             AuroraDeploymentSpecConfigFieldValidator(applicationId, applicationFiles, handlers, auroraConfigFields).validate()
 

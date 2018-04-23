@@ -38,6 +38,7 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
                 it.pattern("^[a-z]{1,10}$",
                         "Affiliation can only contain letters and must be no longer than 10 characters")
             }),
+            AuroraConfigFieldHandler("segment"),
             AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
             AuroraConfigFieldHandler("permissions/admin"),
             AuroraConfigFieldHandler("permissions/view"),
@@ -72,16 +73,17 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
 
     private fun extractPermissions(configFields: AuroraConfigFields): Permissions {
 
-        val viewGroups = configFields.extractDelimitedStringOrArrayAsStringList("permissions/view").toSet()
-        val adminGroups = configFields.extractDelimitedStringOrArrayAsStringList("permissions/admin", " ")
+        val viewGroups = configFields.extractDelimitedStringOrArrayAsSet("permissions/view", " ")
+        val adminGroups = configFields.extractDelimitedStringOrArrayAsSet("permissions/admin", " ")
         //if sa present add to admin users.
-        val adminUsers = configFields.extractDelimitedStringOrArrayAsStringList("permissions/adminServiceAccount", " ").toSet()
+        val adminUsers = configFields.extractDelimitedStringOrArrayAsSet("permissions/adminServiceAccount", " ")
 
-        val adminPermission = Permission(adminGroups.toSet(), adminUsers)
-        val viewPermission = viewGroups.takeIf { !it.isEmpty() }?.let { Permission(it) }
+        val adminPermission = Permission(adminGroups, adminUsers)
+        val viewPermission = if (viewGroups.isNotEmpty()) Permission(viewGroups) else null
 
         return Permissions(admin = adminPermission, view = viewPermission)
     }
+
 
     fun getApplicationFile(): AuroraConfigFile {
         val fileName = "${applicationId.environment}/${applicationId.application}"

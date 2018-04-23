@@ -152,16 +152,10 @@ data class Probe(val path: String? = null, val port: Int, val delay: Int, val ti
 
 data class Route(
         val objectName: String,
-        val name: String,
-        val affiliation: String,
-        val env: String,
-        val separator: String,
+        val host: String,
         val path: String? = null,
         val annotations: Map<String, String>? = null
-) {
-    val host: String
-        get():String = listOf(name, affiliation, env).filter { !it.isBlank() }.joinToString(separator)
-}
+)
 
 data class AuroraDeploymentConfigFlags(
         val debug: Boolean = false,

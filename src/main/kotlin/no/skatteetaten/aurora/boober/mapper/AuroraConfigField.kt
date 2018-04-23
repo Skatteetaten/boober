@@ -6,6 +6,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.mapper.v1.convertValueToString
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.Database
+import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -23,31 +24,26 @@ data class AuroraConfigField(val handler: AuroraConfigFieldHandler, val source: 
             }
 }
 
-inline fun <reified T> AuroraConfigField.getNullableValue(): T? {
+inline fun <reified T> AuroraConfigField.getNullableValue(replacer: StringSubstitutor): T? = this.value(replacer) as T?
 
-    if (this.source == null) {
-        return this.handler.defaultValue as T
+
+inline fun <reified T> AuroraConfigField.value(replacer: StringSubstitutor): T {
+
+    val result = if (this.source == null) {
+        this.handler.defaultValue as T
+    } else {
+        jacksonObjectMapper().convertValue(this.value, T::class.java)
     }
-
-    val value = this.value
-
-    return jacksonObjectMapper().convertValue(value, T::class.java)
+    if (result is String) {
+        return replacer.replace(result as String) as T
+    }
+    return result
 }
 
-inline fun <reified T> AuroraConfigField.value(): T {
+class AuroraConfigFields(val fields: Map<String, AuroraConfigField>, val placeholders: Map<String, String> = emptyMap()) {
 
-    if (this.source == null) {
-        return this.handler.defaultValue as T
-    }
 
-    val value = this.source.asJsonNode.at(this.handler.path)
-
-    return jacksonObjectMapper().convertValue(value, T::class.java)
-
-}
-
-class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
-
+    val replacer = StringSubstitutor(placeholders, "@", "@")
 
     fun getConfigEnv(configExtractors: List<AuroraConfigFieldHandler>): Map<String, String> {
         val env = configExtractors.filter { it.name.count { it == '/' } == 1 }.map {
@@ -114,7 +110,9 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         return false
     }
 
-    inline fun <reified T> extract(name: String): T = fields[name]!!.value()
+
+    inline fun <reified T> extract(name: String): T = fields[name]!!.value(replacer)
+
 
     /**
      * Extracts a config field declared either as a delimited string (ie. "value1, value2") or as a JSON array
@@ -125,22 +123,22 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         val valueNode = field.value
         return when {
             valueNode.isTextual -> valueNode.textValue().split(delimiter).toList()
-            valueNode.isArray -> (field.value() as List<Any?>).map { it?.toString() } // Convert any non-string values in the array to string
+            valueNode.isArray -> (field.value(replacer) as List<Any?>).map { it?.toString() } // Convert any non-string values in the array to string
             else -> emptyList()
         }.filter { !it.isNullOrBlank() }
                 .mapNotNull { it?.trim() }
                 .toSet()
     }
 
-    inline fun <reified T> extractOrNull(name: String): T? = fields[name]!!.getNullableValue()
+    inline fun <reified T> extractOrNull(name: String): T? = fields[name]!!.getNullableValue(replacer)
 
-    inline fun <reified T> extractIfExistsOrNull(name: String): T? = fields[name]?.getNullableValue()
+    inline fun <reified T> extractIfExistsOrNull(name: String): T? = fields[name]?.getNullableValue(replacer)
 
     companion object {
 
         val logger: Logger = LoggerFactory.getLogger(AuroraConfigFields::class.java)
 
-        fun create(handlers: Set<AuroraConfigFieldHandler>, files: List<AuroraConfigFile>): AuroraConfigFields {
+        fun create(handlers: Set<AuroraConfigFieldHandler>, files: List<AuroraConfigFile>, placeholders: Map<String, String> = emptyMap()): AuroraConfigFields {
             val fields: Map<String, AuroraConfigField> = handlers.map { handler ->
                 val matches = files.reversed().mapNotNull {
                     logger.trace("Check if  ${handler.path} exist in file  ${it.contents}")
@@ -158,7 +156,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
             }.associate { it.handler.name to it }
 
-            return AuroraConfigFields(fields)
+            return AuroraConfigFields(fields, placeholders)
         }
 
     }

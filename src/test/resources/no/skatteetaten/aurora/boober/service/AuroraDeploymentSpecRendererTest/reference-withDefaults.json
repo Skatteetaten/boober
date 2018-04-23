@@ -15,6 +15,10 @@
     "source": "about.json",
     "value": "aos"
   },
+  "segment": {
+    "source": "about.json",
+    "value": "aurora"
+  },
   "cluster": {
     "source": "utv/about.json",
     "value": "utv"
@@ -154,21 +158,9 @@
     "value": true
   },
   "routeDefaults": {
-    "name": {
+    "host": {
       "source": "default",
-      "value": "reference"
-    },
-    "affiliation": {
-      "source": "default",
-      "value": "aos"
-    },
-    "env": {
-      "source": "default",
-      "value": "utv"
-    },
-    "separator": {
-      "source": "default",
-      "value": "-"
+      "value": "@name@-@affiliation@-@env@"
     }
   }
 }

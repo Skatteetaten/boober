@@ -13,8 +13,6 @@ import no.skatteetaten.aurora.boober.model.AuroraLocalTemplate
 import no.skatteetaten.aurora.boober.model.AuroraRoute
 import no.skatteetaten.aurora.boober.model.AuroraTemplate
 import no.skatteetaten.aurora.boober.model.AuroraVolume
-import no.skatteetaten.aurora.boober.model.Permission
-import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.utils.oneOf
 
 class AuroraDeploymentSpecMapperV1 {
@@ -128,17 +126,6 @@ class AuroraDeploymentSpecMapperV1 {
         return auroraConfigFields.fields.filterValues { it.source != null || it.handler.defaultValue != null }
     }
 
-    private fun extractPermissions(configFields: AuroraConfigFields): Permissions {
 
-        val viewGroups = configFields.extractDelimitedStringOrArrayAsSet("permissions/view", " ")
-        val adminGroups = configFields.extractDelimitedStringOrArrayAsSet("permissions/admin", " ")
-        //if sa present add to admin users.
-        val adminUsers = configFields.extractDelimitedStringOrArrayAsSet("permissions/adminServiceAccount", " ")
-
-        val adminPermission = Permission(adminGroups, adminUsers)
-        val viewPermission = if (viewGroups.isNotEmpty()) Permission(viewGroups) else null
-
-        return Permissions(admin = adminPermission, view = viewPermission)
-    }
 }
 
