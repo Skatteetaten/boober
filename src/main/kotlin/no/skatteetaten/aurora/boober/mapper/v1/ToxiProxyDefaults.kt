@@ -8,17 +8,13 @@ data class ToxiProxyConfig(val name: String, val listen: String, val upstream: S
 
 // TODO Sjekke korrekt syntax for konstanter i Kotlin
 
-class ToxiProxyDefaults {
-    companion object {
-        val NAME = "toxiproxy"
-        val LISTEN_PORT = 8090
-        val UPSTREAM_PORT = 8080
-        val ADMIN_PORT = 8474
-        val READINESS_PROBE = Probe(port = 8090, delay = 10, timeout = 1)
-        val LIVENESS_PROBE = null
-        val RESOURCE_LIMIT = AuroraDeploymentConfigResource(cpu = "1", memory = "256Mi")
-        val RESOURCE_REQUEST = AuroraDeploymentConfigResource(cpu = "100m", memory = "128Mi")
-    }
+object ToxiProxyDefaults {
+
+    val NAME = "toxiproxy"
+    val READINESS_PROBE = Probe(port = PortNumbers.TOXIPROXY_HTTP_PORT, delay = 10, timeout = 1)
+    val LIVENESS_PROBE = null
+    val RESOURCE_LIMIT = AuroraDeploymentConfigResource(cpu = "1", memory = "256Mi")
+    val RESOURCE_REQUEST = AuroraDeploymentConfigResource(cpu = "100m", memory = "128Mi")
 }
 
 fun getToxiProxyArgs(): List<String> {
@@ -36,8 +32,8 @@ fun getToxiProxyEnv(): Map<String, String> {
 fun getToxiProxyConfig(): String {
     val config = ToxiProxyConfig(
         name = "app",
-        listen = "0.0.0.0:" + ToxiProxyDefaults.LISTEN_PORT,
-        upstream = "0.0.0.0:" + ToxiProxyDefaults.UPSTREAM_PORT)
+        listen = "0.0.0.0:" + PortNumbers.TOXIPROXY_HTTP_PORT,
+        upstream = "0.0.0.0:" + PortNumbers.INTERNAL_HTTP_PORT)
 
     return jacksonObjectMapper().writeValueAsString(listOf(config))
 }

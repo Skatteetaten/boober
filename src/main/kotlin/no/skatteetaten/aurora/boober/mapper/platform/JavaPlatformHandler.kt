@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.mapper.platform
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.v1.PortNumbers
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.TemplateType.development
@@ -17,7 +18,7 @@ class JavaPlatformHandler : ApplicationPlatformHandler("java") {
         }
         val containers = listOf(AuroraContainer(
             name = "${auroraDeploymentSpec.name}-java",
-            tcpPorts = mapOf("http" to 8080, "management" to 8081, "jolokia" to 8778),
+            tcpPorts = mapOf("http" to PortNumbers.INTERNAL_HTTP_PORT, "management" to PortNumbers.INTERNAL_ADMIN_PORT, "jolokia" to PortNumbers.JOLOKIA_HTTP_PORT),
             readiness = auroraDeploymentSpec.deploy!!.readiness,
             liveness = auroraDeploymentSpec.deploy.liveness,
             limit = auroraDeploymentSpec.deploy.resources.limit,

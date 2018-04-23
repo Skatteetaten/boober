@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.mapper.platform
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.v1.PortNumbers
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.TemplateType.development
@@ -21,7 +22,7 @@ class WebPlatformHandler : ApplicationPlatformHandler("web") {
                 AuroraContainer(
                         name = "${auroraDeploymentSpec.name}-node",
                         args = listOf("/u01/bin/run_node"),
-                        tcpPorts = mapOf("http" to 9090, "management" to 8081),
+                        tcpPorts = mapOf("http" to PortNumbers.NODE_PORT, "management" to PortNumbers.INTERNAL_ADMIN_PORT),
                         readiness = auroraDeploymentSpec.deploy!!.readiness,
                         liveness = auroraDeploymentSpec.deploy.liveness,
                         limit = auroraDeploymentSpec.deploy.resources.limit,
@@ -32,7 +33,7 @@ class WebPlatformHandler : ApplicationPlatformHandler("web") {
                 AuroraContainer(
                         name = "${auroraDeploymentSpec.name}-nginx",
                         args = listOf("/u01/bin/run_nginx"),
-                        tcpPorts = mapOf("http" to 8080),
+                        tcpPorts = mapOf("http" to PortNumbers.INTERNAL_HTTP_PORT),
                         readiness = auroraDeploymentSpec.deploy.readiness,
                         liveness = auroraDeploymentSpec.deploy.liveness,
                         limit = auroraDeploymentSpec.deploy.resources.limit,

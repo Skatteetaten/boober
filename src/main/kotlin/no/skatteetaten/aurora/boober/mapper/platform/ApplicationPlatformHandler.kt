@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.mapper.platform
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.v1.PortNumbers
 import no.skatteetaten.aurora.boober.mapper.v1.ToxiProxyDefaults
 import no.skatteetaten.aurora.boober.mapper.v1.getToxiProxyArgs
 import no.skatteetaten.aurora.boober.mapper.v1.getToxiProxyEnv
@@ -120,7 +121,7 @@ abstract class ApplicationPlatformHandler(val name:String) {
         return auroraDeploymentSpec?.deploy?.toxiProxy?.let {
             AuroraContainer(
                 name = "${auroraDeploymentSpec.name}-toxiproxy",
-                tcpPorts = mapOf("http" to ToxiProxyDefaults.LISTEN_PORT, "management" to ToxiProxyDefaults.ADMIN_PORT),
+                tcpPorts = mapOf("http" to PortNumbers.TOXIPROXY_HTTP_PORT, "management" to PortNumbers.TOXIPROXY_ADMIN_PORT),
                 readiness = ToxiProxyDefaults.READINESS_PROBE,
                 liveness = ToxiProxyDefaults.LIVENESS_PROBE,
                 limit = ToxiProxyDefaults.RESOURCE_LIMIT,

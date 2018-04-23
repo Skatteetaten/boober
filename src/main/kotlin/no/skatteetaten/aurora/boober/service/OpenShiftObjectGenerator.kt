@@ -25,6 +25,7 @@ import com.fkorotkov.openshift.to
 import io.fabric8.kubernetes.api.model.IntOrString
 import no.skatteetaten.aurora.boober.Boober
 import no.skatteetaten.aurora.boober.mapper.platform.AuroraServicePort
+import no.skatteetaten.aurora.boober.mapper.v1.PortNumbers
 import no.skatteetaten.aurora.boober.mapper.v1.ToxiProxyDefaults
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -183,9 +184,9 @@ class OpenShiftObjectGenerator(
             } ?: mapOf("prometheus.io/scrape" to "false")
 
             val auroraServicePorts = auroraDeploymentSpec.deploy.toxiProxy?.let {
-                listOf(AuroraServicePort(name = "http", port = 80, targetPort = ToxiProxyDefaults.LISTEN_PORT),
-                    AuroraServicePort(name = "management", port = ToxiProxyDefaults.ADMIN_PORT, targetPort = ToxiProxyDefaults.ADMIN_PORT))
-            } ?: listOf(AuroraServicePort("http", port = 80, targetPort = 8080))
+                listOf(AuroraServicePort(name = "http", port = PortNumbers.HTTP_PORT, targetPort = PortNumbers.TOXIPROXY_HTTP_PORT),
+                    AuroraServicePort(name = "management", port = PortNumbers.TOXIPROXY_ADMIN_PORT, targetPort = PortNumbers.TOXIPROXY_ADMIN_PORT))
+            } ?: listOf(AuroraServicePort("http", port = PortNumbers.HTTP_PORT, targetPort = PortNumbers.INTERNAL_HTTP_PORT))
 
             val servicePorts = auroraServicePorts.map {
                 servicePort {

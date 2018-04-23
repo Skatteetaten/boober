@@ -50,10 +50,10 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
             AuroraConfigFieldHandler("database"),
             AuroraConfigFieldHandler("prometheus", defaultValue = true),
             AuroraConfigFieldHandler("prometheus/path", defaultValue = "/prometheus"),
-            AuroraConfigFieldHandler("prometheus/port", defaultValue = 8081),
+            AuroraConfigFieldHandler("prometheus/port", defaultValue = PortNumbers.INTERNAL_ADMIN_PORT),
             AuroraConfigFieldHandler("management", defaultValue = true),
             AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
-            AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
+            AuroraConfigFieldHandler("management/port", defaultValue = PortNumbers.INTERNAL_ADMIN_PORT),
             AuroraConfigFieldHandler("deployStrategy/type", defaultValue = "rolling", validator = { it.oneOf(listOf("recreate", "rolling")) }),
             AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = 180)
     )
