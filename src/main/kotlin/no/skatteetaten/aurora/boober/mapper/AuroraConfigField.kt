@@ -10,36 +10,36 @@ import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-data class AuroraConfigField(val handler: AuroraConfigFieldHandler,
-                             val replacer: StringSubstitutor,
-                             val source: AuroraConfigFile? = null) {
-    val value: JsonNode
+class AuroraConfigField(val handler: AuroraConfigFieldHandler,
+                        val replacer: StringSubstitutor,
+                        val source: AuroraConfigFile? = null) {
+    val valueNode: JsonNode
         get() = source?.asJsonNode?.at(handler.path) ?: MissingNode.getInstance()
-    val valueOrDefault: JsonNode?
+    val valueNodeOrDefault: JsonNode?
         get() =
-            value.let {
+            valueNode.let {
                 if (it.isMissingNode) {
                     jacksonObjectMapper().convertValue(handler.defaultValue, JsonNode::class.java)
                 } else {
                     it
                 }
             }
-}
 
-inline fun <reified T> AuroraConfigField.getNullableValue(): T? = this.value() as T?
+    inline fun <reified T> getNullableValue(): T? = this.value() as T?
 
 
-inline fun <reified T> AuroraConfigField.value(): T {
+    inline fun <reified T> value(): T {
 
-    val result = if (this.source == null) {
-        this.handler.defaultValue as T
-    } else {
-        jacksonObjectMapper().convertValue(this.value, T::class.java)
+        val result = if (this.source == null) {
+            this.handler.defaultValue as T
+        } else {
+            jacksonObjectMapper().convertValue(this.valueNode, T::class.java)
+        }
+        if (result is String) {
+            return replacer.replace(result as String) as T
+        }
+        return result
     }
-    if (result is String) {
-        return replacer.replace(result as String) as T
-    }
-    return result
 }
 
 class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
@@ -120,7 +120,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
      */
     fun extractDelimitedStringOrArrayAsSet(name: String, delimiter: String = ","): Set<String> {
         val field = fields[name]!!
-        val valueNode = field.value
+        val valueNode = field.valueNode
         return when {
             valueNode.isTextual -> valueNode.textValue().split(delimiter).toList()
             valueNode.isArray -> (field.value() as List<Any?>).map { it?.toString() } // Convert any non-string values in the array to string

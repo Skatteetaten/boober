@@ -22,7 +22,7 @@ class ConfigFieldErrorDetail(type: ErrorType, message: String, val field: Aurora
     companion object {
         fun illegal(message: String, auroraConfigField: AuroraConfigField? = null): ConfigFieldErrorDetail {
             val fieldError = auroraConfigField?.let {
-                AuroraConfigFieldError(it.handler.path, it.source?.name, it.valueOrDefault)
+                AuroraConfigFieldError(it.handler.path, it.source?.name, it.valueNodeOrDefault)
             }
             return ConfigFieldErrorDetail(ErrorType.ILLEGAL, message, fieldError)
         }

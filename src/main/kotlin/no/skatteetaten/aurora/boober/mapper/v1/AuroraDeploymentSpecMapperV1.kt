@@ -71,7 +71,7 @@ class AuroraDeploymentSpecMapperV1 {
                 .filter { it.key.split("/").size == 1 }
                 .forEach {
                     val key = it.key.split("/")[0]
-                    val shouldIncludeSubKeys = it.value.valueOrDefault?.let {
+                    val shouldIncludeSubKeys = it.value.valueNodeOrDefault?.let {
                         !it.isBoolean || it.booleanValue()
                     } ?: false
                     includeSubKeys.put(key, shouldIncludeSubKeys)
@@ -90,7 +90,7 @@ class AuroraDeploymentSpecMapperV1 {
             val configField = entry.value
             val configPath = entry.key
 
-            if (configField.value is ObjectNode) {
+            if (configField.valueNode is ObjectNode) {
                 return@forEach
             }
 
@@ -104,7 +104,7 @@ class AuroraDeploymentSpecMapperV1 {
                 if (index == keys.lastIndex) {
                     next[key] = mutableMapOf(
                             "source" to (configField.source?.configName ?: configField.handler.defaultSource),
-                            "value" to configField.valueOrDefault
+                            "value" to configField.valueNodeOrDefault
                     )
                 } else {
                     if (next[key] == null) {
