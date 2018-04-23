@@ -3,10 +3,12 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
+import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecConfigFieldValidator.Companion.namePattern
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
+import no.skatteetaten.aurora.boober.model.AuroraDeployHeader
 import no.skatteetaten.aurora.boober.model.Permission
 import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.TemplateType
@@ -59,9 +61,15 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
                 it?.startsWith("about-", "envFile must start with about")
             }))
 
-    fun createEnvironment(auroraConfigFields: AuroraConfigFields): AuroraDeployEnvironment {
 
-        return AuroraDeployEnvironment(
+    fun createHeader(auroraConfigFields: AuroraConfigFields, applicationHandler: ApplicationPlatformHandler): AuroraDeployHeader {
+        val name = auroraConfigFields.extract<String>("name")
+        val cluster = auroraConfigFields.extract<String>("cluster")
+        val type = auroraConfigFields.extract<TemplateType>("type")
+
+        val segment = auroraConfigFields.extractIfExistsOrNull<String>("segment")
+
+        val env = AuroraDeployEnvironment(
                 affiliation = auroraConfigFields.extract("affiliation"),
                 envName = auroraConfigFields.extractIfExistsOrNull("env/name")
                         ?: auroraConfigFields.extract("envName"),
@@ -69,9 +77,11 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
                         ?.let { StringToDurationConverter().convert(it) },
                 permissions = extractPermissions(auroraConfigFields)
         )
+
+        return AuroraDeployHeader(env, type, applicationHandler, name, cluster, segment)
     }
 
-    private fun extractPermissions(configFields: AuroraConfigFields): Permissions {
+    fun extractPermissions(configFields: AuroraConfigFields): Permissions {
 
         val viewGroups = configFields.extractDelimitedStringOrArrayAsSet("permissions/view", " ")
         val adminGroups = configFields.extractDelimitedStringOrArrayAsSet("permissions/admin", " ")

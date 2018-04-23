@@ -1,12 +1,36 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
+import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import java.time.Duration
 
 enum class TemplateType {
     deploy, development, localTemplate, template, build
+}
+
+data class AuroraDeployHeader(
+        val env: AuroraDeployEnvironment,
+        val type: TemplateType,
+        val applicationPlatform: ApplicationPlatformHandler,
+        val name: String,
+        val cluster: String,
+        val segment: String?
+) {
+    fun extractPlaceHolders(): Map<String, String> {
+        val segmentPair = segment?.let {
+            "segment" to it
+        }
+        val placeholders = mapOf(
+                "name" to name,
+                "env" to env.envName,
+                "affiliation" to env.affiliation,
+                "cluster" to cluster
+        ).addIfNotNull(segmentPair)
+        return placeholders
+    }
 }
 
 data class AuroraDeployEnvironment(
@@ -126,8 +150,8 @@ data class Mount(
         val content: Map<String, String>? = null,
         val secretVaultName: String? = null
 ) {
-    fun getNamespacedVolumeName(appName:String): String  {
-        val name= if(exist) {
+    fun getNamespacedVolumeName(appName: String): String {
+        val name = if (exist) {
             this.volumeName
         } else {
             this.volumeName.ensureStartWith(appName, "-")
