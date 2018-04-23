@@ -54,4 +54,31 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObje
       ]
       expectedEnvs.every { envName, envValue -> container.env.find { it.name == envName && it.value == envValue } }
   }
+
+  def "toxiproxy container must be created if toxiproxy is enabled in deployment spec for java"() {
+
+      given: "default deployment spec with toxiproxy version 2.1.3 enabled"
+          AuroraDeploymentSpec deploymentSpec = specWithToxiproxy()
+          def provisioningResult = provisiongResult(deploymentSpec)
+
+      when: "dc has been created"
+          def dc = objectGenerator.generateDeploymentConfig("deploy-id", deploymentSpec, provisioningResult)
+          dc = new JsonSlurper().parseText(dc.toString()) // convert to groovy for easier navigation and validation
+
+      then: "the dc must contain a valid toxiproxy container"
+          def containers = dc.spec.template.spec.containers
+          def toxiproxyc = containers[containers.size-1]
+
+          toxiproxyc.image == "shopify/toxiproxy:2.1.3"
+          toxiproxyc.args  == [ "-config", "/u01/config/config.json" ]
+          toxiproxyc.volumeMounts.find { it == ["mountPath": "/u01/config", "name": "toxiproxy-volume"] }
+    }
+
+  def provisiongResult(AuroraDeploymentSpec deploymentSpec) {
+      return new ProvisioningResult(
+          new SchemaProvisionResults([new SchemaProvisionResult(
+              createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec)[0],
+              new DbhSchema("", "", new DatabaseInstance(1512, ""), "", [:], []), "")
+          ]), null)
+  }
 }

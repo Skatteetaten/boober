@@ -47,5 +47,6 @@
   debug:               false                    // default
   pause:               false                    // default
   alarm:               true                     // default
+  toxiproxy:           false                    // default
   route:               true                     // reference.json
 }

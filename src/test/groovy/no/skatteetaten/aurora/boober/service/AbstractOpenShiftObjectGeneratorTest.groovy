@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
+import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
+
 import java.time.Instant
 
 import no.skatteetaten.aurora.boober.Configuration
@@ -30,4 +32,14 @@ class AbstractOpenShiftObjectGeneratorTest extends AbstractAuroraDeploymentSpecT
         mapper,
         templateProcessor, openShiftResourceClient)
   }
+
+  def specWithToxiproxy() {
+    return createDeploymentSpec([
+        "about.json"        : DEFAULT_ABOUT,
+        "utv/about.json"    : DEFAULT_UTV_ABOUT,
+        "reference.json"    : REF_APP_JSON,
+        "utv/reference.json": '''{ "toxiproxy" : { "version" : "2.1.3" } }'''
+    ], aid("utv", "reference"))
+  }
+
 }
