@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.skatteetaten.aurora.boober.mapper.v1.ToxiProxyDefaults.TOXIPROXY_REPOSITORY
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
 import no.skatteetaten.aurora.boober.model.Probe
 
@@ -10,23 +11,21 @@ data class ToxiProxyConfig(val name: String, val listen: String, val upstream: S
 
 object ToxiProxyDefaults {
 
-    val NAME = "toxiproxy"
-    val READINESS_PROBE = Probe(port = PortNumbers.TOXIPROXY_HTTP_PORT, delay = 10, timeout = 1)
+    const val NAME = "toxiproxy"
+    const val TOXIPROXY_REPOSITORY = "shopify/toxiproxy"
+
     val LIVENESS_PROBE = null
+    val READINESS_PROBE = Probe(port = PortNumbers.TOXIPROXY_HTTP_PORT, delay = 10, timeout = 1)
+
     val RESOURCE_LIMIT = AuroraDeploymentConfigResource(cpu = "1", memory = "256Mi")
     val RESOURCE_REQUEST = AuroraDeploymentConfigResource(cpu = "100m", memory = "128Mi")
-}
 
-fun getToxiProxyArgs(): List<String> {
-    return listOf("-config", "/u01/config/config.json")
+    val ARGS: List<String> = listOf("-config", "/u01/config/config.json")
+    val ENV: Map<String, String> = emptyMap()
 }
 
 fun getToxiProxyImage(version: String): String {
-    return "shopify/toxiproxy:" + version
-}
-
-fun getToxiProxyEnv(): Map<String, String> {
-    return emptyMap()
+    return TOXIPROXY_REPOSITORY + ":" + version
 }
 
 fun getToxiProxyConfig(): String {

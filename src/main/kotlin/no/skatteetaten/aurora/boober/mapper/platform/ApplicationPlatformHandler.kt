@@ -5,8 +5,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.v1.PortNumbers
 import no.skatteetaten.aurora.boober.mapper.v1.ToxiProxyDefaults
-import no.skatteetaten.aurora.boober.mapper.v1.getToxiProxyArgs
-import no.skatteetaten.aurora.boober.mapper.v1.getToxiProxyEnv
 import no.skatteetaten.aurora.boober.mapper.v1.getToxiProxyImage
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeployStrategy
@@ -126,10 +124,10 @@ abstract class ApplicationPlatformHandler(val name:String) {
                 liveness = ToxiProxyDefaults.LIVENESS_PROBE,
                 limit = ToxiProxyDefaults.RESOURCE_LIMIT,
                 request = ToxiProxyDefaults.RESOURCE_REQUEST,
-                env = getToxiProxyEnv(),
+                env = ToxiProxyDefaults.ENV,
                 mounts = mounts?.filter { it.targetContainer == ToxiProxyDefaults.NAME },
                 shouldHaveImageChange = false,
-                args = getToxiProxyArgs(),
+                args = ToxiProxyDefaults.ARGS,
                 image = getToxiProxyImage(it.version)
             )
         } ?: null
