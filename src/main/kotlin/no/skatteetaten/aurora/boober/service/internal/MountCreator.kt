@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service.internal
 
+import no.skatteetaten.aurora.boober.mapper.v1.ToxiProxyDefaults
 import no.skatteetaten.aurora.boober.mapper.v1.getToxiProxyConfig
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Mount
@@ -76,17 +77,16 @@ private fun createDatabaseMounts(deploymentSpec: AuroraDeploymentSpec,
 }
 
 private fun createToxiProxyMounts(deploymentSpec: AuroraDeploymentSpec): List<Mount> {
-    val sidecar = "toxiproxy"
 
     return deploymentSpec.deploy?.toxiProxy?.let {
         listOf(Mount(
             path = "/u01/config",
             type = MountType.ConfigMap,
-            mountName = "${sidecar}-volume",
-            volumeName = "${sidecar}-config",
+            mountName = "${ToxiProxyDefaults.NAME}-volume",
+            volumeName = "${ToxiProxyDefaults.NAME}-config",
             exist = false,
             content = mapOf("config.json" to getToxiProxyConfig()),
-            targetContainer = sidecar))
+            targetContainer = ToxiProxyDefaults.NAME))
     }
         .orEmpty()
 }
