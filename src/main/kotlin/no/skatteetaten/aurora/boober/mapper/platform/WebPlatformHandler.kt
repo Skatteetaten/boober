@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class WebPlatformHandler : ApplicationPlatformHandler("web") {
-    override fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?): AuroraDeployment {
+    override fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?, sidecarContainers: List<AuroraContainer>?): AuroraDeployment {
 
         val tag = when (auroraDeploymentSpec.type) {
             development -> "latest"
@@ -41,7 +41,7 @@ class WebPlatformHandler : ApplicationPlatformHandler("web") {
                         env = createEnvVars(mounts, auroraDeploymentSpec),
                         mounts = mounts
                 )
-        ).addIfNotNull(createToxiProxyContainer(auroraDeploymentSpec, mounts))
+        ).addIfNotNull(sidecarContainers)
 
         return AuroraDeployment(
                 name = auroraDeploymentSpec.name,

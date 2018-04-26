@@ -154,7 +154,9 @@ class OpenShiftObjectGenerator(
         val applicationPlatformHandler = Boober.APPLICATION_PLATFORM_HANDLERS[auroraDeploymentSpec.applicationPlatform]
             ?: throw IllegalArgumentException("ApplicationPlatformHandler ${auroraDeploymentSpec.applicationPlatform} is not present")
 
-        val deployment = applicationPlatformHandler.handleAuroraDeployment(auroraDeploymentSpec, labels, mounts)
+        val sidecarContainers = applicationPlatformHandler.createSidecarContainers(auroraDeploymentSpec, mounts)
+
+        val deployment = applicationPlatformHandler.handleAuroraDeployment(auroraDeploymentSpec, labels, mounts, sidecarContainers)
 
         val containers = deployment.containers.map { ContainerGenerator.create(it) }
 

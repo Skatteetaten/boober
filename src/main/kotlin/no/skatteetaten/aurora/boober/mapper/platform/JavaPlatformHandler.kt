@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class JavaPlatformHandler : ApplicationPlatformHandler("java") {
-    override fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?): AuroraDeployment {
+    override fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?, sidecarContainers: List<AuroraContainer>?): AuroraDeployment {
 
         val tag = when (auroraDeploymentSpec.type) {
             development -> "latest"
@@ -26,7 +26,7 @@ class JavaPlatformHandler : ApplicationPlatformHandler("java") {
             env = createEnvVars(mounts, auroraDeploymentSpec),
             mounts = mounts?.filter { it.targetContainer == null }
         ))
-            .addIfNotNull(createToxiProxyContainer(auroraDeploymentSpec, mounts))
+            .addIfNotNull(sidecarContainers)
 
         return AuroraDeployment(
             name = auroraDeploymentSpec.name,

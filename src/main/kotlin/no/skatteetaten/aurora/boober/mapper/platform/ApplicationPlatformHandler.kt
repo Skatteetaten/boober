@@ -22,7 +22,7 @@ import java.time.Duration
 abstract class ApplicationPlatformHandler(val name:String) {
     open fun handlers(handlers: Set<AuroraConfigFieldHandler>): Set<AuroraConfigFieldHandler> = handlers
 
-    abstract fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?): AuroraDeployment
+    abstract fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?, sidecarContainers: List<AuroraContainer>?): AuroraDeployment
 
     fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpec: AuroraDeploymentSpec): Map<String, String> {
 
@@ -114,10 +114,10 @@ abstract class ApplicationPlatformHandler(val name:String) {
         return OpenShiftObjectLabelService.toOpenShiftLabelNameSafeMap(allLabels)
     }
 
-    fun createToxiProxyContainer(auroraDeploymentSpec: AuroraDeploymentSpec, mounts: List<Mount>?): AuroraContainer? {
+    fun createSidecarContainers(auroraDeploymentSpec: AuroraDeploymentSpec, mounts: List<Mount>?): List<AuroraContainer>? {
 
         return auroraDeploymentSpec?.deploy?.toxiProxy?.let {
-            AuroraContainer(
+            listOf(AuroraContainer(
                 name = "${auroraDeploymentSpec.name}-toxiproxy",
                 tcpPorts = mapOf("http" to PortNumbers.TOXIPROXY_HTTP_PORT, "management" to PortNumbers.TOXIPROXY_ADMIN_PORT),
                 readiness = ToxiProxyDefaults.READINESS_PROBE,
@@ -129,7 +129,7 @@ abstract class ApplicationPlatformHandler(val name:String) {
                 shouldHaveImageChange = false,
                 args = ToxiProxyDefaults.ARGS,
                 image = getToxiProxyImage(it.version)
-            )
+            ))
         } ?: null
     }
 
