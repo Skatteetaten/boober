@@ -24,7 +24,7 @@ class JavaPlatformHandler : ApplicationPlatformHandler("java") {
             limit = auroraDeploymentSpec.deploy.resources.limit,
             request = auroraDeploymentSpec.deploy.resources.request,
             env = createEnvVars(mounts, auroraDeploymentSpec),
-            mounts = mounts?.filter { it.targetContainer.equals("main") }
+            mounts = mounts?.filter { it.targetContainer == null }
         ))
             .addIfNotNull(createToxiProxyContainer(auroraDeploymentSpec, mounts))
 

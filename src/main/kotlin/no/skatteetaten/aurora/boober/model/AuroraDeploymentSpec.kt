@@ -140,7 +140,7 @@ data class Mount(
         val exist: Boolean,
         val content: Map<String, String>? = null,
         val secretVaultName: String? = null,
-        val targetContainer: String = "main"
+        val targetContainer: String? = null
 ) {
     fun getNamespacedVolumeName(appName:String): String  {
         val name= if(exist) {

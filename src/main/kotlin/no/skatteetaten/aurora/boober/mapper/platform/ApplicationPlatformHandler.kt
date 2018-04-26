@@ -26,7 +26,7 @@ abstract class ApplicationPlatformHandler(val name:String) {
 
     fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpec: AuroraDeploymentSpec): Map<String, String> {
 
-        val mountEnv = mounts?.filter { it.targetContainer == "main" }?.map {
+        val mountEnv = mounts?.filter { it.targetContainer == null }?.map {
             "VOLUME_${it.mountName.toUpperCase().replace("-", "_")}" to it.path
         }?.toMap() ?: mapOf()
 
