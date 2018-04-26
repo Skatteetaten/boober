@@ -51,7 +51,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
         AuroraConfigFieldHandler("prometheus/port", defaultValue = PortNumbers.INTERNAL_ADMIN_PORT),
         AuroraConfigFieldHandler("management", defaultValue = true),
         AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
-        AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
+        AuroraConfigFieldHandler("management/port", defaultValue = PortNumbers.INTERNAL_ADMIN_PORT.toString()),
         AuroraConfigFieldHandler("certificate/commonName"),
         AuroraConfigFieldHandler("certificate", defaultValue = false),
         AuroraConfigFieldHandler("readiness", defaultValue = true),
