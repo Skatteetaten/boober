@@ -33,7 +33,7 @@ class AbstractOpenShiftObjectGeneratorTest extends AbstractAuroraDeploymentSpecT
         templateProcessor, openShiftResourceClient)
   }
 
-  def specWithToxiproxy() {
+  def specJavaWithToxiproxy() {
     return createDeploymentSpec([
         "about.json"        : DEFAULT_ABOUT,
         "utv/about.json"    : DEFAULT_UTV_ABOUT,
@@ -42,4 +42,12 @@ class AbstractOpenShiftObjectGeneratorTest extends AbstractAuroraDeploymentSpecT
     ], aid("utv", "reference"))
   }
 
+  def specWebWithToxiproxy() {
+    return createDeploymentSpec([
+        "about.json"        : DEFAULT_ABOUT,
+        "utv/about.json"    : DEFAULT_UTV_ABOUT,
+        "webleveranse.json"    : WEB_LEVERANSE,
+        "utv/webleveranse.json": '''{ "type": "deploy", "version" : "1.0.8", "database" : { "REFerence" : "auto" }, "toxiproxy" : { "version" : "2.1.3" } }'''
+    ], aid("utv", "webleveranse"))
+  }
 }

@@ -1,7 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
-
 import groovy.json.JsonSlurper
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 
@@ -12,7 +10,7 @@ class OpenShiftObjectGeneratorServiceTest extends AbstractOpenShiftObjectGenerat
   def "toxiproxy services must be created if toxiproxy is enabled in deployment spec for java"() {
 
     given: "default deployment spec with toxiproxy version 2.1.3 enabled"
-      AuroraDeploymentSpec deploymentSpec = specWithToxiproxy()
+      AuroraDeploymentSpec deploymentSpec = specJavaWithToxiproxy()
       Map<String, String> serviceLabels = [:]
 
     when: "service object has been created"
