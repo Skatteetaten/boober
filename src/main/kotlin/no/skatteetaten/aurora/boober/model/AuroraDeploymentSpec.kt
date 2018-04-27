@@ -116,13 +116,16 @@ data class AuroraDeployStrategy(
 data class AuroraLocalTemplate(
         val parameters: Map<String, String>?,
         val templateJson: JsonNode,
-        val version: String? = null
+        val version: String? = null,
+        val replicas: Int? = null
 )
 
 data class AuroraTemplate(
         val parameters: Map<String, String>?,
         val template: String,
-        val version: String? = null
+        val version: String? = null,
+        val replicas: Int? = null
+
 )
 
 

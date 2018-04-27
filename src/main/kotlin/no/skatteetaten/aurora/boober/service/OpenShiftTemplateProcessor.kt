@@ -17,7 +17,7 @@ class OpenShiftTemplateProcessor(
         val mapper: ObjectMapper) {
 
 
-    fun generateObjects(template: ObjectNode, parameters: Map<String, String>?, aac: AuroraDeploymentSpec, version: String?): List<JsonNode> {
+    fun generateObjects(template: ObjectNode, parameters: Map<String, String>?, aac: AuroraDeploymentSpec, version: String?, replicas: Int?): List<JsonNode> {
 
         val adcParameters = parameters ?: emptyMap()
         val adcParameterKeys = adcParameters.keys
@@ -50,7 +50,13 @@ class OpenShiftTemplateProcessor(
 
         labels.put("updatedBy", userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"))
 
-
+        if (replicas != null) {
+            template["parameters"]
+                    .filter { it["name"].asText() == "REPLICAS" }
+                    .map {
+                        (it as ObjectNode).put("value", replicas)
+                    }
+        }
         if (version != null) {
             template["parameters"]
                     .filter { it["name"].asText() == "VERSION" }
