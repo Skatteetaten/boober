@@ -30,10 +30,8 @@ class OpenShiftTemplateProcessor(
                     .filter { adcParameterKeys.contains(it["name"].textValue()) }
                     .forEach {
                         val node = it as ObjectNode
-
                         node.put("value", adcParameters[it["name"].textValue()] as String)
                     }
-
         }
 
         if (!template.has("labels")) {
