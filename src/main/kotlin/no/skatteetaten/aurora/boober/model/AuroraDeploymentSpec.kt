@@ -107,10 +107,7 @@ data class AuroraDeploy(
         val deployStrategy: AuroraDeployStrategy,
         val env: Map<String, String>,
         val ttl: Duration?
-) {
-    val dockerImage: String
-        get() = "${dockerImagePath}:${dockerTag}"
-}
+)
 
 data class AuroraDeployStrategy(
         val type: String, val timeout: Int
@@ -118,12 +115,14 @@ data class AuroraDeployStrategy(
 
 data class AuroraLocalTemplate(
         val parameters: Map<String, String>?,
-        val templateJson: JsonNode
+        val templateJson: JsonNode,
+        val version: String? = null
 )
 
 data class AuroraTemplate(
         val parameters: Map<String, String>?,
-        val template: String
+        val template: String,
+        val version: String? = null
 )
 
 

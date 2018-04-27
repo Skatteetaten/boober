@@ -6,6 +6,7 @@
       "app": "aos-simple",
       "updatedBy": "hero",
       "affiliation": "aos",
+      "updateInBoober": "true",
       "booberDeployId": "123",
       "releasedVersion": "1.0.3-SNAPSHOT"
     },

@@ -29,7 +29,7 @@
           {
             "from": {
               "kind": "DockerImage",
-              "name": "docker-registry.aurora.sits.no:5000/aurora/atomhopper:1.3.0"
+              "name": "docker-registry.aurora.sits.no:5000/aurora/atomhopper:${VERSION}"
             },
             "importPolicy": {
               "scheduled": true
@@ -289,6 +289,11 @@
     {
       "name": "AFFILIATION",
       "description": "Hvilken tilhørighet atomhopperen har"
+    },
+    {
+      "name": "VERSION",
+      "description": "What version to run",
+      "value": "1.3.0"
     }
   ],
   "labels": {

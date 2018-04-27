@@ -19,7 +19,8 @@ class AuroraLocalTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>, 
                 } else {
                     null
                 }
-            })
+            }),
+            AuroraConfigFieldHandler("version")
     )
 
 
@@ -35,7 +36,8 @@ class AuroraLocalTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>, 
     fun localTemplate(auroraConfigFields: AuroraConfigFields): AuroraLocalTemplate {
         return AuroraLocalTemplate(
                 parameters = auroraConfigFields.getParameters(parameterHandlers),
-                templateJson = extractTemplateJson(auroraConfigFields)
+                templateJson = extractTemplateJson(auroraConfigFields),
+                version = auroraConfigFields.extractIfExistsOrNull("version")
         )
     }
 

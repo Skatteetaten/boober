@@ -11,6 +11,7 @@
       "app": "openshift-referanse-react",
       "updatedBy": "hero",
       "affiliation": "aos",
+      "updateInBoober": "true",
       "booberDeployId": "123",
       "name": "openshift-referanse-react",
       "deployTag": "develop-SNAPSHOT"
@@ -38,6 +39,7 @@
           "app": "openshift-referanse-react",
           "updatedBy": "hero",
           "affiliation": "aos",
+          "updateInBoober": "true",
           "booberDeployId": "123",
           "name": "openshift-referanse-react",
           "deployTag": "develop-SNAPSHOT"

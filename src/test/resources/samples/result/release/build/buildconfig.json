@@ -6,6 +6,7 @@
       "app": "build-dev",
       "updatedBy": "hero",
       "affiliation": "aos",
+      "updateInBoober": "true",
       "booberDeployId": "123"
     },
     "name": "build-dev"

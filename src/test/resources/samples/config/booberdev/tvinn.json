@@ -3,6 +3,7 @@
     "DATABASE": "tvinn"
   },
   "type": "localTemplate",
+  "version": "1",
   "mounts": {
     "tvinn-config": {
       "type": "ConfigMap",

@@ -232,14 +232,14 @@ class OpenShiftObjectGenerator(
 
     fun generateLocalTemplate(auroraDeploymentSpec: AuroraDeploymentSpec): List<JsonNode>? {
         return auroraDeploymentSpec.localTemplate?.let {
-            openShiftTemplateProcessor.generateObjects(it.templateJson as ObjectNode, it.parameters, auroraDeploymentSpec)
+            openShiftTemplateProcessor.generateObjects(it.templateJson as ObjectNode, it.parameters, auroraDeploymentSpec, it.version)
         }
     }
 
     fun generateTemplate(auroraDeploymentSpec: AuroraDeploymentSpec): List<JsonNode>? {
         return auroraDeploymentSpec.template?.let {
             val template = openShiftClient.get("template", "openshift", it.template)?.body as ObjectNode
-            openShiftTemplateProcessor.generateObjects(template, it.parameters, auroraDeploymentSpec)
+            openShiftTemplateProcessor.generateObjects(template, it.parameters, auroraDeploymentSpec, it.version)
         }
     }
 

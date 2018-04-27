@@ -17,10 +17,14 @@ class OpenShiftTemplateProcessor(
         val mapper: ObjectMapper) {
 
 
-    fun generateObjects(template: ObjectNode, parameters: Map<String, String>?, aac: AuroraDeploymentSpec): List<JsonNode> {
+    fun generateObjects(template: ObjectNode, parameters: Map<String, String>?, aac: AuroraDeploymentSpec, version: String?): List<JsonNode> {
 
         val adcParameters = parameters ?: emptyMap()
         val adcParameterKeys = adcParameters.keys
+
+        if (!template.has("labels")) {
+            template.replace("labels", mapper.createObjectNode())
+        }
 
         if (template.has("parameters")) {
             val parameters = template["parameters"]
@@ -30,13 +34,12 @@ class OpenShiftTemplateProcessor(
                     .filter { adcParameterKeys.contains(it["name"].textValue()) }
                     .forEach {
                         val node = it as ObjectNode
+
                         node.put("value", adcParameters[it["name"].textValue()] as String)
                     }
+
         }
 
-        if (!template.has("labels")) {
-            template.replace("labels", mapper.createObjectNode())
-        }
 
         val labels = template["labels"] as ObjectNode
 
@@ -51,12 +54,21 @@ class OpenShiftTemplateProcessor(
         labels.put("updatedBy", userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"))
 
 
+        if (version != null) {
+            template["parameters"]
+                    .filter { it["name"].asText() == "VERSION" }
+                    .map {
+                        (it as ObjectNode).put("value", version)
+                        labels.put("updateInBoober", "true")
+                    }
+        }
+
         val result = openShiftClient.post("processedtemplate", namespace = aac.environment.namespace, payload = template)
 
         return result.body["objects"].asSequence().toList()
     }
 
-    fun validateTemplateParameters(templateJson: JsonNode, parameters: Map<String, String>) : List<String> {
+    fun validateTemplateParameters(templateJson: JsonNode, parameters: Map<String, String>): List<String> {
 
         val templateParameters = templateJson[PARAMETERS_ATTRIBUTE] as ArrayNode
 
