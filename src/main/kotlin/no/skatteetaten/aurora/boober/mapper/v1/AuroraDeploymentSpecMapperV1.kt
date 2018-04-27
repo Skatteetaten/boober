@@ -13,8 +13,6 @@ import no.skatteetaten.aurora.boober.model.AuroraLocalTemplate
 import no.skatteetaten.aurora.boober.model.AuroraRoute
 import no.skatteetaten.aurora.boober.model.AuroraTemplate
 import no.skatteetaten.aurora.boober.model.AuroraVolume
-import no.skatteetaten.aurora.boober.model.Permission
-import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.utils.oneOf
 
 class AuroraDeploymentSpecMapperV1 {
@@ -73,7 +71,7 @@ class AuroraDeploymentSpecMapperV1 {
                 .filter { it.key.split("/").size == 1 }
                 .forEach {
                     val key = it.key.split("/")[0]
-                    val shouldIncludeSubKeys = it.value.valueOrDefault?.let {
+                    val shouldIncludeSubKeys = it.value.valueNodeOrDefault?.let {
                         !it.isBoolean || it.booleanValue()
                     } ?: false
                     includeSubKeys.put(key, shouldIncludeSubKeys)
@@ -92,7 +90,7 @@ class AuroraDeploymentSpecMapperV1 {
             val configField = entry.value
             val configPath = entry.key
 
-            if (configField.value is ObjectNode) {
+            if (configField.valueNode is ObjectNode) {
                 return@forEach
             }
 
@@ -106,7 +104,7 @@ class AuroraDeploymentSpecMapperV1 {
                 if (index == keys.lastIndex) {
                     next[key] = mutableMapOf(
                             "source" to (configField.source?.configName ?: configField.handler.defaultSource),
-                            "value" to configField.valueOrDefault
+                            "value" to configField.valueNodeOrDefault
                     )
                 } else {
                     if (next[key] == null) {
@@ -128,17 +126,6 @@ class AuroraDeploymentSpecMapperV1 {
         return auroraConfigFields.fields.filterValues { it.source != null || it.handler.defaultValue != null }
     }
 
-    private fun extractPermissions(configFields: AuroraConfigFields): Permissions {
 
-        val viewGroups = configFields.extractDelimitedStringOrArrayAsSet("permissions/view", " ")
-        val adminGroups = configFields.extractDelimitedStringOrArrayAsSet("permissions/admin", " ")
-        //if sa present add to admin users.
-        val adminUsers = configFields.extractDelimitedStringOrArrayAsSet("permissions/adminServiceAccount", " ")
-
-        val adminPermission = Permission(adminGroups, adminUsers)
-        val viewPermission = if (viewGroups.isNotEmpty()) Permission(viewGroups) else null
-
-        return Permissions(admin = adminPermission, view = viewPermission)
-    }
 }
 

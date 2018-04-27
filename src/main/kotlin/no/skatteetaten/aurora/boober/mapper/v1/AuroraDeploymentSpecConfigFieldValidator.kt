@@ -36,7 +36,7 @@ class AuroraDeploymentSpecConfigFieldValidator(val applicationId: ApplicationId,
                     ?: false
 
             logger.trace("Validating field=${e.name}")
-            val auroraConfigField: JsonNode? = rawField.valueOrDefault
+            val auroraConfigField: JsonNode? = rawField.valueNodeOrDefault
             logger.trace("value is=${jacksonObjectMapper().writeValueAsString(auroraConfigField)}")
 
             val result = e.validator(auroraConfigField)

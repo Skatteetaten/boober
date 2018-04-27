@@ -11,6 +11,10 @@
     "source": "about.json",
     "value": "aos"
   },
+  "segment": {
+    "source": "about.json",
+    "value": "aurora"
+  },
   "cluster": {
     "source": "utv/about.json",
     "value": "utv"

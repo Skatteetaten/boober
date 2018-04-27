@@ -3,8 +3,7 @@
   "version": "1",
   "certificate": true,
   "routeDefaults": {
-    "affiliation": "ao",
-    "separator": "."
+    "host": "@name@.ao.@env@"
   },
   "route": true,
   "splunkIndex": "openshift-test",

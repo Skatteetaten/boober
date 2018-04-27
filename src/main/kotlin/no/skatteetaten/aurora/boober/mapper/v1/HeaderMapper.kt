@@ -3,10 +3,12 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
+import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecConfigFieldValidator.Companion.namePattern
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
+import no.skatteetaten.aurora.boober.model.AuroraDeployHeader
 import no.skatteetaten.aurora.boober.model.Permission
 import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.TemplateType
@@ -38,6 +40,7 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
                 it.pattern("^[a-z]{1,10}$",
                         "Affiliation can only contain letters and must be no longer than 10 characters")
             }),
+            AuroraConfigFieldHandler("segment"),
             AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
             AuroraConfigFieldHandler("permissions/admin"),
             AuroraConfigFieldHandler("permissions/view"),
@@ -58,9 +61,15 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
                 it?.startsWith("about-", "envFile must start with about")
             }))
 
-    fun createEnvironment(auroraConfigFields: AuroraConfigFields): AuroraDeployEnvironment {
 
-        return AuroraDeployEnvironment(
+    fun createHeader(auroraConfigFields: AuroraConfigFields, applicationHandler: ApplicationPlatformHandler): AuroraDeployHeader {
+        val name = auroraConfigFields.extract<String>("name")
+        val cluster = auroraConfigFields.extract<String>("cluster")
+        val type = auroraConfigFields.extract<TemplateType>("type")
+
+        val segment = auroraConfigFields.extractIfExistsOrNull<String>("segment")
+
+        val env = AuroraDeployEnvironment(
                 affiliation = auroraConfigFields.extract("affiliation"),
                 envName = auroraConfigFields.extractIfExistsOrNull("env/name")
                         ?: auroraConfigFields.extract("envName"),
@@ -68,20 +77,23 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
                         ?.let { StringToDurationConverter().convert(it) },
                 permissions = extractPermissions(auroraConfigFields)
         )
+
+        return AuroraDeployHeader(env, type, applicationHandler, name, cluster, segment)
     }
 
-    private fun extractPermissions(configFields: AuroraConfigFields): Permissions {
+    fun extractPermissions(configFields: AuroraConfigFields): Permissions {
 
-        val viewGroups = configFields.extractDelimitedStringOrArrayAsStringList("permissions/view").toSet()
-        val adminGroups = configFields.extractDelimitedStringOrArrayAsStringList("permissions/admin", " ")
+        val viewGroups = configFields.extractDelimitedStringOrArrayAsSet("permissions/view", " ")
+        val adminGroups = configFields.extractDelimitedStringOrArrayAsSet("permissions/admin", " ")
         //if sa present add to admin users.
-        val adminUsers = configFields.extractDelimitedStringOrArrayAsStringList("permissions/adminServiceAccount", " ").toSet()
+        val adminUsers = configFields.extractDelimitedStringOrArrayAsSet("permissions/adminServiceAccount", " ")
 
-        val adminPermission = Permission(adminGroups.toSet(), adminUsers)
-        val viewPermission = viewGroups.takeIf { !it.isEmpty() }?.let { Permission(it) }
+        val adminPermission = Permission(adminGroups, adminUsers)
+        val viewPermission = if (viewGroups.isNotEmpty()) Permission(viewGroups) else null
 
         return Permissions(admin = adminPermission, view = viewPermission)
     }
+
 
     fun getApplicationFile(): AuroraConfigFile {
         val fileName = "${applicationId.environment}/${applicationId.application}"
