@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.envVar
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.namespace
@@ -23,6 +24,9 @@ import com.fkorotkov.openshift.spec
 import com.fkorotkov.openshift.strategy
 import com.fkorotkov.openshift.to
 import io.fabric8.kubernetes.api.model.IntOrString
+import io.fabric8.openshift.api.model.DeploymentConfig
+import no.skatteetaten.aurora.boober.mapper.platform.podVolumes
+import no.skatteetaten.aurora.boober.mapper.platform.volumeMount
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Mount
@@ -43,6 +47,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.Instants.now
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -86,8 +91,7 @@ class OpenShiftObjectGenerator(
                     .addIfNotNull(generateSecretsAndConfigMaps(auroraDeploymentSpec.name, mounts
                             ?: emptyList(), labels, provisioningResult))
                     .addIfNotNull(generateRoute(auroraDeploymentSpec, labels))
-                    .addIfNotNull(generateTemplate(auroraDeploymentSpec))
-                    .addIfNotNull(generateLocalTemplate(auroraDeploymentSpec))
+                    .addIfNotNull(generateTemplates(auroraDeploymentSpec, mounts))
         })
     }
 
@@ -230,17 +234,32 @@ class OpenShiftObjectGenerator(
         }
     }
 
-    fun generateLocalTemplate(auroraDeploymentSpec: AuroraDeploymentSpec): List<JsonNode>? {
-        return auroraDeploymentSpec.localTemplate?.let {
+    fun generateTemplates(auroraDeploymentSpec: AuroraDeploymentSpec, mounts: List<Mount>?): List<JsonNode>? {
+
+
+        val localTemplate = auroraDeploymentSpec.localTemplate?.let {
             openShiftTemplateProcessor.generateObjects(it.templateJson as ObjectNode, it.parameters, auroraDeploymentSpec, it.version, it.replicas)
         }
-    }
 
-    fun generateTemplate(auroraDeploymentSpec: AuroraDeploymentSpec): List<JsonNode>? {
-        return auroraDeploymentSpec.template?.let {
+        val template = auroraDeploymentSpec.template?.let {
             val template = openShiftClient.get("template", "openshift", it.template)?.body as ObjectNode
             openShiftTemplateProcessor.generateObjects(template, it.parameters, auroraDeploymentSpec, it.version, it.replicas)
         }
+
+        val objects: List<JsonNode> = listOf<JsonNode>().addIfNotNull(localTemplate).addIfNotNull(template)
+
+        return objects.map {
+            if (it.openshiftKind == "DeploymentConfig") {
+                val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it)
+                val spec = dc.spec.template.spec
+                spec.volumes.addAll(auroraDeploymentSpec.volume?.mounts.podVolumes(auroraDeploymentSpec.name))
+                spec.containers.forEach {
+                    it.volumeMounts.addAll(auroraDeploymentSpec.volume?.mounts.volumeMount() ?: listOf())
+                }
+                jacksonObjectMapper().convertValue(dc)
+            } else it
+        }
+
     }
 
     fun generateRoute(auroraDeploymentSpec: AuroraDeploymentSpec, routeLabels: Map<String, String>): List<JsonNode>? {

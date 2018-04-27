@@ -2,6 +2,12 @@ package no.skatteetaten.aurora.boober.mapper.platform
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fkorotkov.kubernetes.configMap
+import com.fkorotkov.kubernetes.persistentVolumeClaim
+import com.fkorotkov.kubernetes.secret
+import com.fkorotkov.kubernetes.volume
+import io.fabric8.kubernetes.api.model.Volume
+import io.fabric8.kubernetes.api.model.VolumeMount
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeployStrategy
@@ -9,6 +15,9 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.model.Mount
+import no.skatteetaten.aurora.boober.model.MountType.ConfigMap
+import no.skatteetaten.aurora.boober.model.MountType.PVC
+import no.skatteetaten.aurora.boober.model.MountType.Secret
 import no.skatteetaten.aurora.boober.model.Probe
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
@@ -16,7 +25,7 @@ import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterNullValues
 import java.time.Duration
 
-abstract class ApplicationPlatformHandler(val name:String) {
+abstract class ApplicationPlatformHandler(val name: String) {
     open fun handlers(handlers: Set<AuroraConfigFieldHandler>): Set<AuroraConfigFieldHandler> = handlers
 
     abstract fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?): AuroraDeployment
@@ -148,3 +157,33 @@ enum class DeploymentState {
     Stateless, Stateful, Daemon
 }
 
+fun List<Mount>?.volumeMount(): List<VolumeMount>? {
+    return this?.map {
+        com.fkorotkov.kubernetes.volumeMount {
+            name = it.normalizeMountName()
+            mountPath = it.path
+        }
+    }
+}
+
+fun List<Mount>?.podVolumes(dcName: String): List<Volume> {
+    return this?.map {
+        val volumeName = it.getNamespacedVolumeName(dcName)
+        volume {
+            name = it.normalizeMountName()
+            when (it.type) {
+                ConfigMap -> configMap {
+                    name = volumeName
+                    items = null
+                }
+                Secret -> secret {
+                    secretName = volumeName
+                    items = null
+                }
+                PVC -> persistentVolumeClaim {
+                    claimName = volumeName
+                }
+            }
+        }
+    } ?: emptyList()
+}

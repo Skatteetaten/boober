@@ -16,6 +16,7 @@ import io.fabric8.kubernetes.api.model.IntOrStringBuilder
 import io.fabric8.kubernetes.api.model.Quantity
 import io.fabric8.kubernetes.api.model.QuantityBuilder
 import no.skatteetaten.aurora.boober.mapper.platform.AuroraContainer
+import no.skatteetaten.aurora.boober.mapper.platform.volumeMount
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
 import no.skatteetaten.aurora.boober.model.Probe
 
@@ -46,12 +47,7 @@ object ContainerGenerator {
                 requests = fromAdcResource(adcContainer.request)
             }
 
-            volumeMounts = adcContainer.mounts?.map {
-                volumeMount {
-                    name = it.normalizeMountName()
-                    mountPath = it.path
-                }
-            }
+            volumeMounts = adcContainer.mounts.volumeMount()
 
             adcContainer.liveness?.let { probe ->
                 livenessProbe = fromProbe(probe)
