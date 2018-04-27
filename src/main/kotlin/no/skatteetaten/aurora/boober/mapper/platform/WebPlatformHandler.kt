@@ -28,7 +28,7 @@ class WebPlatformHandler : ApplicationPlatformHandler("web") {
                         limit = auroraDeploymentSpec.deploy.resources.limit,
                         request = auroraDeploymentSpec.deploy.resources.request,
                         env = createEnvVars(mounts, auroraDeploymentSpec),
-                        mounts = mounts
+                        mounts = mounts?.filter { it.targetContainer == null }
                 ),
                 AuroraContainer(
                         name = "${auroraDeploymentSpec.name}-nginx",
@@ -39,7 +39,7 @@ class WebPlatformHandler : ApplicationPlatformHandler("web") {
                         limit = auroraDeploymentSpec.deploy.resources.limit,
                         request = auroraDeploymentSpec.deploy.resources.request,
                         env = createEnvVars(mounts, auroraDeploymentSpec),
-                        mounts = mounts
+                        mounts = mounts?.filter { it.targetContainer == null }
                 )
         ).addIfNotNull(sidecarContainers)
 

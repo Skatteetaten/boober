@@ -125,7 +125,7 @@ abstract class ApplicationPlatformHandler(val name:String) {
                 limit = ToxiProxyDefaults.RESOURCE_LIMIT,
                 request = ToxiProxyDefaults.RESOURCE_REQUEST,
                 env = ToxiProxyDefaults.ENV,
-                mounts = mounts?.filter { it.targetContainer == ToxiProxyDefaults.NAME },
+                mounts = mounts,
                 shouldHaveImageChange = false,
                 args = ToxiProxyDefaults.ARGS,
                 image = getToxiProxyImage(it.version)
