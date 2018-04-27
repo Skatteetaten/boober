@@ -28,6 +28,8 @@ class OpenShiftTemplateProcessor(
         replicas?.let {
             adcParameters.put("REPLICAS", it.toString())
         }
+        adcParameters.put("NAME", auroraDeploymentSpec.name)
+        adcParameters.put("AFFILIATION", auroraDeploymentSpec.environment.affiliation)
         val adcParameterKeys = adcParameters.keys
 
         if (template.has("parameters")) {
