@@ -22,10 +22,6 @@ class OpenShiftTemplateProcessor(
         val adcParameters = parameters ?: emptyMap()
         val adcParameterKeys = adcParameters.keys
 
-        if (!template.has("labels")) {
-            template.replace("labels", mapper.createObjectNode())
-        }
-
         if (template.has("parameters")) {
             val parameters = template["parameters"]
 
@@ -40,6 +36,9 @@ class OpenShiftTemplateProcessor(
 
         }
 
+        if (!template.has("labels")) {
+            template.replace("labels", mapper.createObjectNode())
+        }
 
         val labels = template["labels"] as ObjectNode
 
