@@ -17,9 +17,17 @@ class OpenShiftTemplateProcessor(
         val mapper: ObjectMapper) {
 
 
-    fun generateObjects(template: ObjectNode, parameters: Map<String, String>?, aac: AuroraDeploymentSpec, version: String?, replicas: Int?): List<JsonNode> {
+    fun generateObjects(template: ObjectNode,
+                        parameters: Map<String, String>?,
+                        auroraDeploymentSpec: AuroraDeploymentSpec,
+                        version: String?,
+                        replicas: Int?): List<JsonNode> {
 
-        val adcParameters = parameters ?: emptyMap()
+
+        val adcParameters = (parameters ?: emptyMap()).toMutableMap()
+        replicas?.let {
+            adcParameters.put("REPLICAS", it.toString())
+        }
         val adcParameterKeys = adcParameters.keys
 
         if (template.has("parameters")) {
@@ -41,22 +49,15 @@ class OpenShiftTemplateProcessor(
         val labels = template["labels"] as ObjectNode
 
         if (!labels.has("affiliation")) {
-            labels.put("affiliation", aac.environment.affiliation)
+            labels.put("affiliation", auroraDeploymentSpec.environment.affiliation)
         }
 
         if (!labels.has("app")) {
-            labels.put("app", aac.name)
+            labels.put("app", auroraDeploymentSpec.name)
         }
 
         labels.put("updatedBy", userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"))
 
-        if (replicas != null) {
-            template["parameters"]
-                    .filter { it["name"].asText() == "REPLICAS" }
-                    .map {
-                        (it as ObjectNode).put("value", replicas)
-                    }
-        }
         if (version != null) {
             template["parameters"]
                     .filter { it["name"].asText() == "VERSION" }
@@ -66,7 +67,7 @@ class OpenShiftTemplateProcessor(
                     }
         }
 
-        val result = openShiftClient.post("processedtemplate", namespace = aac.environment.namespace, payload = template)
+        val result = openShiftClient.post("processedtemplate", namespace = auroraDeploymentSpec.environment.namespace, payload = template)
 
         return result.body["objects"].asSequence().toList()
     }
