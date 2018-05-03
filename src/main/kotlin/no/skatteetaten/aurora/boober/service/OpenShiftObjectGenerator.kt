@@ -249,7 +249,7 @@ class OpenShiftObjectGenerator(
         val objects: List<JsonNode> = listOf<JsonNode>().addIfNotNull(localTemplate).addIfNotNull(template)
 
         return objects.map {
-            if (it.openshiftKind == "DeploymentConfig") {
+            if (it.openshiftKind == "deploymentconfig") {
                 val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it)
                 val spec = dc.spec.template.spec
                 spec.volumes.addAll(auroraDeploymentSpec.volume?.mounts.podVolumes(auroraDeploymentSpec.name))
