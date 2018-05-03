@@ -36,7 +36,7 @@ class RedeployService(val openShiftClient: OpenShiftClient,
         return if (imageStream == null || imageChangeTriggerTagName == null) {
             redeploy(deploymentConfig)
         } else {
-            redeploy(imageStream, imageChangeTriggerTagName)
+            redeploy(imageStream, deploymentConfig.metadata.name, imageChangeTriggerTagName)
         }
     }
 
@@ -47,12 +47,12 @@ class RedeployService(val openShiftClient: OpenShiftClient,
         return RedeployResult.fromOpenShiftResponses(listOf(deploymentRequestResponse))
     }
 
-    fun redeploy(imageStream: ImageStream, tagName: String): RedeployResult {
+    fun redeploy(imageStream: ImageStream, dcName: String, tagName: String): RedeployResult {
         val namespace = imageStream.metadata.namespace
-        val name = imageStream.metadata.name
+        val isName = imageStream.metadata.name
         val dockerImageUrl = imageStream.findDockerImageUrl(tagName)
                 ?: throw IllegalArgumentException("Missing docker image url")
-        val imageStreamImportResponse = performImageStreamImport(namespace, dockerImageUrl, name)
+        val imageStreamImportResponse = performImageStreamImport(namespace, dockerImageUrl, isName)
         if (!imageStreamImportResponse.success) {
             return createFailedRedeployResult(imageStreamImportResponse.exception, imageStreamImportResponse)
         }
@@ -66,7 +66,7 @@ class RedeployService(val openShiftClient: OpenShiftClient,
             return RedeployResult.fromOpenShiftResponses(listOf(imageStreamImportResponse))
         }
 
-        val deploymentRequestResponse = performDeploymentRequest(namespace, name)
+        val deploymentRequestResponse = performDeploymentRequest(namespace, dcName)
         return RedeployResult.fromOpenShiftResponses(listOf(imageStreamImportResponse, deploymentRequestResponse))
     }
 
