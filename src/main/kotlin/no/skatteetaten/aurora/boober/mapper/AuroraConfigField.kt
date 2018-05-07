@@ -120,7 +120,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
      * Extracts a config field declared either as a delimited string (ie. "value1, value2") or as a JSON array
      * (ie. ["value1", "value2"]) as a String list.
      */
-    fun extractDelimitedStringOrArrayAsStringList(name: String, delimiter: String = ","): List<String> {
+    fun extractDelimitedStringOrArrayAsSet(name: String, delimiter: String = ","): Set<String> {
         val field = fields[name]!!
         val valueNode = field.value
         return when {
@@ -129,6 +129,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
             else -> emptyList()
         }.filter { !it.isNullOrBlank() }
                 .mapNotNull { it?.trim() }
+                .toSet()
     }
 
     inline fun <reified T> extractOrNull(name: String): T? = fields[name]!!.getNullableValue()

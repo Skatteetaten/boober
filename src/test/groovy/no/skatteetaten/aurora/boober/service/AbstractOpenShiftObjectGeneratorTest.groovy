@@ -4,6 +4,8 @@ import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 
 import java.time.Instant
 
+import com.fasterxml.jackson.databind.ObjectMapper
+
 import no.skatteetaten.aurora.boober.Configuration
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.AbstractAuroraDeploymentSpecTest
@@ -18,7 +20,7 @@ class AbstractOpenShiftObjectGeneratorTest extends AbstractAuroraDeploymentSpecT
 
   def openShiftResourceClient = Mock(OpenShiftResourceClient)
 
-  def mapper = new Configuration().mapper()
+  def mapper = new ObjectMapper()
 
   OpenShiftObjectGenerator createObjectGenerator(String username = "aurora") {
 

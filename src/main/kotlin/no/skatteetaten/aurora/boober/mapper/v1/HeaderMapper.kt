@@ -5,6 +5,7 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.startsWith
 
@@ -23,7 +24,7 @@ class HeaderMapper(val fields: AuroraConfigFields) {
                 AuroraConfigFieldHandler("type", validator = { it.oneOf(TemplateType.values().map { it.toString() }) }),
                 AuroraConfigFieldHandler("baseFile"),
 
-                AuroraConfigFieldHandler("applicationPlatform", defaultValue = "java", validator = { it.oneOf(no.skatteetaten.aurora.boober.Boober.Companion.APPLICATION_PLATFORM_HANDLERS.keys.toList()) }),
+                AuroraConfigFieldHandler("applicationPlatform", defaultValue = "java", validator = { it.oneOf(AuroraDeploymentSpecService.APPLICATION_PLATFORM_HANDLERS.keys.toList()) }),
                 AuroraConfigFieldHandler("envFile", validator = {
                     it?.startsWith("about-", "envFile must start with about")
                 }))

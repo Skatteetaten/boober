@@ -1,0 +1,13 @@
+{
+  "success": true,
+  "message": "OK",
+  "items": [
+    {
+      "name": "responses",
+      "hasAccess": true,
+      "secrets": {},
+      "permissions": []
+    }
+  ],
+  "count": 1
+}

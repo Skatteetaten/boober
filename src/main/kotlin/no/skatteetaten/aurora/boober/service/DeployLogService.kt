@@ -36,7 +36,10 @@ class DeployLogService(@TargetDomain(AURORA_CONFIG) val gitService: GitService, 
         val repo = gitService.checkoutRepository(affiliation)
         val res = gitService.getTagHistory(repo)
                 .filter { it.tagName.startsWith(DEPLOY_PREFIX) }
-                .map { DeployHistory(it.taggerIdent, mapper.readTree(it.fullMessage)) }
+                .map {
+                    val fullMessage = it.fullMessage
+                    it.taggerIdent.let { DeployHistory(Deployer(it.name, it.emailAddress), it.`when`.toInstant(), mapper.readTree(fullMessage)) }
+                }
         repo.close()
         return res
     }
@@ -45,7 +48,10 @@ class DeployLogService(@TargetDomain(AURORA_CONFIG) val gitService: GitService, 
         val repo = gitService.checkoutRepository(auroraConfigId)
         val res: DeployHistory? = gitService.getTagHistory(repo)
                 .firstOrNull { it.tagName.endsWith(deployId) }
-                ?.let { DeployHistory(it.taggerIdent, mapper.readTree(it.fullMessage)) }
+                ?.let {
+                    val fullMessage = it.fullMessage
+                    it.taggerIdent.let { DeployHistory(Deployer(it.name, it.emailAddress), it.`when`.toInstant(), mapper.readTree(fullMessage)) }
+                }
         repo.close()
         return res
     }

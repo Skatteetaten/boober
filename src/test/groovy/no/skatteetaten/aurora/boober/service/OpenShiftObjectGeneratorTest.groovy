@@ -1,7 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import static no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecBuilderKt.createAuroraDeploymentSpec
-
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 
@@ -51,7 +49,8 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
         }
       }
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, additionalFile)
-      AuroraDeploymentSpec deploymentSpec = createAuroraDeploymentSpec(auroraConfig, aid, overrides)
+      AuroraDeploymentSpec deploymentSpec = AuroraDeploymentSpecService.
+          createAuroraDeploymentSpec(auroraConfig, aid, overrides)
 
     when:
       List<JsonNode> generatedObjects = objectGenerator.
@@ -99,15 +98,44 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, null)
 
     when:
-      AuroraDeploymentSpec deploymentSpec = createAuroraDeploymentSpec(auroraConfig, aid)
+      AuroraDeploymentSpec deploymentSpec = AuroraDeploymentSpecService.createAuroraDeploymentSpec(auroraConfig, aid)
       def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.environment.permissions)
 
     then:
-      rolebindings.size() == 1
-      def rolebinding = rolebindings[0]
-      getArray(rolebinding, "/userNames") == ["system:serviceaccount:paas:jenkinsbuilder"]
-      getArray(rolebinding, "/groupNames") == ["APP_PaaS_utv", "APP_PaaS_drift"]
+      def adminRolebinding = rolebindings.find { it.at("/metadata/name").asText() == "admin" }
+      adminRolebinding != null
 
+      getArray(adminRolebinding, "/userNames") == ["system:serviceaccount:paas:jenkinsbuilder"]
+      getArray(adminRolebinding, "/groupNames") == ["APP_PaaS_utv", "APP_PaaS_drift"]
+
+    and:
+      def viewRolebinding = rolebindings.find { it.at("/metadata/name").asText() == "view" }
+      viewRolebinding != null
+
+    and:
+      rolebindings.size() == 2
+  }
+
+  def "generate rolebinding view should split groups"() {
+
+    given:
+      def aid = new ApplicationId("booberdev", "console")
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, null)
+
+    when:
+      AuroraDeploymentSpec deploymentSpec = AuroraDeploymentSpecService.createAuroraDeploymentSpec(auroraConfig, aid)
+      def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.environment.permissions)
+
+    then:
+      def adminRolebinding = rolebindings.find { it.at("/metadata/name").asText() == "admin" }
+      getArray(adminRolebinding, "/groupNames") == ["APP_PaaS_utv", "APP_PaaS_drift"]
+
+    and:
+      def viewRolebinding = rolebindings.find { it.at("/metadata/name").asText() == "view" }
+      viewRolebinding != null
+
+    and:
+      rolebindings.size() == 2
   }
 
   private List<String> getArray(JsonNode rolebinding, String path) {
