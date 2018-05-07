@@ -142,14 +142,6 @@ abstract class ApplicationPlatformHandler(val name:String) {
     }
 }
 
-data class AuroraServicePort(
-        val name: String,
-        val protocol: String = "TCP",
-        val port: Int,
-        val targetPort: Int,
-        val nodePort: Int = 0
-)
-
 data class AuroraContainer(
         val name: String,
         val tcpPorts: Map<String, Int>,

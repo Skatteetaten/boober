@@ -7,7 +7,7 @@ class OpenShiftObjectGeneratorServiceTest extends AbstractOpenShiftObjectGenerat
 
   OpenShiftObjectGenerator objectGenerator = createObjectGenerator()
 
-  def "toxiproxy services must be created if toxiproxy is enabled in deployment spec for java"() {
+  def "service target must refer to toxiproxy if toxiproxy is enabled in deployment spec for java"() {
 
     given: "default deployment spec with toxiproxy version 2.1.3 enabled"
       AuroraDeploymentSpec deploymentSpec = specJavaWithToxiproxy()
@@ -17,11 +17,10 @@ class OpenShiftObjectGeneratorServiceTest extends AbstractOpenShiftObjectGenerat
       def svc = objectGenerator.generateService(deploymentSpec, serviceLabels)
       svc = new JsonSlurper().parseText(svc.toString()) // convert to groovy for easier navigation and validation
 
-    then: "the svc must contain both http and admin ports"
+    then: "the svc must contain toxiproxy http"
       def ports = svc.spec.ports
 
       ports.find { it.name == "http" && it.port == 80 && it.targetPort == 8090 }
-      ports.find { it.name == "management" && it.port == 8474 && it.targetPort == 8474 }
   }
 
 }

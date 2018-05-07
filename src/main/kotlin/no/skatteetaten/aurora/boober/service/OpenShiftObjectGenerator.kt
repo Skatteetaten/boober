@@ -24,7 +24,6 @@ import com.fkorotkov.openshift.strategy
 import com.fkorotkov.openshift.to
 import io.fabric8.kubernetes.api.model.IntOrString
 import no.skatteetaten.aurora.boober.Boober
-import no.skatteetaten.aurora.boober.mapper.platform.AuroraServicePort
 import no.skatteetaten.aurora.boober.mapper.v1.PortNumbers
 import no.skatteetaten.aurora.boober.mapper.v1.ToxiProxyDefaults
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
@@ -185,20 +184,7 @@ class OpenShiftObjectGenerator(
                 )
             } ?: mapOf("prometheus.io/scrape" to "false")
 
-            val auroraServicePorts = auroraDeploymentSpec.deploy.toxiProxy?.let {
-                listOf(AuroraServicePort(name = "http", port = PortNumbers.HTTP_PORT, targetPort = PortNumbers.TOXIPROXY_HTTP_PORT),
-                    AuroraServicePort(name = "management", port = PortNumbers.TOXIPROXY_ADMIN_PORT, targetPort = PortNumbers.TOXIPROXY_ADMIN_PORT))
-            } ?: listOf(AuroraServicePort("http", port = PortNumbers.HTTP_PORT, targetPort = PortNumbers.INTERNAL_HTTP_PORT))
-
-            val servicePorts = auroraServicePorts.map {
-                servicePort {
-                    name = it.name
-                    protocol = it.protocol
-                    port = it.port
-                    targetPort = IntOrString(it.targetPort)
-                    nodePort = it.nodePort
-                }
-            }
+            val podPort = if (auroraDeploymentSpec.deploy.toxiProxy != null) PortNumbers.TOXIPROXY_HTTP_PORT else PortNumbers.INTERNAL_HTTP_PORT
 
             val service = service {
                 apiVersion = "v1"
@@ -206,16 +192,25 @@ class OpenShiftObjectGenerator(
                     name = auroraDeploymentSpec.name
                     finalizers = null
                     ownerReferences = null
-                    annotations = prometheusAnnotations.addIfNotNull(webseal)
-                        .addIfNotNull(websealRoles)
+                    annotations = prometheusAnnotations.addIfNotNull(webseal).addIfNotNull(websealRoles)
                     labels = serviceLabels
                 }
 
                 spec {
-                    ports = servicePorts
+                    ports = listOf(
+                        servicePort {
+                            name = "http"
+                            protocol = "TCP"
+                            port = PortNumbers.HTTP_PORT
+                            targetPort = IntOrString(podPort)
+                            nodePort = 0
+                        }
+                    )
+
                     selector = mapOf("name" to auroraDeploymentSpec.name)
                     type = "ClusterIP"
                     sessionAffinity = "None"
+
                 }
             }
             mapper.convertValue(service)
