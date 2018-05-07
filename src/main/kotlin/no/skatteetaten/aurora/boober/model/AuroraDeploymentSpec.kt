@@ -37,7 +37,8 @@ data class AuroraDeploymentSpec(
         val build: AuroraBuild? = null,
         val deploy: AuroraDeploy? = null,
         val template: AuroraTemplate? = null,
-        val localTemplate: AuroraLocalTemplate? = null
+        val localTemplate: AuroraLocalTemplate? = null,
+        val integration: AuroraIntegration?
 ) {
 
     fun assembleRouteHost(hostPrefix: String = name): String {
@@ -83,6 +84,11 @@ data class AuroraBuild(
 )
 
 
+data class AuroraIntegration(
+        val database: List<Database> = listOf(),
+        val certificateCn: String? = null
+)
+
 data class AuroraDeploy(
         val applicationFile: String,
         val overrideFiles: Map<String, String>,
@@ -94,9 +100,6 @@ data class AuroraDeploy(
         val artifactId: String,
         val version: String,
         val splunkIndex: String? = null,
-        val database: List<Database> = listOf(),
-        val certificateCn: String? = null,
-        val webseal: Webseal? = null,
         val prometheus: HttpEndpoint? = null,
         val managementPath: String? = null,
         val serviceAccount: String? = null,
@@ -106,7 +109,8 @@ data class AuroraDeploy(
         val dockerTag: String,
         val deployStrategy: AuroraDeployStrategy,
         val env: Map<String, String>,
-        val ttl: Duration?
+        val ttl: Duration?,
+        val webseal: Webseal? = null
 )
 
 data class AuroraDeployStrategy(

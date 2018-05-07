@@ -57,10 +57,10 @@ spring:
     profiles: local
 
 openshift:
-    cluster: qa
+    cluster: utv
 
 boober:
-    dbh: http://dbh-aurora.qa.paas.skead.no
+    dbh: http://dbh-aurora.utv.paas.skead.no
     openshift:
         tokenLocation: /opt/boober
     encrypt:

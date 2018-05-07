@@ -11,6 +11,7 @@ import no.skatteetaten.aurora.boober.model.AuroraBuild
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraIntegration
 import no.skatteetaten.aurora.boober.model.AuroraLocalTemplate
 import no.skatteetaten.aurora.boober.model.AuroraRoute
 import no.skatteetaten.aurora.boober.model.AuroraTemplate
@@ -64,7 +65,8 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                                    build: AuroraBuild?,
                                    deploy: AuroraDeploy?,
                                    template: AuroraTemplate?,
-                                   localTemplate: AuroraLocalTemplate?
+                                   localTemplate: AuroraLocalTemplate?,
+                                   integration: AuroraIntegration?
     ): AuroraDeploymentSpec {
         val name: String = auroraConfigFields.extract("name")
 
@@ -89,7 +91,8 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                 build = build,
                 deploy = deploy,
                 template = template,
-                localTemplate = localTemplate)
+                localTemplate = localTemplate,
+                integration = integration)
 
     }
 

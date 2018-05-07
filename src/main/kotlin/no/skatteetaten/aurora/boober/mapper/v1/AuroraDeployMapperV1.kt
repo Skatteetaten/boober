@@ -10,7 +10,6 @@ import no.skatteetaten.aurora.boober.model.AuroraDeployStrategy
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigFlags
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResources
-import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.model.HttpEndpoint
 import no.skatteetaten.aurora.boober.model.Probe
 import no.skatteetaten.aurora.boober.model.Webseal
@@ -23,10 +22,9 @@ import no.skatteetaten.aurora.boober.utils.removeExtension
 
 class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFiles: List<AuroraConfigFile>, val overrideFiles: List<AuroraConfigFile>) {
 
-    val dbHandlers = findDbHandlers(applicationFiles)
 
     val configHandlers = applicationFiles.findConfigFieldHandlers()
-    val handlers = dbHandlers + listOf(
+    val handlers = listOf(
 
         AuroraConfigFieldHandler("artifactId",
             defaultValue = applicationId.application,
@@ -126,16 +124,13 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
                     memory = auroraConfigFields.extract("resources/memory/max")
                 )
             ),
+                webseal = findWebseal(auroraConfigFields),
             replicas = if (pause) 0 else replicas,
             groupId = groupId,
             artifactId = artifactId,
             version = version,
             splunkIndex = auroraConfigFields.extractOrNull("splunkIndex"),
-            database = findDatabases(auroraConfigFields, name),
-
-            certificateCn = certificateCn,
             serviceAccount = auroraConfigFields.extractOrNull("serviceAccount"),
-            webseal = findWebseal(auroraConfigFields),
             prometheus = findPrometheus(auroraConfigFields),
             managementPath = findManagementPath(auroraConfigFields),
             liveness = getProbe(auroraConfigFields, "liveness"),
@@ -197,24 +192,6 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
         return "$port$path"
     }
 
-    private fun findDatabases(auroraConfigFields: AuroraConfigFields, name: String): List<Database> {
-
-        val simplified = auroraConfigFields.isSimplifiedConfig("database")
-
-        if (simplified && auroraConfigFields.extract("database")) {
-            return listOf(Database(name = name))
-        }
-        return auroraConfigFields.getDatabases(dbHandlers)
-    }
-
-    fun findDbHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
-
-        val keys = applicationFiles.findSubKeys("database")
-
-        return keys.map { key ->
-            AuroraConfigFieldHandler("database/$key")
-        }
-    }
 
     fun getProbe(auroraConfigFields: AuroraConfigFields, name: String): Probe? {
 

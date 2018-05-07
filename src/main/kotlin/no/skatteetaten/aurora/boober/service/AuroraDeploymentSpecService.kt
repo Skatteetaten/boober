@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.boober.mapper.v1.AuroraBuildMapperV1
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeployMapperV1
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecConfigFieldValidator
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecMapperV1
+import no.skatteetaten.aurora.boober.mapper.v1.AuroraIntegrationsMapperV1
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraLocalTemplateMapperV1
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraRouteMapperV1
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraTemplateMapperV1
@@ -47,13 +48,14 @@ class AuroraDeploymentSpecService(val auroraConfigService: AuroraConfigService,
 
             val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(applicationId)
             val deployMapper = AuroraDeployMapperV1(applicationId, applicationFiles, overrideFiles)
+            val integrationMapper = AuroraIntegrationsMapperV1(applicationFiles)
             val volumeMapper = AuroraVolumeMapperV1(applicationFiles)
             val routeMapper = AuroraRouteMapperV1(applicationId, applicationFiles)
             val localTemplateMapper = AuroraLocalTemplateMapperV1(applicationFiles, auroraConfig)
             val templateMapper = AuroraTemplateMapperV1(applicationFiles)
             val buildMapper = AuroraBuildMapperV1(applicationId)
 
-            val rawHandlers = (HeaderMapper.handlers + deploymentSpecMapper.handlers + when (type) {
+            val rawHandlers = (HeaderMapper.handlers + deploymentSpecMapper.handlers + integrationMapper.handlers + when (type) {
                 TemplateType.deploy -> deployMapper.handlers + routeMapper.handlers + volumeMapper.handlers
                 TemplateType.development -> deployMapper.handlers + routeMapper.handlers + volumeMapper.handlers + buildMapper.handlers
                 TemplateType.localTemplate -> routeMapper.handlers + volumeMapper.handlers + localTemplateMapper.handlers
@@ -67,6 +69,7 @@ class AuroraDeploymentSpecService(val auroraConfigService: AuroraConfigService,
 
             val volume = if (type == TemplateType.build) null else volumeMapper.createAuroraVolume(auroraConfigFields)
             val route = if (type == TemplateType.build) null else routeMapper.route(auroraConfigFields)
+            val integration = if (type == TemplateType.build) null else integrationMapper.integrations(auroraConfigFields)
 
             val build = if (type == TemplateType.build || type == TemplateType.development) buildMapper.build(auroraConfigFields) else null
 
@@ -76,7 +79,7 @@ class AuroraDeploymentSpecService(val auroraConfigService: AuroraConfigService,
 
             val localTemplate = if (type == TemplateType.localTemplate) localTemplateMapper.localTemplate(auroraConfigFields) else null
 
-            return deploymentSpecMapper.createAuroraDeploymentSpec(auroraConfigFields, volume, route, build, deploy, template, localTemplate)
+            return deploymentSpecMapper.createAuroraDeploymentSpec(auroraConfigFields, volume, route, build, deploy, template, localTemplate, integration)
         }
     }
 

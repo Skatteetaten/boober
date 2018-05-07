@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.service.*
 import org.springframework.stereotype.Service
 
 class ProvisioningResult(
@@ -40,7 +39,7 @@ class ExternalResourceProvisioner(
     companion object {
         @JvmStatic
         protected fun createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec: AuroraDeploymentSpec): List<SchemaProvisionRequest> {
-            val databaseSpecs = deploymentSpec.deploy?.database ?: listOf()
+            val databaseSpecs = deploymentSpec.integration?.database ?: listOf()
             return databaseSpecs.map {
                 val name = it.name.toLowerCase()
                 if (it.id != null) {

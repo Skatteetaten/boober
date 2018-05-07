@@ -33,7 +33,7 @@ class DeployBase extends AbstractContractBase {
     def spec = new AuroraDeploymentSpec('', TemplateType.development, '', [:], '', '',
         new AuroraDeployEnvironment('', '',
             new Permissions(new Permission(Collections.emptySet(), Collections.emptySet()), null), null),
-        null, null, null, null, null, null)
+        null, null, null, null, null, null, null)
     return new AuroraDeployResult(spec, UUID.randomUUID().toString().substring(0,7), [], success, false, reason)
   }
 }

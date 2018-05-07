@@ -252,9 +252,9 @@ class OpenShiftObjectGenerator(
             if (it.openshiftKind == "deploymentconfig") {
                 val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it)
                 val spec = dc.spec.template.spec
-                spec.volumes.addAll(auroraDeploymentSpec.volume?.mounts.podVolumes(auroraDeploymentSpec.name))
+                spec.volumes.addAll(mounts.podVolumes(auroraDeploymentSpec.name))
                 spec.containers.forEach {
-                    it.volumeMounts.addAll(auroraDeploymentSpec.volume?.mounts.volumeMount() ?: listOf())
+                    it.volumeMounts.addAll(mounts.volumeMount() ?: listOf())
                 }
                 jacksonObjectMapper().convertValue(dc)
             } else it

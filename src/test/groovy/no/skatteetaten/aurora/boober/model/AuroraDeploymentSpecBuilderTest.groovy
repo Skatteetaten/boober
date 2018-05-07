@@ -78,13 +78,13 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
     when:
       def deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
     then:
-      deploymentSpec.deploy.certificateCn == "some_common_name"
+      deploymentSpec.integration.certificateCn == "some_common_name"
 
     when:
       auroraConfigJson["utv/aos-simple.json"] = '''{ "certificate": false }'''
       deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
     then:
-      !deploymentSpec.deploy.certificateCn
+      !deploymentSpec.integration.certificateCn
   }
 
   def "Verify that it is possible to set some common global config options for templates even if they are not directly supported by that type"() {

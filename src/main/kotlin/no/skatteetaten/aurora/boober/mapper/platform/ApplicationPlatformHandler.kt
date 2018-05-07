@@ -13,6 +13,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeployStrategy
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraIntegration
 import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType.ConfigMap
@@ -38,7 +39,7 @@ abstract class ApplicationPlatformHandler(val name: String) {
 
         val splunkIndex = auroraDeploymentSpec.deploy?.splunkIndex?.let { "SPLUNK_INDEX" to it }
 
-        val certEnv = auroraDeploymentSpec.deploy?.certificateCn?.let {
+        val certEnv = auroraDeploymentSpec.integration?.certificateCn?.let {
             val baseUrl = "/u01/secrets/app/${auroraDeploymentSpec.name}-cert"
             mapOf(
                     "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
@@ -63,7 +64,7 @@ abstract class ApplicationPlatformHandler(val name: String) {
             mapOf("ROUTE_NAME" to url, "ROUTE_URL" to "http://$url")
         } ?: mapOf()
 
-        val dbEnv = auroraDeploymentSpec.deploy?.database?.takeIf { it.isNotEmpty() }?.let {
+        val dbEnv = auroraDeploymentSpec.integration?.database?.takeIf { it.isNotEmpty() }?.let {
             fun createDbEnv(db: Database, envName: String): List<Pair<String, String>> {
                 val path = "/u01/secrets/app/${db.name.toLowerCase()}-db"
                 val envName = envName.replace("-", "_").toUpperCase()
@@ -86,7 +87,7 @@ abstract class ApplicationPlatformHandler(val name: String) {
 
     }
 
-    fun createAnnotations(deploy: AuroraDeploy): Map<String, String> {
+    fun createAnnotations(deploy: AuroraDeploy, integration: AuroraIntegration?): Map<String, String> {
 
 
         fun escapeOverrides(): String? {
@@ -101,7 +102,7 @@ abstract class ApplicationPlatformHandler(val name: String) {
                 "boober.skatteetaten.no/overrides" to escapeOverrides(),
                 "console.skatteetaten.no/management-path" to deploy.managementPath,
                 "boober.skatteetaten.no/releaseTo" to deploy.releaseTo,
-                "sprocket.sits.no/deployment-config.certificate" to deploy.certificateCn
+                "sprocket.sits.no/deployment-config.certificate" to integration?.certificateCn
         ).filterNullValues().filterValues { !it.isBlank() }
     }
 

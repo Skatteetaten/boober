@@ -27,6 +27,6 @@ class AuroradeploymentspecBase extends AbstractContractBase {
     new AuroraDeploymentSpec('', TemplateType.development, '', deploymentSpecs, '', '',
         new AuroraDeployEnvironment('', '',
             new Permissions(new Permission(Collections.emptySet(), Collections.emptySet()), null), null),
-        null, null, null, null, null, null)
+        null, null, null, null, null, null, null)
   }
 }

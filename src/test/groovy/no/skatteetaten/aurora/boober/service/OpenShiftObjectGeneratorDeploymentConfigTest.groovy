@@ -38,7 +38,7 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObje
 
     then:
       def appName = deploymentSpec.name
-      def dbName = deploymentSpec.deploy.database.first().name.toLowerCase()
+      def dbName = deploymentSpec.integration.database.first().name.toLowerCase()
       def dbNameEnv = dbName.toUpperCase().replaceAll("-", "_")
 
       def spec = dc.spec.template.spec

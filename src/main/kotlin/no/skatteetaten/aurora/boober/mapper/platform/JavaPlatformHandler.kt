@@ -34,7 +34,7 @@ class JavaPlatformHandler : ApplicationPlatformHandler("java") {
                 containers = container,
                 labels = createLabels(auroraDeploymentSpec.name, auroraDeploymentSpec.deploy, labels),
                 mounts = mounts,
-                annotations = createAnnotations(auroraDeploymentSpec.deploy),
+                annotations = createAnnotations(auroraDeploymentSpec.deploy, auroraDeploymentSpec.integration),
                 deployStrategy = auroraDeploymentSpec.deploy.deployStrategy,
                 replicas = auroraDeploymentSpec.deploy.replicas,
                 serviceAccount = auroraDeploymentSpec.deploy.serviceAccount,
