@@ -1,13 +1,10 @@
 {
-  "name": "tvinn",
   "templateFile": "templates/atomhopper.json",
+  "database": true,
   "parameters": {
     "SPLUNK_INDEX": "safir-test",
-    "APP_NAME": "tvinn",
     "FEED_NAME": "tolldeklarasjon",
     "DOMAIN_NAME": "localhost",
-    "SCHEME": "http",
-    "DB_NAME": "tvinn",
-    "AFFILIATION": "safir"
+    "DB_NAME": "tvinn"
   }
 }

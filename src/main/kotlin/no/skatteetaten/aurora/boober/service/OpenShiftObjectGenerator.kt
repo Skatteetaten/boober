@@ -256,6 +256,14 @@ class OpenShiftObjectGenerator(
                 spec.containers.forEach {
                     it.volumeMounts.addAll(mounts.volumeMount() ?: listOf())
                 }
+
+
+                auroraDeploymentSpec.integration?.certificateCn?.let {
+                    if (dc.metadata.annotations == null) {
+                        dc.metadata.annotations = HashMap<String, String>()
+                    }
+                    dc.metadata.annotations.put("sprocket.sits.no/deployment-config.certificate", it)
+                }
                 jacksonObjectMapper().convertValue(dc)
             } else it
         }
