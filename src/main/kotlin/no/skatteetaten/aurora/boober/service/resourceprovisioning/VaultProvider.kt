@@ -5,7 +5,7 @@ import no.skatteetaten.aurora.boober.utils.PropertiesException
 import no.skatteetaten.aurora.boober.utils.filterProperties
 import org.springframework.stereotype.Service
 
-data class VaultRequest(val collectionName: String, val name: String, val keys: List<String> )
+data class VaultRequest(val collectionName: String, val name: String, val keys: List<String>, val mappedKeys: Map<String, String>?)
 
 typealias VaultData = Map<String, ByteArray>
 typealias VaultIndex = Map<String, VaultData>
@@ -20,14 +20,14 @@ class VaultResults(private val vaultIndex: VaultIndex) {
 @Service
 class VaultProvider(val vaultService: VaultService) {
 
-    fun findVaultData(vaultRequests: List<VaultRequest>): VaultResults? {
+    fun findVaultData(vaultRequests: List<VaultRequest>): VaultResults {
 
         val filteredVaultIndex = vaultRequests.associateBy(
             { it.name },
             {
                 val vaultContents = vaultService.findVault(it.collectionName, it.name).secrets
                 try {
-                    filterVaultData(vaultContents, it.keys)
+                    filterVaultData(vaultContents, it.keys, it.mappedKeys)
                 } catch (pe : PropertiesException) {
                     val propName = it.name
                     throw RuntimeException("Error when reading properties from $propName.", pe)
@@ -38,16 +38,12 @@ class VaultProvider(val vaultService: VaultService) {
         return VaultResults(filteredVaultIndex)
     }
 
-    private fun filterVaultData(vaultData : VaultData, secretVaultKeys : List<String>) : VaultData {
-
-        //if there are no secretVaultKeys specified, use all the keys
-        if (secretVaultKeys.isEmpty()) return vaultData
-        
+    private fun filterVaultData(vaultData : VaultData, secretVaultKeys : List<String>, mappedKeys: Map<String, String>?) : VaultData {
         return vaultData
                 .mapValues {
                     //if the vault contain a .properties-file, we filter based on secretVaultKeys
                     if (it.key.contains(".properties")){
-                        filterProperties(it.value, secretVaultKeys)
+                        filterProperties(it.value, secretVaultKeys, mappedKeys)
                     } else {
                         it.value
                     }

@@ -192,11 +192,12 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       deploymentSpec.getVolume().secretVaultKeys == keys
 
     where:
-      configFile                                                            | vaultName   | keys
-      '''{ "secretVault": "vaultName" }'''                                  | "vaultName" | []
-      '''{ "secretVault": {"name": "test"} }'''                             | "test"      | []
-      '''{ "secretVault": {"name": "test", "keys": []} }'''                 | "test"      | []
-      '''{ "secretVault": {"name": "test", "keys": ["test1", "test2"]} }''' | "test"      | ["test1", "test2"]
+      configFile                                                                                       | vaultName   | keys
+      '''{ "secretVault": "vaultName" }'''                                                             | "vaultName" | []
+      '''{ "secretVault": {"name": "test"} }'''                                                        | "test"      | []
+      '''{ "secretVault": {"name": "test", "keys": []} }'''                                            | "test"      | []
+      '''{ "secretVault": {"name": "test", "keys": ["test1", "test2"]} }'''                            | "test"      | ["test1", "test2"]
+      '''{ "secretVault": {"name": "test", "keys": ["test1"], "mappedKeys":{"test1":"newtestkey"}} }'''| "test"      | ["test1"]
   }
 
   def "Permissions supports both space separated string and array"() {
