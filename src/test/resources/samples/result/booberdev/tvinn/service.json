@@ -7,9 +7,6 @@
       "prometheus.io/scheme": "http",
       "prometheus.io/scrape": "false"
     },
-    "labels": {
-      "affiliation": "safir"
-    },
     "name": "tvinn"
   },
   "spec": {

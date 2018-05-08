@@ -73,21 +73,20 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
 
     where:
 
-      env         | name    | templateFile      | overrides
-      "booberdev" | "tvinn" | "atomhopper.json" | []
-      /*
-        "booberdev"   | "reference"     | null              | []
-        "booberdev"   | "console"       | null              | []
-        "webseal"     | "sprocket"      | null              | []
-        "booberdev"   | "sprocket"      | null              | []
-        "booberdev"   | "reference-web" | null              | []
-        "booberdev"   | "build"         | null              | []
-        "booberdev"   | "aos-simple"    | null              | booberDevAosSimpleOverrides
-        "secrettest"  | "aos-simple"    | null              | []
-        "release"     | "aos-simple"    | null              | []
-        "release"     | "build"         | null              | []
-        "mounts"      | "aos-simple"    | null              | []
-        "secretmount" | "aos-simple"    | null              | []*/
+      env           | name            | templateFile      | overrides
+      "booberdev"   | "tvinn"         | "atomhopper.json" | []
+        "booberdev" | "reference"     | null              | []
+        "booberdev" | "console"       | null              | []
+        "webseal"   | "sprocket"      | null              | []
+      "booberdev"   | "sprocket"      | null              | []
+      "booberdev"   | "reference-web" | null              | []
+      "booberdev"   | "build"         | null              | []
+      "booberdev"   | "aos-simple"    | null              | booberDevAosSimpleOverrides
+      "secrettest"  | "aos-simple"    | null              | []
+      "release"     | "aos-simple"    | null              | []
+      "release"     | "build"         | null              | []
+      "mounts"      | "aos-simple"    | null              | []
+      "secretmount" | "aos-simple"    | null              | []
   }
 
   def "generate rolebinding should include serviceaccount "() {

@@ -112,7 +112,7 @@
                 "env": [
                   {
                     "name": "SPLUNK_INDEX",
-                    "value": "safir_test"
+                    "value": "safir"
                   },
                   {
                     "name": "POD_NAME",
@@ -142,7 +142,7 @@
                   },
                   {
                     "name": "FEED_NAME",
-                    "value": "${FEED_NAME}"
+                    "value": "tolldeklarasjon"
                   },
                   {
                     "name": "DB_NAME",
@@ -173,7 +173,7 @@
                 "resources": {
                   "limits": {
                     "cpu": "2",
-                    "memory": "${MAX_MEMORY}"
+                    "memory": "4Gi"
                   },
                   "requests": {
                     "cpu": "0.1",
