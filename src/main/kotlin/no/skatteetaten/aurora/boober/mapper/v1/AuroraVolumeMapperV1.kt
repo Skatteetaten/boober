@@ -29,7 +29,7 @@ class AuroraVolumeMapperV1(private val applicationFiles: List<AuroraConfigFile>)
     }
 
     private fun createSecretVaultMappedKeysHandlers(): List<AuroraConfigFieldHandler> {
-            return applicationFiles.flatMap {
+        return applicationFiles.flatMap {
             it.asJsonNode.at("/secretVault/mappedKeys").fieldNames().asSequence().toList()
         }.map {
             AuroraConfigFieldHandler("secretVault/mappedKeys/$it")
