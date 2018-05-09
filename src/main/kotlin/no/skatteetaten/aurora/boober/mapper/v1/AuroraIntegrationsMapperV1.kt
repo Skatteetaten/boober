@@ -5,6 +5,7 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraIntegration
 import no.skatteetaten.aurora.boober.model.Database
+import no.skatteetaten.aurora.boober.model.Webseal
 
 class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
 
@@ -13,7 +14,11 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
     val handlers = dbHandlers + listOf(
             AuroraConfigFieldHandler("database", defaultValue = false),
             AuroraConfigFieldHandler("certificate/commonName"),
-            AuroraConfigFieldHandler("certificate", defaultValue = false)
+            AuroraConfigFieldHandler("certificate", defaultValue = false),
+            AuroraConfigFieldHandler("splunkIndex"),
+            AuroraConfigFieldHandler("webseal", defaultValue = false),
+            AuroraConfigFieldHandler("webseal/host"),
+            AuroraConfigFieldHandler("webseal/roles")
     )
 
     //TODO: ADD splunk, webseal, bigip
@@ -30,10 +35,27 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
         }
         return AuroraIntegration(
                 database = findDatabases(auroraConfigFields, name),
-                certificateCn = certificateCn
+                certificateCn = certificateCn,
+                splunkIndex = auroraConfigFields.extractOrNull("splunkIndex"),
+                webseal = findWebseal(auroraConfigFields)
         )
     }
 
+    private fun findWebseal(auroraConfigFields: AuroraConfigFields): Webseal? {
+
+        val name = "webseal"
+        if (auroraConfigFields.disabledAndNoSubKeys(name)) {
+            return null
+        }
+
+        val roles = auroraConfigFields.extractDelimitedStringOrArrayAsSet("$name/roles", ",")
+                .takeIf { it.isNotEmpty() }
+                ?.joinToString(",")
+        return Webseal(
+                auroraConfigFields.extractOrNull("$name/host"),
+                roles
+        )
+    }
 
     private fun findDatabases(auroraConfigFields: AuroraConfigFields, name: String): List<Database> {
 

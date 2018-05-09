@@ -73,6 +73,10 @@
       "value": 180
     }
   },
+  "webseal": {
+    "source": "default",
+    "value": false
+  },
   "artifactId": {
     "source": "webleveranse.json",
     "value": "openshift-referanse-react"
@@ -128,10 +132,6 @@
     }
   },
   "liveness": {
-    "source": "default",
-    "value": false
-  },
-  "webseal": {
     "source": "default",
     "value": false
   },

@@ -28,6 +28,10 @@ class OpenShiftTemplateProcessor(
         replicas?.let {
             adcParameters.put("REPLICAS", it.toString())
         }
+
+        auroraDeploymentSpec.integration?.splunkIndex?.let {
+            adcParameters.put("SPLUNK_INDEX", it)
+        }
         adcParameters.put("NAME", auroraDeploymentSpec.name)
         adcParameters.put("AFFILIATION", auroraDeploymentSpec.environment.affiliation)
         val adcParameterKeys = adcParameters.keys

@@ -23,6 +23,7 @@
     type:              "rolling"                   // webleveranse.json
     timeout:           180                         // default
   }
+  webseal:             false                       // default
   artifactId:          "openshift-referanse-react" // webleveranse.json
   groupId:             "no.skatteetaten.aurora"    // webleveranse.json
   version:             "1"                         // utv/webleveranse.json
@@ -43,7 +44,6 @@
     timeout:           1                           // default
   }
   liveness:            false                       // default
-  webseal:             false                       // default
   debug:               false                       // default
   pause:               false                       // default
   alarm:               true                        // default

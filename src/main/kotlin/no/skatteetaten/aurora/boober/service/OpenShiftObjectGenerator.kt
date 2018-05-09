@@ -24,6 +24,7 @@ import com.fkorotkov.openshift.spec
 import com.fkorotkov.openshift.strategy
 import com.fkorotkov.openshift.to
 import io.fabric8.kubernetes.api.model.IntOrString
+import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.platform.podVolumes
 import no.skatteetaten.aurora.boober.mapper.platform.volumeMount
@@ -48,12 +49,13 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningRe
 import no.skatteetaten.aurora.boober.utils.Instants.now
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.openshiftKind
+import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 
-@Service
+@Component
 class OpenShiftObjectGenerator(
         @Value("\${boober.docker.registry}") val dockerRegistry: String,
         val openShiftObjectLabelService: OpenShiftObjectLabelService,
@@ -168,12 +170,12 @@ class OpenShiftObjectGenerator(
     fun generateService(auroraDeploymentSpec: AuroraDeploymentSpec, serviceLabels: Map<String, String>): JsonNode? {
         return auroraDeploymentSpec.deploy?.let {
 
-            val webseal = it.webseal?.let {
+            val webseal = auroraDeploymentSpec.integration?.webseal?.let {
                 val host = it.host ?: "${auroraDeploymentSpec.name}-${auroraDeploymentSpec.environment.namespace}"
                 "sprocket.sits.no/service.webseal" to host
             }
 
-            val websealRoles = it.webseal?.roles?.let {
+            val websealRoles = auroraDeploymentSpec.integration?.webseal?.roles?.let {
                 "sprocket.sits.no/service.webseal-roles" to it
             }
 
@@ -248,6 +250,7 @@ class OpenShiftObjectGenerator(
 
         val objects: List<JsonNode> = listOf<JsonNode>().addIfNotNull(localTemplate).addIfNotNull(template)
 
+
         return objects.map {
             if (it.openshiftKind == "deploymentconfig") {
                 val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it)
@@ -265,6 +268,24 @@ class OpenShiftObjectGenerator(
                     dc.metadata.annotations.put("sprocket.sits.no/deployment-config.certificate", it)
                 }
                 jacksonObjectMapper().convertValue(dc)
+            } else if (it.openshiftKind == "serivce" && it.openshiftName == auroraDeploymentSpec.name) {
+
+                val service: Service = jacksonObjectMapper().convertValue(it)
+
+                if (service.metadata.annotations == null) {
+                    service.metadata.annotations = HashMap<String, String>()
+                }
+
+                auroraDeploymentSpec.integration?.webseal?.let {
+                    val host = it.host ?: "${auroraDeploymentSpec.name}-${auroraDeploymentSpec.environment.namespace}"
+                    service.metadata.annotations["sprocket.sits.no/service.webseal"] = host
+                }
+
+                auroraDeploymentSpec.integration?.webseal?.roles?.let {
+                    service.metadata.annotations["sprocket.sits.no/service.webseal-roles"] = it
+                }
+
+                jacksonObjectMapper().convertValue(service)
             } else it
         }
 

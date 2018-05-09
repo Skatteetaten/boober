@@ -226,7 +226,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
     then:
-      def roles = deploymentSpec.deploy.webseal.roles
+      def roles = deploymentSpec.integration.webseal.roles
       roles == "role1,role2,3"
 
     where:

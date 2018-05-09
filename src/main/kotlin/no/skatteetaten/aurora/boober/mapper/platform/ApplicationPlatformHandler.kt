@@ -37,7 +37,7 @@ abstract class ApplicationPlatformHandler(val name: String) {
             "VOLUME_${it.mountName.toUpperCase().replace("-", "_")}" to it.path
         }?.toMap() ?: mapOf()
 
-        val splunkIndex = auroraDeploymentSpec.deploy?.splunkIndex?.let { "SPLUNK_INDEX" to it }
+        val splunkIndex = auroraDeploymentSpec.integration?.splunkIndex?.let { "SPLUNK_INDEX" to it }
 
         val certEnv = auroraDeploymentSpec.integration?.certificateCn?.let {
             val baseUrl = "/u01/secrets/app/${auroraDeploymentSpec.name}-cert"

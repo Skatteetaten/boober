@@ -86,7 +86,9 @@ data class AuroraBuild(
 
 data class AuroraIntegration(
         val database: List<Database> = listOf(),
-        val certificateCn: String? = null
+        val certificateCn: String? = null,
+        val splunkIndex: String? = null,
+        val webseal: Webseal? = null
 )
 
 data class AuroraDeploy(
@@ -99,7 +101,6 @@ data class AuroraDeploy(
         val groupId: String,
         val artifactId: String,
         val version: String,
-        val splunkIndex: String? = null,
         val prometheus: HttpEndpoint? = null,
         val managementPath: String? = null,
         val serviceAccount: String? = null,
@@ -109,8 +110,7 @@ data class AuroraDeploy(
         val dockerTag: String,
         val deployStrategy: AuroraDeployStrategy,
         val env: Map<String, String>,
-        val ttl: Duration?,
-        val webseal: Webseal? = null
+        val ttl: Duration?
 )
 
 data class AuroraDeployStrategy(
