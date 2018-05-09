@@ -4,7 +4,12 @@ import spock.lang.Specification
 
 class PropertiesUtilTest extends Specification {
 
-  def props = '#a text line\nfoo=bar\nusername=user\npassword=pass\nsomething=sameting\n'.getBytes()
+  def props = '''#a text line
+foo=bar
+username=user
+password=pass
+something=sameting
+'''.getBytes()
 
   def "Remove non-listed keys from properties"() {
     when:
@@ -29,14 +34,24 @@ class PropertiesUtilTest extends Specification {
       filteredProps.stringPropertyNames()[0] == 'username'
   }
 
-  def "Replace mapped keys"() {
+  def "Replace filtered mapped keys"() {
     when:
       def filteredBytes = PropertiesUtilKt.filterProperties(props, ['username'], ['username': 'new-username'])
 
     then:
       Properties filteredProps = loadProperties(filteredBytes)
+      filteredProps.getProperty('new-username') == 'user'
       filteredProps.size() == 1
-      filteredProps.stringPropertyNames()[0] == 'new-username'
+  }
+
+  def "Replace mapped keys without filtering keys"() {
+    when:
+      def filteredBytes = PropertiesUtilKt.filterProperties(props, [], ['username': 'new-username'])
+
+    then:
+      Properties filteredProps = loadProperties(filteredBytes)
+      filteredProps.getProperty('new-username') == 'user'
+      filteredProps.size() == 1
   }
 
   def loadProperties(byte[] bytes) {
