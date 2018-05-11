@@ -91,6 +91,14 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         }.toMap()
     }
 
+    fun getKeyMappings(keyMappingsExtractors: List<AuroraConfigFieldHandler>): Map<String, String>? {
+        return keyMappingsExtractors.map {
+            val field = it.name.substringAfterLast("/")
+            val value: String = extract(it.name)
+            field to value
+        }.toMap()
+    }
+
     fun disabledAndNoSubKeys(name: String): Boolean {
 
         val simplified = isSimplifiedConfig(name)
