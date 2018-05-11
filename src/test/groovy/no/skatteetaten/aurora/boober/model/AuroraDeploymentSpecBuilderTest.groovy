@@ -197,7 +197,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       '''{ "secretVault": {"name": "test"} }'''                                                        | "test"      | []
       '''{ "secretVault": {"name": "test", "keys": []} }'''                                            | "test"      | []
       '''{ "secretVault": {"name": "test", "keys": ["test1", "test2"]} }'''                            | "test"      | ["test1", "test2"]
-      '''{ "secretVault": {"name": "test", "keys": ["test1"], "mappedKeys":{"test1":"newtestkey"}} }'''| "test"      | ["test1"]
+      '''{ "secretVault": {"name": "test", "keys": ["test1"], "keyMappings":{"test1":"newtestkey"}} }'''| "test"      | ["test1"]
   }
 
   def "Permissions supports both space separated string and array"() {

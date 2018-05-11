@@ -91,8 +91,8 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         }.toMap()
     }
 
-    fun getMappedKeys(mappedKeysExtractors: List<AuroraConfigFieldHandler>): Map<String, String>? {
-        return mappedKeysExtractors.map {
+    fun getKeyMappings(keyMappingsExtractors: List<AuroraConfigFieldHandler>): Map<String, String>? {
+        return keyMappingsExtractors.map {
             val field = it.name.substringAfterLast("/")
             val value: String = extract(it.name)
             field to value

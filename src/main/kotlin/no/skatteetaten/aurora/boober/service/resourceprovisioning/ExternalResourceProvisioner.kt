@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.service.*
 import org.springframework.stereotype.Service
 
 class ProvisioningResult(
@@ -58,7 +57,7 @@ class ExternalResourceProvisioner(
             val secretVaultNames = volume.mounts?.mapNotNull { it.secretVaultName }.orEmpty()
             val allVaultNames = volume.secretVaultName?.let { secretVaultNames + listOf(it) } ?: secretVaultNames
 
-            return allVaultNames.map { VaultRequest(deploymentSpec.environment.affiliation, it, volume.secretVaultKeys, volume.mappedKeys) }
+            return allVaultNames.map { VaultRequest(deploymentSpec.environment.affiliation, it, volume.secretVaultKeys, volume.keyMappings) }
         }
     }
 }

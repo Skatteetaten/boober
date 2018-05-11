@@ -7,12 +7,12 @@ import java.io.IOException
 import java.util.*
 
 
-fun filterProperties(properties: ByteArray, keys: List<String>, mappedKeys: Map<String, String>?): ByteArray =
+fun filterProperties(properties: ByteArray, keys: List<String>, keyMappings: Map<String, String>?): ByteArray =
         try {
             PropertiesLoaderUtils
                     .loadProperties(ByteArrayResource(properties))
                     .filter(keys)
-                    .replaceMappedKeys(mappedKeys)
+                    .replaceKeyMappings(keyMappings)
                     .toByteArray()
         } catch (ioe: IOException) {
             throw PropertiesException("Encountered a problem while reading properties.", ioe)
@@ -32,14 +32,14 @@ fun Properties.filter(keys: List<String>): Properties {
     return newProps
 }
 
-fun Properties.replaceMappedKeys(mappedKeys: Map<String, String>?): Properties {
-    if (mappedKeys == null || mappedKeys.isEmpty()) {
+fun Properties.replaceKeyMappings(keyMappings: Map<String, String>?): Properties {
+    if (keyMappings == null || keyMappings.isEmpty()) {
         return this
     }
 
     val newProps = Properties()
     this.stringPropertyNames().forEach {
-        val key = mappedKeys[it] ?: it
+        val key = keyMappings[it] ?: it
         newProps[key] = this.getProperty(it)
     }
     return newProps

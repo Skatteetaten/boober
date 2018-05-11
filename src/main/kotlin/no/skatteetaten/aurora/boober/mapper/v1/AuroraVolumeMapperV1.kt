@@ -15,24 +15,24 @@ class AuroraVolumeMapperV1(private val applicationFiles: List<AuroraConfigFile>)
     private val mountHandlers = createMountHandlers()
     val configHandlers = applicationFiles.findConfigFieldHandlers()
     private val secretVaultHandlers = createSecretVaultHandlers()
-    private val secretVaultMappedKeysHandlers = createSecretVaultMappedKeysHandlers()
+    private val secretVaultKeyMappingHandlers = createSecretVaultKeyMappingHandlers()
 
-    val handlers = configHandlers + mountHandlers + secretVaultHandlers + secretVaultMappedKeysHandlers
+    val handlers = configHandlers + mountHandlers + secretVaultHandlers + secretVaultKeyMappingHandlers
 
     fun createAuroraVolume(auroraConfigFields: AuroraConfigFields): AuroraVolume {
         return AuroraVolume(
                 secretVaultName = getSecretVault(auroraConfigFields),
                 secretVaultKeys = getSecretVaultKeys(auroraConfigFields),
-                mappedKeys = auroraConfigFields.getMappedKeys(secretVaultMappedKeysHandlers),
+                keyMappings = auroraConfigFields.getKeyMappings(secretVaultKeyMappingHandlers),
                 config = getApplicationConfigFiles(auroraConfigFields),
                 mounts = getMounts(auroraConfigFields))
     }
 
-    private fun createSecretVaultMappedKeysHandlers(): List<AuroraConfigFieldHandler> {
+    private fun createSecretVaultKeyMappingHandlers(): List<AuroraConfigFieldHandler> {
         return applicationFiles.flatMap {
-            it.asJsonNode.at("/secretVault/mappedKeys").fieldNames().asSequence().toList()
+            it.asJsonNode.at("/secretVault/keyMappings").fieldNames().asSequence().toList()
         }.map {
-            AuroraConfigFieldHandler("secretVault/mappedKeys/$it")
+            AuroraConfigFieldHandler("secretVault/keyMappings/$it")
         }
     }
 
