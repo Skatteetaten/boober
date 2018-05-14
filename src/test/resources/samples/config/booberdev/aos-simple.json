@@ -12,5 +12,6 @@
   "deployStrategy": {
     "type": "recreate"
   },
-  "pause": true
+  "pause": true,
+  "releaseTo": ""
 }

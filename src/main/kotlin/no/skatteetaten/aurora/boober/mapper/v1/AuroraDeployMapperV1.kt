@@ -86,7 +86,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
 
         val version: String = auroraConfigFields.extract("version")
 
-        val releaseTo: String? = auroraConfigFields.extractOrNull("releaseTo")
+        val releaseTo: String? = auroraConfigFields.extractOrNull<String>("releaseTo")?.takeUnless { it.isEmpty() }
 
         val artifactId: String = auroraConfigFields.extract("artifactId")
 
