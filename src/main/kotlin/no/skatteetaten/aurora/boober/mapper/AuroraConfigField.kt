@@ -57,7 +57,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
             field to escapedValue
         }
 
-        return env.filter { !it.second.isBlank() }.toMap()
+        return env.toMap()
     }
 
     fun getRouteAnnotations(prefix: String, extractors: List<AuroraConfigFieldHandler>): Map<String, String> {
