@@ -27,8 +27,6 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
     val envNamePattern = "^[a-z0-9\\-]{0,52}$"
     val envNameMessage = "Environment must consist of lower case alphanumeric characters or '-'. It must be no longer than 52 characters."
     val handlers = listOf(
-        AuroraConfigFieldHandler("applicationId", defaultValue = applicationId.toString(),
-            validator = { it.pattern("^$applicationId$", "ApplicationId can't be changed") }),
         AuroraConfigFieldHandler("affiliation", validator = { it.pattern("^[a-z]{1,10}$", "Affiliation can only contain letters and must be no longer than 10 characters") }),
         AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
         AuroraConfigFieldHandler("permissions/admin"),
@@ -85,7 +83,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                     ?.let { StringToDurationConverter().convert(it) },
                 permissions = extractPermissions(auroraConfigFields)
             ),
-            fields = createMapForAuroraDeploymentSpecPointers(createFieldsWithValues(auroraConfigFields, build)),
+            fields = createFields(applicationId, auroraConfigFields, build),
             volume = volume,
             route = route,
             build = build,
@@ -110,6 +108,18 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
 
         return includeSubKeys
     }
+
+    fun createFields(applicationId: ApplicationId, auroraConfigFields: AuroraConfigFields, build: AuroraBuild?): Map<String, Map<String, Any?>> {
+        val applicationIdField = mapOf("applicationId" to mapOf(
+            "source" to "static",
+            "value" to applicationId
+        ))
+
+        val fields = createMapForAuroraDeploymentSpecPointers(createFieldsWithValues(auroraConfigFields, build))
+
+        return applicationIdField + fields
+    }
+
 
     fun createMapForAuroraDeploymentSpecPointers(auroraConfigFields: Map<String, AuroraConfigField>): Map<String, Map<String, Any?>> {
         val fields = mutableMapOf<String, Any?>()
