@@ -26,10 +26,12 @@ import com.fkorotkov.openshift.to
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.openshift.api.model.DeploymentConfig
+import no.skatteetaten.aurora.boober.mapper.platform.createEnvVars
 import no.skatteetaten.aurora.boober.mapper.platform.podVolumes
 import no.skatteetaten.aurora.boober.mapper.platform.volumeMount
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType.ConfigMap
 import no.skatteetaten.aurora.boober.model.MountType.PVC
@@ -48,6 +50,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.Instants.now
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.slf4j.Logger
@@ -167,6 +170,8 @@ class OpenShiftObjectGenerator(
         return mapper.convertValue(dc)
     }
 
+
+
     fun generateService(auroraDeploymentSpec: AuroraDeploymentSpec, serviceLabels: Map<String, String>): JsonNode? {
         return auroraDeploymentSpec.deploy?.let {
 
@@ -258,8 +263,8 @@ class OpenShiftObjectGenerator(
                 spec.volumes.addAll(mounts.podVolumes(auroraDeploymentSpec.name))
                 spec.containers.forEach {
                     it.volumeMounts.addAll(mounts.volumeMount() ?: listOf())
+                    it.env.addAll(createEnvVars(mounts, auroraDeploymentSpec))
                 }
-
 
                 auroraDeploymentSpec.integration?.certificateCn?.let {
                     if (dc.metadata.annotations == null) {

@@ -40,7 +40,7 @@ object ContainerGenerator {
                 val portName = if (it.key == "http") "HTTP_PORT" else "${it.key}_HTTP_PORT".toUpperCase()
                 EnvVarBuilder().withName(portName).withValue(it.value.toString()).build()
             }
-            env = adcContainer.env.map { EnvVarBuilder().withName(it.key).withValue(it.value).build() } + portEnv
+            env = adcContainer.env + portEnv
 
             resources {
                 limits = fromAdcResource(adcContainer.limit)

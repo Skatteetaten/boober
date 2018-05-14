@@ -6,6 +6,8 @@ import com.fkorotkov.kubernetes.configMap
 import com.fkorotkov.kubernetes.persistentVolumeClaim
 import com.fkorotkov.kubernetes.secret
 import com.fkorotkov.kubernetes.volume
+import io.fabric8.kubernetes.api.model.EnvVar
+import io.fabric8.kubernetes.api.model.EnvVarBuilder
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
@@ -31,61 +33,7 @@ abstract class ApplicationPlatformHandler(val name: String) {
 
     abstract fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?): AuroraDeployment
 
-    fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpec: AuroraDeploymentSpec): Map<String, String> {
 
-        val mountEnv = mounts?.map {
-            "VOLUME_${it.mountName.toUpperCase().replace("-", "_")}" to it.path
-        }?.toMap() ?: mapOf()
-
-        val splunkIndex = auroraDeploymentSpec.integration?.splunkIndex?.let { "SPLUNK_INDEX" to it }
-
-        val certEnv = auroraDeploymentSpec.integration?.certificateCn?.let {
-            val baseUrl = "/u01/secrets/app/${auroraDeploymentSpec.name}-cert"
-            mapOf(
-                    "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
-                    "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
-                    "STS_KEYSTORE_DESCRIPTOR" to "$baseUrl/descriptor.properties"
-            )
-        } ?: mapOf()
-
-        val debugEnv = auroraDeploymentSpec.deploy?.flags?.takeIf { it.debug }?.let {
-            mapOf(
-                    "ENABLE_REMOTE_DEBUG" to "true",
-                    "DEBUG_PORT" to "5005"
-            )
-        } ?: mapOf()
-
-        val configEnv = auroraDeploymentSpec.deploy?.env ?: emptyMap()
-
-        val routeName = auroraDeploymentSpec.route?.route?.takeIf { it.isNotEmpty() }?.first()?.let {
-            val host = auroraDeploymentSpec.assembleRouteHost(it.host ?: auroraDeploymentSpec.name)
-
-            val url = "$host${it.path?.ensureStartWith("/") ?: ""}"
-            mapOf("ROUTE_NAME" to url, "ROUTE_URL" to "http://$url")
-        } ?: mapOf()
-
-        val dbEnv = auroraDeploymentSpec.integration?.database?.takeIf { it.isNotEmpty() }?.let {
-            fun createDbEnv(db: Database, envName: String): List<Pair<String, String>> {
-                val path = "/u01/secrets/app/${db.name.toLowerCase()}-db"
-                val envName = envName.replace("-", "_").toUpperCase()
-
-                return listOf(
-                        envName to "$path/info",
-                        "${envName}_PROPERTIES" to "$path/db.properties"
-                )
-            }
-
-            it.flatMap { createDbEnv(it, "${it.name}_db") } + createDbEnv(it.first(), "db")
-        }?.toMap() ?: mapOf()
-
-        val envs = mapOf(
-                "OPENSHIFT_CLUSTER" to auroraDeploymentSpec.cluster,
-                "APP_NAME" to auroraDeploymentSpec.name
-        ).addIfNotNull(splunkIndex) + routeName + certEnv + debugEnv + dbEnv + mountEnv + configEnv
-
-        return envs.mapKeys { it.key.replace(".", "_").replace("-", "_") }
-
-    }
 
     fun createAnnotations(deploy: AuroraDeploy, integration: AuroraIntegration?): Map<String, String> {
 
@@ -138,7 +86,7 @@ data class AuroraContainer(val name: String,
                            val liveness: Probe?,
                            val limit: AuroraDeploymentConfigResource,
                            val request: AuroraDeploymentConfigResource,
-                           val env: Map<String, String>,
+                           val env: List<EnvVar>,
                            val mounts: List<Mount>? = null,
                            val shouldHaveImageChange: Boolean = true)
 
@@ -187,4 +135,61 @@ fun List<Mount>?.podVolumes(dcName: String): List<Volume> {
             }
         }
     } ?: emptyList()
+}
+
+fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpec: AuroraDeploymentSpec): List<EnvVar> {
+
+    val mountEnv = mounts?.map {
+        "VOLUME_${it.mountName.toUpperCase().replace("-", "_")}" to it.path
+    }?.toMap() ?: mapOf()
+
+    val splunkIndex = auroraDeploymentSpec.integration?.splunkIndex?.let { "SPLUNK_INDEX" to it }
+
+    val certEnv = auroraDeploymentSpec.integration?.certificateCn?.let {
+        val baseUrl = "/u01/secrets/app/${auroraDeploymentSpec.name}-cert"
+        mapOf(
+                "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
+                "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
+                "STS_KEYSTORE_DESCRIPTOR" to "$baseUrl/descriptor.properties"
+        )
+    } ?: mapOf()
+
+    val debugEnv = auroraDeploymentSpec.deploy?.flags?.takeIf { it.debug }?.let {
+        mapOf(
+                "ENABLE_REMOTE_DEBUG" to "true",
+                "DEBUG_PORT" to "5005"
+        )
+    } ?: mapOf()
+
+    val configEnv = auroraDeploymentSpec.deploy?.env ?: emptyMap()
+
+    val routeName = auroraDeploymentSpec.route?.route?.takeIf { it.isNotEmpty() }?.first()?.let {
+        val host = auroraDeploymentSpec.assembleRouteHost(it.host ?: auroraDeploymentSpec.name)
+
+        val url = "$host${it.path?.ensureStartWith("/") ?: ""}"
+        mapOf("ROUTE_NAME" to url, "ROUTE_URL" to "http://$url")
+    } ?: mapOf()
+
+    val dbEnv = auroraDeploymentSpec.integration?.database?.takeIf { it.isNotEmpty() }?.let {
+        fun createDbEnv(db: Database, envName: String): List<Pair<String, String>> {
+            val path = "/u01/secrets/app/${db.name.toLowerCase()}-db"
+            val envName = envName.replace("-", "_").toUpperCase()
+
+            return listOf(
+                    envName to "$path/info",
+                    "${envName}_PROPERTIES" to "$path/db.properties"
+            )
+        }
+
+        it.flatMap { createDbEnv(it, "${it.name}_db") } + createDbEnv(it.first(), "db")
+    }?.toMap() ?: mapOf()
+
+    val envs = mapOf(
+            "OPENSHIFT_CLUSTER" to auroraDeploymentSpec.cluster,
+            "APP_NAME" to auroraDeploymentSpec.name
+    ).addIfNotNull(splunkIndex) + routeName + certEnv + debugEnv + dbEnv + mountEnv + configEnv
+
+    val env= envs.mapKeys { it.key.replace(".", "_").replace("-", "_") }
+
+    return env.map { EnvVarBuilder().withName(it.key).withValue(it.value).build() }
 }
