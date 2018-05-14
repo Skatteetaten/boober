@@ -11,6 +11,10 @@
     "source": "default",
     "value": "java"
   },
+  "applicationId": {
+    "source": "default",
+    "value": "utv/reference"
+  },
   "affiliation": {
     "source": "about.json",
     "value": "aos"

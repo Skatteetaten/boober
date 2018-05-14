@@ -2,6 +2,7 @@
   schemaVersion:       "v1"                        // about.json
   type:                "development"               // utv/webleveranse.json
   applicationPlatform: "web"                       // webleveranse.json
+  applicationId:       "utv/webleveranse"          // default
   affiliation:         "aos"                       // about.json
   cluster:             "utv"                       // utv/about.json
   permissions: {

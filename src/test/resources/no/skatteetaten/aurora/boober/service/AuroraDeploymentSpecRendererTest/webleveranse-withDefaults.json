@@ -11,6 +11,10 @@
     "source": "webleveranse.json",
     "value": "web"
   },
+  "applicationId": {
+    "source": "default",
+    "value": "utv/webleveranse"
+  },
   "affiliation": {
     "source": "about.json",
     "value": "aos"
