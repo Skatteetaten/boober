@@ -91,6 +91,34 @@
               {
                 "name": "SCHEME",
                 "value": "http"
+              },
+              {
+                "name": "OPENSHIFT_CLUSTER",
+                "value": "utv"
+              },
+              {
+                "name": "APP_NAME",
+                "value": "tvinn"
+              },
+              {
+                "name": "TVINN_DB",
+                "value": "/u01/secrets/app/tvinn-db/info"
+              },
+              {
+                "name": "TVINN_DB_PROPERTIES",
+                "value": "/u01/secrets/app/tvinn-db/db.properties"
+              },
+              {
+                "name": "DB",
+                "value": "/u01/secrets/app/tvinn-db/info"
+              },
+              {
+                "name": "DB_PROPERTIES",
+                "value": "/u01/secrets/app/tvinn-db/db.properties"
+              },
+              {
+                "name": "VOLUME_TVINN_CONFIG",
+                "value": "/u01/foo"
               }
             ],
             "envFrom": [
