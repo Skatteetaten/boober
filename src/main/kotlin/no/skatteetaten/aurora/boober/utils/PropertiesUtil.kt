@@ -4,7 +4,7 @@ import org.springframework.core.io.ByteArrayResource
 import org.springframework.core.io.support.PropertiesLoaderUtils
 import java.io.ByteArrayOutputStream
 import java.io.IOException
-import java.util.*
+import java.util.Properties
 
 
 fun filterProperties(properties: ByteArray, keys: List<String>, keyMappings: Map<String, String>?): ByteArray =

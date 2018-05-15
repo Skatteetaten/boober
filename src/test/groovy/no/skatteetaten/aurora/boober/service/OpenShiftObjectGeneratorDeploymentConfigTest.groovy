@@ -3,8 +3,6 @@ package no.skatteetaten.aurora.boober.service
 import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 import static no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner.createSchemaProvisionRequestsFromDeploymentSpec
 
-import com.fasterxml.jackson.databind.JsonNode
-
 import groovy.json.JsonSlurper
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseInstance
@@ -70,7 +68,7 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObje
     then: "the dc must contain valid toxiproxy sidecar configuration"
       dcContainsValidToxiProxyContainer(dc, name)
       dcContainsValidToxiProxyVolume(dc, name)
-    }
+  }
 
   def "toxiproxy sidecar must be created if toxiproxy is enabled in deployment spec for web"() {
 
@@ -93,23 +91,23 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObje
 
     return container != null &&
         container.image == "shopify/toxiproxy:2.1.3" &&
-        container.args  == [ "-config", "/u01/config/config.json" ] &&
+        container.args == ["-config", "/u01/config/config.json"] &&
         container.volumeMounts.find { it == ["mountPath": "/u01/config", "name": "toxiproxy-volume"] }
   }
 
   def dcContainsValidToxiProxyVolume(dc, name) {
     def dcobj = new JsonSlurper().parseText(dc.toString()) // convert to groovy for easier navigation and validation
-    def volume = dcobj?.spec?.template?.spec?.volumes?.find { it?.name == "toxiproxy-volume"}
+    def volume = dcobj?.spec?.template?.spec?.volumes?.find { it?.name == "toxiproxy-volume" }
 
     return volume != null &&
         volume.configMap?.name == name + "-config"
   }
 
   def provisiongResult(AuroraDeploymentSpec deploymentSpec) {
-      return new ProvisioningResult(
-          new SchemaProvisionResults([new SchemaProvisionResult(
-              createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec)[0],
-              new DbhSchema("", "", new DatabaseInstance(1512, ""), "", [:], []), "")
-          ]), null)
+    return new ProvisioningResult(
+        new SchemaProvisionResults([new SchemaProvisionResult(
+            createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec)[0],
+            new DbhSchema("", "", new DatabaseInstance(1512, ""), "", [:], []), "")
+        ]), null)
   }
 }

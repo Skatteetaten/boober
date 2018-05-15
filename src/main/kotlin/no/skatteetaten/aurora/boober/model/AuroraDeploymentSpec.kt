@@ -62,8 +62,8 @@ data class AuroraDeploymentSpec(
         val deploy: AuroraDeploy? = null,
         val template: AuroraTemplate? = null,
         val localTemplate: AuroraLocalTemplate? = null,
-        val integration:AuroraIntegration?,
-       val applicationFile:AuroraConfigFile
+        val integration: AuroraIntegration?,
+        val applicationFile: AuroraConfigFile
 )
 
 data class AuroraVolume(
@@ -105,6 +105,7 @@ data class AuroraIntegration(
 )
 
 data class AuroraDeploy(
+        val applicationFile: String,
         val overrideFiles: Map<String, String>,
         val releaseTo: String?,
         val flags: AuroraDeploymentConfigFlags,
@@ -229,5 +230,5 @@ data class Permission(
 )
 
 data class ToxiProxy(
-    val version: String
+        val version: String
 )

@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.contracts
 
 import no.skatteetaten.aurora.boober.controller.v1.DeployControllerV1
 import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Permission
@@ -35,7 +34,7 @@ class DeployBase extends AbstractContractBase {
     def spec = new AuroraDeploymentSpec(new ApplicationId('', ''), '', TemplateType.development, '', [:], '', '',
         new AuroraDeployEnvironment('', '',
             new Permissions(new Permission(Collections.emptySet(), Collections.emptySet()), null), null),
-        null, null, null, null, null, null)
+        null, null, null, null, null, null, null, null)
     return new AuroraDeployResult(spec, UUID.randomUUID().toString().substring(0,7), [], success, false, reason)
   }
 }

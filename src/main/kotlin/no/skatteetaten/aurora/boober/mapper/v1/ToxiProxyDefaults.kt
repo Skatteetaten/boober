@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.fabric8.kubernetes.api.model.EnvVar
 import no.skatteetaten.aurora.boober.mapper.v1.ToxiProxyDefaults.TOXIPROXY_REPOSITORY
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
 import no.skatteetaten.aurora.boober.model.Probe
@@ -21,7 +22,7 @@ object ToxiProxyDefaults {
     val RESOURCE_REQUEST = AuroraDeploymentConfigResource(cpu = "100m", memory = "128Mi")
 
     val ARGS: List<String> = listOf("-config", "/u01/config/config.json")
-    val ENV: Map<String, String> = emptyMap()
+    val ENV: List<EnvVar> = emptyList()
 }
 
 fun getToxiProxyImage(version: String): String {
@@ -30,9 +31,9 @@ fun getToxiProxyImage(version: String): String {
 
 fun getToxiProxyConfig(): String {
     val config = ToxiProxyConfig(
-        name = "app",
-        listen = "0.0.0.0:" + PortNumbers.TOXIPROXY_HTTP_PORT,
-        upstream = "0.0.0.0:" + PortNumbers.INTERNAL_HTTP_PORT)
+            name = "app",
+            listen = "0.0.0.0:" + PortNumbers.TOXIPROXY_HTTP_PORT,
+            upstream = "0.0.0.0:" + PortNumbers.INTERNAL_HTTP_PORT)
 
     return jacksonObjectMapper().writeValueAsString(listOf(config))
 }

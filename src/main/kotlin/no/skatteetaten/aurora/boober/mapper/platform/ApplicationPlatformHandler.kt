@@ -18,7 +18,6 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeployStrategy
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.AuroraIntegration
 import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType.ConfigMap
@@ -76,17 +75,17 @@ abstract class ApplicationPlatformHandler(val name: String) {
 
         return auroraDeploymentSpec?.deploy?.toxiProxy?.let {
             listOf(AuroraContainer(
-                name = "${auroraDeploymentSpec.name}-toxiproxy",
-                tcpPorts = mapOf("http" to PortNumbers.TOXIPROXY_HTTP_PORT, "management" to PortNumbers.TOXIPROXY_ADMIN_PORT),
-                readiness = ToxiProxyDefaults.READINESS_PROBE,
-                liveness = ToxiProxyDefaults.LIVENESS_PROBE,
-                limit = ToxiProxyDefaults.RESOURCE_LIMIT,
-                request = ToxiProxyDefaults.RESOURCE_REQUEST,
-                env = ToxiProxyDefaults.ENV,
-                mounts = mounts,
-                shouldHaveImageChange = false,
-                args = ToxiProxyDefaults.ARGS,
-                image = getToxiProxyImage(it.version)
+                    name = "${auroraDeploymentSpec.name}-toxiproxy",
+                    tcpPorts = mapOf("http" to PortNumbers.TOXIPROXY_HTTP_PORT, "management" to PortNumbers.TOXIPROXY_ADMIN_PORT),
+                    readiness = ToxiProxyDefaults.READINESS_PROBE,
+                    liveness = ToxiProxyDefaults.LIVENESS_PROBE,
+                    limit = ToxiProxyDefaults.RESOURCE_LIMIT,
+                    request = ToxiProxyDefaults.RESOURCE_REQUEST,
+                    env = ToxiProxyDefaults.ENV,
+                    mounts = mounts,
+                    shouldHaveImageChange = false,
+                    args = ToxiProxyDefaults.ARGS,
+                    image = getToxiProxyImage(it.version)
             ))
         } ?: null
     }
@@ -108,7 +107,7 @@ data class AuroraContainer(
         val liveness: Probe?,
         val limit: AuroraDeploymentConfigResource,
         val request: AuroraDeploymentConfigResource,
-        val env: Map<String, String>,
+        val env: List<EnvVar>,
         val mounts: List<Mount>? = null,
         val shouldHaveImageChange: Boolean = true,
         val image: String? = null
@@ -162,7 +161,7 @@ fun List<Mount>?.podVolumes(dcName: String): List<Volume> {
     } ?: emptyList()
 }
 
-fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpec: AuroraDeploymentSpec, routeSuffix:String): List<EnvVar> {
+fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpec: AuroraDeploymentSpec, routeSuffix: String): List<EnvVar> {
 
     val mountEnv = mounts?.map {
         "VOLUME_${it.mountName.toUpperCase().replace("-", "_")}" to it.path

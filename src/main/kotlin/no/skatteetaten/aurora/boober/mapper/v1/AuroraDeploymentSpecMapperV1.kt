@@ -17,7 +17,7 @@ import no.skatteetaten.aurora.boober.model.AuroraTemplate
 import no.skatteetaten.aurora.boober.model.AuroraVolume
 import no.skatteetaten.aurora.boober.utils.oneOf
 
-class AuroraDeploymentSpecMapperV1(val applicationId:ApplicationId) {
+class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
 
 
     val handlers = listOf(
@@ -41,19 +41,19 @@ class AuroraDeploymentSpecMapperV1(val applicationId:ApplicationId) {
                                    build: AuroraBuild?,
                                    deploy: AuroraDeploy?,
                                    template: AuroraTemplate?,
-                                   integration: AuroraIntegration?
+                                   integration: AuroraIntegration?,
                                    localTemplate: AuroraLocalTemplate?,
                                    env: AuroraDeployEnvironment,
                                    applicationFile: AuroraConfigFile): AuroraDeploymentSpec {
         val name: String = auroraConfigFields.extract("name")
 
         return AuroraDeploymentSpec(
-            applicationId = applicationId,
-            schemaVersion = auroraConfigFields.extract("schemaVersion"),
-            applicationPlatform = auroraConfigFields.extract("applicationPlatform"),
-            type = auroraConfigFields.extract("type"),
-            name = name,
-            cluster = auroraConfigFields.extract("cluster"),
+                applicationId = applicationId,
+                schemaVersion = auroraConfigFields.extract("schemaVersion"),
+                applicationPlatform = auroraConfigFields.extract("applicationPlatform"),
+                type = auroraConfigFields.extract("type"),
+                name = name,
+                cluster = auroraConfigFields.extract("cluster"),
                 environment = env,
                 fields = createMapForAuroraDeploymentSpecPointers(createFieldsWithValues(auroraConfigFields, build)),
                 volume = volume,
@@ -62,8 +62,8 @@ class AuroraDeploymentSpecMapperV1(val applicationId:ApplicationId) {
                 deploy = deploy,
                 template = template,
                 localTemplate = localTemplate,
-                integration=integration,
-                applicationFile=applicationFile)
+                integration = integration,
+                applicationFile = applicationFile)
 
     }
 
@@ -86,8 +86,8 @@ class AuroraDeploymentSpecMapperV1(val applicationId:ApplicationId) {
 
     fun createFields(applicationId: ApplicationId, auroraConfigFields: AuroraConfigFields, build: AuroraBuild?): Map<String, Map<String, Any?>> {
         val applicationIdField = mapOf("applicationId" to mapOf(
-            "source" to "static",
-            "value" to applicationId.toString()
+                "source" to "static",
+                "value" to applicationId.toString()
         ))
 
         val fields = createMapForAuroraDeploymentSpecPointers(createFieldsWithValues(auroraConfigFields, build))

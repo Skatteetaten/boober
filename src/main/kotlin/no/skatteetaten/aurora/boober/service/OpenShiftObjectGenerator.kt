@@ -29,12 +29,10 @@ import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.platform.createEnvVars
 import no.skatteetaten.aurora.boober.mapper.platform.podVolumes
 import no.skatteetaten.aurora.boober.mapper.platform.volumeMount
-import no.skatteetaten.aurora.boober.Boober
 import no.skatteetaten.aurora.boober.mapper.v1.PortNumbers
 import no.skatteetaten.aurora.boober.mapper.v1.ToxiProxyDefaults
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType.ConfigMap
 import no.skatteetaten.aurora.boober.model.MountType.PVC
@@ -53,7 +51,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.Instants.now
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.slf4j.Logger
@@ -213,13 +210,13 @@ class OpenShiftObjectGenerator(
 
                 spec {
                     ports = listOf(
-                        servicePort {
-                            name = "http"
-                            protocol = "TCP"
-                            port = PortNumbers.HTTP_PORT
-                            targetPort = IntOrString(podPort)
-                            nodePort = 0
-                        }
+                            servicePort {
+                                name = "http"
+                                protocol = "TCP"
+                                port = PortNumbers.HTTP_PORT
+                                targetPort = IntOrString(podPort)
+                                nodePort = 0
+                            }
                     )
 
                     selector = mapOf("name" to auroraDeploymentSpec.name)
@@ -271,7 +268,7 @@ class OpenShiftObjectGenerator(
                 spec.volumes.addAll(mounts.podVolumes(auroraDeploymentSpec.name))
                 spec.containers.forEach {
                     it.volumeMounts.addAll(mounts.volumeMount() ?: listOf())
-                    it.env.addAll(createEnvVars(mounts, auroraDeploymentSpec))
+                    it.env.addAll(createEnvVars(mounts, auroraDeploymentSpec, routeSuffix))
                 }
 
                 auroraDeploymentSpec.integration?.certificateCn?.let {

@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.contracts
 
 import no.skatteetaten.aurora.boober.controller.v1.AuroraDeploymentSpecControllerV1
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -26,9 +25,12 @@ class AuroradeploymentspecBase extends AbstractContractBase {
 
   private AuroraDeploymentSpec createAuroraDeploymentSpec() {
     def deploymentSpecs = response('deploymentspec', '$.items[0]', Map)
-    new AuroraDeploymentSpec(new ApplicationId('', ''), '', TemplateType.development, '', deploymentSpecs, '', '',
-        new AuroraDeployEnvironment('', '',
-            new Permissions(new Permission(Collections.emptySet(), Collections.emptySet()), null), null),
-        null, null, null, null, null, null, null)
+
+    def aid = new ApplicationId("", "")
+    def env = new AuroraDeployEnvironment('', '',
+        new Permissions(new Permission(Collections.emptySet(), Collections.emptySet()), null), null)
+    new AuroraDeploymentSpec(aid, '', TemplateType.development, '', deploymentSpecs,
+        '', '', env,
+        null, null, null, null, null, null, null, null)
   }
 }

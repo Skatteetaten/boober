@@ -26,7 +26,7 @@ class WebPlatformHandler : ApplicationPlatformHandler("web") {
                         liveness = auroraDeploymentSpec.deploy.liveness,
                         limit = auroraDeploymentSpec.deploy.resources.limit,
                         request = auroraDeploymentSpec.deploy.resources.request,
-                        env = createEnvVars(mounts, auroraDeploymentSpec,routeSuffix),
+                        env = createEnvVars(mounts, auroraDeploymentSpec, routeSuffix),
                         mounts = mounts?.filter { it.targetContainer == null }
                 ),
                 AuroraContainer(

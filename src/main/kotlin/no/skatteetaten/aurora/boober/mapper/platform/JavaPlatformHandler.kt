@@ -10,23 +10,23 @@ import org.springframework.stereotype.Component
 
 @Component
 class JavaPlatformHandler : ApplicationPlatformHandler("java") {
-    override fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?, routeSuffix:String, sidecarContainers: List<AuroraContainer>?): AuroraDeployment {
+    override fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?, routeSuffix: String, sidecarContainers: List<AuroraContainer>?): AuroraDeployment {
 
         val tag = when (auroraDeploymentSpec.type) {
             development -> "latest"
             else -> "default"
         }
         val containers = listOf(AuroraContainer(
-            name = "${auroraDeploymentSpec.name}-java",
-            tcpPorts = mapOf("http" to PortNumbers.INTERNAL_HTTP_PORT, "management" to PortNumbers.INTERNAL_ADMIN_PORT, "jolokia" to PortNumbers.JOLOKIA_HTTP_PORT),
-            readiness = auroraDeploymentSpec.deploy!!.readiness,
-            liveness = auroraDeploymentSpec.deploy.liveness,
-            limit = auroraDeploymentSpec.deploy.resources.limit,
-            request = auroraDeploymentSpec.deploy.resources.request,
-            env = createEnvVars(mounts, auroraDeploymentSpec, routeSuffix),
-            mounts = mounts?.filter { it.targetContainer == null }
+                name = "${auroraDeploymentSpec.name}-java",
+                tcpPorts = mapOf("http" to PortNumbers.INTERNAL_HTTP_PORT, "management" to PortNumbers.INTERNAL_ADMIN_PORT, "jolokia" to PortNumbers.JOLOKIA_HTTP_PORT),
+                readiness = auroraDeploymentSpec.deploy!!.readiness,
+                liveness = auroraDeploymentSpec.deploy.liveness,
+                limit = auroraDeploymentSpec.deploy.resources.limit,
+                request = auroraDeploymentSpec.deploy.resources.request,
+                env = createEnvVars(mounts, auroraDeploymentSpec, routeSuffix),
+                mounts = mounts?.filter { it.targetContainer == null }
         ))
-            .addIfNotNull(sidecarContainers)
+                .addIfNotNull(sidecarContainers)
 
         return AuroraDeployment(
                 name = auroraDeploymentSpec.name,
@@ -45,12 +45,12 @@ class JavaPlatformHandler : ApplicationPlatformHandler("java") {
     override fun handlers(handlers: Set<AuroraConfigFieldHandler>): Set<AuroraConfigFieldHandler> {
 
         val buildHandlers = handlers.find { it.name.startsWith("baseImage") }
-            ?.let {
-                setOf(
+                ?.let {
+                    setOf(
                     AuroraConfigFieldHandler("baseImage/name", defaultValue = "flange"),
                     AuroraConfigFieldHandler("baseImage/version", defaultValue = "8")
-                )
-            }
+                    )
+                }
 
         return handlers.addIfNotNull(buildHandlers)
     }
