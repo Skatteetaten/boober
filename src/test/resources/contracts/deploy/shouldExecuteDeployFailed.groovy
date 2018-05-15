@@ -6,8 +6,8 @@ Contract.make {
   request {
     method 'PUT'
     url $(
-        consumer(~/\/v1\/apply\/[a-z]+/),
-        producer('/v1/apply/invalid')
+        stub(~/\/v1\/apply\/[a-z]+/),
+        test('/v1/apply/invalid')
     )
     headers {
       contentType(applicationJson())
@@ -17,7 +17,7 @@ Contract.make {
         overrides: {},
         deploy: true
     )
-    stubMatchers {
+    bodyMatchers {
       jsonPath('$.applicationIds[?@environment]', byRegex(nonEmpty()))
       jsonPath('$.applicationIds[?@application]', byRegex(nonEmpty()))
       jsonPath('$.deploy', byRegex(anyBoolean()))

@@ -6,8 +6,8 @@ Contract.make {
   request {
     method 'GET'
     url $(
-        consumer(~/\/v1\/apply-result\/[a-z]+\/.+/),
-        producer('/v1/apply-result/aos/123')
+        stub(~/\/v1\/apply-result\/[a-z]+\/.+/),
+        test('/v1/apply-result/aos/123')
     )
   }
   response {

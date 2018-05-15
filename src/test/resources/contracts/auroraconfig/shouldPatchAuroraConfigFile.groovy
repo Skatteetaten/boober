@@ -6,8 +6,8 @@ Contract.make {
   request {
     method 'PATCH'
     url $(
-        consumer(~/\/v1\/auroraconfig\/[a-z]+\/[a-z]+/),
-        producer('/v1/auroraconfig/auroraconfigname/filename')
+        stub(~/\/v1\/auroraconfig\/[a-z]+\/[a-z]+/),
+        test('/v1/auroraconfig/auroraconfigname/filename')
     )
     headers {
       contentType(applicationJson())
@@ -15,7 +15,7 @@ Contract.make {
     body(
         content: 'test-content'
     )
-    stubMatchers {
+    bodyMatchers {
       jsonPath('$.content', byRegex(nonEmpty()))
     }
   }

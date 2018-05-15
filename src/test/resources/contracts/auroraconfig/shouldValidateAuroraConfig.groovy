@@ -6,8 +6,8 @@ Contract.make {
   request {
     method 'PUT'
     url $(
-        consumer(~/\/v1\/auroraconfig\/[a-z]+\/validate/),
-        producer('/v1/auroraconfig/auroraconfigname/validate')
+        stub(~/\/v1\/auroraconfig\/[a-z]+\/validate/),
+        test('/v1/auroraconfig/auroraconfigname/validate')
     )
     headers {
       contentType(applicationJson())
@@ -16,7 +16,7 @@ Contract.make {
         name: 'name',
         files: []
     )
-    stubMatchers {
+    bodyMatchers {
       jsonPath('$.name', byRegex(nonEmpty()))
       jsonPath('$.files[?@name]', byRegex(nonEmpty()))
       jsonPath('$.files[?@contents]', byRegex(nonEmpty()))
