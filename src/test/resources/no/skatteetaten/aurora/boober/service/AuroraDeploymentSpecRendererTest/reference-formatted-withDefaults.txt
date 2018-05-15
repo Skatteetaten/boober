@@ -50,6 +50,7 @@
   pause:               false                        // default
   alarm:               true                         // default
   toxiproxy:           false                        // default
+  route:               true                         // reference.json
   routeDefaults: {
     host:              "@name@-@affiliation@-@env@" // default
   }
