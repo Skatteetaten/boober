@@ -2,13 +2,9 @@
   "kind": "Template",
   "apiVersion": "v1",
   "metadata": {
-    "name": "atomhopper",
-    "creationTimestamp": null,
-    "labels": {
-      "aurora-objects-version": "3.1.6"
-    },
+    "name": "aurora-atomhopper",
     "annotations": {
-      "description": "Deploy en atomhopper. Må sette database secret manuelt",
+      "description": "Deploy en atomhopper",
       "iconClass": "icon-jee",
       "tags": "instant-app, atom"
     }
@@ -18,10 +14,7 @@
       "apiVersion": "v1",
       "kind": "ImageStream",
       "metadata": {
-        "name": "atomhopper",
-        "labels": {
-          "affiliation": "safir"
-        }
+        "name": "tvinn"
       },
       "spec": {
         "dockerImageRepository": "docker-registry.aurora.sits.no:5000/aurora/atomhopper",
@@ -29,12 +22,12 @@
           {
             "from": {
               "kind": "DockerImage",
-              "name": "docker-registry.aurora.sits.no:5000/aurora/atomhopper:1.3.0"
+              "name": "docker-registry.aurora.sits.no:5000/aurora/atomhopper:1"
             },
             "importPolicy": {
               "scheduled": true
             },
-            "name": "1.3.0"
+            "name": "default"
           }
         ]
       }
@@ -47,9 +40,6 @@
           "prometheus.io/path": "/metrics",
           "prometheus.io/scheme": "http",
           "prometheus.io/scrape": "false"
-        },
-        "labels": {
-          "affiliation": "safir"
         },
         "name": "tvinn"
       },
@@ -75,10 +65,7 @@
       "apiVersion": "v1",
       "kind": "Route",
       "metadata": {
-        "name": "tvinn",
-        "labels": {
-          "affiliation": "safir"
-        }
+        "name": "tvinn"
       },
       "spec": {
         "to": {
@@ -91,12 +78,8 @@
       "apiVersion": "v1",
       "kind": "DeploymentConfig",
       "metadata": {
-        "annotations": {
-          "sprocket.sits.no/deployment-config.database": "tvinn"
-        },
         "labels": {
-          "name": "tvinn",
-          "affiliation": "safir"
+          "name": "tvinn"
         },
         "name": "tvinn"
       },
@@ -190,7 +173,7 @@
                 "resources": {
                   "limits": {
                     "cpu": "2",
-                    "memory": "4gi"
+                    "memory": "4Gi"
                   },
                   "requests": {
                     "cpu": "0.1",
@@ -231,7 +214,7 @@
               ],
               "from": {
                 "kind": "ImageStreamTag",
-                "name": "atomhopper:1.2.0"
+                "name": "tvinn:default"
               },
               "lastTriggeredImage": ""
             },
@@ -243,24 +226,18 @@
   ],
   "parameters": [
     {
-      "name": "APP_NAME",
-      "description": "Unique name for this app. Route will be APP_NAME.cluster_prefix_url",
-      "generate": "expression",
-      "from": "[a-z]{6}"
+      "name": "NAME",
+      "description": "Unique name for this app. Route will be NAME.cluster_prefix_url"
     },
     {
       "name": "FEED_NAME",
       "description": "Atomhopper feed name",
-      "required" : true
-    },
-    {
-      "name": "DATABASE",
-      "description": "Spesifiser databaser fra dbHotel. Komma separert liste med: \u003cnavn\u003e:\u003cid\u003e for en db fra id. \u003cnavn\u003e:temp for en temp database. auto for å hente alle databaser for denne applikasjonen i dette miljøet. Standard er blank som gir ingen.",
-      "required" : "true"
+      "required": true
     },
     {
       "name": "DB_NAME",
-      "description": "Name of the database"
+      "description": "Name of the database",
+      "required": true
     },
     {
       "name": "MAX_MEMORY",
@@ -269,7 +246,8 @@
     },
     {
       "name": "DOMAIN_NAME",
-      "description": "Domain name to appear in the links in the feed"
+      "description": "Domain name to appear in the links in the feed",
+      "required": true
     },
     {
       "name": "SCHEME",
@@ -283,10 +261,11 @@
     {
       "name": "AFFILIATION",
       "description": "Hvilken tilhørighet atomhopperen har"
+    },
+    {
+      "name": "VERSION",
+      "description": "Hvilken versjon av AtomHopper vil du kjøre",
+      "value": "1.3.4"
     }
-  ],
-  "labels": {
-    "aurora-objects-version": "3.1.6",
-    "template": "aurora-atomhopper-application"
-  }
+  ]
 }

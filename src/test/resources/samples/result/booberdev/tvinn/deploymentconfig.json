@@ -2,14 +2,14 @@
   "apiVersion": "v1",
   "kind": "DeploymentConfig",
   "metadata": {
-    "annotations": {
-      "sprocket.sits.no/deployment-config.database": "tvinn"
-    },
+    "finalizers": [
+    ],
     "labels": {
-      "name": "tvinn",
-      "affiliation": "safir"
+      "name": "tvinn"
     },
-    "name": "tvinn"
+    "name": "tvinn",
+    "ownerReferences": [
+    ]
   },
   "spec": {
     "replicas": 1,
@@ -17,7 +17,8 @@
       "name": "tvinn"
     },
     "strategy": {
-      "resources": {},
+      "resources": {
+      },
       "rollingParams": {
         "intervalSeconds": 1,
         "maxSurge": "25%",
@@ -29,14 +30,21 @@
     },
     "template": {
       "metadata": {
+        "finalizers": [
+        ],
         "labels": {
           "name": "tvinn"
-        }
+        },
+        "ownerReferences": [
+        ]
       },
       "spec": {
         "containers": [
           {
-            "capabilities": {},
+            "args": [
+            ],
+            "command": [
+            ],
             "env": [
               {
                 "name": "SPLUNK_INDEX",
@@ -83,7 +91,38 @@
               {
                 "name": "SCHEME",
                 "value": "http"
+              },
+              {
+                "name": "OPENSHIFT_CLUSTER",
+                "value": "utv"
+              },
+              {
+                "name": "APP_NAME",
+                "value": "tvinn"
+              },
+              {
+                "name": "TVINN_DB",
+                "value": "/u01/secrets/app/tvinn-db/info"
+              },
+              {
+                "name": "TVINN_DB_PROPERTIES",
+                "value": "/u01/secrets/app/tvinn-db/db.properties"
+              },
+              {
+                "name": "DB",
+                "value": "/u01/secrets/app/tvinn-db/info"
+              },
+              {
+                "name": "DB_PROPERTIES",
+                "value": "/u01/secrets/app/tvinn-db/db.properties"
+              },
+              {
+                "name": "VOLUME_TVINN_CONFIG",
+                "value": "/u01/foo"
               }
+            ],
+            "envFrom": [
+
             ],
             "image": "tvinn",
             "imagePullPolicy": "IfNotPresent",
@@ -101,7 +140,7 @@
             "resources": {
               "limits": {
                 "cpu": "2",
-                "memory": "4gi"
+                "memory": "4Gi"
               },
               "requests": {
                 "cpu": "0.1",
@@ -109,7 +148,12 @@
               }
             },
             "securityContext": {
-              "capabilities": {},
+              "capabilities": {
+                "add": [
+                ],
+                "drop": [
+                ]
+              },
               "privileged": false
             },
             "terminationMessagePath": "/dev/termination-log",
@@ -117,18 +161,39 @@
               {
                 "mountPath": "/u01/logs",
                 "name": "application-log-volume"
+              },
+              {
+                "mountPath": "/u01/foo",
+                "name": "tvinn-config"
               }
-            ]
+            ],
+            "capabilities": {
+            }
           }
         ],
         "dnsPolicy": "ClusterFirst",
+        "hostAliases": [
+        ],
+        "imagePullSecrets": [
+        ],
+        "initContainers": [
+        ],
         "restartPolicy": "Always",
         "serviceAccount": "",
         "serviceAccountName": "",
+        "tolerations": [
+        ],
         "volumes": [
           {
-            "emptyDir": {},
+            "emptyDir": {
+            },
             "name": "application-log-volume"
+          },
+          {
+            "configMap": {
+              "name": "tvinn-config"
+            },
+            "name": "tvinn-config"
           }
         ]
       }
@@ -142,7 +207,7 @@
           ],
           "from": {
             "kind": "ImageStreamTag",
-            "name": "atomhopper:1.2.0"
+            "name": "tvinn:default"
           },
           "lastTriggeredImage": ""
         },

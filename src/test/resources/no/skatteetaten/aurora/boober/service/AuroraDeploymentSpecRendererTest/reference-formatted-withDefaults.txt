@@ -25,6 +25,7 @@
     type:              "rolling"                    // default
     timeout:           180                          // default
   }
+  webseal:             false                        // default
   artifactId:          "reference"                  // fileName
   groupId:             "no.skatteetaten.aurora"     // reference.json
   version:             "1"                          // reference.json
@@ -45,7 +46,6 @@
     timeout:           1                            // default
   }
   liveness:            false                        // default
-  webseal:             false                        // default
   debug:               false                        // default
   pause:               false                        // default
   alarm:               true                         // default

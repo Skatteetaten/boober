@@ -62,6 +62,7 @@ data class AuroraDeploymentSpec(
         val deploy: AuroraDeploy? = null,
         val template: AuroraTemplate? = null,
         val localTemplate: AuroraLocalTemplate? = null,
+        val integration: AuroraIntegration?,
         val applicationFile: AuroraConfigFile
 )
 
@@ -96,7 +97,15 @@ data class AuroraBuild(
 )
 
 
+data class AuroraIntegration(
+        val database: List<Database> = listOf(),
+        val certificateCn: String? = null,
+        val splunkIndex: String? = null,
+        val webseal: Webseal? = null
+)
+
 data class AuroraDeploy(
+        val applicationFile: String,
         val overrideFiles: Map<String, String>,
         val releaseTo: String?,
         val flags: AuroraDeploymentConfigFlags,
@@ -105,10 +114,6 @@ data class AuroraDeploy(
         val groupId: String,
         val artifactId: String,
         val version: String,
-        val splunkIndex: String? = null,
-        val database: List<Database> = listOf(),
-        val certificateCn: String? = null,
-        val webseal: Webseal? = null,
         val prometheus: HttpEndpoint? = null,
         val managementPath: String? = null,
         val serviceAccount: String? = null,
@@ -120,10 +125,7 @@ data class AuroraDeploy(
         val env: Map<String, String>,
         val ttl: Duration?,
         val toxiProxy: ToxiProxy?
-) {
-    val dockerImage: String
-        get() = "${dockerImagePath}:${dockerTag}"
-}
+)
 
 data class AuroraDeployStrategy(
         val type: String, val timeout: Int
@@ -131,12 +133,17 @@ data class AuroraDeployStrategy(
 
 data class AuroraLocalTemplate(
         val parameters: Map<String, String>?,
-        val templateJson: JsonNode
+        val templateJson: JsonNode,
+        val version: String? = null,
+        val replicas: Int? = null
 )
 
 data class AuroraTemplate(
         val parameters: Map<String, String>?,
-        val template: String
+        val template: String,
+        val version: String? = null,
+        val replicas: Int? = null
+
 )
 
 
@@ -223,5 +230,5 @@ data class Permission(
 )
 
 data class ToxiProxy(
-    val version: String
+        val version: String
 )

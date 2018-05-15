@@ -83,6 +83,10 @@
       "value": 180
     }
   },
+  "webseal": {
+    "source": "default",
+    "value": false
+  },
   "artifactId": {
     "source": "fileName",
     "value": "reference"
@@ -138,10 +142,6 @@
     }
   },
   "liveness": {
-    "source": "default",
-    "value": false
-  },
-  "webseal": {
     "source": "default",
     "value": false
   },

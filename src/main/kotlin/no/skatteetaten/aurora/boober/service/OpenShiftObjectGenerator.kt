@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.envVar
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.namespace
@@ -23,7 +24,11 @@ import com.fkorotkov.openshift.spec
 import com.fkorotkov.openshift.strategy
 import com.fkorotkov.openshift.to
 import io.fabric8.kubernetes.api.model.IntOrString
-import no.skatteetaten.aurora.boober.Boober
+import io.fabric8.kubernetes.api.model.Service
+import io.fabric8.openshift.api.model.DeploymentConfig
+import no.skatteetaten.aurora.boober.mapper.platform.createEnvVars
+import no.skatteetaten.aurora.boober.mapper.platform.podVolumes
+import no.skatteetaten.aurora.boober.mapper.platform.volumeMount
 import no.skatteetaten.aurora.boober.mapper.v1.PortNumbers
 import no.skatteetaten.aurora.boober.mapper.v1.ToxiProxyDefaults
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
@@ -46,12 +51,14 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.Instants.now
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.openshiftKind
+import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 
-@Service
+@Component
 class OpenShiftObjectGenerator(
         @Value("\${boober.docker.registry}") val dockerRegistry: String,
         val openShiftObjectLabelService: OpenShiftObjectLabelService,
@@ -91,8 +98,7 @@ class OpenShiftObjectGenerator(
                     .addIfNotNull(generateSecretsAndConfigMaps(auroraDeploymentSpec.name, mounts
                             ?: emptyList(), labels, provisioningResult))
                     .addIfNotNull(generateRoute(auroraDeploymentSpec, labels))
-                    .addIfNotNull(generateTemplate(auroraDeploymentSpec))
-                    .addIfNotNull(generateLocalTemplate(auroraDeploymentSpec))
+                    .addIfNotNull(generateTemplates(auroraDeploymentSpec, mounts))
         })
     }
 
@@ -168,15 +174,17 @@ class OpenShiftObjectGenerator(
         return mapper.convertValue(dc)
     }
 
+
+
     fun generateService(auroraDeploymentSpec: AuroraDeploymentSpec, serviceLabels: Map<String, String>): JsonNode? {
         return auroraDeploymentSpec.deploy?.let {
 
-            val webseal = it.webseal?.let {
+            val webseal = auroraDeploymentSpec.integration?.webseal?.let {
                 val host = it.host ?: "${auroraDeploymentSpec.name}-${auroraDeploymentSpec.environment.namespace}"
                 "sprocket.sits.no/service.webseal" to host
             }
 
-            val websealRoles = it.webseal?.roles?.let {
+            val websealRoles = auroraDeploymentSpec.integration?.webseal?.roles?.let {
                 "sprocket.sits.no/service.webseal-roles" to it
             }
 
@@ -202,13 +210,13 @@ class OpenShiftObjectGenerator(
 
                 spec {
                     ports = listOf(
-                        servicePort {
-                            name = "http"
-                            protocol = "TCP"
-                            port = PortNumbers.HTTP_PORT
-                            targetPort = IntOrString(podPort)
-                            nodePort = 0
-                        }
+                            servicePort {
+                                name = "http"
+                                protocol = "TCP"
+                                port = PortNumbers.HTTP_PORT
+                                targetPort = IntOrString(podPort)
+                                nodePort = 0
+                            }
                     )
 
                     selector = mapOf("name" to auroraDeploymentSpec.name)
@@ -238,17 +246,59 @@ class OpenShiftObjectGenerator(
         }
     }
 
-    fun generateLocalTemplate(auroraDeploymentSpec: AuroraDeploymentSpec): List<JsonNode>? {
-        return auroraDeploymentSpec.localTemplate?.let {
-            openShiftTemplateProcessor.generateObjects(it.templateJson as ObjectNode, it.parameters, auroraDeploymentSpec)
-        }
-    }
+    fun generateTemplates(auroraDeploymentSpec: AuroraDeploymentSpec, mounts: List<Mount>?): List<JsonNode>? {
 
-    fun generateTemplate(auroraDeploymentSpec: AuroraDeploymentSpec): List<JsonNode>? {
-        return auroraDeploymentSpec.template?.let {
-            val template = openShiftClient.get("template", "openshift", it.template)?.body as ObjectNode
-            openShiftTemplateProcessor.generateObjects(template, it.parameters, auroraDeploymentSpec)
+
+        val localTemplate = auroraDeploymentSpec.localTemplate?.let {
+            openShiftTemplateProcessor.generateObjects(it.templateJson as ObjectNode, it.parameters, auroraDeploymentSpec, it.version, it.replicas)
         }
+
+        val template = auroraDeploymentSpec.template?.let {
+            val template = openShiftClient.get("template", "openshift", it.template)?.body as ObjectNode
+            openShiftTemplateProcessor.generateObjects(template, it.parameters, auroraDeploymentSpec, it.version, it.replicas)
+        }
+
+        val objects: List<JsonNode> = listOf<JsonNode>().addIfNotNull(localTemplate).addIfNotNull(template)
+
+
+        return objects.map {
+            if (it.openshiftKind == "deploymentconfig") {
+                val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it)
+                val spec = dc.spec.template.spec
+                spec.volumes.addAll(mounts.podVolumes(auroraDeploymentSpec.name))
+                spec.containers.forEach {
+                    it.volumeMounts.addAll(mounts.volumeMount() ?: listOf())
+                    it.env.addAll(createEnvVars(mounts, auroraDeploymentSpec, routeSuffix))
+                }
+
+                auroraDeploymentSpec.integration?.certificateCn?.let {
+                    if (dc.metadata.annotations == null) {
+                        dc.metadata.annotations = HashMap<String, String>()
+                    }
+                    dc.metadata.annotations.put("sprocket.sits.no/deployment-config.certificate", it)
+                }
+                jacksonObjectMapper().convertValue(dc)
+            } else if (it.openshiftKind == "serivce" && it.openshiftName == auroraDeploymentSpec.name) {
+
+                val service: Service = jacksonObjectMapper().convertValue(it)
+
+                if (service.metadata.annotations == null) {
+                    service.metadata.annotations = HashMap<String, String>()
+                }
+
+                auroraDeploymentSpec.integration?.webseal?.let {
+                    val host = it.host ?: "${auroraDeploymentSpec.name}-${auroraDeploymentSpec.environment.namespace}"
+                    service.metadata.annotations["sprocket.sits.no/service.webseal"] = host
+                }
+
+                auroraDeploymentSpec.integration?.webseal?.roles?.let {
+                    service.metadata.annotations["sprocket.sits.no/service.webseal-roles"] = it
+                }
+
+                jacksonObjectMapper().convertValue(service)
+            } else it
+        }
+
     }
 
     fun generateRoute(auroraDeploymentSpec: AuroraDeploymentSpec, routeLabels: Map<String, String>): List<JsonNode>? {

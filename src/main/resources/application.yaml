@@ -64,7 +64,7 @@ openshift:
     port: 8443
 
 boober:
-    dbh: http://dbh-aurora.qa.paas.skead.no
+    dbh: http://dbh-aurora.${openshift.cluster}.paas.skead.no
     openshift:
         tokenLocation: /opt/boober
     encrypt:

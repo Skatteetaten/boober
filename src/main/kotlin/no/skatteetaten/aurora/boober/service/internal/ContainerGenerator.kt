@@ -16,6 +16,7 @@ import io.fabric8.kubernetes.api.model.IntOrStringBuilder
 import io.fabric8.kubernetes.api.model.Quantity
 import io.fabric8.kubernetes.api.model.QuantityBuilder
 import no.skatteetaten.aurora.boober.mapper.platform.AuroraContainer
+import no.skatteetaten.aurora.boober.mapper.platform.volumeMount
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
 import no.skatteetaten.aurora.boober.model.Probe
 
@@ -43,19 +44,14 @@ object ContainerGenerator {
                 val portName = if (it.key == "http") "HTTP_PORT" else "${it.key}_HTTP_PORT".toUpperCase()
                 EnvVarBuilder().withName(portName).withValue(it.value.toString()).build()
             }
-            env = adcContainer.env.map { EnvVarBuilder().withName(it.key).withValue(it.value).build() } + portEnv
+            env = adcContainer.env + portEnv
 
             resources {
                 limits = fromAdcResource(adcContainer.limit)
                 requests = fromAdcResource(adcContainer.request)
             }
 
-            volumeMounts = adcContainer.mounts?.map {
-                volumeMount {
-                    name = it.normalizeMountName()
-                    mountPath = it.path
-                }
-            }
+            volumeMounts = adcContainer.mounts.volumeMount()
 
             adcContainer.liveness?.let { probe ->
                 livenessProbe = fromProbe(probe)

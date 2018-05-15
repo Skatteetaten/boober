@@ -46,7 +46,7 @@ private fun createMountsFromDeploymentSpec(deploymentSpec: AuroraDeploymentSpec)
                 secretVaultName = it)
     }
 
-    val certMount = deploymentSpec.deploy?.certificateCn?.let {
+    val certMount = deploymentSpec.integration?.certificateCn?.let {
         Mount(path = "/u01/secrets/app/${deploymentSpec.name}-cert",
                 type = MountType.Secret,
                 volumeName = "${deploymentSpec.name}-cert",
@@ -80,15 +80,15 @@ private fun createToxiProxyMounts(deploymentSpec: AuroraDeploymentSpec): List<Mo
 
     return deploymentSpec.deploy?.toxiProxy?.let {
         listOf(Mount(
-            path = "/u01/config",
-            type = MountType.ConfigMap,
-            mountName = "${ToxiProxyDefaults.NAME}-volume",
-            volumeName = "${ToxiProxyDefaults.NAME}-config",
-            exist = false,
-            content = mapOf("config.json" to getToxiProxyConfig()),
-            targetContainer = ToxiProxyDefaults.NAME))
+                path = "/u01/config",
+                type = MountType.ConfigMap,
+                mountName = "${ToxiProxyDefaults.NAME}-volume",
+                volumeName = "${ToxiProxyDefaults.NAME}-config",
+                exist = false,
+                content = mapOf("config.json" to getToxiProxyConfig()),
+                targetContainer = ToxiProxyDefaults.NAME))
     }
-        .orEmpty()
+            .orEmpty()
 }
 
 
