@@ -3,6 +3,9 @@ package no.skatteetaten.aurora.boober.mapper.platform
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.v1.PortNumbers
+import no.skatteetaten.aurora.boober.mapper.v1.ToxiProxyDefaults
+import no.skatteetaten.aurora.boober.mapper.v1.getToxiProxyImage
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeployStrategy
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
@@ -19,11 +22,11 @@ import java.time.Duration
 abstract class ApplicationPlatformHandler(val name:String) {
     open fun handlers(handlers: Set<AuroraConfigFieldHandler>): Set<AuroraConfigFieldHandler> = handlers
 
-    abstract fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?, routeSuffix: String): AuroraDeployment
+    abstract fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?, routeSuffix: String, sidecarContainers: List<AuroraContainer>?): AuroraDeployment
 
     fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpec: AuroraDeploymentSpec, routeSuffix: String): Map<String, String> {
 
-        val mountEnv = mounts?.map {
+        val mountEnv = mounts?.filter { it.targetContainer == null }?.map {
             "VOLUME_${it.mountName.toUpperCase().replace("-", "_")}" to it.path
         }?.toMap() ?: mapOf()
 
@@ -111,6 +114,25 @@ abstract class ApplicationPlatformHandler(val name:String) {
         return OpenShiftObjectLabelService.toOpenShiftLabelNameSafeMap(allLabels)
     }
 
+    fun createSidecarContainers(auroraDeploymentSpec: AuroraDeploymentSpec, mounts: List<Mount>?): List<AuroraContainer>? {
+
+        return auroraDeploymentSpec?.deploy?.toxiProxy?.let {
+            listOf(AuroraContainer(
+                name = "${auroraDeploymentSpec.name}-toxiproxy",
+                tcpPorts = mapOf("http" to PortNumbers.TOXIPROXY_HTTP_PORT, "management" to PortNumbers.TOXIPROXY_ADMIN_PORT),
+                readiness = ToxiProxyDefaults.READINESS_PROBE,
+                liveness = ToxiProxyDefaults.LIVENESS_PROBE,
+                limit = ToxiProxyDefaults.RESOURCE_LIMIT,
+                request = ToxiProxyDefaults.RESOURCE_REQUEST,
+                env = ToxiProxyDefaults.ENV,
+                mounts = mounts,
+                shouldHaveImageChange = false,
+                args = ToxiProxyDefaults.ARGS,
+                image = getToxiProxyImage(it.version)
+            ))
+        } ?: null
+    }
+
     private inline fun <R> String.withNonBlank(block: (String) -> R?): R? {
 
         if (this.isBlank()) {
@@ -120,29 +142,32 @@ abstract class ApplicationPlatformHandler(val name:String) {
     }
 }
 
+data class AuroraContainer(
+        val name: String,
+        val tcpPorts: Map<String, Int>,
+        val args: List<String>? = null,
+        val readiness: Probe?,
+        val liveness: Probe?,
+        val limit: AuroraDeploymentConfigResource,
+        val request: AuroraDeploymentConfigResource,
+        val env: Map<String, String>,
+        val mounts: List<Mount>? = null,
+        val shouldHaveImageChange: Boolean = true,
+        val image: String? = null
+)
 
-data class AuroraContainer(val name: String,
-                           val tcpPorts: Map<String, Int>,
-                           val args: List<String>? = null,
-                           val readiness: Probe?,
-                           val liveness: Probe?,
-                           val limit: AuroraDeploymentConfigResource,
-                           val request: AuroraDeploymentConfigResource,
-                           val env: Map<String, String>,
-                           val mounts: List<Mount>? = null,
-                           val shouldHaveImageChange: Boolean = true)
-
-data class AuroraDeployment(val name: String,
-                            val tag: String,
-                            val containers: List<AuroraContainer>,
-                            val labels: Map<String, String>,
-                            val mounts: List<Mount>? = null,
-                            val annotations: Map<String, String>,
-                            val deployStrategy: AuroraDeployStrategy,
-                            val replicas: Int,
-                            val serviceAccount: String?,
-                            val ttl: Duration?)
-
+data class AuroraDeployment(
+        val name: String,
+        val tag: String,
+        val containers: List<AuroraContainer>,
+        val labels: Map<String, String>,
+        val mounts: List<Mount>? = null,
+        val annotations: Map<String, String>,
+        val deployStrategy: AuroraDeployStrategy,
+        val replicas: Int,
+        val serviceAccount: String?,
+        val ttl: Duration?
+)
 
 enum class DeploymentState {
     Stateless, Stateful, Daemon

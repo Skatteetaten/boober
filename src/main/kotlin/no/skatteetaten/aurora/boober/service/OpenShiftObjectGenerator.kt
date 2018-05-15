@@ -23,6 +23,9 @@ import com.fkorotkov.openshift.spec
 import com.fkorotkov.openshift.strategy
 import com.fkorotkov.openshift.to
 import io.fabric8.kubernetes.api.model.IntOrString
+import no.skatteetaten.aurora.boober.Boober
+import no.skatteetaten.aurora.boober.mapper.v1.PortNumbers
+import no.skatteetaten.aurora.boober.mapper.v1.ToxiProxyDefaults
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Mount
@@ -153,8 +156,10 @@ class OpenShiftObjectGenerator(
 
         val applicationPlatformHandler = AuroraDeploymentSpecService.APPLICATION_PLATFORM_HANDLERS[auroraDeploymentSpec.applicationPlatform]
                 ?: throw IllegalArgumentException("ApplicationPlatformHandler ${auroraDeploymentSpec.applicationPlatform} is not present")
-        val deployment = applicationPlatformHandler.handleAuroraDeployment(auroraDeploymentSpec, labels, mounts, routeSuffix)
 
+        val sidecarContainers = applicationPlatformHandler.createSidecarContainers(auroraDeploymentSpec, mounts?.filter { it.targetContainer == ToxiProxyDefaults.NAME })
+
+        val deployment = applicationPlatformHandler.handleAuroraDeployment(auroraDeploymentSpec, labels, mounts, routeSuffix, sidecarContainers)
 
         val containers = deployment.containers.map { ContainerGenerator.create(it) }
 
@@ -183,6 +188,7 @@ class OpenShiftObjectGenerator(
                 )
             } ?: mapOf("prometheus.io/scrape" to "false")
 
+            val podPort = if (auroraDeploymentSpec.deploy.toxiProxy != null) PortNumbers.TOXIPROXY_HTTP_PORT else PortNumbers.INTERNAL_HTTP_PORT
 
             val service = service {
                 apiVersion = "v1"
@@ -196,13 +202,13 @@ class OpenShiftObjectGenerator(
 
                 spec {
                     ports = listOf(
-                            servicePort {
-                                name = "http"
-                                protocol = "TCP"
-                                port = 80
-                                targetPort = IntOrString(8080)
-                                nodePort = 0
-                            }
+                        servicePort {
+                            name = "http"
+                            protocol = "TCP"
+                            port = PortNumbers.HTTP_PORT
+                            targetPort = IntOrString(podPort)
+                            nodePort = 0
+                        }
                     )
 
                     selector = mapOf("name" to auroraDeploymentSpec.name)
@@ -284,7 +290,6 @@ class OpenShiftObjectGenerator(
 
     private fun generateSecretsAndConfigMaps(appName: String, mounts: List<Mount>, labels: Map<String, String>, provisioningResult: ProvisioningResult?): List<JsonNode> {
 
-
         val schemaSecrets = provisioningResult?.schemaProvisionResults
                 ?.let { DbhSecretGenerator.create(appName, it, labels) }
                 ?: emptyList()
@@ -315,7 +320,6 @@ class OpenShiftObjectGenerator(
             } else {
                 deploymentSpec.name
             }
-
 
             val build = buildConfig {
                 apiVersion = "v1"
@@ -409,5 +413,4 @@ class OpenShiftObjectGenerator(
         val labels = openShiftObjectLabelService.createCommonLabels(deploymentSpec, deployId)
         return c(labels, mounts)
     }
-
 }

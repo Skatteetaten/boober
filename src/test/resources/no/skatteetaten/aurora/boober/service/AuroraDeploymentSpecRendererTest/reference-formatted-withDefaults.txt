@@ -49,7 +49,7 @@
   debug:               false                        // default
   pause:               false                        // default
   alarm:               true                         // default
-  route:               true                         // reference.json
+  toxiproxy:           false                        // default
   routeDefaults: {
     host:              "@name@-@affiliation@-@env@" // default
   }

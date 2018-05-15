@@ -12,6 +12,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResources
 import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.model.HttpEndpoint
 import no.skatteetaten.aurora.boober.model.Probe
+import no.skatteetaten.aurora.boober.model.ToxiProxy
 import no.skatteetaten.aurora.boober.model.Webseal
 import no.skatteetaten.aurora.boober.utils.durationString
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
@@ -45,19 +46,19 @@ class AuroraDeployMapperV1(val name: String, val applicationFiles: List<AuroraCo
         AuroraConfigFieldHandler("serviceAccount"),
         AuroraConfigFieldHandler("prometheus", defaultValue = true),
         AuroraConfigFieldHandler("prometheus/path", defaultValue = "/prometheus"),
-        AuroraConfigFieldHandler("prometheus/port", defaultValue = 8081),
+        AuroraConfigFieldHandler("prometheus/port", defaultValue = PortNumbers.INTERNAL_ADMIN_PORT),
         AuroraConfigFieldHandler("management", defaultValue = true),
         AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
-        AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
+        AuroraConfigFieldHandler("management/port", defaultValue = PortNumbers.INTERNAL_ADMIN_PORT.toString()),
         AuroraConfigFieldHandler("certificate/commonName"),
         AuroraConfigFieldHandler("certificate", defaultValue = false),
         AuroraConfigFieldHandler("readiness", defaultValue = true),
-        AuroraConfigFieldHandler("readiness/port", defaultValue = 8080),
+        AuroraConfigFieldHandler("readiness/port", defaultValue = PortNumbers.INTERNAL_HTTP_PORT),
         AuroraConfigFieldHandler("readiness/path"),
         AuroraConfigFieldHandler("readiness/delay", defaultValue = 10),
         AuroraConfigFieldHandler("readiness/timeout", defaultValue = 1),
         AuroraConfigFieldHandler("liveness", defaultValue = false),
-        AuroraConfigFieldHandler("liveness/port", defaultValue = 8080),
+        AuroraConfigFieldHandler("liveness/port", defaultValue = PortNumbers.INTERNAL_HTTP_PORT),
         AuroraConfigFieldHandler("liveness/path"),
         AuroraConfigFieldHandler("liveness/delay", defaultValue = 10),
         AuroraConfigFieldHandler("liveness/timeout", defaultValue = 1),
@@ -67,8 +68,9 @@ class AuroraDeployMapperV1(val name: String, val applicationFiles: List<AuroraCo
         AuroraConfigFieldHandler("debug", defaultValue = false),
         AuroraConfigFieldHandler("pause", defaultValue = false),
         AuroraConfigFieldHandler("alarm", defaultValue = true),
-        AuroraConfigFieldHandler("ttl", validator = { it.durationString() })
-
+        AuroraConfigFieldHandler("ttl", validator = { it.durationString() }),
+        AuroraConfigFieldHandler("toxiproxy", defaultValue = false),
+        AuroraConfigFieldHandler("toxiproxy/version", defaultValue = "2.1.3")
     ) + configHandlers
 
     fun deploy(auroraConfigFields: AuroraConfigFields): AuroraDeploy? {
@@ -136,9 +138,10 @@ class AuroraDeployMapperV1(val name: String, val applicationFiles: List<AuroraCo
             managementPath = findManagementPath(auroraConfigFields),
             liveness = getProbe(auroraConfigFields, "liveness"),
             readiness = getProbe(auroraConfigFields, "readiness"),
-                env = auroraConfigFields.getConfigEnv(configHandlers),
-                ttl = auroraConfigFields.extractOrNull<String>("ttl")
-                        ?.let { StringToDurationConverter().convert(it) }
+            env = auroraConfigFields.getConfigEnv(configHandlers),
+            ttl = auroraConfigFields.extractOrNull<String>("ttl")
+                ?.let { StringToDurationConverter().convert(it) },
+            toxiProxy = getToxiProxy(auroraConfigFields, "toxiproxy")
         )
     }
 
@@ -223,5 +226,13 @@ class AuroraDeployMapperV1(val name: String, val applicationFiles: List<AuroraCo
             auroraConfigFields.extract("$name/delay"),
             auroraConfigFields.extract("$name/timeout")
         )
+    }
+
+    fun getToxiProxy(auroraConfigFields: AuroraConfigFields, name: String): ToxiProxy? {
+        if (auroraConfigFields.disabledAndNoSubKeys(name)) {
+            return null
+        }
+
+        return ToxiProxy(auroraConfigFields.extract("$name/version"))
     }
 }

@@ -118,7 +118,8 @@ data class AuroraDeploy(
         val dockerTag: String,
         val deployStrategy: AuroraDeployStrategy,
         val env: Map<String, String>,
-        val ttl: Duration?
+        val ttl: Duration?,
+        val toxiProxy: ToxiProxy?
 ) {
     val dockerImage: String
         get() = "${dockerImagePath}:${dockerTag}"
@@ -150,7 +151,8 @@ data class Mount(
         val volumeName: String,
         val exist: Boolean,
         val content: Map<String, String>? = null,
-        val secretVaultName: String? = null
+        val secretVaultName: String? = null,
+        val targetContainer: String? = null
 ) {
     fun getNamespacedVolumeName(appName: String): String {
         val name = if (exist) {
@@ -218,4 +220,8 @@ data class Permissions(
 data class Permission(
         val groups: Set<String>?,
         val users: Set<String>? = emptySet()
+)
+
+data class ToxiProxy(
+    val version: String
 )
