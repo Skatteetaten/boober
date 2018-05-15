@@ -1,4 +1,5 @@
 {
+  applicationId:       utv/reference            // static
   schemaVersion:       "v1"                     // about.json
   type:                "deploy"                 // reference.json
   affiliation:         "aos"                    // about.json

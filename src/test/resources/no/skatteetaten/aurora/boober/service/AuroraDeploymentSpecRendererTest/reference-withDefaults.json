@@ -1,4 +1,8 @@
 {
+  "applicationId": {
+    "source": "static",
+    "value": "utv/reference"
+  },
   "schemaVersion": {
     "source": "about.json",
     "value": "v1"
@@ -10,10 +14,6 @@
   "applicationPlatform": {
     "source": "default",
     "value": "java"
-  },
-  "applicationId": {
-    "source": "default",
-    "value": "utv/reference"
   },
   "affiliation": {
     "source": "about.json",

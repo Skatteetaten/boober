@@ -112,7 +112,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
     fun createFields(applicationId: ApplicationId, auroraConfigFields: AuroraConfigFields, build: AuroraBuild?): Map<String, Map<String, Any?>> {
         val applicationIdField = mapOf("applicationId" to mapOf(
             "source" to "static",
-            "value" to applicationId
+            "value" to applicationId.toString()
         ))
 
         val fields = createMapForAuroraDeploymentSpecPointers(createFieldsWithValues(auroraConfigFields, build))

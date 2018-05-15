@@ -1,8 +1,8 @@
 {
+  applicationId:       utv/reference            // static
   schemaVersion:       "v1"                     // about.json
   type:                "deploy"                 // reference.json
   applicationPlatform: "java"                   // default
-  applicationId:       "utv/reference"          // default
   affiliation:         "aos"                    // about.json
   cluster:             "utv"                    // utv/about.json
   permissions: {

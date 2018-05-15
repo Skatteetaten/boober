@@ -1,4 +1,8 @@
 {
+  "applicationId": {
+    "source": "static",
+    "value": "utv/webleveranse"
+  },
   "schemaVersion": {
     "source": "about.json",
     "value": "v1"
@@ -10,10 +14,6 @@
   "applicationPlatform": {
     "source": "webleveranse.json",
     "value": "web"
-  },
-  "applicationId": {
-    "source": "default",
-    "value": "utv/webleveranse"
   },
   "affiliation": {
     "source": "about.json",
