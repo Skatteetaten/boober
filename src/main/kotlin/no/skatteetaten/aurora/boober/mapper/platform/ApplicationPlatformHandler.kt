@@ -211,7 +211,7 @@ fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpec: AuroraDeploymentSp
             "APP_NAME" to auroraDeploymentSpec.name
     ).addIfNotNull(splunkIndex) + routeName + certEnv + debugEnv + dbEnv + mountEnv + configEnv
 
-    val env= envs.mapKeys { it.key.replace(".", "_").replace("-", "_") }
+    val env = envs.mapKeys { it.key.replace(".", "_").replace("-", "_") }
 
     return env.map { EnvVarBuilder().withName(it.key).withValue(it.value).build() }
 }
