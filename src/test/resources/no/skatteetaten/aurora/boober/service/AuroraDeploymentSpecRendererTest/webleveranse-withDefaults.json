@@ -1,4 +1,8 @@
 {
+  "applicationId": {
+    "source": "static",
+    "value": "utv/webleveranse"
+  },
   "schemaVersion": {
     "source": "about.json",
     "value": "v1"

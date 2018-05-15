@@ -1,4 +1,5 @@
 {
+  applicationId:       utv/webleveranse            // static
   schemaVersion:       "v1"                        // about.json
   type:                "development"               // utv/webleveranse.json
   applicationPlatform: "web"                       // webleveranse.json
