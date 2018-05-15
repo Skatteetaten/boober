@@ -1,13 +1,36 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
+import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 
-import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import java.time.Duration
 
 enum class TemplateType {
     deploy, development, localTemplate, template, build
+}
+
+data class AuroraDeployHeader(
+        val env: AuroraDeployEnvironment,
+        val type: TemplateType,
+        val applicationPlatform: ApplicationPlatformHandler,
+        val name: String,
+        val cluster: String,
+        val segment: String?
+) {
+    fun extractPlaceHolders(): Map<String, String> {
+        val segmentPair = segment?.let {
+            "segment" to it
+        }
+        val placeholders = mapOf(
+                "name" to name,
+                "env" to env.envName,
+                "affiliation" to env.affiliation,
+                "cluster" to cluster
+        ).addIfNotNull(segmentPair)
+        return placeholders
+    }
 }
 
 data class AuroraDeployEnvironment(
@@ -25,6 +48,7 @@ data class AuroraDeployEnvironment(
 }
 
 data class AuroraDeploymentSpec(
+        val applicationId: ApplicationId,
         val schemaVersion: String,
         val type: TemplateType,
         val name: String,
@@ -38,25 +62,14 @@ data class AuroraDeploymentSpec(
         val deploy: AuroraDeploy? = null,
         val template: AuroraTemplate? = null,
         val localTemplate: AuroraLocalTemplate? = null,
-        val integration: AuroraIntegration?
-) {
-
-    fun assembleRouteHost(hostPrefix: String = name): String {
-
-        val hostSuffix = "${environment.namespace}.${cluster}.paas.skead.no"
-
-        return if (hostPrefix.isBlank()) {
-            hostSuffix
-        } else {
-            hostPrefix.ensureEndsWith(hostSuffix, "-")
-        }
-
-    }
-}
+        val integration:AuroraIntegration?,
+       val applicationFile:AuroraConfigFile
+)
 
 data class AuroraVolume(
         val secretVaultName: String?,
         val secretVaultKeys: List<String>,
+        val keyMappings: Map<String, String>?,
         val config: Map<String, String>?,
         val mounts: List<Mount>?
 )
@@ -92,7 +105,6 @@ data class AuroraIntegration(
 )
 
 data class AuroraDeploy(
-        val applicationFile: String,
         val overrideFiles: Map<String, String>,
         val releaseTo: String?,
         val flags: AuroraDeploymentConfigFlags,
@@ -110,7 +122,8 @@ data class AuroraDeploy(
         val dockerTag: String,
         val deployStrategy: AuroraDeployStrategy,
         val env: Map<String, String>,
-        val ttl: Duration?
+        val ttl: Duration?,
+        val toxiProxy: ToxiProxy?
 )
 
 data class AuroraDeployStrategy(
@@ -144,10 +157,11 @@ data class Mount(
         val volumeName: String,
         val exist: Boolean,
         val content: Map<String, String>? = null,
-        val secretVaultName: String? = null
+        val secretVaultName: String? = null,
+        val targetContainer: String? = null
 ) {
-    fun getNamespacedVolumeName(appName:String): String  {
-        val name= if(exist) {
+    fun getNamespacedVolumeName(appName: String): String {
+        val name = if (exist) {
             this.volumeName
         } else {
             this.volumeName.ensureStartWith(appName, "-")
@@ -171,8 +185,8 @@ data class Probe(val path: String? = null, val port: Int, val delay: Int, val ti
 
 
 data class Route(
-        val name: String,
-        val host: String? = null,
+        val objectName: String,
+        val host: String,
         val path: String? = null,
         val annotations: Map<String, String>? = null
 )
@@ -212,4 +226,8 @@ data class Permissions(
 data class Permission(
         val groups: Set<String>?,
         val users: Set<String>? = emptySet()
+)
+
+data class ToxiProxy(
+    val version: String
 )

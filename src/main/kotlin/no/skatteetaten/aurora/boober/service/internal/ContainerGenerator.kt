@@ -34,6 +34,10 @@ object ContainerGenerator {
                 }
             }
 
+            adcContainer.image?.let {
+                image = adcContainer.image
+            }
+
             args = adcContainer.args
 
             val portEnv = adcContainer.tcpPorts.map {

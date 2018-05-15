@@ -111,6 +111,10 @@
                 "value": "baaaar"
               },
               {
+                "name": "BAR",
+                "value": ""
+              },
+              {
                 "name": "HTTP_PORT",
                 "value": "8080"
               },

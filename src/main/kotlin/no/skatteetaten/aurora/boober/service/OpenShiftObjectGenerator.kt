@@ -29,6 +29,9 @@ import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.platform.createEnvVars
 import no.skatteetaten.aurora.boober.mapper.platform.podVolumes
 import no.skatteetaten.aurora.boober.mapper.platform.volumeMount
+import no.skatteetaten.aurora.boober.Boober
+import no.skatteetaten.aurora.boober.mapper.v1.PortNumbers
+import no.skatteetaten.aurora.boober.mapper.v1.ToxiProxyDefaults
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Database
@@ -64,7 +67,9 @@ class OpenShiftObjectGenerator(
         val openShiftObjectLabelService: OpenShiftObjectLabelService,
         val mapper: ObjectMapper,
         val openShiftTemplateProcessor: OpenShiftTemplateProcessor,
-        val openShiftClient: OpenShiftResourceClient) {
+        val openShiftClient: OpenShiftResourceClient,
+        @Value("\${boober.route.suffix}") val routeSuffix: String
+) {
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftObjectGenerator::class.java)
 
@@ -160,8 +165,10 @@ class OpenShiftObjectGenerator(
 
         val applicationPlatformHandler = AuroraDeploymentSpecService.APPLICATION_PLATFORM_HANDLERS[auroraDeploymentSpec.applicationPlatform]
                 ?: throw IllegalArgumentException("ApplicationPlatformHandler ${auroraDeploymentSpec.applicationPlatform} is not present")
-        val deployment = applicationPlatformHandler.handleAuroraDeployment(auroraDeploymentSpec, labels, mounts)
 
+        val sidecarContainers = applicationPlatformHandler.createSidecarContainers(auroraDeploymentSpec, mounts?.filter { it.targetContainer == ToxiProxyDefaults.NAME })
+
+        val deployment = applicationPlatformHandler.handleAuroraDeployment(auroraDeploymentSpec, labels, mounts, routeSuffix, sidecarContainers)
 
         val containers = deployment.containers.map { ContainerGenerator.create(it) }
 
@@ -192,6 +199,7 @@ class OpenShiftObjectGenerator(
                 )
             } ?: mapOf("prometheus.io/scrape" to "false")
 
+            val podPort = if (auroraDeploymentSpec.deploy.toxiProxy != null) PortNumbers.TOXIPROXY_HTTP_PORT else PortNumbers.INTERNAL_HTTP_PORT
 
             val service = service {
                 apiVersion = "v1"
@@ -205,13 +213,13 @@ class OpenShiftObjectGenerator(
 
                 spec {
                     ports = listOf(
-                            servicePort {
-                                name = "http"
-                                protocol = "TCP"
-                                port = 80
-                                targetPort = IntOrString(8080)
-                                nodePort = 0
-                            }
+                        servicePort {
+                            name = "http"
+                            protocol = "TCP"
+                            port = PortNumbers.HTTP_PORT
+                            targetPort = IntOrString(podPort)
+                            nodePort = 0
+                        }
                     )
 
                     selector = mapOf("name" to auroraDeploymentSpec.name)
@@ -302,7 +310,7 @@ class OpenShiftObjectGenerator(
             val route = route {
                 apiVersion = "v1"
                 metadata {
-                    name = it.name
+                    name = it.objectName
                     labels = routeLabels
                     ownerReferences = null
                     finalizers = null
@@ -315,7 +323,7 @@ class OpenShiftObjectGenerator(
                         kind = "Service"
                         name = auroraDeploymentSpec.name
                     }
-                    host = auroraDeploymentSpec.assembleRouteHost(it.host ?: auroraDeploymentSpec.name)
+                    host = "${it.host}${routeSuffix}"
                     it.path?.let {
                         path = it
                     }
@@ -334,7 +342,6 @@ class OpenShiftObjectGenerator(
     }
 
     private fun generateSecretsAndConfigMaps(appName: String, mounts: List<Mount>, labels: Map<String, String>, provisioningResult: ProvisioningResult?): List<JsonNode> {
-
 
         val schemaSecrets = provisioningResult?.schemaProvisionResults
                 ?.let { DbhSecretGenerator.create(appName, it, labels) }
@@ -366,7 +373,6 @@ class OpenShiftObjectGenerator(
             } else {
                 deploymentSpec.name
             }
-
 
             val build = buildConfig {
                 apiVersion = "v1"
@@ -460,5 +466,4 @@ class OpenShiftObjectGenerator(
         val labels = openShiftObjectLabelService.createCommonLabels(deploymentSpec, deployId)
         return c(labels, mounts)
     }
-
 }

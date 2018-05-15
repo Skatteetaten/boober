@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.mapper.platform
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.v1.PortNumbers
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.TemplateType.development
@@ -9,8 +10,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class WebPlatformHandler : ApplicationPlatformHandler("web") {
-    override fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?): AuroraDeployment {
-
+    override fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?, routeSuffix: String, sidecarContainers: List<AuroraContainer>?): AuroraDeployment {
         val tag = when (auroraDeploymentSpec.type) {
             development -> "latest"
             else -> "default"
@@ -21,26 +21,26 @@ class WebPlatformHandler : ApplicationPlatformHandler("web") {
                 AuroraContainer(
                         name = "${auroraDeploymentSpec.name}-node",
                         args = listOf("/u01/bin/run_node"),
-                        tcpPorts = mapOf("http" to 9090, "management" to 8081),
+                        tcpPorts = mapOf("http" to PortNumbers.NODE_PORT, "management" to PortNumbers.INTERNAL_ADMIN_PORT),
                         readiness = auroraDeploymentSpec.deploy!!.readiness,
                         liveness = auroraDeploymentSpec.deploy.liveness,
                         limit = auroraDeploymentSpec.deploy.resources.limit,
                         request = auroraDeploymentSpec.deploy.resources.request,
-                        env = createEnvVars(mounts, auroraDeploymentSpec),
-                        mounts = mounts
+                        env = createEnvVars(mounts, auroraDeploymentSpec,routeSuffix),
+                        mounts = mounts?.filter { it.targetContainer == null }
                 ),
                 AuroraContainer(
                         name = "${auroraDeploymentSpec.name}-nginx",
                         args = listOf("/u01/bin/run_nginx"),
-                        tcpPorts = mapOf("http" to 8080),
+                        tcpPorts = mapOf("http" to PortNumbers.INTERNAL_HTTP_PORT),
                         readiness = auroraDeploymentSpec.deploy.readiness,
                         liveness = auroraDeploymentSpec.deploy.liveness,
                         limit = auroraDeploymentSpec.deploy.resources.limit,
                         request = auroraDeploymentSpec.deploy.resources.request,
-                        env = createEnvVars(mounts, auroraDeploymentSpec),
-                        mounts = mounts
+                        env = createEnvVars(mounts, auroraDeploymentSpec, routeSuffix),
+                        mounts = mounts?.filter { it.targetContainer == null }
                 )
-        )
+        ).addIfNotNull(sidecarContainers)
 
 
         return AuroraDeployment(
@@ -49,7 +49,7 @@ class WebPlatformHandler : ApplicationPlatformHandler("web") {
                 containers = container,
                 labels = createLabels(auroraDeploymentSpec.name, auroraDeploymentSpec.deploy, labels),
                 mounts = mounts,
-                annotations = createAnnotations(auroraDeploymentSpec.deploy, auroraDeploymentSpec.integration),
+                annotations = createAnnotations(auroraDeploymentSpec),
                 deployStrategy = auroraDeploymentSpec.deploy.deployStrategy,
                 replicas = auroraDeploymentSpec.deploy.replicas,
                 serviceAccount = auroraDeploymentSpec.deploy.serviceAccount,

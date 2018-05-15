@@ -83,11 +83,11 @@
               },
               {
                 "name": "ROUTE_NAME",
-                "value": "reference-aos-booberdev.utv.paas.skead.no"
+                "value": "reference.ao.booberdev.utv.paas.skead.no"
               },
               {
                 "name": "ROUTE_URL",
-                "value": "http://reference-aos-booberdev.utv.paas.skead.no"
+                "value": "http://reference.ao.booberdev.utv.paas.skead.no"
               },
               {
                 "name": "STS_CERTIFICATE_URL",

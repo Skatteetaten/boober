@@ -18,7 +18,7 @@
     "alternateBackends": [
 
     ],
-    "host": "aos-mounts.utv.paas.skead.no",
+    "host": "aurora.mounts.utv.paas.skead.no",
     "path": "/foo",
     "to": {
       "kind": "Service",
