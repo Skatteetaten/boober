@@ -3,9 +3,8 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
-import org.eclipse.jgit.lib.PersonIdent
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 
 data class AuroraDeployResult @JvmOverloads constructor(
@@ -19,7 +18,6 @@ data class AuroraDeployResult @JvmOverloads constructor(
         val projectExist:Boolean=false){
     val tag: String = "${auroraDeploymentSpec?.cluster}.${auroraDeploymentSpec?.environment?.namespace}.${auroraDeploymentSpec?.name}/$deployId"
 }
-
 
 
 data class DeployHistory(val deployer: Deployer, val time: Instant, val result: JsonNode)

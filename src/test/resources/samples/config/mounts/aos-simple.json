@@ -5,13 +5,14 @@
       "foo": "baaaar"
     }
   },
+  "segment": "aurora",
   "route": {
     "aos-simple": {
-      "host": ""
+      "host": "@segment@.@env@"
     },
     "bar": {
       "path": "/bar",
-      "host": "",
+      "host": "@segment@.@env@",
       "annotations": {
         "haproxy.router.openshift.io|timeout": "30s"
       }

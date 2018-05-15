@@ -10,8 +10,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class WebPlatformHandler : ApplicationPlatformHandler("web") {
-    override fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?, sidecarContainers: List<AuroraContainer>?): AuroraDeployment {
-
+    override fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?, routeSuffix: String, sidecarContainers: List<AuroraContainer>?): AuroraDeployment {
         val tag = when (auroraDeploymentSpec.type) {
             development -> "latest"
             else -> "default"
@@ -27,7 +26,7 @@ class WebPlatformHandler : ApplicationPlatformHandler("web") {
                         liveness = auroraDeploymentSpec.deploy.liveness,
                         limit = auroraDeploymentSpec.deploy.resources.limit,
                         request = auroraDeploymentSpec.deploy.resources.request,
-                        env = createEnvVars(mounts, auroraDeploymentSpec),
+                        env = createEnvVars(mounts, auroraDeploymentSpec,routeSuffix),
                         mounts = mounts?.filter { it.targetContainer == null }
                 ),
                 AuroraContainer(
@@ -38,10 +37,11 @@ class WebPlatformHandler : ApplicationPlatformHandler("web") {
                         liveness = auroraDeploymentSpec.deploy.liveness,
                         limit = auroraDeploymentSpec.deploy.resources.limit,
                         request = auroraDeploymentSpec.deploy.resources.request,
-                        env = createEnvVars(mounts, auroraDeploymentSpec),
+                        env = createEnvVars(mounts, auroraDeploymentSpec, routeSuffix),
                         mounts = mounts?.filter { it.targetContainer == null }
                 )
         ).addIfNotNull(sidecarContainers)
+
 
         return AuroraDeployment(
                 name = auroraDeploymentSpec.name,
@@ -49,7 +49,7 @@ class WebPlatformHandler : ApplicationPlatformHandler("web") {
                 containers = container,
                 labels = createLabels(auroraDeploymentSpec.name, auroraDeploymentSpec.deploy, labels),
                 mounts = mounts,
-                annotations = createAnnotations(auroraDeploymentSpec.deploy),
+                annotations = createAnnotations(auroraDeploymentSpec),
                 deployStrategy = auroraDeploymentSpec.deploy.deployStrategy,
                 replicas = auroraDeploymentSpec.deploy.replicas,
                 serviceAccount = auroraDeploymentSpec.deploy.serviceAccount,

@@ -1,17 +1,18 @@
 {
-  applicationId:       utv/reference            // static
-  schemaVersion:       "v1"                     // about.json
-  type:                "deploy"                 // reference.json
-  affiliation:         "aos"                    // about.json
-  cluster:             "utv"                    // utv/about.json
+  applicationId:       utv/reference                // static
+  schemaVersion:       "v1"                         // about.json
+  type:                "deploy"                     // reference.json
+  affiliation:         "aos"                        // about.json
+  segment:             "aurora"                     // about.json
+  cluster:             "utv"                        // utv/about.json
   permissions: {
-    admin:             "APP_PaaS_utv"           // about.json
+    admin:             "APP_PaaS_utv"               // about.json
   }
-  envName:             "utv"                    // folderName
-  name:                "reference"              // fileName
-  artifactId:          "reference"              // fileName
-  groupId:             "no.skatteetaten.aurora" // reference.json
-  version:             "1"                      // reference.json
-  replicas:            1                        // reference.json
-  route:               true                     // reference.json
+  envName:             "utv"                        // folderName
+  name:                "reference"                  // fileName
+  artifactId:          "reference"                  // fileName
+  groupId:             "no.skatteetaten.aurora"     // reference.json
+  version:             "1"                          // reference.json
+  replicas:            1                            // reference.json
+  route:               true                         // reference.json
 }

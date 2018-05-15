@@ -22,9 +22,9 @@ import java.time.Duration
 abstract class ApplicationPlatformHandler(val name:String) {
     open fun handlers(handlers: Set<AuroraConfigFieldHandler>): Set<AuroraConfigFieldHandler> = handlers
 
-    abstract fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?, sidecarContainers: List<AuroraContainer>?): AuroraDeployment
+    abstract fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?, routeSuffix: String, sidecarContainers: List<AuroraContainer>?): AuroraDeployment
 
-    fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpec: AuroraDeploymentSpec): Map<String, String> {
+    fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpec: AuroraDeploymentSpec, routeSuffix: String): Map<String, String> {
 
         val mountEnv = mounts?.filter { it.targetContainer == null }?.map {
             "VOLUME_${it.mountName.toUpperCase().replace("-", "_")}" to it.path
@@ -51,8 +51,7 @@ abstract class ApplicationPlatformHandler(val name:String) {
         val configEnv = auroraDeploymentSpec.deploy?.env ?: emptyMap()
 
         val routeName = auroraDeploymentSpec.route?.route?.takeIf { it.isNotEmpty() }?.first()?.let {
-            val host = auroraDeploymentSpec.assembleRouteHost(it.host ?: auroraDeploymentSpec.name)
-
+            val host = "${it.host}${routeSuffix}"
             val url = "$host${it.path?.ensureStartWith("/") ?: ""}"
             mapOf("ROUTE_NAME" to url, "ROUTE_URL" to "http://$url")
         } ?: mapOf()
@@ -80,9 +79,10 @@ abstract class ApplicationPlatformHandler(val name:String) {
 
     }
 
-    fun createAnnotations(deploy: AuroraDeploy): Map<String, String> {
+    fun createAnnotations(spec: AuroraDeploymentSpec): Map<String, String> {
 
 
+        val deploy = spec.deploy!!
         fun escapeOverrides(): String? {
             val files = deploy.overrideFiles.mapValues { jacksonObjectMapper().readValue(it.value, JsonNode::class.java) }
             val content = jacksonObjectMapper().writeValueAsString(files)
@@ -90,7 +90,7 @@ abstract class ApplicationPlatformHandler(val name:String) {
         }
 
         return mapOf(
-                "boober.skatteetaten.no/applicationFile" to deploy.applicationFile,
+                "boober.skatteetaten.no/applicationFile" to spec.applicationFile.name,
                 "console.skatteetaten.no/alarm" to deploy.flags.alarm.toString(),
                 "boober.skatteetaten.no/overrides" to escapeOverrides(),
                 "console.skatteetaten.no/management-path" to deploy.managementPath,

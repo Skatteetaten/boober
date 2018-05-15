@@ -2,13 +2,12 @@ package no.skatteetaten.aurora.boober.mapper.v1
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraBuild
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.utils.length
 import no.skatteetaten.aurora.boober.utils.notBlank
 
-class AuroraBuildMapperV1(val applicationId: ApplicationId) {
+class AuroraBuildMapperV1(val name: String) {
 
     fun build(auroraConfigFields: AuroraConfigFields): AuroraBuild {
 
@@ -67,7 +66,7 @@ class AuroraBuildMapperV1(val applicationId: ApplicationId) {
             AuroraConfigFieldHandler("groupId", validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
             AuroraConfigFieldHandler("artifactId",
                     defaultSource = "fileName",
-                    defaultValue = applicationId.application, validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
+                    defaultValue = name, validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
             AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set") })
     )
 }

@@ -1,62 +1,66 @@
 {
-  applicationId:       utv/webleveranse            // static
-  schemaVersion:       "v1"                        // about.json
-  type:                "development"               // utv/webleveranse.json
-  applicationPlatform: "web"                       // webleveranse.json
-  affiliation:         "aos"                       // about.json
-  cluster:             "utv"                       // utv/about.json
+  applicationId:       utv/webleveranse             // static
+  schemaVersion:       "v1"                         // about.json
+  type:                "development"                // utv/webleveranse.json
+  applicationPlatform: "web"                        // webleveranse.json
+  affiliation:         "aos"                        // about.json
+  segment:             "aurora"                     // about.json
+  cluster:             "utv"                        // utv/about.json
   permissions: {
-    admin:             "APP_PaaS_utv"              // about.json
+    admin:             "APP_PaaS_utv"               // about.json
   }
-  envName:             "utv"                       // folderName
-  name:                "webleveranse"              // webleveranse.json
-  certificate:         false                       // default
-  database:            false                       // default
+  envName:             "utv"                        // folderName
+  name:                "webleveranse"               // webleveranse.json
+  certificate:         false                        // default
+  database:            false                        // default
   prometheus: {
-    path:              "/prometheus"               // default
-    port:              8081                        // default
+    path:              "/prometheus"                // default
+    port:              8081                         // default
   }
   management: {
-    path:              ""                          // webleveranse.json
-    port:              "8081"                      // webleveranse.json
+    path:              ""                           // webleveranse.json
+    port:              "8081"                       // webleveranse.json
   }
   deployStrategy: {
-    type:              "rolling"                   // webleveranse.json
-    timeout:           180                         // default
+    type:              "rolling"                    // webleveranse.json
+    timeout:           180                          // default
   }
-  artifactId:          "openshift-referanse-react" // webleveranse.json
-  groupId:             "no.skatteetaten.aurora"    // webleveranse.json
-  version:             "1"                         // utv/webleveranse.json
+  artifactId:          "openshift-referanse-react"  // webleveranse.json
+  groupId:             "no.skatteetaten.aurora"     // webleveranse.json
+  version:             "1"                          // utv/webleveranse.json
   resources: {
     cpu: {
-      min:             "100m"                      // default
-      max:             "2000m"                     // default
+      min:             "100m"                       // default
+      max:             "2000m"                      // default
     }
     memory: {
-      min:             "128Mi"                     // default
-      max:             "512Mi"                     // default
+      min:             "128Mi"                      // default
+      max:             "512Mi"                      // default
     }
   }
-  replicas:            1                           // webleveranse.json
+  replicas:            1                            // webleveranse.json
   readiness: {
-    port:              8080                        // default
-    delay:             10                          // default
-    timeout:           1                           // default
+    port:              8080                         // default
+    delay:             10                           // default
+    timeout:           1                            // default
   }
-  liveness:            false                       // default
-  webseal:             false                       // default
-  debug:               false                       // default
-  pause:               false                       // default
-  alarm:               true                        // default
-  toxiproxy:           false                       // default
-  route:               true                        // webleveranse.json
-  extraTags:           "latest,major,minor,patch"  // default
+  liveness:            false                        // default
+  webseal:             false                        // default
+  debug:               false                        // default
+  pause:               false                        // default
+  alarm:               true                         // default
+  toxiproxy:           false                        // default
+  route:               true                         // webleveranse.json
+  routeDefaults: {
+    host:              "@name@-@affiliation@-@env@" // default
+  }
+  extraTags:           "latest,major,minor,patch"   // default
   builder: {
-    name:              "architect"                 // default
-    version:           "1"                         // default
+    name:              "architect"                  // default
+    version:           "1"                          // default
   }
   baseImage: {
-    name:              "wrench"                    // default
-    version:           "0"                         // default
+    name:              "wrench"                     // default
+    version:           "0"                          // default
   }
 }

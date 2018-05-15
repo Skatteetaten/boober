@@ -6,7 +6,6 @@ import java.time.Instant
 
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import no.skatteetaten.aurora.boober.Configuration
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.AbstractAuroraDeploymentSpecTest
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
@@ -32,7 +31,7 @@ class AbstractOpenShiftObjectGeneratorTest extends AbstractAuroraDeploymentSpecT
         "docker-registry.aurora.sits.no:5000",
         new OpenShiftObjectLabelService(userDetailsProvider),
         mapper,
-        templateProcessor, openShiftResourceClient)
+        templateProcessor, openShiftResourceClient, ".utv.paas.skead.no")
   }
 
   def specJavaWithToxiproxy() {

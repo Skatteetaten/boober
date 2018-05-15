@@ -57,7 +57,9 @@ class OpenShiftObjectGenerator(
         val openShiftObjectLabelService: OpenShiftObjectLabelService,
         val mapper: ObjectMapper,
         val openShiftTemplateProcessor: OpenShiftTemplateProcessor,
-        val openShiftClient: OpenShiftResourceClient) {
+        val openShiftClient: OpenShiftResourceClient,
+        @Value("\${boober.route.suffix}") val routeSuffix: String
+) {
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftObjectGenerator::class.java)
 
@@ -157,7 +159,7 @@ class OpenShiftObjectGenerator(
 
         val sidecarContainers = applicationPlatformHandler.createSidecarContainers(auroraDeploymentSpec, mounts?.filter { it.targetContainer == ToxiProxyDefaults.NAME })
 
-        val deployment = applicationPlatformHandler.handleAuroraDeployment(auroraDeploymentSpec, labels, mounts, sidecarContainers)
+        val deployment = applicationPlatformHandler.handleAuroraDeployment(auroraDeploymentSpec, labels, mounts, routeSuffix, sidecarContainers)
 
         val containers = deployment.containers.map { ContainerGenerator.create(it) }
 
@@ -255,7 +257,7 @@ class OpenShiftObjectGenerator(
             val route = route {
                 apiVersion = "v1"
                 metadata {
-                    name = it.name
+                    name = it.objectName
                     labels = routeLabels
                     ownerReferences = null
                     finalizers = null
@@ -268,7 +270,7 @@ class OpenShiftObjectGenerator(
                         kind = "Service"
                         name = auroraDeploymentSpec.name
                     }
-                    host = auroraDeploymentSpec.assembleRouteHost(it.host ?: auroraDeploymentSpec.name)
+                    host = "${it.host}${routeSuffix}"
                     it.path?.let {
                         path = it
                     }

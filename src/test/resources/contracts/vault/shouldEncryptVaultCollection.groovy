@@ -15,7 +15,7 @@ Contract.make {
     body(
         operationName: 'reencrypt',
         parameters: [
-          'encryptionKey': 'key'
+            'encryptionKey': 'key'
         ]
     )
     bodyMatchers {
