@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.contracts
 
 import no.skatteetaten.aurora.boober.controller.v1.DeployControllerV1
+import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -31,7 +32,7 @@ class DeployBase extends AbstractContractBase {
       reason = response('deploy-failed', '$.message', String)
     }
 
-    def spec = new AuroraDeploymentSpec('', TemplateType.development, '', [:], '', '',
+    def spec = new AuroraDeploymentSpec(new ApplicationId('', ''), '', TemplateType.development, '', [:], '', '',
         new AuroraDeployEnvironment('', '',
             new Permissions(new Permission(Collections.emptySet(), Collections.emptySet()), null), null),
         null, null, null, null, null, null,new AuroraConfigFile('name', 'contents', true))

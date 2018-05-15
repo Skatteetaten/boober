@@ -6,8 +6,8 @@ Contract.make {
   request {
     method 'GET'
     url $(
-        consumer(~/\/v1\/auroradeployspec\/[a-z]+\/[a-z]+\/[a-z]+/),
-        producer('/v1/auroradeployspec/auroraconfigname/utv/application')
+        stub(~/\/v1\/auroradeployspec\/[a-z]+\/[a-z]+\/[a-z]+/),
+        test('/v1/auroradeployspec/auroraconfigname/utv/application')
     )
   }
   response {

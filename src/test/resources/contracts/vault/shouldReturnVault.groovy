@@ -6,8 +6,8 @@ Contract.make {
   request {
     method 'GET'
     url $(
-        consumer(~/\/v1\/vault\/[a-z]+\/[a-z]+/),
-        producer('/v1/vault/vaultcollection/vaultfile')
+        stub(~/\/v1\/vault\/[a-z]+\/[a-z]+/),
+        test('/v1/vault/vaultcollection/vaultfile')
     )
     headers {
       contentType(applicationJson())

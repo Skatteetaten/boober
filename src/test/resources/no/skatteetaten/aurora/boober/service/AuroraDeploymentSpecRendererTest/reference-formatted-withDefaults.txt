@@ -1,10 +1,11 @@
 {
-  schemaVersion:       "v1"                         // about.json
-  type:                "deploy"                     // reference.json
-  applicationPlatform: "java"                       // default
-  affiliation:         "aos"                        // about.json
+  applicationId:       utv/reference            // static
+  schemaVersion:       "v1"                     // about.json
+  type:                "deploy"                 // reference.json
+  applicationPlatform: "java"                   // default
+  affiliation:         "aos"                    // about.json
   segment:             "aurora"                     // about.json
-  cluster:             "utv"                        // utv/about.json
+  cluster:             "utv"                    // utv/about.json
   permissions: {
     admin:             "APP_PaaS_utv"               // about.json
   }

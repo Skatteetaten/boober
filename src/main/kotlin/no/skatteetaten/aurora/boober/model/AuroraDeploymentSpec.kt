@@ -48,6 +48,7 @@ data class AuroraDeployEnvironment(
 }
 
 data class AuroraDeploymentSpec(
+        val applicationId: ApplicationId,
         val schemaVersion: String,
         val type: TemplateType,
         val name: String,
@@ -67,6 +68,7 @@ data class AuroraDeploymentSpec(
 data class AuroraVolume(
         val secretVaultName: String?,
         val secretVaultKeys: List<String>,
+        val keyMappings: Map<String, String>?,
         val config: Map<String, String>?,
         val mounts: List<Mount>?
 )

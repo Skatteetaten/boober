@@ -6,8 +6,8 @@ Contract.make {
   request {
     method 'PUT'
     url $(
-        consumer(~/\/v1\/vault\/[a-z]+/),
-        producer('/v1/vault/vaultcollection')
+        stub(~/\/v1\/vault\/[a-z]+/),
+        test('/v1/vault/vaultcollection')
     )
     headers {
       contentType(applicationJson())
@@ -17,7 +17,7 @@ Contract.make {
         permissions: [],
         secrets: {}
     )
-    stubMatchers {
+    bodyMatchers {
       jsonPath('$.name', byRegex(nonEmpty()))
     }
   }

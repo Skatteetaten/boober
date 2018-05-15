@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
+import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraBuild
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
@@ -15,7 +16,7 @@ import no.skatteetaten.aurora.boober.model.AuroraTemplate
 import no.skatteetaten.aurora.boober.model.AuroraVolume
 import no.skatteetaten.aurora.boober.utils.oneOf
 
-class AuroraDeploymentSpecMapperV1 {
+class AuroraDeploymentSpecMapperV1(val applicationId:ApplicationId) {
 
 
     val handlers = listOf(
@@ -46,20 +47,22 @@ class AuroraDeploymentSpecMapperV1 {
         val name: String = auroraConfigFields.extract("name")
 
         return AuroraDeploymentSpec(
-                schemaVersion = auroraConfigFields.extract("schemaVersion"),
-                applicationPlatform = auroraConfigFields.extract("applicationPlatform"),
-                type = auroraConfigFields.extract("type"),
-                name = name,
-                cluster = auroraConfigFields.extract("cluster"),
-                environment = env,
-                fields = createMapForAuroraDeploymentSpecPointers(createFieldsWithValues(auroraConfigFields, build)),
-                volume = volume,
-                route = route,
-                build = build,
-                deploy = deploy,
-                template = template,
-                localTemplate = localTemplate,
-                applicationFile = applicationFile)
+            applicationId = applicationId,
+            schemaVersion = auroraConfigFields.extract("schemaVersion"),
+            applicationPlatform = auroraConfigFields.extract("applicationPlatform"),
+            type = auroraConfigFields.extract("type"),
+            name = name,
+
+            cluster = auroraConfigFields.extract("cluster"),
+            environment = env,
+            fields = createFields(applicationId, auroraConfigFields, build),
+            volume = volume,
+            route = route,
+            build = build,
+            deploy = deploy,
+            template = template,
+            localTemplate = localTemplate,
+            applicationFile = applicationFile)
 
     }
 
@@ -78,6 +81,17 @@ class AuroraDeploymentSpecMapperV1 {
                 }
 
         return includeSubKeys
+    }
+
+    fun createFields(applicationId: ApplicationId, auroraConfigFields: AuroraConfigFields, build: AuroraBuild?): Map<String, Map<String, Any?>> {
+        val applicationIdField = mapOf("applicationId" to mapOf(
+            "source" to "static",
+            "value" to applicationId.toString()
+        ))
+
+        val fields = createMapForAuroraDeploymentSpecPointers(createFieldsWithValues(auroraConfigFields, build))
+
+        return applicationIdField + fields
     }
 
 
