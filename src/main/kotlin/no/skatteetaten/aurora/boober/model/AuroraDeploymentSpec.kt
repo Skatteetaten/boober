@@ -56,6 +56,7 @@ data class AuroraDeploymentSpec(
 data class AuroraVolume(
         val secretVaultName: String?,
         val secretVaultKeys: List<String>,
+        val keyMappings: Map<String, String>?,
         val config: Map<String, String>?,
         val mounts: List<Mount>?
 )

@@ -1,57 +1,60 @@
 package no.skatteetaten.aurora.boober.utils
 
-class PropertiesUtilTest {
+import spock.lang.Specification
 
-  final String props = "#a text line\nfoo=bar\nusername=user\npassword=pass\nsomething=sameting\n"
+class PropertiesUtilTest extends Specification {
+
+  def props = '''#a text line
+foo=bar
+username=user
+password=pass
+something=sameting
+'''.getBytes()
 
   def "Remove non-listed keys from properties"() {
-    given:
-      byte[] byteArray = props.getBytes()
-      List<String> filterKeys = new ArrayList<>()
-      filterKeys.add("username")
-      filterKeys.add("password")
-
     when:
-      byte[] filteredBytes = CollectionUtilsKt.filterProperties(byteArray, filterKeys)
+      byte[] filteredBytes = PropertiesUtilKt.filterProperties(props, ['username', 'password'], [:])
 
     then:
-      Properties filteredProps = new Properties()
-      filteredProps.load(new ByteArrayInputStream(filteredBytes))
+      Properties filteredProps = loadProperties(filteredBytes)
       filteredProps.size() == 2
-      filteredProps.stringPropertyNames().contains("username")
-      filteredProps.stringPropertyNames().contains("password")
-      !filteredProps.stringPropertyNames().contains("foo")
-      !filteredProps.stringPropertyNames().contains("something")
-  }
-
-  def "Remove everything when key list is empty"() {
-    given:
-      byte[] byteArray = props.getBytes()
-      List<String> filterKeys = new ArrayList<>()
-
-    when:
-      byte[] filteredBytes = CollectionUtilsKt.filterProperties(byteArray, filterKeys)
-
-    then:
-      Properties filteredProps = new Properties()
-      filteredProps.load(new ByteArrayInputStream(filteredBytes))
-      filteredProps.size() == 0
+      filteredProps.stringPropertyNames().containsAll(['username', 'password'])
+      !filteredProps.stringPropertyNames().containsAll(['foo', 'something'])
   }
 
   def "Remove correct elements when key list contain unknown keys"() {
-    given:
-      byte[] byteArray = props.getBytes()
-      List<String> filterKeys = new ArrayList<>()
-      filterKeys.add("username")
-      filterKeys.add("unknown")
-
     when:
-      byte[] filteredBytes = CollectionUtilsKt.filterProperties(byteArray, filterKeys)
+      byte[] filteredBytes = PropertiesUtilKt.filterProperties(props, ['username', 'unknown'], [:])
 
     then:
-      Properties filteredProps = new Properties()
-      filteredProps.load(new ByteArrayInputStream(filteredBytes))
+      Properties filteredProps = loadProperties(filteredBytes)
       filteredProps.size() == 1
-      filteredProps.stringPropertyNames().contains("username")
+      filteredProps.stringPropertyNames()[0] == 'username'
+  }
+
+  def "Replace filtered key mappings"() {
+    when:
+      def filteredBytes = PropertiesUtilKt.filterProperties(props, ['username'], ['username': 'new-username'])
+
+    then:
+      Properties filteredProps = loadProperties(filteredBytes)
+      filteredProps.getProperty('new-username') == 'user'
+      filteredProps.size() == 1
+  }
+
+  def "Replace key mappings without filtering keys"() {
+    when:
+      def filteredBytes = PropertiesUtilKt.filterProperties(props, [], ['username': 'new-username'])
+
+    then:
+      Properties filteredProps = loadProperties(filteredBytes)
+      filteredProps.getProperty('new-username') == 'user'
+      filteredProps.size() == 4
+  }
+
+  def loadProperties(byte[] bytes) {
+    Properties filteredProps = new Properties()
+    filteredProps.load(new ByteArrayInputStream(bytes))
+    return filteredProps
   }
 }

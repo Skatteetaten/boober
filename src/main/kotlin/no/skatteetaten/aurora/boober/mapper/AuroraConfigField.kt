@@ -57,7 +57,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
             field to escapedValue
         }
 
-        return env.filter { !it.second.isBlank() }.toMap()
+        return env.toMap()
     }
 
     fun getRouteAnnotations(prefix: String, extractors: List<AuroraConfigFieldHandler>): Map<String, String> {
@@ -86,6 +86,14 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         return parameterExtractors.map {
             val (_, field) = it.name.split("/", limit = 2)
 
+            val value: String = extract(it.name)
+            field to value
+        }.toMap()
+    }
+
+    fun getKeyMappings(keyMappingsExtractors: List<AuroraConfigFieldHandler>): Map<String, String>? {
+        return keyMappingsExtractors.map {
+            val field = it.name.substringAfterLast("/")
             val value: String = extract(it.name)
             field to value
         }.toMap()
