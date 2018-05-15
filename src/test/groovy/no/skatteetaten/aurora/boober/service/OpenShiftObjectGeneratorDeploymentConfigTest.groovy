@@ -3,6 +3,8 @@ package no.skatteetaten.aurora.boober.service
 import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 import static no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner.createSchemaProvisionRequestsFromDeploymentSpec
 
+import com.fasterxml.jackson.databind.JsonNode
+
 import groovy.json.JsonSlurper
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseInstance
@@ -53,5 +55,61 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObje
           ("VOLUME_${dbNameEnv}_DB")    : "/u01/secrets/app/${dbName}-db"
       ]
       expectedEnvs.every { envName, envValue -> container.env.find { it.name == envName && it.value == envValue } }
+  }
+
+  def "toxiproxy sidecar must be created if toxiproxy is enabled in deployment spec for java"() {
+
+    given: "plain deployment spec for java with toxiproxy version 2.1.3 enabled"
+      def name = "reference-toxiproxy"
+      AuroraDeploymentSpec deploymentSpec = specJavaWithToxiproxy()
+      def provisioningResult = provisiongResult(deploymentSpec)
+
+    when: "dc has been created"
+      def dc = objectGenerator.generateDeploymentConfig("deploy-id", deploymentSpec, provisioningResult)
+
+    then: "the dc must contain valid toxiproxy sidecar configuration"
+      dcContainsValidToxiProxyContainer(dc, name)
+      dcContainsValidToxiProxyVolume(dc, name)
+    }
+
+  def "toxiproxy sidecar must be created if toxiproxy is enabled in deployment spec for web"() {
+
+    given: "plain deployment spec for web with toxiproxy version 2.1.3 enabled"
+      def name = "webleveranse-toxiproxy"
+      AuroraDeploymentSpec deploymentSpec = specWebWithToxiproxy()
+      def provisioningResult = provisiongResult(deploymentSpec)
+
+    when: "dc has been created"
+      def dc = objectGenerator.generateDeploymentConfig("deploy-id", deploymentSpec, provisioningResult)
+
+    then: "the dc must contain valid toxiproxy sidecar configuration"
+      dcContainsValidToxiProxyContainer(dc, name)
+      dcContainsValidToxiProxyVolume(dc, name)
+  }
+
+  def dcContainsValidToxiProxyContainer(dc, name) {
+    def dcobj = new JsonSlurper().parseText(dc.toString()) // convert to groovy for easier navigation and validation
+    def container = dcobj?.spec?.template?.spec?.containers?.find { it?.name == name }
+
+    return container != null &&
+        container.image == "shopify/toxiproxy:2.1.3" &&
+        container.args  == [ "-config", "/u01/config/config.json" ] &&
+        container.volumeMounts.find { it == ["mountPath": "/u01/config", "name": "toxiproxy-volume"] }
+  }
+
+  def dcContainsValidToxiProxyVolume(dc, name) {
+    def dcobj = new JsonSlurper().parseText(dc.toString()) // convert to groovy for easier navigation and validation
+    def volume = dcobj?.spec?.template?.spec?.volumes?.find { it?.name == "toxiproxy-volume"}
+
+    return volume != null &&
+        volume.configMap?.name == name + "-config"
+  }
+
+  def provisiongResult(AuroraDeploymentSpec deploymentSpec) {
+      return new ProvisioningResult(
+          new SchemaProvisionResults([new SchemaProvisionResult(
+              createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec)[0],
+              new DbhSchema("", "", new DatabaseInstance(1512, ""), "", [:], []), "")
+          ]), null)
   }
 }

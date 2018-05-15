@@ -153,6 +153,10 @@
     "source": "default",
     "value": true
   },
+  "toxiproxy": {
+    "source": "default",
+    "value": false
+  },
   "route": {
     "source": "reference.json",
     "value": true

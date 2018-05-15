@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
+import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
+
 import java.time.Instant
 
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -31,5 +33,23 @@ class AbstractOpenShiftObjectGeneratorTest extends AbstractAuroraDeploymentSpecT
         new OpenShiftObjectLabelService(userDetailsProvider),
         mapper,
         templateProcessor, openShiftResourceClient)
+  }
+
+  def specJavaWithToxiproxy() {
+    return createDeploymentSpec([
+        "about.json"        : DEFAULT_ABOUT,
+        "utv/about.json"    : DEFAULT_UTV_ABOUT,
+        "reference.json"    : REF_APP_JSON,
+        "utv/reference.json": '''{ "toxiproxy" : { "version" : "2.1.3" } }'''
+    ], aid("utv", "reference"))
+  }
+
+  def specWebWithToxiproxy() {
+    return createDeploymentSpec([
+        "about.json"        : DEFAULT_ABOUT,
+        "utv/about.json"    : DEFAULT_UTV_ABOUT,
+        "webleveranse.json"    : WEB_LEVERANSE,
+        "utv/webleveranse.json": '''{ "type": "deploy", "version" : "1.0.8", "database" : { "REFerence" : "auto" }, "toxiproxy" : { "version" : "2.1.3" } }'''
+    ], aid("utv", "webleveranse"))
   }
 }
