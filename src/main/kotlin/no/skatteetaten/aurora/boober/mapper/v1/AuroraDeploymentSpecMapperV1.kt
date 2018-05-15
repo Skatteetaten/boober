@@ -55,7 +55,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
                 name = name,
                 cluster = auroraConfigFields.extract("cluster"),
                 environment = env,
-                fields = createMapForAuroraDeploymentSpecPointers(createFieldsWithValues(auroraConfigFields, build)),
+                fields = createFields(applicationId, auroraConfigFields, build),
                 volume = volume,
                 route = route,
                 build = build,

@@ -20,14 +20,14 @@ import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.removeExtension
 
-class AuroraDeployMapperV1(val name: String, val applicationId: ApplicationId, val applicationFiles: List<AuroraConfigFile>, val overrideFiles: List<AuroraConfigFile>) {
+class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFiles: List<AuroraConfigFile>, val overrideFiles: List<AuroraConfigFile>) {
 
 
     val configHandlers = applicationFiles.findConfigFieldHandlers()
     val handlers = listOf(
 
             AuroraConfigFieldHandler("artifactId",
-                    defaultValue = name,
+                    defaultValue = applicationId.application,
                     defaultSource = "fileName",
                     validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
             AuroraConfigFieldHandler("groupId", validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
@@ -60,8 +60,9 @@ class AuroraDeployMapperV1(val name: String, val applicationId: ApplicationId, v
             AuroraConfigFieldHandler("debug", defaultValue = false),
             AuroraConfigFieldHandler("pause", defaultValue = false),
             AuroraConfigFieldHandler("alarm", defaultValue = true),
-            AuroraConfigFieldHandler("ttl", validator = { it.durationString() })
-
+            AuroraConfigFieldHandler("ttl", validator = { it.durationString() }),
+            AuroraConfigFieldHandler("toxiproxy", defaultValue = false),
+            AuroraConfigFieldHandler("toxiproxy/version", defaultValue = "2.1.3")
     ) + configHandlers
 
     fun deploy(auroraConfigFields: AuroraConfigFields): AuroraDeploy? {

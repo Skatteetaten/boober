@@ -46,7 +46,6 @@
     timeout:           1                            // default
   }
   liveness:            false                        // default
-  webseal:             false                        // default
   debug:               false                        // default
   pause:               false                        // default
   alarm:               true                         // default
