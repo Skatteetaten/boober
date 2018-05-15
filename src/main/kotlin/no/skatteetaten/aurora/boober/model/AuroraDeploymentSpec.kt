@@ -25,6 +25,7 @@ data class AuroraDeployEnvironment(
 }
 
 data class AuroraDeploymentSpec(
+        val applicationId: ApplicationId,
         val schemaVersion: String,
         val type: TemplateType,
         val name: String,

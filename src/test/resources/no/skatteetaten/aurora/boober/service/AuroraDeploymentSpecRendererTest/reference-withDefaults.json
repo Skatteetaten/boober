@@ -1,4 +1,8 @@
 {
+  "applicationId": {
+    "source": "static",
+    "value": "utv/reference"
+  },
   "schemaVersion": {
     "source": "about.json",
     "value": "v1"
