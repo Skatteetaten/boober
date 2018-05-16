@@ -6,8 +6,8 @@ Contract.make {
   request {
     method 'POST'
     url $(
-        consumer(~/\/v1\/vault\/[a-z]+\//),
-        producer('/v1/vault/vaultcollection/')
+        stub(~/\/v1\/vault\/[a-z]+\//),
+        test('/v1/vault/vaultcollection/')
     )
     headers {
       contentType(applicationJson())
@@ -15,10 +15,10 @@ Contract.make {
     body(
         operationName: 'reencrypt',
         parameters: [
-          'encryptionKey': 'key'
+            'encryptionKey': 'key'
         ]
     )
-    stubMatchers {
+    bodyMatchers {
       jsonPath('$.operationName', byEquality())
       jsonPath('$.parameters[?@encryptionKey]', byRegex(nonEmpty()))
     }

@@ -1,4 +1,8 @@
 {
+  "applicationId": {
+    "source": "static",
+    "value": "utv/webleveranse"
+  },
   "schemaVersion": {
     "source": "about.json",
     "value": "v1"
@@ -14,6 +18,10 @@
   "affiliation": {
     "source": "about.json",
     "value": "aos"
+  },
+  "segment": {
+    "source": "about.json",
+    "value": "aurora"
   },
   "cluster": {
     "source": "utv/about.json",

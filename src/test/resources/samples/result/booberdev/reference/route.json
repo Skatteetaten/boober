@@ -6,6 +6,7 @@
       "app": "reference",
       "updatedBy": "hero",
       "affiliation": "aos",
+      "updateInBoober": "true",
       "booberDeployId": "123"
     },
     "name": "reference"
@@ -14,7 +15,7 @@
     "alternateBackends": [
 
     ],
-    "host": "reference-aos-booberdev.utv.paas.skead.no",
+    "host": "reference.ao.booberdev.utv.paas.skead.no",
     "to": {
       "kind": "Service",
       "name": "reference"

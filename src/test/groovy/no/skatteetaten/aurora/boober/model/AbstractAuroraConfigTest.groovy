@@ -17,6 +17,7 @@ abstract class AbstractAuroraConfigTest extends AbstractSpec {
   "permissions": {
     "admin": "APP_PaaS_utv"
   },
+  "segment" : "aurora",
   "affiliation" : "$AFFILIATION"
 }"""
 

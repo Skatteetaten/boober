@@ -50,7 +50,8 @@ class OpenShiftApiUrls(
         }
 
         fun getApiType(endpointKey: String): String {
-            return if (endpointKey in listOf("namespaces", "services", "configmaps", "secrets", "replicationcontrollers", "persistentvolumeclaims", "pods")) "api" else "oapi"
+            return if (endpointKey in listOf("namespaces", "services", "configmaps", "secrets", "serviceaccounts",
+                            "replicationcontrollers", "persistentvolumeclaims", "pods")) "api" else "oapi"
         }
 
     }

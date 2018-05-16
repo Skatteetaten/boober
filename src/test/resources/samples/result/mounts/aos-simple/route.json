@@ -9,6 +9,7 @@
       "app": "aos-simple",
       "updatedBy": "hero",
       "affiliation": "aos",
+      "updateInBoober": "true",
       "booberDeployId": "123"
     },
     "name": "aos-simple"
@@ -17,7 +18,7 @@
     "alternateBackends": [
 
     ],
-    "host": "aos-mounts.utv.paas.skead.no",
+    "host": "aurora.mounts.utv.paas.skead.no",
     "path": "/foo",
     "to": {
       "kind": "Service",

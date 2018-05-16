@@ -78,13 +78,13 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
     when:
       def deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
     then:
-      deploymentSpec.deploy.certificateCn == "some_common_name"
+      deploymentSpec.integration.certificateCn == "some_common_name"
 
     when:
       auroraConfigJson["utv/aos-simple.json"] = '''{ "certificate": false }'''
       deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
     then:
-      !deploymentSpec.deploy.certificateCn
+      !deploymentSpec.integration.certificateCn
   }
 
   def "Verify that it is possible to set some common global config options for templates even if they are not directly supported by that type"() {
@@ -192,12 +192,18 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       deploymentSpec.getVolume().secretVaultKeys == keys
 
     where:
-      configFile                                                                                       | vaultName   | keys
-      '''{ "secretVault": "vaultName" }'''                                                             | "vaultName" | []
-      '''{ "secretVault": {"name": "test"} }'''                                                        | "test"      | []
-      '''{ "secretVault": {"name": "test", "keys": []} }'''                                            | "test"      | []
-      '''{ "secretVault": {"name": "test", "keys": ["test1", "test2"]} }'''                            | "test"      | ["test1", "test2"]
-      '''{ "secretVault": {"name": "test", "keys": ["test1"], "keyMappings":{"test1":"newtestkey"}} }'''| "test"      | ["test1"]
+      configFile                                                                                         | vaultName   |
+          keys
+      '''{ "secretVault": "vaultName" }'''                                                               | "vaultName" |
+          []
+      '''{ "secretVault": {"name": "test"} }'''                                                          | "test"      |
+          []
+      '''{ "secretVault": {"name": "test", "keys": []} }'''                                              | "test"      |
+          []
+      '''{ "secretVault": {"name": "test", "keys": ["test1", "test2"]} }'''                              | "test"      |
+          ["test1", "test2"]
+      '''{ "secretVault": {"name": "test", "keys": ["test1"], "keyMappings":{"test1":"newtestkey"}} }''' | "test"      |
+          ["test1"]
   }
 
   def "Permissions supports both space separated string and array"() {
@@ -227,7 +233,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
     then:
-      def roles = deploymentSpec.deploy.webseal.roles
+      def roles = deploymentSpec.integration.webseal.roles
       roles == "role1,role2,3"
 
     where:

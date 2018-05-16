@@ -11,6 +11,7 @@
       "app": "sprocket",
       "updatedBy": "hero",
       "affiliation": "aos",
+      "updateInBoober": "true",
       "booberDeployId": "123",
       "name": "sprocket",
       "deployTag": "3"
@@ -38,6 +39,7 @@
           "app": "sprocket",
           "updatedBy": "hero",
           "affiliation": "aos",
+          "updateInBoober": "true",
           "booberDeployId": "123",
           "name": "sprocket",
           "deployTag": "3"

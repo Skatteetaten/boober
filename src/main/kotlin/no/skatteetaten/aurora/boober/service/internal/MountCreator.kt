@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.service.internal
 
+import no.skatteetaten.aurora.boober.mapper.v1.ToxiProxyDefaults
+import no.skatteetaten.aurora.boober.mapper.v1.getToxiProxyConfig
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType
@@ -17,7 +19,9 @@ fun findAndCreateMounts(deploymentSpec: AuroraDeploymentSpec, provisioningResult
             ?.let { createDatabaseMounts(deploymentSpec, it) }
             .orEmpty()
 
-    return configMounts + databaseMounts
+    val toxiProxyMounts = createToxiProxyMounts(deploymentSpec)
+
+    return configMounts + databaseMounts + toxiProxyMounts
 }
 
 private fun createMountsFromDeploymentSpec(deploymentSpec: AuroraDeploymentSpec): List<Mount> {
@@ -31,6 +35,7 @@ private fun createMountsFromDeploymentSpec(deploymentSpec: AuroraDeploymentSpec)
                 exist = false,
                 content = it)
     }
+
     val secretVaultMount = deploymentSpec.volume?.secretVaultName?.let {
         Mount(path = "/u01/config/secret",
                 type = MountType.Secret,
@@ -41,7 +46,7 @@ private fun createMountsFromDeploymentSpec(deploymentSpec: AuroraDeploymentSpec)
                 secretVaultName = it)
     }
 
-    val certMount = deploymentSpec.deploy?.certificateCn?.let {
+    val certMount = deploymentSpec.integration?.certificateCn?.let {
         Mount(path = "/u01/secrets/app/${deploymentSpec.name}-cert",
                 type = MountType.Secret,
                 volumeName = "${deploymentSpec.name}-cert",
@@ -52,8 +57,6 @@ private fun createMountsFromDeploymentSpec(deploymentSpec: AuroraDeploymentSpec)
     }
     return listOf<Mount>().addIfNotNull(secretVaultMount).addIfNotNull(configMount).addIfNotNull(certMount).addIfNotNull(deploymentSpec.volume?.mounts)
 }
-
-
 
 private fun createDatabaseMounts(deploymentSpec: AuroraDeploymentSpec,
                                  schemaProvisionResults: SchemaProvisionResults): List<Mount> {
@@ -72,3 +75,20 @@ private fun createDatabaseMounts(deploymentSpec: AuroraDeploymentSpec,
 
     return databaseMounts
 }
+
+private fun createToxiProxyMounts(deploymentSpec: AuroraDeploymentSpec): List<Mount> {
+
+    return deploymentSpec.deploy?.toxiProxy?.let {
+        listOf(Mount(
+                path = "/u01/config",
+                type = MountType.ConfigMap,
+                mountName = "${ToxiProxyDefaults.NAME}-volume",
+                volumeName = "${ToxiProxyDefaults.NAME}-config",
+                exist = false,
+                content = mapOf("config.json" to getToxiProxyConfig()),
+                targetContainer = ToxiProxyDefaults.NAME))
+    }
+            .orEmpty()
+}
+
+

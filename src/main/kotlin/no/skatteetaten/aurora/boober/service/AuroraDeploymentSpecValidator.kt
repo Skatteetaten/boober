@@ -49,7 +49,7 @@ class AuroraDeploymentSpecValidator(
     protected fun validateDatabaseId(deploymentSpec: AuroraDeploymentSpec) {
         // We cannot validate database schemas for applications that are not deployed on the current cluster.
         if (deploymentSpec.cluster != cluster) return
-        val databases = deploymentSpec.deploy?.database ?: return
+        val databases = deploymentSpec.integration?.database ?: return
         databases.mapNotNull { it.id }
                 .forEach {
                     try {

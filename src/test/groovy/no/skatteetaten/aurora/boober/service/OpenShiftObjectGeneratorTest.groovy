@@ -43,8 +43,6 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
         JsonNode jsonResult = mapper.readTree(templateResult)
 
         openShiftResourceClient.post("processedtemplate", _, null, _) >> {
-
-          it[3]["labels"]["updatedBy"] == "hero"
           new ResponseEntity<JsonNode>(jsonResult, HttpStatus.OK)
         }
       }
@@ -76,11 +74,11 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
     where:
 
       env           | name            | templateFile      | overrides
-      "booberdev"   | "reference"     | null              | []
-      "booberdev"   | "console"       | null              | []
-      "webseal"     | "sprocket"      | null              | []
-      "booberdev"   | "sprocket"      | null              | []
       "booberdev"   | "tvinn"         | "atomhopper.json" | []
+        "booberdev" | "reference"     | null              | []
+        "booberdev" | "console"       | null              | []
+        "webseal"   | "sprocket"      | null              | []
+      "booberdev"   | "sprocket"      | null              | []
       "booberdev"   | "reference-web" | null              | []
       "booberdev"   | "build"         | null              | []
       "booberdev"   | "aos-simple"    | null              | booberDevAosSimpleOverrides

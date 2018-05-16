@@ -15,7 +15,8 @@ class ApplyresultBase extends AbstractContractBase {
     loadJsonResponses(this)
     def deployLogService = Mock(DeployLogService) {
       deployHistory(_ as String) >> []
-      findDeployResultById(_ as String, _ as String) >> { arguments -> (arguments[1] == 'invalid-id') ? null : createDeployResult() }
+      findDeployResultById(_ as String, _ as String) >>
+          { arguments -> (arguments[1] == 'invalid-id') ? null : createDeployResult() }
     }
     ApplyResultController controller = new ApplyResultController(deployLogService)
     setupMockMvc(controller)
@@ -23,7 +24,7 @@ class ApplyresultBase extends AbstractContractBase {
 
   DeployHistory createDeployResult() {
     def ident = response('deployresult', '$.items[0].deployer', Map)
-    //TODO: Fetch epoch from response here?
-    new DeployHistory(new Deployer(ident.name, ident.email), Instant.EPOCH, NullNode.instance)
+    def time = response('deployresult', '$.items[0].time', String)
+    new DeployHistory(new Deployer(ident.name, ident.email), Instant.parse(time), NullNode.instance)
   }
 }

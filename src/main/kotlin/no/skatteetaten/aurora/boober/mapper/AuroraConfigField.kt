@@ -6,44 +6,40 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.mapper.v1.convertValueToString
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.Database
+import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-data class AuroraConfigField(val handler: AuroraConfigFieldHandler, val source: AuroraConfigFile? = null) {
-    val value: JsonNode
+class AuroraConfigField(val handler: AuroraConfigFieldHandler,
+                        val replacer: StringSubstitutor,
+                        val source: AuroraConfigFile? = null) {
+    val valueNode: JsonNode
         get() = source?.asJsonNode?.at(handler.path) ?: MissingNode.getInstance()
-    val valueOrDefault: JsonNode?
+    val valueNodeOrDefault: JsonNode?
         get() =
-            value.let {
+            valueNode.let {
                 if (it.isMissingNode) {
                     jacksonObjectMapper().convertValue(handler.defaultValue, JsonNode::class.java)
                 } else {
                     it
                 }
             }
-}
 
-inline fun <reified T> AuroraConfigField.getNullableValue(): T? {
+    inline fun <reified T> getNullableValue(): T? = this.value() as T?
 
-    if (this.source == null) {
-        return this.handler.defaultValue as T
+
+    inline fun <reified T> value(): T {
+
+        val result = if (this.source == null) {
+            this.handler.defaultValue as T
+        } else {
+            jacksonObjectMapper().convertValue(this.valueNode, T::class.java)
+        }
+        if (result is String) {
+            return replacer.replace(result as String) as T
+        }
+        return result
     }
-
-    val value = this.value
-
-    return jacksonObjectMapper().convertValue(value, T::class.java)
-}
-
-inline fun <reified T> AuroraConfigField.value(): T {
-
-    if (this.source == null) {
-        return this.handler.defaultValue as T
-    }
-
-    val value = this.source.asJsonNode.at(this.handler.path)
-
-    return jacksonObjectMapper().convertValue(value, T::class.java)
-
 }
 
 class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
@@ -122,7 +118,9 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         return false
     }
 
+
     inline fun <reified T> extract(name: String): T = fields[name]!!.value()
+
 
     /**
      * Extracts a config field declared either as a delimited string (ie. "value1, value2") or as a JSON array
@@ -130,7 +128,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
      */
     fun extractDelimitedStringOrArrayAsSet(name: String, delimiter: String = ","): Set<String> {
         val field = fields[name]!!
-        val valueNode = field.value
+        val valueNode = field.valueNode
         return when {
             valueNode.isTextual -> valueNode.textValue().split(delimiter).toList()
             valueNode.isArray -> (field.value() as List<Any?>).map { it?.toString() } // Convert any non-string values in the array to string
@@ -148,7 +146,10 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
         val logger: Logger = LoggerFactory.getLogger(AuroraConfigFields::class.java)
 
-        fun create(handlers: Set<AuroraConfigFieldHandler>, files: List<AuroraConfigFile>): AuroraConfigFields {
+        fun create(handlers: Set<AuroraConfigFieldHandler>, files: List<AuroraConfigFile>, placeholders: Map<String, String> = emptyMap()): AuroraConfigFields {
+
+            val replacer = StringSubstitutor(placeholders, "@", "@")
+
             val fields: Map<String, AuroraConfigField> = handlers.map { handler ->
                 val matches = files.reversed().mapNotNull {
                     logger.trace("Check if  ${handler.path} exist in file  ${it.contents}")
@@ -156,13 +157,13 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
                     if (!value.isMissingNode) {
                         logger.trace("Match $value i fil ${it.configName}")
-                        AuroraConfigField(handler, it)
+                        AuroraConfigField(handler, replacer, it)
                     } else null
                 }
 
                 matches.firstOrNull()?.let {
                     it
-                } ?: AuroraConfigField(handler)
+                } ?: AuroraConfigField(handler, replacer)
 
             }.associate { it.handler.name to it }
 

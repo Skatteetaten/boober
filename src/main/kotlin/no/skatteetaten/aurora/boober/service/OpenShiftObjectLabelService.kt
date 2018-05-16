@@ -42,6 +42,7 @@ class OpenShiftObjectLabelService(private val userDetailsProvider: UserDetailsPr
                 "app" to name,
                 "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
                 "affiliation" to auroraDeploymentSpec.environment.affiliation,
+                "updateInBoober" to "true",
                 "booberDeployId" to deployId
         )
         return toOpenShiftLabelNameSafeMap(labels + additionalLabels)

@@ -6,6 +6,7 @@
       "app": "tvinn",
       "updatedBy": "hero",
       "affiliation": "aos",
+      "updateInBoober": "true",
       "booberDeployId": "123"
     },
     "name": "tvinn-config"
