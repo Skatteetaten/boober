@@ -23,6 +23,11 @@ fun Properties.filter(keys: List<String>): Properties {
     }
 
     val propertyNames = this.stringPropertyNames()
+    val missingKeys = keys - propertyNames
+    if (missingKeys.isNotEmpty()) {
+        throw IllegalArgumentException("The keys $missingKeys were not found in the secret vault")
+    }
+
     val newProps = Properties()
     keys.filter { propertyNames.contains(it) }
         .map { it to this.getProperty(it) }
