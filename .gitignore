@@ -41,3 +41,4 @@ src/main/http/rest-client.env.json
 
 # Include code style
 !.idea/codeStyles/*
+!.idea/codeStyleSettings.xml
