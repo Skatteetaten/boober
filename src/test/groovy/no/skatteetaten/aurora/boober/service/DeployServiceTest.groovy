@@ -81,19 +81,24 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
       namespace.command.payload.at("/metadata/labels/removeAfter").textValue() == "86400"
   }
 
-  @Unroll
-  def "Deploy from spec for #env/#name"() {
-    given:
-      def ads = auroraConfigService.
-          createValidatedAuroraDeploymentSpecs(affiliation, [new ApplicationId(env, name)])
+  def "Throw IllegalArgumentException if no applicationId is specified"() {
     when:
-      def result = deployService.deployFromSpec(ads[0], true, true)
+      deployService.executeDeploy(affiliation, [])
 
     then:
-      result.success
-      result.auroraDeploymentSpec
-      result.deployId
-      result.openShiftResponses.size() > 0
+      thrown(IllegalArgumentException)
+  }
+
+  @Unroll
+  def "Execute deploy for #env/#name"() {
+    when:
+      def results = deployService.executeDeploy(affiliation, [new ApplicationId(env, name)])
+
+    then:
+      results.success
+      results.auroraDeploymentSpec
+      results.deployId
+      results.openShiftResponses.size() > 0
 
     where:
       env           | name
