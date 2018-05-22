@@ -20,11 +20,10 @@ import org.springframework.context.annotation.Primary
 import java.io.File
 import java.io.PrintWriter
 
-
 @Configuration
 class GitServices(
-        val userDetails: UserDetailsProvider,
-        val metrics: AuroraMetrics
+    val userDetails: UserDetailsProvider,
+    val metrics: AuroraMetrics
 ) {
 
     enum class Domain {
@@ -58,12 +57,12 @@ class GitServices(
 }
 
 open class GitService(
-        val userDetails: UserDetailsProvider,
-        val url: String,
-        val checkoutPath: String,
-        val username: String,
-        val password: String,
-        val metrics: AuroraMetrics) {
+    val userDetails: UserDetailsProvider,
+    val url: String,
+    val checkoutPath: String,
+    val username: String,
+    val password: String,
+    val metrics: AuroraMetrics) {
 
     val logger: Logger = LoggerFactory.getLogger(GitService::class.java)
 
@@ -88,10 +87,10 @@ open class GitService(
     private fun updateRepository(repoPath: File, failOnUnpushedCommits: Boolean): Git {
         val git = Git.open(repoPath)
         git.pull()
-                .setRebase(true)
-                .setRemote("origin")
-                .setCredentialsProvider(cp)
-                .call()
+            .setRebase(true)
+            .setRemote("origin")
+            .setCredentialsProvider(cp)
+            .call()
 
         if (failOnUnpushedCommits) {
             val trackingStatus = BranchTrackingStatus.of(git.repository, git.repository.fullBranch)
@@ -109,10 +108,10 @@ open class GitService(
 
             try {
                 Git.cloneRepository()
-                        .setURI(uri)
-                        .setCredentialsProvider(cp)
-                        .setDirectory(dir)
-                        .call()
+                    .setURI(uri)
+                    .setCredentialsProvider(cp)
+                    .setDirectory(dir)
+                    .call()
             } catch (ex: Exception) {
                 dir.deleteRecursively()
                 throw ex
@@ -125,19 +124,19 @@ open class GitService(
         repo.add().addFilepattern(".").call()
         val status = repo.status().call()
         val message = commitMessage
-                ?: "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}"
+            ?: "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}"
         val authorIdent = getPersonIdentFromUserDetails()
         try {
             repo.commit()
-                    .setAll(true)
-                    .setAllowEmpty(false)
-                    .setAuthor(authorIdent)
-                    .setMessage(message)
-                    .call()
+                .setAll(true)
+                .setAllowEmpty(false)
+                .setAuthor(authorIdent)
+                .setMessage(message)
+                .call()
             repo.push()
-                    .setCredentialsProvider(cp)
-                    .add("refs/heads/master")
-                    .call()
+                .setCredentialsProvider(cp)
+                .add("refs/heads/master")
+                .call()
         } catch (e: EmtpyCommitException) {
             // Ignore empty commits. It's ok.
         } catch (e: Exception) {
@@ -179,7 +178,7 @@ open class GitService(
     }
 
     private fun getPersonIdentFromUserDetails() =
-            userDetails.getAuthenticatedUser().let {
-                PersonIdent(it.fullName ?: it.username, "${it.username}@skatteetaten.no")
-            }
+        userDetails.getAuthenticatedUser().let {
+            PersonIdent(it.fullName ?: it.username, "${it.username}@skatteetaten.no")
+        }
 }

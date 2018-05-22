@@ -12,17 +12,15 @@ import org.springframework.stereotype.Service
 
 @Service
 class OpenShiftTemplateProcessor(
-        val userDetailsProvider: UserDetailsProvider,
-        val openShiftClient: OpenShiftResourceClient,
-        val mapper: ObjectMapper) {
-
+    val userDetailsProvider: UserDetailsProvider,
+    val openShiftClient: OpenShiftResourceClient,
+    val mapper: ObjectMapper) {
 
     fun generateObjects(template: ObjectNode,
                         parameters: Map<String, String>?,
                         auroraDeploymentSpec: AuroraDeploymentSpec,
                         version: String?,
                         replicas: Int?): List<JsonNode> {
-
 
         val adcParameters = (parameters ?: emptyMap()).toMutableMap()
         replicas?.let {
@@ -36,11 +34,11 @@ class OpenShiftTemplateProcessor(
 
             //mutation in progress. stay away.
             parameters
-                    .filter { adcParameterKeys.contains(it["name"].textValue()) }
-                    .forEach {
-                        val node = it as ObjectNode
-                        node.put("value", adcParameters[it["name"].textValue()] as String)
-                    }
+                .filter { adcParameterKeys.contains(it["name"].textValue()) }
+                .forEach {
+                    val node = it as ObjectNode
+                    node.put("value", adcParameters[it["name"].textValue()] as String)
+                }
         }
 
         if (!template.has("labels")) {
@@ -61,11 +59,11 @@ class OpenShiftTemplateProcessor(
 
         if (version != null) {
             template["parameters"]
-                    .filter { it["name"].asText() == "VERSION" }
-                    .map {
-                        (it as ObjectNode).put("value", version)
-                        labels.put("updateInBoober", "true")
-                    }
+                .filter { it["name"].asText() == "VERSION" }
+                .map {
+                    (it as ObjectNode).put("value", version)
+                    labels.put("updateInBoober", "true")
+                }
         }
 
         val result = openShiftClient.post("processedtemplate", namespace = auroraDeploymentSpec.environment.namespace, payload = template)

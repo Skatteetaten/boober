@@ -12,21 +12,21 @@ object ImageStreamImportGenerator {
 
     fun create(dockerImageUrl: String, imageStreamName: String): ImageStreamImport {
         return ImageStreamImport(
-                metadata = Metadata(name = imageStreamName),
-                spec = Spec(
-                        images = listOf(ImagesItem(
-                                from = From(
-                                        kind = "DockerImage",
-                                        name = dockerImageUrl
-                                ),
-                                to = To(
-                                        name = "default"
-                                ),
-                                importPolicy = ImportPolicy(
-                                        scheduled = true
-                                )
-                        ))
-                )
+            metadata = Metadata(name = imageStreamName),
+            spec = Spec(
+                images = listOf(ImagesItem(
+                    from = From(
+                        kind = "DockerImage",
+                        name = dockerImageUrl
+                    ),
+                    to = To(
+                        name = "default"
+                    ),
+                    importPolicy = ImportPolicy(
+                        scheduled = true
+                    )
+                ))
+            )
         )
     }
 }

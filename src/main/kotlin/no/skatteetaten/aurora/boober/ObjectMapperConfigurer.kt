@@ -10,7 +10,7 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 
 fun configureObjectMapper(objectMapper: ObjectMapper): ObjectMapper {
     return objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .registerModules(JavaTimeModule())
-            .registerKotlinModule()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        .registerModules(JavaTimeModule())
+        .registerKotlinModule()
 }

@@ -19,20 +19,19 @@ import no.skatteetaten.aurora.boober.utils.oneOf
 
 class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
 
-
     val handlers = listOf(
-            AuroraConfigFieldHandler("splunkIndex"),
-            AuroraConfigFieldHandler("certificate/commonName"),
-            AuroraConfigFieldHandler("certificate"),
-            AuroraConfigFieldHandler("database"),
-            AuroraConfigFieldHandler("prometheus", defaultValue = true),
-            AuroraConfigFieldHandler("prometheus/path", defaultValue = "/prometheus"),
-            AuroraConfigFieldHandler("prometheus/port", defaultValue = 8081),
-            AuroraConfigFieldHandler("management", defaultValue = true),
-            AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
-            AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
-            AuroraConfigFieldHandler("deployStrategy/type", defaultValue = "rolling", validator = { it.oneOf(listOf("recreate", "rolling")) }),
-            AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = 180)
+        AuroraConfigFieldHandler("splunkIndex"),
+        AuroraConfigFieldHandler("certificate/commonName"),
+        AuroraConfigFieldHandler("certificate"),
+        AuroraConfigFieldHandler("database"),
+        AuroraConfigFieldHandler("prometheus", defaultValue = true),
+        AuroraConfigFieldHandler("prometheus/path", defaultValue = "/prometheus"),
+        AuroraConfigFieldHandler("prometheus/port", defaultValue = 8081),
+        AuroraConfigFieldHandler("management", defaultValue = true),
+        AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
+        AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
+        AuroraConfigFieldHandler("deployStrategy/type", defaultValue = "rolling", validator = { it.oneOf(listOf("recreate", "rolling")) }),
+        AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = 180)
     )
 
     fun createAuroraDeploymentSpec(auroraConfigFields: AuroraConfigFields,
@@ -48,23 +47,22 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
         val name: String = auroraConfigFields.extract("name")
 
         return AuroraDeploymentSpec(
-                applicationId = applicationId,
-                schemaVersion = auroraConfigFields.extract("schemaVersion"),
-                applicationPlatform = auroraConfigFields.extract("applicationPlatform"),
-                type = auroraConfigFields.extract("type"),
-                name = name,
-                cluster = auroraConfigFields.extract("cluster"),
-                environment = env,
-                fields = createFields(applicationId, auroraConfigFields, build),
-                volume = volume,
-                route = route,
-                build = build,
-                deploy = deploy,
-                template = template,
-                localTemplate = localTemplate,
-                integration = integration,
-                applicationFile = applicationFile)
-
+            applicationId = applicationId,
+            schemaVersion = auroraConfigFields.extract("schemaVersion"),
+            applicationPlatform = auroraConfigFields.extract("applicationPlatform"),
+            type = auroraConfigFields.extract("type"),
+            name = name,
+            cluster = auroraConfigFields.extract("cluster"),
+            environment = env,
+            fields = createFields(applicationId, auroraConfigFields, build),
+            volume = volume,
+            route = route,
+            build = build,
+            deploy = deploy,
+            template = template,
+            localTemplate = localTemplate,
+            integration = integration,
+            applicationFile = applicationFile)
     }
 
     private fun createIncludeSubKeysMap(fields: Map<String, AuroraConfigField>): Map<String, Boolean> {
@@ -72,29 +70,28 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
         val includeSubKeys = mutableMapOf<String, Boolean>()
 
         fields.entries
-                .filter { it.key.split("/").size == 1 }
-                .forEach {
-                    val key = it.key.split("/")[0]
-                    val shouldIncludeSubKeys = it.value.valueNodeOrDefault?.let {
-                        !it.isBoolean || it.booleanValue()
-                    } ?: false
-                    includeSubKeys.put(key, shouldIncludeSubKeys)
-                }
+            .filter { it.key.split("/").size == 1 }
+            .forEach {
+                val key = it.key.split("/")[0]
+                val shouldIncludeSubKeys = it.value.valueNodeOrDefault?.let {
+                    !it.isBoolean || it.booleanValue()
+                } ?: false
+                includeSubKeys.put(key, shouldIncludeSubKeys)
+            }
 
         return includeSubKeys
     }
 
     fun createFields(applicationId: ApplicationId, auroraConfigFields: AuroraConfigFields, build: AuroraBuild?): Map<String, Map<String, Any?>> {
         val applicationIdField = mapOf("applicationId" to mapOf(
-                "source" to "static",
-                "value" to applicationId.toString()
+            "source" to "static",
+            "value" to applicationId.toString()
         ))
 
         val fields = createMapForAuroraDeploymentSpecPointers(createFieldsWithValues(auroraConfigFields, build))
 
         return applicationIdField + fields
     }
-
 
     fun createMapForAuroraDeploymentSpecPointers(auroraConfigFields: Map<String, AuroraConfigField>): Map<String, Map<String, Any?>> {
         val fields = mutableMapOf<String, Any?>()
@@ -118,8 +115,8 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
             keys.forEachIndexed { index, key ->
                 if (index == keys.lastIndex) {
                     next[key] = mutableMapOf(
-                            "source" to (configField.source?.configName ?: configField.handler.defaultSource),
-                            "value" to configField.valueNodeOrDefault
+                        "source" to (configField.source?.configName ?: configField.handler.defaultSource),
+                        "value" to configField.valueNodeOrDefault
                     )
                 } else {
                     if (next[key] == null) {
@@ -140,7 +137,5 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
 
         return auroraConfigFields.fields.filterValues { it.source != null || it.handler.defaultValue != null }
     }
-
-
 }
 

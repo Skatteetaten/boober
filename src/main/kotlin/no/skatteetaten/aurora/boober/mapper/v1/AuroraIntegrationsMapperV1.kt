@@ -12,13 +12,13 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
     val dbHandlers = findDbHandlers(applicationFiles)
 
     val handlers = dbHandlers + listOf(
-            AuroraConfigFieldHandler("database", defaultValue = false),
-            AuroraConfigFieldHandler("certificate/commonName"),
-            AuroraConfigFieldHandler("certificate", defaultValue = false),
-            AuroraConfigFieldHandler("splunkIndex"),
-            AuroraConfigFieldHandler("webseal", defaultValue = false),
-            AuroraConfigFieldHandler("webseal/host"),
-            AuroraConfigFieldHandler("webseal/roles")
+        AuroraConfigFieldHandler("database", defaultValue = false),
+        AuroraConfigFieldHandler("certificate/commonName"),
+        AuroraConfigFieldHandler("certificate", defaultValue = false),
+        AuroraConfigFieldHandler("splunkIndex"),
+        AuroraConfigFieldHandler("webseal", defaultValue = false),
+        AuroraConfigFieldHandler("webseal/host"),
+        AuroraConfigFieldHandler("webseal/roles")
     )
 
     //TODO: ADD splunk, webseal, bigip
@@ -34,10 +34,10 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
             auroraConfigFields.extractOrNull("certificate/commonName")
         }
         return AuroraIntegration(
-                database = findDatabases(auroraConfigFields, name),
-                certificateCn = certificateCn,
-                splunkIndex = auroraConfigFields.extractOrNull("splunkIndex"),
-                webseal = findWebseal(auroraConfigFields)
+            database = findDatabases(auroraConfigFields, name),
+            certificateCn = certificateCn,
+            splunkIndex = auroraConfigFields.extractOrNull("splunkIndex"),
+            webseal = findWebseal(auroraConfigFields)
         )
     }
 
@@ -49,11 +49,11 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
         }
 
         val roles = auroraConfigFields.extractDelimitedStringOrArrayAsSet("$name/roles", ",")
-                .takeIf { it.isNotEmpty() }
-                ?.joinToString(",")
+            .takeIf { it.isNotEmpty() }
+            ?.joinToString(",")
         return Webseal(
-                auroraConfigFields.extractOrNull("$name/host"),
-                roles
+            auroraConfigFields.extractOrNull("$name/host"),
+            roles
         )
     }
 

@@ -4,14 +4,14 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import org.springframework.stereotype.Service
 
 class ProvisioningResult(
-        val schemaProvisionResults: SchemaProvisionResults?,
-        val vaultResults: VaultResults?
+    val schemaProvisionResults: SchemaProvisionResults?,
+    val vaultResults: VaultResults?
 )
 
 @Service
 class ExternalResourceProvisioner(
-        val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
-        val vaultProvider: VaultProvider
+    val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
+    val vaultProvider: VaultProvider
 ) {
 
     fun provisionResources(deploymentSpec: AuroraDeploymentSpec): ProvisioningResult {

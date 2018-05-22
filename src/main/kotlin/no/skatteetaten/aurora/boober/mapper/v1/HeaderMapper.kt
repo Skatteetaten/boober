@@ -33,34 +33,33 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
     val envNameMessage = "Environment must consist of lower case alphanumeric characters or '-'. It must be no longer than 52 characters."
 
     val handlers = setOf(
-            AuroraConfigFieldHandler("schemaVersion", validator = { it.oneOf(VALID_SCHEMA_VERSIONS) }),
-            AuroraConfigFieldHandler("type", validator = { it.oneOf(TemplateType.values().map { it.toString() }) }),
-            AuroraConfigFieldHandler("applicationPlatform", defaultValue = "java", validator = { it.oneOf(AuroraDeploymentSpecService.APPLICATION_PLATFORM_HANDLERS.keys.toList()) }),
-            AuroraConfigFieldHandler("affiliation", validator = {
-                it.pattern("^[a-z]{1,10}$",
-                        "Affiliation can only contain letters and must be no longer than 10 characters")
-            }),
-            AuroraConfigFieldHandler("segment"),
-            AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
-            AuroraConfigFieldHandler("permissions/admin"),
-            AuroraConfigFieldHandler("permissions/view"),
-            AuroraConfigFieldHandler("permissions/adminServiceAccount"),
-            // Max length of OpenShift project names is 63 characters. Project name = affiliation + "-" + envName.
-            AuroraConfigFieldHandler("envName", validator = { it.pattern(envNamePattern, envNameMessage) },
-                    defaultSource = "folderName",
-                    defaultValue = applicationId.environment
-            ),
-            AuroraConfigFieldHandler("name",
-                    defaultValue = applicationId.application,
-                    defaultSource = "fileName",
-                    validator = { it.pattern(namePattern, "Name must be alphanumeric and no more than 40 characters", false) }),
-            AuroraConfigFieldHandler("env/name", validator = { it.pattern(envNamePattern, envNameMessage, false) }),
-            AuroraConfigFieldHandler("env/ttl", validator = { it.durationString() }),
-            AuroraConfigFieldHandler("baseFile"),
-            AuroraConfigFieldHandler("envFile", validator = {
-                it?.startsWith("about-", "envFile must start with about")
-            }))
-
+        AuroraConfigFieldHandler("schemaVersion", validator = { it.oneOf(VALID_SCHEMA_VERSIONS) }),
+        AuroraConfigFieldHandler("type", validator = { it.oneOf(TemplateType.values().map { it.toString() }) }),
+        AuroraConfigFieldHandler("applicationPlatform", defaultValue = "java", validator = { it.oneOf(AuroraDeploymentSpecService.APPLICATION_PLATFORM_HANDLERS.keys.toList()) }),
+        AuroraConfigFieldHandler("affiliation", validator = {
+            it.pattern("^[a-z]{1,10}$",
+                "Affiliation can only contain letters and must be no longer than 10 characters")
+        }),
+        AuroraConfigFieldHandler("segment"),
+        AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
+        AuroraConfigFieldHandler("permissions/admin"),
+        AuroraConfigFieldHandler("permissions/view"),
+        AuroraConfigFieldHandler("permissions/adminServiceAccount"),
+        // Max length of OpenShift project names is 63 characters. Project name = affiliation + "-" + envName.
+        AuroraConfigFieldHandler("envName", validator = { it.pattern(envNamePattern, envNameMessage) },
+            defaultSource = "folderName",
+            defaultValue = applicationId.environment
+        ),
+        AuroraConfigFieldHandler("name",
+            defaultValue = applicationId.application,
+            defaultSource = "fileName",
+            validator = { it.pattern(namePattern, "Name must be alphanumeric and no more than 40 characters", false) }),
+        AuroraConfigFieldHandler("env/name", validator = { it.pattern(envNamePattern, envNameMessage, false) }),
+        AuroraConfigFieldHandler("env/ttl", validator = { it.durationString() }),
+        AuroraConfigFieldHandler("baseFile"),
+        AuroraConfigFieldHandler("envFile", validator = {
+            it?.startsWith("about-", "envFile must start with about")
+        }))
 
     fun createHeader(auroraConfigFields: AuroraConfigFields, applicationHandler: ApplicationPlatformHandler): AuroraDeployHeader {
         val name = auroraConfigFields.extract<String>("name")
@@ -70,12 +69,12 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
         val segment = auroraConfigFields.extractIfExistsOrNull<String>("segment")
 
         val env = AuroraDeployEnvironment(
-                affiliation = auroraConfigFields.extract("affiliation"),
-                envName = auroraConfigFields.extractIfExistsOrNull("env/name")
-                        ?: auroraConfigFields.extract("envName"),
-                ttl = auroraConfigFields.extractOrNull<String>("env/ttl")
-                        ?.let { StringToDurationConverter().convert(it) },
-                permissions = extractPermissions(auroraConfigFields)
+            affiliation = auroraConfigFields.extract("affiliation"),
+            envName = auroraConfigFields.extractIfExistsOrNull("env/name")
+                ?: auroraConfigFields.extract("envName"),
+            ttl = auroraConfigFields.extractOrNull<String>("env/ttl")
+                ?.let { StringToDurationConverter().convert(it) },
+            permissions = extractPermissions(auroraConfigFields)
         )
 
         return AuroraDeployHeader(env, type, applicationHandler, name, cluster, segment)
@@ -94,12 +93,9 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
         return Permissions(admin = adminPermission, view = viewPermission)
     }
 
-
     fun getApplicationFile(): AuroraConfigFile {
         val fileName = "${applicationId.environment}/${applicationId.application}"
         val file = applicationFiles.find { it.name.removeExtension() == fileName && !it.override }
         return file ?: throw IllegalArgumentException("Should find applicationFile $fileName")
     }
-
-
 }

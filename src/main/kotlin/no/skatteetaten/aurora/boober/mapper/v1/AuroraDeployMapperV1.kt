@@ -22,47 +22,46 @@ import no.skatteetaten.aurora.boober.utils.removeExtension
 
 class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFiles: List<AuroraConfigFile>, val overrideFiles: List<AuroraConfigFile>) {
 
-
     val configHandlers = applicationFiles.findConfigFieldHandlers()
     val handlers = listOf(
 
-            AuroraConfigFieldHandler("artifactId",
-                    defaultValue = applicationId.application,
-                    defaultSource = "fileName",
-                    validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
-            AuroraConfigFieldHandler("groupId", validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
-            AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set as string") }),
-            AuroraConfigFieldHandler("releaseTo"),
-            AuroraConfigFieldHandler("deployStrategy/type", defaultValue = "rolling", validator = { it.oneOf(listOf("recreate", "rolling")) }),
-            AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = 180),
-            AuroraConfigFieldHandler("resources/cpu/min", defaultValue = "100m"),
-            AuroraConfigFieldHandler("resources/cpu/max", defaultValue = "2000m"),
-            AuroraConfigFieldHandler("resources/memory/min", defaultValue = "128Mi"),
-            AuroraConfigFieldHandler("resources/memory/max", defaultValue = "512Mi"),
-            AuroraConfigFieldHandler("replicas", defaultValue = 1),
-            AuroraConfigFieldHandler("serviceAccount"),
-            AuroraConfigFieldHandler("prometheus", defaultValue = true),
-            AuroraConfigFieldHandler("prometheus/path", defaultValue = "/prometheus"),
-            AuroraConfigFieldHandler("prometheus/port", defaultValue = 8081),
-            AuroraConfigFieldHandler("management", defaultValue = true),
-            AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
-            AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
-            AuroraConfigFieldHandler("readiness", defaultValue = true),
-            AuroraConfigFieldHandler("readiness/port", defaultValue = 8080),
-            AuroraConfigFieldHandler("readiness/path"),
-            AuroraConfigFieldHandler("readiness/delay", defaultValue = 10),
-            AuroraConfigFieldHandler("readiness/timeout", defaultValue = 1),
-            AuroraConfigFieldHandler("liveness", defaultValue = false),
-            AuroraConfigFieldHandler("liveness/port", defaultValue = 8080),
-            AuroraConfigFieldHandler("liveness/path"),
-            AuroraConfigFieldHandler("liveness/delay", defaultValue = 10),
-            AuroraConfigFieldHandler("liveness/timeout", defaultValue = 1),
-            AuroraConfigFieldHandler("debug", defaultValue = false),
-            AuroraConfigFieldHandler("pause", defaultValue = false),
-            AuroraConfigFieldHandler("alarm", defaultValue = true),
-            AuroraConfigFieldHandler("ttl", validator = { it.durationString() }),
-            AuroraConfigFieldHandler("toxiproxy", defaultValue = false),
-            AuroraConfigFieldHandler("toxiproxy/version", defaultValue = "2.1.3")
+        AuroraConfigFieldHandler("artifactId",
+            defaultValue = applicationId.application,
+            defaultSource = "fileName",
+            validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
+        AuroraConfigFieldHandler("groupId", validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
+        AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set as string") }),
+        AuroraConfigFieldHandler("releaseTo"),
+        AuroraConfigFieldHandler("deployStrategy/type", defaultValue = "rolling", validator = { it.oneOf(listOf("recreate", "rolling")) }),
+        AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = 180),
+        AuroraConfigFieldHandler("resources/cpu/min", defaultValue = "100m"),
+        AuroraConfigFieldHandler("resources/cpu/max", defaultValue = "2000m"),
+        AuroraConfigFieldHandler("resources/memory/min", defaultValue = "128Mi"),
+        AuroraConfigFieldHandler("resources/memory/max", defaultValue = "512Mi"),
+        AuroraConfigFieldHandler("replicas", defaultValue = 1),
+        AuroraConfigFieldHandler("serviceAccount"),
+        AuroraConfigFieldHandler("prometheus", defaultValue = true),
+        AuroraConfigFieldHandler("prometheus/path", defaultValue = "/prometheus"),
+        AuroraConfigFieldHandler("prometheus/port", defaultValue = 8081),
+        AuroraConfigFieldHandler("management", defaultValue = true),
+        AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
+        AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
+        AuroraConfigFieldHandler("readiness", defaultValue = true),
+        AuroraConfigFieldHandler("readiness/port", defaultValue = 8080),
+        AuroraConfigFieldHandler("readiness/path"),
+        AuroraConfigFieldHandler("readiness/delay", defaultValue = 10),
+        AuroraConfigFieldHandler("readiness/timeout", defaultValue = 1),
+        AuroraConfigFieldHandler("liveness", defaultValue = false),
+        AuroraConfigFieldHandler("liveness/port", defaultValue = 8080),
+        AuroraConfigFieldHandler("liveness/path"),
+        AuroraConfigFieldHandler("liveness/delay", defaultValue = 10),
+        AuroraConfigFieldHandler("liveness/timeout", defaultValue = 1),
+        AuroraConfigFieldHandler("debug", defaultValue = false),
+        AuroraConfigFieldHandler("pause", defaultValue = false),
+        AuroraConfigFieldHandler("alarm", defaultValue = true),
+        AuroraConfigFieldHandler("ttl", validator = { it.durationString() }),
+        AuroraConfigFieldHandler("toxiproxy", defaultValue = false),
+        AuroraConfigFieldHandler("toxiproxy/version", defaultValue = "2.1.3")
     ) + configHandlers
 
     fun deploy(auroraConfigFields: AuroraConfigFields): AuroraDeploy? {
@@ -80,60 +79,58 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
         val applicationFile = getApplicationFile(applicationId)
 
         val overrideFiles = overrideFiles.map { it.name to it.contents }
-                .toMap()
+            .toMap()
         val pause: Boolean = auroraConfigFields.extract("pause")
         val replicas: Int = auroraConfigFields.extract("replicas")
 
         return AuroraDeploy(
-                applicationFile = applicationFile.name,
-                releaseTo = releaseTo,
-                dockerImagePath = "$dockerGroup/$artifactId",
-                dockerTag = tag,
-                overrideFiles = overrideFiles,
-                deployStrategy = AuroraDeployStrategy(
-                        auroraConfigFields.extract("deployStrategy/type"),
-                        auroraConfigFields.extract("deployStrategy/timeout")
-                ),
-                flags = AuroraDeploymentConfigFlags(
-                        auroraConfigFields.extract("debug"),
-                        auroraConfigFields.extract("alarm"),
-                        pause
+            applicationFile = applicationFile.name,
+            releaseTo = releaseTo,
+            dockerImagePath = "$dockerGroup/$artifactId",
+            dockerTag = tag,
+            overrideFiles = overrideFiles,
+            deployStrategy = AuroraDeployStrategy(
+                auroraConfigFields.extract("deployStrategy/type"),
+                auroraConfigFields.extract("deployStrategy/timeout")
+            ),
+            flags = AuroraDeploymentConfigFlags(
+                auroraConfigFields.extract("debug"),
+                auroraConfigFields.extract("alarm"),
+                pause
 
+            ),
+            resources = AuroraDeploymentConfigResources(
+                request = AuroraDeploymentConfigResource(
+                    cpu = auroraConfigFields.extract("resources/cpu/min"),
+                    memory = auroraConfigFields.extract("resources/memory/min")
                 ),
-                resources = AuroraDeploymentConfigResources(
-                        request = AuroraDeploymentConfigResource(
-                                cpu = auroraConfigFields.extract("resources/cpu/min"),
-                                memory = auroraConfigFields.extract("resources/memory/min")
-                        ),
-                        limit = AuroraDeploymentConfigResource(
-                                cpu = auroraConfigFields.extract("resources/cpu/max"),
-                                memory = auroraConfigFields.extract("resources/memory/max")
-                        )
-                ),
-                replicas = if (pause) 0 else replicas,
-                groupId = groupId,
-                artifactId = artifactId,
-                version = version,
-                serviceAccount = auroraConfigFields.extractOrNull("serviceAccount"),
-                prometheus = findPrometheus(auroraConfigFields),
-                managementPath = findManagementPath(auroraConfigFields),
-                liveness = getProbe(auroraConfigFields, "liveness"),
-                readiness = getProbe(auroraConfigFields, "readiness"),
-                env = auroraConfigFields.getConfigEnv(configHandlers),
-                ttl = auroraConfigFields.extractOrNull<String>("ttl")
-                        ?.let { StringToDurationConverter().convert(it) },
-                toxiProxy = getToxiProxy(auroraConfigFields, "toxiproxy")
+                limit = AuroraDeploymentConfigResource(
+                    cpu = auroraConfigFields.extract("resources/cpu/max"),
+                    memory = auroraConfigFields.extract("resources/memory/max")
+                )
+            ),
+            replicas = if (pause) 0 else replicas,
+            groupId = groupId,
+            artifactId = artifactId,
+            version = version,
+            serviceAccount = auroraConfigFields.extractOrNull("serviceAccount"),
+            prometheus = findPrometheus(auroraConfigFields),
+            managementPath = findManagementPath(auroraConfigFields),
+            liveness = getProbe(auroraConfigFields, "liveness"),
+            readiness = getProbe(auroraConfigFields, "readiness"),
+            env = auroraConfigFields.getConfigEnv(configHandlers),
+            ttl = auroraConfigFields.extractOrNull<String>("ttl")
+                ?.let { StringToDurationConverter().convert(it) },
+            toxiProxy = getToxiProxy(auroraConfigFields, "toxiproxy")
 
         )
     }
-
 
     private fun getApplicationFile(applicationId: ApplicationId): AuroraConfigFile {
         val fileName = "${applicationId.environment}/${applicationId.application}"
         val file = applicationFiles.find { it.name.removeExtension() == fileName && !it.override }
         return file ?: throw IllegalArgumentException("Should find applicationFile $fileName")
     }
-
 
     private fun findPrometheus(auroraConfigFields: AuroraConfigFields): HttpEndpoint? {
 
@@ -143,8 +140,8 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
             return null
         }
         return HttpEndpoint(
-                auroraConfigFields.extract("$name/path"),
-                auroraConfigFields.extractOrNull("$name/port")
+            auroraConfigFields.extract("$name/path"),
+            auroraConfigFields.extractOrNull("$name/port")
         )
     }
 
@@ -157,13 +154,12 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
         }
 
         val path = auroraConfigFields.extract<String>("$name/path")
-                .ensureStartWith("/")
+            .ensureStartWith("/")
         val port = auroraConfigFields.extract<String>("$name/port")
-                .toString()
-                .ensureStartWith(":")
+            .toString()
+            .ensureStartWith(":")
         return "$port$path"
     }
-
 
     fun getProbe(auroraConfigFields: AuroraConfigFields, name: String): Probe? {
 
@@ -172,14 +168,14 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
         }
 
         return Probe(
-                auroraConfigFields.extractOrNull<String?>("$name/path")?.let {
-                    if (!it.startsWith("/")) {
-                        "/$it"
-                    } else it
-                },
-                auroraConfigFields.extract("$name/port"),
-                auroraConfigFields.extract("$name/delay"),
-                auroraConfigFields.extract("$name/timeout")
+            auroraConfigFields.extractOrNull<String?>("$name/path")?.let {
+                if (!it.startsWith("/")) {
+                    "/$it"
+                } else it
+            },
+            auroraConfigFields.extract("$name/port"),
+            auroraConfigFields.extract("$name/delay"),
+            auroraConfigFields.extract("$name/timeout")
         )
     }
 

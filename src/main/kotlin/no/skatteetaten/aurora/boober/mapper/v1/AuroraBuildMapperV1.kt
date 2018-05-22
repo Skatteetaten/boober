@@ -36,37 +36,37 @@ class AuroraBuildMapperV1(val name: String) {
 
 
         return AuroraBuild(
-                applicationPlatform = auroraConfigFields.extract("applicationPlatform"),
-                testGitUrl = testGitUrl,
-                testTag = auroraConfigFields.extractOrNull("test/tag"),
-                baseName = auroraConfigFields.extract("baseImage/name"),
-                baseVersion = auroraConfigFields.extract("baseImage/version"),
-                builderName = auroraConfigFields.extract("builder/name"),
-                builderVersion = auroraConfigFields.extract("builder/version"),
-                extraTags = auroraConfigFields.extract("extraTags"),
-                version = version,
-                groupId = groupId,
-                artifactId = artifactId,
-                outputKind = outputKind,
-                outputName = outputName,
-                triggers = !skipTriggers,
-                buildSuffix = auroraConfigFields.extractOrNull("buildSuffix")
+            applicationPlatform = auroraConfigFields.extract("applicationPlatform"),
+            testGitUrl = testGitUrl,
+            testTag = auroraConfigFields.extractOrNull("test/tag"),
+            baseName = auroraConfigFields.extract("baseImage/name"),
+            baseVersion = auroraConfigFields.extract("baseImage/version"),
+            builderName = auroraConfigFields.extract("builder/name"),
+            builderVersion = auroraConfigFields.extract("builder/version"),
+            extraTags = auroraConfigFields.extract("extraTags"),
+            version = version,
+            groupId = groupId,
+            artifactId = artifactId,
+            outputKind = outputKind,
+            outputName = outputName,
+            triggers = !skipTriggers,
+            buildSuffix = auroraConfigFields.extractOrNull("buildSuffix")
         )
     }
 
     val handlers = listOf(
-            AuroraConfigFieldHandler("extraTags", defaultValue = "latest,major,minor,patch"),
-            AuroraConfigFieldHandler("buildSuffix"),
-            AuroraConfigFieldHandler("builder/name", defaultValue = "architect"),
-            AuroraConfigFieldHandler("builder/version", defaultValue = "1"),
-            AuroraConfigFieldHandler("baseImage/name"),
-            AuroraConfigFieldHandler("baseImage/version"),
-            AuroraConfigFieldHandler("test/gitUrl"),
-            AuroraConfigFieldHandler("test/tag"),
-            AuroraConfigFieldHandler("groupId", validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
-            AuroraConfigFieldHandler("artifactId",
-                    defaultSource = "fileName",
-                    defaultValue = name, validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
-            AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set") })
+        AuroraConfigFieldHandler("extraTags", defaultValue = "latest,major,minor,patch"),
+        AuroraConfigFieldHandler("buildSuffix"),
+        AuroraConfigFieldHandler("builder/name", defaultValue = "architect"),
+        AuroraConfigFieldHandler("builder/version", defaultValue = "1"),
+        AuroraConfigFieldHandler("baseImage/name"),
+        AuroraConfigFieldHandler("baseImage/version"),
+        AuroraConfigFieldHandler("test/gitUrl"),
+        AuroraConfigFieldHandler("test/tag"),
+        AuroraConfigFieldHandler("groupId", validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
+        AuroraConfigFieldHandler("artifactId",
+            defaultSource = "fileName",
+            defaultValue = name, validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
+        AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set") })
     )
 }

@@ -9,5 +9,4 @@ class AuroraVersioningException(auroraConfig: AuroraConfig, currentFile: AuroraC
     init {
         errors = listOf(VersioningError(auroraConfig.affiliation, currentFile.name, currentFile.version, previousVersion))
     }
-
 }

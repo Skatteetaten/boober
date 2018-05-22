@@ -28,10 +28,10 @@ import org.springframework.web.client.HttpClientErrorException
 enum class OperationType { GET, CREATE, UPDATE, DELETE, NOOP }
 
 data class OpenshiftCommand @JvmOverloads constructor(
-        val operationType: OperationType,
-        val payload: JsonNode = NullNode.getInstance(),
-        val previous: JsonNode? = null,
-        val generated: JsonNode? = null
+    val operationType: OperationType,
+    val payload: JsonNode = NullNode.getInstance(),
+    val previous: JsonNode? = null,
+    val generated: JsonNode? = null
 ) {
     fun isType(operationType: OperationType, kind: String): Boolean {
 
@@ -42,10 +42,10 @@ data class OpenshiftCommand @JvmOverloads constructor(
 }
 
 data class OpenShiftResponse @JvmOverloads constructor(
-        val command: OpenshiftCommand,
-        val responseBody: JsonNode? = null,
-        val success: Boolean = true,
-        val exception: String? = null) {
+    val command: OpenshiftCommand,
+    val responseBody: JsonNode? = null,
+    val success: Boolean = true,
+    val exception: String? = null) {
 
     companion object {
         fun fromOpenShiftException(e: OpenShiftException, command: OpenshiftCommand): OpenShiftResponse {
@@ -61,7 +61,6 @@ data class OpenShiftResponse @JvmOverloads constructor(
             }
             return OpenShiftResponse(command, response, success = false, exception = e.message)
         }
-
     }
 }
 
@@ -72,7 +71,6 @@ data class OpenShiftGroups(private val groupUserPairs: List<UserGroup>) {
     private val groupUsers: Map<String, List<String>> by lazy {
         groupUserPairs.groupBy({ it.group }, { it.user })
     }
-
 
     private val userGroups: Map<String, List<String>> by lazy {
         groupUserPairs.groupBy({ it.user }, { it.group })
@@ -85,10 +83,10 @@ data class OpenShiftGroups(private val groupUserPairs: List<UserGroup>) {
 
 @Service
 class OpenShiftClient(
-        @Value("\${openshift.url}") val baseUrl: String,
-        @ClientType(API_USER) val userClient: OpenShiftResourceClient,
-        @ClientType(SERVICE_ACCOUNT) val serviceAccountClient: OpenShiftResourceClient,
-        val mapper: ObjectMapper
+    @Value("\${openshift.url}") val baseUrl: String,
+    @ClientType(API_USER) val userClient: OpenShiftResourceClient,
+    @ClientType(SERVICE_ACCOUNT) val serviceAccountClient: OpenShiftResourceClient,
+    val mapper: ObjectMapper
 ) {
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftClient::class.java)
@@ -166,7 +164,6 @@ class OpenShiftClient(
         }
     }
 
-
     fun projectExists(name: String): Boolean {
         serviceAccountClient.get("${baseUrl}/oapi/v1/projects/$name", retry = false)?.body?.let {
             val phase = it.at("/status/phase").textValue()
@@ -194,7 +191,7 @@ class OpenShiftClient(
 
         val items = body?.get("items")?.toList() ?: emptyList()
         return items.filterIsInstance<ObjectNode>()
-                .onEach { it.put("kind", kind) }
+            .onEach { it.put("kind", kind) }
     }
 
     /**
@@ -220,6 +217,6 @@ class OpenShiftClient(
 
         @JvmStatic
         fun urlEncode(vararg queryParams: Pair<String, String>) =
-                URLEncodedUtils.format(queryParams.map { BasicNameValuePair(it.first, it.second) }, Charsets.UTF_8)
+            URLEncodedUtils.format(queryParams.map { BasicNameValuePair(it.first, it.second) }, Charsets.UTF_8)
     }
 }

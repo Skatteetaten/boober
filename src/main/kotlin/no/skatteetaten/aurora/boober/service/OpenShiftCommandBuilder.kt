@@ -16,8 +16,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class OpenShiftCommandBuilder(
-        val openShiftClient: OpenShiftClient,
-        val openShiftObjectGenerator: OpenShiftObjectGenerator
+    val openShiftClient: OpenShiftClient,
+    val openShiftObjectGenerator: OpenShiftObjectGenerator
 ) {
 
     fun generateProjectRequest(environment: AuroraDeployEnvironment): OpenshiftCommand {
@@ -33,11 +33,11 @@ class OpenShiftCommandBuilder(
 
     fun generateRolebindings(environment: AuroraDeployEnvironment): List<OpenshiftCommand> {
         return openShiftObjectGenerator.generateRolebindings(environment.permissions)
-                .map { createOpenShiftCommand(environment.namespace, it, true, true) }
+            .map { createOpenShiftCommand(environment.namespace, it, true, true) }
     }
 
     private fun createMergedUpdateCommand(namespace: String, it: JsonNode) =
-            createOpenShiftCommand(namespace, it, true, true).copy(operationType = UPDATE)
+        createOpenShiftCommand(namespace, it, true, true).copy(operationType = UPDATE)
 
     fun generateApplicationObjects(deployId: String,
                                    deploymentSpec: AuroraDeploymentSpec,
@@ -48,16 +48,16 @@ class OpenShiftCommandBuilder(
         val namespace = deploymentSpec.environment.namespace
 
         return openShiftObjectGenerator.generateApplicationObjects(deployId, deploymentSpec, provisioningResult)
-                .map { createOpenShiftCommand(namespace, it, mergeWithExistingResource, false) }
-                .flatMap { command ->
-                    if (command.isType(UPDATE, "route") && mustRecreateRoute(command.payload, command.previous)) {
-                        val deleteCommand = command.copy(operationType = DELETE)
-                        val createCommand = command.copy(operationType = CREATE, payload = command.generated!!)
-                        listOf(deleteCommand, createCommand)
-                    } else {
-                        listOf(command)
-                    }
+            .map { createOpenShiftCommand(namespace, it, mergeWithExistingResource, false) }
+            .flatMap { command ->
+                if (command.isType(UPDATE, "route") && mustRecreateRoute(command.payload, command.previous)) {
+                    val deleteCommand = command.copy(operationType = DELETE)
+                    val createCommand = command.copy(operationType = CREATE, payload = command.generated!!)
+                    listOf(deleteCommand, createCommand)
+                } else {
+                    listOf(command)
                 }
+            }
     }
 
     /**
@@ -92,8 +92,8 @@ class OpenShiftCommandBuilder(
 
         val labelSelectors = listOf("app=$name", "booberDeployId", "booberDeployId!=$deployId")
         return apiResources
-                .flatMap { kind -> openShiftClient.getByLabelSelectors(kind, namespace, labelSelectors) }
-                .map { OpenshiftCommand(DELETE, payload = it, previous = it) }
+            .flatMap { kind -> openShiftClient.getByLabelSelectors(kind, namespace, labelSelectors) }
+            .map { OpenshiftCommand(DELETE, payload = it, previous = it) }
     }
 
     private fun mustRecreateRoute(newRoute: JsonNode, previousRoute: JsonNode?): Boolean {

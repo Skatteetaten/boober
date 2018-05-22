@@ -18,15 +18,15 @@ object DbhSecretGenerator {
             val infoFile = createInfoFile(it.dbhSchema)
 
             SecretGenerator.create(
-                    secretName = "${appName}-${it.request.schemaName}-db".replace("_", "-"),
-                    secretLabels = labels,
-                    secretData = mapOf(
-                            "db.properties" to connectionProperties,
-                            "id" to it.dbhSchema.id,
-                            "info" to infoFile,
-                            "jdbcurl" to it.dbhSchema.jdbcUrl,
-                            "name" to it.dbhSchema.username)
-                            .mapValues { it.value.toByteArray() }
+                secretName = "${appName}-${it.request.schemaName}-db".replace("_", "-"),
+                secretLabels = labels,
+                secretData = mapOf(
+                    "db.properties" to connectionProperties,
+                    "id" to it.dbhSchema.id,
+                    "info" to infoFile,
+                    "jdbcurl" to it.dbhSchema.jdbcUrl,
+                    "name" to it.dbhSchema.username)
+                    .mapValues { it.value.toByteArray() }
             )
         }
     }
@@ -34,20 +34,20 @@ object DbhSecretGenerator {
     private fun createInfoFile(dbhSchema: DbhSchema): String {
 
         val infoFile = mapOf("database" to mapOf(
-                "id" to dbhSchema.id,
-                "name" to dbhSchema.username,
-                "createdDate" to null,
-                "lastUsedDate" to null,
-                "host" to dbhSchema.databaseInstance.host,
-                "port" to dbhSchema.databaseInstance.port,
-                "service" to dbhSchema.service,
-                "jdbcUrl" to dbhSchema.jdbcUrl,
-                "users" to listOf(mapOf(
-                        "username" to dbhSchema.username,
-                        "password" to dbhSchema.password,
-                        "type" to dbhSchema.userType
-                )),
-                "labels" to dbhSchema.labels
+            "id" to dbhSchema.id,
+            "name" to dbhSchema.username,
+            "createdDate" to null,
+            "lastUsedDate" to null,
+            "host" to dbhSchema.databaseInstance.host,
+            "port" to dbhSchema.databaseInstance.port,
+            "service" to dbhSchema.service,
+            "jdbcUrl" to dbhSchema.jdbcUrl,
+            "users" to listOf(mapOf(
+                "username" to dbhSchema.username,
+                "password" to dbhSchema.password,
+                "type" to dbhSchema.userType
+            )),
+            "labels" to dbhSchema.labels
         ))
         return jacksonObjectMapper().writeValueAsString(infoFile)
     }
