@@ -21,6 +21,5 @@ object ConfigMapGenerator {
             }
             data = cmData
         }
-
     }
 }

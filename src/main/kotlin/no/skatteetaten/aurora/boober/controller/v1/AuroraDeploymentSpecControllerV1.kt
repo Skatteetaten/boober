@@ -17,32 +17,32 @@ class AuroraDeploymentSpecControllerV1(val auroraDeploymentSpecService: AuroraDe
 
     @GetMapping("/")
     fun findAllDeploymentSpecs(
-            @PathVariable auroraConfigName: String,
-            @RequestParam(name = "aid", required = false) aidStrings: List<String>,
-            @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
+        @PathVariable auroraConfigName: String,
+        @RequestParam(name = "aid", required = false) aidStrings: List<String>,
+        @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
     ): Response = response(auroraDeploymentSpecService.getAuroraDeploymentSpecs(auroraConfigName, aidStrings), includeDefaults)
 
     @GetMapping("/{environment}/")
     fun findAllDeploymentSpecsForEnvironment(
-            @PathVariable auroraConfigName: String,
-            @PathVariable environment: String,
-            @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
+        @PathVariable auroraConfigName: String,
+        @PathVariable environment: String,
+        @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
     ): Response = response(auroraDeploymentSpecService.getAuroraDeploymentSpecsForEnvironment(auroraConfigName, environment), includeDefaults)
 
     @GetMapping("/{environment}/{application}")
     fun get(
-            @PathVariable auroraConfigName: String,
-            @PathVariable environment: String,
-            @PathVariable application: String,
-            @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
+        @PathVariable auroraConfigName: String,
+        @PathVariable environment: String,
+        @PathVariable application: String,
+        @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
     ): Response = response(auroraDeploymentSpecService.getAuroraDeploymentSpec(auroraConfigName, environment, application), includeDefaults)
 
     @GetMapping("/{environment}/{application}/formatted")
     fun getJsonForMapOfPointers(
-            @PathVariable auroraConfigName: String,
-            @PathVariable environment: String,
-            @PathVariable application: String,
-            @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
+        @PathVariable auroraConfigName: String,
+        @PathVariable environment: String,
+        @PathVariable application: String,
+        @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
     ): Response {
 
         val spec = auroraDeploymentSpecService.getAuroraDeploymentSpec(auroraConfigName, environment, application)

@@ -26,14 +26,14 @@ class AuroraDeploymentSpecConfigFieldValidator(val applicationId: ApplicationId,
     fun validate(fullValidation: Boolean = true) {
 
         val envPointers = listOf("env/name", "env/ttl", "envName", "affiliation",
-                "permissions/admin", "permissions/view", "permissions/adminServiceAccount")
+            "permissions/admin", "permissions/view", "permissions/adminServiceAccount")
 
         val errors: List<ConfigFieldErrorDetail> = fieldHandlers.mapNotNull { e ->
             val rawField = auroraConfigFields.fields[e.name]!!
 
             val invalidEnvSource = envPointers.contains(e.name) && rawField.source?.name
-                    ?.let { !it.split("/").last().startsWith("about") }
-                    ?: false
+                ?.let { !it.split("/").last().startsWith("about") }
+                ?: false
 
             logger.trace("Validating field=${e.name}")
             val auroraConfigField: JsonNode? = rawField.valueNodeOrDefault
@@ -65,8 +65,8 @@ class AuroraDeploymentSpecConfigFieldValidator(val applicationId: ApplicationId,
         (errors + unmappedErrors).takeIf { it.isNotEmpty() }?.let {
             val aid = applicationId
             throw AuroraConfigException(
-                    "Config for application ${aid.application} in environment ${aid.environment} contains errors",
-                    errors = it
+                "Config for application ${aid.application} in environment ${aid.environment} contains errors",
+                errors = it
             )
         }
     }

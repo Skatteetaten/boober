@@ -25,7 +25,6 @@ object RolebindingGenerator {
                 userNames = it.toList()
             }
 
-
             val userRefeerences: List<ObjectReference> = permission.users?.map {
                 objectReference {
                     kind = "User"

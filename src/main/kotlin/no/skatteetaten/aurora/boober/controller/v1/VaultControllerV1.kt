@@ -54,7 +54,6 @@ data class AuroraSecretVaultPayload(val name: String, val permissions: List<Stri
         get() = secrets?.map { Pair(it.key, B64.decode(it.value)) }?.toMap()
 }
 
-
 /*
   @param secrets: A map of fileNames to Base64 encoded content
  */
@@ -79,7 +78,6 @@ data class VaultFileResource(val contents: String) {
     val decodedContents: ByteArray
         @JsonIgnore
         get() = B64.decode(contents)
-
 
     companion object {
         fun fromDecodedBytes(decodedBytes: ByteArray): VaultFileResource {
@@ -114,7 +112,7 @@ class VaultControllerV1(val vaultService: VaultService,
     fun listVaults(@PathVariable vaultCollection: String): Response {
 
         val resources = vaultService.findAllVaultsWithUserAccessInVaultCollection(vaultCollection)
-                .map(::fromVaultWithAccess)
+            .map(::fromVaultWithAccess)
         return Response(items = resources)
     }
 
@@ -123,14 +121,14 @@ class VaultControllerV1(val vaultService: VaultService,
              @RequestBody @Valid vaultPayload: AuroraSecretVaultPayload): Response {
 
         val vault = vaultService.import(vaultCollection, vaultPayload.name, vaultPayload.permissions, vaultPayload.secretsDecoded
-                ?: emptyMap())
+            ?: emptyMap())
         return Response(items = listOf(vault).map(::fromEncryptedFileVault))
     }
 
     @GetMapping("/{vault}")
     fun getVault(@PathVariable vaultCollection: String, @PathVariable vault: String): Response {
         val resources = listOf(vaultService.findVault(vaultCollection, vault))
-                .map(::fromEncryptedFileVault)
+            .map(::fromEncryptedFileVault)
         return Response(items = resources)
     }
 

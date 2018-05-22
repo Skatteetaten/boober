@@ -51,7 +51,6 @@ class Configuration : BeanPostProcessor {
     @Bean
     fun keyFactory(): KeyFactory = object : AbsKeyFactory("AES", 128) {}
 
-
     @Bean
     @Primary
     @TargetService(ServiceTypes.GENERAL)
@@ -78,10 +77,10 @@ class Configuration : BeanPostProcessor {
 
         val clientHttpRequestFactory = defaultHttpComponentsClientHttpRequestFactory(readTimeout, connectTimeout)
         return restTemplateBuilder
-                .requestFactory(clientHttpRequestFactory)
-                .rootUri(bitbucketUrl)
-                .basicAuthorization(username, password)
-                .build()
+            .requestFactory(clientHttpRequestFactory)
+            .rootUri(bitbucketUrl)
+            .basicAuthorization(username, password)
+            .build()
     }
 
     @Bean
@@ -97,17 +96,17 @@ class Configuration : BeanPostProcessor {
 
         val clientHttpRequestFactory = defaultHttpComponentsClientHttpRequestFactory(readTimeout, connectTimeout)
         return restTemplateBuilder
-                .requestFactory(clientHttpRequestFactory)
-                .interceptors(ClientHttpRequestInterceptor { request, body, execution ->
-                    request.headers.apply {
-                        set(HttpHeaders.AUTHORIZATION, "Bearer aurora-token ${sharedSecretReader.secret}")
-                        set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                        set(AuroraHeaderFilter.KORRELASJONS_ID, RequestKorrelasjon.getId())
-                        set(clientIdHeaderName, applicationName)
-                    }
+            .requestFactory(clientHttpRequestFactory)
+            .interceptors(ClientHttpRequestInterceptor { request, body, execution ->
+                request.headers.apply {
+                    set(HttpHeaders.AUTHORIZATION, "Bearer aurora-token ${sharedSecretReader.secret}")
+                    set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    set(AuroraHeaderFilter.KORRELASJONS_ID, RequestKorrelasjon.getId())
+                    set(clientIdHeaderName, applicationName)
+                }
 
-                    execution.execute(request, body)
-                }).build()
+                execution.execute(request, body)
+            }).build()
     }
 
     private fun defaultHttpComponentsClientHttpRequestFactory(readTimeout: Int, connectTimeout: Int): HttpComponentsClientHttpRequestFactory {
@@ -122,14 +121,14 @@ class Configuration : BeanPostProcessor {
         val acceptingTrustStrategy = { chain: Array<X509Certificate>, authType: String -> true }
 
         val sslContext = SSLContexts.custom()
-                .loadTrustMaterial(null, acceptingTrustStrategy)
-                .build()
+            .loadTrustMaterial(null, acceptingTrustStrategy)
+            .build()
 
         val csf = SSLConnectionSocketFactory(sslContext)
 
         val httpClient = HttpClients.custom()
-                .setSSLSocketFactory(csf)
-                .build()
+            .setSSLSocketFactory(csf)
+            .build()
         return httpClient
     }
 }

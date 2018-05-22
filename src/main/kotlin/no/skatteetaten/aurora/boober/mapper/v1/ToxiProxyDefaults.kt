@@ -31,9 +31,9 @@ fun getToxiProxyImage(version: String): String {
 
 fun getToxiProxyConfig(): String {
     val config = ToxiProxyConfig(
-            name = "app",
-            listen = "0.0.0.0:" + PortNumbers.TOXIPROXY_HTTP_PORT,
-            upstream = "0.0.0.0:" + PortNumbers.INTERNAL_HTTP_PORT)
+        name = "app",
+        listen = "0.0.0.0:" + PortNumbers.TOXIPROXY_HTTP_PORT,
+        upstream = "0.0.0.0:" + PortNumbers.INTERNAL_HTTP_PORT)
 
     return jacksonObjectMapper().writeValueAsString(listOf(config))
 }

@@ -27,7 +27,6 @@ class AuroraConfigField(val handler: AuroraConfigFieldHandler,
 
     inline fun <reified T> getNullableValue(): T? = this.value() as T?
 
-
     inline fun <reified T> value(): T {
 
         val result = if (this.source == null) {
@@ -44,7 +43,6 @@ class AuroraConfigField(val handler: AuroraConfigFieldHandler,
 
 class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
-
     fun getConfigEnv(configExtractors: List<AuroraConfigFieldHandler>): Map<String, String> {
         val env = configExtractors.filter { it.name.count { it == '/' } == 1 }.map {
             val (_, field) = it.name.split("/", limit = 2)
@@ -58,13 +56,13 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
     fun getRouteAnnotations(prefix: String, extractors: List<AuroraConfigFieldHandler>): Map<String, String> {
         return extractors
-                .filter { it.path.startsWith("/$prefix") }
-                .map {
-                    val (_, _, _, field) = it.name.split("/", limit = 4)
+            .filter { it.path.startsWith("/$prefix") }
+            .map {
+                val (_, _, _, field) = it.name.split("/", limit = 4)
 
-                    val value: String = extract(it.name)
-                    field to value
-                }.toMap()
+                val value: String = extract(it.name)
+                field to value
+            }.toMap()
     }
 
     fun getDatabases(extractors: List<AuroraConfigFieldHandler>): List<Database> {
@@ -76,7 +74,6 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
             Database(field, if (value == "auto" || value.isBlank()) null else value)
         }
     }
-
 
     fun getParameters(parameterExtractors: List<AuroraConfigFieldHandler>): Map<String, String>? {
         return parameterExtractors.map {
@@ -100,7 +97,6 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         val simplified = isSimplifiedConfig(name)
 
         return simplified && !extract<Boolean>(name)
-
     }
 
     fun isSimplifiedConfig(name: String): Boolean {
@@ -118,9 +114,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         return false
     }
 
-
     inline fun <reified T> extract(name: String): T = fields[name]!!.value()
-
 
     /**
      * Extracts a config field declared either as a delimited string (ie. "value1, value2") or as a JSON array
@@ -134,8 +128,8 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
             valueNode.isArray -> (field.value() as List<Any?>).map { it?.toString() } // Convert any non-string values in the array to string
             else -> emptyList()
         }.filter { !it.isNullOrBlank() }
-                .mapNotNull { it?.trim() }
-                .toSet()
+            .mapNotNull { it?.trim() }
+            .toSet()
     }
 
     inline fun <reified T> extractOrNull(name: String): T? = fields[name]!!.getNullableValue()
@@ -169,6 +163,5 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
             return AuroraConfigFields(fields)
         }
-
     }
 }

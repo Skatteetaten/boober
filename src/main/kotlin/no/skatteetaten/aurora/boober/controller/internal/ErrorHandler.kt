@@ -12,7 +12,11 @@ import no.skatteetaten.aurora.boober.service.ServiceException
 import no.skatteetaten.aurora.boober.service.UnauthorizedAccessException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
-import org.springframework.http.HttpStatus.*
+import org.springframework.http.HttpStatus.BAD_REQUEST
+import org.springframework.http.HttpStatus.FORBIDDEN
+import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
+import org.springframework.http.HttpStatus.NOT_FOUND
+import org.springframework.http.HttpStatus.PRECONDITION_FAILED
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ControllerAdvice
@@ -55,7 +59,6 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
 
     @ExceptionHandler(RuntimeException::class)
     fun handleGenericErrors(ex: RuntimeException, req: WebRequest) = handleException(ex, req, INTERNAL_SERVER_ERROR)
-
 
     private fun handleException(e: Exception, request: WebRequest, httpStatus: HttpStatus): ResponseEntity<*> {
 

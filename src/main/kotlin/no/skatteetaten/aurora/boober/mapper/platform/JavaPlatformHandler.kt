@@ -17,40 +17,39 @@ class JavaPlatformHandler : ApplicationPlatformHandler("java") {
             else -> "default"
         }
         val containers = listOf(AuroraContainer(
-                name = "${auroraDeploymentSpec.name}-java",
-                tcpPorts = mapOf("http" to PortNumbers.INTERNAL_HTTP_PORT, "management" to PortNumbers.INTERNAL_ADMIN_PORT, "jolokia" to PortNumbers.JOLOKIA_HTTP_PORT),
-                readiness = auroraDeploymentSpec.deploy!!.readiness,
-                liveness = auroraDeploymentSpec.deploy.liveness,
-                limit = auroraDeploymentSpec.deploy.resources.limit,
-                request = auroraDeploymentSpec.deploy.resources.request,
-                env = createEnvVars(mounts, auroraDeploymentSpec, routeSuffix),
-                mounts = mounts?.filter { it.targetContainer == null }
+            name = "${auroraDeploymentSpec.name}-java",
+            tcpPorts = mapOf("http" to PortNumbers.INTERNAL_HTTP_PORT, "management" to PortNumbers.INTERNAL_ADMIN_PORT, "jolokia" to PortNumbers.JOLOKIA_HTTP_PORT),
+            readiness = auroraDeploymentSpec.deploy!!.readiness,
+            liveness = auroraDeploymentSpec.deploy.liveness,
+            limit = auroraDeploymentSpec.deploy.resources.limit,
+            request = auroraDeploymentSpec.deploy.resources.request,
+            env = createEnvVars(mounts, auroraDeploymentSpec, routeSuffix),
+            mounts = mounts?.filter { it.targetContainer == null }
         ))
-                .addIfNotNull(sidecarContainers)
+            .addIfNotNull(sidecarContainers)
 
         return AuroraDeployment(
-                name = auroraDeploymentSpec.name,
-                tag = tag,
-                containers = containers,
-                labels = createLabels(auroraDeploymentSpec.name, auroraDeploymentSpec.deploy, labels),
-                mounts = mounts,
-                annotations = createAnnotations(auroraDeploymentSpec),
-                deployStrategy = auroraDeploymentSpec.deploy.deployStrategy,
-                replicas = auroraDeploymentSpec.deploy.replicas,
-                serviceAccount = auroraDeploymentSpec.deploy.serviceAccount,
-                ttl = auroraDeploymentSpec.deploy.ttl)
-
+            name = auroraDeploymentSpec.name,
+            tag = tag,
+            containers = containers,
+            labels = createLabels(auroraDeploymentSpec.name, auroraDeploymentSpec.deploy, labels),
+            mounts = mounts,
+            annotations = createAnnotations(auroraDeploymentSpec),
+            deployStrategy = auroraDeploymentSpec.deploy.deployStrategy,
+            replicas = auroraDeploymentSpec.deploy.replicas,
+            serviceAccount = auroraDeploymentSpec.deploy.serviceAccount,
+            ttl = auroraDeploymentSpec.deploy.ttl)
     }
 
     override fun handlers(handlers: Set<AuroraConfigFieldHandler>): Set<AuroraConfigFieldHandler> {
 
         val buildHandlers = handlers.find { it.name.startsWith("baseImage") }
-                ?.let {
-                    setOf(
+            ?.let {
+                setOf(
                     AuroraConfigFieldHandler("baseImage/name", defaultValue = "flange"),
                     AuroraConfigFieldHandler("baseImage/version", defaultValue = "8")
-                    )
-                }
+                )
+            }
 
         return handlers.addIfNotNull(buildHandlers)
     }

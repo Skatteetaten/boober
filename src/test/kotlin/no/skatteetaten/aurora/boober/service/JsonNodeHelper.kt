@@ -7,7 +7,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 
-
 fun modifyCommandIfRoute(json: JsonNode): OpenshiftCommand {
     return if (json.openshiftKind == "route") {
 

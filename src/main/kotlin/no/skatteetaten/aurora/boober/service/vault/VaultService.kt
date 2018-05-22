@@ -12,9 +12,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 data class VaultWithAccess @JvmOverloads constructor(
-        val vault: EncryptedFileVault?, // Will be null if the user does not have access
-        val vaultName: String,
-        val hasAccess: Boolean = true
+    val vault: EncryptedFileVault?, // Will be null if the user does not have access
+    val vaultName: String,
+    val hasAccess: Boolean = true
 ) {
     companion object {
         fun create(vault: EncryptedFileVault, user: User): VaultWithAccess {
@@ -26,10 +26,10 @@ data class VaultWithAccess @JvmOverloads constructor(
 
 @Service
 class VaultService(
-        @TargetDomain(VAULT)
-        val gitService: GitService,
-        val encryptionService: EncryptionService,
-        val userDetailsProvider: UserDetailsProvider
+    @TargetDomain(VAULT)
+    val gitService: GitService,
+    val encryptionService: EncryptionService,
+    val userDetailsProvider: UserDetailsProvider
 ) {
 
     private val logger = LoggerFactory.getLogger(VaultService::class.java)
@@ -39,7 +39,7 @@ class VaultService(
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
 
         return findAllVaultsInVaultCollection(vaultCollectionName)
-                .map { VaultWithAccess.create(it, authenticatedUser) }
+            .map { VaultWithAccess.create(it, authenticatedUser) }
     }
 
     fun findVault(vaultCollectionName: String, vaultName: String): EncryptedFileVault {
@@ -49,8 +49,8 @@ class VaultService(
     }
 
     fun findVault(vaultCollection: VaultCollection, vaultName: String) =
-            (findVaultByNameIfAllowed(vaultCollection, vaultName)
-                    ?: throw IllegalArgumentException("Vault not found name=$vaultName"))
+        (findVaultByNameIfAllowed(vaultCollection, vaultName)
+            ?: throw IllegalArgumentException("Vault not found name=$vaultName"))
 
     fun vaultExists(vaultCollectionName: String, vaultName: String): Boolean {
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, _ ->
@@ -148,7 +148,7 @@ class VaultService(
         val user = userDetailsProvider.getAuthenticatedUser()
         if (!user.hasAnyRole(permissions)) {
             val message = "You (${user.username}) do not have required permissions ($permissions) to " +
-                    "operate on this vault. You have ${user.authorities.map { it.authority }}"
+                "operate on this vault. You have ${user.authorities.map { it.authority }}"
             throw UnauthorizedAccessException(message)
         }
     }
@@ -184,13 +184,13 @@ class VaultService(
         @JvmStatic
         protected fun assertSecretKeysAreValid(secrets: Map<String, ByteArray>) {
             val filesToKeys = secrets.filter { it.key.endsWith(".properties") }
-                    .mapValues {
-                        String(it.value)
-                                .lines()
-                                .filter{ !it.isBlank()}
-                                .map { it.substringBefore("=") }
-                                .filter { !it.matches(re) }
-                    }
+                .mapValues {
+                    String(it.value)
+                        .lines()
+                        .filter { !it.isBlank() }
+                        .map { it.substringBefore("=") }
+                        .filter { !it.matches(re) }
+                }
 
             val invalidKeys = filesToKeys.flatMap { fileToKey ->
                 fileToKey.value.map { "${fileToKey.key}/$it" }

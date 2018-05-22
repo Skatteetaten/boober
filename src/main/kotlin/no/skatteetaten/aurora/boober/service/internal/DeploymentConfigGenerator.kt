@@ -58,20 +58,20 @@ object DeploymentConfigGenerator {
                     }
                 }
                 triggers = listOf(
-                        deploymentTriggerPolicy {
-                            type = "ImageChange"
-                            imageChangeParams {
-                                automatic = true
-                                containerNames = auroraDeployment.containers
-                                        .filter { it.shouldHaveImageChange }
-                                        .map { it.name }
+                    deploymentTriggerPolicy {
+                        type = "ImageChange"
+                        imageChangeParams {
+                            automatic = true
+                            containerNames = auroraDeployment.containers
+                                .filter { it.shouldHaveImageChange }
+                                .map { it.name }
 
-                                from {
-                                    name = "${auroraDeployment.name}:${auroraDeployment.tag}"
-                                    kind = "ImageStreamTag"
-                                }
+                            from {
+                                name = "${auroraDeployment.name}:${auroraDeployment.tag}"
+                                kind = "ImageStreamTag"
                             }
                         }
+                    }
 
                 )
                 replicas = auroraDeployment.replicas

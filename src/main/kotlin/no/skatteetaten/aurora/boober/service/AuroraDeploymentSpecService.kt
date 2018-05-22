@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import javax.annotation.PostConstruct
 
-
 @Service
 class AuroraDeploymentSpecService(val auroraConfigService: AuroraConfigService,
                                   val aphBeans: List<ApplicationPlatformHandler>) {
@@ -44,11 +43,11 @@ class AuroraDeploymentSpecService(val auroraConfigService: AuroraConfigService,
             val headerMapper = HeaderMapper(applicationId, applicationFiles)
             val headerFields = AuroraConfigFields.create(headerMapper.handlers, applicationFiles)
             AuroraDeploymentSpecConfigFieldValidator(applicationId, applicationFiles, headerMapper.handlers, headerFields)
-                    .validate(false)
+                .validate(false)
             val platform = headerFields.extract<String>("applicationPlatform")
 
             val applicationHandler: ApplicationPlatformHandler = Companion.APPLICATION_PLATFORM_HANDLERS[platform]
-                    ?: throw IllegalArgumentException("ApplicationPlattformHandler $platform is not present")
+                ?: throw IllegalArgumentException("ApplicationPlattformHandler $platform is not present")
 
             val header = headerMapper.createHeader(headerFields, applicationHandler)
 
@@ -86,7 +85,6 @@ class AuroraDeploymentSpecService(val auroraConfigService: AuroraConfigService,
         }
     }
 
-
     @PostConstruct
     fun initializeHandlers() {
         APPLICATION_PLATFORM_HANDLERS = aphBeans.associateBy { it.name }
@@ -96,24 +94,22 @@ class AuroraDeploymentSpecService(val auroraConfigService: AuroraConfigService,
     fun getAuroraDeploymentSpecsForEnvironment(auroraConfigName: String, environment: String): List<AuroraDeploymentSpec> {
         val auroraConfig = auroraConfigService.findAuroraConfig(auroraConfigName)
         return auroraConfig.getApplicationIds()
-                .filter { it.environment == environment }
-                .let { getAuroraDeploymentSpecs(auroraConfig, it) }
+            .filter { it.environment == environment }
+            .let { getAuroraDeploymentSpecs(auroraConfig, it) }
     }
 
     fun getAuroraDeploymentSpecs(auroraConfigName: String, aidStrings: List<String>): List<AuroraDeploymentSpec> {
         val auroraConfig = auroraConfigService.findAuroraConfig(auroraConfigName)
         return aidStrings.map(ApplicationId.Companion::fromString)
-                .let { getAuroraDeploymentSpecs(auroraConfig, it) }
+            .let { getAuroraDeploymentSpecs(auroraConfig, it) }
     }
 
     private fun getAuroraDeploymentSpecs(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>): List<AuroraDeploymentSpec> {
         return applicationIds.map { AuroraDeploymentSpecService.createAuroraDeploymentSpec(auroraConfig, it, listOf()) }
     }
 
-
     fun getAuroraDeploymentSpec(auroraConfigName: String, environment: String, application: String): AuroraDeploymentSpec {
         val auroraConfig = auroraConfigService.findAuroraConfig(auroraConfigName)
         return AuroraDeploymentSpecService.createAuroraDeploymentSpec(auroraConfig, ApplicationId.aid(environment, application))
     }
-
 }
