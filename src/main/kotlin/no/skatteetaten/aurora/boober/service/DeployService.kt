@@ -15,6 +15,7 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.deploymentConfigFromJson
 import no.skatteetaten.aurora.boober.utils.imageStreamFromJson
 import no.skatteetaten.aurora.boober.utils.openshiftKind
+import no.skatteetaten.aurora.boober.utils.whenFalse
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -87,9 +88,14 @@ class DeployService(
 
     private fun prepareDeployEnvironment(environment: AuroraDeployEnvironment, projectExist: Boolean): List<OpenShiftResponse> {
         val namespaceName = environment.namespace
-        val projectResponse = if (!projectExist) openShiftCommandBuilder.generateProjectRequest(environment).let {
-            openShiftClient.performOpenShiftCommand(namespaceName, it)
-        } else null
+
+        val projectResponse = projectExist.whenFalse {
+            openShiftCommandBuilder.generateProjectRequest(environment).let {
+                openShiftClient.performOpenShiftCommand(namespaceName, it)
+                    .also { Thread.sleep(2000) }
+            }
+        }
+
         val namespace = openShiftCommandBuilder.generateNamespace(environment)
         val roleBindings = openShiftCommandBuilder.generateRolebindings(environment)
 
