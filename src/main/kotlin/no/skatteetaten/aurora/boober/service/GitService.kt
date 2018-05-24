@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.utils.LambdaOutputStream
+import org.eclipse.jgit.api.CreateBranchCommand
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.EmtpyCommitException
 import org.eclipse.jgit.lib.BranchTrackingStatus
@@ -74,11 +75,11 @@ open class GitService(
     val cp = UsernamePasswordCredentialsProvider(username, password)
 
     @JvmOverloads
-    fun checkoutRepository(repositoryName: String, checkoutFolder: String = repositoryName, deleteUnpushedCommits: Boolean = true): Git {
+    fun checkoutRepository(repositoryName: String, checkoutFolder: String = repositoryName, deleteUnpushedCommits: Boolean = true, refName: String = "master"): Git {
         val repoPath = File(File("$checkoutPath/$checkoutFolder").absoluteFile.absolutePath)
         val git: Git? = repoPath.takeIf(File::exists).let {
             try {
-                updateRepository(repoPath, deleteUnpushedCommits)
+                updateRepository(repoPath, deleteUnpushedCommits, refName)
             } catch (e: Exception) {
                 logger.warn("Local repository update failed. Cause: ${e.message}.")
                 repoPath.deleteRecursively()
@@ -86,27 +87,53 @@ open class GitService(
             }
         }
 
-        return git ?: cloneRepository(repositoryName, repoPath)
+        return git ?: cloneRepository(repositoryName, repoPath, refName)
     }
 
-    private fun updateRepository(repoPath: File, failOnUnpushedCommits: Boolean): Git {
-        val git = Git.open(repoPath)
-        git.pull()
-            .setRebase(true)
-            .setRemote("origin")
-            .setCredentialsProvider(cp)
-            .call()
+    private fun findRef(git: Git, refName: String): Ref {
+        val ref = git.repository.findRef(refName)
 
-        if (failOnUnpushedCommits) {
-            val trackingStatus = BranchTrackingStatus.of(git.repository, git.repository.fullBranch)
-            if (trackingStatus.aheadCount != 0 || trackingStatus.behindCount != 0) {
-                throw IllegalStateException("We are ${trackingStatus.aheadCount} commit(s) ahead and ${trackingStatus.behindCount} behind ${trackingStatus.remoteTrackingBranch}")
+        return ref ?: git.repository.findRef("origin/$refName")
+    }
+
+    private fun updateRepository(repoPath: File, failOnUnpushedCommits: Boolean, refName: String): Git {
+
+        val git = Git.open(repoPath)
+        val ref = findRef(git, refName)
+        val branchList = git.branchList().call()
+
+        if (branchList.contains(ref) || ref.name.contains("refs/tags/")) {
+            git.checkout()
+                .setCreateBranch(false)
+                .setName(refName)
+                .call()
+        } else {
+            git.checkout()
+                .setCreateBranch(true)
+                .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.TRACK)
+                .setName(refName)
+                .setStartPoint(ref.name)
+                .call()
+        }
+
+        if (ref.name.startsWith("refs/heads/") || ref.name.startsWith("refs/remotes/")) {
+            git.pull()
+                .setRebase(true)
+                .setRemote("origin")
+                .setCredentialsProvider(cp)
+                .call()
+            if (failOnUnpushedCommits) {
+                val trackingStatus = BranchTrackingStatus.of(git.repository, git.repository.fullBranch)
+                if (trackingStatus.aheadCount != 0 || trackingStatus.behindCount != 0) {
+                    throw IllegalStateException("We are ${trackingStatus.aheadCount} commit(s) ahead and ${trackingStatus.behindCount} behind ${trackingStatus.remoteTrackingBranch}")
+                }
             }
         }
+
         return git
     }
 
-    private fun cloneRepository(repositoryName: String, repoPath: File): Git {
+    private fun cloneRepository(repositoryName: String, repoPath: File, refName: String): Git {
         return metrics.withMetrics("git_checkout", {
             val dir = repoPath.apply { mkdirs() }
             val uri = url.format(repositoryName)
@@ -116,6 +143,7 @@ open class GitService(
                     .setURI(uri)
                     .setCredentialsProvider(cp)
                     .setDirectory(dir)
+                    .setBranch(refName)
                     .call()
             } catch (ex: Exception) {
                 dir.deleteRecursively()

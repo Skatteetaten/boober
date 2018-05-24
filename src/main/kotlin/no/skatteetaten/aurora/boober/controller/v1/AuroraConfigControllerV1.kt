@@ -62,8 +62,8 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
     }
 
     @GetMapping("/filenames")
-    fun getFilenames(@PathVariable name: String): Response {
-        return Response(items = auroraConfigService.findAuroraConfigFileNames(name))
+    fun getFilenames(@PathVariable name: String, @RequestHeader(name = "Ref-Name", defaultValue = "master",  required = false) refName: String): Response {
+        return Response(items = auroraConfigService.findAuroraConfigFileNames(name, refName))
     }
 
     @PutMapping("/validate")

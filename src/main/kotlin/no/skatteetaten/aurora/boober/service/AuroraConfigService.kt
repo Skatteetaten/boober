@@ -47,15 +47,15 @@ class AuroraConfigService(
         return bitbucketProjectService.getAllSlugs()
     }
 
-    fun findAuroraConfig(name: String): AuroraConfig {
+    fun findAuroraConfig(name: String, refName: String = "master"): AuroraConfig {
 
-        updateLocalFilesFromGit(name)
+        updateLocalFilesFromGit(name, refName)
         return AuroraConfig.fromFolder("${gitService.checkoutPath}/$name")
     }
 
-    fun findAuroraConfigFileNames(name: String): List<String> {
+    fun findAuroraConfigFileNames(name: String, refName: String): List<String> {
 
-        val auroraConfig = findAuroraConfig(name)
+        val auroraConfig = findAuroraConfig(name, refName)
         return auroraConfig.auroraConfigFiles.map { it.name }
     }
 
@@ -66,26 +66,26 @@ class AuroraConfigService(
             ?: throw IllegalArgumentException("No such file $fileName in AuroraConfig $name")
     }
 
-    fun save(auroraConfig: AuroraConfig): AuroraConfig {
-        val checkoutDir = getAuroraConfigFolder(auroraConfig.affiliation)
-
-        val repo = getUpdatedRepo(auroraConfig.affiliation)
-        val existing = AuroraConfig.fromFolder(checkoutDir)
-
-        existing.auroraConfigFiles.forEach {
-            val outputFile = File(checkoutDir, it.name)
-            FileUtils.deleteQuietly(outputFile)
-        }
-        auroraConfig.auroraConfigFiles.forEach {
-            val outputFile = File(getAuroraConfigFolder(auroraConfig.affiliation), it.name)
-            FileUtils.forceMkdirParent(outputFile)
-            outputFile.writeText(it.contents)
-        }
-
-        gitService.commitAndPushChanges(repo)
-        repo.close()
-        return auroraConfig
-    }
+//    fun save(auroraConfig: AuroraConfig): AuroraConfig {
+//        val checkoutDir = getAuroraConfigFolder(auroraConfig.affiliation)
+//
+//        val repo = getUpdatedRepo(auroraConfig.affiliation)
+//        val existing = AuroraConfig.fromFolder(checkoutDir)
+//
+//        existing.auroraConfigFiles.forEach {
+//            val outputFile = File(checkoutDir, it.name)
+//            FileUtils.deleteQuietly(outputFile)
+//        }
+//        auroraConfig.auroraConfigFiles.forEach {
+//            val outputFile = File(getAuroraConfigFolder(auroraConfig.affiliation), it.name)
+//            FileUtils.forceMkdirParent(outputFile)
+//            outputFile.writeText(it.contents)
+//        }
+//
+//        gitService.commitAndPushChanges(repo)
+//        repo.close()
+//        return auroraConfig
+//    }
 
     @JvmOverloads
     fun updateAuroraConfigFile(name: String, fileName: String, contents: String, previousVersion: String? = null): AuroraConfig {
@@ -157,14 +157,14 @@ class AuroraConfigService(
 
     private fun getAuroraConfigFolder(name: String) = File(gitService.checkoutPath, name)
 
-    private fun updateLocalFilesFromGit(name: String) {
-        val repository = getUpdatedRepo(name)
+    private fun updateLocalFilesFromGit(name: String, refName: String) {
+        val repository = getUpdatedRepo(name, refName)
         repository.close()
     }
 
-    private fun getUpdatedRepo(name: String): Git {
+    private fun getUpdatedRepo(name: String, refName: String): Git {
         return try {
-            gitService.checkoutRepository(name)
+            gitService.checkoutRepository(name, refName = refName)
         } catch (e: InvalidRemoteException) {
             throw IllegalArgumentException("No such AuroraConfig $name")
         } catch (e: Exception) {
