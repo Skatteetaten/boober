@@ -98,3 +98,11 @@ In the example it will be `ClientconfigBase`. This is picked up by [spring cloud
 - In the Base-class add the required setup code, such as creating mock services. It should also extend `AbstractContractBase`, which provides a few helpful helper methods available to get the content of the response-json files and setting up the mock controller.
 - Run `./gradlew generateContractTests` to generate the Spock tests from the contracts. The tests will be automatically generated and run with the normal `./gradlew build` command.
 - When building the project a `stubs.jar` file is generated, for Boober this will be called something like: `boober-SNAPSHOT-stubs.jar`. This can be uploaded to the repository along with other artifacts and then used by the clients that communicates with the Boober API when testing.
+
+
+### Setup ktlint
+
+1. Install [ktlint](https://github.com/shyiko/ktlint#installation)
+2. In the boober root directory run `ktlint --apply-to-idea-project`
+3. Restart idea
+4. To run ktlint check `./gradlew ktlintCheck` and format `./gradlew ktlintFormat`
