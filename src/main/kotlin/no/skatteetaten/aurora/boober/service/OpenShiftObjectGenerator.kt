@@ -83,8 +83,11 @@ class OpenShiftObjectGenerator(
         return mapper.convertValue(deploymentRequest)
     }
 
-    fun generateApplicationObjects(deployId: String, auroraDeploymentSpec: AuroraDeploymentSpec,
-                                   provisioningResult: ProvisioningResult? = null): List<JsonNode> {
+    fun generateApplicationObjects(
+        deployId: String,
+        auroraDeploymentSpec: AuroraDeploymentSpec,
+        provisioningResult: ProvisioningResult? = null
+    ): List<JsonNode> {
 
         return withLabelsAndMounts(deployId, auroraDeploymentSpec, provisioningResult, { labels, mounts ->
 
@@ -149,9 +152,11 @@ class OpenShiftObjectGenerator(
             generateDeploymentConfig(deploymentSpec, labels, mounts)
         }
 
-    fun generateDeploymentConfig(auroraDeploymentSpec: AuroraDeploymentSpec,
-                                 labels: Map<String, String>,
-                                 mounts: List<Mount>?): JsonNode? {
+    fun generateDeploymentConfig(
+        auroraDeploymentSpec: AuroraDeploymentSpec,
+        labels: Map<String, String>,
+        mounts: List<Mount>?
+    ): JsonNode? {
 
         if (auroraDeploymentSpec.deploy == null) {
             return null
@@ -217,11 +222,9 @@ class OpenShiftObjectGenerator(
                     selector = mapOf("name" to auroraDeploymentSpec.name)
                     type = "ClusterIP"
                     sessionAffinity = "None"
-
                 }
             }
             mapper.convertValue(service)
-
         }
     }
 
@@ -253,7 +256,6 @@ class OpenShiftObjectGenerator(
         }
 
         val objects: List<JsonNode> = listOf<JsonNode>().addIfNotNull(localTemplate).addIfNotNull(template)
-
 
         return objects.map {
             if (it.openshiftKind == "deploymentconfig") {
@@ -313,12 +315,11 @@ class OpenShiftObjectGenerator(
                         kind = "Service"
                         name = auroraDeploymentSpec.name
                     }
-                    host = "${it.host}${routeSuffix}"
+                    host = "${it.host}$routeSuffix"
                     it.path?.let {
                         path = it
                     }
                 }
-
             }
             mapper.convertValue<JsonNode>(route)
         }
@@ -389,7 +390,6 @@ class OpenShiftObjectGenerator(
                             buildTriggerPolicy {
                                 type = "ImageChange"
                                 imageChange {
-
                                 }
                             }
                         )
@@ -443,14 +443,17 @@ class OpenShiftObjectGenerator(
                 }
             }
             val bc = mapper.convertValue<JsonNode>(build)
-            //TODO: Handle jenkinsfile buildConfig
+            // TODO: Handle jenkinsfile buildConfig
             listOf(bc)
         }
     }
 
-    private fun <T> withLabelsAndMounts(deployId: String, deploymentSpec: AuroraDeploymentSpec,
-                                        provisioningResult: ProvisioningResult? = null,
-                                        c: (labels: Map<String, String>, mounts: List<Mount>?) -> T): T {
+    private fun <T> withLabelsAndMounts(
+        deployId: String,
+        deploymentSpec: AuroraDeploymentSpec,
+        provisioningResult: ProvisioningResult? = null,
+        c: (labels: Map<String, String>, mounts: List<Mount>?) -> T
+    ): T {
 
         val mounts: List<Mount> = findAndCreateMounts(deploymentSpec, provisioningResult)
         val labels = openShiftObjectLabelService.createCommonLabels(deploymentSpec, deployId)

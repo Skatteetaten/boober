@@ -80,7 +80,7 @@ class RetryLogger(val logger: Logger) : RetryListenerSupport() {
             logger.error("Request failed. Giving up. url=${requestEntity.url}, method=${requestEntity.method}")
         } else {
             val tokenSnippet = getTokenSnippetFromAuthHeader(requestEntity.headers)
-            logger.debug("Requested url=${requestEntity.url}, method=${requestEntity.method}, tokenSnippet=${tokenSnippet}")
+            logger.debug("Requested url=${requestEntity.url}, method=${requestEntity.method}, tokenSnippet=$tokenSnippet")
         }
         super.close(context, callback, throwable)
     }

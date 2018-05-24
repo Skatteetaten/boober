@@ -12,10 +12,12 @@ import no.skatteetaten.aurora.boober.utils.findAllPointers
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class AuroraDeploymentSpecConfigFieldValidator(val applicationId: ApplicationId,
-                                               val applicationFiles: List<AuroraConfigFile>,
-                                               val fieldHandlers: Set<AuroraConfigFieldHandler>,
-                                               val auroraConfigFields: AuroraConfigFields) {
+class AuroraDeploymentSpecConfigFieldValidator(
+    val applicationId: ApplicationId,
+    val applicationFiles: List<AuroraConfigFile>,
+    val fieldHandlers: Set<AuroraConfigFieldHandler>,
+    val auroraConfigFields: AuroraConfigFields
+) {
     val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpecConfigFieldValidator::class.java)
 
     companion object {
@@ -40,7 +42,7 @@ class AuroraDeploymentSpecConfigFieldValidator(val applicationId: ApplicationId,
             logger.trace("value is=${jacksonObjectMapper().writeValueAsString(auroraConfigField)}")
 
             val result = e.validator(auroraConfigField)
-            logger.trace("validator result is=${result}")
+            logger.trace("validator result is=$result")
 
             val err = when {
                 invalidEnvSource -> ConfigFieldErrorDetail.illegal("Invalid Source field=${e.name} requires an about source. Actual source is source=${rawField.source?.name}", rawField)

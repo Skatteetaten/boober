@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service
 import java.util.UUID
 
 @Service
-//TODO:Split up. Service is to large
+// TODO:Split up. Service is to large
 class DeployService(
     val auroraConfigService: AuroraConfigService,
     val openShiftCommandBuilder: OpenShiftCommandBuilder,
@@ -34,7 +34,8 @@ class DeployService(
     val userDetailsProvider: UserDetailsProvider,
     val deployLogService: DeployLogService,
     @Value("\${openshift.cluster}") val cluster: String,
-    @Value("\${boober.docker.registry}") val dockerRegistry: String) {
+    @Value("\${boober.docker.registry}") val dockerRegistry: String
+) {
 
     val logger: Logger = LoggerFactory.getLogger(DeployService::class.java)
 
@@ -77,7 +78,7 @@ class DeployService(
                     "One or more http calls to OpenShift failed"
                 } else "Namespace created successfully."
 
-                logger.info("Environment done. user='${authenticatedUser.fullName}' namespace=${environment.namespace} success=${success} reason=${message} admins=${environment.permissions.admin.groups} viewers=${environment.permissions.view?.groups}")
+                logger.info("Environment done. user='${authenticatedUser.fullName}' namespace=${environment.namespace} success=$success reason=$message admins=${environment.permissions.admin.groups} viewers=${environment.permissions.view?.groups}")
                 Pair(environment, AuroraDeployResult(
                     openShiftResponses = environmentResponses,
                     success = success,
@@ -189,9 +190,12 @@ class DeployService(
             reason = "Deployment success.")
     }
 
-    private fun applyOpenShiftApplicationObjects(deployId: String, deploymentSpec: AuroraDeploymentSpec,
-                                                 provisioningResult: ProvisioningResult? = null,
-                                                 mergeWithExistingResource: Boolean): List<OpenShiftResponse> {
+    private fun applyOpenShiftApplicationObjects(
+        deployId: String,
+        deploymentSpec: AuroraDeploymentSpec,
+        provisioningResult: ProvisioningResult? = null,
+        mergeWithExistingResource: Boolean
+    ): List<OpenShiftResponse> {
 
         val namespace = deploymentSpec.environment.namespace
         val name = deploymentSpec.name
@@ -222,4 +226,3 @@ class DeployService(
             ?.let { deploymentConfigFromJson(it.responseBody) }
     }
 }
-

@@ -184,7 +184,7 @@ fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpec: AuroraDeploymentSp
 
     val configEnv = auroraDeploymentSpec.deploy?.env ?: emptyMap()
     val routeName = auroraDeploymentSpec.route?.route?.takeIf { it.isNotEmpty() }?.first()?.let {
-        val host = "${it.host}${routeSuffix}"
+        val host = "${it.host}$routeSuffix"
         val url = "$host${it.path?.ensureStartWith("/") ?: ""}"
         mapOf("ROUTE_NAME" to url, "ROUTE_URL" to "http://$url")
     } ?: mapOf()

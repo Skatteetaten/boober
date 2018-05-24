@@ -19,7 +19,8 @@ typealias Encryptor = (ByteArray) -> String
 class VaultCollection private constructor(
     val folder: File,
     private val encryptor: Encryptor,
-    private val decryptor: Decryptor) {
+    private val decryptor: Decryptor
+) {
 
     companion object {
         fun fromFolder(folder: File, encryptor: Encryptor, decryptor: Decryptor): VaultCollection = VaultCollection(folder, encryptor, decryptor)

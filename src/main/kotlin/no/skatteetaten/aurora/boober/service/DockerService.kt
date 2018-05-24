@@ -17,7 +17,8 @@ data class TagCommand @JvmOverloads constructor(
     val from: String,
     val to: String,
     val fromRegistry: String,
-    val toRegistry: String = fromRegistry)
+    val toRegistry: String = fromRegistry
+)
 
 @Service
 class DockerService(val httpClient: RestTemplate) {

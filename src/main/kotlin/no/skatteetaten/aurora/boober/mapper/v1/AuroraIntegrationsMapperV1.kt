@@ -21,7 +21,7 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
         AuroraConfigFieldHandler("webseal/roles")
     )
 
-    //TODO: ADD splunk, webseal, bigip
+    // TODO: ADD splunk, webseal, bigip
 
     fun integrations(auroraConfigFields: AuroraConfigFields): AuroraIntegration? {
         val name: String = auroraConfigFields.extract("name")

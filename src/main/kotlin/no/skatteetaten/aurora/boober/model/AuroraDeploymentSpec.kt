@@ -42,7 +42,7 @@ data class AuroraDeployEnvironment(
     val namespace: String
         get() = when {
             envName.isBlank() -> affiliation
-            envName.startsWith("-") -> "${affiliation}${envName}"
+            envName.startsWith("-") -> "${affiliation}$envName"
             else -> "$affiliation-$envName"
         }
 }
@@ -127,7 +127,8 @@ data class AuroraDeploy(
 )
 
 data class AuroraDeployStrategy(
-    val type: String, val timeout: Int
+    val type: String,
+    val timeout: Int
 )
 
 data class AuroraLocalTemplate(
@@ -176,7 +177,7 @@ data class Database(
     val id: String? = null
 ) {
     val spec: String
-        get():String = (id?.let { "$name:$id" } ?: name).toLowerCase()
+        get(): String = (id?.let { "$name:$id" } ?: name).toLowerCase()
 }
 
 data class Probe(val path: String? = null, val port: Int, val delay: Int, val timeout: Int)

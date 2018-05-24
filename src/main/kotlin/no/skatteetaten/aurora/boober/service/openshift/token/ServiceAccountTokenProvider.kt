@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.service.openshift.token;
+package no.skatteetaten.aurora.boober.service.openshift.token
 
 import com.google.common.base.Supplier
 import com.google.common.base.Suppliers

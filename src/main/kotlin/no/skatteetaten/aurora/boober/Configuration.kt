@@ -54,9 +54,10 @@ class Configuration : BeanPostProcessor {
     @Bean
     @Primary
     @TargetService(ServiceTypes.GENERAL)
-    fun defaultRestTemplate(restTemplateBuilder: RestTemplateBuilder,
-                            @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
-                            @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int
+    fun defaultRestTemplate(
+        restTemplateBuilder: RestTemplateBuilder,
+        @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
+        @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int
     ): RestTemplate {
 
         val clientHttpRequestFactory = defaultHttpComponentsClientHttpRequestFactory(readTimeout, connectTimeout)
@@ -66,12 +67,13 @@ class Configuration : BeanPostProcessor {
     @Bean
     @Qualifier("bitbucket")
     @TargetService(ServiceTypes.BITBUCKET)
-    fun bitbucketRestTemplate(restTemplateBuilder: RestTemplateBuilder,
-                              @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
-                              @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
-                              @Value("\${boober.git.username}") username: String,
-                              @Value("\${boober.git.password}") password: String,
-                              @Value("\${boober.bitbucket.url}") bitbucketUrl: String
+    fun bitbucketRestTemplate(
+        restTemplateBuilder: RestTemplateBuilder,
+        @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
+        @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
+        @Value("\${boober.git.username}") username: String,
+        @Value("\${boober.git.password}") password: String,
+        @Value("\${boober.bitbucket.url}") bitbucketUrl: String
 
     ): RestTemplate {
 
@@ -85,11 +87,12 @@ class Configuration : BeanPostProcessor {
 
     @Bean
     @TargetService(ServiceTypes.AURORA)
-    fun auroraRestTemplate(restTemplateBuilder: RestTemplateBuilder,
-                           @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
-                           @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
-                           @Value("\${spring.application.name}") applicationName: String,
-                           sharedSecretReader: SharedSecretReader
+    fun auroraRestTemplate(
+        restTemplateBuilder: RestTemplateBuilder,
+        @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
+        @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
+        @Value("\${spring.application.name}") applicationName: String,
+        sharedSecretReader: SharedSecretReader
     ): RestTemplate {
 
         val clientIdHeaderName = "KlientID"

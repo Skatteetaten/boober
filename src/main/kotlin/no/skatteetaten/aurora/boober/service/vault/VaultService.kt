@@ -59,11 +59,12 @@ class VaultService(
     }
 
     @JvmOverloads
-    fun createOrUpdateFileInVault(vaultCollectionName: String,
-                                  vaultName: String,
-                                  fileName: String,
-                                  fileContents: ByteArray,
-                                  previousSignature: String? = null
+    fun createOrUpdateFileInVault(
+        vaultCollectionName: String,
+        vaultName: String,
+        fileName: String,
+        fileContents: ByteArray,
+        previousSignature: String? = null
     ): EncryptedFileVault {
 
         assertSecretKeysAreValid(mapOf(fileName to fileContents))
@@ -76,9 +77,11 @@ class VaultService(
         })
     }
 
-    fun findFileInVault(vaultCollectionName: String,
-                        vaultName: String,
-                        fileName: String): ByteArray {
+    fun findFileInVault(
+        vaultCollectionName: String,
+        vaultName: String,
+        fileName: String
+    ): ByteArray {
         val vault = findVault(vaultCollectionName, vaultName)
         return vault.getFile(fileName)
     }
@@ -180,7 +183,7 @@ class VaultService(
         val rePattern = "^[-._a-zA-Z0-9]+$"
         val re = Regex(rePattern)
 
-        //Note that a properties file can be delimitered by space and =, very few people know this so we check for it
+        // Note that a properties file can be delimitered by space and =, very few people know this so we check for it
         @JvmStatic
         protected fun assertSecretKeysAreValid(secrets: Map<String, ByteArray>) {
             val filesToKeys = secrets.filter { it.key.endsWith(".properties") }
@@ -197,7 +200,7 @@ class VaultService(
             }
 
             if (invalidKeys.isNotEmpty()) {
-                throw IllegalArgumentException("Vault key=${invalidKeys} is not valid. Regex used for matching $rePattern")
+                throw IllegalArgumentException("Vault key=$invalidKeys is not valid. Regex used for matching $rePattern")
             }
         }
     }

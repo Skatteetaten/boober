@@ -39,19 +39,23 @@ class GitServices(
     @Bean
     @TargetDomain(Domain.AURORA_CONFIG)
     @Primary
-    fun auroraConfigGitService(@Value("\${boober.git.urlPattern}") url: String,
-                               @Value("\${boober.git.checkoutPath}") checkoutPath: String,
-                               @Value("\${boober.git.username}") username: String,
-                               @Value("\${boober.git.password}") password: String): GitService {
+    fun auroraConfigGitService(
+        @Value("\${boober.git.urlPattern}") url: String,
+        @Value("\${boober.git.checkoutPath}") checkoutPath: String,
+        @Value("\${boober.git.username}") username: String,
+        @Value("\${boober.git.password}") password: String
+    ): GitService {
         return GitService(userDetails, url, checkoutPath, username, password, metrics)
     }
 
     @Bean
     @TargetDomain(Domain.VAULT)
-    fun vaultGitService(@Value("\${vault.git.urlPattern}") url: String,
-                        @Value("\${vault.git.checkoutPath}") checkoutPath: String,
-                        @Value("\${vault.git.username}") username: String,
-                        @Value("\${vault.git.password}") password: String): GitService {
+    fun vaultGitService(
+        @Value("\${vault.git.urlPattern}") url: String,
+        @Value("\${vault.git.checkoutPath}") checkoutPath: String,
+        @Value("\${vault.git.username}") username: String,
+        @Value("\${vault.git.password}") password: String
+    ): GitService {
         return GitService(userDetails, url, checkoutPath, username, password, metrics)
     }
 }
@@ -62,7 +66,8 @@ open class GitService(
     val checkoutPath: String,
     val username: String,
     val password: String,
-    val metrics: AuroraMetrics) {
+    val metrics: AuroraMetrics
+) {
 
     val logger: Logger = LoggerFactory.getLogger(GitService::class.java)
 

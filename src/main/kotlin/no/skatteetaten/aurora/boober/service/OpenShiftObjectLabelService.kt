@@ -36,8 +36,12 @@ class OpenShiftObjectLabelService(private val userDetailsProvider: UserDetailsPr
         }
     }
 
-    fun createCommonLabels(auroraDeploymentSpec: AuroraDeploymentSpec, deployId: String,
-                           additionalLabels: Map<String, String> = mapOf(), name: String = auroraDeploymentSpec.name): Map<String, String> {
+    fun createCommonLabels(
+        auroraDeploymentSpec: AuroraDeploymentSpec,
+        deployId: String,
+        additionalLabels: Map<String, String> = mapOf(),
+        name: String = auroraDeploymentSpec.name
+    ): Map<String, String> {
         val labels = mapOf(
             "app" to name,
             "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),

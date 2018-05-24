@@ -45,7 +45,8 @@ data class OpenShiftResponse @JvmOverloads constructor(
     val command: OpenshiftCommand,
     val responseBody: JsonNode? = null,
     val success: Boolean = true,
-    val exception: String? = null) {
+    val exception: String? = null
+) {
 
     companion object {
         fun fromOpenShiftException(e: OpenShiftException, command: OpenshiftCommand): OpenShiftResponse {
@@ -135,17 +136,16 @@ class OpenShiftClient(
     fun getGroups(): OpenShiftGroups {
 
         fun getAllDeclaredUserGroups(): List<UserGroup> {
-            val groupItems = getResponseBodyItems("${baseUrl}/oapi/v1/groups/")
+            val groupItems = getResponseBodyItems("$baseUrl/oapi/v1/groups/")
             return groupItems.flatMap {
                 val name = it["metadata"]["name"].asText()
                 (it["users"] as ArrayNode).map { UserGroup(it.asText(), name) }
-
             }
         }
 
         fun getAllImplicitUserGroups(): List<UserGroup> {
             val implicitGroup = "system:authenticated"
-            val userItems = getResponseBodyItems("${baseUrl}/oapi/v1/users")
+            val userItems = getResponseBodyItems("$baseUrl/oapi/v1/users")
             return userItems.map { UserGroup(it["metadata"]["name"].asText(), implicitGroup) }
         }
 
@@ -165,12 +165,12 @@ class OpenShiftClient(
     }
 
     fun projectExists(name: String): Boolean {
-        serviceAccountClient.get("${baseUrl}/oapi/v1/projects/$name", retry = false)?.body?.let {
+        serviceAccountClient.get("$baseUrl/oapi/v1/projects/$name", retry = false)?.body?.let {
             val phase = it.at("/status/phase").textValue()
             if (phase == "Active") {
                 return true
             } else {
-                throw IllegalStateException("Project ${name} already exists but is in an illegal state ($phase)")
+                throw IllegalStateException("Project $name already exists but is in an illegal state ($phase)")
             }
         }
         return false

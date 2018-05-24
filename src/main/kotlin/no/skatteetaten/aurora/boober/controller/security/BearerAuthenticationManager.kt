@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.controller.security;
+package no.skatteetaten.aurora.boober.controller.security
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.service.OpenShiftException
