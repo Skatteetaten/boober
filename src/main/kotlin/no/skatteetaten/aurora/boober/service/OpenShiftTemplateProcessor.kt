@@ -55,14 +55,13 @@ class OpenShiftTemplateProcessor(
         }
 
         if (!labels.has("template")) {
-            val template= auroraDeploymentSpec.template?.template ?: "local"
+            val template = auroraDeploymentSpec.template?.template ?: "local"
             labels.put("template", template)
         }
 
         if (!labels.has("app")) {
             labels.put("app", auroraDeploymentSpec.name)
         }
-
 
         labels.put("updatedBy", userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"))
 
