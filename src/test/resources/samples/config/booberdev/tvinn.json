@@ -9,5 +9,9 @@
         "FOO": "BAR"
       }
     }
+  },
+  "webseal": {
+    "host": "test",
+    "roles": "admin dev"
   }
 }

@@ -5,12 +5,25 @@
     "annotations": {
       "prometheus.io/path": "/metrics",
       "prometheus.io/scheme": "http",
-      "prometheus.io/scrape": "false"
+      "prometheus.io/scrape": "false",
+      "sprocket.sits.no/service.webseal": "test",
+      "sprocket.sits.no/service.webseal-roles": "admin dev"
     },
-    "name": "tvinn"
+    "finalizers": [
+
+    ],
+    "name": "tvinn",
+    "ownerReferences": [
+
+    ]
   },
   "spec": {
-    "portalIP": "",
+    "externalIPs": [
+
+    ],
+    "loadBalancerSourceRanges": [
+
+    ],
     "ports": [
       {
         "name": "http",
@@ -24,6 +37,7 @@
       "name": "tvinn"
     },
     "sessionAffinity": "None",
-    "type": "ClusterIP"
+    "type": "ClusterIP",
+    "portalIP": ""
   }
 }
