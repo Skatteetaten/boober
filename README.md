@@ -106,4 +106,4 @@ In the example it will be `ClientconfigBase`. This is picked up by [spring cloud
 2. Install [ktlint](https://github.com/shyiko/ktlint#installation)
 3. In the boober root directory run `ktlint --apply-to-idea-project`
 4. Restart idea
-5. To run ktlint check `./gradlew ktlintCheck` and format `./gradlew ktlintFormat`
+5. Run ktlint check `./gradlew ktlintCheck` and format `./gradlew ktlintFormat`
