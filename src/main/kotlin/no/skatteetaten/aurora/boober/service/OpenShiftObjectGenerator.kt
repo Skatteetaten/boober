@@ -272,7 +272,7 @@ class OpenShiftObjectGenerator(
                     dc.metadata.annotations.put("sprocket.sits.no/deployment-config.certificate", it)
                 }
                 jacksonObjectMapper().convertValue(dc)
-            } else if (it.openshiftKind == "serivce" && it.openshiftName == auroraDeploymentSpec.name) {
+            } else if (it.openshiftKind == "service" && it.openshiftName == auroraDeploymentSpec.name) {
 
                 val service: Service = jacksonObjectMapper().convertValue(it)
 
