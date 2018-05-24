@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
+import spock.lang.Unroll
 
 class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
 
@@ -17,6 +18,9 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
 
   @Autowired
   DeployService deployService
+
+  @Autowired
+  RedeployService redeployService
 
   @Autowired
   GitService gitService
@@ -38,19 +42,6 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
       false
     }
 
-    /*
-    def namespaceJson = mapper.
-        convertValue(["kind": "namespace", "metadata": ["labels": ["affiliation": affiliation]]], JsonNode.class)
-
-    openShiftClient.createOpenShiftCommand(_, _, _, _) >> { new OpenshiftCommand(OperationType.CREATE, it[1]) }
-    openShiftClient.createUpdateRolebindingCommand(_, _) >> {
-      new OpenshiftCommand(OperationType.UPDATE, it[0], null, it[0])
-    }
-    openShiftClient.createUpdateNamespaceCommand(_, _) >> {
-      new OpenshiftCommand(OperationType.UPDATE, namespaceJson, null, namespaceJson)
-    }
-    */
-    //This code is copied from the old now removed DeployServiceFromGitTest
     openShiftClient.performOpenShiftCommand(_, _) >> {
       def cmd = it[1]
       def namespace = it[0]
@@ -61,12 +52,13 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
         def fileName = "$namespace-${name}-${kind}.json"
         def resource = loadResource(fileName)
         new OpenShiftResponse(cmd, mapper.readTree(resource))
-      } catch (Exception e) {
+      } catch (Exception ignored) {
         new OpenShiftResponse(cmd, cmd.payload)
       }
     }
-    //openShiftClient.createOpenShiftDeleteCommands(_, _, _, _) >> []
 
+    openShiftClient.getByLabelSelectors(_, _, _) >> []
+    redeployService.triggerRedeploy(_, _) >> new RedeployService.RedeployResult()
   }
 
   def "Should prepare deploy environment for new project with ttl"() {
@@ -87,6 +79,39 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
       def namespace = deployResult.openShiftResponses.find { it.command.payload.at("/kind").textValue() == "Namespace" }
       namespace != null
       namespace.command.payload.at("/metadata/labels/removeAfter").textValue() == "86400"
+  }
+
+  def "Throw IllegalArgumentException if no applicationId is specified"() {
+    when:
+      deployService.executeDeploy(affiliation, [])
+
+    then:
+      thrown(IllegalArgumentException)
+  }
+
+  @Unroll
+  def "Execute deploy for #env/#name"() {
+    when:
+      def results = deployService.executeDeploy(affiliation, [new ApplicationId(env, name)])
+
+    then:
+      results.success
+      results.auroraDeploymentSpec
+      results.deployId
+      results.openShiftResponses.size() > 0
+
+    where:
+      env           | name
+      'booberdev'   | 'reference'
+      'booberdev'   | 'console'
+      'webseal'     | 'sprocket'
+      'booberdev'   | 'sprocket'
+      'booberdev'   | 'reference-web'
+      'booberdev'   | 'aos-simple'
+      'secrettest'  | 'aos-simple'
+      'release'     | 'aos-simple'
+      'mounts'      | 'aos-simple'
+      'secretmount' | 'aos-simple'
   }
 
 }
