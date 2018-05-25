@@ -75,12 +75,14 @@ open class GitService(
     val cp = UsernamePasswordCredentialsProvider(username, password)
 
     @JvmOverloads
-    fun checkoutRepository(repositoryName: String, checkoutFolder: String = repositoryName, deleteUnpushedCommits: Boolean = true, refName: String = "master"): Git {
+    fun checkoutRepository(repositoryName: String, checkoutFolder: String = repositoryName, deleteUnpushedCommits: Boolean = true, refName: String): Git {
         val repoPath = File(File("$checkoutPath/$checkoutFolder").absoluteFile.absolutePath)
         val git: Git? = repoPath.takeIf(File::exists).let {
             try {
                 updateRepository(repoPath, deleteUnpushedCommits, refName)
-            } catch (e: Exception) {
+            } catch (e: IllegalArgumentException) {
+                throw e
+            } catch (e: IllegalStateException) {
                 logger.warn("Local repository update failed. Cause: ${e.message}.")
                 repoPath.deleteRecursively()
                 null
@@ -94,6 +96,7 @@ open class GitService(
         val ref = git.repository.findRef(refName)
 
         return ref ?: git.repository.findRef("origin/$refName")
+        ?: throw IllegalArgumentException("No git reference with refName=$refName")
     }
 
     private fun updateRepository(repoPath: File, failOnUnpushedCommits: Boolean, refName: String): Git {

@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigResource.Companion.fromAuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.utils.logger
 import org.springframework.http.HttpHeaders
@@ -58,12 +59,16 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
 
     @GetMapping()
     fun get(@PathVariable name: String): Response {
-        return createAuroraConfigResponse(auroraConfigService.findAuroraConfig(name))
+        val ref = AuroraConfigRef(name, getRefNameFromRequest())
+        return createAuroraConfigResponse(auroraConfigService.findAuroraConfig(ref))
     }
 
     @GetMapping("/filenames")
-    fun getFilenames(@PathVariable name: String, @RequestHeader(name = "Ref-Name", defaultValue = "master",  required = false) refName: String): Response {
-        return Response(items = auroraConfigService.findAuroraConfigFileNames(name, refName))
+    fun getFilenames(
+        @PathVariable name: String
+    ): Response {
+        val ref = AuroraConfigRef(name, getRefNameFromRequest())
+        return Response(items = auroraConfigService.findAuroraConfigFileNames(ref))
     }
 
     @PutMapping("/validate")
@@ -81,8 +86,9 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
     @GetMapping("/**")
     fun getAuroraConfigFile(@PathVariable name: String, request: HttpServletRequest): ResponseEntity<Response> {
 
+        val ref = AuroraConfigRef(name, getRefNameFromRequest())
         val fileName = extractFileName(name, request)
-        val auroraConfigFile = auroraConfigService.findAuroraConfigFile(name, fileName)
+        val auroraConfigFile = auroraConfigService.findAuroraConfigFile(ref, fileName)
             ?: throw NoSuchResourceException("No such file $fileName in AuroraConfig $name")
         return createAuroraConfigFileResponse(auroraConfigFile)
     }
@@ -95,8 +101,9 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
         request: HttpServletRequest
     ): ResponseEntity<Response> {
 
+        val ref = AuroraConfigRef(name, getRefNameFromRequest())
         val fileName = extractFileName(name, request)
-        val auroraConfig: AuroraConfig = auroraConfigService.updateAuroraConfigFile(name, fileName, payload.content, clearQuotes(ifMatchHeader))
+        val auroraConfig: AuroraConfig = auroraConfigService.updateAuroraConfigFile(ref, fileName, payload.content, clearQuotes(ifMatchHeader))
         val auroraConfigFile = auroraConfig.findFile(fileName)!!
         return createAuroraConfigFileResponse(auroraConfigFile)
     }
@@ -108,9 +115,10 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
         @RequestBody @Valid payload: ContentPayload
     ): ResponseEntity<Response> {
 
+        val ref = AuroraConfigRef(name, getRefNameFromRequest())
         val fileName = extractFileName(name, request)
 
-        val auroraConfig = auroraConfigService.patchAuroraConfigFile(name, fileName, payload.content)
+        val auroraConfig = auroraConfigService.patchAuroraConfigFile(ref, fileName, payload.content)
         val auroraConfigFile = auroraConfig.findFile(fileName)!!
         return createAuroraConfigFileResponse(auroraConfigFile)
     }
@@ -122,7 +130,7 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
 
     private fun createAuroraConfigFileResponse(auroraConfigFile: AuroraConfigFile): ResponseEntity<Response> {
         val configFiles = auroraConfigFile
-            .let { listOf(AuroraConfigFileResource(it.name, it.contents.toString())) }
+            .let { listOf(AuroraConfigFileResource(it.name, it.contents)) }
 
         val response = Response(items = configFiles)
         val headers = HttpHeaders().apply { eTag = "\"${auroraConfigFile.version}\"" }

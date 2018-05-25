@@ -12,9 +12,9 @@ class DeployLogService(@TargetDomain(AURORA_CONFIG) val gitService: GitService, 
 
     private val FAILED_PREFIX = "FAILED"
 
-    fun markRelease(auroraConfigName: String, deployResult: List<AuroraDeployResult>) {
+    fun markRelease(ref: AuroraConfigRef, deployResult: List<AuroraDeployResult>) {
 
-        val repo = gitService.checkoutRepository(auroraConfigName)
+        val repo = gitService.checkoutRepository(ref.name, refName = ref.refName)
         val refs = deployResult
             .filter { !it.ignored }
             .map {
@@ -32,8 +32,8 @@ class DeployLogService(@TargetDomain(AURORA_CONFIG) val gitService: GitService, 
         return result.copy(openShiftResponses = filteredResponses)
     }
 
-    fun deployHistory(affiliation: String): List<DeployHistory> {
-        val repo = gitService.checkoutRepository(affiliation)
+    fun deployHistory(ref: AuroraConfigRef): List<DeployHistory> {
+        val repo = gitService.checkoutRepository(ref.name, refName = ref.refName)
         val res = gitService.getTagHistory(repo)
             .filter { it.tagName.startsWith(DEPLOY_PREFIX) }
             .map {
@@ -44,8 +44,8 @@ class DeployLogService(@TargetDomain(AURORA_CONFIG) val gitService: GitService, 
         return res
     }
 
-    fun findDeployResultById(auroraConfigId: String, deployId: String): DeployHistory? {
-        val repo = gitService.checkoutRepository(auroraConfigId)
+    fun findDeployResultById(ref: AuroraConfigRef, deployId: String): DeployHistory? {
+        val repo = gitService.checkoutRepository(ref.name, refName = ref.refName)
         val res: DeployHistory? = gitService.getTagHistory(repo)
             .firstOrNull { it.tagName.endsWith(deployId) }
             ?.let {

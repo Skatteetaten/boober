@@ -95,15 +95,15 @@ class AuroraDeploymentSpecService(
         logger.info("Boober started with applicationPlatformHandlers ${APPLICATION_PLATFORM_HANDLERS.keys}")
     }
 
-    fun getAuroraDeploymentSpecsForEnvironment(auroraConfigName: String, environment: String): List<AuroraDeploymentSpec> {
-        val auroraConfig = auroraConfigService.findAuroraConfig(auroraConfigName)
+    fun getAuroraDeploymentSpecsForEnvironment(ref: AuroraConfigRef, environment: String): List<AuroraDeploymentSpec> {
+        val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         return auroraConfig.getApplicationIds()
             .filter { it.environment == environment }
             .let { getAuroraDeploymentSpecs(auroraConfig, it) }
     }
 
-    fun getAuroraDeploymentSpecs(auroraConfigName: String, aidStrings: List<String>): List<AuroraDeploymentSpec> {
-        val auroraConfig = auroraConfigService.findAuroraConfig(auroraConfigName)
+    fun getAuroraDeploymentSpecs(ref: AuroraConfigRef, aidStrings: List<String>): List<AuroraDeploymentSpec> {
+        val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         return aidStrings.map(ApplicationId.Companion::fromString)
             .let { getAuroraDeploymentSpecs(auroraConfig, it) }
     }
@@ -112,8 +112,8 @@ class AuroraDeploymentSpecService(
         return applicationIds.map { AuroraDeploymentSpecService.createAuroraDeploymentSpec(auroraConfig, it, listOf()) }
     }
 
-    fun getAuroraDeploymentSpec(auroraConfigName: String, environment: String, application: String): AuroraDeploymentSpec {
-        val auroraConfig = auroraConfigService.findAuroraConfig(auroraConfigName)
+    fun getAuroraDeploymentSpec(ref: AuroraConfigRef, environment: String, application: String): AuroraDeploymentSpec {
+        val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         return AuroraDeploymentSpecService.createAuroraDeploymentSpec(auroraConfig, ApplicationId.aid(environment, application))
     }
 }
