@@ -9,21 +9,9 @@
       "sprocket.sits.no/service.webseal": "test",
       "sprocket.sits.no/service.webseal-roles": "admin dev"
     },
-    "finalizers": [
-
-    ],
-    "name": "tvinn",
-    "ownerReferences": [
-
-    ]
+    "name": "tvinn"
   },
   "spec": {
-    "externalIPs": [
-
-    ],
-    "loadBalancerSourceRanges": [
-
-    ],
     "ports": [
       {
         "name": "http",

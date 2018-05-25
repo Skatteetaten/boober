@@ -1,15 +1,15 @@
 package no.skatteetaten.aurora.boober.service.internal
 
-import com.fkorotkov.kubernetes.containerPort
-import com.fkorotkov.kubernetes.envVar
 import com.fkorotkov.kubernetes.fieldRef
 import com.fkorotkov.kubernetes.httpGet
-import com.fkorotkov.kubernetes.probe
+import com.fkorotkov.kubernetes.newContainerPort
+import com.fkorotkov.kubernetes.newEnvVar
+import com.fkorotkov.kubernetes.newProbe
+import com.fkorotkov.kubernetes.newVolumeMount
 import com.fkorotkov.kubernetes.resources
 import com.fkorotkov.kubernetes.securityContext
 import com.fkorotkov.kubernetes.tcpSocket
 import com.fkorotkov.kubernetes.valueFrom
-import com.fkorotkov.kubernetes.volumeMount
 import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.EnvVarBuilder
 import io.fabric8.kubernetes.api.model.IntOrStringBuilder
@@ -27,7 +27,7 @@ object ContainerGenerator {
 
             name = adcContainer.name
             ports = adcContainer.tcpPorts.map {
-                containerPort {
+                newContainerPort {
                     name = it.key
                     containerPort = it.value
                     protocol = "TCP"
@@ -68,7 +68,8 @@ object ContainerGenerator {
 
     private fun quantity(str: String) = QuantityBuilder().withAmount(str).build()
 
-    private fun fromProbe(it: Probe): io.fabric8.kubernetes.api.model.Probe = probe {
+    private fun fromProbe(it: Probe): io.fabric8.kubernetes.api.model.Probe = newProbe {
+
         tcpSocket {
             port = IntOrStringBuilder().withIntVal(it.port).build()
         }
@@ -83,21 +84,19 @@ object ContainerGenerator {
 
     fun auroraContainer(block: Container.() -> Unit = {}): Container {
         val instance = Container()
-        instance.envFrom = null
-        instance.command = null
         instance.block()
         instance.terminationMessagePath = "/dev/termination-log"
         instance.imagePullPolicy = "IfNotPresent"
         instance.securityContext {
             privileged = false
         }
-        instance.volumeMounts = listOf(volumeMount {
+        instance.volumeMounts = listOf(newVolumeMount {
             name = "application-log-volume"
             mountPath = "/u01/logs"
         }) + instance.volumeMounts
 
         instance.env = listOf(
-            envVar {
+            newEnvVar {
                 name = "POD_NAME"
                 valueFrom {
                     fieldRef {
@@ -106,7 +105,7 @@ object ContainerGenerator {
                     }
                 }
             },
-            envVar {
+            newEnvVar {
                 name = "POD_NAMESPACE"
                 valueFrom {
                     fieldRef {

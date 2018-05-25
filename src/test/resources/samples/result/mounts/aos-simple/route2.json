@@ -15,9 +15,6 @@
     "name": "aos-simple-bar"
   },
   "spec": {
-    "alternateBackends": [
-
-    ],
     "host": "aurora.mounts.utv.paas.skead.no",
     "path": "/bar",
     "to": {

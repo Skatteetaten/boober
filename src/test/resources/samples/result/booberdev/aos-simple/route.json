@@ -15,9 +15,6 @@
     "name": "aos-simple"
   },
   "spec": {
-    "alternateBackends": [
-
-    ],
     "host": "aos-simple-aos-booberdev.utv.paas.skead.no",
     "path": "/foo",
     "to": {

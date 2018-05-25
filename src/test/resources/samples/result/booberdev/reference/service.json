@@ -18,12 +18,6 @@
     "name": "reference"
   },
   "spec": {
-    "externalIPs": [
-
-    ],
-    "loadBalancerSourceRanges": [
-
-    ],
     "ports": [
       {
         "name": "http",

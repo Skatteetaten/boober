@@ -12,9 +12,6 @@
     "name": "reference"
   },
   "spec": {
-    "alternateBackends": [
-
-    ],
     "host": "reference.ao.booberdev.utv.paas.skead.no",
     "to": {
       "kind": "Service",

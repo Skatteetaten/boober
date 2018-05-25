@@ -3,9 +3,10 @@ package no.skatteetaten.aurora.boober.mapper.platform
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.configMap
+import com.fkorotkov.kubernetes.newVolume
+import com.fkorotkov.kubernetes.newVolumeMount
 import com.fkorotkov.kubernetes.persistentVolumeClaim
 import com.fkorotkov.kubernetes.secret
-import com.fkorotkov.kubernetes.volume
 import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.EnvVarBuilder
 import io.fabric8.kubernetes.api.model.Volume
@@ -129,7 +130,7 @@ enum class DeploymentState {
 
 fun List<Mount>?.volumeMount(): List<VolumeMount>? {
     return this?.map {
-        com.fkorotkov.kubernetes.volumeMount {
+        newVolumeMount {
             name = it.normalizeMountName()
             mountPath = it.path
         }
@@ -139,7 +140,7 @@ fun List<Mount>?.volumeMount(): List<VolumeMount>? {
 fun List<Mount>?.podVolumes(dcName: String): List<Volume> {
     return this?.map {
         val volumeName = it.getNamespacedVolumeName(dcName)
-        volume {
+        newVolume {
             name = it.normalizeMountName()
             when (it.type) {
                 ConfigMap -> configMap {

@@ -19,12 +19,6 @@
     "name": "openshift-console-api"
   },
   "spec": {
-    "externalIPs": [
-
-    ],
-    "loadBalancerSourceRanges": [
-
-    ],
     "ports": [
       {
         "name": "http",

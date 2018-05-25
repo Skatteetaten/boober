@@ -19,12 +19,6 @@
     "name": "sprocket"
   },
   "spec": {
-    "externalIPs": [
-
-    ],
-    "loadBalancerSourceRanges": [
-
-    ],
     "ports": [
       {
         "name": "http",

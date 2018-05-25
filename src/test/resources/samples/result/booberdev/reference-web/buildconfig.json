@@ -55,10 +55,7 @@
           "kind": "ImageStreamTag",
           "name": "architect:1",
           "namespace": "openshift"
-        },
-        "secrets": [
-
-        ]
+        }
       },
       "type": "Custom"
     },

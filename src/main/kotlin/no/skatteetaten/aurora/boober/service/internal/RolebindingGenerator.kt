@@ -1,8 +1,8 @@
 package no.skatteetaten.aurora.boober.service.internal
 
-import com.fkorotkov.kubernetes.objectReference
+import com.fkorotkov.kubernetes.newObjectReference
 import com.fkorotkov.openshift.metadata
-import com.fkorotkov.openshift.roleBinding
+import com.fkorotkov.openshift.newRoleBinding
 import com.fkorotkov.openshift.roleRef
 import io.fabric8.kubernetes.api.model.ObjectReference
 import io.fabric8.openshift.api.model.RoleBinding
@@ -12,7 +12,7 @@ object RolebindingGenerator {
 
     fun create(rolebindingName: String, permission: Permission): RoleBinding {
 
-        return roleBinding {
+        return newRoleBinding {
             apiVersion = "v1"
             metadata {
                 name = rolebindingName
@@ -26,13 +26,13 @@ object RolebindingGenerator {
             }
 
             val userRefeerences: List<ObjectReference> = permission.users?.map {
-                objectReference {
+                newObjectReference {
                     kind = "User"
                     name = it
                 }
             } ?: emptyList()
             val groupRefeerences = permission.groups?.map {
-                objectReference {
+                newObjectReference {
                     kind = "Group"
                     name = it
                 }
