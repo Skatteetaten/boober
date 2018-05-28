@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraVersioningException
 import no.skatteetaten.aurora.boober.model.ErrorDetail
 import no.skatteetaten.aurora.boober.model.PreconditionFailureException
+import no.skatteetaten.aurora.boober.service.AuroraConfigServiceException
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.ServiceException
@@ -70,6 +71,7 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
             is AuroraConfigException -> e.errors
             is AuroraVersioningException -> e.errors
             is MultiApplicationValidationException -> e.toValidationErrors()
+            is AuroraConfigServiceException -> listOf(ErrorDetail(message = e.cause?.message ?: "Unknown"))
             else -> listOf(ErrorDetail(message = e.message ?: "Unknown"))
         }
 

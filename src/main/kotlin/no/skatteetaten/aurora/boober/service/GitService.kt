@@ -80,6 +80,8 @@ open class GitService(
         val git: Git? = repoPath.takeIf(File::exists).let {
             try {
                 updateRepository(repoPath, deleteUnpushedCommits, refName)
+            } catch (e: GitReferenceException) {
+                throw e
             } catch (e: Exception) {
                 logger.warn("Local repository update failed. Cause: ${e.message}.")
                 repoPath.deleteRecursively()
@@ -87,14 +89,7 @@ open class GitService(
             }
         }
 
-        return git ?: cloneRepository(repositoryName, repoPath, refName)
-    }
-
-    private fun findRef(git: Git, refName: String): Ref {
-        val ref = git.repository.findRef(refName)
-
-        return ref ?: git.repository.findRef("origin/$refName")
-        ?: throw IllegalArgumentException("No git reference with refName=$refName")
+        return git ?: cloneAndCheckout(repositoryName, repoPath, refName, deleteUnpushedCommits)
     }
 
     private fun updateRepository(repoPath: File, failOnUnpushedCommits: Boolean, refName: String): Git {
@@ -138,7 +133,19 @@ open class GitService(
         return git
     }
 
-    private fun cloneRepository(repositoryName: String, repoPath: File, refName: String): Git {
+    private fun findRef(git: Git, refName: String): Ref {
+        val ref = git.repository.findRef(refName)
+
+        return ref ?: git.repository.findRef("origin/$refName")
+        ?: throw GitReferenceException("No git reference with refName=$refName")
+    }
+
+    private fun cloneAndCheckout(repositoryName: String, repoPath: File, refName: String, deleteUnpushedCommits: Boolean): Git {
+        cloneRepository(repositoryName, repoPath)
+        return updateRepository(repoPath, deleteUnpushedCommits, refName)
+    }
+
+    private fun cloneRepository(repositoryName: String, repoPath: File): Git {
         return metrics.withMetrics("git_checkout", {
             val dir = repoPath.apply { mkdirs() }
             val uri = url.format(repositoryName)
@@ -148,7 +155,6 @@ open class GitService(
                     .setURI(uri)
                     .setCredentialsProvider(cp)
                     .setDirectory(dir)
-                    .setBranch(refName)
                     .call()
             } catch (ex: Exception) {
                 dir.deleteRecursively()
