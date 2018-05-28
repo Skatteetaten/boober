@@ -8,6 +8,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Permission
 import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeployResult
 import no.skatteetaten.aurora.boober.service.DeployService
 
@@ -16,8 +17,8 @@ class DeployBase extends AbstractContractBase {
   void setup() {
     loadJsonResponses(this)
     def deployService = Mock(DeployService) {
-      executeDeploy(_ as String, _ as List, _ as List, _ as Boolean) >> {
-        arguments -> (arguments[0] == 'invalid') ? [createAuroraDeployResult(false)] : [createAuroraDeployResult(true)]
+      executeDeploy(_ as AuroraConfigRef, _ as List, _ as List, _ as Boolean) >> {
+        arguments -> (arguments[0].name == 'invalid') ? [createAuroraDeployResult(false)] : [createAuroraDeployResult(true)]
       }
     }
     DeployControllerV1 controller = new DeployControllerV1(deployService)
@@ -35,7 +36,7 @@ class DeployBase extends AbstractContractBase {
     def spec = new AuroraDeploymentSpec(new ApplicationId('', ''), '', TemplateType.development, '', [:], '', '',
         new AuroraDeployEnvironment('', '',
             new Permissions(new Permission(Collections.emptySet(), Collections.emptySet()), null), null),
-        null, null, null, null, null, null, null, new AuroraConfigFile("", "{}", false))
+        null, null, null, null, null, null, null, new AuroraConfigFile("", "{}", false), "master")
     return new AuroraDeployResult(spec, UUID.randomUUID().toString().substring(0,7), [], success, false, reason)
   }
 }

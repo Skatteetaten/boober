@@ -8,6 +8,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.Permission
 import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService
 
 class AuroradeploymentspecBase extends AbstractContractBase {
@@ -16,9 +17,9 @@ class AuroradeploymentspecBase extends AbstractContractBase {
     loadJsonResponses(this)
     def auroraDeploymentSpec = createAuroraDeploymentSpec()
     def auroraDeploymentSpecService = Mock(AuroraDeploymentSpecService) {
-      getAuroraDeploymentSpecs(_ as String, _ as List) >> [auroraDeploymentSpec]
-      getAuroraDeploymentSpec(_ as String, _ as String, _ as String) >> auroraDeploymentSpec
-      getAuroraDeploymentSpecsForEnvironment(_ as String, _ as String) >> [auroraDeploymentSpec]
+      getAuroraDeploymentSpecs(_ as AuroraConfigRef, _ as List) >> [auroraDeploymentSpec]
+      getAuroraDeploymentSpec(_ as AuroraConfigRef, _ as String, _ as String) >> auroraDeploymentSpec
+      getAuroraDeploymentSpecsForEnvironment(_ as AuroraConfigRef, _ as String) >> [auroraDeploymentSpec]
     }
     AuroraDeploymentSpecControllerV1 controller = new AuroraDeploymentSpecControllerV1(auroraDeploymentSpecService)
     setupMockMvc(controller)
@@ -32,6 +33,6 @@ class AuroradeploymentspecBase extends AbstractContractBase {
         new Permissions(new Permission(Collections.emptySet(), Collections.emptySet()), null), null)
     new AuroraDeploymentSpec(aid, '', TemplateType.development, '', deploymentSpecs,
         '', '', env,
-        null, null, null, null, null, null, null, new AuroraConfigFile("", "", false))
+        null, null, null, null, null, null, null, new AuroraConfigFile("", "", false), "master")
   }
 }
