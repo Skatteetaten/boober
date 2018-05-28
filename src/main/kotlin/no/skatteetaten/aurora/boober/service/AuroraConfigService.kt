@@ -23,8 +23,8 @@ import org.springframework.util.StopWatch
 import java.io.File
 
 class AuroraConfigWithOverrides(
-        var auroraConfig: AuroraConfig,
-        val overrideFiles: List<AuroraConfigFile> = listOf()
+    var auroraConfig: AuroraConfig,
+    val overrideFiles: List<AuroraConfigFile> = listOf()
 )
 
 @Service
@@ -33,7 +33,6 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
                           val deploymentSpecValidator: AuroraDeploymentSpecValidator,
                           @Value("\${openshift.cluster}") val cluster: String,
                           @Value("\${boober.validationPoolSize:6}") val validationPoolSize: Int) {
-
 
     val logger: Logger = getLogger(AuroraConfigService::class.java)
     val yamlMapper = jacksonYamlObjectMapper()
@@ -62,7 +61,7 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
 
         val auroraConfig = findAuroraConfig(name)
         return auroraConfig.findFile(fileName)
-                ?: throw IllegalArgumentException("No such file $fileName in AuroraConfig $name")
+            ?: throw IllegalArgumentException("No such file $fileName in AuroraConfig $name")
     }
 
     fun save(auroraConfig: AuroraConfig): AuroraConfig {
@@ -139,10 +138,10 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
 
     @JvmOverloads
     fun createValidatedAuroraDeploymentSpecs(
-            auroraConfigName: String,
-            applicationIds: List<ApplicationId>,
-            overrideFiles: List<AuroraConfigFile> = listOf(),
-            resourceValidation: Boolean = true): List<AuroraDeploymentSpec> {
+        auroraConfigName: String,
+        applicationIds: List<ApplicationId>,
+        overrideFiles: List<AuroraConfigFile> = listOf(),
+        resourceValidation: Boolean = true): List<AuroraDeploymentSpec> {
 
         val auroraConfig = findAuroraConfig(auroraConfigName)
         return createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig, overrideFiles), applicationIds)
@@ -184,7 +183,7 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
                     }
                 }
             }
-                    .map { it.await() }
+                .map { it.await() }
         }.onErrorThrow(::MultiApplicationValidationException)
         stopWatch.stop()
         logger.debug("Validated AuroraConfig ${auroraConfigWithOverrides.auroraConfig.affiliation} with ${applicationIds.size} applications in ${stopWatch.totalTimeMillis} millis")

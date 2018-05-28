@@ -39,18 +39,18 @@ object ImageStreamGenerator {
             spec {
                 dockerImageRepository = "$dockerRegistry/$dockerImagePath"
                 tags = listOf(
-                        tagReference {
-                            name = "default"
-                            from {
-                                kind = "DockerImage"
-                                name = "$dockerRegistry/$dockerImagePath:$dockerTag"
-                            }
-                            if (!AuroraVersion.isFullAuroraVersion(dockerTag)) {
-                                importPolicy {
-                                    scheduled = true
-                                }
+                    tagReference {
+                        name = "default"
+                        from {
+                            kind = "DockerImage"
+                            name = "$dockerRegistry/$dockerImagePath:$dockerTag"
+                        }
+                        if (!AuroraVersion.isFullAuroraVersion(dockerTag)) {
+                            importPolicy {
+                                scheduled = true
                             }
                         }
+                    }
                 )
             }
         }

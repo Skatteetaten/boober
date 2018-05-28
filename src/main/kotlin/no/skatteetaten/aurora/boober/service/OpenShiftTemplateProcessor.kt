@@ -12,14 +12,21 @@ import org.springframework.stereotype.Service
 
 @Service
 class OpenShiftTemplateProcessor(
-        val userDetailsProvider: UserDetailsProvider,
-        val openShiftClient: OpenShiftResourceClient,
-        val mapper: ObjectMapper) {
+    val userDetailsProvider: UserDetailsProvider,
+    val openShiftClient: OpenShiftResourceClient,
+    val mapper: ObjectMapper) {
 
+    fun generateObjects(template: ObjectNode,
+                        parameters: Map<String, String>?,
+                        auroraDeploymentSpec: AuroraDeploymentSpec,
+                        version: String?,
+                        replicas: Int?): List<JsonNode> {
 
-    fun generateObjects(template: ObjectNode, parameters: Map<String, String>?, aac: AuroraDeploymentSpec): List<JsonNode> {
-
-        val adcParameters = parameters ?: emptyMap()
+        val adcParameters = (parameters ?: emptyMap()).toMutableMap()
+        replicas?.let {
+            adcParameters.put("REPLICAS", it.toString())
+        }
+        adcParameters.put("NAME", auroraDeploymentSpec.name)
         val adcParameterKeys = adcParameters.keys
 
         if (template.has("parameters")) {
@@ -27,11 +34,11 @@ class OpenShiftTemplateProcessor(
 
             //mutation in progress. stay away.
             parameters
-                    .filter { adcParameterKeys.contains(it["name"].textValue()) }
-                    .forEach {
-                        val node = it as ObjectNode
-                        node.put("value", adcParameters[it["name"].textValue()] as String)
-                    }
+                .filter { adcParameterKeys.contains(it["name"].textValue()) }
+                .forEach {
+                    val node = it as ObjectNode
+                    node.put("value", adcParameters[it["name"].textValue()] as String)
+                }
         }
 
         if (!template.has("labels")) {
@@ -41,22 +48,36 @@ class OpenShiftTemplateProcessor(
         val labels = template["labels"] as ObjectNode
 
         if (!labels.has("affiliation")) {
-            labels.put("affiliation", aac.environment.affiliation)
+            labels.put("affiliation", auroraDeploymentSpec.environment.affiliation)
+        }
+
+        if (!labels.has("template")) {
+            val template= auroraDeploymentSpec.template?.template ?: "local"
+            labels.put("template", template)
         }
 
         if (!labels.has("app")) {
-            labels.put("app", aac.name)
+            labels.put("app", auroraDeploymentSpec.name)
         }
+
 
         labels.put("updatedBy", userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"))
 
+        if (version != null) {
+            template["parameters"]
+                .filter { it["name"].asText() == "VERSION" }
+                .map {
+                    (it as ObjectNode).put("value", version)
+                    labels.put("updateInBoober", "true")
+                }
+        }
 
-        val result = openShiftClient.post("processedtemplate", namespace = aac.environment.namespace, payload = template)
+        val result = openShiftClient.post("processedtemplate", namespace = auroraDeploymentSpec.environment.namespace, payload = template)
 
         return result.body["objects"].asSequence().toList()
     }
 
-    fun validateTemplateParameters(templateJson: JsonNode, parameters: Map<String, String>) : List<String> {
+    fun validateTemplateParameters(templateJson: JsonNode, parameters: Map<String, String>): List<String> {
 
         val templateParameters = templateJson[PARAMETERS_ATTRIBUTE] as ArrayNode
 

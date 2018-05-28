@@ -5,15 +5,14 @@ import org.encryptor4j.Encryptor
 import org.encryptor4j.factory.KeyFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.nio.charset.Charset
 import java.security.Security
-import java.util.*
+import java.util.Base64
 
 @Service
 class EncryptionService(
-        @Value("\${boober.encrypt.key}") val key: String,
-        val keyFactory: KeyFactory,
-        val metrics: AuroraMetrics) {
+    @Value("\${boober.encrypt.key}") val key: String,
+    val keyFactory: KeyFactory,
+    val metrics: AuroraMetrics) {
 
     // Version 1 of the file format always contained base64 content (after the file was decrypted).
     val VERSION1 = "Boober:1"

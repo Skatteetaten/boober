@@ -21,5 +21,4 @@ class LambdaOutputStream(val fn: (String) -> Unit) : OutputStream() {
         fn.invoke(mem)
         mem = ""
     }
-
 }

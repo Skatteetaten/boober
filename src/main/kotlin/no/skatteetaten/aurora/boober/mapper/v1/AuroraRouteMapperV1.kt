@@ -2,43 +2,44 @@ package no.skatteetaten.aurora.boober.mapper.v1
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraRoute
 import no.skatteetaten.aurora.boober.model.Route
+import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.startsWith
 
-class AuroraRouteMapperV1(val applicationId: ApplicationId, val applicationFiles: List<AuroraConfigFile>) {
+class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>, val env: AuroraDeployEnvironment, val name: String) {
 
-
-    val handlers = findRouteHandlers() +
-            AuroraConfigFieldHandler("route", defaultValue = false)
+    val handlers = findRouteHandlers() + listOf(
+        AuroraConfigFieldHandler("route", defaultValue = false),
+        AuroraConfigFieldHandler("routeDefaults/host", defaultValue = "@name@-@affiliation@-@env@")) +
+        findRouteAnnotationHandlers("routeDefaults")
 
     fun route(auroraConfigFields: AuroraConfigFields): AuroraRoute {
         return AuroraRoute(
-                route = getRoute(auroraConfigFields, auroraConfigFields.extract("name"))
+            route = getRoute(auroraConfigFields)
         )
     }
 
-    fun getRoute(auroraConfigFields: AuroraConfigFields, name: String): List<Route> {
+    fun getRoute(auroraConfigFields: AuroraConfigFields): List<Route> {
 
+        val simplified = auroraConfigFields.isSimplifiedConfig("route")
 
-        val simplified=auroraConfigFields.isSimplifiedConfig("route")
-        if (simplified && auroraConfigFields.extract("route")) {
-            return listOf(Route(name = name))
+        if (simplified) {
+            if (auroraConfigFields.extract("route")) {
+                return listOf(Route(objectName = name, host = auroraConfigFields.extract("routeDefaults/host")))
+            }
+            return listOf()
         }
         val routes = applicationFiles.findSubKeys("route")
 
         return routes.map {
-            val routeName = if (!it.startsWith(name)) {
-                "$name-$it"
-            } else {
-                it
-            }
-            Route(routeName,
-                    auroraConfigFields.extractOrNull("route/$it/host"),
-                    auroraConfigFields.extractOrNull("route/$it/path"),
-                    auroraConfigFields.getRouteAnnotations("route/$it/annotations", handlers))
+            Route(it.ensureStartWith(name, "-"),
+                auroraConfigFields.extractIfExistsOrNull("route/$it/host")
+                    ?: auroraConfigFields.extract("routeDefaults/host"),
+                auroraConfigFields.extractOrNull("route/$it/path"),
+                auroraConfigFields.getRouteAnnotations("route/$it/annotations", handlers))
         }.toList()
     }
 
@@ -48,13 +49,13 @@ class AuroraRouteMapperV1(val applicationId: ApplicationId, val applicationFiles
 
         return routeHandlers.flatMap { routeName ->
             listOf(
-                    AuroraConfigFieldHandler("route/$routeName/host"),
-                    AuroraConfigFieldHandler("route/$routeName/path", validator = { it?.startsWith("/", "Path must start with /") })
-            ) + findRouteAnnotaionHandlers("route/$routeName")
+                AuroraConfigFieldHandler("route/$routeName/host"),
+                AuroraConfigFieldHandler("route/$routeName/path", validator = { it?.startsWith("/", "Path must start with /") })
+            ) + findRouteAnnotationHandlers("route/$routeName")
         }
     }
 
-    fun findRouteAnnotaionHandlers(prefix: String): List<AuroraConfigFieldHandler> {
+    fun findRouteAnnotationHandlers(prefix: String): List<AuroraConfigFieldHandler> {
 
         return applicationFiles.flatMap { ac ->
             ac.asJsonNode.at("/$prefix/annotations")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
@@ -62,6 +63,4 @@ class AuroraRouteMapperV1(val applicationId: ApplicationId, val applicationFiles
             AuroraConfigFieldHandler("$prefix/annotations/$key")
         }
     }
-
-
 }

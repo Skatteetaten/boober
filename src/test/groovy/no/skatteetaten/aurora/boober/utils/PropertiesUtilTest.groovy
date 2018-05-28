@@ -22,14 +22,12 @@ something=sameting
       !filteredProps.stringPropertyNames().containsAll(['foo', 'something'])
   }
 
-  def "Remove correct elements when key list contain unknown keys"() {
+  def "Throw IllegalArgumentException when filtering with a key that is not available in properties"() {
     when:
-      byte[] filteredBytes = PropertiesUtilKt.filterProperties(props, ['username', 'unknown'], [:])
+      PropertiesUtilKt.filterProperties(props, ['username', 'unknown'], [:])
 
     then:
-      Properties filteredProps = loadProperties(filteredBytes)
-      filteredProps.size() == 1
-      filteredProps.stringPropertyNames()[0] == 'username'
+      thrown(IllegalArgumentException)
   }
 
   def "Replace filtered key mappings"() {

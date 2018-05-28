@@ -1,10 +1,7 @@
 package no.skatteetaten.aurora.boober.service.internal
 
-import com.fkorotkov.kubernetes.configMap
 import com.fkorotkov.kubernetes.emptyDir
 import com.fkorotkov.kubernetes.metadata
-import com.fkorotkov.kubernetes.persistentVolumeClaim
-import com.fkorotkov.kubernetes.secret
 import com.fkorotkov.kubernetes.spec
 import com.fkorotkov.kubernetes.volume
 import com.fkorotkov.openshift.deploymentConfig
@@ -21,9 +18,7 @@ import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.platform.AuroraDeployment
-import no.skatteetaten.aurora.boober.model.MountType.ConfigMap
-import no.skatteetaten.aurora.boober.model.MountType.PVC
-import no.skatteetaten.aurora.boober.model.MountType.Secret
+import no.skatteetaten.aurora.boober.mapper.platform.podVolumes
 import no.skatteetaten.aurora.boober.utils.Instants.now
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 
@@ -63,20 +58,20 @@ object DeploymentConfigGenerator {
                     }
                 }
                 triggers = listOf(
-                        deploymentTriggerPolicy {
-                            type = "ImageChange"
-                            imageChangeParams {
-                                automatic = true
-                                containerNames = auroraDeployment.containers
-                                        .filter { it.shouldHaveImageChange }
-                                        .map { it.name }
+                    deploymentTriggerPolicy {
+                        type = "ImageChange"
+                        imageChangeParams {
+                            automatic = true
+                            containerNames = auroraDeployment.containers
+                                .filter { it.shouldHaveImageChange }
+                                .map { it.name }
 
-                                from {
-                                    name = "${auroraDeployment.name}:${auroraDeployment.tag}"
-                                    kind = "ImageStreamTag"
-                                }
+                            from {
+                                name = "${auroraDeployment.name}:${auroraDeployment.tag}"
+                                kind = "ImageStreamTag"
                             }
                         }
+                    }
 
                 )
                 replicas = auroraDeployment.replicas
@@ -89,25 +84,7 @@ object DeploymentConfigGenerator {
                     }
 
                     spec {
-                        volumes = auroraDeployment.mounts?.map {
-                            val volumeName = it.getNamespacedVolumeName(auroraDeployment.name)
-                            volume {
-                                name = it.normalizeMountName()
-                                when (it.type) {
-                                    ConfigMap -> configMap {
-                                        name = volumeName
-                                        items = null
-                                    }
-                                    Secret -> secret {
-                                        secretName = volumeName
-                                        items = null
-                                    }
-                                    PVC -> persistentVolumeClaim {
-                                        claimName = volumeName
-                                    }
-                                }
-                            }
-                        } ?: emptyList()
+                        volumes = auroraDeployment.mounts.podVolumes(auroraDeployment.name)
                         volumes = volumes + volume {
                             name = "application-log-volume"
                             emptyDir()

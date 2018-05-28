@@ -10,15 +10,14 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.core.env.Environment
 
-
 @Configuration
 class OpenShiftResourceClientConfig(
-        @Value("\${openshift.url}") val baseUrl: String,
-        val openShiftRequestHandler: OpenShiftRequestHandler,
-        val userDetailsTokenProvider: UserDetailsTokenProvider,
-        val serviceAccountTokenProvider: ServiceAccountTokenProvider,
-        val localKubeConfigTokenProvider: LocalKubeConfigTokenProvider,
-        val environment: Environment
+    @Value("\${openshift.url}") val baseUrl: String,
+    val openShiftRequestHandler: OpenShiftRequestHandler,
+    val userDetailsTokenProvider: UserDetailsTokenProvider,
+    val serviceAccountTokenProvider: ServiceAccountTokenProvider,
+    val localKubeConfigTokenProvider: LocalKubeConfigTokenProvider,
+    val environment: Environment
 ) {
 
     enum class TokenSource {
@@ -34,8 +33,7 @@ class OpenShiftResourceClientConfig(
     @Bean
     @ClientType(TokenSource.API_USER)
     @Primary
-    fun createUserDetailsOpenShiftResourceClient(): OpenShiftResourceClient
-            = OpenShiftResourceClient(baseUrl, userDetailsTokenProvider, openShiftRequestHandler)
+    fun createUserDetailsOpenShiftResourceClient(): OpenShiftResourceClient = OpenShiftResourceClient(baseUrl, userDetailsTokenProvider, openShiftRequestHandler)
 
     @Bean
     @ClientType(TokenSource.SERVICE_ACCOUNT)

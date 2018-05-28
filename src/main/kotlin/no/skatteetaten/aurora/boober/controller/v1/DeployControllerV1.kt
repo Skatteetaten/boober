@@ -18,12 +18,12 @@ class DeployControllerV1(val deployService: DeployService) {
     fun apply(@PathVariable affiliation: String, @RequestBody payload: ApplyPayload): Response {
 
         val auroraDeployResults: List<AuroraDeployResult> = deployService.executeDeploy(affiliation,
-                payload.applicationIds,
-                payload.overridesToAuroraConfigFiles(),
-                payload.deploy)
+            payload.applicationIds,
+            payload.overridesToAuroraConfigFiles(),
+            payload.deploy)
 
         return auroraDeployResults.find { !it.success }
-                ?.let { Response(items = auroraDeployResults, success = false, message = it.reason ?: "Deploy failed") }
-                ?: Response(items = auroraDeployResults)
+            ?.let { Response(items = auroraDeployResults, success = false, message = it.reason ?: "Deploy failed") }
+            ?: Response(items = auroraDeployResults)
     }
 }

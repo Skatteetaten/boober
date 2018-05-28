@@ -1,4 +1,8 @@
 {
+  "applicationId": {
+    "source": "static",
+    "value": "utv/webleveranse"
+  },
   "schemaVersion": {
     "source": "about.json",
     "value": "v1"
@@ -14,6 +18,10 @@
   "affiliation": {
     "source": "about.json",
     "value": "aos"
+  },
+  "segment": {
+    "source": "about.json",
+    "value": "aurora"
   },
   "cluster": {
     "source": "utv/about.json",
@@ -73,6 +81,10 @@
       "value": 180
     }
   },
+  "webseal": {
+    "source": "default",
+    "value": false
+  },
   "artifactId": {
     "source": "webleveranse.json",
     "value": "openshift-referanse-react"
@@ -131,10 +143,6 @@
     "source": "default",
     "value": false
   },
-  "webseal": {
-    "source": "default",
-    "value": false
-  },
   "debug": {
     "source": "default",
     "value": false
@@ -147,9 +155,19 @@
     "source": "default",
     "value": true
   },
+  "toxiproxy": {
+    "source": "default",
+    "value": false
+  },
   "route": {
     "source": "webleveranse.json",
     "value": true
+  },
+  "routeDefaults": {
+    "host": {
+      "source": "default",
+      "value": "@name@-@affiliation@-@env@"
+    }
   },
   "extraTags": {
     "source": "default",

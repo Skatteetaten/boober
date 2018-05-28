@@ -117,7 +117,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
     then:
       def e = thrown(AuroraDeploymentSpecValidationException)
       e.message ==
-          "Required template parameters [FEED_NAME, DATABASE] not set. Template does not contain parameter(s) [FOO]"
+          "Required template parameters [FEED_NAME, DB_NAME, DOMAIN_NAME] not set. Template does not contain parameter(s) [FOO]"
   }
 
   def "Fails when template does not contain required fields"() {
@@ -137,7 +137,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
 
     then:
       def e = thrown(AuroraDeploymentSpecValidationException)
-      e.message == "Required template parameters [FEED_NAME, DATABASE] not set"
+      e.message == "Required template parameters [FEED_NAME, DB_NAME, DOMAIN_NAME] not set"
   }
 
   def "Fails when vault does not exist"() {

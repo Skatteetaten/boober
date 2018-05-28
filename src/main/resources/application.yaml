@@ -6,7 +6,8 @@ info:
 
 openshift:
     cluster: utv
-    url: https://${openshift.cluster}-master.paas.skead.no:8443
+    port: 8443
+    url: https://${openshift.cluster}-master.paas.skead.no:${openshift.port}
 
 spring:
     profiles:
@@ -34,6 +35,8 @@ boober:
         registry: "docker-registry.aurora.sits.no:5000"
     openshift:
         tokenLocation: /var/run/secrets/kubernetes.io/serviceaccount/token
+    route:
+        suffix: ".${openshift.cluster}.paas.skead.no"
 
 aurora:
     token:
@@ -58,9 +61,10 @@ spring:
 
 openshift:
     cluster: qa
+    port: 8443
 
 boober:
-    dbh: http://dbh-aurora.qa.paas.skead.no
+    dbh: http://dbh-aurora.${openshift.cluster}.paas.skead.no
     openshift:
         tokenLocation: /opt/boober
     encrypt:

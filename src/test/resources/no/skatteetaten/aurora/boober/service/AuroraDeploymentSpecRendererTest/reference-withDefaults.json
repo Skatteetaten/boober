@@ -1,4 +1,8 @@
 {
+  "applicationId": {
+    "source": "static",
+    "value": "utv/reference"
+  },
   "schemaVersion": {
     "source": "about.json",
     "value": "v1"
@@ -14,6 +18,10 @@
   "affiliation": {
     "source": "about.json",
     "value": "aos"
+  },
+  "segment": {
+    "source": "about.json",
+    "value": "aurora"
   },
   "cluster": {
     "source": "utv/about.json",
@@ -75,6 +83,10 @@
       "value": 180
     }
   },
+  "webseal": {
+    "source": "default",
+    "value": false
+  },
   "artifactId": {
     "source": "fileName",
     "value": "reference"
@@ -133,10 +145,6 @@
     "source": "default",
     "value": false
   },
-  "webseal": {
-    "source": "default",
-    "value": false
-  },
   "debug": {
     "source": "default",
     "value": false
@@ -149,8 +157,18 @@
     "source": "default",
     "value": true
   },
+  "toxiproxy": {
+    "source": "default",
+    "value": false
+  },
   "route": {
     "source": "reference.json",
     "value": true
+  },
+  "routeDefaults": {
+    "host": {
+      "source": "default",
+      "value": "@name@-@affiliation@-@env@"
+    }
   }
 }

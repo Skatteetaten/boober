@@ -11,6 +11,7 @@
       "app": "aos-simple",
       "updatedBy": "hero",
       "affiliation": "aos",
+      "updateInBoober": "true",
       "booberDeployId": "123",
       "name": "aos-simple",
       "deployTag": "1.0.3-SNAPSHOT"
@@ -38,6 +39,7 @@
           "app": "aos-simple",
           "updatedBy": "hero",
           "affiliation": "aos",
+          "updateInBoober": "true",
           "booberDeployId": "123",
           "name": "aos-simple",
           "deployTag": "1.0.3-SNAPSHOT"
@@ -79,11 +81,11 @@
               },
               {
                 "name": "ROUTE_NAME",
-                "value": "aos-mounts.utv.paas.skead.no/foo"
+                "value": "aurora.mounts.utv.paas.skead.no/foo"
               },
               {
                 "name": "ROUTE_URL",
-                "value": "http://aos-mounts.utv.paas.skead.no/foo"
+                "value": "http://aurora.mounts.utv.paas.skead.no/foo"
               },
               {
                 "name": "STS_CERTIFICATE_URL",

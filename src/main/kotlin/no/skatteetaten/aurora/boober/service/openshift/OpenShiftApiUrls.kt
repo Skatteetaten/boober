@@ -1,12 +1,11 @@
 package no.skatteetaten.aurora.boober.service.openshift
 
 class OpenShiftApiUrls(
-        val create: String,
-        val get: String? = null,
-        val update: String? = null
+    val create: String,
+    val get: String? = null,
+    val update: String? = null
 ) {
     companion object Factory {
-
 
         @JvmStatic
         @JvmOverloads
@@ -15,22 +14,22 @@ class OpenShiftApiUrls(
             if (kind == "processedtemplate") {
                 val bcBaseUrl = getCollectionPathForResource(baseUrl, "processedtemplate", namespace)
                 return OpenShiftApiUrls(
-                        create = "$bcBaseUrl"
+                    create = "$bcBaseUrl"
                 )
             }
             if (kind == "deploymentrequest") {
                 val dcBaseUrl = getCollectionPathForResource(baseUrl, "deploymentconfig", namespace)
                 return OpenShiftApiUrls(
-                        create = "$dcBaseUrl/$name/instantiate"
+                    create = "$dcBaseUrl/$name/instantiate"
                 )
             }
             val createUrl = getCollectionPathForResource(baseUrl, kind, namespace)
 
 
             return OpenShiftApiUrls(
-                    create = createUrl,
-                    get = "$createUrl/$name",
-                    update = "$createUrl/$name"
+                create = createUrl,
+                get = "$createUrl/$name",
+                update = "$createUrl/$name"
             )
         }
 
@@ -50,8 +49,8 @@ class OpenShiftApiUrls(
         }
 
         fun getApiType(endpointKey: String): String {
-            return if (endpointKey in listOf("namespaces", "services", "configmaps", "secrets", "replicationcontrollers", "persistentvolumeclaims", "pods")) "api" else "oapi"
+            return if (endpointKey in listOf("namespaces", "services", "configmaps", "secrets", "serviceaccounts",
+                    "replicationcontrollers", "persistentvolumeclaims", "pods")) "api" else "oapi"
         }
-
     }
 }

@@ -20,7 +20,7 @@ class OpenShiftObjectLabelService(private val userDetailsProvider: UserDetailsPr
          * MAX_LABEL_VALUE_LENGTH characters.
          */
         fun toOpenShiftLabelNameSafeMap(labels: Map<String, String>): Map<String, String> =
-                labels.mapValues { toOpenShiftSafeLabel(it.value) }
+            labels.mapValues { toOpenShiftSafeLabel(it.value) }
 
         @JvmStatic
         fun toOpenShiftSafeLabel(value: String): String {
@@ -39,10 +39,11 @@ class OpenShiftObjectLabelService(private val userDetailsProvider: UserDetailsPr
     fun createCommonLabels(auroraDeploymentSpec: AuroraDeploymentSpec, deployId: String,
                            additionalLabels: Map<String, String> = mapOf(), name: String = auroraDeploymentSpec.name): Map<String, String> {
         val labels = mapOf(
-                "app" to name,
-                "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
-                "affiliation" to auroraDeploymentSpec.environment.affiliation,
-                "booberDeployId" to deployId
+            "app" to name,
+            "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
+            "affiliation" to auroraDeploymentSpec.environment.affiliation,
+            "updateInBoober" to "true",
+            "booberDeployId" to deployId
         )
         return toOpenShiftLabelNameSafeMap(labels + additionalLabels)
     }
