@@ -16,15 +16,13 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.controller.internal.ErrorHandler
 import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigControllerV1
 import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraVersioningException
+import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 
 class AuroraConfigControllerTest extends AbstractAuroraConfigTest {
@@ -46,6 +44,7 @@ class AuroraConfigControllerTest extends AbstractAuroraConfigTest {
   }
 
   def auroraConfigName = 'aos'
+  def ref = new AuroraConfigRef(auroraConfigName, "master")
   def fileName = 'about.json'
   def auroraConfig = createAuroraConfig([(fileName): DEFAULT_ABOUT])
 
@@ -53,7 +52,7 @@ class AuroraConfigControllerTest extends AbstractAuroraConfigTest {
 
     given:
       def payload = [content: DEFAULT_ABOUT]
-      auroraConfigService.updateAuroraConfigFile(auroraConfigName, fileName, _, _) >> auroraConfig
+      auroraConfigService.updateAuroraConfigFile(ref,fileName, _, _) >> auroraConfig
     when:
       ResultActions result = mockMvc.perform(
           put("/v1/auroraconfig/$auroraConfigName/$fileName").content(JsonOutput.toJson(payload)).
@@ -68,7 +67,7 @@ class AuroraConfigControllerTest extends AbstractAuroraConfigTest {
     given:
       def payload = [content: DEFAULT_ABOUT]
       def auroraConfigFile = auroraConfig.findFile(fileName)
-      auroraConfigService.findAuroraConfigFile(auroraConfigName, fileName) >> auroraConfigFile
+      auroraConfigService.findAuroraConfigFile(ref, fileName) >> auroraConfigFile
 
     when:
       ResultActions result = mockMvc.perform(get("/v1/auroraconfig/$auroraConfigName/$fileName"))
@@ -86,7 +85,7 @@ class AuroraConfigControllerTest extends AbstractAuroraConfigTest {
           false)
       def eTag = "THIS_IS_NOT_THE_EXPECTED_ETAG"
       def payload = [content: modify(fileToUpdate, { route: true })]
-      auroraConfigService.updateAuroraConfigFile(auroraConfigName, fileName, _ as String, eTag) >> {
+      auroraConfigService.updateAuroraConfigFile(ref, fileName, _ as String, eTag) >> {
         throw new AuroraVersioningException(auroraConfig, auroraConfigFile, eTag)
       }
 
@@ -111,7 +110,7 @@ class AuroraConfigControllerTest extends AbstractAuroraConfigTest {
 }]"""]
 
       auroraConfigService.
-          patchAuroraConfigFile(auroraConfigName, fileName, payload.content, payload.version) >>
+          patchAuroraConfigFile(ref, fileName, payload.content, payload.version) >>
           auroraConfig
     when:
       ResultActions result = mockMvc.perform(

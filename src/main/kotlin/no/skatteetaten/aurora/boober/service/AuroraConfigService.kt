@@ -62,7 +62,7 @@ class AuroraConfigService(
         return auroraConfig.auroraConfigFiles.map { it.name }
     }
 
-    fun findAuroraConfigFile(ref:   AuroraConfigRef, fileName: String): AuroraConfigFile? {
+    fun findAuroraConfigFile(ref: AuroraConfigRef, fileName: String): AuroraConfigFile? {
 
         val auroraConfig = findAuroraConfig(ref)
         return auroraConfig.findFile(fileName)
@@ -84,6 +84,28 @@ class AuroraConfigService(
         val (newFile, updatedAuroraConfig) = auroraConfig.patchFile(filename, jsonPatchOp, previousVersion)
 
         return saveFile(newFile, updatedAuroraConfig)
+    }
+
+    fun save(auroraConfig: AuroraConfig): AuroraConfig {
+        val checkoutDir = getAuroraConfigFolder(auroraConfig.affiliation)
+
+        val ref = AuroraConfigRef(auroraConfig.affiliation, "master")
+        val repo = getUpdatedRepo(ref)
+        val existing = AuroraConfig.fromFolder(checkoutDir)
+
+        existing.auroraConfigFiles.forEach {
+            val outputFile = File(checkoutDir, it.name)
+            FileUtils.deleteQuietly(outputFile)
+        }
+        auroraConfig.auroraConfigFiles.forEach {
+            val outputFile = File(getAuroraConfigFolder(auroraConfig.affiliation), it.name)
+            FileUtils.forceMkdirParent(outputFile)
+            outputFile.writeText(it.contents)
+        }
+
+        gitService.commitAndPushChanges(repo)
+        repo.close()
+        return auroraConfig
     }
 
     private fun saveFile(newFile: AuroraConfigFile, auroraConfig: AuroraConfig): AuroraConfig {

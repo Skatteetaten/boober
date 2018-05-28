@@ -14,6 +14,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
   static CHECKOUT_PATH = new File("build/auroraconfigs").absoluteFile.absolutePath
   static AURORA_CONFIG_NAME = AFFILIATION
   def aid = DEFAULT_AID
+  def ref = new AuroraConfigRef(AURORA_CONFIG_NAME, "master")
 
   def userDetailsProvider = Mock(UserDetailsProvider)
   def auroraMetrics = new AuroraMetrics(new SimpleMeterRegistry())
@@ -30,7 +31,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
 
   def "Throws exception when AuroraConfig cannot be found"() {
     when:
-      auroraConfigService.findAuroraConfig("no_such_auroraconfig")
+      auroraConfigService.findAuroraConfig(new AuroraConfigRef("no_such_affiliation", "master"))
 
     then:
       thrown(IllegalArgumentException)
@@ -38,7 +39,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
 
   def "Finds existing AuroraConfig by name"() {
     when:
-      def auroraConfig = auroraConfigService.findAuroraConfig(AURORA_CONFIG_NAME)
+      def auroraConfig = auroraConfigService.findAuroraConfig(ref)
 
     then:
       auroraConfig != null
@@ -55,7 +56,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
 
     when:
       auroraConfigService.
-          updateAuroraConfigFile(AURORA_CONFIG_NAME, fileToChange, 'foo {"version": "1.0.0"}', theFileToChange.version)
+          updateAuroraConfigFile(ref, fileToChange, 'foo {"version": "1.0.0"}', theFileToChange.version)
 
     then:
       thrown(AuroraConfigException)
@@ -71,10 +72,10 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
 
     when:
       auroraConfigService.
-          updateAuroraConfigFile(AURORA_CONFIG_NAME, fileToChange, '{"version": "1.0.0"}', theFileToChange.version)
+          updateAuroraConfigFile(ref, fileToChange, '{"version": "1.0.0"}', theFileToChange.version)
 
     then:
-      def git = gitService.checkoutRepository(AURORA_CONFIG_NAME)
+      def git = gitService.checkoutRepository(ref.name, ref.refName)
       def gitLog = git.log().call().head()
       git.close()
       gitLog.authorIdent.name == "Aurora Test User"
@@ -84,7 +85,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
   def "Save AuroraConfig"() {
 
     when:
-      def auroraConfig = auroraConfigService.findAuroraConfig(AURORA_CONFIG_NAME)
+      def auroraConfig = auroraConfigService.findAuroraConfig(ref)
 
     then:
       auroraConfig.auroraConfigFiles.size() == 0
@@ -95,7 +96,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
 
     and:
 //      GitServiceHelperKt.recreateFolder(new File(CHECKOUT_PATH))
-      auroraConfig = auroraConfigService.findAuroraConfig(AURORA_CONFIG_NAME)
+      auroraConfig = auroraConfigService.findAuroraConfig(ref)
 
     then:
       auroraConfig.auroraConfigFiles.size() == 4
@@ -130,7 +131,7 @@ type: deploy
       auroraConfigService.save(auroraConfig)
 
     and:
-      auroraConfig = auroraConfigService.findAuroraConfig(AURORA_CONFIG_NAME)
+      auroraConfig = auroraConfigService.findAuroraConfig(ref)
 
     then:
       auroraConfig.auroraConfigFiles.size() == 4
@@ -153,7 +154,7 @@ type: deploy
       auroraConfigService.save(auroraConfig)
 
     and:
-      auroraConfig = auroraConfigService.findAuroraConfig(AURORA_CONFIG_NAME)
+      auroraConfig = auroraConfigService.findAuroraConfig(ref)
 
     then:
       auroraConfig.auroraConfigFiles.size() == 2
@@ -170,7 +171,7 @@ type: deploy
 
     when:
       auroraConfigService.
-          updateAuroraConfigFile(AURORA_CONFIG_NAME, fileToChange, '{"version": "1.0.0"}', "incorrect hash")
+          updateAuroraConfigFile(ref, fileToChange, '{"version": "1.0.0"}', "incorrect hash")
 
     then:
       def e = thrown(AuroraVersioningException)

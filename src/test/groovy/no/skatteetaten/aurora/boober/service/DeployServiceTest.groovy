@@ -63,8 +63,9 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
 
   def "Should prepare deploy environment for new project with ttl"() {
     given:
+      def ref = new AuroraConfigRef(affiliation, "master")
       def ads = auroraConfigService.
-          createValidatedAuroraDeploymentSpecs(affiliation, [new ApplicationId(ENV_NAME, APP_NAME)])
+          createValidatedAuroraDeploymentSpecs(ref, [new ApplicationId(ENV_NAME, APP_NAME)])
 
     when:
       def deployResults = deployService.prepareDeployEnvironments(ads)

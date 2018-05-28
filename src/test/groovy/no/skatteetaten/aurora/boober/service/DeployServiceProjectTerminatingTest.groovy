@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired
 
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 
@@ -24,7 +23,7 @@ class DeployServiceProjectTerminatingTest extends AbstractMockedOpenShiftSpecifi
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "aos-simple"
-  def affiliation = "aos"
+  def ref = new AuroraConfigRef("aos", "master")
 
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
@@ -36,7 +35,7 @@ class DeployServiceProjectTerminatingTest extends AbstractMockedOpenShiftSpecifi
 
   def "Should return with error if project is terminating"() {
     when:
-      deployService.executeDeploy(affiliation, [new ApplicationId(ENV_NAME, APP_NAME)])
+      deployService.executeDeploy(ref, [new ApplicationId(ENV_NAME, APP_NAME)])
 
     then:
       thrown(IllegalStateException)
