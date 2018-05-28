@@ -3,6 +3,10 @@
     "source": "static",
     "value": "utv/webleveranse"
   },
+  "configVersion": {
+    "source": "static",
+    "value": "master"
+  },
   "schemaVersion": {
     "source": "about.json",
     "value": "v1"

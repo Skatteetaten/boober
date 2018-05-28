@@ -63,7 +63,8 @@ data class AuroraDeploymentSpec(
     val template: AuroraTemplate? = null,
     val localTemplate: AuroraLocalTemplate? = null,
     val integration: AuroraIntegration?,
-    val applicationFile: AuroraConfigFile
+    val applicationFile: AuroraConfigFile,
+    val configVersion: String
 )
 
 data class AuroraVolume(

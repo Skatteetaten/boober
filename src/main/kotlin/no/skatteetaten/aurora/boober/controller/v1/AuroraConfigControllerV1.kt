@@ -29,14 +29,14 @@ data class AuroraConfigResource(
     val name: String,
     val files: List<AuroraConfigFileResource> = listOf()
 ) {
-    fun toAuroraConfig(affiliation: String): AuroraConfig {
+    fun toAuroraConfig(ref: AuroraConfigRef): AuroraConfig {
         val auroraConfigFiles = files.map { AuroraConfigFile(it.name, it.contents) }
-        return AuroraConfig(auroraConfigFiles, affiliation)
+        return AuroraConfig(auroraConfigFiles, ref.name, ref.refName)
     }
 
     companion object {
         fun fromAuroraConfig(auroraConfig: AuroraConfig): AuroraConfigResource {
-            return AuroraConfigResource(auroraConfig.affiliation, auroraConfig.auroraConfigFiles.map { AuroraConfigFileResource(it.name, it.contents) })
+            return AuroraConfigResource(auroraConfig.name, auroraConfig.files.map { AuroraConfigFileResource(it.name, it.contents) })
         }
     }
 }
@@ -78,7 +78,8 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
         @RequestBody payload: AuroraConfigResource
     ): Response {
 
-        val auroraConfig = payload.toAuroraConfig(name)
+        val ref = AuroraConfigRef(name, getRefNameFromRequest())
+        val auroraConfig = payload.toAuroraConfig(ref)
         auroraConfigService.validateAuroraConfig(auroraConfig, resourceValidation = resourceValidation)
         return createAuroraConfigResponse(auroraConfig)
     }

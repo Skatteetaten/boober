@@ -53,13 +53,13 @@ class AuroraConfigService(
     fun findAuroraConfig(ref: AuroraConfigRef): AuroraConfig {
 
         updateLocalFilesFromGit(ref)
-        return AuroraConfig.fromFolder("${gitService.checkoutPath}/${ref.name}")
+        return AuroraConfig.fromFolder("${gitService.checkoutPath}/${ref.name}", ref.refName)
     }
 
     fun findAuroraConfigFileNames(ref: AuroraConfigRef): List<String> {
 
         val auroraConfig = findAuroraConfig(ref)
-        return auroraConfig.auroraConfigFiles.map { it.name }
+        return auroraConfig.files.map { it.name }
     }
 
     fun findAuroraConfigFile(ref: AuroraConfigRef, fileName: String): AuroraConfigFile? {
@@ -87,18 +87,19 @@ class AuroraConfigService(
     }
 
     fun save(auroraConfig: AuroraConfig): AuroraConfig {
-        val checkoutDir = getAuroraConfigFolder(auroraConfig.affiliation)
+        val checkoutDir = getAuroraConfigFolder(auroraConfig.name)
 
-        val ref = AuroraConfigRef(auroraConfig.affiliation, "master")
+        val refName = "master"
+        val ref = AuroraConfigRef(auroraConfig.name, refName)
         val repo = getUpdatedRepo(ref)
-        val existing = AuroraConfig.fromFolder(checkoutDir)
+        val existing = AuroraConfig.fromFolder(checkoutDir, refName)
 
-        existing.auroraConfigFiles.forEach {
+        existing.files.forEach {
             val outputFile = File(checkoutDir, it.name)
             FileUtils.deleteQuietly(outputFile)
         }
-        auroraConfig.auroraConfigFiles.forEach {
-            val outputFile = File(getAuroraConfigFolder(auroraConfig.affiliation), it.name)
+        auroraConfig.files.forEach {
+            val outputFile = File(getAuroraConfigFolder(auroraConfig.name), it.name)
             FileUtils.forceMkdirParent(outputFile)
             outputFile.writeText(it.contents)
         }
@@ -124,7 +125,7 @@ class AuroraConfigService(
         createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig), affectedAid)
         watch.stop()
 
-        val checkoutDir = getAuroraConfigFolder(auroraConfig.affiliation)
+        val checkoutDir = getAuroraConfigFolder(auroraConfig.name)
         watch.start("write file")
 
         val outputFile = File(checkoutDir, newFile.name)
@@ -193,7 +194,7 @@ class AuroraConfigService(
                 .map { it.await() }
         }.onErrorThrow(::MultiApplicationValidationException)
         stopWatch.stop()
-        logger.debug("Validated AuroraConfig ${auroraConfigWithOverrides.auroraConfig.affiliation} with ${applicationIds.size} applications in ${stopWatch.totalTimeMillis} millis")
+        logger.debug("Validated AuroraConfig ${auroraConfigWithOverrides.auroraConfig.name} with ${applicationIds.size} applications in ${stopWatch.totalTimeMillis} millis")
         return specs
     }
 

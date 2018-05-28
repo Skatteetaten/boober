@@ -43,7 +43,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
 
     then:
       auroraConfig != null
-      auroraConfig.auroraConfigFiles.size() == 0
+      auroraConfig.getFiles().size() == 0
   }
 
   def "Should fail to update invalid json file"() {
@@ -52,7 +52,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
       auroraConfigService.save(auroraConfig)
 
       def fileToChange = "utv/aos-simple.json"
-      AuroraConfigFile theFileToChange = auroraConfig.auroraConfigFiles.find { it.name == fileToChange }
+      AuroraConfigFile theFileToChange = auroraConfig.getFiles().find { it.name == fileToChange }
 
     when:
       auroraConfigService.
@@ -68,7 +68,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
       auroraConfigService.save(auroraConfig)
 
       def fileToChange = "utv/aos-simple.json"
-      AuroraConfigFile theFileToChange = auroraConfig.auroraConfigFiles.find { it.name == fileToChange }
+      AuroraConfigFile theFileToChange = auroraConfig.getFiles().find { it.name == fileToChange }
 
     when:
       auroraConfigService.
@@ -88,7 +88,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
       def auroraConfig = auroraConfigService.findAuroraConfig(ref)
 
     then:
-      auroraConfig.auroraConfigFiles.size() == 0
+      auroraConfig.getFiles().size() == 0
 
     when:
       auroraConfig = createAuroraConfig(defaultAuroraConfig())
@@ -99,8 +99,8 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
       auroraConfig = auroraConfigService.findAuroraConfig(ref)
 
     then:
-      auroraConfig.auroraConfigFiles.size() == 4
-      auroraConfig.auroraConfigFiles
+      auroraConfig.getFiles().size() == 4
+      auroraConfig.getFiles()
           .collect() { it.name }
           .containsAll(["about.json", "utv/about.json", "utv/aos-simple.json", "aos-simple.json"])
   }
@@ -134,8 +134,8 @@ type: deploy
       auroraConfig = auroraConfigService.findAuroraConfig(ref)
 
     then:
-      auroraConfig.auroraConfigFiles.size() == 4
-      auroraConfig.auroraConfigFiles
+      auroraConfig.getFiles().size() == 4
+      auroraConfig.getFiles()
           .collect() { it.name }
           .containsAll(["foo.yaml", "utv/foo.json"])
   }
@@ -157,8 +157,8 @@ type: deploy
       auroraConfig = auroraConfigService.findAuroraConfig(ref)
 
     then:
-      auroraConfig.auroraConfigFiles.size() == 2
-      auroraConfig.auroraConfigFiles
+      auroraConfig.getFiles().size() == 2
+      auroraConfig.getFiles()
           .collect() { it.name }
           .containsAll(["about.json", "utv/about.json"])
   }

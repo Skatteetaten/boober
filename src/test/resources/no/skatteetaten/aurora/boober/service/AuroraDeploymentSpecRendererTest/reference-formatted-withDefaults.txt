@@ -1,5 +1,6 @@
 {
   applicationId:       utv/reference                // static
+  configVersion:       master                       // static
   schemaVersion:       "v1"                         // about.json
   type:                "deploy"                     // reference.json
   applicationPlatform: "java"                       // default
