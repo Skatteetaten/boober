@@ -47,5 +47,3 @@ fun List<Pair<AuroraDeploymentSpec?, ExceptionWrapper?>>.onErrorThrow(block: (Li
 class ProvisioningException @JvmOverloads constructor(message: String, cause: Throwable? = null) : ServiceException(message, cause)
 
 class AuroraConfigServiceException(message: String, cause: Throwable? = null) : ServiceException(message, cause)
-
-

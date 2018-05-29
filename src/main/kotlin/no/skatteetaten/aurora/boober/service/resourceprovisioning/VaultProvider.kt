@@ -41,7 +41,7 @@ class VaultProvider(val vaultService: VaultService) {
     private fun filterVaultData(vaultData: VaultData, secretVaultKeys: List<String>, keyMappings: Map<String, String>?): VaultData {
         return vaultData
             .mapValues {
-                //if the vault contain a .properties-file, we filter based on secretVaultKeys
+                // if the vault contain a .properties-file, we filter based on secretVaultKeys
                 if (it.key.contains(".properties")) {
                     filterProperties(it.value, secretVaultKeys, keyMappings)
                 } else {

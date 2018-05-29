@@ -10,9 +10,11 @@ import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class AuroraConfigField(val handler: AuroraConfigFieldHandler,
-                        val replacer: StringSubstitutor,
-                        val source: AuroraConfigFile? = null) {
+class AuroraConfigField(
+    val handler: AuroraConfigFieldHandler,
+    val replacer: StringSubstitutor,
+    val source: AuroraConfigFile? = null
+) {
     val valueNode: JsonNode
         get() = source?.asJsonNode?.at(handler.path) ?: MissingNode.getInstance()
     val valueNodeOrDefault: JsonNode?
@@ -158,7 +160,6 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
                 matches.firstOrNull()?.let {
                     it
                 } ?: AuroraConfigField(handler, replacer)
-
             }.associate { it.handler.name to it }
 
             return AuroraConfigFields(fields)

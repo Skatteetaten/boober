@@ -28,5 +28,3 @@ data class AuroraConfigFile(val name: String, val contents: String, val override
         }
     }
 }
-
-

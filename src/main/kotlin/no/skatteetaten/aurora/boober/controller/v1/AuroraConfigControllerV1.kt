@@ -67,9 +67,11 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
     }
 
     @PutMapping("/validate")
-    fun validateAuroraConfig(@PathVariable name: String,
-                             @RequestParam("resourceValidation", required = false, defaultValue = "false") resourceValidation: Boolean,
-                             @RequestBody payload: AuroraConfigResource): Response {
+    fun validateAuroraConfig(
+        @PathVariable name: String,
+        @RequestParam("resourceValidation", required = false, defaultValue = "false") resourceValidation: Boolean,
+        @RequestBody payload: AuroraConfigResource
+    ): Response {
 
         val auroraConfig = payload.toAuroraConfig(name)
         auroraConfigService.validateAuroraConfig(auroraConfig, resourceValidation = resourceValidation)
@@ -86,10 +88,12 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
     }
 
     @PutMapping("/**")
-    fun updateAuroraConfigFile(@PathVariable name: String,
-                               @RequestBody @Valid payload: ContentPayload,
-                               @RequestHeader(value = HttpHeaders.IF_MATCH, required = false) ifMatchHeader: String?,
-                               request: HttpServletRequest): ResponseEntity<Response> {
+    fun updateAuroraConfigFile(
+        @PathVariable name: String,
+        @RequestBody @Valid payload: ContentPayload,
+        @RequestHeader(value = HttpHeaders.IF_MATCH, required = false) ifMatchHeader: String?,
+        request: HttpServletRequest
+    ): ResponseEntity<Response> {
 
         val fileName = extractFileName(name, request)
         val auroraConfig: AuroraConfig = auroraConfigService.updateAuroraConfigFile(name, fileName, payload.content, clearQuotes(ifMatchHeader))
@@ -98,8 +102,11 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
     }
 
     @PatchMapping("/**")
-    fun patchAuroraConfigFile(@PathVariable name: String, request: HttpServletRequest,
-                              @RequestBody @Valid payload: ContentPayload): ResponseEntity<Response> {
+    fun patchAuroraConfigFile(
+        @PathVariable name: String,
+        request: HttpServletRequest,
+        @RequestBody @Valid payload: ContentPayload
+    ): ResponseEntity<Response> {
 
         val fileName = extractFileName(name, request)
 

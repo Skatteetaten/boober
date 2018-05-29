@@ -23,8 +23,10 @@ import org.springframework.stereotype.Service
 import javax.annotation.PostConstruct
 
 @Service
-class AuroraDeploymentSpecService(val auroraConfigService: AuroraConfigService,
-                                  val aphBeans: List<ApplicationPlatformHandler>) {
+class AuroraDeploymentSpecService(
+    val auroraConfigService: AuroraConfigService,
+    val aphBeans: List<ApplicationPlatformHandler>
+) {
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpecService::class.java)
@@ -34,9 +36,11 @@ class AuroraDeploymentSpecService(val auroraConfigService: AuroraConfigService,
 
         @JvmOverloads
         @JvmStatic
-        fun createAuroraDeploymentSpec(auroraConfig: AuroraConfig,
-                                       applicationId: ApplicationId,
-                                       overrideFiles: List<AuroraConfigFile> = listOf()): AuroraDeploymentSpec {
+        fun createAuroraDeploymentSpec(
+            auroraConfig: AuroraConfig,
+            applicationId: ApplicationId,
+            overrideFiles: List<AuroraConfigFile> = listOf()
+        ): AuroraDeploymentSpec {
 
             val applicationFiles = auroraConfig.getFilesForApplication(applicationId, overrideFiles)
 

@@ -13,9 +13,11 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.client.HttpClientErrorException
 import java.net.URI
 
-open class OpenShiftResourceClient(@Value("\${openshift.url}") val baseUrl: String,
-                                   val tokenProvider: TokenProvider,
-                                   val openShiftRequestHandler: OpenShiftRequestHandler) {
+open class OpenShiftResourceClient(
+    @Value("\${openshift.url}") val baseUrl: String,
+    val tokenProvider: TokenProvider,
+    val openShiftRequestHandler: OpenShiftRequestHandler
+) {
 
     fun put(kind: String, namespace: String, name: String, payload: JsonNode): ResponseEntity<JsonNode> {
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, namespace, name)

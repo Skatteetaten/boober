@@ -14,13 +14,16 @@ import org.springframework.stereotype.Service
 class OpenShiftTemplateProcessor(
     val userDetailsProvider: UserDetailsProvider,
     val openShiftClient: OpenShiftResourceClient,
-    val mapper: ObjectMapper) {
+    val mapper: ObjectMapper
+) {
 
-    fun generateObjects(template: ObjectNode,
-                        parameters: Map<String, String>?,
-                        auroraDeploymentSpec: AuroraDeploymentSpec,
-                        version: String?,
-                        replicas: Int?): List<JsonNode> {
+    fun generateObjects(
+        template: ObjectNode,
+        parameters: Map<String, String>?,
+        auroraDeploymentSpec: AuroraDeploymentSpec,
+        version: String?,
+        replicas: Int?
+    ): List<JsonNode> {
 
         val adcParameters = (parameters ?: emptyMap()).toMutableMap()
         replicas?.let {
@@ -32,7 +35,7 @@ class OpenShiftTemplateProcessor(
         if (template.has("parameters")) {
             val parameters = template["parameters"]
 
-            //mutation in progress. stay away.
+            // mutation in progress. stay away.
             parameters
                 .filter { adcParameterKeys.contains(it["name"].textValue()) }
                 .forEach {
@@ -52,14 +55,13 @@ class OpenShiftTemplateProcessor(
         }
 
         if (!labels.has("template")) {
-            val template= auroraDeploymentSpec.template?.template ?: "local"
+            val template = auroraDeploymentSpec.template?.template ?: "local"
             labels.put("template", template)
         }
 
         if (!labels.has("app")) {
             labels.put("app", auroraDeploymentSpec.name)
         }
-
 
         labels.put("updatedBy", userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"))
 
@@ -104,12 +106,12 @@ class OpenShiftTemplateProcessor(
 
         requiredMissingParameters.takeIf { !it.isEmpty() }?.let {
             val parametersString = it.joinToString(", ")
-            errorMessages.add("Required template parameters [${parametersString}] not set")
+            errorMessages.add("Required template parameters [$parametersString] not set")
         }
 
         notMappedParameterNames.takeIf { !it.isEmpty() }?.let {
             val parametersString = it.joinToString(", ")
-            errorMessages.add("Template does not contain parameter(s) [${parametersString}]")
+            errorMessages.add("Template does not contain parameter(s) [$parametersString]")
         }
 
         return errorMessages

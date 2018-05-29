@@ -14,13 +14,16 @@ import no.skatteetaten.aurora.boober.utils.imageStreamImportFromJson
 import org.springframework.stereotype.Service
 
 @Service
-class RedeployService(val openShiftClient: OpenShiftClient,
-                      val openShiftObjectGenerator: OpenShiftObjectGenerator) {
+class RedeployService(
+    val openShiftClient: OpenShiftClient,
+    val openShiftObjectGenerator: OpenShiftObjectGenerator
+) {
 
     data class RedeployResult @JvmOverloads constructor(
         val openShiftResponses: List<OpenShiftResponse> = listOf(),
         val success: Boolean = true,
-        val message: String? = null) {
+        val message: String? = null
+    ) {
 
         companion object {
             fun fromOpenShiftResponses(openShiftResponses: List<OpenShiftResponse>): RedeployResult {
@@ -60,7 +63,6 @@ class RedeployService(val openShiftClient: OpenShiftClient,
         val imageStreamImport = imageStreamImportFromJson(imageStreamImportResponse.responseBody)
         imageStreamImport.findErrorMessage(tagName)
             ?.let { return createFailedRedeployResult(it, imageStreamImportResponse) }
-
 
         if (imageStreamImport.isDifferentImage(imageStream.findCurrentImageHash())) {
             return RedeployResult.fromOpenShiftResponses(listOf(imageStreamImportResponse))

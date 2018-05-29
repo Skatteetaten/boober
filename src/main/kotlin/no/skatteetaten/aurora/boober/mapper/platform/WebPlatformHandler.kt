@@ -16,7 +16,7 @@ class WebPlatformHandler : ApplicationPlatformHandler("web") {
             else -> "default"
         }
 
-        //TODO: What contains should have mounts and env and what should we do with limit/request/liveness?readiness?
+        // TODO: What contains should have mounts and env and what should we do with limit/request/liveness?readiness?
         val container = listOf(
             AuroraContainer(
                 name = "${auroraDeploymentSpec.name}-node",
@@ -41,7 +41,6 @@ class WebPlatformHandler : ApplicationPlatformHandler("web") {
                 mounts = mounts?.filter { it.targetContainer == null }
             )
         ).addIfNotNull(sidecarContainers)
-
 
         return AuroraDeployment(
             name = auroraDeploymentSpec.name,

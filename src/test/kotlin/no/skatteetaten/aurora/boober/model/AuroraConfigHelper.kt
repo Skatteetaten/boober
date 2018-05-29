@@ -72,4 +72,3 @@ private fun convertFileToJsonNode(file: File): JsonNode? {
     val mapper = jacksonObjectMapper()
     return mapper.readValue(file, JsonNode::class.java)
 }
-

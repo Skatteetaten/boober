@@ -11,8 +11,11 @@ import java.util.Arrays
 @Component
 class AuroraRestTemplateTagsProvider : RestTemplateExchangeTagsProvider {
 
-    override fun getTags(urlTemplate: String?, request: HttpRequest,
-                         response: ClientHttpResponse?): Iterable<Tag> {
+    override fun getTags(
+        urlTemplate: String?,
+        request: HttpRequest,
+        response: ClientHttpResponse?
+    ): Iterable<Tag> {
         return Arrays.asList(RestTemplateExchangeTags.method(request),
             RestTemplateExchangeTags.status(response),
             RestTemplateExchangeTags.clientName(request))
