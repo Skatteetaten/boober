@@ -95,11 +95,11 @@ open class GitService(
     private fun updateRepository(repoPath: File, failOnUnpushedCommits: Boolean, refName: String): Git {
 
         val git = Git.open(repoPath)
-        if (git.repository.allRefs.isEmpty()) return git
-
         git.fetch()
             .setCredentialsProvider(cp)
             .call()
+
+        if (git.repository.allRefs.isEmpty()) return git
 
         val ref = findRef(git, refName)
         val branchList = git.branchList().call()
