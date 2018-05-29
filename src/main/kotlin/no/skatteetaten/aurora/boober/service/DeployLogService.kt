@@ -15,7 +15,7 @@ class DeployLogService(@TargetDomain(AURORA_CONFIG) val gitService: GitService, 
     fun markRelease(ref: AuroraConfigRef, deployResult: List<AuroraDeployResult>) {
 
         val repo = gitService.checkoutRepository(ref.name, refName = ref.refName)
-        val refs = deployResult
+        deployResult
             .filter { !it.ignored }
             .map {
                 val result = filterSensitiveInformation(it)
@@ -23,7 +23,10 @@ class DeployLogService(@TargetDomain(AURORA_CONFIG) val gitService: GitService, 
 
                 gitService.createAnnotatedTag(repo, "$prefix/${it.tag}", mapper.writeValueAsString(result))
             }
-        gitService.pushTags(repo, refs)
+            .takeIf { it.isNotEmpty() }
+            ?.let {
+                gitService.pushTags(repo, it)
+            }
     }
 
     private fun filterSensitiveInformation(result: AuroraDeployResult): AuroraDeployResult {
