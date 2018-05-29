@@ -26,12 +26,14 @@ class MultiApplicationValidationException(
     fun toValidationErrors(): List<ApplicationError> {
         return this.errors.map {
             val t = it.throwable
-            ApplicationError(it.aid.application, it.aid.environment,
+            ApplicationError(
+                it.aid.application, it.aid.environment,
                 when (t) {
                     is AuroraConfigException -> t.errors
                     is IllegalArgumentException -> listOf(ConfigFieldErrorDetail.illegal(t.message!!))
                     else -> listOf(ErrorDetail(message = t.message!!))
-                })
+                }
+            )
         }
     }
 }
@@ -44,7 +46,8 @@ fun List<Pair<AuroraDeploymentSpec?, ExceptionWrapper?>>.onErrorThrow(block: (Li
     return this.mapNotNull { it.first }
 }
 
-class ProvisioningException @JvmOverloads constructor(message: String, cause: Throwable? = null) : ServiceException(message, cause)
+class ProvisioningException @JvmOverloads constructor(message: String, cause: Throwable? = null) :
+    ServiceException(message, cause)
 
 class AuroraConfigServiceException(message: String, cause: Throwable? = null) : ServiceException(message, cause)
 

@@ -46,7 +46,10 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
     }
 
     @JvmOverloads
-    fun getFilesForApplication(applicationId: ApplicationId, overrideFiles: List<AuroraConfigFile> = listOf()): List<AuroraConfigFile> {
+    fun getFilesForApplication(
+        applicationId: ApplicationId,
+        overrideFiles: List<AuroraConfigFile> = listOf()
+    ): List<AuroraConfigFile> {
 
         val requiredFiles = requiredFilesForApplication(applicationId)
         val filesForApplication = requiredFiles.mapNotNull { fileName ->
@@ -72,7 +75,11 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
     fun findFile(filename: String): AuroraConfigFile? = files.find { it.name == filename }
 
     @JvmOverloads
-    fun updateFile(name: String, contents: String, previousVersion: String? = null): Pair<AuroraConfigFile, AuroraConfig> {
+    fun updateFile(
+        name: String,
+        contents: String,
+        previousVersion: String? = null
+    ): Pair<AuroraConfigFile, AuroraConfig> {
 
         val files = files.toMutableList()
         val indexOfFileToUpdate = files.indexOfFirst { it.name == name }
@@ -92,7 +99,11 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
         return Pair(newFile, this.copy(files = files))
     }
 
-    fun patchFile(filename: String, jsonPatchOp: String, previousVersion: String? = null): Pair<AuroraConfigFile, AuroraConfig> {
+    fun patchFile(
+        filename: String,
+        jsonPatchOp: String,
+        previousVersion: String? = null
+    ): Pair<AuroraConfigFile, AuroraConfig> {
 
         val patch: JsonPatch = yamlMapper.readValue(jsonPatchOp, JsonPatch::class.java)
 
@@ -129,7 +140,8 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
             "about",
             baseFile,
             "${applicationId.environment}/$envFile",
-            "${applicationId.environment}/${applicationId.application}")
+            "${applicationId.environment}/${applicationId.application}"
+        )
     }
 }
 
