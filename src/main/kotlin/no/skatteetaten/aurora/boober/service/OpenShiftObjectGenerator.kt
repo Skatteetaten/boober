@@ -46,6 +46,7 @@ import no.skatteetaten.aurora.boober.service.internal.DeploymentConfigGenerator
 import no.skatteetaten.aurora.boober.service.internal.ImageStreamGenerator
 import no.skatteetaten.aurora.boober.service.internal.RolebindingGenerator
 import no.skatteetaten.aurora.boober.service.internal.SecretGenerator
+import no.skatteetaten.aurora.boober.service.internal.StsSecretGenerator
 import no.skatteetaten.aurora.boober.service.internal.findAndCreateMounts
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
@@ -338,6 +339,9 @@ class OpenShiftObjectGenerator(
             ?.let { DbhSecretGenerator.create(appName, it, labels) }
             ?: emptyList()
 
+        val stsSecret= provisioningResult?.stsProvisioningResult
+            ?.let { StsSecretGenerator.create(appName, it, labels)}
+
         val schemaSecretNames = schemaSecrets.map { it.metadata.name }
 
         return mounts
@@ -354,6 +358,7 @@ class OpenShiftObjectGenerator(
                 }
             }
             .plus(schemaSecrets)
+            .addIfNotNull(stsSecret)
             .map { mapper.convertValue<JsonNode>(it) }
     }
 

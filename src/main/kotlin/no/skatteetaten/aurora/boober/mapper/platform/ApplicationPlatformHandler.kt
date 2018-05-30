@@ -50,8 +50,7 @@ abstract class ApplicationPlatformHandler(val name: String) {
             "console.skatteetaten.no/alarm" to deploy.flags.alarm.toString(),
             "boober.skatteetaten.no/overrides" to escapeOverrides(),
             "console.skatteetaten.no/management-path" to deploy.managementPath,
-            "boober.skatteetaten.no/releaseTo" to deploy.releaseTo,
-            "sprocket.sits.no/deployment-config.certificate" to spec.integration?.certificateCn
+            "boober.skatteetaten.no/releaseTo" to deploy.releaseTo
         ).filterNullValues().filterValues { !it.isBlank() }
     }
 

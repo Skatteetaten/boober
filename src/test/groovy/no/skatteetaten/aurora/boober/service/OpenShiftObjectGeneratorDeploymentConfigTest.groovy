@@ -26,7 +26,7 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObje
           "utv/reference.json": '''{ "name": "something-different", "certificate": false }'''
       ], aid("utv", "reference"))
 
-      def provisioningResult = new ProvisioningResult(
+      def provisioningResult = new no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult.ProvisioningResult(
           new SchemaProvisionResults([new SchemaProvisionResult(
               createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec)[0],
               new DbhSchema("", "", new DatabaseInstance(1512, ""), "", [:], []), "")
@@ -104,7 +104,7 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObje
   }
 
   def provisiongResult(AuroraDeploymentSpec deploymentSpec) {
-    return new ProvisioningResult(
+    return new no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult.ProvisioningResult(
         new SchemaProvisionResults([new SchemaProvisionResult(
             createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec)[0],
             new DbhSchema("", "", new DatabaseInstance(1512, ""), "", [:], []), "")
