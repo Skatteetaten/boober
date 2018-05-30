@@ -21,11 +21,13 @@ object ImageStreamGenerator {
         }
     }
 
-    fun createRemoteImageStream(isName: String,
-                                isLabels: Map<String, String>,
-                                dockerRegistry: String,
-                                dockerImagePath: String,
-                                dockerTag: String): ImageStream {
+    fun createRemoteImageStream(
+        isName: String,
+        isLabels: Map<String, String>,
+        dockerRegistry: String,
+        dockerImagePath: String,
+        dockerTag: String
+    ): ImageStream {
         return newImageStream {
             apiVersion = "v1"
             metadata {
