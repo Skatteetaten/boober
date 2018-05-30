@@ -5,20 +5,30 @@ import org.springframework.stereotype.Service
 
 class ProvisioningResult(
     val schemaProvisionResults: SchemaProvisionResults?,
-    val vaultResults: VaultResults?
+    val vaultResults: VaultResults?,
+    val stsProvisioningResult: StsProvisioningResult?
 )
 
 @Service
 class ExternalResourceProvisioner(
     val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
+    val stsProvisioner: StsProvisioner,
     val vaultProvider: VaultProvider
 ) {
 
     fun provisionResources(deploymentSpec: AuroraDeploymentSpec): ProvisioningResult {
 
+        val stsProvisioningResult = handleSts(deploymentSpec)
         val schemaProvisionResult = handleSchemaProvisioning(deploymentSpec)
         val schemaResults = handleVaults(deploymentSpec)
-        return ProvisioningResult(schemaProvisionResult, schemaResults)
+        return ProvisioningResult(schemaProvisionResult, schemaResults, stsProvisioningResult)
+    }
+
+
+    private fun handleSts(deploymentSpec: AuroraDeploymentSpec): StsProvisioningResult? {
+        return deploymentSpec.integration?.certificateCn?.let {
+           stsProvisioner.generateCertificate(it)
+        }
     }
 
     private fun handleSchemaProvisioning(deploymentSpec: AuroraDeploymentSpec): SchemaProvisionResults? {

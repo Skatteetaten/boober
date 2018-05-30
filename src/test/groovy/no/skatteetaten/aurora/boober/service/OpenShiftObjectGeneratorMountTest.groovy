@@ -98,7 +98,7 @@ class OpenShiftObjectGeneratorMountTest extends AbstractOpenShiftObjectGenerator
       def vaultFileName = "latest.properties"
       def vaultFileContents = "FOO=BAR"
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid("utv", "aos-simple"))
-      def provisioningResult = new ProvisioningResult(null,
+      def provisioningResult = new no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult.ProvisioningResult(null,
           new VaultResults([test: [(vaultFileName): vaultFileContents.bytes]]))
 
     when:
