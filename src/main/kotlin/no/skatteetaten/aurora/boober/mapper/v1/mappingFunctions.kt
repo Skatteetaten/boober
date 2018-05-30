@@ -20,7 +20,7 @@ fun List<AuroraConfigFile>.findConfigFieldHandlers(): List<AuroraConfigFieldHand
     val keysStartingWithConfig = this.findSubKeys(name)
 
     val configKeys: Map<String, Set<String>> = keysStartingWithConfig.map { configFileName ->
-        //find all unique keys in a configFile
+        // find all unique keys in a configFile
         val keys = this.flatMap { ac ->
             ac.asJsonNode.at("/$name/$configFileName")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
         }.toSet()

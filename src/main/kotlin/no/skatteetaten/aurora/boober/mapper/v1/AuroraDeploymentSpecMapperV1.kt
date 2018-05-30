@@ -34,16 +34,18 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
         AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = 180)
     )
 
-    fun createAuroraDeploymentSpec(auroraConfigFields: AuroraConfigFields,
-                                   volume: AuroraVolume?,
-                                   route: AuroraRoute?,
-                                   build: AuroraBuild?,
-                                   deploy: AuroraDeploy?,
-                                   template: AuroraTemplate?,
-                                   integration: AuroraIntegration?,
-                                   localTemplate: AuroraLocalTemplate?,
-                                   env: AuroraDeployEnvironment,
-                                   applicationFile: AuroraConfigFile): AuroraDeploymentSpec {
+    fun createAuroraDeploymentSpec(
+        auroraConfigFields: AuroraConfigFields,
+        volume: AuroraVolume?,
+        route: AuroraRoute?,
+        build: AuroraBuild?,
+        deploy: AuroraDeploy?,
+        template: AuroraTemplate?,
+        integration: AuroraIntegration?,
+        localTemplate: AuroraLocalTemplate?,
+        env: AuroraDeployEnvironment,
+        applicationFile: AuroraConfigFile
+    ): AuroraDeploymentSpec {
         val name: String = auroraConfigFields.extract("name")
 
         return AuroraDeploymentSpec(
@@ -138,4 +140,3 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
         return auroraConfigFields.fields.filterValues { it.source != null || it.handler.defaultValue != null }
     }
 }
-

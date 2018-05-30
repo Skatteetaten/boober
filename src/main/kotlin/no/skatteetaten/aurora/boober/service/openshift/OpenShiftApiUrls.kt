@@ -25,7 +25,6 @@ class OpenShiftApiUrls(
             }
             val createUrl = getCollectionPathForResource(baseUrl, kind, namespace)
 
-
             return OpenShiftApiUrls(
                 create = createUrl,
                 get = "$createUrl/$name",
@@ -40,7 +39,7 @@ class OpenShiftApiUrls(
 
             val apiType = getApiType(endpointKey)
             val namespacePrefix = if (endpointKey !in listOf("namespaces", "projects", "projectrequests", "deploymentreqeusts", "users", "groups")) {
-                namespace ?: throw IllegalArgumentException("namespace required for resource kind ${kind}")
+                namespace ?: throw IllegalArgumentException("namespace required for resource kind $kind")
                 "/namespaces/$namespace"
             } else ""
 

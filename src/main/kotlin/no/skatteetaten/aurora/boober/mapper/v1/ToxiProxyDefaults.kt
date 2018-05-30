@@ -37,6 +37,3 @@ fun getToxiProxyConfig(): String {
 
     return jacksonObjectMapper().writeValueAsString(listOf(config))
 }
-
-
-

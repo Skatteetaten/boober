@@ -84,7 +84,7 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
 
         val viewGroups = configFields.extractDelimitedStringOrArrayAsSet("permissions/view", " ")
         val adminGroups = configFields.extractDelimitedStringOrArrayAsSet("permissions/admin", " ")
-        //if sa present add to admin users.
+        // if sa present add to admin users.
         val adminUsers = configFields.extractDelimitedStringOrArrayAsSet("permissions/adminServiceAccount", " ")
 
         val adminPermission = Permission(adminGroups, adminUsers)

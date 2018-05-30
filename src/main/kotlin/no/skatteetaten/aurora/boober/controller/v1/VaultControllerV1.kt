@@ -94,8 +94,10 @@ data class VaultOperationPayload(val operationName: VaultOperation, val paramete
 
 @RestController
 @RequestMapping("/v1/vault/{vaultCollection}")
-class VaultControllerV1(val vaultService: VaultService,
-                        @Value("\${vault.operations.enabled:false}") private val operationsEnabled: Boolean) {
+class VaultControllerV1(
+    val vaultService: VaultService,
+    @Value("\${vault.operations.enabled:false}") private val operationsEnabled: Boolean
+) {
 
     @PostMapping("/")
     fun vaultOperation(@PathVariable vaultCollection: String, @RequestBody @Valid operationPayload: VaultOperationPayload) {
@@ -117,8 +119,10 @@ class VaultControllerV1(val vaultService: VaultService,
     }
 
     @PutMapping
-    fun save(@PathVariable vaultCollection: String,
-             @RequestBody @Valid vaultPayload: AuroraSecretVaultPayload): Response {
+    fun save(
+        @PathVariable vaultCollection: String,
+        @RequestBody @Valid vaultPayload: AuroraSecretVaultPayload
+    ): Response {
 
         val vault = vaultService.import(vaultCollection, vaultPayload.name, vaultPayload.permissions, vaultPayload.secretsDecoded
             ?: emptyMap())
@@ -133,8 +137,12 @@ class VaultControllerV1(val vaultService: VaultService,
     }
 
     @GetMapping("/{vault}/**")
-    fun getVaultFile(@PathVariable vaultCollection: String, @PathVariable vault: String,
-                     request: HttpServletRequest, response: HttpServletResponse) {
+    fun getVaultFile(
+        @PathVariable vaultCollection: String,
+        @PathVariable vault: String,
+        request: HttpServletRequest,
+        response: HttpServletResponse
+    ) {
 
         val fileName = getVaultFileNameFromRequestUri(vaultCollection, vault, request)
         val vaultFile = vaultService.findFileInVault(vaultCollection, vault, fileName)
@@ -143,11 +151,14 @@ class VaultControllerV1(val vaultService: VaultService,
     }
 
     @PutMapping("/{vault}/**")
-    fun updateVaultFile(@PathVariable vaultCollection: String,
-                        @PathVariable("vault") vaultName: String,
-                        @RequestBody payload: VaultFileResource,
-                        @RequestHeader(value = HttpHeaders.IF_MATCH, required = false) ifMatchHeader: String?,
-                        request: HttpServletRequest, response: HttpServletResponse) {
+    fun updateVaultFile(
+        @PathVariable vaultCollection: String,
+        @PathVariable("vault") vaultName: String,
+        @RequestBody payload: VaultFileResource,
+        @RequestHeader(value = HttpHeaders.IF_MATCH, required = false) ifMatchHeader: String?,
+        request: HttpServletRequest,
+        response: HttpServletResponse
+    ) {
 
         val fileContents: ByteArray = payload.decodedContents
         val fileName = getVaultFileNameFromRequestUri(vaultCollection, vaultName, request)
@@ -157,9 +168,11 @@ class VaultControllerV1(val vaultService: VaultService,
     }
 
     @DeleteMapping("/{vault}/**")
-    fun deleteVaultFile(@PathVariable vaultCollection: String,
-                        @PathVariable("vault") vaultName: String,
-                        request: HttpServletRequest): Response {
+    fun deleteVaultFile(
+        @PathVariable vaultCollection: String,
+        @PathVariable("vault") vaultName: String,
+        request: HttpServletRequest
+    ): Response {
 
         val fileName = getVaultFileNameFromRequestUri(vaultCollection, vaultName, request)
         vaultService.deleteFileInVault(vaultCollection, vaultName, fileName)?.let(::fromEncryptedFileVault)
@@ -195,5 +208,3 @@ class VaultControllerV1(val vaultService: VaultService,
         response.writer.close()
     }
 }
-
-

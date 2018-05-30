@@ -52,13 +52,15 @@ private fun createMountsFromDeploymentSpec(deploymentSpec: AuroraDeploymentSpec)
             mountName = "${deploymentSpec.name}-cert",
             exist = true,
             content = null)
-        //TODO: Add sprocket content here
+        // TODO: Add sprocket content here
     }
     return listOf<Mount>().addIfNotNull(secretVaultMount).addIfNotNull(configMount).addIfNotNull(certMount).addIfNotNull(deploymentSpec.volume?.mounts)
 }
 
-private fun createDatabaseMounts(deploymentSpec: AuroraDeploymentSpec,
-                                 schemaProvisionResults: SchemaProvisionResults): List<Mount> {
+private fun createDatabaseMounts(
+    deploymentSpec: AuroraDeploymentSpec,
+    schemaProvisionResults: SchemaProvisionResults
+): List<Mount> {
 
     val schemaResults: List<SchemaProvisionResult> = schemaProvisionResults.results
     val databaseMounts = schemaResults.map {
@@ -89,5 +91,3 @@ private fun createToxiProxyMounts(deploymentSpec: AuroraDeploymentSpec): List<Mo
     }
         .orEmpty()
 }
-
-

@@ -13,4 +13,3 @@ class Boober
 fun main(args: Array<String>) {
     SpringApplication.run(Boober::class.java, *args)
 }
-

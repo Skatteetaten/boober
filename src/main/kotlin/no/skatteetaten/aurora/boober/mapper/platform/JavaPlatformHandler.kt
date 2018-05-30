@@ -54,4 +54,3 @@ class JavaPlatformHandler : ApplicationPlatformHandler("java") {
         return handlers.addIfNotNull(buildHandlers)
     }
 }
-

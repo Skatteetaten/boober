@@ -34,7 +34,6 @@ class AuroraBuildMapperV1(val name: String) {
             "$name:latest"
         }
 
-
         return AuroraBuild(
             applicationPlatform = auroraConfigFields.extract("applicationPlatform"),
             testGitUrl = testGitUrl,

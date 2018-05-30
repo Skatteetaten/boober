@@ -8,8 +8,10 @@ import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 
 @Service
-class BitbucketProjectService(@Qualifier("bitbucket") val restTemplate: RestTemplate,
-                              @Value("\${boober.bitbucket.project}") val project: String) {
+class BitbucketProjectService(
+    @Qualifier("bitbucket") val restTemplate: RestTemplate,
+    @Value("\${boober.bitbucket.project}") val project: String
+) {
 
     fun getAllSlugs(): List<String> {
 

@@ -39,10 +39,11 @@ class OpenShiftCommandBuilder(
     private fun createMergedUpdateCommand(namespace: String, it: JsonNode) =
         createOpenShiftCommand(namespace, it, true, true).copy(operationType = UPDATE)
 
-    fun generateApplicationObjects(deployId: String,
-                                   deploymentSpec: AuroraDeploymentSpec,
-                                   provisioningResult: ProvisioningResult?,
-                                   mergeWithExistingResource: Boolean
+    fun generateApplicationObjects(
+        deployId: String,
+        deploymentSpec: AuroraDeploymentSpec,
+        provisioningResult: ProvisioningResult?,
+        mergeWithExistingResource: Boolean
     ): List<OpenshiftCommand> {
 
         val namespace = deploymentSpec.environment.namespace
@@ -87,8 +88,12 @@ class OpenShiftCommandBuilder(
     }
 
     @JvmOverloads
-    fun createOpenShiftDeleteCommands(name: String, namespace: String, deployId: String,
-                                      apiResources: List<String> = listOf("BuildConfig", "DeploymentConfig", "ConfigMap", "Secret", "Service", "Route", "ImageStream")): List<OpenshiftCommand> {
+    fun createOpenShiftDeleteCommands(
+        name: String,
+        namespace: String,
+        deployId: String,
+        apiResources: List<String> = listOf("BuildConfig", "DeploymentConfig", "ConfigMap", "Secret", "Service", "Route", "ImageStream")
+    ): List<OpenshiftCommand> {
 
         val labelSelectors = listOf("app=$name", "booberDeployId", "booberDeployId!=$deployId")
         return apiResources

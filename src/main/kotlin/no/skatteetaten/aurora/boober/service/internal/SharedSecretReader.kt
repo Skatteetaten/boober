@@ -13,8 +13,10 @@ import java.nio.file.Paths
  * the aurora.token.value property, or specify a file containing the secret with the aurora.token.location property.
  */
 @Component
-class SharedSecretReader(@Value("\${aurora.token.location:}") val secretLocation: String?,
-                         @Value("\${aurora.token.value:}") val secretValue: String?) {
+class SharedSecretReader(
+    @Value("\${aurora.token.location:}") val secretLocation: String?,
+    @Value("\${aurora.token.value:}") val secretValue: String?
+) {
 
     init {
         if (listOf(secretLocation, secretValue).all { it.isNullOrEmpty() }) {

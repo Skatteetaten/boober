@@ -12,7 +12,8 @@ import java.util.Base64
 class EncryptionService(
     @Value("\${boober.encrypt.key}") val key: String,
     val keyFactory: KeyFactory,
-    val metrics: AuroraMetrics) {
+    val metrics: AuroraMetrics
+) {
 
     // Version 1 of the file format always contained base64 content (after the file was decrypted).
     val VERSION1 = "Boober:1"
@@ -50,7 +51,7 @@ class EncryptionService(
         return metrics.withMetrics("decrypt", {
             val split = source.split(LINE_SEPERATOR)
             val fileFormatVersion = split[0]
-            //If/when we use new versions of encryption here we can use an encryptor for that specific version when we decode.
+            // If/when we use new versions of encryption here we can use an encryptor for that specific version when we decode.
             val cipherTextBase64: String = split[1]
             val cipherText: ByteArray = Base64.getDecoder().decode(cipherTextBase64)
             val decrypted = encryptor.decrypt(cipherText)

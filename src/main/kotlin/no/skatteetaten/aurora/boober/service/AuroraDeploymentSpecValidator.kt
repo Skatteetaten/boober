@@ -16,7 +16,8 @@ class AuroraDeploymentSpecValidator(
     val openShiftTemplateProcessor: OpenShiftTemplateProcessor,
     val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
     val vaultService: VaultService,
-    @Value("\${openshift.cluster}") val cluster: String) {
+    @Value("\${openshift.cluster}") val cluster: String
+) {
 
     val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpecValidator::class.java)
 

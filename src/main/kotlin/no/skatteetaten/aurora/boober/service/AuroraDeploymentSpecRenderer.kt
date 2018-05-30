@@ -37,7 +37,6 @@ fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSp
 
     val filteredFields = if (includeDefaults) fields else filterDefaultFields(fields)
 
-
     return filteredFields.entries
         .fold("{\n") { result, entry ->
             renderJson(1, result, entry)
@@ -82,6 +81,3 @@ fun filterDefaultFields(fields: Map<String, Map<String, Any?>>): Map<String, Map
             !it.value.isEmpty()
         }
 }
-
-
-

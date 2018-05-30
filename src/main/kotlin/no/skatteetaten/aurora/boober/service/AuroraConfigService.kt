@@ -28,11 +28,13 @@ class AuroraConfigWithOverrides(
 )
 
 @Service
-class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitService,
-                          val bitbucketProjectService: BitbucketProjectService,
-                          val deploymentSpecValidator: AuroraDeploymentSpecValidator,
-                          @Value("\${openshift.cluster}") val cluster: String,
-                          @Value("\${boober.validationPoolSize:6}") val validationPoolSize: Int) {
+class AuroraConfigService(
+    @TargetDomain(AURORA_CONFIG) val gitService: GitService,
+    val bitbucketProjectService: BitbucketProjectService,
+    val deploymentSpecValidator: AuroraDeploymentSpecValidator,
+    @Value("\${openshift.cluster}") val cluster: String,
+    @Value("\${boober.validationPoolSize:6}") val validationPoolSize: Int
+) {
 
     val logger: Logger = getLogger(AuroraConfigService::class.java)
     val yamlMapper = jacksonYamlObjectMapper()
@@ -114,7 +116,7 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
         watch.stop()
         watch.start("validate")
         logger.debug("Affected AID for file={} aid={}", newFile, affectedAid)
-        //This will validate both AuroraConfig and External validation for the affected AID
+        // This will validate both AuroraConfig and External validation for the affected AID
         createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig), affectedAid)
         watch.stop()
 
@@ -141,7 +143,8 @@ class AuroraConfigService(@TargetDomain(AURORA_CONFIG) val gitService: GitServic
         auroraConfigName: String,
         applicationIds: List<ApplicationId>,
         overrideFiles: List<AuroraConfigFile> = listOf(),
-        resourceValidation: Boolean = true): List<AuroraDeploymentSpec> {
+        resourceValidation: Boolean = true
+    ): List<AuroraDeploymentSpec> {
 
         val auroraConfig = findAuroraConfig(auroraConfigName)
         return createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig, overrideFiles), applicationIds)
