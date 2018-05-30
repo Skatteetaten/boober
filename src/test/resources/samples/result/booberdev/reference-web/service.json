@@ -18,12 +18,6 @@
     "name": "openshift-referanse-react"
   },
   "spec": {
-    "externalIPs": [
-
-    ],
-    "loadBalancerSourceRanges": [
-
-    ],
     "ports": [
       {
         "name": "http",

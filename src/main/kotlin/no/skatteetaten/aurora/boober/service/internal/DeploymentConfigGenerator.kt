@@ -2,13 +2,13 @@ package no.skatteetaten.aurora.boober.service.internal
 
 import com.fkorotkov.kubernetes.emptyDir
 import com.fkorotkov.kubernetes.metadata
+import com.fkorotkov.kubernetes.newVolume
 import com.fkorotkov.kubernetes.spec
-import com.fkorotkov.kubernetes.volume
-import com.fkorotkov.openshift.deploymentConfig
-import com.fkorotkov.openshift.deploymentTriggerPolicy
 import com.fkorotkov.openshift.from
 import com.fkorotkov.openshift.imageChangeParams
 import com.fkorotkov.openshift.metadata
+import com.fkorotkov.openshift.newDeploymentConfig
+import com.fkorotkov.openshift.newDeploymentTriggerPolicy
 import com.fkorotkov.openshift.recreateParams
 import com.fkorotkov.openshift.rollingParams
 import com.fkorotkov.openshift.spec
@@ -30,14 +30,12 @@ object DeploymentConfigGenerator {
             val removeInstant = now + it
             "removeAfter" to removeInstant.epochSecond.toString()
         }
-        return deploymentConfig {
+        return newDeploymentConfig {
             metadata {
                 annotations = auroraDeployment.annotations
                 apiVersion = "v1"
                 labels = auroraDeployment.labels.addIfNotNull(ttl)
                 name = auroraDeployment.name
-                finalizers = null
-                ownerReferences = null
             }
             spec {
                 strategy {
@@ -58,7 +56,7 @@ object DeploymentConfigGenerator {
                     }
                 }
                 triggers = listOf(
-                    deploymentTriggerPolicy {
+                    newDeploymentTriggerPolicy {
                         type = "ImageChange"
                         imageChangeParams {
                             automatic = true
@@ -85,7 +83,7 @@ object DeploymentConfigGenerator {
 
                     spec {
                         volumes = auroraDeployment.mounts.podVolumes(auroraDeployment.name)
-                        volumes = volumes + volume {
+                        volumes = volumes + newVolume {
                             name = "application-log-volume"
                             emptyDir()
                         }
@@ -93,10 +91,6 @@ object DeploymentConfigGenerator {
                         restartPolicy = "Always"
                         dnsPolicy = "ClusterFirst"
                         auroraDeployment.serviceAccount?.let { serviceAccount = it }
-                        hostAliases = null
-                        imagePullSecrets = null
-                        tolerations = null
-                        initContainers = null
                     }
                 }
             }

@@ -2,14 +2,10 @@
   "apiVersion": "v1",
   "kind": "DeploymentConfig",
   "metadata": {
-    "finalizers": [
-    ],
     "labels": {
       "name": "tvinn"
     },
-    "name": "tvinn",
-    "ownerReferences": [
-    ]
+    "name": "tvinn"
   },
   "spec": {
     "replicas": 1,
@@ -30,21 +26,13 @@
     },
     "template": {
       "metadata": {
-        "finalizers": [
-        ],
         "labels": {
           "name": "tvinn"
-        },
-        "ownerReferences": [
-        ]
+        }
       },
       "spec": {
         "containers": [
           {
-            "args": [
-            ],
-            "command": [
-            ],
             "env": [
               {
                 "name": "SPLUNK_INDEX",
@@ -121,9 +109,6 @@
                 "value": "/u01/foo"
               }
             ],
-            "envFrom": [
-
-            ],
             "image": "tvinn",
             "imagePullPolicy": "IfNotPresent",
             "name": "tvinn",
@@ -149,10 +134,6 @@
             },
             "securityContext": {
               "capabilities": {
-                "add": [
-                ],
-                "drop": [
-                ]
               },
               "privileged": false
             },
@@ -172,17 +153,9 @@
           }
         ],
         "dnsPolicy": "ClusterFirst",
-        "hostAliases": [
-        ],
-        "imagePullSecrets": [
-        ],
-        "initContainers": [
-        ],
         "restartPolicy": "Always",
         "serviceAccount": "",
         "serviceAccountName": "",
-        "tolerations": [
-        ],
         "volumes": [
           {
             "emptyDir": {

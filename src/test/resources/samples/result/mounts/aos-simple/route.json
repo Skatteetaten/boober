@@ -15,9 +15,6 @@
     "name": "aos-simple"
   },
   "spec": {
-    "alternateBackends": [
-
-    ],
     "host": "aurora.mounts.utv.paas.skead.no",
     "path": "/foo",
     "to": {

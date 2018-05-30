@@ -15,9 +15,6 @@
     "name": "openshift-referanse-react"
   },
   "spec": {
-    "alternateBackends": [
-
-    ],
     "host": "openshift-referanse-react-aos-booberdev.utv.paas.skead.no",
     "to": {
       "kind": "Service",

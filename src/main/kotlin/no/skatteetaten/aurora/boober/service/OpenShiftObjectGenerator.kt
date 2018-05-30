@@ -5,21 +5,21 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fkorotkov.kubernetes.envVar
 import com.fkorotkov.kubernetes.metadata
-import com.fkorotkov.kubernetes.namespace
-import com.fkorotkov.kubernetes.service
-import com.fkorotkov.kubernetes.servicePort
+import com.fkorotkov.kubernetes.newEnvVar
+import com.fkorotkov.kubernetes.newNamespace
+import com.fkorotkov.kubernetes.newService
+import com.fkorotkov.kubernetes.newServicePort
 import com.fkorotkov.kubernetes.spec
-import com.fkorotkov.openshift.buildConfig
-import com.fkorotkov.openshift.buildTriggerPolicy
 import com.fkorotkov.openshift.customStrategy
 import com.fkorotkov.openshift.from
 import com.fkorotkov.openshift.imageChange
 import com.fkorotkov.openshift.metadata
+import com.fkorotkov.openshift.newBuildConfig
+import com.fkorotkov.openshift.newBuildTriggerPolicy
+import com.fkorotkov.openshift.newProjectRequest
+import com.fkorotkov.openshift.newRoute
 import com.fkorotkov.openshift.output
-import com.fkorotkov.openshift.projectRequest
-import com.fkorotkov.openshift.route
 import com.fkorotkov.openshift.spec
 import com.fkorotkov.openshift.strategy
 import com.fkorotkov.openshift.to
@@ -105,7 +105,7 @@ class OpenShiftObjectGenerator(
 
     fun generateProjectRequest(environment: AuroraDeployEnvironment): JsonNode {
 
-        val projectRequest = projectRequest {
+        val projectRequest = newProjectRequest {
             apiVersion = "v1"
             metadata {
                 name = environment.namespace
@@ -119,7 +119,7 @@ class OpenShiftObjectGenerator(
 
     fun generateNamespace(environment: AuroraDeployEnvironment): JsonNode {
 
-        val namespace = namespace {
+        val namespace = newNamespace {
             apiVersion = "v1"
             metadata {
                 val ttl = environment.ttl?.let {
@@ -198,7 +198,7 @@ class OpenShiftObjectGenerator(
 
             val podPort = if (auroraDeploymentSpec.deploy.toxiProxy != null) PortNumbers.TOXIPROXY_HTTP_PORT else PortNumbers.INTERNAL_HTTP_PORT
 
-            val service = service {
+            val service = newService {
                 apiVersion = "v1"
                 metadata {
                     name = auroraDeploymentSpec.name
@@ -210,7 +210,7 @@ class OpenShiftObjectGenerator(
 
                 spec {
                     ports = listOf(
-                        servicePort {
+                        newServicePort {
                             name = "http"
                             protocol = "TCP"
                             port = PortNumbers.HTTP_PORT
@@ -299,7 +299,7 @@ class OpenShiftObjectGenerator(
     fun generateRoute(auroraDeploymentSpec: AuroraDeploymentSpec, routeLabels: Map<String, String>): List<JsonNode>? {
         return auroraDeploymentSpec.route?.route?.map {
 
-            val route = route {
+            val route = newRoute {
                 apiVersion = "v1"
                 metadata {
                     name = it.objectName
@@ -365,7 +365,7 @@ class OpenShiftObjectGenerator(
                 deploymentSpec.name
             }
 
-            val build = buildConfig {
+            val build = newBuildConfig {
                 apiVersion = "v1"
                 metadata {
                     name = buildName
@@ -377,7 +377,7 @@ class OpenShiftObjectGenerator(
                 spec {
                     if (it.triggers) {
                         triggers = listOf(
-                            buildTriggerPolicy {
+                            newBuildTriggerPolicy {
                                 type = "ImageChange"
                                 imageChange {
                                     from {
@@ -387,7 +387,7 @@ class OpenShiftObjectGenerator(
                                     }
                                 }
                             },
-                            buildTriggerPolicy {
+                            newBuildTriggerPolicy {
                                 type = "ImageChange"
                                 imageChange {
                                 }
@@ -413,14 +413,14 @@ class OpenShiftObjectGenerator(
                             )
 
                             env = envMap.map {
-                                envVar {
+                                newEnvVar {
                                     name = it.key
                                     value = it.value
                                 }
                             }
 
                             if (it.applicationPlatform == "web") {
-                                env = env + envVar {
+                                env = env + newEnvVar {
                                     name = "APPLICATION_TYPE"
                                     value = "nodejs"
                                 }

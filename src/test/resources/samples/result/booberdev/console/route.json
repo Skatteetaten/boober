@@ -12,9 +12,6 @@
     "name": "openshift-console-api"
   },
   "spec": {
-    "alternateBackends": [
-
-    ],
     "host": "openshift-console-api-aos-booberdev.utv.paas.skead.no",
     "to": {
       "kind": "Service",

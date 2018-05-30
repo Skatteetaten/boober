@@ -1,22 +1,20 @@
 package no.skatteetaten.aurora.boober.service.internal
 
 import com.fkorotkov.openshift.from
-import com.fkorotkov.openshift.imageStream
 import com.fkorotkov.openshift.importPolicy
 import com.fkorotkov.openshift.metadata
+import com.fkorotkov.openshift.newImageStream
+import com.fkorotkov.openshift.newTagReference
 import com.fkorotkov.openshift.spec
-import com.fkorotkov.openshift.tagReference
 import io.fabric8.openshift.api.model.ImageStream
 import no.skatteetaten.aurora.boober.model.AuroraVersion
 
 object ImageStreamGenerator {
 
     fun createLocalImageStream(isName: String, isLabels: Map<String, String>): ImageStream {
-        return imageStream {
+        return newImageStream {
             apiVersion = "v1"
             metadata {
-                ownerReferences = null
-                finalizers = null
                 name = isName
                 labels = isLabels
             }
@@ -30,18 +28,16 @@ object ImageStreamGenerator {
         dockerImagePath: String,
         dockerTag: String
     ): ImageStream {
-        return imageStream {
+        return newImageStream {
             apiVersion = "v1"
             metadata {
                 name = isName
-                ownerReferences = null
-                finalizers = null
                 labels = isLabels
             }
             spec {
                 dockerImageRepository = "$dockerRegistry/$dockerImagePath"
                 tags = listOf(
-                    tagReference {
+                    newTagReference {
                         name = "default"
                         from {
                             kind = "DockerImage"
