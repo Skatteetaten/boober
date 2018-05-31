@@ -5,8 +5,7 @@
     "annotations": {
       "boober.skatteetaten.no/applicationFile": "booberdev/aos-simple.json",
       "console.skatteetaten.no/alarm": "true",
-      "boober.skatteetaten.no/overrides": "{\"booberdev/aos-simple.json\":{\"version\":\"1.0.4\"}}",
-      "sprocket.sits.no/deployment-config.certificate": "ske.aurora.openshift.aos-simple"
+      "boober.skatteetaten.no/overrides": "{\"booberdev/aos-simple.json\":{\"version\":\"1.0.4\"}}"
     },
     "labels": {
       "appId": "7abf72388235de0b5602f884db4200295ed23837",

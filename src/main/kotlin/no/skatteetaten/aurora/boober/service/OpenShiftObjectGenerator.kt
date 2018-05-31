@@ -110,8 +110,6 @@ class OpenShiftObjectGenerator(
             apiVersion = "v1"
             metadata {
                 name = environment.namespace
-                finalizers = null
-                ownerReferences = null
             }
         }
 
@@ -129,8 +127,6 @@ class OpenShiftObjectGenerator(
                 }
                 labels = mapOf("affiliation" to environment.affiliation).addIfNotNull(ttl)
                 name = environment.namespace
-                finalizers = null
-                ownerReferences = null
             }
         }
 
@@ -267,13 +263,6 @@ class OpenShiftObjectGenerator(
                     it.volumeMounts.addAll(mounts.volumeMount() ?: listOf())
                     it.env.addAll(createEnvVars(mounts, auroraDeploymentSpec, routeSuffix))
                 }
-
-                auroraDeploymentSpec.integration?.certificateCn?.let {
-                    if (dc.metadata.annotations == null) {
-                        dc.metadata.annotations = HashMap<String, String>()
-                    }
-                    dc.metadata.annotations.put("sprocket.sits.no/deployment-config.certificate", it)
-                }
                 jacksonObjectMapper().convertValue(dc)
             } else if (it.openshiftKind == "service" && it.openshiftName == auroraDeploymentSpec.name) {
 
@@ -305,8 +294,6 @@ class OpenShiftObjectGenerator(
                 metadata {
                     name = it.objectName
                     labels = routeLabels
-                    ownerReferences = null
-                    finalizers = null
                     it.annotations?.let {
                         annotations = it.mapKeys { it.key.replace("|", "/") }
                     }

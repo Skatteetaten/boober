@@ -2,24 +2,26 @@ package no.skatteetaten.aurora.boober.service.internal
 
 import io.fabric8.kubernetes.api.model.Secret
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
+import java.io.ByteArrayOutputStream
+import java.util.Properties
 
 object StsSecretGenerator {
 
     @JvmStatic
     fun create(appName: String, stsProvisionResults: StsProvisioningResult, labels: Map<String, String>): Secret {
 
-        val secretName = "$appName-cert"
-        val baseUrl = "/u01/secrets/app/$secretName/keystore.jsk"
+        val secretName="$appName-cert"
+        val baseUrl = "/u01/secrets/app/$secretName/keystore.jks"
 
-        val cert = stsProvisionResults.cert
+        val cert=stsProvisionResults.cert
         return SecretGenerator.create(
-            secretName = secretName,
-            secretLabels = labels,
+            secretName=secretName,
+            secretLabels=labels,
             secretData = mapOf(
                 "privatekey.key" to cert.key,
                 "keystore.jks" to cert.keystore,
                 "certificate.crt" to cert.crt,
-                "desscriptor.properties" to createDescriptorFile(baseUrl, "ca", cert.storePassword, cert.keyPassword)
+                "descriptor.properties" to createDescriptorFile(baseUrl, "ca", cert.storePassword, cert.keyPassword)
             )
         )
     }
@@ -30,11 +32,15 @@ object StsSecretGenerator {
         storePassword: String,
         keyPassword: String
     ): ByteArray {
-        return """
-            keystore-file=${jksPath}}
-            alias=$alias
-            store-password=$storePassword
-            key-password=$keyPassword
-            """.trimIndent().toByteArray()
+        return Properties().run {
+            put("keystore-file", jksPath)
+            put("alias", alias)
+            put("store-password", storePassword)
+            put("key-password", keyPassword)
+
+            val bos = ByteArrayOutputStream()
+            store(bos, "")
+            bos.toByteArray()
+        }
     }
 }

@@ -30,8 +30,8 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
   def "should create openshift objects for #env/#name"() {
 
     given:
-      def provisioningResult = new no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult.ProvisioningResult(null,
-          new VaultResults([foo: ["latest.properties": "FOO=bar\nBAR=baz\n".bytes]]))
+      def provisioningResult = new ProvisioningResult(null,
+          new VaultResults([foo: ["latest.properties": "FOO=bar\nBAR=baz\n".bytes]]), null)
 
       def aid = new ApplicationId(env, name)
       def additionalFile = null

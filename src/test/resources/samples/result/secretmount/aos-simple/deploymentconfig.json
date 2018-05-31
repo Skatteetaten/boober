@@ -4,8 +4,7 @@
   "metadata": {
     "annotations": {
       "boober.skatteetaten.no/applicationFile": "secretmount/aos-simple.json",
-      "console.skatteetaten.no/alarm": "true",
-      "sprocket.sits.no/deployment-config.certificate": "ske.aurora.openshift.aos-simple"
+      "console.skatteetaten.no/alarm": "true"
     },
     "labels": {
       "appId": "7abf72388235de0b5602f884db4200295ed23837",
