@@ -54,10 +54,10 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
           users       : schemaInfo.users,
           labels      : schemaInfo.labels
       ]]
-      def provisioningResult = new no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult.ProvisioningResult(
+      def provisioningResult = new ProvisioningResult(
           new SchemaProvisionResults([new SchemaProvisionResult(
               createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec)[0], schema, responseText
-          )]), null)
+          )]), null, null)
 
     when:
       def objects = objectGenerator.generateApplicationObjects('deploy-id', deploymentSpec, provisioningResult)

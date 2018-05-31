@@ -27,34 +27,40 @@ private fun createMountsFromDeploymentSpec(deploymentSpec: AuroraDeploymentSpec)
 
     val configMount = deploymentSpec.volume?.config?.let {
 
-        Mount(path = "/u01/config/configmap",
+        Mount(
+            path = "/u01/config/configmap",
             type = MountType.ConfigMap,
             volumeName = deploymentSpec.name,
             mountName = "config",
             exist = false,
-            content = it)
+            content = it
+        )
     }
 
     val secretVaultMount = deploymentSpec.volume?.secretVaultName?.let {
-        Mount(path = "/u01/config/secret",
+        Mount(
+            path = "/u01/config/secret",
             type = MountType.Secret,
             volumeName = deploymentSpec.name,
             mountName = "secrets",
             exist = false,
             content = null,
-            secretVaultName = it)
+            secretVaultName = it
+        )
     }
 
     val certMount = deploymentSpec.integration?.certificateCn?.let {
-        Mount(path = "/u01/secrets/app/${deploymentSpec.name}-cert",
+        Mount(
+            path = "/u01/secrets/app/${deploymentSpec.name}-cert",
             type = MountType.Secret,
             volumeName = "${deploymentSpec.name}-cert",
             mountName = "${deploymentSpec.name}-cert",
             exist = true,
-            content = null)
-        // TODO: Add sprocket content here
+            content = null
+        )
     }
-    return listOf<Mount>().addIfNotNull(secretVaultMount).addIfNotNull(configMount).addIfNotNull(certMount).addIfNotNull(deploymentSpec.volume?.mounts)
+    return listOf<Mount>().addIfNotNull(secretVaultMount).addIfNotNull(configMount).addIfNotNull(certMount)
+        .addIfNotNull(deploymentSpec.volume?.mounts)
 }
 
 private fun createDatabaseMounts(
@@ -66,12 +72,14 @@ private fun createDatabaseMounts(
     val databaseMounts = schemaResults.map {
         val mountPath = "${it.request.schemaName}-db".toLowerCase()
         val volumeName = "${deploymentSpec.name}-${it.request.schemaName}-db".toLowerCase()
-        Mount(path = "/u01/secrets/app/$mountPath",
+        Mount(
+            path = "/u01/secrets/app/$mountPath",
             type = MountType.Secret,
             mountName = mountPath,
             volumeName = volumeName,
             exist = true,
-            content = null)
+            content = null
+        )
     }
 
     return databaseMounts
@@ -80,14 +88,17 @@ private fun createDatabaseMounts(
 private fun createToxiProxyMounts(deploymentSpec: AuroraDeploymentSpec): List<Mount> {
 
     return deploymentSpec.deploy?.toxiProxy?.let {
-        listOf(Mount(
-            path = "/u01/config",
-            type = MountType.ConfigMap,
-            mountName = "${ToxiProxyDefaults.NAME}-volume",
-            volumeName = "${ToxiProxyDefaults.NAME}-config",
-            exist = false,
-            content = mapOf("config.json" to getToxiProxyConfig()),
-            targetContainer = ToxiProxyDefaults.NAME))
+        listOf(
+            Mount(
+                path = "/u01/config",
+                type = MountType.ConfigMap,
+                mountName = "${ToxiProxyDefaults.NAME}-volume",
+                volumeName = "${ToxiProxyDefaults.NAME}-config",
+                exist = false,
+                content = mapOf("config.json" to getToxiProxyConfig()),
+                targetContainer = ToxiProxyDefaults.NAME
+            )
+        )
     }
         .orEmpty()
 }

@@ -2,14 +2,10 @@ package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.io.Resource
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
-import org.springframework.http.MediaType
-import org.springframework.http.converter.ByteArrayHttpMessageConverter
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import java.io.ByteArrayOutputStream
@@ -18,6 +14,7 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.nio.charset.Charset
 import java.security.KeyStore
+import java.security.ProviderException
 import java.util.Base64
 
 class StsCertificate(
@@ -35,33 +32,25 @@ data class StsProvisioningResult(
 
 @Service
 class StsProvisioner(
-    @TargetService(ServiceTypes.AURORA)
+    @TargetService(ServiceTypes.SKAP)
     val restTemplate: RestTemplate,
     @Value("\${boober.skap}") val skapUrl: String
 ) {
+    val logger: Logger = LoggerFactory.getLogger(StsProvisioner::class.java)
 
     fun generateCertificate(commonName: String): StsProvisioningResult {
 
-        restTemplate.messageConverters.add(ByteArrayHttpMessageConverter())
-        val headers = HttpHeaders().apply {
-            this.accept = listOf(MediaType.APPLICATION_OCTET_STREAM)
+        val response = try {
+            restTemplate.getForEntity("$skapUrl/certificate?cn={commonName}", Resource::class.java, commonName)
+        } catch (e: Exception) {
+            throw ProviderException("Failed provisioning sts certificate with commonName=$commonName", e)
         }
-
-        val entity = HttpEntity<String>(headers)
-
-        val response = restTemplate.exchange(
-            "$skapUrl/certificate?cn={}",
-            HttpMethod.GET,
-            entity,
-            Resource::class.java,
-            commonName
-        )
         val keyPassword = response.headers.getFirst("key-password")
         val storePassword = response.headers.getFirst("store-password")
-        val cert=createStsCert(response.body.inputStream, keyPassword, storePassword)
+        val cert = createStsCert(response.body.inputStream, keyPassword, storePassword)
         return StsProvisioningResult(
-            cert=cert,
-            commonName=commonName
+            cert = cert,
+            commonName = commonName
         )
     }
 
@@ -88,16 +77,13 @@ class StsProvisioner(
         keyStore.store(osKeystore, "".toCharArray())
 
         return StsCertificate(
-            crt= osCrt.toByteArray(),
-            key=osKey.toByteArray(),
-            keystore=osKeystore.toByteArray(),
-            storePassword=storePassword,
-            keyPassword=keyPassword
+            crt = osCrt.toByteArray(),
+            key = osKey.toByteArray(),
+            keystore = osKeystore.toByteArray(),
+            storePassword = storePassword,
+            keyPassword = keyPassword
         )
     }
-
-
-
 
     internal class PEMWriter(private val type: String, private val encoded: ByteArray) {
 

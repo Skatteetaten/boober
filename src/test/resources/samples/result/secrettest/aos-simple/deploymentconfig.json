@@ -4,8 +4,7 @@
   "metadata": {
     "annotations": {
       "boober.skatteetaten.no/applicationFile": "secrettest/aos-simple.json",
-      "console.skatteetaten.no/alarm": "true",
-      "sprocket.sits.no/deployment-config.certificate": "tullball"
+      "console.skatteetaten.no/alarm": "true"
     },
     "labels": {
       "app": "aos-simple",
