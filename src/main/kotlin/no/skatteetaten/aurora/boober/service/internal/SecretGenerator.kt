@@ -7,7 +7,11 @@ import org.apache.commons.codec.binary.Base64
 
 object SecretGenerator {
 
-    fun create(secretName: String, secretLabels: Map<String, String>, secretData: Map<String, ByteArray>?): Secret {
+    fun create(secretName: String,
+        secretLabels: Map<String, String>,
+        secretData: Map<String, ByteArray>?,
+        secretAnnotations:Map<String, String> = emptyMap()
+    ): Secret {
 
         return newSecret {
             apiVersion = "v1"
@@ -15,6 +19,7 @@ object SecretGenerator {
             metadata {
                 labels = secretLabels
                 name = secretName
+                annotations= secretAnnotations
             }
             secretData?.let {
                 data = it.mapValues { Base64.encodeBase64String(it.value) }

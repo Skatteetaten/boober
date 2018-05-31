@@ -1,7 +1,9 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
+import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
+import no.skatteetaten.aurora.boober.utils.Instants
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -15,6 +17,8 @@ import java.io.OutputStream
 import java.nio.charset.Charset
 import java.security.KeyStore
 import java.security.ProviderException
+import java.time.Duration
+import java.time.Instant
 import java.util.Base64
 
 class StsCertificate(
@@ -27,8 +31,21 @@ class StsCertificate(
 
 data class StsProvisioningResult(
     val cert: StsCertificate,
-    val commonName: String
-)
+    val commonName: String,
+    val ttl:String="365d",
+    val renewBefore:String="30d"
+) {
+    fun renewAt() : Instant {
+        val now = Instants.now
+
+        val converter= StringToDurationConverter()
+
+        val ttlDuration=converter.convert(ttl)
+        val renewBeforeDuration =converter.convert(renewBefore)
+
+        return now + ttlDuration - renewBeforeDuration
+    }
+}
 
 @Service
 class StsProvisioner(
