@@ -23,12 +23,12 @@ object StsSecretGenerator {
         val cert = stsProvisionResults.cert
         return SecretGenerator.create(
             secretName = secretName,
-            secretLabels = labels.addIfNotNull(RENEW_AFTER_LABEL to stsProvisionResults.renewAt().epochSecond.toString()),
+            secretLabels = labels.addIfNotNull(RENEW_AFTER_LABEL to stsProvisionResults.renewAt.epochSecond.toString()),
             secretAnnotations = mapOf(
                 APP_ANNOTATION to appName,
-                TTL_ANNOTATION to stsProvisionResults.command.ttl,
-                RENEW_BEFORE_ANNOTATION to stsProvisionResults.command.renewBefore,
-                COMMON_NAME_ANNOTATION to stsProvisionResults.command.commonName
+                TTL_ANNOTATION to stsProvisionResults.spec.ttl,
+                RENEW_BEFORE_ANNOTATION to stsProvisionResults.spec.renewBefore,
+                COMMON_NAME_ANNOTATION to stsProvisionResults.spec.commonName
             ),
             secretData = mapOf(
                 "privatekey.key" to cert.key,

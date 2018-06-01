@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.mapper.v1
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
+import no.skatteetaten.aurora.boober.model.AuroraCertificateSpec
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraIntegration
 import no.skatteetaten.aurora.boober.model.Database
@@ -14,14 +15,14 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
     val handlers = dbHandlers + listOf(
         AuroraConfigFieldHandler("database", defaultValue = false),
         AuroraConfigFieldHandler("certificate/commonName"),
+        AuroraConfigFieldHandler("certificate/renewBefore", defaultValue = "30d"),
+//        AuroraConfigFieldHandler("certificate/ttl", defaultValue = "365d"), TODO: Ikke støttet i skap
         AuroraConfigFieldHandler("certificate", defaultValue = false),
         AuroraConfigFieldHandler("splunkIndex"),
         AuroraConfigFieldHandler("webseal", defaultValue = false),
         AuroraConfigFieldHandler("webseal/host"),
         AuroraConfigFieldHandler("webseal/roles")
     )
-
-    // TODO: ADD splunk, webseal, bigip
 
     fun integrations(auroraConfigFields: AuroraConfigFields): AuroraIntegration? {
         val name: String = auroraConfigFields.extract("name")
@@ -33,9 +34,16 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
         } else {
             auroraConfigFields.extractOrNull("certificate/commonName")
         }
+
+        val certificate = certificateCn?.let {
+            val renewAfter = auroraConfigFields.extract<String>("certificate/renewBefore")
+            //val ttl= auroraConfigFields.extract<String>("certificate/ttl") TODO:ikke støttet i skap
+            val ttl = "365d"
+            AuroraCertificateSpec(it, ttl, renewAfter)
+        }
         return AuroraIntegration(
             database = findDatabases(auroraConfigFields, name),
-            certificateCn = certificateCn,
+            certificate = certificate,
             splunkIndex = auroraConfigFields.extractOrNull("splunkIndex"),
             webseal = findWebseal(auroraConfigFields)
         )

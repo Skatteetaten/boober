@@ -26,8 +26,8 @@ class ExternalResourceProvisioner(
 
 
     private fun handleSts(deploymentSpec: AuroraDeploymentSpec): StsProvisioningResult? {
-        return deploymentSpec.integration?.certificateCn?.let {
-           stsProvisioner.generateCertificate(StsProvisioningCommand(it))
+        return deploymentSpec.integration?.certificate?.let {
+            stsProvisioner.generateCertificate(it)
         }
     }
 
