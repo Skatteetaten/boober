@@ -26,9 +26,9 @@ object StsSecretGenerator {
             secretLabels = labels.addIfNotNull(RENEW_AFTER_LABEL to stsProvisionResults.renewAt().epochSecond.toString()),
             secretAnnotations = mapOf(
                 APP_ANNOTATION to appName,
-                TTL_ANNOTATION to stsProvisionResults.ttl,
-                RENEW_BEFORE_ANNOTATION to stsProvisionResults.renewBefore,
-                COMMON_NAME_ANNOTATION to stsProvisionResults.commonName
+                TTL_ANNOTATION to stsProvisionResults.command.ttl,
+                RENEW_BEFORE_ANNOTATION to stsProvisionResults.command.renewBefore,
+                COMMON_NAME_ANNOTATION to stsProvisionResults.command.commonName
             ),
             secretData = mapOf(
                 "privatekey.key" to cert.key,

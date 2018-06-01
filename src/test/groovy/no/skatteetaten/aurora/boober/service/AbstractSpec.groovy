@@ -15,7 +15,21 @@ abstract class AbstractSpec extends Specification {
     AuroraDeploymentSpecService.APPLICATION_PLATFORM_HANDLERS = handlers
   }
 
-  String loadResource(String resourceName) {
+  byte[] loadByteResource(String resourceName) {
+    def folder = this.getClass().simpleName
+    loadByteResource(folder, resourceName)
+  }
+
+  byte[] loadByteResource(String folder, String resourceName) {
+    def resourcePath = "${folder}/$resourceName"
+
+    def path = "src/test/resources/" + this.getClass().package.getName().replace(".", "/") + "/$resourcePath"
+
+    this.getClass().getResource(resourcePath)?.openStream().bytes ?:
+        { throw new IllegalArgumentException("No such resource $path") }()
+  }
+
+   String loadResource(String resourceName) {
     def folder = this.getClass().simpleName
     loadResource(folder, resourceName)
   }

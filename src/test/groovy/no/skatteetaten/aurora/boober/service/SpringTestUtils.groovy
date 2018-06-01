@@ -27,6 +27,19 @@ class SpringTestUtils {
   }
 
   @Configuration
+  static class SkapMockRestServiceServiceInitializer {
+
+    @Autowired
+    @TargetService(ServiceTypes.SKAP)
+    RestTemplate restTemplate
+
+    @Bean
+    MockRestServiceServer mockRestServiceServer() {
+      MockRestServiceServer.createServer(restTemplate)
+    }
+  }
+
+  @Configuration
   static class AuroraMockRestServiceServiceInitializer {
 
     @Autowired
