@@ -78,13 +78,15 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
     when:
       def deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
     then:
-      deploymentSpec.integration.certificateCn == "some_common_name"
+      deploymentSpec.integration.certificate.commonName == "some_common_name"
+      deploymentSpec.integration.certificate.renewBefore == "30d"
+      deploymentSpec.integration.certificate.ttl == "365d"
 
     when:
       auroraConfigJson["utv/aos-simple.json"] = '''{ "certificate": false }'''
       deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
     then:
-      !deploymentSpec.integration.certificateCn
+      !deploymentSpec.integration.certificate
   }
 
   def "Verify that it is possible to set some common global config options for templates even if they are not directly supported by that type"() {
@@ -179,7 +181,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
     then:
       def e = thrown(AuroraConfigException)
       e.message ==
-          "Config for application aos-simple in environment utv contains errors. Affiliation can only contain letters and must be no longer than 10 characters."
+      "Config for application aos-simple in environment utv contains errors. Affiliation can only contain letters and must be no longer than 10 characters."
   }
 
   def "Parses variants of secretVault config correctly"() {
@@ -226,7 +228,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
   def "Webseal roles supports both comma separated string and array"() {
     given:
       modify(auroraConfigJson, "utv/aos-simple.json") {
-        put("webseal", [ "roles": roleConfig ])
+        put("webseal", ["roles": roleConfig])
       }
 
     when:

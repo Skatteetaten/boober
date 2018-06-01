@@ -99,9 +99,15 @@ data class AuroraBuild(
 
 data class AuroraIntegration(
     val database: List<Database> = listOf(),
-    val certificateCn: String? = null,
+    val certificate: AuroraCertificateSpec? = null,
     val splunkIndex: String? = null,
     val webseal: Webseal? = null
+)
+
+data class AuroraCertificateSpec(
+    val commonName: String,
+    val ttl: String = "365d",
+    val renewBefore: String = "30d"
 )
 
 data class AuroraDeploy(

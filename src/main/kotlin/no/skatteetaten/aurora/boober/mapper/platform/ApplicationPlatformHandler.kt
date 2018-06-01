@@ -166,7 +166,7 @@ fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpec: AuroraDeploymentSp
 
     val splunkIndex = auroraDeploymentSpec.integration?.splunkIndex?.let { "SPLUNK_INDEX" to it }
 
-    val certEnv = auroraDeploymentSpec.integration?.certificateCn?.let {
+    val certEnv = auroraDeploymentSpec.integration?.certificate?.let {
         val baseUrl = "/u01/secrets/app/${auroraDeploymentSpec.name}-cert"
         mapOf(
             "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",

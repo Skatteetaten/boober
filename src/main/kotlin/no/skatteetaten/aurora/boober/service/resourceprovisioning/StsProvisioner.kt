@@ -3,6 +3,8 @@ package no.skatteetaten.aurora.boober.service.resourceprovisioning
 import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
+import no.skatteetaten.aurora.boober.model.AuroraCertificateSpec
+import no.skatteetaten.aurora.boober.service.ProvisioningException
 import no.skatteetaten.aurora.boober.utils.Instants
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -16,7 +18,6 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.nio.charset.Charset
 import java.security.KeyStore
-import java.security.ProviderException
 import java.time.Instant
 import java.util.Base64
 
@@ -28,28 +29,13 @@ class StsCertificate(
     val keyPassword: String
 )
 
-data class StsProvisioningCommand(
-    val commonName: String,
-    val ttl: String = "365d",
-    val renewBefore: String = "30d"
-)
+
 
 data class StsProvisioningResult(
+    val spec: AuroraCertificateSpec,
     val cert: StsCertificate,
-    val command: StsProvisioningCommand
-) {
-    fun renewAt(): Instant {
-        val now = Instants.now
-
-        val converter = StringToDurationConverter()
-
-        val ttlDuration = converter.convert(command.ttl)
-        val renewBeforeDuration = converter.convert(command.renewBefore)
-
-        //TODO check negative
-        return now + ttlDuration - renewBeforeDuration
-    }
-}
+    val renewAt: Instant
+)
 
 @Service
 class StsProvisioner(
@@ -59,9 +45,10 @@ class StsProvisioner(
 ) {
     val logger: Logger = LoggerFactory.getLogger(StsProvisioner::class.java)
 
-    fun generateCertificate(command: StsProvisioningCommand): StsProvisioningResult {
+    fun generateCertificate(command: AuroraCertificateSpec): StsProvisioningResult {
 
         return try {
+            val renewAt = findRenewInstant(command)
             val response = restTemplate.getForEntity(
                 "$skapUrl/certificate?cn={commonName}",
                 Resource::class.java,
@@ -72,42 +59,61 @@ class StsProvisioner(
             val cert = createStsCert(response.body.inputStream, keyPassword, storePassword)
             StsProvisioningResult(
                 cert = cert,
-                command = command
+                spec = command,
+                renewAt = renewAt
             )
         } catch (e: Exception) {
-            throw ProviderException("Failed provisioning sts certificate with commonName=$command.commonName", e)
+            throw ProvisioningException(
+                "Failed provisioning sts certificate with commonName=${command.commonName} ${e.message}",
+                e
+            )
         }
     }
 
-    fun createStsCert(
-        body: InputStream,
-        keyPassword: String,
-        storePassword: String
-    ): StsCertificate {
+    companion object {
+        @JvmStatic
+        fun findRenewInstant(command: AuroraCertificateSpec): Instant {
+            val now = Instants.now
 
-        val keyStore = KeyStore.getInstance("JKS").apply {
-            this.load(body, "".toCharArray())
+            val converter = StringToDurationConverter()
+
+            val ttlDuration = converter.convert(command.ttl)
+            val renewBeforeDuration = converter.convert(command.renewBefore)
+
+            if (ttlDuration < renewBeforeDuration) {
+                throw IllegalArgumentException("Illegal combination ttl=${command.ttl} and renewBefoew=${command.renewBefore}. renew must be smaller then ttl.")
+            }
+            return now + ttlDuration - renewBeforeDuration
         }
-        val certificate = PEMWriter(PEMWriter.CERTIFICATE_TYPE, keyStore.getCertificate("ca").encoded)
-        val key = PEMWriter(
-            PEMWriter.PRIVATE_KEY_TYPE,
-            keyStore.getKey("ca", keyPassword.toCharArray()).encoded
-        )
-        val osKey = ByteArrayOutputStream()
-        val osCrt = ByteArrayOutputStream()
-        val osKeystore = ByteArrayOutputStream()
 
-        key.writeOut(osKey)
-        certificate.writeOut(osCrt)
-        keyStore.store(osKeystore, "".toCharArray())
+        @JvmStatic
+        fun createStsCert(
+            body: InputStream,
+            keyPassword: String,
+            storePassword: String
+        ): StsCertificate {
 
-        return StsCertificate(
-            crt = osCrt.toByteArray(),
-            key = osKey.toByteArray(),
-            keystore = osKeystore.toByteArray(),
-            storePassword = storePassword,
-            keyPassword = keyPassword
-        )
+            val keyStore = KeyStore.getInstance("JKS").apply {
+                this.load(body, storePassword.toCharArray())
+            }
+            val certificate = PEMWriter(PEMWriter.CERTIFICATE_TYPE, keyStore.getCertificate("ca").encoded)
+            val key = PEMWriter(PEMWriter.PRIVATE_KEY_TYPE, keyStore.getKey("ca", keyPassword.toCharArray()).encoded)
+            val osKey = ByteArrayOutputStream()
+            val osCrt = ByteArrayOutputStream()
+            val osKeystore = ByteArrayOutputStream()
+
+            key.writeOut(osKey)
+            certificate.writeOut(osCrt)
+            keyStore.store(osKeystore, storePassword.toCharArray())
+
+            return StsCertificate(
+                crt = osCrt.toByteArray(),
+                key = osKey.toByteArray(),
+                keystore = osKeystore.toByteArray(),
+                storePassword = storePassword,
+                keyPassword = keyPassword
+            )
+        }
     }
 
     internal class PEMWriter(private val type: String, private val encoded: ByteArray) {

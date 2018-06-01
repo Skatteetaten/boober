@@ -49,7 +49,7 @@ private fun createMountsFromDeploymentSpec(deploymentSpec: AuroraDeploymentSpec)
         )
     }
 
-    val certMount = deploymentSpec.integration?.certificateCn?.let {
+    val certMount = deploymentSpec.integration?.certificate?.let {
         Mount(
             path = "/u01/secrets/app/${deploymentSpec.name}-cert",
             type = MountType.Secret,
