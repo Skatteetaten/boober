@@ -17,7 +17,6 @@ import java.io.OutputStream
 import java.nio.charset.Charset
 import java.security.KeyStore
 import java.security.ProviderException
-import java.time.Duration
 import java.time.Instant
 import java.util.Base64
 
@@ -29,20 +28,25 @@ class StsCertificate(
     val keyPassword: String
 )
 
+data class StsProvisioningCommand(
+    val commonName: String,
+    val ttl: String = "365d",
+    val renewBefore: String = "30d"
+)
+
 data class StsProvisioningResult(
     val cert: StsCertificate,
-    val commonName: String,
-    val ttl:String="365d",
-    val renewBefore:String="30d"
+    val command: StsProvisioningCommand
 ) {
-    fun renewAt() : Instant {
+    fun renewAt(): Instant {
         val now = Instants.now
 
-        val converter= StringToDurationConverter()
+        val converter = StringToDurationConverter()
 
-        val ttlDuration=converter.convert(ttl)
-        val renewBeforeDuration =converter.convert(renewBefore)
+        val ttlDuration = converter.convert(command.ttl)
+        val renewBeforeDuration = converter.convert(command.renewBefore)
 
+        //TODO check negative
         return now + ttlDuration - renewBeforeDuration
     }
 }
@@ -55,20 +59,24 @@ class StsProvisioner(
 ) {
     val logger: Logger = LoggerFactory.getLogger(StsProvisioner::class.java)
 
-    fun generateCertificate(commonName: String): StsProvisioningResult {
+    fun generateCertificate(command: StsProvisioningCommand): StsProvisioningResult {
 
-        val response = try {
-            restTemplate.getForEntity("$skapUrl/certificate?cn={commonName}", Resource::class.java, commonName)
+        return try {
+            val response = restTemplate.getForEntity(
+                "$skapUrl/certificate?cn={commonName}",
+                Resource::class.java,
+                command.commonName
+            )
+            val keyPassword = response.headers.getFirst("key-password")
+            val storePassword = response.headers.getFirst("store-password")
+            val cert = createStsCert(response.body.inputStream, keyPassword, storePassword)
+            StsProvisioningResult(
+                cert = cert,
+                command = command
+            )
         } catch (e: Exception) {
-            throw ProviderException("Failed provisioning sts certificate with commonName=$commonName", e)
+            throw ProviderException("Failed provisioning sts certificate with commonName=$command.commonName", e)
         }
-        val keyPassword = response.headers.getFirst("key-password")
-        val storePassword = response.headers.getFirst("store-password")
-        val cert = createStsCert(response.body.inputStream, keyPassword, storePassword)
-        return StsProvisioningResult(
-            cert = cert,
-            commonName = commonName
-        )
     }
 
     fun createStsCert(
