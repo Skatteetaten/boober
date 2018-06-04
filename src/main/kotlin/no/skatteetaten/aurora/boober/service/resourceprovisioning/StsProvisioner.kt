@@ -29,8 +29,6 @@ class StsCertificate(
     val keyPassword: String
 )
 
-
-
 data class StsProvisioningResult(
     val spec: AuroraCertificateSpec,
     val cert: StsCertificate,

@@ -24,7 +24,6 @@ class ExternalResourceProvisioner(
         return ProvisioningResult(schemaProvisionResult, schemaResults, stsProvisioningResult)
     }
 
-
     private fun handleSts(deploymentSpec: AuroraDeploymentSpec): StsProvisioningResult? {
         return deploymentSpec.integration?.certificate?.let {
             stsProvisioner.generateCertificate(it)
@@ -55,7 +54,12 @@ class ExternalResourceProvisioner(
                 if (it.id != null) {
                     SchemaIdRequest(it.id, name)
                 } else {
-                    SchemaForAppRequest(deploymentSpec.environment.affiliation, deploymentSpec.environment.envName, deploymentSpec.name, name)
+                    SchemaForAppRequest(
+                        deploymentSpec.environment.affiliation,
+                        deploymentSpec.environment.envName,
+                        deploymentSpec.name,
+                        name
+                    )
                 }
             }
         }
@@ -67,7 +71,14 @@ class ExternalResourceProvisioner(
             val secretVaultNames = volume.mounts?.mapNotNull { it.secretVaultName }.orEmpty()
             val allVaultNames = volume.secretVaultName?.let { secretVaultNames + listOf(it) } ?: secretVaultNames
 
-            return allVaultNames.map { VaultRequest(deploymentSpec.environment.affiliation, it, volume.secretVaultKeys, volume.keyMappings) }
+            return allVaultNames.map {
+                VaultRequest(
+                    deploymentSpec.environment.affiliation,
+                    it,
+                    volume.secretVaultKeys,
+                    volume.keyMappings
+                )
+            }
         }
     }
 }
