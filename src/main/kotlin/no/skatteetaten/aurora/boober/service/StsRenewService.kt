@@ -20,7 +20,6 @@ data class RenewRequest(
     val renewBefore: String,
     val commonName: String
 )
-
 @Service
 class StsRenewService(
     val provsioner: StsProvisioner,
