@@ -8,10 +8,11 @@ import org.apache.commons.codec.binary.Base64
 
 object SecretGenerator {
 
-    fun create(secretName: String,
+    fun create(
+        secretName: String,
         secretLabels: Map<String, String>,
         secretData: Map<String, ByteArray>?,
-        secretAnnotations:Map<String, String> = emptyMap()
+        secretAnnotations: Map<String, String> = emptyMap()
     ): Secret {
 
         return newSecret {
@@ -21,7 +22,7 @@ object SecretGenerator {
                 labels = secretLabels
                 name = secretName
                 secretAnnotations.isNotEmpty().whenTrue {
-                    annotations= secretAnnotations
+                    annotations = secretAnnotations
                 }
             }
             secretData?.let {

@@ -97,8 +97,12 @@ class OpenShiftObjectGenerator(
                 .addIfNotNull(generateService(auroraDeploymentSpec, labels))
                 .addIfNotNull(generateImageStream(deployId, auroraDeploymentSpec))
                 .addIfNotNull(generateBuilds(auroraDeploymentSpec, deployId))
-                .addIfNotNull(generateSecretsAndConfigMaps(auroraDeploymentSpec.name, mounts
-                    ?: emptyList(), labels, provisioningResult))
+                .addIfNotNull(
+                    generateSecretsAndConfigMaps(
+                        auroraDeploymentSpec.name, mounts
+                            ?: emptyList(), labels, provisioningResult
+                    )
+                )
                 .addIfNotNull(generateRoute(auroraDeploymentSpec, labels))
                 .addIfNotNull(generateTemplates(auroraDeploymentSpec, mounts))
         })
@@ -144,7 +148,11 @@ class OpenShiftObjectGenerator(
         return listOf(admin).addIfNotNull(view).map { mapper.convertValue<JsonNode>(it) }
     }
 
-    fun generateDeploymentConfig(deployId: String, deploymentSpec: AuroraDeploymentSpec, provisioningResult: ProvisioningResult? = null): JsonNode? =
+    fun generateDeploymentConfig(
+        deployId: String,
+        deploymentSpec: AuroraDeploymentSpec,
+        provisioningResult: ProvisioningResult? = null
+    ): JsonNode? =
         withLabelsAndMounts(deployId, deploymentSpec, provisioningResult) { labels, mounts ->
             generateDeploymentConfig(deploymentSpec, labels, mounts)
         }
@@ -159,12 +167,21 @@ class OpenShiftObjectGenerator(
             return null
         }
 
-        val applicationPlatformHandler = AuroraDeploymentSpecService.APPLICATION_PLATFORM_HANDLERS[auroraDeploymentSpec.applicationPlatform]
-            ?: throw IllegalArgumentException("ApplicationPlatformHandler ${auroraDeploymentSpec.applicationPlatform} is not present")
+        val applicationPlatformHandler =
+            AuroraDeploymentSpecService.APPLICATION_PLATFORM_HANDLERS[auroraDeploymentSpec.applicationPlatform]
+                ?: throw IllegalArgumentException("ApplicationPlatformHandler ${auroraDeploymentSpec.applicationPlatform} is not present")
 
-        val sidecarContainers = applicationPlatformHandler.createSidecarContainers(auroraDeploymentSpec, mounts?.filter { it.targetContainer == ToxiProxyDefaults.NAME })
+        val sidecarContainers = applicationPlatformHandler.createSidecarContainers(
+            auroraDeploymentSpec,
+            mounts?.filter { it.targetContainer == ToxiProxyDefaults.NAME })
 
-        val deployment = applicationPlatformHandler.handleAuroraDeployment(auroraDeploymentSpec, labels, mounts, routeSuffix, sidecarContainers)
+        val deployment = applicationPlatformHandler.handleAuroraDeployment(
+            auroraDeploymentSpec,
+            labels,
+            mounts,
+            routeSuffix,
+            sidecarContainers
+        )
 
         val containers = deployment.containers.map { ContainerGenerator.create(it) }
 
@@ -186,14 +203,16 @@ class OpenShiftObjectGenerator(
             }
 
             val prometheusAnnotations = it.prometheus?.takeIf { it.path != "" }?.let {
-                mapOf("prometheus.io/scheme" to "http",
+                mapOf(
+                    "prometheus.io/scheme" to "http",
                     "prometheus.io/scrape" to "true",
                     "prometheus.io/path" to it.path,
                     "prometheus.io/port" to "${it.port}"
                 )
             } ?: mapOf("prometheus.io/scrape" to "false")
 
-            val podPort = if (auroraDeploymentSpec.deploy.toxiProxy != null) PortNumbers.TOXIPROXY_HTTP_PORT else PortNumbers.INTERNAL_HTTP_PORT
+            val podPort =
+                if (auroraDeploymentSpec.deploy.toxiProxy != null) PortNumbers.TOXIPROXY_HTTP_PORT else PortNumbers.INTERNAL_HTTP_PORT
 
             val service = newService {
                 apiVersion = "v1"
@@ -228,13 +247,21 @@ class OpenShiftObjectGenerator(
     fun generateImageStream(deployId: String, auroraDeploymentSpec: AuroraDeploymentSpec): JsonNode? {
         return auroraDeploymentSpec.deploy?.let {
 
-            val labels = openShiftObjectLabelService.createCommonLabels(auroraDeploymentSpec, deployId,
-                mapOf("releasedVersion" to it.version))
+            val labels = openShiftObjectLabelService.createCommonLabels(
+                auroraDeploymentSpec, deployId,
+                mapOf("releasedVersion" to it.version)
+            )
 
             val imageStream = if (auroraDeploymentSpec.type == TemplateType.development) {
                 ImageStreamGenerator.createLocalImageStream(auroraDeploymentSpec.name, labels)
             } else {
-                ImageStreamGenerator.createRemoteImageStream(auroraDeploymentSpec.name, labels, dockerRegistry, it.dockerImagePath, it.dockerTag)
+                ImageStreamGenerator.createRemoteImageStream(
+                    auroraDeploymentSpec.name,
+                    labels,
+                    dockerRegistry,
+                    it.dockerImagePath,
+                    it.dockerTag
+                )
             }
 
             return mapper.convertValue(imageStream)
@@ -244,12 +271,24 @@ class OpenShiftObjectGenerator(
     fun generateTemplates(auroraDeploymentSpec: AuroraDeploymentSpec, mounts: List<Mount>?): List<JsonNode>? {
 
         val localTemplate = auroraDeploymentSpec.localTemplate?.let {
-            openShiftTemplateProcessor.generateObjects(it.templateJson as ObjectNode, it.parameters, auroraDeploymentSpec, it.version, it.replicas)
+            openShiftTemplateProcessor.generateObjects(
+                it.templateJson as ObjectNode,
+                it.parameters,
+                auroraDeploymentSpec,
+                it.version,
+                it.replicas
+            )
         }
 
         val template = auroraDeploymentSpec.template?.let {
             val template = openShiftClient.get("template", "openshift", it.template)?.body as ObjectNode
-            openShiftTemplateProcessor.generateObjects(template, it.parameters, auroraDeploymentSpec, it.version, it.replicas)
+            openShiftTemplateProcessor.generateObjects(
+                template,
+                it.parameters,
+                auroraDeploymentSpec,
+                it.version,
+                it.replicas
+            )
         }
 
         val objects: List<JsonNode> = listOf<JsonNode>().addIfNotNull(localTemplate).addIfNotNull(template)
@@ -313,21 +352,31 @@ class OpenShiftObjectGenerator(
         }
     }
 
-    fun generateSecretsAndConfigMapsInTest(deployId: String, deploymentSpec: AuroraDeploymentSpec, provisioningResult: ProvisioningResult? = null, name: String): List<JsonNode>? {
+    fun generateSecretsAndConfigMapsInTest(
+        deployId: String,
+        deploymentSpec: AuroraDeploymentSpec,
+        provisioningResult: ProvisioningResult? = null,
+        name: String
+    ): List<JsonNode>? {
 
         return withLabelsAndMounts(deployId, deploymentSpec, provisioningResult, { labels, mounts ->
             generateSecretsAndConfigMaps(name, mounts ?: emptyList(), labels, provisioningResult)
         })
     }
 
-    private fun generateSecretsAndConfigMaps(appName: String, mounts: List<Mount>, labels: Map<String, String>, provisioningResult: ProvisioningResult?): List<JsonNode> {
+    private fun generateSecretsAndConfigMaps(
+        appName: String,
+        mounts: List<Mount>,
+        labels: Map<String, String>,
+        provisioningResult: ProvisioningResult?
+    ): List<JsonNode> {
 
         val schemaSecrets = provisioningResult?.schemaProvisionResults
             ?.let { DbhSecretGenerator.create(appName, it, labels) }
             ?: emptyList()
 
-        val stsSecret= provisioningResult?.stsProvisioningResult
-            ?.let { StsSecretGenerator.create(appName, it, labels)}
+        val stsSecret = provisioningResult?.stsProvisioningResult
+            ?.let { StsSecretGenerator.create(appName, it, labels) }
 
         val schemaSecretNames = schemaSecrets.map { it.metadata.name }
 

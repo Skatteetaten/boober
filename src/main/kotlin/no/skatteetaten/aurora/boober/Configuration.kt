@@ -104,7 +104,7 @@ class Configuration : BeanPostProcessor {
             .interceptors(ClientHttpRequestInterceptor { request, body, execution ->
                 request.headers.apply {
                     set(HttpHeaders.AUTHORIZATION, "aurora-token ${sharedSecretReader.secret}")
-                    accept= listOf(MediaType.APPLICATION_OCTET_STREAM)
+                    accept = listOf(MediaType.APPLICATION_OCTET_STREAM)
                     set(AuroraHeaderFilter.KORRELASJONS_ID, RequestKorrelasjon.getId())
                     set(clientIdHeaderName, applicationName)
                     set("Meldingsid", UUID.randomUUID().toString())
@@ -141,7 +141,10 @@ class Configuration : BeanPostProcessor {
             }).build()
     }
 
-    private fun defaultHttpComponentsClientHttpRequestFactory(readTimeout: Int, connectTimeout: Int): HttpComponentsClientHttpRequestFactory {
+    private fun defaultHttpComponentsClientHttpRequestFactory(
+        readTimeout: Int,
+        connectTimeout: Int
+    ): HttpComponentsClientHttpRequestFactory {
         return HttpComponentsClientHttpRequestFactory().apply {
             setReadTimeout(readTimeout)
             setConnectTimeout(connectTimeout)

@@ -16,7 +16,7 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
         AuroraConfigFieldHandler("database", defaultValue = false),
         AuroraConfigFieldHandler("certificate/commonName"),
         AuroraConfigFieldHandler("certificate/renewBefore", defaultValue = "30d"),
-//        AuroraConfigFieldHandler("certificate/ttl", defaultValue = "365d"), TODO: Ikke støttet i skap
+        // AuroraConfigFieldHandler("certificate/ttl", defaultValue = "365d"), TODO: Ikke støttet i skap
         AuroraConfigFieldHandler("certificate", defaultValue = false),
         AuroraConfigFieldHandler("splunkIndex"),
         AuroraConfigFieldHandler("webseal", defaultValue = false),
@@ -37,7 +37,7 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
 
         val certificate = certificateCn?.let {
             val renewAfter = auroraConfigFields.extract<String>("certificate/renewBefore")
-            //val ttl= auroraConfigFields.extract<String>("certificate/ttl") TODO:ikke støttet i skap
+            // val ttl= auroraConfigFields.extract<String>("certificate/ttl") TODO:ikke støttet i skap
             val ttl = "365d"
             AuroraCertificateSpec(it, ttl, renewAfter)
         }
