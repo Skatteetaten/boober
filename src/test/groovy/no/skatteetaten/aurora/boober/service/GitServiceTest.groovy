@@ -4,6 +4,7 @@ import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.ResetCommand
 import org.eclipse.jgit.revwalk.RevCommit
 
+import groovy.json.JsonSlurper
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
@@ -57,5 +58,31 @@ class GitServiceTest extends Specification {
       List<RevCommit> commits = repoUser2.log().all().call().asList()
       commits*.fullMessage.containsAll("First commit", "Second commit")
       commits.size() == 2
+  }
+
+  def "Verify checking out repository with refName"() {
+    given:
+      def home = System.getProperty("user.home")
+      def TEST_REPO_NAME = "boober-test"
+      REMOTE_REPO_FOLDER = new File("$home/repos").absoluteFile.absolutePath
+      gitService = new GitService(userDetailsProvider, "$REMOTE_REPO_FOLDER/%s", CHECKOUT_PATH, "", "",
+          new AuroraMetrics(new SimpleMeterRegistry()))
+
+    when:
+      def git = gitService.checkoutRepository(TEST_REPO_NAME, "master")
+      def masterConsoleFile = new JsonSlurper().parse(new File("$CHECKOUT_PATH/$TEST_REPO_NAME/console.json"))
+
+    then:
+      git.repository.branch == "master"
+      masterConsoleFile.version == "3"
+
+
+    when:
+      git = gitService.checkoutRepository(TEST_REPO_NAME, "develop")
+      def developConsoleFile = new JsonSlurper().parse(new File("$CHECKOUT_PATH/$TEST_REPO_NAME/console.json"))
+
+    then:
+      git.repository.branch == "develop"
+      developConsoleFile.version == "4"
   }
 }
