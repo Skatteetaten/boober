@@ -13,7 +13,7 @@ class AuroraLocalTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>, 
     val handlers = parameterHandlers + listOf(
         AuroraConfigFieldHandler("templateFile", validator = { json ->
             val fileName = json?.textValue()
-            if (auroraConfig.auroraConfigFiles.none { it.name == fileName }) {
+            if (auroraConfig.files.none { it.name == fileName }) {
                 IllegalArgumentException("The file named $fileName does not exist in AuroraConfig")
             } else {
                 null
@@ -43,7 +43,7 @@ class AuroraLocalTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>, 
 
     private fun extractTemplateJson(auroraConfigFields: AuroraConfigFields): JsonNode {
         val templateFile = auroraConfigFields.extract<String>("templateFile").let { fileName ->
-            auroraConfig.auroraConfigFiles.find { it.name == fileName }?.asJsonNode
+            auroraConfig.files.find { it.name == fileName }?.asJsonNode
         }
         return templateFile ?: throw IllegalArgumentException("templateFile is required")
     }

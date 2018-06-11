@@ -12,10 +12,10 @@ class DeployLogService(@TargetDomain(AURORA_CONFIG) val gitService: GitService, 
 
     private val FAILED_PREFIX = "FAILED"
 
-    fun markRelease(auroraConfigName: String, deployResult: List<AuroraDeployResult>) {
+    fun markRelease(ref: AuroraConfigRef, deployResult: List<AuroraDeployResult>) {
 
-        val repo = gitService.checkoutRepository(auroraConfigName)
-        val refs = deployResult
+        val repo = gitService.checkoutRepository(ref.name, refName = ref.refName)
+        deployResult
             .filter { !it.ignored }
             .map {
                 val result = filterSensitiveInformation(it)
@@ -23,7 +23,10 @@ class DeployLogService(@TargetDomain(AURORA_CONFIG) val gitService: GitService, 
 
                 gitService.createAnnotatedTag(repo, "$prefix/${it.tag}", mapper.writeValueAsString(result))
             }
-        gitService.pushTags(repo, refs)
+            .takeIf { it.isNotEmpty() }
+            ?.let {
+                gitService.pushTags(repo, it)
+            }
     }
 
     private fun filterSensitiveInformation(result: AuroraDeployResult): AuroraDeployResult {
@@ -32,8 +35,8 @@ class DeployLogService(@TargetDomain(AURORA_CONFIG) val gitService: GitService, 
         return result.copy(openShiftResponses = filteredResponses)
     }
 
-    fun deployHistory(affiliation: String): List<DeployHistory> {
-        val repo = gitService.checkoutRepository(affiliation)
+    fun deployHistory(ref: AuroraConfigRef): List<DeployHistory> {
+        val repo = gitService.checkoutRepository(ref.name, refName = ref.refName)
         val res = gitService.getTagHistory(repo)
             .filter { it.tagName.startsWith(DEPLOY_PREFIX) }
             .map {
@@ -44,8 +47,8 @@ class DeployLogService(@TargetDomain(AURORA_CONFIG) val gitService: GitService, 
         return res
     }
 
-    fun findDeployResultById(auroraConfigId: String, deployId: String): DeployHistory? {
-        val repo = gitService.checkoutRepository(auroraConfigId)
+    fun findDeployResultById(ref: AuroraConfigRef, deployId: String): DeployHistory? {
+        val repo = gitService.checkoutRepository(ref.name, refName = ref.refName)
         val res: DeployHistory? = gitService.getTagHistory(repo)
             .firstOrNull { it.tagName.endsWith(deployId) }
             ?.let {

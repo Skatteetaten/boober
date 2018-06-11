@@ -1,9 +1,6 @@
 package no.skatteetaten.aurora.boober.model
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-
-import kotlin.Pair
 
 class AuroraConfigTest extends AbstractAuroraConfigTest {
 
@@ -33,7 +30,7 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
       def updateFileResponse= auroraConfig.updateFile("booberdev/console.json", updates)
       def updatedAuroraConfig=updateFileResponse.second
     then:
-      def version = updatedAuroraConfig.getAuroraConfigFiles().stream()
+      def version = updatedAuroraConfig.getFiles().stream()
           .filter({ it.configName == "booberdev/console.json" })
           .map({ it.asJsonNode.get("version").asText() })
           .findFirst()
@@ -56,7 +53,7 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
       AuroraConfig updatedAuroraConfig = auroraConfig.updateFile(fileName, updates).second
 
     then:
-      def version = updatedAuroraConfig.getAuroraConfigFiles().stream()
+      def version = updatedAuroraConfig.getFiles().stream()
           .filter({ it.configName == fileName })
           .map({ it.asJsonNode.get("version").asText() })
           .findFirst()
@@ -114,7 +111,7 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
     given:
       def referanseAid = new ApplicationId("utv", "referanse")
       def files = createMockFiles("about.json", "referanse.json", "utv/about.json")
-      def auroraConfig = new AuroraConfig(files, "aos")
+      def auroraConfig = new AuroraConfig(files, "aos", "master")
 
     when:
       auroraConfig.getFilesForApplication(referanseAid)
@@ -152,12 +149,12 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
 }]
 """
     when:
-      def version = auroraConfig.auroraConfigFiles.find { it.name == filename }.version
+      def version = auroraConfig.getFiles().find { it.name == filename }.version
       def patchFileResponse = auroraConfig.patchFile(filename, jsonOp, version)
       def patchedAuroraConfig=patchFileResponse.second
 
     then:
-      def patchedFile = patchedAuroraConfig.auroraConfigFiles.find { it.name == filename }
+      def patchedFile = patchedAuroraConfig.getFiles().find { it.name == filename }
       patchedFile.asJsonNode.at("/version").textValue() == "3"
   }
 

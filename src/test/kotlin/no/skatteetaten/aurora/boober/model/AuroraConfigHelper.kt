@@ -19,14 +19,14 @@ fun getAuroraConfigSamples(): AuroraConfig {
         it.key to it.value.readText(Charset.defaultCharset())
     }.toMap()
 
-    return AuroraConfig(nodes.map { AuroraConfigFile(it.key, it.value, false) }, "aos")
+    return AuroraConfig(nodes.map { AuroraConfigFile(it.key, it.value, false) }, "aos", "master")
 }
 
 @JvmOverloads
-fun createAuroraConfig(aid: ApplicationId, affiliation: String = "aos", additionalFile: String? = null): AuroraConfig {
+fun createAuroraConfig(aid: ApplicationId, affiliation: String = "aos", additionalFile: String? = null, refName: String = "master"): AuroraConfig {
     val files = getSampleFiles(aid, additionalFile)
 
-    return AuroraConfig(files.map { AuroraConfigFile(it.key, it.value, false) }, affiliation)
+    return AuroraConfig(files.map { AuroraConfigFile(it.key, it.value, false) }, affiliation, refName)
 }
 
 @JvmOverloads

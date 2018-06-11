@@ -166,7 +166,7 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
       userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User", [])
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
-      GitServiceHelperKt.recreateEmptyBareRepos(auroraConfig.affiliation)
+      GitServiceHelperKt.recreateEmptyBareRepos(auroraConfig.getName())
       GitServiceHelperKt.recreateRepo(new File("/tmp/vaulttest/aos"))
       GitServiceHelperKt.recreateRepo(new File("/tmp/boobertest/aos"))
 
@@ -177,7 +177,7 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
 
   void createRepoAndSaveFiles(AuroraConfig auroraConfig) {
 
-    GitServiceHelperKt.recreateEmptyBareRepos(auroraConfig.affiliation)
+    GitServiceHelperKt.recreateEmptyBareRepos(auroraConfig.getName())
     auroraConfigService.save(auroraConfig)
   }
 

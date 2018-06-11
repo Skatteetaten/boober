@@ -40,17 +40,17 @@ class DeployService(
     val logger: Logger = LoggerFactory.getLogger(DeployService::class.java)
 
     @JvmOverloads
-    fun executeDeploy(auroraConfigName: String, applicationIds: List<ApplicationId>, overrides: List<AuroraConfigFile> = listOf(), deploy: Boolean = true): List<AuroraDeployResult> {
+    fun executeDeploy(ref: AuroraConfigRef, applicationIds: List<ApplicationId>, overrides: List<AuroraConfigFile> = listOf(), deploy: Boolean = true): List<AuroraDeployResult> {
 
         if (applicationIds.isEmpty()) {
             throw IllegalArgumentException("Specify applicationId")
         }
 
-        val deploymentSpecs = auroraConfigService.createValidatedAuroraDeploymentSpecs(auroraConfigName, applicationIds, overrides)
+        val deploymentSpecs = auroraConfigService.createValidatedAuroraDeploymentSpecs(ref, applicationIds, overrides)
         val environments = prepareDeployEnvironments(deploymentSpecs)
         val deployResults: List<AuroraDeployResult> = deployFromSpecs(deploymentSpecs, environments, deploy)
 
-        deployLogService.markRelease(auroraConfigName, deployResults)
+        deployLogService.markRelease(ref, deployResults)
 
         return deployResults
     }

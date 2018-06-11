@@ -160,7 +160,7 @@ class VaultService(
 
         return synchronized(vaultCollectionName) {
 
-            val repo = gitService.checkoutRepository(vaultCollectionName)
+            val repo = gitService.checkoutRepository(vaultCollectionName, refName = "master")
             val folder = repo.repository.directory.parentFile
             val vaultCollection = VaultCollection.fromFolder(folder, encryptionService::encrypt, encryptionService::decrypt)
             val response = function(vaultCollection, repo)

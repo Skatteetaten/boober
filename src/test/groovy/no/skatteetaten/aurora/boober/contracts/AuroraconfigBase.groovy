@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.contracts
 import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigControllerV1
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 
 class AuroraconfigBase extends AbstractContractBase {
@@ -10,11 +11,11 @@ class AuroraconfigBase extends AbstractContractBase {
   void setup() {
     loadJsonResponses(this)
     def auroraConfigService = Mock(AuroraConfigService) {
-      findAuroraConfig(_ as String) >> createAuroraConfig()
-      findAuroraConfigFileNames(_ as String) >> createFileNames()
-      findAuroraConfigFile(_ as String, _ as String) >> createAuroraConfigFile()
-      updateAuroraConfigFile(_ as String, _ as String, _ as String, null) >> createAuroraConfig()
-      patchAuroraConfigFile(_ as String, _ as String, _ as String, null) >> createAuroraConfig()
+      findAuroraConfig(_ as AuroraConfigRef) >> createAuroraConfig()
+      findAuroraConfigFileNames(_ as AuroraConfigRef) >> createFileNames()
+      findAuroraConfigFile(_ as AuroraConfigRef, _ as String) >> createAuroraConfigFile()
+      updateAuroraConfigFile(_ as AuroraConfigRef, _ as String, _ as String, null) >> createAuroraConfig()
+      patchAuroraConfigFile(_ as AuroraConfigRef, _ as String, _ as String, null) >> createAuroraConfig()
     }
     AuroraConfigControllerV1 controller = new AuroraConfigControllerV1(auroraConfigService)
     setupMockMvc(controller)
@@ -27,7 +28,7 @@ class AuroraconfigBase extends AbstractContractBase {
 
   AuroraConfig createAuroraConfig() {
     def affiliation = response('auroraconfig', '$.items[0].name', String)
-    new AuroraConfig([createAuroraConfigFile()], affiliation)
+    new AuroraConfig([createAuroraConfigFile()], affiliation, "master")
   }
 
   List<String> createFileNames() {

@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
 import no.skatteetaten.aurora.boober.controller.internal.Response
+import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.DeployHistory
 import no.skatteetaten.aurora.boober.service.DeployLogService
 import org.springframework.http.HttpStatus
@@ -17,14 +18,16 @@ class ApplyResultController(val deployLogService: DeployLogService) {
     @GetMapping("/")
     fun deployHistory(@PathVariable auroraConfigName: String): Response {
 
-        val applicationResults: List<DeployHistory> = deployLogService.deployHistory(auroraConfigName)
+        val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
+        val applicationResults: List<DeployHistory> = deployLogService.deployHistory(ref)
         return Response(items = applicationResults)
     }
 
     @GetMapping("/{deployId}")
     fun findById(@PathVariable auroraConfigName: String, @PathVariable deployId: String): ResponseEntity<Response> {
 
-        val deployResult = deployLogService.findDeployResultById(auroraConfigName, deployId)
+        val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
+        val deployResult = deployLogService.findDeployResultById(ref, deployId)
         return deployResult?.let {
             ResponseEntity(Response(items = listOf(deployResult)), HttpStatus.OK)
         } ?: ResponseEntity(HttpStatus.NOT_FOUND)

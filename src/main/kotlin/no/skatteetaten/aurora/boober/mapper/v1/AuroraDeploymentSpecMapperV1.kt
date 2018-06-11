@@ -30,7 +30,10 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
         AuroraConfigFieldHandler("management", defaultValue = true),
         AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
         AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
-        AuroraConfigFieldHandler("deployStrategy/type", defaultValue = "rolling", validator = { it.oneOf(listOf("recreate", "rolling")) }),
+        AuroraConfigFieldHandler(
+            "deployStrategy/type",
+            defaultValue = "rolling",
+            validator = { it.oneOf(listOf("recreate", "rolling")) }),
         AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = 180)
     )
 
@@ -44,7 +47,8 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
         integration: AuroraIntegration?,
         localTemplate: AuroraLocalTemplate?,
         env: AuroraDeployEnvironment,
-        applicationFile: AuroraConfigFile
+        applicationFile: AuroraConfigFile,
+        configVersion: String
     ): AuroraDeploymentSpec {
         val name: String = auroraConfigFields.extract("name")
 
@@ -56,7 +60,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
             name = name,
             cluster = auroraConfigFields.extract("cluster"),
             environment = env,
-            fields = createFields(applicationId, auroraConfigFields, build),
+            fields = createFields(applicationId, configVersion, auroraConfigFields, build),
             volume = volume,
             route = route,
             build = build,
@@ -64,7 +68,9 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
             template = template,
             localTemplate = localTemplate,
             integration = integration,
-            applicationFile = applicationFile)
+            applicationFile = applicationFile,
+            configVersion = configVersion
+        )
     }
 
     private fun createIncludeSubKeysMap(fields: Map<String, AuroraConfigField>): Map<String, Boolean> {
@@ -84,11 +90,22 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
         return includeSubKeys
     }
 
-    fun createFields(applicationId: ApplicationId, auroraConfigFields: AuroraConfigFields, build: AuroraBuild?): Map<String, Map<String, Any?>> {
-        val applicationIdField = mapOf("applicationId" to mapOf(
-            "source" to "static",
-            "value" to applicationId.toString()
-        ))
+    fun createFields(
+        applicationId: ApplicationId,
+        configVersion: String,
+        auroraConfigFields: AuroraConfigFields,
+        build: AuroraBuild?
+    ): Map<String, Map<String, Any?>> {
+        val applicationIdField = mapOf(
+            "applicationId" to mapOf(
+                "source" to "static",
+                "value" to applicationId.toString()
+            ),
+            "configVersion" to mapOf(
+                "source" to "static",
+                "value" to configVersion
+            )
+        )
 
         val fields = createMapForAuroraDeploymentSpecPointers(createFieldsWithValues(auroraConfigFields, build))
 
@@ -135,8 +152,12 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
         return fields as Map<String, Map<String, Any?>>
     }
 
-    private fun createFieldsWithValues(auroraConfigFields: AuroraConfigFields, build: AuroraBuild?): Map<String, AuroraConfigField> {
+    private fun createFieldsWithValues(
+        auroraConfigFields: AuroraConfigFields,
+        build: AuroraBuild?
+    ): Map<String, AuroraConfigField> {
 
         return auroraConfigFields.fields.filterValues { it.source != null || it.handler.defaultValue != null }
     }
 }
+

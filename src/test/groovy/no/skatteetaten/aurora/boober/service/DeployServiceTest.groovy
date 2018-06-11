@@ -34,6 +34,7 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "aos-simple"
   def affiliation = "aos"
+  def configRef = new AuroraConfigRef(affiliation, "master")
 
   final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
 
@@ -63,8 +64,9 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
 
   def "Should prepare deploy environment for new project with ttl"() {
     given:
+      def ref = new AuroraConfigRef(affiliation, "master")
       def ads = auroraConfigService.
-          createValidatedAuroraDeploymentSpecs(affiliation, [new ApplicationId(ENV_NAME, APP_NAME)])
+          createValidatedAuroraDeploymentSpecs(ref, [new ApplicationId(ENV_NAME, APP_NAME)])
 
     when:
       def deployResults = deployService.prepareDeployEnvironments(ads)
@@ -83,7 +85,7 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
 
   def "Throw IllegalArgumentException if no applicationId is specified"() {
     when:
-      deployService.executeDeploy(affiliation, [])
+      deployService.executeDeploy(configRef, [])
 
     then:
       thrown(IllegalArgumentException)
@@ -92,7 +94,7 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
   @Unroll
   def "Execute deploy for #env/#name"() {
     when:
-      def results = deployService.executeDeploy(affiliation, [new ApplicationId(env, name)])
+      def results = deployService.executeDeploy(configRef, [new ApplicationId(env, name)])
 
     then:
       results.success
