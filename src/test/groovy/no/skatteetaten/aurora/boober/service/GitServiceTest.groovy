@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
+import org.apache.tools.ant.taskdefs.Expand
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.ResetCommand
 import org.eclipse.jgit.revwalk.RevCommit
@@ -62,10 +63,9 @@ class GitServiceTest extends Specification {
 
   def "Verify checking out repository with refName"() {
     given:
-      def home = System.getProperty("user.home")
       def TEST_REPO_NAME = "boober-test"
-      REMOTE_REPO_FOLDER = new File("$home/repos").absoluteFile.absolutePath
-      gitService = new GitService(userDetailsProvider, "$REMOTE_REPO_FOLDER/%s", CHECKOUT_PATH, "", "",
+      def remoteRepoFolder = unzipRepo("src/test/resources/${TEST_REPO_NAME}.zip")
+      gitService = new GitService(userDetailsProvider, "${remoteRepoFolder.absolutePath}/%s.git", CHECKOUT_PATH, "", "",
           new AuroraMetrics(new SimpleMeterRegistry()))
 
     when:
@@ -84,5 +84,13 @@ class GitServiceTest extends Specification {
     then:
       git.repository.branch == "develop"
       developConsoleFile.version == "4"
+  }
+
+  private static File unzipRepo(String repoPath) {
+    def ant = new AntBuilder()
+    Expand unzip = ant.unzip(src: repoPath,
+        dest: REMOTE_REPO_FOLDER,
+        overwrite: "true")
+    return new File ("$unzip.dest")
   }
 }
