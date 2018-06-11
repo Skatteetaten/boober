@@ -21,16 +21,23 @@ abstract class AbstractSpec extends Specification {
   }
 
   String loadResource(String folder, String resourceName) {
+    def resourceUrl = getResourceUrl(folder, resourceName)
+    resourceUrl.text
+  }
+
+  URL getResourceUrl(String resourceName) {
+    def folder = this.getClass().simpleName
+    getResourceUrl(folder, resourceName)
+  }
+
+  URL getResourceUrl(String folder, String resourceName) {
     def resourcePath = "${folder}/$resourceName"
-
-    def path = "src/test/resources/" + this.getClass().package.getName().replace(".", "/") + "/$resourcePath"
-
-    this.getClass().getResource(resourcePath)?.text ?:
+    String path = "src/test/resources/" + this.getClass().getPackage().getName().replace(".", "/") + "/$resourcePath"
+    this.getClass().getResource(resourcePath) ?:
         { throw new IllegalArgumentException("No such resource $path") }()
   }
 
   JsonNode loadJsonResource(String resourceName) {
-
     new ObjectMapper().readValue(loadResource(resourceName), JsonNode)
   }
 }

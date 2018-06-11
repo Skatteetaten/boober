@@ -12,7 +12,7 @@ import no.skatteetaten.aurora.boober.controller.security.User
 import spock.lang.IgnoreIf
 import spock.lang.Specification
 
-class GitServiceTest extends Specification {
+class GitServiceTest extends AbstractSpec {
 
   static REMOTE_REPO_FOLDER = new File("build/gitrepos_gitservice_bare").absoluteFile.absolutePath
   static CHECKOUT_PATH = new File("build/gitservice").absoluteFile.absolutePath
@@ -64,7 +64,7 @@ class GitServiceTest extends Specification {
   def "Verify checking out repository with refName"() {
     given:
       def TEST_REPO_NAME = "boober-test"
-      def remoteRepoFolder = unzipRepo("src/test/resources/${TEST_REPO_NAME}.zip")
+      def remoteRepoFolder = unzipRepo(getResourceUrl("${TEST_REPO_NAME}.zip").file)
       gitService = new GitService(userDetailsProvider, "${remoteRepoFolder.absolutePath}/%s.git", CHECKOUT_PATH, "", "",
           new AuroraMetrics(new SimpleMeterRegistry()))
 
