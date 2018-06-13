@@ -24,7 +24,7 @@ class AuroraDeploymentSpecControllerV1(val auroraDeploymentSpecService: AuroraDe
     ): Response {
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
-      return response(auroraDeploymentSpecService.getAuroraDeploymentSpecs(ref, aidStrings), includeDefaults)
+        return response(auroraDeploymentSpecService.getAuroraDeploymentSpecs(ref, aidStrings), includeDefaults)
     }
 
     @GetMapping("/{environment}/")
@@ -35,7 +35,10 @@ class AuroraDeploymentSpecControllerV1(val auroraDeploymentSpecService: AuroraDe
     ): Response {
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
-      return response(auroraDeploymentSpecService.getAuroraDeploymentSpecsForEnvironment(ref, environment), includeDefaults)
+        return response(
+            auroraDeploymentSpecService.getAuroraDeploymentSpecsForEnvironment(ref, environment),
+            includeDefaults
+        )
     }
 
     @GetMapping("/{environment}/{application}")
@@ -47,7 +50,10 @@ class AuroraDeploymentSpecControllerV1(val auroraDeploymentSpecService: AuroraDe
     ): Response {
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
-      return response(auroraDeploymentSpecService.getAuroraDeploymentSpec(ref, environment, application), includeDefaults)
+        return response(
+            auroraDeploymentSpecService.getAuroraDeploymentSpec(ref, environment, application),
+            includeDefaults
+        )
     }
 
     @GetMapping("/{environment}/{application}/formatted")
@@ -64,7 +70,8 @@ class AuroraDeploymentSpecControllerV1(val auroraDeploymentSpecService: AuroraDe
         return Response(items = listOf(formatted))
     }
 
-    private fun response(spec: AuroraDeploymentSpec, includeDefaults: Boolean): Response = response(listOf(spec), includeDefaults)
+    private fun response(spec: AuroraDeploymentSpec, includeDefaults: Boolean): Response =
+        response(listOf(spec), includeDefaults)
 
     private fun response(spec: List<AuroraDeploymentSpec>, includeDefaults: Boolean): Response {
 

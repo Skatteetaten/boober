@@ -108,7 +108,7 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
         val patch: JsonPatch = yamlMapper.readValue(jsonPatchOp, JsonPatch::class.java)
 
         val auroraConfigFile = findFile(filename)
-            ?: throw IllegalArgumentException("No such file $filename in AuroraConfig ${name}")
+            ?: throw IllegalArgumentException("No such file $filename in AuroraConfig $name")
 
         val fileContents = patch.apply(auroraConfigFile.asJsonNode)
 
@@ -117,7 +117,7 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
         } else jsonMapper
 
         val rawContents = writeMapper.writerWithDefaultPrettyPrinter().writeValueAsString(fileContents)
-        //TODO how do we handle this with regards to yaml/json.
+        // TODO how do we handle this with regards to yaml/json.
         return updateFile(filename, rawContents, previousVersion)
     }
 
@@ -144,4 +144,3 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
         )
     }
 }
-

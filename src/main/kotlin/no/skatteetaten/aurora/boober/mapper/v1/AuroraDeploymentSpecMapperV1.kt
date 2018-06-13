@@ -160,4 +160,3 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
         return auroraConfigFields.fields.filterValues { it.source != null || it.handler.defaultValue != null }
     }
 }
-
