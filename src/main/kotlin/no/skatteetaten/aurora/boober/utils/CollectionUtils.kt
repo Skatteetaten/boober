@@ -71,3 +71,11 @@ inline fun <K, V> Map<out K, V?>.filterNullValues(): Map<K, V> {
     }
     return result
 }
+
+fun <T> Collection<T>?.takeIfNotEmpty(): Collection<T>? {
+    return this.takeIf { it?.isNotEmpty() == false }
+}
+
+fun <K, V> Map<K, V>?.takeIfNotEmpty(): Map<K, V>? {
+    return this.takeIf { it?.isNotEmpty() == false }
+}

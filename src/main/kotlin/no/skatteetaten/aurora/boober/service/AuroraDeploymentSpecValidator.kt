@@ -5,6 +5,7 @@ import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.service.vault.VaultService
+import no.skatteetaten.aurora.boober.utils.takeIfNotEmpty
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -94,13 +95,11 @@ class AuroraDeploymentSpecValidator(
 
     protected fun validateKeyMappings(deploymentSpec: AuroraDeploymentSpec) {
         deploymentSpec.volume?.let { volume ->
-            val keyMappings = volume.keyMappings ?: return
-            val keys = volume.secretVaultKeys
-            if (keyMappings.isNotEmpty() && keys.isNotEmpty()) {
-                val diff = volume.keyMappings.keys - volume.secretVaultKeys
-                if (diff.isNotEmpty()) {
-                    throw AuroraDeploymentSpecValidationException("The secretVault keyMappings $diff were not found in keys")
-                }
+            val keyMappings = volume.keyMappings.takeIfNotEmpty() ?: return
+            val keys = volume.secretVaultKeys.takeIfNotEmpty() ?: return
+            val diff = keyMappings.keys - keys
+            if (diff.isNotEmpty()) {
+                throw AuroraDeploymentSpecValidationException("The secretVault keyMappings $diff were not found in keys")
             }
         }
     }
