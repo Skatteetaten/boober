@@ -186,9 +186,6 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
     given:
       auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": { "name": "test", "keys":["test-key1"], "keyMappings": { "test-key2":"value" } }}'''
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
-      def vaultCollection = deploymentSpec.environment.affiliation
-
-      vaultService.vaultExists(vaultCollection, "test") >> true
 
     when:
       specValidator.validateKeyMappings(deploymentSpec)
@@ -202,9 +199,6 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
     given:
       auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": { "name": "test", "keyMappings": { "test-key2":"value" } }}'''
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
-      def vaultCollection = deploymentSpec.environment.affiliation
-
-      vaultService.vaultExists(vaultCollection, "test") >> true
 
     expect:
       specValidator.validateKeyMappings(deploymentSpec)
