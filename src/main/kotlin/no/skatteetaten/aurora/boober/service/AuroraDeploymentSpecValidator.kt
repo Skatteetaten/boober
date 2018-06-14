@@ -28,6 +28,7 @@ class AuroraDeploymentSpecValidator(
         validateTemplateIfSet(deploymentSpec)
         validateDatabaseId(deploymentSpec)
         validateVaultExistence(deploymentSpec)
+        validateKeyMappings(deploymentSpec)
     }
 
     protected fun validateVaultExistence(deploymentSpec: AuroraDeploymentSpec) {
@@ -88,6 +89,19 @@ class AuroraDeploymentSpecValidator(
             openShiftTemplateProcessor.validateTemplateParameters(templateJson, it.parameters ?: emptyMap())
                 .takeIf { it.isNotEmpty() }
                 ?.let { throw AuroraDeploymentSpecValidationException(it.joinToString(". ").trim()) }
+        }
+    }
+
+    protected fun validateKeyMappings(deploymentSpec: AuroraDeploymentSpec) {
+        deploymentSpec.volume?.let { volume ->
+            val keyMappings = volume.keyMappings ?: return
+            val keys = volume.secretVaultKeys
+            if (keyMappings.isNotEmpty() && keys.isNotEmpty()) {
+                val diff = volume.keyMappings.keys - volume.secretVaultKeys
+                if (diff.isNotEmpty()) {
+                    throw AuroraDeploymentSpecValidationException("The secretVault keyMappings $diff were not found in keys")
+                }
+            }
         }
     }
 }

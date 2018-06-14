@@ -181,4 +181,32 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
     then:
       deploymentSpec.volume.secretVaultName == "foo2"
   }
+
+  def "Fails when secretVault keyMappings contains values not in keys"() {
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": { "name": "test", "keys":["test-key1"], "keyMappings": { "test-key2":"value" } }}'''
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+      def vaultCollection = deploymentSpec.environment.affiliation
+
+      vaultService.vaultExists(vaultCollection, "test") >> true
+
+    when:
+      specValidator.validateKeyMappings(deploymentSpec)
+
+    then:
+      def e = thrown(AuroraDeploymentSpecValidationException)
+      e.message == "The secretVault keyMappings [test-key2] were not found in keys"
+  }
+
+  def "Succeeds when secretVault contains keyMappings but no keys"() {
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": { "name": "test", "keyMappings": { "test-key2":"value" } }}'''
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+      def vaultCollection = deploymentSpec.environment.affiliation
+
+      vaultService.vaultExists(vaultCollection, "test") >> true
+
+    expect:
+      specValidator.validateKeyMappings(deploymentSpec)
+  }
 }
