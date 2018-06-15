@@ -30,6 +30,7 @@ class AuroraDeploymentSpecValidator(
         validateDatabaseId(deploymentSpec)
         validateVaultExistence(deploymentSpec)
         validateKeyMappings(deploymentSpec)
+        validateSecretVaultKeys(deploymentSpec)
     }
 
     protected fun validateVaultExistence(deploymentSpec: AuroraDeploymentSpec) {
@@ -100,6 +101,22 @@ class AuroraDeploymentSpecValidator(
             val diff = keyMappings.keys - keys
             if (diff.isNotEmpty()) {
                 throw AuroraDeploymentSpecValidationException("The secretVault keyMappings $diff were not found in keys")
+            }
+        }
+    }
+
+    protected fun validateSecretVaultKeys(deploymentSpec: AuroraDeploymentSpec) {
+        deploymentSpec.volume?.let { volume ->
+            val vaultName = volume.secretVaultName ?: return
+            val keys = volume.secretVaultKeys.takeIfNotEmpty() ?: return
+
+            val vaultKeys = vaultService.findVaultKeys(
+                deploymentSpec.environment.affiliation,
+                vaultName
+            )
+            val missingKeys = keys - vaultKeys
+            if (missingKeys.isNotEmpty()) {
+                throw AuroraDeploymentSpecValidationException("The keys $missingKeys were not found in the secret vault")
             }
         }
     }

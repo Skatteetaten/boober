@@ -233,4 +233,16 @@ class VaultServiceTest extends Specification {
       def vault = vaultService.findVault(COLLECTION_NAME, VAULT_NAME)
       vault.permissions == ["admin", "UTV"]
   }
+
+  def "Find secret vault keys"() {
+    when:
+      def fileName = "latest.properties"
+      def contents = "key1=foo\nkey2=bar\nkey3=baz"
+      vaultService.createOrUpdateFileInVault(COLLECTION_NAME, VAULT_NAME, fileName, contents.bytes)
+      def vaultKeys = vaultService.findVaultKeys(COLLECTION_NAME, VAULT_NAME)
+
+    then:
+      vaultKeys.size() == 3
+      vaultKeys.containsAll(['key1', 'key2', 'key3'])
+  }
 }

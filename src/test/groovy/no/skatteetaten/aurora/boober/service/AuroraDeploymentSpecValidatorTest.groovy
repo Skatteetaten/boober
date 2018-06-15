@@ -203,4 +203,18 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
     expect:
       specValidator.validateKeyMappings(deploymentSpec)
   }
+
+  def "Fails when key in auroraConfig is not present in secretVault"() {
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": { "name": "test", "keys": ["test-key1"] }}'''
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+      vaultService.findVaultKeys("aos", "test") >> ["test-key2"]
+
+    when:
+      specValidator.validateSecretVaultKeys(deploymentSpec)
+
+    then:
+      def e = thrown(AuroraDeploymentSpecValidationException)
+      e.message == "The keys [test-key1] were not found in the secret vault"
+  }
 }
