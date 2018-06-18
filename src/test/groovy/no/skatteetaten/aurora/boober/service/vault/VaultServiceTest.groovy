@@ -239,7 +239,7 @@ class VaultServiceTest extends Specification {
       def fileName = "latest.properties"
       def contents = "key1=foo\nkey2=bar\nkey3=baz"
       vaultService.createOrUpdateFileInVault(COLLECTION_NAME, VAULT_NAME, fileName, contents.bytes)
-      def vaultKeys = vaultService.findVaultKeys(COLLECTION_NAME, VAULT_NAME)
+      def vaultKeys = vaultService.findVaultKeys(COLLECTION_NAME, VAULT_NAME, fileName)
 
     then:
       vaultKeys.size() == 3

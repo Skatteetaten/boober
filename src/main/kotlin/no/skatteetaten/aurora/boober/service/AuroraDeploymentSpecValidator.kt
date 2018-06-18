@@ -112,7 +112,8 @@ class AuroraDeploymentSpecValidator(
 
             val vaultKeys = vaultService.findVaultKeys(
                 deploymentSpec.environment.affiliation,
-                vaultName
+                vaultName,
+                "latest.properties"
             )
             val missingKeys = keys - vaultKeys
             if (missingKeys.isNotEmpty()) {

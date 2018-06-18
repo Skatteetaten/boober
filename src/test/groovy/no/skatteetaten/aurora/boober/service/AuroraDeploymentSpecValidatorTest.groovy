@@ -208,7 +208,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
     given:
       auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": { "name": "test", "keys": ["test-key1"] }}'''
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
-      vaultService.findVaultKeys("aos", "test") >> ["test-key2"]
+      vaultService.findVaultKeys("aos", "test", "latest.properties") >> ["test-key2"]
 
     when:
       specValidator.validateSecretVaultKeys(deploymentSpec)

@@ -33,11 +33,11 @@ class VaultService(
     val userDetailsProvider: UserDetailsProvider
 ) {
 
-    fun findVaultKeys(vaultCollectionName: String, vaultName: String): List<String> {
+    fun findVaultKeys(vaultCollectionName: String, vaultName: String, fileName: String): Set<String> {
         val vaultCollection = findVaultCollection(vaultCollectionName)
-        val vault = vaultCollection.findVaultByName(vaultName) ?: return emptyList()
-        return vault.secrets.values
-            .flatMap { PropertiesLoaderUtils.loadProperties(ByteArrayResource(it)).stringPropertyNames() }
+        val vault = vaultCollection.findVaultByName(vaultName) ?: return emptySet()
+        val content = vault.secrets[fileName] ?: return emptySet()
+        return PropertiesLoaderUtils.loadProperties(ByteArrayResource(content)).stringPropertyNames()
     }
 
     fun findAllVaultsWithUserAccessInVaultCollection(vaultCollectionName: String): List<VaultWithAccess> {
