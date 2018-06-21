@@ -9,9 +9,6 @@ Contract.make {
         stub(~/\/v1\/auroraconfig\/[a-z]+\/[a-z]+/),
         test('/v1/auroraconfig/auroraconfigname/filename')
     )
-    headers {
-      contentType(applicationJson())
-    }
   }
   response {
     status 200

@@ -3,9 +3,11 @@
   "message": "OK",
   "items": [
     {
-      "name": "responses",
+      "name": "secret",
       "hasAccess": true,
-      "secrets": {},
+      "secrets": {
+        "latest.properties": "Qm9vYmVyOjEKZlRxTFVsWXNkajBLSkFmUFRCQnc0MkZOTnpkTHdLMjg2eG9UcHkrb1ZpcUxmbzMwWHAwdVdwcDdlNUU9"
+      },
       "permissions": []
     }
   ],

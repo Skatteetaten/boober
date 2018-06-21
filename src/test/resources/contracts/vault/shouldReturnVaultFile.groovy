@@ -9,9 +9,6 @@ Contract.make {
         stub(~/\/v1\/vault\/[a-z]+\/.*/),
         test('/v1/vault/vaultcollection/vault/filename')
     )
-    headers {
-      contentType(applicationJson())
-    }
   }
   response {
     status 200

@@ -23,7 +23,7 @@ class VaultBase extends AbstractContractBase {
   }
 
   static EncryptedFileVault createVault() {
-    EncryptedFileVault.createFromFolder(new File('./src/test/resources/contracts/vault/responses'))
+    EncryptedFileVault.createFromFolder(new File('./src/test/resources/samples/config/secret'))
   }
 
 }
