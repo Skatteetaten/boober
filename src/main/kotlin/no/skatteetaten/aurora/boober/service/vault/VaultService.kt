@@ -8,7 +8,8 @@ import no.skatteetaten.aurora.boober.service.GitServices.TargetDomain
 import no.skatteetaten.aurora.boober.service.UnauthorizedAccessException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import org.eclipse.jgit.api.Git
-import org.slf4j.LoggerFactory
+import org.springframework.core.io.ByteArrayResource
+import org.springframework.core.io.support.PropertiesLoaderUtils
 import org.springframework.stereotype.Service
 
 data class VaultWithAccess @JvmOverloads constructor(
@@ -32,7 +33,12 @@ class VaultService(
     val userDetailsProvider: UserDetailsProvider
 ) {
 
-    private val logger = LoggerFactory.getLogger(VaultService::class.java)
+    fun findVaultKeys(vaultCollectionName: String, vaultName: String, fileName: String): Set<String> {
+        val vaultCollection = findVaultCollection(vaultCollectionName)
+        val vault = vaultCollection.findVaultByName(vaultName) ?: return emptySet()
+        val content = vault.secrets[fileName] ?: return emptySet()
+        return PropertiesLoaderUtils.loadProperties(ByteArrayResource(content)).stringPropertyNames()
+    }
 
     fun findAllVaultsWithUserAccessInVaultCollection(vaultCollectionName: String): List<VaultWithAccess> {
 
@@ -115,7 +121,12 @@ class VaultService(
         })
     }
 
-    fun import(vaultCollectionName: String, vaultName: String, permissions: List<String>, secrets: Map<String, ByteArray>): EncryptedFileVault {
+    fun import(
+        vaultCollectionName: String,
+        vaultName: String,
+        permissions: List<String>,
+        secrets: Map<String, ByteArray>
+    ): EncryptedFileVault {
 
         assertCurrentUserHasAccess(permissions)
 
@@ -135,8 +146,13 @@ class VaultService(
 
         val vaults = findAllVaultsInVaultCollection(vaultCollectionName)
         vaults.forEach { vault: EncryptedFileVault ->
-            val newEncryptionService = EncryptionService(newKey, encryptionService.keyFactory, encryptionService.metrics)
-            val vaultCopy = EncryptedFileVault.createFromFolder(vault.vaultFolder, newEncryptionService::encrypt, encryptionService::decrypt)
+            val newEncryptionService =
+                EncryptionService(newKey, encryptionService.keyFactory, encryptionService.metrics)
+            val vaultCopy = EncryptedFileVault.createFromFolder(
+                vault.vaultFolder,
+                newEncryptionService::encrypt,
+                encryptionService::decrypt
+            )
             vaultCopy.secrets.forEach { t, u -> vaultCopy.updateFile(t, u) }
         }
     }
@@ -156,13 +172,17 @@ class VaultService(
         }
     }
 
-    private fun <T> withVaultCollectionAndRepoForUpdate(vaultCollectionName: String, function: (vaultCollection: VaultCollection, repo: Git) -> T): T {
+    private fun <T> withVaultCollectionAndRepoForUpdate(
+        vaultCollectionName: String,
+        function: (vaultCollection: VaultCollection, repo: Git) -> T
+    ): T {
 
         return synchronized(vaultCollectionName) {
 
             val repo = gitService.checkoutRepository(vaultCollectionName, refName = "master")
             val folder = repo.repository.directory.parentFile
-            val vaultCollection = VaultCollection.fromFolder(folder, encryptionService::encrypt, encryptionService::decrypt)
+            val vaultCollection =
+                VaultCollection.fromFolder(folder, encryptionService::encrypt, encryptionService::decrypt)
             val response = function(vaultCollection, repo)
             repo.close()
             response

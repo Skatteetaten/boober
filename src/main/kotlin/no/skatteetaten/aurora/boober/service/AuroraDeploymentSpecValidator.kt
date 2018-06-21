@@ -5,6 +5,7 @@ import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.service.vault.VaultService
+import no.skatteetaten.aurora.boober.utils.takeIfNotEmpty
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -28,6 +29,8 @@ class AuroraDeploymentSpecValidator(
         validateTemplateIfSet(deploymentSpec)
         validateDatabaseId(deploymentSpec)
         validateVaultExistence(deploymentSpec)
+        validateKeyMappings(deploymentSpec)
+        validateSecretVaultKeys(deploymentSpec)
     }
 
     protected fun validateVaultExistence(deploymentSpec: AuroraDeploymentSpec) {
@@ -88,6 +91,40 @@ class AuroraDeploymentSpecValidator(
             openShiftTemplateProcessor.validateTemplateParameters(templateJson, it.parameters ?: emptyMap())
                 .takeIf { it.isNotEmpty() }
                 ?.let { throw AuroraDeploymentSpecValidationException(it.joinToString(". ").trim()) }
+        }
+    }
+
+    protected fun validateKeyMappings(deploymentSpec: AuroraDeploymentSpec) {
+        deploymentSpec.volume?.let { volume ->
+            val keyMappings = volume.keyMappings.takeIfNotEmpty() ?: return
+            val keys = volume.secretVaultKeys.takeIfNotEmpty() ?: return
+            val diff = keyMappings.keys - keys
+            if (diff.isNotEmpty()) {
+                throw AuroraDeploymentSpecValidationException("The secretVault keyMappings $diff were not found in keys")
+            }
+        }
+    }
+
+    /**
+     * Validates that any secretVaultKeys specified actually exist in the vault.
+     * Note that this method always uses the latest.properties file regardless of the version of the application and
+     * the contents of the vault. TODO: to determine if another properties file should be used instead.
+     */
+    protected fun validateSecretVaultKeys(deploymentSpec: AuroraDeploymentSpec) {
+
+        deploymentSpec.volume?.let { volume ->
+            val vaultName = volume.secretVaultName ?: return
+            val keys = volume.secretVaultKeys.takeIfNotEmpty() ?: return
+
+            val vaultKeys = vaultService.findVaultKeys(
+                deploymentSpec.environment.affiliation,
+                vaultName,
+                    "latest.properties"
+            )
+            val missingKeys = keys - vaultKeys
+            if (missingKeys.isNotEmpty()) {
+                throw AuroraDeploymentSpecValidationException("The keys $missingKeys were not found in the secret vault")
+            }
         }
     }
 }
