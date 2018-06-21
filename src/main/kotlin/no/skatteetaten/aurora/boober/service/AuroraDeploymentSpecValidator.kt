@@ -105,7 +105,13 @@ class AuroraDeploymentSpecValidator(
         }
     }
 
+    /**
+     * Validates that any secretVaultKeys specified actually exist in the vault.
+     * Note that this method always uses the latest.properties file regardless of the version of the application and
+     * the contents of the vault. TODO: to determine if another properties file should be used instead.
+     */
     protected fun validateSecretVaultKeys(deploymentSpec: AuroraDeploymentSpec) {
+
         deploymentSpec.volume?.let { volume ->
             val vaultName = volume.secretVaultName ?: return
             val keys = volume.secretVaultKeys.takeIfNotEmpty() ?: return
@@ -113,7 +119,7 @@ class AuroraDeploymentSpecValidator(
             val vaultKeys = vaultService.findVaultKeys(
                 deploymentSpec.environment.affiliation,
                 vaultName,
-                "latest.properties"
+                    "latest.properties"
             )
             val missingKeys = keys - vaultKeys
             if (missingKeys.isNotEmpty()) {
