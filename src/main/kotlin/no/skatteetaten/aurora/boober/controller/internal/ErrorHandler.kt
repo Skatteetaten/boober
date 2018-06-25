@@ -31,6 +31,9 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
     @ExceptionHandler(ServiceException::class)
     fun handleValidationErrors(ex: ServiceException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
 
+    @ExceptionHandler(AuroraConfigServiceException::class)
+    fun handleAuroraConfigServiceErrors(ex: ServiceException, req: WebRequest) = handleException(ex, req, INTERNAL_SERVER_ERROR)
+
     @ExceptionHandler(AuroraConfigException::class)
     fun handleValidationErrors(ex: AuroraConfigException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
 
