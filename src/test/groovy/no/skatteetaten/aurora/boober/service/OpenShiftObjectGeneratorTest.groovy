@@ -75,9 +75,9 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
 
       env           | name            | templateFile      | overrides
       "booberdev"   | "tvinn"         | "atomhopper.json" | []
-        "booberdev" | "reference"     | null              | []
-        "booberdev" | "console"       | null              | []
-        "webseal"   | "sprocket"      | null              | []
+      "booberdev"   | "reference"     | null              | []
+      "booberdev"   | "console"       | null              | []
+      "webseal"     | "sprocket"      | null              | []
       "booberdev"   | "sprocket"      | null              | []
       "booberdev"   | "reference-web" | null              | []
       "booberdev"   | "build"         | null              | []

@@ -9,6 +9,7 @@
       "prometheus.io/port": "8081"
     },
     "labels": {
+      "appId": "4f99affe6e2316fd3de91e788ea622ea29563c8e",
       "app": "reference",
       "updatedBy": "hero",
       "affiliation": "aos",
