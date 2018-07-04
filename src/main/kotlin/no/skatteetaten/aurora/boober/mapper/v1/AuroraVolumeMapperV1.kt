@@ -25,11 +25,14 @@ class AuroraVolumeMapperV1(private val applicationFiles: List<AuroraConfigFile>)
             secretVaultKeys = getSecretVaultKeys(auroraConfigFields),
             keyMappings = auroraConfigFields.getKeyMappings(secretVaultKeyMappingHandlers),
             config = getApplicationConfigFiles(auroraConfigFields),
-            mounts = getMounts(auroraConfigFields))
+            mounts = getMounts(auroraConfigFields)
+        )
     }
 
-    private fun createSecretVaultKeyMappingHandlers(): List<AuroraConfigFieldHandler> =
-        listOf(AuroraConfigFieldHandler("secretVault/keyMappings"))
+    private fun createSecretVaultKeyMappingHandlers() =
+        applicationFiles.find { it.asJsonNode.has("/secretVault/keyMappings") }?.let {
+            listOf(AuroraConfigFieldHandler("secretVault/keyMapping"))
+        } ?: emptyList()
 
     private fun createSecretVaultHandlers(): List<AuroraConfigFieldHandler> {
         return listOf(
@@ -45,8 +48,12 @@ class AuroraVolumeMapperV1(private val applicationFiles: List<AuroraConfigFile>)
 
         return mountKeys.flatMap { mountName ->
             listOf(
-                AuroraConfigFieldHandler("mounts/$mountName/path", validator = { it.required("Path is required for mount") }),
-                AuroraConfigFieldHandler("mounts/$mountName/type", validator = { it.oneOf(MountType.values().map { it.name }) }),
+                AuroraConfigFieldHandler(
+                    "mounts/$mountName/path",
+                    validator = { it.required("Path is required for mount") }),
+                AuroraConfigFieldHandler(
+                    "mounts/$mountName/type",
+                    validator = { it.oneOf(MountType.values().map { it.name }) }),
                 AuroraConfigFieldHandler("mounts/$mountName/mountName", defaultValue = mountName),
                 AuroraConfigFieldHandler("mounts/$mountName/volumeName", defaultValue = mountName),
                 AuroraConfigFieldHandler("mounts/$mountName/exist", defaultValue = false),
