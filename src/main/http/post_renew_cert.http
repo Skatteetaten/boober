@@ -6,9 +6,7 @@ Content-Type: application/json
   "name": "referanse",
   "commonName": "no.skatteetaten.aurora.openshift.referanse",
   "namespace": "paas-sts",
-  "affiliation": "paas",
-  "ttl": "365d",
-  "renewBefore": "120d"
+  "affiliation": "paas"
 }
 
 ###
