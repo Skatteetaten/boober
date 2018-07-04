@@ -28,13 +28,8 @@ class AuroraVolumeMapperV1(private val applicationFiles: List<AuroraConfigFile>)
             mounts = getMounts(auroraConfigFields))
     }
 
-    private fun createSecretVaultKeyMappingHandlers(): List<AuroraConfigFieldHandler> {
-        return applicationFiles.flatMap {
-            it.asJsonNode.at("/secretVault/keyMappings").fieldNames().asSequence().toList()
-        }.map {
-            AuroraConfigFieldHandler("secretVault/keyMappings/$it")
-        }
-    }
+    private fun createSecretVaultKeyMappingHandlers(): List<AuroraConfigFieldHandler> =
+        listOf(AuroraConfigFieldHandler("secretVault/keyMappings"))
 
     private fun createSecretVaultHandlers(): List<AuroraConfigFieldHandler> {
         return listOf(
