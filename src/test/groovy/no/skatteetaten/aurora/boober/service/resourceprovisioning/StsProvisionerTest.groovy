@@ -49,11 +49,11 @@ class StsProvisionerTest extends AbstractSpec {
       headers.add("key-password", "ca")
       headers.add("store-password", "")
 
-      skapServer.expect(requestTo("${SKAP_HOST}/certificate?cn=${cn}")).
+      skapServer.expect(requestTo("${SKAP_HOST}/certificate?cn=${cn}&cluster=utv&name=foo&namespace=bar")).
           andRespond(withSuccess(loadByteResource("keystore.jks"), MediaType.APPLICATION_OCTET_STREAM).headers(headers))
 
     when:
-      def provisionResult = provisioner.generateCertificate(cn)
+      def provisionResult = provisioner.generateCertificate(cn, "foo", "bar")
 
     then:
       provisionResult != null

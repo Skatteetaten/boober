@@ -78,9 +78,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
     when:
       def deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
     then:
-      deploymentSpec.integration.certificate.commonName == "some_common_name"
-      deploymentSpec.integration.certificate.renewBefore == "30d"
-      deploymentSpec.integration.certificate.ttl == "365d"
+      deploymentSpec.integration.certificate == "some_common_name"
 
     when:
       auroraConfigJson["utv/aos-simple.json"] = '''{ "certificate": false }'''

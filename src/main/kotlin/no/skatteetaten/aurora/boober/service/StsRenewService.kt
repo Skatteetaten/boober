@@ -28,7 +28,11 @@ class StsRenewService(
 
     fun renew(request: RenewRequest): List<OpenShiftResponse> {
 
-        val stsResult = provsioner.generateCertificate(request.commonName)
+        val stsResult = provsioner.generateCertificate(
+            request.commonName,
+            request.name,
+            request.namespace
+        )
 
         val labels = mapOf(
             "app" to request.name,

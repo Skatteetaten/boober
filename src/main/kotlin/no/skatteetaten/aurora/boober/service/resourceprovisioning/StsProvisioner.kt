@@ -1,10 +1,8 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
-import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.service.ProvisioningException
-import no.skatteetaten.aurora.boober.utils.Instants
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -21,6 +19,9 @@ import java.security.cert.X509Certificate
 import java.time.Duration
 import java.time.Instant
 import java.util.Base64
+import org.springframework.web.util.UriComponentsBuilder
+
+
 
 class StsCertificate(
     val crt: ByteArray,
@@ -42,17 +43,23 @@ class StsProvisioner(
     @TargetService(ServiceTypes.SKAP)
     val restTemplate: RestTemplate,
     @Value("\${boober.skap}") val skapUrl: String,
-    @Value("\${boober.sts.renewBeforeDays:14}") val renewBeforeDays: Long
+    @Value("\${boober.sts.renewBeforeDays:14}") val renewBeforeDays: Long,
+    @Value("\${openshift.cluster}") val cluster: String
 ) {
     val logger: Logger = LoggerFactory.getLogger(StsProvisioner::class.java)
 
-    fun generateCertificate(cn:String): StsProvisioningResult {
+    fun generateCertificate(cn: String, name: String, envName: String): StsProvisioningResult {
+
+        val builder = UriComponentsBuilder.fromHttpUrl("$skapUrl/certificate")
+            .queryParam("cn", cn)
+            .queryParam("cluster", cluster)
+            .queryParam("name", name)
+            .queryParam("namespace", envName)
 
         return try {
             val response = restTemplate.getForEntity(
-                "$skapUrl/certificate?cn={commonName}",
-                Resource::class.java,
-                cn
+                builder.build().encode().toUri(),
+                Resource::class.java
             )
             val keyPassword = response.headers.getFirst("key-password")
             val storePassword = response.headers.getFirst("store-password")
