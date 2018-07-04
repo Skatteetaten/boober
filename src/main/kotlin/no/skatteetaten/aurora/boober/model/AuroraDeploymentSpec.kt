@@ -104,8 +104,6 @@ data class AuroraIntegration(
     val webseal: Webseal? = null
 )
 
-
-
 data class AuroraDeploy(
     val applicationFile: String,
     val overrideFiles: Map<String, String>,

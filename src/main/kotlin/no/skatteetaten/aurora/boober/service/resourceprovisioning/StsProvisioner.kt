@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.io.Resource
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
+import org.springframework.web.util.UriComponentsBuilder
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
@@ -19,9 +20,6 @@ import java.security.cert.X509Certificate
 import java.time.Duration
 import java.time.Instant
 import java.util.Base64
-import org.springframework.web.util.UriComponentsBuilder
-
-
 
 class StsCertificate(
     val crt: ByteArray,
@@ -79,7 +77,6 @@ class StsProvisioner(
 
     companion object {
 
-
         @JvmStatic
         fun createStsCert(
             body: InputStream,
@@ -91,7 +88,7 @@ class StsProvisioner(
                 this.load(body, storePassword.toCharArray())
             }
 
-            val x509 =keyStore.getCertificate("ca") as X509Certificate
+            val x509 = keyStore.getCertificate("ca") as X509Certificate
 
             val certificate = PEMWriter(PEMWriter.CERTIFICATE_TYPE, keyStore.getCertificate("ca").encoded)
             val key = PEMWriter(PEMWriter.PRIVATE_KEY_TYPE, keyStore.getKey("ca", keyPassword.toCharArray()).encoded)
@@ -109,7 +106,7 @@ class StsProvisioner(
                 keystore = osKeystore.toByteArray(),
                 storePassword = storePassword,
                 keyPassword = keyPassword,
-                notAfter= x509.notAfter.toInstant()
+                notAfter = x509.notAfter.toInstant()
 
             )
         }
