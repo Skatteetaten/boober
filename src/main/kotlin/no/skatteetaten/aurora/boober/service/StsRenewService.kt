@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.model.AuroraCertificateSpec
 import no.skatteetaten.aurora.boober.service.internal.StsSecretGenerator
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
@@ -16,8 +15,6 @@ data class RenewRequest(
     val name: String,
     val namespace: String,
     val affiliation: String,
-    val ttl: String,
-    val renewBefore: String,
     val commonName: String
 )
 @Service
@@ -31,13 +28,7 @@ class StsRenewService(
 
     fun renew(request: RenewRequest): List<OpenShiftResponse> {
 
-        val stsResult = provsioner.generateCertificate(
-            AuroraCertificateSpec(
-                commonName = request.commonName,
-                ttl = request.ttl,
-                renewBefore = request.renewBefore
-            )
-        )
+        val stsResult = provsioner.generateCertificate(request.commonName)
 
         val labels = mapOf(
             "app" to request.name,
