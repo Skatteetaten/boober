@@ -10,8 +10,6 @@ object StsSecretGenerator {
 
     const val RENEW_AFTER_LABEL = "stsRenewAfter"
     const val APP_ANNOTATION = "gillis.skatteetaten.no/app"
-    const val TTL_ANNOTATION = "gillis.skatteetaten.no/ttl"
-    const val RENEW_BEFORE_ANNOTATION = "gillis.skatteetaten.no/renewBefore"
     const val COMMON_NAME_ANNOTATION = "gillis.skatteetaten.no/commonName"
 
     @JvmStatic
@@ -26,9 +24,7 @@ object StsSecretGenerator {
             secretLabels = labels.addIfNotNull(RENEW_AFTER_LABEL to stsProvisionResults.renewAt.epochSecond.toString()),
             secretAnnotations = mapOf(
                 APP_ANNOTATION to appName,
-                TTL_ANNOTATION to stsProvisionResults.spec.ttl,
-                RENEW_BEFORE_ANNOTATION to stsProvisionResults.spec.renewBefore,
-                COMMON_NAME_ANNOTATION to stsProvisionResults.spec.commonName
+                COMMON_NAME_ANNOTATION to stsProvisionResults.cn
             ),
             secretData = mapOf(
                 "privatekey.key" to cert.key,

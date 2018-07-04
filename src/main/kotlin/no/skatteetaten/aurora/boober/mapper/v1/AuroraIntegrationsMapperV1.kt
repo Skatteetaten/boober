@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.mapper.v1
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.model.AuroraCertificateSpec
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraIntegration
 import no.skatteetaten.aurora.boober.model.Database
@@ -15,8 +14,6 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
     val handlers = dbHandlers + listOf(
         AuroraConfigFieldHandler("database", defaultValue = false),
         AuroraConfigFieldHandler("certificate/commonName"),
-        AuroraConfigFieldHandler("certificate/renewBefore", defaultValue = "30d"),
-        // AuroraConfigFieldHandler("certificate/ttl", defaultValue = "365d"), TODO: Ikke støttet i skap
         AuroraConfigFieldHandler("certificate", defaultValue = false),
         AuroraConfigFieldHandler("splunkIndex"),
         AuroraConfigFieldHandler("webseal", defaultValue = false),
@@ -35,15 +32,9 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
             auroraConfigFields.extractOrNull("certificate/commonName")
         }
 
-        val certificate = certificateCn?.let {
-            val renewAfter = auroraConfigFields.extract<String>("certificate/renewBefore")
-            // val ttl= auroraConfigFields.extract<String>("certificate/ttl") TODO:ikke støttet i skap
-            val ttl = "365d"
-            AuroraCertificateSpec(it, ttl, renewAfter)
-        }
         return AuroraIntegration(
             database = findDatabases(auroraConfigFields, name),
-            certificate = certificate,
+            certificate = certificateCn,
             splunkIndex = auroraConfigFields.extractOrNull("splunkIndex"),
             webseal = findWebseal(auroraConfigFields)
         )

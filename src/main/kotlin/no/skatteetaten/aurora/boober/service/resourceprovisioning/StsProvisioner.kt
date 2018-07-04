@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.service.resourceprovisioning
 import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
-import no.skatteetaten.aurora.boober.model.AuroraCertificateSpec
 import no.skatteetaten.aurora.boober.service.ProvisioningException
 import no.skatteetaten.aurora.boober.utils.Instants
 import org.slf4j.Logger
@@ -18,6 +17,8 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.nio.charset.Charset
 import java.security.KeyStore
+import java.security.cert.X509Certificate
+import java.time.Duration
 import java.time.Instant
 import java.util.Base64
 
@@ -26,11 +27,12 @@ class StsCertificate(
     val key: ByteArray,
     val keystore: ByteArray,
     val storePassword: String,
-    val keyPassword: String
+    val keyPassword: String,
+    val notAfter: Instant
 )
 
 data class StsProvisioningResult(
-    val spec: AuroraCertificateSpec,
+    val cn: String,
     val cert: StsCertificate,
     val renewAt: Instant
 )
@@ -39,50 +41,37 @@ data class StsProvisioningResult(
 class StsProvisioner(
     @TargetService(ServiceTypes.SKAP)
     val restTemplate: RestTemplate,
-    @Value("\${boober.skap}") val skapUrl: String
+    @Value("\${boober.skap}") val skapUrl: String,
+    @Value("\${boober.sts.renewBeforeDays:14}") val renewBeforeDays: Long
 ) {
     val logger: Logger = LoggerFactory.getLogger(StsProvisioner::class.java)
 
-    fun generateCertificate(command: AuroraCertificateSpec): StsProvisioningResult {
+    fun generateCertificate(cn:String): StsProvisioningResult {
 
         return try {
-            val renewAt = findRenewInstant(command)
             val response = restTemplate.getForEntity(
                 "$skapUrl/certificate?cn={commonName}",
                 Resource::class.java,
-                command.commonName
+                cn
             )
             val keyPassword = response.headers.getFirst("key-password")
             val storePassword = response.headers.getFirst("store-password")
             val cert = createStsCert(response.body.inputStream, keyPassword, storePassword)
             StsProvisioningResult(
                 cert = cert,
-                spec = command,
-                renewAt = renewAt
+                cn = cn,
+                renewAt = cert.notAfter - Duration.ofDays(renewBeforeDays)
             )
         } catch (e: Exception) {
             throw ProvisioningException(
-                "Failed provisioning sts certificate with commonName=${command.commonName} ${e.message}",
+                "Failed provisioning sts certificate with commonName=$cn ${e.message}",
                 e
             )
         }
     }
 
     companion object {
-        @JvmStatic
-        fun findRenewInstant(command: AuroraCertificateSpec): Instant {
-            val now = Instants.now
 
-            val converter = StringToDurationConverter()
-
-            val ttlDuration = converter.convert(command.ttl)
-            val renewBeforeDuration = converter.convert(command.renewBefore)
-
-            if (ttlDuration < renewBeforeDuration) {
-                throw IllegalArgumentException("Illegal combination ttl=${command.ttl} and renewBefoew=${command.renewBefore}. renew must be smaller then ttl.")
-            }
-            return now + ttlDuration - renewBeforeDuration
-        }
 
         @JvmStatic
         fun createStsCert(
@@ -94,6 +83,9 @@ class StsProvisioner(
             val keyStore = KeyStore.getInstance("JKS").apply {
                 this.load(body, storePassword.toCharArray())
             }
+
+            val x509 =keyStore.getCertificate("ca") as X509Certificate
+
             val certificate = PEMWriter(PEMWriter.CERTIFICATE_TYPE, keyStore.getCertificate("ca").encoded)
             val key = PEMWriter(PEMWriter.PRIVATE_KEY_TYPE, keyStore.getKey("ca", keyPassword.toCharArray()).encoded)
             val osKey = ByteArrayOutputStream()
@@ -109,7 +101,9 @@ class StsProvisioner(
                 key = osKey.toByteArray(),
                 keystore = osKeystore.toByteArray(),
                 storePassword = storePassword,
-                keyPassword = keyPassword
+                keyPassword = keyPassword,
+                notAfter= x509.notAfter.toInstant()
+
             )
         }
     }
