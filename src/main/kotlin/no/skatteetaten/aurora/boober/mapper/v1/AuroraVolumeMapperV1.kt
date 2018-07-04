@@ -15,24 +15,24 @@ class AuroraVolumeMapperV1(private val applicationFiles: List<AuroraConfigFile>)
     private val mountHandlers = createMountHandlers()
     val configHandlers = applicationFiles.findConfigFieldHandlers()
     private val secretVaultHandlers = createSecretVaultHandlers()
-    private val secretVaultKeyMappingHandlers = createSecretVaultKeyMappingHandlers()
+    private val secretVaultKeyMappingHandler = createSecretVaultKeyMappingHandler()
 
-    val handlers = configHandlers + mountHandlers + secretVaultHandlers + secretVaultKeyMappingHandlers
+    val handlers = configHandlers + mountHandlers + secretVaultHandlers + listOfNotNull(secretVaultKeyMappingHandler)
 
     fun createAuroraVolume(auroraConfigFields: AuroraConfigFields): AuroraVolume {
         return AuroraVolume(
             secretVaultName = getSecretVault(auroraConfigFields),
             secretVaultKeys = getSecretVaultKeys(auroraConfigFields),
-            keyMappings = auroraConfigFields.getKeyMappings(secretVaultKeyMappingHandlers),
+            keyMappings = auroraConfigFields.getKeyMappings(secretVaultKeyMappingHandler),
             config = getApplicationConfigFiles(auroraConfigFields),
             mounts = getMounts(auroraConfigFields)
         )
     }
 
-    private fun createSecretVaultKeyMappingHandlers() =
-        applicationFiles.find { it.asJsonNode.has("/secretVault/keyMappings") }?.let {
-            listOf(AuroraConfigFieldHandler("secretVault/keyMapping"))
-        } ?: emptyList()
+    private fun createSecretVaultKeyMappingHandler() =
+        applicationFiles.find { it.asJsonNode.at("/secretVault/keyMappings") != null }?.let {
+            AuroraConfigFieldHandler("secretVault/keyMappings")
+        }
 
     private fun createSecretVaultHandlers(): List<AuroraConfigFieldHandler> {
         return listOf(
