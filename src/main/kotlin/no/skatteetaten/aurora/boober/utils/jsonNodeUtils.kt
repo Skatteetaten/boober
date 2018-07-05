@@ -16,6 +16,10 @@ fun JsonNode.findAllPointers(maxLevel: Int): List<String> {
         if (root.startsWith("/mount") && root.split("/").size > maxLevel) {
             return listOf(root)
         }
+        if (root.startsWith("/secretVault/keyMappings")) {
+            return listOf()
+        }
+
         val ret = mutableListOf<String>()
         for ((key, child) in node.fields()) {
             val newKey = "$root/$key"
@@ -155,6 +159,7 @@ fun JsonNode?.length(length: Int, message: String, required: Boolean = true): Ex
     return null
 }
 
-fun jacksonYamlObjectMapper(): ObjectMapper = ObjectMapper(YAMLFactory().enable(JsonParser.Feature.ALLOW_COMMENTS)).registerKotlinModule()
+fun jacksonYamlObjectMapper(): ObjectMapper =
+    ObjectMapper(YAMLFactory().enable(JsonParser.Feature.ALLOW_COMMENTS)).registerKotlinModule()
 
 fun jsonMapper(): ObjectMapper = jacksonObjectMapper().enable(JsonParser.Feature.ALLOW_COMMENTS)
