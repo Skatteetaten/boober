@@ -86,13 +86,8 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         }.toMap()
     }
 
-    fun getKeyMappings(keyMappingsExtractors: List<AuroraConfigFieldHandler>): Map<String, String>? {
-        return keyMappingsExtractors.map {
-            val field = it.name.substringAfterLast("/")
-            val value: String = extract(it.name)
-            field to value
-        }.toMap()
-    }
+    fun getKeyMappings(keyMappingsExtractor: AuroraConfigFieldHandler?): Map<String, String>? =
+        keyMappingsExtractor?.let { extractIfExistsOrNull(it.name) }
 
     fun disabledAndNoSubKeys(name: String): Boolean {
 
@@ -142,7 +137,11 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
         val logger: Logger = LoggerFactory.getLogger(AuroraConfigFields::class.java)
 
-        fun create(handlers: Set<AuroraConfigFieldHandler>, files: List<AuroraConfigFile>, placeholders: Map<String, String> = emptyMap()): AuroraConfigFields {
+        fun create(
+            handlers: Set<AuroraConfigFieldHandler>,
+            files: List<AuroraConfigFile>,
+            placeholders: Map<String, String> = emptyMap()
+        ): AuroraConfigFields {
 
             val replacer = StringSubstitutor(placeholders, "@", "@")
 
