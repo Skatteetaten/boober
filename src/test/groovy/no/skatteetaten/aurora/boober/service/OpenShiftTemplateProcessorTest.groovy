@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import java.time.Duration
 
+import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.http.ResponseEntity
 
 import com.fasterxml.jackson.databind.JsonNode
@@ -70,7 +71,7 @@ class OpenShiftTemplateProcessorTest extends AbstractSpec {
   def "Generate template object with labels"() {
     given:
       def openshiftClient = Mock(OpenShiftResourceClient)
-    templateProcessor = new OpenShiftTemplateProcessor(templateProcessor.userDetailsProvider, openshiftClient, mapper)
+      templateProcessor = new OpenShiftTemplateProcessor(templateProcessor.userDetailsProvider, openshiftClient, mapper)
 
     when:
       def objects = templateProcessor.generateObjects(templateJson as ObjectNode, [:], createEmptyDeploymentSpec(), "1", 0)
@@ -87,7 +88,7 @@ class OpenShiftTemplateProcessorTest extends AbstractSpec {
   private static void assertLabels(ObjectNode labels) {
     assert labels['affiliation'] != null
     assert labels['template'].asText() == 'jenkins-cluster-persistent'
-    assert labels['appId'].asText() == 'jenkins-cluster-persistent-2.0'
+    assert labels['appId'].asText() == DigestUtils.sha1Hex('jenkins-cluster-persistent-2.0')
     assert labels['app'] != null
     assert labels['updatedBy'].asText() == 'username'
     assert labels['updateInBoober'] == null
