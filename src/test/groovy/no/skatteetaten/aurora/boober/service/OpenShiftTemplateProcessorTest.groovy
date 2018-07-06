@@ -1,14 +1,30 @@
 package no.skatteetaten.aurora.boober.service
 
+import java.time.Duration
+
+import org.apache.commons.codec.digest.DigestUtils
+import org.springframework.http.ResponseEntity
+
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ObjectNode
 
+import no.skatteetaten.aurora.boober.controller.security.User
+import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.Permission
+import no.skatteetaten.aurora.boober.model.Permissions
+import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 
 class OpenShiftTemplateProcessorTest extends AbstractSpec {
 
   ObjectMapper mapper = new ObjectMapper()
-  def templateProcessor = new OpenShiftTemplateProcessor(Mock(UserDetailsProvider), Mock(OpenShiftResourceClient),
+  def templateProcessor = new OpenShiftTemplateProcessor(
+      Mock(UserDetailsProvider) { getAuthenticatedUser() >> new User('username', 'token', '', []) },
+      Mock(OpenShiftResourceClient),
       mapper)
   String template = loadResource("jenkins-cluster-persistent-2.0.json")
   JsonNode templateJson = mapper.readValue(template, JsonNode)
@@ -50,5 +66,40 @@ class OpenShiftTemplateProcessorTest extends AbstractSpec {
 
     then:
       !errors.isEmpty()
+  }
+
+  def "Generate template object with labels"() {
+    given:
+      def openshiftClient = Mock(OpenShiftResourceClient)
+      templateProcessor = new OpenShiftTemplateProcessor(templateProcessor.userDetailsProvider, openshiftClient, mapper)
+
+    when:
+      def objects = templateProcessor.generateObjects(templateJson as ObjectNode, [:], createEmptyDeploymentSpec(), "1", 0)
+
+    then:
+      1 * openshiftClient.post(_ as String, _ as String, null, _ as ObjectNode) >> {
+        String kind, String namespace, String name, ObjectNode payload ->
+          assertLabels(payload['labels'] as ObjectNode)
+          ResponseEntity.ok(payload)
+     }
+      objects.size() > 0
+  }
+
+  private static void assertLabels(ObjectNode labels) {
+    assert labels['affiliation'] != null
+    assert labels['template'].asText() == 'jenkins-cluster-persistent'
+    assert labels['appId'].asText() == DigestUtils.sha1Hex('jenkins-cluster-persistent-2.0')
+    assert labels['app'] != null
+    assert labels['updatedBy'].asText() == 'username'
+    assert labels['updateInBoober'] == null
+  }
+
+  private static createEmptyDeploymentSpec() {
+    new AuroraDeploymentSpec(new ApplicationId('', ''), '', TemplateType.development, '', [:],
+        '', '', new AuroraDeployEnvironment('', '',
+        new Permissions(new Permission(new HashSet<String>(), new HashSet<String>()),
+            new Permission(new HashSet<String>(), new HashSet<String>())),
+        Duration.ofMinutes(30)),
+        null, null, null, null, null, null, null, new AuroraConfigFile("", "", false), "master")
   }
 }

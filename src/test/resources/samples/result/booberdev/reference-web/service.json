@@ -9,6 +9,7 @@
       "prometheus.io/port": "8081"
     },
     "labels": {
+      "appId": "1590fc38ff96cbe228a5003e20e3ef3893e8bc06",
       "app": "openshift-referanse-react",
       "updatedBy": "hero",
       "affiliation": "aos",

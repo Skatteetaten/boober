@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.stereotype.Service
 
 @Service
@@ -57,6 +58,12 @@ class OpenShiftTemplateProcessor(
         if (!labels.has("template")) {
             val template = auroraDeploymentSpec.template?.template ?: "local"
             labels.put("template", template)
+        }
+
+        if (!labels.has("appId")) {
+            template["metadata"]?.get("name")?.let {
+                labels.put("appId", DigestUtils.sha1Hex(it.asText()))
+            }
         }
 
         if (!labels.has("app")) {

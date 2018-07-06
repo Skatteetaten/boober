@@ -10,6 +10,7 @@
       "sprocket.sits.no/service.webseal": "sprocket-aos-webseal"
     },
     "labels": {
+      "appId": "ad8a6ae72753e0f49ab0f2aeb73ee124ad29e7ac",
       "app": "sprocket",
       "updatedBy": "hero",
       "affiliation": "aos",

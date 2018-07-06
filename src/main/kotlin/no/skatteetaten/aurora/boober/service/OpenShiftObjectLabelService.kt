@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.stereotype.Service
 
 @Service
@@ -49,6 +50,10 @@ class OpenShiftObjectLabelService(private val userDetailsProvider: UserDetailsPr
             "updateInBoober" to "true",
             "booberDeployId" to deployId
         )
-        return toOpenShiftLabelNameSafeMap(labels + additionalLabels)
+
+        val deploy = auroraDeploymentSpec.deploy ?: return toOpenShiftLabelNameSafeMap(labels + additionalLabels)
+        return toOpenShiftLabelNameSafeMap(
+            mapOf("appId" to DigestUtils.sha1Hex("${deploy.groupId}/${deploy.artifactId}")) + labels + additionalLabels
+        )
     }
 }
