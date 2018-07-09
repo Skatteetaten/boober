@@ -1,5 +1,5 @@
 buildscript {
-  ext.kotlin_version = "1.2.41"
+  ext.kotlin_version = "1.2.51"
   ext.springBootVersion = "1.5.12.RELEASE"
   ext.auroraStartersVersion = "3.7.0"
 
