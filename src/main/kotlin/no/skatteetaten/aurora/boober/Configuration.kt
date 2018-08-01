@@ -26,6 +26,8 @@ import org.springframework.retry.annotation.EnableRetry
 import org.springframework.web.client.RestTemplate
 import java.io.FileInputStream
 import java.security.KeyStore
+import java.security.cert.X509Certificate
+import javax.net.ssl.SSLContext
 
 enum class ServiceTypes {
     BITBUCKET, GENERAL, AURORA
@@ -111,13 +113,10 @@ class Configuration : BeanPostProcessor {
     fun defaultHttpComponentsClientHttpRequestFactory(
         @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
         @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
-        keyStore: KeyStore?): HttpComponentsClientHttpRequestFactory {
+        sslContext: SSLContext): HttpComponentsClientHttpRequestFactory {
         return HttpComponentsClientHttpRequestFactory().apply {
             setReadTimeout(readTimeout)
             setConnectTimeout(connectTimeout)
-            val sslContext = SSLContexts.custom()
-                .loadTrustMaterial(keyStore, TrustAllStrategy())
-                .build()
             httpClient = HttpClients.custom()
                 .setSSLSocketFactory(SSLConnectionSocketFactory(sslContext))
                 .build()
@@ -126,18 +125,22 @@ class Configuration : BeanPostProcessor {
 
     @Profile("local")
     @Bean
-    fun localSSLContext(): KeyStore? {
-        return null
+    fun localSSLContext(): SSLContext? {
+        return SSLContexts.custom()
+            .loadTrustMaterial(null, TrustAllStrategy())
+            .build()
     }
 
     @Profile("openshift")
     @Bean
-    fun openshiftSSLContext(): KeyStore? {
+    fun openshiftSSLContext(): SSLContext? {
 
         val trustStore = KeyStore.getInstance(KeyStore.getDefaultType())
         FileInputStream("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt").use {
-            trustStore.load(it, "".toCharArray());
+            trustStore.load(it, "".toCharArray())
         }
-        return trustStore
+        return SSLContexts.custom()
+            .loadTrustMaterial(trustStore) { chain: Array<X509Certificate>, authType: String -> false }
+            .build()
     }
 }
