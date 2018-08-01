@@ -111,7 +111,8 @@ class Configuration : BeanPostProcessor {
     fun defaultHttpComponentsClientHttpRequestFactory(
         @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
         @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
-        trustStore: KeyStore?): HttpComponentsClientHttpRequestFactory {
+        trustStore: KeyStore?
+    ): HttpComponentsClientHttpRequestFactory {
         return HttpComponentsClientHttpRequestFactory().apply {
             setReadTimeout(readTimeout)
             setConnectTimeout(connectTimeout)
