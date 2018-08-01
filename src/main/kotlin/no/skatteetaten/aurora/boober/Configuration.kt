@@ -12,6 +12,7 @@ import org.encryptor4j.factory.KeyFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.beans.factory.config.BeanPostProcessor
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -121,11 +122,11 @@ class Configuration : BeanPostProcessor {
                 .build()
             httpClient = HttpClients.custom()
                 .setSSLSocketFactory(SSLConnectionSocketFactory(sslContext))
-                .build()
+                .build()!!
         }
     }
 
-    @Profile("local")
+    @ConditionalOnMissingBean(KeyStore::class)
     @Bean
     fun localKeyStore(): KeyStore? = null
 

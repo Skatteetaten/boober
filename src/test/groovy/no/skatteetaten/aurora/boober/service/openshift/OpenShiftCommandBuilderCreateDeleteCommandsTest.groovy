@@ -14,7 +14,6 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
-import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 
 import com.fasterxml.jackson.databind.JsonNode
@@ -33,7 +32,6 @@ import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
 @AutoConfigureWebClient
-@ActiveProfiles("local")
 @TestPropertySource(properties = ["openshift.url = http://localhost"])
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,

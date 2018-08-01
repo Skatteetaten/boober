@@ -21,7 +21,7 @@ import no.skatteetaten.aurora.filter.logging.AuroraHeaderFilter
 import no.skatteetaten.aurora.filter.logging.RequestKorrelasjon
 
 @AutoConfigureWebClient
-@ActiveProfiles(["staging", "local"])
+@ActiveProfiles("staging")
 @SpringBootTest(classes = [
     Configuration,
     SharedSecretReader,

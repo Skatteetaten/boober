@@ -8,13 +8,11 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.client.AutoConfigureWebClient
-import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.security.test.context.support.WithUserDetails
-import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.client.MockRestServiceServer
 
 import groovy.json.JsonOutput
@@ -30,7 +28,6 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaIdReques
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResults
 
 @WithUserDetails("aurora")
-@ActiveProfiles("local")
 @AutoConfigureWebClient
 @SpringBootTest(classes = [
     Configuration,
@@ -117,7 +114,6 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
     then:
       assertSchemaIsCorrect(provisionResult)
   }
-
 
   private static assertSchemaIsCorrect(SchemaProvisionResults provisionResult) {
 

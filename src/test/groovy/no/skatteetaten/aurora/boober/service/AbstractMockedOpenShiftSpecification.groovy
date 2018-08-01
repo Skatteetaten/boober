@@ -11,7 +11,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
-import org.springframework.test.context.ActiveProfiles
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -39,7 +38,6 @@ import no.skatteetaten.aurora.boober.utils.Instants
 import spock.mock.DetachedMockFactory
 
 @AutoConfigureWebClient(registerRestTemplate = true)
-@ActiveProfiles("local")
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
     DeployService,
@@ -144,10 +142,9 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
   @Autowired
   ObjectMapper mapper
 
-
   def setup() {
 
-    Instants.determineNow = {Instant.EPOCH }
+    Instants.determineNow = { Instant.EPOCH }
 
     def currentFeature = specificationContext.currentFeature
     DefaultOverride defaultOverride = currentFeature.featureMethod.getAnnotation(DefaultOverride)

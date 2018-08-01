@@ -1,10 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
-import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
-import org.springframework.test.context.ActiveProfiles
-
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -20,12 +17,12 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
 import no.skatteetaten.aurora.boober.service.openshift.UserGroup
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
 @RestClientTest
-@ActiveProfiles("local")
 @SpringBootTest(classes = [
     no.skatteetaten.aurora.boober.Configuration,
     EncryptionService,
