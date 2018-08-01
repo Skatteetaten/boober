@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
+import org.springframework.test.context.ActiveProfiles
 
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Metrics
@@ -13,6 +14,7 @@ import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import spock.lang.Specification
 
 @RestClientTest
+@ActiveProfiles("local")
 @SpringBootTest(classes = [
     Configuration,
     Config,
@@ -23,6 +25,7 @@ import spock.lang.Specification
 class EncryptionServiceTest extends Specification {
   @org.springframework.context.annotation.Configuration
   static class Config {
+
 
     @Bean
     MeterRegistry meterRegistry() {

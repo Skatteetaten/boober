@@ -3,7 +3,9 @@ package no.skatteetaten.aurora.boober.service
 import org.springframework.boot.test.autoconfigure.web.client.AutoConfigureWebClient
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.test.context.support.WithUserDetails
+import org.springframework.test.context.ActiveProfiles
 
+import no.skatteetaten.aurora.boober.Configuration
 import no.skatteetaten.aurora.boober.model.AbstractAuroraDeploymentSpecTest
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -15,10 +17,11 @@ import no.skatteetaten.aurora.boober.service.openshift.token.UserDetailsTokenPro
 
 @WithUserDetails("aurora")
 @AutoConfigureWebClient
+@ActiveProfiles("local")
 @SpringBootTest(classes = [
     SpringTestUtils.MockRestServiceServiceInitializer,
     SpringTestUtils.SecurityMock,
-    no.skatteetaten.aurora.boober.Configuration,
+    Configuration,
     SharedSecretReader,
     OpenShiftRequestHandler,
     OpenShiftResourceClientConfig,
