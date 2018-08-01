@@ -5,7 +5,6 @@ import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import no.skatteetaten.aurora.filter.logging.AuroraHeaderFilter
 import no.skatteetaten.aurora.filter.logging.RequestKorrelasjon
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory
-import org.apache.http.conn.ssl.TrustAllStrategy
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.ssl.SSLContexts
 import org.encryptor4j.factory.AbsKeyFactory
@@ -27,7 +26,6 @@ import org.springframework.web.client.RestTemplate
 import java.io.FileInputStream
 import java.security.KeyStore
 import java.security.cert.X509Certificate
-import javax.net.ssl.SSLContext
 
 enum class ServiceTypes {
     BITBUCKET, GENERAL, AURORA
@@ -113,10 +111,13 @@ class Configuration : BeanPostProcessor {
     fun defaultHttpComponentsClientHttpRequestFactory(
         @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
         @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
-        sslContext: SSLContext): HttpComponentsClientHttpRequestFactory {
+        trustStore: KeyStore?): HttpComponentsClientHttpRequestFactory {
         return HttpComponentsClientHttpRequestFactory().apply {
             setReadTimeout(readTimeout)
             setConnectTimeout(connectTimeout)
+            val sslContext = SSLContexts.custom()
+                .loadTrustMaterial(trustStore) { chain: Array<X509Certificate>, authType: String -> false }
+                .build()
             httpClient = HttpClients.custom()
                 .setSSLSocketFactory(SSLConnectionSocketFactory(sslContext))
                 .build()
@@ -125,22 +126,16 @@ class Configuration : BeanPostProcessor {
 
     @Profile("local")
     @Bean
-    fun localSSLContext(): SSLContext? {
-        return SSLContexts.custom()
-            .loadTrustMaterial(null, TrustAllStrategy())
-            .build()
-    }
+    fun localKeyStore(): KeyStore? = null
 
     @Profile("openshift")
     @Bean
-    fun openshiftSSLContext(): SSLContext? {
+    fun openshiftSSLContext(): KeyStore? {
 
         val trustStore = KeyStore.getInstance(KeyStore.getDefaultType())
         FileInputStream("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt").use {
             trustStore.load(it, "".toCharArray())
         }
-        return SSLContexts.custom()
-            .loadTrustMaterial(trustStore) { chain: Array<X509Certificate>, authType: String -> false }
-            .build()
+        return trustStore
     }
 }
