@@ -77,7 +77,7 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
             permissions = extractPermissions(auroraConfigFields)
         )
 
-        return AuroraDeployHeader(env, type, applicationHandler, name, cluster, segment)
+        return AuroraDeployHeader(env, type, name, cluster, segment)
     }
 
     fun extractPermissions(configFields: AuroraConfigFields): Permissions {

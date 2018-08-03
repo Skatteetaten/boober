@@ -48,7 +48,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       }
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, additionalFile)
       AuroraDeploymentSpec deploymentSpec = AuroraDeploymentSpecService.
-          createAuroraDeploymentSpec(auroraConfig, aid, overrides)
+          createAuroraDeploymentSpec(auroraConfig, aid, overrides, "http://skap")
 
     when:
       List<JsonNode> generatedObjects = objectGenerator.
@@ -96,7 +96,8 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, null)
 
     when:
-      AuroraDeploymentSpec deploymentSpec = AuroraDeploymentSpecService.createAuroraDeploymentSpec(auroraConfig, aid)
+      AuroraDeploymentSpec deploymentSpec = AuroraDeploymentSpecService.
+          createAuroraDeploymentSpec(auroraConfig, aid, [], "http://skap")
       def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.environment.permissions)
 
     then:
@@ -114,6 +115,21 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       rolebindings.size() == 2
   }
 
+  def "should not include skap config if skap is disabled"() {
+
+    given:
+      def aid = new ApplicationId("booberdev", "console")
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, null)
+
+    when:
+      AuroraDeploymentSpec deploymentSpec = AuroraDeploymentSpecService.
+          createAuroraDeploymentSpec(auroraConfig, aid, [], null)
+
+    then:
+      deploymentSpec
+
+  }
+
   def "generate rolebinding view should split groups"() {
 
     given:
@@ -121,7 +137,8 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, null)
 
     when:
-      AuroraDeploymentSpec deploymentSpec = AuroraDeploymentSpecService.createAuroraDeploymentSpec(auroraConfig, aid)
+      AuroraDeploymentSpec deploymentSpec = AuroraDeploymentSpecService.
+          createAuroraDeploymentSpec(auroraConfig, aid, [], "http://skap")
       def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.environment.permissions)
 
     then:

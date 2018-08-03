@@ -14,7 +14,6 @@ enum class TemplateType {
 data class AuroraDeployHeader(
     val env: AuroraDeployEnvironment,
     val type: TemplateType,
-    val applicationPlatform: ApplicationPlatformHandler,
     val name: String,
     val cluster: String,
     val segment: String?

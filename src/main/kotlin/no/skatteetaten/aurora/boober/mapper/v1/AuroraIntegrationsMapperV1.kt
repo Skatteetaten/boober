@@ -7,19 +7,24 @@ import no.skatteetaten.aurora.boober.model.AuroraIntegration
 import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.model.Webseal
 
-class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
+class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>, val skapHost: String?) {
 
     val dbHandlers = findDbHandlers(applicationFiles)
+
+    val skapHandlers = skapHost?.let {
+        listOf(
+            AuroraConfigFieldHandler("certificate", defaultValue = false),
+            AuroraConfigFieldHandler("webseal", defaultValue = false),
+            AuroraConfigFieldHandler("webseal/host"),
+            AuroraConfigFieldHandler("webseal/roles")
+        )
+    } ?: listOf()
 
     val handlers = dbHandlers + listOf(
         AuroraConfigFieldHandler("database", defaultValue = false),
         AuroraConfigFieldHandler("certificate/commonName"),
-        AuroraConfigFieldHandler("certificate", defaultValue = false),
-        AuroraConfigFieldHandler("splunkIndex"),
-        AuroraConfigFieldHandler("webseal", defaultValue = false),
-        AuroraConfigFieldHandler("webseal/host"),
-        AuroraConfigFieldHandler("webseal/roles")
-    )
+        AuroraConfigFieldHandler("splunkIndex")
+    ) + skapHandlers
 
     fun integrations(auroraConfigFields: AuroraConfigFields): AuroraIntegration? {
         val name: String = auroraConfigFields.extract("name")
@@ -34,9 +39,9 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
 
         return AuroraIntegration(
             database = findDatabases(auroraConfigFields, name),
-            certificate = certificateCn,
             splunkIndex = auroraConfigFields.extractOrNull("splunkIndex"),
-            webseal = findWebseal(auroraConfigFields)
+            certificate = skapHost?.let {certificateCn},
+            webseal = skapHost?.let{ findWebseal(auroraConfigFields) }
         )
     }
 
