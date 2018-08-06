@@ -1,9 +1,7 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import java.time.Duration
 
