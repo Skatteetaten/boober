@@ -40,8 +40,8 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>, val s
         return AuroraIntegration(
             database = findDatabases(auroraConfigFields, name),
             splunkIndex = auroraConfigFields.extractOrNull("splunkIndex"),
-            certificate = skapHost?.let {certificateCn},
-            webseal = skapHost?.let{ findWebseal(auroraConfigFields) }
+            certificate = skapHost?.let { certificateCn },
+            webseal = skapHost?.let { findWebseal(auroraConfigFields) }
         )
     }
 
