@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 
 import groovy.json.JsonOutput
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
@@ -115,10 +116,10 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       rolebindings.size() == 2
   }
 
-  def "should not include skap config if skap is disabled"() {
+  def "should get error if config with skap config and it is disabled"() {
 
     given:
-      def aid = new ApplicationId("booberdev", "console")
+      def aid = new ApplicationId("booberdev", "aos-simple")
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, null)
 
     when:
@@ -126,7 +127,9 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
           createAuroraDeploymentSpec(auroraConfig, aid, [], null)
 
     then:
-      deploymentSpec
+      AuroraConfigException e = thrown(AuroraConfigException.class)
+      e.message ==
+          "Config for application aos-simple in environment booberdev contains errors. /webseal/host is not a valid config field pointer, /webseal/roles is not a valid config field pointer."
 
   }
 
