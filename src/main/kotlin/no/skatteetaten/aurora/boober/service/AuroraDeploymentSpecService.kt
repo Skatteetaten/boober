@@ -86,7 +86,7 @@ class AuroraDeploymentSpecService(
             val volume = if (header.type == TemplateType.build) null else volumeMapper.createAuroraVolume(auroraConfigFields)
             val route = if (header.type == TemplateType.build) null else routeMapper.route(auroraConfigFields)
             val build = if (header.type == TemplateType.build || header.type == TemplateType.development) buildMapper.build(auroraConfigFields) else null
-            val deploy = if (header.type == TemplateType.deploy || header.type == TemplateType.development) deployMapper.deploy(auroraConfigFields, auroraConfigFields2) else null
+            val deploy = if (header.type == TemplateType.deploy || header.type == TemplateType.development) deployMapper.deploy(auroraConfigFields) else null
             val template = if (header.type == TemplateType.template) templateMapper.template(auroraConfigFields) else null
             val localTemplate = if (header.type == TemplateType.localTemplate) localTemplateMapper.localTemplate(auroraConfigFields) else null
 

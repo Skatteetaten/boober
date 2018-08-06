@@ -65,22 +65,20 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
 
     fun createHeader2(auroraConfigFields: AuroraConfigFields2, applicationHandler: ApplicationPlatformHandler): AuroraDeployHeader {
 
-        val name = auroraConfigFields.extract<String>("/name")
-        val cluster = auroraConfigFields.extract<String>("/cluster")
-        val type = auroraConfigFields.extract<TemplateType>("/type")
-
-        val segment = auroraConfigFields.extractIfExistsOrNull<String>("/segment")
-
-        val env = AuroraDeployEnvironment(
-            affiliation = auroraConfigFields.extract("/affiliation"),
-            envName = auroraConfigFields.extractIfExistsOrNull("/env/name")
-                ?: auroraConfigFields.extract("/envName"),
-            ttl = auroraConfigFields.extractOrNull<String>("env/ttl")
-                ?.let { StringToDurationConverter().convert(it) },
-            permissions = extractPermissions2(auroraConfigFields)
+        return AuroraDeployHeader(
+            AuroraDeployEnvironment(
+                affiliation = auroraConfigFields.extract("/affiliation"),
+                envName = auroraConfigFields.extractIfExistsOrNull("/env/name")
+                    ?: auroraConfigFields.extract("/envName"),
+                ttl = auroraConfigFields.extractIfExistsOrNull<String>("/env/ttl")
+                    ?.let { StringToDurationConverter().convert(it) },
+                permissions = extractPermissions2(auroraConfigFields)
+            ),
+            auroraConfigFields.extract("/type"), applicationHandler,
+            auroraConfigFields.extract("/name"),
+            auroraConfigFields.extract("/cluster"),
+            auroraConfigFields.extractIfExistsOrNull<String>("/segment")
         )
-
-        return AuroraDeployHeader(env, type, applicationHandler, name, cluster, segment)
     }
 
     fun createHeader(auroraConfigFields: AuroraConfigFields, applicationHandler: ApplicationPlatformHandler): AuroraDeployHeader {

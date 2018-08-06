@@ -58,6 +58,61 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         return env.toMap()
     }
 
+    fun getRouteAnnotations(prefix: String, extractors: List<AuroraConfigFieldHandler>): Map<String, String> {
+        return extractors
+            .filter { it.path.startsWith("/$prefix") }
+            .map {
+                val (_, _, _, field) = it.name.split("/", limit = 4)
+
+                val value: String = extract(it.name)
+                field to value
+            }.toMap()
+    }
+
+    fun getDatabases(extractors: List<AuroraConfigFieldHandler>): List<Database> {
+
+        return extractors.map {
+            val (_, field) = it.name.split("/", limit = 2)
+
+            val value: String = extract(it.name)
+            Database(field, if (value == "auto" || value.isBlank()) null else value)
+        }
+    }
+
+    fun getParameters(parameterExtractors: List<AuroraConfigFieldHandler>): Map<String, String>? {
+        return parameterExtractors.map {
+            val (_, field) = it.name.split("/", limit = 2)
+
+            val value: String = extract(it.name)
+            field to value
+        }.toMap()
+    }
+
+    fun getKeyMappings(keyMappingsExtractor: AuroraConfigFieldHandler?): Map<String, String>? =
+        keyMappingsExtractor?.let { extractIfExistsOrNull(it.name) }
+
+    fun disabledAndNoSubKeys(name: String): Boolean {
+
+        val simplified = isSimplifiedConfig(name)
+
+        return simplified && !extract<Boolean>(name)
+    }
+
+    fun isSimplifiedConfig(name: String): Boolean {
+        val field = fields[name]!!
+
+        if (field.source == null) {
+            return field.handler.defaultValue is Boolean
+        }
+        val value = field.source.asJsonNode.at(field.handler.path)
+
+        if (value.isBoolean) {
+            return true
+        }
+
+        return false
+    }
+
     inline fun <reified T> extract(name: String): T = fields[name]!!.value()
 
     /**
@@ -129,7 +184,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
             val fields: List<Pair<String, AuroraConfigField2>> = files.flatMap { file ->
                 handlers.mapNotNull { handler ->
                     file.asJsonNode.atNullable(handler.path)?.let {
-                        handler.path to AuroraConfigField2(file.configName, it)
+                        handler.name to AuroraConfigField2(file.configName, it)
                     }
                 }
             }
@@ -145,7 +200,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
 data class AuroraConfigFields2(
     val replacer: StringSubstitutor,
-    val fields: Map<String, List<AuroraConfigField2>>
+    val fields: Map<String, List<AuroraConfigField2>> //wrapper i klasse fra AuroraConfigFile til objekt med siste som felter
 ) {
 
     inline fun <reified T> extractIfExistsOrNull(path: String): T? {
@@ -157,7 +212,7 @@ data class AuroraConfigFields2(
 
     inline fun <reified T> extractOrNull(path: String): T? {
 
-        return fields[path]?.lastOrNull()?.let {
+        return fields[path]!!.lastOrNull()?.let {
             getValue<T>(it)
         }
     }
@@ -171,7 +226,7 @@ data class AuroraConfigFields2(
     }
 
     inline fun <reified T> extract(path: String): T {
-        return extractOrNull<T>(path) ?: throw IllegalArgumentException("Path=$path is not set")
+        return extractIfExistsOrNull<T>(path) ?: throw IllegalArgumentException("Path=$path is not set")
     }
 
     /**
@@ -189,66 +244,11 @@ data class AuroraConfigFields2(
             .toSet()
     }
 
-    fun getConfigEnv(configExtractors: List<AuroraConfigFieldHandler>): Map<String, String> {
-        val env = configExtractors.filter { it.name.count { it == '/' } == 1 }.map {
-            val (_, field) = it.name.split("/", limit = 2)
-            val value: Any = extract(it.path)
-            val escapedValue: String = convertValueToString(value)
-            field to escapedValue
-        }
-
-        return env.toMap()
-    }
-
-    fun getRouteAnnotations(prefix: String, extractors: List<AuroraConfigFieldHandler>): Map<String, String> {
-        return extractors
-            .filter { it.path.startsWith("/$prefix") }
-            .map {
-                val (_, _, _, field) = it.name.split("/", limit = 4)
-
-                val value: String = extract(it.path)
-                field to value
-            }.toMap()
-    }
-
-    fun getDatabases(extractors: List<AuroraConfigFieldHandler>): List<Database> {
-
-        return extractors.map {
-            val (_, field) = it.name.split("/", limit = 2)
-
-            val value: String = extract(it.path)
-            Database(field, if (value == "auto" || value.isBlank()) null else value)
-        }
-    }
-
-    fun getParameters(parameterExtractors: List<AuroraConfigFieldHandler>): Map<String, String>? {
-        return parameterExtractors.map {
-            val (_, field) = it.name.split("/", limit = 2)
-
-            val value: String = extract(it.path)
-            field to value
-        }.toMap()
-    }
-
-    fun getKeyMappings(keyMappingsExtractor: AuroraConfigFieldHandler?): Map<String, String>? =
-        keyMappingsExtractor?.let { extractIfExistsOrNull(it.path) }
-
-    fun disabledAndNoSubKeys(name: String): Boolean {
-
-        val simplified = isSimplifiedConfig(name)
-
-        return simplified && !extract<Boolean>(name)
-    }
-
     fun isSimplifiedConfig(name: String): Boolean {
-        val field = fields[name]!!.last()
+        return fields[name]!!.last().value.isBoolean
 
-        if (field.value.isBoolean) {
-            return true
-        }
-
-        return false
     }
+
 }
 
 data class AuroraConfigField2(val source: String, val value: JsonNode)
