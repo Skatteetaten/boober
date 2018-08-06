@@ -2,10 +2,12 @@ package no.skatteetaten.aurora.boober.mapper
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.MissingNode
+import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.mapper.v1.convertValueToString
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.Database
+import no.skatteetaten.aurora.boober.utils.atNullable
 import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -163,5 +165,84 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
             return AuroraConfigFields(fields)
         }
+
+        fun create2(
+            handlers: Set<AuroraConfigFieldHandler>,
+            files: List<AuroraConfigFile>,
+            placeholders: Map<String, String> = emptyMap()
+        ): AuroraConfigFields2 {
+
+            val mapper = jacksonObjectMapper()
+
+            val defaultfields: List<Pair<String, AuroraConfigField2>> =
+                handlers.filter { it.defaultValue != null }.map {
+                    it.path to AuroraConfigField2(it.defaultSource, mapper.convertValue(it.defaultValue!!))
+                }
+
+            val replacer = StringSubstitutor(placeholders, "@", "@")
+
+            val fields: List<Pair<String, AuroraConfigField2>> = files.flatMap { file ->
+                handlers.mapNotNull { handler ->
+                    file.asJsonNode.atNullable(handler.path)?.let {
+                        handler.path to AuroraConfigField2(file.configName, it)
+                    }
+                }
+            }
+
+            val allFields: List<Pair<String, AuroraConfigField2>> = defaultfields + fields
+
+            val groupedFields: Map<String, List<AuroraConfigField2>> = allFields
+                .groupBy({ it.first }) { it.second }
+            return AuroraConfigFields2(replacer, groupedFields)
+        }
     }
 }
+
+data class AuroraConfigFields2(
+    val replacer: StringSubstitutor,
+    val fields: Map<String, List<AuroraConfigField2>>
+) {
+
+    inline fun <reified T> extractIfExistsOrNull(path: String): T? {
+
+        return fields[path]?.lastOrNull()?.let {
+            getValue<T>(it)
+        }
+    }
+
+    inline fun <reified T> extractOrNull(path: String): T? {
+
+        return fields[path]?.lastOrNull()?.let {
+            getValue<T>(it)
+        }
+    }
+
+    inline fun <reified T> getValue(it: AuroraConfigField2): T {
+        val result = jacksonObjectMapper().convertValue(it.value, T::class.java)
+        if (result is String) {
+            return replacer.replace(result as String) as T
+        }
+        return result
+    }
+
+    inline fun <reified T> extract(path: String): T {
+        return extractOrNull<T>(path) ?: throw IllegalArgumentException("Path=$path is not set")
+    }
+
+    /**
+     * Extracts a config field declared either as a delimited string (ie. "value1, value2") or as a JSON array
+     * (ie. ["value1", "value2"]) as a String list.
+     */
+    fun extractDelimitedStringOrArrayAsSet(path: String, delimiter: String = ","): Set<String> {
+        val valueNode = fields[path]!!.last().value
+        return when {
+            valueNode.isTextual -> valueNode.textValue().split(delimiter).toList()
+            valueNode.isArray -> (extract(path) as List<Any?>).map { it?.toString() } // Convert any non-string values in the array to string
+            else -> emptyList()
+        }.filter { !it.isNullOrBlank() }
+            .mapNotNull { it?.trim() }
+            .toSet()
+    }
+}
+
+data class AuroraConfigField2(val source: String, val value: JsonNode)

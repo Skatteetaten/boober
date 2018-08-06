@@ -46,6 +46,8 @@ class AuroraDeploymentSpecService(
 
             val headerMapper = HeaderMapper(applicationId, applicationFiles)
             val headerFields = AuroraConfigFields.create(headerMapper.handlers, applicationFiles)
+            val newFields= AuroraConfigFields.create2(headerMapper.handlers, applicationFiles)
+
             AuroraDeploymentSpecConfigFieldValidator(applicationId, applicationFiles, headerMapper.handlers, headerFields)
                 .validate(false)
             val platform = headerFields.extract<String>("applicationPlatform")
@@ -54,6 +56,8 @@ class AuroraDeploymentSpecService(
                 ?: throw IllegalArgumentException("ApplicationPlattformHandler $platform is not present")
 
             val header = headerMapper.createHeader(headerFields, applicationHandler)
+
+            val header2 = headerMapper.createHeader2(newFields, applicationHandler)
 
             val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(applicationId)
             val deployMapper = AuroraDeployMapperV1(applicationId, applicationFiles, overrideFiles)
