@@ -1,0 +1,10 @@
+{
+  "type": "deploy",
+  "route": {
+    "console": {
+      "annotations": {
+        "haproxy.router.openshift.io/timeout": "600s"
+      }
+    }
+  }
+}
