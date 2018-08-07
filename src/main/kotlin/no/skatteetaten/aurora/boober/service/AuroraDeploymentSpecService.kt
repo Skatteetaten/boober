@@ -45,8 +45,7 @@ class AuroraDeploymentSpecService(
             val applicationFiles = auroraConfig.getFilesForApplication(applicationId, overrideFiles)
 
             val headerMapper = HeaderMapper(applicationId, applicationFiles)
-            val headerFields = AuroraConfigFields.create(headerMapper.handlers, applicationFiles)
-            val newFields= AuroraConfigFields.create2(headerMapper.handlers, applicationFiles)
+            val headerFields = AuroraConfigFields.create(headerMapper.handlers, applicationFiles, applicationId, auroraConfig.version)
 
             AuroraDeploymentSpecConfigFieldValidator(applicationId, applicationFiles, headerMapper.handlers, headerFields)
                 .validate(false)
@@ -57,7 +56,6 @@ class AuroraDeploymentSpecService(
 
             val header = headerMapper.createHeader(headerFields, applicationHandler)
 
-            val header2 = headerMapper.createHeader2(newFields, applicationHandler)
 
             val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(applicationId)
             val deployMapper = AuroraDeployMapperV1(applicationId, applicationFiles, overrideFiles)
@@ -78,8 +76,7 @@ class AuroraDeploymentSpecService(
 
             val handlers = applicationHandler.handlers(rawHandlers)
 
-            val auroraConfigFields = AuroraConfigFields.create(handlers, applicationFiles, header.extractPlaceHolders())
-            val auroraConfigFields2 = AuroraConfigFields.create2(handlers, applicationFiles, header.extractPlaceHolders())
+            val auroraConfigFields = AuroraConfigFields.create(handlers, applicationFiles, applicationId, auroraConfig.version, header.extractPlaceHolders())
 
             AuroraDeploymentSpecConfigFieldValidator(applicationId, applicationFiles, handlers, auroraConfigFields).validate()
             val integration = if (header.type == TemplateType.build) null else integrationMapper.integrations(auroraConfigFields)

@@ -10,19 +10,28 @@ enum class ErrorType {
     GENERIC
 }
 
-data class ApplicationError(val application: String, val environment: String, val details: List<ErrorDetail>, val type: String = "APPLICATION")
+data class ApplicationError(
+    val application: String,
+    val environment: String,
+    val details: List<ErrorDetail>,
+    val type: String = "APPLICATION"
+)
 
 data class AuroraConfigFieldError(val path: String, val fileName: String? = null, val value: JsonNode? = null)
 
 open class ErrorDetail(val type: ErrorType = ErrorType.GENERIC, val message: String)
 
-class ConfigFieldErrorDetail(type: ErrorType, message: String, val field: AuroraConfigFieldError? = null)
-    : ErrorDetail(type, message) {
+class ConfigFieldErrorDetail(type: ErrorType, message: String, val field: AuroraConfigFieldError? = null) :
+    ErrorDetail(type, message) {
 
     companion object {
-        fun illegal(message: String, auroraConfigField: AuroraConfigField? = null): ConfigFieldErrorDetail {
+        fun illegal(
+            message: String,
+            path: String = "",
+            auroraConfigField: AuroraConfigField? = null
+        ): ConfigFieldErrorDetail {
             val fieldError = auroraConfigField?.let {
-                AuroraConfigFieldError(it.handler.path, it.source?.name, it.valueNodeOrDefault)
+                AuroraConfigFieldError(path, auroraConfigField.source, auroraConfigField.valueNode)
             }
             return ConfigFieldErrorDetail(ErrorType.ILLEGAL, message, fieldError)
         }

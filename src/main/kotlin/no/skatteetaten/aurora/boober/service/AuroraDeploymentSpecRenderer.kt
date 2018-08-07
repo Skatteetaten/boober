@@ -1,7 +1,10 @@
 package no.skatteetaten.aurora.boober.service
 
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 
+/*
+TODO: fix
 fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean): String {
 
     val fields = deploymentSpec.fields
@@ -65,19 +68,11 @@ fun findMaxValueLength(fields: Map<String, Any>): Int {
     }.max() ?: 0
 }
 
-fun filterDefaultFields(fields: Map<String, Map<String, Any?>>): Map<String, Map<String, Any?>> {
+fun filterDefaultFields(fields: Map<String, AuroraConfigField>): Map<String, AuroraConfigField> {
 
     return fields
         .filter {
-            it.value["source"].toString() != "default"
-        }
-        .mapValues {
-            if (it.value.containsKey("source")) {
-                it.value
-            } else {
-                filterDefaultFields(it.value as Map<String, Map<String, Any?>>)
-            }
-        }.filter {
-            !it.value.isEmpty()
+            it.value.source != "default"
         }
 }
+*/

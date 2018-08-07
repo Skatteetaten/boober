@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import static no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecRendererKt.filterDefaultFields
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper

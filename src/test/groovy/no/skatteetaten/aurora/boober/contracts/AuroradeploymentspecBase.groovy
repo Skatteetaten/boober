@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.contracts
 
+/*
 import no.skatteetaten.aurora.boober.controller.v1.AuroraDeploymentSpecControllerV1
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -11,6 +12,7 @@ import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService
 
+TODO: fix
 class AuroradeploymentspecBase extends AbstractContractBase {
 
   void setup() {
@@ -31,8 +33,9 @@ class AuroradeploymentspecBase extends AbstractContractBase {
     def aid = new ApplicationId("", "")
     def env = new AuroraDeployEnvironment('', '',
         new Permissions(new Permission(Collections.emptySet(), Collections.emptySet()), null), null)
-    new AuroraDeploymentSpec(aid, '', TemplateType.development, '', deploymentSpecs,
+    new no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec.AuroraDeploymentSpec(aid, '', TemplateType.development, '', deploymentSpecs,
         '', '', env,
         null, null, null, null, null, null, null, new AuroraConfigFile("", "", false), "master")
   }
 }
+ */

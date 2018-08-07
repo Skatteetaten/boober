@@ -40,3 +40,4 @@ class DeployBase extends AbstractContractBase {
     return new AuroraDeployResult(spec, UUID.randomUUID().toString().substring(0,7), [], success, false, reason)
   }
 }
+

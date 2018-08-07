@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields2
 import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecConfigFieldValidator.Companion.namePattern
 import no.skatteetaten.aurora.boober.model.ApplicationId
@@ -63,23 +62,7 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
         }))
 
 
-    fun createHeader2(auroraConfigFields: AuroraConfigFields2, applicationHandler: ApplicationPlatformHandler): AuroraDeployHeader {
 
-        return AuroraDeployHeader(
-            AuroraDeployEnvironment(
-                affiliation = auroraConfigFields.extract("/affiliation"),
-                envName = auroraConfigFields.extractIfExistsOrNull("/env/name")
-                    ?: auroraConfigFields.extract("/envName"),
-                ttl = auroraConfigFields.extractIfExistsOrNull<String>("/env/ttl")
-                    ?.let { StringToDurationConverter().convert(it) },
-                permissions = extractPermissions2(auroraConfigFields)
-            ),
-            auroraConfigFields.extract("/type"), applicationHandler,
-            auroraConfigFields.extract("/name"),
-            auroraConfigFields.extract("/cluster"),
-            auroraConfigFields.extractIfExistsOrNull<String>("/segment")
-        )
-    }
 
     fun createHeader(auroraConfigFields: AuroraConfigFields, applicationHandler: ApplicationPlatformHandler): AuroraDeployHeader {
         val name = auroraConfigFields.extract<String>("name")
@@ -100,19 +83,6 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
         return AuroraDeployHeader(env, type, applicationHandler, name, cluster, segment)
     }
 
-
-    fun extractPermissions2(configFields: AuroraConfigFields2): Permissions {
-
-        val viewGroups = configFields.extractDelimitedStringOrArrayAsSet("/permissions/view", " ")
-        val adminGroups = configFields.extractDelimitedStringOrArrayAsSet("/permissions/admin", " ")
-        // if sa present add to admin users.
-        val adminUsers = configFields.extractDelimitedStringOrArrayAsSet("/permissions/adminServiceAccount", " ")
-
-        val adminPermission = Permission(adminGroups, adminUsers)
-        val viewPermission = if (viewGroups.isNotEmpty()) Permission(viewGroups) else null
-
-        return Permissions(admin = adminPermission, view = viewPermission)
-    }
 
     fun extractPermissions(configFields: AuroraConfigFields): Permissions {
 

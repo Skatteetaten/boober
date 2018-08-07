@@ -1,7 +1,5 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
-import com.fasterxml.jackson.databind.node.ObjectNode
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.model.ApplicationId
@@ -60,7 +58,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
             name = name,
             cluster = auroraConfigFields.extract("cluster"),
             environment = env,
-            fields = createFields(applicationId, configVersion, auroraConfigFields, build),
+            fields = auroraConfigFields.fields,
             volume = volume,
             route = route,
             build = build,
@@ -71,92 +69,5 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
             applicationFile = applicationFile,
             configVersion = configVersion
         )
-    }
-
-    private fun createIncludeSubKeysMap(fields: Map<String, AuroraConfigField>): Map<String, Boolean> {
-
-        val includeSubKeys = mutableMapOf<String, Boolean>()
-
-        fields.entries
-            .filter { it.key.split("/").size == 1 }
-            .forEach {
-                val key = it.key.split("/")[0]
-                val shouldIncludeSubKeys = it.value.valueNodeOrDefault?.let {
-                    !it.isBoolean || it.booleanValue()
-                } ?: false
-                includeSubKeys.put(key, shouldIncludeSubKeys)
-            }
-
-        return includeSubKeys
-    }
-
-    fun createFields(
-        applicationId: ApplicationId,
-        configVersion: String,
-        auroraConfigFields: AuroraConfigFields,
-        build: AuroraBuild?
-    ): Map<String, Map<String, Any?>> {
-        val applicationIdField = mapOf(
-            "applicationId" to mapOf(
-                "source" to "static",
-                "value" to applicationId.toString()
-            ),
-            "configVersion" to mapOf(
-                "source" to "static",
-                "value" to configVersion
-            )
-        )
-
-        val fields = createMapForAuroraDeploymentSpecPointers(createFieldsWithValues(auroraConfigFields, build))
-
-        return applicationIdField + fields
-    }
-
-    fun createMapForAuroraDeploymentSpecPointers(auroraConfigFields: Map<String, AuroraConfigField>): Map<String, Map<String, Any?>> {
-        val fields = mutableMapOf<String, Any?>()
-        val includeSubKeys = createIncludeSubKeysMap(auroraConfigFields)
-
-        auroraConfigFields.entries.forEach { entry ->
-
-            val configField = entry.value
-            val configPath = entry.key
-
-            if (configField.valueNode is ObjectNode) {
-                return@forEach
-            }
-
-            val keys = configPath.split("/")
-            if (keys.size > 1 && !includeSubKeys.getOrDefault(keys[0], true)) {
-                return@forEach
-            }
-
-            var next = fields
-            keys.forEachIndexed { index, key ->
-                if (index == keys.lastIndex) {
-                    next[key] = mutableMapOf(
-                        "source" to (configField.source?.configName ?: configField.handler.defaultSource),
-                        "value" to configField.valueNodeOrDefault
-                    )
-                } else {
-                    if (next[key] == null) {
-                        next[key] = mutableMapOf<String, Any?>()
-                    }
-
-                    if (next[key] is MutableMap<*, *>) {
-                        next = next[key] as MutableMap<String, Any?>
-                    }
-                }
-            }
-        }
-
-        return fields as Map<String, Map<String, Any?>>
-    }
-
-    private fun createFieldsWithValues(
-        auroraConfigFields: AuroraConfigFields,
-        build: AuroraBuild?
-    ): Map<String, AuroraConfigField> {
-
-        return auroraConfigFields.fields.filterValues { it.source != null || it.handler.defaultValue != null }
     }
 }

@@ -27,33 +27,41 @@ class AuroraDeploymentSpecConfigFieldValidator(
     @JvmOverloads
     fun validate(fullValidation: Boolean = true) {
 
-        val envPointers = listOf("env/name", "env/ttl", "envName", "affiliation",
-            "permissions/admin", "permissions/view", "permissions/adminServiceAccount")
+        val envPointers = listOf(
+            "env/name", "env/ttl", "envName", "affiliation",
+            "permissions/admin", "permissions/view", "permissions/adminServiceAccount"
+        )
 
         val errors: List<ConfigFieldErrorDetail> = fieldHandlers.mapNotNull { e ->
-            val rawField = auroraConfigFields.fields[e.name]!!
+            val rawField = auroraConfigFields.fields.get(e.name)
 
-            val invalidEnvSource = envPointers.contains(e.name) && rawField.source?.name
-                ?.let { !it.split("/").last().startsWith("about") }
-                ?: false
+            //hva hvis vi har en handler og vi ikke finner verdien?
+
+
+            val invalidEnvSource =
+                envPointers.contains(e.name) && rawField.source.let { !it.split("/").last().startsWith("about") }
 
             logger.trace("Validating field=${e.name}")
-            val auroraConfigField: JsonNode? = rawField.valueNodeOrDefault
+            val auroraConfigField: JsonNode? = rawField.valueNode
             logger.trace("value is=${jacksonObjectMapper().writeValueAsString(auroraConfigField)}")
 
             val result = e.validator(auroraConfigField)
             logger.trace("validator result is=$result")
 
             val err = when {
-                invalidEnvSource -> ConfigFieldErrorDetail.illegal("Invalid Source field=${e.name} requires an about source. Actual source is source=${rawField.source?.name}", rawField)
+                invalidEnvSource -> ConfigFieldErrorDetail.illegal(
+                    "Invalid Source field=${e.name} requires an about source. Actual source is source=${rawField.source}",
+                    e.name, rawField
+                )
                 result == null -> null
-                auroraConfigField != null -> ConfigFieldErrorDetail.illegal(result.localizedMessage, rawField)
+                auroraConfigField != null -> ConfigFieldErrorDetail.illegal(result.localizedMessage, e.name, rawField)
                 else -> ConfigFieldErrorDetail.missing(result.localizedMessage, e.path)
             }
             if (err != null) {
                 logger.trace("Error=$err message=${err.message}")
             }
             err
+
         }
 
         val unmappedErrors = if (fullValidation) {
@@ -81,3 +89,4 @@ class AuroraDeploymentSpecConfigFieldValidator(
         return filePointers.mapValues { it.value - allPaths }.filterValues { it.isNotEmpty() }
     }
 }
+
