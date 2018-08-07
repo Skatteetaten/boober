@@ -19,6 +19,9 @@ data class AuroraConfigField(
     val source: String
         get() = fields.last().source
 
+    val isDefault: Boolean
+        get() = fields.last().defaultSource
+
     val valueNode: JsonNode
         get() = fields.last().value
 
@@ -52,10 +55,9 @@ data class AuroraConfigField(
     fun isSimplifiedConfig(): Boolean {
         return fields.last()!!.value.isBoolean
     }
-
 }
 
-data class AuroraConfigFieldSource(val source: String, val value: JsonNode)
+data class AuroraConfigFieldSource(val source: String, val value: JsonNode, val defaultSource: Boolean = false)
 
 class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
@@ -121,10 +123,10 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
      * (ie. ["value1", "value2"]) as a String list.
      */
     fun extractDelimitedStringOrArrayAsSet(name: String, delimiter: String = ","): Set<String> {
-        return fields[name]!!.extractDelimitedStringOrArrayAsSet(delimiter)
+        return fields[name]?.extractDelimitedStringOrArrayAsSet(delimiter) ?: emptySet()
     }
 
-    inline fun <reified T> extractOrNull(name: String): T? = fields[name]!!.getNullableValue()
+    inline fun <reified T> extractOrNull(name: String): T? = fields[name]?.getNullableValue()
 
     inline fun <reified T> extractIfExistsOrNull(name: String): T? = fields[name]?.getNullableValue()
 
@@ -144,13 +146,17 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
             val defaultfields: List<Pair<String, AuroraConfigFieldSource>> =
                 handlers.filter { it.defaultValue != null }.map {
-                    it.name to AuroraConfigFieldSource(it.defaultSource, mapper.convertValue(it.defaultValue!!))
+                    it.name to AuroraConfigFieldSource(it.defaultSource, mapper.convertValue(it.defaultValue!!), true)
                 }
 
             val staticFields: List<Pair<String, AuroraConfigFieldSource>> =
                 listOf(
-                    "applicationId" to AuroraConfigFieldSource("static", mapper.convertValue(applicationId.toString()))
-                    , "configVersion" to AuroraConfigFieldSource("static", mapper.convertValue(configVersion))
+                    "applicationId" to AuroraConfigFieldSource(
+                        "static",
+                        mapper.convertValue(applicationId.toString()),
+                        true
+                    )
+                    , "configVersion" to AuroraConfigFieldSource("static", mapper.convertValue(configVersion), true)
                 )
 
             val replacer = StringSubstitutor(placeholders, "@", "@")

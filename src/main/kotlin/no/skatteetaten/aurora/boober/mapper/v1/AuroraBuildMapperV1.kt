@@ -17,7 +17,7 @@ class AuroraBuildMapperV1(val name: String) {
         val groupId: String = auroraConfigFields.extract("groupId")
         val artifactId: String = auroraConfigFields.extract("artifactId")
         val version: String = auroraConfigFields.extract("version")
-        val testGitUrl: String? = auroraConfigFields.extract("test/gitUrl")
+        val testGitUrl: String? = auroraConfigFields.extractIfExistsOrNull("test/gitUrl")
 
         val skipTriggers = type == TemplateType.development || version.contains("SNAPSHOT") || testGitUrl != null
 
@@ -34,7 +34,7 @@ class AuroraBuildMapperV1(val name: String) {
             "$name:latest"
         }
 
-        return AuroraBuild(
+        val b= AuroraBuild(
             applicationPlatform = auroraConfigFields.extract("applicationPlatform"),
             testGitUrl = testGitUrl,
             testTag = auroraConfigFields.extractOrNull("test/tag"),
@@ -51,6 +51,7 @@ class AuroraBuildMapperV1(val name: String) {
             triggers = !skipTriggers,
             buildSuffix = auroraConfigFields.extractOrNull("buildSuffix")
         )
+        return b
     }
 
     val handlers = listOf(

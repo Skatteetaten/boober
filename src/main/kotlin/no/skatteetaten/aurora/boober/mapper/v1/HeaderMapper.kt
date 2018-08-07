@@ -75,7 +75,7 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
             affiliation = auroraConfigFields.extract("affiliation"),
             envName = auroraConfigFields.extractIfExistsOrNull("env/name")
                 ?: auroraConfigFields.extract("envName"),
-            ttl = auroraConfigFields.extractOrNull<String>("env/ttl")
+            ttl = auroraConfigFields.extractIfExistsOrNull<String>("env/ttl")
                 ?.let { StringToDurationConverter().convert(it) },
             permissions = extractPermissions(auroraConfigFields)
         )

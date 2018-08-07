@@ -36,7 +36,7 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
         return AuroraIntegration(
             database = findDatabases(auroraConfigFields, name),
             certificateCn = certificateCn,
-            splunkIndex = auroraConfigFields.extractOrNull("splunkIndex"),
+            splunkIndex = auroraConfigFields.extractIfExistsOrNull("splunkIndex"),
             webseal = findWebseal(auroraConfigFields)
         )
     }
