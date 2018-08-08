@@ -14,7 +14,7 @@ fun filterFieldsForPresentation(fields: Map<String, AuroraConfigField>): Map<Str
         return fields
             .filter { it.key.split("/").size == 1 }
             .filter {
-                val value = it.value.valueNode
+                val value = it.value.value
                 !value.isBoolean || !value.booleanValue()
             }.map {
                 it.key.split("/")[0] + "/"
@@ -27,7 +27,7 @@ fun filterFieldsForPresentation(fields: Map<String, AuroraConfigField>): Map<Str
     }
     val map: MutableMap<String, Any> = mutableMapOf()
     cleanedFields
-        .mapValues { mapOf("source" to it.value.source, "value" to it.value.valueNode) }
+        .mapValues { mapOf("source" to it.value.source, "value" to it.value.value) }
         .forEach {
             map.deepSet(it.key.split("/"), it.value)
         }

@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.mapper
 
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -12,24 +15,28 @@ import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class AuroraConfigField(
-    val fields: List<AuroraConfigFieldSource>,
-    val replacer: StringSubstitutor
+    val sources: List<AuroraConfigFieldSource>,
+    @JsonIgnore
+    val replacer: StringSubstitutor = StringSubstitutor()
 ) {
     val source: String
-        get() = fields.last().source
+        get() = sources.last().source
 
     val isDefault: Boolean
-        get() = fields.last().defaultSource
+        @JsonIgnore
+        get() = sources.last().defaultSource
 
-    val valueNode: JsonNode
-        get() = fields.last().value
+    val value: JsonNode
+        get() = sources.last().value
 
     inline fun <reified T> getNullableValue(): T? = this.value() as T?
 
     inline fun <reified T> value(): T {
 
-        val it = fields.last()!!
+        val it = sources.last()!!
         val result = jacksonObjectMapper().convertValue(it.value, T::class.java)
         if (result is String) {
             return replacer.replace(result as String) as T
@@ -42,7 +49,7 @@ data class AuroraConfigField(
      * (ie. ["value1", "value2"]) as a String list.
      */
     fun extractDelimitedStringOrArrayAsSet(delimiter: String = ","): Set<String> {
-        val valueNode = fields.last()!!.value
+        val valueNode = sources.last()!!.value
         return when {
             valueNode.isTextual -> valueNode.textValue().split(delimiter).toList()
             valueNode.isArray -> (value() as List<Any?>).map { it?.toString() } // Convert any non-string values in the array to string
@@ -52,12 +59,18 @@ data class AuroraConfigField(
             .toSet()
     }
 
+    @JsonIgnore
     fun isSimplifiedConfig(): Boolean {
-        return fields.last()!!.value.isBoolean
+        return sources.last()!!.value.isBoolean
     }
 }
 
-data class AuroraConfigFieldSource(val source: String, val value: JsonNode, val defaultSource: Boolean = false)
+data class AuroraConfigFieldSource(
+    val source: String,
+    val value: JsonNode,
+    @JsonIgnore
+    val defaultSource: Boolean = false
+)
 
 class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 

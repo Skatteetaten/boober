@@ -9,8 +9,21 @@ class OpenShiftApiUrls(
 
         @JvmStatic
         @JvmOverloads
-        fun createOpenShiftApiUrls(baseUrl: String, kind: String, namespace: String? = null, name: String?): OpenShiftApiUrls {
+        fun createOpenShiftApiUrls(
+            baseUrl: String,
+            kind: String,
+            namespace: String? = null,
+            name: String?
+        ): OpenShiftApiUrls {
 
+            if (kind == "application") {
+                val createUrl = "$baseUrl/apis/skatteetaten.no/v1/namespaces/$namespace/applications"
+                return OpenShiftApiUrls(
+                    create = createUrl,
+                    get = "$createUrl/$name",
+                    update = "$createUrl/$name"
+                )
+            }
             if (kind == "processedtemplate") {
                 val bcBaseUrl = getCollectionPathForResource(baseUrl, "processedtemplate", namespace)
                 return OpenShiftApiUrls(
@@ -38,7 +51,15 @@ class OpenShiftApiUrls(
             val endpointKey = kind.toLowerCase() + "s"
 
             val apiType = getApiType(endpointKey)
-            val namespacePrefix = if (endpointKey !in listOf("namespaces", "projects", "projectrequests", "deploymentreqeusts", "users", "groups")) {
+            val namespacePrefix = if (endpointKey !in listOf(
+                    "namespaces",
+                    "projects",
+                    "projectrequests",
+                    "deploymentreqeusts",
+                    "users",
+                    "groups"
+                )
+            ) {
                 namespace ?: throw IllegalArgumentException("namespace required for resource kind $kind")
                 "/namespaces/$namespace"
             } else ""
@@ -48,8 +69,11 @@ class OpenShiftApiUrls(
         }
 
         fun getApiType(endpointKey: String): String {
-            return if (endpointKey in listOf("namespaces", "services", "configmaps", "secrets", "serviceaccounts",
-                    "replicationcontrollers", "persistentvolumeclaims", "pods")) "api" else "oapi"
+            return if (endpointKey in listOf(
+                    "namespaces", "services", "configmaps", "secrets", "serviceaccounts",
+                    "replicationcontrollers", "persistentvolumeclaims", "pods"
+                )
+            ) "api" else "oapi"
         }
     }
 }

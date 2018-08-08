@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
+import io.fabric8.kubernetes.api.model.OwnerReference
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -43,12 +44,18 @@ class OpenShiftCommandBuilder(
         deployId: String,
         deploymentSpec: AuroraDeploymentSpec,
         provisioningResult: ProvisioningResult?,
-        mergeWithExistingResource: Boolean
+        mergeWithExistingResource: Boolean,
+        ownerReference: OwnerReference
     ): List<OpenshiftCommand> {
 
         val namespace = deploymentSpec.environment.namespace
 
-        return openShiftObjectGenerator.generateApplicationObjects(deployId, deploymentSpec, provisioningResult)
+        return openShiftObjectGenerator.generateApplicationObjects(
+            deployId,
+            deploymentSpec,
+            provisioningResult,
+            ownerReference
+        )
             .map { createOpenShiftCommand(namespace, it, mergeWithExistingResource, false) }
             .flatMap { command ->
                 if (command.isType(UPDATE, "route") && mustRecreateRoute(command.payload, command.previous)) {

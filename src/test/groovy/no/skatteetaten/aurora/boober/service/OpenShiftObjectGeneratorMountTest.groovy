@@ -43,7 +43,7 @@ class OpenShiftObjectGeneratorMountTest extends AbstractOpenShiftObjectGenerator
       jsonMounts.size() == 1
       JsonNode mount = jsonMounts.first()
 
-    and: "there are env fields for all config elements in root"
+    and: "there are env sources for all config elements in root"
       deploymentSpec.deploy.env.containsKey("OPPSLAGSTJENESTE_DELEGERING")
       deploymentSpec.deploy.env.containsKey("UTSTED_SAML_URL")
       deploymentSpec.deploy.env.containsKey("VALIDER_SAML_URL")

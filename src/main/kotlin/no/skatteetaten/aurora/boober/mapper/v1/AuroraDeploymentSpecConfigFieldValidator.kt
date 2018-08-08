@@ -3,15 +3,12 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldSource
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.ConfigFieldErrorDetail
 import no.skatteetaten.aurora.boober.utils.findAllPointers
-import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -54,7 +51,7 @@ class AuroraDeploymentSpecConfigFieldValidator(
                     }
 
                 logger.trace("Validating field=${e.name}")
-                val auroraConfigField: JsonNode? = rawField.valueNode
+                val auroraConfigField: JsonNode? = rawField.value
                 logger.trace("value is=${jacksonObjectMapper().writeValueAsString(auroraConfigField)}")
 
                 val result = e.validator(auroraConfigField)

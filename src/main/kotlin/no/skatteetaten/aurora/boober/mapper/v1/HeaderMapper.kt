@@ -21,7 +21,7 @@ import no.skatteetaten.aurora.boober.utils.removeExtension
 import no.skatteetaten.aurora.boober.utils.startsWith
 
 /**
- * The header contains the fields that are required to parse the AuroraConfig files and create a merged file for a
+ * The header contains the sources that are required to parse the AuroraConfig files and create a merged file for a
  * particular application. This merged file is then the subject to further parsing and validation and may in it self
  * be invalid.
  */
