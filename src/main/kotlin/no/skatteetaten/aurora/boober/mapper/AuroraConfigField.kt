@@ -6,7 +6,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.mapper.v1.convertValueToString
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.Database
-import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -137,7 +136,6 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
         val logger: Logger = LoggerFactory.getLogger(AuroraConfigFields::class.java)
 
-        @JvmStatic
         fun create(
             handlers: Set<AuroraConfigFieldHandler>,
             files: List<AuroraConfigFile>,
