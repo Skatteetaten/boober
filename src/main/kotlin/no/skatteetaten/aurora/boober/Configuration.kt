@@ -5,6 +5,7 @@ import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import no.skatteetaten.aurora.filter.logging.AuroraHeaderFilter
 import no.skatteetaten.aurora.filter.logging.RequestKorrelasjon
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory
+import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.ssl.SSLContexts
 import org.encryptor4j.factory.AbsKeyFactory
@@ -112,18 +113,22 @@ class Configuration : BeanPostProcessor {
     fun defaultHttpComponentsClientHttpRequestFactory(
         @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
         @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
-        trustStore: KeyStore?
-    ): HttpComponentsClientHttpRequestFactory {
-        return HttpComponentsClientHttpRequestFactory().apply {
-            setReadTimeout(readTimeout)
-            setConnectTimeout(connectTimeout)
-            val sslContext = SSLContexts.custom()
-                .loadTrustMaterial(trustStore) { chain: Array<X509Certificate>, authType: String -> false }
-                .build()
-            httpClient = HttpClients.custom()
-                .setSSLSocketFactory(SSLConnectionSocketFactory(sslContext))
-                .build()!!
-        }
+        httpClient: CloseableHttpClient
+    ): HttpComponentsClientHttpRequestFactory = HttpComponentsClientHttpRequestFactory().apply {
+        setReadTimeout(readTimeout)
+        setConnectTimeout(connectTimeout)
+        setHttpClient(httpClient)
+    }
+
+    @Bean
+    fun closeableHttpClient(trustStore: KeyStore?): CloseableHttpClient {
+        val sslContext = SSLContexts.custom()
+            .loadTrustMaterial(trustStore) { _: Array<X509Certificate>, _: String -> false }
+            .build()
+        val build = HttpClients.custom()
+            .setSSLSocketFactory(SSLConnectionSocketFactory(sslContext))
+            .build()
+        return build
     }
 
     @ConditionalOnMissingBean(KeyStore::class)
@@ -132,12 +137,7 @@ class Configuration : BeanPostProcessor {
 
     @Profile("openshift")
     @Bean
-    fun openshiftSSLContext(): KeyStore? {
-
-        val trustStore = KeyStore.getInstance(KeyStore.getDefaultType())
-        FileInputStream("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt").use {
-            trustStore.load(it, "".toCharArray())
-        }
-        return trustStore
+    fun openshiftSSLContext(): KeyStore? = KeyStore.getInstance(KeyStore.getDefaultType())?.apply {
+        load(FileInputStream("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"), "".toCharArray())
     }
 }
