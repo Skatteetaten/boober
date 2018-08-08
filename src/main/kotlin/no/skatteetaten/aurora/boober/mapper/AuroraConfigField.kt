@@ -63,8 +63,10 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
             .map {
                 val (_, _, _, field) = it.name.split("/", limit = 4)
 
-                val value: String = extractOrNull(it.name)
-                    ?: throw AuroraDeploymentSpecValidationException("Annotation $field must be separated with '|'")
+                if (field.contains("/")) {
+                    throw AuroraDeploymentSpecValidationException("Annotation $field cannot contain '/'. Use '|' instead.")
+                }
+                val value: String = extract(it.name)
                 field to value
             }.toMap()
     }
