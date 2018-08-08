@@ -59,7 +59,7 @@ class AuroraDeploymentSpecService(
             val deployMapper = AuroraDeployMapperV1(applicationId, applicationFiles, overrideFiles)
             val integrationMapper = AuroraIntegrationsMapperV1(applicationFiles)
             val volumeMapper = AuroraVolumeMapperV1(applicationFiles)
-            val routeMapper = AuroraRouteMapperV1(applicationFiles, header.env, header.name)
+            val routeMapper = AuroraRouteMapperV1(applicationFiles, header.name)
             val localTemplateMapper = AuroraLocalTemplateMapperV1(applicationFiles, auroraConfig)
             val templateMapper = AuroraTemplateMapperV1(applicationFiles)
             val buildMapper = AuroraBuildMapperV1(header.name)
