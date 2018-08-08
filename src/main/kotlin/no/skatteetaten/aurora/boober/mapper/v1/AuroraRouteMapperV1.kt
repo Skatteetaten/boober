@@ -59,7 +59,11 @@ class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>, val name
         return applicationFiles.flatMap { ac ->
             ac.asJsonNode.at("/$prefix/annotations")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
         }.toSet().map { key ->
-            AuroraConfigFieldHandler("$prefix/annotations/$key")
+            AuroraConfigFieldHandler("$prefix/annotations/$key", validator = {
+                if (key.contains("/")) {
+                    IllegalArgumentException("Annotation $key cannot contain '/'. Use '|' instead")
+                } else null
+            })
         }
     }
 }
