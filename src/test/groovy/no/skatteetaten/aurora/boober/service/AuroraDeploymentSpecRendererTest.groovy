@@ -45,10 +45,10 @@ class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSprin
 
     where:
       env   | app            | includeDefaults
-      //"utv" | "webleveranse" | false
+      "utv" | "webleveranse" | false
       "utv" | "webleveranse" | true
-      //"utv" | "reference"    | true
-      //"utv" | "reference"    | false
+      "utv" | "reference"    | true
+      "utv" | "reference"    | false
   }
 
   @Unroll

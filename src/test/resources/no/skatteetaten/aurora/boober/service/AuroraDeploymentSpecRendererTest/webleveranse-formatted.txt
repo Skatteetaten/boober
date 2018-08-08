@@ -1,27 +1,27 @@
 {
-  applicationId:       utv/webleveranse             // static
-  configVersion:       master                       // static
-  schemaVersion:       "v1"                         // about.json
-  type:                "development"                // utv/webleveranse.json
-  applicationPlatform: "web"                        // webleveranse.json
-  affiliation:         "aos"                        // about.json
-  segment:             "aurora"                     // about.json
-  cluster:             "utv"                        // utv/about.json
+  applicationId:       "utv/webleveranse"          // static
+  configVersion:       "master"                    // static
+  schemaVersion:       "v1"                        // about.json
+  type:                "development"               // utv/webleveranse.json
+  applicationPlatform: "web"                       // webleveranse.json
+  affiliation:         "aos"                       // about.json
+  segment:             "aurora"                    // about.json
+  cluster:             "utv"                       // utv/about.json
   permissions: {
-    admin:             "APP_PaaS_utv"               // about.json
+    admin:             "APP_PaaS_utv"              // about.json
   }
-  envName:             "utv"                        // folderName
-  name:                "webleveranse"               // webleveranse.json
+  envName:             "utv"                       // folderName
+  name:                "webleveranse"              // webleveranse.json
   management: {
-    path:              ""                           // webleveranse.json
-    port:              "8081"                       // webleveranse.json
+    path:              ""                          // webleveranse.json
+    port:              "8081"                      // webleveranse.json
   }
   deployStrategy: {
-    type:              "rolling"                    // webleveranse.json
+    type:              "rolling"                   // webleveranse.json
   }
-  artifactId:          "openshift-referanse-react"  // webleveranse.json
-  groupId:             "no.skatteetaten.aurora"     // webleveranse.json
-  version:             "1"                          // utv/webleveranse.json
-  replicas:            1                            // webleveranse.json
-  route:               true                         // webleveranse.json
+  artifactId:          "openshift-referanse-react" // webleveranse.json
+  groupId:             "no.skatteetaten.aurora"    // webleveranse.json
+  version:             "1"                         // utv/webleveranse.json
+  replicas:            1                           // webleveranse.json
+  route:               true                        // webleveranse.json
 }

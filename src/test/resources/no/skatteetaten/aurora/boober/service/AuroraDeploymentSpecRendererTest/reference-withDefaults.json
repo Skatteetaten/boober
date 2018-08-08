@@ -45,14 +45,6 @@
     "source": "fileName",
     "value": "reference"
   },
-  "certificate": {
-    "source": "default",
-    "value": false
-  },
-  "database": {
-    "source": "default",
-    "value": false
-  },
   "prometheus": {
     "source": "default",
     "value": true,
@@ -86,6 +78,14 @@
       "source": "default",
       "value": 180
     }
+  },
+  "database": {
+    "source": "default",
+    "value": false
+  },
+  "certificate": {
+    "source": "default",
+    "value": false
   },
   "webseal": {
     "source": "default",

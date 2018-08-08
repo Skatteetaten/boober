@@ -60,7 +60,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
         AuroraConfigFieldHandler("pause", defaultValue = false),
         AuroraConfigFieldHandler("alarm", defaultValue = true),
         AuroraConfigFieldHandler("ttl", validator = { it.durationString() }),
-        AuroraConfigFieldHandler("toxiproxy", defaultValue = false),
+        AuroraConfigFieldHandler("toxiproxy", defaultValue = false, subKeyFlag = true),
         AuroraConfigFieldHandler("toxiproxy/version", defaultValue = "2.1.3")
     ) + configHandlers
 

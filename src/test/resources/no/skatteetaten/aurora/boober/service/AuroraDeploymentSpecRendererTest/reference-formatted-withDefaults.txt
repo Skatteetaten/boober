@@ -1,6 +1,6 @@
 {
-  applicationId:       utv/reference                // static
-  configVersion:       master                       // static
+  applicationId:       "utv/reference"              // static
+  configVersion:       "master"                     // static
   schemaVersion:       "v1"                         // about.json
   type:                "deploy"                     // reference.json
   applicationPlatform: "java"                       // default
@@ -12,8 +12,6 @@
   }
   envName:             "utv"                        // folderName
   name:                "reference"                  // fileName
-  certificate:         false                        // default
-  database:            false                        // default
   prometheus: {
     path:              "/prometheus"                // default
     port:              8081                         // default
@@ -26,6 +24,8 @@
     type:              "rolling"                    // default
     timeout:           180                          // default
   }
+  database:            false                        // default
+  certificate:         false                        // default
   webseal:             false                        // default
   artifactId:          "reference"                  // fileName
   groupId:             "no.skatteetaten.aurora"     // reference.json

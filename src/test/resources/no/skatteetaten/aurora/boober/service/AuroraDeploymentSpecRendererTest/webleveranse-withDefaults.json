@@ -45,14 +45,6 @@
     "source": "webleveranse.json",
     "value": "webleveranse"
   },
-  "certificate": {
-    "source": "default",
-    "value": false
-  },
-  "database": {
-    "source": "default",
-    "value": false
-  },
   "prometheus": {
     "source": "default",
     "value": true,
@@ -66,6 +58,8 @@
     }
   },
   "management": {
+    "source": "default",
+    "value": true,
     "path": {
       "source": "webleveranse.json",
       "value": ""
@@ -84,6 +78,14 @@
       "source": "default",
       "value": 180
     }
+  },
+  "database": {
+    "source": "default",
+    "value": false
+  },
+  "certificate": {
+    "source": "default",
+    "value": false
   },
   "webseal": {
     "source": "default",

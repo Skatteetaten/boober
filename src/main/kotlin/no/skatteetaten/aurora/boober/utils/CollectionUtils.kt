@@ -27,7 +27,9 @@ fun MutableMap<String, Any>.deepSet(parts:List<String>, value:Map<String, Any>) 
         return
     }
 
-    val subMap:MutableMap<String, Any> = mutableMapOf()
+    val emptyMap: MutableMap<String, Any> = mutableMapOf()
+    val key = parts.first()
+    val subMap: MutableMap<String, Any> = this.getOrDefault(key, emptyMap) as MutableMap<String, Any>
     this[parts.first()] = subMap
     subMap.deepSet(parts.drop(1), value)
 }

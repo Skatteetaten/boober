@@ -24,22 +24,24 @@ class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>, val env:
 
     fun getRoute(auroraConfigFields: AuroraConfigFields): List<Route> {
 
-        val simplified = auroraConfigFields.isSimplifiedConfig("route")
+        val route = "route"
+        val simplified = auroraConfigFields.isSimplifiedConfig(route) && auroraConfigFields.noSpecifiedSubKeys(route)
 
         if (simplified) {
-            if (auroraConfigFields.extract("route")) {
+            if (auroraConfigFields.extract(route)) {
                 return listOf(Route(objectName = name, host = auroraConfigFields.extract("routeDefaults/host")))
             }
             return listOf()
         }
-        val routes = applicationFiles.findSubKeys("route")
+        val routes = applicationFiles.findSubKeys(route)
 
         return routes.map {
             Route(it.ensureStartWith(name, "-"),
-                auroraConfigFields.extractIfExistsOrNull("route/$it/host")
+                auroraConfigFields.extractIfExistsOrNull("$route/$it/host")
                     ?: auroraConfigFields.extract("routeDefaults/host"),
-                auroraConfigFields.extractOrNull("route/$it/path"),
-                auroraConfigFields.getRouteAnnotations("route/$it/annotations", handlers))
+                auroraConfigFields.extractOrNull("$route/$it/path"),
+                auroraConfigFields.getRouteAnnotations("$route/$it/annotations", handlers)
+            )
         }.toList()
     }
 

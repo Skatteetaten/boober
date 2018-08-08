@@ -109,7 +109,13 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
         val simplified = isSimplifiedConfig(name)
 
-        return simplified && !extract<Boolean>(name)
+        val simplifiedIsDiabled = !extract<Boolean>(name)
+
+        return simplified && simplifiedIsDiabled && noSpecifiedSubKeys(name)
+    }
+
+    fun noSpecifiedSubKeys(name: String): Boolean {
+        return this.fields.none { it.key.startsWith("$name/") && it.value.source != "default" }
     }
 
     fun isSimplifiedConfig(name: String): Boolean {
@@ -159,14 +165,14 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
                 val defaultValue = handler.defaultValue?.let {
                     listOf(
                         handler.name to AuroraConfigFieldSource(
-                            handler.defaultSource,
-                            mapper.convertValue(handler.defaultValue),
-                            true
+                            source = handler.defaultSource,
+                            value = mapper.convertValue(handler.defaultValue),
+                            defaultSource = true
                         )
                     )
                 } ?: emptyList()
 
-                defaultValue + files.mapNotNull { file ->
+                val result = defaultValue + files.mapNotNull { file ->
                     file.asJsonNode.atNullable(handler.path)?.let {
                         if(handler.subKeyFlag && it.isObject) {
                             null
@@ -175,6 +181,8 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
                         }
                     }
                 }
+                logger.trace("Processed handler {} result={}", handler.name, result)
+                result
             }
 
             val allFields: List<Pair<String, AuroraConfigFieldSource>> = staticFields + fields
@@ -187,76 +195,3 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         }
     }
 }
-/*
-
-
-    fun createFields(
-        applicationId: ApplicationId,
-        configVersion: String,
-        auroraConfigFields: AuroraConfigFields,
-        build: AuroraBuild?
-    ): Map<String, Map<String, Any?>> {
-        val applicationIdField = mapOf(
-            "applicationId" to mapOf(
-                "source" to "static",
-                "value" to applicationId.toString()
-            ),
-            "configVersion" to mapOf(
-                "source" to "static",
-                "value" to configVersion
-            )
-        )
-
-        val fields = createMapForAuroraDeploymentSpecPointers(createFieldsWithValues(auroraConfigFields, build))
-
-        return applicationIdField + fields
-    }
-
-    fun createMapForAuroraDeploymentSpecPointers(auroraConfigFields: Map<String, AuroraConfigField>): Map<String, Map<String, Any?>> {
-        val fields = mutableMapOf<String, Any?>()
-        val includeSubKeys = createIncludeSubKeysMap(auroraConfigFields)
-
-        auroraConfigFields.entries.forEach { entry ->
-
-            val configField = entry.value
-            val configPath = entry.key
-
-            if (configField.valueNode is ObjectNode) {
-                return@forEach
-            }
-
-            val keys = configPath.split("/")
-            if (keys.size > 1 && !includeSubKeys.getOrDefault(keys[0], true)) {
-                return@forEach
-            }
-
-            var next = fields
-            keys.forEachIndexed { index, key ->
-                if (index == keys.lastIndex) {
-                    next[key] = mutableMapOf(
-                        "source" to (configField.source?.configName ?: configField.handler.defaultSource),
-                        "value" to configField.valueNodeOrDefault
-                    )
-                } else {
-                    if (next[key] == null) {
-                        next[key] = mutableMapOf<String, Any?>()
-                    }
-
-                    if (next[key] is MutableMap<*, *>) {
-                        next = next[key] as MutableMap<String, Any?>
-                    }
-                }
-            }
-        }
-
-        return fields as Map<String, Map<String, Any?>>
-    }
-
-    private fun createFieldsWithValues(
-        auroraConfigFields: AuroraConfigFields,
-        build: AuroraBuild?
-    ): Map<String, AuroraConfigField> {
-
-        return auroraConfigFields.fields.filterValues { it.source != null || it.handler.defaultValue != null }
-    }
- */
