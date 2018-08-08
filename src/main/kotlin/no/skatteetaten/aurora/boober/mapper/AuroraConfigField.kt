@@ -61,7 +61,6 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
             .filter { it.path.startsWith("/$prefix") }
             .map {
                 val (_, _, _, field) = it.name.split("/", limit = 4)
-
                 val value: String = extract(it.name)
                 field to value
             }.toMap()
