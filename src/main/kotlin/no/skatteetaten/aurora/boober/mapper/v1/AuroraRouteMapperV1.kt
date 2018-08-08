@@ -12,7 +12,7 @@ import no.skatteetaten.aurora.boober.utils.startsWith
 class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>, val env: AuroraDeployEnvironment, val name: String) {
 
     val handlers = findRouteHandlers() + listOf(
-        AuroraConfigFieldHandler("route", defaultValue = false),
+        AuroraConfigFieldHandler("route", defaultValue = false, subKeyFlag = true),
         AuroraConfigFieldHandler("routeDefaults/host", defaultValue = "@name@-@affiliation@-@env@")) +
         findRouteAnnotationHandlers("routeDefaults")
 

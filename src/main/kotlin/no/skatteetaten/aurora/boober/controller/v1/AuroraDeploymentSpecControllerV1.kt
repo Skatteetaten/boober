@@ -4,13 +4,13 @@ import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService
+import no.skatteetaten.aurora.boober.service.filterDefaultFields
+import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
- /*
-    TODO
 @RestController
 @RequestMapping("/v1/auroradeployspec/{auroraConfigName}")
 class AuroraDeploymentSpecControllerV1(val auroraDeploymentSpecService: AuroraDeploymentSpecService) {
@@ -79,4 +79,3 @@ class AuroraDeploymentSpecControllerV1(val auroraDeploymentSpecService: AuroraDe
         return Response(items = if (includeDefaults) fields else fields.map(::filterDefaultFields))
     }
 }
-     */

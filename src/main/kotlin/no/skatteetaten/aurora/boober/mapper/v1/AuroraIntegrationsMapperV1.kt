@@ -12,11 +12,11 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
     val dbHandlers = findDbHandlers(applicationFiles)
 
     val handlers = dbHandlers + listOf(
-        AuroraConfigFieldHandler("database", defaultValue = false),
+        AuroraConfigFieldHandler("database", defaultValue = false, subKeyFlag = true),
         AuroraConfigFieldHandler("certificate/commonName"),
         AuroraConfigFieldHandler("certificate", defaultValue = false),
         AuroraConfigFieldHandler("splunkIndex"),
-        AuroraConfigFieldHandler("webseal", defaultValue = false),
+        AuroraConfigFieldHandler("webseal", defaultValue = false, subKeyFlag = true),
         AuroraConfigFieldHandler("webseal/host"),
         AuroraConfigFieldHandler("webseal/roles")
     )

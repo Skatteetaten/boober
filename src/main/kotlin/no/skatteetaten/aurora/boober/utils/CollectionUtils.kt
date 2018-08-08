@@ -18,6 +18,20 @@ fun <T> Set<T>.addIfNotNull(value: T?): Set<T> {
     } ?: this
 }
 
+fun MutableMap<String, Any>.deepSet(parts:List<String>, value:Map<String, Any>) {
+
+    if(parts.isEmpty()) {
+        value.forEach {
+            this[it.key] = it.value
+        }
+        return
+    }
+
+    val subMap:MutableMap<String, Any> = mutableMapOf()
+    this[parts.first()] = subMap
+    subMap.deepSet(parts.drop(1), value)
+}
+
 fun <T> Set<T>.addIfNotNull(value: Set<T>?): Set<T> {
     return value?.let {
         this + it

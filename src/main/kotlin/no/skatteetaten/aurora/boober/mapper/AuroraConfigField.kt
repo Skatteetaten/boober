@@ -144,37 +144,119 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
             val mapper = jacksonObjectMapper()
 
-            val defaultfields: List<Pair<String, AuroraConfigFieldSource>> =
-                handlers.filter { it.defaultValue != null }.map {
-                    it.name to AuroraConfigFieldSource(it.defaultSource, mapper.convertValue(it.defaultValue!!), true)
-                }
-
             val staticFields: List<Pair<String, AuroraConfigFieldSource>> =
                 listOf(
-                    "applicationId" to AuroraConfigFieldSource(
-                        "static",
-                        mapper.convertValue(applicationId.toString()),
-                        true
-                    )
-                    , "configVersion" to AuroraConfigFieldSource("static", mapper.convertValue(configVersion), true)
+                    "applicationId" to
+                        AuroraConfigFieldSource("static", mapper.convertValue(applicationId.toString())),
+                    "configVersion" to
+                        AuroraConfigFieldSource("static", mapper.convertValue(configVersion))
                 )
 
             val replacer = StringSubstitutor(placeholders, "@", "@")
 
-            val fields: List<Pair<String, AuroraConfigFieldSource>> = files.flatMap { file ->
-                handlers.mapNotNull { handler ->
+            val fields: List<Pair<String, AuroraConfigFieldSource>> = handlers.flatMap { handler ->
+
+                val defaultValue = handler.defaultValue?.let {
+                    listOf(
+                        handler.name to AuroraConfigFieldSource(
+                            handler.defaultSource,
+                            mapper.convertValue(handler.defaultValue),
+                            true
+                        )
+                    )
+                } ?: emptyList()
+
+                defaultValue + files.mapNotNull { file ->
                     file.asJsonNode.atNullable(handler.path)?.let {
-                        handler.name to AuroraConfigFieldSource(file.configName, it)
+                        if(handler.subKeyFlag && it.isObject) {
+                            null
+                        } else {
+                            handler.name to AuroraConfigFieldSource(file.configName, it, handler.subKeyFlag)
+                        }
                     }
                 }
             }
 
-            val allFields: List<Pair<String, AuroraConfigFieldSource>> = staticFields + defaultfields + fields
+            val allFields: List<Pair<String, AuroraConfigFieldSource>> = staticFields + fields
 
             val groupedFields: Map<String, AuroraConfigField> = allFields
                 .groupBy({ it.first }) { it.second }
                 .mapValues { AuroraConfigField(it.value, replacer) }
             return AuroraConfigFields(groupedFields)
+
         }
     }
 }
+/*
+
+
+    fun createFields(
+        applicationId: ApplicationId,
+        configVersion: String,
+        auroraConfigFields: AuroraConfigFields,
+        build: AuroraBuild?
+    ): Map<String, Map<String, Any?>> {
+        val applicationIdField = mapOf(
+            "applicationId" to mapOf(
+                "source" to "static",
+                "value" to applicationId.toString()
+            ),
+            "configVersion" to mapOf(
+                "source" to "static",
+                "value" to configVersion
+            )
+        )
+
+        val fields = createMapForAuroraDeploymentSpecPointers(createFieldsWithValues(auroraConfigFields, build))
+
+        return applicationIdField + fields
+    }
+
+    fun createMapForAuroraDeploymentSpecPointers(auroraConfigFields: Map<String, AuroraConfigField>): Map<String, Map<String, Any?>> {
+        val fields = mutableMapOf<String, Any?>()
+        val includeSubKeys = createIncludeSubKeysMap(auroraConfigFields)
+
+        auroraConfigFields.entries.forEach { entry ->
+
+            val configField = entry.value
+            val configPath = entry.key
+
+            if (configField.valueNode is ObjectNode) {
+                return@forEach
+            }
+
+            val keys = configPath.split("/")
+            if (keys.size > 1 && !includeSubKeys.getOrDefault(keys[0], true)) {
+                return@forEach
+            }
+
+            var next = fields
+            keys.forEachIndexed { index, key ->
+                if (index == keys.lastIndex) {
+                    next[key] = mutableMapOf(
+                        "source" to (configField.source?.configName ?: configField.handler.defaultSource),
+                        "value" to configField.valueNodeOrDefault
+                    )
+                } else {
+                    if (next[key] == null) {
+                        next[key] = mutableMapOf<String, Any?>()
+                    }
+
+                    if (next[key] is MutableMap<*, *>) {
+                        next = next[key] as MutableMap<String, Any?>
+                    }
+                }
+            }
+        }
+
+        return fields as Map<String, Map<String, Any?>>
+    }
+
+    private fun createFieldsWithValues(
+        auroraConfigFields: AuroraConfigFields,
+        build: AuroraBuild?
+    ): Map<String, AuroraConfigField> {
+
+        return auroraConfigFields.fields.filterValues { it.source != null || it.handler.defaultValue != null }
+    }
+ */

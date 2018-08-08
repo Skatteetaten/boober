@@ -22,10 +22,10 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
         AuroraConfigFieldHandler("certificate/commonName"),
         AuroraConfigFieldHandler("certificate"),
         AuroraConfigFieldHandler("database"),
-        AuroraConfigFieldHandler("prometheus", defaultValue = true),
+        AuroraConfigFieldHandler("prometheus", defaultValue = true, subKeyFlag = true),
         AuroraConfigFieldHandler("prometheus/path", defaultValue = "/prometheus"),
         AuroraConfigFieldHandler("prometheus/port", defaultValue = 8081),
-        AuroraConfigFieldHandler("management", defaultValue = true),
+        AuroraConfigFieldHandler("management", defaultValue = true, subKeyFlag = true),
         AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
         AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
         AuroraConfigFieldHandler(

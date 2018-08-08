@@ -34,7 +34,7 @@ class AuroraBuildMapperV1(val name: String) {
             "$name:latest"
         }
 
-        val b= AuroraBuild(
+        return AuroraBuild(
             applicationPlatform = auroraConfigFields.extract("applicationPlatform"),
             testGitUrl = testGitUrl,
             testTag = auroraConfigFields.extractOrNull("test/tag"),
@@ -51,7 +51,6 @@ class AuroraBuildMapperV1(val name: String) {
             triggers = !skipTriggers,
             buildSuffix = auroraConfigFields.extractOrNull("buildSuffix")
         )
-        return b
     }
 
     val handlers = listOf(
@@ -63,10 +62,13 @@ class AuroraBuildMapperV1(val name: String) {
         AuroraConfigFieldHandler("baseImage/version"),
         AuroraConfigFieldHandler("test/gitUrl"),
         AuroraConfigFieldHandler("test/tag"),
-        AuroraConfigFieldHandler("groupId", validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
+        AuroraConfigFieldHandler(
+            "groupId",
+            validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
         AuroraConfigFieldHandler("artifactId",
             defaultSource = "fileName",
-            defaultValue = name, validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
+            defaultValue = name,
+            validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
         AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set") })
     )
 }
