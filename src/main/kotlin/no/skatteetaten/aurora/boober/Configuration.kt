@@ -13,16 +13,20 @@ import org.encryptor4j.factory.KeyFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.beans.factory.config.BeanPostProcessor
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
+import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.client.ClientHttpRequestInterceptor
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory
 import org.springframework.retry.annotation.EnableRetry
 import org.springframework.web.client.RestTemplate
+import java.io.FileInputStream
+import java.security.KeyStore
 import java.security.cert.X509Certificate
 
 enum class ServiceTypes {
@@ -56,11 +60,9 @@ class Configuration : BeanPostProcessor {
     @TargetService(ServiceTypes.GENERAL)
     fun defaultRestTemplate(
         restTemplateBuilder: RestTemplateBuilder,
-        @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
-        @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int
+        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
     ): RestTemplate {
 
-        val clientHttpRequestFactory = defaultHttpComponentsClientHttpRequestFactory(readTimeout, connectTimeout)
         return restTemplateBuilder.requestFactory(clientHttpRequestFactory).build()
     }
 
@@ -69,15 +71,12 @@ class Configuration : BeanPostProcessor {
     @TargetService(ServiceTypes.BITBUCKET)
     fun bitbucketRestTemplate(
         restTemplateBuilder: RestTemplateBuilder,
-        @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
-        @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
         @Value("\${boober.git.username}") username: String,
         @Value("\${boober.git.password}") password: String,
-        @Value("\${boober.bitbucket.url}") bitbucketUrl: String
-
+        @Value("\${boober.bitbucket.url}") bitbucketUrl: String,
+        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
     ): RestTemplate {
 
-        val clientHttpRequestFactory = defaultHttpComponentsClientHttpRequestFactory(readTimeout, connectTimeout)
         return restTemplateBuilder
             .requestFactory(clientHttpRequestFactory)
             .rootUri(bitbucketUrl)
@@ -89,15 +88,13 @@ class Configuration : BeanPostProcessor {
     @TargetService(ServiceTypes.AURORA)
     fun auroraRestTemplate(
         restTemplateBuilder: RestTemplateBuilder,
-        @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
-        @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
         @Value("\${spring.application.name}") applicationName: String,
-        sharedSecretReader: SharedSecretReader
+        sharedSecretReader: SharedSecretReader,
+        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
     ): RestTemplate {
 
         val clientIdHeaderName = "KlientID"
 
-        val clientHttpRequestFactory = defaultHttpComponentsClientHttpRequestFactory(readTimeout, connectTimeout)
         return restTemplateBuilder
             .requestFactory(clientHttpRequestFactory)
             .interceptors(ClientHttpRequestInterceptor { request, body, execution ->
@@ -112,26 +109,35 @@ class Configuration : BeanPostProcessor {
             }).build()
     }
 
-    private fun defaultHttpComponentsClientHttpRequestFactory(readTimeout: Int, connectTimeout: Int): HttpComponentsClientHttpRequestFactory {
-        return HttpComponentsClientHttpRequestFactory().apply {
-            setReadTimeout(readTimeout)
-            setConnectTimeout(connectTimeout)
-            httpClient = createSslTrustAllHttpClient()
-        }
+    @Bean
+    fun defaultHttpComponentsClientHttpRequestFactory(
+        @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
+        @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
+        httpClient: CloseableHttpClient
+    ): HttpComponentsClientHttpRequestFactory = HttpComponentsClientHttpRequestFactory().apply {
+        setReadTimeout(readTimeout)
+        setConnectTimeout(connectTimeout)
+        setHttpClient(httpClient)
     }
 
-    private fun createSslTrustAllHttpClient(): CloseableHttpClient? {
-        val acceptingTrustStrategy = { chain: Array<X509Certificate>, authType: String -> true }
-
+    @Bean
+    fun closeableHttpClient(trustStore: KeyStore?): CloseableHttpClient {
         val sslContext = SSLContexts.custom()
-            .loadTrustMaterial(null, acceptingTrustStrategy)
+            .loadTrustMaterial(trustStore) { _: Array<X509Certificate>, _: String -> false }
             .build()
-
-        val csf = SSLConnectionSocketFactory(sslContext)
-
-        val httpClient = HttpClients.custom()
-            .setSSLSocketFactory(csf)
+        val build = HttpClients.custom()
+            .setSSLSocketFactory(SSLConnectionSocketFactory(sslContext))
             .build()
-        return httpClient
+        return build
+    }
+
+    @ConditionalOnMissingBean(KeyStore::class)
+    @Bean
+    fun localKeyStore(): KeyStore? = null
+
+    @Profile("openshift")
+    @Bean
+    fun openshiftSSLContext(): KeyStore? = KeyStore.getInstance(KeyStore.getDefaultType())?.apply {
+        load(FileInputStream("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"), "".toCharArray())
     }
 }
