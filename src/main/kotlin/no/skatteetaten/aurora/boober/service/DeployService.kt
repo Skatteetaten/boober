@@ -14,6 +14,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.model.openshift.Application
+import no.skatteetaten.aurora.boober.model.openshift.ApplicationCommand
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
@@ -64,7 +65,13 @@ class DeployService(
 
         val deploymentSpecs = auroraConfigService.createValidatedAuroraDeploymentSpecs(ref, applicationIds, overrides)
         val environments = prepareDeployEnvironments(deploymentSpecs)
-        val deployResults: List<AuroraDeployResult> = deployFromSpecs(deploymentSpecs, environments, deploy)
+        val applicationCmd = ApplicationCommand(
+            configRef = ref,
+            overrides = overrides
+
+        )
+        val deployResults: List<AuroraDeployResult> =
+            deployFromSpecs(deploymentSpecs, environments, deploy, applicationCmd)
 
         deployLogService.markRelease(ref, deployResults)
 
@@ -136,7 +143,8 @@ class DeployService(
     private fun deployFromSpecs(
         deploymentSpecs: List<AuroraDeploymentSpec>,
         environments: Map<AuroraDeployEnvironment, AuroraDeployResult>,
-        deploy: Boolean
+        deploy: Boolean,
+        applicationCmd: ApplicationCommand
     ): List<AuroraDeployResult> {
 
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
@@ -162,7 +170,7 @@ class DeployService(
                 !env.success -> env.copy(auroraDeploymentSpec = it)
                 else -> {
                     try {
-                        val result = deployFromSpec(it, deploy, env.projectExist)
+                        val result = deployFromSpec(it, deploy, env.projectExist, applicationCmd)
                         result.copy(openShiftResponses = env.openShiftResponses.addIfNotNull(result.openShiftResponses))
                     } catch (e: Exception) {
                         AuroraDeployResult(auroraDeploymentSpec = it, success = false, reason = e.message)
@@ -219,7 +227,8 @@ class DeployService(
     fun deployFromSpec(
         deploymentSpec: AuroraDeploymentSpec,
         shouldDeploy: Boolean,
-        namespaceCreated: Boolean
+        namespaceCreated: Boolean,
+        applicationCmd: ApplicationCommand
     ): AuroraDeployResult {
 
         val deployId = UUID.randomUUID().toString().substring(0, 7)
@@ -235,7 +244,7 @@ class DeployService(
 
         //TODO need ref for what is deployed
         val application = Application(
-            spec = ApplicationSpec(deploymentSpec.fields),
+            spec = ApplicationSpec(deploymentSpec.fields, cmd = applicationCmd),
             metadata = ObjectMetaBuilder()
                 .withName(deploymentSpec.name)
                 .withLabels(createCommonLabels(deploymentSpec, deployId))

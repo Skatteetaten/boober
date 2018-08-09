@@ -66,8 +66,8 @@ class AuroraBuildMapperV1(val name: String) {
             "groupId",
             validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
         AuroraConfigFieldHandler("artifactId",
-            defaultSource = "fileName",
             defaultValue = name,
+            defaultSource = "fileName",
             validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
         AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set") })
     )

@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class AuroraConfigField(
-    val sources: List<AuroraConfigFieldSource>,
+    val sources: Set<AuroraConfigFieldSource>,
     @JsonIgnore
     val replacer: StringSubstitutor = StringSubstitutor()
 ) {
@@ -202,7 +202,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
             val groupedFields: Map<String, AuroraConfigField> = allFields
                 .groupBy({ it.first }) { it.second }
-                .mapValues { AuroraConfigField(it.value, replacer) }
+                .mapValues { AuroraConfigField(it.value.toSet(), replacer) }
             return AuroraConfigFields(groupedFields)
 
         }

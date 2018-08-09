@@ -87,7 +87,19 @@ class AuroraDeploymentSpecService(
             val template = if (header.type == TemplateType.template) templateMapper.template(auroraConfigFields) else null
             val localTemplate = if (header.type == TemplateType.localTemplate) localTemplateMapper.localTemplate(auroraConfigFields) else null
 
-            return deploymentSpecMapper.createAuroraDeploymentSpec(auroraConfigFields, volume, route, build, deploy, template, integration, localTemplate, header.env, headerMapper.getApplicationFile(), auroraConfig.version)
+            return deploymentSpecMapper.createAuroraDeploymentSpec(
+                auroraConfigFields = auroraConfigFields,
+                volume = volume,
+                route = route,
+                build = build,
+                deploy = deploy,
+                template = template,
+                integration = integration,
+                localTemplate = localTemplate,
+                env = header.env,
+                applicationFile = headerMapper.getApplicationFile(),
+                configVersion = auroraConfig.version
+            )
         }
     }
 
