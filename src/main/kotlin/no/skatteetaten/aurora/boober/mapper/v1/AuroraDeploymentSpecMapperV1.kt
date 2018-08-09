@@ -20,7 +20,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
     val handlers = listOf(
         AuroraConfigFieldHandler("splunkIndex"),
         AuroraConfigFieldHandler("certificate/commonName"),
-        AuroraConfigFieldHandler("certificate"),
+        AuroraConfigFieldHandler("certificate", subKeyFlag = true),
         AuroraConfigFieldHandler("database"),
         AuroraConfigFieldHandler("prometheus", defaultValue = true, subKeyFlag = true),
         AuroraConfigFieldHandler("prometheus/path", defaultValue = "/prometheus"),

@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder
@@ -13,18 +12,17 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.TemplateType
-import no.skatteetaten.aurora.boober.model.openshift.Application
-import no.skatteetaten.aurora.boober.model.openshift.ApplicationCommand
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationSpec
+import no.skatteetaten.aurora.boober.model.openshift.AuroraApplicationInstance
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.deploymentConfigFromJson
-import no.skatteetaten.aurora.boober.utils.filterNullValues
 import no.skatteetaten.aurora.boober.utils.imageStreamFromJson
 import no.skatteetaten.aurora.boober.utils.openshiftKind
+import no.skatteetaten.aurora.boober.utils.openshiftName
 import no.skatteetaten.aurora.boober.utils.whenFalse
 import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.Logger
@@ -177,48 +175,6 @@ class DeployService(
         }
     }
 
-    fun createCommonLabels(
-        auroraDeploymentSpec: AuroraDeploymentSpec,
-        deployId: String,
-        additionalLabels: Map<String, String> = mapOf(),
-        name: String = auroraDeploymentSpec.name
-    ): Map<String, String> {
-        val labels = mapOf(
-            "app" to name,
-            "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
-            "affiliation" to auroraDeploymentSpec.environment.affiliation,
-            "updateInBoober" to "true",
-            "booberDeployId" to deployId
-        )
-
-        val deploy = auroraDeploymentSpec.deploy ?: return OpenShiftObjectLabelService.toOpenShiftLabelNameSafeMap(
-            labels + additionalLabels
-        )
-        return OpenShiftObjectLabelService.toOpenShiftLabelNameSafeMap(
-            mapOf("appId" to DigestUtils.sha1Hex("${deploy.groupId}/${deploy.artifactId}")) + labels + additionalLabels
-        )
-    }
-
-    fun createAnnotations(spec: AuroraDeploymentSpec): Map<String, String> {
-
-        val deploy = spec.deploy!!
-        fun escapeOverrides(): String? {
-            val files =
-                deploy.overrideFiles.mapValues { jacksonObjectMapper().readValue(it.value, JsonNode::class.java) }
-            val content = jacksonObjectMapper().writeValueAsString(files)
-            return content.takeIf { it != "{}" }
-        }
-
-        return mapOf(
-            "boober.skatteetaten.no/applicationFile" to spec.applicationFile.name,
-            "console.skatteetaten.no/alarm" to deploy.flags.alarm.toString(),
-            "boober.skatteetaten.no/overrides" to escapeOverrides(),
-            "console.skatteetaten.no/management-path" to deploy.managementPath,
-            "boober.skatteetaten.no/releaseTo" to deploy.releaseTo,
-            "sprocket.sits.no/deployment-config.certificate" to spec.integration?.certificateCn
-        ).filterNullValues().filterValues { !it.isBlank() }
-    }
-
     fun deployFromSpec(
         deploymentSpec: AuroraDeploymentSpec,
         shouldDeploy: Boolean,
@@ -236,21 +192,35 @@ class DeployService(
             )
         }
 
-        val application = Application(
-            spec = ApplicationSpec(
-                deploymentSpec.fields, cmd =
-                ApplicationCommand(
-                    configRef = auroraConfigRef,
-                    overrides = deploymentSpec.deploy?.overrideFiles,
-                    applicationId = deploymentSpec.applicationId,
-                    applicationFile = deploymentSpec.applicationFile.name // TODO: is this really needed?
+        val applicationId = deploymentSpec.template?.let {
+            it.template
+        } ?: deploymentSpec.localTemplate?.let {
+            "local" + it.templateJson.openshiftName
+        } ?: deploymentSpec.deploy?.let {
+            "${it.groupId}/${it.artifactId}"
+        } ?: throw RuntimeException("Not valid deployment") // TODO: what do we do here?
 
-                )
+        val application = AuroraApplicationInstance(
+            spec = ApplicationSpec(
+                configRef = auroraConfigRef,
+                exactGitRef = auroraConfigService.findExactRef(auroraConfigRef),
+                overrides = deploymentSpec.deploy?.overrideFiles,
+                applicationId = DigestUtils.sha1Hex(applicationId),
+                applicationInstanceId = DigestUtils.sha1Hex(deploymentSpec.applicationId.toString()),
+                splunkIndex = deploymentSpec.integration?.splunkIndex,
+                managementPath = deploymentSpec.deploy?.managementPath,
+                releaseTo = deploymentSpec.deploy?.releaseTo
             ),
             metadata = ObjectMetaBuilder()
                 .withName(deploymentSpec.name)
-                .withLabels(createCommonLabels(deploymentSpec, deployId))
-                .withAnnotations(createAnnotations(deploymentSpec))
+                .withLabels(
+                    mapOf(
+                        "app" to deploymentSpec.name,
+                        "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
+                        "affiliation" to deploymentSpec.environment.affiliation,
+                        "booberDeployId" to deployId
+                    )
+                )
                 .build()
         )
 
@@ -260,8 +230,8 @@ class DeployService(
         )
         val applicationResult =
             openShiftClient.performOpenShiftCommand(deploymentSpec.environment.namespace, applicationCommnd)
-        val appResponse: Application = applicationResult.responseBody?.let {
-            jacksonObjectMapper().convertValue<Application>(it)
+        val appResponse: AuroraApplicationInstance = applicationResult.responseBody?.let {
+            jacksonObjectMapper().convertValue<AuroraApplicationInstance>(it)
         } ?: throw RuntimeException("Could not write application")
 
         val ownerReference = OwnerReferenceBuilder()

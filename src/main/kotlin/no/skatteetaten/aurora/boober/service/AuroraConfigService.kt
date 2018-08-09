@@ -50,6 +50,10 @@ class AuroraConfigService(
         return bitbucketProjectService.getAllSlugs()
     }
 
+    fun findExactRef(ref: AuroraConfigRef): String {
+
+        return updateLocalFilesFromGit(ref)
+    }
     fun findAuroraConfig(ref: AuroraConfigRef): AuroraConfig {
 
         updateLocalFilesFromGit(ref)
@@ -70,7 +74,12 @@ class AuroraConfigService(
     }
 
     @JvmOverloads
-    fun updateAuroraConfigFile(ref: AuroraConfigRef, fileName: String, contents: String, previousVersion: String? = null): AuroraConfig {
+    fun updateAuroraConfigFile(
+        ref: AuroraConfigRef,
+        fileName: String,
+        contents: String,
+        previousVersion: String? = null
+    ): AuroraConfig {
 
         val oldAuroraConfig = findAuroraConfig(ref)
         val (newFile, auroraConfig) = oldAuroraConfig.updateFile(fileName, contents, previousVersion)
@@ -78,7 +87,12 @@ class AuroraConfigService(
         return saveFile(newFile, auroraConfig)
     }
 
-    fun patchAuroraConfigFile(ref: AuroraConfigRef, filename: String, jsonPatchOp: String, previousVersion: String? = null): AuroraConfig {
+    fun patchAuroraConfigFile(
+        ref: AuroraConfigRef,
+        filename: String,
+        jsonPatchOp: String,
+        previousVersion: String? = null
+    ): AuroraConfig {
 
         val auroraConfig = findAuroraConfig(ref)
         val (newFile, updatedAuroraConfig) = auroraConfig.patchFile(filename, jsonPatchOp, previousVersion)
@@ -92,6 +106,7 @@ class AuroraConfigService(
         val refName = "master"
         val ref = AuroraConfigRef(auroraConfig.name, refName)
         val repo = getUpdatedRepo(ref)
+
         val existing = AuroraConfig.fromFolder(checkoutDir, refName)
 
         existing.files.forEach {
@@ -152,19 +167,34 @@ class AuroraConfigService(
     ): List<AuroraDeploymentSpec> {
 
         val auroraConfig = findAuroraConfig(ref)
-        return createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig, overrideFiles), applicationIds)
+        return createValidatedAuroraDeploymentSpecs(
+            AuroraConfigWithOverrides(auroraConfig, overrideFiles),
+            applicationIds
+        )
     }
 
-    fun validateAuroraConfig(auroraConfig: AuroraConfig, overrideFiles: List<AuroraConfigFile> = listOf(), resourceValidation: Boolean = true) {
+    fun validateAuroraConfig(
+        auroraConfig: AuroraConfig,
+        overrideFiles: List<AuroraConfigFile> = listOf(),
+        resourceValidation: Boolean = true
+    ) {
         val applicationIds = auroraConfig.getApplicationIds()
-        createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig, overrideFiles), applicationIds, resourceValidation)
+        createValidatedAuroraDeploymentSpecs(
+            AuroraConfigWithOverrides(auroraConfig, overrideFiles),
+            applicationIds,
+            resourceValidation
+        )
     }
 
     private fun getAuroraConfigFolder(name: String) = File(gitService.checkoutPath, name)
 
-    private fun updateLocalFilesFromGit(ref: AuroraConfigRef) {
+    private fun updateLocalFilesFromGit(ref: AuroraConfigRef): String {
         val repository = getUpdatedRepo(ref)
+
+        val head = repository.repository.exactRef("HEAD").objectId.abbreviate(8).name()!!
+
         repository.close()
+        return head
     }
 
     private fun getUpdatedRepo(ref: AuroraConfigRef): Git {
@@ -173,18 +203,26 @@ class AuroraConfigService(
         } catch (e: InvalidRemoteException) {
             throw IllegalArgumentException("No such AuroraConfig ${ref.name}")
         } catch (e: Exception) {
-            throw AuroraConfigServiceException("An unexpected error occurred when checking out AuroraConfig with name ${ref.name}", e)
+            throw AuroraConfigServiceException(
+                "An unexpected error occurred when checking out AuroraConfig with name ${ref.name}",
+                e
+            )
         }
     }
 
-    private fun createValidatedAuroraDeploymentSpecs(auroraConfigWithOverrides: AuroraConfigWithOverrides, applicationIds: List<ApplicationId>, resourceValidation: Boolean = true): List<AuroraDeploymentSpec> {
+    private fun createValidatedAuroraDeploymentSpecs(
+        auroraConfigWithOverrides: AuroraConfigWithOverrides,
+        applicationIds: List<ApplicationId>,
+        resourceValidation: Boolean = true
+    ): List<AuroraDeploymentSpec> {
 
         val stopWatch = StopWatch().apply { start() }
         val specs: List<AuroraDeploymentSpec> = runBlocking(dispatcher) {
             applicationIds.map { aid ->
                 async(dispatcher) {
                     try {
-                        val spec = createValidatedAuroraDeploymentSpec(auroraConfigWithOverrides, aid, resourceValidation)
+                        val spec =
+                            createValidatedAuroraDeploymentSpec(auroraConfigWithOverrides, aid, resourceValidation)
                         Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = spec, second = null)
                     } catch (e: Throwable) {
                         Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = null, second = ExceptionWrapper(aid, e))
@@ -198,10 +236,18 @@ class AuroraConfigService(
         return specs
     }
 
-    private fun createValidatedAuroraDeploymentSpec(auroraConfigWithOverrides: AuroraConfigWithOverrides, aid: ApplicationId, resourceValidation: Boolean = true): AuroraDeploymentSpec {
+    private fun createValidatedAuroraDeploymentSpec(
+        auroraConfigWithOverrides: AuroraConfigWithOverrides,
+        aid: ApplicationId,
+        resourceValidation: Boolean = true
+    ): AuroraDeploymentSpec {
 
         val stopWatch = StopWatch().apply { start() }
-        val spec = AuroraDeploymentSpecService.createAuroraDeploymentSpec(auroraConfigWithOverrides.auroraConfig, aid, auroraConfigWithOverrides.overrideFiles)
+        val spec = AuroraDeploymentSpecService.createAuroraDeploymentSpec(
+            auroraConfigWithOverrides.auroraConfig,
+            aid,
+            auroraConfigWithOverrides.overrideFiles
+        )
         if (spec.cluster == cluster && resourceValidation) {
             deploymentSpecValidator.assertIsValid(spec)
         }
