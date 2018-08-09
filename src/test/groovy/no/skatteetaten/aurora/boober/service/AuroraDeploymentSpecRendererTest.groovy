@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import static no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecRendererKt.filterDefaultFields
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -29,12 +28,7 @@ class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSprin
       def aid = ApplicationId.aid(env, app)
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
 
-
-      def fields=deploymentSpec.fields
-      if (!includeDefaults) {
-        fields = filterDefaultFields(fields)
-      }
-      def renderedJson = AuroraDeploymentSpecRendererKt.renderSpecAsJson(fields)
+      def renderedJson = AuroraDeploymentSpecRendererKt.renderSpecAsJson(deploymentSpec, includeDefaults)
       def filename = getFilename(aid, includeDefaults)
       def expected = loadResource(filename)
 

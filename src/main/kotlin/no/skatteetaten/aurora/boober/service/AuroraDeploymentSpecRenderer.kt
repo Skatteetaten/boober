@@ -3,52 +3,18 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
+import no.skatteetaten.aurora.boober.mapper.present
+import no.skatteetaten.aurora.boober.mapper.removeDefaults
+import no.skatteetaten.aurora.boober.mapper.removeInactive
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.utils.deepSet
 
-fun filterFieldsForPresentation(fields: Map<String, AuroraConfigField>): Map<String, Any> {
-
-    fun createExcludePaths(fields: Map<String, AuroraConfigField>): Set<String> {
-
-        return fields
-            .filter { it.key.split("/").size == 1 }
-            .filter {
-                val value = it.value.value
-                !value.isBoolean || !value.booleanValue()
-            }.map {
-                it.key.split("/")[0] + "/"
-            }.toSet()
-    }
-
-    val excludePaths = createExcludePaths(fields)
-    val cleanedFields = fields.filter { field ->
-        excludePaths.none { field.key.startsWith(it) }
-    }
-    val map: MutableMap<String, Any> = mutableMapOf()
-    cleanedFields
-        .mapValues { mapOf("source" to it.value.source, "value" to it.value.value) }
-        .forEach {
-            map.deepSet(it.key.split("/"), it.value)
-        }
-    return map
-}
-
-fun renderSpecAsJson(fields: Map<String, AuroraConfigField>): JsonNode {
-
-    val from = filterFieldsForPresentation(fields)
-    return jacksonObjectMapper().convertValue(from)
+fun renderSpecAsJson(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean): JsonNode {
+    return jacksonObjectMapper().convertValue(getFieldsForPresentation(includeDefaults, deploymentSpec))
 }
 
 fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean): String {
 
-    val rawFields = if (!includeDefaults) {
-        filterDefaultFields(deploymentSpec.fields)
-    } else {
-        deploymentSpec.fields
-    }
-
-    val fields = filterFieldsForPresentation(rawFields)
+    val fields = getFieldsForPresentation(includeDefaults, deploymentSpec)
 
     val defaultKeys = listOf("source", "value")
     val indent = 2
@@ -86,6 +52,19 @@ fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSp
         } + "}"
 }
 
+fun getFieldsForPresentation(
+    includeDefaults: Boolean,
+    deploymentSpec: AuroraDeploymentSpec
+): Map<String, Any> {
+    val rawFields = if (!includeDefaults) {
+        deploymentSpec.fields.removeDefaults()
+    } else {
+        deploymentSpec.fields
+    }
+    val fields = rawFields.removeInactive().present { mapOf("source" to it.value.source, "value" to it.value.value) }
+    return fields
+}
+
 fun findMaxKeyLength(fields: Map<String, Any>, indent: Int, accumulated: Int = 0): Int {
     return fields.map {
         val value = it.value as Map<String, Any>
@@ -106,8 +85,4 @@ fun findMaxValueLength(fields: Map<String, Any>): Int {
             findMaxValueLength(value)
         }
     }.max() ?: 0
-}
-
-fun filterDefaultFields(fields: Map<String, AuroraConfigField>): Map<String, AuroraConfigField> {
-    return fields.filter { it.value.source != "default" }
 }

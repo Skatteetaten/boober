@@ -1,11 +1,11 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
 import no.skatteetaten.aurora.boober.controller.internal.Response
+import no.skatteetaten.aurora.boober.mapper.present
+import no.skatteetaten.aurora.boober.mapper.removeDefaults
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService
-import no.skatteetaten.aurora.boober.service.filterDefaultFields
-import no.skatteetaten.aurora.boober.service.filterFieldsForPresentation
 import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -78,11 +78,18 @@ class AuroraDeploymentSpecControllerV1(val auroraDeploymentSpecService: AuroraDe
 
         val fields = spec.map {
             val rawFields = if (!includeDefaults) {
-                filterDefaultFields(it.fields)
+                it.fields.removeDefaults()
             } else {
                 it.fields
             }
-            filterFieldsForPresentation(rawFields)
+
+            rawFields.present {
+                mapOf(
+                    "source" to it.value.source,
+                    "value" to it.value.value,
+                    "sources" to it.value.sources
+                )
+            }
         }
         return Response(items = fields)
     }

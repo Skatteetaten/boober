@@ -11,6 +11,7 @@ import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.utils.atNullable
+import no.skatteetaten.aurora.boober.utils.deepSet
 import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -207,3 +208,39 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
         }
     }
 }
+
+fun Map<String, AuroraConfigField>.removeDefaults() = this.filter { it.value.source != "default" }
+
+fun Map<String, AuroraConfigField>.removeInactive(): Map<String, AuroraConfigField> {
+
+    fun createExcludePaths(fields: Map<String, AuroraConfigField>): Set<String> {
+
+        return fields
+            .filter { it.key.split("/").size == 1 }
+            .filter {
+                val value = it.value.value
+                !value.isBoolean || !value.booleanValue()
+            }.map {
+                it.key.split("/")[0] + "/"
+            }.toSet()
+    }
+
+    val excludePaths = createExcludePaths(this)
+    return this.filter { field ->
+        excludePaths.none { field.key.startsWith(it) }
+    }
+}
+
+fun Map<String, AuroraConfigField>.present(
+    transformer: (Map.Entry<String, AuroraConfigField>) -> Map<String, Any>
+): Map<String, Any> {
+
+    val map: MutableMap<String, Any> = mutableMapOf()
+    this
+        .mapValues { transformer(it) }
+        .forEach {
+            map.deepSet(it.key.split("/"), it.value)
+        }
+    return map
+}
+
