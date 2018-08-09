@@ -65,13 +65,8 @@ class DeployService(
 
         val deploymentSpecs = auroraConfigService.createValidatedAuroraDeploymentSpecs(ref, applicationIds, overrides)
         val environments = prepareDeployEnvironments(deploymentSpecs)
-        val applicationCmd = ApplicationCommand(
-            configRef = ref,
-            overrides = overrides
-
-        )
         val deployResults: List<AuroraDeployResult> =
-            deployFromSpecs(deploymentSpecs, environments, deploy, applicationCmd)
+            deployFromSpecs(deploymentSpecs, environments, deploy, ref)
 
         deployLogService.markRelease(ref, deployResults)
 
@@ -144,7 +139,7 @@ class DeployService(
         deploymentSpecs: List<AuroraDeploymentSpec>,
         environments: Map<AuroraDeployEnvironment, AuroraDeployResult>,
         deploy: Boolean,
-        applicationCmd: ApplicationCommand
+        configRef: AuroraConfigRef
     ): List<AuroraDeployResult> {
 
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
@@ -170,7 +165,7 @@ class DeployService(
                 !env.success -> env.copy(auroraDeploymentSpec = it)
                 else -> {
                     try {
-                        val result = deployFromSpec(it, deploy, env.projectExist, applicationCmd)
+                        val result = deployFromSpec(it, deploy, env.projectExist, configRef)
                         result.copy(openShiftResponses = env.openShiftResponses.addIfNotNull(result.openShiftResponses))
                     } catch (e: Exception) {
                         AuroraDeployResult(auroraDeploymentSpec = it, success = false, reason = e.message)
@@ -228,7 +223,7 @@ class DeployService(
         deploymentSpec: AuroraDeploymentSpec,
         shouldDeploy: Boolean,
         namespaceCreated: Boolean,
-        applicationCmd: ApplicationCommand
+        auroraConfigRef: AuroraConfigRef
     ): AuroraDeployResult {
 
         val deployId = UUID.randomUUID().toString().substring(0, 7)
@@ -240,11 +235,18 @@ class DeployService(
                 reason = "Not valid in this cluster."
             )
         }
-        //Here we need to create application object
 
-        //TODO need ref for what is deployed
         val application = Application(
-            spec = ApplicationSpec(deploymentSpec.fields, cmd = applicationCmd),
+            spec = ApplicationSpec(
+                deploymentSpec.fields, cmd =
+                ApplicationCommand(
+                    configRef = auroraConfigRef,
+                    overrides = deploymentSpec.deploy?.overrideFiles,
+                    applicationId = deploymentSpec.applicationId,
+                    applicationFile = deploymentSpec.applicationFile.name // TODO: is this really needed?
+
+                )
+            ),
             metadata = ObjectMetaBuilder()
                 .withName(deploymentSpec.name)
                 .withLabels(createCommonLabels(deploymentSpec, deployId))
@@ -262,22 +264,21 @@ class DeployService(
             jacksonObjectMapper().convertValue<Application>(it)
         } ?: throw RuntimeException("Could not write application")
 
-        //  logger.info("App is={}", appResponse)
         val ownerReference = OwnerReferenceBuilder()
             .withApiVersion(appResponse.apiVersion)
             .withKind(appResponse.kind)
             .withName(appResponse.metadata.name)
             .withUid(appResponse.metadata.uid)
             .build()
-        //This should be set in each generated resource
 
         logger.debug("Resource provisioning")
         val provisioningResult = resourceProvisioner.provisionResources(deploymentSpec)
 
         logger.debug("Apply objects")
-        val openShiftResponses: List<OpenShiftResponse> = applyOpenShiftApplicationObjects(
-            deployId, deploymentSpec, provisioningResult, namespaceCreated, ownerReference
-        )
+        val openShiftResponses: List<OpenShiftResponse> = listOf(applicationResult) +
+            applyOpenShiftApplicationObjects(
+                deployId, deploymentSpec, provisioningResult, namespaceCreated, ownerReference
+            )
 
         logger.debug("done applying objects")
         val success = openShiftResponses.all { it.success }

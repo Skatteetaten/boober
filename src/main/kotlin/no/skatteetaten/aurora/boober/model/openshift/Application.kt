@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import io.fabric8.kubernetes.api.model.ObjectMeta
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -21,7 +21,9 @@ data class ApplicationSpec(val config: Map<String, AuroraConfigField>, val cmd: 
 //TODO:name here?
 data class ApplicationCommand(
     val configRef: AuroraConfigRef,
-    val overrides: List<AuroraConfigFile>
+    val overrides: Map<String, String>?,
+    val applicationId: ApplicationId,
+    val applicationFile: String
 )
 
 
