@@ -117,7 +117,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
     }
 
     fun getKeyMappings(keyMappingsExtractor: AuroraConfigFieldHandler?): Map<String, String>? =
-        keyMappingsExtractor?.let { extractIfExistsOrNull(it.name) }
+        keyMappingsExtractor?.let { extractOrNull(it.name) }
 
     fun disabledAndNoSubKeys(name: String): Boolean {
 
@@ -147,8 +147,6 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
     }
 
     inline fun <reified T> extractOrNull(name: String): T? = fields[name]?.getNullableValue()
-
-    inline fun <reified T> extractIfExistsOrNull(name: String): T? = fields[name]?.getNullableValue()
 
     companion object {
 

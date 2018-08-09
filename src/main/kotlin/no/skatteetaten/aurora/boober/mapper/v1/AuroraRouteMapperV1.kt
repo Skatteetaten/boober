@@ -37,7 +37,7 @@ class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>, val env:
 
         return routes.map {
             Route(it.ensureStartWith(name, "-"),
-                auroraConfigFields.extractIfExistsOrNull("$route/$it/host")
+                auroraConfigFields.extractOrNull("$route/$it/host")
                     ?: auroraConfigFields.extract("routeDefaults/host"),
                 auroraConfigFields.extractOrNull("$route/$it/path"),
                 auroraConfigFields.getRouteAnnotations("$route/$it/annotations", handlers)

@@ -36,8 +36,8 @@ class AuroraLocalTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>, 
         return AuroraLocalTemplate(
             parameters = auroraConfigFields.getParameters(parameterHandlers),
             templateJson = extractTemplateJson(auroraConfigFields),
-            version = auroraConfigFields.extractIfExistsOrNull("version"),
-            replicas = auroraConfigFields.extractIfExistsOrNull("replicas")
+            version = auroraConfigFields.extractOrNull("version"),
+            replicas = auroraConfigFields.extractOrNull("replicas")
         )
     }
 

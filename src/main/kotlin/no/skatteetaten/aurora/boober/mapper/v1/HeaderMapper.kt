@@ -77,13 +77,13 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
         val cluster = auroraConfigFields.extract<String>("cluster")
         val type = auroraConfigFields.extract<TemplateType>("type")
 
-        val segment = auroraConfigFields.extractIfExistsOrNull<String>("segment")
+        val segment = auroraConfigFields.extractOrNull<String>("segment")
 
         val env = AuroraDeployEnvironment(
             affiliation = auroraConfigFields.extract("affiliation"),
-            envName = auroraConfigFields.extractIfExistsOrNull("env/name")
+            envName = auroraConfigFields.extractOrNull("env/name")
                 ?: auroraConfigFields.extract("envName"),
-            ttl = auroraConfigFields.extractIfExistsOrNull<String>("env/ttl")
+            ttl = auroraConfigFields.extractOrNull<String>("env/ttl")
                 ?.let { StringToDurationConverter().convert(it) },
             permissions = extractPermissions(auroraConfigFields)
         )

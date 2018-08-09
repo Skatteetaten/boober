@@ -25,7 +25,7 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
 
     fun integrations(auroraConfigFields: AuroraConfigFields): AuroraIntegration? {
         val name: String = auroraConfigFields.extract("name")
-        val groupId: String = auroraConfigFields.extractIfExistsOrNull<String>("groupId") ?: ""
+        val groupId: String = auroraConfigFields.extractOrNull<String>("groupId") ?: ""
 
         val certificateCn = if (auroraConfigFields.isSimplifiedConfig("certificate")) {
             val certFlag: Boolean = auroraConfigFields.extract("certificate")
@@ -36,7 +36,7 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
         return AuroraIntegration(
             database = findDatabases(auroraConfigFields, name),
             certificateCn = certificateCn,
-            splunkIndex = auroraConfigFields.extractIfExistsOrNull("splunkIndex"),
+            splunkIndex = auroraConfigFields.extractOrNull("splunkIndex"),
             webseal = findWebseal(auroraConfigFields)
         )
     }

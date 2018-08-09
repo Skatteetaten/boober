@@ -97,11 +97,11 @@ class AuroraVolumeMapperV1(private val applicationFiles: List<AuroraConfigFile>)
     }
 
     private fun getSecretVault(auroraConfigFields: AuroraConfigFields): String? =
-        auroraConfigFields.extractIfExistsOrNull("secretVault/name")
-            ?: auroraConfigFields.extractIfExistsOrNull("secretVault")
+        auroraConfigFields.extractOrNull("secretVault/name")
+            ?: auroraConfigFields.extractOrNull("secretVault")
 
     private fun getSecretVaultKeys(auroraConfigFields: AuroraConfigFields): List<String> =
-        auroraConfigFields.extractIfExistsOrNull("secretVault/keys") ?: listOf()
+        auroraConfigFields.extractOrNull("secretVault/keys") ?: listOf()
 
     private fun getMounts(auroraConfigFields: AuroraConfigFields): List<Mount>? {
         if (mountHandlers.isEmpty()) {
