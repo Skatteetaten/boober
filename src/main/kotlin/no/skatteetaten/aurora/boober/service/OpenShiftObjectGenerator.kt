@@ -100,9 +100,11 @@ class OpenShiftObjectGenerator(
                 .addIfNotNull(generateBuilds(auroraDeploymentSpec, deployId, ownerReference))
                 .addIfNotNull(
                     generateSecretsAndConfigMaps(
-                        auroraDeploymentSpec.name, mounts
-                            ?: emptyList(), labels, provisioningResult
-                        , ownerReference
+                        appName = auroraDeploymentSpec.name,
+                        mounts = mounts ?: emptyList(),
+                        labels = labels,
+                        provisioningResult = provisioningResult,
+                        ownerReference = ownerReference
                     )
                 )
                 .addIfNotNull(generateRoute(auroraDeploymentSpec, labels, ownerReference))
@@ -346,7 +348,6 @@ class OpenShiftObjectGenerator(
                 jacksonObjectMapper().convertValue(service)
             } else it
 
-            //try to set metadata
             val metadataJson: JsonNode = jacksonObjectMapper().convertValue(listOf(ownerReference))
             val metadataNode: ObjectNode = result["metadata"] as ObjectNode
             metadataNode.set("ownerReferences", metadataJson)

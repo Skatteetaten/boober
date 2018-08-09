@@ -24,7 +24,6 @@ class AuroraDeploymentSpecConfigFieldValidator(
         val namePattern = "^[a-z][-a-z0-9]{0,38}[a-z0-9]$"
     }
 
-
     @JvmOverloads
     fun validate(fullValidation: Boolean = true) {
 
@@ -40,9 +39,6 @@ class AuroraDeploymentSpecConfigFieldValidator(
                     ConfigFieldErrorDetail.missing(it.localizedMessage, e.path)
                 }
             } else {
-
-                //hva hvis vi har en handler og vi ikke finner verdien?
-
                 val invalidEnvSource =
                     envPointers.contains(e.name) && !rawField.isDefault && rawField.source.let {
                         !it.split("/").last().startsWith(
@@ -75,7 +71,6 @@ class AuroraDeploymentSpecConfigFieldValidator(
                 }
                 err
             }
-
         }
 
         val unmappedErrors = if (fullValidation) {
@@ -103,4 +98,3 @@ class AuroraDeploymentSpecConfigFieldValidator(
         return filePointers.mapValues { it.value - allPaths }.filterValues { it.isNotEmpty() }
     }
 }
-

@@ -45,9 +45,15 @@ class AuroraDeploymentSpecService(
             val applicationFiles = auroraConfig.getFilesForApplication(applicationId, overrideFiles)
 
             val headerMapper = HeaderMapper(applicationId, applicationFiles)
-            val headerFields = AuroraConfigFields.create(headerMapper.handlers, applicationFiles, applicationId, auroraConfig.version)
+            val headerFields =
+                AuroraConfigFields.create(headerMapper.handlers, applicationFiles, applicationId, auroraConfig.version)
 
-            AuroraDeploymentSpecConfigFieldValidator(applicationId, applicationFiles, headerMapper.handlers, headerFields)
+            AuroraDeploymentSpecConfigFieldValidator(
+                applicationId,
+                applicationFiles,
+                headerMapper.handlers,
+                headerFields
+            )
                 .validate(false)
             val platform = headerFields.extract<String>("applicationPlatform")
 
@@ -55,7 +61,6 @@ class AuroraDeploymentSpecService(
                 ?: throw IllegalArgumentException("ApplicationPlattformHandler $platform is not present")
 
             val header = headerMapper.createHeader(headerFields, applicationHandler)
-
 
             val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(applicationId)
             val deployMapper = AuroraDeployMapperV1(applicationId, applicationFiles, overrideFiles)
@@ -66,26 +71,48 @@ class AuroraDeploymentSpecService(
             val templateMapper = AuroraTemplateMapperV1(applicationFiles)
             val buildMapper = AuroraBuildMapperV1(header.name)
 
-            val rawHandlers = (headerMapper.handlers + deploymentSpecMapper.handlers + integrationMapper.handlers + when (header.type) {
-                TemplateType.deploy -> deployMapper.handlers + routeMapper.handlers + volumeMapper.handlers
-                TemplateType.development -> deployMapper.handlers + routeMapper.handlers + volumeMapper.handlers + buildMapper.handlers
-                TemplateType.localTemplate -> routeMapper.handlers + volumeMapper.handlers + localTemplateMapper.handlers
-                TemplateType.template -> routeMapper.handlers + volumeMapper.handlers + templateMapper.handlers
-                TemplateType.build -> buildMapper.handlers
-            }).toSet()
+            val rawHandlers =
+                (headerMapper.handlers + deploymentSpecMapper.handlers + integrationMapper.handlers + when (header.type) {
+                    TemplateType.deploy -> deployMapper.handlers + routeMapper.handlers + volumeMapper.handlers
+                    TemplateType.development -> deployMapper.handlers + routeMapper.handlers + volumeMapper.handlers + buildMapper.handlers
+                    TemplateType.localTemplate -> routeMapper.handlers + volumeMapper.handlers + localTemplateMapper.handlers
+                    TemplateType.template -> routeMapper.handlers + volumeMapper.handlers + templateMapper.handlers
+                    TemplateType.build -> buildMapper.handlers
+                }).toSet()
 
             val handlers = applicationHandler.handlers(rawHandlers)
 
-            val auroraConfigFields = AuroraConfigFields.create(handlers, applicationFiles, applicationId, auroraConfig.version, header.extractPlaceHolders())
+            val auroraConfigFields = AuroraConfigFields.create(
+                handlers,
+                applicationFiles,
+                applicationId,
+                auroraConfig.version,
+                header.extractPlaceHolders()
+            )
 
-            AuroraDeploymentSpecConfigFieldValidator(applicationId, applicationFiles, handlers, auroraConfigFields).validate()
-            val integration = if (header.type == TemplateType.build) null else integrationMapper.integrations(auroraConfigFields)
-            val volume = if (header.type == TemplateType.build) null else volumeMapper.createAuroraVolume(auroraConfigFields)
+            AuroraDeploymentSpecConfigFieldValidator(
+                applicationId,
+                applicationFiles,
+                handlers,
+                auroraConfigFields
+            ).validate()
+            val integration =
+                if (header.type == TemplateType.build) null else integrationMapper.integrations(auroraConfigFields)
+            val volume =
+                if (header.type == TemplateType.build) null else volumeMapper.createAuroraVolume(auroraConfigFields)
             val route = if (header.type == TemplateType.build) null else routeMapper.route(auroraConfigFields)
-            val build = if (header.type == TemplateType.build || header.type == TemplateType.development) buildMapper.build(auroraConfigFields) else null
-            val deploy = if (header.type == TemplateType.deploy || header.type == TemplateType.development) deployMapper.deploy(auroraConfigFields) else null
-            val template = if (header.type == TemplateType.template) templateMapper.template(auroraConfigFields) else null
-            val localTemplate = if (header.type == TemplateType.localTemplate) localTemplateMapper.localTemplate(auroraConfigFields) else null
+            val build =
+                if (header.type == TemplateType.build || header.type == TemplateType.development) buildMapper.build(
+                    auroraConfigFields
+                ) else null
+            val deploy =
+                if (header.type == TemplateType.deploy || header.type == TemplateType.development) deployMapper.deploy(
+                    auroraConfigFields
+                ) else null
+            val template =
+                if (header.type == TemplateType.template) templateMapper.template(auroraConfigFields) else null
+            val localTemplate =
+                if (header.type == TemplateType.localTemplate) localTemplateMapper.localTemplate(auroraConfigFields) else null
 
             return deploymentSpecMapper.createAuroraDeploymentSpec(
                 auroraConfigFields = auroraConfigFields,
@@ -122,12 +149,18 @@ class AuroraDeploymentSpecService(
             .let { getAuroraDeploymentSpecs(auroraConfig, it) }
     }
 
-    private fun getAuroraDeploymentSpecs(auroraConfig: AuroraConfig, applicationIds: List<ApplicationId>): List<AuroraDeploymentSpec> {
+    private fun getAuroraDeploymentSpecs(
+        auroraConfig: AuroraConfig,
+        applicationIds: List<ApplicationId>
+    ): List<AuroraDeploymentSpec> {
         return applicationIds.map { AuroraDeploymentSpecService.createAuroraDeploymentSpec(auroraConfig, it, listOf()) }
     }
 
     fun getAuroraDeploymentSpec(ref: AuroraConfigRef, environment: String, application: String): AuroraDeploymentSpec {
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
-        return AuroraDeploymentSpecService.createAuroraDeploymentSpec(auroraConfig, ApplicationId.aid(environment, application))
+        return AuroraDeploymentSpecService.createAuroraDeploymentSpec(
+            auroraConfig,
+            ApplicationId.aid(environment, application)
+        )
     }
 }

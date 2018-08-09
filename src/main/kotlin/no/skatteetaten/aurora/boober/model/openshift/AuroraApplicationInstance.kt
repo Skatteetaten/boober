@@ -26,6 +26,3 @@ data class ApplicationSpec(
     val releaseTo: String?,
     val exactGitRef: String?
 )
-
-
-

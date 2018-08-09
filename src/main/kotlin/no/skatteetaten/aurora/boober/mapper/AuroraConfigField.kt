@@ -187,7 +187,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
                 val result = defaultValue + files.mapNotNull { file ->
                     file.asJsonNode.atNullable(handler.path)?.let {
-                        if(handler.subKeyFlag && it.isObject) {
+                        if (handler.subKeyFlag && it.isObject) {
                             null
                         } else {
                             handler.name to AuroraConfigFieldSource(file.configName, it, handler.subKeyFlag)
@@ -204,7 +204,6 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
                 .groupBy({ it.first }) { it.second }
                 .mapValues { AuroraConfigField(it.value.toSet(), replacer) }
             return AuroraConfigFields(groupedFields)
-
         }
     }
 }

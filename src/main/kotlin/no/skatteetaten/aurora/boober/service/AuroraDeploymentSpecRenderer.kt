@@ -80,7 +80,6 @@ fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSp
         }
     }
 
-
     return fields.entries
         .fold("{\n") { result, entry ->
             renderJson(1, result, entry as Map.Entry<String, Map<String, Any?>>)

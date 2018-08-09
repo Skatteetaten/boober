@@ -10,5 +10,5 @@ data class AuroraConfigFieldHandler(
     @JsonIgnore val validator: (JsonNode?) -> Exception? = { _ -> null },
     val defaultValue: Any? = null,
     val defaultSource: String = "default",
-    val subKeyFlag:Boolean = false
+    val subKeyFlag: Boolean = false
 )

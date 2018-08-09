@@ -30,15 +30,21 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
     private val VALID_SCHEMA_VERSIONS = listOf("v1")
 
     val envNamePattern = "^[a-z0-9\\-]{0,52}$"
-    val envNameMessage = "Environment must consist of lower case alphanumeric characters or '-'. It must be no longer than 52 characters."
+    val envNameMessage =
+        "Environment must consist of lower case alphanumeric characters or '-'. It must be no longer than 52 characters."
 
     val handlers = setOf(
         AuroraConfigFieldHandler("schemaVersion", validator = { it.oneOf(VALID_SCHEMA_VERSIONS) }),
         AuroraConfigFieldHandler("type", validator = { it.oneOf(TemplateType.values().map { it.toString() }) }),
-        AuroraConfigFieldHandler("applicationPlatform", defaultValue = "java", validator = { it.oneOf(AuroraDeploymentSpecService.APPLICATION_PLATFORM_HANDLERS.keys.toList()) }),
+        AuroraConfigFieldHandler(
+            "applicationPlatform",
+            defaultValue = "java",
+            validator = { it.oneOf(AuroraDeploymentSpecService.APPLICATION_PLATFORM_HANDLERS.keys.toList()) }),
         AuroraConfigFieldHandler("affiliation", validator = {
-            it.pattern("^[a-z]{1,10}$",
-                "Affiliation can only contain letters and must be no longer than 10 characters")
+            it.pattern(
+                "^[a-z]{1,10}$",
+                "Affiliation can only contain letters and must be no longer than 10 characters"
+            )
         }),
         AuroraConfigFieldHandler("segment"),
         AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
@@ -46,7 +52,8 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
         AuroraConfigFieldHandler("permissions/view"),
         AuroraConfigFieldHandler("permissions/adminServiceAccount"),
         // Max length of OpenShift project names is 63 characters. Project name = affiliation + "-" + envName.
-        AuroraConfigFieldHandler("envName", validator = { it.pattern(envNamePattern, envNameMessage) },
+        AuroraConfigFieldHandler(
+            "envName", validator = { it.pattern(envNamePattern, envNameMessage) },
             defaultSource = "folderName",
             defaultValue = applicationId.environment
         ),
@@ -59,12 +66,13 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
         AuroraConfigFieldHandler("baseFile"),
         AuroraConfigFieldHandler("envFile", validator = {
             it?.startsWith("about-", "envFile must start with about")
-        }))
+        })
+    )
 
-
-
-
-    fun createHeader(auroraConfigFields: AuroraConfigFields, applicationHandler: ApplicationPlatformHandler): AuroraDeployHeader {
+    fun createHeader(
+        auroraConfigFields: AuroraConfigFields,
+        applicationHandler: ApplicationPlatformHandler
+    ): AuroraDeployHeader {
         val name = auroraConfigFields.extract<String>("name")
         val cluster = auroraConfigFields.extract<String>("cluster")
         val type = auroraConfigFields.extract<TemplateType>("type")
@@ -82,7 +90,6 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
 
         return AuroraDeployHeader(env, type, applicationHandler, name, cluster, segment)
     }
-
 
     fun extractPermissions(configFields: AuroraConfigFields): Permissions {
 

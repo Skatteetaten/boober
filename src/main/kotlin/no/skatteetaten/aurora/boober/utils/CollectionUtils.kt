@@ -18,9 +18,9 @@ fun <T> Set<T>.addIfNotNull(value: T?): Set<T> {
     } ?: this
 }
 
-fun MutableMap<String, Any>.deepSet(parts:List<String>, value:Map<String, Any>) {
+fun MutableMap<String, Any>.deepSet(parts: List<String>, value: Map<String, Any>) {
 
-    if(parts.isEmpty()) {
+    if (parts.isEmpty()) {
         value.forEach {
             this[it.key] = it.value
         }
