@@ -8,7 +8,7 @@ import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class AuroraApplicationInstance(
-    val kind: String = "Application", // TODO hva skal denne være?
+    val kind: String = "AuroraApplicationInstance",
     val metadata: ObjectMeta,
     val apiVersion: String = "skatteetaten.no/v1",
     val spec: ApplicationSpec
@@ -24,7 +24,7 @@ data class ApplicationSpec(
     val splunkIndex: String? = null,
     val managementPath: String?,
     val releaseTo: String?,
-    val exactGitRef: String
+    val exactGitRef: String?
 )
 
 

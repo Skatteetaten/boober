@@ -50,7 +50,7 @@ class AuroraConfigService(
         return bitbucketProjectService.getAllSlugs()
     }
 
-    fun findExactRef(ref: AuroraConfigRef): String {
+    fun findExactRef(ref: AuroraConfigRef): String? {
 
         return updateLocalFilesFromGit(ref)
     }
@@ -106,7 +106,6 @@ class AuroraConfigService(
         val refName = "master"
         val ref = AuroraConfigRef(auroraConfig.name, refName)
         val repo = getUpdatedRepo(ref)
-
         val existing = AuroraConfig.fromFolder(checkoutDir, refName)
 
         existing.files.forEach {
@@ -188,10 +187,10 @@ class AuroraConfigService(
 
     private fun getAuroraConfigFolder(name: String) = File(gitService.checkoutPath, name)
 
-    private fun updateLocalFilesFromGit(ref: AuroraConfigRef): String {
+    private fun updateLocalFilesFromGit(ref: AuroraConfigRef): String? {
         val repository = getUpdatedRepo(ref)
 
-        val head = repository.repository.exactRef("HEAD").objectId.abbreviate(8).name()!!
+        val head = repository.repository.exactRef("HEAD").objectId?.abbreviate(8)?.name()
 
         repository.close()
         return head

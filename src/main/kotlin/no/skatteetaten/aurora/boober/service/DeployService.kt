@@ -213,6 +213,7 @@ class DeployService(
             ),
             metadata = ObjectMetaBuilder()
                 .withName(deploymentSpec.name)
+                .withAnnotations(null)
                 .withLabels(
                     mapOf(
                         "app" to deploymentSpec.name,
