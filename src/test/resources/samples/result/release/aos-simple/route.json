@@ -13,7 +13,15 @@
       "updateInBoober": "true",
       "booberDeployId": "123"
     },
-    "name": "aos-simple"
+    "name": "aos-simple",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "aos-simple",
+        "uid": "123-123"
+      }
+    ]
   },
   "spec": {
     "host": "aos-simple-aos-release.utv.paas.skead.no",

@@ -5,8 +5,8 @@ import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 import org.springframework.beans.factory.annotation.Autowired
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 
+import io.fabric8.kubernetes.api.model.OwnerReference
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AbstractAuroraDeploymentSpecSpringTest
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
@@ -36,7 +36,8 @@ class ResourceMergerTest extends AbstractAuroraDeploymentSpecSpringTest {
 
     given:
       JsonNode existing = loadJsonResource("dc-webleveranse.json")
-      JsonNode newResource = withDeploySpec { objectGenerator.generateDeploymentConfig("deploy-id", it, null) }
+      JsonNode newResource =
+          withDeploySpec { objectGenerator.generateDeploymentConfig("deploy-id", it, null, new OwnerReference()) }
 
     when:
       def merged = ResourceMergerKt.mergeWithExistingResource(newResource, existing)

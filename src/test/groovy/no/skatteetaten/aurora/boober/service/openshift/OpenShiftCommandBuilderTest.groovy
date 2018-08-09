@@ -12,7 +12,7 @@ import org.springframework.test.web.client.MockRestServiceServer
 
 import com.fasterxml.jackson.databind.JsonNode
 
-import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
+import io.fabric8.kubernetes.api.model.OwnerReference
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AbstractAuroraDeploymentSpecSpringTest
 import no.skatteetaten.aurora.boober.service.OpenShiftCommandBuilder
@@ -59,7 +59,8 @@ class OpenShiftCommandBuilderTest extends AbstractAuroraDeploymentSpecSpringTest
           andRespond(withSuccess(loadResource("dc-webleveranse.json"), MediaType.APPLICATION_JSON))
 
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid(ENVIRONMENT, "webleveranse"))
-      JsonNode deploymentConfig = objectGenerator.generateDeploymentConfig("deploy-id", deploymentSpec, null)
+      JsonNode deploymentConfig = objectGenerator.
+          generateDeploymentConfig("deploy-id", deploymentSpec, null, new OwnerReference())
 
     when:
       OpenshiftCommand command = commandBuilder.createOpenShiftCommand(NAMESPACE, deploymentConfig, true, false)

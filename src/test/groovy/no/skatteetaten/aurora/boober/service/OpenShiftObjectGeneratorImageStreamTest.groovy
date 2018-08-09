@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 
 import groovy.json.JsonSlurper
+import io.fabric8.kubernetes.api.model.OwnerReference
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 
 class OpenShiftObjectGeneratorImageStreamTest extends AbstractOpenShiftObjectGeneratorTest {
@@ -22,7 +23,7 @@ class OpenShiftObjectGeneratorImageStreamTest extends AbstractOpenShiftObjectGen
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid("utv", "aos-simple"))
 
     when:
-      def imageStream = objectGenerator.generateImageStream('deploy-id', deploymentSpec)
+      def imageStream = objectGenerator.generateImageStream('deploy-id', deploymentSpec, new OwnerReference())
       imageStream = new JsonSlurper().parseText(imageStream.toString())
 
     then:

@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import groovy.json.JsonSlurper
+import io.fabric8.kubernetes.api.model.OwnerReference
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 
 class OpenShiftObjectGeneratorServiceTest extends AbstractOpenShiftObjectGeneratorTest {
@@ -14,7 +15,7 @@ class OpenShiftObjectGeneratorServiceTest extends AbstractOpenShiftObjectGenerat
       Map<String, String> serviceLabels = [:]
 
     when: "service object has been created"
-      def svc = objectGenerator.generateService(deploymentSpec, serviceLabels)
+      def svc = objectGenerator.generateService(deploymentSpec, serviceLabels, new OwnerReference())
       svc = new JsonSlurper().parseText(svc.toString()) // convert to groovy for easier navigation and validation
 
     then: "the svc must contain toxiproxy http"

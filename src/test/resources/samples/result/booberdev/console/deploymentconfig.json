@@ -17,7 +17,15 @@
       "name": "openshift-console-api",
       "deployTag": "3"
     },
-    "name": "openshift-console-api"
+    "name": "openshift-console-api",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "openshift-console-api",
+        "uid": "123-123"
+      }
+    ]
   },
   "spec": {
     "replicas": 1,

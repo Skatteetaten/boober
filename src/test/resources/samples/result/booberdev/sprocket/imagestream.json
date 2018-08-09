@@ -11,7 +11,15 @@
       "booberDeployId": "123",
       "releasedVersion": "3"
     },
-    "name": "sprocket"
+    "name": "sprocket",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "sprocket",
+        "uid": "123-123"
+      }
+    ]
   },
   "spec": {
     "dockerImageRepository": "docker-registry.aurora.sits.no:5000/ske_openshift_aurora/sprocket",

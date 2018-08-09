@@ -153,7 +153,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
 
     then:
       def ex = thrown(AuroraConfigException)
-      ex.errors[0].message == "Version must be set as string"
+      ex.errors[0].message == "Version must be set"
   }
 
   def "Fails when affiliation is not in about file"() {

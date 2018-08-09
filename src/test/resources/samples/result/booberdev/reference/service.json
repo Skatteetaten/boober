@@ -16,7 +16,15 @@
       "updateInBoober": "true",
       "booberDeployId": "123"
     },
-    "name": "reference"
+    "name": "reference",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "reference",
+        "uid": "123-123"
+      }
+    ]
   },
   "spec": {
     "ports": [

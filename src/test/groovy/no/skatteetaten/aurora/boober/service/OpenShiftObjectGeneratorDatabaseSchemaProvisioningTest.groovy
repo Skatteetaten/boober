@@ -5,6 +5,7 @@ import static no.skatteetaten.aurora.boober.service.resourceprovisioning.Externa
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
+import io.fabric8.kubernetes.api.model.OwnerReference
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseInstance
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisionerTest
@@ -60,7 +61,8 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
           )]), null)
 
     when:
-      def objects = objectGenerator.generateApplicationObjects('deploy-id', deploymentSpec, provisioningResult)
+      def objects = objectGenerator.
+          generateApplicationObjects('deploy-id', deploymentSpec, provisioningResult, new OwnerReference())
       def deploymentConfig = objects.find { it.get("kind").textValue().toLowerCase() == "deploymentconfig" }
       deploymentConfig = new JsonSlurper().parseText(deploymentConfig.toString())
       def secret = objects.find { it.get("kind").textValue().toLowerCase() == "secret" }

@@ -18,7 +18,15 @@
       "name": "aos-simple",
       "deployTag": "ref"
     },
-    "name": "aos-simple"
+    "name": "aos-simple",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "aos-simple",
+        "uid": "123-123"
+      }
+    ]
   },
   "spec": {
     "replicas": 1,

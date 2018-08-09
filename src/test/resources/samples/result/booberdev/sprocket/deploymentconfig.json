@@ -17,7 +17,15 @@
       "name": "sprocket",
       "deployTag": "3"
     },
-    "name": "sprocket"
+    "name": "sprocket",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "sprocket",
+        "uid": "123-123"
+      }
+    ]
   },
   "spec": {
     "replicas": 1,

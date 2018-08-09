@@ -11,7 +11,15 @@
       "booberDeployId": "123",
       "releasedVersion": "1.0.3-b1.1.0-flange-1.0.0"
     },
-    "name": "aos-simple"
+    "name": "aos-simple",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "aos-simple",
+        "uid": "123-123"
+      }
+    ]
   },
   "spec": {
     "dockerImageRepository": "docker-registry.aurora.sits.no:5000/ske_aurora_openshift/aos-simple",

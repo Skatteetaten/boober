@@ -19,7 +19,15 @@
       "deployTag": "1.0.0-b1.5.3-flange-8.152.18",
       "removeAfter": "86400"
     },
-    "name": "reference"
+    "name": "reference",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "reference",
+        "uid": "123-123"
+      }
+    ]
   },
   "spec": {
     "replicas": 1,

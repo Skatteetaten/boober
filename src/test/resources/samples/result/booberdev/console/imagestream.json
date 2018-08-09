@@ -11,7 +11,15 @@
       "booberDeployId": "123",
       "releasedVersion": "3"
     },
-    "name": "openshift-console-api"
+    "name": "openshift-console-api",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "openshift-console-api",
+        "uid": "123-123"
+      }
+    ]
   },
   "spec": {
     "dockerImageRepository": "docker-registry.aurora.sits.no:5000/ske_openshift_aurora/openshift-console-api",

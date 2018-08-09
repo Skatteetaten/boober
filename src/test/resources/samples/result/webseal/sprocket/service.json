@@ -17,7 +17,15 @@
       "updateInBoober": "true",
       "booberDeployId": "123"
     },
-    "name": "sprocket"
+    "name": "sprocket",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "sprocket",
+        "uid": "123-123"
+      }
+    ]
   },
   "spec": {
     "ports": [

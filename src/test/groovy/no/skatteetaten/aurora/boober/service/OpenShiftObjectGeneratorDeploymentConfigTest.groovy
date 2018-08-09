@@ -4,6 +4,7 @@ import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 import static no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner.createSchemaProvisionRequestsFromDeploymentSpec
 
 import groovy.json.JsonSlurper
+import io.fabric8.kubernetes.api.model.OwnerReference
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseInstance
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
@@ -33,7 +34,8 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObje
           ]), null)
 
     when:
-      def dc = objectGenerator.generateDeploymentConfig("deploy-id", deploymentSpec, provisioningResult)
+      def dc = objectGenerator.
+          generateDeploymentConfig("deploy-id", deploymentSpec, provisioningResult, new OwnerReference())
       dc = new JsonSlurper().parseText(dc.toString()) // convert to groovy for easier navigation and validation
 
     then:
@@ -63,7 +65,8 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObje
       def provisioningResult = provisiongResult(deploymentSpec)
 
     when: "dc has been created"
-      def dc = objectGenerator.generateDeploymentConfig("deploy-id", deploymentSpec, provisioningResult)
+      def dc = objectGenerator.
+          generateDeploymentConfig("deploy-id", deploymentSpec, provisioningResult, new OwnerReference())
 
     then: "the dc must contain valid toxiproxy sidecar configuration"
       dcContainsValidToxiProxyContainer(dc, name)
@@ -78,7 +81,8 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObje
       def provisioningResult = provisiongResult(deploymentSpec)
 
     when: "dc has been created"
-      def dc = objectGenerator.generateDeploymentConfig("deploy-id", deploymentSpec, provisioningResult)
+      def dc = objectGenerator.
+          generateDeploymentConfig("deploy-id", deploymentSpec, provisioningResult, new OwnerReference())
 
     then: "the dc must contain valid toxiproxy sidecar configuration"
       dcContainsValidToxiProxyContainer(dc, name)

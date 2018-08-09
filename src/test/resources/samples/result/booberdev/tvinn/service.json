@@ -9,7 +9,15 @@
       "sprocket.sits.no/service.webseal": "test",
       "sprocket.sits.no/service.webseal-roles": "admin dev"
     },
-    "name": "tvinn"
+    "name": "tvinn",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "tvinn",
+        "uid": "123-123"
+      }
+    ]
   },
   "spec": {
     "ports": [

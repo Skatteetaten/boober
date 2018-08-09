@@ -11,7 +11,15 @@
       "booberDeployId": "123",
       "releasedVersion": "1.0.0-b1.5.3-flange-8.152.18"
     },
-    "name": "reference"
+    "name": "reference",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "reference",
+        "uid": "123-123"
+      }
+    ]
   },
   "spec": {
     "dockerImageRepository": "docker-registry.aurora.sits.no:5000/no_skatteetaten_aurora_openshift/reference",

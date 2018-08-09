@@ -10,7 +10,15 @@
       "updateInBoober": "true",
       "booberDeployId": "123"
     },
-    "name": "openshift-referanse-react"
+    "name": "openshift-referanse-react",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "openshift-referanse-react",
+        "uid": "123-123"
+      }
+    ]
   },
   "spec": {
     "output": {
@@ -61,7 +69,6 @@
       "type": "Custom"
     },
     "triggers": [
-
     ]
   }
 }

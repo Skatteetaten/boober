@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 
 import groovy.json.JsonOutput
+import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
@@ -33,6 +34,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       def provisioningResult = new ProvisioningResult(null,
           new VaultResults([foo: ["latest.properties": "FOO=bar\nBAR=baz\n".bytes]]))
 
+
       def aid = new ApplicationId(env, name)
       def additionalFile = null
       if (templateFile != null) {
@@ -49,12 +51,20 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, additionalFile)
       AuroraDeploymentSpec deploymentSpec = AuroraDeploymentSpecService.
           createAuroraDeploymentSpec(auroraConfig, aid, overrides)
+      def ownerReference = new OwnerReferenceBuilder()
+          .withApiVersion("skatteetaten.no/v1")
+          .withKind("Application")
+          .withName(deploymentSpec.name)
+          .withUid("123-123")
+          .build()
+
 
     when:
+
       List<JsonNode> generatedObjects = objectGenerator.
           with {
             [generateProjectRequest(deploymentSpec.environment)] +
-                generateApplicationObjects(DEPLOY_ID, deploymentSpec, provisioningResult)
+                generateApplicationObjects(DEPLOY_ID, deploymentSpec, provisioningResult, ownerReference)
           }
 
     then:
@@ -73,19 +83,17 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
 
     where:
 
-      env          | name            | templateFile      | overrides
-      "booberdev"  | "aos-simple"    | null              | booberDevAosSimpleOverrides
-      "booberdev"  | "tvinn"         | "atomhopper.json" | []
-      "booberdev"  | "reference"     | null              | []
-      "booberdev"  | "console"       | null              | []
-      "webseal"    | "sprocket"      | null              | []
-      "booberdev"  | "sprocket"      | null              | []
-      "booberdev"  | "reference-web" | null              | []
-      "booberdev"  | "build"         | null              | []
-      "secrettest" | "aos-simple"    | null              | []
-      "release"    | "aos-simple"    | null              | []
-      "release"    | "build"         | null              | []
-      "mounts"     | "aos-simple"    | null              | []
+      env           | name            | templateFile      | overrides
+      "booberdev"   | "aos-simple"    | null              | booberDevAosSimpleOverrides
+      "booberdev"   | "tvinn"         | "atomhopper.json" | []
+      "booberdev"   | "reference"     | null              | []
+      "booberdev"   | "console"       | null              | []
+      "webseal"     | "sprocket"      | null              | []
+      "booberdev"   | "sprocket"      | null              | []
+      "booberdev"   | "reference-web" | null              | []
+      "secrettest"  | "aos-simple"    | null              | []
+      "release"     | "aos-simple"    | null              | []
+      "mounts"      | "aos-simple"    | null              | []
       "secretmount" | "aos-simple"    | null              | []
   }
 

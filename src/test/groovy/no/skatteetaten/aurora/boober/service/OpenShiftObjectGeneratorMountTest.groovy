@@ -5,6 +5,7 @@ import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 import com.fasterxml.jackson.databind.JsonNode
 
 import groovy.json.JsonSlurper
+import io.fabric8.kubernetes.api.model.OwnerReference
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultResults
@@ -37,7 +38,9 @@ class OpenShiftObjectGeneratorMountTest extends AbstractOpenShiftObjectGenerator
       AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid("utv", "aos-simple"))
 
     when:
-      def jsonMounts = objectGenerator.generateSecretsAndConfigMapsInTest("deploy-id", deploymentSpec, null, deploymentSpec.name)
+      def jsonMounts = objectGenerator.
+          generateSecretsAndConfigMapsInTest("deploy-id", deploymentSpec, null, deploymentSpec.name,
+              new OwnerReference())
 
     then:
       jsonMounts.size() == 1
@@ -103,7 +106,8 @@ class OpenShiftObjectGeneratorMountTest extends AbstractOpenShiftObjectGenerator
 
     when:
       List<JsonNode> jsonMounts = objectGenerator.
-          generateSecretsAndConfigMapsInTest("deploy-id", deploymentSpec, provisioningResult, deploymentSpec.name)
+          generateSecretsAndConfigMapsInTest("deploy-id", deploymentSpec, provisioningResult, deploymentSpec.name,
+              new OwnerReference())
 
     then:
       jsonMounts.size() == 1

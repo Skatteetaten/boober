@@ -19,7 +19,15 @@
       "deployTag": "1.0.4",
       "paused": "true"
     },
-    "name": "aos-simple"
+    "name": "aos-simple",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "aos-simple",
+        "uid": "123-123"
+      }
+    ]
   },
   "spec": {
     "replicas": 0,
