@@ -201,19 +201,25 @@ class DeployService(
             "${it.groupId}/${it.artifactId}"
         } ?: throw RuntimeException("Not valid deployment") // TODO: what do we do here?
 
+        val exactGitRef = auroraConfigService.findExactRef(auroraConfigRef)
         val application = AuroraApplicationInstance(
             spec = ApplicationSpec(
+                selector = mapOf("name" to deploymentSpec.name),
                 configRef = auroraConfigRef,
                 deployTag = deploymentSpec.deploy?.let { deploy ->
                     deploy.releaseTo?.withNonBlank { it } ?: deploy.version
-                },
-                exactGitRef = auroraConfigService.findExactRef(auroraConfigRef),
+                } ?: deploymentSpec.template?.version ?: deploymentSpec.localTemplate?.version,
+                exactGitRef = exactGitRef,
                 overrides = deploymentSpec.deploy?.overrideFiles,
                 applicationId = DigestUtils.sha1Hex(applicationId),
                 applicationInstanceId = DigestUtils.sha1Hex(deploymentSpec.applicationId.toString()),
                 splunkIndex = deploymentSpec.integration?.splunkIndex,
                 managementPath = deploymentSpec.deploy?.managementPath,
-                releaseTo = deploymentSpec.deploy?.releaseTo
+                releaseTo = deploymentSpec.deploy?.releaseTo,
+                links = mapOf(
+                    "deploymentSpec" to
+                        "/v1/auroradeployspec/${auroraConfigRef.name}:${exactGitRef}/${deploymentSpec.environment.namespace}/${deploymentSpec.name}"
+                )
             ),
             metadata = ObjectMetaBuilder()
                 .withName(deploymentSpec.name)

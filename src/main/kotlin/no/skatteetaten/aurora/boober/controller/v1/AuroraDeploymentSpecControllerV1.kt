@@ -71,6 +71,17 @@ class AuroraDeploymentSpecControllerV1(val auroraDeploymentSpecService: AuroraDe
         return Response(items = listOf(formatted))
     }
 
+    @GetMapping(":{ref}/{environment}/{application}")
+    fun get(
+        @PathVariable auroraConfigName: String,
+        @PathVariable environment: String,
+        @PathVariable application: String,
+        @PathVariable ref: String
+    ): Response {
+        val ref = AuroraConfigRef(auroraConfigName, ref)
+        return response(auroraDeploymentSpecService.getAuroraDeploymentSpec(ref, environment, application), true)
+    }
+
     private fun response(spec: AuroraDeploymentSpec, includeDefaults: Boolean): Response =
         response(listOf(spec), includeDefaults)
 

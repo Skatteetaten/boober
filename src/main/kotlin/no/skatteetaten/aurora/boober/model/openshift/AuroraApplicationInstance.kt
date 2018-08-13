@@ -25,11 +25,12 @@ data class ApplicationSpec(
     val managementPath: String?,
     val releaseTo: String?,
     val exactGitRef: String?,
-    val deployTag: String?
+    val deployTag: String?,
+    val selector: Map<String, String>,
+    val links: Map<String, String>
 )
 
 data class AuroraConfigRef(
     val name: String,
     val refName: String
 )
-
