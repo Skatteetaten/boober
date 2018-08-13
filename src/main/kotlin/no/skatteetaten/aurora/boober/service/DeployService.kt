@@ -218,7 +218,7 @@ class DeployService(
                 releaseTo = deploymentSpec.deploy?.releaseTo,
                 links = mapOf(
                     "deploymentSpec" to
-                        "/v1/auroradeployspec/${auroraConfigRef.name}:${exactGitRef}/${deploymentSpec.environment.namespace}/${deploymentSpec.name}"
+                        "/v1/auroradeployspec/${auroraConfigRef.name}:$exactGitRef/${deploymentSpec.environment.namespace}/${deploymentSpec.name}"
                 )
             ),
             metadata = ObjectMetaBuilder()
