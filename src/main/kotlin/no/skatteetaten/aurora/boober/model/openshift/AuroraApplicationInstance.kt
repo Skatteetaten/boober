@@ -24,5 +24,12 @@ data class ApplicationSpec(
     val splunkIndex: String? = null,
     val managementPath: String?,
     val releaseTo: String?,
-    val exactGitRef: String?
+    val exactGitRef: String?,
+    val deployTag: String?
 )
+
+data class AuroraConfigRef(
+    val name: String,
+    val refName: String
+)
+

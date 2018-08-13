@@ -29,6 +29,7 @@ import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterNullValues
+import no.skatteetaten.aurora.boober.utils.withNonBlank
 import java.time.Duration
 
 abstract class ApplicationPlatformHandler(val name: String) {
@@ -85,15 +86,7 @@ abstract class ApplicationPlatformHandler(val name: String) {
                 args = ToxiProxyDefaults.ARGS,
                 image = getToxiProxyImage(it.version)
             ))
-        } ?: null
-    }
-
-    private inline fun <R> String.withNonBlank(block: (String) -> R?): R? {
-
-        if (this.isBlank()) {
-            return null
         }
-        return block(this)
     }
 }
 

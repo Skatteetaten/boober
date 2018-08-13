@@ -17,3 +17,11 @@ fun String.ensureStartWith(startWith: String, seperator: String = ""): String {
 }
 
 fun String.removeExtension(): String = FilenameUtils.removeExtension(this)
+
+fun <R> String.withNonBlank(block: (String) -> R?): R? {
+
+    if (this.isBlank()) {
+        return null
+    }
+    return block(this)
+}

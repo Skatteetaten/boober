@@ -24,6 +24,7 @@ import no.skatteetaten.aurora.boober.utils.imageStreamFromJson
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
 import no.skatteetaten.aurora.boober.utils.whenFalse
+import no.skatteetaten.aurora.boober.utils.withNonBlank
 import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -203,6 +204,9 @@ class DeployService(
         val application = AuroraApplicationInstance(
             spec = ApplicationSpec(
                 configRef = auroraConfigRef,
+                deployTag = deploymentSpec.deploy?.let { deploy ->
+                    deploy.releaseTo?.withNonBlank { it } ?: deploy.version
+                },
                 exactGitRef = auroraConfigService.findExactRef(auroraConfigRef),
                 overrides = deploymentSpec.deploy?.overrideFiles,
                 applicationId = DigestUtils.sha1Hex(applicationId),
@@ -231,9 +235,20 @@ class DeployService(
         )
         val applicationResult =
             openShiftClient.performOpenShiftCommand(deploymentSpec.environment.namespace, applicationCommnd)
-        val appResponse: AuroraApplicationInstance = applicationResult.responseBody?.let {
-            jacksonObjectMapper().convertValue<AuroraApplicationInstance>(it)
-        } ?: throw RuntimeException("Could not write application")
+
+        val appResponse: AuroraApplicationInstance? = applicationResult.responseBody?.let {
+            jacksonObjectMapper().convertValue(it)
+        }
+
+        if (appResponse == null) {
+            return AuroraDeployResult(
+                deploymentSpec,
+                deployId,
+                listOf(applicationResult),
+                false,
+                reason = "Creating application object failed"
+            )
+        }
 
         val ownerReference = OwnerReferenceBuilder()
             .withApiVersion(appResponse.apiVersion)
