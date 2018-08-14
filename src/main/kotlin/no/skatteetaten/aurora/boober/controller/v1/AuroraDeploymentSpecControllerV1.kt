@@ -92,7 +92,6 @@ class AuroraDeploymentSpecControllerV1(val auroraDeploymentSpecService: AuroraDe
     ): Response {
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest(reference))
-        //TODO : send in default here and return result of present from line 119
         val spec = auroraDeploymentSpecService.getAuroraDeploymentSpec(
             ref = ref,
             environment = environment,
