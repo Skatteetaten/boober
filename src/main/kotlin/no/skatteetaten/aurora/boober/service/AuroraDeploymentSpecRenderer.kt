@@ -3,10 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.mapper.present
-import no.skatteetaten.aurora.boober.mapper.removeDefaults
-import no.skatteetaten.aurora.boober.mapper.removeInactive
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 
 fun renderSpecAsJson(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean): JsonNode {
     return jacksonObjectMapper().convertValue(getFieldsForPresentation(includeDefaults, deploymentSpec))
@@ -54,12 +51,12 @@ fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSp
 
 fun getFieldsForPresentation(
     includeDefaults: Boolean,
-    deploymentSpec: AuroraDeploymentSpec
+    deploymentSpecInternal: AuroraDeploymentSpec
 ): Map<String, Any> {
     val rawFields = if (!includeDefaults) {
-        deploymentSpec.fields.removeDefaults()
+        deploymentSpecInternal.removeDefaults()
     } else {
-        deploymentSpec.fields
+        deploymentSpecInternal
     }
     val fields = rawFields.removeInactive().present { mapOf("source" to it.value.source, "value" to it.value.value) }
     return fields

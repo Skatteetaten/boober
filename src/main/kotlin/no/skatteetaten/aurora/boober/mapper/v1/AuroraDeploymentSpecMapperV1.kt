@@ -1,13 +1,13 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraBuild
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.AuroraIntegration
 import no.skatteetaten.aurora.boober.model.AuroraLocalTemplate
 import no.skatteetaten.aurora.boober.model.AuroraRoute
@@ -36,7 +36,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
     )
 
     fun createAuroraDeploymentSpec(
-        auroraConfigFields: AuroraConfigFields,
+        auroraDeploymentSpec: AuroraDeploymentSpec,
         volume: AuroraVolume?,
         route: AuroraRoute?,
         build: AuroraBuild?,
@@ -48,18 +48,18 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
         applicationFile: AuroraConfigFile,
         configVersion: String,
         overrideFiles: Map<String, String>
-    ): AuroraDeploymentSpec {
-        val name: String = auroraConfigFields.extract("name")
+    ): AuroraDeploymentSpecInternal {
+        val name: String = auroraDeploymentSpec.extract("name")
 
-        return AuroraDeploymentSpec(
+        return AuroraDeploymentSpecInternal(
             applicationId = applicationId,
-            schemaVersion = auroraConfigFields.extract("schemaVersion"),
-            applicationPlatform = auroraConfigFields.extract("applicationPlatform"),
-            type = auroraConfigFields.extract("type"),
+            schemaVersion = auroraDeploymentSpec.extract("schemaVersion"),
+            applicationPlatform = auroraDeploymentSpec.extract("applicationPlatform"),
+            type = auroraDeploymentSpec.extract("type"),
             name = name,
-            cluster = auroraConfigFields.extract("cluster"),
+            cluster = auroraDeploymentSpec.extract("cluster"),
             environment = env,
-            fields = auroraConfigFields.fields,
+            spec = auroraDeploymentSpec,
             volume = volume,
             route = route,
             build = build,

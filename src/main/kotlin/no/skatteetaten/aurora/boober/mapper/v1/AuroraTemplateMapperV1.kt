@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraTemplate
 
@@ -33,12 +33,12 @@ class AuroraTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>) {
         }
     }
 
-    fun template(auroraConfigFields: AuroraConfigFields): AuroraTemplate {
+    fun template(auroraDeploymentSpec: AuroraDeploymentSpec): AuroraTemplate {
         return AuroraTemplate(
-            parameters = auroraConfigFields.getParameters(parameterHandlers),
-            template = auroraConfigFields.extract("template"),
-            version = auroraConfigFields.extractOrNull("version"),
-            replicas = auroraConfigFields.extractOrNull("replicas")
+            parameters = auroraDeploymentSpec.getParameters(parameterHandlers),
+            template = auroraDeploymentSpec.extract("template"),
+            version = auroraDeploymentSpec.extractOrNull("version"),
+            replicas = auroraDeploymentSpec.extractOrNull("replicas")
         )
     }
 }

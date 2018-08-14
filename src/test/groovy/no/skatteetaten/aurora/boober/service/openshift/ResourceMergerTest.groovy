@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import com.fasterxml.jackson.databind.JsonNode
 
 import io.fabric8.kubernetes.api.model.OwnerReference
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.AbstractAuroraDeploymentSpecSpringTest
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 import spock.lang.Unroll
@@ -92,7 +92,7 @@ class ResourceMergerTest extends AbstractAuroraDeploymentSpecSpringTest {
   }
 
   private <T> T withDeploySpec(Closure<T> c) {
-    AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid(ENVIRONMENT, "webleveranse"))
+    AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, aid(ENVIRONMENT, "webleveranse"))
     c(deploymentSpec)
   }
 }

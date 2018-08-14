@@ -5,8 +5,9 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import groovy.json.JsonOutput
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import spock.lang.Unroll
 
 class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSpringTest {
@@ -26,7 +27,7 @@ class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSprin
   def "Should create a Map of AuroraDeploymentSpec pointers for #env/#app with defaults #includeDefaults"() {
     given:
       def aid = ApplicationId.aid(env, app)
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid).spec
 
       def renderedJson = AuroraDeploymentSpecRendererKt.renderSpecAsJson(deploymentSpec, includeDefaults)
       def filename = getFilename(aid, includeDefaults)
@@ -49,7 +50,7 @@ class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSprin
   def "Should render formatted json-like output for pointers for #env/#app with defaults #includeDefaults"() {
     given:
       def aid = ApplicationId.aid(env, app)
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid).spec
       def renderedJson = AuroraDeploymentSpecRendererKt.
           renderJsonForAuroraDeploymentSpecPointers(deploymentSpec, includeDefaults)
       def filename = getFilename(aid, includeDefaults, true, "txt")

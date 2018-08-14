@@ -2,7 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import groovy.json.JsonSlurper
 import io.fabric8.kubernetes.api.model.OwnerReference
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 
 class OpenShiftObjectGeneratorServiceTest extends AbstractOpenShiftObjectGeneratorTest {
 
@@ -11,7 +11,7 @@ class OpenShiftObjectGeneratorServiceTest extends AbstractOpenShiftObjectGenerat
   def "service target must refer to toxiproxy if toxiproxy is enabled in deployment spec for java"() {
 
     given: "default deployment spec with toxiproxy version 2.1.3 enabled"
-      AuroraDeploymentSpec deploymentSpec = specJavaWithToxiproxy()
+      AuroraDeploymentSpecInternal deploymentSpec = specJavaWithToxiproxy()
       Map<String, String> serviceLabels = [:]
 
     when: "service object has been created"

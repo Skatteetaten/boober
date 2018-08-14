@@ -6,7 +6,7 @@ import static no.skatteetaten.aurora.boober.service.resourceprovisioning.Externa
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import io.fabric8.kubernetes.api.model.OwnerReference
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseInstance
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisionerTest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
@@ -24,7 +24,7 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
     given:
 
       def appName = "reference"
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec([
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec([
           "about.json"        : DEFAULT_ABOUT,
           "utv/about.json"    : DEFAULT_UTV_ABOUT,
           "reference.json"    : REF_APP_JSON_LONG_DB_NAME,

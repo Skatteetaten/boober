@@ -10,10 +10,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 
 import no.skatteetaten.aurora.boober.controller.security.User
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.Permission
 import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.TemplateType
@@ -95,7 +96,7 @@ class OpenShiftTemplateProcessorTest extends AbstractSpec {
   }
 
   private static createEmptyDeploymentSpec() {
-    new AuroraDeploymentSpec(new ApplicationId('', ''), '', TemplateType.development, '', [:],
+    new AuroraDeploymentSpecInternal(new ApplicationId('', ''), '', TemplateType.development, '', new AuroraDeploymentSpec([:]),
         '', '', new AuroraDeployEnvironment('', '',
         new Permissions(new Permission(new HashSet<String>(), new HashSet<String>()),
             new Permission(new HashSet<String>(), new HashSet<String>())),

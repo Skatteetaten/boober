@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.stereotype.Service
 
@@ -38,20 +38,20 @@ class OpenShiftObjectLabelService(private val userDetailsProvider: UserDetailsPr
     }
 
     fun createCommonLabels(
-        auroraDeploymentSpec: AuroraDeploymentSpec,
+        auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
         deployId: String,
         additionalLabels: Map<String, String> = mapOf(),
-        name: String = auroraDeploymentSpec.name
+        name: String = auroraDeploymentSpecInternal.name
     ): Map<String, String> {
         val labels = mapOf(
             "app" to name,
             "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
-            "affiliation" to auroraDeploymentSpec.environment.affiliation,
+            "affiliation" to auroraDeploymentSpecInternal.environment.affiliation,
             "updateInBoober" to "true",
             "booberDeployId" to deployId
         )
 
-        val deploy = auroraDeploymentSpec.deploy ?: return toOpenShiftLabelNameSafeMap(labels + additionalLabels)
+        val deploy = auroraDeploymentSpecInternal.deploy ?: return toOpenShiftLabelNameSafeMap(labels + additionalLabels)
         return toOpenShiftLabelNameSafeMap(
             mapOf("appId" to DigestUtils.sha1Hex("${deploy.groupId}/${deploy.artifactId}")) + labels + additionalLabels
         )

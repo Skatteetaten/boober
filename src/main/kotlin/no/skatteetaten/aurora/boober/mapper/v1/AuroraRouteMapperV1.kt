@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraRoute
@@ -16,20 +16,20 @@ class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>, val env:
         AuroraConfigFieldHandler("routeDefaults/host", defaultValue = "@name@-@affiliation@-@env@")) +
         findRouteAnnotationHandlers("routeDefaults")
 
-    fun route(auroraConfigFields: AuroraConfigFields): AuroraRoute {
+    fun route(auroraDeploymentSpec: AuroraDeploymentSpec): AuroraRoute {
         return AuroraRoute(
-            route = getRoute(auroraConfigFields)
+            route = getRoute(auroraDeploymentSpec)
         )
     }
 
-    fun getRoute(auroraConfigFields: AuroraConfigFields): List<Route> {
+    fun getRoute(auroraDeploymentSpec: AuroraDeploymentSpec): List<Route> {
 
         val route = "route"
-        val simplified = auroraConfigFields.isSimplifiedConfig(route) && auroraConfigFields.noSpecifiedSubKeys(route)
+        val simplified = auroraDeploymentSpec.isSimplifiedConfig(route) && auroraDeploymentSpec.noSpecifiedSubKeys(route)
 
         if (simplified) {
-            if (auroraConfigFields.extract(route)) {
-                return listOf(Route(objectName = name, host = auroraConfigFields.extract("routeDefaults/host")))
+            if (auroraDeploymentSpec.extract(route)) {
+                return listOf(Route(objectName = name, host = auroraDeploymentSpec.extract("routeDefaults/host")))
             }
             return listOf()
         }
@@ -37,10 +37,10 @@ class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>, val env:
 
         return routes.map {
             Route(it.ensureStartWith(name, "-"),
-                auroraConfigFields.extractOrNull("$route/$it/host")
-                    ?: auroraConfigFields.extract("routeDefaults/host"),
-                auroraConfigFields.extractOrNull("$route/$it/path"),
-                auroraConfigFields.getRouteAnnotations("$route/$it/annotations", handlers)
+                auroraDeploymentSpec.extractOrNull("$route/$it/host")
+                    ?: auroraDeploymentSpec.extract("routeDefaults/host"),
+                auroraDeploymentSpec.extractOrNull("$route/$it/path"),
+                auroraDeploymentSpec.getRouteAnnotations("$route/$it/annotations", handlers)
             )
         }.toList()
     }

@@ -5,7 +5,7 @@ import org.springframework.web.context.request.ServletRequestAttributes
 
 fun clearQuotes(str: String?) = str?.replace("\"", "")
 
-fun getRefNameFromRequest(ref: String?): String {
+fun getRefNameFromRequest(ref: String? = null): String {
     val request = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).request
     val header: String? = request.getHeader("Ref-Name")
     if (!ref.isNullOrBlank()) {

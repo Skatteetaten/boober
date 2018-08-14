@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraBuildMapperV1
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeployMapperV1
@@ -15,7 +15,7 @@ import no.skatteetaten.aurora.boober.mapper.v1.HeaderMapper
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.TemplateType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -34,6 +34,7 @@ class AuroraDeploymentSpecService(
         @JvmStatic
         var APPLICATION_PLATFORM_HANDLERS: Map<String, ApplicationPlatformHandler> = emptyMap()
 
+
         @JvmOverloads
         @JvmStatic
         fun createAuroraDeploymentSpec(
@@ -41,12 +42,24 @@ class AuroraDeploymentSpecService(
             applicationId: ApplicationId,
             overrideFiles: List<AuroraConfigFile> = listOf()
         ): AuroraDeploymentSpec {
+            // TODO : The implementation here should change, but it is too much work to do this right now.
+            // If creator/mutator RFC is accepted it will be easier
+            return createAuroraDeploymentSpecInternal(auroraConfig, applicationId, overrideFiles).spec
+        }
+
+        @JvmOverloads
+        @JvmStatic
+        fun createAuroraDeploymentSpecInternal(
+            auroraConfig: AuroraConfig,
+            applicationId: ApplicationId,
+            overrideFiles: List<AuroraConfigFile> = listOf()
+        ): AuroraDeploymentSpecInternal {
 
             val applicationFiles = auroraConfig.getFilesForApplication(applicationId, overrideFiles)
 
             val headerMapper = HeaderMapper(applicationId, applicationFiles)
             val headerFields =
-                AuroraConfigFields.create(headerMapper.handlers, applicationFiles, applicationId, auroraConfig.version)
+                AuroraDeploymentSpec.create(headerMapper.handlers, applicationFiles, applicationId, auroraConfig.version)
 
             AuroraDeploymentSpecConfigFieldValidator(
                 applicationId,
@@ -82,7 +95,7 @@ class AuroraDeploymentSpecService(
 
             val handlers = applicationHandler.handlers(rawHandlers)
 
-            val auroraConfigFields = AuroraConfigFields.create(
+            val auroraConfigFields = AuroraDeploymentSpec.create(
                 handlers,
                 applicationFiles,
                 applicationId,
@@ -96,6 +109,7 @@ class AuroraDeploymentSpecService(
                 handlers,
                 auroraConfigFields
             ).validate()
+
             val integration =
                 if (header.type == TemplateType.build) null else integrationMapper.integrations(auroraConfigFields)
             val volume =
@@ -116,7 +130,7 @@ class AuroraDeploymentSpecService(
 
             val overrides = overrideFiles.map { it.name to it.contents }.toMap()
             return deploymentSpecMapper.createAuroraDeploymentSpec(
-                auroraConfigFields = auroraConfigFields,
+                auroraDeploymentSpec = auroraConfigFields,
                 volume = volume,
                 route = route,
                 build = build,

@@ -2,7 +2,7 @@ package no.skatteetaten.aurora.boober.mapper.v1
 
 import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecConfigFieldValidator.Companion.namePattern
 import no.skatteetaten.aurora.boober.model.ApplicationId
@@ -70,33 +70,33 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
     )
 
     fun createHeader(
-        auroraConfigFields: AuroraConfigFields,
+        auroraDeploymentSpec: AuroraDeploymentSpec,
         applicationHandler: ApplicationPlatformHandler
     ): AuroraDeployHeader {
-        val name = auroraConfigFields.extract<String>("name")
-        val cluster = auroraConfigFields.extract<String>("cluster")
-        val type = auroraConfigFields.extract<TemplateType>("type")
+        val name = auroraDeploymentSpec.extract<String>("name")
+        val cluster = auroraDeploymentSpec.extract<String>("cluster")
+        val type = auroraDeploymentSpec.extract<TemplateType>("type")
 
-        val segment = auroraConfigFields.extractOrNull<String>("segment")
+        val segment = auroraDeploymentSpec.extractOrNull<String>("segment")
 
         val env = AuroraDeployEnvironment(
-            affiliation = auroraConfigFields.extract("affiliation"),
-            envName = auroraConfigFields.extractOrNull("env/name")
-                ?: auroraConfigFields.extract("envName"),
-            ttl = auroraConfigFields.extractOrNull<String>("env/ttl")
+            affiliation = auroraDeploymentSpec.extract("affiliation"),
+            envName = auroraDeploymentSpec.extractOrNull("env/name")
+                ?: auroraDeploymentSpec.extract("envName"),
+            ttl = auroraDeploymentSpec.extractOrNull<String>("env/ttl")
                 ?.let { StringToDurationConverter().convert(it) },
-            permissions = extractPermissions(auroraConfigFields)
+            permissions = extractPermissions(auroraDeploymentSpec)
         )
 
         return AuroraDeployHeader(env, type, applicationHandler, name, cluster, segment)
     }
 
-    fun extractPermissions(configFields: AuroraConfigFields): Permissions {
+    fun extractPermissions(deploymentSpec: AuroraDeploymentSpec): Permissions {
 
-        val viewGroups = configFields.extractDelimitedStringOrArrayAsSet("permissions/view", " ")
-        val adminGroups = configFields.extractDelimitedStringOrArrayAsSet("permissions/admin", " ")
+        val viewGroups = deploymentSpec.extractDelimitedStringOrArrayAsSet("permissions/view", " ")
+        val adminGroups = deploymentSpec.extractDelimitedStringOrArrayAsSet("permissions/admin", " ")
         // if sa present add to admin users.
-        val adminUsers = configFields.extractDelimitedStringOrArrayAsSet("permissions/adminServiceAccount", " ")
+        val adminUsers = deploymentSpec.extractDelimitedStringOrArrayAsSet("permissions/adminServiceAccount", " ")
 
         val adminPermission = Permission(adminGroups, adminUsers)
         val viewPermission = if (viewGroups.isNotEmpty()) Permission(viewGroups) else null

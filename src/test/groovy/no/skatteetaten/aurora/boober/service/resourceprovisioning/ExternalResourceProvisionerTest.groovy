@@ -3,17 +3,13 @@ package no.skatteetaten.aurora.boober.service.resourceprovisioning
 import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
 
 import no.skatteetaten.aurora.boober.model.AbstractAuroraDeploymentSpecTest
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaIdRequest
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionRequest
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 
 class ExternalResourceProvisionerTest extends AbstractAuroraDeploymentSpecTest {
 
   def "Auto provisioned named schema"() {
     given:
-      AuroraDeploymentSpec spec = createDeploySpecWithDbSpec('{ "database" : { "REFerence" : "auto" } }')
+      AuroraDeploymentSpecInternal spec = createDeploySpecWithDbSpec('{ "database" : { "REFerence" : "auto" } }')
 
     when:
       def requests = ExternalResourceProvisioner.createSchemaProvisionRequestsFromDeploymentSpec(spec)
@@ -26,7 +22,7 @@ class ExternalResourceProvisionerTest extends AbstractAuroraDeploymentSpecTest {
 
   def "Auto provisioned schema with default name"() {
     given:
-      AuroraDeploymentSpec spec = createDeploySpecWithDbSpec('{ "database": true }')
+      AuroraDeploymentSpecInternal spec = createDeploySpecWithDbSpec('{ "database": true }')
 
     when:
       def requests = ExternalResourceProvisioner.createSchemaProvisionRequestsFromDeploymentSpec(spec)
@@ -39,7 +35,7 @@ class ExternalResourceProvisionerTest extends AbstractAuroraDeploymentSpecTest {
 
   def "Named schema with explicit id"() {
     given:
-      AuroraDeploymentSpec spec =
+      AuroraDeploymentSpecInternal spec =
           createDeploySpecWithDbSpec('{ "database": { "REFerence": "fd59dba9-7d67-4ea2-bb98-081a5df8c387" } }')
 
     when:
@@ -59,7 +55,7 @@ class ExternalResourceProvisionerTest extends AbstractAuroraDeploymentSpecTest {
   } 
 }'''
     given:
-      AuroraDeploymentSpec spec = createDeploySpecWithDbSpec(dbSpec)
+      AuroraDeploymentSpecInternal spec = createDeploySpecWithDbSpec(dbSpec)
 
     when:
       def requests = ExternalResourceProvisioner.createSchemaProvisionRequestsFromDeploymentSpec(spec)
@@ -68,7 +64,7 @@ class ExternalResourceProvisionerTest extends AbstractAuroraDeploymentSpecTest {
       requests.size() == 2
   }
 
-  static AuroraDeploymentSpec createDeploySpecWithDbSpec(String dbSpec) {
+  static AuroraDeploymentSpecInternal createDeploySpecWithDbSpec(String dbSpec) {
     createDeploymentSpec(defaultAuroraConfig().with {
       put("reference.json", REF_APP_JSON)
       put("utv/reference.json", dbSpec)

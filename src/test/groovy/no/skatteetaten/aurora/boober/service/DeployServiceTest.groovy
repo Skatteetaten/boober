@@ -98,7 +98,7 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
 
     then:
       results.success
-      results.auroraDeploymentSpec
+      results.auroraDeploymentSpecInternal
       results.deployId
       results.openShiftResponses.size() > 0
 

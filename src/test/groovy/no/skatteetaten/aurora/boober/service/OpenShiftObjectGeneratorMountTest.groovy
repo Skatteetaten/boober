@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode
 
 import groovy.json.JsonSlurper
 import io.fabric8.kubernetes.api.model.OwnerReference
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultResults
 
@@ -35,7 +35,7 @@ class OpenShiftObjectGeneratorMountTest extends AbstractOpenShiftObjectGenerator
 }'''
       ]
 
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid("utv", "aos-simple"))
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, aid("utv", "aos-simple"))
 
     when:
       def jsonMounts = objectGenerator.
@@ -71,7 +71,7 @@ class OpenShiftObjectGeneratorMountTest extends AbstractOpenShiftObjectGenerator
   } 
 }'''
     when:
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
     then:
       def env = deploymentSpec.deploy.env
@@ -100,7 +100,7 @@ class OpenShiftObjectGeneratorMountTest extends AbstractOpenShiftObjectGenerator
 
       def vaultFileName = "latest.properties"
       def vaultFileContents = "FOO=BAR"
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid("utv", "aos-simple"))
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, aid("utv", "aos-simple"))
       def provisioningResult = new ProvisioningResult(null,
           new VaultResults([test: [(vaultFileName): vaultFileContents.bytes]]))
 

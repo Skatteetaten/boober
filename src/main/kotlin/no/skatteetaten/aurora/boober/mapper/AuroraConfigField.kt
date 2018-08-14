@@ -73,7 +73,7 @@ data class AuroraConfigFieldSource(
     val defaultSource: Boolean = false
 )
 
-class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
+class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
 
     fun getConfigEnv(configExtractors: List<AuroraConfigFieldHandler>): Map<String, String> {
         val env = configExtractors.filter { it.name.count { it == '/' } == 1 }.map {
@@ -150,7 +150,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
 
     companion object {
 
-        val logger: Logger = LoggerFactory.getLogger(AuroraConfigFields::class.java)
+        val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpec::class.java)
 
         fun create(
             handlers: Set<AuroraConfigFieldHandler>,
@@ -158,7 +158,7 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
             applicationId: ApplicationId,
             configVersion: String,
             placeholders: Map<String, String> = emptyMap()
-        ): AuroraConfigFields {
+        ): AuroraDeploymentSpec {
 
             val mapper = jacksonObjectMapper()
 
@@ -202,42 +202,41 @@ class AuroraConfigFields(val fields: Map<String, AuroraConfigField>) {
             val groupedFields: Map<String, AuroraConfigField> = allFields
                 .groupBy({ it.first }) { it.second }
                 .mapValues { AuroraConfigField(it.value.toSet(), replacer) }
-            return AuroraConfigFields(groupedFields)
+            return AuroraDeploymentSpec(groupedFields)
         }
     }
-}
 
-fun Map<String, AuroraConfigField>.removeDefaults() = this.filter { it.value.source != "default" }
+    fun removeDefaults() = AuroraDeploymentSpec(this.fields.filter { it.value.source != "default" })
 
-fun Map<String, AuroraConfigField>.removeInactive(): Map<String, AuroraConfigField> {
+    fun removeInactive(): AuroraDeploymentSpec {
 
-    fun createExcludePaths(fields: Map<String, AuroraConfigField>): Set<String> {
+        fun createExcludePaths(fields: Map<String, AuroraConfigField>): Set<String> {
 
-        return fields
-            .filter { it.key.split("/").size == 1 }
-            .filter {
-                val value = it.value.value
-                !value.isBoolean || !value.booleanValue()
-            }.map {
-                it.key.split("/")[0] + "/"
-            }.toSet()
-    }
-
-    val excludePaths = createExcludePaths(this)
-    return this.filter { field ->
-        excludePaths.none { field.key.startsWith(it) }
-    }
-}
-
-fun Map<String, AuroraConfigField>.present(
-    transformer: (Map.Entry<String, AuroraConfigField>) -> Map<String, Any>
-): Map<String, Any> {
-
-    val map: MutableMap<String, Any> = mutableMapOf()
-    this
-        .mapValues { transformer(it) }
-        .forEach {
-            map.deepSet(it.key.split("/"), it.value)
+            return fields
+                .filter { it.key.split("/").size == 1 }
+                .filter {
+                    val value = it.value.value
+                    !value.isBoolean || !value.booleanValue()
+                }.map {
+                    it.key.split("/")[0] + "/"
+                }.toSet()
         }
-    return map
+
+        val excludePaths = createExcludePaths(this.fields)
+        return AuroraDeploymentSpec(this.fields.filter { field ->
+            excludePaths.none { field.key.startsWith(it) }
+        })
+    }
+
+    fun present(transformer: (Map.Entry<String, AuroraConfigField>) -> Map<String, Any>): Map<String, Any> {
+
+        val map: MutableMap<String, Any> = mutableMapOf()
+        this.fields
+            .mapValues { transformer(it) }
+            .forEach {
+                map.deepSet(it.key.split("/"), it.value)
+            }
+        return map
+    }
 }
+

@@ -5,7 +5,7 @@ import static no.skatteetaten.aurora.boober.service.resourceprovisioning.Externa
 
 import groovy.json.JsonSlurper
 import io.fabric8.kubernetes.api.model.OwnerReference
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseInstance
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
@@ -20,7 +20,7 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObje
 
     given:
 
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec([
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec([
           "about.json"        : DEFAULT_ABOUT,
           "utv/about.json"    : DEFAULT_UTV_ABOUT,
           "reference.json"    : REF_APP_JSON,
@@ -61,7 +61,7 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObje
 
     given: "plain deployment spec for java with toxiproxy version 2.1.3 enabled"
       def name = "reference-toxiproxy"
-      AuroraDeploymentSpec deploymentSpec = specJavaWithToxiproxy()
+      AuroraDeploymentSpecInternal deploymentSpec = specJavaWithToxiproxy()
       def provisioningResult = provisiongResult(deploymentSpec)
 
     when: "dc has been created"
@@ -77,7 +77,7 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObje
 
     given: "plain deployment spec for web with toxiproxy version 2.1.3 enabled"
       def name = "webleveranse-toxiproxy"
-      AuroraDeploymentSpec deploymentSpec = specWebWithToxiproxy()
+      AuroraDeploymentSpecInternal deploymentSpec = specWebWithToxiproxy()
       def provisioningResult = provisiongResult(deploymentSpec)
 
     when: "dc has been created"
@@ -107,7 +107,7 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObje
         volume.configMap?.name == name + "-config"
   }
 
-  def provisiongResult(AuroraDeploymentSpec deploymentSpec) {
+  def provisiongResult(AuroraDeploymentSpecInternal deploymentSpec) {
     return new ProvisioningResult(
         new SchemaProvisionResults([new SchemaProvisionResult(
             createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec)[0],

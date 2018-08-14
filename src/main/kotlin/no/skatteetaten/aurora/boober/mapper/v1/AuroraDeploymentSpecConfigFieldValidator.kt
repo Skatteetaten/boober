@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.ConfigFieldErrorDetail
@@ -16,7 +16,7 @@ class AuroraDeploymentSpecConfigFieldValidator(
     val applicationId: ApplicationId,
     val applicationFiles: List<AuroraConfigFile>,
     val fieldHandlers: Set<AuroraConfigFieldHandler>,
-    val auroraConfigFields: AuroraConfigFields
+    val auroraDeploymentSpec: AuroraDeploymentSpec
 ) {
     val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpecConfigFieldValidator::class.java)
 
@@ -33,7 +33,7 @@ class AuroraDeploymentSpecConfigFieldValidator(
         )
 
         val errors: List<ConfigFieldErrorDetail> = fieldHandlers.mapNotNull { e ->
-            val rawField = auroraConfigFields.fields[e.name]
+            val rawField = auroraDeploymentSpec.fields[e.name]
             if (rawField == null) {
                 e.validator(null)?.let {
                     ConfigFieldErrorDetail.missing(it.localizedMessage, e.path)

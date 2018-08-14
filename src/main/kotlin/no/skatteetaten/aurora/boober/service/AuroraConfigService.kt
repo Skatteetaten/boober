@@ -8,7 +8,7 @@ import kotlinx.coroutines.experimental.runBlocking
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.GitServices.Domain.AURORA_CONFIG
 import no.skatteetaten.aurora.boober.service.GitServices.TargetDomain
 import org.apache.commons.io.FileUtils
@@ -163,7 +163,7 @@ class AuroraConfigService(
         applicationIds: List<ApplicationId>,
         overrideFiles: List<AuroraConfigFile> = listOf(),
         resourceValidation: Boolean = true
-    ): List<AuroraDeploymentSpec> {
+    ): List<AuroraDeploymentSpecInternal> {
 
         val auroraConfig = findAuroraConfig(ref)
         return createValidatedAuroraDeploymentSpecs(
@@ -213,18 +213,18 @@ class AuroraConfigService(
         auroraConfigWithOverrides: AuroraConfigWithOverrides,
         applicationIds: List<ApplicationId>,
         resourceValidation: Boolean = true
-    ): List<AuroraDeploymentSpec> {
+    ): List<AuroraDeploymentSpecInternal> {
 
         val stopWatch = StopWatch().apply { start() }
-        val specs: List<AuroraDeploymentSpec> = runBlocking(dispatcher) {
+        val specInternals: List<AuroraDeploymentSpecInternal> = runBlocking(dispatcher) {
             applicationIds.map { aid ->
                 async(dispatcher) {
                     try {
                         val spec =
                             createValidatedAuroraDeploymentSpec(auroraConfigWithOverrides, aid, resourceValidation)
-                        Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = spec, second = null)
+                        Pair<AuroraDeploymentSpecInternal?, ExceptionWrapper?>(first = spec, second = null)
                     } catch (e: Throwable) {
-                        Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = null, second = ExceptionWrapper(aid, e))
+                        Pair<AuroraDeploymentSpecInternal?, ExceptionWrapper?>(first = null, second = ExceptionWrapper(aid, e))
                     }
                 }
             }
@@ -232,17 +232,17 @@ class AuroraConfigService(
         }.onErrorThrow(::MultiApplicationValidationException)
         stopWatch.stop()
         logger.debug("Validated AuroraConfig ${auroraConfigWithOverrides.auroraConfig.name} with ${applicationIds.size} applications in ${stopWatch.totalTimeMillis} millis")
-        return specs
+        return specInternals
     }
 
     private fun createValidatedAuroraDeploymentSpec(
         auroraConfigWithOverrides: AuroraConfigWithOverrides,
         aid: ApplicationId,
         resourceValidation: Boolean = true
-    ): AuroraDeploymentSpec {
+    ): AuroraDeploymentSpecInternal {
 
         val stopWatch = StopWatch().apply { start() }
-        val spec = AuroraDeploymentSpecService.createAuroraDeploymentSpec(
+        val spec = AuroraDeploymentSpecService.createAuroraDeploymentSpecInternal(
             auroraConfigWithOverrides.auroraConfig,
             aid,
             auroraConfigWithOverrides.overrideFiles

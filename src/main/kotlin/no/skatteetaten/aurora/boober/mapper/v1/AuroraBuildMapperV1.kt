@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraBuild
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.utils.length
@@ -9,15 +9,15 @@ import no.skatteetaten.aurora.boober.utils.notBlank
 
 class AuroraBuildMapperV1(val name: String) {
 
-    fun build(auroraConfigFields: AuroraConfigFields): AuroraBuild {
+    fun build(auroraDeploymentSpec: AuroraDeploymentSpec): AuroraBuild {
 
-        val type: TemplateType = auroraConfigFields.extract("type")
-        val name: String = auroraConfigFields.extract("name")
+        val type: TemplateType = auroraDeploymentSpec.extract("type")
+        val name: String = auroraDeploymentSpec.extract("name")
 
-        val groupId: String = auroraConfigFields.extract("groupId")
-        val artifactId: String = auroraConfigFields.extract("artifactId")
-        val version: String = auroraConfigFields.extract("version")
-        val testGitUrl: String? = auroraConfigFields.extractOrNull("test/gitUrl")
+        val groupId: String = auroraDeploymentSpec.extract("groupId")
+        val artifactId: String = auroraDeploymentSpec.extract("artifactId")
+        val version: String = auroraDeploymentSpec.extract("version")
+        val testGitUrl: String? = auroraDeploymentSpec.extractOrNull("test/gitUrl")
 
         val skipTriggers = type == TemplateType.development || version.contains("SNAPSHOT") || testGitUrl != null
 
@@ -35,21 +35,21 @@ class AuroraBuildMapperV1(val name: String) {
         }
 
         return AuroraBuild(
-            applicationPlatform = auroraConfigFields.extract("applicationPlatform"),
+            applicationPlatform = auroraDeploymentSpec.extract("applicationPlatform"),
             testGitUrl = testGitUrl,
-            testTag = auroraConfigFields.extractOrNull("test/tag"),
-            baseName = auroraConfigFields.extract("baseImage/name"),
-            baseVersion = auroraConfigFields.extract("baseImage/version"),
-            builderName = auroraConfigFields.extract("builder/name"),
-            builderVersion = auroraConfigFields.extract("builder/version"),
-            extraTags = auroraConfigFields.extract("extraTags"),
+            testTag = auroraDeploymentSpec.extractOrNull("test/tag"),
+            baseName = auroraDeploymentSpec.extract("baseImage/name"),
+            baseVersion = auroraDeploymentSpec.extract("baseImage/version"),
+            builderName = auroraDeploymentSpec.extract("builder/name"),
+            builderVersion = auroraDeploymentSpec.extract("builder/version"),
+            extraTags = auroraDeploymentSpec.extract("extraTags"),
             version = version,
             groupId = groupId,
             artifactId = artifactId,
             outputKind = outputKind,
             outputName = outputName,
             triggers = !skipTriggers,
-            buildSuffix = auroraConfigFields.extractOrNull("buildSuffix")
+            buildSuffix = auroraDeploymentSpec.extractOrNull("buildSuffix")
         )
     }
 

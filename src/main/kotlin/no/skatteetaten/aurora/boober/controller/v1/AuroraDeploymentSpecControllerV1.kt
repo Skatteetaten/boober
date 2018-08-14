@@ -3,10 +3,9 @@ package no.skatteetaten.aurora.boober.controller.v1
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.controller.internal.Response
-import no.skatteetaten.aurora.boober.mapper.present
-import no.skatteetaten.aurora.boober.mapper.removeDefaults
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService
 import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
@@ -93,6 +92,7 @@ class AuroraDeploymentSpecControllerV1(val auroraDeploymentSpecService: AuroraDe
     ): Response {
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest(reference))
+        //TODO : send in default here and return result of present from line 119
         val spec = auroraDeploymentSpecService.getAuroraDeploymentSpec(
             ref = ref,
             environment = environment,
@@ -103,16 +103,16 @@ class AuroraDeploymentSpecControllerV1(val auroraDeploymentSpecService: AuroraDe
         return Response(items = listOf(formatted))
     }
 
-    private fun response(spec: AuroraDeploymentSpec, includeDefaults: Boolean): Response =
-        response(listOf(spec), includeDefaults)
+    private fun response(specInternal: AuroraDeploymentSpec, includeDefaults: Boolean): Response =
+        response(listOf(specInternal), includeDefaults)
 
-    private fun response(spec: List<AuroraDeploymentSpec>, includeDefaults: Boolean): Response {
+    private fun response(specInternal: List<AuroraDeploymentSpec>, includeDefaults: Boolean): Response {
 
-        val fields = spec.map {
+        val fields = specInternal.map { deploymentSpecInternal ->
             val rawFields = if (!includeDefaults) {
-                it.fields.removeDefaults()
+                deploymentSpecInternal.removeDefaults()
             } else {
-                it.fields
+                deploymentSpecInternal
             }
 
             rawFields.present {

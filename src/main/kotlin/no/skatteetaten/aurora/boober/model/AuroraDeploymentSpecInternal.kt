@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 
@@ -48,12 +48,12 @@ data class AuroraDeployEnvironment(
         }
 }
 
-data class AuroraDeploymentSpec(
+data class AuroraDeploymentSpecInternal(
     val applicationId: ApplicationId,
     val schemaVersion: String,
     val type: TemplateType,
     val name: String,
-    val fields: Map<String, AuroraConfigField>,
+    val spec: AuroraDeploymentSpec,
     val applicationPlatform: String = "java",
     val cluster: String,
     val environment: AuroraDeployEnvironment,

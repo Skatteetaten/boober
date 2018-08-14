@@ -11,7 +11,7 @@ import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultResults
 import spock.lang.Shared
@@ -49,8 +49,8 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
         }
       }
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, additionalFile)
-      AuroraDeploymentSpec deploymentSpec = AuroraDeploymentSpecService.
-          createAuroraDeploymentSpec(auroraConfig, aid, overrides)
+      AuroraDeploymentSpecInternal deploymentSpec = AuroraDeploymentSpecService.
+          createAuroraDeploymentSpecInternal(auroraConfig, aid, overrides)
       def ownerReference = new OwnerReferenceBuilder()
           .withApiVersion("skatteetaten.no/v1")
           .withKind("Application")
@@ -104,7 +104,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, null)
 
     when:
-      AuroraDeploymentSpec deploymentSpec = AuroraDeploymentSpecService.createAuroraDeploymentSpec(auroraConfig, aid)
+      AuroraDeploymentSpecInternal deploymentSpec = AuroraDeploymentSpecService.createAuroraDeploymentSpecInternal(auroraConfig, aid)
       def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.environment.permissions)
 
     then:
@@ -129,7 +129,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, null)
 
     when:
-      AuroraDeploymentSpec deploymentSpec = AuroraDeploymentSpecService.createAuroraDeploymentSpec(auroraConfig, aid)
+      AuroraDeploymentSpecInternal deploymentSpec = AuroraDeploymentSpecService.createAuroraDeploymentSpecInternal(auroraConfig, aid)
       def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.environment.permissions)
 
     then:
