@@ -20,7 +20,7 @@ import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.removeExtension
 
-class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFiles: List<AuroraConfigFile>, val overrideFiles: List<AuroraConfigFile>) {
+class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFiles: List<AuroraConfigFile>) {
 
     val configHandlers = applicationFiles.findConfigFieldHandlers()
     val handlers = listOf(
@@ -78,8 +78,6 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
         val tag = releaseTo ?: version
         val applicationFile = getApplicationFile(applicationId)
 
-        val overrideFiles = overrideFiles.map { it.name to it.contents }
-            .toMap()
         val pause: Boolean = auroraConfigFields.extract("pause")
         val replicas: Int = auroraConfigFields.extract("replicas")
 
@@ -88,7 +86,6 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
             releaseTo = releaseTo,
             dockerImagePath = "$dockerGroup/$artifactId",
             dockerTag = tag,
-            overrideFiles = overrideFiles,
             deployStrategy = AuroraDeployStrategy(
                 auroraConfigFields.extract("deployStrategy/type"),
                 auroraConfigFields.extract("deployStrategy/timeout")

@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.boober.contracts
 
-/*
+/* TODO : fix
 import no.skatteetaten.aurora.boober.controller.v1.AuroraDeploymentSpecControllerV1
 import no.skatteetaten.aurora.boober.model.ApplicationId
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -11,8 +11,6 @@ import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService
-
-TODO: fix
 class AuroradeploymentspecBase extends AbstractContractBase {
 
   void setup() {
@@ -20,7 +18,7 @@ class AuroradeploymentspecBase extends AbstractContractBase {
     def auroraDeploymentSpec = createAuroraDeploymentSpec()
     def auroraDeploymentSpecService = Mock(AuroraDeploymentSpecService) {
       getAuroraDeploymentSpecs(_ as AuroraConfigRef, _ as List) >> [auroraDeploymentSpec]
-      getAuroraDeploymentSpec(_ as AuroraConfigRef, _ as String, _ as String) >> auroraDeploymentSpec
+      getAuroraDeploymentSpec(_ as AuroraConfigRef, _ as String, _ as String, _ as List) >> auroraDeploymentSpec
       getAuroraDeploymentSpecsForEnvironment(_ as AuroraConfigRef, _ as String) >> [auroraDeploymentSpec]
     }
     AuroraDeploymentSpecControllerV1 controller = new AuroraDeploymentSpecControllerV1(auroraDeploymentSpecService)
@@ -33,9 +31,10 @@ class AuroradeploymentspecBase extends AbstractContractBase {
     def aid = new ApplicationId("", "")
     def env = new AuroraDeployEnvironment('', '',
         new Permissions(new Permission(Collections.emptySet(), Collections.emptySet()), null), null)
-    new no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec.AuroraDeploymentSpec(aid, '', TemplateType.development, '', deploymentSpecs,
+
+    new AuroraDeploymentSpec(aid, '', TemplateType.development, '', deploymentSpecs,
         '', '', env,
-        null, null, null, null, null, null, null, new AuroraConfigFile("", "", false), "master")
+        null, null, null, null, null, null, null, new AuroraConfigFile("", "", false), "master", [:])
   }
 }
- */
+*/

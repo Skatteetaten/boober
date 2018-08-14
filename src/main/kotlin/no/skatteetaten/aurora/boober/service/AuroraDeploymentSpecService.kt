@@ -63,7 +63,7 @@ class AuroraDeploymentSpecService(
             val header = headerMapper.createHeader(headerFields, applicationHandler)
 
             val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(applicationId)
-            val deployMapper = AuroraDeployMapperV1(applicationId, applicationFiles, overrideFiles)
+            val deployMapper = AuroraDeployMapperV1(applicationId, applicationFiles)
             val integrationMapper = AuroraIntegrationsMapperV1(applicationFiles)
             val volumeMapper = AuroraVolumeMapperV1(applicationFiles)
             val routeMapper = AuroraRouteMapperV1(applicationFiles, header.env, header.name)
@@ -114,6 +114,7 @@ class AuroraDeploymentSpecService(
             val localTemplate =
                 if (header.type == TemplateType.localTemplate) localTemplateMapper.localTemplate(auroraConfigFields) else null
 
+            val overrides = overrideFiles.map { it.name to it.contents }.toMap()
             return deploymentSpecMapper.createAuroraDeploymentSpec(
                 auroraConfigFields = auroraConfigFields,
                 volume = volume,
@@ -125,7 +126,8 @@ class AuroraDeploymentSpecService(
                 localTemplate = localTemplate,
                 env = header.env,
                 applicationFile = headerMapper.getApplicationFile(),
-                configVersion = auroraConfig.version
+                configVersion = auroraConfig.version,
+                overrideFiles = overrides
             )
         }
     }
@@ -156,11 +158,17 @@ class AuroraDeploymentSpecService(
         return applicationIds.map { AuroraDeploymentSpecService.createAuroraDeploymentSpec(auroraConfig, it, listOf()) }
     }
 
-    fun getAuroraDeploymentSpec(ref: AuroraConfigRef, environment: String, application: String): AuroraDeploymentSpec {
+    fun getAuroraDeploymentSpec(
+        ref: AuroraConfigRef,
+        environment: String,
+        application: String,
+        overrides: List<AuroraConfigFile> = emptyList()
+    ): AuroraDeploymentSpec {
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         return AuroraDeploymentSpecService.createAuroraDeploymentSpec(
-            auroraConfig,
-            ApplicationId.aid(environment, application)
+            auroraConfig = auroraConfig,
+            overrideFiles = overrides,
+            applicationId = ApplicationId.aid(environment, application)
         )
     }
 }

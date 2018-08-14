@@ -65,7 +65,8 @@ data class AuroraDeploymentSpec(
     val localTemplate: AuroraLocalTemplate? = null,
     val integration: AuroraIntegration?,
     val applicationFile: AuroraConfigFile,
-    val configVersion: String
+    val configVersion: String,
+    val overrideFiles: Map<String, String>
 )
 
 data class AuroraVolume(
@@ -107,7 +108,6 @@ data class AuroraIntegration(
 
 data class AuroraDeploy(
     val applicationFile: String,
-    val overrideFiles: Map<String, String>,
     val releaseTo: String?,
     val flags: AuroraDeploymentConfigFlags,
     val resources: AuroraDeploymentConfigResources,

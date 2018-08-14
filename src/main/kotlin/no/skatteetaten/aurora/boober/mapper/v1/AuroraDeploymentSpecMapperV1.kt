@@ -46,7 +46,8 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
         localTemplate: AuroraLocalTemplate?,
         env: AuroraDeployEnvironment,
         applicationFile: AuroraConfigFile,
-        configVersion: String
+        configVersion: String,
+        overrideFiles: Map<String, String>
     ): AuroraDeploymentSpec {
         val name: String = auroraConfigFields.extract("name")
 
@@ -67,7 +68,8 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
             localTemplate = localTemplate,
             integration = integration,
             applicationFile = applicationFile,
-            configVersion = configVersion
+            configVersion = configVersion,
+            overrideFiles = overrideFiles
         )
     }
 }

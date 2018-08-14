@@ -41,7 +41,7 @@ abstract class ApplicationPlatformHandler(val name: String) {
 
         val deploy = spec.deploy!!
         fun escapeOverrides(): String? {
-            val files = deploy.overrideFiles.mapValues { jacksonObjectMapper().readValue(it.value, JsonNode::class.java) }
+            val files = spec.overrideFiles.mapValues { jacksonObjectMapper().readValue(it.value, JsonNode::class.java) }
             val content = jacksonObjectMapper().writeValueAsString(files)
             return content.takeIf { it != "{}" }
         }

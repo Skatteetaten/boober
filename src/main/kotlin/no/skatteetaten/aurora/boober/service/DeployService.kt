@@ -30,6 +30,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import org.springframework.web.util.UriUtils
+import java.nio.charset.Charset
 import java.util.UUID
 
 @Service
@@ -201,6 +203,10 @@ class DeployService(
             "${it.groupId}/${it.artifactId}"
         } ?: throw RuntimeException("Not valid deployment") // TODO: what do we do here?
 
+        val overridesQueryParam = deploymentSpec.overrideFiles.let {
+            val json = jacksonObjectMapper().writeValueAsString(it)
+            UriUtils.encodeQueryParam(json, Charset.defaultCharset().toString())
+        }
         val exactGitRef = auroraConfigService.findExactRef(auroraConfigRef)
         val application = AuroraApplicationInstance(
             spec = ApplicationSpec(
@@ -210,7 +216,7 @@ class DeployService(
                     deploy.releaseTo?.withNonBlank { it } ?: deploy.version
                 } ?: deploymentSpec.template?.version ?: deploymentSpec.localTemplate?.version,
                 exactGitRef = exactGitRef,
-                overrides = deploymentSpec.deploy?.overrideFiles,
+                overrides = deploymentSpec.overrideFiles,
                 applicationId = DigestUtils.sha1Hex(applicationId),
                 applicationInstanceId = DigestUtils.sha1Hex(deploymentSpec.applicationId.toString()),
                 splunkIndex = deploymentSpec.integration?.splunkIndex,
@@ -218,7 +224,7 @@ class DeployService(
                 releaseTo = deploymentSpec.deploy?.releaseTo,
                 links = mapOf(
                     "deploymentSpec" to
-                        "/v1/auroradeployspec/${auroraConfigRef.name}:$exactGitRef/${deploymentSpec.environment.namespace}/${deploymentSpec.name}"
+                        "/v1/auroradeployspec/${auroraConfigRef.name}/${deploymentSpec.environment.namespace}/${deploymentSpec.name}?reference=$exactGitRef&overrides=$overridesQueryParam"
                 )
             ),
             metadata = ObjectMetaBuilder()
