@@ -288,7 +288,7 @@ class DeployService(
             spec = ApplicationSpec(
                 selector = mapOf("name" to deploymentSpecInternal.name),
                 deployTag = deploymentSpecInternal.version,
-                //This is the base shared applicationId
+                // This is the base shared applicationId
                 applicationId = DigestUtils.sha1Hex(deploymentSpecInternal.appId),
                 applicationInstanceId = DigestUtils.sha1Hex(deploymentSpecInternal.applicationId.toString()),
                 splunkIndex = deploymentSpecInternal.integration?.splunkIndex,

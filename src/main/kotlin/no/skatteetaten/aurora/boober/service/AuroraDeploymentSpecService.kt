@@ -34,7 +34,6 @@ class AuroraDeploymentSpecService(
         @JvmStatic
         var APPLICATION_PLATFORM_HANDLERS: Map<String, ApplicationPlatformHandler> = emptyMap()
 
-
         @JvmOverloads
         @JvmStatic
         fun createAuroraDeploymentSpec(
