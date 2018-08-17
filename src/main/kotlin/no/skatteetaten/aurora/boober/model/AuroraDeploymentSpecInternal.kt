@@ -6,6 +6,8 @@ import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
+import no.skatteetaten.aurora.boober.utils.openshiftName
+import no.skatteetaten.aurora.boober.utils.withNonBlank
 import java.time.Duration
 
 enum class TemplateType {
@@ -67,7 +69,24 @@ data class AuroraDeploymentSpecInternal(
     val applicationFile: AuroraConfigFile,
     val configVersion: String,
     val overrideFiles: Map<String, String>
-)
+) {
+
+    val appId: String
+        get() =
+            template?.let {
+                it.template
+            } ?: localTemplate?.let {
+                "local" + it.templateJson.openshiftName
+            } ?: deploy?.let {
+                "${it.groupId}/${it.artifactId}"
+            } ?: throw RuntimeException("Not valid deployment")
+
+    val version: String?
+        get() = deploy?.let { deploy ->
+            deploy.releaseTo?.withNonBlank { it } ?: deploy.version
+        } ?: template?.version
+        ?: localTemplate?.version
+}
 
 data class AuroraVolume(
     val secretVaultName: String?,

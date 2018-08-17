@@ -13,6 +13,8 @@ import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeployResult
 import no.skatteetaten.aurora.boober.service.DeployService
 
+/*
+// TODO fix
 class DeployBase extends AbstractContractBase {
 
   void setup() {
@@ -42,3 +44,4 @@ class DeployBase extends AbstractContractBase {
   }
 }
 
+ */

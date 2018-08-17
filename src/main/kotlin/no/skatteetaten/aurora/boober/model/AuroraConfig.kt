@@ -117,7 +117,6 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
         } else jsonMapper
 
         val rawContents = writeMapper.writerWithDefaultPrettyPrinter().writeValueAsString(fileContents)
-        // TODO how do we handle this with regards to yaml/json.
         return updateFile(filename, rawContents, previousVersion)
     }
 

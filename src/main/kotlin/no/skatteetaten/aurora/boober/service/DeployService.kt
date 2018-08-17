@@ -12,6 +12,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.model.openshift.ApplicationCommand
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationSpec
 import no.skatteetaten.aurora.boober.model.openshift.AuroraApplicationInstance
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -22,16 +23,12 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.deploymentConfigFromJson
 import no.skatteetaten.aurora.boober.utils.imageStreamFromJson
 import no.skatteetaten.aurora.boober.utils.openshiftKind
-import no.skatteetaten.aurora.boober.utils.openshiftName
 import no.skatteetaten.aurora.boober.utils.whenFalse
-import no.skatteetaten.aurora.boober.utils.withNonBlank
 import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import org.springframework.web.util.UriUtils
-import java.nio.charset.Charset
 import java.util.UUID
 
 @Service
@@ -195,52 +192,7 @@ class DeployService(
             )
         }
 
-        val applicationId = deploymentSpecInternal.template?.let {
-            it.template
-        } ?: deploymentSpecInternal.localTemplate?.let {
-            "local" + it.templateJson.openshiftName
-        } ?: deploymentSpecInternal.deploy?.let {
-            "${it.groupId}/${it.artifactId}"
-        } ?: throw RuntimeException("Not valid deployment") // TODO: what do we do here?
-
-        val overridesQueryParam = deploymentSpecInternal.overrideFiles.let {
-            val json = jacksonObjectMapper().writeValueAsString(it)
-            UriUtils.encodeQueryParam(json, Charset.defaultCharset().toString())
-        }
-        val exactGitRef = auroraConfigService.findExactRef(auroraConfigRef)
-        val application = AuroraApplicationInstance(
-            spec = ApplicationSpec(
-                selector = mapOf("name" to deploymentSpecInternal.name),
-                configRef = auroraConfigRef,
-                deployTag = deploymentSpecInternal.deploy?.let { deploy ->
-                    deploy.releaseTo?.withNonBlank { it } ?: deploy.version
-                } ?: deploymentSpecInternal.template?.version ?: deploymentSpecInternal.localTemplate?.version,
-                exactGitRef = exactGitRef,
-                overrides = deploymentSpecInternal.overrideFiles,
-                applicationId = DigestUtils.sha1Hex(applicationId),
-                applicationInstanceId = DigestUtils.sha1Hex(deploymentSpecInternal.applicationId.toString()),
-                splunkIndex = deploymentSpecInternal.integration?.splunkIndex,
-                managementPath = deploymentSpecInternal.deploy?.managementPath,
-                releaseTo = deploymentSpecInternal.deploy?.releaseTo,
-                // TODO: remove
-                links = mapOf(
-                    "deploymentSpecInternal" to
-                        "http://boober/v1/auroradeployspec/${auroraConfigRef.name}/${deploymentSpecInternal.environment.namespace}/${deploymentSpecInternal.name}?reference=$exactGitRef&overrides=$overridesQueryParam"
-                )
-            ),
-            metadata = ObjectMetaBuilder()
-                .withName(deploymentSpecInternal.name)
-                .withAnnotations(null)
-                .withLabels(
-                    mapOf(
-                        "app" to deploymentSpecInternal.name,
-                        "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
-                        "affiliation" to deploymentSpecInternal.environment.affiliation,
-                        "booberDeployId" to deployId
-                    )
-                )
-                .build()
-        )
+        val application = createApplicationInstance(auroraConfigRef, deploymentSpecInternal, deployId)
 
         val applicationCommnd = openShiftCommandBuilder.createOpenShiftCommand(
             deploymentSpecInternal.environment.namespace,
@@ -255,10 +207,10 @@ class DeployService(
 
         if (appResponse == null) {
             return AuroraDeployResult(
-                deploymentSpecInternal,
-                deployId,
-                listOf(applicationResult),
-                false,
+                auroraDeploymentSpecInternal = deploymentSpecInternal,
+                deployId = deployId,
+                openShiftResponses = listOf(applicationResult),
+                success = false,
                 reason = "Creating application object failed"
             )
         }
@@ -323,6 +275,43 @@ class DeployService(
             openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses),
             tagResponse = tagResult,
             reason = "Deployment success."
+        )
+    }
+
+    fun createApplicationInstance(
+        auroraConfigRef: AuroraConfigRef,
+        deploymentSpecInternal: AuroraDeploymentSpecInternal,
+        deployId: String
+    ): AuroraApplicationInstance {
+        val exactGitRef = auroraConfigService.findExactRef(auroraConfigRef)
+        return AuroraApplicationInstance(
+            spec = ApplicationSpec(
+                selector = mapOf("name" to deploymentSpecInternal.name),
+                deployTag = deploymentSpecInternal.version,
+                //This is the base shared applicationId
+                applicationId = DigestUtils.sha1Hex(deploymentSpecInternal.appId),
+                applicationInstanceId = DigestUtils.sha1Hex(deploymentSpecInternal.applicationId.toString()),
+                splunkIndex = deploymentSpecInternal.integration?.splunkIndex,
+                managementPath = deploymentSpecInternal.deploy?.managementPath,
+                releaseTo = deploymentSpecInternal.deploy?.releaseTo,
+                command = ApplicationCommand(
+                    auroraConfig = exactGitRef?.let { AuroraConfigRef(auroraConfigRef.name, it) } ?: auroraConfigRef,
+                    applicationId = deploymentSpecInternal.applicationId,
+                    overrideFiles = deploymentSpecInternal.overrideFiles
+                )
+            ),
+            metadata = ObjectMetaBuilder()
+                .withName(deploymentSpecInternal.name)
+                .withAnnotations(null)
+                .withLabels(
+                    mapOf(
+                        "app" to deploymentSpecInternal.name,
+                        "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
+                        "affiliation" to deploymentSpecInternal.environment.affiliation,
+                        "booberDeployId" to deployId
+                    )
+                )
+                .build()
         )
     }
 
