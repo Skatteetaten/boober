@@ -34,7 +34,6 @@ class AuroraDeploymentSpecService(
         @JvmStatic
         var APPLICATION_PLATFORM_HANDLERS: Map<String, ApplicationPlatformHandler> = emptyMap()
 
-
         @JvmOverloads
         @JvmStatic
         fun createAuroraDeploymentSpec(
@@ -59,7 +58,12 @@ class AuroraDeploymentSpecService(
 
             val headerMapper = HeaderMapper(applicationId, applicationFiles)
             val headerSpec =
-                AuroraDeploymentSpec.create(headerMapper.handlers, applicationFiles, applicationId, auroraConfig.version)
+                AuroraDeploymentSpec.create(
+                    headerMapper.handlers,
+                    applicationFiles,
+                    applicationId,
+                    auroraConfig.version
+                )
 
             AuroraDeploymentSpecConfigFieldValidator(
                 applicationId = applicationId,

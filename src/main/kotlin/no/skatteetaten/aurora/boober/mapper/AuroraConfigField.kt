@@ -239,4 +239,3 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
         return map
     }
 }
-
