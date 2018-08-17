@@ -58,7 +58,12 @@ class AuroraDeploymentSpecService(
 
             val headerMapper = HeaderMapper(applicationId, applicationFiles)
             val headerSpec =
-                AuroraDeploymentSpec.create(headerMapper.handlers, applicationFiles, applicationId, auroraConfig.version)
+                AuroraDeploymentSpec.create(
+                    headerMapper.handlers,
+                    applicationFiles,
+                    applicationId,
+                    auroraConfig.version
+                )
 
             AuroraDeploymentSpecConfigFieldValidator(
                 applicationId = applicationId,
