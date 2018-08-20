@@ -64,20 +64,24 @@ object ContainerGenerator {
 
     private fun fromAdcResource(resource: AuroraDeploymentConfigResource): Map<String, Quantity> = mapOf(
         "cpu" to quantity(resource.cpu),
-        "memory" to quantity(resource.memory))
+        "memory" to quantity(resource.memory)
+    )
 
     private fun quantity(str: String) = QuantityBuilder().withAmount(str).build()
 
     private fun fromProbe(it: Probe): io.fabric8.kubernetes.api.model.Probe = newProbe {
 
-        tcpSocket {
-            port = IntOrStringBuilder().withIntVal(it.port).build()
-        }
-        it.path?.let {
+        if (it.path != null) {
             httpGet {
-                path = it
+                path = it.path
+                port = IntOrStringBuilder().withIntVal(it.port).build()
+            }
+        } else {
+            tcpSocket {
+                port = IntOrStringBuilder().withIntVal(it.port).build()
             }
         }
+
         initialDelaySeconds = it.delay
         timeoutSeconds = it.timeout
     }

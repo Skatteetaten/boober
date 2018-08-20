@@ -239,4 +239,26 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
     where:
       roleConfig << ["role1,role2,3", "role1, role2, 3", ["role1", "role2", 3]]
   }
+
+  def "Fails when annotation has wrong separator"() {
+    given:
+      def auroraConfigJson = defaultAuroraConfig()
+      auroraConfigJson["utv/aos-simple.json"] = '''{
+  "route": {
+    "console": {
+      "annotations": {
+        "haproxy.router.openshift.io/timeout": "600s"
+      }
+    }
+  }
+}
+'''
+
+    when:
+      createDeploymentSpec(auroraConfigJson, aid("utv", "aos-simple"))
+
+    then:
+      def e = thrown AuroraConfigException
+      e.message == '''Config for application aos-simple in environment utv contains errors. Annotation haproxy.router.openshift.io/timeout cannot contain '/'. Use '|' instead.'''
+  }
 }

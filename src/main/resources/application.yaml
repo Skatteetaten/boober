@@ -62,6 +62,7 @@ spring:
 openshift:
     cluster: qa
     port: 8443
+    url: https://${openshift.cluster}-master.paas.skead.no:${openshift.port}
 
 boober:
     dbh: http://dbh-aurora.${openshift.cluster}.paas.skead.no
