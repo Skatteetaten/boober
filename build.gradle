@@ -23,7 +23,7 @@ buildscript {
         "org.jetbrains.kotlin:kotlin-allopen:$kotlin_version",
         "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion",
         "no.skatteetaten.aurora.gradle.plugins:aurora-gradle-plugin:1.2.1",
-        "org.springframework.cloud:spring-cloud-contract-gradle-plugin:2.0.0.RELEASE",
+        "org.springframework.cloud:spring-cloud-contract-gradle-plugin:2.0.1.RELEASE",
         "gradle.plugin.org.jlleitschuh.gradle:ktlint-gradle:4.0.0"
     )
   }
@@ -56,7 +56,7 @@ ext["logback.version"] = "1.2.3"
 
 dependencyManagement {
   imports {
-    mavenBom "org.springframework.cloud:spring-cloud-contract-dependencies:2.0.0.RELEASE"
+    mavenBom "org.springframework.cloud:spring-cloud-contract-dependencies:2.0.1.RELEASE"
   }
 }
 
