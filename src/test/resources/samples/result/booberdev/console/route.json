@@ -3,7 +3,6 @@
   "kind": "Route",
   "metadata": {
     "labels": {
-      "appId": "1d8c6374126c0a5f2e0592eb3d44cbc681a42c8a",
       "app": "openshift-console-api",
       "updatedBy": "hero",
       "affiliation": "aos",

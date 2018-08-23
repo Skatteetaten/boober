@@ -60,11 +60,6 @@ class OpenShiftTemplateProcessor(
             labels.put("template", template)
         }
 
-        if (!labels.has("appId")) {
-            template["metadata"]?.get("name")?.let {
-                labels.put("appId", DigestUtils.sha1Hex(it.asText()))
-            }
-        }
 
         if (!labels.has("app")) {
             labels.put("app", auroraDeploymentSpecInternal.name)

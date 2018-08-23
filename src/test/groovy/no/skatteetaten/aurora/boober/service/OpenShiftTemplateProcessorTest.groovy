@@ -89,7 +89,6 @@ class OpenShiftTemplateProcessorTest extends AbstractSpec {
   private static void assertLabels(ObjectNode labels) {
     assert labels['affiliation'] != null
     assert labels['template'].asText() == 'jenkins-cluster-persistent'
-    assert labels['appId'].asText() == DigestUtils.sha1Hex('jenkins-cluster-persistent-2.0')
     assert labels['app'] != null
     assert labels['updatedBy'].asText() == 'username'
     assert labels['updateInBoober'] == null

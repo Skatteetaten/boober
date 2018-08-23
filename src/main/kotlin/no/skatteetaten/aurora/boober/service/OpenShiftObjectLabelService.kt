@@ -52,9 +52,6 @@ class OpenShiftObjectLabelService(private val userDetailsProvider: UserDetailsPr
             "booberDeployId" to deployId
         )
 
-        val deploy = auroraDeploymentSpecInternal.deploy ?: return toOpenShiftLabelNameSafeMap(labels + additionalLabels)
-        return toOpenShiftLabelNameSafeMap(
-            mapOf("appId" to DigestUtils.sha1Hex("${deploy.groupId}/${deploy.artifactId}")) + labels + additionalLabels
-        )
+        return toOpenShiftLabelNameSafeMap(labels + additionalLabels)
     }
 }

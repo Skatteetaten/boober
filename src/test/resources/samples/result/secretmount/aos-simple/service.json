@@ -8,7 +8,6 @@
       "sprocket.sits.no/service.webseal-roles": "admin dev"
     },
     "labels": {
-      "appId": "7abf72388235de0b5602f884db4200295ed23837",
       "app": "aos-simple",
       "updatedBy": "hero",
       "affiliation": "aos",
