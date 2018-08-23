@@ -37,7 +37,7 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
         }
     }
 
-    fun getApplicationIds(): List<ApplicationDeploymentRef> {
+    fun getApplicationDeploymentRefs(): List<ApplicationDeploymentRef> {
 
         return files
             .map { it.name.removeExtension() }

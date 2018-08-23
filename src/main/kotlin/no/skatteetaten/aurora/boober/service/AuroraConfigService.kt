@@ -127,7 +127,7 @@ class AuroraConfigService(
 
         val watch = StopWatch()
         watch.start("find affected aid")
-        val affectedAid = auroraConfig.getApplicationIds().filter {
+        val affectedAid = auroraConfig.getApplicationDeploymentRefs().filter {
             val files = auroraConfig.getFilesForApplication(it)
             files.any { it.name == newFile.name }
         }
@@ -177,10 +177,9 @@ class AuroraConfigService(
         overrideFiles: List<AuroraConfigFile> = listOf(),
         resourceValidation: Boolean = true
     ) {
-        val applicationIds = auroraConfig.getApplicationIds()
         createValidatedAuroraDeploymentSpecs(
             AuroraConfigWithOverrides(auroraConfig, overrideFiles),
-            applicationIds,
+            auroraConfig.getApplicationDeploymentRefs(),
             resourceValidation
         )
     }

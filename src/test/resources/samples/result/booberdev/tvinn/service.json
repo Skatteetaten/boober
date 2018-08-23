@@ -9,6 +9,9 @@
       "sprocket.sits.no/service.webseal": "test",
       "sprocket.sits.no/service.webseal-roles": "admin dev"
     },
+    "labels": {
+      "name": "tvinn"
+    },
     "name": "tvinn",
     "ownerReferences": [
       {

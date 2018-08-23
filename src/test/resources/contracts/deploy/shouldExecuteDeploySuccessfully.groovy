@@ -13,7 +13,7 @@ Contract.make {
       contentType(applicationJson())
     }
     body(
-        applicationIds: [],
+        applicationDeploymentRefs: [],
         overrides: {},
         deploy: true
     )

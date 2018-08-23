@@ -83,7 +83,7 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
       namespace.command.payload.at("/metadata/labels/removeAfter").textValue() == "86400"
   }
 
-  def "Throw IllegalArgumentException if no applicationId is specified"() {
+  def "Throw IllegalArgumentException if no applicationDeploymentRef is specified"() {
     when:
       deployService.executeDeploy(configRef, [])
 

@@ -95,7 +95,13 @@ class OpenShiftObjectGenerator(
 
             listOf<JsonNode>()
                 .addIfNotNull(generateDeploymentConfig(auroraDeploymentSpecInternal, labels, mounts, ownerReference))
-                .addIfNotNull(generateService(auroraDeploymentSpecInternal, labels, ownerReference))
+                .addIfNotNull(
+                    generateService(
+                        auroraDeploymentSpecInternal,
+                        labels + ("name" to auroraDeploymentSpecInternal.name),
+                        ownerReference
+                    )
+                )
                 .addIfNotNull(generateImageStream(deployId, auroraDeploymentSpecInternal, ownerReference))
                 .addIfNotNull(generateBuilds(auroraDeploymentSpecInternal, deployId, ownerReference))
                 .addIfNotNull(
@@ -204,7 +210,8 @@ class OpenShiftObjectGenerator(
         return auroraDeploymentSpecInternal.deploy?.let {
 
             val webseal = auroraDeploymentSpecInternal.integration?.webseal?.let {
-                val host = it.host ?: "${auroraDeploymentSpecInternal.name}-${auroraDeploymentSpecInternal.environment.namespace}"
+                val host = it.host
+                    ?: "${auroraDeploymentSpecInternal.name}-${auroraDeploymentSpecInternal.environment.namespace}"
                 "sprocket.sits.no/service.webseal" to host
             }
 
@@ -335,9 +342,15 @@ class OpenShiftObjectGenerator(
                 if (service.metadata.annotations == null) {
                     service.metadata.annotations = HashMap<String, String>()
                 }
+                if (service.metadata.labels == null) {
+                    service.metadata.labels = HashMap<String, String>()
+                }
+
+                service.metadata.labels.put("name", auroraDeploymentSpecInternal.name)
 
                 auroraDeploymentSpecInternal.integration?.webseal?.let {
-                    val host = it.host ?: "${auroraDeploymentSpecInternal.name}-${auroraDeploymentSpecInternal.environment.namespace}"
+                    val host = it.host
+                        ?: "${auroraDeploymentSpecInternal.name}-${auroraDeploymentSpecInternal.environment.namespace}"
                     service.metadata.annotations["sprocket.sits.no/service.webseal"] = host
                 }
 
@@ -462,7 +475,11 @@ class OpenShiftObjectGenerator(
                 metadata {
                     ownerReferences = listOf(ownerReference)
                     name = buildName
-                    labels = openShiftObjectLabelService.createCommonLabels(deploymentSpecInternal, deployId, name = buildName)
+                    labels = openShiftObjectLabelService.createCommonLabels(
+                        deploymentSpecInternal,
+                        deployId,
+                        name = buildName
+                    )
                 }
 
                 spec {

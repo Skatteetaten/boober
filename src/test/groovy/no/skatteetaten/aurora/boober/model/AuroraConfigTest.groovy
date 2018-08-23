@@ -12,10 +12,10 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
     given:
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid)
     when:
-      def applicationIds = auroraConfig.getApplicationIds()
+      def refs = auroraConfig.getApplicationDeploymentRefs()
 
     then:
-      def console = applicationIds.get(0)
+      def console = refs.get(0)
       console.application == "console"
       console.environment == "booberdev"
   }

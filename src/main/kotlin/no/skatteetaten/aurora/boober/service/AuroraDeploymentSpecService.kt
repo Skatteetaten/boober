@@ -158,7 +158,7 @@ class AuroraDeploymentSpecService(
 
     fun getAuroraDeploymentSpecsForEnvironment(ref: AuroraConfigRef, environment: String): List<AuroraDeploymentSpec> {
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
-        return auroraConfig.getApplicationIds()
+        return auroraConfig.getApplicationDeploymentRefs()
             .filter { it.environment == environment }
             .let { getAuroraDeploymentSpecs(auroraConfig, it) }
     }

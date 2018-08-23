@@ -58,11 +58,11 @@ it has the encryption keys.
 
 
 ### AuroraDeploymentSpec
-An unversioned abstraction between AuroraConfig and the ObjectGeneration processes via ApplicationId.
+An unversioned abstraction between AuroraConfig and the ObjectGeneration processes via ApplicationDeploymentRef.
 
 Given an applicationDeploymentRef that is deployed from an AuroraConfig the following process will happen:
  
- - find the files in an AuroraConfig that is relevant for this ApplicationId
+ - find the files in an AuroraConfig that is relevant for this ApplicationDeploymentRef
  - convert the AuroraConfig into an AuroraDeploymentSpec using a versioned process
  - the mapping logic will retain information about what file a given config item is retrieved from
   
