@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
-import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
+import static no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.aid
 
 import groovy.json.JsonSlurper
 import io.fabric8.kubernetes.api.model.OwnerReference

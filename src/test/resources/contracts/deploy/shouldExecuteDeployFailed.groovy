@@ -18,8 +18,8 @@ Contract.make {
         deploy: true
     )
     bodyMatchers {
-      jsonPath('$.applicationIds[?@environment]', byRegex(nonEmpty()))
-      jsonPath('$.applicationIds[?@application]', byRegex(nonEmpty()))
+      jsonPath('$.applicationDeploymentRefs[?@environment]', byRegex(nonEmpty()))
+      jsonPath('$.applicationDeploymentRefs[?@application]', byRegex(nonEmpty()))
       jsonPath('$.deploy', byRegex(anyBoolean()))
     }
   }

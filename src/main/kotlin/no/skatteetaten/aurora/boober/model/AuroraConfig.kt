@@ -37,21 +37,21 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
         }
     }
 
-    fun getApplicationIds(): List<ApplicationId> {
+    fun getApplicationIds(): List<ApplicationDeploymentRef> {
 
         return files
             .map { it.name.removeExtension() }
             .filter { it.contains("/") && !it.contains("about") && !it.startsWith("templates") }
-            .map { val (environment, application) = it.split("/"); ApplicationId(environment, application) }
+            .map { val (environment, application) = it.split("/"); ApplicationDeploymentRef(environment, application) }
     }
 
     @JvmOverloads
     fun getFilesForApplication(
-        applicationId: ApplicationId,
+        applicationDeploymentRef: ApplicationDeploymentRef,
         overrideFiles: List<AuroraConfigFile> = listOf()
     ): List<AuroraConfigFile> {
 
-        val requiredFiles = requiredFilesForApplication(applicationId)
+        val requiredFiles = requiredFilesForApplication(applicationDeploymentRef)
         val filesForApplication = requiredFiles.mapNotNull { fileName ->
             files.find { it.name.removeExtension() == fileName }
         }
@@ -120,17 +120,17 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
         return updateFile(filename, rawContents, previousVersion)
     }
 
-    private fun getApplicationFile(applicationId: ApplicationId): AuroraConfigFile {
-        val fileName = "${applicationId.environment}/${applicationId.application}"
+    private fun getApplicationFile(applicationDeploymentRef: ApplicationDeploymentRef): AuroraConfigFile {
+        val fileName = "${applicationDeploymentRef.environment}/${applicationDeploymentRef.application}"
         val file = files.find { it.name.removeExtension() == fileName && !it.override }
         return file ?: throw IllegalArgumentException("Should find applicationFile $fileName.(json|yaml)")
     }
 
-    private fun requiredFilesForApplication(applicationId: ApplicationId): Set<String> {
+    private fun requiredFilesForApplication(applicationDeploymentRef: ApplicationDeploymentRef): Set<String> {
 
-        val implementationFile = getApplicationFile(applicationId)
+        val implementationFile = getApplicationFile(applicationDeploymentRef)
         val baseFile = implementationFile.asJsonNode.get("baseFile")?.asText()?.removeExtension()
-            ?: applicationId.application
+            ?: applicationDeploymentRef.application
 
         val envFile = implementationFile.asJsonNode.get("envFile")?.asText()?.removeExtension()
             ?: "about"
@@ -138,8 +138,8 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
         return setOf(
             "about",
             baseFile,
-            "${applicationId.environment}/$envFile",
-            "${applicationId.environment}/${applicationId.application}"
+            "${applicationDeploymentRef.environment}/$envFile",
+            "${applicationDeploymentRef.environment}/${applicationDeploymentRef.application}"
         )
     }
 }

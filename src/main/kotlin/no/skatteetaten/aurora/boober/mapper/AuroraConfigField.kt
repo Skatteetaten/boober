@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.mapper.v1.convertValueToString
-import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.utils.atNullable
@@ -154,7 +154,7 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
         fun create(
             handlers: Set<AuroraConfigFieldHandler>,
             files: List<AuroraConfigFile>,
-            applicationId: ApplicationId,
+            applicationDeploymentRef: ApplicationDeploymentRef,
             configVersion: String,
             placeholders: Map<String, String> = emptyMap()
         ): AuroraDeploymentSpec {
@@ -163,8 +163,8 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
 
             val staticFields: List<Pair<String, AuroraConfigFieldSource>> =
                 listOf(
-                    "applicationId" to
-                        AuroraConfigFieldSource("static", mapper.convertValue(applicationId.toString())),
+                    "applicationDeploymentRef" to
+                        AuroraConfigFieldSource("static", mapper.convertValue(applicationDeploymentRef.toString())),
                     "configVersion" to
                         AuroraConfigFieldSource("static", mapper.convertValue(configVersion))
                 )

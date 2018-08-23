@@ -5,7 +5,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.ConfigFieldErrorDetail
 import no.skatteetaten.aurora.boober.utils.findAllPointers
@@ -13,7 +13,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class AuroraDeploymentSpecConfigFieldValidator(
-    val applicationId: ApplicationId,
+    val applicationDeploymentRef: ApplicationDeploymentRef,
     val applicationFiles: List<AuroraConfigFile>,
     val fieldHandlers: Set<AuroraConfigFieldHandler>,
     val auroraDeploymentSpec: AuroraDeploymentSpec
@@ -82,7 +82,7 @@ class AuroraDeploymentSpecConfigFieldValidator(
         }
 
         (errors + unmappedErrors).takeIf { it.isNotEmpty() }?.let {
-            val aid = applicationId
+            val aid = applicationDeploymentRef
             throw AuroraConfigException(
                 "Config for application ${aid.application} in environment ${aid.environment} contains errors",
                 errors = it

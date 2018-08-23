@@ -5,7 +5,7 @@ import kotlinx.coroutines.experimental.ThreadPoolDispatcher
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.newFixedThreadPoolContext
 import kotlinx.coroutines.experimental.runBlocking
-import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
@@ -160,7 +160,7 @@ class AuroraConfigService(
     @JvmOverloads
     fun createValidatedAuroraDeploymentSpecs(
         ref: AuroraConfigRef,
-        applicationIds: List<ApplicationId>,
+        applicationDeploymentRefs: List<ApplicationDeploymentRef>,
         overrideFiles: List<AuroraConfigFile> = listOf(),
         resourceValidation: Boolean = true
     ): List<AuroraDeploymentSpecInternal> {
@@ -168,7 +168,7 @@ class AuroraConfigService(
         val auroraConfig = findAuroraConfig(ref)
         return createValidatedAuroraDeploymentSpecs(
             AuroraConfigWithOverrides(auroraConfig, overrideFiles),
-            applicationIds
+            applicationDeploymentRefs
         )
     }
 
@@ -211,13 +211,13 @@ class AuroraConfigService(
 
     private fun createValidatedAuroraDeploymentSpecs(
         auroraConfigWithOverrides: AuroraConfigWithOverrides,
-        applicationIds: List<ApplicationId>,
+        applicationDeploymentRefs: List<ApplicationDeploymentRef>,
         resourceValidation: Boolean = true
     ): List<AuroraDeploymentSpecInternal> {
 
         val stopWatch = StopWatch().apply { start() }
         val specInternals: List<AuroraDeploymentSpecInternal> = runBlocking(dispatcher) {
-            applicationIds.map { aid ->
+            applicationDeploymentRefs.map { aid ->
                 async(dispatcher) {
                     try {
                         val spec =
@@ -231,13 +231,13 @@ class AuroraConfigService(
                 .map { it.await() }
         }.onErrorThrow(::MultiApplicationValidationException)
         stopWatch.stop()
-        logger.debug("Validated AuroraConfig ${auroraConfigWithOverrides.auroraConfig.name} with ${applicationIds.size} applications in ${stopWatch.totalTimeMillis} millis")
+        logger.debug("Validated AuroraConfig ${auroraConfigWithOverrides.auroraConfig.name} with ${applicationDeploymentRefs.size} applications in ${stopWatch.totalTimeMillis} millis")
         return specInternals
     }
 
     private fun createValidatedAuroraDeploymentSpec(
         auroraConfigWithOverrides: AuroraConfigWithOverrides,
-        aid: ApplicationId,
+        aid: ApplicationDeploymentRef,
         resourceValidation: Boolean = true
     ): AuroraDeploymentSpecInternal {
 

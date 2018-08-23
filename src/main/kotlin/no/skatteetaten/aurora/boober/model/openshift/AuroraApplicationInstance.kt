@@ -3,7 +3,7 @@ package no.skatteetaten.aurora.boober.model.openshift
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import io.fabric8.kubernetes.api.model.ObjectMeta
-import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -32,7 +32,7 @@ data class ApplicationSpec(
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class ApplicationCommand(
     val overrideFiles: Map<String, String>,
-    val applicationId: ApplicationId,
+    val applicationDeploymentRef: ApplicationDeploymentRef,
     val auroraConfig: AuroraConfigRef
 )
 

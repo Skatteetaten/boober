@@ -7,7 +7,7 @@ import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
-import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
@@ -52,16 +52,17 @@ class DeployService(
     @JvmOverloads
     fun executeDeploy(
         ref: AuroraConfigRef,
-        applicationIds: List<ApplicationId>,
+        applicationDeploymentRefs: List<ApplicationDeploymentRef>,
         overrides: List<AuroraConfigFile> = listOf(),
         deploy: Boolean = true
     ): List<AuroraDeployResult> {
 
-        if (applicationIds.isEmpty()) {
-            throw IllegalArgumentException("Specify applicationId")
+        if (applicationDeploymentRefs.isEmpty()) {
+            throw IllegalArgumentException("Specify applicationDeploymentRef")
         }
 
-        val deploymentSpecs = auroraConfigService.createValidatedAuroraDeploymentSpecs(ref, applicationIds, overrides)
+        val deploymentSpecs =
+            auroraConfigService.createValidatedAuroraDeploymentSpecs(ref, applicationDeploymentRefs, overrides)
         val environments = prepareDeployEnvironments(deploymentSpecs)
         val deployResults: List<AuroraDeployResult> =
             deployFromSpecs(deploymentSpecs, environments, deploy, ref)
@@ -288,15 +289,15 @@ class DeployService(
             spec = ApplicationSpec(
                 selector = mapOf("name" to deploymentSpecInternal.name),
                 deployTag = deploymentSpecInternal.version,
-                // This is the base shared applicationId
+                // This is the base shared applicationDeploymentRef
                 applicationId = DigestUtils.sha1Hex(deploymentSpecInternal.appId),
-                applicationInstanceId = DigestUtils.sha1Hex(deploymentSpecInternal.applicationId.toString()),
+                applicationInstanceId = DigestUtils.sha1Hex(deploymentSpecInternal.applicationDeploymentRef.toString()),
                 splunkIndex = deploymentSpecInternal.integration?.splunkIndex,
                 managementPath = deploymentSpecInternal.deploy?.managementPath,
                 releaseTo = deploymentSpecInternal.deploy?.releaseTo,
                 command = ApplicationCommand(
                     auroraConfig = exactGitRef?.let { AuroraConfigRef(auroraConfigRef.name, it) } ?: auroraConfigRef,
-                    applicationId = deploymentSpecInternal.applicationId,
+                    applicationDeploymentRef = deploymentSpecInternal.applicationDeploymentRef,
                     overrideFiles = deploymentSpecInternal.overrideFiles
                 )
             ),

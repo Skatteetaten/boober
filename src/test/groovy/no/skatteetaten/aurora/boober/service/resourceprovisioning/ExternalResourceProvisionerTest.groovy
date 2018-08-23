@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
-import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
+import static no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.aid
 
 import no.skatteetaten.aurora.boober.model.AbstractAuroraDeploymentSpecTest
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal

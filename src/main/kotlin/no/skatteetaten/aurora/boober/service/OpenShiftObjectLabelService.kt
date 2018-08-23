@@ -44,6 +44,7 @@ class OpenShiftObjectLabelService(private val userDetailsProvider: UserDetailsPr
         name: String = auroraDeploymentSpecInternal.name
     ): Map<String, String> {
         val labels = mapOf(
+            // TODO: Deprecated. This should be removed once all old objects are gone
             "app" to name,
             "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
             "affiliation" to auroraDeploymentSpecInternal.environment.affiliation,

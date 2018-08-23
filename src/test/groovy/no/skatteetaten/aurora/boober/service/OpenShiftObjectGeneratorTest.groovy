@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 
 import groovy.json.JsonOutput
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder
-import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
@@ -35,7 +35,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
           new VaultResults([foo: ["latest.properties": "FOO=bar\nBAR=baz\n".bytes]]))
 
 
-      def aid = new ApplicationId(env, name)
+      def aid = new ApplicationDeploymentRef(env, name)
       def additionalFile = null
       if (templateFile != null) {
 
@@ -100,7 +100,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
   def "generate rolebinding should include serviceaccount "() {
 
     given:
-      def aid = new ApplicationId("booberdev", "console")
+      def aid = new ApplicationDeploymentRef("booberdev", "console")
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, null)
 
     when:
@@ -125,7 +125,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
   def "generate rolebinding view should split groups"() {
 
     given:
-      def aid = new ApplicationId("booberdev", "console")
+      def aid = new ApplicationDeploymentRef("booberdev", "console")
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, null)
 
     when:

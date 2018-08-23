@@ -5,7 +5,7 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecConfigFieldValidator.Companion.namePattern
-import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeployHeader
@@ -25,7 +25,10 @@ import no.skatteetaten.aurora.boober.utils.startsWith
  * particular application. This merged file is then the subject to further parsing and validation and may in it self
  * be invalid.
  */
-class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<AuroraConfigFile>) {
+class HeaderMapper(
+    val applicationDeploymentRef: ApplicationDeploymentRef,
+    val applicationFiles: List<AuroraConfigFile>
+) {
 
     private val VALID_SCHEMA_VERSIONS = listOf("v1")
 
@@ -55,10 +58,10 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
         AuroraConfigFieldHandler(
             "envName", validator = { it.pattern(envNamePattern, envNameMessage) },
             defaultSource = "folderName",
-            defaultValue = applicationId.environment
+            defaultValue = applicationDeploymentRef.environment
         ),
         AuroraConfigFieldHandler("name",
-            defaultValue = applicationId.application,
+            defaultValue = applicationDeploymentRef.application,
             defaultSource = "fileName",
             validator = { it.pattern(namePattern, "Name must be alphanumeric and no more than 40 characters", false) }),
         AuroraConfigFieldHandler("env/name", validator = { it.pattern(envNamePattern, envNameMessage, false) }),
@@ -105,7 +108,7 @@ class HeaderMapper(val applicationId: ApplicationId, val applicationFiles: List<
     }
 
     fun getApplicationFile(): AuroraConfigFile {
-        val fileName = "${applicationId.environment}/${applicationId.application}"
+        val fileName = "${applicationDeploymentRef.environment}/${applicationDeploymentRef.application}"
         val file = applicationFiles.find { it.name.removeExtension() == fileName && !it.override }
         return file ?: throw IllegalArgumentException("Should find applicationFile $fileName")
     }

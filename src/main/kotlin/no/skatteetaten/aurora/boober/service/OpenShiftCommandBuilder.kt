@@ -102,6 +102,7 @@ class OpenShiftCommandBuilder(
         apiResources: List<String> = listOf("BuildConfig", "DeploymentConfig", "ConfigMap", "Secret", "Service", "Route", "ImageStream")
     ): List<OpenshiftCommand> {
 
+        // TODO: This cannot be change until we remove the app label
         val labelSelectors = listOf("app=$name", "booberDeployId", "booberDeployId!=$deployId")
         return apiResources
             .flatMap { kind -> openShiftClient.getByLabelSelectors(kind, namespace, labelSelectors) }

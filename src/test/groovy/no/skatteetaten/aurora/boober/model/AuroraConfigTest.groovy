@@ -6,7 +6,7 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
 
   def mapper = new ObjectMapper()
 
-  def aid = new ApplicationId("booberdev", "console")
+  def aid = new ApplicationDeploymentRef("booberdev", "console")
 
   def "Should get all application ids for AuroraConfig"() {
     given:
@@ -109,7 +109,7 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
 
   def "Fails when some files for application are missing"() {
     given:
-      def referanseAid = new ApplicationId("utv", "referanse")
+      def referanseAid = new ApplicationDeploymentRef("utv", "referanse")
       def files = createMockFiles("about.json", "referanse.json", "utv/about.json")
       def auroraConfig = new AuroraConfig(files, "aos", "master")
 
@@ -123,7 +123,7 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
 
   def "Includes base file in files for application when set"() {
     given:
-      def aid = new ApplicationId("booberdev", "aos-complex")
+      def aid = new ApplicationDeploymentRef("booberdev", "aos-complex")
       def auroraConfig = AuroraConfigHelperKt.getAuroraConfigSamples()
 
     when:

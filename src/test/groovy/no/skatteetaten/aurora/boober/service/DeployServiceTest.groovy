@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import spock.lang.Unroll
@@ -36,7 +36,7 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
   def affiliation = "aos"
   def configRef = new AuroraConfigRef(affiliation, "master")
 
-  final ApplicationId aid = new ApplicationId(ENV_NAME, APP_NAME)
+  final ApplicationDeploymentRef aid = new ApplicationDeploymentRef(ENV_NAME, APP_NAME)
 
   def setup() {
     openShiftClient.projectExists(_) >> {
@@ -66,7 +66,7 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
     given:
       def ref = new AuroraConfigRef(affiliation, "master")
       def ads = auroraConfigService.
-          createValidatedAuroraDeploymentSpecs(ref, [new ApplicationId(ENV_NAME, APP_NAME)])
+          createValidatedAuroraDeploymentSpecs(ref, [new ApplicationDeploymentRef(ENV_NAME, APP_NAME)])
 
     when:
       def deployResults = deployService.prepareDeployEnvironments(ads)
@@ -94,7 +94,7 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
   @Unroll
   def "Execute deploy for #env/#name"() {
     when:
-      def results = deployService.executeDeploy(configRef, [new ApplicationId(env, name)])
+      def results = deployService.executeDeploy(configRef, [new ApplicationDeploymentRef(env, name)])
 
     then:
       results.success

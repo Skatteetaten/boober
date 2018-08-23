@@ -51,7 +51,7 @@ data class AuroraDeployEnvironment(
 }
 
 data class AuroraDeploymentSpecInternal(
-    val applicationId: ApplicationId,
+    val applicationDeploymentRef: ApplicationDeploymentRef,
     val schemaVersion: String,
     val type: TemplateType,
     val name: String,

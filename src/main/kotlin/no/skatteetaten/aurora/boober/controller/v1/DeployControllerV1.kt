@@ -26,7 +26,7 @@ class DeployControllerV1(val deployService: DeployService) {
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest(reference))
         val auroraDeployResults: List<AuroraDeployResult> = deployService.executeDeploy(
             ref,
-            payload.applicationIds,
+            payload.applicationDeploymentRefs,
             payload.overridesToAuroraConfigFiles(),
             payload.deploy
         )

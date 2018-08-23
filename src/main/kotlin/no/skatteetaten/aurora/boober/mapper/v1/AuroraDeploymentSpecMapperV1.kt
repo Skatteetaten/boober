@@ -2,7 +2,7 @@ package no.skatteetaten.aurora.boober.mapper.v1
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraBuild
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
@@ -15,7 +15,7 @@ import no.skatteetaten.aurora.boober.model.AuroraTemplate
 import no.skatteetaten.aurora.boober.model.AuroraVolume
 import no.skatteetaten.aurora.boober.utils.oneOf
 
-class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
+class AuroraDeploymentSpecMapperV1(val applicationDeploymentRef: ApplicationDeploymentRef) {
 
     val handlers = listOf(
         AuroraConfigFieldHandler("splunkIndex"),
@@ -52,7 +52,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
         val name: String = auroraDeploymentSpec.extract("name")
 
         return AuroraDeploymentSpecInternal(
-            applicationId = applicationId,
+            applicationDeploymentRef = applicationDeploymentRef,
             schemaVersion = auroraDeploymentSpec.extract("schemaVersion"),
             applicationPlatform = auroraDeploymentSpec.extract("applicationPlatform"),
             type = auroraDeploymentSpec.extract("type"),

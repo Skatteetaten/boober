@@ -3,7 +3,7 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeployStrategy
@@ -20,13 +20,16 @@ import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.removeExtension
 
-class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFiles: List<AuroraConfigFile>) {
+class AuroraDeployMapperV1(
+    val applicationDeploymentRef: ApplicationDeploymentRef,
+    val applicationFiles: List<AuroraConfigFile>
+) {
 
     val configHandlers = applicationFiles.findConfigFieldHandlers()
     val handlers = listOf(
 
         AuroraConfigFieldHandler("artifactId",
-            defaultValue = applicationId.application,
+            defaultValue = applicationDeploymentRef.application,
             defaultSource = "fileName",
             validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
         AuroraConfigFieldHandler("groupId", validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
@@ -76,7 +79,7 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
         val dockerGroup = groupId.replace(".", "_")
 
         val tag = releaseTo ?: version
-        val applicationFile = getApplicationFile(applicationId)
+        val applicationFile = getApplicationFile(applicationDeploymentRef)
 
         val pause: Boolean = auroraDeploymentSpec.extract("pause")
         val replicas: Int = auroraDeploymentSpec.extract("replicas")
@@ -123,8 +126,8 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
         )
     }
 
-    private fun getApplicationFile(applicationId: ApplicationId): AuroraConfigFile {
-        val fileName = "${applicationId.environment}/${applicationId.application}"
+    private fun getApplicationFile(applicationDeploymentRef: ApplicationDeploymentRef): AuroraConfigFile {
+        val fileName = "${applicationDeploymentRef.environment}/${applicationDeploymentRef.application}"
         val file = applicationFiles.find { it.name.removeExtension() == fileName && !it.override }
         return file ?: throw IllegalArgumentException("Should find applicationFile $fileName")
     }
