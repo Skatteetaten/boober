@@ -27,6 +27,7 @@ import org.springframework.retry.annotation.EnableRetry
 import org.springframework.web.client.RestTemplate
 import java.io.FileInputStream
 import java.security.KeyStore
+import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 
 enum class ServiceTypes {
@@ -138,7 +139,11 @@ class Configuration : BeanPostProcessor {
     @Profile("openshift")
     @Primary
     @Bean
-    fun openshiftSSLContext(): KeyStore? = KeyStore.getInstance(KeyStore.getDefaultType())?.apply {
-        load(FileInputStream("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"), "".toCharArray())
+    fun openshiftSSLContext(): KeyStore? = KeyStore.getInstance(KeyStore.getDefaultType())?.let { ks ->
+        val fis = FileInputStream("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")
+        CertificateFactory.getInstance("X509").generateCertificates(fis).forEach {
+            ks.setCertificateEntry((it as X509Certificate).subjectX500Principal.name, it)
+        }
+        ks
     }
 }

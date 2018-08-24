@@ -109,9 +109,7 @@ class AuroraConfigControllerTest extends AbstractAuroraConfigTest {
   "value": 3
 }]"""]
 
-      auroraConfigService.
-          patchAuroraConfigFile(ref, fileName, payload.content, payload.version) >>
-          auroraConfig
+      auroraConfigService. patchAuroraConfigFile(ref, fileName, payload.content, payload.version) >> auroraConfig
     when:
       ResultActions result = mockMvc.perform(
           patch("/v1/auroraconfig/$auroraConfigName/$fileName").content(JsonOutput.toJson(payload)).
