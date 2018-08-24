@@ -140,6 +140,7 @@ class Configuration : BeanPostProcessor {
     @Primary
     @Bean
     fun openshiftSSLContext(): KeyStore? = KeyStore.getInstance(KeyStore.getDefaultType())?.let { ks ->
+        ks.load(null, "".toCharArray())
         val fis = FileInputStream("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")
         CertificateFactory.getInstance("X509").generateCertificates(fis).forEach {
             ks.setCertificateEntry((it as X509Certificate).subjectX500Principal.name, it)
