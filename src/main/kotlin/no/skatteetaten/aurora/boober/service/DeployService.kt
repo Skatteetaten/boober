@@ -285,7 +285,7 @@ class DeployService(
         deployId: String
     ): ApplicationDeployment {
         val exactGitRef = auroraConfigService.findExactRef(auroraConfigRef)
-        val auroraConfigRefExact= exactGitRef?.let { auroraConfigRef.copy(resolvedRef = it)} ?: auroraConfigRef
+        val auroraConfigRefExact = exactGitRef?.let { auroraConfigRef.copy(resolvedRef = it) } ?: auroraConfigRef
 
         return ApplicationDeployment(
             spec = ApplicationSpec(

@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
-import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.stereotype.Service
 
 @Service
@@ -60,7 +59,6 @@ class OpenShiftTemplateProcessor(
             labels.put("template", template)
         }
 
-
         if (!labels.has("app")) {
             labels.put("app", auroraDeploymentSpecInternal.name)
         }
@@ -76,7 +74,11 @@ class OpenShiftTemplateProcessor(
                 }
         }
 
-        val result = openShiftClient.post("processedtemplate", namespace = auroraDeploymentSpecInternal.environment.namespace, payload = template)
+        val result = openShiftClient.post(
+            "processedtemplate",
+            namespace = auroraDeploymentSpecInternal.environment.namespace,
+            payload = template
+        )
 
         return result.body["objects"].asSequence().toList()
     }
