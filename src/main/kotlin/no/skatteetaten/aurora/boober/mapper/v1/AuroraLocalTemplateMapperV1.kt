@@ -42,7 +42,7 @@ class AuroraLocalTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>, 
     }
 
     private fun extractTemplateJson(auroraDeploymentSpec: AuroraDeploymentSpec): JsonNode {
-        val templateFile = auroraDeploymentSpec.extract<String>("templateFile").let { fileName ->
+        val templateFile = auroraDeploymentSpec.get<String>("templateFile").let { fileName ->
             auroraConfig.files.find { it.name == fileName }?.asJsonNode
         }
         return templateFile ?: throw IllegalArgumentException("templateFile is required")

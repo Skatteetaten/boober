@@ -24,11 +24,11 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
     // TODO: ADD splunk, webseal, bigip
 
     fun integrations(auroraDeploymentSpec: AuroraDeploymentSpec): AuroraIntegration? {
-        val name: String = auroraDeploymentSpec.extract("name")
+        val name: String = auroraDeploymentSpec.get("name")
         val groupId: String = auroraDeploymentSpec.extractOrNull<String>("groupId") ?: ""
 
         val certificateCn = if (auroraDeploymentSpec.isSimplifiedConfig("certificate")) {
-            val certFlag: Boolean = auroraDeploymentSpec.extract("certificate")
+            val certFlag: Boolean = auroraDeploymentSpec.get("certificate")
             if (certFlag) "$groupId.$name" else null
         } else {
             auroraDeploymentSpec.extractOrNull("certificate/commonName")
@@ -61,7 +61,7 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
 
         val simplified = auroraDeploymentSpec.isSimplifiedConfig("database")
 
-        if (simplified && auroraDeploymentSpec.extract("database")) {
+        if (simplified && auroraDeploymentSpec.get("database")) {
             return listOf(Database(name = name))
         }
         return auroraDeploymentSpec.getDatabases(dbHandlers)

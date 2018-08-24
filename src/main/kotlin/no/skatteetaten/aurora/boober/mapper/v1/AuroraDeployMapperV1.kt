@@ -68,21 +68,21 @@ class AuroraDeployMapperV1(
     ) + configHandlers
 
     fun deploy(auroraDeploymentSpec: AuroraDeploymentSpec): AuroraDeploy? {
-        val groupId: String = auroraDeploymentSpec.extract("groupId")
+        val groupId: String = auroraDeploymentSpec.get("groupId")
 
-        val version: String = auroraDeploymentSpec.extract("version")
+        val version: String = auroraDeploymentSpec.get("version")
 
         val releaseTo: String? = auroraDeploymentSpec.extractOrNull<String>("releaseTo")?.takeUnless { it.isEmpty() }
 
-        val artifactId: String = auroraDeploymentSpec.extract("artifactId")
+        val artifactId: String = auroraDeploymentSpec.get("artifactId")
 
         val dockerGroup = groupId.replace(".", "_")
 
         val tag = releaseTo ?: version
         val applicationFile = getApplicationFile(applicationDeploymentRef)
 
-        val pause: Boolean = auroraDeploymentSpec.extract("pause")
-        val replicas: Int = auroraDeploymentSpec.extract("replicas")
+        val pause: Boolean = auroraDeploymentSpec.get("pause")
+        val replicas: Int = auroraDeploymentSpec.get("replicas")
 
         return AuroraDeploy(
             applicationFile = applicationFile.name,
@@ -90,23 +90,23 @@ class AuroraDeployMapperV1(
             dockerImagePath = "$dockerGroup/$artifactId",
             dockerTag = tag,
             deployStrategy = AuroraDeployStrategy(
-                auroraDeploymentSpec.extract("deployStrategy/type"),
-                auroraDeploymentSpec.extract("deployStrategy/timeout")
+                auroraDeploymentSpec.get("deployStrategy/type"),
+                auroraDeploymentSpec.get("deployStrategy/timeout")
             ),
             flags = AuroraDeploymentConfigFlags(
-                auroraDeploymentSpec.extract("debug"),
-                auroraDeploymentSpec.extract("alarm"),
+                auroraDeploymentSpec.get("debug"),
+                auroraDeploymentSpec.get("alarm"),
                 pause
 
             ),
             resources = AuroraDeploymentConfigResources(
                 request = AuroraDeploymentConfigResource(
-                    cpu = auroraDeploymentSpec.extract("resources/cpu/min"),
-                    memory = auroraDeploymentSpec.extract("resources/memory/min")
+                    cpu = auroraDeploymentSpec.get("resources/cpu/min"),
+                    memory = auroraDeploymentSpec.get("resources/memory/min")
                 ),
                 limit = AuroraDeploymentConfigResource(
-                    cpu = auroraDeploymentSpec.extract("resources/cpu/max"),
-                    memory = auroraDeploymentSpec.extract("resources/memory/max")
+                    cpu = auroraDeploymentSpec.get("resources/cpu/max"),
+                    memory = auroraDeploymentSpec.get("resources/memory/max")
                 )
             ),
             replicas = if (pause) 0 else replicas,
@@ -140,7 +140,7 @@ class AuroraDeployMapperV1(
             return null
         }
         return HttpEndpoint(
-            auroraDeploymentSpec.extract("$name/path"),
+            auroraDeploymentSpec.get("$name/path"),
             auroraDeploymentSpec.extractOrNull("$name/port")
         )
     }
@@ -153,9 +153,9 @@ class AuroraDeployMapperV1(
             return null
         }
 
-        val path = auroraDeploymentSpec.extract<String>("$name/path")
+        val path = auroraDeploymentSpec.get<String>("$name/path")
             .ensureStartWith("/")
-        val port = auroraDeploymentSpec.extract<String>("$name/port")
+        val port = auroraDeploymentSpec.get<String>("$name/port")
             .toString()
             .ensureStartWith(":")
         return "$port$path"
@@ -173,9 +173,9 @@ class AuroraDeployMapperV1(
                     "/$it"
                 } else it
             },
-            auroraDeploymentSpec.extract("$name/port"),
-            auroraDeploymentSpec.extract("$name/delay"),
-            auroraDeploymentSpec.extract("$name/timeout")
+            auroraDeploymentSpec.get("$name/port"),
+            auroraDeploymentSpec.get("$name/delay"),
+            auroraDeploymentSpec.get("$name/timeout")
         )
     }
 
@@ -184,6 +184,6 @@ class AuroraDeployMapperV1(
             return null
         }
 
-        return ToxiProxy(auroraDeploymentSpec.extract("$name/version"))
+        return ToxiProxy(auroraDeploymentSpec.get("$name/version"))
     }
 }
