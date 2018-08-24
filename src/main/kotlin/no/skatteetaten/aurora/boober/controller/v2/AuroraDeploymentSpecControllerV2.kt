@@ -21,7 +21,7 @@ import java.nio.charset.Charset
 
 @RestController
 @RequestMapping("/v2/auroradeployspec/{auroraConfigName}")
-class AuroraDeploymentSpecControllerV1(
+class AuroraDeploymentSpecControllerV2(
     val auroraDeploymentSpecService: AuroraDeploymentSpecService,
     val responder: AuroraDeploymentSpecResponderV2
 ) {
