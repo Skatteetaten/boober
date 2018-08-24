@@ -11,12 +11,12 @@ class AuroraBuildMapperV1(val name: String) {
 
     fun build(auroraDeploymentSpec: AuroraDeploymentSpec): AuroraBuild {
 
-        val type: TemplateType = auroraDeploymentSpec.extract("type")
-        val name: String = auroraDeploymentSpec.extract("name")
+        val type: TemplateType = auroraDeploymentSpec["type"]
+        val name: String = auroraDeploymentSpec["name"]
 
-        val groupId: String = auroraDeploymentSpec.extract("groupId")
-        val artifactId: String = auroraDeploymentSpec.extract("artifactId")
-        val version: String = auroraDeploymentSpec.extract("version")
+        val groupId: String = auroraDeploymentSpec["groupId"]
+        val artifactId: String = auroraDeploymentSpec.get("artifactId")
+        val version: String = auroraDeploymentSpec.get("version")
         val testGitUrl: String? = auroraDeploymentSpec.extractOrNull("test/gitUrl")
 
         val skipTriggers = type == TemplateType.development || version.contains("SNAPSHOT") || testGitUrl != null
@@ -35,14 +35,14 @@ class AuroraBuildMapperV1(val name: String) {
         }
 
         return AuroraBuild(
-            applicationPlatform = auroraDeploymentSpec.extract("applicationPlatform"),
+            applicationPlatform = auroraDeploymentSpec.get("applicationPlatform"),
             testGitUrl = testGitUrl,
             testTag = auroraDeploymentSpec.extractOrNull("test/tag"),
-            baseName = auroraDeploymentSpec.extract("baseImage/name"),
-            baseVersion = auroraDeploymentSpec.extract("baseImage/version"),
-            builderName = auroraDeploymentSpec.extract("builder/name"),
-            builderVersion = auroraDeploymentSpec.extract("builder/version"),
-            extraTags = auroraDeploymentSpec.extract("extraTags"),
+            baseName = auroraDeploymentSpec.get("baseImage/name"),
+            baseVersion = auroraDeploymentSpec.get("baseImage/version"),
+            builderName = auroraDeploymentSpec.get("builder/name"),
+            builderVersion = auroraDeploymentSpec.get("builder/version"),
+            extraTags = auroraDeploymentSpec.get("extraTags"),
             version = version,
             groupId = groupId,
             artifactId = artifactId,

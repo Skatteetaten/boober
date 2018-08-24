@@ -76,16 +76,16 @@ class HeaderMapper(
         auroraDeploymentSpec: AuroraDeploymentSpec,
         applicationHandler: ApplicationPlatformHandler
     ): AuroraDeployHeader {
-        val name = auroraDeploymentSpec.extract<String>("name")
-        val cluster = auroraDeploymentSpec.extract<String>("cluster")
-        val type = auroraDeploymentSpec.extract<TemplateType>("type")
+        val name = auroraDeploymentSpec.get<String>("name")
+        val cluster = auroraDeploymentSpec.get<String>("cluster")
+        val type = auroraDeploymentSpec.get<TemplateType>("type")
 
         val segment = auroraDeploymentSpec.extractOrNull<String>("segment")
 
         val env = AuroraDeployEnvironment(
-            affiliation = auroraDeploymentSpec.extract("affiliation"),
+            affiliation = auroraDeploymentSpec.get("affiliation"),
             envName = auroraDeploymentSpec.extractOrNull("env/name")
-                ?: auroraDeploymentSpec.extract("envName"),
+                ?: auroraDeploymentSpec.get("envName"),
             ttl = auroraDeploymentSpec.extractOrNull<String>("env/ttl")
                 ?.let { StringToDurationConverter().convert(it) },
             permissions = extractPermissions(auroraDeploymentSpec)

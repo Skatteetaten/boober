@@ -49,15 +49,15 @@ class AuroraDeploymentSpecMapperV1(val applicationDeploymentRef: ApplicationDepl
         configVersion: String,
         overrideFiles: Map<String, String>
     ): AuroraDeploymentSpecInternal {
-        val name: String = auroraDeploymentSpec.extract("name")
+        val name: String = auroraDeploymentSpec.get("name")
 
         return AuroraDeploymentSpecInternal(
             applicationDeploymentRef = applicationDeploymentRef,
-            schemaVersion = auroraDeploymentSpec.extract("schemaVersion"),
-            applicationPlatform = auroraDeploymentSpec.extract("applicationPlatform"),
-            type = auroraDeploymentSpec.extract("type"),
+            schemaVersion = auroraDeploymentSpec.get("schemaVersion"),
+            applicationPlatform = auroraDeploymentSpec.get("applicationPlatform"),
+            type = auroraDeploymentSpec.get("type"),
             name = name,
-            cluster = auroraDeploymentSpec.extract("cluster"),
+            cluster = auroraDeploymentSpec.get("cluster"),
             environment = env,
             spec = auroraDeploymentSpec,
             volume = volume,
