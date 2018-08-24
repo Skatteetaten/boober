@@ -36,7 +36,3 @@ data class ApplicationCommand(
     val auroraConfig: AuroraConfigRef
 )
 
-data class AuroraConfigRef(
-    val name: String,
-    val refName: String
-)
