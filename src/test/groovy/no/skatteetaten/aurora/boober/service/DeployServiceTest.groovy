@@ -34,7 +34,7 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "aos-simple"
   def affiliation = "aos"
-  def configRef = new AuroraConfigRef(affiliation, "master")
+  def configRef = new AuroraConfigRef(affiliation, "master", "123")
 
   final ApplicationDeploymentRef aid = new ApplicationDeploymentRef(ENV_NAME, APP_NAME)
 
@@ -64,7 +64,7 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
 
   def "Should prepare deploy environment for new project with ttl"() {
     given:
-      def ref = new AuroraConfigRef(affiliation, "master")
+      def ref = new AuroraConfigRef(affiliation, "master", "123")
       def ads = auroraConfigService.
           createValidatedAuroraDeploymentSpecs(ref, [new ApplicationDeploymentRef(ENV_NAME, APP_NAME)])
 

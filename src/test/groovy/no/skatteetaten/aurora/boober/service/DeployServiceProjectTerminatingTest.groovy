@@ -23,7 +23,7 @@ class DeployServiceProjectTerminatingTest extends AbstractMockedOpenShiftSpecifi
 
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "aos-simple"
-  def ref = new AuroraConfigRef("aos", "master")
+  def ref = new AuroraConfigRef("aos", "master", "123")
 
   final ApplicationDeploymentRef aid = new ApplicationDeploymentRef(ENV_NAME, APP_NAME)
 

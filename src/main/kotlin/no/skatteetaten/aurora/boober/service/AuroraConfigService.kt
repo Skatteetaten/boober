@@ -28,7 +28,8 @@ class AuroraConfigWithOverrides(
 
 data class AuroraConfigRef(
     val name: String,
-    val refName: String
+    val refName: String,
+    val resolvedRef: String? = null
 )
 
 @Service

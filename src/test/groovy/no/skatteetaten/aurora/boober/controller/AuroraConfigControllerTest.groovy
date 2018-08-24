@@ -44,7 +44,7 @@ class AuroraConfigControllerTest extends AbstractAuroraConfigTest {
   }
 
   def auroraConfigName = 'aos'
-  def ref = new AuroraConfigRef(auroraConfigName, "master")
+  def ref = new AuroraConfigRef(auroraConfigName, "master", null)
   def fileName = 'about.json'
   def auroraConfig = createAuroraConfig([(fileName): DEFAULT_ABOUT])
 

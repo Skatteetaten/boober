@@ -193,7 +193,7 @@ class DeployService(
             )
         }
 
-        val application = createApplicationInstance(auroraConfigRef, deploymentSpecInternal, deployId)
+        val application = createApplicationDeployment(auroraConfigRef, deploymentSpecInternal, deployId)
 
         val applicationCommnd = openShiftCommandBuilder.createOpenShiftCommand(
             deploymentSpecInternal.environment.namespace,
@@ -279,12 +279,14 @@ class DeployService(
         )
     }
 
-    fun createApplicationInstance(
+    fun createApplicationDeployment(
         auroraConfigRef: AuroraConfigRef,
         deploymentSpecInternal: AuroraDeploymentSpecInternal,
         deployId: String
     ): ApplicationDeployment {
         val exactGitRef = auroraConfigService.findExactRef(auroraConfigRef)
+        val auroraConfigRefExact= exactGitRef?.let { auroraConfigRef.copy(resolvedRef = it)} ?: auroraConfigRef
+
         return ApplicationDeployment(
             spec = ApplicationSpec(
                 selector = mapOf("name" to deploymentSpecInternal.name),
@@ -296,7 +298,7 @@ class DeployService(
                 managementPath = deploymentSpecInternal.deploy?.managementPath,
                 releaseTo = deploymentSpecInternal.deploy?.releaseTo,
                 command = ApplicationCommand(
-                    auroraConfig = exactGitRef?.let { AuroraConfigRef(auroraConfigRef.name, it) } ?: auroraConfigRef,
+                    auroraConfig = auroraConfigRefExact,
                     applicationDeploymentRef = deploymentSpecInternal.applicationDeploymentRef,
                     overrideFiles = deploymentSpecInternal.overrideFiles
                 )
