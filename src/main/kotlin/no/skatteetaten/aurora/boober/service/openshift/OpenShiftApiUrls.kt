@@ -16,8 +16,8 @@ class OpenShiftApiUrls(
             name: String?
         ): OpenShiftApiUrls {
 
-            if (kind == "applicationdeployments") {
-                val createUrl = "$baseUrl/apis/skatteetaten.no/v1/namespaces/$namespace/$kind"
+            if (kind == "applicationdeployment") {
+                val createUrl = "$baseUrl/apis/skatteetaten.no/v1/namespaces/$namespace/${kind}s"
                 return OpenShiftApiUrls(
                     create = createUrl,
                     get = "$createUrl/$name",
