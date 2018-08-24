@@ -16,8 +16,8 @@ class OpenShiftApiUrls(
             name: String?
         ): OpenShiftApiUrls {
 
-            if (kind == "auroraapplicationinstance") {
-                val createUrl = "$baseUrl/apis/skatteetaten.no/v1/namespaces/$namespace/auroraapplicationinstances"
+            if (kind == "applicationdeployments") {
+                val createUrl = "$baseUrl/apis/skatteetaten.no/v1/namespaces/$namespace/$kind"
                 return OpenShiftApiUrls(
                     create = createUrl,
                     get = "$createUrl/$name",
@@ -30,6 +30,7 @@ class OpenShiftApiUrls(
                     create = "$bcBaseUrl"
                 )
             }
+
             if (kind == "deploymentrequest") {
                 val dcBaseUrl = getCollectionPathForResource(baseUrl, "deploymentconfig", namespace)
                 return OpenShiftApiUrls(

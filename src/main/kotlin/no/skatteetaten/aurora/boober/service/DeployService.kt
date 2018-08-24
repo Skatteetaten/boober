@@ -13,8 +13,8 @@ import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationCommand
+import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationSpec
-import no.skatteetaten.aurora.boober.model.openshift.AuroraApplicationInstance
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
@@ -202,7 +202,7 @@ class DeployService(
         val applicationResult =
             openShiftClient.performOpenShiftCommand(deploymentSpecInternal.environment.namespace, applicationCommnd)
 
-        val appResponse: AuroraApplicationInstance? = applicationResult.responseBody?.let {
+        val appResponse: ApplicationDeployment? = applicationResult.responseBody?.let {
             jacksonObjectMapper().convertValue(it)
         }
 
@@ -283,15 +283,15 @@ class DeployService(
         auroraConfigRef: AuroraConfigRef,
         deploymentSpecInternal: AuroraDeploymentSpecInternal,
         deployId: String
-    ): AuroraApplicationInstance {
+    ): ApplicationDeployment {
         val exactGitRef = auroraConfigService.findExactRef(auroraConfigRef)
-        return AuroraApplicationInstance(
+        return ApplicationDeployment(
             spec = ApplicationSpec(
                 selector = mapOf("name" to deploymentSpecInternal.name),
                 deployTag = deploymentSpecInternal.version,
                 // This is the base shared applicationDeploymentRef
                 applicationId = DigestUtils.sha1Hex(deploymentSpecInternal.appId),
-                applicationInstanceId = DigestUtils.sha1Hex(deploymentSpecInternal.applicationDeploymentRef.toString()),
+                applicationDeploymentId = DigestUtils.sha1Hex(deploymentSpecInternal.applicationDeploymentRef.toString()),
                 splunkIndex = deploymentSpecInternal.integration?.splunkIndex,
                 managementPath = deploymentSpecInternal.deploy?.managementPath,
                 releaseTo = deploymentSpecInternal.deploy?.releaseTo,
