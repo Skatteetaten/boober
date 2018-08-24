@@ -11,10 +11,10 @@ class AuroraBuildMapperV1(val name: String) {
 
     fun build(auroraDeploymentSpec: AuroraDeploymentSpec): AuroraBuild {
 
-        val type: TemplateType = auroraDeploymentSpec.get("type")
-        val name: String = auroraDeploymentSpec.get("name")
+        val type: TemplateType = auroraDeploymentSpec["type"]
+        val name: String = auroraDeploymentSpec["name"]
 
-        val groupId: String = auroraDeploymentSpec.get("groupId")
+        val groupId: String = auroraDeploymentSpec["groupId"]
         val artifactId: String = auroraDeploymentSpec.get("artifactId")
         val version: String = auroraDeploymentSpec.get("version")
         val testGitUrl: String? = auroraDeploymentSpec.extractOrNull("test/gitUrl")
