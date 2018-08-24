@@ -13,6 +13,7 @@ import org.encryptor4j.factory.KeyFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.beans.factory.config.BeanPostProcessor
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -130,11 +131,12 @@ class Configuration : BeanPostProcessor {
         return build
     }
 
-    @Profile("local")
+    @ConditionalOnMissingBean(KeyStore::class)
     @Bean
     fun localKeyStore(): KeyStore? = null
 
     @Profile("openshift")
+    @Primary
     @Bean
     fun openshiftSSLContext(): KeyStore? = KeyStore.getInstance(KeyStore.getDefaultType())?.apply {
         load(FileInputStream("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"), "".toCharArray())
