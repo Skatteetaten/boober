@@ -1,14 +1,15 @@
-package no.skatteetaten.aurora.boober.controller.v1
+package no.skatteetaten.aurora.boober.controller.v2
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.controller.internal.Response
+import no.skatteetaten.aurora.boober.controller.v1.getRefNameFromRequest
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService
 import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
-import no.skatteetaten.aurora.boober.service.renderSpecAsJsonOld
+import no.skatteetaten.aurora.boober.service.renderSpecAsJson
 import org.springframework.stereotype.Component
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -19,10 +20,10 @@ import org.springframework.web.util.UriUtils
 import java.nio.charset.Charset
 
 @RestController
-@RequestMapping("/v1/auroradeployspec/{auroraConfigName}")
+@RequestMapping("/v2/auroradeployspec/{auroraConfigName}")
 class AuroraDeploymentSpecControllerV1(
     val auroraDeploymentSpecService: AuroraDeploymentSpecService,
-    val responder: AuroraDeploymentSpecResponder
+    val responder: AuroraDeploymentSpecResponderV2
 ) {
 
     @GetMapping("/")
@@ -108,14 +109,14 @@ class AuroraDeploymentSpecControllerV1(
 }
 
 @Component
-class AuroraDeploymentSpecResponder {
+class AuroraDeploymentSpecResponderV2 {
     fun create(formatted: String) = Response(items = listOf(formatted))
 
     fun create(specInternal: AuroraDeploymentSpec, includeDefaults: Boolean): Response =
         create(listOf(specInternal), includeDefaults)
 
     fun create(specs: List<AuroraDeploymentSpec>, includeDefaults: Boolean): Response {
-        val fields = specs.map { renderSpecAsJsonOld(includeDefaults, it) }
+        val fields = specs.map { renderSpecAsJson(it, includeDefaults) }
         return Response(items = fields)
     }
 }

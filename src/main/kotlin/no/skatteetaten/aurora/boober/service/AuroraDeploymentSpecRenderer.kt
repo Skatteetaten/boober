@@ -2,24 +2,9 @@ package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 
-fun renderSpecAsJson(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean): Map<String, Any> {
-    val rawFields = if (!includeDefaults) {
-        deploymentSpec.removeDefaults()
-    } else {
-        deploymentSpec
-    }
-
-    return rawFields.present {
-        mapOf(
-            "source" to it.value.source,
-            "value" to it.value.value,
-            "sources" to it.value.sources
-        )
-    }
-}
 fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean): String {
 
-    val fields = getFieldsForPresentation(includeDefaults, deploymentSpec)
+    val fields = renderSpecAsJsonOld(includeDefaults, deploymentSpec)
 
     val defaultKeys = listOf("source", "value")
     val indent = 2
@@ -57,7 +42,23 @@ fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSp
         } + "}"
 }
 
-fun getFieldsForPresentation(
+fun renderSpecAsJson(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean): Map<String, Any> {
+    val rawFields = if (!includeDefaults) {
+        deploymentSpec.removeDefaults()
+    } else {
+        deploymentSpec
+    }
+
+    return rawFields.present {
+        mapOf(
+            "source" to it.value.source,
+            "value" to it.value.value,
+            "sources" to it.value.sources
+        )
+    }
+}
+
+fun renderSpecAsJsonOld(
     includeDefaults: Boolean,
     deploymentSpecInternal: AuroraDeploymentSpec
 ): Map<String, Any> {
