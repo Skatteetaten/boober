@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import org.springframework.stereotype.Service
 
 class ProvisioningResult(
@@ -14,15 +14,15 @@ class ExternalResourceProvisioner(
     val vaultProvider: VaultProvider
 ) {
 
-    fun provisionResources(deploymentSpec: AuroraDeploymentSpec): ProvisioningResult {
+    fun provisionResources(deploymentSpecInternal: AuroraDeploymentSpecInternal): ProvisioningResult {
 
-        val schemaProvisionResult = handleSchemaProvisioning(deploymentSpec)
-        val schemaResults = handleVaults(deploymentSpec)
+        val schemaProvisionResult = handleSchemaProvisioning(deploymentSpecInternal)
+        val schemaResults = handleVaults(deploymentSpecInternal)
         return ProvisioningResult(schemaProvisionResult, schemaResults)
     }
 
-    private fun handleSchemaProvisioning(deploymentSpec: AuroraDeploymentSpec): SchemaProvisionResults? {
-        val schemaProvisionRequests = createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec)
+    private fun handleSchemaProvisioning(deploymentSpecInternal: AuroraDeploymentSpecInternal): SchemaProvisionResults? {
+        val schemaProvisionRequests = createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpecInternal)
         if (schemaProvisionRequests.isEmpty()) {
             return null
         }
@@ -30,34 +30,34 @@ class ExternalResourceProvisioner(
         return databaseSchemaProvisioner.provisionSchemas(schemaProvisionRequests)
     }
 
-    private fun handleVaults(deploymentSpec: AuroraDeploymentSpec): VaultResults? {
+    private fun handleVaults(deploymentSpecInternal: AuroraDeploymentSpecInternal): VaultResults? {
 
-        val vaultRequests = createVaultRequests(deploymentSpec)
+        val vaultRequests = createVaultRequests(deploymentSpecInternal)
         return vaultProvider.findVaultData(vaultRequests)
     }
 
     companion object {
         @JvmStatic
-        protected fun createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec: AuroraDeploymentSpec): List<SchemaProvisionRequest> {
-            val databaseSpecs = deploymentSpec.integration?.database ?: listOf()
+        protected fun createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpecInternal: AuroraDeploymentSpecInternal): List<SchemaProvisionRequest> {
+            val databaseSpecs = deploymentSpecInternal.integration?.database ?: listOf()
             return databaseSpecs.map {
                 val name = it.name.toLowerCase()
                 if (it.id != null) {
                     SchemaIdRequest(it.id, name)
                 } else {
-                    SchemaForAppRequest(deploymentSpec.environment.affiliation, deploymentSpec.environment.envName, deploymentSpec.name, name)
+                    SchemaForAppRequest(deploymentSpecInternal.environment.affiliation, deploymentSpecInternal.environment.envName, deploymentSpecInternal.name, name)
                 }
             }
         }
 
         @JvmStatic
-        protected fun createVaultRequests(deploymentSpec: AuroraDeploymentSpec): List<VaultRequest> {
-            val volume = deploymentSpec.volume ?: return listOf()
+        protected fun createVaultRequests(deploymentSpecInternal: AuroraDeploymentSpecInternal): List<VaultRequest> {
+            val volume = deploymentSpecInternal.volume ?: return listOf()
 
             val secretVaultNames = volume.mounts?.mapNotNull { it.secretVaultName }.orEmpty()
             val allVaultNames = volume.secretVaultName?.let { secretVaultNames + listOf(it) } ?: secretVaultNames
 
-            return allVaultNames.map { VaultRequest(deploymentSpec.environment.affiliation, it, volume.secretVaultKeys, volume.keyMappings) }
+            return allVaultNames.map { VaultRequest(deploymentSpecInternal.environment.affiliation, it, volume.secretVaultKeys, volume.keyMappings) }
         }
     }
 }

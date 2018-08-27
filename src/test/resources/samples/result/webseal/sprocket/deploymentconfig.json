@@ -8,7 +8,6 @@
       "console.skatteetaten.no/management-path": ":8081/foobar"
     },
     "labels": {
-      "appId": "ad8a6ae72753e0f49ab0f2aeb73ee124ad29e7ac",
       "app": "sprocket",
       "updatedBy": "hero",
       "affiliation": "aos",
@@ -17,7 +16,15 @@
       "name": "sprocket",
       "deployTag": "3"
     },
-    "name": "sprocket"
+    "name": "sprocket",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "sprocket",
+        "uid": "123-123"
+      }
+    ]
   },
   "spec": {
     "replicas": 1,
@@ -37,7 +44,6 @@
     "template": {
       "metadata": {
         "labels": {
-          "appId": "ad8a6ae72753e0f49ab0f2aeb73ee124ad29e7ac",
           "app": "sprocket",
           "updatedBy": "hero",
           "affiliation": "aos",

@@ -9,7 +9,6 @@
       "sprocket.sits.no/deployment-config.certificate": "no.skatteetaten.aurora.openshift.reference"
     },
     "labels": {
-      "appId": "4f99affe6e2316fd3de91e788ea622ea29563c8e",
       "app": "reference",
       "updatedBy": "hero",
       "affiliation": "aos",
@@ -19,7 +18,15 @@
       "deployTag": "1.0.0-b1.5.3-flange-8.152.18",
       "removeAfter": "86400"
     },
-    "name": "reference"
+    "name": "reference",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "reference",
+        "uid": "123-123"
+      }
+    ]
   },
   "spec": {
     "replicas": 1,
@@ -39,7 +46,6 @@
     "template": {
       "metadata": {
         "labels": {
-          "appId": "4f99affe6e2316fd3de91e788ea622ea29563c8e",
           "app": "reference",
           "updatedBy": "hero",
           "affiliation": "aos",

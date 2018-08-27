@@ -16,15 +16,19 @@ import org.springframework.web.bind.annotation.RestController
 class ApplyResultController(val deployLogService: DeployLogService) {
 
     @GetMapping("/")
-    fun deployHistory(@PathVariable auroraConfigName: String): Response {
-
+    fun deployHistory(
+        @PathVariable auroraConfigName: String
+    ): Response {
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         val applicationResults: List<DeployHistory> = deployLogService.deployHistory(ref)
         return Response(items = applicationResults)
     }
 
     @GetMapping("/{deployId}")
-    fun findById(@PathVariable auroraConfigName: String, @PathVariable deployId: String): ResponseEntity<Response> {
+    fun findById(
+        @PathVariable auroraConfigName: String,
+        @PathVariable deployId: String
+    ): ResponseEntity<Response> {
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         val deployResult = deployLogService.findDeployResultById(ref, deployId)

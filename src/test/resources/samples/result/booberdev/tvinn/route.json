@@ -2,7 +2,15 @@
   "apiVersion": "v1",
   "kind": "Route",
   "metadata": {
-    "name": "tvinn"
+    "name": "tvinn",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "tvinn",
+        "uid": "123-123"
+      }
+    ]
   },
   "spec": {
     "to": {

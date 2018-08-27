@@ -1,9 +1,9 @@
 package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.ApplicationError
-import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.ConfigFieldErrorDetail
 import no.skatteetaten.aurora.boober.model.ErrorDetail
 
@@ -17,7 +17,7 @@ class AuroraDeploymentSpecValidationException(message: String) : ServiceExceptio
 
 class UnauthorizedAccessException(message: String) : ServiceException(message)
 
-data class ExceptionWrapper(val aid: ApplicationId, val throwable: Throwable)
+data class ExceptionWrapper(val aid: ApplicationDeploymentRef, val throwable: Throwable)
 
 class MultiApplicationValidationException(
     val errors: List<ExceptionWrapper> = listOf()
@@ -38,7 +38,7 @@ class MultiApplicationValidationException(
     }
 }
 
-fun List<Pair<AuroraDeploymentSpec?, ExceptionWrapper?>>.onErrorThrow(block: (List<ExceptionWrapper>) -> Exception): List<AuroraDeploymentSpec> {
+fun List<Pair<AuroraDeploymentSpecInternal?, ExceptionWrapper?>>.onErrorThrow(block: (List<ExceptionWrapper>) -> Exception): List<AuroraDeploymentSpecInternal> {
     this.mapNotNull { it.second }
         .takeIf { it.isNotEmpty() }
         ?.let { throw block(it) }

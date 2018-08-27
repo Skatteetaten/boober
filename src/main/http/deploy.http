@@ -1,0 +1,14 @@
+PUT {{apiUrl}}/v1/apply/paas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "applicationIds": [
+    {
+      "environment": "m89870",
+      "application": "whoami"
+    }
+  ]
+}
+
+###

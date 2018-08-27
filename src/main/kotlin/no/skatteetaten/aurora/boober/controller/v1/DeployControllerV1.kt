@@ -19,10 +19,12 @@ class DeployControllerV1(val deployService: DeployService) {
     fun apply(@PathVariable auroraConfigName: String, @RequestBody payload: ApplyPayload): Response {
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
-        val auroraDeployResults: List<AuroraDeployResult> = deployService.executeDeploy(ref,
-            payload.applicationIds,
+        val auroraDeployResults: List<AuroraDeployResult> = deployService.executeDeploy(
+            ref,
+            payload.allRefs,
             payload.overridesToAuroraConfigFiles(),
-            payload.deploy)
+            payload.deploy
+        )
 
         return auroraDeployResults.find { !it.success }
             ?.let { Response(items = auroraDeployResults, success = false, message = it.reason ?: "Deploy failed") }

@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service.internal
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.kubernetes.api.model.Secret
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResults
@@ -10,7 +11,12 @@ import java.util.Properties
 object DbhSecretGenerator {
 
     @JvmStatic
-    fun create(appName: String, schemaProvisionResults: SchemaProvisionResults, labels: Map<String, String>): List<Secret> {
+    fun create(
+        appName: String,
+        schemaProvisionResults: SchemaProvisionResults,
+        labels: Map<String, String>,
+        ownerReference: OwnerReference
+    ): List<Secret> {
 
         return schemaProvisionResults.results.map {
 
@@ -26,7 +32,8 @@ object DbhSecretGenerator {
                     "info" to infoFile,
                     "jdbcurl" to it.dbhSchema.jdbcUrl,
                     "name" to it.dbhSchema.username)
-                    .mapValues { it.value.toByteArray() }
+                    .mapValues { it.value.toByteArray() },
+                ownerReference = ownerReference
             )
         }
     }

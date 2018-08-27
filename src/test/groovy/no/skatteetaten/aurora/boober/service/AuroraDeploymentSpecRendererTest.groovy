@@ -1,13 +1,12 @@
 package no.skatteetaten.aurora.boober.service
 
-import static no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecRendererKt.filterDefaultFields
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import groovy.json.JsonOutput
-import no.skatteetaten.aurora.boober.model.ApplicationId
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import spock.lang.Unroll
 
 class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSpringTest {
@@ -26,14 +25,10 @@ class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSprin
   @Unroll
   def "Should create a Map of AuroraDeploymentSpec pointers for #env/#app with defaults #includeDefaults"() {
     given:
-      def aid = ApplicationId.aid(env, app)
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
+      def aid = ApplicationDeploymentRef.aid(env, app)
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid).spec
 
-
-      def renderedJson = deploymentSpec.fields
-      if (!includeDefaults) {
-        renderedJson = filterDefaultFields(renderedJson)
-      }
+      def renderedJson = AuroraDeploymentSpecRendererKt.renderSpecAsJson(deploymentSpec, includeDefaults)
       def filename = getFilename(aid, includeDefaults)
       def expected = loadResource(filename)
 
@@ -53,8 +48,8 @@ class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSprin
   @Unroll
   def "Should render formatted json-like output for pointers for #env/#app with defaults #includeDefaults"() {
     given:
-      def aid = ApplicationId.aid(env, app)
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
+      def aid = ApplicationDeploymentRef.aid(env, app)
+      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid).spec
       def renderedJson = AuroraDeploymentSpecRendererKt.
           renderJsonForAuroraDeploymentSpecPointers(deploymentSpec, includeDefaults)
       def filename = getFilename(aid, includeDefaults, true, "txt")
@@ -72,7 +67,8 @@ class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSprin
       "utv" | "reference"    | false
   }
 
-  def getFilename(ApplicationId aid, boolean includeDefaults, boolean formatted = false, String type = "json") {
+  def getFilename(ApplicationDeploymentRef aid, boolean includeDefaults, boolean formatted = false,
+      String type = "json") {
     String defaultSuffix = includeDefaults ? "-withDefaults" : ""
     String formattedText = formatted ? "-formatted" : ""
 

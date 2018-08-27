@@ -24,6 +24,7 @@ import com.fkorotkov.openshift.spec
 import com.fkorotkov.openshift.strategy
 import com.fkorotkov.openshift.to
 import io.fabric8.kubernetes.api.model.IntOrString
+import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.platform.createEnvVars
@@ -32,7 +33,7 @@ import no.skatteetaten.aurora.boober.mapper.platform.volumeMount
 import no.skatteetaten.aurora.boober.mapper.v1.PortNumbers
 import no.skatteetaten.aurora.boober.mapper.v1.ToxiProxyDefaults
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType.ConfigMap
 import no.skatteetaten.aurora.boober.model.MountType.PVC
@@ -85,22 +86,36 @@ class OpenShiftObjectGenerator(
 
     fun generateApplicationObjects(
         deployId: String,
-        auroraDeploymentSpec: AuroraDeploymentSpec,
-        provisioningResult: ProvisioningResult? = null
+        auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
+        provisioningResult: ProvisioningResult? = null,
+        ownerReference: OwnerReference
     ): List<JsonNode> {
 
-        return withLabelsAndMounts(deployId, auroraDeploymentSpec, provisioningResult, { labels, mounts ->
+        return withLabelsAndMounts(deployId, auroraDeploymentSpecInternal, provisioningResult) { labels, mounts ->
 
             listOf<JsonNode>()
-                .addIfNotNull(generateDeploymentConfig(auroraDeploymentSpec, labels, mounts))
-                .addIfNotNull(generateService(auroraDeploymentSpec, labels))
-                .addIfNotNull(generateImageStream(deployId, auroraDeploymentSpec))
-                .addIfNotNull(generateBuilds(auroraDeploymentSpec, deployId))
-                .addIfNotNull(generateSecretsAndConfigMaps(auroraDeploymentSpec.name, mounts
-                    ?: emptyList(), labels, provisioningResult))
-                .addIfNotNull(generateRoute(auroraDeploymentSpec, labels))
-                .addIfNotNull(generateTemplates(auroraDeploymentSpec, mounts))
-        })
+                .addIfNotNull(generateDeploymentConfig(auroraDeploymentSpecInternal, labels, mounts, ownerReference))
+                .addIfNotNull(
+                    generateService(
+                        auroraDeploymentSpecInternal,
+                        labels + ("name" to auroraDeploymentSpecInternal.name),
+                        ownerReference
+                    )
+                )
+                .addIfNotNull(generateImageStream(deployId, auroraDeploymentSpecInternal, ownerReference))
+                .addIfNotNull(generateBuilds(auroraDeploymentSpecInternal, deployId, ownerReference))
+                .addIfNotNull(
+                    generateSecretsAndConfigMaps(
+                        appName = auroraDeploymentSpecInternal.name,
+                        mounts = mounts ?: emptyList(),
+                        labels = labels,
+                        provisioningResult = provisioningResult,
+                        ownerReference = ownerReference
+                    )
+                )
+                .addIfNotNull(generateRoute(auroraDeploymentSpecInternal, labels, ownerReference))
+                .addIfNotNull(generateTemplates(auroraDeploymentSpecInternal, mounts, ownerReference))
+        }
     }
 
     fun generateProjectRequest(environment: AuroraDeployEnvironment): JsonNode {
@@ -109,8 +124,6 @@ class OpenShiftObjectGenerator(
             apiVersion = "v1"
             metadata {
                 name = environment.namespace
-                finalizers = null
-                ownerReferences = null
             }
         }
 
@@ -128,8 +141,6 @@ class OpenShiftObjectGenerator(
                 }
                 labels = mapOf("affiliation" to environment.affiliation).addIfNotNull(ttl)
                 name = environment.namespace
-                finalizers = null
-                ownerReferences = null
             }
         }
 
@@ -147,63 +158,84 @@ class OpenShiftObjectGenerator(
         return listOf(admin).addIfNotNull(view).map { mapper.convertValue<JsonNode>(it) }
     }
 
-    fun generateDeploymentConfig(deployId: String, deploymentSpec: AuroraDeploymentSpec, provisioningResult: ProvisioningResult? = null): JsonNode? =
-        withLabelsAndMounts(deployId, deploymentSpec, provisioningResult) { labels, mounts ->
-            generateDeploymentConfig(deploymentSpec, labels, mounts)
+    fun generateDeploymentConfig(
+        deployId: String,
+        deploymentSpecInternal: AuroraDeploymentSpecInternal,
+        provisioningResult: ProvisioningResult? = null,
+        ownerReference: OwnerReference
+    ): JsonNode? =
+        withLabelsAndMounts(deployId, deploymentSpecInternal, provisioningResult) { labels, mounts ->
+            generateDeploymentConfig(deploymentSpecInternal, labels, mounts, ownerReference)
         }
 
     fun generateDeploymentConfig(
-        auroraDeploymentSpec: AuroraDeploymentSpec,
+        auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
         labels: Map<String, String>,
-        mounts: List<Mount>?
+        mounts: List<Mount>?,
+        ownerReference: OwnerReference
     ): JsonNode? {
 
-        if (auroraDeploymentSpec.deploy == null) {
+        if (auroraDeploymentSpecInternal.deploy == null) {
             return null
         }
 
-        val applicationPlatformHandler = AuroraDeploymentSpecService.APPLICATION_PLATFORM_HANDLERS[auroraDeploymentSpec.applicationPlatform]
-            ?: throw IllegalArgumentException("ApplicationPlatformHandler ${auroraDeploymentSpec.applicationPlatform} is not present")
+        val applicationPlatformHandler =
+            AuroraDeploymentSpecService.APPLICATION_PLATFORM_HANDLERS[auroraDeploymentSpecInternal.applicationPlatform]
+                ?: throw IllegalArgumentException("ApplicationPlatformHandler ${auroraDeploymentSpecInternal.applicationPlatform} is not present")
 
-        val sidecarContainers = applicationPlatformHandler.createSidecarContainers(auroraDeploymentSpec, mounts?.filter { it.targetContainer == ToxiProxyDefaults.NAME })
+        val sidecarContainers = applicationPlatformHandler.createSidecarContainers(
+            auroraDeploymentSpecInternal,
+            mounts?.filter { it.targetContainer == ToxiProxyDefaults.NAME })
 
-        val deployment = applicationPlatformHandler.handleAuroraDeployment(auroraDeploymentSpec, labels, mounts, routeSuffix, sidecarContainers)
+        val deployment = applicationPlatformHandler.handleAuroraDeployment(
+            auroraDeploymentSpecInternal,
+            labels,
+            mounts,
+            routeSuffix,
+            sidecarContainers
+        )
 
         val containers = deployment.containers.map { ContainerGenerator.create(it) }
 
-        val dc = DeploymentConfigGenerator.create(deployment, containers)
+        val dc = DeploymentConfigGenerator.create(deployment, containers, ownerReference)
 
         return mapper.convertValue(dc)
     }
 
-    fun generateService(auroraDeploymentSpec: AuroraDeploymentSpec, serviceLabels: Map<String, String>): JsonNode? {
-        return auroraDeploymentSpec.deploy?.let {
+    fun generateService(
+        auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
+        serviceLabels: Map<String, String>,
+        reference: OwnerReference
+    ): JsonNode? {
+        return auroraDeploymentSpecInternal.deploy?.let {
 
-            val webseal = auroraDeploymentSpec.integration?.webseal?.let {
-                val host = it.host ?: "${auroraDeploymentSpec.name}-${auroraDeploymentSpec.environment.namespace}"
+            val webseal = auroraDeploymentSpecInternal.integration?.webseal?.let {
+                val host = it.host
+                    ?: "${auroraDeploymentSpecInternal.name}-${auroraDeploymentSpecInternal.environment.namespace}"
                 "sprocket.sits.no/service.webseal" to host
             }
 
-            val websealRoles = auroraDeploymentSpec.integration?.webseal?.roles?.let {
+            val websealRoles = auroraDeploymentSpecInternal.integration?.webseal?.roles?.let {
                 "sprocket.sits.no/service.webseal-roles" to it
             }
 
             val prometheusAnnotations = it.prometheus?.takeIf { it.path != "" }?.let {
-                mapOf("prometheus.io/scheme" to "http",
+                mapOf(
+                    "prometheus.io/scheme" to "http",
                     "prometheus.io/scrape" to "true",
                     "prometheus.io/path" to it.path,
                     "prometheus.io/port" to "${it.port}"
                 )
             } ?: mapOf("prometheus.io/scrape" to "false")
 
-            val podPort = if (auroraDeploymentSpec.deploy.toxiProxy != null) PortNumbers.TOXIPROXY_HTTP_PORT else PortNumbers.INTERNAL_HTTP_PORT
+            val podPort =
+                if (auroraDeploymentSpecInternal.deploy.toxiProxy != null) PortNumbers.TOXIPROXY_HTTP_PORT else PortNumbers.INTERNAL_HTTP_PORT
 
             val service = newService {
                 apiVersion = "v1"
                 metadata {
-                    name = auroraDeploymentSpec.name
-                    finalizers = null
-                    ownerReferences = null
+                    ownerReferences = listOf(reference)
+                    name = auroraDeploymentSpecInternal.name
                     annotations = prometheusAnnotations.addIfNotNull(webseal).addIfNotNull(websealRoles)
                     labels = serviceLabels
                 }
@@ -219,7 +251,7 @@ class OpenShiftObjectGenerator(
                         }
                     )
 
-                    selector = mapOf("name" to auroraDeploymentSpec.name)
+                    selector = mapOf("name" to auroraDeploymentSpecInternal.name)
                     type = "ClusterIP"
                     sessionAffinity = "None"
                 }
@@ -228,84 +260,127 @@ class OpenShiftObjectGenerator(
         }
     }
 
-    fun generateImageStream(deployId: String, auroraDeploymentSpec: AuroraDeploymentSpec): JsonNode? {
-        return auroraDeploymentSpec.deploy?.let {
+    fun generateImageStream(
+        deployId: String,
+        auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
+        reference: OwnerReference
+    ): JsonNode? {
+        return auroraDeploymentSpecInternal.deploy?.let {
 
-            val labels = openShiftObjectLabelService.createCommonLabels(auroraDeploymentSpec, deployId,
-                mapOf("releasedVersion" to it.version))
+            val labels = openShiftObjectLabelService.createCommonLabels(
+                auroraDeploymentSpecInternal, deployId,
+                mapOf("releasedVersion" to it.version)
+            )
 
-            val imageStream = if (auroraDeploymentSpec.type == TemplateType.development) {
-                ImageStreamGenerator.createLocalImageStream(auroraDeploymentSpec.name, labels)
+            val imageStream = if (auroraDeploymentSpecInternal.type == TemplateType.development) {
+                ImageStreamGenerator.createLocalImageStream(auroraDeploymentSpecInternal.name, labels, reference)
             } else {
-                ImageStreamGenerator.createRemoteImageStream(auroraDeploymentSpec.name, labels, dockerRegistry, it.dockerImagePath, it.dockerTag)
+                ImageStreamGenerator.createRemoteImageStream(
+                    auroraDeploymentSpecInternal.name,
+                    labels,
+                    dockerRegistry,
+                    it.dockerImagePath,
+                    it.dockerTag,
+                    reference
+                )
             }
 
             return mapper.convertValue(imageStream)
         }
     }
 
-    fun generateTemplates(auroraDeploymentSpec: AuroraDeploymentSpec, mounts: List<Mount>?): List<JsonNode>? {
+    fun generateTemplates(
+        auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
+        mounts: List<Mount>?,
+        ownerReference: OwnerReference
+    ): List<JsonNode>? {
 
-        val localTemplate = auroraDeploymentSpec.localTemplate?.let {
-            openShiftTemplateProcessor.generateObjects(it.templateJson as ObjectNode, it.parameters, auroraDeploymentSpec, it.version, it.replicas)
+        val localTemplate = auroraDeploymentSpecInternal.localTemplate?.let {
+            openShiftTemplateProcessor.generateObjects(
+                it.templateJson as ObjectNode,
+                it.parameters,
+                auroraDeploymentSpecInternal,
+                it.version,
+                it.replicas
+            )
         }
 
-        val template = auroraDeploymentSpec.template?.let {
+        val template = auroraDeploymentSpecInternal.template?.let {
             val template = openShiftClient.get("template", "openshift", it.template)?.body as ObjectNode
-            openShiftTemplateProcessor.generateObjects(template, it.parameters, auroraDeploymentSpec, it.version, it.replicas)
+            openShiftTemplateProcessor.generateObjects(
+                template,
+                it.parameters,
+                auroraDeploymentSpecInternal,
+                it.version,
+                it.replicas
+            )
         }
 
         val objects: List<JsonNode> = listOf<JsonNode>().addIfNotNull(localTemplate).addIfNotNull(template)
 
         return objects.map {
-            if (it.openshiftKind == "deploymentconfig") {
+            val result: JsonNode = if (it.openshiftKind == "deploymentconfig") {
                 val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it)
                 val spec = dc.spec.template.spec
-                spec.volumes.addAll(mounts.podVolumes(auroraDeploymentSpec.name))
+                spec.volumes.addAll(mounts.podVolumes(auroraDeploymentSpecInternal.name))
                 spec.containers.forEach {
                     it.volumeMounts.addAll(mounts.volumeMount() ?: listOf())
-                    it.env.addAll(createEnvVars(mounts, auroraDeploymentSpec, routeSuffix))
+                    it.env.addAll(createEnvVars(mounts, auroraDeploymentSpecInternal, routeSuffix))
                 }
 
-                auroraDeploymentSpec.integration?.certificateCn?.let {
+                auroraDeploymentSpecInternal.integration?.certificateCn?.let {
                     if (dc.metadata.annotations == null) {
                         dc.metadata.annotations = HashMap<String, String>()
                     }
                     dc.metadata.annotations.put("sprocket.sits.no/deployment-config.certificate", it)
                 }
                 jacksonObjectMapper().convertValue(dc)
-            } else if (it.openshiftKind == "service" && it.openshiftName == auroraDeploymentSpec.name) {
+            } else if (it.openshiftKind == "service" && it.openshiftName == auroraDeploymentSpecInternal.name) {
 
                 val service: Service = jacksonObjectMapper().convertValue(it)
 
                 if (service.metadata.annotations == null) {
                     service.metadata.annotations = HashMap<String, String>()
                 }
+                if (service.metadata.labels == null) {
+                    service.metadata.labels = HashMap<String, String>()
+                }
 
-                auroraDeploymentSpec.integration?.webseal?.let {
-                    val host = it.host ?: "${auroraDeploymentSpec.name}-${auroraDeploymentSpec.environment.namespace}"
+                service.metadata.labels.put("name", auroraDeploymentSpecInternal.name)
+
+                auroraDeploymentSpecInternal.integration?.webseal?.let {
+                    val host = it.host
+                        ?: "${auroraDeploymentSpecInternal.name}-${auroraDeploymentSpecInternal.environment.namespace}"
                     service.metadata.annotations["sprocket.sits.no/service.webseal"] = host
                 }
 
-                auroraDeploymentSpec.integration?.webseal?.roles?.let {
+                auroraDeploymentSpecInternal.integration?.webseal?.roles?.let {
                     service.metadata.annotations["sprocket.sits.no/service.webseal-roles"] = it
                 }
 
                 jacksonObjectMapper().convertValue(service)
             } else it
+
+            val metadataJson: JsonNode = jacksonObjectMapper().convertValue(listOf(ownerReference))
+            val metadataNode: ObjectNode = result["metadata"] as ObjectNode
+            metadataNode.set("ownerReferences", metadataJson)
+            result
         }
     }
 
-    fun generateRoute(auroraDeploymentSpec: AuroraDeploymentSpec, routeLabels: Map<String, String>): List<JsonNode>? {
-        return auroraDeploymentSpec.route?.route?.map {
+    fun generateRoute(
+        auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
+        routeLabels: Map<String, String>,
+        ownerReference: OwnerReference
+    ): List<JsonNode>? {
+        return auroraDeploymentSpecInternal.route?.route?.map {
 
             val route = newRoute {
                 apiVersion = "v1"
                 metadata {
                     name = it.objectName
                     labels = routeLabels
-                    ownerReferences = null
-                    finalizers = null
+                    ownerReferences = listOf(ownerReference)
                     it.annotations?.let {
                         annotations = it.mapKeys { it.key.replace("|", "/") }
                     }
@@ -313,7 +388,7 @@ class OpenShiftObjectGenerator(
                 spec {
                     to {
                         kind = "Service"
-                        name = auroraDeploymentSpec.name
+                        name = auroraDeploymentSpecInternal.name
                     }
                     host = "${it.host}$routeSuffix"
                     it.path?.let {
@@ -325,17 +400,29 @@ class OpenShiftObjectGenerator(
         }
     }
 
-    fun generateSecretsAndConfigMapsInTest(deployId: String, deploymentSpec: AuroraDeploymentSpec, provisioningResult: ProvisioningResult? = null, name: String): List<JsonNode>? {
+    fun generateSecretsAndConfigMapsInTest(
+        deployId: String,
+        deploymentSpecInternal: AuroraDeploymentSpecInternal,
+        provisioningResult: ProvisioningResult? = null,
+        name: String,
+        ownerReference: OwnerReference
+    ): List<JsonNode>? {
 
-        return withLabelsAndMounts(deployId, deploymentSpec, provisioningResult, { labels, mounts ->
-            generateSecretsAndConfigMaps(name, mounts ?: emptyList(), labels, provisioningResult)
+        return withLabelsAndMounts(deployId, deploymentSpecInternal, provisioningResult, { labels, mounts ->
+            generateSecretsAndConfigMaps(name, mounts ?: emptyList(), labels, provisioningResult, ownerReference)
         })
     }
 
-    private fun generateSecretsAndConfigMaps(appName: String, mounts: List<Mount>, labels: Map<String, String>, provisioningResult: ProvisioningResult?): List<JsonNode> {
+    private fun generateSecretsAndConfigMaps(
+        appName: String,
+        mounts: List<Mount>,
+        labels: Map<String, String>,
+        provisioningResult: ProvisioningResult?,
+        ownerReference: OwnerReference
+    ): List<JsonNode> {
 
         val schemaSecrets = provisioningResult?.schemaProvisionResults
-            ?.let { DbhSecretGenerator.create(appName, it, labels) }
+            ?.let { DbhSecretGenerator.create(appName, it, labels, ownerReference) }
             ?: emptyList()
 
         val schemaSecretNames = schemaSecrets.map { it.metadata.name }
@@ -346,10 +433,24 @@ class OpenShiftObjectGenerator(
             .mapNotNull { mount: Mount ->
                 when (mount.type) {
                     ConfigMap -> mount.content
-                        ?.let { ConfigMapGenerator.create(mount.getNamespacedVolumeName(appName), labels, it) }
+                        ?.let {
+                            ConfigMapGenerator.create(
+                                mount.getNamespacedVolumeName(appName),
+                                labels,
+                                it,
+                                ownerReference
+                            )
+                        }
                     Secret -> mount.secretVaultName
                         ?.let { provisioningResult?.vaultResults?.getVaultData(it) }
-                        ?.let { SecretGenerator.create(mount.getNamespacedVolumeName(appName), labels, it) }
+                        ?.let {
+                            SecretGenerator.create(
+                                mount.getNamespacedVolumeName(appName),
+                                labels,
+                                it,
+                                ownerReference
+                            )
+                        }
                     PVC -> null
                 }
             }
@@ -357,21 +458,28 @@ class OpenShiftObjectGenerator(
             .map { mapper.convertValue<JsonNode>(it) }
     }
 
-    private fun generateBuilds(deploymentSpec: AuroraDeploymentSpec, deployId: String): List<JsonNode>? {
-        return deploymentSpec.build?.let {
+    private fun generateBuilds(
+        deploymentSpecInternal: AuroraDeploymentSpecInternal,
+        deployId: String,
+        ownerReference: OwnerReference
+    ): List<JsonNode>? {
+        return deploymentSpecInternal.build?.let {
             val buildName = if (it.buildSuffix != null) {
-                "${deploymentSpec.name}-${it.buildSuffix}"
+                "${deploymentSpecInternal.name}-${it.buildSuffix}"
             } else {
-                deploymentSpec.name
+                deploymentSpecInternal.name
             }
 
             val build = newBuildConfig {
                 apiVersion = "v1"
                 metadata {
+                    ownerReferences = listOf(ownerReference)
                     name = buildName
-                    labels = openShiftObjectLabelService.createCommonLabels(deploymentSpec, deployId, name = buildName)
-                    ownerReferences = null
-                    finalizers = null
+                    labels = openShiftObjectLabelService.createCommonLabels(
+                        deploymentSpecInternal,
+                        deployId,
+                        name = buildName
+                    )
                 }
 
                 spec {
@@ -450,13 +558,13 @@ class OpenShiftObjectGenerator(
 
     private fun <T> withLabelsAndMounts(
         deployId: String,
-        deploymentSpec: AuroraDeploymentSpec,
+        deploymentSpecInternal: AuroraDeploymentSpecInternal,
         provisioningResult: ProvisioningResult? = null,
         c: (labels: Map<String, String>, mounts: List<Mount>?) -> T
     ): T {
 
-        val mounts: List<Mount> = findAndCreateMounts(deploymentSpec, provisioningResult)
-        val labels = openShiftObjectLabelService.createCommonLabels(deploymentSpec, deployId)
+        val mounts: List<Mount> = findAndCreateMounts(deploymentSpecInternal, provisioningResult)
+        val labels = openShiftObjectLabelService.createCommonLabels(deploymentSpecInternal, deployId)
         return c(labels, mounts)
     }
 }

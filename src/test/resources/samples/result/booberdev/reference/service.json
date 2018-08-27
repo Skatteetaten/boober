@@ -9,14 +9,22 @@
       "prometheus.io/port": "8081"
     },
     "labels": {
-      "appId": "4f99affe6e2316fd3de91e788ea622ea29563c8e",
       "app": "reference",
       "updatedBy": "hero",
       "affiliation": "aos",
       "updateInBoober": "true",
-      "booberDeployId": "123"
+      "booberDeployId": "123",
+      "name": "reference"
     },
-    "name": "reference"
+    "name": "reference",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "reference",
+        "uid": "123-123"
+      }
+    ]
   },
   "spec": {
     "ports": [

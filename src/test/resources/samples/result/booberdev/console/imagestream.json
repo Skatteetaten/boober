@@ -3,7 +3,6 @@
   "kind": "ImageStream",
   "metadata": {
     "labels": {
-      "appId": "1d8c6374126c0a5f2e0592eb3d44cbc681a42c8a",
       "app": "openshift-console-api",
       "updatedBy": "hero",
       "affiliation": "aos",
@@ -11,7 +10,15 @@
       "booberDeployId": "123",
       "releasedVersion": "3"
     },
-    "name": "openshift-console-api"
+    "name": "openshift-console-api",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "openshift-console-api",
+        "uid": "123-123"
+      }
+    ]
   },
   "spec": {
     "dockerImageRepository": "docker-registry.aurora.sits.no:5000/ske_openshift_aurora/openshift-console-api",

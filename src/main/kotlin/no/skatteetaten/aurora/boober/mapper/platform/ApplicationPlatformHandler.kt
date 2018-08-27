@@ -18,7 +18,7 @@ import no.skatteetaten.aurora.boober.mapper.v1.getToxiProxyImage
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeployStrategy
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType.ConfigMap
@@ -29,29 +29,30 @@ import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterNullValues
+import no.skatteetaten.aurora.boober.utils.withNonBlank
 import java.time.Duration
 
 abstract class ApplicationPlatformHandler(val name: String) {
     open fun handlers(handlers: Set<AuroraConfigFieldHandler>): Set<AuroraConfigFieldHandler> = handlers
 
-    abstract fun handleAuroraDeployment(auroraDeploymentSpec: AuroraDeploymentSpec, labels: Map<String, String>, mounts: List<Mount>?, routeSuffix: String, sidecarContainers: List<AuroraContainer>?): AuroraDeployment
+    abstract fun handleAuroraDeployment(auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal, labels: Map<String, String>, mounts: List<Mount>?, routeSuffix: String, sidecarContainers: List<AuroraContainer>?): AuroraDeployment
 
-    fun createAnnotations(spec: AuroraDeploymentSpec): Map<String, String> {
+    fun createAnnotations(specInternal: AuroraDeploymentSpecInternal): Map<String, String> {
 
-        val deploy = spec.deploy!!
+        val deploy = specInternal.deploy!!
         fun escapeOverrides(): String? {
-            val files = deploy.overrideFiles.mapValues { jacksonObjectMapper().readValue(it.value, JsonNode::class.java) }
+            val files = specInternal.overrideFiles.mapValues { jacksonObjectMapper().readValue(it.value, JsonNode::class.java) }
             val content = jacksonObjectMapper().writeValueAsString(files)
             return content.takeIf { it != "{}" }
         }
 
         return mapOf(
-            "boober.skatteetaten.no/applicationFile" to spec.applicationFile.name,
+            "boober.skatteetaten.no/applicationFile" to specInternal.applicationFile.name,
             "console.skatteetaten.no/alarm" to deploy.flags.alarm.toString(),
             "boober.skatteetaten.no/overrides" to escapeOverrides(),
             "console.skatteetaten.no/management-path" to deploy.managementPath,
             "boober.skatteetaten.no/releaseTo" to deploy.releaseTo,
-            "sprocket.sits.no/deployment-config.certificate" to spec.integration?.certificateCn
+            "sprocket.sits.no/deployment-config.certificate" to specInternal.integration?.certificateCn
         ).filterNullValues().filterValues { !it.isBlank() }
     }
 
@@ -69,11 +70,11 @@ abstract class ApplicationPlatformHandler(val name: String) {
         return OpenShiftObjectLabelService.toOpenShiftLabelNameSafeMap(allLabels)
     }
 
-    fun createSidecarContainers(auroraDeploymentSpec: AuroraDeploymentSpec, mounts: List<Mount>?): List<AuroraContainer>? {
+    fun createSidecarContainers(auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal, mounts: List<Mount>?): List<AuroraContainer>? {
 
-        return auroraDeploymentSpec?.deploy?.toxiProxy?.let {
+        return auroraDeploymentSpecInternal?.deploy?.toxiProxy?.let {
             listOf(AuroraContainer(
-                name = "${auroraDeploymentSpec.name}-toxiproxy",
+                name = "${auroraDeploymentSpecInternal.name}-toxiproxy",
                 tcpPorts = mapOf("http" to PortNumbers.TOXIPROXY_HTTP_PORT, "management" to PortNumbers.TOXIPROXY_ADMIN_PORT),
                 readiness = ToxiProxyDefaults.READINESS_PROBE,
                 liveness = ToxiProxyDefaults.LIVENESS_PROBE,
@@ -85,15 +86,7 @@ abstract class ApplicationPlatformHandler(val name: String) {
                 args = ToxiProxyDefaults.ARGS,
                 image = getToxiProxyImage(it.version)
             ))
-        } ?: null
-    }
-
-    private inline fun <R> String.withNonBlank(block: (String) -> R?): R? {
-
-        if (this.isBlank()) {
-            return null
         }
-        return block(this)
     }
 }
 
@@ -159,16 +152,16 @@ fun List<Mount>?.podVolumes(dcName: String): List<Volume> {
     } ?: emptyList()
 }
 
-fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpec: AuroraDeploymentSpec, routeSuffix: String): List<EnvVar> {
+fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal, routeSuffix: String): List<EnvVar> {
 
     val mountEnv = mounts?.map {
         "VOLUME_${it.mountName.toUpperCase().replace("-", "_")}" to it.path
     }?.toMap() ?: mapOf()
 
-    val splunkIndex = auroraDeploymentSpec.integration?.splunkIndex?.let { "SPLUNK_INDEX" to it }
+    val splunkIndex = auroraDeploymentSpecInternal.integration?.splunkIndex?.let { "SPLUNK_INDEX" to it }
 
-    val certEnv = auroraDeploymentSpec.integration?.certificateCn?.let {
-        val baseUrl = "/u01/secrets/app/${auroraDeploymentSpec.name}-cert"
+    val certEnv = auroraDeploymentSpecInternal.integration?.certificateCn?.let {
+        val baseUrl = "/u01/secrets/app/${auroraDeploymentSpecInternal.name}-cert"
         mapOf(
             "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
             "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
@@ -176,21 +169,21 @@ fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpec: AuroraDeploymentSp
         )
     } ?: mapOf()
 
-    val debugEnv = auroraDeploymentSpec.deploy?.flags?.takeIf { it.debug }?.let {
+    val debugEnv = auroraDeploymentSpecInternal.deploy?.flags?.takeIf { it.debug }?.let {
         mapOf(
             "ENABLE_REMOTE_DEBUG" to "true",
             "DEBUG_PORT" to "5005"
         )
     } ?: mapOf()
 
-    val configEnv = auroraDeploymentSpec.deploy?.env ?: emptyMap()
-    val routeName = auroraDeploymentSpec.route?.route?.takeIf { it.isNotEmpty() }?.first()?.let {
+    val configEnv = auroraDeploymentSpecInternal.deploy?.env ?: emptyMap()
+    val routeName = auroraDeploymentSpecInternal.route?.route?.takeIf { it.isNotEmpty() }?.first()?.let {
         val host = "${it.host}$routeSuffix"
         val url = "$host${it.path?.ensureStartWith("/") ?: ""}"
         mapOf("ROUTE_NAME" to url, "ROUTE_URL" to "http://$url")
     } ?: mapOf()
 
-    val dbEnv = auroraDeploymentSpec.integration?.database?.takeIf { it.isNotEmpty() }?.let {
+    val dbEnv = auroraDeploymentSpecInternal.integration?.database?.takeIf { it.isNotEmpty() }?.let {
         fun createDbEnv(db: Database, envName: String): List<Pair<String, String>> {
             val path = "/u01/secrets/app/${db.name.toLowerCase()}-db"
             val envName = envName.replace("-", "_").toUpperCase()
@@ -205,8 +198,8 @@ fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpec: AuroraDeploymentSp
     }?.toMap() ?: mapOf()
 
     val envs = mapOf(
-        "OPENSHIFT_CLUSTER" to auroraDeploymentSpec.cluster,
-        "APP_NAME" to auroraDeploymentSpec.name
+        "OPENSHIFT_CLUSTER" to auroraDeploymentSpecInternal.cluster,
+        "APP_NAME" to auroraDeploymentSpecInternal.name
     ).addIfNotNull(splunkIndex) + routeName + certEnv + debugEnv + dbEnv + mountEnv + configEnv
 
     val env = envs.mapKeys { it.key.replace(".", "_").replace("-", "_") }

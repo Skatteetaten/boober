@@ -44,7 +44,7 @@ class AuroraConfigControllerTest extends AbstractAuroraConfigTest {
   }
 
   def auroraConfigName = 'aos'
-  def ref = new AuroraConfigRef(auroraConfigName, "master")
+  def ref = new AuroraConfigRef(auroraConfigName, "master", null)
   def fileName = 'about.json'
   def auroraConfig = createAuroraConfig([(fileName): DEFAULT_ABOUT])
 
@@ -109,9 +109,7 @@ class AuroraConfigControllerTest extends AbstractAuroraConfigTest {
   "value": 3
 }]"""]
 
-      auroraConfigService.
-          patchAuroraConfigFile(ref, fileName, payload.content, payload.version) >>
-          auroraConfig
+      auroraConfigService. patchAuroraConfigFile(ref, fileName, payload.content, payload.version) >> auroraConfig
     when:
       ResultActions result = mockMvc.perform(
           patch("/v1/auroraconfig/$auroraConfigName/$fileName").content(JsonOutput.toJson(payload)).

@@ -47,6 +47,11 @@ abstract class AbstractContractBase extends Specification {
     jsonResponses[responseName].read(jsonPath, type)
   }
 
+  def <T> T responseObject(String responseName = jsonResponses.keySet().first(), Class<T> type) {
+    def json = jsonResponses[responseName].jsonString()
+    ObjectMapperConfigurer.configureObjectMapper(new ObjectMapper()).readValue(json, type)
+  }
+
   def setupMockMvc(Object controller) {
     def objectMapper = ObjectMapperConfigurer.configureObjectMapper(new ObjectMapper())
 

@@ -1,178 +1,472 @@
 {
-  "applicationId": {
+  "applicationDeploymentRef": {
     "source": "static",
-    "value": "utv/reference"
+    "value": "utv/reference",
+    "sources": [
+      {
+        "source": "static",
+        "value": "utv/reference"
+      }
+    ]
   },
   "configVersion": {
     "source": "static",
-    "value": "master"
+    "value": "master",
+    "sources": [
+      {
+        "source": "static",
+        "value": "master"
+      }
+    ]
   },
   "schemaVersion": {
     "source": "about.json",
-    "value": "v1"
+    "value": "v1",
+    "sources": [
+      {
+        "source": "about.json",
+        "value": "v1"
+      }
+    ]
   },
   "type": {
     "source": "reference.json",
-    "value": "deploy"
+    "value": "deploy",
+    "sources": [
+      {
+        "source": "reference.json",
+        "value": "deploy"
+      }
+    ]
   },
   "applicationPlatform": {
     "source": "default",
-    "value": "java"
+    "value": "java",
+    "sources": [
+      {
+        "source": "default",
+        "value": "java"
+      }
+    ]
   },
   "affiliation": {
     "source": "about.json",
-    "value": "aos"
+    "value": "aos",
+    "sources": [
+      {
+        "source": "about.json",
+        "value": "aos"
+      }
+    ]
   },
   "segment": {
     "source": "about.json",
-    "value": "aurora"
+    "value": "aurora",
+    "sources": [
+      {
+        "source": "about.json",
+        "value": "aurora"
+      }
+    ]
   },
   "cluster": {
     "source": "utv/about.json",
-    "value": "utv"
+    "value": "utv",
+    "sources": [
+      {
+        "source": "utv/about.json",
+        "value": "utv"
+      }
+    ]
   },
   "permissions": {
     "admin": {
       "source": "about.json",
-      "value": "APP_PaaS_utv"
+      "value": "APP_PaaS_utv",
+      "sources": [
+        {
+          "source": "about.json",
+          "value": "APP_PaaS_utv"
+        }
+      ]
     }
   },
   "envName": {
     "source": "folderName",
-    "value": "utv"
+    "value": "utv",
+    "sources": [
+      {
+        "source": "folderName",
+        "value": "utv"
+      }
+    ]
   },
   "name": {
     "source": "fileName",
-    "value": "reference"
-  },
-  "certificate": {
-    "source": "default",
-    "value": false
-  },
-  "database": {
-    "source": "default",
-    "value": false
+    "value": "reference",
+    "sources": [
+      {
+        "source": "fileName",
+        "value": "reference"
+      }
+    ]
   },
   "prometheus": {
     "source": "default",
     "value": true,
+    "sources": [
+      {
+        "source": "default",
+        "value": true
+      }
+    ],
     "path": {
       "source": "default",
-      "value": "/prometheus"
+      "value": "/prometheus",
+      "sources": [
+        {
+          "source": "default",
+          "value": "/prometheus"
+        }
+      ]
     },
     "port": {
       "source": "default",
-      "value": 8081
+      "value": 8081,
+      "sources": [
+        {
+          "source": "default",
+          "value": 8081
+        }
+      ]
     }
   },
   "management": {
     "source": "default",
     "value": true,
+    "sources": [
+      {
+        "source": "default",
+        "value": true
+      }
+    ],
     "path": {
       "source": "default",
-      "value": "actuator"
+      "value": "actuator",
+      "sources": [
+        {
+          "source": "default",
+          "value": "actuator"
+        }
+      ]
     },
     "port": {
       "source": "default",
-      "value": "8081"
+      "value": "8081",
+      "sources": [
+        {
+          "source": "default",
+          "value": "8081"
+        }
+      ]
     }
   },
   "deployStrategy": {
     "type": {
       "source": "default",
-      "value": "rolling"
+      "value": "rolling",
+      "sources": [
+        {
+          "source": "default",
+          "value": "rolling"
+        }
+      ]
     },
     "timeout": {
       "source": "default",
-      "value": 180
+      "value": 180,
+      "sources": [
+        {
+          "source": "default",
+          "value": 180
+        }
+      ]
     }
+  },
+  "database": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "source": "default",
+        "value": false
+      }
+    ]
+  },
+  "certificate": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "source": "default",
+        "value": false
+      }
+    ]
   },
   "webseal": {
     "source": "default",
-    "value": false
+    "value": false,
+    "sources": [
+      {
+        "source": "default",
+        "value": false
+      }
+    ]
   },
   "artifactId": {
     "source": "fileName",
-    "value": "reference"
+    "value": "reference",
+    "sources": [
+      {
+        "source": "fileName",
+        "value": "reference"
+      }
+    ]
   },
   "groupId": {
     "source": "reference.json",
-    "value": "no.skatteetaten.aurora"
+    "value": "no.skatteetaten.aurora",
+    "sources": [
+      {
+        "source": "reference.json",
+        "value": "no.skatteetaten.aurora"
+      }
+    ]
   },
   "version": {
     "source": "reference.json",
-    "value": "1"
+    "value": "1",
+    "sources": [
+      {
+        "source": "reference.json",
+        "value": "1"
+      }
+    ]
   },
   "resources": {
     "cpu": {
       "min": {
         "source": "default",
-        "value": "100m"
+        "value": "100m",
+        "sources": [
+          {
+            "source": "default",
+            "value": "100m"
+          }
+        ]
       },
       "max": {
         "source": "default",
-        "value": "2000m"
+        "value": "2000m",
+        "sources": [
+          {
+            "source": "default",
+            "value": "2000m"
+          }
+        ]
       }
     },
     "memory": {
       "min": {
         "source": "default",
-        "value": "128Mi"
+        "value": "128Mi",
+        "sources": [
+          {
+            "source": "default",
+            "value": "128Mi"
+          }
+        ]
       },
       "max": {
         "source": "default",
-        "value": "512Mi"
+        "value": "512Mi",
+        "sources": [
+          {
+            "source": "default",
+            "value": "512Mi"
+          }
+        ]
       }
     }
   },
   "replicas": {
     "source": "reference.json",
-    "value": 1
+    "value": 1,
+    "sources": [
+      {
+        "source": "default",
+        "value": 1
+      },
+      {
+        "source": "reference.json",
+        "value": 1
+      }
+    ]
   },
   "readiness": {
     "source": "default",
     "value": true,
+    "sources": [
+      {
+        "source": "default",
+        "value": true
+      }
+    ],
     "port": {
       "source": "default",
-      "value": 8080
+      "value": 8080,
+      "sources": [
+        {
+          "source": "default",
+          "value": 8080
+        }
+      ]
     },
     "delay": {
       "source": "default",
-      "value": 10
+      "value": 10,
+      "sources": [
+        {
+          "source": "default",
+          "value": 10
+        }
+      ]
     },
     "timeout": {
       "source": "default",
-      "value": 1
+      "value": 1,
+      "sources": [
+        {
+          "source": "default",
+          "value": 1
+        }
+      ]
     }
   },
   "liveness": {
     "source": "default",
-    "value": false
+    "value": false,
+    "sources": [
+      {
+        "source": "default",
+        "value": false
+      }
+    ],
+    "port": {
+      "source": "default",
+      "value": 8080,
+      "sources": [
+        {
+          "source": "default",
+          "value": 8080
+        }
+      ]
+    },
+    "delay": {
+      "source": "default",
+      "value": 10,
+      "sources": [
+        {
+          "source": "default",
+          "value": 10
+        }
+      ]
+    },
+    "timeout": {
+      "source": "default",
+      "value": 1,
+      "sources": [
+        {
+          "source": "default",
+          "value": 1
+        }
+      ]
+    }
   },
   "debug": {
     "source": "default",
-    "value": false
+    "value": false,
+    "sources": [
+      {
+        "source": "default",
+        "value": false
+      }
+    ]
   },
   "pause": {
     "source": "default",
-    "value": false
+    "value": false,
+    "sources": [
+      {
+        "source": "default",
+        "value": false
+      }
+    ]
   },
   "alarm": {
     "source": "default",
-    "value": true
+    "value": true,
+    "sources": [
+      {
+        "source": "default",
+        "value": true
+      }
+    ]
   },
   "toxiproxy": {
     "source": "default",
-    "value": false
+    "value": false,
+    "sources": [
+      {
+        "source": "default",
+        "value": false
+      }
+    ],
+    "version": {
+      "source": "default",
+      "value": "2.1.3",
+      "sources": [
+        {
+          "source": "default",
+          "value": "2.1.3"
+        }
+      ]
+    }
   },
   "route": {
     "source": "reference.json",
-    "value": true
+    "value": true,
+    "sources": [
+      {
+        "source": "default",
+        "value": false
+      },
+      {
+        "source": "reference.json",
+        "value": true
+      }
+    ]
   },
   "routeDefaults": {
     "host": {
       "source": "default",
-      "value": "@name@-@affiliation@-@env@"
+      "value": "@name@-@affiliation@-@env@",
+      "sources": [
+        {
+          "source": "default",
+          "value": "@name@-@affiliation@-@env@"
+        }
+      ]
     }
   }
 }
