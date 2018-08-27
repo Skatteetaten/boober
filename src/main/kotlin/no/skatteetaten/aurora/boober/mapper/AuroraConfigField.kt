@@ -78,7 +78,7 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
     fun getConfigEnv(configExtractors: List<AuroraConfigFieldHandler>): Map<String, String> {
         val env = configExtractors.filter { it.name.count { it == '/' } == 1 }.map {
             val (_, field) = it.name.split("/", limit = 2)
-            val value: Any = extract(it.name)
+            val value: Any = this[it.name]
             val escapedValue: String = convertValueToString(value)
             field to escapedValue
         }
@@ -91,7 +91,7 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
             .filter { it.path.startsWith("/$prefix") }
             .map {
                 val (_, _, _, field) = it.name.split("/", limit = 4)
-                val value: String = extract(it.name)
+                val value: String = this[it.name]
                 field to value
             }.toMap()
     }
@@ -101,7 +101,7 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
         return extractors.map {
             val (_, field) = it.name.split("/", limit = 2)
 
-            val value: String = extract(it.name)
+            val value: String = this[it.name]
             Database(field, if (value == "auto" || value.isBlank()) null else value)
         }
     }
@@ -110,19 +110,19 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
         return parameterExtractors.map {
             val (_, field) = it.name.split("/", limit = 2)
 
-            val value: String = extract(it.name)
+            val value: String = this[it.name]
             field to value
         }.toMap()
     }
 
     fun getKeyMappings(keyMappingsExtractor: AuroraConfigFieldHandler?): Map<String, String>? =
-        keyMappingsExtractor?.let { extractOrNull(it.name) }
+        keyMappingsExtractor?.let { getOrNull(it.name) }
 
     fun disabledAndNoSubKeys(name: String): Boolean {
 
         val simplified = isSimplifiedConfig(name)
 
-        val simplifiedIsDiabled = !extract<Boolean>(name)
+        val simplifiedIsDiabled = !get<Boolean>(name)
 
         return simplified && simplifiedIsDiabled && noSpecifiedSubKeys(name)
     }
@@ -135,17 +135,17 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
         return fields[name]!!.isSimplifiedConfig()
     }
 
-    inline fun <reified T> extract(name: String): T = fields[name]!!.value()
+    inline operator fun <reified T> get(name: String): T = fields[name]!!.value()
 
     /**
      * Extracts a config field declared either as a delimited string (ie. "value1, value2") or as a JSON array
      * (ie. ["value1", "value2"]) as a String list.
      */
-    fun extractDelimitedStringOrArrayAsSet(name: String, delimiter: String = ","): Set<String> {
+    fun getDelimitedStringOrArrayAsSet(name: String, delimiter: String = ","): Set<String> {
         return fields[name]?.extractDelimitedStringOrArrayAsSet(delimiter) ?: emptySet()
     }
 
-    inline fun <reified T> extractOrNull(name: String): T? = fields[name]?.getNullableValue()
+    inline fun <reified T> getOrNull(name: String): T? = fields[name]?.getNullableValue()
 
     companion object {
 

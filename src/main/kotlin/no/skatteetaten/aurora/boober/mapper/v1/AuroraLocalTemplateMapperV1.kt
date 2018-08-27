@@ -36,13 +36,13 @@ class AuroraLocalTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>, 
         return AuroraLocalTemplate(
             parameters = auroraDeploymentSpec.getParameters(parameterHandlers),
             templateJson = extractTemplateJson(auroraDeploymentSpec),
-            version = auroraDeploymentSpec.extractOrNull("version"),
-            replicas = auroraDeploymentSpec.extractOrNull("replicas")
+            version = auroraDeploymentSpec.getOrNull("version"),
+            replicas = auroraDeploymentSpec.getOrNull("replicas")
         )
     }
 
     private fun extractTemplateJson(auroraDeploymentSpec: AuroraDeploymentSpec): JsonNode {
-        val templateFile = auroraDeploymentSpec.extract<String>("templateFile").let { fileName ->
+        val templateFile = auroraDeploymentSpec.get<String>("templateFile").let { fileName ->
             auroraConfig.files.find { it.name == fileName }?.asJsonNode
         }
         return templateFile ?: throw IllegalArgumentException("templateFile is required")

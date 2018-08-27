@@ -36,9 +36,9 @@ class AuroraTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>) {
     fun template(auroraDeploymentSpec: AuroraDeploymentSpec): AuroraTemplate {
         return AuroraTemplate(
             parameters = auroraDeploymentSpec.getParameters(parameterHandlers),
-            template = auroraDeploymentSpec.extract("template"),
-            version = auroraDeploymentSpec.extractOrNull("version"),
-            replicas = auroraDeploymentSpec.extractOrNull("replicas")
+            template = auroraDeploymentSpec["template"],
+            version = auroraDeploymentSpec.getOrNull("version"),
+            replicas = auroraDeploymentSpec.getOrNull("replicas")
         )
     }
 }

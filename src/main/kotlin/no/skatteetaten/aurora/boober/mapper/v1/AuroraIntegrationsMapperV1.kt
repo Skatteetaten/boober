@@ -24,19 +24,19 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
     // TODO: ADD splunk, webseal, bigip
 
     fun integrations(auroraDeploymentSpec: AuroraDeploymentSpec): AuroraIntegration? {
-        val name: String = auroraDeploymentSpec.extract("name")
-        val groupId: String = auroraDeploymentSpec.extractOrNull<String>("groupId") ?: ""
+        val name: String = auroraDeploymentSpec["name"]
+        val groupId: String = auroraDeploymentSpec.getOrNull<String>("groupId") ?: ""
 
         val certificateCn = if (auroraDeploymentSpec.isSimplifiedConfig("certificate")) {
-            val certFlag: Boolean = auroraDeploymentSpec.extract("certificate")
+            val certFlag: Boolean = auroraDeploymentSpec["certificate"]
             if (certFlag) "$groupId.$name" else null
         } else {
-            auroraDeploymentSpec.extractOrNull("certificate/commonName")
+            auroraDeploymentSpec.getOrNull("certificate/commonName")
         }
         return AuroraIntegration(
             database = findDatabases(auroraDeploymentSpec, name),
             certificateCn = certificateCn,
-            splunkIndex = auroraDeploymentSpec.extractOrNull("splunkIndex"),
+            splunkIndex = auroraDeploymentSpec.getOrNull("splunkIndex"),
             webseal = findWebseal(auroraDeploymentSpec)
         )
     }
@@ -48,11 +48,11 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
             return null
         }
 
-        val roles = auroraDeploymentSpec.extractDelimitedStringOrArrayAsSet("$name/roles", ",")
+        val roles = auroraDeploymentSpec.getDelimitedStringOrArrayAsSet("$name/roles", ",")
             .takeIf { it.isNotEmpty() }
             ?.joinToString(",")
         return Webseal(
-            auroraDeploymentSpec.extractOrNull("$name/host"),
+            auroraDeploymentSpec.getOrNull("$name/host"),
             roles
         )
     }
@@ -61,7 +61,7 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
 
         val simplified = auroraDeploymentSpec.isSimplifiedConfig("database")
 
-        if (simplified && auroraDeploymentSpec.extract("database")) {
+        if (simplified && auroraDeploymentSpec["database"]) {
             return listOf(Database(name = name))
         }
         return auroraDeploymentSpec.getDatabases(dbHandlers)

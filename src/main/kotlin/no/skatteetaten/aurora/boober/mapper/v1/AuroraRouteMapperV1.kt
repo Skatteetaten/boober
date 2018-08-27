@@ -27,8 +27,8 @@ class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>, val name
         val simplified = auroraDeploymentSpec.isSimplifiedConfig(route) && auroraDeploymentSpec.noSpecifiedSubKeys(route)
 
         if (simplified) {
-            if (auroraDeploymentSpec.extract(route)) {
-                return listOf(Route(objectName = name, host = auroraDeploymentSpec.extract("routeDefaults/host")))
+            if (auroraDeploymentSpec[route]) {
+                return listOf(Route(objectName = name, host = auroraDeploymentSpec["routeDefaults/host"]))
             }
             return listOf()
         }
@@ -36,9 +36,9 @@ class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>, val name
 
         return routes.map {
             Route(it.ensureStartWith(name, "-"),
-                auroraDeploymentSpec.extractOrNull("$route/$it/host")
-                    ?: auroraDeploymentSpec.extract("routeDefaults/host"),
-                auroraDeploymentSpec.extractOrNull("$route/$it/path"),
+                auroraDeploymentSpec.getOrNull("$route/$it/host")
+                    ?: auroraDeploymentSpec["routeDefaults/host"],
+                auroraDeploymentSpec.getOrNull("$route/$it/path"),
                 auroraDeploymentSpec.getRouteAnnotations("$route/$it/annotations", handlers)
             )
         }.toList()

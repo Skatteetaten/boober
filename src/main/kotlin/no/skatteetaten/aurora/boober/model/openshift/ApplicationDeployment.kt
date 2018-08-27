@@ -35,4 +35,3 @@ data class ApplicationCommand(
     val applicationDeploymentRef: ApplicationDeploymentRef,
     val auroraConfig: AuroraConfigRef
 )
-

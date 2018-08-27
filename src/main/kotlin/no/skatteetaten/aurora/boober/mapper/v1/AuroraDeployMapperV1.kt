@@ -32,10 +32,15 @@ class AuroraDeployMapperV1(
             defaultValue = applicationDeploymentRef.application,
             defaultSource = "fileName",
             validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
-        AuroraConfigFieldHandler("groupId", validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
+        AuroraConfigFieldHandler(
+            "groupId",
+            validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
         AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set") }),
         AuroraConfigFieldHandler("releaseTo"),
-        AuroraConfigFieldHandler("deployStrategy/type", defaultValue = "rolling", validator = { it.oneOf(listOf("recreate", "rolling")) }),
+        AuroraConfigFieldHandler(
+            "deployStrategy/type",
+            defaultValue = "rolling",
+            validator = { it.oneOf(listOf("recreate", "rolling")) }),
         AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = 180),
         AuroraConfigFieldHandler("resources/cpu/min", defaultValue = "100m"),
         AuroraConfigFieldHandler("resources/cpu/max", defaultValue = "2000m"),
@@ -68,21 +73,21 @@ class AuroraDeployMapperV1(
     ) + configHandlers
 
     fun deploy(auroraDeploymentSpec: AuroraDeploymentSpec): AuroraDeploy? {
-        val groupId: String = auroraDeploymentSpec.extract("groupId")
+        val groupId: String = auroraDeploymentSpec["groupId"]
 
-        val version: String = auroraDeploymentSpec.extract("version")
+        val version: String = auroraDeploymentSpec["version"]
 
-        val releaseTo: String? = auroraDeploymentSpec.extractOrNull<String>("releaseTo")?.takeUnless { it.isEmpty() }
+        val releaseTo: String? = auroraDeploymentSpec.getOrNull<String>("releaseTo")?.takeUnless { it.isEmpty() }
 
-        val artifactId: String = auroraDeploymentSpec.extract("artifactId")
+        val artifactId: String = auroraDeploymentSpec["artifactId"]
 
         val dockerGroup = groupId.replace(".", "_")
 
         val tag = releaseTo ?: version
         val applicationFile = getApplicationFile(applicationDeploymentRef)
 
-        val pause: Boolean = auroraDeploymentSpec.extract("pause")
-        val replicas: Int = auroraDeploymentSpec.extract("replicas")
+        val pause: Boolean = auroraDeploymentSpec["pause"]
+        val replicas: Int = auroraDeploymentSpec["replicas"]
 
         return AuroraDeploy(
             applicationFile = applicationFile.name,
@@ -90,36 +95,36 @@ class AuroraDeployMapperV1(
             dockerImagePath = "$dockerGroup/$artifactId",
             dockerTag = tag,
             deployStrategy = AuroraDeployStrategy(
-                auroraDeploymentSpec.extract("deployStrategy/type"),
-                auroraDeploymentSpec.extract("deployStrategy/timeout")
+                auroraDeploymentSpec["deployStrategy/type"],
+                auroraDeploymentSpec["deployStrategy/timeout"]
             ),
             flags = AuroraDeploymentConfigFlags(
-                auroraDeploymentSpec.extract("debug"),
-                auroraDeploymentSpec.extract("alarm"),
+                auroraDeploymentSpec["debug"],
+                auroraDeploymentSpec["alarm"],
                 pause
 
             ),
             resources = AuroraDeploymentConfigResources(
                 request = AuroraDeploymentConfigResource(
-                    cpu = auroraDeploymentSpec.extract("resources/cpu/min"),
-                    memory = auroraDeploymentSpec.extract("resources/memory/min")
+                    cpu = auroraDeploymentSpec["resources/cpu/min"],
+                    memory = auroraDeploymentSpec["resources/memory/min"]
                 ),
                 limit = AuroraDeploymentConfigResource(
-                    cpu = auroraDeploymentSpec.extract("resources/cpu/max"),
-                    memory = auroraDeploymentSpec.extract("resources/memory/max")
+                    cpu = auroraDeploymentSpec["resources/cpu/max"],
+                    memory = auroraDeploymentSpec["resources/memory/max"]
                 )
             ),
             replicas = if (pause) 0 else replicas,
             groupId = groupId,
             artifactId = artifactId,
             version = version,
-            serviceAccount = auroraDeploymentSpec.extractOrNull("serviceAccount"),
+            serviceAccount = auroraDeploymentSpec.getOrNull("serviceAccount"),
             prometheus = findPrometheus(auroraDeploymentSpec),
             managementPath = findManagementPath(auroraDeploymentSpec),
             liveness = getProbe(auroraDeploymentSpec, "liveness"),
             readiness = getProbe(auroraDeploymentSpec, "readiness"),
             env = auroraDeploymentSpec.getConfigEnv(configHandlers),
-            ttl = auroraDeploymentSpec.extractOrNull<String>("ttl")
+            ttl = auroraDeploymentSpec.getOrNull<String>("ttl")
                 ?.let { StringToDurationConverter().convert(it) },
             toxiProxy = getToxiProxy(auroraDeploymentSpec, "toxiproxy")
 
@@ -140,8 +145,8 @@ class AuroraDeployMapperV1(
             return null
         }
         return HttpEndpoint(
-            auroraDeploymentSpec.extract("$name/path"),
-            auroraDeploymentSpec.extractOrNull("$name/port")
+            auroraDeploymentSpec["$name/path"],
+            auroraDeploymentSpec.getOrNull("$name/port")
         )
     }
 
@@ -153,11 +158,8 @@ class AuroraDeployMapperV1(
             return null
         }
 
-        val path = auroraDeploymentSpec.extract<String>("$name/path")
-            .ensureStartWith("/")
-        val port = auroraDeploymentSpec.extract<String>("$name/port")
-            .toString()
-            .ensureStartWith(":")
+        val path = auroraDeploymentSpec.get<String>("$name/path").ensureStartWith("/")
+        val port = auroraDeploymentSpec.get<Int>("$name/port").toString().ensureStartWith(":")
         return "$port$path"
     }
 
@@ -168,14 +170,14 @@ class AuroraDeployMapperV1(
         }
 
         return Probe(
-            auroraDeploymentSpec.extractOrNull<String?>("$name/path")?.let {
+            auroraDeploymentSpec.getOrNull<String?>("$name/path")?.let {
                 if (!it.startsWith("/")) {
                     "/$it"
                 } else it
             },
-            auroraDeploymentSpec.extract("$name/port"),
-            auroraDeploymentSpec.extract("$name/delay"),
-            auroraDeploymentSpec.extract("$name/timeout")
+            auroraDeploymentSpec["$name/port"],
+            auroraDeploymentSpec["$name/delay"],
+            auroraDeploymentSpec["$name/timeout"]
         )
     }
 
@@ -184,6 +186,6 @@ class AuroraDeployMapperV1(
             return null
         }
 
-        return ToxiProxy(auroraDeploymentSpec.extract("$name/version"))
+        return ToxiProxy(auroraDeploymentSpec["$name/version"])
     }
 }

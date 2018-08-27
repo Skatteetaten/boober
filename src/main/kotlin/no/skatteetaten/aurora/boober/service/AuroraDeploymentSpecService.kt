@@ -72,7 +72,7 @@ class AuroraDeploymentSpecService(
                 auroraDeploymentSpec = headerSpec
             )
                 .validate(false)
-            val platform = headerSpec.extract<String>("applicationPlatform")
+            val platform: String = headerSpec["applicationPlatform"]
 
             val applicationHandler: ApplicationPlatformHandler = Companion.APPLICATION_PLATFORM_HANDLERS[platform]
                 ?: throw IllegalArgumentException("ApplicationPlattformHandler $platform is not present")

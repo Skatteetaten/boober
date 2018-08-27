@@ -72,7 +72,7 @@ class AuroraVolumeMapperV1(private val applicationFiles: List<AuroraConfigFile>)
                 .map { it.name }
                 .filter { it.count { it == '/' } > 1 }
                 .map { name ->
-                    val value: Any = auroraDeploymentSpec.extract(name)
+                    val value: Any = auroraDeploymentSpec[name]
                     val escapedValue: String = convertValueToString(value)
                     val (_, configFile, field) = name.split("/", limit = 3)
                     val fileName = configFile.ensureEndsWith(".properties")
@@ -97,11 +97,11 @@ class AuroraVolumeMapperV1(private val applicationFiles: List<AuroraConfigFile>)
     }
 
     private fun getSecretVault(auroraDeploymentSpec: AuroraDeploymentSpec): String? =
-        auroraDeploymentSpec.extractOrNull("secretVault/name")
-            ?: auroraDeploymentSpec.extractOrNull("secretVault")
+        auroraDeploymentSpec.getOrNull("secretVault/name")
+            ?: auroraDeploymentSpec.getOrNull("secretVault")
 
     private fun getSecretVaultKeys(auroraDeploymentSpec: AuroraDeploymentSpec): List<String> =
-        auroraDeploymentSpec.extractOrNull("secretVault/keys") ?: listOf()
+        auroraDeploymentSpec.getOrNull("secretVault/keys") ?: listOf()
 
     private fun getMounts(auroraDeploymentSpec: AuroraDeploymentSpec): List<Mount>? {
         if (mountHandlers.isEmpty()) {
@@ -114,20 +114,20 @@ class AuroraVolumeMapperV1(private val applicationFiles: List<AuroraConfigFile>)
         }.toSet()
 
         return mountNames.map { mount ->
-            val type: MountType = auroraDeploymentSpec.extract("mounts/$mount/type")
+            val type: MountType = auroraDeploymentSpec["mounts/$mount/type"]
 
             val content: Map<String, String>? = if (type == MountType.ConfigMap) {
-                auroraDeploymentSpec.extract("mounts/$mount/content")
+                auroraDeploymentSpec["mounts/$mount/content"]
             } else {
                 null
             }
-            val secretVaultName = auroraDeploymentSpec.extractOrNull<String?>("mounts/$mount/secretVault")
+            val secretVaultName = auroraDeploymentSpec.getOrNull<String?>("mounts/$mount/secretVault")
             Mount(
-                auroraDeploymentSpec.extract("mounts/$mount/path"),
+                auroraDeploymentSpec["mounts/$mount/path"],
                 type,
-                auroraDeploymentSpec.extract("mounts/$mount/mountName"),
-                auroraDeploymentSpec.extract("mounts/$mount/volumeName"),
-                auroraDeploymentSpec.extract("mounts/$mount/exist"),
+                auroraDeploymentSpec["mounts/$mount/mountName"],
+                auroraDeploymentSpec["mounts/$mount/volumeName"],
+                auroraDeploymentSpec["mounts/$mount/exist"],
                 content,
                 secretVaultName
             )

@@ -76,30 +76,31 @@ class HeaderMapper(
         auroraDeploymentSpec: AuroraDeploymentSpec,
         applicationHandler: ApplicationPlatformHandler
     ): AuroraDeployHeader {
-        val name = auroraDeploymentSpec.extract<String>("name")
-        val cluster = auroraDeploymentSpec.extract<String>("cluster")
-        val type = auroraDeploymentSpec.extract<TemplateType>("type")
-
-        val segment = auroraDeploymentSpec.extractOrNull<String>("segment")
 
         val env = AuroraDeployEnvironment(
-            affiliation = auroraDeploymentSpec.extract("affiliation"),
-            envName = auroraDeploymentSpec.extractOrNull("env/name")
-                ?: auroraDeploymentSpec.extract("envName"),
-            ttl = auroraDeploymentSpec.extractOrNull<String>("env/ttl")
+            affiliation = auroraDeploymentSpec["affiliation"],
+            envName = auroraDeploymentSpec.getOrNull("env/name")
+                ?: auroraDeploymentSpec["envName"],
+            ttl = auroraDeploymentSpec.getOrNull<String>("env/ttl")
                 ?.let { StringToDurationConverter().convert(it) },
             permissions = extractPermissions(auroraDeploymentSpec)
         )
 
-        return AuroraDeployHeader(env, type, applicationHandler, name, cluster, segment)
+        return AuroraDeployHeader(env,
+            auroraDeploymentSpec["type"],
+            applicationHandler,
+            auroraDeploymentSpec["name"],
+            auroraDeploymentSpec["cluster"],
+            auroraDeploymentSpec.getOrNull<String>("segment")
+        )
     }
 
     fun extractPermissions(deploymentSpec: AuroraDeploymentSpec): Permissions {
 
-        val viewGroups = deploymentSpec.extractDelimitedStringOrArrayAsSet("permissions/view", " ")
-        val adminGroups = deploymentSpec.extractDelimitedStringOrArrayAsSet("permissions/admin", " ")
+        val viewGroups = deploymentSpec.getDelimitedStringOrArrayAsSet("permissions/view", " ")
+        val adminGroups = deploymentSpec.getDelimitedStringOrArrayAsSet("permissions/admin", " ")
         // if sa present add to admin users.
-        val adminUsers = deploymentSpec.extractDelimitedStringOrArrayAsSet("permissions/adminServiceAccount", " ")
+        val adminUsers = deploymentSpec.getDelimitedStringOrArrayAsSet("permissions/adminServiceAccount", " ")
 
         val adminPermission = Permission(adminGroups, adminUsers)
         val viewPermission = if (viewGroups.isNotEmpty()) Permission(viewGroups) else null
