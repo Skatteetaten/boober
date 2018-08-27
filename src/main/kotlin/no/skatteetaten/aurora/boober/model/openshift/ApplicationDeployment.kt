@@ -12,12 +12,12 @@ data class ApplicationDeployment(
     val kind: String = "ApplicationDeployment",
     val metadata: ObjectMeta,
     val apiVersion: String = "skatteetaten.no/v1",
-    val spec: ApplicationSpec
+    val spec: ApplicationDeploymentSpec
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-data class ApplicationSpec(
+data class ApplicationDeploymentSpec(
     val applicationId: String,
     val applicationDeploymentId: String,
     val splunkIndex: String? = null,
@@ -25,12 +25,12 @@ data class ApplicationSpec(
     val releaseTo: String?,
     val deployTag: String?,
     val selector: Map<String, String>,
-    val command: ApplicationCommand
+    val command: ApplicationDeploymentCommand
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-data class ApplicationCommand(
+data class ApplicationDeploymentCommand(
     val overrideFiles: Map<String, String>,
     val applicationDeploymentRef: ApplicationDeploymentRef,
     val auroraConfig: AuroraConfigRef

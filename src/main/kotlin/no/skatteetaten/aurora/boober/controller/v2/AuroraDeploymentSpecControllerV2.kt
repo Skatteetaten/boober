@@ -30,11 +30,10 @@ class AuroraDeploymentSpecControllerV2(
     fun findAllDeploymentSpecs(
         @PathVariable auroraConfigName: String,
         @RequestParam(name = "aid", required = false) aidStrings: List<String>,
-        @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean,
-        @RequestParam(name = "reference", required = false) reference: String?
+        @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
     ): Response {
 
-        val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest(reference))
+        val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         return responder.create(auroraDeploymentSpecService.getAuroraDeploymentSpecs(ref, aidStrings), includeDefaults)
     }
 
@@ -42,11 +41,10 @@ class AuroraDeploymentSpecControllerV2(
     fun findAllDeploymentSpecsForEnvironment(
         @PathVariable auroraConfigName: String,
         @PathVariable environment: String,
-        @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean,
-        @RequestParam(name = "reference", required = false) reference: String?
+        @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
     ): Response {
 
-        val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest(reference))
+        val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         return responder.create(
             auroraDeploymentSpecService.getAuroraDeploymentSpecsForEnvironment(ref, environment),
             includeDefaults
@@ -59,13 +57,12 @@ class AuroraDeploymentSpecControllerV2(
         @PathVariable environment: String,
         @PathVariable application: String,
         @RequestParam(name = "overrides", required = false) overrides: String?,
-        @RequestParam(name = "reference", required = false) reference: String?,
         @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
     ): Response {
 
         val overrideFiles: List<AuroraConfigFile> = extractOverrides(overrides)
 
-        val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest(reference))
+        val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         return responder.create(
             auroraDeploymentSpecService.getAuroraDeploymentSpec(
                 ref = ref,
@@ -92,11 +89,10 @@ class AuroraDeploymentSpecControllerV2(
         @PathVariable environment: String,
         @PathVariable application: String,
         @RequestParam(name = "overrides", required = false) overrides: String?,
-        @RequestParam(name = "reference", required = false) reference: String?,
         @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
     ): Response {
 
-        val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest(reference))
+        val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         val spec = auroraDeploymentSpecService.getAuroraDeploymentSpec(
             ref = ref,
             environment = environment,

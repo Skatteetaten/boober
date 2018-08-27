@@ -17,7 +17,8 @@ class RequestHelperTest extends Specification {
 
   def "Get ref-name from request given ref input"() {
     when:
-      def refName = RequestHelper.getRefNameFromRequest('abc123')
+      request.addParameter("reference", "abc123")
+      def refName = RequestHelper.getRefNameFromRequest()
 
     then:
       refName == 'abc123'

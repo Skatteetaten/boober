@@ -12,9 +12,9 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.TemplateType
-import no.skatteetaten.aurora.boober.model.openshift.ApplicationCommand
+import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
-import no.skatteetaten.aurora.boober.model.openshift.ApplicationSpec
+import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
@@ -288,7 +288,7 @@ class DeployService(
         val auroraConfigRefExact = exactGitRef?.let { auroraConfigRef.copy(resolvedRef = it) } ?: auroraConfigRef
 
         return ApplicationDeployment(
-            spec = ApplicationSpec(
+            spec = ApplicationDeploymentSpec(
                 selector = mapOf("name" to deploymentSpecInternal.name),
                 deployTag = deploymentSpecInternal.version,
                 // This is the base shared applicationDeploymentRef
@@ -297,7 +297,7 @@ class DeployService(
                 splunkIndex = deploymentSpecInternal.integration?.splunkIndex,
                 managementPath = deploymentSpecInternal.deploy?.managementPath,
                 releaseTo = deploymentSpecInternal.deploy?.releaseTo,
-                command = ApplicationCommand(
+                command = ApplicationDeploymentCommand(
                     auroraConfig = auroraConfigRefExact,
                     applicationDeploymentRef = deploymentSpecInternal.applicationDeploymentRef,
                     overrideFiles = deploymentSpecInternal.overrideFiles

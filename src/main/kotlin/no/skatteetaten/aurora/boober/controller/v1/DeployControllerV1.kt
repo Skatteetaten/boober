@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -17,13 +16,9 @@ import org.springframework.web.bind.annotation.RestController
 class DeployControllerV1(val deployService: DeployService) {
 
     @PutMapping()
-    fun apply(
-        @PathVariable auroraConfigName: String,
-        @RequestParam(name = "reference", required = false) reference: String?,
-        @RequestBody payload: ApplyPayload
-    ): Response {
+    fun apply(@PathVariable auroraConfigName: String, @RequestBody payload: ApplyPayload): Response {
 
-        val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest(reference))
+        val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         val auroraDeployResults: List<AuroraDeployResult> = deployService.executeDeploy(
             ref,
             payload.allRefs,
