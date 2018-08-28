@@ -8,7 +8,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService
 import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
-import no.skatteetaten.aurora.boober.service.renderSpecAsJsonOld
+import no.skatteetaten.aurora.boober.service.renderSpecAsJson
 import org.springframework.stereotype.Component
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -111,7 +111,7 @@ class AuroraDeploymentSpecResponder {
         create(listOf(specInternal), includeDefaults)
 
     fun create(specs: List<AuroraDeploymentSpec>, includeDefaults: Boolean): Response {
-        val fields = specs.map { renderSpecAsJsonOld(includeDefaults, it) }
+        val fields = specs.map { renderSpecAsJson(it, includeDefaults) }
         return Response(items = fields)
     }
 }
