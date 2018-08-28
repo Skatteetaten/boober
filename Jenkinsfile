@@ -11,7 +11,7 @@ def overrides = [
     credentialsId: "github"
 ]
 
-fileLoader.withGit(overrides.pipelineScript,, overrides.pipelineScript) {
+fileLoader.withGit(overrides.pipelineScript,, overrides.scriptVersion) {
    jenkinsfile = fileLoader.load('templates/leveransepakke')
 }
 jenkinsfile.gradle(overrides.scriptVersion, overrides)
