@@ -11,7 +11,6 @@ def overrides = [
     credentialsId: "github"
 ]
 
-
 fileLoader.withGit(overrides.pipelineScript,, overrides.pipelineScript) {
    jenkinsfile = fileLoader.load('templates/leveransepakke')
 }
