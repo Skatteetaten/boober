@@ -8,7 +8,10 @@ def overrides = [
     checkstyle: false,
     docs: false,
     sonarqube: false,
-    credentialsId: "github"
+    credentialsId: "github",
+    suggestVersionAndTagReleases: [[branch: 'master', versionHint: '2']]
+  ]
+
 ]
 
 fileLoader.withGit(overrides.pipelineScript,, overrides.scriptVersion) {
