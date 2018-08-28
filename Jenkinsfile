@@ -9,7 +9,9 @@ def overrides = [
     docs: false,
     sonarqube: false,
     credentialsId: "github",
-    suggestVersionAndTagReleases: [[branch: 'master', versionHint: '2']]
+    suggestVersionAndTagReleases: [
+      [branch: 'master', versionHint: '2']
+    ]
   ]
 
 ]
