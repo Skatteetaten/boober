@@ -1,11 +1,9 @@
 def jenkinsfile
 
-def scriptVersion  = 'feature/AOS-2708'
-fileLoader.withGit('https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git', scriptVersion) {
-   jenkinsfile = fileLoader.load('templates/leveransepakke')
-}
 
 def overrides = [
+    scriptVersion  : 'feature/AOS-2708',
+    pipelineScript: 'https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git,
     piTests: false,
     checkstyle: false,
     docs: false,
@@ -13,4 +11,8 @@ def overrides = [
     credentialsId: "github"
 ]
 
-jenkinsfile.gradle(version, overrides)
+
+fileLoader.withGit(overrides.pipelineScript,, overrides.pipelineScript) {
+   jenkinsfile = fileLoader.load('templates/leveransepakke')
+}
+jenkinsfile.gradle(overrides.scriptVersion, overrides)
