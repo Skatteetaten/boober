@@ -12,8 +12,6 @@ def overrides = [
     suggestVersionAndTagReleases: [
       [branch: 'master', versionHint: '2']
     ]
-  ]
-
 ]
 
 fileLoader.withGit(overrides.pipelineScript,, overrides.scriptVersion) {
