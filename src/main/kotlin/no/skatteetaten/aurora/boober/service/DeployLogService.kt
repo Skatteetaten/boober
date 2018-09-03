@@ -13,6 +13,7 @@ class DeployLogService(val bitbucketDeploymentTagService: BitbucketDeploymentTag
     private val DEPLOY_PREFIX = "DEPLOY"
 
     private val FAILED_PREFIX = "FAILED"
+
     fun markRelease(ref: AuroraConfigRef, deployResult: List<AuroraDeployResult>, deployer: Deployer): List<AuroraDeployResult> {
 
         return deployResult
@@ -38,7 +39,6 @@ class DeployLogService(val bitbucketDeploymentTagService: BitbucketDeploymentTag
         val filteredResponses = result.openShiftResponses.filter { it.responseBody?.openshiftKind != "secret" }
         return result.copy(openShiftResponses = filteredResponses)
     }
-
 
     fun deployHistory(ref: AuroraConfigRef): List<DeployHistory> {
         val files = bitbucketDeploymentTagService.getFiles(ref.name)

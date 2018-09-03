@@ -148,21 +148,21 @@ open class GitService(
     }
 
     private fun cloneRepository(repositoryName: String, repoPath: File): Git {
-        return metrics.withMetrics("git_checkout", {
+        return metrics.withMetrics("git_checkout") {
             val dir = repoPath.apply { mkdirs() }
             val uri = url.format(repositoryName)
 
             try {
                 Git.cloneRepository()
-                    .setURI(uri)
-                    .setCredentialsProvider(cp)
-                    .setDirectory(dir)
-                    .call()
+                        .setURI(uri)
+                        .setCredentialsProvider(cp)
+                        .setDirectory(dir)
+                        .call()
             } catch (ex: Exception) {
                 dir.deleteRecursively()
                 throw ex
             }
-        })
+        }
     }
 
     fun commitAndPushChanges(repo: Git, commitMessage: String? = null) {
@@ -188,30 +188,6 @@ open class GitService(
         } catch (e: Exception) {
             throw e
         }
-    }
-
-    fun pushTags(git: Git, tags: List<Ref>) {
-
-        logger.debug("push tags to git")
-        val cmd = git.push()
-        logger.debug("added tag")
-        tags.forEach { cmd.add(it) }
-        logger.trace("/added tag")
-        metrics.withMetrics("git_push_tags", {
-            cmd.setCredentialsProvider(cp)
-            if (logger.isTraceEnabled) {
-                cmd.progressMonitor = TextProgressMonitor(PrintWriter(LambdaOutputStream {
-                    logger.trace(it)
-                }))
-            }
-            cmd.call()
-        })
-        logger.trace("/push tags to git")
-    }
-
-    fun createAnnotatedTag(git: Git, tag: String, tagBody: String): Ref {
-        val user = getPersonIdentFromUserDetails()
-        return git.tag().setTagger(user).setAnnotated(true).setName(tag).setMessage(tagBody).call()
     }
 
     fun getTagHistory(git: Git): List<RevTag> {
