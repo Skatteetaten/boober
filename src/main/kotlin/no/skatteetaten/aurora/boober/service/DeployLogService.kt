@@ -6,7 +6,7 @@ import no.skatteetaten.aurora.boober.service.GitServices.TargetDomain
 import org.springframework.stereotype.Service
 
 @Service
-class DeployLogService(@TargetDomain(AURORA_CONFIG) val gitService: GitService, val mapper: ObjectMapper) {
+class DeployLogService(val bitbucketDeploymentTagService: BitbucketDeploymentTagService, val mapper: ObjectMapper) {
 
     private val DEPLOY_PREFIX = "DEPLOY"
 
