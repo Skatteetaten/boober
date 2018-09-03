@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ArrayNode
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -7,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.util.MultiValueMap
@@ -20,7 +23,8 @@ class BitbucketDeploymentTagService(
 ) {
 
     val logger: Logger = LoggerFactory.getLogger(BitbucketDeploymentTagService::class.java)
-    fun postDeployResult(fileName: String, message: String, content: String): Boolean {
+
+    fun uploadFile(fileName: String, message: String, content: String): JsonNode? {
 
         val url = "rest/api/1.0/projects/$project/repos/$repo/browse/{fileName}"
         val headers = HttpHeaders().apply {
@@ -33,12 +37,21 @@ class BitbucketDeploymentTagService(
 
         val request = HttpEntity<MultiValueMap<String, String>>(map, headers)
 
-        val response = restTemplate.postForEntity(url, request, String::class.java, fileName)
-        logger.info("{}", response)
-        return true
+        return restTemplate.postForObject(url, request, JsonNode::class.java, fileName)
     }
 
-    fun getDeployResult(fileName: String): DeployHistory? {
-        return null
+
+    // TODO: Paged api?
+    fun getFiles(prefix: String): List<String> {
+        val url="rest/api/1.0/projects/$project}/repos/$repo/files/{prefix}?limit=10000"
+        return restTemplate.getForObject(url, JsonNode::class.java, prefix)?.let{
+            val values = it["values"] as ArrayNode
+            values.map { it.toString() }
+        }?: emptyList()
+    }
+
+    inline final fun <reified T> getFile(fileName: String): T? {
+        val url="projects/$project/repos/$repo/raw/{fileName}"
+        return restTemplate.getForObject(url, T::class.java, fileName)
     }
 }
