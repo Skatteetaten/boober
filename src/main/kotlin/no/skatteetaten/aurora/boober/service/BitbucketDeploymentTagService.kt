@@ -22,7 +22,7 @@ class BitbucketDeploymentTagService(
     val logger: Logger = LoggerFactory.getLogger(BitbucketDeploymentTagService::class.java)
     fun postDeployResult(fileName: String, message: String, content: String): Boolean {
 
-        val url = "/projects/$project/repos/$repo/browse/{fileName}"
+        val url = "rest/api/1.0/projects/$project/repos/$repo/browse/{fileName}"
         val headers = HttpHeaders().apply {
             contentType = MediaType.APPLICATION_FORM_URLENCODED
         }
@@ -36,5 +36,9 @@ class BitbucketDeploymentTagService(
         val response = restTemplate.postForEntity(url, request, String::class.java, fileName)
         logger.info("{}", response)
         return true
+    }
+
+    fun getDeployResult(fileName: String): DeployHistory? {
+        return null
     }
 }

@@ -27,7 +27,7 @@ boober:
     dbh: http://dbh
     bitbucket:
         project: "ac"
-        url: "https://git.aurora.skead.no/rest/api/1.0"
+        url: "https://git.aurora.skead.no/"
         tags:
           project: "ao"
           repos: "auroradeploymenttags"

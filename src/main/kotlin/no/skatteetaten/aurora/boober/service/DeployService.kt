@@ -12,8 +12,8 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.TemplateType
-import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
+import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
@@ -107,11 +107,17 @@ class DeployService(
                         openShiftResponses = environmentResponses,
                         success = success,
                         reason = message,
-                        projectExist = projectExist
+                        projectExist = projectExist,
+                        deployer = getDeployer()
                     )
                 )
             }.toMap()
     }
+
+    private fun getDeployer() =
+        userDetailsProvider.getAuthenticatedUser().let {
+            Deployer(it.fullName ?: it.username, "${it.username}@skatteetaten.no")
+        }
 
     private fun prepareDeployEnvironment(
         environment: AuroraDeployEnvironment,
@@ -149,29 +155,29 @@ class DeployService(
                 env == null -> {
                     if (it.cluster != cluster) {
                         AuroraDeployResult(
-                            auroraDeploymentSpecInternal = it,
+                            auroraDeploymentSpec = it,
                             ignored = true,
                             reason = "Not valid in this cluster."
                         )
                     } else {
                         AuroraDeployResult(
-                            auroraDeploymentSpecInternal = it,
+                            auroraDeploymentSpec = it,
                             success = false,
                             reason = "Environment was not created."
                         )
                     }
                 }
-                !env.success -> env.copy(auroraDeploymentSpecInternal = it)
+                !env.success -> env.copy(auroraDeploymentSpec = it)
                 else -> {
                     try {
                         val result = deployFromSpec(it, deploy, env.projectExist, configRef)
                         result.copy(openShiftResponses = env.openShiftResponses.addIfNotNull(result.openShiftResponses))
                     } catch (e: Exception) {
-                        AuroraDeployResult(auroraDeploymentSpecInternal = it, success = false, reason = e.message)
+                        AuroraDeployResult(auroraDeploymentSpec = it, success = false, reason = e.message)
                     }
                 }
             }.also {
-                logger.info("Deploy done username=${authenticatedUser.username} fullName='${authenticatedUser.fullName}' deployId=${it.deployId} app=${it.auroraDeploymentSpecInternal?.name} namespace=${it.auroraDeploymentSpecInternal?.environment?.namespace} success=${it.success} ignored=${it.ignored} reason=${it.reason}")
+                logger.info("Deploy done username=${authenticatedUser.username} fullName='${authenticatedUser.fullName}' deployId=${it.deployId} app=${it.auroraDeploymentSpec?.name} namespace=${it.auroraDeploymentSpec?.environment?.namespace} success=${it.success} ignored=${it.ignored} reason=${it.reason}")
             }
         }
     }
@@ -187,7 +193,7 @@ class DeployService(
 
         if (deploymentSpecInternal.cluster != cluster) {
             return AuroraDeployResult(
-                auroraDeploymentSpecInternal = deploymentSpecInternal,
+                auroraDeploymentSpec = deploymentSpecInternal,
                 ignored = true,
                 reason = "Not valid in this cluster."
             )
@@ -208,7 +214,7 @@ class DeployService(
 
         if (appResponse == null) {
             return AuroraDeployResult(
-                auroraDeploymentSpecInternal = deploymentSpecInternal,
+                auroraDeploymentSpec = deploymentSpecInternal,
                 deployId = deployId,
                 openShiftResponses = listOf(applicationResult),
                 success = false,

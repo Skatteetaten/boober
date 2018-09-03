@@ -14,7 +14,8 @@ data class AuroraDeployResult @JvmOverloads constructor(
     val ignored: Boolean = false,
     val reason: String? = null,
     val tagResponse: TagResult? = null,
-    val projectExist: Boolean = false
+    val projectExist: Boolean = false,
+    val deployer: Deployer? = null
 ) {
     val tag: String = "${auroraDeploymentSpecInternal?.cluster}.${auroraDeploymentSpecInternal?.environment?.namespace}.${auroraDeploymentSpecInternal?.name}/$deployId"
 }

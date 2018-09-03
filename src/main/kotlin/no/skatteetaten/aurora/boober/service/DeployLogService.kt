@@ -1,8 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.service.GitServices.Domain.AURORA_CONFIG
-import no.skatteetaten.aurora.boober.service.GitServices.TargetDomain
 import org.springframework.stereotype.Service
 
 @Service
@@ -14,18 +12,15 @@ class DeployLogService(val bitbucketDeploymentTagService: BitbucketDeploymentTag
 
     fun markRelease(ref: AuroraConfigRef, deployResult: List<AuroraDeployResult>) {
 
-        val repo = gitService.checkoutRepository(ref.name, refName = ref.refName)
         deployResult
             .filter { !it.ignored }
             .map {
                 val result = filterSensitiveInformation(it)
                 val prefix = if (it.success) DEPLOY_PREFIX else FAILED_PREFIX
-
-                gitService.createAnnotatedTag(repo, "$prefix/${it.tag}", mapper.writeValueAsString(result))
-            }
-            .takeIf { it.isNotEmpty() }
-            ?.let {
-                gitService.pushTags(repo, it)
+                val message = "$prefix/${it.tag}"
+                val fileName = "${ref.name}/${it.deployId}.json"
+                val content = mapper.writeValueAsString(result)
+                bitbucketDeploymentTagService.postDeployResult(fileName, message, content)
             }
     }
 
@@ -35,13 +30,20 @@ class DeployLogService(val bitbucketDeploymentTagService: BitbucketDeploymentTag
         return result.copy(openShiftResponses = filteredResponses)
     }
 
+
     fun deployHistory(ref: AuroraConfigRef): List<DeployHistory> {
         val repo = gitService.checkoutRepository(ref.name, refName = ref.refName)
         val res = gitService.getTagHistory(repo)
             .filter { it.tagName.startsWith(DEPLOY_PREFIX) }
             .map {
                 val fullMessage = it.fullMessage
-                it.taggerIdent.let { DeployHistory(Deployer(it.name, it.emailAddress), it.`when`.toInstant(), mapper.readTree(fullMessage)) }
+                it.taggerIdent.let {
+                    DeployHistory(
+                        Deployer(it.name, it.emailAddress),
+                        it.`when`.toInstant(),
+                        mapper.readTree(fullMessage)
+                    )
+                }
             }
         repo.close()
         return res
@@ -53,7 +55,13 @@ class DeployLogService(val bitbucketDeploymentTagService: BitbucketDeploymentTag
             .firstOrNull { it.tagName.endsWith(deployId) }
             ?.let {
                 val fullMessage = it.fullMessage
-                it.taggerIdent.let { DeployHistory(Deployer(it.name, it.emailAddress), it.`when`.toInstant(), mapper.readTree(fullMessage)) }
+                it.taggerIdent.let {
+                    DeployHistory(
+                        Deployer(it.name, it.emailAddress),
+                        it.`when`.toInstant(),
+                        mapper.readTree(fullMessage)
+                    )
+                }
             }
         repo.close()
         return res
