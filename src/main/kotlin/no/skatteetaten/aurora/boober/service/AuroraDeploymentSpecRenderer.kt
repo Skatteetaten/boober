@@ -55,6 +55,11 @@ fun renderSpecAsJson(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Bool
             "value" to it.value.value,
             "sources" to it.value.sources
         )
+        // TODO: Remove after AO has been upgraded
+    }.let { result ->
+        result["applicationDeploymentRef"]?.let {
+            result + mapOf("applicationId" to it)
+        } ?: result
     }
 }
 

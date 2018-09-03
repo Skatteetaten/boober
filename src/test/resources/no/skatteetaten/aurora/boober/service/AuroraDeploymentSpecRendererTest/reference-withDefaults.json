@@ -468,5 +468,15 @@
         }
       ]
     }
+  },
+  "applicationId": {
+    "source": "static",
+    "value": "utv/reference",
+    "sources": [
+      {
+        "source": "static",
+        "value": "utv/reference"
+      }
+    ]
   }
 }

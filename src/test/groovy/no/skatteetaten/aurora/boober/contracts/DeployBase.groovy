@@ -41,6 +41,7 @@ class DeployBase extends AbstractContractBase {
         new AuroraDeployEnvironment('', '',
             new Permissions(new Permission(Collections.emptySet(), Collections.emptySet()), null), null),
         null, null, null, null, new AuroraTemplate([:], 'test', '1.0.0', 1), null, null, new AuroraConfigFile("", "{}", false), "master", [:])
+
     return new AuroraDeployResult(spec, UUID.randomUUID().toString().substring(0, 7), [], success, false, reason)
   }
 }
