@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.util.MultiValueMap
@@ -40,10 +39,8 @@ class BitbucketDeploymentTagService(
         return restTemplate.postForObject(url, request, JsonNode::class.java, fileName)
     }
 
-
-    // TODO: Paged api?
     fun getFiles(prefix: String): List<String> {
-        val url="rest/api/1.0/projects/$project}/repos/$repo/files/{prefix}?limit=10000"
+        val url = "rest/api/1.0/projects/$project}/repos/$repo/files/{prefix}?limit=100000"
         return restTemplate.getForObject(url, JsonNode::class.java, prefix)?.let{
             val values = it["values"] as ArrayNode
             values.map { it.toString() }

@@ -31,6 +31,9 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
   @Autowired
   AuroraConfigService auroraConfigService
 
+  @Autowired
+  DeployLogService deployLogService
+
   public static final String ENV_NAME = "booberdev"
   public static final String APP_NAME = "aos-simple"
   def affiliation = "aos"
@@ -60,6 +63,9 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
 
     openShiftClient.getByLabelSelectors(_, _, _) >> []
     redeployService.triggerRedeploy(_, _) >> new RedeployService.RedeployResult()
+    deployLogService.markRelease(_, _, _) >> {
+      it[1]
+    }
   }
 
   def "Should prepare deploy environment for new project with ttl"() {
