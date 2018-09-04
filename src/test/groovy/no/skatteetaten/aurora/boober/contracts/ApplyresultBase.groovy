@@ -3,9 +3,11 @@ package no.skatteetaten.aurora.boober.contracts
 import java.time.Instant
 
 import no.skatteetaten.aurora.boober.controller.v1.ApplyResultController
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
-import no.skatteetaten.aurora.boober.service.AuroraDeployResult
 import no.skatteetaten.aurora.boober.service.DeployHistoryEntry
+import no.skatteetaten.aurora.boober.service.DeployHistoryEntryResult
 import no.skatteetaten.aurora.boober.service.DeployLogService
 import no.skatteetaten.aurora.boober.service.Deployer
 
@@ -25,10 +27,16 @@ class ApplyresultBase extends AbstractContractBase {
   DeployHistoryEntry createDeployResult() {
     def ident = response('deployresult', '$.items[0].deployer', Map)
     def time = response('deployresult', '$.items[0].time', String)
-    new no.skatteetaten.aurora.boober.service.DeployHistory.DeployHistory(
+    new DeployHistoryEntry(
+        "test",
+        new ApplicationDeploymentCommand([:], new ApplicationDeploymentRef("", ""), new AuroraConfigRef("", "", "")),
+        [:],
         new Deployer(ident.name, ident.email),
         Instant.parse(time),
-        new AuroraDeployResult(null, "", [], true, false, null, null, false, null),
-        new AuroraConfigRef("", "", ""))
+        "",
+        true,
+        new DeployHistoryEntryResult([], null),
+        true,
+        "")
   }
 }

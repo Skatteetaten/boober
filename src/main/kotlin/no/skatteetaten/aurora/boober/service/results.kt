@@ -8,7 +8,7 @@ import java.time.Instant
 import java.util.UUID
 
 data class AuroraDeployResult @JvmOverloads constructor(
-    val command: ApplicationDeploymentCommand,
+    val command: ApplicationDeploymentCommand? = null,
     val auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal? = null,
     val deployId: String = UUID.randomUUID().toString().substring(0, 7),
     val openShiftResponses: List<OpenShiftResponse> = listOf(),
@@ -18,10 +18,7 @@ data class AuroraDeployResult @JvmOverloads constructor(
     val tagResponse: TagResult? = null,
     val projectExist: Boolean = false,
     val bitbucketStoreResult: JsonNode? = null
-) {
-    val tag: String =
-        "${auroraDeploymentSpecInternal?.cluster}.${auroraDeploymentSpecInternal?.environment?.namespace}.${auroraDeploymentSpecInternal?.name}/$deployId"
-}
+)
 
 data class DeployHistoryEntry(
     val version: String = "v2",
@@ -34,7 +31,6 @@ data class DeployHistoryEntry(
     val result: DeployHistoryEntryResult,
     val projectExist: Boolean,
     val reason: String
-
 )
 
 data class DeployHistoryEntryResult(val openshift: List<OpenShiftResponse>, val tagResult: TagResult?)

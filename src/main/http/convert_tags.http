@@ -1,4 +1,0 @@
-POST {{apiUrl}}/v1/apply-result/paas/convert
-Authorization:Bearer {{token}}
-
-###

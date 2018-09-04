@@ -8,7 +8,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -22,22 +21,6 @@ class ApplyResultController(val deployLogService: DeployLogService) {
     ): Response {
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         val applicationResults: List<DeployHistoryEntry> = deployLogService.deployHistory(ref)
-        return Response(items = applicationResults)
-    }
-
-    // TODO: This can be removed once all objects are converted.
-    @PostMapping("/convert")
-    fun convertHistory(
-        @PathVariable auroraConfigName: String
-    ): Response {
-        val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
-        val applicationResults = deployLogService.getAllTags(ref).map {
-
-            it
-            /*deployLogService.storeDeployHistory(it)
-                ?: throw RuntimeException("Could not store deploy history=${jacksonObjectMapper().writeValueAsString(it)}")
-                */
-        }
         return Response(items = applicationResults)
     }
 

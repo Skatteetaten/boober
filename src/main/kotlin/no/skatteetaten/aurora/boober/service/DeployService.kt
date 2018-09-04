@@ -235,7 +235,8 @@ class DeployService(
                 deployId = deployId,
                 openShiftResponses = listOf(applicationResult),
                 success = false,
-                reason = "Creating application object failed"
+                reason = "Creating application object failed",
+                command = cmd
             )
         }
 
@@ -257,7 +258,7 @@ class DeployService(
 
         logger.debug("done applying objects")
         val success = openShiftResponses.all { it.success }
-        val result = AuroraDeployResult(deploymentSpecInternal, deployId, openShiftResponses, success)
+        val result = AuroraDeployResult(cmd, deploymentSpecInternal, deployId, openShiftResponses, success)
         if (!shouldDeploy) {
             return result.copy(reason = "Deploy explicitly turned of.")
         }
