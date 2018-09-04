@@ -27,6 +27,19 @@ class SpringTestUtils {
   }
 
   @Configuration
+  static class BitbucketMockRestServiceServiceInitializer {
+
+    @Autowired
+    @TargetService(ServiceTypes.BITBUCKET)
+    RestTemplate restTemplate
+
+    @Bean
+    MockRestServiceServer mockRestServiceServer() {
+      MockRestServiceServer.createServer(restTemplate)
+    }
+  }
+
+  @Configuration
   static class AuroraMockRestServiceServiceInitializer {
 
     @Autowired

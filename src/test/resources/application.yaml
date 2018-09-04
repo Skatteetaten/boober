@@ -9,6 +9,12 @@ aurora:
     value: token
 
 boober:
+    bitbucket:
+        project: "ac"
+        url: "https://git.aurora.skead.no/"
+        tags:
+            project: "ao"
+            repo: "auroradeploymenttags"
   dbh:
     http://localhost:8080
   encrypt:
