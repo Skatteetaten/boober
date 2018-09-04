@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.utils.Instants.now
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.springframework.stereotype.Service
@@ -62,11 +63,13 @@ class DeployLogService(
 
     fun deployHistory(ref: AuroraConfigRef): List<DeployHistoryEntry> {
         val files = bitbucketDeploymentTagService.getFiles(ref.name)
-        return files.mapNotNull { bitbucketDeploymentTagService.getFile<DeployHistoryEntry>(it) }
-            .filter { it.success }
+        return files.mapNotNull { bitbucketDeploymentTagService.getFile("${ref.name}/$it") }
+            .map { mapper.readValue<DeployHistoryEntry>(it) }
     }
 
     fun findDeployResultById(ref: AuroraConfigRef, deployId: String): DeployHistoryEntry? {
-        return bitbucketDeploymentTagService.getFile("${ref.name}/$deployId.json")
+        return bitbucketDeploymentTagService.getFile("${ref.name}/$deployId.json")?.let {
+            mapper.readValue(it)
+        }
     }
 }

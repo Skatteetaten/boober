@@ -41,15 +41,15 @@ class BitbucketDeploymentTagService(
     }
 
     fun getFiles(prefix: String): List<String> {
-        val url = "/rest/api/1.0/projects/$project}/repos/$repo/files/{prefix}?limit=100000"
+        val url = "/rest/api/1.0/projects/$project/repos/$repo/files/{prefix}?limit=100000"
         return restTemplate.getForObject(url, JsonNode::class.java, prefix)?.let {
             val values = it["values"] as ArrayNode
-            values.map { it.toString() }
+            values.map { it.asText() }
         } ?: emptyList()
     }
 
-    final inline fun <reified T> getFile(fileName: String): T? {
+    final fun getFile(fileName: String): String? {
         val url = "/projects/$project/repos/$repo/raw/{fileName}"
-        return restTemplate.getForObject(url, T::class.java, fileName)
+        return restTemplate.getForObject(url, String::class.java, fileName)
     }
 }
