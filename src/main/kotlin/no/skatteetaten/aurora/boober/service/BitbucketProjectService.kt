@@ -16,7 +16,7 @@ class BitbucketProjectService(
     fun getAllSlugs(): List<String> {
 
         val repoList =
-            restTemplate.getForObject("rest/api/1.0/projects/$project/repos?limit=1000", JsonNode::class.java)
+            restTemplate.getForObject("/rest/api/1.0/projects/$project/repos?limit=1000", JsonNode::class.java)
         val values = repoList["values"] as ArrayNode
 
         return values.map {

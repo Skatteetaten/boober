@@ -29,14 +29,15 @@ class ApplyresultBase extends AbstractContractBase {
     def time = response('deployresult', '$.items[0].time', String)
     new DeployHistoryEntry(
         "test",
-        new ApplicationDeploymentCommand([:], new ApplicationDeploymentRef("", ""), new AuroraConfigRef("", "", "")),
-        [:],
+        "",
         new Deployer(ident.name, ident.email),
         Instant.parse(time),
+        true,
+        true,
         "",
-        true,
-        new DeployHistoryEntryResult([], null),
-        true,
-        "")
+        new ApplicationDeploymentCommand([:], new ApplicationDeploymentRef("", ""), new AuroraConfigRef("", "", "")),
+        [:],
+        new DeployHistoryEntryResult([], null)
+        )
   }
 }

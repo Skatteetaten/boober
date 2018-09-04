@@ -5,7 +5,7 @@ Content-Type: application/json
 {
   "applicationIds": [
     {
-      "environment": "m89870",
+      "environment": "",
       "application": "whoami"
     }
   ]

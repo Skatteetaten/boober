@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
@@ -23,11 +24,11 @@ class BitbucketDeploymentTagService(
 
     val logger: Logger = LoggerFactory.getLogger(BitbucketDeploymentTagService::class.java)
 
-    fun uploadFile(fileName: String, message: String, content: String): JsonNode? {
+    fun uploadFile(fileName: String, message: String, content: String): String? {
 
-        val url = "rest/api/1.0/projects/$project/repos/$repo/browse/{fileName}"
+        val url = "/rest/api/1.0/projects/$project/repos/$repo/browse/{fileName}"
         val headers = HttpHeaders().apply {
-            contentType = MediaType.APPLICATION_FORM_URLENCODED
+            contentType = MediaType.MULTIPART_FORM_DATA
         }
 
         val map = LinkedMultiValueMap<String, String>()
@@ -36,11 +37,11 @@ class BitbucketDeploymentTagService(
 
         val request = HttpEntity<MultiValueMap<String, String>>(map, headers)
 
-        return restTemplate.postForObject(url, request, JsonNode::class.java, fileName)
+        return restTemplate.exchange(url, HttpMethod.PUT, request, String::class.java, fileName).body
     }
 
     fun getFiles(prefix: String): List<String> {
-        val url = "rest/api/1.0/projects/$project}/repos/$repo/files/{prefix}?limit=100000"
+        val url = "/rest/api/1.0/projects/$project}/repos/$repo/files/{prefix}?limit=100000"
         return restTemplate.getForObject(url, JsonNode::class.java, prefix)?.let {
             val values = it["values"] as ArrayNode
             values.map { it.toString() }
@@ -48,7 +49,7 @@ class BitbucketDeploymentTagService(
     }
 
     final inline fun <reified T> getFile(fileName: String): T? {
-        val url = "projects/$project/repos/$repo/raw/{fileName}"
+        val url = "/projects/$project/repos/$repo/raw/{fileName}"
         return restTemplate.getForObject(url, T::class.java, fileName)
     }
 }

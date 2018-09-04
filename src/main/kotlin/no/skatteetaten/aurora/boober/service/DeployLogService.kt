@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.utils.Instants.now
 import no.skatteetaten.aurora.boober.utils.openshiftKind
@@ -47,7 +46,7 @@ class DeployLogService(
             }
     }
 
-    fun storeDeployHistory(deployHistoryEntry: DeployHistoryEntry): JsonNode? {
+    fun storeDeployHistory(deployHistoryEntry: DeployHistoryEntry): String? {
         val prefix = if (deployHistoryEntry.success) DEPLOY_PREFIX else FAILED_PREFIX
         val message = "$prefix/${deployHistoryEntry.command.applicationDeploymentRef}"
         val fileName = "${deployHistoryEntry.command.auroraConfig.name}/${deployHistoryEntry.deployId}.json"

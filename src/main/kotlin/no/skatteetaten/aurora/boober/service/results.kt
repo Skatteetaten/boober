@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
@@ -17,20 +16,20 @@ data class AuroraDeployResult @JvmOverloads constructor(
     val reason: String? = null,
     val tagResponse: TagResult? = null,
     val projectExist: Boolean = false,
-    val bitbucketStoreResult: JsonNode? = null
+    val bitbucketStoreResult: String? = null
 )
 
 data class DeployHistoryEntry(
     val version: String = "v2",
-    val command: ApplicationDeploymentCommand,
-    val deploymentSpec: Map<String, Any>,
+    val deployId: String,
     val deployer: Deployer,
     val time: Instant,
-    val deployId: String,
     val success: Boolean,
-    val result: DeployHistoryEntryResult,
     val projectExist: Boolean,
-    val reason: String
+    val reason: String,
+    val command: ApplicationDeploymentCommand,
+    val deploymentSpec: Map<String, Any>,
+    val result: DeployHistoryEntryResult
 )
 
 data class DeployHistoryEntryResult(val openshift: List<OpenShiftResponse>, val tagResult: TagResult?)
