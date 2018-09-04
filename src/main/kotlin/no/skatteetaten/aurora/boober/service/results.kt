@@ -24,7 +24,7 @@ data class AuroraDeployResult @JvmOverloads constructor(
 data class DeployHistory(
     val deployer: Deployer,
     val time: Instant,
-    val result: AuroraDeployResult,
+    val result: JsonNode,
     val ref: AuroraConfigRef
 )
 

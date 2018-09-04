@@ -1,7 +1,5 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.DeployHistory
@@ -33,9 +31,12 @@ class ApplyResultController(val deployLogService: DeployLogService) {
         @PathVariable auroraConfigName: String
     ): Response {
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
-        val applicationResults: List<JsonNode> = deployLogService.getAllTags(ref).map {
-            deployLogService.storeDeployHistory(it)
+        val applicationResults = deployLogService.getAllTags(ref).map {
+
+            it
+            /*deployLogService.storeDeployHistory(it)
                 ?: throw RuntimeException("Could not store deploy history=${jacksonObjectMapper().writeValueAsString(it)}")
+                */
         }
         return Response(items = applicationResults)
     }

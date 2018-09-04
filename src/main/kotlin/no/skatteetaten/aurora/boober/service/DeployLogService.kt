@@ -25,6 +25,7 @@ class DeployLogService(
     ): List<AuroraDeployResult> {
 
         return deployResult
+            .filter { !it.ignored }
             .map {
                 if (it.ignored) {
                     it
@@ -34,7 +35,7 @@ class DeployLogService(
                     val storeResult = storeDeployHistory(deployHistory)
                     it.copy(bitbucketStoreResult = storeResult)
                 }
-            }
+                }
     }
 
     fun storeDeployHistory(deployHistory: DeployHistory): JsonNode? {
@@ -59,6 +60,7 @@ class DeployLogService(
 
     fun findDeployResultById(ref: AuroraConfigRef, deployId: String): DeployHistory? {
         return bitbucketDeploymentTagService.getFile("${ref.name}/$deployId.json")
+
     }
 
     fun getAllTags(ref: AuroraConfigRef): List<DeployHistory> {
