@@ -151,6 +151,13 @@ class DeployService(
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
 
         return deploymentSpecInternals.map {
+
+            val cmd = ApplicationDeploymentCommand(
+                auroraConfig = configRef,
+                applicationDeploymentRef = it.applicationDeploymentRef,
+                overrideFiles = it.overrideFiles
+            )
+
             val env = environments[it.environment]
             when {
                 env == null -> {
@@ -158,23 +165,30 @@ class DeployService(
                         AuroraDeployResult(
                             auroraDeploymentSpecInternal = it,
                             ignored = true,
-                            reason = "Not valid in this cluster."
+                            reason = "Not valid in this cluster.",
+                            command = cmd
                         )
                     } else {
                         AuroraDeployResult(
                             auroraDeploymentSpecInternal = it,
                             success = false,
-                            reason = "Environment was not created."
+                            reason = "Environment was not created.",
+                            command = cmd
                         )
                     }
                 }
                 !env.success -> env.copy(auroraDeploymentSpecInternal = it)
                 else -> {
                     try {
-                        val result = deployFromSpec(it, deploy, env.projectExist, configRef)
+                        val result = deployFromSpec(it, deploy, env.projectExist, configRef, cmd)
                         result.copy(openShiftResponses = env.openShiftResponses.addIfNotNull(result.openShiftResponses))
                     } catch (e: Exception) {
-                        AuroraDeployResult(auroraDeploymentSpecInternal = it, success = false, reason = e.message)
+                        AuroraDeployResult(
+                            auroraDeploymentSpecInternal = it,
+                            success = false,
+                            reason = e.message,
+                            command = cmd
+                        )
                     }
                 }
             }.also {
@@ -187,7 +201,8 @@ class DeployService(
         deploymentSpecInternal: AuroraDeploymentSpecInternal,
         shouldDeploy: Boolean,
         namespaceCreated: Boolean,
-        auroraConfigRef: AuroraConfigRef
+        auroraConfigRef: AuroraConfigRef,
+        cmd: ApplicationDeploymentCommand
     ): AuroraDeployResult {
 
         val deployId = UUID.randomUUID().toString().substring(0, 7)
@@ -196,11 +211,12 @@ class DeployService(
             return AuroraDeployResult(
                 auroraDeploymentSpecInternal = deploymentSpecInternal,
                 ignored = true,
-                reason = "Not valid in this cluster."
+                reason = "Not valid in this cluster.",
+                command = cmd
             )
         }
 
-        val application = createApplicationDeployment(auroraConfigRef, deploymentSpecInternal, deployId)
+        val application = createApplicationDeployment(auroraConfigRef, deploymentSpecInternal, deployId, cmd)
 
         val applicationCommnd = openShiftCommandBuilder.createOpenShiftCommand(
             deploymentSpecInternal.environment.namespace,
@@ -289,10 +305,9 @@ class DeployService(
     fun createApplicationDeployment(
         auroraConfigRef: AuroraConfigRef,
         deploymentSpecInternal: AuroraDeploymentSpecInternal,
-        deployId: String
+        deployId: String,
+        cmd: ApplicationDeploymentCommand
     ): ApplicationDeployment {
-        val exactGitRef = auroraConfigService.findExactRef(auroraConfigRef)
-        val auroraConfigRefExact = exactGitRef?.let { auroraConfigRef.copy(resolvedRef = it) } ?: auroraConfigRef
 
         return ApplicationDeployment(
             spec = ApplicationDeploymentSpec(
@@ -304,11 +319,7 @@ class DeployService(
                 splunkIndex = deploymentSpecInternal.integration?.splunkIndex,
                 managementPath = deploymentSpecInternal.deploy?.managementPath,
                 releaseTo = deploymentSpecInternal.deploy?.releaseTo,
-                command = ApplicationDeploymentCommand(
-                    auroraConfig = auroraConfigRefExact,
-                    applicationDeploymentRef = deploymentSpecInternal.applicationDeploymentRef,
-                    overrideFiles = deploymentSpecInternal.overrideFiles
-                )
+                command = cmd
             ),
             metadata = ObjectMetaBuilder()
                 .withName(deploymentSpecInternal.name)

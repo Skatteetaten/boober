@@ -2,7 +2,7 @@ package no.skatteetaten.aurora.boober.controller.v1
 
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
-import no.skatteetaten.aurora.boober.service.DeployHistory
+import no.skatteetaten.aurora.boober.service.DeployHistoryEntry
 import no.skatteetaten.aurora.boober.service.DeployLogService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -21,7 +21,7 @@ class ApplyResultController(val deployLogService: DeployLogService) {
         @PathVariable auroraConfigName: String
     ): Response {
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
-        val applicationResults: List<DeployHistory> = deployLogService.deployHistory(ref)
+        val applicationResults: List<DeployHistoryEntry> = deployLogService.deployHistory(ref)
         return Response(items = applicationResults)
     }
 

@@ -5,7 +5,7 @@ import java.time.Instant
 import no.skatteetaten.aurora.boober.controller.v1.ApplyResultController
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeployResult
-import no.skatteetaten.aurora.boober.service.DeployHistory
+import no.skatteetaten.aurora.boober.service.DeployHistoryEntry
 import no.skatteetaten.aurora.boober.service.DeployLogService
 import no.skatteetaten.aurora.boober.service.Deployer
 
@@ -22,10 +22,10 @@ class ApplyresultBase extends AbstractContractBase {
     setupMockMvc(controller)
   }
 
-  DeployHistory createDeployResult() {
+  DeployHistoryEntry createDeployResult() {
     def ident = response('deployresult', '$.items[0].deployer', Map)
     def time = response('deployresult', '$.items[0].time', String)
-    new DeployHistory(
+    new no.skatteetaten.aurora.boober.service.DeployHistory.DeployHistory(
         new Deployer(ident.name, ident.email),
         Instant.parse(time),
         new AuroraDeployResult(null, "", [], true, false, null, null, false, null),

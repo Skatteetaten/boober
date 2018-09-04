@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.utils.Instants.now
 import no.skatteetaten.aurora.boober.utils.openshiftKind
@@ -25,24 +26,35 @@ class DeployLogService(
     ): List<AuroraDeployResult> {
 
         return deployResult
-            .filter { !it.ignored }
             .map {
                 if (it.ignored) {
                     it
                 } else {
                     val result = filterDeployInformation(it)
-                    val deployHistory = DeployHistory(deployer, now, result, ref)
+                    val deployHistory = DeployHistoryEntry(
+                        command = result.command,
+                        deployer = deployer,
+                        time = now,
+                        deploymentSpec = result.auroraDeploymentSpecInternal?.let {
+                            renderSpecAsJson(it.spec, true)
+                        } ?: mapOf(),
+                        deployId = result.deployId,
+                        success = result.success,
+                        reason = result.reason ?: "",
+                        result = DeployHistoryEntryResult(result.openShiftResponses, result.tagResponse),
+                        projectExist = result.projectExist
+                    )
                     val storeResult = storeDeployHistory(deployHistory)
                     it.copy(bitbucketStoreResult = storeResult)
                 }
-                }
+            }
     }
 
-    fun storeDeployHistory(deployHistory: DeployHistory): JsonNode? {
-        val prefix = if (deployHistory.result.success) DEPLOY_PREFIX else FAILED_PREFIX
-        val message = "$prefix/${deployHistory.result.tag}"
-        val fileName = "${deployHistory.ref.name}/${deployHistory.result.deployId}.json"
-        val content = mapper.writeValueAsString(deployHistory)
+    fun storeDeployHistory(deployHistoryEntry: DeployHistoryEntry): JsonNode? {
+        val prefix = if (deployHistoryEntry.success) DEPLOY_PREFIX else FAILED_PREFIX
+        val message = "$prefix/${deployHistoryEntry.command.applicationDeploymentRef}"
+        val fileName = "${deployHistoryEntry.command.auroraConfig.name}/${deployHistoryEntry.deployId}.json"
+        val content = mapper.writeValueAsString(deployHistoryEntry)
         return bitbucketDeploymentTagService.uploadFile(fileName, message, content)
     }
 
@@ -52,29 +64,40 @@ class DeployLogService(
         return result.copy(openShiftResponses = filteredResponses)
     }
 
-    fun deployHistory(ref: AuroraConfigRef): List<DeployHistory> {
+    fun deployHistory(ref: AuroraConfigRef): List<DeployHistoryEntry> {
         val files = bitbucketDeploymentTagService.getFiles(ref.name)
-        return files.mapNotNull { bitbucketDeploymentTagService.getFile<DeployHistory>(it) }
-            .filter { it.result.success }
+        return files.mapNotNull { bitbucketDeploymentTagService.getFile<DeployHistoryEntry>(it) }
+            .filter { it.success }
     }
 
-    fun findDeployResultById(ref: AuroraConfigRef, deployId: String): DeployHistory? {
+    fun findDeployResultById(ref: AuroraConfigRef, deployId: String): DeployHistoryEntry? {
         return bitbucketDeploymentTagService.getFile("${ref.name}/$deployId.json")
-
     }
 
-    fun getAllTags(ref: AuroraConfigRef): List<DeployHistory> {
+    fun getAllTags(ref: AuroraConfigRef): List<DeployHistoryEntry> {
         val repo = gitService.checkoutRepository(ref.name, refName = ref.refName)
         val res = gitService.getTagHistory(repo)
             .map {
+                val success = it.tagName.startsWith(DEPLOY_PREFIX)
                 val resolvedRef = it.`object`.id.abbreviate(8).name()
                 val fullMessage = it.fullMessage
+                val jsonNode: JsonNode = mapper.readValue(fullMessage)
+                val resolvedAuroraConfigRef = ref.copy(resolvedRef = resolvedRef)
+
+                // TODO: this might be different when we are new
+                val rawSpec = jsonNode.at("/result/auroraDeploymentSpec/fields") as ObjectNode
+
+
                 it.taggerIdent.let {
-                    DeployHistory(
-                        Deployer(it.name, it.emailAddress),
-                        it.`when`.toInstant(),
-                        mapper.readValue(fullMessage),
-                        ref.copy(resolvedRef = resolvedRef)
+                    DeployHistoryEntry(
+                        version = "v1",
+                        deployer = Deployer(it.name, it.emailAddress),
+                        time = it.`when`.toInstant(),
+                        success = success,
+                        reason = jsonNode.at("/reason").asText(),
+                        deployId = jsonNode.get("/result/deployId").asText(),
+                        deploymentSpec = mapper.
+
                     )
                 }
             }
