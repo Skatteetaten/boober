@@ -81,6 +81,16 @@ data class AuroraDeploymentSpecInternal(
                 "${it.groupId}/${it.artifactId}"
             } ?: throw RuntimeException("Not valid deployment")
 
+    val appName: String
+        get() =
+            template?.let {
+                it.template
+            } ?: localTemplate?.let {
+                "local" + it.templateJson.openshiftName
+            } ?: deploy?.let {
+                it.artifactId
+            } ?: throw RuntimeException("Not valid deployment")
+
     val version: String?
         get() = deploy?.let { deploy ->
             deploy.releaseTo?.withNonBlank { it } ?: deploy.version
