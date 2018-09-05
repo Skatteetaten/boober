@@ -121,7 +121,7 @@ compileTestGroovy.classpath += files(compileTestKotlin.destinationDir)
 testClasses.dependsOn compileTestGroovy
 
 task wrapper(type: Wrapper) {
-  gradleVersion = "4.7"
+  gradleVersion = "4.10"
 }
 
 contracts {

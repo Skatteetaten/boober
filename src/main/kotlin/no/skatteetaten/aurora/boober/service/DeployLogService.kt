@@ -41,15 +41,15 @@ class DeployLogService(
                         result = DeployHistoryEntryResult(result.openShiftResponses, result.tagResponse),
                         projectExist = result.projectExist
                     )
-                    val storeResult = storeDeployHistory(deployHistory)
+                    val storeResult = storeDeployHistory(deployHistory, result.auroraDeploymentSpecInternal!!.cluster)
                     it.copy(bitbucketStoreResult = storeResult)
                 }
             }
     }
 
-    fun storeDeployHistory(deployHistoryEntry: DeployHistoryEntry): String? {
+    fun storeDeployHistory(deployHistoryEntry: DeployHistoryEntry, cluster: String): String? {
         val prefix = if (deployHistoryEntry.success) DEPLOY_PREFIX else FAILED_PREFIX
-        val message = "$prefix/${deployHistoryEntry.command.applicationDeploymentRef}"
+        val message = "$prefix/$cluster-${deployHistoryEntry.command.applicationDeploymentRef}"
         val fileName = "${deployHistoryEntry.command.auroraConfig.name}/${deployHistoryEntry.deployId}.json"
         val content = mapper.writeValueAsString(deployHistoryEntry)
         return bitbucketDeploymentTagService.uploadFile(fileName, message, content)
