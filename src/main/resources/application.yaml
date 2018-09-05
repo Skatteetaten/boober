@@ -29,8 +29,8 @@ boober:
         project: "ac"
         url: "https://git.aurora.skead.no/"
         tags:
-          project: "ao"
-          repo: "auroradeploymenttags"
+            project: "ao"
+            repo: "auroradeploymenttags"
     git:
         checkoutPath: "/tmp/boober"
         urlPattern: https://git.aurora.skead.no/scm/${boober.bitbucket.project}/%s.git
