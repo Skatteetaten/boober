@@ -10,6 +10,7 @@ import no.skatteetaten.aurora.boober.model.AuroraTemplate
 import no.skatteetaten.aurora.boober.model.Permission
 import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeployResult
 import no.skatteetaten.aurora.boober.service.DeployService
@@ -40,9 +41,14 @@ class DeployBase extends AbstractContractBase {
         new AuroraDeploymentSpec([:]), '', '',
         new AuroraDeployEnvironment('', '',
             new Permissions(new Permission(Collections.emptySet(), Collections.emptySet()), null), null),
-        null, null, null, null, new AuroraTemplate([:], 'test', '1.0.0', 1), null, null, new AuroraConfigFile("", "{}", false), "master", [:])
+        null, null, null, null, new AuroraTemplate([:], 'test', '1.0.0', 1), null, null,
+        new AuroraConfigFile("", "{}", false), "master", [:])
 
-    return new AuroraDeployResult(spec, UUID.randomUUID().toString().substring(0, 7), [], success, false, reason)
+    def command = new ApplicationDeploymentCommand([:], new ApplicationDeploymentRef("", ""),
+        new AuroraConfigRef("", "", ""))
+
+    return new AuroraDeployResult(command, spec, UUID.randomUUID().toString().substring(0, 7), [], success, false,
+        reason)
   }
 }
 

@@ -1,61 +1,77 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.service.GitServices.Domain.AURORA_CONFIG
-import no.skatteetaten.aurora.boober.service.GitServices.TargetDomain
+import com.fasterxml.jackson.module.kotlin.readValue
+import no.skatteetaten.aurora.boober.utils.Instants.now
+import no.skatteetaten.aurora.boober.utils.openshiftKind
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class DeployLogService(@TargetDomain(AURORA_CONFIG) val gitService: GitService, val mapper: ObjectMapper) {
+class DeployLogService(
+    val bitbucketService: BitbucketService,
+    val mapper: ObjectMapper,
+    @Value("\${boober.bitbucket.tags.project}") val project: String,
+    @Value("\${boober.bitbucket.tags.repo}") val repo: String
+) {
 
     private val DEPLOY_PREFIX = "DEPLOY"
 
     private val FAILED_PREFIX = "FAILED"
 
-    fun markRelease(ref: AuroraConfigRef, deployResult: List<AuroraDeployResult>) {
+    fun markRelease(
+        deployResult: List<AuroraDeployResult>,
+        deployer: Deployer
+    ): List<AuroraDeployResult> {
 
-        val repo = gitService.checkoutRepository(ref.name, refName = ref.refName)
-        deployResult
-            .filter { !it.ignored }
+        return deployResult
             .map {
-                val result = filterSensitiveInformation(it)
-                val prefix = if (it.success) DEPLOY_PREFIX else FAILED_PREFIX
-
-                gitService.createAnnotatedTag(repo, "$prefix/${it.tag}", mapper.writeValueAsString(result))
-            }
-            .takeIf { it.isNotEmpty() }
-            ?.let {
-                gitService.pushTags(repo, it)
+                if (it.ignored) {
+                    it
+                } else {
+                    val result = filterDeployInformation(it)
+                    val deployHistory = DeployHistoryEntry(
+                        command = result.command!!,
+                        deployer = deployer,
+                        time = now,
+                        deploymentSpec = result.auroraDeploymentSpecInternal?.let {
+                            renderSpecAsJson(it.spec, true)
+                        } ?: mapOf(),
+                        deployId = result.deployId,
+                        success = result.success,
+                        reason = result.reason ?: "",
+                        result = DeployHistoryEntryResult(result.openShiftResponses, result.tagResponse),
+                        projectExist = result.projectExist
+                    )
+                    val storeResult = storeDeployHistory(deployHistory, result.auroraDeploymentSpecInternal!!.cluster)
+                    it.copy(bitbucketStoreResult = storeResult)
+                }
             }
     }
 
-    private fun filterSensitiveInformation(result: AuroraDeployResult): AuroraDeployResult {
+    fun storeDeployHistory(deployHistoryEntry: DeployHistoryEntry, cluster: String): String? {
+        val prefix = if (deployHistoryEntry.success) DEPLOY_PREFIX else FAILED_PREFIX
+        val message = "$prefix/$cluster-${deployHistoryEntry.command.applicationDeploymentRef}"
+        val fileName = "${deployHistoryEntry.command.auroraConfig.name}/${deployHistoryEntry.deployId}.json"
+        val content = mapper.writeValueAsString(deployHistoryEntry)
+        return bitbucketService.uploadFile(project, repo, fileName, message, content)
+    }
 
-        val filteredResponses = result.openShiftResponses.filter { it.responseBody?.get("kind")?.asText() != "Secret" }
+    private fun filterDeployInformation(result: AuroraDeployResult): AuroraDeployResult {
+
+        val filteredResponses = result.openShiftResponses.filter { it.responseBody?.openshiftKind != "secret" }
         return result.copy(openShiftResponses = filteredResponses)
     }
 
-    fun deployHistory(ref: AuroraConfigRef): List<DeployHistory> {
-        val repo = gitService.checkoutRepository(ref.name, refName = ref.refName)
-        val res = gitService.getTagHistory(repo)
-            .filter { it.tagName.startsWith(DEPLOY_PREFIX) }
-            .map {
-                val fullMessage = it.fullMessage
-                it.taggerIdent.let { DeployHistory(Deployer(it.name, it.emailAddress), it.`when`.toInstant(), mapper.readTree(fullMessage)) }
-            }
-        repo.close()
-        return res
+    fun deployHistory(ref: AuroraConfigRef): List<DeployHistoryEntry> {
+        val files = bitbucketService.getFiles(project, repo, ref.name)
+        return files.mapNotNull { bitbucketService.getFile(project, repo, "${ref.name}/$it") }
+            .map { mapper.readValue<DeployHistoryEntry>(it) }
     }
 
-    fun findDeployResultById(ref: AuroraConfigRef, deployId: String): DeployHistory? {
-        val repo = gitService.checkoutRepository(ref.name, refName = ref.refName)
-        val res: DeployHistory? = gitService.getTagHistory(repo)
-            .firstOrNull { it.tagName.endsWith(deployId) }
-            ?.let {
-                val fullMessage = it.fullMessage
-                it.taggerIdent.let { DeployHistory(Deployer(it.name, it.emailAddress), it.`when`.toInstant(), mapper.readTree(fullMessage)) }
-            }
-        repo.close()
-        return res
+    fun findDeployResultById(ref: AuroraConfigRef, deployId: String): DeployHistoryEntry? {
+        return bitbucketService.getFile(project, repo, "${ref.name}/$deployId.json")?.let {
+            mapper.readValue(it)
+        }
     }
 }

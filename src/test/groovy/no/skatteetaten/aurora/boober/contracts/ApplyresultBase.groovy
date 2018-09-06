@@ -2,11 +2,12 @@ package no.skatteetaten.aurora.boober.contracts
 
 import java.time.Instant
 
-import com.fasterxml.jackson.databind.node.NullNode
-
 import no.skatteetaten.aurora.boober.controller.v1.ApplyResultController
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
-import no.skatteetaten.aurora.boober.service.DeployHistory
+import no.skatteetaten.aurora.boober.service.DeployHistoryEntry
+import no.skatteetaten.aurora.boober.service.DeployHistoryEntryResult
 import no.skatteetaten.aurora.boober.service.DeployLogService
 import no.skatteetaten.aurora.boober.service.Deployer
 
@@ -23,9 +24,20 @@ class ApplyresultBase extends AbstractContractBase {
     setupMockMvc(controller)
   }
 
-  DeployHistory createDeployResult() {
+  DeployHistoryEntry createDeployResult() {
     def ident = response('deployresult', '$.items[0].deployer', Map)
     def time = response('deployresult', '$.items[0].time', String)
-    new DeployHistory(new Deployer(ident.name, ident.email), Instant.parse(time), NullNode.instance)
+    new DeployHistoryEntry(
+        "test",
+        "",
+        new Deployer(ident.name, ident.email),
+        Instant.parse(time),
+        true,
+        true,
+        "",
+        new ApplicationDeploymentCommand([:], new ApplicationDeploymentRef("", ""), new AuroraConfigRef("", "", "")),
+        [:],
+        new DeployHistoryEntryResult([], null)
+        )
   }
 }
