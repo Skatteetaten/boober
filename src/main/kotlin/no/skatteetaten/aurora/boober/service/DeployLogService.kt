@@ -4,12 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.utils.Instants.now
 import no.skatteetaten.aurora.boober.utils.openshiftKind
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class DeployLogService(
-    val bitbucketDeploymentTagService: BitbucketDeploymentTagService,
-    val mapper: ObjectMapper
+    val bitbucketService: BitbucketService,
+    val mapper: ObjectMapper,
+    @Value("\${boober.bitbucket.tags.project}") val project: String,
+    @Value("\${boober.bitbucket.tags.repo}") val repo: String
 ) {
 
     private val DEPLOY_PREFIX = "DEPLOY"
@@ -17,7 +20,6 @@ class DeployLogService(
     private val FAILED_PREFIX = "FAILED"
 
     fun markRelease(
-        ref: AuroraConfigRef,
         deployResult: List<AuroraDeployResult>,
         deployer: Deployer
     ): List<AuroraDeployResult> {
@@ -52,7 +54,7 @@ class DeployLogService(
         val message = "$prefix/$cluster-${deployHistoryEntry.command.applicationDeploymentRef}"
         val fileName = "${deployHistoryEntry.command.auroraConfig.name}/${deployHistoryEntry.deployId}.json"
         val content = mapper.writeValueAsString(deployHistoryEntry)
-        return bitbucketDeploymentTagService.uploadFile(fileName, message, content)
+        return bitbucketService.uploadFile(project, repo, fileName, message, content)
     }
 
     private fun filterDeployInformation(result: AuroraDeployResult): AuroraDeployResult {
@@ -62,13 +64,13 @@ class DeployLogService(
     }
 
     fun deployHistory(ref: AuroraConfigRef): List<DeployHistoryEntry> {
-        val files = bitbucketDeploymentTagService.getFiles(ref.name)
-        return files.mapNotNull { bitbucketDeploymentTagService.getFile("${ref.name}/$it") }
+        val files = bitbucketService.getFiles(project, repo, ref.name)
+        return files.mapNotNull { bitbucketService.getFile(project, repo, "${ref.name}/$it") }
             .map { mapper.readValue<DeployHistoryEntry>(it) }
     }
 
     fun findDeployResultById(ref: AuroraConfigRef, deployId: String): DeployHistoryEntry? {
-        return bitbucketDeploymentTagService.getFile("${ref.name}/$deployId.json")?.let {
+        return bitbucketService.getFile(project, repo, "${ref.name}/$deployId.json")?.let {
             mapper.readValue(it)
         }
     }

@@ -55,7 +55,7 @@ import spock.mock.DetachedMockFactory
     AuroraDeploymentSpecValidator,
     SharedSecretReader,
     OpenShiftObjectLabelService,
-    BitbucketProjectService
+    BitbucketService
 ])
 class AbstractMockedOpenShiftSpecification extends AbstractSpec {
 
@@ -84,8 +84,8 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
     }
 
     @Bean
-    BitbucketProjectService bitbucketProjectService() {
-      factory.Mock(BitbucketProjectService)
+    BitbucketService bitbucketService() {
+      factory.Mock(BitbucketService)
     }
 
     @Bean

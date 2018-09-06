@@ -35,10 +35,11 @@ data class AuroraConfigRef(
 @Service
 class AuroraConfigService(
     @TargetDomain(AURORA_CONFIG) val gitService: GitService,
-    val bitbucketProjectService: BitbucketProjectService,
+    val bitbucketProjectService: BitbucketService,
     val deploymentSpecValidator: AuroraDeploymentSpecValidator,
     @Value("\${openshift.cluster}") val cluster: String,
-    @Value("\${boober.validationPoolSize:6}") val validationPoolSize: Int
+    @Value("\${boober.validationPoolSize:6}") val validationPoolSize: Int,
+    @Value("\${boober.bitbucket.project}") val project: String
 ) {
 
     val logger: Logger = getLogger(AuroraConfigService::class.java)
@@ -48,7 +49,7 @@ class AuroraConfigService(
 
     fun findAllAuroraConfigNames(): List<String> {
 
-        return bitbucketProjectService.getAllSlugs()
+        return bitbucketProjectService.getRepoNames(project)
     }
 
     fun findExactRef(ref: AuroraConfigRef): String? {

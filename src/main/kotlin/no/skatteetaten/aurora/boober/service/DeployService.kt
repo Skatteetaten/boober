@@ -76,7 +76,7 @@ class DeployService(
         val deployer = userDetailsProvider.getAuthenticatedUser().let {
             Deployer(it.fullName ?: it.username, "${it.username}@skatteetaten.no")
         }
-        return deployLogService.markRelease(auroraConfigRefExact, deployResults, deployer)
+        return deployLogService.markRelease(deployResults, deployer)
     }
 
     fun prepareDeployEnvironments(deploymentSpecInternals: List<AuroraDeploymentSpecInternal>): Map<AuroraDeployEnvironment, AuroraDeployResult> {

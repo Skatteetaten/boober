@@ -27,11 +27,11 @@ import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 @SpringBootTest(classes = [
     Configuration,
     SharedSecretReader,
-    BitbucketDeploymentTagService,
+    BitbucketService,
     SpringTestUtils.BitbucketMockRestServiceServiceInitializer]
 )
 
-class BitbucketDeploymentTagServiceTest extends AbstractSpec {
+class BitbucketServiceTest extends AbstractSpec {
 
   @Autowired
   MockRestServiceServer mockServer
@@ -41,8 +41,10 @@ class BitbucketDeploymentTagServiceTest extends AbstractSpec {
   RestTemplate auroraRestTemplate
 
   @Autowired
-  BitbucketDeploymentTagService service
+  BitbucketService service
 
+  String project = "ao"
+  String repo = "auroradeploymenttags"
   def "Verify upload file"() {
 
     given:
@@ -55,7 +57,7 @@ class BitbucketDeploymentTagServiceTest extends AbstractSpec {
 
           .andRespond(withSuccess('''true''', TEXT_PLAIN))
     when:
-      def response = service.uploadFile("filename.json", "message", "foobar")
+      def response = service.uploadFile(project, repo, "filename.json", "message", "foobar")
 
     then:
       response == "true"
@@ -81,7 +83,7 @@ class BitbucketDeploymentTagServiceTest extends AbstractSpec {
 
     when:
 
-      def response = service.getFiles("foobar")
+      def response = service.getFiles(project, repo, "foobar")
     then:
       response == ["foo", "bar", "baz"]
   }
@@ -97,9 +99,29 @@ class BitbucketDeploymentTagServiceTest extends AbstractSpec {
 
     when:
 
-      def response = service.getFile("foobar.json")
+      def response = service.getFile(project, repo, "foobar.json")
     then:
       response == "foooobar"
+
+  }
+
+  def "Verify get repo names"() {
+    given:
+
+      def url = "https://git.aurora.skead.no/rest/api/1.0/projects/$project/repos?limit=1000"
+      mockServer.expect(requestTo(url))
+          .andExpect(method(HttpMethod.GET))
+          .andRespond(withSuccess('''{ 
+  "values" : [
+    { "slug" : "foo"},
+    { "slug" : "bar"}
+]}''', APPLICATION_JSON))
+
+    when:
+
+      def response = service.getRepoNames(project)
+    then:
+      response == ["foo", "bar"]
 
   }
 
