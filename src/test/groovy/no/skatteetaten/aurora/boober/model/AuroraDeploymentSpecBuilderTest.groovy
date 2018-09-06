@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.boober.model
 
-import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
+import static no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.aid
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 
@@ -138,7 +138,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
 
     then:
       def ex = thrown(AuroraConfigException)
-      ex.errors[0].field.path == '/name'
+      ex.errors[0].field.path == 'name'
   }
 
   def "Should throw AuroraConfigException due to missing required properties"() {
@@ -153,7 +153,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
 
     then:
       def ex = thrown(AuroraConfigException)
-      ex.errors[0].message == "Version must be set as string"
+      ex.errors[0].message == "Version must be set"
   }
 
   def "Fails when affiliation is not in about file"() {
@@ -185,7 +185,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
   def "Parses variants of secretVault config correctly"() {
     given:
       auroraConfigJson["utv/aos-simple.json"] = configFile
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
     expect:
       deploymentSpec.getVolume().secretVaultName == vaultName
@@ -213,7 +213,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       })
 
     when:
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
     then:
       def adminGroups = deploymentSpec.environment.permissions.admin.groups
@@ -230,7 +230,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       }
 
     when:
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
     then:
       def roles = deploymentSpec.integration.webseal.roles
@@ -238,5 +238,27 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
 
     where:
       roleConfig << ["role1,role2,3", "role1, role2, 3", ["role1", "role2", 3]]
+  }
+
+  def "Fails when annotation has wrong separator"() {
+    given:
+      def auroraConfigJson = defaultAuroraConfig()
+      auroraConfigJson["utv/aos-simple.json"] = '''{
+  "route": {
+    "console": {
+      "annotations": {
+        "haproxy.router.openshift.io/timeout": "600s"
+      }
+    }
+  }
+}
+'''
+
+    when:
+      createDeploymentSpec(auroraConfigJson, aid("utv", "aos-simple"))
+
+    then:
+      def e = thrown AuroraConfigException
+      e.message == '''Config for application aos-simple in environment utv contains errors. Annotation haproxy.router.openshift.io/timeout cannot contain '/'. Use '|' instead.'''
   }
 }

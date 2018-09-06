@@ -36,7 +36,9 @@ data class AuroraConfigResource(
 
     companion object {
         fun fromAuroraConfig(auroraConfig: AuroraConfig): AuroraConfigResource {
-            return AuroraConfigResource(auroraConfig.name, auroraConfig.files.map { AuroraConfigFileResource(it.name, it.contents) })
+            return AuroraConfigResource(
+                auroraConfig.name,
+                auroraConfig.files.map { AuroraConfigFileResource(it.name, it.contents) })
         }
     }
 }
@@ -58,7 +60,7 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
     val logger by logger()
 
     @GetMapping()
-    fun get(@PathVariable name: String): Response {
+    fun get( @PathVariable name: String ): Response {
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         return createAuroraConfigResponse(auroraConfigService.findAuroraConfig(ref))
     }
@@ -85,7 +87,7 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
     }
 
     @GetMapping("/**")
-    fun getAuroraConfigFile(@PathVariable name: String, request: HttpServletRequest): ResponseEntity<Response> {
+    fun getAuroraConfigFile( @PathVariable name: String, request: HttpServletRequest ): ResponseEntity<Response> {
 
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         val fileName = extractFileName(name, request)
@@ -104,7 +106,8 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
 
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         val fileName = extractFileName(name, request)
-        val auroraConfig: AuroraConfig = auroraConfigService.updateAuroraConfigFile(ref, fileName, payload.content, clearQuotes(ifMatchHeader))
+        val auroraConfig: AuroraConfig =
+            auroraConfigService.updateAuroraConfigFile(ref, fileName, payload.content, clearQuotes(ifMatchHeader))
         val auroraConfigFile = auroraConfig.findFile(fileName)!!
         return createAuroraConfigFileResponse(auroraConfigFile)
     }

@@ -3,7 +3,7 @@ package no.skatteetaten.aurora.boober.service.openshift
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess
 
-import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
+import static no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.aid
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -12,8 +12,8 @@ import org.springframework.test.web.client.MockRestServiceServer
 
 import com.fasterxml.jackson.databind.JsonNode
 
-import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import io.fabric8.kubernetes.api.model.OwnerReference
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.AbstractAuroraDeploymentSpecSpringTest
 import no.skatteetaten.aurora.boober.service.OpenShiftCommandBuilder
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
@@ -58,8 +58,9 @@ class OpenShiftCommandBuilderTest extends AbstractAuroraDeploymentSpecSpringTest
       osClusterMock.expect(requestTo("$openShiftUrl/oapi/v1/namespaces/$NAMESPACE/deploymentconfigs/webleveranse")).
           andRespond(withSuccess(loadResource("dc-webleveranse.json"), MediaType.APPLICATION_JSON))
 
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid(ENVIRONMENT, "webleveranse"))
-      JsonNode deploymentConfig = objectGenerator.generateDeploymentConfig("deploy-id", deploymentSpec, null)
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, aid(ENVIRONMENT, "webleveranse"))
+      JsonNode deploymentConfig = objectGenerator.
+          generateDeploymentConfig("deploy-id", deploymentSpec, null, new OwnerReference())
 
     when:
       OpenshiftCommand command = commandBuilder.createOpenShiftCommand(NAMESPACE, deploymentConfig, true, false)

@@ -6,9 +6,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.BooleanNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
-import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.stereotype.Service
 
 @Service
@@ -21,7 +20,7 @@ class OpenShiftTemplateProcessor(
     fun generateObjects(
         template: ObjectNode,
         parameters: Map<String, String>?,
-        auroraDeploymentSpec: AuroraDeploymentSpec,
+        auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
         version: String?,
         replicas: Int?
     ): List<JsonNode> {
@@ -30,7 +29,7 @@ class OpenShiftTemplateProcessor(
         replicas?.let {
             adcParameters.put("REPLICAS", it.toString())
         }
-        adcParameters.put("NAME", auroraDeploymentSpec.name)
+        adcParameters.put("NAME", auroraDeploymentSpecInternal.name)
         val adcParameterKeys = adcParameters.keys
 
         if (template.has("parameters")) {
@@ -52,22 +51,16 @@ class OpenShiftTemplateProcessor(
         val labels = template["labels"] as ObjectNode
 
         if (!labels.has("affiliation")) {
-            labels.put("affiliation", auroraDeploymentSpec.environment.affiliation)
+            labels.put("affiliation", auroraDeploymentSpecInternal.environment.affiliation)
         }
 
         if (!labels.has("template")) {
-            val template = auroraDeploymentSpec.template?.template ?: "local"
+            val template = auroraDeploymentSpecInternal.template?.template ?: "local"
             labels.put("template", template)
         }
 
-        if (!labels.has("appId")) {
-            template["metadata"]?.get("name")?.let {
-                labels.put("appId", DigestUtils.sha1Hex(it.asText()))
-            }
-        }
-
         if (!labels.has("app")) {
-            labels.put("app", auroraDeploymentSpec.name)
+            labels.put("app", auroraDeploymentSpecInternal.name)
         }
 
         labels.put("updatedBy", userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"))
@@ -81,7 +74,11 @@ class OpenShiftTemplateProcessor(
                 }
         }
 
-        val result = openShiftClient.post("processedtemplate", namespace = auroraDeploymentSpec.environment.namespace, payload = template)
+        val result = openShiftClient.post(
+            "processedtemplate",
+            namespace = auroraDeploymentSpecInternal.environment.namespace,
+            payload = template
+        )
 
         return result.body["objects"].asSequence().toList()
     }

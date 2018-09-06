@@ -1,11 +1,12 @@
 package no.skatteetaten.aurora.boober.service
 
-import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
+import static no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.aid
 
 import com.fasterxml.jackson.databind.JsonNode
 
 import groovy.json.JsonSlurper
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import io.fabric8.kubernetes.api.model.OwnerReference
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultResults
 
@@ -34,16 +35,18 @@ class OpenShiftObjectGeneratorMountTest extends AbstractOpenShiftObjectGenerator
 }'''
       ]
 
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid("utv", "aos-simple"))
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, aid("utv", "aos-simple"))
 
     when:
-      def jsonMounts = objectGenerator.generateSecretsAndConfigMapsInTest("deploy-id", deploymentSpec, null, deploymentSpec.name)
+      def jsonMounts = objectGenerator.
+          generateSecretsAndConfigMapsInTest("deploy-id", deploymentSpec, null, deploymentSpec.name,
+              new OwnerReference())
 
     then:
       jsonMounts.size() == 1
       JsonNode mount = jsonMounts.first()
 
-    and: "there are env fields for all config elements in root"
+    and: "there are env sources for all config elements in root"
       deploymentSpec.deploy.env.containsKey("OPPSLAGSTJENESTE_DELEGERING")
       deploymentSpec.deploy.env.containsKey("UTSTED_SAML_URL")
       deploymentSpec.deploy.env.containsKey("VALIDER_SAML_URL")
@@ -68,7 +71,7 @@ class OpenShiftObjectGeneratorMountTest extends AbstractOpenShiftObjectGenerator
   } 
 }'''
     when:
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
     then:
       def env = deploymentSpec.deploy.env
@@ -97,13 +100,14 @@ class OpenShiftObjectGeneratorMountTest extends AbstractOpenShiftObjectGenerator
 
       def vaultFileName = "latest.properties"
       def vaultFileContents = "FOO=BAR"
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid("utv", "aos-simple"))
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, aid("utv", "aos-simple"))
       def provisioningResult = new ProvisioningResult(null,
           new VaultResults([test: [(vaultFileName): vaultFileContents.bytes]]))
 
     when:
       List<JsonNode> jsonMounts = objectGenerator.
-          generateSecretsAndConfigMapsInTest("deploy-id", deploymentSpec, provisioningResult, deploymentSpec.name)
+          generateSecretsAndConfigMapsInTest("deploy-id", deploymentSpec, provisioningResult, deploymentSpec.name,
+              new OwnerReference())
 
     then:
       jsonMounts.size() == 1

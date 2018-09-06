@@ -23,14 +23,19 @@ fun getAuroraConfigSamples(): AuroraConfig {
 }
 
 @JvmOverloads
-fun createAuroraConfig(aid: ApplicationId, affiliation: String = "aos", additionalFile: String? = null, refName: String = "master"): AuroraConfig {
+fun createAuroraConfig(
+    aid: ApplicationDeploymentRef,
+    affiliation: String = "aos",
+    additionalFile: String? = null,
+    refName: String = "master"
+): AuroraConfig {
     val files = getSampleFiles(aid, additionalFile)
 
     return AuroraConfig(files.map { AuroraConfigFile(it.key, it.value, false) }, affiliation, refName)
 }
 
 @JvmOverloads
-fun getSampleFiles(aid: ApplicationId, additionalFile: String? = null): Map<String, String> {
+fun getSampleFiles(aid: ApplicationDeploymentRef, additionalFile: String? = null): Map<String, String> {
 
     return collectFiles(
         "about.json",
@@ -41,7 +46,7 @@ fun getSampleFiles(aid: ApplicationId, additionalFile: String? = null): Map<Stri
     )
 }
 
-fun getResultFiles(aid: ApplicationId): Map<String, JsonNode?> {
+fun getResultFiles(aid: ApplicationDeploymentRef): Map<String, JsonNode?> {
     val baseFolder = File(AuroraConfigHelper::class.java
         .getResource("/samples/result/${aid.environment}/${aid.application}").file)
 

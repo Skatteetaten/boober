@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.AbstractAuroraDeploymentSpecTest
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
@@ -33,7 +33,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
   def "Fails when admin groups is empty"() {
     given:
       auroraConfigJson["utv/about.json"] = '''{ "permissions": { "admin": "" }, "cluster" : "utv" }'''
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
     when:
       specValidator.assertIsValid(deploymentSpec)
@@ -46,7 +46,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
     given:
       auroraConfigJson["utv/about.json"] = '''{ "permissions": { "admin": "APP_PaaS_utv" }, "cluster" : "utv" }'''
       openShiftClient.getGroups() >> new OpenShiftGroups([])
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
     when:
       specValidator.assertIsValid(deploymentSpec)
@@ -61,7 +61,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
       openShiftClient.getGroups() >> new OpenShiftGroups([new UserGroup("foo", "APP_PaaS_utv")])
       openShiftClient.getTemplate("atomhopper") >> null
       dbClient.findSchemaById("123-123-123") >> true
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
     when:
       specValidator.assertIsValid(deploymentSpec)
@@ -74,7 +74,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
   def "Succeeds when databaseId does not exist when not on current cluster"() {
     given:
       auroraConfigJson["utv/aos-simple.json"] = '''{ "cluster": "qa", "database": { "foo" : "123-123-123" } }'''
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
       dbClient.findSchemaById("123-123-123") >> { throw new ProvisioningException("") }
 
     when:
@@ -90,7 +90,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
 
       openShiftClient.getGroups() >> new OpenShiftGroups([new UserGroup("foo", "APP_PaaS_utv")])
       openShiftClient.getTemplate("atomhopper") >> null
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
     when:
       specValidator.assertIsValid(deploymentSpec)
@@ -109,7 +109,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
         def templateResult = this.getClass().getResource(templateFileName)
         mapper.readTree(templateResult)
       }
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
     when:
       specValidator.assertIsValid(deploymentSpec)
@@ -130,7 +130,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
         def templateResult = this.getClass().getResource(templateFileName)
         mapper.readTree(templateResult)
       }
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
     when:
       specValidator.assertIsValid(deploymentSpec)
@@ -143,7 +143,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
   def "Fails when vault does not exist"() {
     given:
       auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": "test", "mounts": { "secret": { "type": "Secret", "secretVault": "test2", "path": "/tmp" } } }'''
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
       def vaultCollection = deploymentSpec.environment.affiliation
 
       vaultService.vaultExists(vaultCollection, "test2") >> true
@@ -160,7 +160,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
   def "Succeeds when vault exists"() {
     given:
       auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": "test", "mounts": { "secret": { "type": "Secret", "secretVault": "test2", "path": "/tmp" } } }'''
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
       def vaultCollection = deploymentSpec.environment.affiliation
 
       vaultService.vaultExists(vaultCollection, "test2") >> true
@@ -185,7 +185,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
   def "Fails when secretVault keyMappings contains values not in keys"() {
     given:
       auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": { "name": "test", "keys":["test-key1"], "keyMappings": { "test-key2":"value" } }}'''
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
     when:
       specValidator.validateKeyMappings(deploymentSpec)
@@ -198,7 +198,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
   def "Succeeds when secretVault contains keyMappings but no keys"() {
     given:
       auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": { "name": "test", "keyMappings": { "test-key2":"value" } }}'''
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
     expect:
       specValidator.validateKeyMappings(deploymentSpec)
@@ -207,7 +207,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
   def "Fails when key in auroraConfig is not present in secretVault"() {
     given:
       auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": { "name": "test", "keys": ["test-key1"] }}'''
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
       vaultService.findVaultKeys("aos", "test", "latest.properties") >> ["test-key2"]
 
     when:

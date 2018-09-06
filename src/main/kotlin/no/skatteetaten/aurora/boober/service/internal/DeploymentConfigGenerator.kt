@@ -16,6 +16,7 @@ import com.fkorotkov.openshift.strategy
 import com.fkorotkov.openshift.template
 import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.IntOrString
+import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.platform.AuroraDeployment
 import no.skatteetaten.aurora.boober.mapper.platform.podVolumes
@@ -24,14 +25,20 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 
 object DeploymentConfigGenerator {
 
-    fun create(auroraDeployment: AuroraDeployment, container: List<Container>): DeploymentConfig {
+    fun create(
+        auroraDeployment: AuroraDeployment,
+        container: List<Container>,
+        reference: OwnerReference
+    ): DeploymentConfig {
 
         val ttl = auroraDeployment.ttl?.let {
             val removeInstant = now + it
             "removeAfter" to removeInstant.epochSecond.toString()
         }
         return newDeploymentConfig {
+
             metadata {
+                ownerReferences = listOf(reference)
                 annotations = auroraDeployment.annotations
                 apiVersion = "v1"
                 labels = auroraDeployment.labels.addIfNotNull(ttl)
@@ -76,8 +83,6 @@ object DeploymentConfigGenerator {
                 selector = mapOf("name" to auroraDeployment.name)
                 template {
                     metadata {
-                        finalizers = null
-                        ownerReferences = null
                         labels = auroraDeployment.labels
                     }
 

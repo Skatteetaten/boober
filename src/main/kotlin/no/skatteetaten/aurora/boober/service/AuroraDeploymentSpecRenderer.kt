@@ -1,15 +1,16 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 
 fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean): String {
 
-    val fields = deploymentSpec.fields
+    val fields = renderSpecAsJsonOld(includeDefaults, deploymentSpec)
+
     val defaultKeys = listOf("source", "value")
     val indent = 2
 
-    val keyMaxLength = findMaxKeyLength(deploymentSpec.fields, indent)
-    val valueMaxLength = findMaxValueLength(deploymentSpec.fields)
+    val keyMaxLength = findMaxKeyLength(fields, indent)
+    val valueMaxLength = findMaxValueLength(fields)
 
     fun renderJson(level: Int, result: String, entry: Map.Entry<String, Map<String, Any?>>): String {
 
@@ -35,12 +36,44 @@ fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSp
         }
     }
 
-    val filteredFields = if (includeDefaults) fields else filterDefaultFields(fields)
-
-    return filteredFields.entries
+    return fields.entries
         .fold("{\n") { result, entry ->
-            renderJson(1, result, entry)
+            renderJson(1, result, entry as Map.Entry<String, Map<String, Any?>>)
         } + "}"
+}
+
+fun renderSpecAsJson(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean): Map<String, Any> {
+    val rawFields = if (!includeDefaults) {
+        deploymentSpec.removeDefaults()
+    } else {
+        deploymentSpec
+    }
+
+    return rawFields.present {
+        mapOf(
+            "source" to it.value.source,
+            "value" to it.value.value,
+            "sources" to it.value.sources
+        )
+        // TODO: Remove after AO has been upgraded
+    }.let { result ->
+        result["applicationDeploymentRef"]?.let {
+            result + mapOf("applicationId" to it)
+        } ?: result
+    }
+}
+
+fun renderSpecAsJsonOld(
+    includeDefaults: Boolean,
+    deploymentSpecInternal: AuroraDeploymentSpec
+): Map<String, Any> {
+    val rawFields = if (!includeDefaults) {
+        deploymentSpecInternal.removeDefaults()
+    } else {
+        deploymentSpecInternal
+    }
+    val fields = rawFields.removeInactive().present { mapOf("source" to it.value.source, "value" to it.value.value) }
+    return fields
 }
 
 fun findMaxKeyLength(fields: Map<String, Any>, indent: Int, accumulated: Int = 0): Int {
@@ -63,21 +96,4 @@ fun findMaxValueLength(fields: Map<String, Any>): Int {
             findMaxValueLength(value)
         }
     }.max() ?: 0
-}
-
-fun filterDefaultFields(fields: Map<String, Map<String, Any?>>): Map<String, Map<String, Any?>> {
-
-    return fields
-        .filter {
-            it.value["source"].toString() != "default"
-        }
-        .mapValues {
-            if (it.value.containsKey("source")) {
-                it.value
-            } else {
-                filterDefaultFields(it.value as Map<String, Map<String, Any?>>)
-            }
-        }.filter {
-            !it.value.isEmpty()
-        }
 }

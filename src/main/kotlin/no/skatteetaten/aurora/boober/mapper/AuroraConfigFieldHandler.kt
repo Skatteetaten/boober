@@ -9,5 +9,6 @@ data class AuroraConfigFieldHandler(
     // Dirty quick fix. This class should never be directly serialized to the http response.
     @JsonIgnore val validator: (JsonNode?) -> Exception? = { _ -> null },
     val defaultValue: Any? = null,
-    val defaultSource: String = "default"
+    val defaultSource: String = "default",
+    val subKeyFlag: Boolean = false
 )

@@ -27,7 +27,10 @@ boober:
     dbh: http://dbh
     bitbucket:
         project: "ac"
-        url: "https://git.aurora.skead.no/rest/api/1.0"
+        url: "https://git.aurora.skead.no/"
+        tags:
+            project: "ao"
+            repo: "auroradeploymenttags"
     git:
         checkoutPath: "/tmp/boober"
         urlPattern: https://git.aurora.skead.no/scm/${boober.bitbucket.project}/%s.git
@@ -60,8 +63,9 @@ spring:
     profiles: local
 
 openshift:
-    cluster: qa
+    cluster: utv
     port: 8443
+    url: https://${openshift.cluster}-master.paas.skead.no:${openshift.port}
 
 boober:
     dbh: http://dbh-aurora.${openshift.cluster}.paas.skead.no

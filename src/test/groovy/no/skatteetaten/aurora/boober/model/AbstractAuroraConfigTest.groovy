@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.boober.model
 
-import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
+import static no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.aid
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper

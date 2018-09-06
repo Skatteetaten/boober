@@ -9,7 +9,15 @@
       "updateInBoober": "true",
       "booberDeployId": "123"
     },
-    "name": "tvinn-config"
+    "name": "tvinn-config",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "tvinn",
+        "uid": "123-123"
+      }
+    ]
   },
   "data": {
     "FOO": "BAR"

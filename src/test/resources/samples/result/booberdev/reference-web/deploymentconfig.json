@@ -8,7 +8,6 @@
       "console.skatteetaten.no/management-path": ":8081/actuator"
     },
     "labels": {
-      "appId": "1590fc38ff96cbe228a5003e20e3ef3893e8bc06",
       "app": "openshift-referanse-react",
       "updatedBy": "hero",
       "affiliation": "aos",
@@ -17,7 +16,15 @@
       "name": "openshift-referanse-react",
       "deployTag": "develop-SNAPSHOT"
     },
-    "name": "openshift-referanse-react"
+    "name": "openshift-referanse-react",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "openshift-referanse-react",
+        "uid": "123-123"
+      }
+    ]
   },
   "spec": {
     "replicas": 1,
@@ -37,7 +44,6 @@
     "template": {
       "metadata": {
         "labels": {
-          "appId": "1590fc38ff96cbe228a5003e20e3ef3893e8bc06",
           "app": "openshift-referanse-react",
           "updatedBy": "hero",
           "affiliation": "aos",

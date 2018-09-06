@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service.openshift
 
-import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
 
@@ -19,15 +18,15 @@ import org.springframework.test.context.TestPropertySource
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
-import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.service.OpenShiftCommandBuilder
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.service.OpenShiftTemplateProcessor
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
+import no.skatteetaten.aurora.boober.utils.Instants
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -52,7 +51,7 @@ class OpenShiftCommandBuilderCreateDeleteCommandsTest extends Specification {
 
 
     @Bean
-    @ClientType(API_USER)
+    @OpenShiftResourceClientConfig.ClientType(API_USER)
     @Primary
     OpenShiftResourceClient resourceClient() {
 
@@ -60,7 +59,7 @@ class OpenShiftCommandBuilderCreateDeleteCommandsTest extends Specification {
     }
 
     @Bean
-    @ClientType(SERVICE_ACCOUNT)
+    @OpenShiftResourceClientConfig.ClientType(SERVICE_ACCOUNT)
     OpenShiftResourceClient resourceClientSA() {
 
       factory.Mock(OpenShiftResourceClient)
@@ -71,7 +70,7 @@ class OpenShiftCommandBuilderCreateDeleteCommandsTest extends Specification {
   OpenShiftCommandBuilder openShiftCommandBuilder
 
   @Autowired
-  @ClientType(API_USER)
+  @OpenShiftResourceClientConfig.ClientType(API_USER)
   OpenShiftResourceClient userClient
 
   @Autowired
@@ -88,7 +87,7 @@ class OpenShiftCommandBuilderCreateDeleteCommandsTest extends Specification {
       def namespace = "booberdev"
       def deployId = "abc123"
       def baseUrl = "http://localhost"
-      def aid = new ApplicationId(namespace, name)
+      def aid = new ApplicationDeploymentRef(namespace, name)
 
       def responses = createResponsesFromResultFiles(aid)
 
@@ -110,7 +109,7 @@ class OpenShiftCommandBuilderCreateDeleteCommandsTest extends Specification {
       }
   }
 
-  Map<String, JsonNode> createResponsesFromResultFiles(ApplicationId aid) {
+  Map<String, JsonNode> createResponsesFromResultFiles(ApplicationDeploymentRef aid) {
     (Map<String, JsonNode>) AuroraConfigHelperKt.getResultFiles(aid).collectEntries {
       def responseBody = mapper.createObjectNode()
       def items = mapper.createArrayNode()

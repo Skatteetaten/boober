@@ -1,9 +1,12 @@
 buildscript {
-  ext.kotlin_version = "1.2.51"
+  ext.kotlin_version = "1.2.61"
   ext.springBootVersion = "1.5.12.RELEASE"
   ext.auroraStartersVersion = "3.7.0"
 
   repositories {
+    maven {
+      url "http://aurora/nexus/content/groups/public"
+    }
     mavenCentral()
     jcenter()
     mavenLocal()
@@ -14,6 +17,7 @@ buildscript {
     maven {
       url "https://plugins.gradle.org/m2/"
     }
+
   }
 
   dependencies {
@@ -23,13 +27,16 @@ buildscript {
         "org.jetbrains.kotlin:kotlin-allopen:$kotlin_version",
         "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion",
         "no.skatteetaten.aurora.gradle.plugins:aurora-gradle-plugin:1.2.1",
-        "org.springframework.cloud:spring-cloud-contract-gradle-plugin:2.0.0.RELEASE",
+        "org.springframework.cloud:spring-cloud-contract-gradle-plugin:2.0.1.RELEASE",
         "gradle.plugin.org.jlleitschuh.gradle:ktlint-gradle:4.0.0"
     )
   }
 }
 
 repositories {
+  maven {
+    url "http://aurora/nexus/content/groups/public"
+  }
   mavenCentral()
   jcenter()
   mavenLocal()
@@ -56,7 +63,7 @@ ext["logback.version"] = "1.2.3"
 
 dependencyManagement {
   imports {
-    mavenBom "org.springframework.cloud:spring-cloud-contract-dependencies:2.0.0.RELEASE"
+    mavenBom "org.springframework.cloud:spring-cloud-contract-dependencies:2.0.1.RELEASE"
   }
 }
 
@@ -112,7 +119,7 @@ compileKotlin {
   }
 }
 
-test{
+test {
   maxHeapSize = "512m"
 }
 
@@ -121,7 +128,7 @@ compileTestGroovy.classpath += files(compileTestKotlin.destinationDir)
 testClasses.dependsOn compileTestGroovy
 
 task wrapper(type: Wrapper) {
-  gradleVersion = "4.7"
+  gradleVersion = "4.10"
 }
 
 contracts {

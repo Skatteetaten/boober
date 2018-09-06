@@ -7,10 +7,11 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 
 import groovy.json.JsonOutput
-import no.skatteetaten.aurora.boober.model.ApplicationId
+import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultResults
 import spock.lang.Shared
@@ -33,7 +34,8 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       def provisioningResult = new ProvisioningResult(null,
           new VaultResults([foo: ["latest.properties": "FOO=bar\nBAR=baz\n".bytes]]))
 
-      def aid = new ApplicationId(env, name)
+
+      def aid = new ApplicationDeploymentRef(env, name)
       def additionalFile = null
       if (templateFile != null) {
 
@@ -47,14 +49,22 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
         }
       }
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, additionalFile)
-      AuroraDeploymentSpec deploymentSpec = AuroraDeploymentSpecService.
-          createAuroraDeploymentSpec(auroraConfig, aid, overrides)
+      AuroraDeploymentSpecInternal deploymentSpec = AuroraDeploymentSpecService.
+          createAuroraDeploymentSpecInternal(auroraConfig, aid, overrides)
+      def ownerReference = new OwnerReferenceBuilder()
+          .withApiVersion("skatteetaten.no/v1")
+          .withKind("Application")
+          .withName(deploymentSpec.name)
+          .withUid("123-123")
+          .build()
+
 
     when:
+
       List<JsonNode> generatedObjects = objectGenerator.
           with {
             [generateProjectRequest(deploymentSpec.environment)] +
-                generateApplicationObjects(DEPLOY_ID, deploymentSpec, provisioningResult)
+                generateApplicationObjects(DEPLOY_ID, deploymentSpec, provisioningResult, ownerReference)
           }
 
     then:
@@ -74,17 +84,15 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
     where:
 
       env           | name            | templateFile      | overrides
+      "booberdev"   | "aos-simple"    | null              | booberDevAosSimpleOverrides
       "booberdev"   | "tvinn"         | "atomhopper.json" | []
       "booberdev"   | "reference"     | null              | []
       "booberdev"   | "console"       | null              | []
       "webseal"     | "sprocket"      | null              | []
       "booberdev"   | "sprocket"      | null              | []
       "booberdev"   | "reference-web" | null              | []
-      "booberdev"   | "build"         | null              | []
-      "booberdev"   | "aos-simple"    | null              | booberDevAosSimpleOverrides
       "secrettest"  | "aos-simple"    | null              | []
       "release"     | "aos-simple"    | null              | []
-      "release"     | "build"         | null              | []
       "mounts"      | "aos-simple"    | null              | []
       "secretmount" | "aos-simple"    | null              | []
   }
@@ -92,11 +100,11 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
   def "generate rolebinding should include serviceaccount "() {
 
     given:
-      def aid = new ApplicationId("booberdev", "console")
+      def aid = new ApplicationDeploymentRef("booberdev", "console")
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, null)
 
     when:
-      AuroraDeploymentSpec deploymentSpec = AuroraDeploymentSpecService.createAuroraDeploymentSpec(auroraConfig, aid)
+      AuroraDeploymentSpecInternal deploymentSpec = AuroraDeploymentSpecService.createAuroraDeploymentSpecInternal(auroraConfig, aid)
       def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.environment.permissions)
 
     then:
@@ -117,11 +125,11 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
   def "generate rolebinding view should split groups"() {
 
     given:
-      def aid = new ApplicationId("booberdev", "console")
+      def aid = new ApplicationDeploymentRef("booberdev", "console")
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, null)
 
     when:
-      AuroraDeploymentSpec deploymentSpec = AuroraDeploymentSpecService.createAuroraDeploymentSpec(auroraConfig, aid)
+      AuroraDeploymentSpecInternal deploymentSpec = AuroraDeploymentSpecService.createAuroraDeploymentSpecInternal(auroraConfig, aid)
       def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.environment.permissions)
 
     then:

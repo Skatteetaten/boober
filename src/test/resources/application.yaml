@@ -5,30 +5,36 @@ spring:
         name: boober
 
 aurora:
-  token:
-    value: token
+    token:
+        value: token
 
 boober:
-  dbh:
-    http://localhost:8080
-  encrypt:
-    key: "komogsyngensang"
-  git:
-    urlPattern: "file:///tmp/boobertest/%s"
-    checkoutPath: "build/boobercheckout"
-    username: "foo"
-    password: "bar"
-  docker:
-    registry: "docker-registry.aurora.sits.no:5000"
-  openshift:
-    token: foo
+    bitbucket:
+        project: "ac"
+        url: "https://git.aurora.skead.no/"
+        tags:
+            project: "ao"
+            repo: "auroradeploymenttags"
+    dbh:
+        http://localhost:8080
+    encrypt:
+        key: "komogsyngensang"
+    git:
+        urlPattern: "file:///tmp/boobertest/%s"
+        checkoutPath: "build/boobercheckout"
+        username: "foo"
+        password: "bar"
+    docker:
+        registry: "docker-registry.aurora.sits.no:5000"
+    openshift:
+        token: foo
 
 vault:
-  git:
-    urlPattern: "file:///tmp/vaulttest/%s"
-    checkoutPath: "build/vaultcheckout"
-    username: "foo"
-    password: "bar"
+    git:
+        urlPattern: "file:///tmp/vaulttest/%s"
+        checkoutPath: "build/vaultcheckout"
+        username: "foo"
+        password: "bar"
 
 management:
     port: 0
