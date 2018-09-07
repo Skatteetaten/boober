@@ -119,6 +119,26 @@
       }
     ]
   },
+  "certificate": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "source": "default",
+        "value": false
+      }
+    ]
+  },
+  "database": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "source": "default",
+        "value": false
+      }
+    ]
+  },
   "prometheus": {
     "source": "default",
     "value": true,
@@ -212,26 +232,6 @@
         }
       ]
     }
-  },
-  "database": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "source": "default",
-        "value": false
-      }
-    ]
-  },
-  "certificate": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "source": "default",
-        "value": false
-      }
-    ]
   },
   "webseal": {
     "source": "default",

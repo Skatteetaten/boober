@@ -12,6 +12,8 @@
   }
   envName:                  "utv"                        // folderName
   name:                     "webleveranse"               // webleveranse.json
+  certificate:              false                        // default
+  database:                 false                        // default
   prometheus: {
     path:                   "/prometheus"                // default
     port:                   8081                         // default
@@ -24,8 +26,6 @@
     type:                   "rolling"                    // webleveranse.json
     timeout:                180                          // default
   }
-  database:                 false                        // default
-  certificate:              false                        // default
   webseal:                  false                        // default
   artifactId:               "openshift-referanse-react"  // webleveranse.json
   groupId:                  "no.skatteetaten.aurora"     // webleveranse.json

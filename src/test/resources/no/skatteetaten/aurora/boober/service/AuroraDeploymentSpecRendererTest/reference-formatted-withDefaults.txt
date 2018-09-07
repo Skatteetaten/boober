@@ -12,6 +12,8 @@
   }
   envName:                  "utv"                        // folderName
   name:                     "reference"                  // fileName
+  certificate:              false                        // default
+  database:                 false                        // default
   prometheus: {
     path:                   "/prometheus"                // default
     port:                   8081                         // default
@@ -24,8 +26,6 @@
     type:                   "rolling"                    // default
     timeout:                180                          // default
   }
-  database:                 false                        // default
-  certificate:              false                        // default
   webseal:                  false                        // default
   artifactId:               "reference"                  // fileName
   groupId:                  "no.skatteetaten.aurora"     // reference.json
