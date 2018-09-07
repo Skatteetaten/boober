@@ -297,11 +297,11 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       deploymentSpec.integration.certificateCn == "foooo"
   }
 
-  def "Should use custom cert name if specified and certificate=false in about file"() {
+  def "Should use custom cert name if specified and certificate=false in base file"() {
 
     given:
       def aid = DEFAULT_AID
-      modify(auroraConfigJson, "about.json", {
+      modify(auroraConfigJson, "aos-simple.json", {
         put("certificate", false)
       })
       modify(auroraConfigJson, "utv/aos-simple.json", {
