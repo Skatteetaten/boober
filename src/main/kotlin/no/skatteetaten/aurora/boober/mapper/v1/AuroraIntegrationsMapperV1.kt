@@ -61,7 +61,7 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>) {
 
         val simplified = auroraDeploymentSpec.isSimplifiedConfig("database")
 
-        if (simplified && auroraDeploymentSpec["database"]) {
+        if (simplified && auroraDeploymentSpec["database"] && auroraDeploymentSpec.noSpecifiedSubKeys("database")) {
             return listOf(Database(name = name))
         }
         return auroraDeploymentSpec.getDatabases(dbHandlers)
