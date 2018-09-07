@@ -21,7 +21,6 @@ class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>, val name
         )
     }
 
-    // TODO: samme mønster som cert
     fun getRoute(auroraDeploymentSpec: AuroraDeploymentSpec): List<Route> {
 
         val route = "route"
