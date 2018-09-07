@@ -296,4 +296,21 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
     then:
       deploymentSpec.integration.certificateCn == "foooo"
   }
+
+  def "Should use custom cert name if specified and certificate=false in about file"() {
+
+    given:
+      def aid = DEFAULT_AID
+      modify(auroraConfigJson, "about.json", {
+        put("certificate", false)
+      })
+      modify(auroraConfigJson, "utv/aos-simple.json", {
+        put("certificate", ["commonName": "foooo"])
+      })
+    when:
+      def deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
+
+    then:
+      deploymentSpec.integration.certificateCn == "foooo"
+  }
 }
