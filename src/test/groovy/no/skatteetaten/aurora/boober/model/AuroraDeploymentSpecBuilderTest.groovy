@@ -72,7 +72,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
   def "Disabling certificate with simplified config over full config"() {
     given:
       modify(auroraConfigJson, "aos-simple.json", {
-        certificate = [commonName: "some_common_name"]
+        put("certificate", [commonName: "some_common_name"])
       })
 
     when:
@@ -81,7 +81,9 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       deploymentSpec.integration.certificateCn == "some_common_name"
 
     when:
-      auroraConfigJson["utv/aos-simple.json"] = '''{ "certificate": false }'''
+      modify(auroraConfigJson, "utv/aos-simple.json", {
+        put("certificate", false)
+      })
       deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
     then:
       !deploymentSpec.integration.certificateCn
@@ -134,7 +136,6 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       })
     when:
       def deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
-      println deploymentSpec
 
     then:
       def ex = thrown(AuroraConfigException)
@@ -260,5 +261,39 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
     then:
       def e = thrown AuroraConfigException
       e.message == '''Config for application aos-simple in environment utv contains errors. Annotation haproxy.router.openshift.io/timeout cannot contain '/'. Use '|' instead.'''
+  }
+
+  def "Should use custom db name if specified and database=true in about file"() {
+
+    given:
+      def aid = DEFAULT_AID
+      modify(auroraConfigJson, "about.json", {
+        put("database", true)
+      })
+      modify(auroraConfigJson, "utv/aos-simple.json", {
+        put("database", ["foobar": "auto"])
+      })
+    when:
+      def deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
+
+    then:
+      deploymentSpec.integration.database == [new Database("foobar", null)]
+  }
+
+  def "Should use custom cert name if specified and certificate=true in about file"() {
+
+    given:
+      def aid = DEFAULT_AID
+      modify(auroraConfigJson, "about.json", {
+        put("certificate", true)
+      })
+      modify(auroraConfigJson, "utv/aos-simple.json", {
+        put("certificate", ["commonName": "foooo"])
+      })
+    when:
+      def deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
+
+    then:
+      deploymentSpec.integration.certificateCn == "foooo"
   }
 }

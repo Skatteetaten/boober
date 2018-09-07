@@ -45,6 +45,36 @@ data class AuroraConfigField(
         return result
     }
 
+    @JsonIgnore
+    fun order(): Int {
+        val source = sources.last()!!
+        val name = source.source
+
+        if (source.defaultSource) {
+            return 0
+        }
+
+        val overrideValue = if (name.endsWith("override")) {
+            1
+        } else {
+            0
+        }
+
+        val envValue = if (name.contains("/")) {
+            4
+        } else {
+            0
+        }
+
+        val typeValue = if (name.startsWith("about") || name.contains("/about")) {
+            0
+        } else {
+            2
+        }
+
+        return overrideValue + envValue + typeValue
+    }
+
     /**
      * Extracts a config field declared either as a delimited string (ie. "value1, value2") or as a JSON array
      * (ie. ["value1", "value2"]) as a String list.
@@ -61,7 +91,7 @@ data class AuroraConfigField(
     }
 
     @JsonIgnore
-    fun isSimplifiedConfig(): Boolean {
+    fun isBooleanFlag(): Boolean {
         return sources.last()!!.value.isBoolean
     }
 }
@@ -118,21 +148,29 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
     fun getKeyMappings(keyMappingsExtractor: AuroraConfigFieldHandler?): Map<String, String>? =
         keyMappingsExtractor?.let { getOrNull(it.name) }
 
-    fun disabledAndNoSubKeys(name: String): Boolean {
-
-        val simplified = isSimplifiedConfig(name)
-
-        val simplifiedIsDiabled = !get<Boolean>(name)
-
-        return simplified && simplifiedIsDiabled && noSpecifiedSubKeys(name)
+    fun isSimplifiedAndDisabled(name: String): Boolean {
+        return isSimplifiedConfig(name) && !get<Boolean>(name)
     }
 
-    fun noSpecifiedSubKeys(name: String): Boolean {
-        return this.fields.none { it.key.startsWith("$name/") && it.value.source != "default" }
+    fun isSimplifiedAndEnabled(name: String): Boolean {
+        return isSimplifiedConfig(name) && get(name)
     }
 
     fun isSimplifiedConfig(name: String): Boolean {
-        return fields[name]!!.isSimplifiedConfig()
+        val field = fields[name]!!
+
+        val toggleOrder = field.order()
+        val subKeys = fields
+            .filter { it.key.startsWith("$name/") }
+
+        val maxSubKeyOrder: Int = subKeys
+            .map { it.value.order() }
+            .max() ?: 0
+
+        if (maxSubKeyOrder > toggleOrder) {
+            return false
+        }
+        return field.isBooleanFlag()
     }
 
     inline operator fun <reified T> get(name: String): T = fields[name]!!.value()
@@ -172,7 +210,6 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
             val replacer = StringSubstitutor(placeholders, "@", "@")
 
             val fields: List<Pair<String, AuroraConfigFieldSource>> = handlers.flatMap { handler ->
-
                 val defaultValue = handler.defaultValue?.let {
                     listOf(
                         handler.name to AuroraConfigFieldSource(
@@ -188,11 +225,13 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
                         if (handler.subKeyFlag && it.isObject) {
                             null
                         } else {
-                            handler.name to AuroraConfigFieldSource(file.configName, it, handler.subKeyFlag)
+                            handler.name to AuroraConfigFieldSource(
+                                source = file.configName,
+                                value = it
+                            )
                         }
                     }
                 }
-                logger.trace("Processed handler {} result={}", handler.name, result)
                 result
             }
 
@@ -236,5 +275,16 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
                 map.deepSet(it.key.split("/"), it.value)
             }
         return map
+    }
+
+    fun <T> featureEnabled(name: String, fn: (String) -> T?): T? {
+
+        // feature is disabled and has no specified subKeys
+        // adding a sub key implicitly enables a feature
+        if (isSimplifiedAndDisabled(name)) {
+            return null
+        }
+
+        return fn(name)
     }
 }

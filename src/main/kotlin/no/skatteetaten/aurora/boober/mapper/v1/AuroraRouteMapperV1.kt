@@ -21,10 +21,11 @@ class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>, val name
         )
     }
 
+    // TODO: samme mønster som cert
     fun getRoute(auroraDeploymentSpec: AuroraDeploymentSpec): List<Route> {
 
         val route = "route"
-        val simplified = auroraDeploymentSpec.isSimplifiedConfig(route) && auroraDeploymentSpec.noSpecifiedSubKeys(route)
+        val simplified = auroraDeploymentSpec.isSimplifiedConfig(route)
 
         if (simplified) {
             if (auroraDeploymentSpec[route]) {

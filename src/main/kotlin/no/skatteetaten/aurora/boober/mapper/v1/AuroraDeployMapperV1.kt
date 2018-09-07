@@ -138,54 +138,38 @@ class AuroraDeployMapperV1(
     }
 
     private fun findPrometheus(auroraDeploymentSpec: AuroraDeploymentSpec): HttpEndpoint? {
-
-        val name = "prometheus"
-
-        if (auroraDeploymentSpec.disabledAndNoSubKeys(name)) {
-            return null
+        return auroraDeploymentSpec.featureEnabled("prometheus") {
+            HttpEndpoint(auroraDeploymentSpec["$it/path"], auroraDeploymentSpec.getOrNull("$it/port"))
         }
-        return HttpEndpoint(
-            auroraDeploymentSpec["$name/path"],
-            auroraDeploymentSpec.getOrNull("$name/port")
-        )
     }
 
     private fun findManagementPath(auroraDeploymentSpec: AuroraDeploymentSpec): String? {
-
-        val name = "management"
-
-        if (auroraDeploymentSpec.disabledAndNoSubKeys(name)) {
-            return null
+        return auroraDeploymentSpec.featureEnabled("management") {
+            val path = auroraDeploymentSpec.get<String>("$it/path").ensureStartWith("/")
+            val port = auroraDeploymentSpec.get<Int>("$it/port").toString().ensureStartWith(":")
+            "$port$path"
         }
-
-        val path = auroraDeploymentSpec.get<String>("$name/path").ensureStartWith("/")
-        val port = auroraDeploymentSpec.get<Int>("$name/port").toString().ensureStartWith(":")
-        return "$port$path"
     }
 
     fun getProbe(auroraDeploymentSpec: AuroraDeploymentSpec, name: String): Probe? {
 
-        if (auroraDeploymentSpec.disabledAndNoSubKeys(name)) {
-            return null
+        return auroraDeploymentSpec.featureEnabled(name) { field ->
+            Probe(
+                auroraDeploymentSpec.getOrNull<String?>("$field/path")?.let {
+                    if (!it.startsWith("/")) {
+                        "/$it"
+                    } else it
+                },
+                auroraDeploymentSpec["$field/port"],
+                auroraDeploymentSpec["$field/delay"],
+                auroraDeploymentSpec["$field/timeout"]
+            )
         }
-
-        return Probe(
-            auroraDeploymentSpec.getOrNull<String?>("$name/path")?.let {
-                if (!it.startsWith("/")) {
-                    "/$it"
-                } else it
-            },
-            auroraDeploymentSpec["$name/port"],
-            auroraDeploymentSpec["$name/delay"],
-            auroraDeploymentSpec["$name/timeout"]
-        )
     }
 
     fun getToxiProxy(auroraDeploymentSpec: AuroraDeploymentSpec, name: String): ToxiProxy? {
-        if (auroraDeploymentSpec.disabledAndNoSubKeys(name)) {
-            return null
+        return auroraDeploymentSpec.featureEnabled(name) {
+            ToxiProxy(auroraDeploymentSpec["$it/version"])
         }
-
-        return ToxiProxy(auroraDeploymentSpec["$name/version"])
     }
 }
