@@ -4,7 +4,7 @@
     "value": "utv/webleveranse",
     "sources": [
       {
-        "source": "static",
+        "name": "static",
         "value": "utv/webleveranse"
       }
     ]
@@ -14,7 +14,7 @@
     "value": "master",
     "sources": [
       {
-        "source": "static",
+        "name": "static",
         "value": "master"
       }
     ]
@@ -24,7 +24,7 @@
     "value": "v1",
     "sources": [
       {
-        "source": "about.json",
+        "name": "about.json",
         "value": "v1"
       }
     ]
@@ -34,7 +34,7 @@
     "value": "development",
     "sources": [
       {
-        "source": "utv/webleveranse.json",
+        "name": "utv/webleveranse.json",
         "value": "development"
       }
     ]
@@ -44,11 +44,11 @@
     "value": "web",
     "sources": [
       {
-        "source": "default",
+        "name": "default",
         "value": "java"
       },
       {
-        "source": "webleveranse.json",
+        "name": "webleveranse.json",
         "value": "web"
       }
     ]
@@ -58,7 +58,7 @@
     "value": "aos",
     "sources": [
       {
-        "source": "about.json",
+        "name": "about.json",
         "value": "aos"
       }
     ]
@@ -68,7 +68,7 @@
     "value": "aurora",
     "sources": [
       {
-        "source": "about.json",
+        "name": "about.json",
         "value": "aurora"
       }
     ]
@@ -78,7 +78,7 @@
     "value": "utv",
     "sources": [
       {
-        "source": "utv/about.json",
+        "name": "utv/about.json",
         "value": "utv"
       }
     ]
@@ -89,7 +89,7 @@
       "value": "APP_PaaS_utv",
       "sources": [
         {
-          "source": "about.json",
+          "name": "about.json",
           "value": "APP_PaaS_utv"
         }
       ]
@@ -100,7 +100,7 @@
     "value": "utv",
     "sources": [
       {
-        "source": "folderName",
+        "name": "folderName",
         "value": "utv"
       }
     ]
@@ -110,11 +110,11 @@
     "value": "webleveranse",
     "sources": [
       {
-        "source": "fileName",
+        "name": "fileName",
         "value": "webleveranse"
       },
       {
-        "source": "webleveranse.json",
+        "name": "webleveranse.json",
         "value": "webleveranse"
       }
     ]
@@ -125,11 +125,11 @@
       "value": "",
       "sources": [
         {
-          "source": "default",
+          "name": "default",
           "value": "actuator"
         },
         {
-          "source": "webleveranse.json",
+          "name": "webleveranse.json",
           "value": ""
         }
       ]
@@ -139,11 +139,11 @@
       "value": "8081",
       "sources": [
         {
-          "source": "default",
+          "name": "default",
           "value": "8081"
         },
         {
-          "source": "webleveranse.json",
+          "name": "webleveranse.json",
           "value": "8081"
         }
       ]
@@ -155,11 +155,11 @@
       "value": "rolling",
       "sources": [
         {
-          "source": "default",
+          "name": "default",
           "value": "rolling"
         },
         {
-          "source": "webleveranse.json",
+          "name": "webleveranse.json",
           "value": "rolling"
         }
       ]
@@ -170,11 +170,11 @@
     "value": "openshift-referanse-react",
     "sources": [
       {
-        "source": "fileName",
+        "name": "fileName",
         "value": "webleveranse"
       },
       {
-        "source": "webleveranse.json",
+        "name": "webleveranse.json",
         "value": "openshift-referanse-react"
       }
     ]
@@ -184,7 +184,7 @@
     "value": "no.skatteetaten.aurora",
     "sources": [
       {
-        "source": "webleveranse.json",
+        "name": "webleveranse.json",
         "value": "no.skatteetaten.aurora"
       }
     ]
@@ -194,7 +194,7 @@
     "value": "1",
     "sources": [
       {
-        "source": "utv/webleveranse.json",
+        "name": "utv/webleveranse.json",
         "value": "1"
       }
     ]
@@ -204,11 +204,11 @@
     "value": 1,
     "sources": [
       {
-        "source": "default",
+        "name": "default",
         "value": 1
       },
       {
-        "source": "webleveranse.json",
+        "name": "webleveranse.json",
         "value": 1
       }
     ]
@@ -218,11 +218,11 @@
     "value": true,
     "sources": [
       {
-        "source": "default",
+        "name": "default",
         "value": false
       },
       {
-        "source": "webleveranse.json",
+        "name": "webleveranse.json",
         "value": true
       }
     ]
@@ -232,7 +232,7 @@
     "value": "utv/webleveranse",
     "sources": [
       {
-        "source": "static",
+        "name": "static",
         "value": "utv/webleveranse"
       }
     ]

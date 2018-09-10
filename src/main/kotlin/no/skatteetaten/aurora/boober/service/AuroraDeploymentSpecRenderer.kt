@@ -51,7 +51,7 @@ fun renderSpecAsJson(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Bool
 
     return rawFields.present {
         mapOf(
-            "source" to it.value.source,
+            "source" to it.value.name,
             "value" to it.value.value,
             "sources" to it.value.sources
         )
@@ -72,7 +72,7 @@ fun renderSpecAsJsonOld(
     } else {
         deploymentSpecInternal
     }
-    val fields = rawFields.removeInactive().present { mapOf("source" to it.value.source, "value" to it.value.value) }
+    val fields = rawFields.removeInactive().present { mapOf("source" to it.value.name, "value" to it.value.value) }
     return fields
 }
 
