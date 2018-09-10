@@ -90,10 +90,6 @@ data class AuroraConfigField(
             .toSet()
     }
 
-    @JsonIgnore
-    fun isBooleanFlag(): Boolean {
-        return sources.last()!!.value.isBoolean
-    }
 }
 
 data class AuroraConfigFieldSource(
