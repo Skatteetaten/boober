@@ -77,7 +77,6 @@ data class AuroraConfigField(
             .mapNotNull { it?.trim() }
             .toSet()
     }
-
 }
 
 data class AuroraConfigFieldSource(
