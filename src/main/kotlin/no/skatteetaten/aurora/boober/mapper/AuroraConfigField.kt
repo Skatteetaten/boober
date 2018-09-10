@@ -90,6 +90,10 @@ data class AuroraConfigField(
             .toSet()
     }
 
+    @JsonIgnore
+    fun isBooleanFlag(): Boolean {
+        return sources.last()!!.value.isBoolean
+    }
 }
 
 data class AuroraConfigFieldSource(
@@ -160,8 +164,13 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
     fun isSimplifiedConfig(name: String): Boolean {
         val field = fields[name]!!
 
-        val toggleWeight = field.weight()
         val subKeys = getSubKeys(name)
+        // If there are not subkeys we cannot be complex
+        if (subKeys.isEmpty()) {
+            return true
+        }
+
+        val toggleWeight = field.weight()
 
         // If there are any subkeys we need to find their weight. Not that if there are no subkeys weight is 0
         val maxSubKeyWeight: Int = subKeys
