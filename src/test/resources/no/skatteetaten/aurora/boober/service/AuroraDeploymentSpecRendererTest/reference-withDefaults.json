@@ -4,7 +4,7 @@
     "value": "utv/reference",
     "sources": [
       {
-        "source": "static",
+        "name": "static",
         "value": "utv/reference"
       }
     ]
@@ -14,7 +14,7 @@
     "value": "master",
     "sources": [
       {
-        "source": "static",
+        "name": "static",
         "value": "master"
       }
     ]
@@ -24,7 +24,7 @@
     "value": "v1",
     "sources": [
       {
-        "source": "about.json",
+        "name": "about.json",
         "value": "v1"
       }
     ]
@@ -34,7 +34,7 @@
     "value": "deploy",
     "sources": [
       {
-        "source": "reference.json",
+        "name": "reference.json",
         "value": "deploy"
       }
     ]
@@ -44,7 +44,7 @@
     "value": "java",
     "sources": [
       {
-        "source": "default",
+        "name": "default",
         "value": "java"
       }
     ]
@@ -54,7 +54,7 @@
     "value": "aos",
     "sources": [
       {
-        "source": "about.json",
+        "name": "about.json",
         "value": "aos"
       }
     ]
@@ -64,7 +64,7 @@
     "value": "aurora",
     "sources": [
       {
-        "source": "about.json",
+        "name": "about.json",
         "value": "aurora"
       }
     ]
@@ -74,7 +74,7 @@
     "value": "utv",
     "sources": [
       {
-        "source": "utv/about.json",
+        "name": "utv/about.json",
         "value": "utv"
       }
     ]
@@ -85,7 +85,7 @@
       "value": "APP_PaaS_utv",
       "sources": [
         {
-          "source": "about.json",
+          "name": "about.json",
           "value": "APP_PaaS_utv"
         }
       ]
@@ -96,7 +96,7 @@
     "value": "utv",
     "sources": [
       {
-        "source": "folderName",
+        "name": "folderName",
         "value": "utv"
       }
     ]
@@ -106,7 +106,7 @@
     "value": "reference",
     "sources": [
       {
-        "source": "fileName",
+        "name": "fileName",
         "value": "reference"
       }
     ]
@@ -116,7 +116,7 @@
     "value": false,
     "sources": [
       {
-        "source": "default",
+        "name": "default",
         "value": false
       }
     ]
@@ -126,7 +126,7 @@
     "value": false,
     "sources": [
       {
-        "source": "default",
+        "name": "default",
         "value": false
       }
     ]
@@ -136,7 +136,7 @@
     "value": true,
     "sources": [
       {
-        "source": "default",
+        "name": "default",
         "value": true
       }
     ],
@@ -145,7 +145,7 @@
       "value": "/prometheus",
       "sources": [
         {
-          "source": "default",
+          "name": "default",
           "value": "/prometheus"
         }
       ]
@@ -155,7 +155,7 @@
       "value": 8081,
       "sources": [
         {
-          "source": "default",
+          "name": "default",
           "value": 8081
         }
       ]
@@ -166,7 +166,7 @@
     "value": true,
     "sources": [
       {
-        "source": "default",
+        "name": "default",
         "value": true
       }
     ],
@@ -175,7 +175,7 @@
       "value": "actuator",
       "sources": [
         {
-          "source": "default",
+          "name": "default",
           "value": "actuator"
         }
       ]
@@ -185,7 +185,7 @@
       "value": "8081",
       "sources": [
         {
-          "source": "default",
+          "name": "default",
           "value": "8081"
         }
       ]
@@ -197,7 +197,7 @@
       "value": "rolling",
       "sources": [
         {
-          "source": "default",
+          "name": "default",
           "value": "rolling"
         }
       ]
@@ -207,7 +207,7 @@
       "value": 180,
       "sources": [
         {
-          "source": "default",
+          "name": "default",
           "value": 180
         }
       ]
@@ -218,7 +218,7 @@
     "value": false,
     "sources": [
       {
-        "source": "default",
+        "name": "default",
         "value": false
       }
     ]
@@ -228,7 +228,7 @@
     "value": "reference",
     "sources": [
       {
-        "source": "fileName",
+        "name": "fileName",
         "value": "reference"
       }
     ]
@@ -238,7 +238,7 @@
     "value": "no.skatteetaten.aurora",
     "sources": [
       {
-        "source": "reference.json",
+        "name": "reference.json",
         "value": "no.skatteetaten.aurora"
       }
     ]
@@ -248,7 +248,7 @@
     "value": "1",
     "sources": [
       {
-        "source": "reference.json",
+        "name": "reference.json",
         "value": "1"
       }
     ]
@@ -260,7 +260,7 @@
         "value": "100m",
         "sources": [
           {
-            "source": "default",
+            "name": "default",
             "value": "100m"
           }
         ]
@@ -270,7 +270,7 @@
         "value": "2000m",
         "sources": [
           {
-            "source": "default",
+            "name": "default",
             "value": "2000m"
           }
         ]
@@ -282,7 +282,7 @@
         "value": "128Mi",
         "sources": [
           {
-            "source": "default",
+            "name": "default",
             "value": "128Mi"
           }
         ]
@@ -292,7 +292,7 @@
         "value": "512Mi",
         "sources": [
           {
-            "source": "default",
+            "name": "default",
             "value": "512Mi"
           }
         ]
@@ -304,11 +304,11 @@
     "value": 1,
     "sources": [
       {
-        "source": "default",
+        "name": "default",
         "value": 1
       },
       {
-        "source": "reference.json",
+        "name": "reference.json",
         "value": 1
       }
     ]
@@ -318,7 +318,7 @@
     "value": true,
     "sources": [
       {
-        "source": "default",
+        "name": "default",
         "value": true
       }
     ],
@@ -327,7 +327,7 @@
       "value": 8080,
       "sources": [
         {
-          "source": "default",
+          "name": "default",
           "value": 8080
         }
       ]
@@ -337,7 +337,7 @@
       "value": 10,
       "sources": [
         {
-          "source": "default",
+          "name": "default",
           "value": 10
         }
       ]
@@ -347,7 +347,7 @@
       "value": 1,
       "sources": [
         {
-          "source": "default",
+          "name": "default",
           "value": 1
         }
       ]
@@ -358,7 +358,7 @@
     "value": false,
     "sources": [
       {
-        "source": "default",
+        "name": "default",
         "value": false
       }
     ],
@@ -367,7 +367,7 @@
       "value": 8080,
       "sources": [
         {
-          "source": "default",
+          "name": "default",
           "value": 8080
         }
       ]
@@ -377,7 +377,7 @@
       "value": 10,
       "sources": [
         {
-          "source": "default",
+          "name": "default",
           "value": 10
         }
       ]
@@ -387,7 +387,7 @@
       "value": 1,
       "sources": [
         {
-          "source": "default",
+          "name": "default",
           "value": 1
         }
       ]
@@ -398,7 +398,7 @@
     "value": false,
     "sources": [
       {
-        "source": "default",
+        "name": "default",
         "value": false
       }
     ]
@@ -408,7 +408,7 @@
     "value": false,
     "sources": [
       {
-        "source": "default",
+        "name": "default",
         "value": false
       }
     ]
@@ -418,7 +418,7 @@
     "value": true,
     "sources": [
       {
-        "source": "default",
+        "name": "default",
         "value": true
       }
     ]
@@ -428,7 +428,7 @@
     "value": false,
     "sources": [
       {
-        "source": "default",
+        "name": "default",
         "value": false
       }
     ],
@@ -437,7 +437,7 @@
       "value": "2.1.3",
       "sources": [
         {
-          "source": "default",
+          "name": "default",
           "value": "2.1.3"
         }
       ]
@@ -448,11 +448,11 @@
     "value": true,
     "sources": [
       {
-        "source": "default",
+        "name": "default",
         "value": false
       },
       {
-        "source": "reference.json",
+        "name": "reference.json",
         "value": true
       }
     ]
@@ -463,7 +463,7 @@
       "value": "@name@-@affiliation@-@env@",
       "sources": [
         {
-          "source": "default",
+          "name": "default",
           "value": "@name@-@affiliation@-@env@"
         }
       ]
@@ -474,7 +474,7 @@
     "value": "utv/reference",
     "sources": [
       {
-        "source": "static",
+        "name": "static",
         "value": "utv/reference"
       }
     ]

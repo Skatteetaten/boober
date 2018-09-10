@@ -23,56 +23,44 @@ data class AuroraConfigField(
     @JsonIgnore
     val replacer: StringSubstitutor = StringSubstitutor()
 ) {
-    val source: String
-        get() = sources.last().source
+
+    private val source: AuroraConfigFieldSource get() = sources.last()
+
+    val name: String
+        get() = source.name
 
     val isDefault: Boolean
         @JsonIgnore
-        get() = sources.last().defaultSource
+        get() = source.defaultSource
 
     val value: JsonNode
-        get() = sources.last().value
+        get() = source.value
 
     inline fun <reified T> getNullableValue(): T? = this.value() as T?
 
     inline fun <reified T> value(): T {
 
-        val it = sources.last()!!
-        val result = jacksonObjectMapper().convertValue(it.value, T::class.java)
+        val result = jacksonObjectMapper().convertValue(value, T::class.java)
         if (result is String) {
             return replacer.replace(result as String) as T
         }
         return result
     }
 
-    @JsonIgnore
-    fun weight(): Int {
-        val source = sources.last()!!
-        val name = source.source
+    val weight: Int @JsonIgnore get() {
 
-        if (source.defaultSource) {
-            return 0
-        }
+        if (isDefault) return 0
 
-        val overrideValue = if (name.endsWith("override")) {
-            1
-        } else {
-            0
-        }
+        val isBaseOrApplicationFile = !(name.startsWith("about") || name.contains("/about"))
+        val isApplicationOrEnvFile = name.contains("/")
+        val isOverrideFile = name.endsWith("override")
 
-        val envValue = if (name.contains("/")) {
-            4
-        } else {
-            0
-        }
+        var weight = 1
+        if (isApplicationOrEnvFile) weight += 4 // files in an environment folder are higher weighted than files at the root.
+        if (isBaseOrApplicationFile) weight += 2 // base and application files are higher weigthed than about files.
+        if (isOverrideFile) weight += 1 // override files are higher weigthed than their non-override counterparts.
 
-        val typeValue = if (name.startsWith("about") || name.contains("/about")) {
-            0
-        } else {
-            2
-        }
-
-        return 1 + overrideValue + envValue + typeValue
+        return weight
     }
 
     /**
@@ -80,7 +68,7 @@ data class AuroraConfigField(
      * (ie. ["value1", "value2"]) as a String list.
      */
     fun extractDelimitedStringOrArrayAsSet(delimiter: String = ","): Set<String> {
-        val valueNode = sources.last()!!.value
+        val valueNode = value
         return when {
             valueNode.isTextual -> valueNode.textValue().split(delimiter).toList()
             valueNode.isArray -> (value() as List<Any?>).map { it?.toString() } // Convert any non-string values in the array to string
@@ -93,7 +81,7 @@ data class AuroraConfigField(
 }
 
 data class AuroraConfigFieldSource(
-    val source: String,
+    val name: String,
     val value: JsonNode,
     @JsonIgnore
     val defaultSource: Boolean = false
@@ -161,16 +149,16 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
         val field = fields[name]!!
 
         val subKeys = getSubKeys(name)
-        // If there are not subkeys we cannot be complex
+        // If there are no subkeys we cannot be complex
         if (subKeys.isEmpty()) {
             return true
         }
 
-        val toggleWeight = field.weight()
+        val toggleWeight = field.weight
 
         // If there are any subkeys we need to find their weight. Not that if there are no subkeys weight is 0
         val maxSubKeyWeight: Int = subKeys
-            .map { it.value.weight() }
+            .map { it.value.weight }
             .max() ?: 0
 
         // If the toggle has more then or equal weight to the subKeys then it has presedence and we are simplified
@@ -223,7 +211,7 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
                 val defaultValue = handler.defaultValue?.let {
                     listOf(
                         handler.name to AuroraConfigFieldSource(
-                            source = handler.defaultSource,
+                            name = handler.defaultSource,
                             value = mapper.convertValue(handler.defaultValue),
                             defaultSource = true
                         )
@@ -242,7 +230,7 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
                             null
                         } else {
                             handler.name to AuroraConfigFieldSource(
-                                source = file.configName,
+                                name = file.configName,
                                 value = it
                             )
                         }
@@ -260,7 +248,7 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
         }
     }
 
-    fun removeDefaults() = AuroraDeploymentSpec(this.fields.filter { it.value.source != "default" })
+    fun removeDefaults() = AuroraDeploymentSpec(this.fields.filter { it.value.name != "default" })
 
     fun removeInactive(): AuroraDeploymentSpec {
 

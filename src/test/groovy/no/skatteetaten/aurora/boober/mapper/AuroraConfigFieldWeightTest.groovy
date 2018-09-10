@@ -25,13 +25,13 @@ class AuroraConfigFieldWeightTest extends Specification {
       )
 
     when:
-      def order = acf.weight()
+      def weight = acf.weight
     then:
-      order == weight
+      weight == expectedWeight
 
     where:
 
-      fileName                           | isDefault | weight
+      fileName                           | isDefault | expectedWeight
       "fileName"                         | true      | 0
       "about.json"                       | false     | 1    // aboutfil
       "about.json.override"              | false     | 2
