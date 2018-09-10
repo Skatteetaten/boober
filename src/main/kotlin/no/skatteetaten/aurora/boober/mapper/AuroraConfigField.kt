@@ -231,6 +231,12 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
 
                 val result = defaultValue + files.mapNotNull { file ->
                     file.asJsonNode.atNullable(handler.path)?.let {
+                        /*
+                          If a handler can be simplified or complex we do not create
+                          a source if it is complex
+
+                          The indidividual subKeys have their own handlers.
+                         */
                         if (handler.canBeSimplifiedConfig && it.isObject) {
                             null
                         } else {
