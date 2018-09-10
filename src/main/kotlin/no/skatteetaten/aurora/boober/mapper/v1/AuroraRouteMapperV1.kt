@@ -11,7 +11,7 @@ import no.skatteetaten.aurora.boober.utils.startsWith
 class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>, val name: String) {
 
     val handlers = findRouteHandlers() + listOf(
-        AuroraConfigFieldHandler("route", defaultValue = false, subKeyFlag = true),
+        AuroraConfigFieldHandler("route", defaultValue = false, canBeSimplifiedConfig = true),
         AuroraConfigFieldHandler("routeDefaults/host", defaultValue = "@name@-@affiliation@-@env@")) +
         findRouteAnnotationHandlers("routeDefaults")
 
@@ -24,7 +24,7 @@ class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>, val name
     fun getRoute(auroraDeploymentSpec: AuroraDeploymentSpec): List<Route> {
 
         val route = "route"
-        val simplified = auroraDeploymentSpec.isSimplifiedConfig(route) && auroraDeploymentSpec.noSpecifiedSubKeys(route)
+        val simplified = auroraDeploymentSpec.isSimplifiedConfig(route)
 
         if (simplified) {
             if (auroraDeploymentSpec[route]) {

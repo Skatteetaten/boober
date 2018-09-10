@@ -72,7 +72,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
   def "Disabling certificate with simplified config over full config"() {
     given:
       modify(auroraConfigJson, "aos-simple.json", {
-        certificate = [commonName: "some_common_name"]
+        put("certificate", [commonName: "some_common_name"])
       })
 
     when:
@@ -81,7 +81,9 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       deploymentSpec.integration.certificateCn == "some_common_name"
 
     when:
-      auroraConfigJson["utv/aos-simple.json"] = '''{ "certificate": false }'''
+      modify(auroraConfigJson, "utv/aos-simple.json", {
+        put("certificate", false)
+      })
       deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
     then:
       !deploymentSpec.integration.certificateCn
@@ -134,7 +136,6 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       })
     when:
       def deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
-      println deploymentSpec
 
     then:
       def ex = thrown(AuroraConfigException)
@@ -166,7 +167,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
     then:
       def e = thrown(AuroraConfigException)
       e.message ==
-          "Config for application aos-simple in environment utv contains errors. Invalid Source field=affiliation requires an about source. Actual source is source=utv/aos-simple.json."
+      "Config for application aos-simple in environment utv contains errors. Invalid Source field=affiliation requires an about source. Actual source is source=utv/aos-simple.json."
   }
 
   def "Fails when affiliation is too long"() {
@@ -179,7 +180,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
     then:
       def e = thrown(AuroraConfigException)
       e.message ==
-          "Config for application aos-simple in environment utv contains errors. Affiliation can only contain letters and must be no longer than 10 characters."
+      "Config for application aos-simple in environment utv contains errors. Affiliation can only contain letters and must be no longer than 10 characters."
   }
 
   def "Parses variants of secretVault config correctly"() {
@@ -192,18 +193,18 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       deploymentSpec.getVolume().secretVaultKeys == keys
 
     where:
-      configFile                                                                                         | vaultName   |
-          keys
-      '''{ "secretVault": "vaultName" }'''                                                               | "vaultName" |
-          []
-      '''{ "secretVault": {"name": "test"} }'''                                                          | "test"      |
-          []
-      '''{ "secretVault": {"name": "test", "keys": []} }'''                                              | "test"      |
-          []
-      '''{ "secretVault": {"name": "test", "keys": ["test1", "test2"]} }'''                              | "test"      |
-          ["test1", "test2"]
-      '''{ "secretVault": {"name": "test", "keys": ["test1"], "keyMappings":{"test1":"newtestkey"}} }''' | "test"      |
-          ["test1"]
+      configFile | vaultName |
+      keys
+      '''{ "secretVault": "vaultName" }''' | "vaultName" |
+      []
+      '''{ "secretVault": {"name": "test"} }''' | "test" |
+      []
+      '''{ "secretVault": {"name": "test", "keys": []} }''' | "test" |
+      []
+      '''{ "secretVault": {"name": "test", "keys": ["test1", "test2"]} }''' | "test" |
+      ["test1", "test2"]
+      '''{ "secretVault": {"name": "test", "keys": ["test1"], "keyMappings":{"test1":"newtestkey"}} }''' | "test" |
+      ["test1"]
   }
 
   def "Permissions supports both space separated string and array"() {
@@ -226,7 +227,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
   def "Webseal roles supports both comma separated string and array"() {
     given:
       modify(auroraConfigJson, "utv/aos-simple.json") {
-        put("webseal", [ "roles": roleConfig ])
+        put("webseal", ["roles": roleConfig])
       }
 
     when:
@@ -260,5 +261,86 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
     then:
       def e = thrown AuroraConfigException
       e.message == '''Config for application aos-simple in environment utv contains errors. Annotation haproxy.router.openshift.io/timeout cannot contain '/'. Use '|' instead.'''
+  }
+
+  def "Should use overridden db name when set to default at higher level"() {
+
+    given:
+      def aid = DEFAULT_AID
+      modify(auroraConfigJson, "about.json", {
+        put("database", true)
+      })
+      modify(auroraConfigJson, "utv/aos-simple.json", {
+        put("database", ["foobar": "auto"])
+      })
+    when:
+      def deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
+
+    then:
+      deploymentSpec.integration.database == [new Database("foobar", null)]
+  }
+
+  def "Should use overridden cert name when set to default at higher level"() {
+
+    given:
+      def aid = DEFAULT_AID
+      modify(auroraConfigJson, "about.json", {
+        put("certificate", true)
+      })
+      modify(auroraConfigJson, "utv/aos-simple.json", {
+        put("certificate", ["commonName": "foooo"])
+      })
+    when:
+      def deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
+
+    then:
+      deploymentSpec.integration.certificateCn == "foooo"
+  }
+
+  def "Should use overridden cert name when explicitly disabled at higher level"() {
+
+    given:
+      def aid = DEFAULT_AID
+      modify(auroraConfigJson, "aos-simple.json", {
+        put("certificate", false)
+      })
+      modify(auroraConfigJson, "utv/aos-simple.json", {
+        put("certificate", ["commonName": "foooo"])
+      })
+    when:
+      def deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
+
+    then:
+      deploymentSpec.integration.certificateCn == "foooo"
+  }
+
+  def "Should generate route with complex config"() {
+
+    given:
+      def aid = DEFAULT_AID
+
+      modify(auroraConfigJson, "utv/aos-simple.json", {
+        put("route", [foo: [host: "host"]])
+      })
+    when:
+      def deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
+
+    then:
+      deploymentSpec.route.route[0].host == "host"
+  }
+
+  def "Should generate route with simple config"() {
+
+    given:
+      def aid = DEFAULT_AID
+
+      modify(auroraConfigJson, "utv/aos-simple.json", {
+        put("route", true)
+      })
+    when:
+      def deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
+
+    then:
+      deploymentSpec.route.route[0].host == "aos-simple-aos-utv"
   }
 }

@@ -31,7 +31,7 @@ class ConfigFieldErrorDetail(type: ErrorType, message: String, val field: Aurora
             auroraConfigField: AuroraConfigField? = null
         ): ConfigFieldErrorDetail {
             val fieldError = auroraConfigField?.let {
-                AuroraConfigFieldError(path, auroraConfigField.source, auroraConfigField.value)
+                AuroraConfigFieldError(path, auroraConfigField.name, auroraConfigField.value)
             }
             return ConfigFieldErrorDetail(ErrorType.ILLEGAL, message, fieldError)
         }

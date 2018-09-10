@@ -4,7 +4,7 @@
     "value": "utv/reference",
     "sources": [
       {
-        "source": "static",
+        "name": "static",
         "value": "utv/reference"
       }
     ]
@@ -14,7 +14,7 @@
     "value": "master",
     "sources": [
       {
-        "source": "static",
+        "name": "static",
         "value": "master"
       }
     ]
@@ -24,7 +24,7 @@
     "value": "v1",
     "sources": [
       {
-        "source": "about.json",
+        "name": "about.json",
         "value": "v1"
       }
     ]
@@ -34,7 +34,7 @@
     "value": "deploy",
     "sources": [
       {
-        "source": "reference.json",
+        "name": "reference.json",
         "value": "deploy"
       }
     ]
@@ -44,7 +44,7 @@
     "value": "aos",
     "sources": [
       {
-        "source": "about.json",
+        "name": "about.json",
         "value": "aos"
       }
     ]
@@ -54,7 +54,7 @@
     "value": "aurora",
     "sources": [
       {
-        "source": "about.json",
+        "name": "about.json",
         "value": "aurora"
       }
     ]
@@ -64,7 +64,7 @@
     "value": "utv",
     "sources": [
       {
-        "source": "utv/about.json",
+        "name": "utv/about.json",
         "value": "utv"
       }
     ]
@@ -75,7 +75,7 @@
       "value": "APP_PaaS_utv",
       "sources": [
         {
-          "source": "about.json",
+          "name": "about.json",
           "value": "APP_PaaS_utv"
         }
       ]
@@ -86,7 +86,7 @@
     "value": "utv",
     "sources": [
       {
-        "source": "folderName",
+        "name": "folderName",
         "value": "utv"
       }
     ]
@@ -96,7 +96,7 @@
     "value": "reference",
     "sources": [
       {
-        "source": "fileName",
+        "name": "fileName",
         "value": "reference"
       }
     ]
@@ -106,7 +106,7 @@
     "value": "reference",
     "sources": [
       {
-        "source": "fileName",
+        "name": "fileName",
         "value": "reference"
       }
     ]
@@ -116,7 +116,7 @@
     "value": "no.skatteetaten.aurora",
     "sources": [
       {
-        "source": "reference.json",
+        "name": "reference.json",
         "value": "no.skatteetaten.aurora"
       }
     ]
@@ -126,7 +126,7 @@
     "value": "1",
     "sources": [
       {
-        "source": "reference.json",
+        "name": "reference.json",
         "value": "1"
       }
     ]
@@ -136,11 +136,11 @@
     "value": 1,
     "sources": [
       {
-        "source": "default",
+        "name": "default",
         "value": 1
       },
       {
-        "source": "reference.json",
+        "name": "reference.json",
         "value": 1
       }
     ]
@@ -150,11 +150,11 @@
     "value": true,
     "sources": [
       {
-        "source": "default",
+        "name": "default",
         "value": false
       },
       {
-        "source": "reference.json",
+        "name": "reference.json",
         "value": true
       }
     ]
@@ -164,7 +164,7 @@
     "value": "utv/reference",
     "sources": [
       {
-        "source": "static",
+        "name": "static",
         "value": "utv/reference"
       }
     ]

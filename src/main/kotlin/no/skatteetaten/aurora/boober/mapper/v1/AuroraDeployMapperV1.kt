@@ -48,18 +48,18 @@ class AuroraDeployMapperV1(
         AuroraConfigFieldHandler("resources/memory/max", defaultValue = "512Mi"),
         AuroraConfigFieldHandler("replicas", defaultValue = 1),
         AuroraConfigFieldHandler("serviceAccount"),
-        AuroraConfigFieldHandler("prometheus", defaultValue = true, subKeyFlag = true),
+        AuroraConfigFieldHandler("prometheus", defaultValue = true, canBeSimplifiedConfig = true),
         AuroraConfigFieldHandler("prometheus/path", defaultValue = "/prometheus"),
         AuroraConfigFieldHandler("prometheus/port", defaultValue = 8081),
-        AuroraConfigFieldHandler("management", defaultValue = true, subKeyFlag = true),
+        AuroraConfigFieldHandler("management", defaultValue = true, canBeSimplifiedConfig = true),
         AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
         AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
-        AuroraConfigFieldHandler("readiness", defaultValue = true, subKeyFlag = true),
+        AuroraConfigFieldHandler("readiness", defaultValue = true, canBeSimplifiedConfig = true),
         AuroraConfigFieldHandler("readiness/port", defaultValue = 8080),
         AuroraConfigFieldHandler("readiness/path"),
         AuroraConfigFieldHandler("readiness/delay", defaultValue = 10),
         AuroraConfigFieldHandler("readiness/timeout", defaultValue = 1),
-        AuroraConfigFieldHandler("liveness", defaultValue = false, subKeyFlag = true),
+        AuroraConfigFieldHandler("liveness", defaultValue = false, canBeSimplifiedConfig = true),
         AuroraConfigFieldHandler("liveness/port", defaultValue = 8080),
         AuroraConfigFieldHandler("liveness/path"),
         AuroraConfigFieldHandler("liveness/delay", defaultValue = 10),
@@ -68,7 +68,7 @@ class AuroraDeployMapperV1(
         AuroraConfigFieldHandler("pause", defaultValue = false),
         AuroraConfigFieldHandler("alarm", defaultValue = true),
         AuroraConfigFieldHandler("ttl", validator = { it.durationString() }),
-        AuroraConfigFieldHandler("toxiproxy", defaultValue = false, subKeyFlag = true),
+        AuroraConfigFieldHandler("toxiproxy", defaultValue = false, canBeSimplifiedConfig = true),
         AuroraConfigFieldHandler("toxiproxy/version", defaultValue = "2.1.3")
     ) + configHandlers
 
@@ -138,54 +138,38 @@ class AuroraDeployMapperV1(
     }
 
     private fun findPrometheus(auroraDeploymentSpec: AuroraDeploymentSpec): HttpEndpoint? {
-
-        val name = "prometheus"
-
-        if (auroraDeploymentSpec.disabledAndNoSubKeys(name)) {
-            return null
+        return auroraDeploymentSpec.featureEnabled("prometheus") {
+            HttpEndpoint(auroraDeploymentSpec["$it/path"], auroraDeploymentSpec.getOrNull("$it/port"))
         }
-        return HttpEndpoint(
-            auroraDeploymentSpec["$name/path"],
-            auroraDeploymentSpec.getOrNull("$name/port")
-        )
     }
 
     private fun findManagementPath(auroraDeploymentSpec: AuroraDeploymentSpec): String? {
-
-        val name = "management"
-
-        if (auroraDeploymentSpec.disabledAndNoSubKeys(name)) {
-            return null
+        return auroraDeploymentSpec.featureEnabled("management") {
+            val path = auroraDeploymentSpec.get<String>("$it/path").ensureStartWith("/")
+            val port = auroraDeploymentSpec.get<Int>("$it/port").toString().ensureStartWith(":")
+            "$port$path"
         }
-
-        val path = auroraDeploymentSpec.get<String>("$name/path").ensureStartWith("/")
-        val port = auroraDeploymentSpec.get<Int>("$name/port").toString().ensureStartWith(":")
-        return "$port$path"
     }
 
     fun getProbe(auroraDeploymentSpec: AuroraDeploymentSpec, name: String): Probe? {
 
-        if (auroraDeploymentSpec.disabledAndNoSubKeys(name)) {
-            return null
+        return auroraDeploymentSpec.featureEnabled(name) { field ->
+            Probe(
+                auroraDeploymentSpec.getOrNull<String?>("$field/path")?.let {
+                    if (!it.startsWith("/")) {
+                        "/$it"
+                    } else it
+                },
+                auroraDeploymentSpec["$field/port"],
+                auroraDeploymentSpec["$field/delay"],
+                auroraDeploymentSpec["$field/timeout"]
+            )
         }
-
-        return Probe(
-            auroraDeploymentSpec.getOrNull<String?>("$name/path")?.let {
-                if (!it.startsWith("/")) {
-                    "/$it"
-                } else it
-            },
-            auroraDeploymentSpec["$name/port"],
-            auroraDeploymentSpec["$name/delay"],
-            auroraDeploymentSpec["$name/timeout"]
-        )
     }
 
     fun getToxiProxy(auroraDeploymentSpec: AuroraDeploymentSpec, name: String): ToxiProxy? {
-        if (auroraDeploymentSpec.disabledAndNoSubKeys(name)) {
-            return null
+        return auroraDeploymentSpec.featureEnabled(name) {
+            ToxiProxy(auroraDeploymentSpec["$it/version"])
         }
-
-        return ToxiProxy(auroraDeploymentSpec["$name/version"])
     }
 }

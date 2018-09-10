@@ -23,26 +23,44 @@ data class AuroraConfigField(
     @JsonIgnore
     val replacer: StringSubstitutor = StringSubstitutor()
 ) {
-    val source: String
-        get() = sources.last().source
+
+    private val source: AuroraConfigFieldSource get() = sources.last()
+
+    val name: String
+        get() = source.name
 
     val isDefault: Boolean
         @JsonIgnore
-        get() = sources.last().defaultSource
+        get() = source.defaultSource
 
     val value: JsonNode
-        get() = sources.last().value
+        get() = source.value
 
     inline fun <reified T> getNullableValue(): T? = this.value() as T?
 
     inline fun <reified T> value(): T {
 
-        val it = sources.last()!!
-        val result = jacksonObjectMapper().convertValue(it.value, T::class.java)
+        val result = jacksonObjectMapper().convertValue(value, T::class.java)
         if (result is String) {
             return replacer.replace(result as String) as T
         }
         return result
+    }
+
+    val weight: Int @JsonIgnore get() {
+
+        if (isDefault) return 0
+
+        val isBaseOrApplicationFile = !(name.startsWith("about") || name.contains("/about"))
+        val isApplicationOrEnvFile = name.contains("/")
+        val isOverrideFile = name.endsWith("override")
+
+        var weight = 1
+        if (isApplicationOrEnvFile) weight += 4 // files in an environment folder are higher weighted than files at the root.
+        if (isBaseOrApplicationFile) weight += 2 // base and application files are higher weigthed than about files.
+        if (isOverrideFile) weight += 1 // override files are higher weigthed than their non-override counterparts.
+
+        return weight
     }
 
     /**
@@ -50,7 +68,7 @@ data class AuroraConfigField(
      * (ie. ["value1", "value2"]) as a String list.
      */
     fun extractDelimitedStringOrArrayAsSet(delimiter: String = ","): Set<String> {
-        val valueNode = sources.last()!!.value
+        val valueNode = value
         return when {
             valueNode.isTextual -> valueNode.textValue().split(delimiter).toList()
             valueNode.isArray -> (value() as List<Any?>).map { it?.toString() } // Convert any non-string values in the array to string
@@ -59,15 +77,10 @@ data class AuroraConfigField(
             .mapNotNull { it?.trim() }
             .toSet()
     }
-
-    @JsonIgnore
-    fun isSimplifiedConfig(): Boolean {
-        return sources.last()!!.value.isBoolean
-    }
 }
 
 data class AuroraConfigFieldSource(
-    val source: String,
+    val name: String,
     val value: JsonNode,
     @JsonIgnore
     val defaultSource: Boolean = false
@@ -118,21 +131,43 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
     fun getKeyMappings(keyMappingsExtractor: AuroraConfigFieldHandler?): Map<String, String>? =
         keyMappingsExtractor?.let { getOrNull(it.name) }
 
-    fun disabledAndNoSubKeys(name: String): Boolean {
-
-        val simplified = isSimplifiedConfig(name)
-
-        val simplifiedIsDiabled = !get<Boolean>(name)
-
-        return simplified && simplifiedIsDiabled && noSpecifiedSubKeys(name)
+    fun isSimplifiedAndDisabled(name: String): Boolean {
+        return isSimplifiedConfig(name) && !get<Boolean>(name)
     }
 
-    fun noSpecifiedSubKeys(name: String): Boolean {
-        return this.fields.none { it.key.startsWith("$name/") && it.value.source != "default" }
+    fun isSimplifiedAndEnabled(name: String): Boolean {
+        return isSimplifiedConfig(name) && get(name)
     }
 
+    /*
+    In order to know if this is simplified config or not we need to find out what instruction is
+    specified in the most specific place. Each AuroraConfigFieldSource has a weight that determine
+    the presedence.
+     */
     fun isSimplifiedConfig(name: String): Boolean {
-        return fields[name]!!.isSimplifiedConfig()
+        val field = fields[name]!!
+
+        val subKeys = getSubKeys(name)
+        // If there are no subkeys we cannot be complex
+        if (subKeys.isEmpty()) {
+            return true
+        }
+
+        val toggleWeight = field.weight
+
+        // If there are any subkeys we need to find their weight. Not that if there are no subkeys weight is 0
+        val maxSubKeyWeight: Int = subKeys
+            .map { it.value.weight }
+            .max() ?: 0
+
+        // If the toggle has more then or equal weight to the subKeys then it has presedence and we are simplified
+        return toggleWeight >= maxSubKeyWeight
+    }
+
+    fun getSubKeys(name: String): Map<String, AuroraConfigField> {
+        val subKeys = fields
+            .filter { it.key.startsWith("$name/") }
+        return subKeys
     }
 
     inline operator fun <reified T> get(name: String): T = fields[name]!!.value()
@@ -172,11 +207,10 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
             val replacer = StringSubstitutor(placeholders, "@", "@")
 
             val fields: List<Pair<String, AuroraConfigFieldSource>> = handlers.flatMap { handler ->
-
                 val defaultValue = handler.defaultValue?.let {
                     listOf(
                         handler.name to AuroraConfigFieldSource(
-                            source = handler.defaultSource,
+                            name = handler.defaultSource,
                             value = mapper.convertValue(handler.defaultValue),
                             defaultSource = true
                         )
@@ -185,14 +219,22 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
 
                 val result = defaultValue + files.mapNotNull { file ->
                     file.asJsonNode.atNullable(handler.path)?.let {
-                        if (handler.subKeyFlag && it.isObject) {
+                        /*
+                          If a handler can be simplified or complex we do not create
+                          a source if it is complex
+
+                          The indidividual subKeys have their own handlers.
+                         */
+                        if (handler.canBeSimplifiedConfig && it.isObject) {
                             null
                         } else {
-                            handler.name to AuroraConfigFieldSource(file.configName, it, handler.subKeyFlag)
+                            handler.name to AuroraConfigFieldSource(
+                                name = file.configName,
+                                value = it
+                            )
                         }
                     }
                 }
-                logger.trace("Processed handler {} result={}", handler.name, result)
                 result
             }
 
@@ -205,7 +247,7 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
         }
     }
 
-    fun removeDefaults() = AuroraDeploymentSpec(this.fields.filter { it.value.source != "default" })
+    fun removeDefaults() = AuroraDeploymentSpec(this.fields.filter { it.value.name != "default" })
 
     fun removeInactive(): AuroraDeploymentSpec {
 
@@ -236,5 +278,16 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
                 map.deepSet(it.key.split("/"), it.value)
             }
         return map
+    }
+
+    fun <T> featureEnabled(name: String, fn: (String) -> T?): T? {
+
+        // feature is disabled and has no specified subKeys
+        // adding a sub key implicitly enables a feature
+        if (isSimplifiedAndDisabled(name)) {
+            return null
+        }
+
+        return fn(name)
     }
 }

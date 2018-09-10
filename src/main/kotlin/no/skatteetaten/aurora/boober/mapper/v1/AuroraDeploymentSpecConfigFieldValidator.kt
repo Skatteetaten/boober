@@ -40,7 +40,7 @@ class AuroraDeploymentSpecConfigFieldValidator(
                 }
             } else {
                 val invalidEnvSource =
-                    envPointers.contains(e.name) && !rawField.isDefault && rawField.source.let {
+                    envPointers.contains(e.name) && !rawField.isDefault && rawField.name.let {
                         !it.split("/").last().startsWith(
                             "about"
                         )
@@ -55,7 +55,7 @@ class AuroraDeploymentSpecConfigFieldValidator(
 
                 val err = when {
                     invalidEnvSource -> ConfigFieldErrorDetail.illegal(
-                        "Invalid Source field=${e.name} requires an about source. Actual source is source=${rawField.source}",
+                        "Invalid Source field=${e.name} requires an about source. Actual source is source=${rawField.name}",
                         e.name, rawField
                     )
                     result == null -> null
