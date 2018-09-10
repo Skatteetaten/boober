@@ -263,7 +263,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       e.message == '''Config for application aos-simple in environment utv contains errors. Annotation haproxy.router.openshift.io/timeout cannot contain '/'. Use '|' instead.'''
   }
 
-  def "Should use custom db name if specified and database=true in about file"() {
+  def "Should use overridden db name when set to default at higher level"() {
 
     given:
       def aid = DEFAULT_AID
@@ -280,7 +280,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       deploymentSpec.integration.database == [new Database("foobar", null)]
   }
 
-  def "Should use custom cert name if specified and certificate=true in about file"() {
+  def "Should use overridden cert name when set to default at higher level"() {
 
     given:
       def aid = DEFAULT_AID
@@ -297,7 +297,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       deploymentSpec.integration.certificateCn == "foooo"
   }
 
-  def "Should use custom cert name if specified and certificate=false in base file"() {
+  def "Should use overridden cert name when explicitly disabled at higher level"() {
 
     given:
       def aid = DEFAULT_AID
