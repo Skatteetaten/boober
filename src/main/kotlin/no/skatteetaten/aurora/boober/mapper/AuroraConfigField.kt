@@ -46,7 +46,7 @@ data class AuroraConfigField(
     }
 
     @JsonIgnore
-    fun order(): Int {
+    fun weight(): Int {
         val source = sources.last()!!
         val name = source.source
 
@@ -72,7 +72,7 @@ data class AuroraConfigField(
             2
         }
 
-        return overrideValue + envValue + typeValue
+        return 1 + overrideValue + envValue + typeValue
     }
 
     /**
@@ -156,21 +156,30 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
         return isSimplifiedConfig(name) && get(name)
     }
 
+    /*
+    In order to know if this is simplified config or not we need to find out what instruction is
+    specified in the most specific place. Each AuroraConfigFieldSource has a weight that determine
+    the presedence.
+     */
     fun isSimplifiedConfig(name: String): Boolean {
         val field = fields[name]!!
 
-        val toggleOrder = field.order()
-        val subKeys = fields
-            .filter { it.key.startsWith("$name/") }
+        val toggleWeight = field.weight()
+        val subKeys = getSubKeys(name)
 
-        val maxSubKeyOrder: Int = subKeys
-            .map { it.value.order() }
+        // If there are any subkeys we need to find their weight. Not that if there are no subkeys weight is 0
+        val maxSubKeyWeight: Int = subKeys
+            .map { it.value.weight() }
             .max() ?: 0
 
-        if (maxSubKeyOrder > toggleOrder) {
-            return false
-        }
-        return field.isBooleanFlag()
+        // If the toggle has more then or equal weight to the subKeys then it has presedence and we are simplified
+        return toggleWeight >= maxSubKeyWeight
+    }
+
+    fun getSubKeys(name: String): Map<String, AuroraConfigField> {
+        val subKeys = fields
+            .filter { it.key.startsWith("$name/") }
+        return subKeys
     }
 
     inline operator fun <reified T> get(name: String): T = fields[name]!!.value()
@@ -222,6 +231,7 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
 
                 val result = defaultValue + files.mapNotNull { file ->
                     file.asJsonNode.atNullable(handler.path)?.let {
+
                         if (handler.subKeyFlag && it.isObject) {
                             null
                         } else {
