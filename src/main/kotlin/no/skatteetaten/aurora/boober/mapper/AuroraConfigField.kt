@@ -231,8 +231,6 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
 
                 val result = defaultValue + files.mapNotNull { file ->
                     file.asJsonNode.atNullable(handler.path)?.let {
-
-                        //If you can be simplified or object and is object then ignore it
                         if (handler.canBeSimplifiedConfig && it.isObject) {
                             null
                         } else {
