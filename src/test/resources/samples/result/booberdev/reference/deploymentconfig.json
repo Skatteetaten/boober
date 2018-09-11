@@ -144,14 +144,14 @@
                 "protocol": "TCP"
               }
             ],
-             "readinessProbe": {
-                 "httpGet": {
-                     "path": "/foo",
-                     "port": 8080
-                 },
-                 "initialDelaySeconds": 10,
-                 "timeoutSeconds": 1
-             },
+            "readinessProbe": {
+              "httpGet": {
+                "path": "/foo",
+                "port": 8080
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 1
+            },
             "resources": {
               "limits": {
                 "cpu": "2000m",

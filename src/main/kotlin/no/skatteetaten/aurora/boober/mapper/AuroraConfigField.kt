@@ -47,21 +47,22 @@ data class AuroraConfigField(
         return result
     }
 
-    val weight: Int @JsonIgnore get() {
+    val weight: Int
+        @JsonIgnore get() {
 
-        if (isDefault) return 0
+            if (isDefault) return 0
 
-        val isBaseOrApplicationFile = !(name.startsWith("about") || name.contains("/about"))
-        val isApplicationOrEnvFile = name.contains("/")
-        val isOverrideFile = name.endsWith("override")
+            val isBaseOrApplicationFile = !(name.startsWith("about") || name.contains("/about"))
+            val isApplicationOrEnvFile = name.contains("/")
+            val isOverrideFile = name.endsWith("override")
 
-        var weight = 1
-        if (isApplicationOrEnvFile) weight += 4 // files in an environment folder are higher weighted than files at the root.
-        if (isBaseOrApplicationFile) weight += 2 // base and application files are higher weigthed than about files.
-        if (isOverrideFile) weight += 1 // override files are higher weigthed than their non-override counterparts.
+            var weight = 1
+            if (isApplicationOrEnvFile) weight += 4 // files in an environment folder are higher weighted than files at the root.
+            if (isBaseOrApplicationFile) weight += 2 // base and application files are higher weigthed than about files.
+            if (isOverrideFile) weight += 1 // override files are higher weigthed than their non-override counterparts.
 
-        return weight
-    }
+            return weight
+        }
 
     /**
      * Extracts a config field declared either as a delimited string (ie. "value1, value2") or as a JSON array

@@ -45,6 +45,7 @@ class BitbucketServiceTest extends AbstractSpec {
 
   String project = "ao"
   String repo = "auroradeploymenttags"
+
   def "Verify upload file"() {
 
     given:

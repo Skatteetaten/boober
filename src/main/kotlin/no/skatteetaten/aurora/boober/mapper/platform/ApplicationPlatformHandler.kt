@@ -35,13 +35,20 @@ import java.time.Duration
 abstract class ApplicationPlatformHandler(val name: String) {
     open fun handlers(handlers: Set<AuroraConfigFieldHandler>): Set<AuroraConfigFieldHandler> = handlers
 
-    abstract fun handleAuroraDeployment(auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal, labels: Map<String, String>, mounts: List<Mount>?, routeSuffix: String, sidecarContainers: List<AuroraContainer>?): AuroraDeployment
+    abstract fun handleAuroraDeployment(
+        auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
+        labels: Map<String, String>,
+        mounts: List<Mount>?,
+        routeSuffix: String,
+        sidecarContainers: List<AuroraContainer>?
+    ): AuroraDeployment
 
     fun createAnnotations(specInternal: AuroraDeploymentSpecInternal): Map<String, String> {
 
         val deploy = specInternal.deploy!!
         fun escapeOverrides(): String? {
-            val files = specInternal.overrideFiles.mapValues { jacksonObjectMapper().readValue(it.value, JsonNode::class.java) }
+            val files =
+                specInternal.overrideFiles.mapValues { jacksonObjectMapper().readValue(it.value, JsonNode::class.java) }
             val content = jacksonObjectMapper().writeValueAsString(files)
             return content.takeIf { it != "{}" }
         }
@@ -69,7 +76,10 @@ abstract class ApplicationPlatformHandler(val name: String) {
         return OpenShiftObjectLabelService.toOpenShiftLabelNameSafeMap(allLabels)
     }
 
-    fun createSidecarContainers(auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal, mounts: List<Mount>?): List<AuroraContainer>? {
+    fun createSidecarContainers(
+        auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
+        mounts: List<Mount>?
+    ): List<AuroraContainer>? {
 
         return auroraDeploymentSpecInternal?.deploy?.toxiProxy?.let {
             listOf(AuroraContainer(
@@ -151,7 +161,11 @@ fun List<Mount>?.podVolumes(dcName: String): List<Volume> {
     } ?: emptyList()
 }
 
-fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal, routeSuffix: String): List<EnvVar> {
+fun createEnvVars(
+    mounts: List<Mount>?,
+    auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
+    routeSuffix: String
+): List<EnvVar> {
 
     val mountEnv = mounts?.map {
         "VOLUME_${it.mountName.toUpperCase().replace("-", "_")}" to it.path

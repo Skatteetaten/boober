@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.service
 
 import java.time.Duration
 
-import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.http.ResponseEntity
 
 import com.fasterxml.jackson.databind.JsonNode

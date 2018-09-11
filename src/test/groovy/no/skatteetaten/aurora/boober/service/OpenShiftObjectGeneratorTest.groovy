@@ -7,8 +7,8 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 
 import groovy.json.JsonOutput
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt

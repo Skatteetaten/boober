@@ -40,7 +40,8 @@ class StsRenewService(
             "affiliation" to request.affiliation
         )
 
-        val secret = StsSecretGenerator.create(request.name, stsResult, labels)
+        // TODO: Need to fetch owner reference here, or get it in the RenewRequest.
+        val secret = StsSecretGenerator.create(request.name, stsResult, labels, ownerReference)
         val json = jacksonObjectMapper().convertValue<JsonNode>(secret)
         val command = commandBuilder.createOpenShiftCommand(request.namespace, json)
 

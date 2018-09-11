@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.openshiftName
 import no.skatteetaten.aurora.boober.utils.withNonBlank
@@ -16,6 +17,7 @@ enum class TemplateType {
 data class AuroraDeployHeader(
     val env: AuroraDeployEnvironment,
     val type: TemplateType,
+    val applicationPlatform: ApplicationPlatformHandler,
     val name: String,
     val cluster: String,
     val segment: String?

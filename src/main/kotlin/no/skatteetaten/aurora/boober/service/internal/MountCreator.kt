@@ -10,7 +10,10 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisio
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResults
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 
-fun findAndCreateMounts(deploymentSpecInternal: AuroraDeploymentSpecInternal, provisioningResult: ProvisioningResult?): List<Mount> {
+fun findAndCreateMounts(
+    deploymentSpecInternal: AuroraDeploymentSpecInternal,
+    provisioningResult: ProvisioningResult?
+): List<Mount> {
 
     val configMounts = createMountsFromDeploymentSpec(deploymentSpecInternal)
 

@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service.internal
 
+import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.kubernetes.api.model.Secret
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
@@ -13,7 +14,12 @@ object StsSecretGenerator {
     const val COMMON_NAME_ANNOTATION = "gillis.skatteetaten.no/commonName"
 
     @JvmStatic
-    fun create(appName: String, stsProvisionResults: StsProvisioningResult, labels: Map<String, String>): Secret {
+    fun create(
+        appName: String,
+        stsProvisionResults: StsProvisioningResult,
+        labels: Map<String, String>,
+        ownerReference: OwnerReference
+    ): Secret {
 
         val secretName = "$appName-cert"
         val baseUrl = "/u01/secrets/app/$secretName/keystore.jks"
@@ -26,6 +32,7 @@ object StsSecretGenerator {
                 APP_ANNOTATION to appName,
                 COMMON_NAME_ANNOTATION to stsProvisionResults.cn
             ),
+            ownerReference = ownerReference,
             secretData = mapOf(
                 "privatekey.key" to cert.key,
                 "keystore.jks" to cert.keystore,

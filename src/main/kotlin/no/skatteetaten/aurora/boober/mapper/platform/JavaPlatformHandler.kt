@@ -10,7 +10,13 @@ import org.springframework.stereotype.Component
 
 @Component
 class JavaPlatformHandler : ApplicationPlatformHandler("java") {
-    override fun handleAuroraDeployment(auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal, labels: Map<String, String>, mounts: List<Mount>?, routeSuffix: String, sidecarContainers: List<AuroraContainer>?): AuroraDeployment {
+    override fun handleAuroraDeployment(
+        auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
+        labels: Map<String, String>,
+        mounts: List<Mount>?,
+        routeSuffix: String,
+        sidecarContainers: List<AuroraContainer>?
+    ): AuroraDeployment {
 
         val tag = when (auroraDeploymentSpecInternal.type) {
             development -> "latest"
@@ -38,7 +44,8 @@ class JavaPlatformHandler : ApplicationPlatformHandler("java") {
             deployStrategy = auroraDeploymentSpecInternal.deploy.deployStrategy,
             replicas = auroraDeploymentSpecInternal.deploy.replicas,
             serviceAccount = auroraDeploymentSpecInternal.deploy.serviceAccount,
-            ttl = auroraDeploymentSpecInternal.deploy.ttl)
+            ttl = auroraDeploymentSpecInternal.deploy.ttl
+        )
     }
 
     override fun handlers(handlers: Set<AuroraConfigFieldHandler>): Set<AuroraConfigFieldHandler> {

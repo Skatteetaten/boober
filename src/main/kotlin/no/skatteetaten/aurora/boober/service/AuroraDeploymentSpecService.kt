@@ -46,7 +46,12 @@ class AuroraDeploymentSpecService(
         ): AuroraDeploymentSpec {
             // TODO : The implementation here should change, but it is too much work to do this right now.
             // If creator/mutator RFC is accepted it will be easier
-            return createAuroraDeploymentSpecInternal(auroraConfig, applicationDeploymentRef, overrideFiles).spec
+            return createAuroraDeploymentSpecInternal(
+                auroraConfig,
+                applicationDeploymentRef,
+                overrideFiles,
+                skapUrl
+            ).spec
         }
 
         @JvmOverloads
@@ -54,7 +59,8 @@ class AuroraDeploymentSpecService(
         fun createAuroraDeploymentSpecInternal(
             auroraConfig: AuroraConfig,
             applicationDeploymentRef: ApplicationDeploymentRef,
-            overrideFiles: List<AuroraConfigFile> = listOf()
+            overrideFiles: List<AuroraConfigFile> = listOf(),
+            skapUrl: String?
         ): AuroraDeploymentSpecInternal {
 
             val applicationFiles = auroraConfig.getFilesForApplication(applicationDeploymentRef, overrideFiles)
@@ -66,11 +72,13 @@ class AuroraDeploymentSpecService(
                     applicationFiles,
                     applicationDeploymentRef,
                     auroraConfig.version
-                )AuroraDeploymentSpecConfigFieldValidator(
+                )
+
+            AuroraDeploymentSpecConfigFieldValidator(
                 applicationDeploymentRef = applicationDeploymentRef,
                 applicationFiles =
                 applicationFiles,
-               fieldHandlers = headerMapper.handlers,
+                fieldHandlers = headerMapper.handlers,
                 auroraDeploymentSpec = headerSpec
             )
                 .validate(false)
@@ -135,20 +143,21 @@ class AuroraDeploymentSpecService(
             val localTemplate =
                 if (header.type == TemplateType.localTemplate) localTemplateMapper.localTemplate(deploymentSpec) else null
 
-            val overrides = overrideFiles.map { it.name to it.contents }.toMap()return deploymentSpecMapper.createAuroraDeploymentSpec(
+            val overrides = overrideFiles.map { it.name to it.contents }
+                .toMap()
+
+            return deploymentSpecMapper.createAuroraDeploymentSpec(
                 auroraDeploymentSpec = deploymentSpec,
-                volume= volume,
-                route= route,
-                build= build,
-                deploy= deploy,
-                template= template,
-                integration =
-                integration,
-               localTemplate = localTemplate,
-               env = header.env,
-               applicationFile = headerMapper.getApplicationFile(),
-               configVersion = auroraConfig.version
-            ,
+                volume = volume,
+                route = route,
+                build = build,
+                deploy = deploy,
+                template = template,
+                integration = integration,
+                localTemplate = localTemplate,
+                env = header.env,
+                applicationFile = headerMapper.getApplicationFile(),
+                configVersion = auroraConfig.version,
                 overrideFiles = overrides
             )
         }
@@ -195,10 +204,10 @@ class AuroraDeploymentSpecService(
     ): AuroraDeploymentSpec {
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         return AuroraDeploymentSpecService.createAuroraDeploymentSpec(
-            auroraConfig= auroraConfig,
+            auroraConfig = auroraConfig,
             overrideFiles = overrides,
             applicationDeploymentRef = ApplicationDeploymentRef.aid(environment, application)
-        ,
+            ,
             skapUrl = skapUrl
         )
     }

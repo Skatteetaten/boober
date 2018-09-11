@@ -60,7 +60,7 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
     val logger by logger()
 
     @GetMapping()
-    fun get( @PathVariable name: String ): Response {
+    fun get(@PathVariable name: String): Response {
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         return createAuroraConfigResponse(auroraConfigService.findAuroraConfig(ref))
     }
@@ -87,7 +87,7 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
     }
 
     @GetMapping("/**")
-    fun getAuroraConfigFile( @PathVariable name: String, request: HttpServletRequest ): ResponseEntity<Response> {
+    fun getAuroraConfigFile(@PathVariable name: String, request: HttpServletRequest): ResponseEntity<Response> {
 
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         val fileName = extractFileName(name, request)

@@ -25,7 +25,7 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>, val s
     } ?: listOf()
     val handlers = dbHandlers + listOf(
         AuroraConfigFieldHandler("database", defaultValue = false, canBeSimplifiedConfig = true),
-        AuroraConfigFieldHandler("splunkIndex"),
+        AuroraConfigFieldHandler("splunkIndex")
     ) + skapHandlers
 
     fun integrations(auroraDeploymentSpec: AuroraDeploymentSpec): AuroraIntegration? {
@@ -33,7 +33,7 @@ class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>, val s
 
         return AuroraIntegration(
             database = findDatabases(auroraDeploymentSpec, name),
-            certificate = skapHost?.let {findCertificate(auroraDeploymentSpec, name)},
+            certificate = skapHost?.let { findCertificate(auroraDeploymentSpec, name) },
             splunkIndex = auroraDeploymentSpec.getOrNull("splunkIndex"),
             webseal = findWebseal(auroraDeploymentSpec)
         )

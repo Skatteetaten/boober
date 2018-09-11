@@ -226,7 +226,10 @@ class AuroraConfigService(
                             createValidatedAuroraDeploymentSpec(auroraConfigWithOverrides, aid, resourceValidation)
                         Pair<AuroraDeploymentSpecInternal?, ExceptionWrapper?>(first = spec, second = null)
                     } catch (e: Throwable) {
-                        Pair<AuroraDeploymentSpecInternal?, ExceptionWrapper?>(first = null, second = ExceptionWrapper(aid, e))
+                        Pair<AuroraDeploymentSpecInternal?, ExceptionWrapper?>(
+                            first = null,
+                            second = ExceptionWrapper(aid, e)
+                        )
                     }
                 }
             }
@@ -248,7 +251,8 @@ class AuroraConfigService(
             auroraConfigWithOverrides.auroraConfig,
             aid,
             auroraConfigWithOverrides.overrideFiles
-        , skapUrl)
+            , skapUrl
+        )
         if (spec.cluster == cluster && resourceValidation) {
             deploymentSpecValidator.assertIsValid(spec)
         }

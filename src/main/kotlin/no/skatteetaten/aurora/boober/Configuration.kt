@@ -93,12 +93,12 @@ class Configuration : BeanPostProcessor {
         @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
         @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
         @Value("\${spring.application.name}") applicationName: String,
-        sharedSecretReader: SharedSecretReader
+        sharedSecretReader: SharedSecretReader,
+        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
     ): RestTemplate {
 
         val clientIdHeaderName = "KlientID"
 
-        val clientHttpRequestFactory = defaultHttpComponentsClientHttpRequestFactory(readTimeout, connectTimeout)
         return restTemplateBuilder
             .requestFactory(clientHttpRequestFactory)
             .interceptors(ClientHttpRequestInterceptor { request, body, execution ->
@@ -139,10 +139,10 @@ class Configuration : BeanPostProcessor {
             }).build()
     }
 
-    @Bean fun defaultHttpComponentsClientHttpRequestFactory(
-        @Value("\${boober.httpclient.readTimeout:10000}")readTimeout: Int,
-       @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int
-    ,
+    @Bean
+    fun defaultHttpComponentsClientHttpRequestFactory(
+        @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
+        @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
         httpClient: CloseableHttpClient
     ): HttpComponentsClientHttpRequestFactory = HttpComponentsClientHttpRequestFactory().apply {
         setReadTimeout(readTimeout)

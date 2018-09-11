@@ -109,9 +109,9 @@ class OpenShiftObjectGenerator(
                     generateSecretsAndConfigMaps(
                         appName = auroraDeploymentSpecInternal.name,
                         mounts = mounts ?: emptyList(),
-                            labels = labels,
+                        labels = labels,
                         provisioningResult = provisioningResult
-                    ,
+                        ,
                         ownerReference = ownerReference
                     )
                 )
@@ -164,7 +164,7 @@ class OpenShiftObjectGenerator(
         deployId: String,
         deploymentSpecInternal: AuroraDeploymentSpecInternal,
         provisioningResult: ProvisioningResult? = null
-    ,
+        ,
         ownerReference: OwnerReference
     ): JsonNode? =
         withLabelsAndMounts(deployId, deploymentSpecInternal, provisioningResult) { labels, mounts ->
@@ -284,7 +284,7 @@ class OpenShiftObjectGenerator(
                     dockerRegistry,
                     it.dockerImagePath,
                     it.dockerTag
-                ,
+                    ,
                     reference
                 )
             }
@@ -402,7 +402,7 @@ class OpenShiftObjectGenerator(
         deploymentSpecInternal: AuroraDeploymentSpecInternal,
         provisioningResult: ProvisioningResult? = null,
         name: String
-    ,
+        ,
         ownerReference: OwnerReference
     ): List<JsonNode>? {
 
@@ -416,7 +416,7 @@ class OpenShiftObjectGenerator(
         mounts: List<Mount>,
         labels: Map<String, String>,
         provisioningResult: ProvisioningResult?
-    ,
+        ,
         ownerReference: OwnerReference
     ): List<JsonNode> {
 
@@ -425,7 +425,7 @@ class OpenShiftObjectGenerator(
             ?: emptyList()
 
         val stsSecret = provisioningResult?.stsProvisioningResult
-            ?.let { StsSecretGenerator.create(appName, it, labels) }
+            ?.let { StsSecretGenerator.create(appName, it, labels, ownerReference) }
 
         val schemaSecretNames = schemaSecrets.map { it.metadata.name }
 
@@ -437,20 +437,20 @@ class OpenShiftObjectGenerator(
                     ConfigMap -> mount.content
                         ?.let {
                             ConfigMapGenerator.create(
-                                mount.getNamespacedVolumeName(appName),
-                                labels,
-                                it,
-                                ownerReference
+                                cmName = mount.getNamespacedVolumeName(appName),
+                                cmLabels = labels,
+                                cmData = it,
+                                ownerReference = ownerReference
                             )
                         }
                     Secret -> mount.secretVaultName
                         ?.let { provisioningResult?.vaultResults?.getVaultData(it) }
                         ?.let {
                             SecretGenerator.create(
-                                mount.getNamespacedVolumeName(appName),
-                                labels,
-                                it,
-                                ownerReference
+                                secretName = mount.getNamespacedVolumeName(appName),
+                                secretLabels = labels,
+                                secretData = it,
+                                ownerReference = ownerReference
                             )
                         }
                     PVC -> null

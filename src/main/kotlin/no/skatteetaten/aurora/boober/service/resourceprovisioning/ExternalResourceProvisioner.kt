@@ -18,13 +18,13 @@ class ExternalResourceProvisioner(
 
     fun provisionResources(deploymentSpecInternal: AuroraDeploymentSpecInternal): ProvisioningResult {
 
-        val stsProvisioningResult = handleSts(deploymentSpec)
+        val stsProvisioningResult = handleSts(deploymentSpecInternal)
         val schemaProvisionResult = handleSchemaProvisioning(deploymentSpecInternal)
         val schemaResults = handleVaults(deploymentSpecInternal)
         return ProvisioningResult(schemaProvisionResult, schemaResults, stsProvisioningResult)
     }
 
-    private fun handleSts(deploymentSpec: AuroraDeploymentSpec): StsProvisioningResult? {
+    private fun handleSts(deploymentSpec: AuroraDeploymentSpecInternal): StsProvisioningResult? {
         return deploymentSpec.integration?.certificate?.let {
             stsProvisioner.generateCertificate(it, deploymentSpec.name, deploymentSpec.environment.envName)
         }

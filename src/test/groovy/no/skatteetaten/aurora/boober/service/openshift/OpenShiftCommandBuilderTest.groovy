@@ -58,7 +58,8 @@ class OpenShiftCommandBuilderTest extends AbstractAuroraDeploymentSpecSpringTest
       osClusterMock.expect(requestTo("$openShiftUrl/oapi/v1/namespaces/$NAMESPACE/deploymentconfigs/webleveranse")).
           andRespond(withSuccess(loadResource("dc-webleveranse.json"), MediaType.APPLICATION_JSON))
 
-      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, aid(ENVIRONMENT, "webleveranse"))
+      AuroraDeploymentSpecInternal deploymentSpec =
+          createDeploymentSpec(auroraConfigJson, aid(ENVIRONMENT, "webleveranse"))
       JsonNode deploymentConfig = objectGenerator.
           generateDeploymentConfig("deploy-id", deploymentSpec, null, new OwnerReference())
 

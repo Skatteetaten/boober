@@ -38,6 +38,6 @@ class ApplyresultBase extends AbstractContractBase {
         new ApplicationDeploymentCommand([:], new ApplicationDeploymentRef("", ""), new AuroraConfigRef("", "", "")),
         [:],
         new DeployHistoryEntryResult([], null)
-        )
+    )
   }
 }
