@@ -1,14 +1,12 @@
 package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.AuroraMetrics
-import no.skatteetaten.aurora.boober.utils.LambdaOutputStream
 import org.eclipse.jgit.api.CreateBranchCommand
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.EmtpyCommitException
 import org.eclipse.jgit.lib.BranchTrackingStatus
 import org.eclipse.jgit.lib.PersonIdent
 import org.eclipse.jgit.lib.Ref
-import org.eclipse.jgit.lib.TextProgressMonitor
 import org.eclipse.jgit.revwalk.RevTag
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 import org.slf4j.Logger
@@ -19,7 +17,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import java.io.File
-import java.io.PrintWriter
 
 @Configuration
 class GitServices(
@@ -75,7 +72,12 @@ open class GitService(
     val cp = UsernamePasswordCredentialsProvider(username, password)
 
     @JvmOverloads
-    fun checkoutRepository(repositoryName: String, refName: String, checkoutFolder: String = repositoryName, deleteUnpushedCommits: Boolean = true): Git {
+    fun checkoutRepository(
+        repositoryName: String,
+        refName: String,
+        checkoutFolder: String = repositoryName,
+        deleteUnpushedCommits: Boolean = true
+    ): Git {
         val repoPath = File(File("$checkoutPath/$checkoutFolder").absoluteFile.absolutePath)
         val git: Git? = repoPath.takeIf(File::exists).let {
             try {
@@ -142,13 +144,18 @@ open class GitService(
         ?: throw GitReferenceException("No git reference with refName=$refName")
     }
 
-    private fun cloneAndCheckout(repositoryName: String, repoPath: File, refName: String, deleteUnpushedCommits: Boolean): Git {
+    private fun cloneAndCheckout(
+        repositoryName: String,
+        repoPath: File,
+        refName: String,
+        deleteUnpushedCommits: Boolean
+    ): Git {
         cloneRepository(repositoryName, repoPath)
         return updateRepository(repoPath, deleteUnpushedCommits, refName)
     }
 
     private fun cloneRepository(repositoryName: String, repoPath: File): Git {
-        return metrics.withMetrics("git_checkout", {
+        return metrics.withMetrics("git_checkout") {
             val dir = repoPath.apply { mkdirs() }
             val uri = url.format(repositoryName)
 
@@ -162,7 +169,7 @@ open class GitService(
                 dir.deleteRecursively()
                 throw ex
             }
-        })
+        }
     }
 
     fun commitAndPushChanges(repo: Git, commitMessage: String? = null) {
@@ -188,30 +195,6 @@ open class GitService(
         } catch (e: Exception) {
             throw e
         }
-    }
-
-    fun pushTags(git: Git, tags: List<Ref>) {
-
-        logger.debug("push tags to git")
-        val cmd = git.push()
-        logger.debug("added tag")
-        tags.forEach { cmd.add(it) }
-        logger.trace("/added tag")
-        metrics.withMetrics("git_push_tags", {
-            cmd.setCredentialsProvider(cp)
-            if (logger.isTraceEnabled) {
-                cmd.progressMonitor = TextProgressMonitor(PrintWriter(LambdaOutputStream {
-                    logger.trace(it)
-                }))
-            }
-            cmd.call()
-        })
-        logger.trace("/push tags to git")
-    }
-
-    fun createAnnotatedTag(git: Git, tag: String, tagBody: String): Ref {
-        val user = getPersonIdentFromUserDetails()
-        return git.tag().setTagger(user).setAnnotated(true).setName(tag).setMessage(tagBody).call()
     }
 
     fun getTagHistory(git: Git): List<RevTag> {

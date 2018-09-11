@@ -1,0 +1,4 @@
+GET {{apiUrl}}/v1/apply-result/paas/f28ed8e
+Authorization: Bearer {{token}}
+
+###

@@ -10,10 +10,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 
 import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.Permission
 import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.model.TemplateType
@@ -88,18 +89,18 @@ class OpenShiftTemplateProcessorTest extends AbstractSpec {
   private static void assertLabels(ObjectNode labels) {
     assert labels['affiliation'] != null
     assert labels['template'].asText() == 'jenkins-cluster-persistent'
-    assert labels['appId'].asText() == DigestUtils.sha1Hex('jenkins-cluster-persistent-2.0')
     assert labels['app'] != null
     assert labels['updatedBy'].asText() == 'username'
     assert labels['updateInBoober'] == null
   }
 
   private static createEmptyDeploymentSpec() {
-    new AuroraDeploymentSpec(new ApplicationId('', ''), '', TemplateType.development, '', [:],
+    new AuroraDeploymentSpecInternal(new ApplicationDeploymentRef('', ''), '', TemplateType.development, '',
+        new AuroraDeploymentSpec([:]),
         '', '', new AuroraDeployEnvironment('', '',
         new Permissions(new Permission(new HashSet<String>(), new HashSet<String>()),
             new Permission(new HashSet<String>(), new HashSet<String>())),
         Duration.ofMinutes(30)),
-        null, null, null, null, null, null, null, new AuroraConfigFile("", "", false), "master")
+        null, null, null, null, null, null, null, new AuroraConfigFile("", "", false), "master", [:])
   }
 }

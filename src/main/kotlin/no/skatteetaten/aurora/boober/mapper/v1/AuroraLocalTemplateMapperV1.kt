@@ -2,7 +2,7 @@ package no.skatteetaten.aurora.boober.mapper.v1
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraLocalTemplate
@@ -32,17 +32,17 @@ class AuroraLocalTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>, 
         }
     }
 
-    fun localTemplate(auroraConfigFields: AuroraConfigFields): AuroraLocalTemplate {
+    fun localTemplate(auroraDeploymentSpec: AuroraDeploymentSpec): AuroraLocalTemplate {
         return AuroraLocalTemplate(
-            parameters = auroraConfigFields.getParameters(parameterHandlers),
-            templateJson = extractTemplateJson(auroraConfigFields),
-            version = auroraConfigFields.extractIfExistsOrNull("version"),
-            replicas = auroraConfigFields.extractIfExistsOrNull("replicas")
+            parameters = auroraDeploymentSpec.getParameters(parameterHandlers),
+            templateJson = extractTemplateJson(auroraDeploymentSpec),
+            version = auroraDeploymentSpec.getOrNull("version"),
+            replicas = auroraDeploymentSpec.getOrNull("replicas")
         )
     }
 
-    private fun extractTemplateJson(auroraConfigFields: AuroraConfigFields): JsonNode {
-        val templateFile = auroraConfigFields.extract<String>("templateFile").let { fileName ->
+    private fun extractTemplateJson(auroraDeploymentSpec: AuroraDeploymentSpec): JsonNode {
+        val templateFile = auroraDeploymentSpec.get<String>("templateFile").let { fileName ->
             auroraConfig.files.find { it.name == fileName }?.asJsonNode
         }
         return templateFile ?: throw IllegalArgumentException("templateFile is required")

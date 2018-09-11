@@ -1,12 +1,20 @@
 package no.skatteetaten.aurora.boober.service
 
+import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder
+import io.fabric8.kubernetes.api.model.OwnerReference
+import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
-import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
+import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
+import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
@@ -16,6 +24,7 @@ import no.skatteetaten.aurora.boober.utils.deploymentConfigFromJson
 import no.skatteetaten.aurora.boober.utils.imageStreamFromJson
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.whenFalse
+import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -33,6 +42,7 @@ class DeployService(
     val redeployService: RedeployService,
     val userDetailsProvider: UserDetailsProvider,
     val deployLogService: DeployLogService,
+
     @Value("\${openshift.cluster}") val cluster: String,
     @Value("\${boober.docker.registry}") val dockerRegistry: String
 ) {
@@ -40,33 +50,53 @@ class DeployService(
     val logger: Logger = LoggerFactory.getLogger(DeployService::class.java)
 
     @JvmOverloads
-    fun executeDeploy(ref: AuroraConfigRef, applicationIds: List<ApplicationId>, overrides: List<AuroraConfigFile> = listOf(), deploy: Boolean = true): List<AuroraDeployResult> {
+    fun executeDeploy(
+        ref: AuroraConfigRef,
+        applicationDeploymentRefs: List<ApplicationDeploymentRef>,
+        overrides: List<AuroraConfigFile> = listOf(),
+        deploy: Boolean = true
+    ): List<AuroraDeployResult> {
 
-        if (applicationIds.isEmpty()) {
-            throw IllegalArgumentException("Specify applicationId")
+        if (applicationDeploymentRefs.isEmpty()) {
+            throw IllegalArgumentException("Specify applicationDeploymentRef")
         }
 
-        val deploymentSpecs = auroraConfigService.createValidatedAuroraDeploymentSpecs(ref, applicationIds, overrides)
+        val auroraConfigRefExact = auroraConfigService.findExactRef(ref)?.let { ref.copy(resolvedRef = it) } ?: ref
+
+        val deploymentSpecs =
+            auroraConfigService.createValidatedAuroraDeploymentSpecs(
+                auroraConfigRefExact,
+                applicationDeploymentRefs,
+                overrides
+            )
         val environments = prepareDeployEnvironments(deploymentSpecs)
-        val deployResults: List<AuroraDeployResult> = deployFromSpecs(deploymentSpecs, environments, deploy)
+        val deployResults: List<AuroraDeployResult> =
+            deployFromSpecs(deploymentSpecs, environments, deploy, auroraConfigRefExact)
 
-        deployLogService.markRelease(ref, deployResults)
-
-        return deployResults
+        val deployer = userDetailsProvider.getAuthenticatedUser().let {
+            Deployer(it.fullName ?: it.username, "${it.username}@skatteetaten.no")
+        }
+        return deployLogService.markRelease(deployResults, deployer)
     }
 
-    fun prepareDeployEnvironments(deploymentSpecs: List<AuroraDeploymentSpec>): Map<AuroraDeployEnvironment, AuroraDeployResult> {
+    fun prepareDeployEnvironments(deploymentSpecInternals: List<AuroraDeploymentSpecInternal>): Map<AuroraDeployEnvironment, AuroraDeployResult> {
 
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
 
-        return deploymentSpecs
+        return deploymentSpecInternals
             .filter { it.cluster == cluster }
             .map { it.environment }
             .distinct()
             .map { environment: AuroraDeployEnvironment ->
 
                 if (!authenticatedUser.hasAnyRole(environment.permissions.admin.groups)) {
-                    Pair(environment, AuroraDeployResult(success = false, reason = "User=${authenticatedUser.fullName} does not have access to admin this environment from the groups=${environment.permissions.admin.groups}"))
+                    Pair(
+                        environment,
+                        AuroraDeployResult(
+                            success = false,
+                            reason = "User=${authenticatedUser.fullName} does not have access to admin this environment from the groups=${environment.permissions.admin.groups}"
+                        )
+                    )
                 }
 
                 val projectExist = openShiftClient.projectExists(environment.namespace)
@@ -79,15 +109,21 @@ class DeployService(
                 } else "Namespace created successfully."
 
                 logger.info("Environment done. user='${authenticatedUser.fullName}' namespace=${environment.namespace} success=$success reason=$message admins=${environment.permissions.admin.groups} viewers=${environment.permissions.view?.groups}")
-                Pair(environment, AuroraDeployResult(
-                    openShiftResponses = environmentResponses,
-                    success = success,
-                    reason = message,
-                    projectExist = projectExist))
+                Pair(
+                    environment, AuroraDeployResult(
+                        openShiftResponses = environmentResponses,
+                        success = success,
+                        reason = message,
+                        projectExist = projectExist
+                    )
+                )
             }.toMap()
     }
 
-    private fun prepareDeployEnvironment(environment: AuroraDeployEnvironment, projectExist: Boolean): List<OpenShiftResponse> {
+    fun prepareDeployEnvironment(
+        environment: AuroraDeployEnvironment,
+        projectExist: Boolean
+    ): List<OpenShiftResponse> {
         val namespaceName = environment.namespace
 
         val projectResponse = projectExist.whenFalse {
@@ -105,52 +141,124 @@ class DeployService(
         return listOfNotNull(projectResponse).addIfNotNull(resourceResponse)
     }
 
-    private fun deployFromSpecs(deploymentSpecs: List<AuroraDeploymentSpec>, environments: Map<AuroraDeployEnvironment, AuroraDeployResult>, deploy: Boolean): List<AuroraDeployResult> {
+    private fun deployFromSpecs(
+        deploymentSpecInternals: List<AuroraDeploymentSpecInternal>,
+        environments: Map<AuroraDeployEnvironment, AuroraDeployResult>,
+        deploy: Boolean,
+        configRef: AuroraConfigRef
+    ): List<AuroraDeployResult> {
 
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
 
-        return deploymentSpecs.map {
+        return deploymentSpecInternals.map {
+
+            val cmd = ApplicationDeploymentCommand(
+                auroraConfig = configRef,
+                applicationDeploymentRef = it.applicationDeploymentRef,
+                overrideFiles = it.overrideFiles
+            )
+
             val env = environments[it.environment]
             when {
                 env == null -> {
                     if (it.cluster != cluster) {
-                        AuroraDeployResult(auroraDeploymentSpec = it, ignored = true, reason = "Not valid in this cluster.")
+                        AuroraDeployResult(
+                            auroraDeploymentSpecInternal = it,
+                            ignored = true,
+                            reason = "Not valid in this cluster.",
+                            command = cmd
+                        )
                     } else {
-                        AuroraDeployResult(auroraDeploymentSpec = it, success = false, reason = "Environment was not created.")
+                        AuroraDeployResult(
+                            auroraDeploymentSpecInternal = it,
+                            success = false,
+                            reason = "Environment was not created.",
+                            command = cmd
+                        )
                     }
                 }
-                !env.success -> env.copy(auroraDeploymentSpec = it)
+                !env.success -> env.copy(auroraDeploymentSpecInternal = it)
                 else -> {
                     try {
-                        val result = deployFromSpec(it, deploy, env.projectExist)
+                        val result = deployFromSpec(it, deploy, env.projectExist, configRef, cmd)
                         result.copy(openShiftResponses = env.openShiftResponses.addIfNotNull(result.openShiftResponses))
                     } catch (e: Exception) {
-                        AuroraDeployResult(auroraDeploymentSpec = it, success = false, reason = e.message)
+                        AuroraDeployResult(
+                            auroraDeploymentSpecInternal = it,
+                            success = false,
+                            reason = e.message,
+                            command = cmd
+                        )
                     }
                 }
             }.also {
-                logger.info("Deploy done username=${authenticatedUser.username} fullName='${authenticatedUser.fullName}' deployId=${it.deployId} app=${it.auroraDeploymentSpec?.name} namespace=${it.auroraDeploymentSpec?.environment?.namespace} success=${it.success} ignored=${it.ignored} reason=${it.reason}")
+                logger.info("Deploy done username=${authenticatedUser.username} fullName='${authenticatedUser.fullName}' deployId=${it.deployId} app=${it.auroraDeploymentSpecInternal?.name} namespace=${it.auroraDeploymentSpecInternal?.environment?.namespace} success=${it.success} ignored=${it.ignored} reason=${it.reason}")
             }
         }
     }
 
-    fun deployFromSpec(deploymentSpec: AuroraDeploymentSpec, shouldDeploy: Boolean, namespaceCreated: Boolean): AuroraDeployResult {
+    fun deployFromSpec(
+        deploymentSpecInternal: AuroraDeploymentSpecInternal,
+        shouldDeploy: Boolean,
+        namespaceCreated: Boolean,
+        auroraConfigRef: AuroraConfigRef,
+        cmd: ApplicationDeploymentCommand
+    ): AuroraDeployResult {
 
         val deployId = UUID.randomUUID().toString().substring(0, 7)
-        if (deploymentSpec.cluster != cluster) {
-            return AuroraDeployResult(auroraDeploymentSpec = deploymentSpec, ignored = true, reason = "Not valid in this cluster.")
+
+        if (deploymentSpecInternal.cluster != cluster) {
+            return AuroraDeployResult(
+                auroraDeploymentSpecInternal = deploymentSpecInternal,
+                ignored = true,
+                reason = "Not valid in this cluster.",
+                command = cmd
+            )
         }
 
+        val application = createApplicationDeployment(auroraConfigRef, deploymentSpecInternal, deployId, cmd)
+
+        val applicationCommnd = openShiftCommandBuilder.createOpenShiftCommand(
+            deploymentSpecInternal.environment.namespace,
+            jacksonObjectMapper().convertValue(application)
+        )
+        val applicationResult =
+            openShiftClient.performOpenShiftCommand(deploymentSpecInternal.environment.namespace, applicationCommnd)
+
+        val appResponse: ApplicationDeployment? = applicationResult.responseBody?.let {
+            jacksonObjectMapper().convertValue(it)
+        }
+
+        if (appResponse == null) {
+            return AuroraDeployResult(
+                auroraDeploymentSpecInternal = deploymentSpecInternal,
+                deployId = deployId,
+                openShiftResponses = listOf(applicationResult),
+                success = false,
+                reason = "Creating application object failed",
+                command = cmd
+            )
+        }
+
+        val ownerReference = OwnerReferenceBuilder()
+            .withApiVersion(appResponse.apiVersion)
+            .withKind(appResponse.kind)
+            .withName(appResponse.metadata.name)
+            .withUid(appResponse.metadata.uid)
+            .build()
+
         logger.debug("Resource provisioning")
-        val provisioningResult = resourceProvisioner.provisionResources(deploymentSpec)
+        val provisioningResult = resourceProvisioner.provisionResources(deploymentSpecInternal)
 
         logger.debug("Apply objects")
-        val openShiftResponses: List<OpenShiftResponse> = applyOpenShiftApplicationObjects(
-            deployId, deploymentSpec, provisioningResult, namespaceCreated)
+        val openShiftResponses: List<OpenShiftResponse> = listOf(applicationResult) +
+            applyOpenShiftApplicationObjects(
+                deployId, deploymentSpecInternal, provisioningResult, namespaceCreated, ownerReference
+            )
 
         logger.debug("done applying objects")
         val success = openShiftResponses.all { it.success }
-        val result = AuroraDeployResult(deploymentSpec, deployId, openShiftResponses, success)
+        val result = AuroraDeployResult(cmd, deploymentSpecInternal, deployId, openShiftResponses, success)
         if (!shouldDeploy) {
             return result.copy(reason = "Deploy explicitly turned of.")
         }
@@ -159,11 +267,11 @@ class DeployService(
             return result.copy(reason = "One or more resources did not complete correctly.")
         }
 
-        if (deploymentSpec.deploy?.flags?.pause == true) {
+        if (deploymentSpecInternal.deploy?.flags?.pause == true) {
             return result.copy(reason = "Deployment is paused.")
         }
 
-        val tagResult = deploymentSpec.deploy?.takeIf { it.releaseTo != null }?.let {
+        val tagResult = deploymentSpecInternal.deploy?.takeIf { it.releaseTo != null }?.let {
             val dockerGroup = it.groupId.dockerGroupSafeName()
             val cmd = TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
             dockerService.tag(cmd)
@@ -175,33 +283,81 @@ class DeployService(
         val imageStream = findImageStreamResponse(openShiftResponses)
         val deploymentConfig = findDeploymentConfigResponse(openShiftResponses)
             ?: throw IllegalArgumentException("Missing DeploymentConfig")
-        val redeployResult = if (deploymentSpec.type == TemplateType.development) {
-            RedeployService.RedeployResult(message = "No deploy was made with ${deploymentSpec.type} type")
+        val redeployResult = if (deploymentSpecInternal.type == TemplateType.development) {
+            RedeployService.RedeployResult(message = "No deploy was made with ${deploymentSpecInternal.type} type")
         } else {
             redeployService.triggerRedeploy(deploymentConfig, imageStream)
         }
 
         if (!redeployResult.success) {
-            return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses),
-                tagResponse = tagResult, success = false, reason = redeployResult.message)
+            return result.copy(
+                openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses),
+                tagResponse = tagResult, success = false, reason = redeployResult.message
+            )
         }
 
-        return result.copy(openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses), tagResponse = tagResult,
-            reason = "Deployment success.")
+        return result.copy(
+            openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses),
+            tagResponse = tagResult,
+            reason = "Deployment success."
+        )
+    }
+
+    fun createApplicationDeployment(
+        auroraConfigRef: AuroraConfigRef,
+        deploymentSpecInternal: AuroraDeploymentSpecInternal,
+        deployId: String,
+        cmd: ApplicationDeploymentCommand
+    ): ApplicationDeployment {
+
+        return ApplicationDeployment(
+            spec = ApplicationDeploymentSpec(
+                selector = mapOf("name" to deploymentSpecInternal.name),
+                deployTag = deploymentSpecInternal.version,
+                // This is the base shared applicationDeploymentRef
+                applicationId = DigestUtils.sha1Hex(deploymentSpecInternal.appId),
+                applicationDeploymentId = DigestUtils.sha1Hex(deploymentSpecInternal.applicationDeploymentRef.toString()),
+                applicationName = deploymentSpecInternal.appName,
+                applicationDeploymentName = deploymentSpecInternal.applicationDeploymentRef.application,
+                splunkIndex = deploymentSpecInternal.integration?.splunkIndex,
+                managementPath = deploymentSpecInternal.deploy?.managementPath,
+                releaseTo = deploymentSpecInternal.deploy?.releaseTo,
+                command = cmd
+            ),
+            metadata = ObjectMetaBuilder()
+                .withName(deploymentSpecInternal.name)
+                .withAnnotations(null)
+                .withLabels(
+                    mapOf(
+                        "app" to deploymentSpecInternal.name,
+                        "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
+                        "affiliation" to deploymentSpecInternal.environment.affiliation,
+                        "booberDeployId" to deployId
+                    )
+                )
+                .build()
+        )
     }
 
     private fun applyOpenShiftApplicationObjects(
         deployId: String,
-        deploymentSpec: AuroraDeploymentSpec,
+        deploymentSpecInternal: AuroraDeploymentSpecInternal,
         provisioningResult: ProvisioningResult? = null,
-        mergeWithExistingResource: Boolean
+        mergeWithExistingResource: Boolean,
+        ownerReference: OwnerReference
     ): List<OpenShiftResponse> {
 
-        val namespace = deploymentSpec.environment.namespace
-        val name = deploymentSpec.name
+        val namespace = deploymentSpecInternal.environment.namespace
+        val name = deploymentSpecInternal.name
 
         val openShiftApplicationResponses: List<OpenShiftResponse> = openShiftCommandBuilder
-            .generateApplicationObjects(deployId, deploymentSpec, provisioningResult, mergeWithExistingResource)
+            .generateApplicationObjects(
+                deployId,
+                deploymentSpecInternal,
+                provisioningResult,
+                mergeWithExistingResource,
+                ownerReference
+            )
             .map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         if (openShiftApplicationResponses.any { !it.success }) {

@@ -1,84 +1,240 @@
 {
-  "applicationId": {
+  "applicationDeploymentRef": {
     "source": "static",
-    "value": "utv/webleveranse"
+    "value": "utv/webleveranse",
+    "sources": [
+      {
+        "name": "static",
+        "value": "utv/webleveranse"
+      }
+    ]
   },
   "configVersion": {
     "source": "static",
-    "value": "master"
+    "value": "master",
+    "sources": [
+      {
+        "name": "static",
+        "value": "master"
+      }
+    ]
   },
   "schemaVersion": {
     "source": "about.json",
-    "value": "v1"
+    "value": "v1",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "v1"
+      }
+    ]
   },
   "type": {
     "source": "utv/webleveranse.json",
-    "value": "development"
+    "value": "development",
+    "sources": [
+      {
+        "name": "utv/webleveranse.json",
+        "value": "development"
+      }
+    ]
   },
   "applicationPlatform": {
     "source": "webleveranse.json",
-    "value": "web"
+    "value": "web",
+    "sources": [
+      {
+        "name": "default",
+        "value": "java"
+      },
+      {
+        "name": "webleveranse.json",
+        "value": "web"
+      }
+    ]
   },
   "affiliation": {
     "source": "about.json",
-    "value": "aos"
+    "value": "aos",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "aos"
+      }
+    ]
   },
   "segment": {
     "source": "about.json",
-    "value": "aurora"
+    "value": "aurora",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "aurora"
+      }
+    ]
   },
   "cluster": {
     "source": "utv/about.json",
-    "value": "utv"
+    "value": "utv",
+    "sources": [
+      {
+        "name": "utv/about.json",
+        "value": "utv"
+      }
+    ]
   },
   "permissions": {
     "admin": {
       "source": "about.json",
-      "value": "APP_PaaS_utv"
+      "value": "APP_PaaS_utv",
+      "sources": [
+        {
+          "name": "about.json",
+          "value": "APP_PaaS_utv"
+        }
+      ]
     }
   },
   "envName": {
     "source": "folderName",
-    "value": "utv"
+    "value": "utv",
+    "sources": [
+      {
+        "name": "folderName",
+        "value": "utv"
+      }
+    ]
   },
   "name": {
     "source": "webleveranse.json",
-    "value": "webleveranse"
+    "value": "webleveranse",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "webleveranse"
+      },
+      {
+        "name": "webleveranse.json",
+        "value": "webleveranse"
+      }
+    ]
   },
   "management": {
     "path": {
       "source": "webleveranse.json",
-      "value": ""
+      "value": "",
+      "sources": [
+        {
+          "name": "default",
+          "value": "actuator"
+        },
+        {
+          "name": "webleveranse.json",
+          "value": ""
+        }
+      ]
     },
     "port": {
       "source": "webleveranse.json",
-      "value": "8081"
+      "value": "8081",
+      "sources": [
+        {
+          "name": "default",
+          "value": "8081"
+        },
+        {
+          "name": "webleveranse.json",
+          "value": "8081"
+        }
+      ]
     }
   },
   "deployStrategy": {
     "type": {
       "source": "webleveranse.json",
-      "value": "rolling"
+      "value": "rolling",
+      "sources": [
+        {
+          "name": "default",
+          "value": "rolling"
+        },
+        {
+          "name": "webleveranse.json",
+          "value": "rolling"
+        }
+      ]
     }
   },
   "artifactId": {
     "source": "webleveranse.json",
-    "value": "openshift-referanse-react"
+    "value": "openshift-referanse-react",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "webleveranse"
+      },
+      {
+        "name": "webleveranse.json",
+        "value": "openshift-referanse-react"
+      }
+    ]
   },
   "groupId": {
     "source": "webleveranse.json",
-    "value": "no.skatteetaten.aurora"
+    "value": "no.skatteetaten.aurora",
+    "sources": [
+      {
+        "name": "webleveranse.json",
+        "value": "no.skatteetaten.aurora"
+      }
+    ]
   },
   "version": {
     "source": "utv/webleveranse.json",
-    "value": "1"
+    "value": "1",
+    "sources": [
+      {
+        "name": "utv/webleveranse.json",
+        "value": "1"
+      }
+    ]
   },
   "replicas": {
     "source": "webleveranse.json",
-    "value": 1
+    "value": 1,
+    "sources": [
+      {
+        "name": "default",
+        "value": 1
+      },
+      {
+        "name": "webleveranse.json",
+        "value": 1
+      }
+    ]
   },
   "route": {
     "source": "webleveranse.json",
-    "value": true
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "webleveranse.json",
+        "value": true
+      }
+    ]
+  },
+  "applicationId": {
+    "source": "static",
+    "value": "utv/webleveranse",
+    "sources": [
+      {
+        "name": "static",
+        "value": "utv/webleveranse"
+      }
+    ]
   }
 }

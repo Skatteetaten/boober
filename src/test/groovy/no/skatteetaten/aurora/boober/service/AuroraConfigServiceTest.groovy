@@ -14,12 +14,12 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
   static CHECKOUT_PATH = new File("build/auroraconfigs").absoluteFile.absolutePath
   static AURORA_CONFIG_NAME = AFFILIATION
   def aid = DEFAULT_AID
-  def ref = new AuroraConfigRef(AURORA_CONFIG_NAME, "master")
+  def ref = new AuroraConfigRef(AURORA_CONFIG_NAME, "master", "123")
 
   def userDetailsProvider = Mock(UserDetailsProvider)
   def auroraMetrics = new AuroraMetrics(new SimpleMeterRegistry())
   def gitService = new GitService(userDetailsProvider, "$REMOTE_REPO_FOLDER/%s", CHECKOUT_PATH, "", "", auroraMetrics)
-  def auroraConfigService = new AuroraConfigService(gitService, Mock(BitbucketProjectService),
+  def auroraConfigService = new AuroraConfigService(gitService, Mock(BitbucketService),
       Mock(AuroraDeploymentSpecValidator), "qa", 6, "http://skap")
 
   def setup() {
@@ -31,7 +31,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
 
   def "Throws exception when AuroraConfig cannot be found"() {
     when:
-      auroraConfigService.findAuroraConfig(new AuroraConfigRef("no_such_affiliation", "master"))
+      auroraConfigService.findAuroraConfig(new AuroraConfigRef("no_such_affiliation", "master", "123"))
 
     then:
       thrown(IllegalArgumentException)

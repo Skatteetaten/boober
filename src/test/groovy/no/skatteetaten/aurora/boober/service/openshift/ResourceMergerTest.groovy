@@ -1,13 +1,13 @@
 package no.skatteetaten.aurora.boober.service.openshift
 
-import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
+import static no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.aid
 
 import org.springframework.beans.factory.annotation.Autowired
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import io.fabric8.kubernetes.api.model.OwnerReference
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.AbstractAuroraDeploymentSpecSpringTest
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 import spock.lang.Unroll
@@ -36,7 +36,8 @@ class ResourceMergerTest extends AbstractAuroraDeploymentSpecSpringTest {
 
     given:
       JsonNode existing = loadJsonResource("dc-webleveranse.json")
-      JsonNode newResource = withDeploySpec { objectGenerator.generateDeploymentConfig("deploy-id", it, null) }
+      JsonNode newResource =
+          withDeploySpec { objectGenerator.generateDeploymentConfig("deploy-id", it, null, new OwnerReference()) }
 
     when:
       def merged = ResourceMergerKt.mergeWithExistingResource(newResource, existing)
@@ -91,7 +92,7 @@ class ResourceMergerTest extends AbstractAuroraDeploymentSpecSpringTest {
   }
 
   private <T> T withDeploySpec(Closure<T> c) {
-    AuroraDeploymentSpec deploymentSpec = createDeploymentSpec(auroraConfigJson, aid(ENVIRONMENT, "webleveranse"))
+    AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, aid(ENVIRONMENT, "webleveranse"))
     c(deploymentSpec)
   }
 }

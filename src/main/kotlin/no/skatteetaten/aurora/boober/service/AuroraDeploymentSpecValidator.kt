@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
@@ -23,36 +23,36 @@ class AuroraDeploymentSpecValidator(
     val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpecValidator::class.java)
 
     @Throws(AuroraDeploymentSpecValidationException::class)
-    fun assertIsValid(deploymentSpec: AuroraDeploymentSpec) {
+    fun assertIsValid(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
 
-        validateAdminGroups(deploymentSpec)
-        validateTemplateIfSet(deploymentSpec)
-        validateDatabaseId(deploymentSpec)
-        validateVaultExistence(deploymentSpec)
-        validateKeyMappings(deploymentSpec)
-        validateSecretVaultKeys(deploymentSpec)
+        validateAdminGroups(deploymentSpecInternal)
+        validateTemplateIfSet(deploymentSpecInternal)
+        validateDatabaseId(deploymentSpecInternal)
+        validateVaultExistence(deploymentSpecInternal)
+        validateKeyMappings(deploymentSpecInternal)
+        validateSecretVaultKeys(deploymentSpecInternal)
     }
 
-    protected fun validateVaultExistence(deploymentSpec: AuroraDeploymentSpec) {
+    protected fun validateVaultExistence(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
 
-        val vaultNames = (deploymentSpec.volume?.mounts
+        val vaultNames = (deploymentSpecInternal.volume?.mounts
             ?.filter { it.type == MountType.Secret }
             ?.mapNotNull { it.secretVaultName }
             ?: emptyList())
             .toMutableList()
-        deploymentSpec.volume?.secretVaultName?.let { vaultNames.add(it) }
+        deploymentSpecInternal.volume?.secretVaultName?.let { vaultNames.add(it) }
 
         vaultNames.forEach {
-            val vaultCollectionName = deploymentSpec.environment.affiliation
+            val vaultCollectionName = deploymentSpecInternal.environment.affiliation
             if (!vaultService.vaultExists(vaultCollectionName, it))
                 throw AuroraDeploymentSpecValidationException("Referenced Vault $it in Vault Collection $vaultCollectionName does not exist")
         }
     }
 
-    protected fun validateDatabaseId(deploymentSpec: AuroraDeploymentSpec) {
+    protected fun validateDatabaseId(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
         // We cannot validate database schemas for applications that are not deployed on the current cluster.
-        if (deploymentSpec.cluster != cluster) return
-        val databases = deploymentSpec.integration?.database ?: return
+        if (deploymentSpecInternal.cluster != cluster) return
+        val databases = deploymentSpecInternal.integration?.database ?: return
         databases.mapNotNull { it.id }
             .forEach {
                 try {
@@ -63,9 +63,9 @@ class AuroraDeploymentSpecValidator(
             }
     }
 
-    private fun validateAdminGroups(deploymentSpec: AuroraDeploymentSpec) {
+    private fun validateAdminGroups(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
 
-        val adminGroups: Set<String> = deploymentSpec.environment.permissions.admin.groups ?: setOf()
+        val adminGroups: Set<String> = deploymentSpecInternal.environment.permissions.admin.groups ?: setOf()
         adminGroups.takeIf { it.isEmpty() }
             ?.let { throw AuroraDeploymentSpecValidationException("permissions.admin.groups cannot be empty") }
 
@@ -77,15 +77,15 @@ class AuroraDeploymentSpecValidator(
         }
     }
 
-    private fun validateTemplateIfSet(deploymentSpec: AuroraDeploymentSpec) {
+    private fun validateTemplateIfSet(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
 
-        deploymentSpec.localTemplate?.let {
+        deploymentSpecInternal.localTemplate?.let {
             openShiftTemplateProcessor.validateTemplateParameters(it.templateJson, it.parameters ?: emptyMap())
                 .takeIf { it.isNotEmpty() }
                 ?.let { throw AuroraDeploymentSpecValidationException(it.joinToString(". ").trim()) }
         }
 
-        deploymentSpec.template?.let {
+        deploymentSpecInternal.template?.let {
             val templateJson = openShiftClient.getTemplate(it.template)
                 ?: throw AuroraDeploymentSpecValidationException("Template ${it.template} does not exist")
             openShiftTemplateProcessor.validateTemplateParameters(templateJson, it.parameters ?: emptyMap())
@@ -94,8 +94,8 @@ class AuroraDeploymentSpecValidator(
         }
     }
 
-    protected fun validateKeyMappings(deploymentSpec: AuroraDeploymentSpec) {
-        deploymentSpec.volume?.let { volume ->
+    protected fun validateKeyMappings(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
+        deploymentSpecInternal.volume?.let { volume ->
             val keyMappings = volume.keyMappings.takeIfNotEmpty() ?: return
             val keys = volume.secretVaultKeys.takeIfNotEmpty() ?: return
             val diff = keyMappings.keys - keys
@@ -110,14 +110,14 @@ class AuroraDeploymentSpecValidator(
      * Note that this method always uses the latest.properties file regardless of the version of the application and
      * the contents of the vault. TODO: to determine if another properties file should be used instead.
      */
-    protected fun validateSecretVaultKeys(deploymentSpec: AuroraDeploymentSpec) {
+    protected fun validateSecretVaultKeys(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
 
-        deploymentSpec.volume?.let { volume ->
+        deploymentSpecInternal.volume?.let { volume ->
             val vaultName = volume.secretVaultName ?: return
             val keys = volume.secretVaultKeys.takeIfNotEmpty() ?: return
 
             val vaultKeys = vaultService.findVaultKeys(
-                deploymentSpec.environment.affiliation,
+                deploymentSpecInternal.environment.affiliation,
                 vaultName,
                     "latest.properties"
             )

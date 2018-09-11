@@ -8,7 +8,6 @@
       "boober.skatteetaten.no/overrides": "{\"booberdev/aos-simple.json\":{\"version\":\"1.0.4\"}}"
     },
     "labels": {
-      "appId": "7abf72388235de0b5602f884db4200295ed23837",
       "app": "aos-simple",
       "updatedBy": "hero",
       "affiliation": "aos",
@@ -18,7 +17,15 @@
       "deployTag": "1.0.4",
       "paused": "true"
     },
-    "name": "aos-simple"
+    "name": "aos-simple",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "aos-simple",
+        "uid": "123-123"
+      }
+    ]
   },
   "spec": {
     "replicas": 0,
@@ -34,7 +41,6 @@
     "template": {
       "metadata": {
         "labels": {
-          "appId": "7abf72388235de0b5602f884db4200295ed23837",
           "app": "aos-simple",
           "updatedBy": "hero",
           "affiliation": "aos",

@@ -9,14 +9,22 @@
       "prometheus.io/port": "8082"
     },
     "labels": {
-      "appId": "ad8a6ae72753e0f49ab0f2aeb73ee124ad29e7ac",
       "app": "sprocket",
       "updatedBy": "hero",
       "affiliation": "aos",
       "updateInBoober": "true",
-      "booberDeployId": "123"
+      "booberDeployId": "123",
+      "name": "sprocket"
     },
-    "name": "sprocket"
+    "name": "sprocket",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "sprocket",
+        "uid": "123-123"
+      }
+    ]
   },
   "spec": {
     "ports": [

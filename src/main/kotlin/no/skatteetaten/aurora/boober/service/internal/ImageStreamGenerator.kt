@@ -6,15 +6,21 @@ import com.fkorotkov.openshift.metadata
 import com.fkorotkov.openshift.newImageStream
 import com.fkorotkov.openshift.newTagReference
 import com.fkorotkov.openshift.spec
+import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.openshift.api.model.ImageStream
 import no.skatteetaten.aurora.boober.model.AuroraVersion
 
 object ImageStreamGenerator {
 
-    fun createLocalImageStream(isName: String, isLabels: Map<String, String>): ImageStream {
+    fun createLocalImageStream(
+        isName: String,
+        isLabels: Map<String, String>,
+        reference: OwnerReference
+    ): ImageStream {
         return newImageStream {
             apiVersion = "v1"
             metadata {
+                ownerReferences = listOf(reference)
                 name = isName
                 labels = isLabels
             }
@@ -26,11 +32,13 @@ object ImageStreamGenerator {
         isLabels: Map<String, String>,
         dockerRegistry: String,
         dockerImagePath: String,
-        dockerTag: String
+        dockerTag: String,
+        reference: OwnerReference
     ): ImageStream {
         return newImageStream {
             apiVersion = "v1"
             metadata {
+                ownerReferences = listOf(reference)
                 name = isName
                 labels = isLabels
             }

@@ -1,8 +1,9 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
+import io.fabric8.kubernetes.api.model.OwnerReference
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType.CREATE
@@ -41,14 +42,20 @@ class OpenShiftCommandBuilder(
 
     fun generateApplicationObjects(
         deployId: String,
-        deploymentSpec: AuroraDeploymentSpec,
+        deploymentSpecInternal: AuroraDeploymentSpecInternal,
         provisioningResult: ProvisioningResult?,
-        mergeWithExistingResource: Boolean
+        mergeWithExistingResource: Boolean,
+        ownerReference: OwnerReference
     ): List<OpenshiftCommand> {
 
-        val namespace = deploymentSpec.environment.namespace
+        val namespace = deploymentSpecInternal.environment.namespace
 
-        return openShiftObjectGenerator.generateApplicationObjects(deployId, deploymentSpec, provisioningResult)
+        return openShiftObjectGenerator.generateApplicationObjects(
+            deployId,
+            deploymentSpecInternal,
+            provisioningResult,
+            ownerReference
+        )
             .map { createOpenShiftCommand(namespace, it, mergeWithExistingResource, false) }
             .flatMap { command ->
                 if (command.isType(UPDATE, "route") && mustRecreateRoute(command.payload, command.previous)) {
@@ -95,6 +102,7 @@ class OpenShiftCommandBuilder(
         apiResources: List<String> = listOf("BuildConfig", "DeploymentConfig", "ConfigMap", "Secret", "Service", "Route", "ImageStream")
     ): List<OpenshiftCommand> {
 
+        // TODO: This cannot be change until we remove the app label
         val labelSelectors = listOf("app=$name", "booberDeployId", "booberDeployId!=$deployId")
         return apiResources
             .flatMap { kind -> openShiftClient.getByLabelSelectors(kind, namespace, labelSelectors) }

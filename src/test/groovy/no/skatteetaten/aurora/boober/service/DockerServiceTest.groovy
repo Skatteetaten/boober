@@ -18,7 +18,7 @@ import spock.mock.DetachedMockFactory
 @SpringBootTest(classes = [
     Config,
     DockerService,
-    ObjectMapper,
+    ObjectMapper
 ])
 class DockerServiceTest extends Specification {
 

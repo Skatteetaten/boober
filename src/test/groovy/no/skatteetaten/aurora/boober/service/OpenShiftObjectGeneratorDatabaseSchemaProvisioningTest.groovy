@@ -1,11 +1,12 @@
 package no.skatteetaten.aurora.boober.service
 
-import static no.skatteetaten.aurora.boober.model.ApplicationId.aid
+import static no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.aid
 import static no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner.createSchemaProvisionRequestsFromDeploymentSpec
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import io.fabric8.kubernetes.api.model.OwnerReference
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseInstance
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisionerTest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
@@ -23,7 +24,7 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
     given:
 
       def appName = "reference"
-      AuroraDeploymentSpec deploymentSpec = createDeploymentSpec([
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec([
           "about.json"        : DEFAULT_ABOUT,
           "utv/about.json"    : DEFAULT_UTV_ABOUT,
           "reference.json"    : REF_APP_JSON_LONG_DB_NAME,
@@ -60,7 +61,8 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
           )]), null, null)
 
     when:
-      def objects = objectGenerator.generateApplicationObjects('deploy-id', deploymentSpec, provisioningResult)
+      def objects = objectGenerator.
+          generateApplicationObjects('deploy-id', deploymentSpec, provisioningResult, new OwnerReference())
       def deploymentConfig = objects.find { it.get("kind").textValue().toLowerCase() == "deploymentconfig" }
       deploymentConfig = new JsonSlurper().parseText(deploymentConfig.toString())
       def secret = objects.find { it.get("kind").textValue().toLowerCase() == "secret" }

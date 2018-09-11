@@ -3,14 +3,21 @@
   "kind": "ConfigMap",
   "metadata": {
     "labels": {
-      "appId": "ad8a6ae72753e0f49ab0f2aeb73ee124ad29e7ac",
       "app": "sprocket",
       "updatedBy": "hero",
       "affiliation": "aos",
       "updateInBoober": "true",
       "booberDeployId": "123"
     },
-    "name": "sprocket-config"
+    "name": "sprocket-config",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "Application",
+        "name": "sprocket",
+        "uid": "123-123"
+      }
+    ]
   },
   "data": {
     "FOO": "BAR"

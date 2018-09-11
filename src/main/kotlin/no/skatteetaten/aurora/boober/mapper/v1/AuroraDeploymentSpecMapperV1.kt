@@ -1,15 +1,13 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
-import com.fasterxml.jackson.databind.node.ObjectNode
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraBuild
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.AuroraIntegration
 import no.skatteetaten.aurora.boober.model.AuroraLocalTemplate
 import no.skatteetaten.aurora.boober.model.AuroraRoute
@@ -17,17 +15,17 @@ import no.skatteetaten.aurora.boober.model.AuroraTemplate
 import no.skatteetaten.aurora.boober.model.AuroraVolume
 import no.skatteetaten.aurora.boober.utils.oneOf
 
-class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
+class AuroraDeploymentSpecMapperV1(val applicationDeploymentRef: ApplicationDeploymentRef) {
 
     val handlers = listOf(
         AuroraConfigFieldHandler("splunkIndex"),
         AuroraConfigFieldHandler("certificate/commonName"),
-        AuroraConfigFieldHandler("certificate"),
-        AuroraConfigFieldHandler("database"),
-        AuroraConfigFieldHandler("prometheus", defaultValue = true),
+        AuroraConfigFieldHandler("certificate", defaultValue = false, canBeSimplifiedConfig = true),
+        AuroraConfigFieldHandler("database", defaultValue = false, canBeSimplifiedConfig = true),
+        AuroraConfigFieldHandler("prometheus", defaultValue = true, canBeSimplifiedConfig = true),
         AuroraConfigFieldHandler("prometheus/path", defaultValue = "/prometheus"),
         AuroraConfigFieldHandler("prometheus/port", defaultValue = 8081),
-        AuroraConfigFieldHandler("management", defaultValue = true),
+        AuroraConfigFieldHandler("management", defaultValue = true, canBeSimplifiedConfig = true),
         AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
         AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
         AuroraConfigFieldHandler(
@@ -38,7 +36,7 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
     )
 
     fun createAuroraDeploymentSpec(
-        auroraConfigFields: AuroraConfigFields,
+        auroraDeploymentSpec: AuroraDeploymentSpec,
         volume: AuroraVolume?,
         route: AuroraRoute?,
         build: AuroraBuild?,
@@ -48,19 +46,20 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
         localTemplate: AuroraLocalTemplate?,
         env: AuroraDeployEnvironment,
         applicationFile: AuroraConfigFile,
-        configVersion: String
-    ): AuroraDeploymentSpec {
-        val name: String = auroraConfigFields.extract("name")
+        configVersion: String,
+        overrideFiles: Map<String, String>
+    ): AuroraDeploymentSpecInternal {
+        val name: String = auroraDeploymentSpec["name"]
 
-        return AuroraDeploymentSpec(
-            applicationId = applicationId,
-            schemaVersion = auroraConfigFields.extract("schemaVersion"),
-            applicationPlatform = auroraConfigFields.extract("applicationPlatform"),
-            type = auroraConfigFields.extract("type"),
+        return AuroraDeploymentSpecInternal(
+            applicationDeploymentRef = applicationDeploymentRef,
+            schemaVersion = auroraDeploymentSpec["schemaVersion"],
+            applicationPlatform = auroraDeploymentSpec["applicationPlatform"],
+            type = auroraDeploymentSpec["type"],
             name = name,
-            cluster = auroraConfigFields.extract("cluster"),
+            cluster = auroraDeploymentSpec["cluster"],
             environment = env,
-            fields = createFields(applicationId, configVersion, auroraConfigFields, build),
+            spec = auroraDeploymentSpec,
             volume = volume,
             route = route,
             build = build,
@@ -69,94 +68,8 @@ class AuroraDeploymentSpecMapperV1(val applicationId: ApplicationId) {
             localTemplate = localTemplate,
             integration = integration,
             applicationFile = applicationFile,
-            configVersion = configVersion
+            configVersion = configVersion,
+            overrideFiles = overrideFiles
         )
-    }
-
-    private fun createIncludeSubKeysMap(fields: Map<String, AuroraConfigField>): Map<String, Boolean> {
-
-        val includeSubKeys = mutableMapOf<String, Boolean>()
-
-        fields.entries
-            .filter { it.key.split("/").size == 1 }
-            .forEach {
-                val key = it.key.split("/")[0]
-                val shouldIncludeSubKeys = it.value.valueNodeOrDefault?.let {
-                    !it.isBoolean || it.booleanValue()
-                } ?: false
-                includeSubKeys.put(key, shouldIncludeSubKeys)
-            }
-
-        return includeSubKeys
-    }
-
-    fun createFields(
-        applicationId: ApplicationId,
-        configVersion: String,
-        auroraConfigFields: AuroraConfigFields,
-        build: AuroraBuild?
-    ): Map<String, Map<String, Any?>> {
-        val applicationIdField = mapOf(
-            "applicationId" to mapOf(
-                "source" to "static",
-                "value" to applicationId.toString()
-            ),
-            "configVersion" to mapOf(
-                "source" to "static",
-                "value" to configVersion
-            )
-        )
-
-        val fields = createMapForAuroraDeploymentSpecPointers(createFieldsWithValues(auroraConfigFields, build))
-
-        return applicationIdField + fields
-    }
-
-    fun createMapForAuroraDeploymentSpecPointers(auroraConfigFields: Map<String, AuroraConfigField>): Map<String, Map<String, Any?>> {
-        val fields = mutableMapOf<String, Any?>()
-        val includeSubKeys = createIncludeSubKeysMap(auroraConfigFields)
-
-        auroraConfigFields.entries.forEach { entry ->
-
-            val configField = entry.value
-            val configPath = entry.key
-
-            if (configField.valueNode is ObjectNode) {
-                return@forEach
-            }
-
-            val keys = configPath.split("/")
-            if (keys.size > 1 && !includeSubKeys.getOrDefault(keys[0], true)) {
-                return@forEach
-            }
-
-            var next = fields
-            keys.forEachIndexed { index, key ->
-                if (index == keys.lastIndex) {
-                    next[key] = mutableMapOf(
-                        "source" to (configField.source?.configName ?: configField.handler.defaultSource),
-                        "value" to configField.valueNodeOrDefault
-                    )
-                } else {
-                    if (next[key] == null) {
-                        next[key] = mutableMapOf<String, Any?>()
-                    }
-
-                    if (next[key] is MutableMap<*, *>) {
-                        next = next[key] as MutableMap<String, Any?>
-                    }
-                }
-            }
-        }
-
-        return fields as Map<String, Map<String, Any?>>
-    }
-
-    private fun createFieldsWithValues(
-        auroraConfigFields: AuroraConfigFields,
-        build: AuroraBuild?
-    ): Map<String, AuroraConfigField> {
-
-        return auroraConfigFields.fields.filterValues { it.source != null || it.handler.defaultValue != null }
     }
 }

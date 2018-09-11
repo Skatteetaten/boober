@@ -1,8 +1,12 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
+import no.skatteetaten.aurora.boober.utils.openshiftName
+import no.skatteetaten.aurora.boober.utils.withNonBlank
 import java.time.Duration
 
 enum class TemplateType {
@@ -44,12 +48,12 @@ data class AuroraDeployEnvironment(
         }
 }
 
-data class AuroraDeploymentSpec(
-    val applicationId: ApplicationId,
+data class AuroraDeploymentSpecInternal(
+    val applicationDeploymentRef: ApplicationDeploymentRef,
     val schemaVersion: String,
     val type: TemplateType,
     val name: String,
-    val fields: Map<String, Map<String, Any?>>,
+    val spec: AuroraDeploymentSpec,
     val applicationPlatform: String = "java",
     val cluster: String,
     val environment: AuroraDeployEnvironment,
@@ -61,8 +65,36 @@ data class AuroraDeploymentSpec(
     val localTemplate: AuroraLocalTemplate? = null,
     val integration: AuroraIntegration?,
     val applicationFile: AuroraConfigFile,
-    val configVersion: String
-)
+    val configVersion: String,
+    val overrideFiles: Map<String, String>
+) {
+
+    val appId: String
+        get() =
+            template?.let {
+                it.template
+            } ?: localTemplate?.let {
+                "local" + it.templateJson.openshiftName
+            } ?: deploy?.let {
+                "${it.groupId}/${it.artifactId}"
+            } ?: throw RuntimeException("Not valid deployment")
+
+    val appName: String
+        get() =
+            template?.let {
+                it.template
+            } ?: localTemplate?.let {
+                "local" + it.templateJson.openshiftName
+            } ?: deploy?.let {
+                it.artifactId
+            } ?: throw RuntimeException("Not valid deployment")
+
+    val version: String?
+        get() = deploy?.let { deploy ->
+            deploy.releaseTo?.withNonBlank { it } ?: deploy.version
+        } ?: template?.version
+        ?: localTemplate?.version
+}
 
 data class AuroraVolume(
     val secretVaultName: String?,
@@ -103,7 +135,6 @@ data class AuroraIntegration(
 
 data class AuroraDeploy(
     val applicationFile: String,
-    val overrideFiles: Map<String, String>,
     val releaseTo: String?,
     val flags: AuroraDeploymentConfigFlags,
     val resources: AuroraDeploymentConfigResources,

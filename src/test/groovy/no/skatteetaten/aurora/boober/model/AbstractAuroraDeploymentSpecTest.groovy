@@ -4,9 +4,10 @@ import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService
 
 abstract class AbstractAuroraDeploymentSpecTest extends AbstractAuroraConfigTest {
 
-  static AuroraDeploymentSpec createDeploymentSpec(Map<String, String> auroraConfigJson, ApplicationId applicationId) {
+  static AuroraDeploymentSpecInternal createDeploymentSpec(Map<String, String> auroraConfigJson,
+      ApplicationDeploymentRef ref) {
 
     AuroraConfig auroraConfig = createAuroraConfig(auroraConfigJson)
-    AuroraDeploymentSpecService.createAuroraDeploymentSpec(auroraConfig, applicationId, [], "http://skap")
+    AuroraDeploymentSpecService.createAuroraDeploymentSpecInternal(auroraConfig, ref, [], "http://skap")
   }
 }

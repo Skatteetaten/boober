@@ -7,9 +7,7 @@
   "groupId": "no.skatteetaten.aurora",
   "artifactId": "openshift-referanse-react",
   "version": "develop-SNAPSHOT",
-  "route" : {
-    "openshift-referanse-react" : { }
-  },
+  "route": true,
   "config": {
     "foo2": "baz"
   }

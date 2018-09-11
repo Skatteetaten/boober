@@ -39,6 +39,14 @@ fun JsonNode.findAllPointers(maxLevel: Int): List<String> {
     }
 }
 
+fun JsonNode.atNullable(path: String): JsonNode? {
+    val value = this.at(path)
+    if (value.isMissingNode) {
+        return null
+    }
+    return value
+}
+
 val JsonNode.openshiftKind: String
     get() = this.get("kind")?.asText()?.toLowerCase()
         ?: throw IllegalArgumentException("Kind must be set in file=$this")

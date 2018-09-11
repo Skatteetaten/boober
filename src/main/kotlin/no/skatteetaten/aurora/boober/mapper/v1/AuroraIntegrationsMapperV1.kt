@@ -1,81 +1,80 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraIntegration
 import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.model.Webseal
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 class AuroraIntegrationsMapperV1(applicationFiles: List<AuroraConfigFile>, val skapHost: String?) {
+    val logger: Logger = LoggerFactory.getLogger(AuroraIntegrationsMapperV1::class.java)
 
     val dbHandlers = findDbHandlers(applicationFiles)
 
     val skapHandlers = skapHost?.let {
         listOf(
-            AuroraConfigFieldHandler("certificate", defaultValue = false),
-            AuroraConfigFieldHandler("webseal", defaultValue = false),
+            AuroraConfigFieldHandler("certificate", defaultValue = false, canBeSimplifiedConfig = true),
+            AuroraConfigFieldHandler("certificate/commonName"),
+            AuroraConfigFieldHandler("webseal", defaultValue = false, canBeSimplifiedConfig = true),
             AuroraConfigFieldHandler("webseal/host"),
             AuroraConfigFieldHandler("webseal/roles")
         )
     } ?: listOf()
-
     val handlers = dbHandlers + listOf(
-        AuroraConfigFieldHandler("database", defaultValue = false),
-        AuroraConfigFieldHandler("certificate/commonName"),
-        AuroraConfigFieldHandler("splunkIndex")
+        AuroraConfigFieldHandler("database", defaultValue = false, canBeSimplifiedConfig = true),
+        AuroraConfigFieldHandler("splunkIndex"),
     ) + skapHandlers
 
-    fun integrations(auroraConfigFields: AuroraConfigFields): AuroraIntegration? {
-        val name: String = auroraConfigFields.extract("name")
-        val groupId: String = auroraConfigFields.extractIfExistsOrNull<String>("groupId") ?: ""
-
-        val certificateCn = if (auroraConfigFields.isSimplifiedConfig("certificate")) {
-            val certFlag: Boolean = auroraConfigFields.extract("certificate")
-            if (certFlag) "$groupId.$name" else null
-        } else {
-            auroraConfigFields.extractOrNull("certificate/commonName")
-        }
+    fun integrations(auroraDeploymentSpec: AuroraDeploymentSpec): AuroraIntegration? {
+        val name: String = auroraDeploymentSpec["name"]
 
         return AuroraIntegration(
-            database = findDatabases(auroraConfigFields, name),
-            splunkIndex = auroraConfigFields.extractOrNull("splunkIndex"),
-            certificate = skapHost?.let { certificateCn },
-            webseal = skapHost?.let { findWebseal(auroraConfigFields) }
+            database = findDatabases(auroraDeploymentSpec, name),
+            certificate = skapHost?.let {findCertificate(auroraDeploymentSpec, name)},
+            splunkIndex = auroraDeploymentSpec.getOrNull("splunkIndex"),
+            webseal = findWebseal(auroraDeploymentSpec)
         )
     }
 
-    private fun findWebseal(auroraConfigFields: AuroraConfigFields): Webseal? {
+    fun findCertificate(auroraDeploymentSpec: AuroraDeploymentSpec, name: String): String? {
 
-        val name = "webseal"
-        if (auroraConfigFields.disabledAndNoSubKeys(name)) {
+        val simplified = auroraDeploymentSpec.isSimplifiedConfig("certificate")
+        if (!simplified) {
+            return auroraDeploymentSpec.getOrNull("certificate/commonName")
+        }
+
+        val value: Boolean = auroraDeploymentSpec["certificate"]
+        if (!value) {
             return null
         }
-
-        val roles = auroraConfigFields.extractDelimitedStringOrArrayAsSet("$name/roles", ",")
-            .takeIf { it.isNotEmpty() }
-            ?.joinToString(",")
-        return Webseal(
-            auroraConfigFields.extractOrNull("$name/host"),
-            roles
-        )
+        val groupId: String = auroraDeploymentSpec.getOrNull<String>("groupId") ?: ""
+        return "$groupId.$name"
     }
 
-    private fun findDatabases(auroraConfigFields: AuroraConfigFields, name: String): List<Database> {
+    private fun findWebseal(auroraDeploymentSpec: AuroraDeploymentSpec): Webseal? {
+        return auroraDeploymentSpec.featureEnabled("webseal") { field ->
+            val roles = auroraDeploymentSpec.getDelimitedStringOrArrayAsSet("$field/roles", ",")
+                .takeIf { it.isNotEmpty() }
+                ?.joinToString(",")
+            Webseal(auroraDeploymentSpec.getOrNull("$field/host"), roles)
+        }
+    }
 
-        val simplified = auroraConfigFields.isSimplifiedConfig("database")
+    private fun findDatabases(auroraDeploymentSpec: AuroraDeploymentSpec, name: String): List<Database> {
 
-        if (simplified && auroraConfigFields.extract("database")) {
+        if (auroraDeploymentSpec.isSimplifiedAndEnabled("database")) {
             return listOf(Database(name = name))
         }
-        return auroraConfigFields.getDatabases(dbHandlers)
+
+        return auroraDeploymentSpec.getDatabases(dbHandlers)
     }
 
     fun findDbHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
 
-        val keys = applicationFiles.findSubKeys("database")
-
-        return keys.map { key ->
+        return applicationFiles.findSubKeys("database").map { key ->
             AuroraConfigFieldHandler("database/$key")
         }
     }

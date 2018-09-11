@@ -2,8 +2,8 @@ package no.skatteetaten.aurora.boober.mapper.v1
 
 import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFields
-import no.skatteetaten.aurora.boober.model.ApplicationId
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeployStrategy
@@ -20,19 +20,27 @@ import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.removeExtension
 
-class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFiles: List<AuroraConfigFile>, val overrideFiles: List<AuroraConfigFile>) {
+class AuroraDeployMapperV1(
+    val applicationDeploymentRef: ApplicationDeploymentRef,
+    val applicationFiles: List<AuroraConfigFile>
+) {
 
     val configHandlers = applicationFiles.findConfigFieldHandlers()
     val handlers = listOf(
 
         AuroraConfigFieldHandler("artifactId",
-            defaultValue = applicationId.application,
+            defaultValue = applicationDeploymentRef.application,
             defaultSource = "fileName",
             validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
-        AuroraConfigFieldHandler("groupId", validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
-        AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set as string") }),
+        AuroraConfigFieldHandler(
+            "groupId",
+            validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
+        AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set") }),
         AuroraConfigFieldHandler("releaseTo"),
-        AuroraConfigFieldHandler("deployStrategy/type", defaultValue = "rolling", validator = { it.oneOf(listOf("recreate", "rolling")) }),
+        AuroraConfigFieldHandler(
+            "deployStrategy/type",
+            defaultValue = "rolling",
+            validator = { it.oneOf(listOf("recreate", "rolling")) }),
         AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = 180),
         AuroraConfigFieldHandler("resources/cpu/min", defaultValue = "100m"),
         AuroraConfigFieldHandler("resources/cpu/max", defaultValue = "2000m"),
@@ -40,18 +48,18 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
         AuroraConfigFieldHandler("resources/memory/max", defaultValue = "512Mi"),
         AuroraConfigFieldHandler("replicas", defaultValue = 1),
         AuroraConfigFieldHandler("serviceAccount"),
-        AuroraConfigFieldHandler("prometheus", defaultValue = true),
+        AuroraConfigFieldHandler("prometheus", defaultValue = true, canBeSimplifiedConfig = true),
         AuroraConfigFieldHandler("prometheus/path", defaultValue = "/prometheus"),
         AuroraConfigFieldHandler("prometheus/port", defaultValue = 8081),
-        AuroraConfigFieldHandler("management", defaultValue = true),
+        AuroraConfigFieldHandler("management", defaultValue = true, canBeSimplifiedConfig = true),
         AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
         AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
-        AuroraConfigFieldHandler("readiness", defaultValue = true),
+        AuroraConfigFieldHandler("readiness", defaultValue = true, canBeSimplifiedConfig = true),
         AuroraConfigFieldHandler("readiness/port", defaultValue = 8080),
         AuroraConfigFieldHandler("readiness/path"),
         AuroraConfigFieldHandler("readiness/delay", defaultValue = 10),
         AuroraConfigFieldHandler("readiness/timeout", defaultValue = 1),
-        AuroraConfigFieldHandler("liveness", defaultValue = false),
+        AuroraConfigFieldHandler("liveness", defaultValue = false, canBeSimplifiedConfig = true),
         AuroraConfigFieldHandler("liveness/port", defaultValue = 8080),
         AuroraConfigFieldHandler("liveness/path"),
         AuroraConfigFieldHandler("liveness/delay", defaultValue = 10),
@@ -60,130 +68,108 @@ class AuroraDeployMapperV1(val applicationId: ApplicationId, val applicationFile
         AuroraConfigFieldHandler("pause", defaultValue = false),
         AuroraConfigFieldHandler("alarm", defaultValue = true),
         AuroraConfigFieldHandler("ttl", validator = { it.durationString() }),
-        AuroraConfigFieldHandler("toxiproxy", defaultValue = false),
+        AuroraConfigFieldHandler("toxiproxy", defaultValue = false, canBeSimplifiedConfig = true),
         AuroraConfigFieldHandler("toxiproxy/version", defaultValue = "2.1.3")
     ) + configHandlers
 
-    fun deploy(auroraConfigFields: AuroraConfigFields): AuroraDeploy? {
-        val groupId: String = auroraConfigFields.extract("groupId")
+    fun deploy(auroraDeploymentSpec: AuroraDeploymentSpec): AuroraDeploy? {
+        val groupId: String = auroraDeploymentSpec["groupId"]
 
-        val version: String = auroraConfigFields.extract("version")
+        val version: String = auroraDeploymentSpec["version"]
 
-        val releaseTo: String? = auroraConfigFields.extractOrNull<String>("releaseTo")?.takeUnless { it.isEmpty() }
+        val releaseTo: String? = auroraDeploymentSpec.getOrNull<String>("releaseTo")?.takeUnless { it.isEmpty() }
 
-        val artifactId: String = auroraConfigFields.extract("artifactId")
+        val artifactId: String = auroraDeploymentSpec["artifactId"]
 
         val dockerGroup = groupId.replace(".", "_")
 
         val tag = releaseTo ?: version
-        val applicationFile = getApplicationFile(applicationId)
+        val applicationFile = getApplicationFile(applicationDeploymentRef)
 
-        val overrideFiles = overrideFiles.map { it.name to it.contents }
-            .toMap()
-        val pause: Boolean = auroraConfigFields.extract("pause")
-        val replicas: Int = auroraConfigFields.extract("replicas")
+        val pause: Boolean = auroraDeploymentSpec["pause"]
+        val replicas: Int = auroraDeploymentSpec["replicas"]
 
         return AuroraDeploy(
             applicationFile = applicationFile.name,
             releaseTo = releaseTo,
             dockerImagePath = "$dockerGroup/$artifactId",
             dockerTag = tag,
-            overrideFiles = overrideFiles,
             deployStrategy = AuroraDeployStrategy(
-                auroraConfigFields.extract("deployStrategy/type"),
-                auroraConfigFields.extract("deployStrategy/timeout")
+                auroraDeploymentSpec["deployStrategy/type"],
+                auroraDeploymentSpec["deployStrategy/timeout"]
             ),
             flags = AuroraDeploymentConfigFlags(
-                auroraConfigFields.extract("debug"),
-                auroraConfigFields.extract("alarm"),
+                auroraDeploymentSpec["debug"],
+                auroraDeploymentSpec["alarm"],
                 pause
 
             ),
             resources = AuroraDeploymentConfigResources(
                 request = AuroraDeploymentConfigResource(
-                    cpu = auroraConfigFields.extract("resources/cpu/min"),
-                    memory = auroraConfigFields.extract("resources/memory/min")
+                    cpu = auroraDeploymentSpec["resources/cpu/min"],
+                    memory = auroraDeploymentSpec["resources/memory/min"]
                 ),
                 limit = AuroraDeploymentConfigResource(
-                    cpu = auroraConfigFields.extract("resources/cpu/max"),
-                    memory = auroraConfigFields.extract("resources/memory/max")
+                    cpu = auroraDeploymentSpec["resources/cpu/max"],
+                    memory = auroraDeploymentSpec["resources/memory/max"]
                 )
             ),
             replicas = if (pause) 0 else replicas,
             groupId = groupId,
             artifactId = artifactId,
             version = version,
-            serviceAccount = auroraConfigFields.extractOrNull("serviceAccount"),
-            prometheus = findPrometheus(auroraConfigFields),
-            managementPath = findManagementPath(auroraConfigFields),
-            liveness = getProbe(auroraConfigFields, "liveness"),
-            readiness = getProbe(auroraConfigFields, "readiness"),
-            env = auroraConfigFields.getConfigEnv(configHandlers),
-            ttl = auroraConfigFields.extractOrNull<String>("ttl")
+            serviceAccount = auroraDeploymentSpec.getOrNull("serviceAccount"),
+            prometheus = findPrometheus(auroraDeploymentSpec),
+            managementPath = findManagementPath(auroraDeploymentSpec),
+            liveness = getProbe(auroraDeploymentSpec, "liveness"),
+            readiness = getProbe(auroraDeploymentSpec, "readiness"),
+            env = auroraDeploymentSpec.getConfigEnv(configHandlers),
+            ttl = auroraDeploymentSpec.getOrNull<String>("ttl")
                 ?.let { StringToDurationConverter().convert(it) },
-            toxiProxy = getToxiProxy(auroraConfigFields, "toxiproxy")
+            toxiProxy = getToxiProxy(auroraDeploymentSpec, "toxiproxy")
 
         )
     }
 
-    private fun getApplicationFile(applicationId: ApplicationId): AuroraConfigFile {
-        val fileName = "${applicationId.environment}/${applicationId.application}"
+    private fun getApplicationFile(applicationDeploymentRef: ApplicationDeploymentRef): AuroraConfigFile {
+        val fileName = "${applicationDeploymentRef.environment}/${applicationDeploymentRef.application}"
         val file = applicationFiles.find { it.name.removeExtension() == fileName && !it.override }
         return file ?: throw IllegalArgumentException("Should find applicationFile $fileName")
     }
 
-    private fun findPrometheus(auroraConfigFields: AuroraConfigFields): HttpEndpoint? {
-
-        val name = "prometheus"
-
-        if (auroraConfigFields.disabledAndNoSubKeys(name)) {
-            return null
+    private fun findPrometheus(auroraDeploymentSpec: AuroraDeploymentSpec): HttpEndpoint? {
+        return auroraDeploymentSpec.featureEnabled("prometheus") {
+            HttpEndpoint(auroraDeploymentSpec["$it/path"], auroraDeploymentSpec.getOrNull("$it/port"))
         }
-        return HttpEndpoint(
-            auroraConfigFields.extract("$name/path"),
-            auroraConfigFields.extractOrNull("$name/port")
-        )
     }
 
-    private fun findManagementPath(auroraConfigFields: AuroraConfigFields): String? {
-
-        val name = "management"
-
-        if (auroraConfigFields.disabledAndNoSubKeys(name)) {
-            return null
+    private fun findManagementPath(auroraDeploymentSpec: AuroraDeploymentSpec): String? {
+        return auroraDeploymentSpec.featureEnabled("management") {
+            val path = auroraDeploymentSpec.get<String>("$it/path").ensureStartWith("/")
+            val port = auroraDeploymentSpec.get<Int>("$it/port").toString().ensureStartWith(":")
+            "$port$path"
         }
-
-        val path = auroraConfigFields.extract<String>("$name/path")
-            .ensureStartWith("/")
-        val port = auroraConfigFields.extract<String>("$name/port")
-            .toString()
-            .ensureStartWith(":")
-        return "$port$path"
     }
 
-    fun getProbe(auroraConfigFields: AuroraConfigFields, name: String): Probe? {
+    fun getProbe(auroraDeploymentSpec: AuroraDeploymentSpec, name: String): Probe? {
 
-        if (auroraConfigFields.disabledAndNoSubKeys(name)) {
-            return null
+        return auroraDeploymentSpec.featureEnabled(name) { field ->
+            Probe(
+                auroraDeploymentSpec.getOrNull<String?>("$field/path")?.let {
+                    if (!it.startsWith("/")) {
+                        "/$it"
+                    } else it
+                },
+                auroraDeploymentSpec["$field/port"],
+                auroraDeploymentSpec["$field/delay"],
+                auroraDeploymentSpec["$field/timeout"]
+            )
         }
-
-        return Probe(
-            auroraConfigFields.extractOrNull<String?>("$name/path")?.let {
-                if (!it.startsWith("/")) {
-                    "/$it"
-                } else it
-            },
-            auroraConfigFields.extract("$name/port"),
-            auroraConfigFields.extract("$name/delay"),
-            auroraConfigFields.extract("$name/timeout")
-        )
     }
 
-    fun getToxiProxy(auroraConfigFields: AuroraConfigFields, name: String): ToxiProxy? {
-        if (auroraConfigFields.disabledAndNoSubKeys(name)) {
-            return null
+    fun getToxiProxy(auroraDeploymentSpec: AuroraDeploymentSpec, name: String): ToxiProxy? {
+        return auroraDeploymentSpec.featureEnabled(name) {
+            ToxiProxy(auroraDeploymentSpec["$it/version"])
         }
-
-        return ToxiProxy(auroraConfigFields.extract("$name/version"))
     }
 }
