@@ -22,12 +22,14 @@ import no.skatteetaten.aurora.boober.Configuration
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
+import no.skatteetaten.aurora.boober.service.openshift.BitbucketRequestHandler
 
 @AutoConfigureWebClient
 @SpringBootTest(classes = [
     Configuration,
     SharedSecretReader,
     BitbucketService,
+    BitbucketRequestHandler,
     SpringTestUtils.BitbucketMockRestServiceServiceInitializer]
 )
 

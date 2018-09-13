@@ -6,7 +6,9 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.utils.logger
 import org.slf4j.Logger
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpMethod
 import org.springframework.http.RequestEntity
 import org.springframework.http.ResponseEntity
 import org.springframework.retry.RetryCallback
@@ -20,41 +22,73 @@ import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestClientResponseException
 import org.springframework.web.client.RestTemplate
 import java.lang.Integer.min
+import kotlin.reflect.KClass
 
 @Component
-class OpenShiftRequestHandler(val restTemplate: RestTemplate) {
+class OpenShiftRequestHandler(restTemplate: RestTemplate) : DefaultRetryingRequestHandler(restTemplate)
 
-    companion object {
-        val REQUEST_ENTITY = "requestEntity"
+@Component
+class BitbucketRequestHandler(@Qualifier("bitbucket") restTemplate: RestTemplate) :
+    DefaultRetryingRequestHandler(restTemplate)
+
+private const val REQUEST_ENTITY = "requestEntity"
+
+open class DefaultRetryingRequestHandler(val restTemplate: RestTemplate) {
+
+    private val logger by logger()
+
+    private val retryTemplate = retryTemplate(logger)
+
+    fun <T, U : Any> put(
+        body: T,
+        headers: HttpHeaders,
+        responseType: KClass<U>,
+        url: String,
+        vararg uriVariables: Any
+    ): ResponseEntity<U> {
+        val uri = restTemplate.uriTemplateHandler.expand(url, *uriVariables)
+        return exchange(RequestEntity(body, headers, HttpMethod.PUT, uri), responseType)
     }
 
-    final val logger by logger()
+    fun <U : Any> get(responseType: KClass<U>, url: String, vararg uriVariables: Any): ResponseEntity<U> =
+        get(HttpHeaders(), responseType, url, *uriVariables)
 
-    val retryTemplate = retryTemplate(logger)
+    fun <U : Any> get(
+        headers: HttpHeaders,
+        responseType: KClass<U>,
+        url: String,
+        vararg uriVariables: Any
+    ): ResponseEntity<U> {
+        val uri = restTemplate.uriTemplateHandler.expand(url, *uriVariables)
+        return exchange(RequestEntity<Any>(headers, HttpMethod.GET, uri), responseType)
+    }
 
-    fun <T> exchange(requestEntity: RequestEntity<T>, retry: Boolean = true): ResponseEntity<JsonNode> {
+    fun exchange(requestEntity: RequestEntity<*>, retry: Boolean = true): ResponseEntity<JsonNode> =
+        exchange(requestEntity, JsonNode::class, retry)
+
+    fun <U : Any> exchange(requestEntity: RequestEntity<*>, t: KClass<U>, retry: Boolean = true): ResponseEntity<U> {
 
         val responseEntity = if (retry) {
-            retryTemplate.execute<ResponseEntity<JsonNode>, RestClientException> {
+            retryTemplate.execute<ResponseEntity<U>, RestClientException> {
                 it.setAttribute(REQUEST_ENTITY, requestEntity)
-                tryExchange(requestEntity)
+                tryExchange(requestEntity, t)
             }
         } else {
-            tryExchange(requestEntity)
+            tryExchange(requestEntity, t)
         }
         logger.trace("Body={}", responseEntity.body)
         return responseEntity
     }
 
-    private fun tryExchange(requestEntity: RequestEntity<*>): ResponseEntity<JsonNode> {
+    private fun <U : Any> tryExchange(requestEntity: RequestEntity<*>, t: KClass<U>): ResponseEntity<U> {
         return try {
-            restTemplate.exchange<JsonNode>(requestEntity, JsonNode::class.java)
+            restTemplate.exchange(requestEntity, t.java)
         } catch (e: Exception) {
             throw OpenShiftException("An error occurred while communicating with OpenShift", e)
         }
     }
 
-    private final fun retryTemplate(logger: Logger): RetryTemplate {
+    private fun retryTemplate(logger: Logger): RetryTemplate {
 
         val template = RetryTemplate().apply {
             setRetryPolicy(SimpleRetryPolicy(3))
@@ -73,9 +107,13 @@ class RetryLogger(val logger: Logger) : RetryListenerSupport() {
     /**
      * Logs whether the request was successful or not
      */
-    override fun <T : Any?, E : Throwable?> close(context: RetryContext?, callback: RetryCallback<T, E>?, throwable: Throwable?) {
+    override fun <T : Any?, E : Throwable?> close(
+        context: RetryContext?,
+        callback: RetryCallback<T, E>?,
+        throwable: Throwable?
+    ) {
 
-        val requestEntity: RequestEntity<*> = context?.getAttribute(OpenShiftRequestHandler.REQUEST_ENTITY) as RequestEntity<*>
+        val requestEntity: RequestEntity<*> = context?.getAttribute(REQUEST_ENTITY) as RequestEntity<*>
         if (context.getAttribute(RetryContext.EXHAUSTED)?.let { it as Boolean } == true) {
             logger.error("Request failed. Giving up. url=${requestEntity.url}, method=${requestEntity.method}")
         } else {
@@ -88,9 +126,13 @@ class RetryLogger(val logger: Logger) : RetryListenerSupport() {
     /**
      * Logs information about the request and the number of attempts when an error occurs.
      */
-    override fun <T : Any?, E : Throwable?> onError(context: RetryContext?, callback: RetryCallback<T, E>?, e: Throwable?) {
+    override fun <T : Any?, E : Throwable?> onError(
+        context: RetryContext?,
+        callback: RetryCallback<T, E>?,
+        e: Throwable?
+    ) {
 
-        val requestEntity: RequestEntity<*> = context?.getAttribute(OpenShiftRequestHandler.REQUEST_ENTITY) as RequestEntity<*>
+        val requestEntity: RequestEntity<*> = context?.getAttribute(REQUEST_ENTITY) as RequestEntity<*>
         val cause = e?.cause
         val params = mutableMapOf(
             "attempt" to context.retryCount,
