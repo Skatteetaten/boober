@@ -13,7 +13,7 @@ import org.springframework.core.env.Environment
 @Configuration
 class OpenShiftResourceClientConfig(
     @Value("\${openshift.url}") val baseUrl: String,
-    val openShiftRequestHandler: OpenShiftRequestHandler,
+    val restTemplateWrapper: OpenShiftRestTemplateWrapper,
     val userDetailsTokenProvider: UserDetailsTokenProvider,
     val serviceAccountTokenProvider: ServiceAccountTokenProvider,
     val localKubeConfigTokenProvider: LocalKubeConfigTokenProvider,
@@ -33,7 +33,7 @@ class OpenShiftResourceClientConfig(
     @Bean
     @ClientType(TokenSource.API_USER)
     @Primary
-    fun createUserDetailsOpenShiftResourceClient(): OpenShiftResourceClient = OpenShiftResourceClient(baseUrl, userDetailsTokenProvider, openShiftRequestHandler)
+    fun createUserDetailsOpenShiftResourceClient(): OpenShiftResourceClient = OpenShiftResourceClient(baseUrl, userDetailsTokenProvider, restTemplateWrapper)
 
     @Bean
     @ClientType(TokenSource.SERVICE_ACCOUNT)
@@ -43,6 +43,6 @@ class OpenShiftResourceClientConfig(
         } else {
             serviceAccountTokenProvider
         }
-        return OpenShiftResourceClient(baseUrl, tokenProvider, openShiftRequestHandler)
+        return OpenShiftResourceClient(baseUrl, tokenProvider, restTemplateWrapper)
     }
 }

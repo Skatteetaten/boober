@@ -3,17 +3,24 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
-import no.skatteetaten.aurora.boober.service.openshift.BitbucketRequestHandler
+import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
+import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
+import org.springframework.web.client.RestTemplate
+
+@Component
+class BitbucketRestTemplateWrapper(@Qualifier("bitbucket") restTemplate: RestTemplate) :
+    RetryingRestTemplateWrapper(restTemplate)
 
 @Service
 class BitbucketService(
-    val requestHandler: BitbucketRequestHandler,
+    val restTemplateWrapper: BitbucketRestTemplateWrapper,
     val mapper: ObjectMapper
 ) {
 
@@ -31,13 +38,13 @@ class BitbucketService(
             add("content", content)
         }
 
-        return requestHandler.put(body, headers, String::class, url, fileName).body
+        return restTemplateWrapper.put(body, headers, String::class, url, fileName).body
     }
 
     fun getFiles(project: String, repo: String, prefix: String): List<String> {
         val url = "/rest/api/1.0/projects/$project/repos/$repo/files/{prefix}?limit=100000"
 
-        return requestHandler.get(JsonNode::class, url, prefix).body?.let { jsonNode ->
+        return restTemplateWrapper.get(JsonNode::class, url, prefix).body?.let { jsonNode ->
             val values = jsonNode["values"] as ArrayNode
             values.map { it.asText() }
         } ?: emptyList()
@@ -45,13 +52,13 @@ class BitbucketService(
 
     fun getFile(project: String, repo: String, fileName: String): String? {
         val url = "/projects/$project/repos/$repo/raw/{fileName}"
-        return requestHandler.get(String::class, url, fileName).body
+        return restTemplateWrapper.get(String::class, url, fileName).body
     }
 
     fun getRepoNames(project: String): List<String> {
 
         val url = "/rest/api/1.0/projects/$project/repos?limit=1000"
-        val repoList = requestHandler.get(JsonNode::class, url).body
+        val repoList = restTemplateWrapper.get(JsonNode::class, url).body
         val values = repoList["values"] as ArrayNode
 
         return values.map {
