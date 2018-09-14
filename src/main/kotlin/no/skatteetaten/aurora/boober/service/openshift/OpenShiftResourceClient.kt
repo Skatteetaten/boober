@@ -16,13 +16,13 @@ import java.net.URI
 open class OpenShiftResourceClient(
     @Value("\${openshift.url}") val baseUrl: String,
     val tokenProvider: TokenProvider,
-    val openShiftRequestHandler: OpenShiftRequestHandler
+    val restTemplateWrapper: OpenShiftRestTemplateWrapper
 ) {
 
     fun put(kind: String, namespace: String, name: String, payload: JsonNode): ResponseEntity<JsonNode> {
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, namespace, name)
         val headers: HttpHeaders = getAuthorizationHeaders()
-        return openShiftRequestHandler.exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.PUT, URI(urls.update)))
+        return restTemplateWrapper.exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.PUT, URI(urls.update)))
     }
 
     open fun get(kind: String, namespace: String, name: String, retry: Boolean = true): ResponseEntity<JsonNode>? {
@@ -33,29 +33,21 @@ open class OpenShiftResourceClient(
         return get(url, retry = retry)
     }
 
-    open fun get(url: String, headers: HttpHeaders = getAuthorizationHeaders(), retry: Boolean = true): ResponseEntity<JsonNode>? {
-        try {
-            return openShiftRequestHandler.exchange(RequestEntity<Any>(headers, HttpMethod.GET, URI(url)), retry)
-        } catch (e: OpenShiftException) {
-            if (e.cause is HttpClientErrorException && e.cause.statusCode == HttpStatus.NOT_FOUND) {
-                return null
-            }
-            throw e
-        }
-    }
+    open fun get(url: String, headers: HttpHeaders = getAuthorizationHeaders(), retry: Boolean = true) =
+        exchange<JsonNode>(RequestEntity(headers, HttpMethod.GET, URI(url)), retry)
 
     open fun post(kind: String, namespace: String, name: String? = null, payload: JsonNode): ResponseEntity<JsonNode> {
 
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, namespace, name)
         val headers: HttpHeaders = getAuthorizationHeaders()
-        return openShiftRequestHandler.exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.POST, URI(urls.create)))
+        return exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.POST, URI(urls.create)))!!
     }
 
     fun delete(kind: String, namespace: String, name: String? = null): ResponseEntity<JsonNode> {
 
         val urls: OpenShiftApiUrls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, namespace, name)
         val headers: HttpHeaders = getAuthorizationHeaders()
-        return openShiftRequestHandler.exchange(RequestEntity<JsonNode>(headers, HttpMethod.DELETE, URI(urls.get)))
+        return exchange(RequestEntity<JsonNode>(headers, HttpMethod.DELETE, URI(urls.get)))!!
     }
 
     open fun getAuthorizationHeaders(): HttpHeaders {
@@ -67,5 +59,14 @@ open class OpenShiftResourceClient(
         headers.contentType = MediaType.APPLICATION_JSON
         headers.set("Authorization", "Bearer " + token)
         return headers
+    }
+
+    protected fun <T> exchange(requestEntity: RequestEntity<T>, retry: Boolean = true) = try {
+        restTemplateWrapper.exchange(requestEntity, retry)
+    } catch (e: HttpClientErrorException) {
+        if (e.statusCode != HttpStatus.NOT_FOUND) {
+            throw OpenShiftException("An error occurred while communicating with OpenShift", e)
+        }
+        null
     }
 }

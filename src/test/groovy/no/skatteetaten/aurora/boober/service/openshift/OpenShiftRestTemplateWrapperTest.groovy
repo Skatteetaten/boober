@@ -13,6 +13,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.RequestEntity
 import org.springframework.http.ResponseEntity
 import org.springframework.test.web.client.MockRestServiceServer
+import org.springframework.web.client.HttpClientErrorException
 
 import com.fasterxml.jackson.databind.JsonNode
 
@@ -20,9 +21,9 @@ import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.service.AbstractAuroraDeploymentSpecSpringTest
-import no.skatteetaten.aurora.boober.service.OpenShiftException
+import no.skatteetaten.aurora.boober.utils.RetryLogger
 
-class OpenShiftRequestHandlerTest extends AbstractAuroraDeploymentSpecSpringTest {
+class OpenShiftRestTemplateWrapperTest extends AbstractAuroraDeploymentSpecSpringTest {
 
   @Value('${openshift.url}')
   String openShiftUrl
@@ -31,7 +32,7 @@ class OpenShiftRequestHandlerTest extends AbstractAuroraDeploymentSpecSpringTest
   MockRestServiceServer osClusterMock
 
   @Autowired
-  OpenShiftRequestHandler requestHandler
+  OpenShiftRestTemplateWrapper restTemplateWrapper
 
   @Value('${openshift.url}/oapi/v1/namespaces/aos/deploymentconfigs/webleveranse')
   String resourceUrl
@@ -49,7 +50,7 @@ class OpenShiftRequestHandlerTest extends AbstractAuroraDeploymentSpecSpringTest
       osClusterMock.expect(requestTo(resourceUrl)).andRespond(withSuccess(resource, APPLICATION_JSON))
 
     when:
-      ResponseEntity<JsonNode> entity = requestHandler.
+      ResponseEntity<JsonNode> entity = restTemplateWrapper.
           exchange(new RequestEntity<Object>(GET, new URI(resourceUrl)), true)
 
     then:
@@ -63,10 +64,10 @@ class OpenShiftRequestHandlerTest extends AbstractAuroraDeploymentSpecSpringTest
       3.times { osClusterMock.expect(requestTo(resourceUrl)).andRespond(withBadRequest()) }
 
     when:
-      requestHandler.exchange(new RequestEntity<Object>(GET, new URI(resourceUrl)), true)
+      restTemplateWrapper.exchange(new RequestEntity<Object>(GET, new URI(resourceUrl)), true)
 
     then:
-      thrown(OpenShiftException)
+      thrown(HttpClientErrorException)
   }
 
   def "Fails immediately when retry is disabled"() {
@@ -77,21 +78,22 @@ class OpenShiftRequestHandlerTest extends AbstractAuroraDeploymentSpecSpringTest
       0 * osClusterMock._
 
     when:
-      requestHandler.exchange(new RequestEntity<Object>(GET, new URI(resourceUrl)), false)
+      restTemplateWrapper.exchange(new RequestEntity<Object>(GET, new URI(resourceUrl)), false)
 
     then:
-      thrown(OpenShiftException)
+      thrown(HttpClientErrorException)
   }
 
   def "Get token snippet from auth header"() {
+    def httpHeaders = new HttpHeaders().with {
+      it.add(HttpHeaders.AUTHORIZATION, "Authorization $token" as String)
+      it
+    }
     expect:
-      RetryLogger.getTokenSnippetFromAuthHeader(new HttpHeaders().with {
-        it.add(org.springframework.http.HttpHeaders.AUTHORIZATION, "Authorization $token" as String)
-        it
-      }) == snippet
+      RetryLogger.getTokenSnippetFromAuthHeader(httpHeaders) == snippet
 
     where:
-      token | snippet
+      token             | snippet
       "some_long_token" | "some_"
   }
 }
