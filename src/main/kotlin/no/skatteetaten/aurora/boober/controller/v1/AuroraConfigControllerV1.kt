@@ -74,10 +74,7 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
     }
 
     @GetMapping("/files")
-    fun getFiles(
-        @PathVariable name: String,
-        @PathVariable type: AuroraConfigFileType
-    ): Response {
+    fun getFiles(@PathVariable name: String): Response {
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         return Response(items = auroraConfigService.findAuroraConfig(ref).files.map {
             AuroraConfigFileTypeResource(it.name, it.type, it.asJsonNode)
