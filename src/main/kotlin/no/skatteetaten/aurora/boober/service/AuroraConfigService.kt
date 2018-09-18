@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.experimental.ThreadPoolDispatcher
 import kotlinx.coroutines.experimental.async
@@ -9,7 +8,6 @@ import kotlinx.coroutines.experimental.runBlocking
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.GitServices.Domain.AURORA_CONFIG
 import no.skatteetaten.aurora.boober.service.GitServices.TargetDomain
@@ -63,12 +61,6 @@ class AuroraConfigService(
 
         updateLocalFilesFromGit(ref)
         return AuroraConfig.fromFolder("${gitService.checkoutPath}/${ref.name}", ref.refName)
-    }
-
-    // TODO: should this return a list or an nullable type? There should never be more then one file of one kind. But the resource object in the controller has a list of items
-    fun findAuroraConfigFileByType(ref: AuroraConfigRef, type: AuroraConfigFileType): List<AuroraConfigFile> {
-        val ac = findAuroraConfig(ref)
-        return ac.files.filter { it.type == type }
     }
 
     fun findAuroraConfigFileNames(ref: AuroraConfigRef): List<String> {

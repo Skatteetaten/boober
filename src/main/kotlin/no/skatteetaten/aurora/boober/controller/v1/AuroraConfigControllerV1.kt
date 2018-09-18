@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
 import com.fasterxml.jackson.annotation.JsonRawValue
+import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.controller.NoSuchResourceException
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigResource.Companion.fromAuroraConfig
@@ -56,7 +57,8 @@ data class ContentPayload(
 
 data class AuroraConfigFileTypeResource(
     val name: String,
-    val type: AuroraConfigFileType
+    val type: AuroraConfigFileType,
+    val content: JsonNode
 )
 
 @RestController
@@ -71,14 +73,14 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
         return createAuroraConfigResponse(auroraConfigService.findAuroraConfig(ref))
     }
 
-    @GetMapping("/file/{type}")
-    fun getFileNameForType(
+    @GetMapping("/files")
+    fun getFiles(
         @PathVariable name: String,
         @PathVariable type: AuroraConfigFileType
     ): Response {
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
-        return Response(items = auroraConfigService.findAuroraConfigFileByType(ref, type).map {
-            AuroraConfigFileTypeResource(it.name, it.type)
+        return Response(items = auroraConfigService.findAuroraConfig(ref).files.map {
+            AuroraConfigFileTypeResource(it.name, it.type, it.asJsonNode)
         })
     }
 
