@@ -1,78 +1,27 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
-import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.APP
-import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.APP_OVERRIDE
-import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.BASE
-import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.BASE_OVERRIDE
-import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.DEFAULT
-import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.ENV
-import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.ENV_OVERRIDE
-import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.GLOBAL
-import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.GLOBAL_OVERRIDE
 import no.skatteetaten.aurora.boober.model.ErrorType.INVALID
 import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import org.springframework.util.DigestUtils
 
-enum class AuroraConfigFileType {
-    DEFAULT,
-    GLOBAL,
-    GLOBAL_OVERRIDE,
-    BASE,
-    BASE_OVERRIDE,
-    ENV,
-    ENV_OVERRIDE,
-    APP,
-    APP_OVERRIDE
-}
-
-data class AuroraConfigFile(
-    val name: String,
-    val contents: String,
-    val override: Boolean = false,
-    val isDefault: Boolean = false
-) {
+data class AuroraConfigFile(val name: String, val contents: String, val override: Boolean = false) {
     val configName
         get() = if (override) "$name.override" else name
 
     val version
         get() = DigestUtils.md5DigestAsHex(jacksonObjectMapper().writeValueAsString(contents).toByteArray())
 
-    val type: AuroraConfigFileType
-        get() {
-
-            val appSpecificFile = !(name.startsWith("about") || name.contains("/about"))
-            val hasSubFolder = name.contains("/")
-
-            return when {
-                isDefault -> DEFAULT
-                !hasSubFolder && !appSpecificFile && !override -> GLOBAL
-                !hasSubFolder && !appSpecificFile && override -> GLOBAL_OVERRIDE
-                !hasSubFolder && appSpecificFile && !override -> BASE
-                !hasSubFolder && appSpecificFile && override -> BASE_OVERRIDE
-                hasSubFolder && !appSpecificFile && !override -> ENV
-                hasSubFolder && !appSpecificFile && override -> ENV_OVERRIDE
-                hasSubFolder && appSpecificFile && !override -> APP
-                hasSubFolder && appSpecificFile && override -> APP_OVERRIDE
-                else -> DEFAULT
-            }
-        }
-
     val asJsonNode: JsonNode by lazy {
         try {
-
             val mapper = if (name.endsWith(".json")) {
                 jacksonObjectMapper()
-            } else if (name.endsWith(".yaml") || name.endsWith(".yml")) {
-                jacksonYamlObjectMapper()
             } else {
-                null
+                jacksonYamlObjectMapper()
             }
-
-            mapper?.readValue(contents, JsonNode::class.java) ?: TextNode(contents)
+            mapper.readValue(contents, JsonNode::class.java)
         } catch (e: Exception) {
             val message = "AuroraConfigFile=$name is not valid errorMessage=${e.message}"
             throw AuroraConfigException(message, listOf(ConfigFieldErrorDetail(INVALID, message)))
