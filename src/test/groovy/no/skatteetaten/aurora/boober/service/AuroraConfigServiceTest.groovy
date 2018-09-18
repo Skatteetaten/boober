@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
 import no.skatteetaten.aurora.boober.model.AuroraVersioningException
 
 class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
@@ -177,4 +178,19 @@ type: deploy
       def e = thrown(AuroraVersioningException)
       e.errors.size() == 1
   }
+
+  def "Finds base file in existing AuroraConfig"() {
+    given:
+      def auroraConfig = createAuroraConfig(defaultAuroraConfig())
+      auroraConfigService.save(auroraConfig)
+
+    when:
+      def auroraConfigFiles = auroraConfigService.findAuroraConfigFileByType(ref, AuroraConfigFileType.BASE)
+
+    then:
+      auroraConfigFiles.size() == 1
+      def file = auroraConfigFiles[0]
+      file.name == "aos-simple.json"
+  }
+
 }
