@@ -1,11 +1,13 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
 import com.fasterxml.jackson.annotation.JsonRawValue
+import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.controller.NoSuchResourceException
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigResource.Companion.fromAuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.utils.logger
@@ -53,6 +55,12 @@ data class ContentPayload(
     val content: String
 )
 
+data class AuroraConfigFileTypeResource(
+    val name: String,
+    val type: AuroraConfigFileType,
+    val content: JsonNode
+)
+
 @RestController
 @RequestMapping("/v1/auroraconfig/{name}")
 class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
@@ -60,9 +68,17 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
     val logger by logger()
 
     @GetMapping()
-    fun get( @PathVariable name: String ): Response {
+    fun get(@PathVariable name: String): Response {
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         return createAuroraConfigResponse(auroraConfigService.findAuroraConfig(ref))
+    }
+
+    @GetMapping("/files")
+    fun getFiles(@PathVariable name: String): Response {
+        val ref = AuroraConfigRef(name, getRefNameFromRequest())
+        return Response(items = auroraConfigService.findAuroraConfig(ref).files.map {
+            AuroraConfigFileTypeResource(it.name, it.type, it.asJsonNode)
+        })
     }
 
     @GetMapping("/filenames")
@@ -87,7 +103,7 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
     }
 
     @GetMapping("/**")
-    fun getAuroraConfigFile( @PathVariable name: String, request: HttpServletRequest ): ResponseEntity<Response> {
+    fun getAuroraConfigFile(@PathVariable name: String, request: HttpServletRequest): ResponseEntity<Response> {
 
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         val fileName = extractFileName(name, request)

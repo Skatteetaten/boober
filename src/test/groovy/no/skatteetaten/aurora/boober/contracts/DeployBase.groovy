@@ -42,7 +42,7 @@ class DeployBase extends AbstractContractBase {
         new AuroraDeployEnvironment('', '',
             new Permissions(new Permission(Collections.emptySet(), Collections.emptySet()), null), null),
         null, null, null, null, new AuroraTemplate([:], 'test', '1.0.0', 1), null, null,
-        new AuroraConfigFile("", "{}", false), "master", [:])
+        new AuroraConfigFile("", "{}", false, false), "master", [:])
 
     def command = new ApplicationDeploymentCommand([:], new ApplicationDeploymentRef("", ""),
         new AuroraConfigRef("", "", ""))

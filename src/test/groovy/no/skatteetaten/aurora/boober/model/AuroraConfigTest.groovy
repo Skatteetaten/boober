@@ -159,10 +159,10 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
   }
 
   List<AuroraConfigFile> createMockFiles(String... files) {
-    files.collect { new AuroraConfigFile(it, "{}", false) }
+    files.collect { new AuroraConfigFile(it, "{}", false, false) }
   }
 
   def overrideFile(String fileName) {
-    new AuroraConfigFile(fileName, "{}", true)
+    new AuroraConfigFile(fileName, "{}", true, false)
   }
 }
