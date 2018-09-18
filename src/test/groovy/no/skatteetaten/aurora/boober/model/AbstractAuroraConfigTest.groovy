@@ -112,7 +112,7 @@ abstract class AbstractAuroraConfigTest extends AbstractSpec {
   static AuroraConfig createAuroraConfig(Map<String, String> auroraConfigJson) {
 
     def auroraConfigFiles = auroraConfigJson.collect { name, contents ->
-      new AuroraConfigFile(name, contents, false, false)
+      new AuroraConfigFile(name, contents, false)
     }
     def auroraConfig = new AuroraConfig(auroraConfigFiles, "aos", "master")
     auroraConfig

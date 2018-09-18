@@ -53,7 +53,7 @@ fun renderSpecAsJson(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Bool
         mapOf(
             "source" to it.value.name,
             "value" to it.value.value,
-            "sources" to it.value.sources.map { mapOf("name" to it.configFile.configName, "value" to it.value) }
+            "sources" to it.value.sources
         )
         // TODO: Remove after AO has been upgraded
     }.let { result ->

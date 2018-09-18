@@ -23,7 +23,7 @@ class AuroraconfigBase extends AbstractContractBase {
 
   AuroraConfigFile createAuroraConfigFile() {
     def files = response('auroraconfig', '$.items[0].files[0]', Map)
-    new AuroraConfigFile(files.name, files.contents, false, false)
+    new AuroraConfigFile(files.name, files.contents, false)
   }
 
   AuroraConfig createAuroraConfig() {
