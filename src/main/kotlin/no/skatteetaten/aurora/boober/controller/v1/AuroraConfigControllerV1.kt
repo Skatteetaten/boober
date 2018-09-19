@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonRawValue
 import no.skatteetaten.aurora.boober.controller.NoSuchResourceException
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigResource.Companion.fromAuroraConfig
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
@@ -65,6 +66,18 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
     fun get(@PathVariable name: String): Response {
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         return createAuroraConfigResponse(auroraConfigService.findAuroraConfig(ref))
+    }
+
+    @GetMapping("/files/{environment}/{application}")
+    fun get(@PathVariable name: String, @PathVariable environment: String, @PathVariable application: String): Response {
+        val ref = AuroraConfigRef(name, getRefNameFromRequest())
+
+        val adr = ApplicationDeploymentRef(environment, application)
+        val files = auroraConfigService.findAuroraConfigFilesForApplicationDeployment(ref, adr)
+
+        return Response(items = files.map {
+            AuroraConfigFileResource(it.name, it.contents, it.type)
+        })
     }
 
     @GetMapping("/filenames")
