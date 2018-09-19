@@ -1,5 +1,5 @@
 buildscript {
-  ext.kotlin_version = "1.2.61"
+  ext.kotlin_version = "1.2.70"
   ext.springBootVersion = "1.5.12.RELEASE"
   ext.auroraStartersVersion = "3.7.0"
 
@@ -116,6 +116,7 @@ compileKotlin {
   kotlinOptions {
     suppressWarnings = true
     jvmTarget = 1.8
+    freeCompilerArgs = ["-Xjsr305=strict"]
   }
 }
 

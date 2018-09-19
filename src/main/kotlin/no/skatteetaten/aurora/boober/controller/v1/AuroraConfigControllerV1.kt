@@ -63,21 +63,26 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
     val logger by logger()
 
     @GetMapping()
-    fun get(@PathVariable name: String): Response {
+    fun get(
+        @PathVariable name: String,
+        @RequestParam("environment", required = false) environment: String? = null,
+        @RequestParam("application", required = false) application: String? = null
+    ): Response {
+
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
+
+        if (application != null && environment != null) {
+            val adr = ApplicationDeploymentRef(environment, application)
+            val files = auroraConfigService.findAuroraConfigFilesForApplicationDeployment(ref, adr)
+
+            return Response(items = files.map {
+                AuroraConfigFileResource(it.name, it.contents, it.type)
+            })
+        }
+        if (application != null || environment != null) {
+            throw IllegalArgumentException("Either both application and environment must be set or none of them")
+        }
         return createAuroraConfigResponse(auroraConfigService.findAuroraConfig(ref))
-    }
-
-    @GetMapping("/files/{environment}/{application}")
-    fun get(@PathVariable name: String, @PathVariable environment: String, @PathVariable application: String): Response {
-        val ref = AuroraConfigRef(name, getRefNameFromRequest())
-
-        val adr = ApplicationDeploymentRef(environment, application)
-        val files = auroraConfigService.findAuroraConfigFilesForApplicationDeployment(ref, adr)
-
-        return Response(items = files.map {
-            AuroraConfigFileResource(it.name, it.contents, it.type)
-        })
     }
 
     @GetMapping("/filenames")
