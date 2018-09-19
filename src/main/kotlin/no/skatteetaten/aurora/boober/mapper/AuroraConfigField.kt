@@ -9,6 +9,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.mapper.v1.convertValueToString
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
 import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.utils.atNullable
 import no.skatteetaten.aurora.boober.utils.deepSet
@@ -27,11 +28,13 @@ data class AuroraConfigField(
     private val source: AuroraConfigFieldSource get() = sources.last()
 
     val name: String
-        get() = source.name
+        get() = source.configFile.configName
 
     val isDefault: Boolean
         @JsonIgnore
-        get() = source.defaultSource
+        get() = source.configFile.type == AuroraConfigFileType.DEFAULT
+
+    val fileType: AuroraConfigFileType get() = source.configFile.type
 
     val value: JsonNode
         get() = source.value
@@ -45,22 +48,6 @@ data class AuroraConfigField(
             return replacer.replace(result as String) as T
         }
         return result
-    }
-
-    val weight: Int @JsonIgnore get() {
-
-        if (isDefault) return 0
-
-        val isBaseOrApplicationFile = !(name.startsWith("about") || name.contains("/about"))
-        val isApplicationOrEnvFile = name.contains("/")
-        val isOverrideFile = name.endsWith("override")
-
-        var weight = 1
-        if (isApplicationOrEnvFile) weight += 4 // files in an environment folder are higher weighted than files at the root.
-        if (isBaseOrApplicationFile) weight += 2 // base and application files are higher weigthed than about files.
-        if (isOverrideFile) weight += 1 // override files are higher weigthed than their non-override counterparts.
-
-        return weight
     }
 
     /**
@@ -80,10 +67,8 @@ data class AuroraConfigField(
 }
 
 data class AuroraConfigFieldSource(
-    val name: String,
-    val value: JsonNode,
-    @JsonIgnore
-    val defaultSource: Boolean = false
+    val configFile: AuroraConfigFile,
+    val value: JsonNode
 )
 
 class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
@@ -141,8 +126,8 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
 
     /*
     In order to know if this is simplified config or not we need to find out what instruction is
-    specified in the most specific place. Each AuroraConfigFieldSource has a weight that determine
-    the presedence.
+    specified in the most specific place. Each AuroraConfigFieldSource has a a presedence accoring to the
+    AuroraConfigFileType enum.
      */
     fun isSimplifiedConfig(name: String): Boolean {
         val field = fields[name]!!
@@ -153,15 +138,8 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
             return true
         }
 
-        val toggleWeight = field.weight
-
-        // If there are any subkeys we need to find their weight. Not that if there are no subkeys weight is 0
-        val maxSubKeyWeight: Int = subKeys
-            .map { it.value.weight }
-            .max() ?: 0
-
-        // If the toggle has more then or equal weight to the subKeys then it has presedence and we are simplified
-        return toggleWeight >= maxSubKeyWeight
+        // if any subkey has higher presedence accoring to the AuroraConfigFileTypeEnum we are not simplified
+        return !subKeys.any { it.value.fileType > field.fileType }
     }
 
     fun getSubKeys(name: String): Map<String, AuroraConfigField> {
@@ -199,9 +177,15 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
             val staticFields: List<Pair<String, AuroraConfigFieldSource>> =
                 listOf(
                     "applicationDeploymentRef" to
-                        AuroraConfigFieldSource("static", mapper.convertValue(applicationDeploymentRef.toString())),
+                        AuroraConfigFieldSource(
+                            AuroraConfigFile("static", "{}", isDefault = true),
+                            mapper.convertValue(applicationDeploymentRef.toString())
+                        ),
                     "configVersion" to
-                        AuroraConfigFieldSource("static", mapper.convertValue(configVersion))
+                        AuroraConfigFieldSource(
+                            AuroraConfigFile("static", "{}", isDefault = true),
+                            mapper.convertValue(configVersion)
+                        )
                 )
 
             val replacer = StringSubstitutor(placeholders, "@", "@")
@@ -210,9 +194,12 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
                 val defaultValue = handler.defaultValue?.let {
                     listOf(
                         handler.name to AuroraConfigFieldSource(
-                            name = handler.defaultSource,
-                            value = mapper.convertValue(handler.defaultValue),
-                            defaultSource = true
+                            configFile = AuroraConfigFile(
+                                name = handler.defaultSource,
+                                contents = "",
+                                isDefault = true
+                            ),
+                            value = mapper.convertValue(handler.defaultValue)
                         )
                     )
                 } ?: emptyList()
@@ -228,10 +215,7 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
                         if (handler.canBeSimplifiedConfig && it.isObject) {
                             null
                         } else {
-                            handler.name to AuroraConfigFieldSource(
-                                name = file.configName,
-                                value = it
-                            )
+                            handler.name to AuroraConfigFieldSource(configFile = file, value = it)
                         }
                     }
                 }

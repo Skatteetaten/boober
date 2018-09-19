@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigResource.Companion.fromAuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.utils.logger
@@ -38,14 +39,15 @@ data class AuroraConfigResource(
         fun fromAuroraConfig(auroraConfig: AuroraConfig): AuroraConfigResource {
             return AuroraConfigResource(
                 auroraConfig.name,
-                auroraConfig.files.map { AuroraConfigFileResource(it.name, it.contents) })
+                auroraConfig.files.map { AuroraConfigFileResource(it.name, it.contents, it.type) })
         }
     }
 }
 
 data class AuroraConfigFileResource(
     val name: String,
-    val contents: String
+    val contents: String,
+    val type: AuroraConfigFileType
 )
 
 data class ContentPayload(
@@ -60,7 +62,7 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
     val logger by logger()
 
     @GetMapping()
-    fun get( @PathVariable name: String ): Response {
+    fun get(@PathVariable name: String): Response {
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         return createAuroraConfigResponse(auroraConfigService.findAuroraConfig(ref))
     }
@@ -87,7 +89,7 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
     }
 
     @GetMapping("/**")
-    fun getAuroraConfigFile( @PathVariable name: String, request: HttpServletRequest ): ResponseEntity<Response> {
+    fun getAuroraConfigFile(@PathVariable name: String, request: HttpServletRequest): ResponseEntity<Response> {
 
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         val fileName = extractFileName(name, request)
@@ -134,7 +136,7 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
 
     private fun createAuroraConfigFileResponse(auroraConfigFile: AuroraConfigFile): ResponseEntity<Response> {
         val configFiles = auroraConfigFile
-            .let { listOf(AuroraConfigFileResource(it.name, it.contents)) }
+            .let { listOf(AuroraConfigFileResource(it.name, it.contents, it.type)) }
 
         val response = Response(items = configFiles)
         val headers = HttpHeaders().apply { eTag = "\"${auroraConfigFile.version}\"" }
