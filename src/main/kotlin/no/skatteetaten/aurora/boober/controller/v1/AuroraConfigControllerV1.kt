@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
 import com.fasterxml.jackson.annotation.JsonRawValue
-import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.controller.NoSuchResourceException
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigResource.Companion.fromAuroraConfig
@@ -40,25 +39,20 @@ data class AuroraConfigResource(
         fun fromAuroraConfig(auroraConfig: AuroraConfig): AuroraConfigResource {
             return AuroraConfigResource(
                 auroraConfig.name,
-                auroraConfig.files.map { AuroraConfigFileResource(it.name, it.contents) })
+                auroraConfig.files.map { AuroraConfigFileResource(it.name, it.contents, it.type) })
         }
     }
 }
 
 data class AuroraConfigFileResource(
     val name: String,
-    val contents: String
+    val contents: String,
+    val type: AuroraConfigFileType
 )
 
 data class ContentPayload(
     @JsonRawValue
     val content: String
-)
-
-data class AuroraConfigFileTypeResource(
-    val name: String,
-    val type: AuroraConfigFileType,
-    val content: JsonNode
 )
 
 @RestController
@@ -71,14 +65,6 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
     fun get(@PathVariable name: String): Response {
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         return createAuroraConfigResponse(auroraConfigService.findAuroraConfig(ref))
-    }
-
-    @GetMapping("/files")
-    fun getFiles(@PathVariable name: String): Response {
-        val ref = AuroraConfigRef(name, getRefNameFromRequest())
-        return Response(items = auroraConfigService.findAuroraConfig(ref).files.map {
-            AuroraConfigFileTypeResource(it.name, it.type, it.asJsonNode)
-        })
     }
 
     @GetMapping("/filenames")
@@ -150,7 +136,7 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
 
     private fun createAuroraConfigFileResponse(auroraConfigFile: AuroraConfigFile): ResponseEntity<Response> {
         val configFiles = auroraConfigFile
-            .let { listOf(AuroraConfigFileResource(it.name, it.contents)) }
+            .let { listOf(AuroraConfigFileResource(it.name, it.contents, it.type)) }
 
         val response = Response(items = configFiles)
         val headers = HttpHeaders().apply { eTag = "\"${auroraConfigFile.version}\"" }
