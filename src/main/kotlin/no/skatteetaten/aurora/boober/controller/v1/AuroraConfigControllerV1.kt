@@ -48,7 +48,7 @@ data class AuroraConfigResource(
 data class AuroraConfigFileResource(
     val name: String,
     val contents: String,
-    val type: AuroraConfigFileType
+    val type: AuroraConfigFileType? = null
 )
 
 data class ContentPayload(
