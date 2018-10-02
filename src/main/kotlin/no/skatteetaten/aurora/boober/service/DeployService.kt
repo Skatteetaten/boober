@@ -316,7 +316,7 @@ class DeployService(
                 deployTag = deploymentSpecInternal.version,
                 // This is the base shared applicationDeploymentRef
                 applicationId = DigestUtils.sha1Hex(deploymentSpecInternal.appId),
-                applicationDeploymentId = DigestUtils.sha1Hex(deploymentSpecInternal.applicationDeploymentRef.toString()),
+                applicationDeploymentId = DigestUtils.sha1Hex(deploymentSpecInternal.appDeploymentId),
                 applicationName = deploymentSpecInternal.appName,
                 applicationDeploymentName = deploymentSpecInternal.applicationDeploymentRef.application,
                 splunkIndex = deploymentSpecInternal.integration?.splunkIndex,

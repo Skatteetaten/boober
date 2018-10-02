@@ -71,6 +71,7 @@ data class AuroraDeploymentSpecInternal(
     val overrideFiles: Map<String, String>
 ) {
 
+    val appDeploymentId:String get()= environment.affiliation + applicationDeploymentRef.toString()
     val appId: String
         get() =
             template?.let {
