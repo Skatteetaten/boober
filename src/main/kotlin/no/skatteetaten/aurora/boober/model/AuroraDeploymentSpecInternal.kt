@@ -71,7 +71,7 @@ data class AuroraDeploymentSpecInternal(
     val overrideFiles: Map<String, String>
 ) {
 
-    val appDeploymentId: String get() = "${environment.namespace}-$name"
+    val appDeploymentId: String get() = "${environment.namespace}/$name"
     val appId: String
         get() =
             template?.let {
