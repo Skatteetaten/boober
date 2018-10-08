@@ -318,7 +318,7 @@ class DeployService(
                 applicationId = DigestUtils.sha1Hex(deploymentSpecInternal.appId),
                 applicationDeploymentId = DigestUtils.sha1Hex(deploymentSpecInternal.appDeploymentId),
                 applicationName = deploymentSpecInternal.appName,
-                applicationDeploymentName = deploymentSpecInternal.applicationDeploymentRef.application,
+                applicationDeploymentName = deploymentSpecInternal.name,
                 splunkIndex = deploymentSpecInternal.integration?.splunkIndex,
                 managementPath = deploymentSpecInternal.deploy?.managementPath,
                 releaseTo = deploymentSpecInternal.deploy?.releaseTo,
