@@ -66,6 +66,7 @@ class StsProvisioner(
                 cert = cert,
                 cn = cn,
                 renewAt = cert.notAfter - Duration.ofDays(renewBeforeDays)
+                // TODO: Denne må fikses, Her må vi ha en  Duration fra nå til denne renewAt.
             )
         } catch (e: Exception) {
             throw ProvisioningException(
