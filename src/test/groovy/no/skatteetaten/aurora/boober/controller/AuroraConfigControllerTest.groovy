@@ -82,7 +82,7 @@ class AuroraConfigControllerTest extends AbstractAuroraConfigTest {
     given:
       def fileToUpdate = DEFAULT_ABOUT
       def auroraConfigFile = new AuroraConfigFile("about.json", fileToUpdate,
-          false)
+          false, false)
       def eTag = "THIS_IS_NOT_THE_EXPECTED_ETAG"
       def payload = [content: modify(fileToUpdate, { route: true })]
       auroraConfigService.updateAuroraConfigFile(ref, fileName, _ as String, eTag) >> {

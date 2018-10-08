@@ -8,7 +8,7 @@ import no.skatteetaten.aurora.boober.Configuration
 import no.skatteetaten.aurora.boober.model.AbstractAuroraDeploymentSpecTest
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftRequestHandler
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftRestTemplateWrapper
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig
 import no.skatteetaten.aurora.boober.service.openshift.token.LocalKubeConfigTokenProvider
 import no.skatteetaten.aurora.boober.service.openshift.token.ServiceAccountTokenProvider
@@ -21,7 +21,7 @@ import no.skatteetaten.aurora.boober.service.openshift.token.UserDetailsTokenPro
     SpringTestUtils.SecurityMock,
     Configuration,
     SharedSecretReader,
-    OpenShiftRequestHandler,
+    OpenShiftRestTemplateWrapper,
     OpenShiftResourceClientConfig,
     UserDetailsProvider,
     UserDetailsTokenProvider,

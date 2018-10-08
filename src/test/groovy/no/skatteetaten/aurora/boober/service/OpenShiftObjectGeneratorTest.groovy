@@ -26,7 +26,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
   def file = '''{ "version": "1.0.4"}'''
 
   @Shared
-  def booberDevAosSimpleOverrides = [new AuroraConfigFile("booberdev/aos-simple.json", file, true)]
+  def booberDevAosSimpleOverrides = [new AuroraConfigFile("booberdev/aos-simple.json", file, true, false)]
 
   @Unroll
   def "should create openshift objects for #env/#name"() {

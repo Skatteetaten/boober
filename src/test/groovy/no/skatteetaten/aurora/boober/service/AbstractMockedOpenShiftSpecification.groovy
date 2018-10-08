@@ -55,6 +55,7 @@ import spock.mock.DetachedMockFactory
     AuroraDeploymentSpecValidator,
     SharedSecretReader,
     OpenShiftObjectLabelService,
+    BitbucketRestTemplateWrapper,
     BitbucketService
 ])
 class AbstractMockedOpenShiftSpecification extends AbstractSpec {

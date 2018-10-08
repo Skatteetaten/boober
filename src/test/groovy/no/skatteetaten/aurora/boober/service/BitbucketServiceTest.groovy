@@ -28,6 +28,7 @@ import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
     Configuration,
     SharedSecretReader,
     BitbucketService,
+    BitbucketRestTemplateWrapper,
     SpringTestUtils.BitbucketMockRestServiceServiceInitializer]
 )
 
@@ -35,10 +36,6 @@ class BitbucketServiceTest extends AbstractSpec {
 
   @Autowired
   MockRestServiceServer mockServer
-
-  @Autowired
-  @TargetService(ServiceTypes.BITBUCKET)
-  RestTemplate auroraRestTemplate
 
   @Autowired
   BitbucketService service

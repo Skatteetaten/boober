@@ -57,6 +57,14 @@ class AuroraConfigService(
 
         return updateLocalFilesFromGit(ref)
     }
+
+    fun findAuroraConfigFilesForApplicationDeployment(
+        ref: AuroraConfigRef,
+        adr: ApplicationDeploymentRef
+    ): List<AuroraConfigFile> {
+        return findAuroraConfig(ref).getFilesForApplication(adr)
+    }
+
     fun findAuroraConfig(ref: AuroraConfigRef): AuroraConfig {
 
         updateLocalFilesFromGit(ref)

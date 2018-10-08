@@ -3,21 +3,24 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
+import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
+import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
-import org.springframework.util.MultiValueMap
 import org.springframework.web.client.RestTemplate
+
+@Component
+class BitbucketRestTemplateWrapper(@Qualifier("bitbucket") restTemplate: RestTemplate) :
+    RetryingRestTemplateWrapper(restTemplate)
 
 @Service
 class BitbucketService(
-    @Qualifier("bitbucket") val restTemplate: RestTemplate,
+    val restTemplateWrapper: BitbucketRestTemplateWrapper,
     val mapper: ObjectMapper
 ) {
 
@@ -30,32 +33,32 @@ class BitbucketService(
             contentType = MediaType.MULTIPART_FORM_DATA
         }
 
-        val map = LinkedMultiValueMap<String, String>()
-        map.add("message", message)
-        map.add("content", content)
+        val body = LinkedMultiValueMap<String, String>().apply {
+            add("message", message)
+            add("content", content)
+        }
 
-        val request = HttpEntity<MultiValueMap<String, String>>(map, headers)
-
-        return restTemplate.exchange(url, HttpMethod.PUT, request, String::class.java, fileName).body
+        return restTemplateWrapper.put(body, headers, String::class, url, fileName).body
     }
 
     fun getFiles(project: String, repo: String, prefix: String): List<String> {
         val url = "/rest/api/1.0/projects/$project/repos/$repo/files/{prefix}?limit=100000"
-        return restTemplate.getForObject(url, JsonNode::class.java, prefix)?.let {
-            val values = it["values"] as ArrayNode
+
+        return restTemplateWrapper.get(JsonNode::class, url, prefix).body?.let { jsonNode ->
+            val values = jsonNode["values"] as ArrayNode
             values.map { it.asText() }
         } ?: emptyList()
     }
 
     fun getFile(project: String, repo: String, fileName: String): String? {
         val url = "/projects/$project/repos/$repo/raw/{fileName}"
-        return restTemplate.getForObject(url, String::class.java, fileName)
+        return restTemplateWrapper.get(String::class, url, fileName).body
     }
 
     fun getRepoNames(project: String): List<String> {
 
-        val repoList =
-            restTemplate.getForObject("/rest/api/1.0/projects/$project/repos?limit=1000", JsonNode::class.java)
+        val url = "/rest/api/1.0/projects/$project/repos?limit=1000"
+        val repoList = restTemplateWrapper.get(JsonNode::class, url).body
         val values = repoList["values"] as ArrayNode
 
         return values.map {
