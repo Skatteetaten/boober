@@ -56,6 +56,14 @@ class AuroraConfigService(
 
         return updateLocalFilesFromGit(ref)
     }
+
+    fun findAuroraConfigFilesForApplicationDeployment(
+        ref: AuroraConfigRef,
+        adr: ApplicationDeploymentRef
+    ): List<AuroraConfigFile> {
+        return findAuroraConfig(ref).getFilesForApplication(adr)
+    }
+
     fun findAuroraConfig(ref: AuroraConfigRef): AuroraConfig {
 
         updateLocalFilesFromGit(ref)
@@ -225,7 +233,10 @@ class AuroraConfigService(
                             createValidatedAuroraDeploymentSpec(auroraConfigWithOverrides, aid, resourceValidation)
                         Pair<AuroraDeploymentSpecInternal?, ExceptionWrapper?>(first = spec, second = null)
                     } catch (e: Throwable) {
-                        Pair<AuroraDeploymentSpecInternal?, ExceptionWrapper?>(first = null, second = ExceptionWrapper(aid, e))
+                        Pair<AuroraDeploymentSpecInternal?, ExceptionWrapper?>(
+                            first = null,
+                            second = ExceptionWrapper(aid, e)
+                        )
                     }
                 }
             }
