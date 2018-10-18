@@ -137,10 +137,12 @@ class OpenShiftClient(
 
         fun getAllDeclaredUserGroups(): List<UserGroup> {
             val groupItems = getResponseBodyItems("$baseUrl/oapi/v1/groups/")
-            return groupItems.flatMap {
-                val name = it["metadata"]["name"].asText()
-                (it["users"] as ArrayNode).map { UserGroup(it.asText(), name) }
-            }
+            return groupItems
+                .filter { it["users"] is ArrayNode }
+                .flatMap {
+                    val name = it["metadata"]["name"].asText()
+                    (it["users"] as ArrayNode).map { UserGroup(it.asText(), name) }
+                }
         }
 
         fun getAllImplicitUserGroups(): List<UserGroup> {

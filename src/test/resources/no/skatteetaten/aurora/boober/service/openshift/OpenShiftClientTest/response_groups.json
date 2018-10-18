@@ -91,6 +91,41 @@
         "m6222222",
         "y6222222"
       ]
+    },
+    {
+      "metadata": {
+        "name": "APP_PROJ1_utv",
+        "selfLink": "/oapi/v1/groups/APP_PROJ1_drift",
+        "uid": "ac072b72-6ac5-11e6-b1c7-005056833ec1",
+        "resourceVersion": "166902441",
+        "creationTimestamp": "2016-08-25T13:13:10Z",
+        "labels": {
+          "openshift.io/ldap.host": "ldap.skead.no"
+        },
+        "annotations": {
+          "openshift.io/ldap.sync-time": "2017-12-21T12:01:5200100",
+          "openshift.io/ldap.uid": "CN=APP_PROJ1_drift,OU=Prosjekter,OU=vRAutomation,OU=Produksjon,OU=Applikasjoner,OU=Grupper,DC=skead,DC=no",
+          "openshift.io/ldap.url": "ldap.skead.no:3268"
+        }
+      },
+      "users": null
+    },
+    {
+      "metadata": {
+        "name": "APP_PROJ1_utv2",
+        "selfLink": "/oapi/v1/groups/APP_PROJ1_drift",
+        "uid": "ac072b72-6ac5-11e6-b1c7-005056833ec1",
+        "resourceVersion": "166902441",
+        "creationTimestamp": "2016-08-25T13:13:10Z",
+        "labels": {
+          "openshift.io/ldap.host": "ldap.skead.no"
+        },
+        "annotations": {
+          "openshift.io/ldap.sync-time": "2017-12-21T12:01:5200100",
+          "openshift.io/ldap.uid": "CN=APP_PROJ1_drift,OU=Prosjekter,OU=vRAutomation,OU=Produksjon,OU=Applikasjoner,OU=Grupper,DC=skead,DC=no",
+          "openshift.io/ldap.url": "ldap.skead.no:3268"
+        }
+      }
     }
   ]
 }
