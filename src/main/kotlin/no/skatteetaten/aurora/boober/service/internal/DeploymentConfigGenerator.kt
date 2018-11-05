@@ -20,8 +20,6 @@ import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.platform.AuroraDeployment
 import no.skatteetaten.aurora.boober.mapper.platform.podVolumes
-import no.skatteetaten.aurora.boober.utils.Instants.now
-import no.skatteetaten.aurora.boober.utils.addIfNotNull
 
 object DeploymentConfigGenerator {
 
@@ -31,17 +29,14 @@ object DeploymentConfigGenerator {
         reference: OwnerReference
     ): DeploymentConfig {
 
-        val ttl = auroraDeployment.ttl?.let {
-            val removeInstant = now + it
-            "removeAfter" to removeInstant.epochSecond.toString()
-        }
+
         return newDeploymentConfig {
 
             metadata {
                 ownerReferences = listOf(reference)
                 annotations = auroraDeployment.annotations
                 apiVersion = "v1"
-                labels = auroraDeployment.labels.addIfNotNull(ttl)
+                labels = auroraDeployment.labels
                 name = auroraDeployment.name
             }
             spec {
