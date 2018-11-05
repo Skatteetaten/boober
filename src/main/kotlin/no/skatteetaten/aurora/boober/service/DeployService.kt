@@ -19,6 +19,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
+import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.deploymentConfigFromJson
 import no.skatteetaten.aurora.boober.utils.imageStreamFromJson
@@ -310,13 +311,19 @@ class DeployService(
         cmd: ApplicationDeploymentCommand
     ): ApplicationDeployment {
 
+        val ttl = deploymentSpecInternal.deploy?.ttl?.let {
+            val removeInstant = Instants.now + it
+            "removeAfter" to removeInstant.epochSecond.toString()
+        }
+        val applicationId = DigestUtils.sha1Hex(deploymentSpecInternal.appId)
+        val applicationDeploymentId = DigestUtils.sha1Hex(deploymentSpecInternal.appDeploymentId)
         return ApplicationDeployment(
             spec = ApplicationDeploymentSpec(
                 selector = mapOf("name" to deploymentSpecInternal.name),
                 deployTag = deploymentSpecInternal.version,
                 // This is the base shared applicationDeploymentRef
-                applicationId = DigestUtils.sha1Hex(deploymentSpecInternal.appId),
-                applicationDeploymentId = DigestUtils.sha1Hex(deploymentSpecInternal.appDeploymentId),
+                applicationId = applicationId,
+                applicationDeploymentId = applicationDeploymentId,
                 applicationName = deploymentSpecInternal.appName,
                 applicationDeploymentName = deploymentSpecInternal.name,
                 splunkIndex = deploymentSpecInternal.integration?.splunkIndex,
@@ -332,8 +339,10 @@ class DeployService(
                         "app" to deploymentSpecInternal.name,
                         "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
                         "affiliation" to deploymentSpecInternal.environment.affiliation,
-                        "booberDeployId" to deployId
-                    )
+                        "booberDeployId" to deployId,
+                        "applicationId" to applicationId,
+                        "id" to applicationDeploymentId
+                    ).addIfNotNull(ttl)
                 )
                 .build()
         )
