@@ -134,7 +134,7 @@
                 "memory": "512Mi"
               },
               "requests": {
-                "cpu": "100m",
+                "cpu": "10m",
                 "memory": "128Mi"
               }
             },
@@ -219,7 +219,7 @@
                 "memory": "512Mi"
               },
               "requests": {
-                "cpu": "100m",
+                "cpu": "10m",
                 "memory": "128Mi"
               }
             },

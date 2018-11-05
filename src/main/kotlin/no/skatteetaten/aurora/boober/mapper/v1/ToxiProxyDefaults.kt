@@ -19,7 +19,7 @@ object ToxiProxyDefaults {
     val READINESS_PROBE = Probe(port = PortNumbers.TOXIPROXY_HTTP_PORT, delay = 10, timeout = 1)
 
     val RESOURCE_LIMIT = AuroraDeploymentConfigResource(cpu = "1", memory = "256Mi")
-    val RESOURCE_REQUEST = AuroraDeploymentConfigResource(cpu = "100m", memory = "128Mi")
+    val RESOURCE_REQUEST = AuroraDeploymentConfigResource(cpu = "10m", memory = "128Mi")
 
     val ARGS: List<String> = listOf("-config", "/u01/config/config.json")
     val ENV: List<EnvVar> = emptyList()
