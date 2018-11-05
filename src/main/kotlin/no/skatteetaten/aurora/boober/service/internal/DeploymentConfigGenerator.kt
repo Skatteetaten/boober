@@ -29,7 +29,6 @@ object DeploymentConfigGenerator {
         reference: OwnerReference
     ): DeploymentConfig {
 
-
         return newDeploymentConfig {
 
             metadata {
