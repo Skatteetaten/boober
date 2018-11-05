@@ -99,7 +99,7 @@
         "cpu": {
           "min": {
             "source": "default",
-            "value": "100m"
+            "value": "10m"
           },
           "max": {
             "source": "default",

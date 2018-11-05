@@ -42,7 +42,7 @@ class AuroraDeployMapperV1(
             defaultValue = "rolling",
             validator = { it.oneOf(listOf("recreate", "rolling")) }),
         AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = 180),
-        AuroraConfigFieldHandler("resources/cpu/min", defaultValue = "100m"),
+        AuroraConfigFieldHandler("resources/cpu/min", defaultValue = "10m"),
         AuroraConfigFieldHandler("resources/cpu/max", defaultValue = "2000m"),
         AuroraConfigFieldHandler("resources/memory/min", defaultValue = "128Mi"),
         AuroraConfigFieldHandler("resources/memory/max", defaultValue = "512Mi"),

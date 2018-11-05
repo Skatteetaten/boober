@@ -281,11 +281,11 @@
     "cpu": {
       "min": {
         "source": "default",
-        "value": "100m",
+        "value": "10m",
         "sources": [
           {
             "name": "default",
-            "value": "100m"
+            "value": "10m"
           }
         ]
       },
