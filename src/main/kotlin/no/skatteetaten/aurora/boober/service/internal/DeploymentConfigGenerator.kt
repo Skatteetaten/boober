@@ -4,7 +4,16 @@ import com.fkorotkov.kubernetes.emptyDir
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newVolume
 import com.fkorotkov.kubernetes.spec
-import com.fkorotkov.openshift.*
+import com.fkorotkov.openshift.from
+import com.fkorotkov.openshift.imageChangeParams
+import com.fkorotkov.openshift.metadata
+import com.fkorotkov.openshift.newDeploymentConfig
+import com.fkorotkov.openshift.newDeploymentTriggerPolicy
+import com.fkorotkov.openshift.recreateParams
+import com.fkorotkov.openshift.rollingParams
+import com.fkorotkov.openshift.spec
+import com.fkorotkov.openshift.strategy
+import com.fkorotkov.openshift.template
 import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.OwnerReference
