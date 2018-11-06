@@ -65,6 +65,12 @@ data class OpenShiftResponse @JvmOverloads constructor(
     }
 }
 
+fun List<OpenShiftResponse>.resource(kind: String): OpenShiftResponse? =
+    this.find { it.responseBody?.openshiftKind == kind }
+
+fun List<OpenshiftCommand>.resource(kind: String): OpenshiftCommand? =
+    this.find { it.payload.openshiftKind == kind }
+
 data class UserGroup(val user: String, val group: String)
 
 data class OpenShiftGroups(private val groupUserPairs: List<UserGroup>) {

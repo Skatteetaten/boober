@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.NullNode
 
 import io.fabric8.kubernetes.api.model.ObjectMeta
@@ -15,6 +16,7 @@ import io.fabric8.openshift.api.model.ImageStreamStatus
 import io.fabric8.openshift.api.model.NamedTagEventList
 import io.fabric8.openshift.api.model.TagEvent
 import io.fabric8.openshift.api.model.TagReference
+import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.model.openshift.ConditionsItem
 import no.skatteetaten.aurora.boober.model.openshift.ImageStreamImport
 import no.skatteetaten.aurora.boober.model.openshift.Import
@@ -41,16 +43,65 @@ class RedeployServiceTest extends Specification {
   def openShiftClient = Mock(OpenShiftClient)
   def redeployService = new RedeployService(openShiftClient, openShiftObjectGenerator)
 
-  def "Redeploy given null ImageStream return success"() {
+  def "Should not run explicit deploy for development type"() {
+    when:
+      def response = redeployService.triggerRedeploy([deploymentConfig], TemplateType.development)
+
+    then:
+      response.success
+      response.message == "No explicit deploy was made with development type"
+  }
+
+  def "Should throw error if dc is null"() {
     given:
       openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> openShiftResponse()
 
     when:
-      def response = redeployService.triggerRedeploy(deploymentConfig, null)
+      redeployService.triggerRedeploy([], TemplateType.deploy)
+
+    then:
+      def e = thrown(IllegalArgumentException)
+      e.message == 'Missing DeploymentConfig'
+  }
+
+  def "Redeploy given null ImageStream return success"() {
+
+    given:
+      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> openShiftResponse()
+
+    when:
+      def response = redeployService.triggerRedeploy([deploymentConfig], TemplateType.deploy)
 
     then:
       response.success
       response.openShiftResponses.size() == 1
+  }
+
+  def "Redeploy with paused deploy will not run manual deploy"() {
+    given:
+      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> imageStreamImportResponse()
+
+    when:
+      def response = redeployService.
+          triggerRedeploy([deploymentConfig("ImageChange", 0), imageStream], TemplateType.deploy)
+
+    then:
+      response.success
+      response.openShiftResponses.size() == 1
+  }
+
+  def "Redeploy with newly created imagestream will not import"() {
+    given:
+      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> imageStreamImportResponse()
+
+    when:
+      def response = redeployService.
+          triggerRedeploy([deploymentConfig, imageStream("dockerUrl", OperationType.CREATE)], TemplateType.deploy)
+
+    then:
+      response.success
+      response.message == "No explicit deploy was made for newly created imagestream"
+      response.openShiftResponses.size() == 0
   }
 
   def "Redeploy given image is already imported return success"() {
@@ -58,7 +109,7 @@ class RedeployServiceTest extends Specification {
       openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> imageStreamImportResponse()
 
     when:
-      def response = redeployService.triggerRedeploy(deploymentConfig, imageStream)
+      def response = redeployService.triggerRedeploy([deploymentConfig, imageStream], TemplateType.deploy)
 
     then:
       response.success
@@ -70,7 +121,7 @@ class RedeployServiceTest extends Specification {
       openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> imageStreamImportResponse('234')
 
     when:
-      def response = redeployService.triggerRedeploy(deploymentConfig, imageStream)
+      def response = redeployService.triggerRedeploy([deploymentConfig, imageStream], TemplateType.deploy)
 
     then:
       response.success
@@ -83,7 +134,7 @@ class RedeployServiceTest extends Specification {
       openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> failedResponse(errorMessage)
 
     when:
-      def response = redeployService.triggerRedeploy(deploymentConfig, imageStream)
+      def response = redeployService.triggerRedeploy([deploymentConfig, imageStream], TemplateType.deploy)
 
     then:
       !response.success
@@ -98,7 +149,7 @@ class RedeployServiceTest extends Specification {
           failedImageStreamImportResponse(errorMessage)
 
     when:
-      def response = redeployService.triggerRedeploy(deploymentConfig, imageStream)
+      def response = redeployService.triggerRedeploy([deploymentConfig, imageStream], TemplateType.deploy)
 
     then:
       !response.success
@@ -112,7 +163,7 @@ class RedeployServiceTest extends Specification {
       openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> openShiftResponse()
 
     when:
-      def response = redeployService.triggerRedeploy(deploymentConfigWithoutType, imageStream)
+      def response = redeployService.triggerRedeploy([deploymentConfigWithoutType, imageStream], TemplateType.deploy)
 
     then:
       response.success
@@ -124,25 +175,32 @@ class RedeployServiceTest extends Specification {
       def imageStreamWithoutDockerImageUrl = imageStream(null)
 
     when:
-      redeployService.triggerRedeploy(deploymentConfig, imageStreamWithoutDockerImageUrl)
+      redeployService.triggerRedeploy([deploymentConfig, imageStreamWithoutDockerImageUrl], TemplateType.deploy)
 
     then:
       def e = thrown(IllegalArgumentException)
       e.message == 'Missing docker image url'
   }
 
-  private static DeploymentConfig deploymentConfig(String type = 'ImageChange') {
-    return new DeploymentConfig(
+  private static OpenShiftResponse deploymentConfig(String type = 'ImageChange', int replicas = 1) {
+
+    def deploymentConfig = new DeploymentConfig(
         metadata: new ObjectMeta(namespace: 'affiliation', name: 'name'),
         spec: new DeploymentConfigSpec(
+            replicas: replicas,
             triggers: [new DeploymentTriggerPolicy(type: type,
                 imageChangeParams: new DeploymentTriggerImageChangeParams(
                     from: new ObjectReference(name: 'referanse:default')))])
     )
+    def mapper = new ObjectMapper();
+    JsonNode dc = mapper.convertValue(deploymentConfig, JsonNode.class)
+    def dcCommand = new OpenshiftCommand(OperationType.CREATE, dc, dc)
+    return new OpenShiftResponse(dcCommand, dc, true)
   }
 
-  private ImageStream imageStream(String dockerImageUrl = 'dockerImageUrl') {
-    return new ImageStream(
+  private OpenShiftResponse imageStream(String dockerImageUrl = 'dockerImageUrl',
+      OperationType type = OperationType.UPDATE) {
+    def is = new ImageStream(
         metadata: new ObjectMeta(namespace: 'affiliation', name: 'name', resourceVersion: '123'),
         status: new ImageStreamStatus(
             tags: [new NamedTagEventList(items: [new TagEvent(image: defaultImageHash)])]
@@ -150,6 +208,10 @@ class RedeployServiceTest extends Specification {
         spec: new ImageStreamSpec(
             tags: [new TagReference(name: 'default', from: new ObjectReference(name: dockerImageUrl))]
         ))
+    def mapper = new ObjectMapper();
+    JsonNode dc = mapper.convertValue(is, JsonNode.class)
+    def dcCommand = new OpenshiftCommand(type, dc)
+    return new OpenShiftResponse(dcCommand, dc, true)
   }
 
   private ImageStreamImport imageStreamImport(String imageHash = defaultImageHash, boolean status = true,

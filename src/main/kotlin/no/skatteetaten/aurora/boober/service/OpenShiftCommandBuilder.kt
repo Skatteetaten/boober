@@ -1,7 +1,10 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.OwnerReference
+import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -10,7 +13,9 @@ import no.skatteetaten.aurora.boober.service.openshift.OperationType.CREATE
 import no.skatteetaten.aurora.boober.service.openshift.OperationType.DELETE
 import no.skatteetaten.aurora.boober.service.openshift.OperationType.UPDATE
 import no.skatteetaten.aurora.boober.service.openshift.mergeWithExistingResource
+import no.skatteetaten.aurora.boober.service.openshift.resource
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.springframework.stereotype.Service
@@ -40,7 +45,7 @@ class OpenShiftCommandBuilder(
     private fun createMergedUpdateCommand(namespace: String, it: JsonNode) =
         createOpenShiftCommand(namespace, it, true, true).copy(operationType = UPDATE)
 
-    fun generateApplicationObjects(
+    fun generateOpenshiftCommands(
         deployId: String,
         deploymentSpecInternal: AuroraDeploymentSpecInternal,
         provisioningResult: ProvisioningResult?,
@@ -50,13 +55,12 @@ class OpenShiftCommandBuilder(
 
         val namespace = deploymentSpecInternal.environment.namespace
 
-        return openShiftObjectGenerator.generateApplicationObjects(
+        val commands = openShiftObjectGenerator.generateApplicationObjects(
             deployId,
             deploymentSpecInternal,
             provisioningResult,
             ownerReference
-        )
-            .map { createOpenShiftCommand(namespace, it, mergeWithExistingResource, false) }
+        ).map { createOpenShiftCommand(namespace, it, mergeWithExistingResource, false) }
             .flatMap { command ->
                 if (command.isType(UPDATE, "route") && mustRecreateRoute(command.payload, command.previous)) {
                     val deleteCommand = command.copy(operationType = DELETE)
@@ -66,6 +70,30 @@ class OpenShiftCommandBuilder(
                     listOf(command)
                 }
             }
+
+        // if deploy was paused we need to do imageStream first
+        if (!deploymentPaused(commands)) {
+            return commands
+        }
+
+        // we cannot asume any order of the commands.
+        val commandsWithoutDCAndIS = commands.filter {
+            val kind = it.payload.openshiftKind
+            kind != "deploymentconfig" && kind != "imagestream"
+        }
+
+        val dc = commands.resource("deploymentconfig")
+        val imageStream = commands.resource("imagestream")?.let { listOf(it) } ?: emptyList()
+
+        return imageStream.addIfNotNull(dc) + commandsWithoutDCAndIS
+    }
+
+    private fun deploymentPaused(commands: List<OpenshiftCommand>): Boolean {
+        commands.resource("deploymentconfig")?.let {
+            val dc = jacksonObjectMapper().convertValue<DeploymentConfig>(it.previous!!)
+            return dc.spec.replicas == 0
+        }
+        return false
     }
 
     /**
@@ -77,7 +105,12 @@ class OpenShiftCommandBuilder(
      * <code>false</code>, because retrying everything will significantly impact performance of creating or updating
      * many objects.
      */
-    fun createOpenShiftCommand(namespace: String, newResource: JsonNode, mergeWithExistingResource: Boolean = true, retryGetResourceOnFailure: Boolean = false): OpenshiftCommand {
+    fun createOpenShiftCommand(
+        namespace: String,
+        newResource: JsonNode,
+        mergeWithExistingResource: Boolean = true,
+        retryGetResourceOnFailure: Boolean = false
+    ): OpenshiftCommand {
 
         val kind = newResource.openshiftKind
         val name = newResource.openshiftName
@@ -99,7 +132,15 @@ class OpenShiftCommandBuilder(
         name: String,
         namespace: String,
         deployId: String,
-        apiResources: List<String> = listOf("BuildConfig", "DeploymentConfig", "ConfigMap", "Secret", "Service", "Route", "ImageStream")
+        apiResources: List<String> = listOf(
+            "BuildConfig",
+            "DeploymentConfig",
+            "ConfigMap",
+            "Secret",
+            "Service",
+            "Route",
+            "ImageStream"
+        )
     ): List<OpenshiftCommand> {
 
         // TODO: This cannot be change until we remove the app label

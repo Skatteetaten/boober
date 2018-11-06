@@ -5,13 +5,10 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder
 import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder
-import io.fabric8.openshift.api.model.DeploymentConfig
-import io.fabric8.openshift.api.model.ImageStream
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
-import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
@@ -21,9 +18,6 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResour
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.deploymentConfigFromJson
-import no.skatteetaten.aurora.boober.utils.imageStreamFromJson
-import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.whenFalse
 import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.Logger
@@ -217,14 +211,14 @@ class DeployService(
             )
         }
 
-        val application = createApplicationDeployment(auroraConfigRef, deploymentSpecInternal, deployId, cmd)
+        val application = createApplicationDeployment(deploymentSpecInternal, deployId, cmd)
 
-        val applicationCommnd = openShiftCommandBuilder.createOpenShiftCommand(
+        val applicationCommand = openShiftCommandBuilder.createOpenShiftCommand(
             deploymentSpecInternal.environment.namespace,
             jacksonObjectMapper().convertValue(application)
         )
         val applicationResult =
-            openShiftClient.performOpenShiftCommand(deploymentSpecInternal.environment.namespace, applicationCommnd)
+            openShiftClient.performOpenShiftCommand(deploymentSpecInternal.environment.namespace, applicationCommand)
 
         val appResponse: ApplicationDeployment? = applicationResult.responseBody?.let {
             jacksonObjectMapper().convertValue(it)
@@ -261,7 +255,7 @@ class DeployService(
         val success = openShiftResponses.all { it.success }
         val result = AuroraDeployResult(cmd, deploymentSpecInternal, deployId, openShiftResponses, success)
         if (!shouldDeploy) {
-            return result.copy(reason = "Deploy explicitly turned of.")
+            return result.copy(reason = "Deploy explicitly turned off.")
         }
 
         if (!success) {
@@ -272,6 +266,7 @@ class DeployService(
             return result.copy(reason = "Deployment is paused.")
         }
 
+        // TODO: Should this be before the returns above?
         val tagResult = deploymentSpecInternal.deploy?.takeIf { it.releaseTo != null }?.let {
             val dockerGroup = it.groupId.dockerGroupSafeName()
             val cmd = TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
@@ -281,14 +276,7 @@ class DeployService(
         tagResult?.takeIf { !it.success }
             ?.let { return result.copy(tagResponse = it, reason = "Tag command failed") }
 
-        val imageStream = findImageStreamResponse(openShiftResponses)
-        val deploymentConfig = findDeploymentConfigResponse(openShiftResponses)
-            ?: throw IllegalArgumentException("Missing DeploymentConfig")
-        val redeployResult = if (deploymentSpecInternal.type == TemplateType.development) {
-            RedeployService.RedeployResult(message = "No deploy was made with ${deploymentSpecInternal.type} type")
-        } else {
-            redeployService.triggerRedeploy(deploymentConfig, imageStream)
-        }
+        val redeployResult = redeployService.triggerRedeploy(openShiftResponses, deploymentSpecInternal.type)
 
         if (!redeployResult.success) {
             return result.copy(
@@ -305,7 +293,6 @@ class DeployService(
     }
 
     fun createApplicationDeployment(
-        auroraConfigRef: AuroraConfigRef,
         deploymentSpecInternal: AuroraDeploymentSpecInternal,
         deployId: String,
         cmd: ApplicationDeploymentCommand
@@ -321,7 +308,6 @@ class DeployService(
             spec = ApplicationDeploymentSpec(
                 selector = mapOf("name" to deploymentSpecInternal.name),
                 deployTag = deploymentSpecInternal.version,
-                // This is the base shared applicationDeploymentRef
                 applicationId = applicationId,
                 applicationDeploymentId = applicationDeploymentId,
                 applicationName = deploymentSpecInternal.appName,
@@ -333,7 +319,6 @@ class DeployService(
             ),
             metadata = ObjectMetaBuilder()
                 .withName(deploymentSpecInternal.name)
-                .withAnnotations(null)
                 .withLabels(
                     mapOf(
                         "app" to deploymentSpecInternal.name,
@@ -359,14 +344,15 @@ class DeployService(
         val namespace = deploymentSpecInternal.environment.namespace
         val name = deploymentSpecInternal.name
 
-        val openShiftApplicationResponses: List<OpenShiftResponse> = openShiftCommandBuilder
-            .generateApplicationObjects(
-                deployId,
-                deploymentSpecInternal,
-                provisioningResult,
-                mergeWithExistingResource,
-                ownerReference
-            )
+        val commands = openShiftCommandBuilder.generateOpenshiftCommands(
+            deployId,
+            deploymentSpecInternal,
+            provisioningResult,
+            mergeWithExistingResource,
+            ownerReference
+        )
+
+        val openShiftApplicationResponses: List<OpenShiftResponse> = commands
             .map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         if (openShiftApplicationResponses.any { !it.success }) {
@@ -379,15 +365,5 @@ class DeployService(
             .map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         return openShiftApplicationResponses.addIfNotNull(deleteOldObjectResponses)
-    }
-
-    private fun findImageStreamResponse(openShiftResponses: List<OpenShiftResponse>): ImageStream? {
-        return openShiftResponses.find { it.responseBody?.openshiftKind == "imagestream" }
-            ?.let { imageStreamFromJson(it.responseBody) }
-    }
-
-    private fun findDeploymentConfigResponse(openShiftResponses: List<OpenShiftResponse>): DeploymentConfig? {
-        return openShiftResponses.find { it.responseBody?.openshiftKind == "deploymentconfig" }
-            ?.let { deploymentConfigFromJson(it.responseBody) }
     }
 }
