@@ -3,7 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
 import no.skatteetaten.aurora.boober.model.TemplateType
-import no.skatteetaten.aurora.boober.service.internal.ImageStreamImportGenerator
+import no.skatteetaten.aurora.boober.model.openshift.ImageStreamImport
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
@@ -11,7 +11,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.service.openshift.resource
 import no.skatteetaten.aurora.boober.utils.deploymentConfigFromJson
 import no.skatteetaten.aurora.boober.utils.findCurrentImageHash
-import no.skatteetaten.aurora.boober.utils.findDockerImageUrl
 import no.skatteetaten.aurora.boober.utils.findImageChangeTriggerTagName
 import no.skatteetaten.aurora.boober.utils.imageStreamFromJson
 import no.skatteetaten.aurora.boober.utils.imageStreamImportFromJson
@@ -50,6 +49,10 @@ class RedeployService(
         val isResource = openShiftResponses.resource("imagestream")
         val imageStream = isResource?.responseBody?.let { imageStreamFromJson(it) }
 
+        val isiResource = openShiftResponses.resource("imagestreamimport")?.let { isi ->
+            isi.responseBody?.let { imageStreamImportFromJson(it) }
+        }
+
         val dcResource = openShiftResponses.resource("deploymentconfig")
         val oldDcResource = dcResource?.command?.previous?.let { deploymentConfigFromJson(it) }
         val wasPaused = oldDcResource?.spec?.replicas == 0
@@ -64,7 +67,12 @@ class RedeployService(
         if (imageStream == null || imageChangeTriggerTagName == null) {
             return triggerRedeploy(deploymentConfig)
         }
-        return triggerRedeploy(imageStream, deploymentConfig.metadata.name, imageChangeTriggerTagName, wasPaused)
+        return triggerRedeploy(
+            imageStream,
+            deploymentConfig.metadata.name,
+            wasPaused,
+            isiResource
+        )
     }
 
     fun triggerRedeploy(deploymentConfig: DeploymentConfig): RedeployResult {
@@ -74,44 +82,24 @@ class RedeployService(
         return RedeployResult.fromOpenShiftResponses(listOf(deploymentRequestResponse))
     }
 
-    fun triggerRedeploy(imageStream: ImageStream, dcName: String, tagName: String, wasPaused: Boolean): RedeployResult {
+    fun triggerRedeploy(
+        imageStream: ImageStream,
+        dcName: String,
+        wasPaused: Boolean,
+        imageStreamImport: ImageStreamImport?
+    ): RedeployResult {
         val namespace = imageStream.metadata.namespace
-        val isName = imageStream.metadata.name
-        val dockerImageUrl = imageStream.findDockerImageUrl(tagName)
-            ?: throw IllegalArgumentException("Missing docker image url")
-        val imageStreamImportResponse = performImageStreamImport(namespace, dockerImageUrl, isName)
-        if (!imageStreamImportResponse.success) {
-            return createFailedRedeployResult(imageStreamImportResponse.exception, imageStreamImportResponse)
-        }
 
-        val imageStreamImport = imageStreamImportFromJson(imageStreamImportResponse.responseBody)
-        imageStreamImport.findErrorMessage(tagName)
-            // TODO: bør vi ha en beskjed her?
-            ?.let { return createFailedRedeployResult(it, imageStreamImportResponse) }
-
-        if (imageStreamImport.isDifferentImage(imageStream.findCurrentImageHash())) {
-            // TODO: bør vi ha en beskjed her?
-            return RedeployResult.fromOpenShiftResponses(listOf(imageStreamImportResponse))
+        imageStreamImport?.let {
+            if (imageStreamImport.isDifferentImage(imageStream.findCurrentImageHash())) {
+                return RedeployResult(message = "Image is different so no explicit deploy")
+            }
         }
         if (wasPaused) {
-            // TODO: bør vi ha en beskjed her?
-            return RedeployResult.fromOpenShiftResponses(listOf(imageStreamImportResponse))
+            return RedeployResult(message = "Deploy was paused so no explicit deploy")
         }
         val deploymentRequestResponse = performDeploymentRequest(namespace, dcName)
-        return RedeployResult.fromOpenShiftResponses(listOf(imageStreamImportResponse, deploymentRequestResponse))
-    }
-
-    private fun createFailedRedeployResult(message: String?, openShiftResponse: OpenShiftResponse) =
-        RedeployResult(success = false, message = message, openShiftResponses = listOf(openShiftResponse))
-
-    private fun performImageStreamImport(
-        namespace: String,
-        dockerImageUrl: String,
-        imageStreamName: String
-    ): OpenShiftResponse {
-        val imageStreamImport = ImageStreamImportGenerator.create(dockerImageUrl, imageStreamName)
-        val command = OpenshiftCommand(OperationType.CREATE, imageStreamImport.toJsonNode())
-        return openShiftClient.performOpenShiftCommand(namespace, command)
+        return RedeployResult.fromOpenShiftResponses(listOf(deploymentRequestResponse))
     }
 
     private fun performDeploymentRequest(namespace: String, name: String): OpenShiftResponse {

@@ -24,10 +24,12 @@ import no.skatteetaten.aurora.boober.model.openshift.ImportStatus
 import no.skatteetaten.aurora.boober.model.openshift.ItemsItem
 import no.skatteetaten.aurora.boober.model.openshift.Status
 import no.skatteetaten.aurora.boober.model.openshift.TagsItem
+import no.skatteetaten.aurora.boober.service.internal.ImageStreamImportGenerator
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import spock.lang.Ignore
 import spock.lang.Specification
 
 class RedeployServiceTest extends Specification {
@@ -87,7 +89,8 @@ class RedeployServiceTest extends Specification {
 
     then:
       response.success
-      response.openShiftResponses.size() == 1
+      response.message == "Deploy was paused so no explicit deploy"
+      response.openShiftResponses.size() == 0
   }
 
   def "Redeploy with newly created imagestream will not import"() {
@@ -100,8 +103,8 @@ class RedeployServiceTest extends Specification {
 
     then:
       response.success
-      response.message == "No explicit deploy was made for newly created imagestream"
       response.openShiftResponses.size() == 0
+      response.message == "No explicit deploy was made for newly created imagestream"
   }
 
   def "Redeploy given image is already imported return success"() {
@@ -113,7 +116,7 @@ class RedeployServiceTest extends Specification {
 
     then:
       response.success
-      response.openShiftResponses.size() == 2
+      response.openShiftResponses.size() == 1
   }
 
   def "Redeploy given image is not imported return success"() {
@@ -128,34 +131,6 @@ class RedeployServiceTest extends Specification {
       response.openShiftResponses.size() == 1
   }
 
-  def "Redeploy given failure from ImageStreamImport command return failed"() {
-    given:
-      def errorMessage = 'failed ImageStreamImport'
-      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> failedResponse(errorMessage)
-
-    when:
-      def response = redeployService.triggerRedeploy([deploymentConfig, imageStream], TemplateType.deploy)
-
-    then:
-      !response.success
-      response.message == errorMessage
-      response.openShiftResponses.size() == 1
-  }
-
-  def "Redeploy given error message in ImageStreamImport response return failed"() {
-    given:
-      def errorMessage = 'ImageStreamImport error message'
-      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >>
-          failedImageStreamImportResponse(errorMessage)
-
-    when:
-      def response = redeployService.triggerRedeploy([deploymentConfig, imageStream], TemplateType.deploy)
-
-    then:
-      !response.success
-      response.message == errorMessage
-      response.openShiftResponses.size() == 1
-  }
 
   def "Redeploy given no type in DeploymentConfig perform deployment request and return success"() {
     given:
@@ -170,16 +145,18 @@ class RedeployServiceTest extends Specification {
       response.openShiftResponses.size() == 1
   }
 
-  def "Redeploy given no docker image url throw IllegalArgumentException"() {
+  def "Redeploy with different image will not run explicit deploy"() {
     given:
-      def imageStreamWithoutDockerImageUrl = imageStream(null)
+      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> imageStreamImportResponse()
 
     when:
-      redeployService.triggerRedeploy([deploymentConfig, imageStreamWithoutDockerImageUrl], TemplateType.deploy)
+      def response = redeployService.
+          triggerRedeploy([deploymentConfig, imageStream, imageStreamImportResponse("hash")], TemplateType.deploy)
 
     then:
-      def e = thrown(IllegalArgumentException)
-      e.message == 'Missing docker image url'
+      response.success
+      response.openShiftResponses.size() == 0
+      response.message == "Image is different so no explicit deploy"
   }
 
   private static OpenShiftResponse deploymentConfig(String type = 'ImageChange', int replicas = 1) {
@@ -216,7 +193,7 @@ class RedeployServiceTest extends Specification {
 
   private ImageStreamImport imageStreamImport(String imageHash = defaultImageHash, boolean status = true,
       String errorMessage = '') {
-    return new ImageStreamImport(null, '', '', null,
+    return new ImageStreamImport(null, '', 'ImageStreamImport', null,
         new Status([], new Import(null, null,
             new ImportStatus('', [new TagsItem('default',
                 [new ItemsItem(0, imageHash, '', '')],

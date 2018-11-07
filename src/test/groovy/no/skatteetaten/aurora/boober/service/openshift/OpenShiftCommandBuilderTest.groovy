@@ -11,6 +11,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.client.MockRestServiceServer
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 
 import io.fabric8.kubernetes.api.model.OwnerReference
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
@@ -58,15 +59,17 @@ class OpenShiftCommandBuilderTest extends AbstractAuroraDeploymentSpecSpringTest
       osClusterMock.expect(requestTo("$openShiftUrl/oapi/v1/namespaces/$NAMESPACE/deploymentconfigs/webleveranse")).
           andRespond(withSuccess(loadResource("dc-webleveranse.json"), MediaType.APPLICATION_JSON))
 
-      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, aid(ENVIRONMENT, "webleveranse"))
+      AuroraDeploymentSpecInternal deploymentSpec =
+          createDeploymentSpec(auroraConfigJson, aid(ENVIRONMENT, "webleveranse"))
       JsonNode deploymentConfig = objectGenerator.
           generateDeploymentConfig("deploy-id", deploymentSpec, null, new OwnerReference())
 
     when:
-      OpenshiftCommand command = commandBuilder.createOpenShiftCommand(NAMESPACE, deploymentConfig, true, false)
+      OpenshiftCommand command = commandBuilder.createOpenShiftCommands(NAMESPACE, deploymentConfig, true, false).first()
 
     then:
       def resourceVersion = "/metadata/resourceVersion"
       command.payload.at(resourceVersion).textValue() == command.previous.at(resourceVersion).textValue()
   }
+
 }

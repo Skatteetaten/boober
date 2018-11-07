@@ -71,6 +71,10 @@ fun List<OpenShiftResponse>.resource(kind: String): OpenShiftResponse? =
 fun List<OpenshiftCommand>.resource(kind: String): OpenshiftCommand? =
     this.find { it.payload.openshiftKind == kind }
 
+fun List<OpenshiftCommand>.deploymentConfig(): OpenshiftCommand? = this.resource("deploymentconfig")
+fun List<OpenshiftCommand>.imageStream(): OpenshiftCommand? = this.resource("imagestream")
+fun List<OpenshiftCommand>.imageStreamImport(): OpenshiftCommand? = this.resource("imagestreamimport")
+
 data class UserGroup(val user: String, val group: String)
 
 data class OpenShiftGroups(private val groupUserPairs: List<UserGroup>) {

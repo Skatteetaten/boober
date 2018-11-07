@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder
@@ -37,7 +38,6 @@ class DeployService(
     val redeployService: RedeployService,
     val userDetailsProvider: UserDetailsProvider,
     val deployLogService: DeployLogService,
-
     @Value("\${openshift.cluster}") val cluster: String,
     @Value("\${boober.docker.registry}") val dockerRegistry: String
 ) {
@@ -123,7 +123,7 @@ class DeployService(
 
         val projectResponse = projectExist.whenFalse {
             openShiftCommandBuilder.generateProjectRequest(environment).let {
-                openShiftClient.performOpenShiftCommand(namespaceName, it)
+                openShiftClient.performOpenShiftCommand(namespaceName, it.first())
                     .also { Thread.sleep(2000) }
             }
         }
@@ -213,10 +213,11 @@ class DeployService(
 
         val application = createApplicationDeployment(deploymentSpecInternal, deployId, cmd)
 
-        val applicationCommand = openShiftCommandBuilder.createOpenShiftCommand(
+        val applicationCommand = openShiftCommandBuilder.createOpenShiftCommands(
             deploymentSpecInternal.environment.namespace,
             jacksonObjectMapper().convertValue(application)
-        )
+        ).first()
+
         val applicationResult =
             openShiftClient.performOpenShiftCommand(deploymentSpecInternal.environment.namespace, applicationCommand)
 
@@ -344,7 +345,7 @@ class DeployService(
         val namespace = deploymentSpecInternal.environment.namespace
         val name = deploymentSpecInternal.name
 
-        val commands = openShiftCommandBuilder.generateOpenshiftCommands(
+        val objects = openShiftCommandBuilder.generateOpenshiftObjects(
             deployId,
             deploymentSpecInternal,
             provisioningResult,
@@ -352,8 +353,9 @@ class DeployService(
             ownerReference
         )
 
-        val openShiftApplicationResponses: List<OpenShiftResponse> = commands
-            .map { openShiftClient.performOpenShiftCommand(namespace, it) }
+        val openShiftApplicationResponses: List<OpenShiftResponse> = objects.flatMap {
+            createAndApplyObjects(namespace, it, mergeWithExistingResource)
+        }
 
         if (openShiftApplicationResponses.any { !it.success }) {
             logger.warn("One or more commands failed for $namespace/$name. Will not delete objects from previous deploys.")
@@ -365,5 +367,16 @@ class DeployService(
             .map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         return openShiftApplicationResponses.addIfNotNull(deleteOldObjectResponses)
+    }
+
+    // TODO: This could be retried
+    private fun createAndApplyObjects(
+        namespace: String,
+        it: JsonNode,
+        mergeWithExistingResource: Boolean
+    ): List<OpenShiftResponse> {
+        return openShiftCommandBuilder.createOpenShiftCommands(namespace, it, mergeWithExistingResource).map {
+            openShiftClient.performOpenShiftCommand(namespace, it)
+        }
     }
 }
