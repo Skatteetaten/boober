@@ -11,6 +11,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.internal.ImageStreamImportGenerator
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType.CREATE
 import no.skatteetaten.aurora.boober.service.openshift.OperationType.DELETE
@@ -121,7 +122,7 @@ class OpenShiftCommandBuilder(
         val isName = imageStream.metadata.name
         val dockerUrl = imageStream.findDockerImageUrl(tagName) ?: return null
         val imageStreamImport = ImageStreamImportGenerator.create(dockerUrl, isName)
-        return imageStreamImport.toJsonNode()
+        return jacksonObjectMapper().convertValue(imageStreamImport)
     }
 
     private fun deploymentPaused(command: JsonNode): Boolean {
@@ -207,5 +208,16 @@ class OpenShiftCommandBuilder(
         val pathChanged = previousRoute.at(pathPointer) != newRoute.at(pathPointer)
 
         return hostChanged || pathChanged
+    }
+
+    // TODO: This could be retried
+    fun createAndApplyObjects(
+        namespace: String,
+        it: JsonNode,
+        mergeWithExistingResource: Boolean
+    ): List<OpenShiftResponse> {
+        return createOpenShiftCommands(namespace, it, mergeWithExistingResource).map {
+            openShiftClient.performOpenShiftCommand(namespace, it)
+        }
     }
 }

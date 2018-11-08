@@ -68,12 +68,9 @@ data class OpenShiftResponse @JvmOverloads constructor(
 fun List<OpenShiftResponse>.resource(kind: String): OpenShiftResponse? =
     this.find { it.responseBody?.openshiftKind == kind }
 
-fun List<OpenshiftCommand>.resource(kind: String): OpenshiftCommand? =
-    this.find { it.payload.openshiftKind == kind }
-
-fun List<OpenshiftCommand>.deploymentConfig(): OpenshiftCommand? = this.resource("deploymentconfig")
-fun List<OpenshiftCommand>.imageStream(): OpenshiftCommand? = this.resource("imagestream")
-fun List<OpenshiftCommand>.imageStreamImport(): OpenshiftCommand? = this.resource("imagestreamimport")
+fun List<OpenShiftResponse>.deploymentConfig(): OpenShiftResponse? = this.resource("deploymentconfig")
+fun List<OpenShiftResponse>.imageStream(): OpenShiftResponse? = this.resource("imagestream")
+fun List<OpenShiftResponse>.imageStreamImport(): OpenShiftResponse? = this.resource("imagestreamimport")
 
 data class UserGroup(val user: String, val group: String)
 

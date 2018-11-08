@@ -1,32 +1,37 @@
 package no.skatteetaten.aurora.boober.service.internal
 
-import no.skatteetaten.aurora.boober.model.openshift.From
-import no.skatteetaten.aurora.boober.model.openshift.ImageStreamImport
-import no.skatteetaten.aurora.boober.model.openshift.ImagesItem
-import no.skatteetaten.aurora.boober.model.openshift.ImportPolicy
-import no.skatteetaten.aurora.boober.model.openshift.Metadata
-import no.skatteetaten.aurora.boober.model.openshift.Spec
-import no.skatteetaten.aurora.boober.model.openshift.To
+import com.fkorotkov.openshift.from
+import com.fkorotkov.openshift.importPolicy
+import com.fkorotkov.openshift.metadata
+import com.fkorotkov.openshift.newImageImportSpec
+import com.fkorotkov.openshift.newImageStreamImport
+import com.fkorotkov.openshift.spec
+import com.fkorotkov.openshift.to
+import io.fabric8.openshift.api.model.ImageStreamImport
 
 object ImageStreamImportGenerator {
 
     fun create(dockerImageUrl: String, imageStreamName: String): ImageStreamImport {
-        return ImageStreamImport(
-            metadata = Metadata(name = imageStreamName),
-            spec = Spec(
-                images = listOf(ImagesItem(
-                    from = From(
-                        kind = "DockerImage",
+        return newImageStreamImport {
+            metadata {
+                name = imageStreamName
+            }
+            spec {
+                images = listOf(newImageImportSpec {
+                    from {
+                        kind = "DockerImage"
                         name = dockerImageUrl
-                    ),
-                    to = To(
+                    }
+
+                    to {
                         name = "default"
-                    ),
-                    importPolicy = ImportPolicy(
+                    }
+
+                    importPolicy {
                         scheduled = true
-                    )
-                ))
-            )
-        )
+                    }
+                })
+            }
+        }
     }
 }

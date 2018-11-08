@@ -2,13 +2,16 @@ package no.skatteetaten.aurora.boober.service
 
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
+import io.fabric8.openshift.api.model.ImageStreamImport
 import no.skatteetaten.aurora.boober.model.TemplateType
-import no.skatteetaten.aurora.boober.model.openshift.ImageStreamImport
+import no.skatteetaten.aurora.boober.model.openshift.isDifferentImage
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
-import no.skatteetaten.aurora.boober.service.openshift.resource
+import no.skatteetaten.aurora.boober.service.openshift.deploymentConfig
+import no.skatteetaten.aurora.boober.service.openshift.imageStream
+import no.skatteetaten.aurora.boober.service.openshift.imageStreamImport
 import no.skatteetaten.aurora.boober.utils.deploymentConfigFromJson
 import no.skatteetaten.aurora.boober.utils.findCurrentImageHash
 import no.skatteetaten.aurora.boober.utils.findImageChangeTriggerTagName
@@ -46,14 +49,14 @@ class RedeployService(
             return RedeployResult(message = "No explicit deploy was made with $type type")
         }
 
-        val isResource = openShiftResponses.resource("imagestream")
+        val isResource = openShiftResponses.imageStream()
         val imageStream = isResource?.responseBody?.let { imageStreamFromJson(it) }
 
-        val isiResource = openShiftResponses.resource("imagestreamimport")?.let { isi ->
+        val isiResource = openShiftResponses.imageStreamImport()?.let { isi ->
             isi.responseBody?.let { imageStreamImportFromJson(it) }
         }
 
-        val dcResource = openShiftResponses.resource("deploymentconfig")
+        val dcResource = openShiftResponses.deploymentConfig()
         val oldDcResource = dcResource?.command?.previous?.let { deploymentConfigFromJson(it) }
         val wasPaused = oldDcResource?.spec?.replicas == 0
 
@@ -95,6 +98,7 @@ class RedeployService(
                 return RedeployResult(message = "Image is different so no explicit deploy")
             }
         }
+        // TODO: not 100% sure if this is correct or not.
         if (wasPaused) {
             return RedeployResult(message = "Deploy was paused so no explicit deploy")
         }

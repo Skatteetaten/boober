@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder
@@ -267,11 +266,9 @@ class DeployService(
             return result.copy(reason = "Deployment is paused.")
         }
 
-        // TODO: Should this be before the returns above?
         val tagResult = deploymentSpecInternal.deploy?.takeIf { it.releaseTo != null }?.let {
             val dockerGroup = it.groupId.dockerGroupSafeName()
-            val cmd = TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry)
-            dockerService.tag(cmd)
+            dockerService.tag(TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry))
         }
 
         tagResult?.takeIf { !it.success }
@@ -354,7 +351,7 @@ class DeployService(
         )
 
         val openShiftApplicationResponses: List<OpenShiftResponse> = objects.flatMap {
-            createAndApplyObjects(namespace, it, mergeWithExistingResource)
+            openShiftCommandBuilder.createAndApplyObjects(namespace, it, mergeWithExistingResource)
         }
 
         if (openShiftApplicationResponses.any { !it.success }) {
@@ -367,16 +364,5 @@ class DeployService(
             .map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         return openShiftApplicationResponses.addIfNotNull(deleteOldObjectResponses)
-    }
-
-    // TODO: This could be retried
-    private fun createAndApplyObjects(
-        namespace: String,
-        it: JsonNode,
-        mergeWithExistingResource: Boolean
-    ): List<OpenShiftResponse> {
-        return openShiftCommandBuilder.createOpenShiftCommands(namespace, it, mergeWithExistingResource).map {
-            openShiftClient.performOpenShiftCommand(namespace, it)
-        }
     }
 }
