@@ -1,9 +1,11 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.treeToValue
 import com.github.fge.jackson.JacksonUtils
 import com.github.fge.jackson.jsonpointer.JsonPointer
 import com.github.fge.jsonpatch.AddOperation
@@ -23,7 +25,17 @@ class UserAnnotationService(
     @ClientType(TokenSource.SERVICE_ACCOUNT) private val serviceAccountClient: OpenShiftResourceClient
 ) {
 
-    fun addAnnotation(key: String, entries: Map<String, Any>): OpenShiftResponse {
+    fun getAnnotations(key: String) =
+        try {
+            val name = userDetailsProvider.getAuthenticatedUser().username
+            val response = serviceAccountClient.get("user", "", name)
+            val annotations = response?.body?.at("/metadata/annotations") ?: NullNode.instance
+            OpenShiftResponse(OpenshiftCommand(OperationType.GET), jacksonObjectMapper().treeToValue(annotations))
+        } catch (e: OpenShiftException) {
+            OpenShiftResponse.fromOpenShiftException(e, OpenshiftCommand(OperationType.GET))
+        }
+
+    fun addAnnotations(key: String, entries: Map<String, Any>): OpenShiftResponse {
         val patchJson = createAddPatch(key, entries)
         val cmd = OpenshiftCommand(OperationType.UPDATE, patchJson)
         return try {
@@ -38,7 +50,8 @@ class UserAnnotationService(
     fun createAddPatch(key: String, entries: Map<String, Any>): JsonNode {
         val jsonEntries = jacksonObjectMapper().writeValueAsString(entries)
         val encodedString = Base64Utils.encodeToString(jsonEntries.toByteArray())
-        val patch = JsonPatch(listOf(AddOperation(JsonPointer.of("metadata", "annotations", key), TextNode(encodedString))))
+        val patch =
+            JsonPatch(listOf(AddOperation(JsonPointer.of("metadata", "annotations", key), TextNode(encodedString))))
         return JacksonUtils.newMapper().convertValue(patch)
     }
 }

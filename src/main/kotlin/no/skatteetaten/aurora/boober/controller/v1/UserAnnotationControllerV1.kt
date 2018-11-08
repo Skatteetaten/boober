@@ -4,6 +4,7 @@ import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.service.UserAnnotationService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import org.springframework.stereotype.Component
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestBody
@@ -11,15 +12,21 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/v1/users")
+@RequestMapping("/v1/users/annotations/{key}")
 class UserAnnotationControllerV1(
     private val userAnnotationService: UserAnnotationService,
     private val userAnnotationResponder: UserAnnotationResponder
 ) {
 
-    @PatchMapping("/annotations/{key}")
+    @PatchMapping
     fun updateUserAnnotation(@PathVariable key: String, @RequestBody entries: Map<String, Any>): Response {
-        val response = userAnnotationService.addAnnotation(key, entries)
+        val response = userAnnotationService.addAnnotations(key, entries)
+        return userAnnotationResponder.create(response)
+    }
+
+    @GetMapping
+    fun getUserAnnotations(@PathVariable key: String): Response {
+        val response = userAnnotationService.getAnnotations(key)
         return userAnnotationResponder.create(response)
     }
 }
