@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.fge.jackson.JacksonUtils
@@ -14,6 +15,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import org.springframework.stereotype.Service
+import org.springframework.util.Base64Utils
 
 @Service
 class UserAnnotationService(
@@ -34,8 +36,9 @@ class UserAnnotationService(
     }
 
     fun createAddPatch(key: String, entries: Map<String, Any>): JsonNode {
-        val jsonEntries = jacksonObjectMapper().convertValue<JsonNode>(entries)
-        val patch = JsonPatch(listOf(AddOperation(JsonPointer.of("metadata", "annotations", key), jsonEntries)))
+        val jsonEntries = jacksonObjectMapper().writeValueAsString(entries)
+        val encodedString = Base64Utils.encodeToString(jsonEntries.toByteArray())
+        val patch = JsonPatch(listOf(AddOperation(JsonPointer.of("metadata", "annotations", key), TextNode(encodedString))))
         return JacksonUtils.newMapper().convertValue(patch)
     }
 }
