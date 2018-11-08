@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.model
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.openshift._import
-import com.fkorotkov.openshift.image
 import com.fkorotkov.openshift.newImageStreamImport
 import com.fkorotkov.openshift.newNamedTagEventList
 import com.fkorotkov.openshift.newTagEvent
@@ -55,8 +54,10 @@ fun getSampleFiles(aid: ApplicationDeploymentRef, additionalFile: String? = null
 }
 
 fun getResultFiles(aid: ApplicationDeploymentRef): Map<String, JsonNode?> {
-    val baseFolder = File(AuroraConfigHelper::class.java
-        .getResource("/samples/result/${aid.environment}/${aid.application}").file)
+    val baseFolder = File(
+        AuroraConfigHelper::class.java
+            .getResource("/samples/result/${aid.environment}/${aid.application}").file
+    )
 
     return getFiles(baseFolder)
 }
@@ -87,7 +88,11 @@ private fun convertFileToJsonNode(file: File): JsonNode? {
 }
 
 @JvmOverloads
-fun imageStreamImport(imageHash: String = "123", imageStatus: Boolean = true, imageErrorMessage: String = ""): ImageStreamImport {
+fun imageStreamImport(
+    imageHash: String = "123",
+    imageStatus: Boolean = true,
+    imageErrorMessage: String = ""
+): ImageStreamImport {
     return newImageStreamImport {
         status {
             _import {
@@ -96,6 +101,7 @@ fun imageStreamImport(imageHash: String = "123", imageStatus: Boolean = true, im
                         items = listOf(newTagEvent {
                             created = "true"
                             image = imageHash
+                            tag = "default"
                         })
                         conditions = listOf(newTagEventCondition {
                             status = imageStatus.toString()

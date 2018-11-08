@@ -4,6 +4,7 @@ import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
 import io.fabric8.openshift.api.model.ImageStreamImport
 import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.model.openshift.findErrorMessage
 import no.skatteetaten.aurora.boober.model.openshift.isDifferentImage
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
@@ -70,6 +71,10 @@ class RedeployService(
         if (imageStream == null || imageChangeTriggerTagName == null) {
             return triggerRedeploy(deploymentConfig)
         }
+
+        isiResource?.findErrorMessage(imageChangeTriggerTagName)?.let {
+            return RedeployResult(success = false, message = "ImageStreamImport failed with message=$it")
+        }
         return triggerRedeploy(
             imageStream,
             deploymentConfig.metadata.name,
@@ -94,10 +99,12 @@ class RedeployService(
         val namespace = imageStream.metadata.namespace
 
         imageStreamImport?.let {
-            if (imageStreamImport.isDifferentImage(imageStream.findCurrentImageHash())) {
+
+            if (it.isDifferentImage(imageStream.findCurrentImageHash())) {
                 return RedeployResult(message = "Image is different so no explicit deploy")
             }
         }
+
         // TODO: not 100% sure if this is correct or not.
         if (wasPaused) {
             return RedeployResult(message = "Deploy was paused so no explicit deploy")

@@ -138,11 +138,12 @@ class RedeployServiceTest extends Specification {
 
   def "Redeploy with same image will run explicit deploy"() {
     given:
-      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> imageStreamImportResponse()
+      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> openShiftResponse()
 
     when:
       def response = redeployService.
-          triggerRedeploy([deploymentConfig, imageStream, imageStreamImportResponse(defaultImageHash)], TemplateType.deploy)
+          triggerRedeploy([deploymentConfig, imageStream, imageStreamImportResponse(defaultImageHash)],
+              TemplateType.deploy)
 
     then:
       response.success
@@ -151,9 +152,6 @@ class RedeployServiceTest extends Specification {
   }
 
   def "Redeploy with different image will not run explicit deploy"() {
-    given:
-      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> imageStreamImportResponse()
-
     when:
       def response = redeployService.
           triggerRedeploy([deploymentConfig, imageStream, imageStreamImportResponse("hash")], TemplateType.deploy)
@@ -162,6 +160,18 @@ class RedeployServiceTest extends Specification {
       response.success
       response.openShiftResponses.size() == 0
       response.message == "Image is different so no explicit deploy"
+  }
+
+  def "Redeploy with error in imageStreamImport fails"() {
+    when:
+      def response = redeployService.
+          triggerRedeploy([deploymentConfig, imageStream, failedImageStreamImportResponse("Failed")],
+              TemplateType.deploy)
+
+    then:
+      !response.success
+      response.message == "ImageStreamImport failed with message=Failed"
+      response.openShiftResponses.size() == 0
   }
 
   private static OpenShiftResponse deploymentConfig(String type = 'ImageChange', int replicas = 1) {
@@ -200,13 +210,27 @@ class RedeployServiceTest extends Specification {
     def imageStreamImport = AuroraConfigHelperKt.imageStreamImport(imageHash)
 
     def mapper = new ObjectMapper()
-    def isiJson= mapper.convertValue(imageStreamImport, JsonNode.class)
+    def isiJson = mapper.convertValue(imageStreamImport, JsonNode.class)
     return new OpenShiftResponse(
         new OpenshiftCommand(OperationType.CREATE, emptyJsonNode), isiJson)
   }
 
   private OpenShiftResponse openShiftResponse(JsonNode responseBody = emptyJsonNode) {
     return new OpenShiftResponse(new OpenshiftCommand(OperationType.CREATE, emptyJsonNode), responseBody)
+  }
+
+  private OpenShiftResponse failedResponse(JsonNode jsonNode = emptyJsonNode, String errorMessage) {
+    return new OpenShiftResponse(
+        new OpenshiftCommand(OperationType.CREATE, emptyJsonNode), jsonNode, false, errorMessage
+    )
+  }
+
+  private OpenShiftResponse failedImageStreamImportResponse(String errorMessage) {
+    def imageStreamImport = AuroraConfigHelperKt.imageStreamImport(defaultImageHash, false, errorMessage)
+
+    def mapper = new ObjectMapper()
+    def isiJson = mapper.convertValue(imageStreamImport, JsonNode.class)
+    return openShiftResponse(isiJson)
   }
 
 }
