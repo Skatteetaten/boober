@@ -72,6 +72,7 @@ class RedeployService(
             return triggerRedeploy(deploymentConfig)
         }
 
+        // TODO Move this to check for error after doing ImageStreamImport command
         isiResource?.findErrorMessage(imageChangeTriggerTagName)?.let {
             return RedeployResult(success = false, message = "ImageStreamImport failed with message=$it")
         }
