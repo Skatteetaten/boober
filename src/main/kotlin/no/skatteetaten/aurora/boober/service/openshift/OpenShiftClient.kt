@@ -25,7 +25,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
 
-enum class OperationType { GET, CREATE, UPDATE, PATCH, DELETE, NOOP }
+enum class OperationType { GET, CREATE, UPDATE, DELETE, NOOP }
 
 data class OpenshiftCommand @JvmOverloads constructor(
     val operationType: OperationType,
@@ -104,7 +104,6 @@ class OpenShiftClient(
                 OperationType.GET -> throw OpenShiftException("GET is unsupported") // We should probably consider implementing it, though
                 OperationType.CREATE -> performClient.post(kind, namespace, name, command.payload).body
                 OperationType.UPDATE -> performClient.put(kind, namespace, name, command.payload).body
-                OperationType.PATCH -> performClient.patch(kind, name, command.payload).body
                 OperationType.DELETE -> performClient.delete(kind, namespace, name).body
                 OperationType.NOOP -> command.payload
             }
