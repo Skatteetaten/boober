@@ -17,9 +17,9 @@ class UserAnnotationControllerV1(
     private val userAnnotationResponder: UserAnnotationResponder
 ) {
 
-    @PatchMapping("/{user}/annotations/{key}")
-    fun updateUserAnnotation(@PathVariable user: String, @PathVariable key: String, @RequestBody entries: Map<String, Any>): Response {
-        val response = userAnnotationService.addAnnotation(user, key, entries)
+    @PatchMapping("/annotations/{key}")
+    fun updateUserAnnotation(@PathVariable key: String, @RequestBody entries: Map<String, Any>): Response {
+        val response = userAnnotationService.addAnnotation(key, entries)
         return userAnnotationResponder.create(response)
     }
 }

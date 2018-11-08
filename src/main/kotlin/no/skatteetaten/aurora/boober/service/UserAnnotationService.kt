@@ -16,7 +16,7 @@ class UserAnnotationService(
     @ClientType(TokenSource.SERVICE_ACCOUNT) private val serviceAccountClient: OpenShiftResourceClient
 ) {
 
-    fun addAnnotation(user: String, key: String, entries: Map<String, Any>): OpenShiftResponse {
+    fun addAnnotation(key: String, entries: Map<String, Any>): OpenShiftResponse {
         val patchJson = createAddPatch(key, entries).toJson()
         val cmd = OpenshiftCommand(OperationType.UPDATE, patchJson)
         return try {

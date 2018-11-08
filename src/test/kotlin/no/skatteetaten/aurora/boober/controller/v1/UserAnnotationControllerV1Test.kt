@@ -33,11 +33,11 @@ class UserAnnotationControllerV1Test {
         val jsonEntries = """{"key1": ["value1", "value2"]}"""
         val entries = jacksonObjectMapper().readValue<Map<String, Any>>(jsonEntries)
 
-        every { userAnnotationService.addAnnotation("myusername", "filters", entries) } returns
+        every { userAnnotationService.addAnnotation("filters", entries) } returns
             OpenShiftResponse(OpenshiftCommand(OperationType.UPDATE))
 
         val response = mockMvc.perform(
-            patch("/v1/users/{user}/annotations/{key}", "myusername", "filters")
+            patch("/v1/users/annotations/{key}", "filters")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .content(jsonEntries)
         )
