@@ -122,7 +122,7 @@ class DeployService(
 
         val projectResponse = projectExist.whenFalse {
             openShiftCommandBuilder.generateProjectRequest(environment).let {
-                openShiftClient.performOpenShiftCommand(namespaceName, it.first())
+                openShiftClient.performOpenShiftCommand(namespaceName, it)
                     .also { Thread.sleep(2000) }
             }
         }
@@ -212,10 +212,10 @@ class DeployService(
 
         val application = createApplicationDeployment(deploymentSpecInternal, deployId, cmd)
 
-        val applicationCommand = openShiftCommandBuilder.createOpenShiftCommands(
+        val applicationCommand = openShiftCommandBuilder.createOpenShiftCommand(
             deploymentSpecInternal.environment.namespace,
             jacksonObjectMapper().convertValue(application)
-        ).first()
+        )
 
         val applicationResult =
             openShiftClient.performOpenShiftCommand(deploymentSpecInternal.environment.namespace, applicationCommand)

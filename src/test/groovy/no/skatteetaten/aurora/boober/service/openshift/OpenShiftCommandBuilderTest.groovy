@@ -11,7 +11,6 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.client.MockRestServiceServer
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 
 import io.fabric8.kubernetes.api.model.OwnerReference
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
@@ -65,7 +64,7 @@ class OpenShiftCommandBuilderTest extends AbstractAuroraDeploymentSpecSpringTest
           generateDeploymentConfig("deploy-id", deploymentSpec, null, new OwnerReference())
 
     when:
-      OpenshiftCommand command = commandBuilder.createOpenShiftCommands(NAMESPACE, deploymentConfig, true, false).first()
+      OpenshiftCommand command = commandBuilder.createOpenShiftCommand(NAMESPACE, deploymentConfig, true, false)
 
     then:
       def resourceVersion = "/metadata/resourceVersion"

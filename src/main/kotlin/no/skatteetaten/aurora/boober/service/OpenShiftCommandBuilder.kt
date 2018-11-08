@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fkorotkov.kubernetes.newPatch
 import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
@@ -33,24 +34,24 @@ class OpenShiftCommandBuilder(
     val openShiftObjectGenerator: OpenShiftObjectGenerator
 ) {
 
-    fun generateProjectRequest(environment: AuroraDeployEnvironment): List<OpenshiftCommand> {
+    fun generateProjectRequest(environment: AuroraDeployEnvironment): OpenshiftCommand {
 
         val projectRequest = openShiftObjectGenerator.generateProjectRequest(environment)
-        return createOpenShiftCommands(environment.namespace, projectRequest, false, false)
+        return createOpenShiftCommand(environment.namespace, projectRequest, false, false)
     }
 
-    fun generateNamespace(environment: AuroraDeployEnvironment): List<OpenshiftCommand> {
+    fun generateNamespace(environment: AuroraDeployEnvironment): OpenshiftCommand {
         val namespace = openShiftObjectGenerator.generateNamespace(environment)
         return createMergedUpdateCommand(environment.namespace, namespace)
     }
 
     fun generateRolebindings(environment: AuroraDeployEnvironment): List<OpenshiftCommand> {
         return openShiftObjectGenerator.generateRolebindings(environment.permissions)
-            .flatMap { createOpenShiftCommands(environment.namespace, it, true, true) }
+            .map { createOpenShiftCommand(environment.namespace, it, true, true) }
     }
 
     private fun createMergedUpdateCommand(namespace: String, it: JsonNode) =
-        createOpenShiftCommands(namespace, it, true, true).map { it.copy(operationType = UPDATE) }
+        createOpenShiftCommand(namespace, it, true, true).let { it.copy(operationType = UPDATE) }
 
     fun generateOpenshiftObjects(
         deployId: String,
@@ -82,12 +83,12 @@ class OpenShiftCommandBuilder(
         val objectsWithoutIS: List<JsonNode> = objects.filter { it.openshiftKind != "imagestream" }
 
         val dc = objects.deploymentConfig()?.let {
-            createOpenShiftCommands(namespace, it, mergeWithExistingResource).first()
+            createOpenShiftCommand(namespace, it, mergeWithExistingResource)
         }
 
         val imageStreamNode = objects.imageStream()
         val imageStream = imageStreamNode?.let {
-            createOpenShiftCommands(namespace, it, mergeWithExistingResource).first()
+            createOpenShiftCommand(namespace, it, mergeWithExistingResource)
         }
 
         val imageStreamImport = when {
@@ -139,12 +140,12 @@ class OpenShiftCommandBuilder(
      * <code>false</code>, because retrying everything will significantly impact performance of creating or updating
      * many objects.
      */
-    fun createOpenShiftCommands(
+    fun createOpenShiftCommand(
         namespace: String,
         newResource: JsonNode,
         mergeWithExistingResource: Boolean = true,
         retryGetResourceOnFailure: Boolean = false
-    ): List<OpenshiftCommand> {
+    ): OpenshiftCommand {
 
         val kind = newResource.openshiftKind
         val name = newResource.openshiftName
@@ -153,7 +154,7 @@ class OpenShiftCommandBuilder(
             openShiftClient.get(kind, namespace, name, retryGetResourceOnFailure)
         else null
 
-        val command = if (existingResource == null) {
+        return if (existingResource == null) {
             OpenshiftCommand(CREATE, payload = newResource)
         } else {
             val mergedResource = mergeWithExistingResource(newResource, existingResource.body)
@@ -163,13 +164,6 @@ class OpenShiftCommandBuilder(
                 previous = existingResource.body,
                 generated = newResource
             )
-        }
-        return if (command.isType(UPDATE, "route") && mustRecreateRoute(command.payload, command.previous)) {
-            val deleteCommand = command.copy(operationType = DELETE)
-            val createCommand = command.copy(operationType = CREATE, payload = command.generated!!)
-            listOf(deleteCommand, createCommand)
-        } else {
-            listOf(command)
         }
     }
 
@@ -189,6 +183,7 @@ class OpenShiftCommandBuilder(
         )
     ): List<OpenshiftCommand> {
 
+        newPatch { }
         // TODO: This cannot be change until we remove the app label
         val labelSelectors = listOf("app=$name", "booberDeployId", "booberDeployId!=$deployId")
         return apiResources
@@ -216,8 +211,17 @@ class OpenShiftCommandBuilder(
         it: JsonNode,
         mergeWithExistingResource: Boolean
     ): List<OpenShiftResponse> {
-        return createOpenShiftCommands(namespace, it, mergeWithExistingResource).map {
-            openShiftClient.performOpenShiftCommand(namespace, it)
-        }
+        val command = createOpenShiftCommand(namespace, it, mergeWithExistingResource)
+
+        val commands: List<OpenshiftCommand> =
+            if (command.isType(UPDATE, "route") && mustRecreateRoute(command.payload, command.previous)) {
+                val deleteCommand = command.copy(operationType = DELETE)
+                val createCommand = command.copy(operationType = CREATE, payload = command.generated!!)
+                listOf(deleteCommand, createCommand)
+            } else {
+                listOf(command)
+            }
+
+        return commands.map { openShiftClient.performOpenShiftCommand(namespace, it) }
     }
 }
