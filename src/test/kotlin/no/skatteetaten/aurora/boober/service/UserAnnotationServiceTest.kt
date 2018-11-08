@@ -3,7 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import assertk.assert
 import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.module.kotlin.treeToValue
 import com.github.fge.jsonpatch.JsonPatch
 import io.mockk.every
 import io.mockk.mockk
@@ -20,12 +20,12 @@ class UserAnnotationServiceTest {
 
     @Test
     fun `Given filters map create valid json patch for adding user annotations`() {
-        val json = userAnnotationService.createAddPatch("filters", mapOf("key1" to "value1"))
-        val jsonPatch = jacksonObjectMapper().readValue<JsonPatch>(json)
+        val json = userAnnotationService.createAddPatch("filters", mapOf("key" to mapOf("nested-key" to "value")))
+        val jsonPatch = jacksonObjectMapper().treeToValue<JsonPatch>(json)
 
         val userResource = """{ "metadata": { "annotations": {} } }""".toJson()
         val patchedJson = jsonPatch.apply(userResource)
 
-        assert(patchedJson.at("/metadata/annotations/filters/key1").textValue()).isEqualTo("value1")
+        assert(patchedJson.at("/metadata/annotations/filters/key/nested-key").textValue()).isEqualTo("value")
     }
 }
