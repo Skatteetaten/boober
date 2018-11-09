@@ -62,11 +62,11 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
 
     val logger by logger()
 
-    @GetMapping()
+    @GetMapping
     fun get(
         @PathVariable name: String,
-        @RequestParam("environment", required = false) environment: String? = null,
-        @RequestParam("application", required = false) application: String? = null
+        @RequestParam("environment", required = false) environment: String?,
+        @RequestParam("application", required = false) application: String?
     ): Response {
 
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
