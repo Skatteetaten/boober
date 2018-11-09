@@ -80,9 +80,12 @@ class OpenShiftCommandBuilder(
         mergeWithExistingResource: Boolean
     ): List<JsonNode> {
         // we cannot asume any order of the commands.
-        val objectsWithoutIS: List<JsonNode> = objects.filter { it.openshiftKind != "imagestream" }
+        val objectsWithoutISAndDc: List<JsonNode> =
+            objects.filter { it.openshiftKind != "imagestream" && it.openshiftKind != "deploymentconfig" }
 
-        val dc = objects.deploymentConfig()?.let {
+        val dcNode = objects.deploymentConfig()
+
+        val dc = dcNode?.let {
             createOpenShiftCommand(namespace, it, mergeWithExistingResource)
         }
 
@@ -102,7 +105,8 @@ class OpenShiftCommandBuilder(
         dc?.previous?.takeIf { deploymentPaused(it) }?.let {
             return listOfNotNull(imageStream?.payload)
                 .addIfNotNull(imageStreamImport)
-                .addIfNotNull(objectsWithoutIS)
+                .addIfNotNull(objectsWithoutISAndDc)
+                .addIfNotNull(dcNode)
         }
 
         return objects.addIfNotNull(imageStreamImport)
