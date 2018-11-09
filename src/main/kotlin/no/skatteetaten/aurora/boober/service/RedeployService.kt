@@ -72,6 +72,11 @@ class RedeployService(
             return triggerRedeploy(deploymentConfig)
         }
 
+        isiResource?.let {
+            if (it.isDifferentImage(imageStream.findCurrentImageHash(imageChangeTriggerTagName))) {
+                return RedeployResult(message = "New version in ImageStream found.")
+            }
+        }
         // TODO Move this to check for error after doing ImageStreamImport command
         isiResource?.findErrorMessage()?.let {
             return RedeployResult(success = false, message = "ImageStreamImport failed with message=$it")
@@ -99,12 +104,6 @@ class RedeployService(
     ): RedeployResult {
         val namespace = imageStream.metadata.namespace
 
-        imageStreamImport?.let {
-
-            if (it.isDifferentImage(imageStream.findCurrentImageHash())) {
-                return RedeployResult(message = "New version in ImageStream found.")
-            }
-        }
         // TODO: not 100% sure if this is correct or not.
         if (wasPaused) {
             return RedeployResult(message = "Deploy was paused so no explicit deploy")

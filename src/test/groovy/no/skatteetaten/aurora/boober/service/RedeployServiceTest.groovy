@@ -195,7 +195,7 @@ class RedeployServiceTest extends Specification {
     def is = new ImageStream(
         metadata: new ObjectMeta(namespace: 'affiliation', name: 'name', resourceVersion: '123'),
         status: new ImageStreamStatus(
-            tags: [new NamedTagEventList(items: [new TagEvent(image: defaultImageHash)])]
+            tags: [new NamedTagEventList(items: [new TagEvent(image: defaultImageHash)], tag: "default")]
         ),
         spec: new ImageStreamSpec(
             tags: [new TagReference(name: 'default', from: new ObjectReference(name: dockerImageUrl))]
