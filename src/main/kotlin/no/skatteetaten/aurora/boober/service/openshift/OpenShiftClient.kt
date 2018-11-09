@@ -66,7 +66,10 @@ data class OpenShiftResponse @JvmOverloads constructor(
 }
 
 fun List<OpenShiftResponse>.describe() = this.map {
-    "${it.command.operationType} ${it.command.payload.openshiftKind}/${it.command.payload.openshiftName}"
+    val exceptionMessage = it.exception?.let {
+        "failed=$it"
+    }
+    "${it.command.operationType} ${it.command.payload.openshiftKind}/${it.command.payload.openshiftName} $exceptionMessage"
 }
 fun List<OpenShiftResponse>.describeString() = this.describe().joinToString { ", " }
 

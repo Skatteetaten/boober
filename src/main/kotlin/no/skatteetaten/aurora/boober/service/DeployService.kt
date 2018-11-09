@@ -274,7 +274,7 @@ class DeployService(
         }
 
         tagResult?.takeIf { !it.success }
-            ?.let { return result.copy(tagResponse = it, reason = "Tag command failed") }
+            ?.let { return result.copy(tagResponse = it, reason = "Tag command failed.") }
 
         val redeployResult = redeployService.triggerRedeploy(openShiftResponses, deploymentSpecInternal.type)
 
@@ -288,7 +288,7 @@ class DeployService(
         return result.copy(
             openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses),
             tagResponse = tagResult,
-            reason = "Successfull deploy ${redeployResult.message}"
+            reason = redeployResult.message
         )
     }
 
