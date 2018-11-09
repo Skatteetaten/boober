@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.controller.v1
 
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.service.UserAnnotationService
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import org.springframework.stereotype.Component
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -33,10 +32,5 @@ class UserAnnotationControllerV1(
 
 @Component
 class UserAnnotationResponder {
-    fun create(response: OpenShiftResponse) =
-        if (response.success) {
-            Response(items = listOf(response))
-        } else {
-            Response(success = false, message = response.exception ?: "", items = listOf(response))
-        }
+    fun create(annotations: Map<String, Any>) = Response(items = listOf(annotations))
 }

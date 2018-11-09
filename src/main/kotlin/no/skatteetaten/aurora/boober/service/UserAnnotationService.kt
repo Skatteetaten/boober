@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.treeToValue
 import com.github.fge.jackson.JacksonUtils
 import com.github.fge.jackson.jsonpointer.JsonPointer
@@ -13,9 +14,10 @@ import com.github.fge.jsonpatch.JsonPatch
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
-import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
-import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import no.skatteetaten.aurora.boober.utils.isBase64
+import no.skatteetaten.aurora.boober.utils.withBase64Prefix
+import no.skatteetaten.aurora.boober.utils.withoutBase64Prefix
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.util.Base64Utils
 
@@ -25,33 +27,38 @@ class UserAnnotationService(
     @ClientType(TokenSource.SERVICE_ACCOUNT) private val serviceAccountClient: OpenShiftResourceClient
 ) {
 
-    fun getAnnotations(key: String) =
-        try {
-            val name = userDetailsProvider.getAuthenticatedUser().username
-            val response = serviceAccountClient.get("user", "", name)
-            val annotations = response?.body?.at("/metadata/annotations") ?: NullNode.instance
-            OpenShiftResponse(OpenshiftCommand(OperationType.GET), jacksonObjectMapper().treeToValue(annotations))
-        } catch (e: OpenShiftException) {
-            OpenShiftResponse.fromOpenShiftException(e, OpenshiftCommand(OperationType.GET))
-        }
+    fun getAnnotations(key: String): Map<String, JsonNode> {
+        val name = userDetailsProvider.getAuthenticatedUser().username
+        val response = serviceAccountClient.get("user", "", name)
+        return getResponseAnnotations(response)
+    }
 
-    fun addAnnotations(key: String, entries: Map<String, Any>): OpenShiftResponse {
+    fun addAnnotations(key: String, entries: Map<String, Any>): Map<String, JsonNode> {
         val patchJson = createAddPatch(key, entries)
-        val cmd = OpenshiftCommand(OperationType.UPDATE, patchJson)
-        return try {
-            val name = userDetailsProvider.getAuthenticatedUser().username
-            val response = serviceAccountClient.patch("user", name, patchJson)
-            OpenShiftResponse(cmd, response.body)
-        } catch (e: OpenShiftException) {
-            OpenShiftResponse.fromOpenShiftException(e, cmd)
+        val name = userDetailsProvider.getAuthenticatedUser().username
+        val response = serviceAccountClient.patch("user", name, patchJson)
+        return getResponseAnnotations(response)
+    }
+
+    private fun getResponseAnnotations(response: ResponseEntity<JsonNode>?): Map<String, JsonNode> {
+        val annotations = response?.body?.at("/metadata/annotations") ?: NullNode.instance
+        val entries = jacksonObjectMapper().treeToValue<Map<String, String>>(annotations)
+        return entries.mapValues {
+            if (it.value.isBase64()) {
+                jacksonObjectMapper().readValue<JsonNode>(String(Base64Utils.decodeFromString(it.value.withoutBase64Prefix())))
+            } else {
+                TextNode(it.value)
+            }
         }
     }
 
     fun createAddPatch(key: String, entries: Map<String, Any>): JsonNode {
         val jsonEntries = jacksonObjectMapper().writeValueAsString(entries)
         val encodedString = Base64Utils.encodeToString(jsonEntries.toByteArray())
-        val patch =
-            JsonPatch(listOf(AddOperation(JsonPointer.of("metadata", "annotations", key), TextNode(encodedString))))
-        return JacksonUtils.newMapper().convertValue(patch)
+        val operation = AddOperation(
+            JsonPointer.of("metadata", "annotations", key),
+            TextNode(encodedString.withBase64Prefix())
+        )
+        return JacksonUtils.newMapper().convertValue(JsonPatch(listOf(operation)))
     }
 }

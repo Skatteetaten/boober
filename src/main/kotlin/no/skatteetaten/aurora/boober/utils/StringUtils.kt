@@ -30,3 +30,11 @@ fun <R> String.withNonBlank(block: (String) -> R?): R? {
 }
 
 fun String.toJson() = jacksonObjectMapper().readValue<JsonNode>(this)
+
+private const val base64Prefix = "data:application/json;base64,"
+
+fun String.isBase64() = this.startsWith(base64Prefix)
+
+fun String.withBase64Prefix() = "$base64Prefix$this"
+
+fun String.withoutBase64Prefix() = this.removePrefix(base64Prefix)

@@ -1,15 +1,12 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
-import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.service.UserAnnotationService
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
-import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
-import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import no.skatteetaten.aurora.boober.utils.toJson
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
@@ -32,11 +29,10 @@ class UserAnnotationControllerV1Test {
 
     @Test
     fun `Add user annotations`() {
-        val jsonEntries = """{"key1": ["value1", "value2"]}"""
+        val jsonEntries = """{"key": "value"}"""
         val entries = jacksonObjectMapper().readValue<Map<String, Any>>(jsonEntries)
 
-        every { userAnnotationService.addAnnotations("filters", entries) } returns
-            OpenShiftResponse(OpenshiftCommand(OperationType.UPDATE))
+        every { userAnnotationService.addAnnotations("filters", entries) } returns mapOf("filters" to """{"key":"value"}""".toJson())
 
         val response = mockMvc.perform(
             patch("/v1/users/annotations/{key}", "filters")
@@ -45,19 +41,17 @@ class UserAnnotationControllerV1Test {
         )
 
         response.andExpect(status().isOk)
-            .andExpect(jsonPath("$.items[0].success").value(true))
+            .andExpect(jsonPath("$.items[0].filters.key").value("value"))
     }
 
     @Test
     fun `Get user annotations`() {
-        every { userAnnotationService.getAnnotations("filters") } returns OpenShiftResponse(
-            OpenshiftCommand(OperationType.GET), jacksonObjectMapper().convertValue(mapOf("key" to "value"))
-        )
+        every { userAnnotationService.getAnnotations("filters") } returns mapOf("filters" to """{"key":"value"}""".toJson())
 
         val response = mockMvc.perform(get("/v1/users/annotations/{key}", "filters"))
 
         response.andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.items[0].key").value("value"))
+            .andExpect(jsonPath("$.items[0].filters.key").value("value"))
     }
 }
