@@ -18,6 +18,7 @@ object ImageStreamImportGenerator {
                 name = imageStreamName
             }
             spec {
+                import = true
                 images = listOf(newImageImportSpec {
                     from {
                         kind = "DockerImage"

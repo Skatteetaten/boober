@@ -14,6 +14,7 @@ import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentComman
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
+import no.skatteetaten.aurora.boober.service.openshift.describeString
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.Instants
@@ -259,7 +260,8 @@ class DeployService(
         }
 
         if (!success) {
-            return result.copy(reason = "One or more resources did not complete correctly.")
+            val failedCommands = openShiftResponses.filter { !it.success }.describeString()
+            return result.copy(reason = "Failed commands $failedCommands")
         }
 
         if (deploymentSpecInternal.deploy?.flags?.pause == true) {
@@ -286,7 +288,7 @@ class DeployService(
         return result.copy(
             openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses),
             tagResponse = tagResult,
-            reason = "Deployment success."
+            reason = "Successfull deploy ${redeployResult.message}"
         )
     }
 

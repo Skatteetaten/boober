@@ -96,7 +96,7 @@ class RedeployServiceTest extends Specification {
     then:
       response.success
       response.openShiftResponses.size() == 0
-      response.message == "No explicit deploy was made for newly created imagestream"
+      response.message == "No explicit deploy for new ImageStream."
   }
 
   def "Redeploy given image is already imported return success"() {
@@ -148,7 +148,7 @@ class RedeployServiceTest extends Specification {
     then:
       response.success
       response.openShiftResponses.size() == 1
-      response.message == "Redeploy succeeded"
+      response.message == "No changes in ImageStream, explicit deploy. Succeeded."
   }
 
   def "Redeploy with different image will not run explicit deploy"() {
@@ -159,7 +159,7 @@ class RedeployServiceTest extends Specification {
     then:
       response.success
       response.openShiftResponses.size() == 0
-      response.message == "Image is different so no explicit deploy"
+      response.message == "New version in ImageStream found."
   }
 
   def "Redeploy with error in imageStreamImport fails"() {

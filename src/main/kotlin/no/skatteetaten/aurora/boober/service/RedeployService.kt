@@ -33,10 +33,10 @@ class RedeployService(
     ) {
 
         companion object {
-            fun fromOpenShiftResponses(openShiftResponses: List<OpenShiftResponse>): RedeployResult {
+            fun fromOpenShiftResponses(openShiftResponses: List<OpenShiftResponse>, extraMessage: String = ""): RedeployResult {
                 val success = openShiftResponses.all { it.success }
-                val message = if (success) "Redeploy succeeded" else "Redeploy failed"
-                return RedeployResult(openShiftResponses = openShiftResponses, success = success, message = message)
+                val message = if (success) "Succeeded." else "Failed."
+                return RedeployResult(openShiftResponses = openShiftResponses, success = success, message = "$extraMessage $message")
             }
         }
     }
@@ -65,7 +65,7 @@ class RedeployService(
             ?: throw IllegalArgumentException("Missing DeploymentConfig")
 
         if (isResource?.command?.operationType == OperationType.CREATE) {
-            return RedeployResult(message = "No explicit deploy was made for newly created imagestream")
+            return RedeployResult(message = "No explicit deploy for new ImageStream.")
         }
         val imageChangeTriggerTagName = deploymentConfig.findImageChangeTriggerTagName()
         if (imageStream == null || imageChangeTriggerTagName == null) {
@@ -88,7 +88,7 @@ class RedeployService(
         val namespace = deploymentConfig.metadata.namespace
         val name = deploymentConfig.metadata.name
         val deploymentRequestResponse = performDeploymentRequest(namespace, name)
-        return RedeployResult.fromOpenShiftResponses(listOf(deploymentRequestResponse))
+        return RedeployResult.fromOpenShiftResponses(listOf(deploymentRequestResponse), "No ImageStream found.")
     }
 
     fun triggerRedeploy(
@@ -102,16 +102,15 @@ class RedeployService(
         imageStreamImport?.let {
 
             if (it.isDifferentImage(imageStream.findCurrentImageHash())) {
-                return RedeployResult(message = "Image is different so no explicit deploy")
+                return RedeployResult(message = "New version in ImageStream found.")
             }
         }
-
         // TODO: not 100% sure if this is correct or not.
         if (wasPaused) {
             return RedeployResult(message = "Deploy was paused so no explicit deploy")
         }
         val deploymentRequestResponse = performDeploymentRequest(namespace, dcName)
-        return RedeployResult.fromOpenShiftResponses(listOf(deploymentRequestResponse))
+        return RedeployResult.fromOpenShiftResponses(listOf(deploymentRequestResponse), "No changes in ImageStream, explicit deploy.")
     }
 
     private fun performDeploymentRequest(namespace: String, name: String): OpenShiftResponse {
