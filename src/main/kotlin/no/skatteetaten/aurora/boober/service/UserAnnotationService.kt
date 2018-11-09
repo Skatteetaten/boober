@@ -11,6 +11,7 @@ import com.github.fge.jackson.JacksonUtils
 import com.github.fge.jackson.jsonpointer.JsonPointer
 import com.github.fge.jsonpatch.AddOperation
 import com.github.fge.jsonpatch.JsonPatch
+import com.github.fge.jsonpatch.RemoveOperation
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource
@@ -33,11 +34,33 @@ class UserAnnotationService(
         return getResponseAnnotations(response)
     }
 
-    fun addAnnotations(key: String, entries: Map<String, Any>): Map<String, JsonNode> {
+    fun updateAnnotations(key: String, entries: Map<String, Any>): Map<String, JsonNode> {
         val patchJson = createAddPatch(key, entries)
         val name = userDetailsProvider.getAuthenticatedUser().username
         val response = serviceAccountClient.patch("user", name, patchJson)
         return getResponseAnnotations(response)
+    }
+
+    fun createAddPatch(key: String, entries: Map<String, Any>): JsonNode {
+        val jsonEntries = jacksonObjectMapper().writeValueAsString(entries)
+        val encodedString = Base64Utils.encodeToString(jsonEntries.toByteArray())
+        val operation = AddOperation(
+            JsonPointer.of("metadata", "annotations", key),
+            TextNode(encodedString.withBase64Prefix())
+        )
+        return JacksonUtils.newMapper().convertValue(JsonPatch(listOf(operation)))
+    }
+
+    fun deleteAnnotations(key: String): Map<String, JsonNode> {
+        val patchJson = createRemovePatch(key)
+        val name = userDetailsProvider.getAuthenticatedUser().username
+        val response = serviceAccountClient.patch("user", name, patchJson)
+        return getResponseAnnotations(response)
+    }
+
+    fun createRemovePatch(key: String): JsonNode {
+        val operation = RemoveOperation(JsonPointer.of("metadata", "annotations", key))
+        return JacksonUtils.newMapper().convertValue(JsonPatch(listOf(operation)))
     }
 
     private fun getResponseAnnotations(response: ResponseEntity<JsonNode>?): Map<String, JsonNode> {
@@ -50,15 +73,5 @@ class UserAnnotationService(
                 TextNode(it.value)
             }
         }
-    }
-
-    fun createAddPatch(key: String, entries: Map<String, Any>): JsonNode {
-        val jsonEntries = jacksonObjectMapper().writeValueAsString(entries)
-        val encodedString = Base64Utils.encodeToString(jsonEntries.toByteArray())
-        val operation = AddOperation(
-            JsonPointer.of("metadata", "annotations", key),
-            TextNode(encodedString.withBase64Prefix())
-        )
-        return JacksonUtils.newMapper().convertValue(JsonPatch(listOf(operation)))
     }
 }

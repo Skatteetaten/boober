@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
+import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.clearMocks
@@ -10,6 +11,7 @@ import no.skatteetaten.aurora.boober.utils.toJson
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -32,7 +34,7 @@ class UserAnnotationControllerV1Test {
         val jsonEntries = """{"key": "value"}"""
         val entries = jacksonObjectMapper().readValue<Map<String, Any>>(jsonEntries)
 
-        every { userAnnotationService.addAnnotations("filters", entries) } returns mapOf("filters" to """{"key":"value"}""".toJson())
+        every { userAnnotationService.updateAnnotations("filters", entries) } returns mapOf("filters" to """{"key":"value"}""".toJson())
 
         val response = mockMvc.perform(
             patch("/v1/users/annotations/{key}", "filters")
@@ -53,5 +55,16 @@ class UserAnnotationControllerV1Test {
         response.andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.items[0].filters.key").value("value"))
+    }
+
+    @Test
+    fun `Delete user annotation`() {
+        every { userAnnotationService.deleteAnnotations("filters") } returns mapOf("key" to TextNode("value"))
+
+        val response = mockMvc.perform(delete("/v1/users/annotations/{key}", "filters"))
+
+        response.andExpect(status().isOk)
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.items[0].key").value("value"))
     }
 }
