@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import assertk.assert
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
+import assertk.assertions.isTrue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.treeToValue
 import com.github.fge.jsonpatch.JsonPatch
@@ -32,14 +33,26 @@ class UserAnnotationServiceTest {
     }
 
     @Test
-    fun `Given filters map create valid json patch for adding user annotations`() {
-        val json = userAnnotationService.createAddPatch("filters", mapOf("key" to mapOf("nested-key" to "value")))
+    fun `Given filters map create return valid json patch for adding user annotations`() {
+        val json = userAnnotationService.createAddPatch("filters", """{"key":{"nested-key":"value"}}""".toJson())
         val jsonPatch = jacksonObjectMapper().treeToValue<JsonPatch>(json)
 
         val userResource = """{"metadata":{"annotations":{}}}""".toJson()
         val patchedJson = jsonPatch.apply(userResource)
 
         assert(patchedJson.at("/metadata/annotations/filters").textValue()).isNotNull()
+    }
+
+    @Test
+    fun `Given key create valid json patch for removing user annotations`() {
+        val json = userAnnotationService.createRemovePatch("filters")
+        val jsonPatch = jacksonObjectMapper().treeToValue<JsonPatch>(json)
+
+        val userResource = """{"metadata":{"annotations":{"filters":"test123"}}}""".toJson()
+        val patchedJson = jsonPatch.apply(userResource)
+
+        assert(patchedJson.at("/metadata/annotations").isObject).isTrue()
+        assert(patchedJson.at("/metadata/annotations/filters").isMissingNode).isTrue()
     }
 
     @Test
@@ -51,7 +64,7 @@ class UserAnnotationServiceTest {
             openShiftResourceClient.get("user", "", "username")
         } returns ResponseEntity.ok("""{"metadata":{"annotations":{"key":"${encodedEntry.withBase64Prefix()}"}}}""".toJson())
 
-        val response = userAnnotationService.getAnnotations("filters")
+        val response = userAnnotationService.getAnnotations()
         assert(response["key"]?.at("/key1")?.textValue()).isEqualTo("value1")
     }
 
@@ -61,7 +74,17 @@ class UserAnnotationServiceTest {
             openShiftResourceClient.get("user", "", "username")
         } returns ResponseEntity.ok("""{"metadata":{"annotations":{"key":"value"}}}""".toJson())
 
-        val response = userAnnotationService.getAnnotations("filters")
+        val response = userAnnotationService.getAnnotations()
+        assert(response["key"]?.textValue()).isEqualTo("value")
+    }
+
+    @Test
+    fun `Delete user annotations`() {
+        every {
+            openShiftResourceClient.patch("user", "username", any())
+        } returns ResponseEntity.ok("""{"metadata":{"annotations":{"key":"value"}}}""".toJson())
+
+        val response = userAnnotationService.deleteAnnotations("filters")
         assert(response["key"]?.textValue()).isEqualTo("value")
     }
 }

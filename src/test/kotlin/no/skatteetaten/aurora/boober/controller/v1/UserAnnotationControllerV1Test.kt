@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
+import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.clearMocks
@@ -10,6 +11,7 @@ import no.skatteetaten.aurora.boober.utils.toJson
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -28,11 +30,9 @@ class UserAnnotationControllerV1Test {
     }
 
     @Test
-    fun `Add user annotations`() {
+    fun `Update user annotations`() {
         val jsonEntries = """{"key": "value"}"""
-        val entries = jacksonObjectMapper().readValue<Map<String, Any>>(jsonEntries)
-
-        every { userAnnotationService.addAnnotations("filters", entries) } returns mapOf("filters" to """{"key":"value"}""".toJson())
+        every { userAnnotationService.updateAnnotations("filters", jsonEntries.toJson()) } returns mapOf("filters" to jsonEntries.toJson())
 
         val response = mockMvc.perform(
             patch("/v1/users/annotations/{key}", "filters")
@@ -41,17 +41,48 @@ class UserAnnotationControllerV1Test {
         )
 
         response.andExpect(status().isOk)
-            .andExpect(jsonPath("$.items[0].filters.key").value("value"))
+            .andExpect(jsonPath("$.items.filters.key").value("value"))
     }
 
     @Test
-    fun `Get user annotations`() {
-        every { userAnnotationService.getAnnotations("filters") } returns mapOf("filters" to """{"key":"value"}""".toJson())
+    fun `Get all user annotations`() {
+        every { userAnnotationService.getAnnotations() } returns mapOf(
+            "filters" to """{"key":"first"}""".toJson(),
+            "test-key" to """{"key":"second"}""".toJson()
+        )
+
+        val response = mockMvc.perform(get("/v1/users/annotations"))
+
+        response.andExpect(status().isOk)
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.items.length()").value(2))
+            .andExpect(jsonPath("$.items.filters.key").value("first"))
+            .andExpect(jsonPath("$.items.test-key.key").value("second"))
+    }
+
+    @Test
+    fun `Get user annotations by key`() {
+        every { userAnnotationService.getAnnotations() } returns mapOf(
+            "filters" to """{"key":"first"}""".toJson(),
+            "test-key" to """{"key":"second"}""".toJson()
+        )
 
         val response = mockMvc.perform(get("/v1/users/annotations/{key}", "filters"))
 
         response.andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.items[0].filters.key").value("value"))
+            .andExpect(jsonPath("$.items.length()").value(1))
+            .andExpect(jsonPath("$.items.filters.key").value("first"))
+    }
+
+    @Test
+    fun `Delete user annotation`() {
+        every { userAnnotationService.deleteAnnotations("filters") } returns mapOf("key" to TextNode("value"))
+
+        val response = mockMvc.perform(delete("/v1/users/annotations/{key}", "filters"))
+
+        response.andExpect(status().isOk)
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.items.key").value("value"))
     }
 }
