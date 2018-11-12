@@ -64,7 +64,7 @@ class UserAnnotationServiceTest {
             openShiftResourceClient.get("user", "", "username")
         } returns ResponseEntity.ok("""{"metadata":{"annotations":{"key":"${encodedEntry.withBase64Prefix()}"}}}""".toJson())
 
-        val response = userAnnotationService.getAnnotations("filters")
+        val response = userAnnotationService.getAnnotations()
         assert(response["key"]?.at("/key1")?.textValue()).isEqualTo("value1")
     }
 
@@ -74,7 +74,7 @@ class UserAnnotationServiceTest {
             openShiftResourceClient.get("user", "", "username")
         } returns ResponseEntity.ok("""{"metadata":{"annotations":{"key":"value"}}}""".toJson())
 
-        val response = userAnnotationService.getAnnotations("filters")
+        val response = userAnnotationService.getAnnotations()
         assert(response["key"]?.textValue()).isEqualTo("value")
     }
 

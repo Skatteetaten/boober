@@ -28,7 +28,7 @@ class UserAnnotationService(
     @ClientType(TokenSource.SERVICE_ACCOUNT) private val serviceAccountClient: OpenShiftResourceClient
 ) {
 
-    fun getAnnotations(key: String): Map<String, JsonNode> {
+    fun getAnnotations(): Map<String, JsonNode> {
         val name = userDetailsProvider.getAuthenticatedUser().username
         val response = serviceAccountClient.get("user", "", name)
         return getResponseAnnotations(response)

@@ -47,14 +47,34 @@ class UserAnnotationControllerV1Test {
     }
 
     @Test
-    fun `Get user annotations`() {
-        every { userAnnotationService.getAnnotations("filters") } returns mapOf("filters" to """{"key":"value"}""".toJson())
+    fun `Get all user annotations`() {
+        every { userAnnotationService.getAnnotations() } returns mapOf(
+            "filters" to """{"key":"first"}""".toJson(),
+            "test-key" to """{"key":"second"}""".toJson()
+        )
+
+        val response = mockMvc.perform(get("/v1/users/annotations"))
+
+        response.andExpect(status().isOk)
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.items.length()").value(2))
+            .andExpect(jsonPath("$.items[0].filters.key").value("first"))
+            .andExpect(jsonPath("$.items[1].test-key.key").value("second"))
+    }
+
+    @Test
+    fun `Get user annotations by key`() {
+        every { userAnnotationService.getAnnotations() } returns mapOf(
+            "filters" to """{"key":"first"}""".toJson(),
+            "test-key" to """{"key":"second"}""".toJson()
+        )
 
         val response = mockMvc.perform(get("/v1/users/annotations/{key}", "filters"))
 
         response.andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.items[0].filters.key").value("value"))
+            .andExpect(jsonPath("$.items.length()").value(1))
+            .andExpect(jsonPath("$.items[0].filters.key").value("first"))
     }
 
     @Test
