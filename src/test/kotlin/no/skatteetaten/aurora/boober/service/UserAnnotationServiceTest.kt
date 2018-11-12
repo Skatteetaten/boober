@@ -34,7 +34,7 @@ class UserAnnotationServiceTest {
 
     @Test
     fun `Given filters map create return valid json patch for adding user annotations`() {
-        val json = userAnnotationService.createAddPatch("filters", mapOf("key" to mapOf("nested-key" to "value")))
+        val json = userAnnotationService.createAddPatch("filters", """{"key":{"nested-key":"value"}}""".toJson())
         val jsonPatch = jacksonObjectMapper().treeToValue<JsonPatch>(json)
 
         val userResource = """{"metadata":{"annotations":{}}}""".toJson()

@@ -30,11 +30,9 @@ class UserAnnotationControllerV1Test {
     }
 
     @Test
-    fun `Add user annotations`() {
+    fun `Update user annotations`() {
         val jsonEntries = """{"key": "value"}"""
-        val entries = jacksonObjectMapper().readValue<Map<String, Any>>(jsonEntries)
-
-        every { userAnnotationService.updateAnnotations("filters", entries) } returns mapOf("filters" to """{"key":"value"}""".toJson())
+        every { userAnnotationService.updateAnnotations("filters", jsonEntries.toJson()) } returns mapOf("filters" to jsonEntries.toJson())
 
         val response = mockMvc.perform(
             patch("/v1/users/annotations/{key}", "filters")
@@ -43,7 +41,7 @@ class UserAnnotationControllerV1Test {
         )
 
         response.andExpect(status().isOk)
-            .andExpect(jsonPath("$.items[0].filters.key").value("value"))
+            .andExpect(jsonPath("$.items.filters.key").value("value"))
     }
 
     @Test
@@ -58,8 +56,8 @@ class UserAnnotationControllerV1Test {
         response.andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.items.length()").value(2))
-            .andExpect(jsonPath("$.items[0].filters.key").value("first"))
-            .andExpect(jsonPath("$.items[1].test-key.key").value("second"))
+            .andExpect(jsonPath("$.items.filters.key").value("first"))
+            .andExpect(jsonPath("$.items.test-key.key").value("second"))
     }
 
     @Test
@@ -74,7 +72,7 @@ class UserAnnotationControllerV1Test {
         response.andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.items.length()").value(1))
-            .andExpect(jsonPath("$.items[0].filters.key").value("first"))
+            .andExpect(jsonPath("$.items.filters.key").value("first"))
     }
 
     @Test
@@ -85,6 +83,6 @@ class UserAnnotationControllerV1Test {
 
         response.andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.items[0].key").value("value"))
+            .andExpect(jsonPath("$.items.key").value("value"))
     }
 }

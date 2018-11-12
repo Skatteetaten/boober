@@ -34,14 +34,14 @@ class UserAnnotationService(
         return getResponseAnnotations(response)
     }
 
-    fun updateAnnotations(key: String, entries: Map<String, Any>): Map<String, JsonNode> {
+    fun updateAnnotations(key: String, entries: JsonNode): Map<String, JsonNode> {
         val patchJson = createAddPatch(key, entries)
         val name = userDetailsProvider.getAuthenticatedUser().username
         val response = serviceAccountClient.patch("user", name, patchJson)
         return getResponseAnnotations(response)
     }
 
-    fun createAddPatch(key: String, entries: Map<String, Any>): JsonNode {
+    fun createAddPatch(key: String, entries: JsonNode): JsonNode {
         val jsonEntries = jacksonObjectMapper().writeValueAsString(entries)
         val encodedString = Base64Utils.encodeToString(jsonEntries.toByteArray())
         val operation = AddOperation(
