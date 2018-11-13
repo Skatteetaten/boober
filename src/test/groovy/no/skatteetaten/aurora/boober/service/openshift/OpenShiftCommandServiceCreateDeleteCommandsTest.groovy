@@ -20,7 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
-import no.skatteetaten.aurora.boober.service.OpenShiftCommandBuilder
+import no.skatteetaten.aurora.boober.service.OpenShiftCommandService
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.service.OpenShiftTemplateProcessor
@@ -41,9 +41,9 @@ import spock.mock.DetachedMockFactory
     UserDetailsProvider,
     SharedSecretReader,
     OpenShiftObjectLabelService,
-    OpenShiftCommandBuilder
+    OpenShiftCommandService
 ])
-class OpenShiftCommandBuilderCreateDeleteCommandsTest extends Specification {
+class OpenShiftCommandServiceCreateDeleteCommandsTest extends Specification {
 
   @Configuration
   static class Config {
@@ -67,7 +67,7 @@ class OpenShiftCommandBuilderCreateDeleteCommandsTest extends Specification {
   }
 
   @Autowired
-  OpenShiftCommandBuilder openShiftCommandBuilder
+  OpenShiftCommandService openShiftCommandBuilder
 
   @Autowired
   @OpenShiftResourceClientConfig.ClientType(API_USER)

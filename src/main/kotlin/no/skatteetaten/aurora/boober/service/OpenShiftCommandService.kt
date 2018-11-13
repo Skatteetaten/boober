@@ -10,6 +10,7 @@ import io.fabric8.openshift.api.model.ImageStream
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.model.openshift.findErrorMessage
 import no.skatteetaten.aurora.boober.service.internal.ImageStreamImportGenerator
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
@@ -24,12 +25,13 @@ import no.skatteetaten.aurora.boober.utils.deploymentConfig
 import no.skatteetaten.aurora.boober.utils.findDockerImageUrl
 import no.skatteetaten.aurora.boober.utils.findImageChangeTriggerTagName
 import no.skatteetaten.aurora.boober.utils.imageStream
+import no.skatteetaten.aurora.boober.utils.imageStreamImportFromJson
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.springframework.stereotype.Service
 
 @Service
-class OpenShiftCommandBuilder(
+class OpenShiftCommandService(
     val openShiftClient: OpenShiftClient,
     val openShiftObjectGenerator: OpenShiftObjectGenerator
 ) {
@@ -226,6 +228,26 @@ class OpenShiftCommandBuilder(
                 listOf(command)
             }
 
-        return commands.map { openShiftClient.performOpenShiftCommand(namespace, it) }
+        val results = commands.map { openShiftClient.performOpenShiftCommand(namespace, it) }
+
+        return results.map { response ->
+            findErrorMessage(response)
+                ?.let { response.copy(success = false, exception = it) }
+                ?: response
+        }
+    }
+
+    private fun findErrorMessage(response: OpenShiftResponse): String? {
+        if (!response.success) {
+            return response.exception
+        }
+
+        val body = response.responseBody ?: return null
+
+        // right now only imagestreamimport is checked for errors in status. Route is maybe something we can add here?
+        return when {
+            body.openshiftKind == "imagestreamimport" -> imageStreamImportFromJson(body).findErrorMessage()
+            else -> null
+        }
     }
 }

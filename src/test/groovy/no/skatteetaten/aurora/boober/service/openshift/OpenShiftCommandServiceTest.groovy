@@ -15,10 +15,10 @@ import com.fasterxml.jackson.databind.JsonNode
 import io.fabric8.kubernetes.api.model.OwnerReference
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.AbstractAuroraDeploymentSpecSpringTest
-import no.skatteetaten.aurora.boober.service.OpenShiftCommandBuilder
+import no.skatteetaten.aurora.boober.service.OpenShiftCommandService
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 
-class OpenShiftCommandBuilderTest extends AbstractAuroraDeploymentSpecSpringTest {
+class OpenShiftCommandServiceTest extends AbstractAuroraDeploymentSpecSpringTest {
 
   String ENVIRONMENT = "utv"
 
@@ -46,10 +46,10 @@ class OpenShiftCommandBuilderTest extends AbstractAuroraDeploymentSpecSpringTest
   @Autowired
   OpenShiftClient client
 
-  OpenShiftCommandBuilder commandBuilder
+  OpenShiftCommandService commandBuilder
 
   def setup() {
-    commandBuilder = new OpenShiftCommandBuilder(client, objectGenerator)
+    commandBuilder = new OpenShiftCommandService(client, objectGenerator)
   }
 
   def "Gets existing resource from OpenShift and merges"() {

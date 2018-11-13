@@ -148,7 +148,7 @@ class RedeployServiceTest extends Specification {
     then:
       response.success
       response.openShiftResponses.size() == 1
-      response.message == "No changes in ImageStream, explicit deploy. Succeeded."
+      response.message == "Explicit deploy since version not changed in ImageStream. Succeeded."
   }
 
   def "Redeploy with different image will not run explicit deploy"() {
@@ -162,17 +162,6 @@ class RedeployServiceTest extends Specification {
       response.message == "New version in ImageStream found."
   }
 
-  def "Redeploy with error in imageStreamImport fails"() {
-    when:
-      def response = redeployService.
-          triggerRedeploy([deploymentConfig, imageStream, failedImageStreamImportResponse("Failed")],
-              TemplateType.deploy)
-
-    then:
-      !response.success
-      response.message == "ImageStreamImport failed with message=Failed"
-      response.openShiftResponses.size() == 0
-  }
 
   private static OpenShiftResponse deploymentConfig(String type = 'ImageChange', int replicas = 1) {
 

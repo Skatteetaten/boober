@@ -4,7 +4,6 @@ import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
 import io.fabric8.openshift.api.model.ImageStreamImport
 import no.skatteetaten.aurora.boober.model.TemplateType
-import no.skatteetaten.aurora.boober.model.openshift.findErrorMessage
 import no.skatteetaten.aurora.boober.model.openshift.isDifferentImage
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
@@ -77,10 +76,7 @@ class RedeployService(
                 return RedeployResult(message = "New version in ImageStream found.")
             }
         }
-        // TODO Move this to check for error after doing ImageStreamImport command
-        isiResource?.findErrorMessage()?.let {
-            return RedeployResult(success = false, message = "ImageStreamImport failed with message=$it")
-        }
+
         return triggerRedeploy(
             imageStream,
             deploymentConfig.metadata.name,
@@ -93,7 +89,7 @@ class RedeployService(
         val namespace = deploymentConfig.metadata.namespace
         val name = deploymentConfig.metadata.name
         val deploymentRequestResponse = performDeploymentRequest(namespace, name)
-        return RedeployResult.fromOpenShiftResponses(listOf(deploymentRequestResponse), "No ImageStream found.")
+        return RedeployResult.fromOpenShiftResponses(listOf(deploymentRequestResponse), "Manual deploy.")
     }
 
     fun triggerRedeploy(
@@ -104,12 +100,11 @@ class RedeployService(
     ): RedeployResult {
         val namespace = imageStream.metadata.namespace
 
-        // TODO: not 100% sure if this is correct or not.
         if (wasPaused) {
             return RedeployResult(message = "Deploy was paused so no explicit deploy")
         }
         val deploymentRequestResponse = performDeploymentRequest(namespace, dcName)
-        return RedeployResult.fromOpenShiftResponses(listOf(deploymentRequestResponse), "No changes in ImageStream, explicit deploy.")
+        return RedeployResult.fromOpenShiftResponses(listOf(deploymentRequestResponse), "Explicit deploy since version not changed in ImageStream.")
     }
 
     private fun performDeploymentRequest(namespace: String, name: String): OpenShiftResponse {

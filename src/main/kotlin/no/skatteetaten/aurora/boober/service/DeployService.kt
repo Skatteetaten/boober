@@ -31,7 +31,7 @@ import java.util.UUID
 // TODO:Split up. Service is to large
 class DeployService(
     val auroraConfigService: AuroraConfigService,
-    val openShiftCommandBuilder: OpenShiftCommandBuilder,
+    val openShiftCommandBuilder: OpenShiftCommandService,
     val openShiftClient: OpenShiftClient,
     val dockerService: DockerService,
     val resourceProvisioner: ExternalResourceProvisioner,
@@ -255,13 +255,14 @@ class DeployService(
         logger.debug("done applying objects")
         val success = openShiftResponses.all { it.success }
         val result = AuroraDeployResult(cmd, deploymentSpecInternal, deployId, openShiftResponses, success)
-        if (!shouldDeploy) {
-            return result.copy(reason = "Deploy explicitly turned off.")
-        }
 
         if (!success) {
             val failedCommands = openShiftResponses.filter { !it.success }.describeString()
             return result.copy(reason = "Failed commands $failedCommands")
+        }
+
+        if (!shouldDeploy) {
+            return result.copy(reason = "Deploy explicitly turned off.")
         }
 
         if (deploymentSpecInternal.deploy?.flags?.pause == true) {
