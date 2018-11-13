@@ -258,15 +258,15 @@ class DeployService(
 
         if (!success) {
             val failedCommands = openShiftResponses.filter { !it.success }.describeString()
-            return result.copy(reason = "Failed commands $failedCommands")
+            return result.copy(reason = "Errors $failedCommands")
         }
 
         if (!shouldDeploy) {
-            return result.copy(reason = "Deploy explicitly turned off.")
+            return result.copy(reason = "No deploy made, turned off in payload.")
         }
 
         if (deploymentSpecInternal.deploy?.flags?.pause == true) {
-            return result.copy(reason = "Deployment is paused.")
+            return result.copy(reason = "Deployment is paused and will be/remain scaled down.")
         }
 
         val tagResult = deploymentSpecInternal.deploy?.takeIf { it.releaseTo != null }?.let {

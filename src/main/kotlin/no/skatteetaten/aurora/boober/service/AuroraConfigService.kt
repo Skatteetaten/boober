@@ -1,10 +1,9 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import kotlinx.coroutines.experimental.ThreadPoolDispatcher
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.newFixedThreadPoolContext
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.async
+import kotlinx.coroutines.newFixedThreadPoolContext
+import kotlinx.coroutines.runBlocking
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -45,7 +44,7 @@ class AuroraConfigService(
     val logger: Logger = getLogger(AuroraConfigService::class.java)
     val mapper = jacksonObjectMapper()
 
-    private val dispatcher: ThreadPoolDispatcher = newFixedThreadPoolContext(validationPoolSize, "validationPool")
+    private val dispatcher = newFixedThreadPoolContext(validationPoolSize, "validationPool")
 
     fun findAllAuroraConfigNames(): List<String> {
 

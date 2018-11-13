@@ -43,7 +43,7 @@ class RedeployServiceTest extends Specification {
 
     then:
       response.success
-      response.message == "No explicit deploy was made with development type"
+      response.message == "No deploy made since type=development, deploy via oc start-build."
   }
 
   def "Should throw error if dc is null"() {
@@ -81,7 +81,7 @@ class RedeployServiceTest extends Specification {
 
     then:
       response.success
-      response.message == "Deploy was paused so no explicit deploy"
+      response.message == "Paused deploy resumed."
       response.openShiftResponses.size() == 0
   }
 
@@ -96,7 +96,7 @@ class RedeployServiceTest extends Specification {
     then:
       response.success
       response.openShiftResponses.size() == 0
-      response.message == "No explicit deploy for new ImageStream."
+      response.message == "New application version found."
   }
 
   def "Redeploy given image is already imported return success"() {
@@ -148,7 +148,7 @@ class RedeployServiceTest extends Specification {
     then:
       response.success
       response.openShiftResponses.size() == 1
-      response.message == "Explicit deploy since version not changed in ImageStream. Succeeded."
+      response.message == "No new application version found. Config changes deployment succeeded."
   }
 
   def "Redeploy with different image will not run explicit deploy"() {
@@ -159,7 +159,7 @@ class RedeployServiceTest extends Specification {
     then:
       response.success
       response.openShiftResponses.size() == 0
-      response.message == "New version in ImageStream found."
+      response.message == "New application version found."
   }
 
 
