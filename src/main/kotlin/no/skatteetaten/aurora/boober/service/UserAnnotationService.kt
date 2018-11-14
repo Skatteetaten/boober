@@ -7,11 +7,8 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.treeToValue
-import com.github.fge.jackson.JacksonUtils
-import com.github.fge.jackson.jsonpointer.JsonPointer
-import com.github.fge.jsonpatch.AddOperation
-import com.github.fge.jsonpatch.JsonPatch
-import com.github.fge.jsonpatch.RemoveOperation
+import com.fkorotkov.kubernetes.newObjectMeta
+import io.fabric8.kubernetes.api.model.ObjectMeta
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource
@@ -21,6 +18,10 @@ import no.skatteetaten.aurora.boober.utils.withoutBase64Prefix
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.util.Base64Utils
+
+private data class UserAnnotation(val metadata: ObjectMeta) {
+    fun toJsonNode(): JsonNode = jacksonObjectMapper().convertValue(this)
+}
 
 @Service
 class UserAnnotationService(
@@ -35,44 +36,33 @@ class UserAnnotationService(
     }
 
     fun updateAnnotations(key: String, entries: JsonNode): Map<String, JsonNode> {
-        val patchJson = createAddPatch(key, entries)
+        val patchJson = createUpdatePatch(key, entries)
         val name = userDetailsProvider.getAuthenticatedUser().username
-        val response = serviceAccountClient.patch("user", name, patchJson)
+        val response = serviceAccountClient.strategicMergePatch("user", name, patchJson)
         return getResponseAnnotations(response)
     }
 
-    fun createAddPatch(key: String, entries: JsonNode): JsonNode {
+    fun createUpdatePatch(key: String, entries: JsonNode): JsonNode {
         val jsonEntries = jacksonObjectMapper().writeValueAsString(entries)
         val encodedString = Base64Utils.encodeToString(jsonEntries.toByteArray()).withBase64Prefix()
-
-        val operation = if (hasUserAnnotations()) {
-            AddOperation(JsonPointer.of("metadata", "annotations", key), TextNode(encodedString))
-        } else {
-            AddOperation(
-                JsonPointer.of("metadata", "annotations"),
-                jacksonObjectMapper().convertValue(mapOf(key to encodedString))
-            )
-        }
-        return JacksonUtils.newMapper().convertValue(JsonPatch(listOf(operation)))
-    }
-
-    private fun hasUserAnnotations(): Boolean {
-        val name = userDetailsProvider.getAuthenticatedUser().username
-        val user = serviceAccountClient.get("user", "", name)
-        val annotations = user?.body?.at("/metadata/annotations") ?: return false
-        return !annotations.isMissingNode
+        val userAnnotation = UserAnnotation(metadata = newObjectMeta {
+            annotations = mapOf(key to encodedString)
+        })
+        return userAnnotation.toJsonNode()
     }
 
     fun deleteAnnotations(key: String): Map<String, JsonNode> {
         val patchJson = createRemovePatch(key)
         val name = userDetailsProvider.getAuthenticatedUser().username
-        val response = serviceAccountClient.patch("user", name, patchJson)
+        val response = serviceAccountClient.strategicMergePatch("user", name, patchJson)
         return getResponseAnnotations(response)
     }
 
     fun createRemovePatch(key: String): JsonNode {
-        val operation = RemoveOperation(JsonPointer.of("metadata", "annotations", key))
-        return JacksonUtils.newMapper().convertValue(JsonPatch(listOf(operation)))
+        val userAnnotation = UserAnnotation(metadata = newObjectMeta {
+            annotations = mapOf(key to null)
+        })
+        return userAnnotation.toJsonNode()
     }
 
     private fun getResponseAnnotations(response: ResponseEntity<JsonNode>?): Map<String, JsonNode> {
