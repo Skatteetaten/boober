@@ -45,8 +45,8 @@ class UserAnnotationService(
         val jsonEntries = jacksonObjectMapper().writeValueAsString(entries)
         val encodedString = Base64Utils.encodeToString(jsonEntries.toByteArray())
         val operation = AddOperation(
-            JsonPointer.of("metadata", "annotations", key),
-            TextNode(encodedString.withBase64Prefix())
+            JsonPointer.of("metadata", "annotations"),
+            jacksonObjectMapper().convertValue(mapOf(key to encodedString.withBase64Prefix()))
         )
         return JacksonUtils.newMapper().convertValue(JsonPatch(listOf(operation)))
     }
