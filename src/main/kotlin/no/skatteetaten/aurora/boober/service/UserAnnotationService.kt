@@ -43,12 +43,24 @@ class UserAnnotationService(
 
     fun createAddPatch(key: String, entries: JsonNode): JsonNode {
         val jsonEntries = jacksonObjectMapper().writeValueAsString(entries)
-        val encodedString = Base64Utils.encodeToString(jsonEntries.toByteArray())
-        val operation = AddOperation(
-            JsonPointer.of("metadata", "annotations"),
-            jacksonObjectMapper().convertValue(mapOf(key to encodedString.withBase64Prefix()))
-        )
+        val encodedString = Base64Utils.encodeToString(jsonEntries.toByteArray()).withBase64Prefix()
+
+        val operation = if (hasUserAnnotations()) {
+            AddOperation(JsonPointer.of("metadata", "annotations", key), TextNode(encodedString))
+        } else {
+            AddOperation(
+                JsonPointer.of("metadata", "annotations"),
+                jacksonObjectMapper().convertValue(mapOf(key to encodedString))
+            )
+        }
         return JacksonUtils.newMapper().convertValue(JsonPatch(listOf(operation)))
+    }
+
+    private fun hasUserAnnotations(): Boolean {
+        val name = userDetailsProvider.getAuthenticatedUser().username
+        val user = serviceAccountClient.get("user", "", name)
+        val annotations = user?.body?.at("/metadata/annotations") ?: return false
+        return !annotations.isMissingNode
     }
 
     fun deleteAnnotations(key: String): Map<String, JsonNode> {
