@@ -14,6 +14,7 @@ import org.springframework.retry.backoff.FixedBackOffPolicy
 import org.springframework.retry.listener.RetryListenerSupport
 import org.springframework.retry.policy.SimpleRetryPolicy
 import org.springframework.retry.support.RetryTemplate
+import org.springframework.web.client.HttpServerErrorException
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestClientResponseException
 import org.springframework.web.client.RestTemplate
@@ -115,16 +116,19 @@ class RetryLogger(val logger: Logger) : RetryListenerSupport() {
             "method" to requestEntity.method,
             "message" to cause?.message
         )
+        if(e is HttpServerErrorException) {
+            params["body"] = e.responseBodyAsString
+        }
         if (cause is RestClientResponseException) {
-            params.put("code", cause.rawStatusCode)
-            params.put("statusText", cause.statusText)
+            params["code"] = cause.rawStatusCode
+            params["statusText"] = cause.statusText
             val messageFromResponse = try {
                 val response = jacksonObjectMapper().readValue<JsonNode>(cause.responseBodyAsString)
                 response.get("message")?.textValue()
             } catch (e: Exception) {
                 "<N/A>"
             }
-            params.put("messageFromResponse", messageFromResponse)
+            params["messageFromResponse"] = messageFromResponse
         }
 
         val message = StringBuilder("Request failed. ")
