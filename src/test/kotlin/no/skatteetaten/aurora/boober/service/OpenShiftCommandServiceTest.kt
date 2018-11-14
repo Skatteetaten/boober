@@ -1,8 +1,10 @@
 package no.skatteetaten.aurora.boober.service
 
+import assertk.assert
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
+import com.fasterxml.jackson.databind.JsonNode
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -28,26 +30,29 @@ class OpenShiftCommandServiceTest : ResourceLoader() {
     }
 
     @Test
-    fun `Should accept successfull command`() {
+    fun `Should accept successful command`() {
         val json = loadJsonResource("dc.json")
-        val commandSlot = slot<OpenshiftCommand>()
-        every {
-            openshiftClient.performOpenShiftCommand(
-                namespace = namespace,
-                command = capture(commandSlot)
-            )
-        } answers { OpenShiftResponse(commandSlot.captured, json) }
+        createOpenShiftClientMock(json)
         val resultList = service.createAndApplyObjects(namespace, json, false)
 
-        assertk.assert(resultList.size).isEqualTo(1)
-        val result = resultList.first()
-        assertk.assert(result.success).isTrue()
+        assert(resultList.size).isEqualTo(1)
+        assert(resultList.first().success).isTrue()
     }
 
     @Test
     fun `Should fail ImageStreamImport where command succeeds but import has failed`() {
-
         val json = loadJsonResource("iis-failed.json")
+        createOpenShiftClientMock(json)
+
+        val resultList = service.createAndApplyObjects(namespace, json, false)
+        assert(resultList.size).isEqualTo(1)
+        val result = resultList.first()
+        assert(result.success).isFalse()
+        assert(result.exception)
+            .isEqualTo("dockerimage.image.openshift.io \"docker-registry.aurora.sits.no:5000/no_skatteetaten_aurora_demo/whoami:foobar\" not found")
+    }
+
+    private fun createOpenShiftClientMock(json: JsonNode) {
         val commandSlot = slot<OpenshiftCommand>()
         every {
             openshiftClient.performOpenShiftCommand(
@@ -55,12 +60,5 @@ class OpenShiftCommandServiceTest : ResourceLoader() {
                 command = capture(commandSlot)
             )
         } answers { OpenShiftResponse(commandSlot.captured, json) }
-
-        val resultList = service.createAndApplyObjects(namespace, json, false)
-        assertk.assert(resultList.size).isEqualTo(1)
-        val result = resultList.first()
-        assertk.assert(result.success).isFalse()
-        assertk.assert(result.exception)
-            .isEqualTo("dockerimage.image.openshift.io \"docker-registry.aurora.sits.no:5000/no_skatteetaten_aurora_demo/whoami:foobar\" not found")
     }
 }
