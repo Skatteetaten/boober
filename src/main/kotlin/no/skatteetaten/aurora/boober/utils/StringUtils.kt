@@ -1,9 +1,12 @@
 package no.skatteetaten.aurora.boober.utils
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.TextNode
+import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.apache.commons.io.FilenameUtils
+import org.springframework.util.Base64Utils
 
 fun String.ensureEndsWith(endsWith: String, seperator: String = ""): String {
     if (this.endsWith(endsWith)) {
@@ -33,8 +36,11 @@ fun String.toJson() = jacksonObjectMapper().readValue<JsonNode>(this)
 
 const val base64Prefix = "data:application/json;base64,"
 
-fun String.isBase64() = this.startsWith(base64Prefix)
+fun String.toBase64() = "$base64Prefix${Base64Utils.encodeToString(this.toByteArray())}"
 
-fun String.withBase64Prefix() = "$base64Prefix$this"
-
-fun String.withoutBase64Prefix() = this.removePrefix(base64Prefix)
+fun String.base64ToJsonNode() =
+    if (this.startsWith(base64Prefix)) {
+        jacksonObjectMapper().convertValue<JsonNode>(String(Base64Utils.decodeFromString(this.removePrefix(base64Prefix))))
+    } else {
+        TextNode(this)
+    }

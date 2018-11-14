@@ -10,12 +10,11 @@ import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.utils.base64Prefix
+import no.skatteetaten.aurora.boober.utils.toBase64
 import no.skatteetaten.aurora.boober.utils.toJson
-import no.skatteetaten.aurora.boober.utils.withBase64Prefix
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.ResponseEntity
-import org.springframework.util.Base64Utils
 
 class UserAnnotationServiceTest {
 
@@ -45,14 +44,13 @@ class UserAnnotationServiceTest {
     @Test
     fun `Get user annotations where value is base64 encoded`() {
         val entry = """{"key1":"value1"}"""
-        val encodedEntry = Base64Utils.encodeToString(entry.toByteArray())
 
         every {
             openShiftResourceClient.get("user", "", "username")
-        } returns ResponseEntity.ok("""{"metadata":{"annotations":{"key":"${encodedEntry.withBase64Prefix()}"}}}""".toJson())
+        } returns ResponseEntity.ok("""{"metadata":{"annotations":{"key":"${entry.toBase64()}"}}}""".toJson())
 
         val response = userAnnotationService.getAnnotations()
-        assert(response["key"]?.at("/key1")?.textValue()).isEqualTo("value1")
+        assert(response["key"]?.textValue()).isEqualTo(entry)
     }
 
     @Test
