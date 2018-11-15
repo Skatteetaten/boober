@@ -42,15 +42,27 @@ class UserAnnotationServiceTest {
     }
 
     @Test
-    fun `Get user annotations where value is base64 encoded`() {
-        val entry = """{"key1":"value1"}"""
+    fun `Get user annotations where value is base64 encoded and json`() {
+        val entry = """{"key1":"value1"}""".toBase64()
 
         every {
             openShiftResourceClient.get("user", "", "username")
-        } returns ResponseEntity.ok("""{"metadata":{"annotations":{"key":"${entry.toBase64()}"}}}""".toJson())
+        } returns ResponseEntity.ok("""{"metadata":{"annotations":{"key":"$entry"}}}""".toJson())
 
         val response = userAnnotationService.getAnnotations()
-        assert(response["key"]?.textValue()).isEqualTo(entry)
+        assert(response["key"]?.at("/key1")?.textValue()).isEqualTo("value1")
+    }
+
+    @Test
+    fun `Get user annotations where value is base64 encoded and text`() {
+        val entry = """test value""".toBase64()
+
+        every {
+            openShiftResourceClient.get("user", "", "username")
+        } returns ResponseEntity.ok("""{"metadata":{"annotations":{"key":"$entry"}}}""".toJson())
+
+        val response = userAnnotationService.getAnnotations()
+        assert(response["key"]?.textValue()).isEqualTo("test value")
     }
 
     @Test
