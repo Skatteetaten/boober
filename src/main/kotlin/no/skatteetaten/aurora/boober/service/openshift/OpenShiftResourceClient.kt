@@ -50,18 +50,25 @@ open class OpenShiftResourceClient(
         return exchange(RequestEntity<JsonNode>(headers, HttpMethod.DELETE, URI(urls.get)))!!
     }
 
+    fun patch(kind: String, name: String? = null, payload: JsonNode): ResponseEntity<JsonNode> {
+        val urls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl = baseUrl, kind = kind, name = name)
+        val headers = getAuthorizationHeaders().apply {
+            set(HttpHeaders.CONTENT_TYPE, "application/json-patch+json")
+        }
+        return exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.PATCH, URI(urls.update)))!!
+    }
+
     open fun getAuthorizationHeaders(): HttpHeaders {
         return createHeaders(tokenProvider.getToken())
     }
 
-    fun createHeaders(token: String): HttpHeaders {
-        val headers = HttpHeaders()
-        headers.contentType = MediaType.APPLICATION_JSON
-        headers.set("Authorization", "Bearer " + token)
-        return headers
-    }
+    fun createHeaders(token: String) =
+        HttpHeaders().apply {
+            contentType = MediaType.APPLICATION_JSON
+            set("Authorization", "Bearer $token")
+        }
 
-    protected fun <T> exchange(requestEntity: RequestEntity<T>, retry: Boolean = true) = try {
+    private fun <T> exchange(requestEntity: RequestEntity<T>, retry: Boolean = true) = try {
         restTemplateWrapper.exchange(requestEntity, retry)
     } catch (e: HttpClientErrorException) {
         if (e.statusCode != HttpStatus.NOT_FOUND) {

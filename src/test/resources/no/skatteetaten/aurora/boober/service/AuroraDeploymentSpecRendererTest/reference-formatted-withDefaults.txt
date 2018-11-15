@@ -32,7 +32,7 @@
   version:                  "1"                          // reference.json
   resources: {
     cpu: {
-      min:                  "100m"                       // default
+      min:                  "10m"                        // default
       max:                  "2000m"                      // default
     }
     memory: {

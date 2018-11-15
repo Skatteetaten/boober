@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.NullNode
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
@@ -30,7 +31,7 @@ class DockerService(val httpClient: RestTemplate) {
         val response = if (manifest.statusCode.is2xxSuccessful && manifest.hasBody()) {
             putManifest(cmd.toRegistry, cmd.name, cmd.to, manifest.body)
         } else manifest
-        return TagResult(cmd, response.body, response.statusCode.is2xxSuccessful)
+        return TagResult(cmd, NullNode.instance, response.statusCode.is2xxSuccessful)
     }
 
     fun getManifest(registryUrl: String, name: String, tag: String): ResponseEntity<JsonNode> {

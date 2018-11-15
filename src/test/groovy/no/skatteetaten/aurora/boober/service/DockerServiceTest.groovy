@@ -46,14 +46,13 @@ class DockerServiceTest extends Specification {
   def "Should tag from one tag to another"() {
     given:
       def manifest = mapper.convertValue([manifest: "foo"], JsonNode.class)
-      httpClient.exchange(_, _) >> new ResponseEntity<JsonNode>(manifest, HttpStatus.OK)
+      httpClient.exchange(_, _) >>> [new ResponseEntity<JsonNode>(manifest, HttpStatus.OK), new ResponseEntity<JsonNode>(null, HttpStatus.CREATED)]
 
     when:
       def response = service.tag(new TagCommand("foo/bar", "1.2.3", "latest", "registry"))
 
     then:
       response.success
-
   }
 
   def "Should not tag if we cannot find manifest"() {

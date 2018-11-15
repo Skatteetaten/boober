@@ -3,8 +3,10 @@
   "kind": "DeploymentConfig",
   "metadata": {
     "annotations": {
-      "boober.skatteetaten.no/applicationFile": "secretmount/aos-simple.json",
-      "console.skatteetaten.no/alarm": "true"
+      "boober.skatteetaten.no/applicationFile": "booberdev/aos-simple.json",
+      "console.skatteetaten.no/alarm": "true",
+      "boober.skatteetaten.no/overrides": "{\"booberdev/aos-simple.json\":{\"version\":\"1.0.4\"}}",
+      "sprocket.sits.no/deployment-config.certificate": "ske.aurora.openshift.aos-simple"
     },
     "labels": {
       "app": "aos-simple",
@@ -13,7 +15,8 @@
       "updateInBoober": "true",
       "booberDeployId": "123",
       "name": "aos-simple",
-      "deployTag": "1.0.3-SNAPSHOT"
+      "deployTag": "1.0.4",
+      "paused": "true"
     },
     "name": "aos-simple",
     "ownerReferences": [
@@ -26,19 +29,15 @@
     ]
   },
   "spec": {
-    "replicas": 1,
+    "replicas": 0,
     "selector": {
       "name": "aos-simple"
     },
     "strategy": {
-      "rollingParams": {
-        "intervalSeconds": 1,
-        "maxSurge": "25%",
-        "maxUnavailable": 0,
-        "timeoutSeconds": 180,
-        "updatePeriodSeconds": 1
+      "recreateParams": {
+        "timeoutSeconds": 180
       },
-      "type": "Rolling"
+      "type": "Recreate"
     },
     "template": {
       "metadata": {
@@ -49,7 +48,8 @@
           "updateInBoober": "true",
           "booberDeployId": "123",
           "name": "aos-simple",
-          "deployTag": "1.0.3-SNAPSHOT"
+          "deployTag": "1.0.4",
+          "paused": "true"
         }
       },
       "spec": {
@@ -88,11 +88,11 @@
               },
               {
                 "name": "ROUTE_NAME",
-                "value": "aos-simple-aos-secretmount.utv.paas.skead.no/foo"
+                "value": "aos-simple-aos-booberdev.utv.paas.skead.no/foo"
               },
               {
                 "name": "ROUTE_URL",
-                "value": "http://aos-simple-aos-secretmount.utv.paas.skead.no/foo"
+                "value": "http://aos-simple-aos-booberdev.utv.paas.skead.no/foo"
               },
               {
                 "name": "STS_CERTIFICATE_URL",
@@ -107,18 +107,21 @@
                 "value": "/u01/secrets/app/aos-simple-cert/descriptor.properties"
               },
               {
+                "name": "VOLUME_CONFIG",
+                "value": "/u01/config/configmap"
+              },
+              {
                 "name": "VOLUME_AOS_SIMPLE_CERT",
                 "value": "/u01/secrets/app/aos-simple-cert"
               },
               {
-                "name": "VOLUME_SECRET_MOUNT",
-                "value": "/u01/foo"
+                "name": "FOO",
+                "value": "baaaar"
               },
               {
-                "name": "VOLUME_PVC",
-                "value": "/foo"
+                "name": "BAR",
+                "value": ""
               },
-
               {
                 "name": "HTTP_PORT",
                 "value": "8080"
@@ -133,6 +136,13 @@
               }
             ],
             "imagePullPolicy": "IfNotPresent",
+            "livenessProbe": {
+              "initialDelaySeconds": 10,
+              "tcpSocket": {
+                "port": 8080
+              },
+              "timeoutSeconds": 1
+            },
             "name": "aos-simple-java",
             "ports": [
               {
@@ -151,13 +161,6 @@
                 "protocol": "TCP"
               }
             ],
-            "readinessProbe": {
-              "initialDelaySeconds": 10,
-              "tcpSocket": {
-                "port": 8080
-              },
-              "timeoutSeconds": 1
-            },
             "resources": {
               "limits": {
                 "cpu": "2000m",
@@ -178,16 +181,12 @@
                 "name": "application-log-volume"
               },
               {
+                "mountPath": "/u01/config/configmap",
+                "name": "config"
+              },
+              {
                 "mountPath": "/u01/secrets/app/aos-simple-cert",
                 "name": "aos-simple-cert"
-              },
-              {
-                "mountPath": "/u01/foo",
-                "name": "secret-mount"
-              },
-              {
-                "mountPath": "/foo",
-                "name": "pvc"
               }
             ]
           }
@@ -196,21 +195,15 @@
         "restartPolicy": "Always",
         "volumes": [
           {
+            "configMap": {
+              "name": "aos-simple"
+            },
+            "name": "config"
+          },
+          {
             "name": "aos-simple-cert",
             "secret": {
               "secretName": "aos-simple-cert"
-            }
-          },
-          {
-            "name": "secret-mount",
-            "secret": {
-              "secretName": "aos-simple-secret-mount"
-            }
-          },
-          {
-            "name": "pvc",
-            "persistentVolumeClaim": {
-              "claimName": "pvc"
             }
           },
           {

@@ -2,6 +2,14 @@ package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fkorotkov.openshift._import
+import com.fkorotkov.openshift.newImageStreamImportStatus
+import com.fkorotkov.openshift.newNamedTagEventList
+import com.fkorotkov.openshift.newTagEvent
+import com.fkorotkov.openshift.newTagEventCondition
+import com.fkorotkov.openshift.status
+import io.fabric8.openshift.api.model.ImageStreamImport
+import no.skatteetaten.aurora.boober.service.internal.ImageStreamImportGenerator
 import java.io.File
 import java.nio.charset.Charset
 
@@ -47,8 +55,10 @@ fun getSampleFiles(aid: ApplicationDeploymentRef, additionalFile: String? = null
 }
 
 fun getResultFiles(aid: ApplicationDeploymentRef): Map<String, JsonNode?> {
-    val baseFolder = File(AuroraConfigHelper::class.java
-        .getResource("/samples/result/${aid.environment}/${aid.application}").file)
+    val baseFolder = File(
+        AuroraConfigHelper::class.java
+            .getResource("/samples/result/${aid.environment}/${aid.application}").file
+    )
 
     return getFiles(baseFolder)
 }
@@ -76,4 +86,33 @@ private fun convertFileToJsonNode(file: File): JsonNode? {
 
     val mapper = jacksonObjectMapper()
     return mapper.readValue(file, JsonNode::class.java)
+}
+
+@JvmOverloads
+fun imageStreamImport(
+    imageHash: String = "123",
+    imageStatus: Boolean = true,
+    imageErrorMessage: String = ""
+): ImageStreamImport {
+
+    val status = newImageStreamImportStatus {
+        _import {
+            status {
+                tags = listOf(newNamedTagEventList {
+                    items = listOf(newTagEvent {
+                        created = "true"
+                        image = imageHash
+                        tag = "default"
+                    })
+                    conditions = listOf(newTagEventCondition {
+                        status = imageStatus.toString()
+                        message = imageErrorMessage
+                    })
+                })
+            }
+        }
+    }
+    val isi = ImageStreamImportGenerator.create("test", "docker")
+    isi.status = status
+    return isi
 }
