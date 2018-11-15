@@ -16,6 +16,15 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 
 private data class UserAnnotation(val metadata: ObjectMeta) {
+    companion object {
+        fun create(key: String, annotation: String?) =
+            UserAnnotation(metadata = newObjectMeta {
+                annotations = mapOf(key to annotation)
+            })
+
+        fun emptyAnnotation(key: String) = UserAnnotation.create(key, null)
+    }
+
     fun toJsonNode(): JsonNode = jacksonObjectMapper().convertValue(this)
 }
 
@@ -40,10 +49,7 @@ class UserAnnotationService(
 
     fun createUpdatePatch(key: String, entries: JsonNode): JsonNode {
         val jsonEntries = jacksonObjectMapper().writeValueAsString(entries)
-        val userAnnotation = UserAnnotation(metadata = newObjectMeta {
-            annotations = mapOf(key to jsonEntries.toBase64())
-        })
-        return userAnnotation.toJsonNode()
+        return UserAnnotation.create(key, jsonEntries.toBase64()).toJsonNode()
     }
 
     fun deleteAnnotations(key: String): Map<String, JsonNode> {
@@ -53,12 +59,7 @@ class UserAnnotationService(
         return getResponseAnnotations(response)
     }
 
-    fun createRemovePatch(key: String): JsonNode {
-        val userAnnotation = UserAnnotation(metadata = newObjectMeta {
-            annotations = mapOf(key to null)
-        })
-        return userAnnotation.toJsonNode()
-    }
+    fun createRemovePatch(key: String): JsonNode = UserAnnotation.emptyAnnotation(key).toJsonNode()
 
     private fun getResponseAnnotations(response: ResponseEntity<JsonNode>?): Map<String, JsonNode> {
         val annotations = response?.body?.at("/metadata/annotations") ?: return emptyMap()

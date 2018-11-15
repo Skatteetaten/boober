@@ -64,12 +64,22 @@ class UserAnnotationServiceTest {
     }
 
     @Test
-    fun `Delete user annotations`() {
+    fun `Delete user annotations return existing annotations`() {
         every {
             openShiftResourceClient.strategicMergePatch("user", "username", any())
         } returns ResponseEntity.ok("""{"metadata":{"annotations":{"key":"value"}}}""".toJson())
 
         val response = userAnnotationService.deleteAnnotations("filters")
         assert(response["key"]?.textValue()).isEqualTo("value")
+    }
+
+    @Test
+    fun `Delete user annotations return no annotations`() {
+        every {
+            openShiftResourceClient.strategicMergePatch("user", "username", any())
+        } returns ResponseEntity.ok("""{}""".toJson())
+
+        val response = userAnnotationService.deleteAnnotations("filters")
+        assert(response.isEmpty()).isTrue()
     }
 }
