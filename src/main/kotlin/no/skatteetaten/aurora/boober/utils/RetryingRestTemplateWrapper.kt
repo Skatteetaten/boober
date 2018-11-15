@@ -116,7 +116,7 @@ class RetryLogger(val logger: Logger) : RetryListenerSupport() {
             "method" to requestEntity.method,
             "message" to cause?.message
         )
-        if(e is HttpServerErrorException) {
+        if (e is HttpServerErrorException) {
             params["body"] = e.responseBodyAsString
         }
         if (cause is RestClientResponseException) {

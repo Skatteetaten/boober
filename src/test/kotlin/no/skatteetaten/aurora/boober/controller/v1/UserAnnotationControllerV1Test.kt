@@ -30,7 +30,12 @@ class UserAnnotationControllerV1Test {
     @Test
     fun `Update user annotations`() {
         val jsonEntries = """{"key": "value"}"""
-        every { userAnnotationService.updateAnnotations("filters", jsonEntries.toJson()) } returns mapOf("filters" to jsonEntries.toJson())
+        every {
+            userAnnotationService.updateAnnotations(
+                "filters",
+                jsonEntries.toJson()
+            )
+        } returns mapOf("filters" to jsonEntries.toJson())
 
         val response = mockMvc.perform(
             patch("/v1/users/annotations/{key}", "filters")

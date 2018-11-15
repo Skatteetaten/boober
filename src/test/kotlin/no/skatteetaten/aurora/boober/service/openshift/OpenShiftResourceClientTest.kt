@@ -34,10 +34,10 @@ class OpenShiftResourceClientTest {
         val response = """{ "metadata": { "annotations": { "foo": "bar" } } }"""
 
         val request = server.execute(response) {
-            val responseEntity = openShiftResourceClient.patch("user", "username", TextNode("{}"))
+            val responseEntity = openShiftResourceClient.strategicMergePatch("user", "username", TextNode("{}"))
             assert(responseEntity.statusCode.value()).isEqualTo(200)
         }
-        assert(request.headers[HttpHeaders.CONTENT_TYPE]).isEqualTo("application/json-patch+json")
+        assert(request.headers[HttpHeaders.CONTENT_TYPE]).isEqualTo("application/strategic-merge-patch+json")
         assert(request.path).isEqualTo("/oapi/v1/users/username")
     }
 }
