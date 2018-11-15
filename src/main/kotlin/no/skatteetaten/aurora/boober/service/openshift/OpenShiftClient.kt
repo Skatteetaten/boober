@@ -71,7 +71,7 @@ fun List<OpenShiftResponse>.describe() = this.map {
     }
     "${it.command.operationType} ${it.command.payload.openshiftKind}/${it.command.payload.openshiftName} $exceptionMessage"
 }
-fun List<OpenShiftResponse>.describeString() =  this.describe().joinToString(", ")
+fun List<OpenShiftResponse>.describeString() = this.describe().joinToString(", ")
 
 fun List<OpenShiftResponse>.resource(kind: String): OpenShiftResponse? =
     this.find { it.responseBody?.openshiftKind == kind }
