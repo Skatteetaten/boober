@@ -1,8 +1,6 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
 import com.fasterxml.jackson.databind.node.TextNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk

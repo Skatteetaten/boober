@@ -47,6 +47,9 @@ fun JsonNode.atNullable(path: String): JsonNode? {
     return value
 }
 
+fun List<JsonNode>.deploymentConfig(): JsonNode? = this.find { it.openshiftKind == "deploymentconfig" }
+fun List<JsonNode>.imageStream(): JsonNode? = this.find { it.openshiftKind == "imagestream" }
+
 val JsonNode.openshiftKind: String
     get() = this.get("kind")?.asText()?.toLowerCase()
         ?: throw IllegalArgumentException("Kind must be set in file=$this")

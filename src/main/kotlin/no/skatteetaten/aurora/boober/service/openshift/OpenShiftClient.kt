@@ -65,6 +65,21 @@ data class OpenShiftResponse @JvmOverloads constructor(
     }
 }
 
+fun List<OpenShiftResponse>.describe() = this.map {
+    val exceptionMessage = it.exception?.let {
+        "failed=$it"
+    }
+    "${it.command.operationType} ${it.command.payload.openshiftKind}/${it.command.payload.openshiftName} $exceptionMessage"
+}
+fun List<OpenShiftResponse>.describeString() = this.describe().joinToString { ", " }
+
+fun List<OpenShiftResponse>.resource(kind: String): OpenShiftResponse? =
+    this.find { it.responseBody?.openshiftKind == kind }
+
+fun List<OpenShiftResponse>.deploymentConfig(): OpenShiftResponse? = this.resource("deploymentconfig")
+fun List<OpenShiftResponse>.imageStream(): OpenShiftResponse? = this.resource("imagestream")
+fun List<OpenShiftResponse>.imageStreamImport(): OpenShiftResponse? = this.resource("imagestreamimport")
+
 data class UserGroup(val user: String, val group: String)
 
 data class OpenShiftGroups(private val groupUserPairs: List<UserGroup>) {
