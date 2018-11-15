@@ -1,8 +1,8 @@
 package no.skatteetaten.aurora.boober.utils
 
+import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
-import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.apache.commons.io.FilenameUtils
@@ -40,7 +40,12 @@ fun String.toBase64() = "$base64Prefix${Base64Utils.encodeToString(this.toByteAr
 
 fun String.base64ToJsonNode() =
     if (this.startsWith(base64Prefix)) {
-        jacksonObjectMapper().convertValue<JsonNode>(String(Base64Utils.decodeFromString(this.removePrefix(base64Prefix))))
+        val decodedValue = String(Base64Utils.decodeFromString(this.removePrefix(base64Prefix)))
+        try {
+            jacksonObjectMapper().readValue<JsonNode>(decodedValue)
+        } catch (e: JsonParseException) {
+            TextNode(decodedValue)
+        }
     } else {
         TextNode(this)
     }
