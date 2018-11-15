@@ -50,10 +50,10 @@ open class OpenShiftResourceClient(
         return exchange(RequestEntity<JsonNode>(headers, HttpMethod.DELETE, URI(urls.get)))!!
     }
 
-    fun patch(kind: String, name: String? = null, payload: JsonNode): ResponseEntity<JsonNode> {
+    fun strategicMergePatch(kind: String, name: String? = null, payload: JsonNode): ResponseEntity<JsonNode> {
         val urls = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl = baseUrl, kind = kind, name = name)
         val headers = getAuthorizationHeaders().apply {
-            set(HttpHeaders.CONTENT_TYPE, "application/json-patch+json")
+            set(HttpHeaders.CONTENT_TYPE, "application/strategic-merge-patch+json")
         }
         return exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.PATCH, URI(urls.update)))!!
     }
