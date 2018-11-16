@@ -44,7 +44,7 @@ class UserAnnotationControllerV1Test {
         )
 
         response.andExpect(status().isOk)
-            .andExpect(jsonPath("$.items.filters.key").value("value"))
+            .andExpect(jsonPath("$.items[0].filters.key").value("value"))
     }
 
     @Test
@@ -59,8 +59,8 @@ class UserAnnotationControllerV1Test {
         response.andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.items.length()").value(2))
-            .andExpect(jsonPath("$.items.filters.key").value("first"))
-            .andExpect(jsonPath("$.items.test-key.key").value("second"))
+            .andExpect(jsonPath("$.items[0].filters.key").value("first"))
+            .andExpect(jsonPath("$.items[1].test-key.key").value("second"))
     }
 
     @Test
@@ -75,7 +75,7 @@ class UserAnnotationControllerV1Test {
         response.andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.items.length()").value(1))
-            .andExpect(jsonPath("$.items.filters.key").value("first"))
+            .andExpect(jsonPath("$.items[0].filters.key").value("first"))
     }
 
     @Test
@@ -86,6 +86,6 @@ class UserAnnotationControllerV1Test {
 
         response.andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.items.key").value("value"))
+            .andExpect(jsonPath("$.items[0].key").value("value"))
     }
 }
