@@ -76,43 +76,46 @@ class DeployService(
 
     fun prepareDeployEnvironments(deploymentSpecInternals: List<AuroraDeploymentSpecInternal>): Map<AuroraDeployEnvironment, AuroraDeployResult> {
 
-        val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
-
         return deploymentSpecInternals
             .filter { it.cluster == cluster }
             .map { it.environment }
             .distinct()
-            .map { environment: AuroraDeployEnvironment ->
+            .map(this::prepareDeployEnvironment)
+            .toMap()
+    }
 
-                if (!authenticatedUser.hasAnyRole(environment.permissions.admin.groups)) {
-                    Pair(
-                        environment,
-                        AuroraDeployResult(
-                            success = false,
-                            reason = "User=${authenticatedUser.fullName} does not have access to admin this environment from the groups=${environment.permissions.admin.groups}"
-                        )
-                    )
-                }
+    fun prepareDeployEnvironment(environment: AuroraDeployEnvironment): Pair<AuroraDeployEnvironment, AuroraDeployResult> {
 
-                val projectExist = openShiftClient.projectExists(environment.namespace)
-                val environmentResponses = prepareDeployEnvironment(environment, projectExist)
-
-                val success = environmentResponses.all { it.success }
-
-                val message = if (!success) {
-                    "One or more http calls to OpenShift failed"
-                } else "Namespace created successfully."
-
-                logger.info("Environment done. user='${authenticatedUser.fullName}' namespace=${environment.namespace} success=$success reason=$message admins=${environment.permissions.admin.groups} viewers=${environment.permissions.view?.groups}")
-                Pair(
-                    environment, AuroraDeployResult(
-                        openShiftResponses = environmentResponses,
-                        success = success,
-                        reason = message,
-                        projectExist = projectExist
-                    )
+        val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
+        if (!authenticatedUser.hasAnyRole(environment.permissions.admin.groups)) {
+            return Pair(
+                environment,
+                AuroraDeployResult(
+                    success = false,
+                    reason = "User=${authenticatedUser.fullName} does not have access to admin this environment from the groups=${environment.permissions.admin.groups}"
                 )
-            }.toMap()
+            )
+        }
+
+        val projectExist = openShiftClient.projectExists(environment.namespace)
+        val environmentResponses = prepareDeployEnvironment(environment, projectExist)
+
+        val success = environmentResponses.all { it.success }
+
+        val message = if (!success) {
+            "One or more http calls to OpenShift failed"
+        } else "Namespace created successfully."
+
+        logger.info("Environment done. user='${authenticatedUser.fullName}' namespace=${environment.namespace} success=$success reason=$message admins=${environment.permissions.admin.groups} viewers=${environment.permissions.view?.groups}")
+
+        return Pair(
+            environment, AuroraDeployResult(
+                openShiftResponses = environmentResponses,
+                success = success,
+                reason = message,
+                projectExist = projectExist
+            )
+        )
     }
 
     fun prepareDeployEnvironment(
