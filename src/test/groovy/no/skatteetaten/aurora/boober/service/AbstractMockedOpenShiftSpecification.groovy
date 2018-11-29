@@ -11,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -154,7 +155,7 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
     boolean useAuroraConfig = defaultOverride ? defaultOverride.auroraConfig() : true
 
     if (useInteractions) {
-      userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User", [])
+      userDetailsProvider.authenticatedUser >> getAuthenticatedUser()
 
       openShiftClient.getGroups() >> new OpenShiftGroups([
           new UserGroup("foo", "APP_PaaS_drift"),
@@ -163,7 +164,7 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
 
     if (useAuroraConfig) {
 
-      userDetailsProvider.authenticatedUser >> new User("hero", "token", "Test User", [])
+      userDetailsProvider.authenticatedUser >> getAuthenticatedUser()
 
       AuroraConfig auroraConfig = AuroraConfigHelperKt.auroraConfigSamples
       GitServiceHelperKt.recreateEmptyBareRepos(auroraConfig.getName())
@@ -173,6 +174,10 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
       vaultService.createOrUpdateFileInVault("aos", "foo", "latest.properties", "FOO=BAR".bytes as byte[])
       auroraConfigService.save(auroraConfig)
     }
+  }
+
+  protected User getAuthenticatedUser() {
+    new User("hero", "token", "Test User", [new SimpleGrantedAuthority("APP_PaaS_utv")])
   }
 
   void createRepoAndSaveFiles(AuroraConfig auroraConfig) {
