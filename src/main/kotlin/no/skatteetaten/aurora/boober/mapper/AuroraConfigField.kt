@@ -10,7 +10,6 @@ import no.skatteetaten.aurora.boober.mapper.v1.convertValueToString
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
-import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.utils.atNullable
 import no.skatteetaten.aurora.boober.utils.deepSet
 import org.apache.commons.text.StringSubstitutor
@@ -48,10 +47,6 @@ data class AuroraConfigField(
             return replacer.replace(result as String) as T
         }
         return result
-    }
-
-    fun isTextual(): Boolean {
-        return value.isTextual
     }
     /**
      * Extracts a config field declared either as a delimited string (ie. "value1, value2") or as a JSON array
@@ -93,6 +88,7 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
                 field to value
             }
     }
+
     fun getParameters(parameterExtractors: List<AuroraConfigFieldHandler>): Map<String, String>? {
         return parameterExtractors.associate {
             val (_, field) = it.name.split("/", limit = 2)
@@ -146,8 +142,6 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
     fun getDelimitedStringOrArrayAsSet(name: String, delimiter: String = ","): Set<String> {
         return fields[name]?.extractDelimitedStringOrArrayAsSet(delimiter) ?: emptySet()
     }
-
-    fun isTextual(name:String) = fields[name]?.isTextual()
 
     inline fun <reified T> getOrNull(name: String): T? = fields[name]?.getNullableValue()
 

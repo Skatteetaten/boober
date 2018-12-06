@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.model
 
+import static no.skatteetaten.aurora.boober.mapper.v1.DatabasePermission.READ
 import static no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.aid
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
@@ -168,7 +169,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
     then:
       def e = thrown(AuroraConfigException)
       e.message ==
-      "Config for application aos-simple in environment utv contains errors. Invalid Source field=affiliation requires an about source. Actual source is source=utv/aos-simple.json."
+          "Config for application aos-simple in environment utv contains errors. Invalid Source field=affiliation requires an about source. Actual source is source=utv/aos-simple.json."
   }
 
   def "Fails when affiliation is too long"() {
@@ -181,7 +182,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
     then:
       def e = thrown(AuroraConfigException)
       e.message ==
-      "Config for application aos-simple in environment utv contains errors. Affiliation can only contain letters and must be no longer than 10 characters."
+          "Config for application aos-simple in environment utv contains errors. Affiliation can only contain letters and must be no longer than 10 characters."
   }
 
   def "Parses variants of secretVault config correctly"() {
@@ -194,18 +195,18 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       deploymentSpec.getVolume().secretVaultKeys == keys
 
     where:
-      configFile | vaultName |
-      keys
-      '''{ "secretVault": "vaultName" }''' | "vaultName" |
-      []
-      '''{ "secretVault": {"name": "test"} }''' | "test" |
-      []
-      '''{ "secretVault": {"name": "test", "keys": []} }''' | "test" |
-      []
-      '''{ "secretVault": {"name": "test", "keys": ["test1", "test2"]} }''' | "test" |
-      ["test1", "test2"]
-      '''{ "secretVault": {"name": "test", "keys": ["test1"], "keyMappings":{"test1":"newtestkey"}} }''' | "test" |
-      ["test1"]
+      configFile                                                                                         | vaultName   |
+          keys
+      '''{ "secretVault": "vaultName" }'''                                                               | "vaultName" |
+          []
+      '''{ "secretVault": {"name": "test"} }'''                                                          | "test"      |
+          []
+      '''{ "secretVault": {"name": "test", "keys": []} }'''                                              | "test"      |
+          []
+      '''{ "secretVault": {"name": "test", "keys": ["test1", "test2"]} }'''                              | "test"      |
+          ["test1", "test2"]
+      '''{ "secretVault": {"name": "test", "keys": ["test1"], "keyMappings":{"test1":"newtestkey"}} }''' | "test"      |
+          ["test1"]
   }
 
   def "Permissions supports both space separated string and array"() {
@@ -278,7 +279,84 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       def deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
 
     then:
-      deploymentSpec.integration.database == [new Database("foobar", null, DatabaseFlavor.ORACLE_MANAGED, true)]
+      deploymentSpec.integration.database ==
+          [new Database("foobar", null, DatabaseFlavor.ORACLE_MANAGED, true, [:], [:], [:])]
+  }
+
+  def "Should use databaseDefaults"() {
+    given:
+      def aid = DEFAULT_AID
+      modify(auroraConfigJson, "about.json", {
+        put("databaseDefaults", [
+            "name"      : "ohyeah",
+            "flavor"    : "POSTGRES_MANAGED",
+            "generate"  : false,
+            "roles"     : [
+                "jalla": "READ"
+            ],
+            "exposeTo"  : [
+                "foobar": "jalla"
+            ],
+            "parameters": [
+                "foo": "bar"
+            ]
+        ])
+      })
+      modify(auroraConfigJson, "utv/aos-simple.json", {
+        put("database", true)
+      })
+    when:
+      def deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
+    then:
+      deploymentSpec.integration.database ==
+          [new Database("ohyeah", null, DatabaseFlavor.POSTGRES_MANAGED, false, [foobar: "jalla"], [jalla: READ],
+              [foo: "bar"])]
+  }
+
+  def "Should use expaned database configuration"() {
+    given:
+      def aid = DEFAULT_AID
+      modify(auroraConfigJson, "about.json", {
+        put("databaseDefaults", [
+            name      : "ohyeah",
+            flavor    : "POSTGRES_MANAGED",
+            generate  : false,
+            roles     : [
+                jalla: "READ"
+            ],
+            exposeTo  : [
+                foobar: "jalla"
+            ],
+            parameters: [
+                foo: "bar"
+            ]
+        ])
+      })
+      modify(auroraConfigJson, "utv/aos-simple.json", {
+        put("database", [
+            foo : [
+                id : "123",
+                roles : [
+                   read : "READ"
+                ],
+                exposeTo  : [
+                    foobar : "read"
+                ],
+                parameters: [
+                    baz : "bar"
+                ]
+            ]
+        ])
+      })
+    when:
+      def deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
+
+    then:
+      deploymentSpec.integration.database ==
+          [new Database("foo", "123", DatabaseFlavor.POSTGRES_MANAGED, false,
+              [foobar: "read"],
+              [jalla: READ, read: READ],
+              [foo: "bar", baz: "bar"])]
   }
 
   def "Should use overridden cert name when set to default at higher level"() {

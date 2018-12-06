@@ -3,6 +3,8 @@ package no.skatteetaten.aurora.boober.model
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
+import no.skatteetaten.aurora.boober.mapper.v1.DatabaseFlavor
+import no.skatteetaten.aurora.boober.mapper.v1.DatabasePermission
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
@@ -206,7 +208,12 @@ data class Mount(
 
 data class Database(
     val name: String,
-    val id: String? = null
+    val id: String? = null,
+    val flavor: DatabaseFlavor,
+    val generate: Boolean,
+    val exposeTo: Map<String, String> = emptyMap(),
+    val roles: Map<String, DatabasePermission> = emptyMap(),
+    val parameters: Map<String, String> = emptyMap()
 ) {
     val spec: String
         get(): String = (id?.let { "$name:$id" } ?: name).toLowerCase()

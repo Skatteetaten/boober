@@ -17,6 +17,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService.Companion.APPLICATION_PLATFORM_HANDLERS
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -74,14 +75,14 @@ class AuroraDeploymentSpecService(
                 .validate(false)
             val platform: String = headerSpec["applicationPlatform"]
 
-            val applicationHandler: ApplicationPlatformHandler = Companion.APPLICATION_PLATFORM_HANDLERS[platform]
+            val applicationHandler: ApplicationPlatformHandler = APPLICATION_PLATFORM_HANDLERS[platform]
                 ?: throw IllegalArgumentException("ApplicationPlattformHandler $platform is not present")
 
             val header = headerMapper.createHeader(headerSpec, applicationHandler)
 
             val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(applicationDeploymentRef)
             val deployMapper = AuroraDeployMapperV1(applicationDeploymentRef, applicationFiles)
-            val integrationMapper = AuroraIntegrationsMapperV1(applicationFiles)
+            val integrationMapper = AuroraIntegrationsMapperV1(applicationFiles, header.name)
             val volumeMapper = AuroraVolumeMapperV1(applicationFiles)
             val routeMapper = AuroraRouteMapperV1(applicationFiles, header.name)
             val localTemplateMapper = AuroraLocalTemplateMapperV1(applicationFiles, auroraConfig)
@@ -132,7 +133,7 @@ class AuroraDeploymentSpecService(
             val localTemplate =
                 if (header.type == TemplateType.localTemplate) localTemplateMapper.localTemplate(deploymentSpec) else null
 
-            val overrides = overrideFiles.map { it.name to it.contents }.toMap()
+            val overrides = overrideFiles.associate { it.name to it.contents }
             return deploymentSpecMapper.createAuroraDeploymentSpec(
                 auroraDeploymentSpec = deploymentSpec,
                 volume = volume,

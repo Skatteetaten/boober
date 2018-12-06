@@ -43,7 +43,7 @@ class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>, val name
                 auroraDeploymentSpec.getOrNull("$route/$it/path"),
                 auroraDeploymentSpec.getRouteAnnotations("$route/$it/annotations", handlers)
             )
-        }.toList()
+        }
     }
 
     fun findRouteHandlers(): List<AuroraConfigFieldHandler> {

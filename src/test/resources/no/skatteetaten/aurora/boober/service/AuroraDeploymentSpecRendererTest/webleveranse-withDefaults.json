@@ -233,6 +233,38 @@
       ]
     }
   },
+  "databaseDefaults": {
+    "flavor": {
+      "source": "default",
+      "value": "ORACLE_MANAGED",
+      "sources": [
+        {
+          "name": "default",
+          "value": "ORACLE_MANAGED"
+        }
+      ]
+    },
+    "generate": {
+      "source": "default",
+      "value": true,
+      "sources": [
+        {
+          "name": "default",
+          "value": true
+        }
+      ]
+    },
+    "name": {
+      "source": "default",
+      "value": "@name@",
+      "sources": [
+        {
+          "name": "default",
+          "value": "@name@"
+        }
+      ]
+    }
+  },
   "webseal": {
     "source": "default",
     "value": false,
