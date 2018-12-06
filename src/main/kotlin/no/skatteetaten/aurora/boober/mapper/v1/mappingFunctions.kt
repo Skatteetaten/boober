@@ -2,16 +2,24 @@ package no.skatteetaten.aurora.boober.mapper.v1
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.Validator
+import no.skatteetaten.aurora.boober.mapper.defaultValidator
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 
 fun List<AuroraConfigFile>.findSubKeys(name: String): Set<String> {
-    return this.flatMap {
-        if (it.asJsonNode.has(name)) {
-            it.asJsonNode[name].fieldNames().asSequence().toList()
-        } else {
-            emptyList()
-        }
+    return this.flatMap { ac ->
+        ac.asJsonNode.at("/$name")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
     }.toSet()
+}
+
+fun List<AuroraConfigFile>.findSubHandlers(
+    key: String,
+    validatorFn: (k: String) -> Validator = { defaultValidator }
+): List<AuroraConfigFieldHandler> {
+
+    return findSubKeys(key).map { subKey ->
+        AuroraConfigFieldHandler("$key/$subKey", validator = validatorFn(subKey))
+    }
 }
 
 fun List<AuroraConfigFile>.findConfigFieldHandlers(): List<AuroraConfigFieldHandler> {
@@ -19,14 +27,7 @@ fun List<AuroraConfigFile>.findConfigFieldHandlers(): List<AuroraConfigFieldHand
     val name = "config"
     val keysStartingWithConfig = this.findSubKeys(name)
 
-    val configKeys: Map<String, Set<String>> = keysStartingWithConfig.map { configFileName ->
-        // find all unique keys in a configFile
-        val keys = this.flatMap { ac ->
-            ac.asJsonNode.at("/$name/$configFileName")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
-        }.toSet()
-
-        configFileName to keys
-    }.toMap()
+    val configKeys: Map<String, Set<String>> = keysStartingWithConfig.associateWith { findSubKeys("$name/$it") }
 
     return configKeys.flatMap { configFile ->
         val value = configFile.value
