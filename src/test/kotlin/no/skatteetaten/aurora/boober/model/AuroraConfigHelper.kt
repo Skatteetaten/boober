@@ -64,7 +64,7 @@ fun getResultFiles(aid: ApplicationDeploymentRef): Map<String, JsonNode?> {
 }
 
 private fun getFiles(baseFolder: File, name: String = ""): Map<String, JsonNode?> {
-    return baseFolder.listFiles().toHashSet().map {
+    return baseFolder.listFiles().toHashSet().associate {
         val json = convertFileToJsonNode(it)
 
         var appName = json?.at("/metadata/name")?.textValue()
@@ -74,12 +74,12 @@ private fun getFiles(baseFolder: File, name: String = ""): Map<String, JsonNode?
 
         val file = json?.at("/kind")?.textValue() + "/" + appName
         file.toLowerCase() to json
-    }.toMap()
+    }
 }
 
 private fun collectFiles(vararg fileNames: String): Map<String, String> {
 
-    return fileNames.filter { !it.isBlank() }.map { it to File(folder, it).readText(Charset.defaultCharset()) }.toMap()
+    return fileNames.filter { !it.isBlank() }.associateWith { File(folder, it).readText(Charset.defaultCharset()) }
 }
 
 private fun convertFileToJsonNode(file: File): JsonNode? {

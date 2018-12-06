@@ -154,9 +154,9 @@ fun List<Mount>?.podVolumes(dcName: String): List<Volume> {
 
 fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal, routeSuffix: String): List<EnvVar> {
 
-    val mountEnv = mounts?.map {
+    val mountEnv = mounts?.associate {
         "VOLUME_${it.mountName.toUpperCase().replace("-", "_")}" to it.path
-    }?.toMap() ?: mapOf()
+    } ?: mapOf()
 
     val splunkIndex = auroraDeploymentSpecInternal.integration?.splunkIndex?.let { "SPLUNK_INDEX" to it }
 

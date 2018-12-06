@@ -80,8 +80,7 @@ class DeployService(
             .filter { it.cluster == cluster }
             .map { it.environment }
             .distinct()
-            .map(this::prepareDeployEnvironment)
-            .toMap()
+            .associate(this::prepareDeployEnvironment)
     }
 
     fun prepareDeployEnvironment(environment: AuroraDeployEnvironment): Pair<AuroraDeployEnvironment, AuroraDeployResult> {

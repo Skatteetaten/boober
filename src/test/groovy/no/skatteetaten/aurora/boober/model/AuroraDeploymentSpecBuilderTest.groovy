@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.model
 import static no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.aid
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
+import no.skatteetaten.aurora.boober.mapper.v1.DatabaseFlavor
 
 class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
 
@@ -277,7 +278,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       def deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
 
     then:
-      deploymentSpec.integration.database == [new Database("foobar", null)]
+      deploymentSpec.integration.database == [new Database("foobar", null, DatabaseFlavor.ORACLE_MANAGED, true)]
   }
 
   def "Should use overridden cert name when set to default at higher level"() {

@@ -50,15 +50,17 @@ data class AuroraConfigField(
         return result
     }
 
+    fun isTextual(): Boolean {
+        return value.isTextual
+    }
     /**
      * Extracts a config field declared either as a delimited string (ie. "value1, value2") or as a JSON array
      * (ie. ["value1", "value2"]) as a String list.
      */
     fun extractDelimitedStringOrArrayAsSet(delimiter: String = ","): Set<String> {
-        val valueNode = value
         return when {
-            valueNode.isTextual -> valueNode.textValue().split(delimiter).toList()
-            valueNode.isArray -> (value() as List<Any?>).map { it?.toString() } // Convert any non-string values in the array to string
+            value.isTextual -> value.textValue().split(delimiter).toList()
+            value.isArray -> (value() as List<Any?>).map { it?.toString() } // Convert any non-string values in the array to string
             else -> emptyList()
         }.filter { !it.isNullOrBlank() }
             .mapNotNull { it?.trim() }
@@ -74,43 +76,30 @@ data class AuroraConfigFieldSource(
 class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
 
     fun getConfigEnv(configExtractors: List<AuroraConfigFieldHandler>): Map<String, String> {
-        val env = configExtractors.filter { it.name.count { it == '/' } == 1 }.map {
+        return configExtractors.filter { it.name.count { it == '/' } == 1 }.associate {
             val (_, field) = it.name.split("/", limit = 2)
             val value: Any = this[it.name]
             val escapedValue: String = convertValueToString(value)
             field to escapedValue
         }
-
-        return env.toMap()
     }
 
     fun getRouteAnnotations(prefix: String, extractors: List<AuroraConfigFieldHandler>): Map<String, String> {
         return extractors
             .filter { it.path.startsWith("/$prefix") }
-            .map {
+            .associate {
                 val (_, _, _, field) = it.name.split("/", limit = 4)
                 val value: String = this[it.name]
                 field to value
-            }.toMap()
+            }
     }
-
-    fun getDatabases(extractors: List<AuroraConfigFieldHandler>): List<Database> {
-
-        return extractors.map {
-            val (_, field) = it.name.split("/", limit = 2)
-
-            val value: String = this[it.name]
-            Database(field, if (value == "auto" || value.isBlank()) null else value)
-        }
-    }
-
     fun getParameters(parameterExtractors: List<AuroraConfigFieldHandler>): Map<String, String>? {
-        return parameterExtractors.map {
+        return parameterExtractors.associate {
             val (_, field) = it.name.split("/", limit = 2)
 
             val value: String = this[it.name]
             field to value
-        }.toMap()
+        }
     }
 
     fun getKeyMappings(keyMappingsExtractor: AuroraConfigFieldHandler?): Map<String, String>? =
@@ -157,6 +146,8 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
     fun getDelimitedStringOrArrayAsSet(name: String, delimiter: String = ","): Set<String> {
         return fields[name]?.extractDelimitedStringOrArrayAsSet(delimiter) ?: emptySet()
     }
+
+    fun isTextual(name:String) = fields[name]?.isTextual()
 
     inline fun <reified T> getOrNull(name: String): T? = fields[name]?.getNullableValue()
 
