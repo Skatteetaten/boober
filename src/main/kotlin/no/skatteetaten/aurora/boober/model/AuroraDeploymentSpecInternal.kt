@@ -13,7 +13,7 @@ import no.skatteetaten.aurora.boober.utils.withNonBlank
 import java.time.Duration
 
 enum class TemplateType {
-    deploy, development, localTemplate, template, build
+    deploy, development, localTemplate, template
 }
 
 data class AuroraDeployHeader(
@@ -118,16 +118,11 @@ data class AuroraBuild(
     val baseVersion: String,
     val builderName: String,
     val builderVersion: String,
-    val testGitUrl: String?,
-    val testTag: String?,
-    val extraTags: String,
     val groupId: String,
     val artifactId: String,
     val version: String,
     val outputKind: String,
     val outputName: String,
-    val triggers: Boolean,
-    val buildSuffix: String?,
     val applicationPlatform: String
 )
 

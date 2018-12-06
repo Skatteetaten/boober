@@ -468,11 +468,7 @@ class OpenShiftObjectGenerator(
         ownerReference: OwnerReference
     ): List<JsonNode>? {
         return deploymentSpecInternal.build?.let {
-            val buildName = if (it.buildSuffix != null) {
-                "${deploymentSpecInternal.name}-${it.buildSuffix}"
-            } else {
-                deploymentSpecInternal.name
-            }
+            val buildName = deploymentSpecInternal.name
 
             val build = newBuildConfig {
                 apiVersion = "v1"
@@ -487,25 +483,6 @@ class OpenShiftObjectGenerator(
                 }
 
                 spec {
-                    if (it.triggers) {
-                        triggers = listOf(
-                            newBuildTriggerPolicy {
-                                type = "ImageChange"
-                                imageChange {
-                                    from {
-                                        kind = "ImageStreamTag"
-                                        namespace = "openshift"
-                                        name = "${it.baseName}:${it.baseVersion}"
-                                    }
-                                }
-                            },
-                            newBuildTriggerPolicy {
-                                type = "ImageChange"
-                                imageChange {
-                                }
-                            }
-                        )
-                    }
                     strategy {
                         type = "Custom"
                         customStrategy {
@@ -521,7 +498,8 @@ class OpenShiftObjectGenerator(
                                 "VERSION" to it.version,
                                 "DOCKER_BASE_VERSION" to it.baseVersion,
                                 "DOCKER_BASE_IMAGE" to "aurora/${it.baseName}",
-                                "PUSH_EXTRA_TAGS" to it.extraTags
+                                "PUSH_EXTRA_TAGS" to "latest,major,minor,patch"
+
                             )
 
                             env = envMap.map {
@@ -544,18 +522,13 @@ class OpenShiftObjectGenerator(
                             imageLabels = null
                             to {
                                 kind = it.outputKind
-                                if (it.outputKind == "DockerImage") {
-                                    name = "$dockerRegistry/${it.outputName}"
-                                } else {
-                                    name = it.outputName
-                                }
+                                name = it.outputName
                             }
                         }
                     }
                 }
             }
             val bc = mapper.convertValue<JsonNode>(build)
-            // TODO: Handle jenkinsfile buildConfig
             listOf(bc)
         }
     }

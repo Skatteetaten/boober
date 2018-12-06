@@ -95,7 +95,6 @@ class AuroraDeploymentSpecService(
                     TemplateType.development -> deployMapper.handlers + routeMapper.handlers + volumeMapper.handlers + buildMapper.handlers
                     TemplateType.localTemplate -> routeMapper.handlers + volumeMapper.handlers + localTemplateMapper.handlers
                     TemplateType.template -> routeMapper.handlers + volumeMapper.handlers + templateMapper.handlers
-                    TemplateType.build -> buildMapper.handlers
                 }).toSet()
 
             val handlers = applicationHandler.handlers(rawHandlers)
@@ -115,15 +114,11 @@ class AuroraDeploymentSpecService(
                 auroraDeploymentSpec = deploymentSpec
             ).validate()
 
-            val integration =
-                if (header.type == TemplateType.build) null else integrationMapper.integrations(deploymentSpec)
-            val volume =
-                if (header.type == TemplateType.build) null else volumeMapper.createAuroraVolume(deploymentSpec)
-            val route = if (header.type == TemplateType.build) null else routeMapper.route(deploymentSpec)
+            val integration = integrationMapper.integrations(deploymentSpec)
+            val volume = volumeMapper.createAuroraVolume(deploymentSpec)
+            val route = routeMapper.route(deploymentSpec)
             val build =
-                if (header.type == TemplateType.build || header.type == TemplateType.development) buildMapper.build(
-                    deploymentSpec
-                ) else null
+                if (header.type == TemplateType.development) buildMapper.build(deploymentSpec) else null
             val deploy =
                 if (header.type == TemplateType.deploy || header.type == TemplateType.development) deployMapper.deploy(
                     deploymentSpec

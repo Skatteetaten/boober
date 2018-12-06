@@ -525,16 +525,6 @@
       ]
     }
   },
-  "extraTags": {
-    "source": "default",
-    "value": "latest,major,minor,patch",
-    "sources": [
-      {
-        "name": "default",
-        "value": "latest,major,minor,patch"
-      }
-    ]
-  },
   "builder": {
     "name": {
       "source": "default",

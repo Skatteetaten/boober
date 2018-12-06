@@ -60,7 +60,6 @@
   routeDefaults: {
     host:                   "@name@-@affiliation@-@env@" // default
   }
-  extraTags:                "latest,major,minor,patch"   // default
   builder: {
     name:                   "architect"                  // default
     version:                "1"                          // default
