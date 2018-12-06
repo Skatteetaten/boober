@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
+import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -108,16 +109,9 @@ class AuroraIntegrationsMapperV1(
                 )
             } else {
 
-                val parameters = applicationFiles.findSubKeys("database/$db/parameters").associateWith {
-                    spec.get<String>("database/$db/parameters/$it")
-                }
-                val roles = applicationFiles.findSubKeys("database/$db/roles").associateWith {
-                    spec.get<DatabasePermission>("database/$db/roles/$it")
-                }
-                val exposeTo = applicationFiles.findSubKeys("database/$db/exposeTo").associateWith {
-                    spec.get<String>("database/$db/exposeTo/$it")
-                }
-
+                val parameters = applicationFiles.associateSubKeys<String>("database/$db/parameters", spec)
+                val roles = applicationFiles.associateSubKeys<DatabasePermission>("database/$db/roles", spec)
+                val exposeTo = applicationFiles.associateSubKeys<String>("database/$db/exposeTo", spec)
                 val value: String = spec.getOrNull("database/$db/id") ?: ""
 
                 Database(
@@ -136,51 +130,60 @@ class AuroraIntegrationsMapperV1(
     fun findDbHandlers(): List<AuroraConfigFieldHandler> {
 
         return applicationFiles.findSubKeys("database").flatMap { db ->
-
             val expandedDbKeys = applicationFiles.findSubKeys("database/$db")
             if (expandedDbKeys.isEmpty()) {
                 listOf(AuroraConfigFieldHandler("database/$db"))
             } else {
-                val mainHandlers = listOf(
-                    AuroraConfigFieldHandler("database/$db/generate"),
-                    AuroraConfigFieldHandler("database/$db/name"),
-                    AuroraConfigFieldHandler("database/$db/id"),
-                    AuroraConfigFieldHandler(
-                        "database/$db/flavor", validator = { node ->
-                            node?.oneOf(DatabaseFlavor.values().map { it.toString() })
-                        })
-                )
-
-                val validKeyRoles = applicationFiles.findSubKeys("database/$db/roles")
-                val validDefaultRoles = applicationFiles.findSubKeys("databaseDefaults/roles")
-                val validRoles = validDefaultRoles + validKeyRoles
-
-                val databaseRolesHandlers =
-                    applicationFiles.findSubHandlers("database/$db/roles", validatorFn = { k ->
-                        { node ->
-                            node.oneOf(DatabasePermission.values().map { it.toString() })
-                        }
-                    })
-
-                val databaseExposeToHandlers =
-                    applicationFiles.findSubHandlers("database/$db/exposeTo", validatorFn = { exposeTo ->
-                        { node ->
-                            val role = node?.textValue() ?: ""
-                            if (validRoles.contains(role)) {
-                                null
-                            } else {
-                                val validRolesString = validRoles.joinToString(",")
-                                IllegalArgumentException(
-                                    "Database cannot be exposedTo=$exposeTo with invalid role=$role. ValidRoles=$validRolesString"
-                                )
-                            }
-                        }
-                    })
-
-                val parametersHandlers = applicationFiles.findSubHandlers("database/$db/parameters")
-
-                mainHandlers + databaseRolesHandlers + databaseExposeToHandlers + parametersHandlers
+                createExpandedDbHandlers(db)
             }
+        }
+    }
+
+    private fun createExpandedDbHandlers(db: String): List<AuroraConfigFieldHandler> {
+        val mainHandlers = listOf(
+            AuroraConfigFieldHandler("database/$db/generate"),
+            AuroraConfigFieldHandler("database/$db/name"),
+            AuroraConfigFieldHandler("database/$db/id"),
+            AuroraConfigFieldHandler(
+                "database/$db/flavor", validator = { node ->
+                    node?.oneOf(DatabaseFlavor.values().map { it.toString() })
+                })
+        )
+
+        val validKeyRoles = applicationFiles.findSubKeys("database/$db/roles")
+        val validDefaultRoles = applicationFiles.findSubKeys("databaseDefaults/roles")
+        val validRoles = validDefaultRoles + validKeyRoles
+
+        val databaseRolesHandlers =
+            applicationFiles.findSubHandlers("database/$db/roles", validatorFn = { k ->
+                { node ->
+                    node.oneOf(DatabasePermission.values().map { it.toString() })
+                }
+            })
+
+        val databaseExposeToHandlers =
+            applicationFiles.findSubHandlers("database/$db/exposeTo", validatorFn = { exposeTo ->
+                { node -> exposeToValidator(node, validRoles, exposeTo) }
+            })
+
+        val parametersHandlers = applicationFiles.findSubHandlers("database/$db/parameters")
+
+        return mainHandlers + databaseRolesHandlers + databaseExposeToHandlers + parametersHandlers
+    }
+
+    private fun exposeToValidator(
+        node: JsonNode?,
+        validRoles: Set<String>,
+        exposeTo: String
+    ): Exception? {
+        val role = node?.textValue() ?: ""
+        return if (validRoles.contains(role)) {
+            null
+        } else {
+            val validRolesString = validRoles.joinToString(",")
+            IllegalArgumentException(
+                "Database cannot expose affiliation=$exposeTo with invalid role=$role. ValidRoles=$validRolesString"
+            )
         }
     }
 
@@ -208,17 +211,7 @@ class AuroraIntegrationsMapperV1(
 
         val databaseDefaultExposeToHandlers =
             applicationFiles.findSubHandlers("databaseDefaults/exposeTo", validatorFn = { exposeTo ->
-                { node ->
-                    val role = node?.textValue() ?: ""
-                    if (validRoles.contains(role)) {
-                        null
-                    } else {
-                        val validRolesString = validRoles.joinToString(",")
-                        IllegalArgumentException(
-                            "Default database config cannot be exposedTo=$exposeTo with invalid role=$role. ValidRoles=$validRolesString"
-                        )
-                    }
-                }
+                { node -> exposeToValidator(node, validRoles, exposeTo) }
             })
 
         val parametersHandlers = applicationFiles.findSubHandlers("databaseDefaults/parameters")

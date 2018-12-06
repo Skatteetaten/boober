@@ -64,7 +64,6 @@ class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>, val name
 
         return applicationFiles.findSubHandlers("$prefix/annotations", validatorFn = { key ->
             {
-                // This validator is a bit weird since we check the key and not the value.
                 if (key.contains("/")) {
                     IllegalArgumentException("Annotation $key cannot contain '/'. Use '|' instead")
                 } else null
