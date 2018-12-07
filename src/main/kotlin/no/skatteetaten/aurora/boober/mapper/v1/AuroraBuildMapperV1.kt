@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraBuild
-import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.utils.length
 import no.skatteetaten.aurora.boober.utils.notBlank
 

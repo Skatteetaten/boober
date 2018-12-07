@@ -64,8 +64,8 @@ private fun createDatabaseMounts(
 
     val schemaResults: List<SchemaProvisionResult> = schemaProvisionResults.results
     val databaseMounts = schemaResults.map {
-        val mountPath = "${it.request.schemaName}-db".toLowerCase()
-        val volumeName = "${deploymentSpecInternal.name}-${it.request.schemaName}-db".toLowerCase()
+        val mountPath = "${it.request.details.schemaName}-db".toLowerCase()
+        val volumeName = "${deploymentSpecInternal.name}-${it.request.details.schemaName}-db".toLowerCase()
         Mount(path = "/u01/secrets/app/$mountPath",
             type = MountType.Secret,
             mountName = mountPath,

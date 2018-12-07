@@ -14,10 +14,8 @@ import com.fkorotkov.kubernetes.newServicePort
 import com.fkorotkov.kubernetes.spec
 import com.fkorotkov.openshift.customStrategy
 import com.fkorotkov.openshift.from
-import com.fkorotkov.openshift.imageChange
 import com.fkorotkov.openshift.metadata
 import com.fkorotkov.openshift.newBuildConfig
-import com.fkorotkov.openshift.newBuildTriggerPolicy
 import com.fkorotkov.openshift.newProjectRequest
 import com.fkorotkov.openshift.newRoute
 import com.fkorotkov.openshift.output

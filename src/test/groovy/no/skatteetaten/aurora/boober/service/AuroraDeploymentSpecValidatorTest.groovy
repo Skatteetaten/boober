@@ -60,7 +60,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
       auroraConfigJson["utv/aos-simple.json"] = '''{ "database": { "foo" : "123-123-123" } }'''
       openShiftClient.getGroups() >> new OpenShiftGroups([new UserGroup("foo", "APP_PaaS_utv")])
       openShiftClient.getTemplate("atomhopper") >> null
-      dbClient.findSchemaById("123-123-123") >> true
+      dbClient.findSchemaById("123-123-123", _) >> true
       AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
     when:
@@ -68,14 +68,14 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
 
     then:
       def e = thrown(AuroraDeploymentSpecValidationException)
-      e.message == "Database schema with id=123-123-123 does not exist"
+      e.message == "Database schema with id=123-123-123 and affiliation=aos does not exist"
   }
 
   def "Succeeds when databaseId does not exist when not on current cluster"() {
     given:
       auroraConfigJson["utv/aos-simple.json"] = '''{ "cluster": "qa", "database": { "foo" : "123-123-123" } }'''
       AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
-      dbClient.findSchemaById("123-123-123") >> { throw new ProvisioningException("") }
+      dbClient.findSchemaById("123-123-123", _) >> { throw new ProvisioningException("") }
 
     when:
       specValidator.validateDatabaseId(deploymentSpec)

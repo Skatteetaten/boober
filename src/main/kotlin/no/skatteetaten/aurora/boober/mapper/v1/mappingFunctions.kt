@@ -1,13 +1,11 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.fabric8.kubernetes.api.model.apps.DeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.Validator
 import no.skatteetaten.aurora.boober.mapper.defaultValidator
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.utils.oneOf
 
 fun List<AuroraConfigFile>.findSubKeys(name: String): Set<String> {
     return this.flatMap { ac ->

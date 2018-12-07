@@ -24,7 +24,7 @@ object DbhSecretGenerator {
             val infoFile = createInfoFile(it.dbhSchema)
 
             SecretGenerator.create(
-                secretName = "$appName-${it.request.schemaName}-db".replace("_", "-"),
+                secretName = "$appName-${it.request.details.schemaName}-db".replace("_", "-"),
                 secretLabels = labels,
                 secretData = mapOf(
                     "db.properties" to connectionProperties,

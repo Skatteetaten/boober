@@ -1,6 +1,8 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
+import no.skatteetaten.aurora.boober.mapper.v1.DatabasePermission
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
+import no.skatteetaten.aurora.boober.model.Database
 import org.springframework.stereotype.Service
 
 class ProvisioningResult(
@@ -41,11 +43,20 @@ class ExternalResourceProvisioner(
         protected fun createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpecInternal: AuroraDeploymentSpecInternal): List<SchemaProvisionRequest> {
             val databaseSpecs = deploymentSpecInternal.integration?.database ?: listOf()
             return databaseSpecs.map {
-                val name = it.name.toLowerCase()
+
+                val details = it.createSchemaDetails(deploymentSpecInternal.environment.affiliation)
                 if (it.id != null) {
-                    SchemaIdRequest(it.id, name)
+                    SchemaIdRequest(
+                        id = it.id,
+                        details = details
+                    )
                 } else {
-                    SchemaForAppRequest(deploymentSpecInternal.environment.affiliation, deploymentSpecInternal.environment.envName, deploymentSpecInternal.name, name)
+                    SchemaForAppRequest(
+                        environment = deploymentSpecInternal.environment.envName,
+                        application = deploymentSpecInternal.name,
+                        details = details,
+                        generate = it.generate
+                    )
                 }
             }
         }
@@ -57,7 +68,29 @@ class ExternalResourceProvisioner(
             val secretVaultNames = volume.mounts?.mapNotNull { it.secretVaultName }.orEmpty()
             val allVaultNames = volume.secretVaultName?.let { secretVaultNames + listOf(it) } ?: secretVaultNames
 
-            return allVaultNames.map { VaultRequest(deploymentSpecInternal.environment.affiliation, it, volume.secretVaultKeys, volume.keyMappings) }
+            return allVaultNames.map {
+                VaultRequest(
+                    deploymentSpecInternal.environment.affiliation,
+                    it,
+                    volume.secretVaultKeys,
+                    volume.keyMappings
+                )
+            }
         }
     }
+}
+
+fun Database.createSchemaDetails(affiliation: String): SchemaRequestDetails {
+    val roles = if (this.roles.isEmpty()) {
+        mapOf("SCHEMA" to DatabasePermission.ALL)
+    } else this.roles
+
+    return SchemaRequestDetails(
+        schemaName = this.name.toLowerCase(),
+        parameters = this.parameters,
+        exposeTo = this.exposeTo,
+        flavor = this.flavor,
+        roles = roles,
+        affiliation = affiliation
+    )
 }
