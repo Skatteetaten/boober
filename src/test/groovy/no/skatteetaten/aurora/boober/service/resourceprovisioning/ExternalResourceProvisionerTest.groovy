@@ -1,15 +1,18 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
-import static no.skatteetaten.aurora.boober.mapper.v1.DatabaseFlavor.ORACLE_MANAGED
 import static no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.aid
 
-import no.skatteetaten.aurora.boober.mapper.v1.DatabasePermission
 import no.skatteetaten.aurora.boober.model.AbstractAuroraDeploymentSpecTest
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 
 class ExternalResourceProvisionerTest extends AbstractAuroraDeploymentSpecTest {
 
-  def details = new SchemaRequestDetails("reference", [:], [SCHEMA: DatabasePermission.ALL], [:], ORACLE_MANAGED, "aos")
+  def details = new SchemaRequestDetails(
+      "reference",
+      [:],
+      [new SchemaUser("SCHEMA", "a", "aos")],
+      DatabaseEngine.ORACLE,
+      "aos")
 
   def "Auto provisioned named schema"() {
     given:

@@ -15,10 +15,9 @@ import org.springframework.http.MediaType
 import org.springframework.security.test.context.support.WithUserDetails
 import org.springframework.test.web.client.MockRestServiceServer
 
-import groovy.json.JsonOutput
+import com.fasterxml.jackson.databind.ObjectMapper
+
 import no.skatteetaten.aurora.boober.Configuration
-import no.skatteetaten.aurora.boober.mapper.v1.DatabaseFlavor
-import no.skatteetaten.aurora.boober.mapper.v1.DatabasePermission
 import no.skatteetaten.aurora.boober.service.AbstractSpec
 import no.skatteetaten.aurora.boober.service.ProvisioningException
 import no.skatteetaten.aurora.boober.service.SpringTestUtils
@@ -55,8 +54,12 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
 
   def labels = [affiliation: 'aos', environment: 'aos-utv', application: appName, name: schemaName]
 
-  def details = new SchemaRequestDetails(schemaName, [:], [SCHEMA: DatabasePermission.ALL], [:],
-      DatabaseFlavor.ORACLE_MANAGED, "aos")
+  def details = new SchemaRequestDetails(
+      schemaName,
+      [:],
+      [new SchemaUser("SCHEMA", "a", "aos")],
+      DatabaseEngine.ORACLE,
+      "aos")
 
   def "Schema request with id succeeds when schema exists"() {
 
@@ -106,18 +109,19 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
 
     given:
       def labelsString = labels.collect { k, v -> "$k%3D$v" }.join(",")
-      def createBody = [labels    : labels + [userId: 'aurora'],
-                        roles     : details.roles,
-                        flavor    : details.flavor,
-                        exposeTo  : details.exposeTo,
-                        parameters: details.parameters]
+      def createBody = new SchemaRequestPayload(
+          labels + [userId: 'aurora'],
+          details.users,
+          details.engine,
+          details.parameters)
 
+      def body = new ObjectMapper().writeValueAsString(createBody)
       dbhServer.expect(requestTo("${DBH_HOST}/api/v1/schema/?labels=$labelsString&roles=SCHEMA")).
           andRespond(withSuccess(loadResource("schema_empty_response.json"), MediaType.APPLICATION_JSON))
 
       dbhServer.expect(requestTo("${DBH_HOST}/api/v1/schema/")).
           andExpect(method(HttpMethod.POST)).
-          andExpect(content().string(JsonOutput.toJson(createBody))).
+          andExpect(content().string(body)).
           andRespond(withSuccess(loadResource("schema_${id}.json"), MediaType.APPLICATION_JSON))
 
     when:

@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
-import no.skatteetaten.aurora.boober.mapper.v1.DatabaseFlavor
-import no.skatteetaten.aurora.boober.mapper.v1.DatabasePermission
 import no.skatteetaten.aurora.boober.service.ProvisioningException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.utils.logger
@@ -23,12 +21,27 @@ sealed class SchemaProvisionRequest {
 data class SchemaRequestDetails(
     val schemaName: String,
     val parameters: Map<String, String>,
-    // Hvis roles er tom fyll inn SCHAMA med ALL
-    val roles: Map<String, DatabasePermission>,
-    val exposeTo: Map<String, String>,
-    val flavor: DatabaseFlavor,
+    val users: List<SchemaUser>,
+    val engine: DatabaseEngine,
     val affiliation: String
 )
+
+data class SchemaRequestPayload(
+    val labels: Map<String, String>,
+    val users: List<SchemaUser>,
+    val engine: DatabaseEngine,
+    val parameters: Map<String, String>
+)
+
+data class SchemaUser(
+    val name: String,
+    val role: String,
+    val affiliation: String
+)
+
+enum class DatabaseEngine {
+    POSTGRES, ORACLE
+}
 
 data class SchemaIdRequest(
     val id: String,
@@ -117,8 +130,7 @@ class DatabaseSchemaProvisioner(
         details: SchemaRequestDetails
     ): Pair<DbhSchema, String> {
 
-        // TODO: BAS?
-        val roleString = details.roles.keys.joinToString(",")
+        val roleString = details.users.joinToString(",") { it.name }
         val response: ResponseEntity<JsonNode> = try {
             restTemplate.getForEntity(
                 "{0}/api/v1/schema/{1}?affiliation={2}&roles={3}",
@@ -168,7 +180,7 @@ class DatabaseSchemaProvisioner(
 
         // TODO: BAS?
         val labelsString = toLabelsString(labels)
-        val roleString = details.roles.keys.joinToString(",")
+        val roleString = details.users.joinToString(",") { it.name }
         val response: ResponseEntity<JsonNode> = try {
             restTemplate.getForEntity(
                 "{0}/api/v1/schema/?labels={1}&roles={2}", JsonNode::class.java, dbhUrl,
@@ -186,14 +198,14 @@ class DatabaseSchemaProvisioner(
         details: SchemaRequestDetails
     ): Pair<DbhSchema, String> {
 
-        // TODO: BAS?
-        val payload = mapOf(
-            "labels" to labels,
-            "roles" to details.roles,
-            "flavor" to details.flavor,
-            "exposeTo" to details.exposeTo,
-            "parameters" to details.parameters
-        )
+        val payload =
+            SchemaRequestPayload(
+                users = details.users,
+                engine = details.engine,
+                parameters = details.parameters,
+                labels = labels
+            )
+
         val response: ResponseEntity<JsonNode> = try {
             restTemplate.postForEntity("{0}/api/v1/schema/", payload, JsonNode::class.java, dbhUrl)
         } catch (e: Exception) {

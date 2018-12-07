@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
-import no.skatteetaten.aurora.boober.mapper.v1.DatabasePermission
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.Database
 import org.springframework.stereotype.Service
@@ -42,6 +41,7 @@ class ExternalResourceProvisioner(
         @JvmStatic
         protected fun createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpecInternal: AuroraDeploymentSpecInternal): List<SchemaProvisionRequest> {
             val databaseSpecs = deploymentSpecInternal.integration?.database ?: listOf()
+            // TODO: If we want to support non managed databsaes we need to filter the flavor on managed here.
             return databaseSpecs.map {
 
                 val details = it.createSchemaDetails(deploymentSpecInternal.environment.affiliation)
@@ -70,10 +70,10 @@ class ExternalResourceProvisioner(
 
             return allVaultNames.map {
                 VaultRequest(
-                    deploymentSpecInternal.environment.affiliation,
-                    it,
-                    volume.secretVaultKeys,
-                    volume.keyMappings
+                    collectionName = deploymentSpecInternal.environment.affiliation,
+                    name = it,
+                    keys = volume.secretVaultKeys,
+                    keyMappings = volume.keyMappings
                 )
             }
         }
@@ -81,16 +81,20 @@ class ExternalResourceProvisioner(
 }
 
 fun Database.createSchemaDetails(affiliation: String): SchemaRequestDetails {
-    val roles = if (this.roles.isEmpty()) {
-        mapOf("SCHEMA" to DatabasePermission.ALL)
-    } else this.roles
+
+    val users = if (this.roles.isEmpty()) {
+        listOf(SchemaUser(name = "SCHEMA", role = "a", affiliation = affiliation))
+    } else this.roles.map { role ->
+        val exportedRole = this.exposeTo.filter { it.value == role.key }.map { it.key }.firstOrNull()
+        val userAffiliation = exportedRole ?: affiliation
+        SchemaUser(name = role.key, role = role.value.permissionString, affiliation = userAffiliation)
+    }
 
     return SchemaRequestDetails(
         schemaName = this.name.toLowerCase(),
         parameters = this.parameters,
-        exposeTo = this.exposeTo,
-        flavor = this.flavor,
-        roles = roles,
-        affiliation = affiliation
+        users = users,
+        affiliation = affiliation,
+        engine = this.flavor.engine
     )
 }

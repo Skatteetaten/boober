@@ -7,19 +7,22 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraIntegration
 import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.model.Webseal
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseEngine
 import no.skatteetaten.aurora.boober.utils.oneOf
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-enum class DatabaseFlavor {
-    ORACLE_MANAGED,
-    POSTGRES_MANAGED
+enum class DatabaseFlavor(val engine: DatabaseEngine, val managed: Boolean) {
+    ORACLE_MANAGED(DatabaseEngine.ORACLE, true),
+    POSTGRES_MANAGED(DatabaseEngine.POSTGRES, true)
 }
 
-enum class DatabasePermission {
-    READ,
-    WRITE,
-    ALL
+enum class DatabasePermission(
+    val permissionString: String
+) {
+    READ("r"),
+    WRITE("rw"),
+    ALL("a")
 }
 
 class AuroraIntegrationsMapperV1(
