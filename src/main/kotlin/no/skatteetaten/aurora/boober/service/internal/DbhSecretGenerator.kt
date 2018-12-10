@@ -116,6 +116,6 @@ fun SchemaProvisionResults.createDatabaseMounts(
     }
 }
 
-//TODO: Skal denne ha startsWith?
+// TODO: Skal denne ha startsWith?
 fun SchemaProvisionResult.createName(appName: String) =
     "$appName-${this.request.details.schemaName}-db".replace("_", "-").toLowerCase()
