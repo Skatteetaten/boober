@@ -143,6 +143,7 @@ class AuroraIntegrationsMapperV1(
     }
 
     private fun createExpandedDbHandlers(db: String): List<AuroraConfigFieldHandler> {
+
         val mainHandlers = listOf(
             AuroraConfigFieldHandler("database/$db/generate"),
             AuroraConfigFieldHandler("database/$db/name"),
