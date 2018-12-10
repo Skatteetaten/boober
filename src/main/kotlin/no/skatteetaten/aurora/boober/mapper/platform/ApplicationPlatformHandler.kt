@@ -19,13 +19,13 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeployStrategy
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigResource
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
-import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType.ConfigMap
 import no.skatteetaten.aurora.boober.model.MountType.PVC
 import no.skatteetaten.aurora.boober.model.MountType.Secret
 import no.skatteetaten.aurora.boober.model.Probe
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
+import no.skatteetaten.aurora.boober.service.internal.createDbEnv
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterNullValues
@@ -35,13 +35,20 @@ import java.time.Duration
 abstract class ApplicationPlatformHandler(val name: String) {
     open fun handlers(handlers: Set<AuroraConfigFieldHandler>): Set<AuroraConfigFieldHandler> = handlers
 
-    abstract fun handleAuroraDeployment(auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal, labels: Map<String, String>, mounts: List<Mount>?, routeSuffix: String, sidecarContainers: List<AuroraContainer>?): AuroraDeployment
+    abstract fun handleAuroraDeployment(
+        auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
+        labels: Map<String, String>,
+        mounts: List<Mount>?,
+        routeSuffix: String,
+        sidecarContainers: List<AuroraContainer>?
+    ): AuroraDeployment
 
     fun createAnnotations(specInternal: AuroraDeploymentSpecInternal): Map<String, String> {
 
         val deploy = specInternal.deploy!!
         fun escapeOverrides(): String? {
-            val files = specInternal.overrideFiles.mapValues { jacksonObjectMapper().readValue(it.value, JsonNode::class.java) }
+            val files =
+                specInternal.overrideFiles.mapValues { jacksonObjectMapper().readValue(it.value, JsonNode::class.java) }
             val content = jacksonObjectMapper().writeValueAsString(files)
             return content.takeIf { it != "{}" }
         }
@@ -70,22 +77,30 @@ abstract class ApplicationPlatformHandler(val name: String) {
         return OpenShiftObjectLabelService.toOpenShiftLabelNameSafeMap(allLabels)
     }
 
-    fun createSidecarContainers(auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal, mounts: List<Mount>?): List<AuroraContainer>? {
+    fun createSidecarContainers(
+        auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
+        mounts: List<Mount>?
+    ): List<AuroraContainer>? {
 
-        return auroraDeploymentSpecInternal?.deploy?.toxiProxy?.let {
-            listOf(AuroraContainer(
-                name = "${auroraDeploymentSpecInternal.name}-toxiproxy",
-                tcpPorts = mapOf("http" to PortNumbers.TOXIPROXY_HTTP_PORT, "management" to PortNumbers.TOXIPROXY_ADMIN_PORT),
-                readiness = ToxiProxyDefaults.READINESS_PROBE,
-                liveness = ToxiProxyDefaults.LIVENESS_PROBE,
-                limit = ToxiProxyDefaults.RESOURCE_LIMIT,
-                request = ToxiProxyDefaults.RESOURCE_REQUEST,
-                env = ToxiProxyDefaults.ENV,
-                mounts = mounts,
-                shouldHaveImageChange = false,
-                args = ToxiProxyDefaults.ARGS,
-                image = getToxiProxyImage(it.version)
-            ))
+        return auroraDeploymentSpecInternal.deploy?.toxiProxy?.let {
+            listOf(
+                AuroraContainer(
+                    name = "${auroraDeploymentSpecInternal.name}-toxiproxy",
+                    tcpPorts = mapOf(
+                        "http" to PortNumbers.TOXIPROXY_HTTP_PORT,
+                        "management" to PortNumbers.TOXIPROXY_ADMIN_PORT
+                    ),
+                    readiness = ToxiProxyDefaults.READINESS_PROBE,
+                    liveness = ToxiProxyDefaults.LIVENESS_PROBE,
+                    limit = ToxiProxyDefaults.RESOURCE_LIMIT,
+                    request = ToxiProxyDefaults.RESOURCE_REQUEST,
+                    env = ToxiProxyDefaults.ENV,
+                    mounts = mounts,
+                    shouldHaveImageChange = false,
+                    args = ToxiProxyDefaults.ARGS,
+                    image = getToxiProxyImage(it.version)
+                )
+            )
         }
     }
 }
@@ -152,11 +167,15 @@ fun List<Mount>?.podVolumes(dcName: String): List<Volume> {
     } ?: emptyList()
 }
 
-fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal, routeSuffix: String): List<EnvVar> {
+fun createEnvVars(
+    mounts: List<Mount>?,
+    auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
+    routeSuffix: String
+): List<EnvVar> {
 
     val mountEnv = mounts?.associate {
         "VOLUME_${it.mountName.toUpperCase().replace("-", "_")}" to it.path
-    } ?: mapOf()
+    }
 
     val splunkIndex = auroraDeploymentSpecInternal.integration?.splunkIndex?.let { "SPLUNK_INDEX" to it }
 
@@ -167,40 +186,35 @@ fun createEnvVars(mounts: List<Mount>?, auroraDeploymentSpecInternal: AuroraDepl
             "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
             "STS_KEYSTORE_DESCRIPTOR" to "$baseUrl/descriptor.properties"
         )
-    } ?: mapOf()
-
+    }
     val debugEnv = auroraDeploymentSpecInternal.deploy?.flags?.takeIf { it.debug }?.let {
         mapOf(
             "ENABLE_REMOTE_DEBUG" to "true",
             "DEBUG_PORT" to "5005"
         )
-    } ?: mapOf()
+    }
 
     val configEnv = auroraDeploymentSpecInternal.deploy?.env ?: emptyMap()
     val routeName = auroraDeploymentSpecInternal.route?.route?.takeIf { it.isNotEmpty() }?.first()?.let {
         val host = "${it.host}$routeSuffix"
         val url = "$host${it.path?.ensureStartWith("/") ?: ""}"
         mapOf("ROUTE_NAME" to url, "ROUTE_URL" to "http://$url")
-    } ?: mapOf()
+    }
 
-    val dbEnv = auroraDeploymentSpecInternal.integration?.database?.takeIf { it.isNotEmpty() }?.let {
-        fun createDbEnv(db: Database, envName: String): List<Pair<String, String>> {
-            val path = "/u01/secrets/app/${db.name.toLowerCase()}-db"
-            val envName = envName.replace("-", "_").toUpperCase()
-
-            return listOf(
-                envName to "$path/info",
-                "${envName}_PROPERTIES" to "$path/db.properties"
-            )
-        }
-
-        it.flatMap { createDbEnv(it, "${it.name}_db") } + createDbEnv(it.first(), "db")
-    }?.toMap() ?: mapOf()
+    val dbEnv = auroraDeploymentSpecInternal.integration?.database?.takeIf { it.isNotEmpty() }?.let { db ->
+        db.flatMap { it.createDbEnv("${it.name}_db") } + db.first().createDbEnv("db")
+    }?.toMap()
 
     val envs = mapOf(
         "OPENSHIFT_CLUSTER" to auroraDeploymentSpecInternal.cluster,
         "APP_NAME" to auroraDeploymentSpecInternal.name
-    ).addIfNotNull(splunkIndex) + routeName + certEnv + debugEnv + dbEnv + mountEnv + configEnv
+    ).addIfNotNull(splunkIndex)
+        .addIfNotNull(routeName)
+        .addIfNotNull(certEnv)
+        .addIfNotNull(debugEnv)
+        .addIfNotNull(dbEnv)
+        .addIfNotNull(mountEnv)
+        .addIfNotNull(configEnv)
 
     val env = envs.mapKeys { it.key.replace(".", "_").replace("-", "_") }
 
