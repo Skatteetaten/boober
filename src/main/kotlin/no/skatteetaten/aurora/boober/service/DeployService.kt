@@ -87,7 +87,10 @@ class DeployService(
     fun prepareDeployEnvironment(environment: AuroraDeployEnvironment): Pair<AuroraDeployEnvironment, AuroraDeployResult> {
 
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
-        if (!authenticatedUser.hasAnyRole(environment.permissions.admin.groups)) {
+        val userNotInAdminUsers = !environment.permissions.admin.users.contains(authenticatedUser.username)
+        val userNotInAnyAdminGroups = !authenticatedUser.hasAnyRole(environment.permissions.admin.groups)
+
+        if (userNotInAdminUsers && userNotInAnyAdminGroups) {
             return Pair(
                 environment,
                 AuroraDeployResult(
