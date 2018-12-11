@@ -249,6 +249,23 @@ class DeployService(
         logger.debug("Resource provisioning")
         val provisioningResult = resourceProvisioner.provisionResources(deploymentSpecInternal)
 
+        val tagResult = deploymentSpecInternal.deploy?.takeIf { it.releaseTo != null }?.let {
+            val dockerGroup = it.groupId.dockerGroupSafeName()
+            dockerService.tag(TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry))
+        }
+        val rawResult = AuroraDeployResult(
+            command = cmd,
+            deployId = deployId,
+            auroraDeploymentSpecInternal = deploymentSpecInternal,
+            tagResponse = tagResult
+        )
+        tagResult?.takeIf { !it.success }?.let {
+            return rawResult.copy(
+                success = false,
+                reason = "Tag command failed."
+            )
+        }
+
         logger.debug("Apply objects")
         val openShiftResponses: List<OpenShiftResponse> = listOf(applicationResult) +
             applyOpenShiftApplicationObjects(
@@ -257,7 +274,10 @@ class DeployService(
 
         logger.debug("done applying objects")
         val success = openShiftResponses.all { it.success }
-        val result = AuroraDeployResult(cmd, deploymentSpecInternal, deployId, openShiftResponses, success)
+        val result = rawResult.copy(
+            openShiftResponses = openShiftResponses,
+            success = success
+        )
 
         if (!success) {
             val failedCommands = openShiftResponses.filter { !it.success }.describeString()
@@ -271,14 +291,6 @@ class DeployService(
         if (deploymentSpecInternal.deploy?.flags?.pause == true) {
             return result.copy(reason = "Deployment is paused and will be/remain scaled down.")
         }
-
-        val tagResult = deploymentSpecInternal.deploy?.takeIf { it.releaseTo != null }?.let {
-            val dockerGroup = it.groupId.dockerGroupSafeName()
-            dockerService.tag(TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry))
-        }
-
-        tagResult?.takeIf { !it.success }
-            ?.let { return result.copy(tagResponse = it, reason = "Tag command failed.") }
 
         val redeployResult = redeployService.triggerRedeploy(openShiftResponses, deploymentSpecInternal.type)
 
