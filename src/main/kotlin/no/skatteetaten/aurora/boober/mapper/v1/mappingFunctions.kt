@@ -7,6 +7,14 @@ import no.skatteetaten.aurora.boober.mapper.Validator
 import no.skatteetaten.aurora.boober.mapper.defaultValidator
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 
+fun List<AuroraConfigFile>.findSubKeysExpanded(name: String): Set<String> {
+    return this.flatMap { ac ->
+        ac.asJsonNode.at("/$name")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
+    }.map {
+        "$name/$it"
+    }.toSet()
+}
+
 fun List<AuroraConfigFile>.findSubKeys(name: String): Set<String> {
     return this.flatMap { ac ->
         ac.asJsonNode.at("/$name")?.fieldNames()?.asSequence()?.toList() ?: emptyList()

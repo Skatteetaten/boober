@@ -25,11 +25,8 @@ class AuroraTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>) {
     )
 
     fun findParameters(): List<AuroraConfigFieldHandler> {
-
-        val parameterKeys = applicationFiles.findSubKeys("parameters")
-
-        return parameterKeys.map { parameter ->
-            AuroraConfigFieldHandler("parameters/$parameter")
+        return applicationFiles.findSubKeysExpanded("parameters").map {
+            AuroraConfigFieldHandler(it)
         }
     }
 

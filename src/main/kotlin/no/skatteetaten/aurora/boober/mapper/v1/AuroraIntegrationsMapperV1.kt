@@ -31,6 +31,7 @@ class AuroraIntegrationsMapperV1(
 ) {
     val logger: Logger = LoggerFactory.getLogger(AuroraIntegrationsMapperV1::class.java)
 
+    val databaseDefaultsKey = "databaseDefaults"
     val dbHandlers = findDbHandlers()
 
     val dbDefautsHandlers = findDbDefaultHandlers()
@@ -83,45 +84,39 @@ class AuroraIntegrationsMapperV1(
     private fun findDatabases(spec: AuroraDeploymentSpec): List<Database> {
 
         val defaultDb = Database(
-            name = spec["databaseDefaults/name"],
-            flavor = spec["databaseDefaults/flavor"],
-            generate = spec["databaseDefaults/generate"],
-            parameters = applicationFiles.findSubKeys("databaseDefaults/parameters").associateWith {
-                spec.get<String>("databaseDefaults/parameters/$it")
-            },
-            roles = applicationFiles.findSubKeys("databaseDefaults/roles").associateWith {
-                spec.get<DatabasePermission>("databaseDefaults/roles/$it")
-            },
-            exposeTo = applicationFiles.findSubKeys("databaseDefaults/exposeTo").associateWith {
-                spec.get<String>("databaseDefaults/exposeTo/$it")
-            }
+            name = spec["$databaseDefaultsKey/name"],
+            flavor = spec["$databaseDefaultsKey/flavor"],
+            generate = spec["$databaseDefaultsKey/generate"],
+            parameters = applicationFiles.associateSubKeys("$databaseDefaultsKey/parameters", spec),
+            roles = applicationFiles.associateSubKeys("$databaseDefaultsKey/roles", spec),
+            exposeTo = applicationFiles.associateSubKeys("$databaseDefaultsKey/exposeTo", spec)
 
         )
         if (spec.isSimplifiedAndEnabled("database")) {
             return listOf(defaultDb)
         }
         return applicationFiles.findSubKeys("database").map { db ->
-
-            val isSimple = spec.fields.containsKey("database/$db")
+            val key = "database/$db"
+            val isSimple = spec.fields.containsKey(key)
 
             if (isSimple) {
-                val value: String = spec["database/$db"]
+                val value: String = spec[key]
                 defaultDb.copy(
                     name = db,
                     id = if (value == "auto" || value.isBlank()) null else value
                 )
             } else {
 
-                val parameters = applicationFiles.associateSubKeys<String>("database/$db/parameters", spec)
-                val roles = applicationFiles.associateSubKeys<DatabasePermission>("database/$db/roles", spec)
-                val exposeTo = applicationFiles.associateSubKeys<String>("database/$db/exposeTo", spec)
-                val value: String = spec.getOrNull("database/$db/id") ?: ""
+                val parameters = applicationFiles.associateSubKeys<String>("$key/parameters", spec)
+                val roles = applicationFiles.associateSubKeys<DatabasePermission>("$key/roles", spec)
+                val exposeTo = applicationFiles.associateSubKeys<String>("$key/exposeTo", spec)
+                val value: String = spec.getOrNull("$key/id") ?: ""
 
                 Database(
-                    name = spec.getOrNull("database/$db/name") ?: db,
+                    name = spec.getOrNull("$key/name") ?: db,
                     id = if (value == "auto" || value.isBlank()) null else value,
-                    flavor = spec.getOrNull("database/$db/flavor") ?: defaultDb.flavor,
-                    generate = spec.getOrNull("database/$db/generate") ?: defaultDb.generate,
+                    flavor = spec.getOrNull("$key/flavor") ?: defaultDb.flavor,
+                    generate = spec.getOrNull("$key/generate") ?: defaultDb.generate,
                     parameters = defaultDb.parameters + parameters,
                     roles = defaultDb.roles + roles,
                     exposeTo = defaultDb.exposeTo + exposeTo
@@ -132,10 +127,10 @@ class AuroraIntegrationsMapperV1(
 
     fun findDbHandlers(): List<AuroraConfigFieldHandler> {
 
-        return applicationFiles.findSubKeys("database").flatMap { db ->
-            val expandedDbKeys = applicationFiles.findSubKeys("database/$db")
+        return applicationFiles.findSubKeysExpanded("database").flatMap { db ->
+            val expandedDbKeys = applicationFiles.findSubKeys(db)
             if (expandedDbKeys.isEmpty()) {
-                listOf(AuroraConfigFieldHandler("database/$db"))
+                listOf(AuroraConfigFieldHandler(db))
             } else {
                 createExpandedDbHandlers(db)
             }
@@ -145,32 +140,32 @@ class AuroraIntegrationsMapperV1(
     private fun createExpandedDbHandlers(db: String): List<AuroraConfigFieldHandler> {
 
         val mainHandlers = listOf(
-            AuroraConfigFieldHandler("database/$db/generate"),
-            AuroraConfigFieldHandler("database/$db/name"),
-            AuroraConfigFieldHandler("database/$db/id"),
+            AuroraConfigFieldHandler("$db/generate"),
+            AuroraConfigFieldHandler("$db/name"),
+            AuroraConfigFieldHandler("$db/id"),
             AuroraConfigFieldHandler(
-                "database/$db/flavor", validator = { node ->
+                "$db/flavor", validator = { node ->
                     node?.oneOf(DatabaseFlavor.values().map { it.toString() })
                 })
         )
 
-        val validKeyRoles = applicationFiles.findSubKeys("database/$db/roles")
-        val validDefaultRoles = applicationFiles.findSubKeys("databaseDefaults/roles")
+        val validKeyRoles = applicationFiles.findSubKeys("$db/roles")
+        val validDefaultRoles = applicationFiles.findSubKeys("$databaseDefaultsKey/roles")
         val validRoles = validDefaultRoles + validKeyRoles
 
         val databaseRolesHandlers =
-            applicationFiles.findSubHandlers("database/$db/roles", validatorFn = { k ->
+            applicationFiles.findSubHandlers("$db/roles", validatorFn = { k ->
                 { node ->
                     node.oneOf(DatabasePermission.values().map { it.toString() })
                 }
             })
 
         val databaseExposeToHandlers =
-            applicationFiles.findSubHandlers("database/$db/exposeTo", validatorFn = { exposeTo ->
+            applicationFiles.findSubHandlers("$db/exposeTo", validatorFn = { exposeTo ->
                 { node -> exposeToValidator(node, validRoles, exposeTo) }
             })
 
-        val parametersHandlers = applicationFiles.findSubHandlers("database/$db/parameters")
+        val parametersHandlers = applicationFiles.findSubHandlers("$db/parameters")
 
         return mainHandlers + databaseRolesHandlers + databaseExposeToHandlers + parametersHandlers
     }
@@ -195,30 +190,33 @@ class AuroraIntegrationsMapperV1(
 
         val databaseDefaultHandler = listOf(
             AuroraConfigFieldHandler(
-                "databaseDefaults/flavor",
+                "$databaseDefaultsKey/flavor",
                 defaultValue = DatabaseFlavor.ORACLE_MANAGED,
                 validator = { node ->
                     node.oneOf(DatabaseFlavor.values().map { it.toString() })
                 }),
-            AuroraConfigFieldHandler("databaseDefaults/generate", defaultValue = true),
-            AuroraConfigFieldHandler("databaseDefaults/name", defaultValue = "@name@") // må vi ha på en validator her?
+            AuroraConfigFieldHandler("$databaseDefaultsKey/generate", defaultValue = true),
+            AuroraConfigFieldHandler(
+                "$databaseDefaultsKey/name",
+                defaultValue = "@name@"
+            ) // må vi ha på en validator her?
         )
 
         val databaseDefaultRolesHandlers =
-            applicationFiles.findSubHandlers("databaseDefaults/roles", validatorFn = { key ->
+            applicationFiles.findSubHandlers("$databaseDefaultsKey/roles", validatorFn = { key ->
                 { node ->
                     node.oneOf(DatabasePermission.values().map { it.toString() })
                 }
             })
 
-        val validRoles = applicationFiles.findSubKeys("databaseDefaults/roles")
+        val validRoles = applicationFiles.findSubKeys("$databaseDefaultsKey/roles")
 
         val databaseDefaultExposeToHandlers =
-            applicationFiles.findSubHandlers("databaseDefaults/exposeTo", validatorFn = { exposeTo ->
+            applicationFiles.findSubHandlers("$databaseDefaultsKey/exposeTo", validatorFn = { exposeTo ->
                 { node -> exposeToValidator(node, validRoles, exposeTo) }
             })
 
-        val parametersHandlers = applicationFiles.findSubHandlers("databaseDefaults/parameters")
+        val parametersHandlers = applicationFiles.findSubHandlers("$databaseDefaultsKey/parameters")
 
         return listOf<AuroraConfigFieldHandler>() + databaseDefaultHandler + databaseDefaultRolesHandlers + databaseDefaultExposeToHandlers + parametersHandlers
     }
