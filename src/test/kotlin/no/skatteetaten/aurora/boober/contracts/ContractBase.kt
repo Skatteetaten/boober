@@ -6,15 +6,14 @@ import com.jayway.jsonpath.DocumentContext
 import com.jayway.jsonpath.JsonPath
 import io.restassured.module.mockmvc.RestAssuredMockMvc
 import no.skatteetaten.aurora.boober.configureObjectMapper
-import org.bouncycastle.asn1.x500.style.RFC4519Style.name
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import java.io.File
 
 class ContractResponses(val jsonResponses: Map<String, DocumentContext>) {
     inline fun <reified T : Any> response(responseName: String = jsonResponses.keys.first()): T {
-        val json =
-            jsonResponses[responseName]?.jsonString() ?: throw IllegalArgumentException("Invalid response name,  $name")
+        val json = jsonResponses[responseName]?.jsonString()
+            ?: throw IllegalArgumentException("Invalid response name,  $responseName")
         return configureObjectMapper(ObjectMapper()).readValue(json)
     }
 }

@@ -13,15 +13,11 @@ open class AuroradeploymentspecBase {
     @BeforeEach
     fun setUp() {
         withContractResponses(this) {
-            val auroraDeploymentSpecService = mockk<AuroraDeploymentSpecService>().apply {
-                every { getAuroraDeploymentSpecs(any(), any()) } returns listOf(AuroraDeploymentSpec(emptyMap()))
-            }
-
+            val auroraDeploymentSpecService = mockk<AuroraDeploymentSpecService>(relaxed = true)
             val auroraDeploymentSpecResponder = mockk<AuroraDeploymentSpecResponder>().apply {
                 every { create(any()) } returns it.response("deploymentspec-formatted")
-                every {
-                    create(any<List<AuroraDeploymentSpec>>(), any())
-                } returns it.response("deploymentspec")
+                every { create(any<List<AuroraDeploymentSpec>>(), any()) } returns it.response("deploymentspec")
+                every { create(any<AuroraDeploymentSpec>(), any()) } returns it.response("deploymentspec")
             }
 
             AuroraDeploymentSpecControllerV1(auroraDeploymentSpecService, auroraDeploymentSpecResponder)
