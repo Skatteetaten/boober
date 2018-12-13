@@ -10,7 +10,6 @@ import org.bouncycastle.asn1.x500.style.RFC4519Style.name
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import java.io.File
-import kotlin.reflect.KClass
 
 class ContractResponses(val jsonResponses: Map<String, DocumentContext>) {
     inline fun <reified T : Any> response(responseName: String): T {
@@ -20,14 +19,14 @@ class ContractResponses(val jsonResponses: Map<String, DocumentContext>) {
     }
 }
 
-fun contractResponses(baseClass: KClass<*>, fn: (responses: ContractResponses) -> Any) {
-    val baseName = baseClass.simpleName
-        ?: throw IllegalArgumentException("Invalid base object, ${baseClass.simpleName}")
+fun contractResponses(baseTestObject: Any, fn: (responses: ContractResponses) -> Any) {
+    val baseName = baseTestObject::class.simpleName
+        ?: throw IllegalArgumentException("Invalid base object, ${baseTestObject::class.simpleName}")
     contractResponses(baseName, fn)
 }
 
 fun contractResponses(baseName: String, fn: (responses: ContractResponses) -> Any) {
-    val folderName = "/contracts/${baseName.toLowerCase().removeSuffix("base")}/responses"
+    val folderName = "/contracts/${baseName.toLowerCase().removeSuffix("test")}/responses"
     val content = object {}.javaClass.getResource(folderName)
 
     val files = File(content.toURI()).walk().filter { it.name.endsWith(".json") }.toList()
