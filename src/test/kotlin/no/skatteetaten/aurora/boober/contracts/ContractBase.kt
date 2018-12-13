@@ -19,11 +19,15 @@ class ContractResponses(val jsonResponses: Map<String, DocumentContext>) {
     }
 }
 
-inline fun <reified T : Any> contractResponses(fn: (responses: ContractResponses) -> Any) {
-    val baseName =
-        T::class.simpleName ?: throw IllegalArgumentException("Invalid base object, ${T::class.simpleName}")
-    val folderName = "/contracts/${baseName.toLowerCase().removeSuffix("base")}/responses"
-    val content = T::class.java.getResource(folderName)
+fun contractResponses(baseTestObject: Any, fn: (responses: ContractResponses) -> Any) {
+    val baseName = baseTestObject::class.simpleName
+        ?: throw IllegalArgumentException("Invalid base object, ${baseTestObject::class.simpleName}")
+    contractResponses(baseName, fn)
+}
+
+fun contractResponses(baseName: String, fn: (responses: ContractResponses) -> Any) {
+    val folderName = "/contracts/${baseName.toLowerCase().removeSuffix("test")}/responses"
+    val content = object {}.javaClass.getResource(folderName)
 
     val files = File(content.toURI()).walk().filter { it.name.endsWith(".json") }.toList()
     val jsonResponses = files.associateBy({ it.name.removeSuffix(".json") }, { JsonPath.parse(it) })
