@@ -12,7 +12,7 @@ open class AuroradeploymentspecBase {
 
     @BeforeEach
     fun setUp() {
-        contractResponses<AuroradeploymentspecBase> {
+        contractResponses(AuroradeploymentspecBase::class) {
             val auroraDeploymentSpecService = mockk<AuroraDeploymentSpecService>().apply {
                 every { getAuroraDeploymentSpecs(any(), any()) } returns listOf(AuroraDeploymentSpec(emptyMap()))
             }
