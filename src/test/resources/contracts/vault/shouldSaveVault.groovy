@@ -13,9 +13,7 @@ Contract.make {
       contentType(applicationJson())
     }
     body(
-        name: 'responses',
-        permissions: [],
-        secrets: {}
+        '''{"name":"responses","permissions":[],"secrets":{}}'''
     )
     bodyMatchers {
       jsonPath('$.name', byRegex(nonEmpty()))
