@@ -7,7 +7,7 @@ Contract.make {
     method 'PUT'
     url $(
         stub(~/\/v1\/auroraconfig\/[a-z]+\/validate/),
-        test('/v1/auroraconfig/auroraconfigname/validate')
+        test('/v1/auroraconfig/filename/validate')
     )
     headers {
       contentType(applicationJson())
@@ -27,6 +27,6 @@ Contract.make {
     headers {
       contentType(applicationJson())
     }
-    body(file('responses/validate.json'))
+    body(file('responses/auroraconfig.json'))
   }
 }

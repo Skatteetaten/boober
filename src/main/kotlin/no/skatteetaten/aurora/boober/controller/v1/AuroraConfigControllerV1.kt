@@ -14,6 +14,7 @@ import no.skatteetaten.aurora.boober.utils.logger
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.stereotype.Component
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -58,7 +59,10 @@ data class ContentPayload(
 
 @RestController
 @RequestMapping("/v1/auroraconfig/{name}")
-class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
+class AuroraConfigControllerV1(
+    private val auroraConfigService: AuroraConfigService,
+    private val responder: AuroraConfigResponder
+) {
 
     val logger by logger()
 
@@ -82,7 +86,7 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
         if (application != null || environment != null) {
             throw IllegalArgumentException("Either both application and environment must be set or none of them")
         }
-        return createAuroraConfigResponse(auroraConfigService.findAuroraConfig(ref))
+        return responder.create(auroraConfigService.findAuroraConfig(ref))
     }
 
     @GetMapping("/filenames")
@@ -90,7 +94,7 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
         @PathVariable name: String
     ): Response {
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
-        return Response(items = auroraConfigService.findAuroraConfigFileNames(ref))
+        return responder.create(auroraConfigService.findAuroraConfigFileNames(ref))
     }
 
     @PutMapping("/validate")
@@ -103,7 +107,7 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         val auroraConfig = payload.toAuroraConfig(ref)
         auroraConfigService.validateAuroraConfig(auroraConfig, resourceValidation = resourceValidation)
-        return createAuroraConfigResponse(auroraConfig)
+        return responder.create(auroraConfig)
     }
 
     @GetMapping("/**")
@@ -153,15 +157,21 @@ class AuroraConfigControllerV1(val auroraConfigService: AuroraConfigService) {
     }
 
     private fun createAuroraConfigFileResponse(auroraConfigFile: AuroraConfigFile): ResponseEntity<Response> {
-        val configFiles = auroraConfigFile
-            .let { listOf(AuroraConfigFileResource(it.name, it.contents, it.type)) }
-
-        val response = Response(items = configFiles)
+        val response = responder.create(auroraConfigFile)
         val headers = HttpHeaders().apply { eTag = "\"${auroraConfigFile.version}\"" }
         return ResponseEntity(response, headers, HttpStatus.OK)
     }
+}
 
-    private fun createAuroraConfigResponse(auroraConfig: AuroraConfig): Response {
-        return Response(items = listOf(auroraConfig).map { fromAuroraConfig(it) })
+@Component
+class AuroraConfigResponder {
+    fun create(auroraConfig: AuroraConfig) = Response(items = listOf(auroraConfig).map { fromAuroraConfig(it) })
+
+    fun create(auroraConfigFile: AuroraConfigFile): Response {
+        val configFiles = auroraConfigFile
+            .let { listOf(AuroraConfigFileResource(it.name, it.contents, it.type)) }
+        return Response(items = configFiles)
     }
+
+    fun create(fileNames: List<String>) = Response(items = fileNames)
 }

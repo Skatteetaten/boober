@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
+import no.skatteetaten.aurora.boober.controller.Responder
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.DeployHistoryEntry
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/v1/apply-result/{auroraConfigName}")
-class ApplyResultController(val deployLogService: DeployLogService) {
+class ApplyResultController(private val deployLogService: DeployLogService, private val responder: Responder) {
 
     @GetMapping("/")
     fun deployHistory(
@@ -21,7 +22,7 @@ class ApplyResultController(val deployLogService: DeployLogService) {
     ): Response {
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         val applicationResults: List<DeployHistoryEntry> = deployLogService.deployHistory(ref)
-        return Response(items = applicationResults)
+        return responder.create(applicationResults)
     }
 
     @GetMapping("/{deployId}")
@@ -33,7 +34,7 @@ class ApplyResultController(val deployLogService: DeployLogService) {
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         val deployResult = deployLogService.findDeployResultById(ref, deployId)
         return deployResult?.let {
-            ResponseEntity(Response(items = listOf(deployResult)), HttpStatus.OK)
+            ResponseEntity(responder.create(deployResult), HttpStatus.OK)
         } ?: ResponseEntity(HttpStatus.NOT_FOUND)
     }
 }

@@ -1,4 +1,4 @@
-package deploy
+package vault
 
 import org.springframework.cloud.contract.spec.Contract
 
@@ -15,6 +15,5 @@ Contract.make {
     headers {
       contentType(applicationJson())
     }
-    body(file('responses/vaultfile.json'))
   }
 }

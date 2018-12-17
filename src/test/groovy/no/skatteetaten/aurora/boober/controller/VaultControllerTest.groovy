@@ -42,7 +42,7 @@ class VaultControllerTest extends Specification {
   def fileContents = 'SECRET_PASS=asdlfkjaølfjaøf'
 
   void setup() {
-    def controller = new VaultControllerV1(vaultService, false)
+    def controller = new VaultControllerV1(vaultService, new Responder(), false)
     mockMvc = MockMvcBuilders.
         standaloneSetup(controller)
         .setControllerAdvice(new ErrorHandler())

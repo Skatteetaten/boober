@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.controller.v1
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.skatteetaten.aurora.boober.controller.Responder
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.v1.VaultOperation.reencrypt
 import no.skatteetaten.aurora.boober.controller.v1.VaultWithAccessResource.Companion.fromEncryptedFileVault
@@ -49,7 +50,11 @@ object B64 {
 /*
   @param secrets: A map of fileNames to Base64 encoded content
  */
-data class AuroraSecretVaultPayload(val name: String, val permissions: List<String>, val secrets: Map<String, String>?) {
+data class AuroraSecretVaultPayload(
+    val name: String,
+    val permissions: List<String>,
+    val secrets: Map<String, String>?
+) {
     val secretsDecoded: Map<String, ByteArray>?
         get() = secrets?.map { Pair(it.key, B64.decode(it.value)) }?.toMap()
 }
@@ -57,14 +62,24 @@ data class AuroraSecretVaultPayload(val name: String, val permissions: List<Stri
 /*
   @param secrets: A map of fileNames to Base64 encoded content
  */
-data class VaultWithAccessResource(val name: String, val hasAccess: Boolean, val secrets: Map<String, String>?, val permissions: List<String>?) {
+data class VaultWithAccessResource(
+    val name: String,
+    val hasAccess: Boolean,
+    val secrets: Map<String, String>?,
+    val permissions: List<String>?
+) {
     companion object {
         fun fromEncryptedFileVault(it: EncryptedFileVault): VaultWithAccessResource {
             return VaultWithAccessResource(it.name, true, encodeSecrets(it.secrets), it.permissions)
         }
 
         fun fromVaultWithAccess(it: VaultWithAccess): VaultWithAccessResource {
-            return VaultWithAccessResource(it.vaultName, it.hasAccess, encodeSecrets(it.vault?.secrets), it.vault?.permissions)
+            return VaultWithAccessResource(
+                it.vaultName,
+                it.hasAccess,
+                encodeSecrets(it.vault?.secrets),
+                it.vault?.permissions
+            )
         }
 
         private fun encodeSecrets(secrets: Map<String, ByteArray>?): Map<String, String>? {
@@ -95,7 +110,8 @@ data class VaultOperationPayload(val operationName: VaultOperation, val paramete
 @RestController
 @RequestMapping("/v1/vault/{vaultCollection}")
 class VaultControllerV1(
-    val vaultService: VaultService,
+    private val vaultService: VaultService,
+    private val responder: Responder,
     @Value("\${vault.operations.enabled:false}") private val operationsEnabled: Boolean
 ) {
 
@@ -106,7 +122,10 @@ class VaultControllerV1(
             throw UnauthorizedAccessException("Vault operations has been disabled")
         }
         when (operationPayload.operationName) {
-            reencrypt -> vaultService.reencryptVaultCollection(vaultCollection, operationPayload.parameters["encryptionKey"] as String)
+            reencrypt -> vaultService.reencryptVaultCollection(
+                vaultCollection,
+                operationPayload.parameters["encryptionKey"] as String
+            )
         }
     }
 
@@ -115,7 +134,7 @@ class VaultControllerV1(
 
         val resources = vaultService.findAllVaultsWithUserAccessInVaultCollection(vaultCollection)
             .map(::fromVaultWithAccess)
-        return Response(items = resources)
+        return responder.create(items = resources)
     }
 
     @PutMapping
@@ -124,16 +143,18 @@ class VaultControllerV1(
         @RequestBody @Valid vaultPayload: AuroraSecretVaultPayload
     ): Response {
 
-        val vault = vaultService.import(vaultCollection, vaultPayload.name, vaultPayload.permissions, vaultPayload.secretsDecoded
-            ?: emptyMap())
-        return Response(items = listOf(vault).map(::fromEncryptedFileVault))
+        val vault = vaultService.import(
+            vaultCollection, vaultPayload.name, vaultPayload.permissions, vaultPayload.secretsDecoded
+                ?: emptyMap()
+        )
+        return responder.create(items = listOf(vault).map(::fromEncryptedFileVault))
     }
 
     @GetMapping("/{vault}")
     fun getVault(@PathVariable vaultCollection: String, @PathVariable vault: String): Response {
         val resources = listOf(vaultService.findVault(vaultCollection, vault))
             .map(::fromEncryptedFileVault)
-        return Response(items = resources)
+        return responder.create(items = resources)
     }
 
     @GetMapping("/{vault}/**")
@@ -163,7 +184,13 @@ class VaultControllerV1(
         val fileContents: ByteArray = payload.decodedContents
         val fileName = getVaultFileNameFromRequestUri(vaultCollection, vaultName, request)
 
-        vaultService.createOrUpdateFileInVault(vaultCollection, vaultName, fileName, fileContents, clearQuotes(ifMatchHeader))
+        vaultService.createOrUpdateFileInVault(
+            vaultCollection,
+            vaultName,
+            fileName,
+            fileContents,
+            clearQuotes(ifMatchHeader)
+        )
         writeVaultFileResponse(fileContents, response)
     }
 
@@ -176,16 +203,20 @@ class VaultControllerV1(
 
         val fileName = getVaultFileNameFromRequestUri(vaultCollection, vaultName, request)
         vaultService.deleteFileInVault(vaultCollection, vaultName, fileName)?.let(::fromEncryptedFileVault)
-        return Response(items = listOf())
+        return responder.create()
     }
 
     @DeleteMapping("/{vault}")
     fun delete(@PathVariable vaultCollection: String, @PathVariable vault: String): Response {
         vaultService.deleteVault(vaultCollection, vault)
-        return Response(items = listOf())
+        return responder.create()
     }
 
-    private fun getVaultFileNameFromRequestUri(vaultCollection: String, vault: String, request: HttpServletRequest): String {
+    private fun getVaultFileNameFromRequestUri(
+        vaultCollection: String,
+        vault: String,
+        request: HttpServletRequest
+    ): String {
         val path = "/v1/vault/$vaultCollection/$vault/**"
         return AntPathMatcher().extractPathWithinPattern(path, request.requestURI)
     }
