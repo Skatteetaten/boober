@@ -254,7 +254,7 @@ data class Permissions(
 
 data class Permission(
     val groups: Set<String>?,
-    val users: Set<String>? = emptySet()
+    val users: Set<String> = emptySet()
 )
 
 data class ToxiProxy(

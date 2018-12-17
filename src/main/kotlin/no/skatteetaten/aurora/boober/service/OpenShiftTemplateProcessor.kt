@@ -17,6 +17,7 @@ class OpenShiftTemplateProcessor(
     val mapper: ObjectMapper
 ) {
 
+    val populatedParameters: Set<String> = setOf("REPLICAS", "SPLUNK_INDEX", "NAME", "VERSION")
     fun generateObjects(
         template: ObjectNode,
         parameters: Map<String, String>?,
@@ -98,9 +99,12 @@ class OpenShiftTemplateProcessor(
 
             val isRequiredParameter = getBoolean(it, REQUIRED_ATTRIBUTE)
             val noDefaultValueSpecified = it[VALUE_ATTRIBUTE] == null
+
             isRequiredParameter && noDefaultValueSpecified
         }.map {
             it[NAME_ATTRIBUTE].textValue()
+        }.filter {
+            !populatedParameters.contains(it)
         }.filter {
             !parameters.containsKey(it)
         }
