@@ -71,7 +71,7 @@ class RedeployServiceTest extends Specification {
       response.openShiftResponses.size() == 1
   }
 
-  def "Redeploy with paused deploy will not run manual deploy"() {
+  def "Redeploy with paused deploy will run manual deploy"() {
     given:
       openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> imageStreamImportResponse()
 
@@ -81,8 +81,8 @@ class RedeployServiceTest extends Specification {
 
     then:
       response.success
-      response.message == "Paused deploy resumed."
-      response.openShiftResponses.size() == 0
+      response.message == "No new application version found. Config changes deployment succeeded."
+      response.openShiftResponses.size() == 1
   }
 
   def "Redeploy with newly created imagestream will not import"() {
