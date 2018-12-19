@@ -183,8 +183,8 @@ class DatabaseSchemaProvisioner(
         val roleString = details.users.joinToString(",") { it.name }
         val response: ResponseEntity<JsonNode> = try {
             restTemplate.getForEntity(
-                "{0}/api/v1/schema/?labels={1}&roles={2}", JsonNode::class.java, dbhUrl,
-                labelsString, roleString
+                "{0}/api/v1/schema/?labels={1}&roles={2}&engine={3}", JsonNode::class.java, dbhUrl,
+                labelsString, roleString, details.engine
             )
         } catch (e: Exception) {
             throw createProvisioningException("Unable to get database schema.", e)

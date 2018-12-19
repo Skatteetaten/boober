@@ -83,6 +83,9 @@ class AuroraIntegrationsMapperV1(
 
     private fun findDatabases(spec: AuroraDeploymentSpec): List<Database> {
 
+        // TODO: the difference between files and spec here could be confusing. Should we use files here at all?
+        // TODO: Will overrides be correct here if we use applicationFiles?
+
         val defaultDb = Database(
             name = spec["$databaseDefaultsKey/name"],
             flavor = spec["$databaseDefaultsKey/flavor"],
