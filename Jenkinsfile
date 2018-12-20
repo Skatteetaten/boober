@@ -8,7 +8,7 @@ def overrides = [
     disableAllReports: true,
     credentialsId: "github",
     suggestVersionAndTagReleases: [
-      [branch: 'master', versionHint: '1.0']
+      [branch: 'master', versionHint: '2']
     ]
 ]
 
