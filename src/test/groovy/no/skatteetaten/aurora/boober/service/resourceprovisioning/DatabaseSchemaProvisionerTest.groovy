@@ -94,7 +94,7 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
 
     given:
       def labelsString = labels.collect { k, v -> "$k%3D$v" }.join(",")
-      dbhServer.expect(requestTo("${DBH_HOST}/api/v1/schema/?labels=$labelsString&roles=SCHEMA")).
+      dbhServer.expect(requestTo("${DBH_HOST}/api/v1/schema/?labels=$labelsString&roles=SCHEMA&engine=ORACLE")).
           andRespond(withSuccess(loadResource("schema_${id}.json"), MediaType.APPLICATION_JSON))
 
     when:
@@ -116,7 +116,7 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
           details.parameters)
 
       def body = new ObjectMapper().writeValueAsString(createBody)
-      dbhServer.expect(requestTo("${DBH_HOST}/api/v1/schema/?labels=$labelsString&roles=SCHEMA")).
+      dbhServer.expect(requestTo("${DBH_HOST}/api/v1/schema/?labels=$labelsString&roles=SCHEMA&engine=ORACLE")).
           andRespond(withSuccess(loadResource("schema_empty_response.json"), MediaType.APPLICATION_JSON))
 
       dbhServer.expect(requestTo("${DBH_HOST}/api/v1/schema/")).
