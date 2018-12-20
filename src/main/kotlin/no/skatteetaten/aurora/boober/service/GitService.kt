@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 
 @Configuration
 class GitServices(
@@ -71,6 +72,8 @@ open class GitService(
 
     val cp = UsernamePasswordCredentialsProvider(username, password)
 
+    val locks = ConcurrentHashMap<String, Any>()
+
     @JvmOverloads
     fun checkoutRepository(
         repositoryName: String,
@@ -78,20 +81,23 @@ open class GitService(
         checkoutFolder: String = repositoryName,
         deleteUnpushedCommits: Boolean = true
     ): Git {
-        val repoPath = File(File("$checkoutPath/$checkoutFolder").absoluteFile.absolutePath)
-        val git: Git? = repoPath.takeIf(File::exists).let {
-            try {
-                updateRepository(repoPath, deleteUnpushedCommits, refName)
-            } catch (e: GitReferenceException) {
-                throw e
-            } catch (e: Exception) {
-                logger.warn("Local repository update failed. Cause: ${e.message}.")
-                repoPath.deleteRecursively()
-                null
+        val lock = locks.computeIfAbsent(repositoryName) { object {} }
+        return synchronized(lock) {
+            val repoPath = File(File("$checkoutPath/$checkoutFolder").absoluteFile.absolutePath)
+            val git: Git? = repoPath.takeIf(File::exists).let {
+                try {
+                    updateRepository(repoPath, deleteUnpushedCommits, refName)
+                } catch (e: GitReferenceException) {
+                    throw e
+                } catch (e: Exception) {
+                    logger.warn("Local repository update failed. Cause: ${e.message}.")
+                    repoPath.deleteRecursively()
+                    null
+                }
             }
-        }
 
-        return git ?: cloneAndCheckout(repositoryName, repoPath, refName, deleteUnpushedCommits)
+            git ?: cloneAndCheckout(repositoryName, repoPath, refName, deleteUnpushedCommits)
+        }
     }
 
     private fun updateRepository(repoPath: File, failOnUnpushedCommits: Boolean, refName: String): Git {
