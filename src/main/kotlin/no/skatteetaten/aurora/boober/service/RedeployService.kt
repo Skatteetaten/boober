@@ -30,10 +30,17 @@ class RedeployService(
     ) {
 
         companion object {
-            fun fromOpenShiftResponses(openShiftResponses: List<OpenShiftResponse>, extraMessage: String = ""): RedeployResult {
+            fun fromOpenShiftResponses(
+                openShiftResponses: List<OpenShiftResponse>,
+                extraMessage: String = ""
+            ): RedeployResult {
                 val success = openShiftResponses.all { it.success }
                 val message = if (success) "succeeded." else "failed."
-                return RedeployResult(openShiftResponses = openShiftResponses, success = success, message = "$extraMessage $message")
+                return RedeployResult(
+                    openShiftResponses = openShiftResponses,
+                    success = success,
+                    message = "$extraMessage $message"
+                )
             }
         }
     }
@@ -70,22 +77,25 @@ class RedeployService(
         }
 
         val isNewVersion = isiResource?.let {
-                it.isDifferentImage(imageStream.findCurrentImageHash(imageChangeTriggerTagName))
-            } ?: false
+            it.isDifferentImage(imageStream.findCurrentImageHash(imageChangeTriggerTagName))
+        } ?: false
 
-        val versionMessage = if(isNewVersion) {
+        val versionMessage = if (isNewVersion) {
             "New application version found."
-        } else  {
+        } else {
             "No new application version found."
         }
 
-        if(!wasPaused && isNewVersion) {
-            return RedeployResult(message=versionMessage)
+        if (!wasPaused && isNewVersion) {
+            return RedeployResult(message = versionMessage)
         }
 
         val namespace = imageStream.metadata.namespace
         val deploymentRequestResponse = performDeploymentRequest(namespace, deploymentConfig.metadata.name)
-        return RedeployResult.fromOpenShiftResponses(listOf(deploymentRequestResponse), "$versionMessage Config changes deployment")
+        return RedeployResult.fromOpenShiftResponses(
+            listOf(deploymentRequestResponse),
+            "$versionMessage Config changes deployment"
+        )
     }
 
     fun triggerRedeploy(deploymentConfig: DeploymentConfig): RedeployResult {
