@@ -12,7 +12,8 @@ class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>, val name
 
     val handlers = findRouteHandlers() + listOf(
         AuroraConfigFieldHandler("route", defaultValue = false, canBeSimplifiedConfig = true),
-        AuroraConfigFieldHandler("routeDefaults/host", defaultValue = "@name@-@affiliation@-@env@")) +
+        AuroraConfigFieldHandler("routeDefaults/host", defaultValue = "@name@-@affiliation@-@env@")
+    ) +
         findRouteAnnotationHandlers("routeDefaults")
 
     fun route(auroraDeploymentSpec: AuroraDeploymentSpec): AuroraRoute {
@@ -35,13 +36,14 @@ class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>, val name
         val routes = applicationFiles.findSubKeys(route)
 
         return routes.map {
-            Route(it.ensureStartWith(name, "-"),
+            Route(
+                it.ensureStartWith(name, "-"),
                 auroraDeploymentSpec.getOrNull("$route/$it/host")
                     ?: auroraDeploymentSpec["routeDefaults/host"],
                 auroraDeploymentSpec.getOrNull("$route/$it/path"),
                 auroraDeploymentSpec.getRouteAnnotations("$route/$it/annotations", handlers)
             )
-        }.toList()
+        }
     }
 
     fun findRouteHandlers(): List<AuroraConfigFieldHandler> {
@@ -51,22 +53,21 @@ class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>, val name
         return routeHandlers.flatMap { routeName ->
             listOf(
                 AuroraConfigFieldHandler("route/$routeName/host"),
-                AuroraConfigFieldHandler("route/$routeName/path", validator = { it?.startsWith("/", "Path must start with /") })
+                AuroraConfigFieldHandler(
+                    "route/$routeName/path",
+                    validator = { it?.startsWith("/", "Path must start with /") })
             ) + findRouteAnnotationHandlers("route/$routeName")
         }
     }
 
     fun findRouteAnnotationHandlers(prefix: String): List<AuroraConfigFieldHandler> {
 
-        return applicationFiles.flatMap { ac ->
-            ac.asJsonNode.at("/$prefix/annotations")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
-        }.toSet().map { key ->
-            AuroraConfigFieldHandler("$prefix/annotations/$key", validator = {
-                // This validator is a bit weird since we check the key and not the value.
+        return applicationFiles.findSubHandlers("$prefix/annotations", validatorFn = { key ->
+            {
                 if (key.contains("/")) {
                     IllegalArgumentException("Annotation $key cannot contain '/'. Use '|' instead")
                 } else null
-            })
-        }
+            }
+        })
     }
 }

@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
+import no.skatteetaten.aurora.boober.model.Database
 import org.springframework.stereotype.Service
 
 class ProvisioningResult(
@@ -40,12 +41,22 @@ class ExternalResourceProvisioner(
         @JvmStatic
         protected fun createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpecInternal: AuroraDeploymentSpecInternal): List<SchemaProvisionRequest> {
             val databaseSpecs = deploymentSpecInternal.integration?.database ?: listOf()
+            // TODO: If we want to support non managed databsaes we need to filter the flavor on managed here.
             return databaseSpecs.map {
-                val name = it.name.toLowerCase()
+
+                val details = it.createSchemaDetails(deploymentSpecInternal.environment.affiliation)
                 if (it.id != null) {
-                    SchemaIdRequest(it.id, name)
+                    SchemaIdRequest(
+                        id = it.id,
+                        details = details
+                    )
                 } else {
-                    SchemaForAppRequest(deploymentSpecInternal.environment.affiliation, deploymentSpecInternal.environment.envName, deploymentSpecInternal.name, name)
+                    SchemaForAppRequest(
+                        environment = deploymentSpecInternal.environment.envName,
+                        application = deploymentSpecInternal.name,
+                        details = details,
+                        generate = it.generate
+                    )
                 }
             }
         }
@@ -57,7 +68,33 @@ class ExternalResourceProvisioner(
             val secretVaultNames = volume.mounts?.mapNotNull { it.secretVaultName }.orEmpty()
             val allVaultNames = volume.secretVaultName?.let { secretVaultNames + listOf(it) } ?: secretVaultNames
 
-            return allVaultNames.map { VaultRequest(deploymentSpecInternal.environment.affiliation, it, volume.secretVaultKeys, volume.keyMappings) }
+            return allVaultNames.map {
+                VaultRequest(
+                    collectionName = deploymentSpecInternal.environment.affiliation,
+                    name = it,
+                    keys = volume.secretVaultKeys,
+                    keyMappings = volume.keyMappings
+                )
+            }
         }
     }
+}
+
+fun Database.createSchemaDetails(affiliation: String): SchemaRequestDetails {
+
+    val users = if (this.roles.isEmpty()) {
+        listOf(SchemaUser(name = "SCHEMA", role = "a", affiliation = affiliation))
+    } else this.roles.map { role ->
+        val exportedRole = this.exposeTo.filter { it.value == role.key }.map { it.key }.firstOrNull()
+        val userAffiliation = exportedRole ?: affiliation
+        SchemaUser(name = role.key, role = role.value.permissionString, affiliation = userAffiliation)
+    }
+
+    return SchemaRequestDetails(
+        schemaName = this.name.toLowerCase(),
+        parameters = this.parameters,
+        users = users,
+        affiliation = affiliation,
+        engine = this.flavor.engine
+    )
 }

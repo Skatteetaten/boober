@@ -95,7 +95,7 @@ class EncryptedFileVault private constructor(
             .associate { file ->
                 val contents = decryptor(file.readText())
                 file.name to contents
-            }.toMap()
+            }
 
     val files: List<File>
         get() = vaultFolder.listFiles()?.filter { it.isFile } ?: emptyList()

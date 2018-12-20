@@ -40,7 +40,7 @@ class WebSecurityConfig(
 
     @Bean
     internal fun preAuthenticationProvider() = PreAuthenticatedAuthenticationProvider().apply {
-        setPreAuthenticatedUserDetailsService({ it: PreAuthenticatedAuthenticationToken ->
+        setPreAuthenticatedUserDetailsService { it: PreAuthenticatedAuthenticationToken ->
 
             val principal: JsonNode? = it.principal as JsonNode?
             val username: String = principal?.openshiftName
@@ -51,7 +51,7 @@ class WebSecurityConfig(
             User(username, it.credentials as String, fullName, it.authorities).also {
                 logger.info("Logged in user username=$username, name='$fullName' tokenSnippet=${it.tokenSnippet} groups=${it.groupNames}")
             }
-        })
+        }
     }
 
     @Bean

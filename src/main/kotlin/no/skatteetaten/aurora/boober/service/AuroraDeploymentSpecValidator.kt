@@ -4,6 +4,8 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaIdRequest
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.createSchemaDetails
 import no.skatteetaten.aurora.boober.service.vault.VaultService
 import no.skatteetaten.aurora.boober.utils.takeIfNotEmpty
 import org.slf4j.Logger
@@ -53,12 +55,13 @@ class AuroraDeploymentSpecValidator(
         // We cannot validate database schemas for applications that are not deployed on the current cluster.
         if (deploymentSpecInternal.cluster != cluster) return
         val databases = deploymentSpecInternal.integration?.database ?: return
-        databases.mapNotNull { it.id }
+        databases.filter { it.id != null }
+            .map { SchemaIdRequest(it.id!!, it.createSchemaDetails(deploymentSpecInternal.environment.affiliation)) }
             .forEach {
                 try {
-                    databaseSchemaProvisioner.findSchemaById(it)
+                    databaseSchemaProvisioner.findSchemaById(it.id, it.details)
                 } catch (e: Exception) {
-                    throw AuroraDeploymentSpecValidationException("Database schema with id=$it does not exist")
+                    throw AuroraDeploymentSpecValidationException("Database schema with id=${it.id} and affiliation=${it.details.affiliation} does not exist")
                 }
             }
     }
@@ -119,7 +122,7 @@ class AuroraDeploymentSpecValidator(
             val vaultKeys = vaultService.findVaultKeys(
                 deploymentSpecInternal.environment.affiliation,
                 vaultName,
-                    "latest.properties"
+                "latest.properties"
             )
             val missingKeys = keys - vaultKeys
             if (missingKeys.isNotEmpty()) {
