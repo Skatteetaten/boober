@@ -44,8 +44,6 @@ class AuroraDeploymentSpecService(
             overrideFiles: List<AuroraConfigFile> = listOf(),
             skapUrl: String?
         ): AuroraDeploymentSpec {
-            // TODO : The implementation here should change, but it is too much work to do this right now.
-            // If creator/mutator RFC is accepted it will be easier
             return createAuroraDeploymentSpecInternal(
                 auroraConfig,
                 applicationDeploymentRef,
@@ -84,14 +82,14 @@ class AuroraDeploymentSpecService(
                 .validate(false)
             val platform: String = headerSpec["applicationPlatform"]
 
-            val applicationHandler: ApplicationPlatformHandler = Companion.APPLICATION_PLATFORM_HANDLERS[platform]
+            val applicationHandler: ApplicationPlatformHandler = APPLICATION_PLATFORM_HANDLERS[platform]
                 ?: throw IllegalArgumentException("ApplicationPlattformHandler $platform is not present")
 
             val header = headerMapper.createHeader(headerSpec, applicationHandler)
 
             val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(applicationDeploymentRef)
             val deployMapper = AuroraDeployMapperV1(applicationDeploymentRef, applicationFiles)
-            val integrationMapper = AuroraIntegrationsMapperV1(applicationFiles, skapUrl)
+            val integrationMapper = AuroraIntegrationsMapperV1(applicationFiles, header.name, skapUrl)
             val volumeMapper = AuroraVolumeMapperV1(applicationFiles)
             val routeMapper = AuroraRouteMapperV1(applicationFiles, header.name)
             val localTemplateMapper = AuroraLocalTemplateMapperV1(applicationFiles, auroraConfig)
@@ -104,7 +102,6 @@ class AuroraDeploymentSpecService(
                     TemplateType.development -> deployMapper.handlers + routeMapper.handlers + volumeMapper.handlers + buildMapper.handlers
                     TemplateType.localTemplate -> routeMapper.handlers + volumeMapper.handlers + localTemplateMapper.handlers
                     TemplateType.template -> routeMapper.handlers + volumeMapper.handlers + templateMapper.handlers
-                    TemplateType.build -> buildMapper.handlers
                 }).toSet()
 
             val handlers = applicationHandler.handlers(rawHandlers)
@@ -125,15 +122,11 @@ class AuroraDeploymentSpecService(
                 auroraDeploymentSpec = deploymentSpec
             ).validate()
 
-            val integration =
-                if (header.type == TemplateType.build) null else integrationMapper.integrations(deploymentSpec)
-            val volume =
-                if (header.type == TemplateType.build) null else volumeMapper.createAuroraVolume(deploymentSpec)
-            val route = if (header.type == TemplateType.build) null else routeMapper.route(deploymentSpec)
+            val integration = integrationMapper.integrations(deploymentSpec)
+            val volume = volumeMapper.createAuroraVolume(deploymentSpec)
+            val route = routeMapper.route(deploymentSpec)
             val build =
-                if (header.type == TemplateType.build || header.type == TemplateType.development) buildMapper.build(
-                    deploymentSpec
-                ) else null
+                if (header.type == TemplateType.development) buildMapper.build(deploymentSpec) else null
             val deploy =
                 if (header.type == TemplateType.deploy || header.type == TemplateType.development) deployMapper.deploy(
                     deploymentSpec
@@ -143,8 +136,7 @@ class AuroraDeploymentSpecService(
             val localTemplate =
                 if (header.type == TemplateType.localTemplate) localTemplateMapper.localTemplate(deploymentSpec) else null
 
-            val overrides = overrideFiles.map { it.name to it.contents }
-                .toMap()
+            val overrides = overrideFiles.associate { it.name to it.contents }
 
             return deploymentSpecMapper.createAuroraDeploymentSpec(
                 auroraDeploymentSpec = deploymentSpec,

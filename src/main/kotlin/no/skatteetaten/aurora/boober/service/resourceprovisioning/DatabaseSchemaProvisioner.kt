@@ -14,19 +14,52 @@ import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate
 
 sealed class SchemaProvisionRequest {
-    abstract val schemaName: String
+
+    abstract val details: SchemaRequestDetails
 }
 
-data class SchemaIdRequest(val id: String, override val schemaName: String) : SchemaProvisionRequest()
+data class SchemaRequestDetails(
+    val schemaName: String,
+    val parameters: Map<String, String>,
+    val users: List<SchemaUser>,
+    val engine: DatabaseEngine,
+    val affiliation: String
+)
 
-data class SchemaForAppRequest(
-    val affiliation: String,
-    val environment: String,
-    val application: String,
-    override val schemaName: String
+data class SchemaRequestPayload(
+    val labels: Map<String, String>,
+    val users: List<SchemaUser>,
+    val engine: DatabaseEngine,
+    val parameters: Map<String, String>
+)
+
+data class SchemaUser(
+    val name: String,
+    val role: String,
+    val affiliation: String
+)
+
+enum class DatabaseEngine {
+    POSTGRES, ORACLE
+}
+
+data class SchemaIdRequest(
+    val id: String,
+    override val details: SchemaRequestDetails
 ) : SchemaProvisionRequest()
 
-data class SchemaProvisionResult(val request: SchemaProvisionRequest, val dbhSchema: DbhSchema, val responseText: String)
+data class SchemaForAppRequest(
+    val environment: String,
+    val application: String,
+    val generate: Boolean,
+    override val details: SchemaRequestDetails
+) : SchemaProvisionRequest()
+
+data class SchemaProvisionResult(
+    val request: SchemaProvisionRequest,
+    val dbhSchema: DbhSchema,
+    val responseText: String
+)
 
 data class SchemaProvisionResults(val results: List<SchemaProvisionResult>)
 
@@ -48,6 +81,7 @@ data class DbhSchema(
     val affiliation: String
         get() = labels.get("affiliation")!!
 
+    // TOOD: support multiple users with different roles
     val username: String
         get() = users.firstOrNull()?.username ?: ""
 
@@ -63,6 +97,7 @@ data class DbhSchema(
 
 @Service
 class DatabaseSchemaProvisioner(
+    // TODO: Rename to DBH and put dbhUrl as baseUrl in client?
     @TargetService(ServiceTypes.AURORA)
     val restTemplate: RestTemplate,
     val mapper: ObjectMapper,
@@ -86,14 +121,25 @@ class DatabaseSchemaProvisioner(
 
     private fun provisionFromId(request: SchemaIdRequest): SchemaProvisionResult {
 
-        val (dbhSchema, responseText) = findSchemaById(request.id)
+        val (dbhSchema, responseText) = findSchemaById(request.id, request.details)
         return SchemaProvisionResult(request, dbhSchema, responseText)
     }
 
-    fun findSchemaById(id: String): Pair<DbhSchema, String> {
+    fun findSchemaById(
+        id: String,
+        details: SchemaRequestDetails
+    ): Pair<DbhSchema, String> {
 
+        val roleString = details.users.joinToString(",") { it.name }
         val response: ResponseEntity<JsonNode> = try {
-            restTemplate.getForEntity("{0}/api/v1/schema/{1}", JsonNode::class.java, dbhUrl, id)
+            restTemplate.getForEntity(
+                "{0}/api/v1/schema/{1}?affiliation={2}&roles={3}",
+                JsonNode::class.java,
+                dbhUrl,
+                id,
+                details.affiliation,
+                roleString
+            )
         } catch (e: Exception) {
             throw createProvisioningException("Unable to get information on schema with id $id", e)
         }
@@ -105,15 +151,20 @@ class DatabaseSchemaProvisioner(
 
         val user = userDetailsProvider.getAuthenticatedUser()
         val labels = mapOf(
-            "affiliation" to request.affiliation,
-            "environment" to "${request.affiliation}-${request.environment}",
+            "affiliation" to request.details.affiliation,
+            // TODO should we really hard code this here? Why not just send in environment here?
+            "environment" to "${request.details.affiliation}-${request.environment}",
             "application" to request.application,
-            "name" to request.schemaName,
+            "name" to request.details.schemaName,
             "userId" to user.username
         )
 
         val (dbhSchema, responseText) = try {
-            findOrCreateSchemaByLabels(labels)
+            val find = findSchemaByLabels(labels, request.details)
+            if (find == null && !request.generate) {
+                throw ProvisioningException("Could not find schema with labels=$labels, generate disabled.")
+            }
+            find ?: createSchema(labels, request.details)
         } catch (e: Exception) {
             val message = e.message.orEmpty() + " Schema query: ${toLabelsString(labels)}"
             throw ProvisioningException(message, e)
@@ -122,16 +173,19 @@ class DatabaseSchemaProvisioner(
         return SchemaProvisionResult(request, dbhSchema, responseText)
     }
 
-    private fun findOrCreateSchemaByLabels(labels: Map<String, String>): Pair<DbhSchema, String> {
+    private fun findSchemaByLabels(
+        labels: Map<String, String>,
+        details: SchemaRequestDetails
+    ): Pair<DbhSchema, String>? {
 
-        return findSchemaByLabels(labels) ?: createSchema(labels)
-    }
-
-    private fun findSchemaByLabels(labels: Map<String, String>): Pair<DbhSchema, String>? {
-
+        // TODO: BAS?
         val labelsString = toLabelsString(labels)
+        val roleString = details.users.joinToString(",") { it.name }
         val response: ResponseEntity<JsonNode> = try {
-            restTemplate.getForEntity("{0}/api/v1/schema/?labels={1}", JsonNode::class.java, dbhUrl, labelsString)
+            restTemplate.getForEntity(
+                "{0}/api/v1/schema/?labels={1}&roles={2}&engine={3}", JsonNode::class.java, dbhUrl,
+                labelsString, roleString, details.engine
+            )
         } catch (e: Exception) {
             throw createProvisioningException("Unable to get database schema.", e)
         }
@@ -139,9 +193,19 @@ class DatabaseSchemaProvisioner(
         return parseResponse(response)
     }
 
-    private fun createSchema(labels: Map<String, String>): Pair<DbhSchema, String> {
+    private fun createSchema(
+        labels: Map<String, String>,
+        details: SchemaRequestDetails
+    ): Pair<DbhSchema, String> {
 
-        val payload = mapOf("labels" to labels)
+        val payload =
+            SchemaRequestPayload(
+                users = details.users,
+                engine = details.engine,
+                parameters = details.parameters,
+                labels = labels
+            )
+
         val response: ResponseEntity<JsonNode> = try {
             restTemplate.postForEntity("{0}/api/v1/schema/", payload, JsonNode::class.java, dbhUrl)
         } catch (e: Exception) {
@@ -179,7 +243,7 @@ class DatabaseSchemaProvisioner(
         return when (e) {
             is HttpClientErrorException -> {
                 val dbhErrorResponse = parseErrorResponse(e.responseBodyAsString)
-                ProvisioningException(message + " cause=$dbhErrorResponse", e)
+                ProvisioningException("$message cause=$dbhErrorResponse", e)
             }
             else -> ProvisioningException(message, e)
         }

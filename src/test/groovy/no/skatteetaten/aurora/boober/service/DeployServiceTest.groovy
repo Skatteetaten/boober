@@ -23,9 +23,6 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
   RedeployService redeployService
 
   @Autowired
-  GitService gitService
-
-  @Autowired
   ObjectMapper mapper
 
   @Autowired
@@ -121,5 +118,4 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
       'mounts'      | 'aos-simple'
       'secretmount' | 'aos-simple'
   }
-
 }

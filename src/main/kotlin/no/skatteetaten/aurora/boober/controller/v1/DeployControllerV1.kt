@@ -7,6 +7,7 @@ import no.skatteetaten.aurora.boober.service.DeployService
 import no.skatteetaten.aurora.boober.service.TagResult
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.renderSpecAsJson
+import org.springframework.stereotype.Component
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/v1/apply/{auroraConfigName}")
-class DeployControllerV1(val deployService: DeployService) {
+class DeployControllerV1(private val deployService: DeployService, private val responder: DeployResponder) {
 
     @PutMapping()
     fun apply(@PathVariable auroraConfigName: String, @RequestBody payload: ApplyPayload): Response {
@@ -52,9 +53,7 @@ class DeployControllerV1(val deployService: DeployService) {
             )
         }
 
-        return auroraDeployResults.find { !it.success }
-            ?.let { Response(items = auroraDeployResults, success = false, message = it.reason ?: "Deploy failed") }
-            ?: Response(items = auroraDeployResults)
+        return responder.create(auroraDeployResults)
     }
 
     data class DeployResponse(
@@ -83,4 +82,12 @@ class DeployControllerV1(val deployService: DeployService) {
     data class Environment(
         val namespace: String
     )
+}
+
+@Component
+class DeployResponder {
+    fun create(deployResponses: List<DeployControllerV1.DeployResponse>) =
+        deployResponses.find { !it.success }
+            ?.let { Response(items = deployResponses, success = false, message = it.reason ?: "Deploy failed") }
+            ?: Response(items = deployResponses)
 }

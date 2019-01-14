@@ -6,7 +6,6 @@ import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
 import no.skatteetaten.aurora.boober.model.AuroraVersioningException
 
 class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
@@ -21,7 +20,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
   def auroraMetrics = new AuroraMetrics(new SimpleMeterRegistry())
   def gitService = new GitService(userDetailsProvider, "$REMOTE_REPO_FOLDER/%s", CHECKOUT_PATH, "", "", auroraMetrics)
   def auroraConfigService = new AuroraConfigService(gitService, Mock(BitbucketService),
-      Mock(AuroraDeploymentSpecValidator), "qa", 6, "http://skap")
+      Mock(AuroraDeploymentSpecValidator), "qa", "http://skap", 6, "ac")
 
   def setup() {
     GitServiceHelperKt.recreateRepo(new File(REMOTE_REPO_FOLDER, "${AURORA_CONFIG_NAME}.git"))

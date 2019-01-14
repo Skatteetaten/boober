@@ -1,8 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
 import io.fabric8.openshift.api.model.DeploymentConfig
-import io.fabric8.openshift.api.model.ImageStream
-import io.fabric8.openshift.api.model.ImageStreamImport
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.model.openshift.isDifferentImage
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -32,10 +30,17 @@ class RedeployService(
     ) {
 
         companion object {
-            fun fromOpenShiftResponses(openShiftResponses: List<OpenShiftResponse>, extraMessage: String = ""): RedeployResult {
+            fun fromOpenShiftResponses(
+                openShiftResponses: List<OpenShiftResponse>,
+                extraMessage: String = ""
+            ): RedeployResult {
                 val success = openShiftResponses.all { it.success }
                 val message = if (success) "succeeded." else "failed."
-                return RedeployResult(openShiftResponses = openShiftResponses, success = success, message = "$extraMessage $message")
+                return RedeployResult(
+                    openShiftResponses = openShiftResponses,
+                    success = success,
+                    message = "$extraMessage $message"
+                )
             }
         }
     }
@@ -71,17 +76,25 @@ class RedeployService(
             return triggerRedeploy(deploymentConfig)
         }
 
-        isiResource?.let {
-            if (it.isDifferentImage(imageStream.findCurrentImageHash(imageChangeTriggerTagName))) {
-                return RedeployResult(message = "New application version found.")
-            }
+        val isNewVersion = isiResource?.let {
+            it.isDifferentImage(imageStream.findCurrentImageHash(imageChangeTriggerTagName))
+        } ?: false
+
+        val versionMessage = if (isNewVersion) {
+            "New application version found."
+        } else {
+            "No new application version found."
         }
 
-        return triggerRedeploy(
-            imageStream,
-            deploymentConfig.metadata.name,
-            wasPaused,
-            isiResource
+        if (!wasPaused && isNewVersion) {
+            return RedeployResult(message = versionMessage)
+        }
+
+        val namespace = imageStream.metadata.namespace
+        val deploymentRequestResponse = performDeploymentRequest(namespace, deploymentConfig.metadata.name)
+        return RedeployResult.fromOpenShiftResponses(
+            listOf(deploymentRequestResponse),
+            "$versionMessage Config changes deployment"
         )
     }
 
@@ -90,21 +103,6 @@ class RedeployService(
         val name = deploymentConfig.metadata.name
         val deploymentRequestResponse = performDeploymentRequest(namespace, name)
         return RedeployResult.fromOpenShiftResponses(listOf(deploymentRequestResponse), "Deployment")
-    }
-
-    fun triggerRedeploy(
-        imageStream: ImageStream,
-        dcName: String,
-        wasPaused: Boolean,
-        imageStreamImport: ImageStreamImport?
-    ): RedeployResult {
-        val namespace = imageStream.metadata.namespace
-
-        if (wasPaused) {
-            return RedeployResult(message = "Paused deploy resumed.")
-        }
-        val deploymentRequestResponse = performDeploymentRequest(namespace, dcName)
-        return RedeployResult.fromOpenShiftResponses(listOf(deploymentRequestResponse), "No new application version found. Config changes deployment")
     }
 
     fun performDeploymentRequest(namespace: String, name: String): OpenShiftResponse {

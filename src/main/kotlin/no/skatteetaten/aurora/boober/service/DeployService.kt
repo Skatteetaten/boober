@@ -76,43 +76,48 @@ class DeployService(
 
     fun prepareDeployEnvironments(deploymentSpecInternals: List<AuroraDeploymentSpecInternal>): Map<AuroraDeployEnvironment, AuroraDeployResult> {
 
-        val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
-
         return deploymentSpecInternals
             .filter { it.cluster == cluster }
             .map { it.environment }
             .distinct()
-            .map { environment: AuroraDeployEnvironment ->
+            .associate(this::prepareDeployEnvironment)
+    }
 
-                if (!authenticatedUser.hasAnyRole(environment.permissions.admin.groups)) {
-                    Pair(
-                        environment,
-                        AuroraDeployResult(
-                            success = false,
-                            reason = "User=${authenticatedUser.fullName} does not have access to admin this environment from the groups=${environment.permissions.admin.groups}"
-                        )
-                    )
-                }
+    fun prepareDeployEnvironment(environment: AuroraDeployEnvironment): Pair<AuroraDeployEnvironment, AuroraDeployResult> {
 
-                val projectExist = openShiftClient.projectExists(environment.namespace)
-                val environmentResponses = prepareDeployEnvironment(environment, projectExist)
+        val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
+        val userNotInAdminUsers = !environment.permissions.admin.users.contains(authenticatedUser.username)
+        val userNotInAnyAdminGroups = !authenticatedUser.hasAnyRole(environment.permissions.admin.groups)
 
-                val success = environmentResponses.all { it.success }
-
-                val message = if (!success) {
-                    "One or more http calls to OpenShift failed"
-                } else "Namespace created successfully."
-
-                logger.info("Environment done. user='${authenticatedUser.fullName}' namespace=${environment.namespace} success=$success reason=$message admins=${environment.permissions.admin.groups} viewers=${environment.permissions.view?.groups}")
-                Pair(
-                    environment, AuroraDeployResult(
-                        openShiftResponses = environmentResponses,
-                        success = success,
-                        reason = message,
-                        projectExist = projectExist
-                    )
+        if (userNotInAdminUsers && userNotInAnyAdminGroups) {
+            return Pair(
+                environment,
+                AuroraDeployResult(
+                    success = false,
+                    reason = "User=${authenticatedUser.fullName} does not have access to admin this environment from the groups=${environment.permissions.admin.groups}"
                 )
-            }.toMap()
+            )
+        }
+
+        val projectExist = openShiftClient.projectExists(environment.namespace)
+        val environmentResponses = prepareDeployEnvironment(environment, projectExist)
+
+        val success = environmentResponses.all { it.success }
+
+        val message = if (!success) {
+            "One or more http calls to OpenShift failed"
+        } else "Namespace created successfully."
+
+        logger.info("Environment done. user='${authenticatedUser.fullName}' namespace=${environment.namespace} success=$success reason=$message admins=${environment.permissions.admin.groups} viewers=${environment.permissions.view?.groups}")
+
+        return Pair(
+            environment, AuroraDeployResult(
+                openShiftResponses = environmentResponses,
+                success = success,
+                reason = message,
+                projectExist = projectExist
+            )
+        )
     }
 
     fun prepareDeployEnvironment(
@@ -246,6 +251,23 @@ class DeployService(
         logger.debug("Resource provisioning")
         val provisioningResult = resourceProvisioner.provisionResources(deploymentSpecInternal)
 
+        val tagResult = deploymentSpecInternal.deploy?.takeIf { it.releaseTo != null }?.let {
+            val dockerGroup = it.groupId.dockerGroupSafeName()
+            dockerService.tag(TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry))
+        }
+        val rawResult = AuroraDeployResult(
+            command = cmd,
+            deployId = deployId,
+            auroraDeploymentSpecInternal = deploymentSpecInternal,
+            tagResponse = tagResult
+        )
+        tagResult?.takeIf { !it.success }?.let {
+            return rawResult.copy(
+                success = false,
+                reason = "Tag command failed."
+            )
+        }
+
         logger.debug("Apply objects")
         val openShiftResponses: List<OpenShiftResponse> = listOf(applicationResult) +
             applyOpenShiftApplicationObjects(
@@ -254,7 +276,10 @@ class DeployService(
 
         logger.debug("done applying objects")
         val success = openShiftResponses.all { it.success }
-        val result = AuroraDeployResult(cmd, deploymentSpecInternal, deployId, openShiftResponses, success)
+        val result = rawResult.copy(
+            openShiftResponses = openShiftResponses,
+            success = success
+        )
 
         if (!success) {
             val failedCommands = openShiftResponses.filter { !it.success }.describeString()
@@ -268,14 +293,6 @@ class DeployService(
         if (deploymentSpecInternal.deploy?.flags?.pause == true) {
             return result.copy(reason = "Deployment is paused and will be/remain scaled down.")
         }
-
-        val tagResult = deploymentSpecInternal.deploy?.takeIf { it.releaseTo != null }?.let {
-            val dockerGroup = it.groupId.dockerGroupSafeName()
-            dockerService.tag(TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry))
-        }
-
-        tagResult?.takeIf { !it.success }
-            ?.let { return result.copy(tagResponse = it, reason = "Tag command failed.") }
 
         val redeployResult = redeployService.triggerRedeploy(openShiftResponses, deploymentSpecInternal.type)
 

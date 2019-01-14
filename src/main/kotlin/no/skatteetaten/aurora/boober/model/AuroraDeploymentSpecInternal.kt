@@ -3,6 +3,8 @@ package no.skatteetaten.aurora.boober.model
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
+import no.skatteetaten.aurora.boober.mapper.v1.DatabaseFlavor
+import no.skatteetaten.aurora.boober.mapper.v1.DatabasePermission
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
@@ -11,7 +13,7 @@ import no.skatteetaten.aurora.boober.utils.withNonBlank
 import java.time.Duration
 
 enum class TemplateType {
-    deploy, development, localTemplate, template, build
+    deploy, development, localTemplate, template
 }
 
 data class AuroraDeployHeader(
@@ -116,16 +118,11 @@ data class AuroraBuild(
     val baseVersion: String,
     val builderName: String,
     val builderVersion: String,
-    val testGitUrl: String?,
-    val testTag: String?,
-    val extraTags: String,
     val groupId: String,
     val artifactId: String,
     val version: String,
     val outputKind: String,
     val outputName: String,
-    val triggers: Boolean,
-    val buildSuffix: String?,
     val applicationPlatform: String
 )
 
@@ -206,7 +203,12 @@ data class Mount(
 
 data class Database(
     val name: String,
-    val id: String? = null
+    val id: String? = null,
+    val flavor: DatabaseFlavor,
+    val generate: Boolean,
+    val exposeTo: Map<String, String> = emptyMap(),
+    val roles: Map<String, DatabasePermission> = emptyMap(),
+    val parameters: Map<String, String> = emptyMap()
 ) {
     val spec: String
         get(): String = (id?.let { "$name:$id" } ?: name).toLowerCase()
@@ -254,7 +256,7 @@ data class Permissions(
 
 data class Permission(
     val groups: Set<String>?,
-    val users: Set<String>? = emptySet()
+    val users: Set<String> = emptySet()
 )
 
 data class ToxiProxy(

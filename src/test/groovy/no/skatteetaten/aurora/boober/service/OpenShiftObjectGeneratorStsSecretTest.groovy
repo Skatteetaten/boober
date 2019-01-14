@@ -4,6 +4,7 @@ import static no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProv
 
 import java.time.Duration
 
+import io.fabric8.kubernetes.api.model.OwnerReference
 import no.skatteetaten.aurora.boober.service.internal.StsSecretGenerator
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
 
@@ -19,7 +20,7 @@ class OpenShiftObjectGeneratorStsSecretTest extends AbstractOpenShiftObjectGener
       def provisioningResult = new StsProvisioningResult(cn, cert, cert.notAfter - Duration.ofDays(14))
 
     when: "secret has been created"
-      def secret = StsSecretGenerator.create("aos-simple", provisioningResult, [:])
+      def secret = StsSecretGenerator.create("aos-simple", provisioningResult, [:], new OwnerReference())
 
     then: "the secret should be correct"
       secret != null

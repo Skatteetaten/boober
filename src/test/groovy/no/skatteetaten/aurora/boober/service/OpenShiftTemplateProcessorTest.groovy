@@ -56,6 +56,7 @@ class OpenShiftTemplateProcessorTest extends AbstractSpec {
 
     then:
       !errors.isEmpty()
+      errors[0] == "Required template parameters [AFFILIATION] not set"
   }
 
   def "Throws exception when extra parameters are provided"() {

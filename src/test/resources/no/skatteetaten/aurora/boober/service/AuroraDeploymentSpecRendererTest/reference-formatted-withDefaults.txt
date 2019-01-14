@@ -26,6 +26,11 @@
     type:                   "rolling"                    // default
     timeout:                180                          // default
   }
+  databaseDefaults: {
+    flavor:                 "ORACLE_MANAGED"             // default
+    generate:               true                         // default
+    name:                   "@name@"                     // default
+  }
   webseal:                  false                        // default
   artifactId:               "reference"                  // fileName
   groupId:                  "no.skatteetaten.aurora"     // reference.json

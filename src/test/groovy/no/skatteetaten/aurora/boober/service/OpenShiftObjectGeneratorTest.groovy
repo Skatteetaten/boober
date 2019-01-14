@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import groovy.json.JsonOutput
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
@@ -126,7 +127,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
   def "should get error if config with skap config and it is disabled"() {
 
     given:
-      def aid = new ApplicationId("booberdev", "aos-simple")
+      def aid = new ApplicationDeploymentRef("booberdev", "aos-simple")
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, null)
 
     when:

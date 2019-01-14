@@ -26,6 +26,11 @@
     type:                   "rolling"                    // webleveranse.json
     timeout:                180                          // default
   }
+  databaseDefaults: {
+    flavor:                 "ORACLE_MANAGED"             // default
+    generate:               true                         // default
+    name:                   "@name@"                     // default
+  }
   webseal:                  false                        // default
   artifactId:               "openshift-referanse-react"  // webleveranse.json
   groupId:                  "no.skatteetaten.aurora"     // webleveranse.json
@@ -55,7 +60,6 @@
   routeDefaults: {
     host:                   "@name@-@affiliation@-@env@" // default
   }
-  extraTags:                "latest,major,minor,patch"   // default
   builder: {
     name:                   "architect"                  // default
     version:                "1"                          // default

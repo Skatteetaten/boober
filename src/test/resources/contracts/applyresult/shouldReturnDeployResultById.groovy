@@ -15,6 +15,6 @@ Contract.make {
     headers {
       contentType(applicationJson())
     }
-    body(file('responses/deployresult.json'))
+    body(file('responses/deployhistory.json'))
   }
 }

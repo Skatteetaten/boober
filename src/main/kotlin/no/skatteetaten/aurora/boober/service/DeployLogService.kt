@@ -43,8 +43,17 @@ class DeployLogService(
                         result = DeployHistoryEntryResult(result.openShiftResponses, result.tagResponse),
                         projectExist = result.projectExist
                     )
-                    val storeResult = storeDeployHistory(deployHistory, result.auroraDeploymentSpecInternal!!.cluster)
-                    it.copy(bitbucketStoreResult = storeResult)
+                    try {
+                        val storeResult =
+                            storeDeployHistory(deployHistory, result.auroraDeploymentSpecInternal!!.cluster)
+                        it.copy(bitbucketStoreResult = storeResult)
+                    } catch (e: Exception) {
+                        it.copy(
+                            bitbucketStoreResult = e.localizedMessage,
+                            deployId = "failed",
+                            reason = it.reason + " Failed to store deploy result."
+                        )
+                    }
                 }
             }
     }

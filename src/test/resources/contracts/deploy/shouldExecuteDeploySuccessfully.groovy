@@ -13,9 +13,7 @@ Contract.make {
       contentType(applicationJson())
     }
     body(
-        applicationDeploymentRefs: [],
-        overrides: {},
-        deploy: true
+        '''{"applicationDeploymentRefs":[{"environment":"env","application":"app"}],"applicationIds":[],"overrides":{},"deploy":true,"allRefs":[{"environment":"env","application":"app"}]}'''
     )
     bodyMatchers {
       jsonPath('$.applicationDeploymentRefs[?@environment]', byRegex(nonEmpty()))

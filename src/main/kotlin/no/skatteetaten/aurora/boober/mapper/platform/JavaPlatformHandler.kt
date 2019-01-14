@@ -24,7 +24,11 @@ class JavaPlatformHandler : ApplicationPlatformHandler("java") {
         }
         val containers = listOf(AuroraContainer(
             name = "${auroraDeploymentSpecInternal.name}-java",
-            tcpPorts = mapOf("http" to PortNumbers.INTERNAL_HTTP_PORT, "management" to PortNumbers.INTERNAL_ADMIN_PORT, "jolokia" to PortNumbers.JOLOKIA_HTTP_PORT),
+            tcpPorts = mapOf(
+                "http" to PortNumbers.INTERNAL_HTTP_PORT,
+                "management" to PortNumbers.INTERNAL_ADMIN_PORT,
+                "jolokia" to PortNumbers.JOLOKIA_HTTP_PORT
+            ),
             readiness = auroraDeploymentSpecInternal.deploy!!.readiness,
             liveness = auroraDeploymentSpecInternal.deploy.liveness,
             limit = auroraDeploymentSpecInternal.deploy.resources.limit,

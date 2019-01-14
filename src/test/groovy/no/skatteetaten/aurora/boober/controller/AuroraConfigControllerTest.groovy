@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.controller.internal.ErrorHandler
 import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigControllerV1
+import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigResponder
 import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraVersioningException
@@ -35,7 +36,7 @@ class AuroraConfigControllerTest extends AbstractAuroraConfigTest {
   def auroraConfigService = Mock(AuroraConfigService)
 
   def setup() {
-    def controller = new AuroraConfigControllerV1(auroraConfigService)
+    def controller = new AuroraConfigControllerV1(auroraConfigService, new AuroraConfigResponder())
     mockMvc = MockMvcBuilders.
         standaloneSetup(controller)
         .setControllerAdvice(new ErrorHandler())
