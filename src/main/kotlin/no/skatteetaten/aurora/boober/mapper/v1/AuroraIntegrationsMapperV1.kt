@@ -37,7 +37,6 @@ class AuroraIntegrationsMapperV1(
 
     val dbDefaultsHandlers = findDbDefaultHandlers()
 
-
     val skapHandlers = skapHost?.let {
         listOf(
             AuroraConfigFieldHandler("certificate", defaultValue = false, canBeSimplifiedConfig = true),

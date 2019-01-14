@@ -198,8 +198,7 @@ class AuroraDeploymentSpecService(
         return AuroraDeploymentSpecService.createAuroraDeploymentSpec(
             auroraConfig = auroraConfig,
             overrideFiles = overrides,
-            applicationDeploymentRef = ApplicationDeploymentRef.aid(environment, application)
-            ,
+            applicationDeploymentRef = ApplicationDeploymentRef.aid(environment, application),
             skapUrl = skapUrl
         )
     }

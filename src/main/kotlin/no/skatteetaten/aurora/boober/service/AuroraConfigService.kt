@@ -255,10 +255,10 @@ class AuroraConfigService(
 
         val stopWatch = StopWatch().apply { start() }
         val spec = AuroraDeploymentSpecService.createAuroraDeploymentSpecInternal(
-            auroraConfigWithOverrides.auroraConfig,
-            aid,
-            auroraConfigWithOverrides.overrideFiles
-            , skapUrl
+            auroraConfig = auroraConfigWithOverrides.auroraConfig,
+            applicationDeploymentRef = aid,
+            overrideFiles = auroraConfigWithOverrides.overrideFiles,
+            skapUrl = skapUrl
         )
         if (spec.cluster == cluster && resourceValidation) {
             deploymentSpecValidator.assertIsValid(spec)

@@ -67,7 +67,8 @@ class AuroraConfigControllerV1(
     val logger by logger()
 
     @GetMapping
-    fun get(@PathVariable name: String,
+    fun get(
+        @PathVariable name: String,
         @RequestParam("environment", required = false) environment: String?,
         @RequestParam("application", required = false) application: String?
     ): Response {

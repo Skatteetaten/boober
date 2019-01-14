@@ -98,8 +98,7 @@ class OpenShiftObjectGenerator(
                         appName = auroraDeploymentSpecInternal.name,
                         mounts = mounts ?: emptyList(),
                         labels = labels,
-                        provisioningResult = provisioningResult
-                        ,
+                        provisioningResult = provisioningResult,
                         ownerReference = ownerReference
                     )
                 )
@@ -151,8 +150,7 @@ class OpenShiftObjectGenerator(
     fun generateDeploymentConfig(
         deployId: String,
         deploymentSpecInternal: AuroraDeploymentSpecInternal,
-        provisioningResult: ProvisioningResult? = null
-        ,
+        provisioningResult: ProvisioningResult? = null,
         ownerReference: OwnerReference
     ): JsonNode? =
         withLabelsAndMounts(deployId, deploymentSpecInternal, provisioningResult) { labels, mounts ->
@@ -222,8 +220,7 @@ class OpenShiftObjectGenerator(
                     isLabels = labels,
                     dockerRegistry = dockerRegistry,
                     dockerImagePath = it.dockerImagePath,
-                    dockerTag = it.dockerTag
-                    ,
+                    dockerTag = it.dockerTag,
                     reference = reference
                 )
             }
@@ -328,8 +325,7 @@ class OpenShiftObjectGenerator(
         deployId: String,
         deploymentSpecInternal: AuroraDeploymentSpecInternal,
         provisioningResult: ProvisioningResult? = null,
-        name: String
-        ,
+        name: String,
         ownerReference: OwnerReference
     ): List<JsonNode>? {
         return withLabelsAndMounts(deployId, deploymentSpecInternal, provisioningResult) { labels, mounts ->
@@ -347,8 +343,7 @@ class OpenShiftObjectGenerator(
         appName: String,
         mounts: List<Mount>,
         labels: Map<String, String>,
-        provisioningResult: ProvisioningResult?
-        ,
+        provisioningResult: ProvisioningResult?,
         ownerReference: OwnerReference
     ): List<JsonNode> {
 
