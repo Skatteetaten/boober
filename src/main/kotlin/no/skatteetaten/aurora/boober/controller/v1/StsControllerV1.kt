@@ -32,7 +32,7 @@ class StsControllerV1(val service: StsRenewService) {
         return Response(
             items = items,
             success = true,
-            message = "Renewd cert for affiliaion=${payload.affiliation} namespace=${payload.namespace} name=${payload.name} with commonName=${payload.commonName}"
+            message = "Renewed cert for affiliaion=${payload.affiliation} namespace=${payload.namespace} name=${payload.name} with commonName=${payload.commonName}"
         )
     }
 }
