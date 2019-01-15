@@ -152,7 +152,8 @@ data class AuroraDeploy(
     val deployStrategy: AuroraDeployStrategy,
     val env: Map<String, String>,
     val ttl: Duration?,
-    val toxiProxy: ToxiProxy?
+    val toxiProxy: ToxiProxy?,
+    val pause: Boolean = false
 )
 
 data class AuroraDeployStrategy(
