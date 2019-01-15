@@ -70,7 +70,8 @@ data class AuroraDeploymentSpecInternal(
     val integration: AuroraIntegration?,
     val applicationFile: AuroraConfigFile,
     val configVersion: String,
-    val overrideFiles: Map<String, String>
+    val overrideFiles: Map<String, String>,
+    val message: String?
 ) {
 
     val appDeploymentId: String get() = "${environment.namespace}/$name"

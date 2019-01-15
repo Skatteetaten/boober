@@ -19,6 +19,7 @@ class AuroraDeploymentSpecMapperV1(val applicationDeploymentRef: ApplicationDepl
 
     val handlers = listOf(
         AuroraConfigFieldHandler("splunkIndex"),
+        AuroraConfigFieldHandler("message"),
         AuroraConfigFieldHandler("certificate/commonName"),
         AuroraConfigFieldHandler("certificate", defaultValue = false, canBeSimplifiedConfig = true),
         AuroraConfigFieldHandler("database", defaultValue = false, canBeSimplifiedConfig = true),
@@ -69,7 +70,8 @@ class AuroraDeploymentSpecMapperV1(val applicationDeploymentRef: ApplicationDepl
             integration = integration,
             applicationFile = applicationFile,
             configVersion = configVersion,
-            overrideFiles = overrideFiles
+            overrideFiles = overrideFiles,
+            message = auroraDeploymentSpec.getOrNull<String>("message")
         )
     }
 }
