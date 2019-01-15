@@ -19,8 +19,8 @@ class StsControllerV1(val service: StsRenewService) {
 
         val items = service.renew(payload)
 
-        val failed = items.first { !it.success }
-        failed.let {
+        val failed = items.firstOrNull { !it.success }
+        failed?.let {
             val cmd = it.command.payload
             return Response(
                 items = items,
