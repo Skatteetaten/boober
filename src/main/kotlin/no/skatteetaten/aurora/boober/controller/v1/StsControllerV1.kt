@@ -23,14 +23,12 @@ class StsControllerV1(val service: StsRenewService) {
         failed?.let {
             val cmd = it.command.payload
             return Response(
-                items = items,
                 success = false,
                 message = failed.exception
                     ?: "Failed running command kind=${cmd.openshiftKind} name=${cmd.openshiftName}"
             )
         }
         return Response(
-            items = items,
             success = true,
             message = "Renewed cert for affiliaion=${payload.affiliation} namespace=${payload.namespace} name=${payload.name} with commonName=${payload.commonName}"
         )
