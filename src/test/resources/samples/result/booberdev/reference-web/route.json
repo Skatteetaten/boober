@@ -13,7 +13,7 @@
     "ownerReferences": [
       {
         "apiVersion": "skatteetaten.no/v1",
-        "kind": "Application",
+        "kind": "ApplicationDeployment",
         "name": "openshift-referanse-react",
         "uid": "123-123"
       }

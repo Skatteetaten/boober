@@ -126,8 +126,8 @@ class AuroraDeployMapperV1(
             env = auroraDeploymentSpec.getConfigEnv(configHandlers),
             ttl = auroraDeploymentSpec.getOrNull<String>("ttl")
                 ?.let { StringToDurationConverter().convert(it) },
-            toxiProxy = getToxiProxy(auroraDeploymentSpec, "toxiproxy")
-
+            toxiProxy = getToxiProxy(auroraDeploymentSpec, "toxiproxy"),
+            pause = pause
         )
     }
 

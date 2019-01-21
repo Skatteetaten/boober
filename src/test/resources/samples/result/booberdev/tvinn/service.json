@@ -16,7 +16,7 @@
     "ownerReferences": [
       {
         "apiVersion": "skatteetaten.no/v1",
-        "kind": "Application",
+        "kind": "ApplicationDeployment",
         "name": "tvinn",
         "uid": "123-123"
       }

@@ -70,7 +70,8 @@ data class AuroraDeploymentSpecInternal(
     val integration: AuroraIntegration?,
     val applicationFile: AuroraConfigFile,
     val configVersion: String,
-    val overrideFiles: Map<String, String>
+    val overrideFiles: Map<String, String>,
+    val message: String?
 ) {
 
     val appDeploymentId: String get() = "${environment.namespace}/$name"
@@ -152,7 +153,8 @@ data class AuroraDeploy(
     val deployStrategy: AuroraDeployStrategy,
     val env: Map<String, String>,
     val ttl: Duration?,
-    val toxiProxy: ToxiProxy?
+    val toxiProxy: ToxiProxy?,
+    val pause: Boolean = false
 )
 
 data class AuroraDeployStrategy(

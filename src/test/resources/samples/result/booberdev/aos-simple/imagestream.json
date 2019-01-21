@@ -14,7 +14,7 @@
     "ownerReferences": [
       {
         "apiVersion": "skatteetaten.no/v1",
-        "kind": "Application",
+        "kind": "ApplicationDeployment",
         "name": "aos-simple",
         "uid": "123-123"
       }
