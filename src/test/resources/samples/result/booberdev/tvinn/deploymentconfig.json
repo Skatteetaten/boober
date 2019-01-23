@@ -115,6 +115,10 @@
               {
                 "name": "VOLUME_TVINN_CONFIG",
                 "value": "/u01/foo"
+              },
+              {
+                "name": "FOO",
+                "value": "bar"
               }
             ],
             "image": "tvinn",

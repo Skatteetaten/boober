@@ -6,5 +6,8 @@
     "FEED_NAME": "tolldeklarasjon",
     "DOMAIN_NAME": "localhost",
     "DB_NAME": "tvinn"
+  },
+  "config": {
+    "FOO": "bar"
   }
 }

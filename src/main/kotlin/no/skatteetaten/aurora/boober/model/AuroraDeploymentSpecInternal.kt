@@ -71,7 +71,8 @@ data class AuroraDeploymentSpecInternal(
     val applicationFile: AuroraConfigFile,
     val configVersion: String,
     val overrideFiles: Map<String, String>,
-    val message: String?
+    val message: String?,
+    val env: Map<String, String>
 ) {
 
     val appDeploymentId: String get() = "${environment.namespace}/$name"
@@ -151,7 +152,6 @@ data class AuroraDeploy(
     val dockerImagePath: String,
     val dockerTag: String,
     val deployStrategy: AuroraDeployStrategy,
-    val env: Map<String, String>,
     val ttl: Duration?,
     val toxiProxy: ToxiProxy?,
     val pause: Boolean = false

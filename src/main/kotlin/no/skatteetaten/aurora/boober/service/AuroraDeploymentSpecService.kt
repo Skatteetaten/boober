@@ -17,7 +17,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.TemplateType
-import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService.Companion.APPLICATION_PLATFORM_HANDLERS
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -80,7 +79,7 @@ class AuroraDeploymentSpecService(
 
             val header = headerMapper.createHeader(headerSpec, applicationHandler)
 
-            val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(applicationDeploymentRef)
+            val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(applicationDeploymentRef, applicationFiles)
             val deployMapper = AuroraDeployMapperV1(applicationDeploymentRef, applicationFiles)
             val integrationMapper = AuroraIntegrationsMapperV1(applicationFiles, header.name)
             val volumeMapper = AuroraVolumeMapperV1(applicationFiles)

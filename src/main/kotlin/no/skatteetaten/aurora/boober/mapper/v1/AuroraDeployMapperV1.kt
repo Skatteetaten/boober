@@ -25,7 +25,6 @@ class AuroraDeployMapperV1(
     val applicationFiles: List<AuroraConfigFile>
 ) {
 
-    val configHandlers = applicationFiles.findConfigFieldHandlers()
     val handlers = listOf(
 
         AuroraConfigFieldHandler("artifactId",
@@ -70,7 +69,7 @@ class AuroraDeployMapperV1(
         AuroraConfigFieldHandler("ttl", validator = { it.durationString() }),
         AuroraConfigFieldHandler("toxiproxy", defaultValue = false, canBeSimplifiedConfig = true),
         AuroraConfigFieldHandler("toxiproxy/version", defaultValue = "2.1.3")
-    ) + configHandlers
+    )
 
     fun deploy(auroraDeploymentSpec: AuroraDeploymentSpec): AuroraDeploy? {
         val groupId: String = auroraDeploymentSpec["groupId"]
@@ -123,7 +122,6 @@ class AuroraDeployMapperV1(
             managementPath = findManagementPath(auroraDeploymentSpec),
             liveness = getProbe(auroraDeploymentSpec, "liveness"),
             readiness = getProbe(auroraDeploymentSpec, "readiness"),
-            env = auroraDeploymentSpec.getConfigEnv(configHandlers),
             ttl = auroraDeploymentSpec.getOrNull<String>("ttl")
                 ?.let { StringToDurationConverter().convert(it) },
             toxiProxy = getToxiProxy(auroraDeploymentSpec, "toxiproxy"),

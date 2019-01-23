@@ -47,9 +47,9 @@ class OpenShiftObjectGeneratorMountTest extends AbstractOpenShiftObjectGenerator
       JsonNode mount = jsonMounts.first()
 
     and: "there are env sources for all config elements in root"
-      deploymentSpec.deploy.env.containsKey("OPPSLAGSTJENESTE_DELEGERING")
-      deploymentSpec.deploy.env.containsKey("UTSTED_SAML_URL")
-      deploymentSpec.deploy.env.containsKey("VALIDER_SAML_URL")
+      deploymentSpec.env.containsKey("OPPSLAGSTJENESTE_DELEGERING")
+      deploymentSpec.env.containsKey("UTSTED_SAML_URL")
+      deploymentSpec.env.containsKey("VALIDER_SAML_URL")
 
     and: "the 1.properties property contains a string with each property on a separate line"
       def propertiesFile = mount.get('data').get('1.properties').textValue()
@@ -74,7 +74,7 @@ class OpenShiftObjectGeneratorMountTest extends AbstractOpenShiftObjectGenerator
       AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
     then:
-      def env = deploymentSpec.deploy.env
+      def env = deploymentSpec.env
       env["STRING"] == "Hello"
       env["BOOL"] == "false"
       env["INT"] == "42"
