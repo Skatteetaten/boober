@@ -195,7 +195,7 @@ fun createEnvVars(
         )
     }
 
-    val configEnv = auroraDeploymentSpecInternal.deploy?.env ?: emptyMap()
+    val configEnv = auroraDeploymentSpecInternal.env
     val routeName = auroraDeploymentSpecInternal.route?.route?.takeIf { it.isNotEmpty() }?.first()?.let {
         val host = "${it.host}$routeSuffix"
         val url = "$host${it.path?.ensureStartWith("/") ?: ""}"
