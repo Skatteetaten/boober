@@ -59,7 +59,7 @@ class WebPlatformHandler : ApplicationPlatformHandler("web") {
             replicas = auroraDeploymentSpecInternal.deploy.replicas,
             serviceAccount = auroraDeploymentSpecInternal.deploy.serviceAccount,
             ttl = auroraDeploymentSpecInternal.deploy.ttl
-        ,
+            ,
             pause = auroraDeploymentSpecInternal.deploy.pause
         )
     }
@@ -67,8 +67,10 @@ class WebPlatformHandler : ApplicationPlatformHandler("web") {
     override fun handlers(handlers: Set<AuroraConfigFieldHandler>): Set<AuroraConfigFieldHandler> {
 
         val buildHandlers = handlers.find { it.name.startsWith("baseImage") }?.let {
-            setOf(AuroraConfigFieldHandler("baseImage/name", defaultValue = "wrench"),
-                AuroraConfigFieldHandler("baseImage/version", defaultValue = "0"))
+            setOf(
+                AuroraConfigFieldHandler("baseImage/name", defaultValue = "wrench"),
+                AuroraConfigFieldHandler("baseImage/version", defaultValue = "0")
+            )
         }
         return handlers.addIfNotNull(buildHandlers)
     }
