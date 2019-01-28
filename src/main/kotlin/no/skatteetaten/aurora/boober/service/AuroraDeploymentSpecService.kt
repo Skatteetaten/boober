@@ -87,7 +87,7 @@ class AuroraDeploymentSpecService(
 
             val header = headerMapper.createHeader(headerSpec, applicationHandler)
 
-            val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(applicationDeploymentRef)
+            val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(applicationDeploymentRef, applicationFiles)
             val deployMapper = AuroraDeployMapperV1(applicationDeploymentRef, applicationFiles)
             val integrationMapper = AuroraIntegrationsMapperV1(applicationFiles, header.name, skapUrl)
             val volumeMapper = AuroraVolumeMapperV1(applicationFiles)

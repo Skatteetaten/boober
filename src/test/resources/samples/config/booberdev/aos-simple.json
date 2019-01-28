@@ -13,5 +13,6 @@
     "type": "recreate"
   },
   "pause": true,
+  "message": "Aurora <3",
   "releaseTo": ""
 }

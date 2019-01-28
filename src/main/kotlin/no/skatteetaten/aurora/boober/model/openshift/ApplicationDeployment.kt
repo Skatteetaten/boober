@@ -27,7 +27,8 @@ data class ApplicationDeploymentSpec(
     val releaseTo: String?,
     val deployTag: String?,
     val selector: Map<String, String>,
-    val command: ApplicationDeploymentCommand
+    val command: ApplicationDeploymentCommand,
+    val message: String?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

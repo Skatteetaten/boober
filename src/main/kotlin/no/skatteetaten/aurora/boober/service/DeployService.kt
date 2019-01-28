@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder
 import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
@@ -11,16 +10,14 @@ import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
-import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
+import no.skatteetaten.aurora.boober.service.internal.ApplicationDeploymentGenerator
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.describeString
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
-import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.whenFalse
-import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -216,7 +213,8 @@ class DeployService(
             )
         }
 
-        val application = createApplicationDeployment(deploymentSpecInternal, deployId, cmd)
+        val updateBy = userDetailsProvider.getAuthenticatedUser().username.replace(":", "-")
+        val application = ApplicationDeploymentGenerator.generate(deploymentSpecInternal, deployId, cmd, updateBy)
 
         val applicationCommand = openShiftCommandBuilder.createOpenShiftCommand(
             deploymentSpecInternal.environment.namespace,
@@ -307,47 +305,6 @@ class DeployService(
             openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses),
             tagResponse = tagResult,
             reason = redeployResult.message
-        )
-    }
-
-    fun createApplicationDeployment(
-        deploymentSpecInternal: AuroraDeploymentSpecInternal,
-        deployId: String,
-        cmd: ApplicationDeploymentCommand
-    ): ApplicationDeployment {
-
-        val ttl = deploymentSpecInternal.deploy?.ttl?.let {
-            val removeInstant = Instants.now + it
-            "removeAfter" to removeInstant.epochSecond.toString()
-        }
-        val applicationId = DigestUtils.sha1Hex(deploymentSpecInternal.appId)
-        val applicationDeploymentId = DigestUtils.sha1Hex(deploymentSpecInternal.appDeploymentId)
-        return ApplicationDeployment(
-            spec = ApplicationDeploymentSpec(
-                selector = mapOf("name" to deploymentSpecInternal.name),
-                deployTag = deploymentSpecInternal.version,
-                applicationId = applicationId,
-                applicationDeploymentId = applicationDeploymentId,
-                applicationName = deploymentSpecInternal.appName,
-                applicationDeploymentName = deploymentSpecInternal.name,
-                splunkIndex = deploymentSpecInternal.integration?.splunkIndex,
-                managementPath = deploymentSpecInternal.deploy?.managementPath,
-                releaseTo = deploymentSpecInternal.deploy?.releaseTo,
-                command = cmd
-            ),
-            metadata = ObjectMetaBuilder()
-                .withName(deploymentSpecInternal.name)
-                .withLabels(
-                    mapOf(
-                        "app" to deploymentSpecInternal.name,
-                        "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
-                        "affiliation" to deploymentSpecInternal.environment.affiliation,
-                        "booberDeployId" to deployId,
-                        "applicationId" to applicationId,
-                        "id" to applicationDeploymentId
-                    ).addIfNotNull(ttl)
-                )
-                .build()
         )
     }
 

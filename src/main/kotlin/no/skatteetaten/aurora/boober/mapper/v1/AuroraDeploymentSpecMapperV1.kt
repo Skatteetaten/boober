@@ -15,10 +15,16 @@ import no.skatteetaten.aurora.boober.model.AuroraTemplate
 import no.skatteetaten.aurora.boober.model.AuroraVolume
 import no.skatteetaten.aurora.boober.utils.oneOf
 
-class AuroraDeploymentSpecMapperV1(val applicationDeploymentRef: ApplicationDeploymentRef) {
+class AuroraDeploymentSpecMapperV1(
+    val applicationDeploymentRef: ApplicationDeploymentRef,
+    val applicationFiles: List<AuroraConfigFile>
+) {
+
+    val configHandlers = applicationFiles.findConfigFieldHandlers()
 
     val handlers = listOf(
         AuroraConfigFieldHandler("splunkIndex"),
+        AuroraConfigFieldHandler("message"),
         AuroraConfigFieldHandler("certificate/commonName"),
         AuroraConfigFieldHandler("certificate", defaultValue = false, canBeSimplifiedConfig = true),
         AuroraConfigFieldHandler("database", defaultValue = false, canBeSimplifiedConfig = true),
@@ -33,7 +39,7 @@ class AuroraDeploymentSpecMapperV1(val applicationDeploymentRef: ApplicationDepl
             defaultValue = "rolling",
             validator = { it.oneOf(listOf("recreate", "rolling")) }),
         AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = 180)
-    )
+    ) + configHandlers
 
     fun createAuroraDeploymentSpec(
         auroraDeploymentSpec: AuroraDeploymentSpec,
@@ -69,7 +75,9 @@ class AuroraDeploymentSpecMapperV1(val applicationDeploymentRef: ApplicationDepl
             integration = integration,
             applicationFile = applicationFile,
             configVersion = configVersion,
-            overrideFiles = overrideFiles
+            overrideFiles = overrideFiles,
+            message = auroraDeploymentSpec.getOrNull<String>("message"),
+            env = auroraDeploymentSpec.getConfigEnv(configHandlers)
         )
     }
 }

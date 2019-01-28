@@ -59,6 +59,8 @@ class WebPlatformHandler : ApplicationPlatformHandler("web") {
             replicas = auroraDeploymentSpecInternal.deploy.replicas,
             serviceAccount = auroraDeploymentSpecInternal.deploy.serviceAccount,
             ttl = auroraDeploymentSpecInternal.deploy.ttl
+        ,
+            pause = auroraDeploymentSpecInternal.deploy.pause
         )
     }
 

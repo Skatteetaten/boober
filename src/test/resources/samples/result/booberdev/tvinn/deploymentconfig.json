@@ -9,7 +9,7 @@
     "ownerReferences": [
       {
         "apiVersion": "skatteetaten.no/v1",
-        "kind": "Application",
+        "kind": "ApplicationDeployment",
         "name": "tvinn",
         "uid": "123-123"
       }
@@ -115,6 +115,10 @@
               {
                 "name": "VOLUME_TVINN_CONFIG",
                 "value": "/u01/foo"
+              },
+              {
+                "name": "FOO",
+                "value": "bar"
               }
             ],
             "image": "tvinn",

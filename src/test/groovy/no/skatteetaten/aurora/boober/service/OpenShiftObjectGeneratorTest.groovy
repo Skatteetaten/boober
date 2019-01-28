@@ -14,6 +14,8 @@ import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
+import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
+import no.skatteetaten.aurora.boober.service.internal.ApplicationDeploymentGenerator
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultResults
 import spock.lang.Shared
@@ -29,13 +31,26 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
   @Shared
   def booberDevAosSimpleOverrides = [new AuroraConfigFile("booberdev/aos-simple.json", file, true, false)]
 
+  def "ensure that message exist in application deployment object"() {
+    given:
+      def auroraConfigJson = defaultAuroraConfig()
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "message": "Aurora <3" }'''
+
+    when:
+      def spec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+      def auroraConfigRef = new AuroraConfigRef("test", "master", "123")
+      def command = new ApplicationDeploymentCommand([:], DEFAULT_AID, auroraConfigRef)
+      def applicationDeployment = ApplicationDeploymentGenerator.generate(spec, "123", command, "luke")
+    then:
+      applicationDeployment.spec.message == "Aurora <3"
+  }
+
   @Unroll
   def "should create openshift objects for #env/#name"() {
 
     given:
       def provisioningResult = new ProvisioningResult(null,
           new VaultResults([foo: ["latest.properties": "FOO=bar\nBAR=baz\n".bytes]]), null)
-
 
       def aid = new ApplicationDeploymentRef(env, name)
       def additionalFile = null
@@ -55,7 +70,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
           createAuroraDeploymentSpecInternal(auroraConfig, aid, overrides, "http://skap")
       def ownerReference = new OwnerReferenceBuilder()
           .withApiVersion("skatteetaten.no/v1")
-          .withKind("Application")
+          .withKind("ApplicationDeployment")
           .withName(deploymentSpec.name)
           .withUid("123-123")
           .build()
@@ -80,7 +95,6 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       }
 
       generatedObjects.collect { getKey(it) } as Set == resultFiles.keySet()
-
 
     where:
 

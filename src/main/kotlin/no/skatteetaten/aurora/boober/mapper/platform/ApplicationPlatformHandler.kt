@@ -128,7 +128,8 @@ data class AuroraDeployment(
     val deployStrategy: AuroraDeployStrategy,
     val replicas: Int,
     val serviceAccount: String?,
-    val ttl: Duration?
+    val ttl: Duration?,
+    val pause: Boolean
 )
 
 enum class DeploymentState {
@@ -193,7 +194,7 @@ fun createEnvVars(
         )
     }
 
-    val configEnv = auroraDeploymentSpecInternal.deploy?.env ?: emptyMap()
+    val configEnv = auroraDeploymentSpecInternal.env
     val routeName = auroraDeploymentSpecInternal.route?.route?.takeIf { it.isNotEmpty() }?.first()?.let {
         val host = "${it.host}$routeSuffix"
         val url = "$host${it.path?.ensureStartWith("/") ?: ""}"
