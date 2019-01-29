@@ -29,7 +29,6 @@
     ]
   },
   "spec": {
-    "paused": true,
     "replicas": 0,
     "selector": {
       "name": "aos-simple"
