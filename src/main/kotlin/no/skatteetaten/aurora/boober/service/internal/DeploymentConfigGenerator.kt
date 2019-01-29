@@ -56,9 +56,6 @@ object DeploymentConfigGenerator {
                         }
                     }
                 }
-                if (auroraDeployment.pause) {
-                    paused = true
-                }
                 triggers = listOf(
                     newDeploymentTriggerPolicy {
                         type = "ImageChange"
