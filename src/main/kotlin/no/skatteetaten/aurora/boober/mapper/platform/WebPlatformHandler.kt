@@ -58,8 +58,7 @@ class WebPlatformHandler : ApplicationPlatformHandler("web") {
             deployStrategy = auroraDeploymentSpecInternal.deploy.deployStrategy,
             replicas = auroraDeploymentSpecInternal.deploy.replicas,
             serviceAccount = auroraDeploymentSpecInternal.deploy.serviceAccount,
-            ttl = auroraDeploymentSpecInternal.deploy.ttl
-            ,
+            ttl = auroraDeploymentSpecInternal.deploy.ttl,
             pause = auroraDeploymentSpecInternal.deploy.pause
         )
     }
