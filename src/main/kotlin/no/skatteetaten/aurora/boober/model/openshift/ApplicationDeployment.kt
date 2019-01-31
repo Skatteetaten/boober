@@ -22,7 +22,7 @@ data class ApplicationDeploymentSpec(
     val applicationDeploymentId: String,
     val applicationName: String,
     val applicationDeploymentName: String,
-    val database: Map<String, String>,
+    val databases: List<String>,
     val splunkIndex: String? = null,
     val managementPath: String?,
     val releaseTo: String?,

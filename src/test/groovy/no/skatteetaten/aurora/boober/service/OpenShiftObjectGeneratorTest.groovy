@@ -14,6 +14,9 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.service.internal.ApplicationDeploymentGenerator
+import no.skatteetaten.aurora.boober.service.internal.Provisions
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseInstance
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultResults
 import spock.lang.Shared
@@ -38,10 +41,25 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       def spec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
       def auroraConfigRef = new AuroraConfigRef("test", "master", "123")
       def command = new ApplicationDeploymentCommand([:], DEFAULT_AID, auroraConfigRef)
-      def provisioningResult = new ProvisioningResult(null, null)
-      def applicationDeployment = ApplicationDeploymentGenerator.generate(spec, "123", command, "luke", provisioningResult)
+      def provisions = new Provisions([])
+      def applicationDeployment = ApplicationDeploymentGenerator.generate(spec, "123", command, "luke", provisions)
     then:
       applicationDeployment.spec.message == "Aurora <3"
+  }
+
+  def "ensure that database exist in application deployment object"() {
+    given:
+      def auroraConfigJson = defaultAuroraConfig()
+
+    when:
+      def spec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+      def auroraConfigRef = new AuroraConfigRef("test", "master", "123")
+      def command = new ApplicationDeploymentCommand([:], DEFAULT_AID, auroraConfigRef)
+      def schema = new DbhSchema("123-456", "MANAGED", new DatabaseInstance(1234, null), "", ["name":"referanse"], [])
+      def provisions = new Provisions([schema])
+      def applicationDeployment = ApplicationDeploymentGenerator.generate(spec, "123", command, "luke", provisions)
+    then:
+      applicationDeployment.spec.databases.contains("123-456")
   }
 
   @Unroll
