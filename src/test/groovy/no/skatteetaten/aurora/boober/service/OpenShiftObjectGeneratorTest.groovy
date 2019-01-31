@@ -38,7 +38,8 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       def spec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
       def auroraConfigRef = new AuroraConfigRef("test", "master", "123")
       def command = new ApplicationDeploymentCommand([:], DEFAULT_AID, auroraConfigRef)
-      def applicationDeployment = ApplicationDeploymentGenerator.generate(spec, "123", command, "luke")
+      def provisioningResult = new ProvisioningResult(null, null)
+      def applicationDeployment = ApplicationDeploymentGenerator.generate(spec, "123", command, "luke", provisioningResult)
     then:
       applicationDeployment.spec.message == "Aurora <3"
   }
