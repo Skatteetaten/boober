@@ -213,8 +213,11 @@ class DeployService(
             )
         }
 
+        logger.debug("Resource provisioning")
+        val provisioningResult = resourceProvisioner.provisionResources(deploymentSpecInternal)
+
         val updateBy = userDetailsProvider.getAuthenticatedUser().username.replace(":", "-")
-        val application = ApplicationDeploymentGenerator.generate(deploymentSpecInternal, deployId, cmd, updateBy)
+        val application = ApplicationDeploymentGenerator.generate(deploymentSpecInternal, deployId, cmd, updateBy, provisioningResult)
 
         val applicationCommand = openShiftCommandBuilder.createOpenShiftCommand(
             deploymentSpecInternal.environment.namespace,
@@ -245,9 +248,6 @@ class DeployService(
             .withName(appResponse.metadata.name)
             .withUid(appResponse.metadata.uid)
             .build()
-
-        logger.debug("Resource provisioning")
-        val provisioningResult = resourceProvisioner.provisionResources(deploymentSpecInternal)
 
         val tagResult = deploymentSpecInternal.deploy?.takeIf { it.releaseTo != null }?.let {
             val dockerGroup = it.groupId.dockerGroupSafeName()

@@ -48,6 +48,7 @@ data class AuroraConfigField(
         }
         return result
     }
+
     /**
      * Extracts a config field declared either as a delimited string (ie. "value1, value2") or as a JSON array
      * (ie. ["value1", "value2"]) as a String list.

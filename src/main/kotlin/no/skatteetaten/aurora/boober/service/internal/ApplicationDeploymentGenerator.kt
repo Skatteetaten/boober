@@ -5,6 +5,8 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResults
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.apache.commons.codec.digest.DigestUtils
@@ -16,7 +18,8 @@ object ApplicationDeploymentGenerator {
         deploymentSpecInternal: AuroraDeploymentSpecInternal,
         deployId: String,
         cmd: ApplicationDeploymentCommand,
-        updateBy: String
+        updateBy: String,
+        provisioningResult: ProvisioningResult
     ): ApplicationDeployment {
 
         val ttl = deploymentSpecInternal.deploy?.ttl?.let {
@@ -33,6 +36,7 @@ object ApplicationDeploymentGenerator {
                 applicationDeploymentId = applicationDeploymentId,
                 applicationName = deploymentSpecInternal.appName,
                 applicationDeploymentName = deploymentSpecInternal.name,
+                database = createDatabaseInformation(provisioningResult.schemaProvisionResults),
                 splunkIndex = deploymentSpecInternal.integration?.splunkIndex,
                 managementPath = deploymentSpecInternal.deploy?.managementPath,
                 releaseTo = deploymentSpecInternal.deploy?.releaseTo,
@@ -53,5 +57,11 @@ object ApplicationDeploymentGenerator {
                 )
                 .build()
         )
+    }
+
+    private fun createDatabaseInformation(schemaProvision: SchemaProvisionResults?): Map<String, String> {
+        return schemaProvision?.results?.associate {
+            it.dbhSchema.name to it.dbhSchema.id
+        } ?: mapOf()
     }
 }
