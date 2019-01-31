@@ -214,22 +214,10 @@ class DeployService(
             )
         }
 
-        logger.debug("Resource provisioning")
-        val provisioningResult = resourceProvisioner.provisionResources(deploymentSpecInternal)
-
-        val dbhSchemas = provisioningResult.schemaProvisionResults?.results?.map { it.dbhSchema } ?: listOf()
-        val provisions = Provisions(dbhSchemas)
-
         val updateBy = userDetailsProvider.getAuthenticatedUser().username.replace(":", "-")
-        val application = ApplicationDeploymentGenerator.generate(deploymentSpecInternal, deployId, cmd, updateBy, provisions)
-
-        val applicationCommand = openShiftCommandBuilder.createOpenShiftCommand(
-            deploymentSpecInternal.environment.namespace,
-            jacksonObjectMapper().convertValue(application)
-        )
 
         val applicationResult =
-            openShiftClient.performOpenShiftCommand(deploymentSpecInternal.environment.namespace, applicationCommand)
+            applyApplicationDeployment(deployId, deploymentSpecInternal, cmd, updateBy, Provisions())
 
         val appResponse: ApplicationDeployment? = applicationResult.responseBody?.let {
             jacksonObjectMapper().convertValue(it)
@@ -253,6 +241,9 @@ class DeployService(
             .withUid(appResponse.metadata.uid)
             .build()
 
+        logger.debug("Resource provisioning")
+        val provisioningResult = resourceProvisioner.provisionResources(deploymentSpecInternal)
+
         val tagResult = deploymentSpecInternal.deploy?.takeIf { it.releaseTo != null }?.let {
             val dockerGroup = it.groupId.dockerGroupSafeName()
             dockerService.tag(TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry))
@@ -270,8 +261,13 @@ class DeployService(
             )
         }
 
+        val dbhSchemas = provisioningResult.schemaProvisionResults?.results?.map { it.dbhSchema } ?: listOf()
+        val provisions = Provisions(dbhSchemas)
+        val applicationUpdateResult =
+            applyApplicationDeployment(deployId, deploymentSpecInternal, cmd, updateBy, provisions)
+
         logger.debug("Apply objects")
-        val openShiftResponses: List<OpenShiftResponse> = listOf(applicationResult) +
+        val openShiftResponses: List<OpenShiftResponse> = listOf(applicationUpdateResult) +
             applyOpenShiftApplicationObjects(
                 deployId, deploymentSpecInternal, provisioningResult, namespaceCreated, ownerReference
             )
@@ -310,6 +306,26 @@ class DeployService(
             tagResponse = tagResult,
             reason = redeployResult.message
         )
+    }
+
+    private fun applyApplicationDeployment(
+        deployId: String,
+        deploymentSpecInternal: AuroraDeploymentSpecInternal,
+        cmd: ApplicationDeploymentCommand,
+        updateBy: String,
+        provisions: Provisions
+    ): OpenShiftResponse {
+
+        val application = ApplicationDeploymentGenerator.generate(
+            deploymentSpecInternal, deployId, cmd, updateBy, provisions
+        )
+
+        val applicationCommand = openShiftCommandBuilder.createOpenShiftCommand(
+            deploymentSpecInternal.environment.namespace,
+            jacksonObjectMapper().convertValue(application)
+        )
+
+        return openShiftClient.performOpenShiftCommand(deploymentSpecInternal.environment.namespace, applicationCommand)
     }
 
     private fun applyOpenShiftApplicationObjects(

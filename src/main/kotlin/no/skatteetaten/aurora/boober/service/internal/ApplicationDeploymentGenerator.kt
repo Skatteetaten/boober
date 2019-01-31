@@ -10,7 +10,7 @@ import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.apache.commons.codec.digest.DigestUtils
 
-data class Provisions(val dbhSchemas: List<DbhSchema>)
+data class Provisions(val dbhSchemas: List<DbhSchema> = listOf())
 
 object ApplicationDeploymentGenerator {
 
