@@ -30,8 +30,8 @@ class MultiApplicationValidationException(
                 it.aid.application, it.aid.environment,
                 when (t) {
                     is AuroraConfigException -> t.errors
-                    is IllegalArgumentException -> listOf(ConfigFieldErrorDetail.illegal(t.message!!))
-                    else -> listOf(ErrorDetail(message = t.message!!))
+                    is IllegalArgumentException -> listOf(ConfigFieldErrorDetail.illegal(t.message ?: ""))
+                    else -> listOf(ErrorDetail(message = t.message ?: ""))
                 }
             )
         }

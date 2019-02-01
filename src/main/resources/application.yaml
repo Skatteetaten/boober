@@ -25,7 +25,6 @@ vault:
 
 boober:
     dbh: http://dbh
-    skap: http://skap
     bitbucket:
         project: "ac"
         url: "https://git.aurora.skead.no/"
@@ -70,7 +69,7 @@ openshift:
 
 boober:
     dbh: http://dbh-aurora.${openshift.cluster}.paas.skead.no
-    skap: http://skap-aurora.${openshift.cluster}.paas.skead.no
+    http://skap-aurora.${openshift.cluster}.paas.skead.no
     openshift:
         tokenLocation: /opt/boober
     encrypt:

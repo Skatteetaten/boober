@@ -27,7 +27,7 @@ import javax.annotation.PostConstruct
 class AuroraDeploymentSpecService(
     val auroraConfigService: AuroraConfigService,
     val aphBeans: List<ApplicationPlatformHandler>,
-    @Value("\${boober.skap}") val skapUrl: String?
+    @Value("\${boober.skap:#{null}}") val skapUrl: String?
 ) {
 
     companion object {
