@@ -6,20 +6,29 @@ import org.springframework.stereotype.Service
 
 class ProvisioningResult(
     val schemaProvisionResults: SchemaProvisionResults?,
-    val vaultResults: VaultResults?
+    val vaultResults: VaultResults?,
+    val stsProvisioningResult: StsProvisioningResult?
 )
 
 @Service
 class ExternalResourceProvisioner(
     val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
+    val stsProvisioner: StsProvisioner,
     val vaultProvider: VaultProvider
 ) {
 
     fun provisionResources(deploymentSpecInternal: AuroraDeploymentSpecInternal): ProvisioningResult {
 
+        val stsProvisioningResult = handleSts(deploymentSpecInternal)
         val schemaProvisionResult = handleSchemaProvisioning(deploymentSpecInternal)
         val schemaResults = handleVaults(deploymentSpecInternal)
-        return ProvisioningResult(schemaProvisionResult, schemaResults)
+        return ProvisioningResult(schemaProvisionResult, schemaResults, stsProvisioningResult)
+    }
+
+    private fun handleSts(deploymentSpec: AuroraDeploymentSpecInternal): StsProvisioningResult? {
+        return deploymentSpec.integration?.certificate?.let {
+            stsProvisioner.generateCertificate(it, deploymentSpec.name, deploymentSpec.environment.envName)
+        }
     }
 
     private fun handleSchemaProvisioning(deploymentSpecInternal: AuroraDeploymentSpecInternal): SchemaProvisionResults? {
@@ -52,7 +61,8 @@ class ExternalResourceProvisioner(
                     )
                 } else {
                     SchemaForAppRequest(
-                        environment = deploymentSpecInternal.environment.envName,
+                        environment =
+                        deploymentSpecInternal.environment.envName,
                         application = deploymentSpecInternal.name,
                         details = details,
                         generate = it.generate

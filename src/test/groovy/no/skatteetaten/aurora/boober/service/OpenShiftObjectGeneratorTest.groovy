@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 
 import groovy.json.JsonOutput
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
@@ -48,7 +50,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
 
     given:
       def provisioningResult = new ProvisioningResult(null,
-          new VaultResults([foo: ["latest.properties": "FOO=bar\nBAR=baz\n".bytes]]))
+          new VaultResults([foo: ["latest.properties": "FOO=bar\nBAR=baz\n".bytes]]), null)
 
       def aid = new ApplicationDeploymentRef(env, name)
       def additionalFile = null
@@ -65,7 +67,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       }
       def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, additionalFile)
       AuroraDeploymentSpecInternal deploymentSpec = AuroraDeploymentSpecService.
-          createAuroraDeploymentSpecInternal(auroraConfig, aid, overrides)
+          createAuroraDeploymentSpecInternal(auroraConfig, aid, overrides, "http://skap")
       def ownerReference = new OwnerReferenceBuilder()
           .withApiVersion("skatteetaten.no/v1")
           .withKind("ApplicationDeployment")
@@ -118,7 +120,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
 
     when:
       AuroraDeploymentSpecInternal deploymentSpec = AuroraDeploymentSpecService.
-          createAuroraDeploymentSpecInternal(auroraConfig, aid)
+          createAuroraDeploymentSpecInternal(auroraConfig, aid, [], "http://skap")
       def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.environment.permissions)
 
     then:
@@ -136,6 +138,23 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       rolebindings.size() == 2
   }
 
+  def "should get error if config with skap config and it is disabled"() {
+
+    given:
+      def aid = new ApplicationDeploymentRef("booberdev", "aos-simple")
+      def auroraConfig = AuroraConfigHelperKt.createAuroraConfig(aid, AFFILIATION, null)
+
+    when:
+      AuroraDeploymentSpec deploymentSpec = AuroraDeploymentSpecService.
+          createAuroraDeploymentSpec(auroraConfig, aid, [], null)
+
+    then:
+      AuroraConfigException e = thrown(AuroraConfigException.class)
+      e.message ==
+          "Config for application aos-simple in environment booberdev contains errors. /webseal/host is not a valid config field pointer, /webseal/roles is not a valid config field pointer."
+
+  }
+
   def "generate rolebinding view should split groups"() {
 
     given:
@@ -144,7 +163,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
 
     when:
       AuroraDeploymentSpecInternal deploymentSpec = AuroraDeploymentSpecService.
-          createAuroraDeploymentSpecInternal(auroraConfig, aid)
+          createAuroraDeploymentSpecInternal(auroraConfig, aid, [], "http://skap")
       def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.environment.permissions)
 
     then:

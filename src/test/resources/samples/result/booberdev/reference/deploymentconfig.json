@@ -5,8 +5,7 @@
     "annotations": {
       "boober.skatteetaten.no/applicationFile": "booberdev/reference.json",
       "console.skatteetaten.no/alarm": "true",
-      "console.skatteetaten.no/management-path": ":8081/actuator",
-      "sprocket.sits.no/deployment-config.certificate": "no.skatteetaten.aurora.openshift.reference"
+      "console.skatteetaten.no/management-path": ":8081/actuator"
     },
     "labels": {
       "app": "reference",
@@ -144,14 +143,14 @@
                 "protocol": "TCP"
               }
             ],
-             "readinessProbe": {
-                 "httpGet": {
-                     "path": "/foo",
-                     "port": 8080
-                 },
-                 "initialDelaySeconds": 10,
-                 "timeoutSeconds": 1
-             },
+            "readinessProbe": {
+              "httpGet": {
+                "path": "/foo",
+                "port": 8080
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 1
+            },
             "resources": {
               "limits": {
                 "cpu": "2000m",

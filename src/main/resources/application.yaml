@@ -69,6 +69,7 @@ openshift:
 
 boober:
     dbh: http://dbh-aurora.${openshift.cluster}.paas.skead.no
+    http://skap-aurora.${openshift.cluster}.paas.skead.no
     openshift:
         tokenLocation: /opt/boober
     encrypt:

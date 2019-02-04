@@ -31,7 +31,7 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObje
           new SchemaProvisionResults([new SchemaProvisionResult(
               createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec)[0],
               new DbhSchema("", "", new DatabaseInstance(1512, ""), "", [:], []), "")
-          ]), null)
+          ]), null, null)
 
     when:
       def dc = objectGenerator.
@@ -112,6 +112,6 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObje
         new SchemaProvisionResults([new SchemaProvisionResult(
             createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec)[0],
             new DbhSchema("", "", new DatabaseInstance(1512, ""), "", [:], []), "")
-        ]), null)
+        ]), null, null)
   }
 }

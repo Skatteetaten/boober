@@ -27,31 +27,36 @@ enum class DatabasePermission(
 
 class AuroraIntegrationsMapperV1(
     val applicationFiles: List<AuroraConfigFile>,
-    val name: String
+    val name: String,
+    val skapHost: String?
 ) {
     val logger: Logger = LoggerFactory.getLogger(AuroraIntegrationsMapperV1::class.java)
 
     val databaseDefaultsKey = "databaseDefaults"
     val dbHandlers = findDbHandlers()
 
-    val dbDefautsHandlers = findDbDefaultHandlers()
+    val dbDefaultsHandlers = findDbDefaultHandlers()
 
-    val handlers = dbDefautsHandlers + dbHandlers + listOf(
+    val skapHandlers = skapHost?.let {
+        listOf(
+            AuroraConfigFieldHandler("certificate", defaultValue = false, canBeSimplifiedConfig = true),
+            AuroraConfigFieldHandler("certificate/commonName"),
+            AuroraConfigFieldHandler("webseal", defaultValue = false, canBeSimplifiedConfig = true),
+            AuroraConfigFieldHandler("webseal/host"),
+            AuroraConfigFieldHandler("webseal/roles")
+        )
+    } ?: listOf()
+    val handlers = dbDefaultsHandlers + dbHandlers + listOf(
         AuroraConfigFieldHandler("database", defaultValue = false, canBeSimplifiedConfig = true),
-        AuroraConfigFieldHandler("certificate/commonName"),
-        AuroraConfigFieldHandler("certificate", defaultValue = false, canBeSimplifiedConfig = true),
-        AuroraConfigFieldHandler("splunkIndex"),
-        AuroraConfigFieldHandler("webseal", defaultValue = false, canBeSimplifiedConfig = true),
-        AuroraConfigFieldHandler("webseal/host"),
-        AuroraConfigFieldHandler("webseal/roles")
-    )
+        AuroraConfigFieldHandler("splunkIndex")
+    ) + skapHandlers
 
     fun integrations(auroraDeploymentSpec: AuroraDeploymentSpec): AuroraIntegration? {
         val name: String = auroraDeploymentSpec["name"]
 
         return AuroraIntegration(
             database = findDatabases(auroraDeploymentSpec),
-            certificateCn = findCertificate(auroraDeploymentSpec, name),
+            certificate = skapHost?.let { findCertificate(auroraDeploymentSpec, name) },
             splunkIndex = auroraDeploymentSpec.getOrNull("splunkIndex"),
             webseal = findWebseal(auroraDeploymentSpec)
         )

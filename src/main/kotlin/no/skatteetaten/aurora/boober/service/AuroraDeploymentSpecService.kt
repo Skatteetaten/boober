@@ -19,13 +19,15 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.TemplateType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import javax.annotation.PostConstruct
 
 @Service
 class AuroraDeploymentSpecService(
     val auroraConfigService: AuroraConfigService,
-    val aphBeans: List<ApplicationPlatformHandler>
+    val aphBeans: List<ApplicationPlatformHandler>,
+    @Value("\${boober.skap:#{null}}") val skapUrl: String?
 ) {
 
     companion object {
@@ -39,11 +41,15 @@ class AuroraDeploymentSpecService(
         fun createAuroraDeploymentSpec(
             auroraConfig: AuroraConfig,
             applicationDeploymentRef: ApplicationDeploymentRef,
-            overrideFiles: List<AuroraConfigFile> = listOf()
+            overrideFiles: List<AuroraConfigFile> = listOf(),
+            skapUrl: String?
         ): AuroraDeploymentSpec {
-            // TODO : The implementation here should change, but it is too much work to do this right now.
-            // If creator/mutator RFC is accepted it will be easier
-            return createAuroraDeploymentSpecInternal(auroraConfig, applicationDeploymentRef, overrideFiles).spec
+            return createAuroraDeploymentSpecInternal(
+                auroraConfig,
+                applicationDeploymentRef,
+                overrideFiles,
+                skapUrl
+            ).spec
         }
 
         @JvmOverloads
@@ -51,7 +57,8 @@ class AuroraDeploymentSpecService(
         fun createAuroraDeploymentSpecInternal(
             auroraConfig: AuroraConfig,
             applicationDeploymentRef: ApplicationDeploymentRef,
-            overrideFiles: List<AuroraConfigFile> = listOf()
+            overrideFiles: List<AuroraConfigFile> = listOf(),
+            skapUrl: String?
         ): AuroraDeploymentSpecInternal {
 
             val applicationFiles = auroraConfig.getFilesForApplication(applicationDeploymentRef, overrideFiles)
@@ -67,7 +74,8 @@ class AuroraDeploymentSpecService(
 
             AuroraDeploymentSpecConfigFieldValidator(
                 applicationDeploymentRef = applicationDeploymentRef,
-                applicationFiles = applicationFiles,
+                applicationFiles =
+                applicationFiles,
                 fieldHandlers = headerMapper.handlers,
                 auroraDeploymentSpec = headerSpec
             )
@@ -81,7 +89,7 @@ class AuroraDeploymentSpecService(
 
             val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(applicationDeploymentRef, applicationFiles)
             val deployMapper = AuroraDeployMapperV1(applicationDeploymentRef, applicationFiles)
-            val integrationMapper = AuroraIntegrationsMapperV1(applicationFiles, header.name)
+            val integrationMapper = AuroraIntegrationsMapperV1(applicationFiles, header.name, skapUrl)
             val volumeMapper = AuroraVolumeMapperV1(applicationFiles)
             val routeMapper = AuroraRouteMapperV1(applicationFiles, header.name)
             val localTemplateMapper = AuroraLocalTemplateMapperV1(applicationFiles, auroraConfig)
@@ -107,6 +115,7 @@ class AuroraDeploymentSpecService(
             )
 
             AuroraDeploymentSpecConfigFieldValidator(
+
                 applicationDeploymentRef = applicationDeploymentRef,
                 applicationFiles = applicationFiles,
                 fieldHandlers = handlers,
@@ -128,6 +137,7 @@ class AuroraDeploymentSpecService(
                 if (header.type == TemplateType.localTemplate) localTemplateMapper.localTemplate(deploymentSpec) else null
 
             val overrides = overrideFiles.associate { it.name to it.contents }
+
             return deploymentSpecMapper.createAuroraDeploymentSpec(
                 auroraDeploymentSpec = deploymentSpec,
                 volume = volume,
@@ -172,7 +182,8 @@ class AuroraDeploymentSpecService(
             AuroraDeploymentSpecService.createAuroraDeploymentSpec(
                 auroraConfig,
                 it,
-                listOf()
+                listOf(),
+                skapUrl
             )
         }
     }
@@ -187,7 +198,8 @@ class AuroraDeploymentSpecService(
         return AuroraDeploymentSpecService.createAuroraDeploymentSpec(
             auroraConfig = auroraConfig,
             overrideFiles = overrides,
-            applicationDeploymentRef = ApplicationDeploymentRef.aid(environment, application)
+            applicationDeploymentRef = ApplicationDeploymentRef.aid(environment, application),
+            skapUrl = skapUrl
         )
     }
 }

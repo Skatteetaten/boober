@@ -92,7 +92,8 @@ class ResourceMergerTest extends AbstractAuroraDeploymentSpecSpringTest {
   }
 
   private <T> T withDeploySpec(Closure<T> c) {
-    AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, aid(ENVIRONMENT, "webleveranse"))
+    AuroraDeploymentSpecInternal deploymentSpec =
+        createDeploymentSpec(auroraConfigJson, aid(ENVIRONMENT, "webleveranse"))
     c(deploymentSpec)
   }
 }

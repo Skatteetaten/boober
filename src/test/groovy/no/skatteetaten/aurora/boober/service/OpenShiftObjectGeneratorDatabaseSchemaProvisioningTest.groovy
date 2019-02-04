@@ -58,7 +58,7 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
       def provisioningResult = new ProvisioningResult(
           new SchemaProvisionResults([new SchemaProvisionResult(
               createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec)[0], schema, responseText
-          )]), null)
+          )]), null, null)
 
     when:
       def objects = objectGenerator.
