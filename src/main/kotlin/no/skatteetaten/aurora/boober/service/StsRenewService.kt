@@ -11,6 +11,8 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.whenTrue
 import org.springframework.stereotype.Service
+import java.lang.IllegalArgumentException
+import java.util.Optional
 
 data class RenewRequest(
     val name: String,
@@ -22,7 +24,7 @@ data class RenewRequest(
 
 @Service
 class StsRenewService(
-    val provsioner: StsProvisioner,
+    val provsioner: Optional<StsProvisioner>,
     val commandService: OpenShiftCommandService,
     val openshiftClient: OpenShiftClient,
     val redeployer: RedeployService,
@@ -31,7 +33,9 @@ class StsRenewService(
 
     fun renew(request: RenewRequest): List<OpenShiftResponse> {
 
-        val stsResult = provsioner.generateCertificate(
+        val sts = provsioner.orElseThrow { IllegalArgumentException("Sts service not available") }
+
+        val stsResult = sts.generateCertificate(
             cn = request.commonName,
             name = request.name,
             envName = request.namespace

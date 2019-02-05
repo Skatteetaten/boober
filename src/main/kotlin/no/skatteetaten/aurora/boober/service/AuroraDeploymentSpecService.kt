@@ -19,15 +19,13 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.TemplateType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import javax.annotation.PostConstruct
 
 @Service
 class AuroraDeploymentSpecService(
     val auroraConfigService: AuroraConfigService,
-    val aphBeans: List<ApplicationPlatformHandler>,
-    @Value("\${boober.skap:#{null}}") val skapUrl: String?
+    val aphBeans: List<ApplicationPlatformHandler>
 ) {
 
     companion object {
@@ -41,14 +39,12 @@ class AuroraDeploymentSpecService(
         fun createAuroraDeploymentSpec(
             auroraConfig: AuroraConfig,
             applicationDeploymentRef: ApplicationDeploymentRef,
-            overrideFiles: List<AuroraConfigFile> = listOf(),
-            skapUrl: String?
+            overrideFiles: List<AuroraConfigFile> = listOf()
         ): AuroraDeploymentSpec {
             return createAuroraDeploymentSpecInternal(
                 auroraConfig,
                 applicationDeploymentRef,
-                overrideFiles,
-                skapUrl
+                overrideFiles
             ).spec
         }
 
@@ -57,8 +53,7 @@ class AuroraDeploymentSpecService(
         fun createAuroraDeploymentSpecInternal(
             auroraConfig: AuroraConfig,
             applicationDeploymentRef: ApplicationDeploymentRef,
-            overrideFiles: List<AuroraConfigFile> = listOf(),
-            skapUrl: String?
+            overrideFiles: List<AuroraConfigFile> = listOf()
         ): AuroraDeploymentSpecInternal {
 
             val applicationFiles = auroraConfig.getFilesForApplication(applicationDeploymentRef, overrideFiles)
@@ -83,13 +78,13 @@ class AuroraDeploymentSpecService(
             val platform: String = headerSpec["applicationPlatform"]
 
             val applicationHandler: ApplicationPlatformHandler = APPLICATION_PLATFORM_HANDLERS[platform]
-                ?: throw IllegalArgumentException("ApplicationPlattformHandler $platform is not present")
+                ?: throw IllegalArgumentException("ApplicationPlatformHandler $platform is not present")
 
             val header = headerMapper.createHeader(headerSpec, applicationHandler)
 
             val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(applicationDeploymentRef, applicationFiles)
             val deployMapper = AuroraDeployMapperV1(applicationDeploymentRef, applicationFiles)
-            val integrationMapper = AuroraIntegrationsMapperV1(applicationFiles, header.name, skapUrl)
+            val integrationMapper = AuroraIntegrationsMapperV1(applicationFiles, header.name)
             val volumeMapper = AuroraVolumeMapperV1(applicationFiles)
             val routeMapper = AuroraRouteMapperV1(applicationFiles, header.name)
             val localTemplateMapper = AuroraLocalTemplateMapperV1(applicationFiles, auroraConfig)
@@ -182,8 +177,7 @@ class AuroraDeploymentSpecService(
             AuroraDeploymentSpecService.createAuroraDeploymentSpec(
                 auroraConfig,
                 it,
-                listOf(),
-                skapUrl
+                listOf()
             )
         }
     }
@@ -198,8 +192,7 @@ class AuroraDeploymentSpecService(
         return AuroraDeploymentSpecService.createAuroraDeploymentSpec(
             auroraConfig = auroraConfig,
             overrideFiles = overrides,
-            applicationDeploymentRef = ApplicationDeploymentRef.aid(environment, application),
-            skapUrl = skapUrl
+            applicationDeploymentRef = ApplicationDeploymentRef.aid(environment, application)
         )
     }
 }

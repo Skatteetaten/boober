@@ -10,6 +10,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.UserGroup
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.vault.VaultService
 
 class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest {
@@ -20,9 +21,11 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
   def openShiftClient = Mock(OpenShiftClient)
   def dbClient = Mock(DatabaseSchemaProvisioner)
   def vaultService = Mock(VaultService)
+  def stsService = Mock(StsProvisioner)
 
   def processor = new OpenShiftTemplateProcessor(udp, Mock(OpenShiftResourceClient), new ObjectMapper())
-  def specValidator = new AuroraDeploymentSpecValidator(openShiftClient, processor, dbClient, vaultService, "utv")
+  def specValidator = new AuroraDeploymentSpecValidator(openShiftClient, processor, Optional.of(dbClient),
+      Optional.of(stsService), vaultService, "utv")
 
   def mapper = new ObjectMapper()
 
@@ -78,7 +81,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
       dbClient.findSchemaById("123-123-123", _) >> { throw new ProvisioningException("") }
 
     when:
-      specValidator.validateDatabaseId(deploymentSpec)
+      specValidator.validateDatabase(deploymentSpec)
 
     then:
       true

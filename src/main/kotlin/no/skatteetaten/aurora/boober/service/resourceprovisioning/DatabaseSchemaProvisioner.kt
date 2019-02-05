@@ -8,6 +8,7 @@ import no.skatteetaten.aurora.boober.service.ProvisioningException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.utils.logger
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
@@ -96,13 +97,13 @@ data class DbhSchema(
 }
 
 @Service
+@ConditionalOnProperty("boober.dbh")
 class DatabaseSchemaProvisioner(
-    // TODO: Rename to DBH and put dbhUrl as baseUrl in client?
     @TargetService(ServiceTypes.AURORA)
     val restTemplate: RestTemplate,
     val mapper: ObjectMapper,
     val userDetailsProvider: UserDetailsProvider,
-    @Value("\${boober.dbh}") val dbhUrl: String
+    @Value("\${boober.dbh:#{null}}") val dbhUrl: String?
 ) {
     val logger by logger()
 

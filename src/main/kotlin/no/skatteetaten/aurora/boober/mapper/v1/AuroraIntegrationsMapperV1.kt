@@ -27,8 +27,7 @@ enum class DatabasePermission(
 
 class AuroraIntegrationsMapperV1(
     val applicationFiles: List<AuroraConfigFile>,
-    val name: String,
-    val skapHost: String?
+    val name: String
 ) {
     val logger: Logger = LoggerFactory.getLogger(AuroraIntegrationsMapperV1::class.java)
 
@@ -37,26 +36,22 @@ class AuroraIntegrationsMapperV1(
 
     val dbDefaultsHandlers = findDbDefaultHandlers()
 
-    val skapHandlers = skapHost?.let {
-        listOf(
-            AuroraConfigFieldHandler("certificate", defaultValue = false, canBeSimplifiedConfig = true),
-            AuroraConfigFieldHandler("certificate/commonName"),
-            AuroraConfigFieldHandler("webseal", defaultValue = false, canBeSimplifiedConfig = true),
-            AuroraConfigFieldHandler("webseal/host"),
-            AuroraConfigFieldHandler("webseal/roles")
-        )
-    } ?: listOf()
     val handlers = dbDefaultsHandlers + dbHandlers + listOf(
         AuroraConfigFieldHandler("database", defaultValue = false, canBeSimplifiedConfig = true),
-        AuroraConfigFieldHandler("splunkIndex")
-    ) + skapHandlers
+        AuroraConfigFieldHandler("splunkIndex"),
+        AuroraConfigFieldHandler("certificate", defaultValue = false, canBeSimplifiedConfig = true),
+        AuroraConfigFieldHandler("certificate/commonName"),
+        AuroraConfigFieldHandler("webseal", defaultValue = false, canBeSimplifiedConfig = true),
+        AuroraConfigFieldHandler("webseal/host"),
+        AuroraConfigFieldHandler("webseal/roles")
+    )
 
     fun integrations(auroraDeploymentSpec: AuroraDeploymentSpec): AuroraIntegration? {
         val name: String = auroraDeploymentSpec["name"]
 
         return AuroraIntegration(
             database = findDatabases(auroraDeploymentSpec),
-            certificate = skapHost?.let { findCertificate(auroraDeploymentSpec, name) },
+            certificate = findCertificate(auroraDeploymentSpec, name),
             splunkIndex = auroraDeploymentSpec.getOrNull("splunkIndex"),
             webseal = findWebseal(auroraDeploymentSpec)
         )
