@@ -33,6 +33,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
     udp.authenticatedUser >> new User("hero", "token", "Test User", [])
   }
 
+
   def "Fails when admin groups is empty"() {
     given:
       auroraConfigJson["utv/about.json"] = '''{ "permissions": { "admin": "" }, "cluster" : "utv" }'''
@@ -57,6 +58,63 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
     then:
       thrown(AuroraDeploymentSpecValidationException)
   }
+
+
+   def "Fails when sts service not specified"() {
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "certificate": true }'''
+      openShiftClient.getGroups() >> new OpenShiftGroups([new UserGroup("foo", "APP_PaaS_utv")])
+      openShiftClient.getTemplate("atomhopper") >> null
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    when:
+
+      def validator = new AuroraDeploymentSpecValidator(openShiftClient, processor, Optional.of(dbClient),
+          Optional.empty(), vaultService, "utv")
+      validator.assertIsValid(deploymentSpec)
+
+    then:
+      def e = thrown(AuroraDeploymentSpecValidationException)
+      e.message == "No sts service found in this cluster"
+  }
+
+   def "Fails when webseal service not specified"() {
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "webseal": true }'''
+      openShiftClient.getGroups() >> new OpenShiftGroups([new UserGroup("foo", "APP_PaaS_utv")])
+      openShiftClient.getTemplate("atomhopper") >> null
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    when:
+
+      def validator = new AuroraDeploymentSpecValidator(openShiftClient, processor, Optional.of(dbClient),
+          Optional.empty(), vaultService, "utv")
+      validator.assertIsValid(deploymentSpec)
+
+    then:
+      def e = thrown(AuroraDeploymentSpecValidationException)
+      e.message == "No webseal service found in this cluster"
+  }
+
+  def "Fails when database service not specified"() {
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "database": { "foo" : "123-123-123" } }'''
+      openShiftClient.getGroups() >> new OpenShiftGroups([new UserGroup("foo", "APP_PaaS_utv")])
+      openShiftClient.getTemplate("atomhopper") >> null
+      dbClient.findSchemaById("123-123-123", _) >> true
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    when:
+
+      def validator = new AuroraDeploymentSpecValidator(openShiftClient, processor, Optional.empty(),
+          Optional.of(stsService), vaultService, "utv")
+      validator.assertIsValid(deploymentSpec)
+
+    then:
+      def e = thrown(AuroraDeploymentSpecValidationException)
+      e.message == "No database service found in this cluster"
+  }
+
 
   def "Fails when databaseId does not exist"() {
     given:
