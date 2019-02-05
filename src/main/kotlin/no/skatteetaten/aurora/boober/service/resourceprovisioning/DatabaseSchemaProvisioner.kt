@@ -103,7 +103,7 @@ class DatabaseSchemaProvisioner(
     val restTemplate: RestTemplate,
     val mapper: ObjectMapper,
     val userDetailsProvider: UserDetailsProvider,
-    @Value("\${boober.dbh:#{null}}") val dbhUrl: String?
+    @Value("\${boober.dbh}") val dbhUrl: String
 ) {
     val logger by logger()
 
