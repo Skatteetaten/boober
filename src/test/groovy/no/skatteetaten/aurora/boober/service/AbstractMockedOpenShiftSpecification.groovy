@@ -34,6 +34,7 @@ import no.skatteetaten.aurora.boober.service.openshift.UserGroup
 import no.skatteetaten.aurora.boober.service.openshift.token.UserDetailsTokenProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.vault.VaultService
 import no.skatteetaten.aurora.boober.utils.Instants
 import spock.mock.DetachedMockFactory
@@ -88,6 +89,11 @@ class AbstractMockedOpenShiftSpecification extends AbstractSpec {
     @Bean
     BitbucketService bitbucketService() {
       factory.Mock(BitbucketService)
+    }
+
+    @Bean
+    StsProvisioner stsProvisioner() {
+      factory.Mock(StsProvisioner)
     }
 
     @Bean

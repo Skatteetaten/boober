@@ -24,7 +24,6 @@ vault:
         urlPattern: https://git.aurora.skead.no/scm/${vault.git.project}/%s.git
 
 boober:
-    dbh: http://dbh
     bitbucket:
         project: "ac"
         url: "https://git.aurora.skead.no/"

@@ -37,7 +37,6 @@ class AuroraConfigService(
     val bitbucketProjectService: BitbucketService,
     val deploymentSpecValidator: AuroraDeploymentSpecValidator,
     @Value("\${openshift.cluster}") val cluster: String,
-    @Value("\${boober.skap:#{null}}") val skapUrl: String?,
     @Value("\${boober.validationPoolSize:6}") val validationPoolSize: Int,
     @Value("\${boober.bitbucket.project}") val project: String
 ) {
@@ -257,8 +256,7 @@ class AuroraConfigService(
         val spec = AuroraDeploymentSpecService.createAuroraDeploymentSpecInternal(
             auroraConfig = auroraConfigWithOverrides.auroraConfig,
             applicationDeploymentRef = aid,
-            overrideFiles = auroraConfigWithOverrides.overrideFiles,
-            skapUrl = skapUrl
+            overrideFiles = auroraConfigWithOverrides.overrideFiles
         )
         if (spec.cluster == cluster && resourceValidation) {
             deploymentSpecValidator.assertIsValid(spec)

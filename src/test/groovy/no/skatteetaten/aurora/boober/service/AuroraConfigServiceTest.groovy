@@ -20,7 +20,7 @@ class AuroraConfigServiceTest extends AbstractAuroraConfigTest {
   def auroraMetrics = new AuroraMetrics(new SimpleMeterRegistry())
   def gitService = new GitService(userDetailsProvider, "$REMOTE_REPO_FOLDER/%s", CHECKOUT_PATH, "", "", auroraMetrics)
   def auroraConfigService = new AuroraConfigService(gitService, Mock(BitbucketService),
-      Mock(AuroraDeploymentSpecValidator), "qa", "http://skap", 6, "ac")
+      Mock(AuroraDeploymentSpecValidator), "qa", 6, "ac")
 
   def setup() {
     GitServiceHelperKt.recreateRepo(new File(REMOTE_REPO_FOLDER, "${AURORA_CONFIG_NAME}.git"))

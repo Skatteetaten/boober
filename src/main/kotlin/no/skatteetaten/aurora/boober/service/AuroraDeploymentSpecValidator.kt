@@ -5,6 +5,7 @@ import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaIdRequest
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.createSchemaDetails
 import no.skatteetaten.aurora.boober.service.vault.VaultService
 import no.skatteetaten.aurora.boober.utils.takeIfNotEmpty
@@ -12,12 +13,14 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.Optional
 
 @Service
 class AuroraDeploymentSpecValidator(
     val openShiftClient: OpenShiftClient,
     val openShiftTemplateProcessor: OpenShiftTemplateProcessor,
-    val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
+    val databaseSchemaProvisioner: Optional<DatabaseSchemaProvisioner>,
+    val stsProvisioner: Optional<StsProvisioner>,
     val vaultService: VaultService,
     @Value("\${openshift.cluster}") val cluster: String
 ) {
@@ -29,14 +32,26 @@ class AuroraDeploymentSpecValidator(
 
         validateAdminGroups(deploymentSpecInternal)
         validateTemplateIfSet(deploymentSpecInternal)
-        validateDatabaseId(deploymentSpecInternal)
+        validateDatabase(deploymentSpecInternal)
+        validateSkap(deploymentSpecInternal)
         validateVaultExistence(deploymentSpecInternal)
         validateKeyMappings(deploymentSpecInternal)
         validateSecretVaultKeys(deploymentSpecInternal)
     }
 
-    protected fun validateVaultExistence(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
+    protected fun validateSkap(spec: AuroraDeploymentSpecInternal) {
+        if (spec.cluster != cluster) return
+        if (stsProvisioner.isPresent) return
 
+        spec.integration?.webseal?.let {
+            throw AuroraDeploymentSpecValidationException("No webseal service found in this cluster")
+        }
+        spec.integration?.certificate?.let {
+            throw AuroraDeploymentSpecValidationException("No sts service found in this cluster")
+        }
+    }
+
+    protected fun validateVaultExistence(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
         val vaultNames = (deploymentSpecInternal.volume?.mounts
             ?.filter { it.type == MountType.Secret }
             ?.mapNotNull { it.secretVaultName }
@@ -51,15 +66,23 @@ class AuroraDeploymentSpecValidator(
         }
     }
 
-    protected fun validateDatabaseId(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
+    protected fun validateDatabase(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
         // We cannot validate database schemas for applications that are not deployed on the current cluster.
         if (deploymentSpecInternal.cluster != cluster) return
-        val databases = deploymentSpecInternal.integration?.database ?: return
+        val databases = deploymentSpecInternal.integration?.database
+        if (databases.isNullOrEmpty()) {
+            return
+        }
+
+        val dbProvisioner = databaseSchemaProvisioner.orElseThrow {
+            AuroraDeploymentSpecValidationException("No database service found in this cluster")
+        }
+
         databases.filter { it.id != null }
             .map { SchemaIdRequest(it.id!!, it.createSchemaDetails(deploymentSpecInternal.environment.affiliation)) }
             .forEach {
                 try {
-                    databaseSchemaProvisioner.findSchemaById(it.id, it.details)
+                    dbProvisioner.findSchemaById(it.id, it.details)
                 } catch (e: Exception) {
                     throw AuroraDeploymentSpecValidationException("Database schema with id=${it.id} and affiliation=${it.details.affiliation} does not exist")
                 }
@@ -82,9 +105,11 @@ class AuroraDeploymentSpecValidator(
 
     private fun validateTemplateIfSet(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
 
-        deploymentSpecInternal.localTemplate?.let {
-            openShiftTemplateProcessor.validateTemplateParameters(it.templateJson, it.parameters ?: emptyMap())
-                .takeIf { it.isNotEmpty() }
+        deploymentSpecInternal.localTemplate?.let { template ->
+            openShiftTemplateProcessor.validateTemplateParameters(
+                template.templateJson,
+                template.parameters ?: emptyMap()
+            ).takeIf { it.isNotEmpty() }
                 ?.let { throw AuroraDeploymentSpecValidationException(it.joinToString(". ").trim()) }
         }
 

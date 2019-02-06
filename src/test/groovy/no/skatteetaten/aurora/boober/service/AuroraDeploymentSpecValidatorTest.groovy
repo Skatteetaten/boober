@@ -10,6 +10,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.UserGroup
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.vault.VaultService
 
 class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest {
@@ -20,15 +21,18 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
   def openShiftClient = Mock(OpenShiftClient)
   def dbClient = Mock(DatabaseSchemaProvisioner)
   def vaultService = Mock(VaultService)
+  def stsService = Mock(StsProvisioner)
 
   def processor = new OpenShiftTemplateProcessor(udp, Mock(OpenShiftResourceClient), new ObjectMapper())
-  def specValidator = new AuroraDeploymentSpecValidator(openShiftClient, processor, dbClient, vaultService, "utv")
+  def specValidator = new AuroraDeploymentSpecValidator(openShiftClient, processor, Optional.of(dbClient),
+      Optional.of(stsService), vaultService, "utv")
 
   def mapper = new ObjectMapper()
 
   def setup() {
     udp.authenticatedUser >> new User("hero", "token", "Test User", [])
   }
+
 
   def "Fails when admin groups is empty"() {
     given:
@@ -55,6 +59,63 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
       thrown(AuroraDeploymentSpecValidationException)
   }
 
+
+   def "Fails when sts service not specified"() {
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "certificate": true }'''
+      openShiftClient.getGroups() >> new OpenShiftGroups([new UserGroup("foo", "APP_PaaS_utv")])
+      openShiftClient.getTemplate("atomhopper") >> null
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    when:
+
+      def validator = new AuroraDeploymentSpecValidator(openShiftClient, processor, Optional.of(dbClient),
+          Optional.empty(), vaultService, "utv")
+      validator.assertIsValid(deploymentSpec)
+
+    then:
+      def e = thrown(AuroraDeploymentSpecValidationException)
+      e.message == "No sts service found in this cluster"
+  }
+
+   def "Fails when webseal service not specified"() {
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "webseal": true }'''
+      openShiftClient.getGroups() >> new OpenShiftGroups([new UserGroup("foo", "APP_PaaS_utv")])
+      openShiftClient.getTemplate("atomhopper") >> null
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    when:
+
+      def validator = new AuroraDeploymentSpecValidator(openShiftClient, processor, Optional.of(dbClient),
+          Optional.empty(), vaultService, "utv")
+      validator.assertIsValid(deploymentSpec)
+
+    then:
+      def e = thrown(AuroraDeploymentSpecValidationException)
+      e.message == "No webseal service found in this cluster"
+  }
+
+  def "Fails when database service not specified"() {
+    given:
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "database": { "foo" : "123-123-123" } }'''
+      openShiftClient.getGroups() >> new OpenShiftGroups([new UserGroup("foo", "APP_PaaS_utv")])
+      openShiftClient.getTemplate("atomhopper") >> null
+      dbClient.findSchemaById("123-123-123", _) >> true
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    when:
+
+      def validator = new AuroraDeploymentSpecValidator(openShiftClient, processor, Optional.empty(),
+          Optional.of(stsService), vaultService, "utv")
+      validator.assertIsValid(deploymentSpec)
+
+    then:
+      def e = thrown(AuroraDeploymentSpecValidationException)
+      e.message == "No database service found in this cluster"
+  }
+
+
   def "Fails when databaseId does not exist"() {
     given:
       auroraConfigJson["utv/aos-simple.json"] = '''{ "database": { "foo" : "123-123-123" } }'''
@@ -78,7 +139,7 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
       dbClient.findSchemaById("123-123-123", _) >> { throw new ProvisioningException("") }
 
     when:
-      specValidator.validateDatabaseId(deploymentSpec)
+      specValidator.validateDatabase(deploymentSpec)
 
     then:
       true

@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service.resourceprovisioning
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.Database
 import org.springframework.stereotype.Service
+import java.util.Optional
 
 class ProvisioningResult(
     val schemaProvisionResults: SchemaProvisionResults?,
@@ -12,8 +13,8 @@ class ProvisioningResult(
 
 @Service
 class ExternalResourceProvisioner(
-    val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
-    val stsProvisioner: StsProvisioner,
+    val databaseSchemaProvisioner: Optional<DatabaseSchemaProvisioner>,
+    val stsProvisioner: Optional<StsProvisioner>,
     val vaultProvider: VaultProvider
 ) {
 
@@ -27,7 +28,11 @@ class ExternalResourceProvisioner(
 
     private fun handleSts(deploymentSpec: AuroraDeploymentSpecInternal): StsProvisioningResult? {
         return deploymentSpec.integration?.certificate?.let {
-            stsProvisioner.generateCertificate(it, deploymentSpec.name, deploymentSpec.environment.envName)
+            val sts = stsProvisioner.orElseThrow {
+                IllegalArgumentException("Sts is not provided")
+            }
+
+            sts.generateCertificate(it, deploymentSpec.name, deploymentSpec.environment.envName)
         }
     }
 
@@ -36,8 +41,11 @@ class ExternalResourceProvisioner(
         if (schemaProvisionRequests.isEmpty()) {
             return null
         }
+        val dbService = databaseSchemaProvisioner.orElseThrow {
+            IllegalArgumentException("No database provisioner provided")
+        }
 
-        return databaseSchemaProvisioner.provisionSchemas(schemaProvisionRequests)
+        return dbService.provisionSchemas(schemaProvisionRequests)
     }
 
     private fun handleVaults(deploymentSpecInternal: AuroraDeploymentSpecInternal): VaultResults? {
