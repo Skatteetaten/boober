@@ -17,8 +17,8 @@ class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSprin
       "about.json"           : DEFAULT_ABOUT,
       "utv/about.json"       : DEFAULT_UTV_ABOUT,
       "webleveranse.json"    : WEB_LEVERANSE,
-      "reference.json"       : REFERENCE,
-      "utv/reference.json"   : '''{}''',
+      "reference.json"       : REFERENCE_WEBSEAL,
+      "utv/reference.json"   : '''{ "webseal" : { "roles" : "foobar" }}''',
       "utv/webleveranse.json": '''{ "type": "development", "version": "1" }'''
   ]
 

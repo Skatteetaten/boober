@@ -26,6 +26,9 @@ data class AuroraConfigField(
 
     private val source: AuroraConfigFieldSource get() = sources.last()
 
+    val canBeSimplified: Boolean
+        get() = source.canBeSimplified
+
     val name: String
         get() = source.configFile.configName
 
@@ -48,6 +51,7 @@ data class AuroraConfigField(
         }
         return result
     }
+
     /**
      * Extracts a config field declared either as a delimited string (ie. "value1, value2") or as a JSON array
      * (ie. ["value1", "value2"]) as a String list.
@@ -65,7 +69,8 @@ data class AuroraConfigField(
 
 data class AuroraConfigFieldSource(
     val configFile: AuroraConfigFile,
-    val value: JsonNode
+    val value: JsonNode,
+    val canBeSimplified: Boolean = false
 )
 
 class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
@@ -116,6 +121,9 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
      */
     fun isSimplifiedConfig(name: String): Boolean {
         val field = fields[name]!!
+
+        // if a field is not marked as simplified it will not be simplified
+        if (!field.canBeSimplified) return false
 
         val subKeys = getSubKeys(name)
         // If there are no subkeys we cannot be complex
@@ -184,6 +192,7 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
                                 contents = "",
                                 isDefault = true
                             ),
+                            canBeSimplified = handler.canBeSimplifiedConfig,
                             value = mapper.convertValue(handler.defaultValue)
                         )
                     )
@@ -200,7 +209,11 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
                         if (handler.canBeSimplifiedConfig && it.isObject) {
                             null
                         } else {
-                            handler.name to AuroraConfigFieldSource(configFile = file, value = it)
+                            handler.name to AuroraConfigFieldSource(
+                                configFile = file,
+                                value = it,
+                                canBeSimplified = handler.canBeSimplifiedConfig
+                            )
                         }
                     }
                 }
@@ -216,32 +229,31 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
         }
     }
 
-    fun removeDefaults() = AuroraDeploymentSpec(this.fields.filter { it.value.name != "default" })
+    fun present(
+        includeDefaults: Boolean = true,
+        transformer: (Map.Entry<String, AuroraConfigField>) -> Map<String, Any>
+    ): Map<String, Any> {
 
-    fun removeInactive(): AuroraDeploymentSpec {
-
-        fun createExcludePaths(fields: Map<String, AuroraConfigField>): Set<String> {
-
-            return fields
-                .filter { it.key.split("/").size == 1 }
-                .filter {
-                    val value = it.value.value
-                    !value.isBoolean || !value.booleanValue()
-                }.map {
-                    it.key.split("/")[0] + "/"
-                }.toSet()
-        }
-
-        val excludePaths = createExcludePaths(this.fields)
-        return AuroraDeploymentSpec(this.fields.filter { field ->
-            excludePaths.none { field.key.startsWith(it) }
-        })
-    }
-
-    fun present(transformer: (Map.Entry<String, AuroraConfigField>) -> Map<String, Any>): Map<String, Any> {
-
+        val excludePaths = this.fields.filter { isSimplifiedAndDisabled(it.key) }.map { "${it.key}/" }
         val map: MutableMap<String, Any> = mutableMapOf()
         this.fields
+            .filter { field ->
+                val simpleCheck = if (field.value.canBeSimplified) {
+                    this.isSimplifiedConfig(field.key)
+                } else {
+                    true
+                }
+
+                val defaultCheck = if (!includeDefaults) {
+                    field.value.name != "default"
+                } else {
+                    true
+                }
+
+                val excludeCheck = excludePaths.none { field.key.startsWith(it) }
+
+                simpleCheck && defaultCheck && excludeCheck
+            }
             .mapValues { transformer(it) }
             .forEach {
                 map.deepSet(it.key.split("/"), it.value)

@@ -31,7 +31,7 @@ class AuroraConfigFieldTypeTest extends Specification {
     given:
 
       def acf = new AuroraConfigField(
-          [new AuroraConfigFieldSource(new AuroraConfigFile(fileName, "", isOverride, isDefault), value)] as Set,
+          [new AuroraConfigFieldSource(new AuroraConfigFile(fileName, "", isOverride, isDefault), value, false)] as Set,
           substitutor
       )
 

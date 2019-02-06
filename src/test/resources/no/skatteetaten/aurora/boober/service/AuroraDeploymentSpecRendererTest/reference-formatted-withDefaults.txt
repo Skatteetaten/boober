@@ -31,7 +31,9 @@
     generate:               true                         // default
     name:                   "@name@"                     // default
   }
-  webseal:                  false                        // default
+  webseal: {
+    roles:                  "foobar"                     // utv/reference.json
+  }
   artifactId:               "reference"                  // fileName
   groupId:                  "no.skatteetaten.aurora"     // reference.json
   version:                  "1"                          // reference.json
