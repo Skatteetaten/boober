@@ -58,8 +58,7 @@ abstract class ApplicationPlatformHandler(val name: String) {
             "console.skatteetaten.no/alarm" to deploy.flags.alarm.toString(),
             "boober.skatteetaten.no/overrides" to escapeOverrides(),
             "console.skatteetaten.no/management-path" to deploy.managementPath,
-            "boober.skatteetaten.no/releaseTo" to deploy.releaseTo,
-            "sprocket.sits.no/deployment-config.certificate" to specInternal.integration?.certificateCn
+            "boober.skatteetaten.no/releaseTo" to deploy.releaseTo
         ).filterNullValues().filterValues { !it.isBlank() }
     }
 
@@ -180,7 +179,7 @@ fun createEnvVars(
 
     val splunkIndex = auroraDeploymentSpecInternal.integration?.splunkIndex?.let { "SPLUNK_INDEX" to it }
 
-    val certEnv = auroraDeploymentSpecInternal.integration?.certificateCn?.let {
+    val certEnv = auroraDeploymentSpecInternal.integration?.certificate?.let {
         val baseUrl = "/u01/secrets/app/${auroraDeploymentSpecInternal.name}-cert"
         mapOf(
             "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",

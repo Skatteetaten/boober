@@ -35,7 +35,6 @@ class RequestHelperTest extends Specification {
       refName == 'header'
   }
 
-
   def "Get ref-name given no ref input"() {
     when:
       def refName = RequestHelper.getRefNameFromRequest()

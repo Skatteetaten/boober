@@ -105,7 +105,7 @@ class RedeployService(
         return RedeployResult.fromOpenShiftResponses(listOf(deploymentRequestResponse), "Deployment")
     }
 
-    private fun performDeploymentRequest(namespace: String, name: String): OpenShiftResponse {
+    fun performDeploymentRequest(namespace: String, name: String): OpenShiftResponse {
         val deploymentRequest = openShiftObjectGenerator.generateDeploymentRequest(name)
         val command = OpenshiftCommand(OperationType.CREATE, deploymentRequest)
         return openShiftClient.performOpenShiftCommand(namespace, command)

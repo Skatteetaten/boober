@@ -102,7 +102,7 @@ class OpenShiftObjectGeneratorMountTest extends AbstractOpenShiftObjectGenerator
       def vaultFileContents = "FOO=BAR"
       AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, aid("utv", "aos-simple"))
       def provisioningResult = new ProvisioningResult(null,
-          new VaultResults([test: [(vaultFileName): vaultFileContents.bytes]]))
+          new VaultResults([test: [(vaultFileName): vaultFileContents.bytes]]), null)
 
     when:
       List<JsonNode> jsonMounts = objectGenerator.

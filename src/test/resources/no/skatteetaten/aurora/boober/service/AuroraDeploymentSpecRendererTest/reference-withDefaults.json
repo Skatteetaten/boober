@@ -245,15 +245,18 @@
       ]
     }
   },
+
   "webseal": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
+    "roles": {
+      "source": "utv/reference.json",
+      "value": "foobar",
+      "sources": [
+        {
+          "name": "utv/reference.json",
+          "value": "foobar"
+        }
+      ]
+    }
   },
   "artifactId": {
     "source": "fileName",
@@ -393,37 +396,7 @@
         "name": "default",
         "value": false
       }
-    ],
-    "port": {
-      "source": "default",
-      "value": 8080,
-      "sources": [
-        {
-          "name": "default",
-          "value": 8080
-        }
-      ]
-    },
-    "delay": {
-      "source": "default",
-      "value": 10,
-      "sources": [
-        {
-          "name": "default",
-          "value": 10
-        }
-      ]
-    },
-    "timeout": {
-      "source": "default",
-      "value": 1,
-      "sources": [
-        {
-          "name": "default",
-          "value": 1
-        }
-      ]
-    }
+    ]
   },
   "debug": {
     "source": "default",
@@ -463,17 +436,7 @@
         "name": "default",
         "value": false
       }
-    ],
-    "version": {
-      "source": "default",
-      "value": "2.1.3",
-      "sources": [
-        {
-          "name": "default",
-          "value": "2.1.3"
-        }
-      ]
-    }
+    ]
   },
   "route": {
     "source": "reference.json",

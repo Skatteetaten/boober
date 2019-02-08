@@ -3,23 +3,37 @@ package no.skatteetaten.aurora.boober.service.resourceprovisioning
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.Database
 import org.springframework.stereotype.Service
+import java.util.Optional
 
 class ProvisioningResult(
     val schemaProvisionResults: SchemaProvisionResults?,
-    val vaultResults: VaultResults?
+    val vaultResults: VaultResults?,
+    val stsProvisioningResult: StsProvisioningResult?
 )
 
 @Service
 class ExternalResourceProvisioner(
-    val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
+    val databaseSchemaProvisioner: Optional<DatabaseSchemaProvisioner>,
+    val stsProvisioner: Optional<StsProvisioner>,
     val vaultProvider: VaultProvider
 ) {
 
     fun provisionResources(deploymentSpecInternal: AuroraDeploymentSpecInternal): ProvisioningResult {
 
+        val stsProvisioningResult = handleSts(deploymentSpecInternal)
         val schemaProvisionResult = handleSchemaProvisioning(deploymentSpecInternal)
         val schemaResults = handleVaults(deploymentSpecInternal)
-        return ProvisioningResult(schemaProvisionResult, schemaResults)
+        return ProvisioningResult(schemaProvisionResult, schemaResults, stsProvisioningResult)
+    }
+
+    private fun handleSts(deploymentSpec: AuroraDeploymentSpecInternal): StsProvisioningResult? {
+        return deploymentSpec.integration?.certificate?.let {
+            val sts = stsProvisioner.orElseThrow {
+                IllegalArgumentException("Sts is not provided")
+            }
+
+            sts.generateCertificate(it, deploymentSpec.name, deploymentSpec.environment.envName)
+        }
     }
 
     private fun handleSchemaProvisioning(deploymentSpecInternal: AuroraDeploymentSpecInternal): SchemaProvisionResults? {
@@ -27,8 +41,11 @@ class ExternalResourceProvisioner(
         if (schemaProvisionRequests.isEmpty()) {
             return null
         }
+        val dbService = databaseSchemaProvisioner.orElseThrow {
+            IllegalArgumentException("No database provisioner provided")
+        }
 
-        return databaseSchemaProvisioner.provisionSchemas(schemaProvisionRequests)
+        return dbService.provisionSchemas(schemaProvisionRequests)
     }
 
     private fun handleVaults(deploymentSpecInternal: AuroraDeploymentSpecInternal): VaultResults? {
@@ -52,7 +69,8 @@ class ExternalResourceProvisioner(
                     )
                 } else {
                     SchemaForAppRequest(
-                        environment = deploymentSpecInternal.environment.envName,
+                        environment =
+                        deploymentSpecInternal.environment.envName,
                         application = deploymentSpecInternal.name,
                         details = details,
                         generate = it.generate

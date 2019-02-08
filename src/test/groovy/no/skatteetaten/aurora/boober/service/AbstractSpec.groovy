@@ -15,6 +15,15 @@ abstract class AbstractSpec extends Specification {
     AuroraDeploymentSpecService.APPLICATION_PLATFORM_HANDLERS = handlers
   }
 
+  byte[] loadByteResource(String resourceName) {
+    def folder = this.getClass().simpleName
+    loadByteResource(folder, resourceName)
+  }
+
+  byte[] loadByteResource(String folder, String resourceName) {
+    getResourceUrl(folder, resourceName).openStream().bytes
+  }
+
   String loadResource(String resourceName) {
     def folder = this.getClass().simpleName
     loadResource(folder, resourceName)

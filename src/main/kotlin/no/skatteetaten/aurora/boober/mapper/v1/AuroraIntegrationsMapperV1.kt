@@ -34,13 +34,13 @@ class AuroraIntegrationsMapperV1(
     val databaseDefaultsKey = "databaseDefaults"
     val dbHandlers = findDbHandlers()
 
-    val dbDefautsHandlers = findDbDefaultHandlers()
+    val dbDefaultsHandlers = findDbDefaultHandlers()
 
-    val handlers = dbDefautsHandlers + dbHandlers + listOf(
+    val handlers = dbDefaultsHandlers + dbHandlers + listOf(
         AuroraConfigFieldHandler("database", defaultValue = false, canBeSimplifiedConfig = true),
-        AuroraConfigFieldHandler("certificate/commonName"),
-        AuroraConfigFieldHandler("certificate", defaultValue = false, canBeSimplifiedConfig = true),
         AuroraConfigFieldHandler("splunkIndex"),
+        AuroraConfigFieldHandler("certificate", defaultValue = false, canBeSimplifiedConfig = true),
+        AuroraConfigFieldHandler("certificate/commonName"),
         AuroraConfigFieldHandler("webseal", defaultValue = false, canBeSimplifiedConfig = true),
         AuroraConfigFieldHandler("webseal/host"),
         AuroraConfigFieldHandler("webseal/roles")
@@ -51,7 +51,7 @@ class AuroraIntegrationsMapperV1(
 
         return AuroraIntegration(
             database = findDatabases(auroraDeploymentSpec),
-            certificateCn = findCertificate(auroraDeploymentSpec, name),
+            certificate = findCertificate(auroraDeploymentSpec, name),
             splunkIndex = auroraDeploymentSpec.getOrNull("splunkIndex"),
             webseal = findWebseal(auroraDeploymentSpec)
         )

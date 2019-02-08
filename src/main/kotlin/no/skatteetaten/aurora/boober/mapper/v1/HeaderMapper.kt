@@ -86,7 +86,8 @@ class HeaderMapper(
             permissions = extractPermissions(auroraDeploymentSpec)
         )
 
-        return AuroraDeployHeader(env,
+        return AuroraDeployHeader(
+            env,
             auroraDeploymentSpec["type"],
             applicationHandler,
             auroraDeploymentSpec["name"],

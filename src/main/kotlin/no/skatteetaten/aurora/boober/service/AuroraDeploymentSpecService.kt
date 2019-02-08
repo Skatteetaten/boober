@@ -41,9 +41,11 @@ class AuroraDeploymentSpecService(
             applicationDeploymentRef: ApplicationDeploymentRef,
             overrideFiles: List<AuroraConfigFile> = listOf()
         ): AuroraDeploymentSpec {
-            // TODO : The implementation here should change, but it is too much work to do this right now.
-            // If creator/mutator RFC is accepted it will be easier
-            return createAuroraDeploymentSpecInternal(auroraConfig, applicationDeploymentRef, overrideFiles).spec
+            return createAuroraDeploymentSpecInternal(
+                auroraConfig,
+                applicationDeploymentRef,
+                overrideFiles
+            ).spec
         }
 
         @JvmOverloads
@@ -67,7 +69,8 @@ class AuroraDeploymentSpecService(
 
             AuroraDeploymentSpecConfigFieldValidator(
                 applicationDeploymentRef = applicationDeploymentRef,
-                applicationFiles = applicationFiles,
+                applicationFiles =
+                applicationFiles,
                 fieldHandlers = headerMapper.handlers,
                 auroraDeploymentSpec = headerSpec
             )
@@ -75,7 +78,7 @@ class AuroraDeploymentSpecService(
             val platform: String = headerSpec["applicationPlatform"]
 
             val applicationHandler: ApplicationPlatformHandler = APPLICATION_PLATFORM_HANDLERS[platform]
-                ?: throw IllegalArgumentException("ApplicationPlattformHandler $platform is not present")
+                ?: throw IllegalArgumentException("ApplicationPlatformHandler $platform is not present")
 
             val header = headerMapper.createHeader(headerSpec, applicationHandler)
 
@@ -107,6 +110,7 @@ class AuroraDeploymentSpecService(
             )
 
             AuroraDeploymentSpecConfigFieldValidator(
+
                 applicationDeploymentRef = applicationDeploymentRef,
                 applicationFiles = applicationFiles,
                 fieldHandlers = handlers,
@@ -128,6 +132,7 @@ class AuroraDeploymentSpecService(
                 if (header.type == TemplateType.localTemplate) localTemplateMapper.localTemplate(deploymentSpec) else null
 
             val overrides = overrideFiles.associate { it.name to it.contents }
+
             return deploymentSpecMapper.createAuroraDeploymentSpec(
                 auroraDeploymentSpec = deploymentSpec,
                 volume = volume,

@@ -8,6 +8,6 @@ abstract class AbstractAuroraDeploymentSpecTest extends AbstractAuroraConfigTest
       ApplicationDeploymentRef ref) {
 
     AuroraConfig auroraConfig = createAuroraConfig(auroraConfigJson)
-    AuroraDeploymentSpecService.createAuroraDeploymentSpecInternal(auroraConfig, ref)
+    AuroraDeploymentSpecService.createAuroraDeploymentSpecInternal(auroraConfig, ref, [])
   }
 }

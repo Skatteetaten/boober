@@ -254,9 +254,9 @@ class AuroraConfigService(
 
         val stopWatch = StopWatch().apply { start() }
         val spec = AuroraDeploymentSpecService.createAuroraDeploymentSpecInternal(
-            auroraConfigWithOverrides.auroraConfig,
-            aid,
-            auroraConfigWithOverrides.overrideFiles
+            auroraConfig = auroraConfigWithOverrides.auroraConfig,
+            applicationDeploymentRef = aid,
+            overrideFiles = auroraConfigWithOverrides.overrideFiles
         )
         if (spec.cluster == cluster && resourceValidation) {
             deploymentSpecValidator.assertIsValid(spec)

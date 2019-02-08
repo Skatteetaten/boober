@@ -10,7 +10,13 @@ import org.springframework.stereotype.Component
 
 @Component
 class WebPlatformHandler : ApplicationPlatformHandler("web") {
-    override fun handleAuroraDeployment(auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal, labels: Map<String, String>, mounts: List<Mount>?, routeSuffix: String, sidecarContainers: List<AuroraContainer>?): AuroraDeployment {
+    override fun handleAuroraDeployment(
+        auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
+        labels: Map<String, String>,
+        mounts: List<Mount>?,
+        routeSuffix: String,
+        sidecarContainers: List<AuroraContainer>?
+    ): AuroraDeployment {
         val tag = when (auroraDeploymentSpecInternal.type) {
             development -> "latest"
             else -> "default"
@@ -60,8 +66,10 @@ class WebPlatformHandler : ApplicationPlatformHandler("web") {
     override fun handlers(handlers: Set<AuroraConfigFieldHandler>): Set<AuroraConfigFieldHandler> {
 
         val buildHandlers = handlers.find { it.name.startsWith("baseImage") }?.let {
-            setOf(AuroraConfigFieldHandler("baseImage/name", defaultValue = "wrench"),
-                AuroraConfigFieldHandler("baseImage/version", defaultValue = "0"))
+            setOf(
+                AuroraConfigFieldHandler("baseImage/name", defaultValue = "wrench"),
+                AuroraConfigFieldHandler("baseImage/version", defaultValue = "0")
+            )
         }
         return handlers.addIfNotNull(buildHandlers)
     }

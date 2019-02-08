@@ -15,8 +15,8 @@ boober:
         tags:
             project: "ao"
             repo: "auroradeploymenttags"
-    dbh:
-        http://localhost:8080
+    dbh: http://localhost:8080
+    skap: http://localhost:8082
     encrypt:
         key: "komogsyngensang"
     git:

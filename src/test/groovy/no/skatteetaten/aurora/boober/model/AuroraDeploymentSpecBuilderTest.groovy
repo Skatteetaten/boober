@@ -80,7 +80,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
     when:
       def deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
     then:
-      deploymentSpec.integration.certificateCn == "some_common_name"
+      deploymentSpec.integration.certificate == "some_common_name"
 
     when:
       modify(auroraConfigJson, "utv/aos-simple.json", {
@@ -88,7 +88,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       })
       deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
     then:
-      !deploymentSpec.integration.certificateCn
+      !deploymentSpec.integration.certificate
   }
 
   def "Verify that it is possible to set some common global config options for templates even if they are not directly supported by that type"() {
@@ -334,16 +334,16 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       })
       modify(auroraConfigJson, "utv/aos-simple.json", {
         put("database", [
-            foo : [
-                id : "123",
-                roles : [
-                   read : "READ"
+            foo: [
+                id        : "123",
+                roles     : [
+                    read: "READ"
                 ],
                 exposeTo  : [
-                    foobar : "read"
+                    foobar: "read"
                 ],
                 parameters: [
-                    baz : "bar"
+                    baz: "bar"
                 ]
             ]
         ])
@@ -373,7 +373,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       def deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
 
     then:
-      deploymentSpec.integration.certificateCn == "foooo"
+      deploymentSpec.integration.certificate == "foooo"
   }
 
   def "Should use overridden cert name when explicitly disabled at higher level"() {
@@ -390,7 +390,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       def deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
 
     then:
-      deploymentSpec.integration.certificateCn == "foooo"
+      deploymentSpec.integration.certificate == "foooo"
   }
 
   def "Should generate route with complex config"() {

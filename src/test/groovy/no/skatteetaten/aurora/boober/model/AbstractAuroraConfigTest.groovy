@@ -34,10 +34,20 @@ abstract class AbstractAuroraConfigTest extends AbstractSpec {
   "route": true,
   "type": "deploy"
 }'''
+
   static final String REFERENCE = '''{
   "groupId" : "no.skatteetaten.aurora",
   "replicas" : 1,
   "version" : "1",
+  "route" : true,
+  "type" : "deploy"
+}'''
+
+    static final String REFERENCE_WEBSEAL = '''{
+  "groupId" : "no.skatteetaten.aurora",
+  "replicas" : 1,
+  "version" : "1",
+  "webseal":  true,
   "route" : true,
   "type" : "deploy"
 }'''

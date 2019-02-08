@@ -29,9 +29,10 @@ import java.io.FileInputStream
 import java.security.KeyStore
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
+import java.util.UUID
 
 enum class ServiceTypes {
-    BITBUCKET, GENERAL, AURORA
+    BITBUCKET, GENERAL, AURORA, SKAP
 }
 
 @Target(AnnotationTarget.TYPE, AnnotationTarget.FUNCTION, AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
@@ -83,6 +84,34 @@ class Configuration : BeanPostProcessor {
             .rootUri(bitbucketUrl)
             .basicAuthorization(username, password)
             .build()
+    }
+
+    @Bean
+    @TargetService(ServiceTypes.SKAP)
+    fun skapRestTemplate(
+        restTemplateBuilder: RestTemplateBuilder,
+        @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
+        @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
+        @Value("\${spring.application.name}") applicationName: String,
+        sharedSecretReader: SharedSecretReader,
+        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
+    ): RestTemplate {
+
+        val clientIdHeaderName = "KlientID"
+
+        return restTemplateBuilder
+            .requestFactory(clientHttpRequestFactory)
+            .interceptors(ClientHttpRequestInterceptor { request, body, execution ->
+                request.headers.apply {
+                    set(HttpHeaders.AUTHORIZATION, "aurora-token ${sharedSecretReader.secret}")
+                    accept = listOf(MediaType.APPLICATION_OCTET_STREAM)
+                    set(AuroraHeaderFilter.KORRELASJONS_ID, RequestKorrelasjon.getId())
+                    set(clientIdHeaderName, applicationName)
+                    set("Meldingsid", UUID.randomUUID().toString())
+                }
+
+                execution.execute(request, body)
+            }).build()
     }
 
     @Bean

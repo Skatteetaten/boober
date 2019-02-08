@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 
 import groovy.json.JsonOutput
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
@@ -67,7 +69,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
 
     given:
       def provisioningResult = new ProvisioningResult(null,
-          new VaultResults([foo: ["latest.properties": "FOO=bar\nBAR=baz\n".bytes]]))
+          new VaultResults([foo: ["latest.properties": "FOO=bar\nBAR=baz\n".bytes]]), null)
 
       def aid = new ApplicationDeploymentRef(env, name)
       def additionalFile = null
@@ -137,7 +139,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
 
     when:
       AuroraDeploymentSpecInternal deploymentSpec = AuroraDeploymentSpecService.
-          createAuroraDeploymentSpecInternal(auroraConfig, aid)
+          createAuroraDeploymentSpecInternal(auroraConfig, aid, [])
       def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.environment.permissions)
 
     then:
@@ -155,6 +157,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       rolebindings.size() == 2
   }
 
+
   def "generate rolebinding view should split groups"() {
 
     given:
@@ -163,7 +166,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
 
     when:
       AuroraDeploymentSpecInternal deploymentSpec = AuroraDeploymentSpecService.
-          createAuroraDeploymentSpecInternal(auroraConfig, aid)
+          createAuroraDeploymentSpecInternal(auroraConfig, aid, [])
       def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.environment.permissions)
 
     then:

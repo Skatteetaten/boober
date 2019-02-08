@@ -35,6 +35,7 @@ import no.skatteetaten.aurora.boober.service.internal.RolebindingGenerator
 import no.skatteetaten.aurora.boober.service.internal.RouteGenerator
 import no.skatteetaten.aurora.boober.service.internal.SecretGenerator
 import no.skatteetaten.aurora.boober.service.internal.ServiceGenerator
+import no.skatteetaten.aurora.boober.service.internal.StsSecretGenerator
 import no.skatteetaten.aurora.boober.service.internal.findAndCreateMounts
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
@@ -266,13 +267,6 @@ class OpenShiftObjectGenerator(
                     it.volumeMounts.addAll(mounts.volumeMount() ?: listOf())
                     it.env.addAll(createEnvVars(mounts, auroraDeploymentSpecInternal, routeSuffix))
                 }
-
-                auroraDeploymentSpecInternal.integration?.certificateCn?.let {
-                    if (dc.metadata.annotations == null) {
-                        dc.metadata.annotations = HashMap<String, String>()
-                    }
-                    dc.metadata.annotations.put("sprocket.sits.no/deployment-config.certificate", it)
-                }
                 jacksonObjectMapper().convertValue(dc)
             } else if (it.openshiftKind == "service" && it.openshiftName == auroraDeploymentSpecInternal.name) {
 
@@ -357,6 +351,9 @@ class OpenShiftObjectGenerator(
             ?.let { DbhSecretGenerator.create(appName, it, labels, ownerReference) }
             ?: emptyList()
 
+        val stsSecret = provisioningResult?.stsProvisioningResult
+            ?.let { StsSecretGenerator.create(appName, it, labels, ownerReference) }
+
         val schemaSecretNames = schemaSecrets.map { it.metadata.name }
 
         return mounts
@@ -367,26 +364,27 @@ class OpenShiftObjectGenerator(
                     ConfigMap -> mount.content
                         ?.let {
                             ConfigMapGenerator.create(
-                                mount.getNamespacedVolumeName(appName),
-                                labels,
-                                it,
-                                ownerReference
+                                cmName = mount.getNamespacedVolumeName(appName),
+                                cmLabels = labels,
+                                cmData = it,
+                                ownerReference = ownerReference
                             )
                         }
                     Secret -> mount.secretVaultName
                         ?.let { provisioningResult?.vaultResults?.getVaultData(it) }
                         ?.let {
                             SecretGenerator.create(
-                                mount.getNamespacedVolumeName(appName),
-                                labels,
-                                it,
-                                ownerReference
+                                secretName = mount.getNamespacedVolumeName(appName),
+                                secretLabels = labels,
+                                secretData = it,
+                                ownerReference = ownerReference
                             )
                         }
                     PVC -> null
                 }
             }
             .plus(schemaSecrets)
+            .addIfNotNull(stsSecret)
             .map { mapper.convertValue<JsonNode>(it) }
     }
 

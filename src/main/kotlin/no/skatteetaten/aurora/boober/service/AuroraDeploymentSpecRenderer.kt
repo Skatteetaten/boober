@@ -43,13 +43,8 @@ fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSp
 }
 
 fun renderSpecAsJson(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean): Map<String, Any> {
-    val rawFields = if (!includeDefaults) {
-        deploymentSpec.removeDefaults()
-    } else {
-        deploymentSpec
-    }
 
-    return rawFields.present {
+    val jsonSpec = deploymentSpec.present(includeDefaults) {
         mapOf(
             "source" to it.value.name,
             "value" to it.value.value,
@@ -61,19 +56,20 @@ fun renderSpecAsJson(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Bool
             result + mapOf("applicationId" to it)
         } ?: result
     }
+
+    return jsonSpec
 }
 
 fun renderSpecAsJsonOld(
     includeDefaults: Boolean,
     deploymentSpecInternal: AuroraDeploymentSpec
 ): Map<String, Any> {
-    val rawFields = if (!includeDefaults) {
-        deploymentSpecInternal.removeDefaults()
-    } else {
-        deploymentSpecInternal
+    return deploymentSpecInternal.present(includeDefaults) {
+        mapOf(
+            "source" to it.value.name,
+            "value" to it.value.value
+        )
     }
-    val fields = rawFields.removeInactive().present { mapOf("source" to it.value.name, "value" to it.value.value) }
-    return fields
 }
 
 fun findMaxKeyLength(fields: Map<String, Any>, indent: Int, accumulated: Int = 0): Int {

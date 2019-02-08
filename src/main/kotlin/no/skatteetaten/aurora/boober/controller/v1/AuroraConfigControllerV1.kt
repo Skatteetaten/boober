@@ -72,7 +72,6 @@ class AuroraConfigControllerV1(
         @RequestParam("environment", required = false) environment: String?,
         @RequestParam("application", required = false) application: String?
     ): Response {
-
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
 
         if (application != null && environment != null) {

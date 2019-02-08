@@ -130,7 +130,7 @@ data class AuroraBuild(
 
 data class AuroraIntegration(
     val database: List<Database> = listOf(),
-    val certificateCn: String? = null,
+    val certificate: String? = null,
     val splunkIndex: String? = null,
     val webseal: Webseal? = null
 )
