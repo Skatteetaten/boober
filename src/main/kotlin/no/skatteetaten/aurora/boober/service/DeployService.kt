@@ -11,6 +11,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.service.internal.ApplicationDeploymentGenerator
+import no.skatteetaten.aurora.boober.service.internal.Provisions
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.describeString
@@ -213,8 +214,14 @@ class DeployService(
             )
         }
 
+        logger.debug("Resource provisioning")
+        val provisioningResult = resourceProvisioner.provisionResources(deploymentSpecInternal)
+
+        val dbhSchemas = provisioningResult.schemaProvisionResults?.results?.map { it.dbhSchema } ?: listOf()
+        val provisions = Provisions(dbhSchemas)
+
         val updateBy = userDetailsProvider.getAuthenticatedUser().username.replace(":", "-")
-        val application = ApplicationDeploymentGenerator.generate(deploymentSpecInternal, deployId, cmd, updateBy)
+        val application = ApplicationDeploymentGenerator.generate(deploymentSpecInternal, deployId, cmd, updateBy, provisions)
 
         val applicationCommand = openShiftCommandBuilder.createOpenShiftCommand(
             deploymentSpecInternal.environment.namespace,
@@ -245,9 +252,6 @@ class DeployService(
             .withName(appResponse.metadata.name)
             .withUid(appResponse.metadata.uid)
             .build()
-
-        logger.debug("Resource provisioning")
-        val provisioningResult = resourceProvisioner.provisionResources(deploymentSpecInternal)
 
         val tagResult = deploymentSpecInternal.deploy?.takeIf { it.releaseTo != null }?.let {
             val dockerGroup = it.groupId.dockerGroupSafeName()
