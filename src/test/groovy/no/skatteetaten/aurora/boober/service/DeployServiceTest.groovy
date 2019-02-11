@@ -58,6 +58,7 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
       }
     }
 
+    openShiftClient.resourceExists(_, _, _) >> true
     openShiftClient.getByLabelSelectors(_, _, _) >> []
     redeployService.triggerRedeploy(_, _) >> new RedeployService.RedeployResult()
     deployLogService.markRelease(_, _) >> {
