@@ -38,11 +38,6 @@ class OpenShiftResourceClientConfig(
     @Bean
     @ClientType(TokenSource.SERVICE_ACCOUNT)
     fun createServiceAccountOpenShiftResourceClient(): OpenShiftResourceClient {
-        val tokenProvider = if (environment.activeProfiles.any { it == "local" }) {
-            localKubeConfigTokenProvider
-        } else {
-            serviceAccountTokenProvider
-        }
-        return OpenShiftResourceClient(baseUrl, tokenProvider, restTemplateWrapper)
+        return OpenShiftResourceClient(baseUrl, serviceAccountTokenProvider, restTemplateWrapper)
     }
 }

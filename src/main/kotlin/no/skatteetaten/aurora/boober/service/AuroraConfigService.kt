@@ -4,6 +4,8 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.async
 import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.slf4j.MDCContext
+import no.skatteetaten.aurora.boober.controller.security.SpringSecurityThreadContextElement
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -224,7 +226,9 @@ class AuroraConfigService(
     ): List<AuroraDeploymentSpecInternal> {
 
         val stopWatch = StopWatch().apply { start() }
-        val specInternals: List<AuroraDeploymentSpecInternal> = runBlocking(dispatcher) {
+        val specInternals: List<AuroraDeploymentSpecInternal> = runBlocking(
+            MDCContext() + SpringSecurityThreadContextElement()
+        ) {
             applicationDeploymentRefs.map { aid ->
                 async(dispatcher) {
                     try {
