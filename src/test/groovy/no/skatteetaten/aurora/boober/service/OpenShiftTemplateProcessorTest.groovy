@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import java.time.Duration
 
+import org.apache.commons.text.StringSubstitutor
 import org.springframework.http.ResponseEntity
 
 import com.fasterxml.jackson.databind.JsonNode
@@ -96,7 +97,7 @@ class OpenShiftTemplateProcessorTest extends AbstractSpec {
 
   private static createEmptyDeploymentSpec() {
     new AuroraDeploymentSpecInternal(new ApplicationDeploymentRef('', ''), '', TemplateType.development, '',
-        new AuroraDeploymentSpec([:]),
+        new AuroraDeploymentSpec([:], new StringSubstitutor()),
         '', '', new AuroraDeployEnvironment('', '',
         new Permissions(new Permission(new HashSet<String>(), new HashSet<String>()),
             new Permission(new HashSet<String>(), new HashSet<String>())),

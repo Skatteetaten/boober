@@ -1,7 +1,7 @@
 {
   "type": "deploy",
   "mounts": {
-    "sprocket-config": {
+    "@name@-config": {
       "type": "ConfigMap",
       "path": "/u01/foo",
       "content": {

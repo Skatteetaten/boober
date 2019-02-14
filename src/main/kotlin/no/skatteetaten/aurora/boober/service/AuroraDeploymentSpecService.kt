@@ -73,8 +73,8 @@ class AuroraDeploymentSpecService(
                 applicationFiles,
                 fieldHandlers = headerMapper.handlers,
                 auroraDeploymentSpec = headerSpec
-            )
-                .validate(false)
+            ).validate(false)
+
             val platform: String = headerSpec["applicationPlatform"]
 
             val applicationHandler: ApplicationPlatformHandler = APPLICATION_PLATFORM_HANDLERS[platform]

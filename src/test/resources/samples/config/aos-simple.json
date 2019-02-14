@@ -15,7 +15,7 @@
   },
   "webseal": {
     "host": "test",
-    "roles": "admin dev"
+    "roles": "admin dev @name@"
   },
   "route": {    
     "aos-simple": {
