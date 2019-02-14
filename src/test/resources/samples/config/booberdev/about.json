@@ -3,7 +3,7 @@
   "type": "development",
   "cluster": "utv",
    "permissions": {
-     "adminServiceAccount": "system:serviceaccount:@envName@:jenkinsbuilder",
+     "adminServiceAccount": "system:serviceaccount:paas:jenkinsbuilder",
      "view": "APP_PaaS_drift APP_PaaS_utv"
    },
   "env": {
