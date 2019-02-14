@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraBuildMapperV1
@@ -16,6 +17,8 @@ import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
+import no.skatteetaten.aurora.boober.model.AuroraRoute
+import no.skatteetaten.aurora.boober.model.ConfigFieldErrorDetail
 import no.skatteetaten.aurora.boober.model.TemplateType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -120,6 +123,9 @@ class AuroraDeploymentSpecService(
             val integration = integrationMapper.integrations(deploymentSpec)
             val volume = volumeMapper.createAuroraVolume(deploymentSpec)
             val route = routeMapper.route(deploymentSpec)
+
+            validateRoutes(route, applicationDeploymentRef)
+
             val build =
                 if (header.type == TemplateType.development) buildMapper.build(deploymentSpec) else null
             val deploy =
@@ -147,6 +153,35 @@ class AuroraDeploymentSpecService(
                 configVersion = auroraConfig.version,
                 overrideFiles = overrides
             )
+        }
+
+        @JvmStatic
+        fun validateRoutes(
+            auroraRoute: AuroraRoute,
+            applicationDeploymentRef: ApplicationDeploymentRef
+        ) {
+            val routeNames = auroraRoute.route.groupBy { it.objectName }
+            val duplicateRoutes = routeNames.filter { it.value.size > 1 }.map { it.key }
+
+            if (duplicateRoutes.isNotEmpty()) {
+                throw AuroraConfigException(
+                    "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} have routes with duplicate names",
+                    errors = duplicateRoutes.map {
+                        ConfigFieldErrorDetail.illegal(message = "Route name=$it is duplicated")
+                    }
+                )
+            }
+
+            val duplicatedHosts = auroraRoute.route.groupBy { it.target }.filter { it.value.size > 1 }
+            if (duplicatedHosts.isNotEmpty()) {
+                throw AuroraConfigException(
+                    "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} have duplicated targets",
+                    errors = duplicatedHosts.map { route ->
+                        val routeNames = route.value.joinToString(",") { it.objectName }
+                        ConfigFieldErrorDetail.illegal(message = "target=${route.key} is duplicated in routes $routeNames")
+                    }
+                )
+            }
         }
     }
 

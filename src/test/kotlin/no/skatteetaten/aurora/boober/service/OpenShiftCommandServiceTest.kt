@@ -12,6 +12,7 @@ import io.mockk.slot
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
+import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -27,6 +28,17 @@ class OpenShiftCommandServiceTest : ResourceLoader() {
     @AfterEach
     fun tearDown() {
         clearMocks(openshiftClient, generator)
+    }
+
+    @Test
+    fun `Should parse error message from route`() {
+        val json = loadJsonResource("route-failed.json")
+        val response = OpenShiftResponse(
+            command = OpenshiftCommand(OperationType.CREATE),
+            success = true,
+            responseBody = json
+        )
+        assert(service.findErrorMessage(response)).isEqualTo("route ref3 already exposes foobar.paas-bjarte-dev.utv.paas.skead.no and is older")
     }
 
     @Test
