@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service.openshift
 
-import no.skatteetaten.aurora.boober.service.openshift.token.LocalKubeConfigTokenProvider
 import no.skatteetaten.aurora.boober.service.openshift.token.ServiceAccountTokenProvider
 import no.skatteetaten.aurora.boober.service.openshift.token.UserDetailsTokenProvider
 import org.springframework.beans.factory.annotation.Qualifier
@@ -16,7 +15,6 @@ class OpenShiftResourceClientConfig(
     val restTemplateWrapper: OpenShiftRestTemplateWrapper,
     val userDetailsTokenProvider: UserDetailsTokenProvider,
     val serviceAccountTokenProvider: ServiceAccountTokenProvider,
-    val localKubeConfigTokenProvider: LocalKubeConfigTokenProvider,
     val environment: Environment
 ) {
 
@@ -38,11 +36,6 @@ class OpenShiftResourceClientConfig(
     @Bean
     @ClientType(TokenSource.SERVICE_ACCOUNT)
     fun createServiceAccountOpenShiftResourceClient(): OpenShiftResourceClient {
-        val tokenProvider = if (environment.activeProfiles.any { it == "local" }) {
-            localKubeConfigTokenProvider
-        } else {
-            serviceAccountTokenProvider
-        }
-        return OpenShiftResourceClient(baseUrl, tokenProvider, restTemplateWrapper)
+        return OpenShiftResourceClient(baseUrl, serviceAccountTokenProvider, restTemplateWrapper)
     }
 }
