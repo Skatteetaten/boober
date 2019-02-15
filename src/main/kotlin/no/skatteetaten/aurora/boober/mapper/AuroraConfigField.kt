@@ -186,8 +186,6 @@ class AuroraDeploymentSpec(
                         )
                 )
 
-            val replacer = StringSubstitutor(placeholders, "@", "@")
-
             val fields: List<Pair<String, AuroraConfigFieldSource>> = handlers.flatMap { handler ->
                 val defaultValue = handler.defaultValue?.let {
                     listOf(
@@ -226,6 +224,8 @@ class AuroraDeploymentSpec(
             }
 
             val allFields: List<Pair<String, AuroraConfigFieldSource>> = staticFields + fields
+
+            val replacer = StringSubstitutor(placeholders, "@", "@")
 
             val groupedFields: Map<String, AuroraConfigField> = allFields
                 .groupBy({ it.first }) { it.second }
