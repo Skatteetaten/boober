@@ -177,8 +177,10 @@ data class AuroraTemplate(
 
 )
 
-enum class MountType {
-    ConfigMap, Secret, PVC
+enum class MountType(val kind: String) {
+    ConfigMap("configmap"),
+    Secret("secret"),
+    PVC("persistentvolumeclaim")
 }
 
 data class Mount(

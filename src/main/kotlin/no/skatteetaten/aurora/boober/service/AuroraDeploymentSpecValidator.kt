@@ -37,6 +37,24 @@ class AuroraDeploymentSpecValidator(
         validateVaultExistence(deploymentSpecInternal)
         validateKeyMappings(deploymentSpecInternal)
         validateSecretVaultKeys(deploymentSpecInternal)
+        validateExistingResources(deploymentSpecInternal)
+    }
+
+    protected fun validateExistingResources(spec: AuroraDeploymentSpecInternal) {
+        if (spec.cluster != cluster) return
+        val existingMounts = spec.volume?.mounts?.filter { it.exist } ?: return
+
+        val namespace = spec.environment.namespace
+        existingMounts.forEach {
+            if (!openShiftClient.resourceExists(
+                    kind = it.type.kind,
+                    namespace = namespace,
+                    name = it.volumeName
+                )
+            ) {
+                throw AuroraDeploymentSpecValidationException("Required existing resource with type=${it.type} namespace=$namespace name=${it.volumeName} does not exist.")
+            }
+        }
     }
 
     protected fun validateSkap(spec: AuroraDeploymentSpecInternal) {

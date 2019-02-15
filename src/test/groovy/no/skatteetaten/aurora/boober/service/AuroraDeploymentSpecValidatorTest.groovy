@@ -278,4 +278,22 @@ class AuroraDeploymentSpecValidatorTest extends AbstractAuroraDeploymentSpecTest
       def e = thrown(AuroraDeploymentSpecValidationException)
       e.message == "The keys [test-key1] were not found in the secret vault"
   }
+
+  def "Fails when existing mount not exist"() {
+    given:
+
+      auroraConfigJson["utv/aos-simple.json"] = '''{ "secretVault": "test", "mounts": { "secret": { "type": "Secret", "secretVault": "test2", "exist" : true, "path": "/tmp" } } }'''
+
+      openShiftClient.resourceExists(_, _, _) >> false
+      AuroraDeploymentSpecInternal deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+    when:
+      specValidator.validateExistingResources(deploymentSpec)
+
+    then:
+      def e = thrown(AuroraDeploymentSpecValidationException)
+      e.message ==
+          "Required existing resource with type=Secret namespace=aos-utv name=secret does not exist."
+  }
+
 }
