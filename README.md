@@ -11,10 +11,15 @@ The component is named after the Boober Fraggle (http://muppet.wikia.com/wiki/Bo
 
 ### Setup the API
 
-Boober reads AuroraConfig and Vaults from git repositories. When running locally the standard setup is to use a seperate
-project in bitbucket suffixed by `-dev`.
- 
-By default, boober during development will deploy to the qa cluster.
+In order to setup boober correctly set the following variables in `$HOME/.spring-boot-devtools.properties` file.
+
+    boober.encrypt.key= <encrypt key>
+    boober.git.password= <bitbucket password for boober user>
+    vault.git.password= <vault password for boober>
+
+You also need to set the token for the sa that has the correct privileges in the file `/tmp/boober-token`. 
+
+There is a script called boober-dev in the https://github.com/Skatteetaten/aurora-scripts repo to set this up automatically
 
 ### Setup ao
 
