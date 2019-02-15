@@ -1,15 +1,10 @@
 package no.skatteetaten.aurora.boober.utils
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.convertValue
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.openshift.api.model.Route
-
-fun routeFromJson(jsonNode: JsonNode): Route = jacksonObjectMapper().convertValue(jsonNode)
 
 fun Route.findErrorMessage(): String? {
     val ingress = this.status.ingress
-    if (this.status.ingress.isNullOrEmpty()) {
+    if (ingress.isNullOrEmpty()) {
         return null
     }
 

@@ -1,6 +1,8 @@
 package no.skatteetaten.aurora.boober.service
 
 import io.fabric8.openshift.api.model.DeploymentConfig
+import io.fabric8.openshift.api.model.ImageStream
+import io.fabric8.openshift.api.model.ImageStreamImport
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.model.openshift.isDifferentImage
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -10,11 +12,9 @@ import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.service.openshift.deploymentConfig
 import no.skatteetaten.aurora.boober.service.openshift.imageStream
 import no.skatteetaten.aurora.boober.service.openshift.imageStreamImport
-import no.skatteetaten.aurora.boober.utils.deploymentConfigFromJson
+import no.skatteetaten.aurora.boober.utils.convert
 import no.skatteetaten.aurora.boober.utils.findCurrentImageHash
 import no.skatteetaten.aurora.boober.utils.findImageChangeTriggerTagName
-import no.skatteetaten.aurora.boober.utils.imageStreamFromJson
-import no.skatteetaten.aurora.boober.utils.imageStreamImportFromJson
 import org.springframework.stereotype.Service
 
 @Service
@@ -55,17 +55,17 @@ class RedeployService(
         }
 
         val isResource = openShiftResponses.imageStream()
-        val imageStream = isResource?.responseBody?.let { imageStreamFromJson(it) }
+        val imageStream: ImageStream? = isResource?.responseBody?.let { it.convert() }
 
-        val isiResource = openShiftResponses.imageStreamImport()?.let { isi ->
-            isi.responseBody?.let { imageStreamImportFromJson(it) }
+        val isiResource: ImageStreamImport? = openShiftResponses.imageStreamImport()?.let { isi ->
+            isi.responseBody?.let { it.convert() }
         }
 
         val dcResource = openShiftResponses.deploymentConfig()
-        val oldDcResource = dcResource?.command?.previous?.let { deploymentConfigFromJson(it) }
+        val oldDcResource: DeploymentConfig? = dcResource?.command?.previous?.let { it.convert() }
         val wasPaused = oldDcResource?.spec?.replicas == 0
 
-        val deploymentConfig = dcResource?.responseBody?.let { deploymentConfigFromJson(it) }
+        val deploymentConfig = dcResource?.responseBody?.let { it.convert<DeploymentConfig>() }
             ?: throw IllegalArgumentException("Missing DeploymentConfig")
 
         if (isResource?.command?.operationType == OperationType.CREATE) {

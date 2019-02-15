@@ -7,6 +7,8 @@ import com.fkorotkov.kubernetes.newPatch
 import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
+import io.fabric8.openshift.api.model.ImageStreamImport
+import io.fabric8.openshift.api.model.Route
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.TemplateType
@@ -21,15 +23,14 @@ import no.skatteetaten.aurora.boober.service.openshift.OperationType.UPDATE
 import no.skatteetaten.aurora.boober.service.openshift.mergeWithExistingResource
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.convert
 import no.skatteetaten.aurora.boober.utils.deploymentConfig
 import no.skatteetaten.aurora.boober.utils.findDockerImageUrl
 import no.skatteetaten.aurora.boober.utils.findErrorMessage
 import no.skatteetaten.aurora.boober.utils.findImageChangeTriggerTagName
 import no.skatteetaten.aurora.boober.utils.imageStream
-import no.skatteetaten.aurora.boober.utils.imageStreamImportFromJson
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
-import no.skatteetaten.aurora.boober.utils.routeFromJson
 import org.springframework.stereotype.Service
 
 @Service
@@ -248,8 +249,8 @@ class OpenShiftCommandService(
 
         // right now only imagestreamimport is checked for errors in status. Route is maybe something we can add here?
         return when {
-            body.openshiftKind == "route" -> routeFromJson(body).findErrorMessage()
-            body.openshiftKind == "imagestreamimport" -> imageStreamImportFromJson(body).findErrorMessage()
+            body.openshiftKind == "route" -> body.convert<Route>().findErrorMessage()
+            body.openshiftKind == "imagestreamimport" -> body.convert<ImageStreamImport>().findErrorMessage()
             else -> null
         }
     }
