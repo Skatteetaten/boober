@@ -5,9 +5,12 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
+
+inline fun <reified T : Any> JsonNode.convert(): T = jacksonObjectMapper().convertValue(this)
 
 fun JsonNode.findAllPointers(maxLevel: Int): List<String> {
 

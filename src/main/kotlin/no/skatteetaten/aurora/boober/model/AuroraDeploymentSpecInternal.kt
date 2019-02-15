@@ -225,7 +225,10 @@ data class Route(
     val host: String,
     val path: String? = null,
     val annotations: Map<String, String>? = null
-)
+) {
+    val target: String
+        get(): String = if (path != null) "$host$path" else host
+}
 
 data class AuroraDeploymentConfigFlags(
     val debug: Boolean = false,
