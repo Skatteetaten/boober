@@ -177,8 +177,8 @@ class AuroraDeploymentSpecService(
                 throw AuroraConfigException(
                     "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} have duplicated targets",
                     errors = duplicatedHosts.map { route ->
-                        val routeNames = route.value.joinToString(",") { it.objectName }
-                        ConfigFieldErrorDetail.illegal(message = "target=${route.key} is duplicated in routes $routeNames")
+                        val routes = route.value.joinToString(",") { it.objectName }
+                        ConfigFieldErrorDetail.illegal(message = "target=${route.key} is duplicated in routes $routes")
                     }
                 )
             }
