@@ -26,7 +26,7 @@ class DeployLogService(
 
         return deployResult
             .map {
-                if (it.ignored) {
+                if (it.ignored || it.command == null) {
                     it
                 } else {
                     val result = filterDeployInformation(it)
