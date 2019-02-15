@@ -63,6 +63,7 @@ data class AuroraConfigField(
             else -> emptyList()
         }.filter { !it.isNullOrBlank() }
             .mapNotNull { it?.trim() }
+            .map { replacer.replace(it) }
             .toSet()
     }
 }
@@ -73,7 +74,10 @@ data class AuroraConfigFieldSource(
     val canBeSimplified: Boolean = false
 )
 
-class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
+class AuroraDeploymentSpec(
+    val fields: Map<String, AuroraConfigField>,
+    val replacer: StringSubstitutor
+) {
 
     fun getConfigEnv(configExtractors: List<AuroraConfigFieldHandler>): Map<String, String> {
         return configExtractors.filter { it.name.count { it == '/' } == 1 }.associate {
@@ -138,6 +142,7 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
     fun getSubKeys(name: String): Map<String, AuroraConfigField> {
         val subKeys = fields
             .filter { it.key.startsWith("$name/") }
+            .mapKeys { replacer.replace(it.key) }
         return subKeys
     }
 
@@ -181,8 +186,6 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
                         )
                 )
 
-            val replacer = StringSubstitutor(placeholders, "@", "@")
-
             val fields: List<Pair<String, AuroraConfigFieldSource>> = handlers.flatMap { handler ->
                 val defaultValue = handler.defaultValue?.let {
                     listOf(
@@ -222,10 +225,12 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
 
             val allFields: List<Pair<String, AuroraConfigFieldSource>> = staticFields + fields
 
+            val replacer = StringSubstitutor(placeholders, "@", "@")
+
             val groupedFields: Map<String, AuroraConfigField> = allFields
                 .groupBy({ it.first }) { it.second }
                 .mapValues { AuroraConfigField(it.value.toSet(), replacer) }
-            return AuroraDeploymentSpec(groupedFields)
+            return AuroraDeploymentSpec(groupedFields, replacer)
         }
     }
 
