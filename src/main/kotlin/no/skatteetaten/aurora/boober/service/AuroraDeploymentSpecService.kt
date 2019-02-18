@@ -92,7 +92,7 @@ class AuroraDeploymentSpecService(
             val routeMapper = AuroraRouteMapperV1(applicationFiles, header.name)
             val localTemplateMapper = AuroraLocalTemplateMapperV1(applicationFiles, auroraConfig)
             val templateMapper = AuroraTemplateMapperV1(applicationFiles)
-            val buildMapper = AuroraBuildMapperV1(header.name)
+            val buildMapper = AuroraBuildMapperV1(header.name, applicationFiles)
 
             val rawHandlers =
                 (headerMapper.handlers + deploymentSpecMapper.handlers + integrationMapper.handlers + when (header.type) {

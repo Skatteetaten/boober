@@ -5,6 +5,7 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
 import no.skatteetaten.aurora.boober.model.AuroraDeploy
 import no.skatteetaten.aurora.boober.model.AuroraDeployStrategy
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentConfigFlags
@@ -28,9 +29,12 @@ class AuroraDeployMapperV1(
     val handlers = listOf(
 
         AuroraConfigFieldHandler("artifactId",
-            defaultValue = applicationDeploymentRef.application,
+            defaultValue = applicationFiles.find { it.type == AuroraConfigFileType.BASE }
+                ?.let { it.name.removeExtension() }
+                ?: applicationDeploymentRef.application,
             defaultSource = "fileName",
             validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
+
         AuroraConfigFieldHandler(
             "groupId",
             validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
