@@ -422,4 +422,15 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
     then:
       deploymentSpec.route.route[0].host == "aos-simple-aos-utv"
   }
+
+  def "Should use base file name as default artifactId"() {
+    given:
+      auroraConfigJson["utv/reference.json"] = '''{ "baseFile" : "aos-simple.json"}'''
+
+    when:
+      def spec = createDeploymentSpec(auroraConfigJson, aid("utv", "reference"))
+
+    then:
+      spec.deploy.artifactId == "aos-simple"
+  }
 }
