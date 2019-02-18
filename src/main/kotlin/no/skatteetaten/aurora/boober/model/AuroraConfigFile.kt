@@ -29,6 +29,11 @@ enum class AuroraConfigFileType {
     APP_OVERRIDE
 }
 
+data class AuroraConfigFileSpec(
+    val name: String,
+    val type: AuroraConfigFileType
+)
+
 data class AuroraConfigFile(
     val name: String,
     val contents: String,
