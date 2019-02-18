@@ -68,12 +68,17 @@ data class AuroraDeploymentSpecInternal(
     val template: AuroraTemplate? = null,
     val localTemplate: AuroraLocalTemplate? = null,
     val integration: AuroraIntegration?,
-    val applicationFile: AuroraConfigFile,
     val configVersion: String,
-    val overrideFiles: Map<String, String>,
     val message: String?,
-    val env: Map<String, String>
+    val env: Map<String, String>,
+    val files: List<AuroraConfigFile>
 ) {
+
+    val overrideFiles: Map<String, String>
+        get() = files.filter { it.override }.associate { it.name to it.contents }
+
+    val applicationFile: AuroraConfigFile
+        get() = files.find { it.type == AuroraConfigFileType.APP }!!
 
     val appDeploymentId: String get() = "${environment.namespace}/$name"
     val appId: String

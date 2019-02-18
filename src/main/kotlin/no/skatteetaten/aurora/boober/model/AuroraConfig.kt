@@ -1,12 +1,16 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.github.fge.jsonpatch.JsonPatch
+import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.APP
+import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.BASE
+import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.ENV
+import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.GLOBAL
+import no.skatteetaten.aurora.boober.utils.filterNullValues
 import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.removeExtension
 import java.io.File
 import java.nio.charset.Charset
-import java.util.HashSet
 
 data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val version: String) {
 
@@ -33,7 +37,7 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
                 it.key to it.value.readText(Charset.defaultCharset())
             }.toMap()
 
-            return AuroraConfig(nodes.map { AuroraConfigFile(it.key, it.value!!, false) }, folder.name, version)
+            return AuroraConfig(nodes.map { AuroraConfigFile(it.key, it.value, false) }, folder.name, version)
         }
     }
 
@@ -51,25 +55,30 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
         overrideFiles: List<AuroraConfigFile> = listOf()
     ): List<AuroraConfigFile> {
 
-        val requiredFiles = requiredFilesForApplication(applicationDeploymentRef)
-        val filesForApplication = requiredFiles.mapNotNull { fileName ->
-            files.find { it.name.removeExtension() == fileName }
+        val fileSpec = findFileSpec(applicationDeploymentRef)
+
+        val filesForApplication: Map<AuroraConfigFileSpec, AuroraConfigFile?> = findFiles(fileSpec, files)
+        val overrides: List<AuroraConfigFile> = findFiles(fileSpec, overrideFiles).filterNullValues().values.toList()
+
+        val missingFileSpec = filesForApplication.filterValues { it == null }.map { it.key }
+        if (missingFileSpec.isNotEmpty()) {
+            val missingFiles = missingFileSpec.joinToString(",") {
+                "${it.type} file with name ${it.name}"
+            }
+            throw IllegalArgumentException("Some required AuroraConfig (json|yaml) files missing. $missingFiles.")
         }
 
-        val overrides = requiredFiles.mapNotNull { fileName ->
-            overrideFiles.find { it.name.removeExtension() == fileName }
-        }
+        val applicationFiles = filesForApplication.filterNullValues().values.toList()
+        return applicationFiles + overrides
+    }
 
-        val allFiles = filesForApplication + overrides
-
-        val uniqueFileNames = HashSet(allFiles.map { it.name })
-        if (uniqueFileNames.size != requiredFiles.size) {
-            val missingFiles = requiredFiles.filter { it !in uniqueFileNames }
-            val missingFilesWithExtension = missingFiles.map { "$it.(json|yaml)" }
-            throw IllegalArgumentException("Unable to merge files because some required files are missing. Missing $missingFilesWithExtension.")
-        }
-
-        return allFiles
+    private fun findFiles(
+        fileSpec: Set<AuroraConfigFileSpec>,
+        files: List<AuroraConfigFile>
+    ): Map<AuroraConfigFileSpec, AuroraConfigFile?> {
+        return fileSpec.map { spec ->
+            spec to files.find { it.name.removeExtension() == spec.name }
+        }.toMap()
     }
 
     fun findFile(filename: String): AuroraConfigFile? = files.find { it.name == filename }
@@ -126,9 +135,10 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
         return file ?: throw IllegalArgumentException("Should find applicationFile $fileName.(json|yaml)")
     }
 
-    private fun requiredFilesForApplication(applicationDeploymentRef: ApplicationDeploymentRef): Set<String> {
+    private fun findFileSpec(applicationDeploymentRef: ApplicationDeploymentRef): Set<AuroraConfigFileSpec> {
 
         val implementationFile = getApplicationFile(applicationDeploymentRef)
+
         val baseFile = implementationFile.asJsonNode.get("baseFile")?.asText()?.removeExtension()
             ?: applicationDeploymentRef.application
 
@@ -136,10 +146,10 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
             ?: "about"
 
         return setOf(
-            "about",
-            baseFile,
-            "${applicationDeploymentRef.environment}/$envFile",
-            "${applicationDeploymentRef.environment}/${applicationDeploymentRef.application}"
+            AuroraConfigFileSpec("about", GLOBAL),
+            AuroraConfigFileSpec(baseFile, BASE),
+            AuroraConfigFileSpec("${applicationDeploymentRef.environment}/$envFile", ENV),
+            AuroraConfigFileSpec("${applicationDeploymentRef.environment}/${applicationDeploymentRef.application}", APP)
         )
     }
 }

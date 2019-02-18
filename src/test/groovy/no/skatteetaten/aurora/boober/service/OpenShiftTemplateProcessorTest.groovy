@@ -102,6 +102,6 @@ class OpenShiftTemplateProcessorTest extends AbstractSpec {
         new Permissions(new Permission(new HashSet<String>(), new HashSet<String>()),
             new Permission(new HashSet<String>(), new HashSet<String>())),
         Duration.ofMinutes(30)),
-        null, null, null, null, null, null, null, new AuroraConfigFile("", "", false, false), "master", [:], null, [:])
+        null, null, null, null, null, null, null, "master",  null, [:], [])
   }
 }

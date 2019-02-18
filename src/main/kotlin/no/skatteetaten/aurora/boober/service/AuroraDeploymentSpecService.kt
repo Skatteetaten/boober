@@ -72,8 +72,7 @@ class AuroraDeploymentSpecService(
 
             AuroraDeploymentSpecConfigFieldValidator(
                 applicationDeploymentRef = applicationDeploymentRef,
-                applicationFiles =
-                applicationFiles,
+                applicationFiles = applicationFiles,
                 fieldHandlers = headerMapper.handlers,
                 auroraDeploymentSpec = headerSpec
             ).validate(false)
@@ -137,8 +136,6 @@ class AuroraDeploymentSpecService(
             val localTemplate =
                 if (header.type == TemplateType.localTemplate) localTemplateMapper.localTemplate(deploymentSpec) else null
 
-            val overrides = overrideFiles.associate { it.name to it.contents }
-
             return deploymentSpecMapper.createAuroraDeploymentSpec(
                 auroraDeploymentSpec = deploymentSpec,
                 volume = volume,
@@ -149,9 +146,8 @@ class AuroraDeploymentSpecService(
                 integration = integration,
                 localTemplate = localTemplate,
                 env = header.env,
-                applicationFile = headerMapper.getApplicationFile(),
                 configVersion = auroraConfig.version,
-                overrideFiles = overrides
+                files = applicationFiles
             )
         }
 
