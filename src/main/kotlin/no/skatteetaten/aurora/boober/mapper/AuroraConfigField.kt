@@ -167,7 +167,7 @@ class AuroraDeploymentSpec(
             files: List<AuroraConfigFile>,
             applicationDeploymentRef: ApplicationDeploymentRef,
             configVersion: String,
-            placeholders: Map<String, String> = emptyMap()
+            replacer: StringSubstitutor = StringSubstitutor()
         ): AuroraDeploymentSpec {
 
             val mapper = jacksonObjectMapper()
@@ -224,8 +224,6 @@ class AuroraDeploymentSpec(
             }
 
             val allFields: List<Pair<String, AuroraConfigFieldSource>> = staticFields + fields
-
-            val replacer = StringSubstitutor(placeholders, "@", "@")
 
             val groupedFields: Map<String, AuroraConfigField> = allFields
                 .groupBy({ it.first }) { it.second }
