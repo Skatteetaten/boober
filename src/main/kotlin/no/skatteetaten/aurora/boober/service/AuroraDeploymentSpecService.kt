@@ -20,6 +20,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.AuroraRoute
 import no.skatteetaten.aurora.boober.model.ConfigFieldErrorDetail
 import no.skatteetaten.aurora.boober.model.TemplateType
+import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -84,11 +85,12 @@ class AuroraDeploymentSpecService(
 
             val header = headerMapper.createHeader(headerSpec, applicationHandler)
 
+            val replacer = StringSubstitutor(header.extractPlaceHolders(), "@", "@")
             val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(applicationDeploymentRef, applicationFiles)
             val deployMapper = AuroraDeployMapperV1(applicationDeploymentRef, applicationFiles)
             val integrationMapper = AuroraIntegrationsMapperV1(applicationFiles, header.name)
             val volumeMapper = AuroraVolumeMapperV1(applicationFiles)
-            val routeMapper = AuroraRouteMapperV1(applicationFiles, header.name)
+            val routeMapper = AuroraRouteMapperV1(applicationFiles, header.name, replacer)
             val localTemplateMapper = AuroraLocalTemplateMapperV1(applicationFiles, auroraConfig)
             val templateMapper = AuroraTemplateMapperV1(applicationFiles)
             val buildMapper = AuroraBuildMapperV1(header.name, applicationFiles)
@@ -108,7 +110,7 @@ class AuroraDeploymentSpecService(
                 files = applicationFiles,
                 applicationDeploymentRef = applicationDeploymentRef,
                 configVersion = auroraConfig.version,
-                placeholders = header.extractPlaceHolders()
+                replacer = replacer
             )
 
             AuroraDeploymentSpecConfigFieldValidator(

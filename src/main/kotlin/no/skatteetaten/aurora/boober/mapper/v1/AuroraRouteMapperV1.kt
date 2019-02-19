@@ -7,8 +7,13 @@ import no.skatteetaten.aurora.boober.model.AuroraRoute
 import no.skatteetaten.aurora.boober.model.Route
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.startsWith
+import org.apache.commons.text.StringSubstitutor
 
-class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>, val name: String) {
+class AuroraRouteMapperV1(
+    val applicationFiles: List<AuroraConfigFile>,
+    val name: String,
+    val replacer: StringSubstitutor
+) {
 
     val handlers = findRouteHandlers() + listOf(
         AuroraConfigFieldHandler("route", defaultValue = false, canBeSimplifiedConfig = true),
@@ -37,11 +42,11 @@ class AuroraRouteMapperV1(val applicationFiles: List<AuroraConfigFile>, val name
 
         return routes.map {
             Route(
-                it.ensureStartWith(name, "-"),
-                auroraDeploymentSpec.getOrNull("$route/$it/host")
+                objectName = replacer.replace(it).ensureStartWith(name, "-"),
+                host = auroraDeploymentSpec.getOrNull("$route/$it/host")
                     ?: auroraDeploymentSpec["routeDefaults/host"],
-                auroraDeploymentSpec.getOrNull("$route/$it/path"),
-                auroraDeploymentSpec.getRouteAnnotations("$route/$it/annotations", handlers)
+                path = auroraDeploymentSpec.getOrNull("$route/$it/path"),
+                annotations = auroraDeploymentSpec.getRouteAnnotations("$route/$it/annotations", handlers)
             )
         }
     }
