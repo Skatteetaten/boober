@@ -233,18 +233,22 @@ class DatabaseSchemaProvisioner(
     }
 
     private fun createProvisioningException(message: String, e: Exception): ProvisioningException {
-        fun parseErrorResponse(responseMessage: String?): String {
+        fun parseErrorResponse(responseMessage: String?): DbhErrorResponse {
             return try {
-                val dbhResponse = mapper.readValue(responseMessage, DbhErrorResponse::class.java)
-                dbhResponse.errorMessage
+                mapper.readValue(responseMessage, DbhErrorResponse::class.java)
             } catch (e: Exception) {
-                ""
+                DbhErrorResponse("", emptyList(), 0)
             }
         }
         return when (e) {
             is HttpClientErrorException -> {
                 val dbhErrorResponse = parseErrorResponse(e.responseBodyAsString)
-                ProvisioningException("$message cause=$dbhErrorResponse", e)
+                val errorMessage = if (dbhErrorResponse.items.isNotEmpty()) {
+                    dbhErrorResponse.items.first()
+                } else {
+                    ""
+                }
+                ProvisioningException("$message cause=$errorMessage status=${dbhErrorResponse.status}", e)
             }
             else -> ProvisioningException(message, e)
         }
@@ -256,5 +260,5 @@ class DatabaseSchemaProvisioner(
 
     data class DbApiEnvelope(val status: String, val items: List<DbhSchema> = listOf())
 
-    data class DbhErrorResponse(val errorMessage: String)
+    data class DbhErrorResponse(val status: String, val items: List<String>, val totalCount: Int)
 }
