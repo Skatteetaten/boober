@@ -110,7 +110,8 @@ fun Database.createSchemaDetails(affiliation: String): SchemaRequestDetails {
 
     return SchemaRequestDetails(
         schemaName = this.name.toLowerCase(),
-        parameters = this.parameters,
+        // TODO: fix
+        parameters = emptyMap(),
         users = users,
         affiliation = affiliation,
         engine = this.flavor.engine

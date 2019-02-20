@@ -10,6 +10,8 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
 
   def auroraConfigJson = defaultAuroraConfig()
 
+  def defaultDatabaseInstance = new DatabaseInstance(null, true, [affiliation: "aos"])
+
   def "fileName can be long if both artifactId and name exist"() {
     given:
       auroraConfigJson["this-name-is-stupid-stupid-stupidly-long-for-no-reason.json"] = '''{ "type" : "deploy", "groupId" : "foo", "version": "1"}'''
@@ -280,7 +282,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
 
     then:
       deploymentSpec.integration.database ==
-          [new Database("foobar", null, DatabaseFlavor.ORACLE_MANAGED, true, [:], [:], [:])]
+          [new Database("foobar", null, DatabaseFlavor.ORACLE_MANAGED, true, [:], [:], defaultDatabaseInstance)]
   }
 
   def "Should use databaseDefaults"() {
@@ -288,18 +290,22 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       def aid = DEFAULT_AID
       modify(auroraConfigJson, "about.json", {
         put("databaseDefaults", [
-            "name"      : "ohyeah",
-            "flavor"    : "POSTGRES_MANAGED",
-            "generate"  : false,
-            "roles"     : [
+            "name"    : "ohyeah",
+            "flavor"  : "POSTGRES_MANAGED",
+            "generate": false,
+            "roles"   : [
                 "jalla": "READ"
             ],
-            "exposeTo"  : [
+            "exposeTo": [
                 "foobar": "jalla"
             ],
-            "parameters": [
-                "foo": "bar"
-            ]
+            "instance": [
+                "name"    : "corrusant",
+                "fallback": true,
+                "labels"  : [
+                    "type": "ytelse"
+                ]
+            ],
         ])
       })
       modify(auroraConfigJson, "utv/aos-simple.json", {
@@ -308,42 +314,47 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
     when:
       def deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
     then:
+      def instance = new DatabaseInstance("corrusant", true, [type: "ytelse", affiliation: "aos"])
       deploymentSpec.integration.database ==
           [new Database("ohyeah", null, DatabaseFlavor.POSTGRES_MANAGED, false, [foobar: "jalla"], [jalla: READ],
-              [foo: "bar"])]
+              instance)]
   }
 
-  def "Should use expaned database configuration"() {
+  def "Should use expanded database configuration"() {
     given:
       def aid = DEFAULT_AID
       modify(auroraConfigJson, "about.json", {
         put("databaseDefaults", [
-            name      : "ohyeah",
-            flavor    : "POSTGRES_MANAGED",
-            generate  : false,
-            roles     : [
+            name    : "ohyeah",
+            flavor  : "POSTGRES_MANAGED",
+            generate: false,
+            roles   : [
                 jalla: "READ"
             ],
-            exposeTo  : [
+            exposeTo: [
                 foobar: "jalla"
             ],
-            parameters: [
-                foo: "bar"
+            instance: [
+                labels: [
+                    foo: "bar"
+                ]
             ]
         ])
       })
       modify(auroraConfigJson, "utv/aos-simple.json", {
         put("database", [
             foo: [
-                id        : "123",
-                roles     : [
+                id      : "123",
+                roles   : [
                     read: "READ"
                 ],
-                exposeTo  : [
+                exposeTo: [
                     foobar: "read"
                 ],
-                parameters: [
-                    baz: "bar"
+                instance: [
+                    labels: [
+                        baz: "bar"
+                    ]
                 ]
             ]
         ])
@@ -356,7 +367,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
           [new Database("foo", "123", DatabaseFlavor.POSTGRES_MANAGED, false,
               [foobar: "read"],
               [jalla: READ, read: READ],
-              [foo: "bar", baz: "bar"])]
+              new DatabaseInstance(null, false, [foo: "bar", baz: "bar", affiliation: "aos"]))]
   }
 
   def "Should use overridden cert name when set to default at higher level"() {

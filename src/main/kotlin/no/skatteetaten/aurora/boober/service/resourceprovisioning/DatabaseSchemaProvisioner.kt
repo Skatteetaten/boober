@@ -66,12 +66,12 @@ data class SchemaProvisionResults(val results: List<SchemaProvisionResult>)
 
 data class DbhUser(val username: String, val password: String, val type: String)
 
-data class DatabaseInstance(val port: Long, val host: String?)
+data class DatabaseSchemaInstance(val port: Long, val host: String?)
 
 data class DbhSchema(
     val id: String,
     val type: String,
-    val databaseInstance: DatabaseInstance,
+    val databaseInstance: DatabaseSchemaInstance,
     val jdbcUrl: String,
     val labels: Map<String, String> = mapOf(),
     private val users: List<DbhUser> = listOf()
@@ -153,7 +153,6 @@ class DatabaseSchemaProvisioner(
         val user = userDetailsProvider.getAuthenticatedUser()
         val labels = mapOf(
             "affiliation" to request.details.affiliation,
-            // TODO should we really hard code this here? Why not just send in environment here?
             "environment" to "${request.details.affiliation}-${request.environment}",
             "application" to request.application,
             "name" to request.details.schemaName,

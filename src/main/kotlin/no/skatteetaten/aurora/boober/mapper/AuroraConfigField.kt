@@ -135,6 +135,8 @@ class AuroraDeploymentSpec(val fields: Map<String, AuroraConfigField>) {
         return !subKeys.any { it.value.fileType > field.fileType }
     }
 
+    fun hasSubKeys(name: String): Boolean = getSubKeys(name).isNotEmpty()
+
     fun getSubKeys(name: String): Map<String, AuroraConfigField> {
         val subKeys = fields
             .filter { it.key.startsWith("$name/") }

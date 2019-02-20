@@ -7,7 +7,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import io.fabric8.kubernetes.api.model.OwnerReference
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseInstance
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaInstance
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisionerTest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhUser
@@ -34,7 +34,7 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest extends AbstractOpe
       def schema = new DbhSchema(
           "fd59dba9-7d67-4ea2-bb98-081a5df8c387",
           "MANAGED",
-          new DatabaseInstance(1521, "some-db-server01.skead.no"),
+          new DatabaseSchemaInstance(1521, "some-db-server01.skead.no"),
           "jdbc:oracle:thin:@some-db-server01.skead.no:1521/dbhotel",
           [name: appName, affiliation: AFFILIATION, application: "reference", environment: "architect-utv", userId: "k72950"],
           [new DbhUser("VCLFVAPKGOMBCFTWEVKZDYBGVTMYDP", "yYGmRnUPBORxMoMcPptGvDYgKxmRSm", "SCHEMA")]
