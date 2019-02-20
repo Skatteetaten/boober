@@ -210,7 +210,7 @@ data class Database(
     val generate: Boolean,
     val exposeTo: Map<String, String> = emptyMap(),
     val roles: Map<String, DatabasePermission> = emptyMap(),
-    val instance: DatabaseInstance? = null
+    val instance: DatabaseInstance
 ) {
     val spec: String
         get(): String = (id?.let { "$name:$id" } ?: name).toLowerCase()

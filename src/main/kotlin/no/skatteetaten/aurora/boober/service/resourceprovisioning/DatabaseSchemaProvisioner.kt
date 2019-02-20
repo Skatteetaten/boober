@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
+import no.skatteetaten.aurora.boober.model.DatabaseInstance
 import no.skatteetaten.aurora.boober.service.ProvisioningException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.utils.logger
@@ -21,9 +22,9 @@ sealed class SchemaProvisionRequest {
 
 data class SchemaRequestDetails(
     val schemaName: String,
-    val parameters: Map<String, String>,
     val users: List<SchemaUser>,
     val engine: DatabaseEngine,
+    val databaseInstance: DatabaseInstance,
     val affiliation: String
 )
 
@@ -31,7 +32,9 @@ data class SchemaRequestPayload(
     val labels: Map<String, String>,
     val users: List<SchemaUser>,
     val engine: DatabaseEngine,
-    val parameters: Map<String, String>
+    val instanceLabels: Map<String, String>,
+    val instanceName: String? = null,
+    val fallback: Boolean = false
 )
 
 data class SchemaUser(
@@ -178,7 +181,6 @@ class DatabaseSchemaProvisioner(
         details: SchemaRequestDetails
     ): Pair<DbhSchema, String>? {
 
-        // TODO: BAS?
         val labelsString = toLabelsString(labels)
         val roleString = details.users.joinToString(",") { it.name }
         val response: ResponseEntity<JsonNode> = try {
@@ -202,7 +204,9 @@ class DatabaseSchemaProvisioner(
             SchemaRequestPayload(
                 users = details.users,
                 engine = details.engine,
-                parameters = details.parameters,
+                instanceName = details.databaseInstance.name,
+                fallback = details.databaseInstance.fallback,
+                instanceLabels = details.databaseInstance.labels,
                 labels = labels
             )
 
