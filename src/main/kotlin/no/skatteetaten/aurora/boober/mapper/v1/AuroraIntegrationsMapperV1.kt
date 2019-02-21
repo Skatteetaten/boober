@@ -127,9 +127,9 @@ class AuroraIntegrationsMapperV1(
                 val value: String = spec.getOrNull("$key/id") ?: ""
 
                 val flavor: DatabaseFlavor = spec.getOrNull("$key/flavor") ?: defaultDb.flavor
-                val instanceName = instance?.name ?: defaultDb.instance?.name
-                val instanceFallback = instance?.fallback ?: defaultDb.instance?.fallback ?: flavor.defaultFallback
-                val instanceLabels = emptyMap<String, String>().addIfNotNull(defaultDb.instance?.labels)
+                val instanceName = instance?.name ?: defaultDb.instance.name
+                val instanceFallback = instance?.fallback ?: defaultDb.instance.fallback
+                val instanceLabels = emptyMap<String, String>().addIfNotNull(defaultDb.instance.labels)
                     .addIfNotNull(instance?.labels)
 
                 Database(
