@@ -94,7 +94,7 @@ class AuroraIntegrationsMapperV1(
 
     private fun findDatabases(spec: AuroraDeploymentSpec): List<Database> {
         val defaultFlavor: DatabaseFlavor = spec["$databaseDefaultsKey/flavor"]
-        val defaultInstance = findInstance(spec, "$databaseDefaultsKey/instance")
+        val defaultInstance = findInstance(spec, "$databaseDefaultsKey/instance", defaultFlavor.defaultFallback)
             ?: DatabaseInstance(fallback = defaultFlavor.defaultFallback)
 
         val defaultDb = Database(
@@ -123,10 +123,10 @@ class AuroraIntegrationsMapperV1(
 
                 val roles = applicationFiles.associateSubKeys<DatabasePermission>("$key/roles", spec)
                 val exposeTo = applicationFiles.associateSubKeys<String>("$key/exposeTo", spec)
-                val instance = findInstance(spec, "$key/instance")
+                val flavor: DatabaseFlavor = spec.getOrNull("$key/flavor") ?: defaultDb.flavor
+                val instance = findInstance(spec, "$key/instance", flavor.defaultFallback)
                 val value: String = spec.getOrNull("$key/id") ?: ""
 
-                val flavor: DatabaseFlavor = spec.getOrNull("$key/flavor") ?: defaultDb.flavor
                 val instanceName = instance?.name ?: defaultDb.instance.name
                 val instanceFallback = instance?.fallback ?: defaultDb.instance.fallback
                 val instanceLabels = emptyMap<String, String>().addIfNotNull(defaultDb.instance.labels)
@@ -151,7 +151,8 @@ class AuroraIntegrationsMapperV1(
 
     private fun findInstance(
         spec: AuroraDeploymentSpec,
-        key: String
+        key: String,
+        defaultFallback: Boolean
     ): DatabaseInstance? {
 
         if (!spec.hasSubKeys(key)) {
@@ -159,7 +160,7 @@ class AuroraIntegrationsMapperV1(
         }
         return DatabaseInstance(
             name = spec.getOrNull("$key/name"),
-            fallback = spec.getOrNull("$key/fallback") ?: false,
+            fallback = spec.getOrNull("$key/fallback") ?: defaultFallback,
             labels = applicationFiles.associateSubKeys("$key/labels", spec)
         )
     }
