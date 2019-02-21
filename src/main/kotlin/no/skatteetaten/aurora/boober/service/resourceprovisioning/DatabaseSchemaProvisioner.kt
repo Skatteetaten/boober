@@ -24,8 +24,8 @@ data class SchemaRequestDetails(
     val schemaName: String,
     val users: List<SchemaUser>,
     val engine: DatabaseEngine,
-    val databaseInstance: DatabaseInstance,
-    val affiliation: String
+    val affiliation: String,
+    val databaseInstance: DatabaseInstance
 )
 
 data class SchemaRequestPayload(
@@ -34,7 +34,7 @@ data class SchemaRequestPayload(
     val engine: DatabaseEngine,
     val instanceLabels: Map<String, String>,
     val instanceName: String? = null,
-    val fallback: Boolean = false
+    val instanceFallback: Boolean = false
 )
 
 data class SchemaUser(
@@ -205,7 +205,7 @@ class DatabaseSchemaProvisioner(
                 users = details.users,
                 engine = details.engine,
                 instanceName = details.databaseInstance.name,
-                fallback = details.databaseInstance.fallback,
+                instanceFallback = details.databaseInstance.fallback,
                 instanceLabels = details.databaseInstance.labels,
                 labels = labels
             )
