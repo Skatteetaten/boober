@@ -13,7 +13,6 @@ object RolebindingGenerator {
     fun create(rolebindingName: String, permission: Permission): RoleBinding {
 
         return newRoleBinding {
-            apiVersion = "v1"
             metadata {
                 name = rolebindingName
             }

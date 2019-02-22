@@ -46,7 +46,7 @@ class UserAnnotationServiceTest {
         val entry = """{"key1":"value1"}""".toBase64()
 
         every {
-            openShiftResourceClient.get("user", "", "username")
+            openShiftResourceClient.get("user", name = "username")
         } returns ResponseEntity.ok("""{"metadata":{"annotations":{"key":"$entry"}}}""".toJson())
 
         val response = userAnnotationService.getAnnotations()
@@ -58,7 +58,7 @@ class UserAnnotationServiceTest {
         val entry = """test value""".toBase64()
 
         every {
-            openShiftResourceClient.get("user", "", "username")
+            openShiftResourceClient.get("user", name = "username")
         } returns ResponseEntity.ok("""{"metadata":{"annotations":{"key":"$entry"}}}""".toJson())
 
         val response = userAnnotationService.getAnnotations()
@@ -68,7 +68,7 @@ class UserAnnotationServiceTest {
     @Test
     fun `Get user annotation where value is plain text`() {
         every {
-            openShiftResourceClient.get("user", "", "username")
+            openShiftResourceClient.get("user", name = "username")
         } returns ResponseEntity.ok("""{"metadata":{"annotations":{"key":"value"}}}""".toJson())
 
         val response = userAnnotationService.getAnnotations()

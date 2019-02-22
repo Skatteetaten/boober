@@ -175,7 +175,7 @@ class RedeployServiceTest extends Specification {
     )
     def mapper = new ObjectMapper()
     JsonNode dc = mapper.convertValue(deploymentConfig, JsonNode.class)
-    def dcCommand = new OpenshiftCommand(OperationType.CREATE, dc, dc)
+    def dcCommand = new OpenshiftCommand(OperationType.CREATE, "", dc, dc)
     return new OpenShiftResponse(dcCommand, dc, true)
   }
 
@@ -191,7 +191,7 @@ class RedeployServiceTest extends Specification {
         ))
     def mapper = new ObjectMapper();
     JsonNode dc = mapper.convertValue(is, JsonNode.class)
-    def dcCommand = new OpenshiftCommand(type, dc)
+    def dcCommand = new OpenshiftCommand(type, "", dc)
     return new OpenShiftResponse(dcCommand, dc, true)
   }
 
@@ -201,16 +201,16 @@ class RedeployServiceTest extends Specification {
     def mapper = new ObjectMapper()
     def isiJson = mapper.convertValue(imageStreamImport, JsonNode.class)
     return new OpenShiftResponse(
-        new OpenshiftCommand(OperationType.CREATE, emptyJsonNode), isiJson)
+        new OpenshiftCommand(OperationType.CREATE, "", emptyJsonNode), isiJson)
   }
 
   private OpenShiftResponse openShiftResponse(JsonNode responseBody = emptyJsonNode) {
-    return new OpenShiftResponse(new OpenshiftCommand(OperationType.CREATE, emptyJsonNode), responseBody)
+    return new OpenShiftResponse(new OpenshiftCommand(OperationType.CREATE, "", emptyJsonNode), responseBody)
   }
 
   private OpenShiftResponse failedResponse(JsonNode jsonNode = emptyJsonNode, String errorMessage) {
     return new OpenShiftResponse(
-        new OpenshiftCommand(OperationType.CREATE, emptyJsonNode), jsonNode, false, errorMessage
+        new OpenshiftCommand(OperationType.CREATE, "", emptyJsonNode), jsonNode, false, errorMessage
     )
   }
 

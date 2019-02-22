@@ -12,7 +12,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.Permission
@@ -79,8 +78,8 @@ class OpenShiftTemplateProcessorTest extends AbstractSpec {
       def objects = templateProcessor.generateObjects(templateJson as ObjectNode, [:], createEmptyDeploymentSpec(), "1", 0)
 
     then:
-      1 * openshiftClient.post(_ as String, _ as String, null, _ as ObjectNode) >> {
-        String kind, String namespace, String name, ObjectNode payload ->
+      1 * openshiftClient.post(_ as String, _ as ObjectNode) >> {
+        String url, ObjectNode payload ->
           assertLabels(payload['labels'] as ObjectNode)
           ResponseEntity.ok(payload)
      }
@@ -98,7 +97,7 @@ class OpenShiftTemplateProcessorTest extends AbstractSpec {
   private static createEmptyDeploymentSpec() {
     new AuroraDeploymentSpecInternal(new ApplicationDeploymentRef('', ''), '', TemplateType.development, '',
         new AuroraDeploymentSpec([:], new StringSubstitutor()),
-        '', '', new AuroraDeployEnvironment('', '',
+        '', '', new AuroraDeployEnvironment('paas', 'booberdev',
         new Permissions(new Permission(new HashSet<String>(), new HashSet<String>()),
             new Permission(new HashSet<String>(), new HashSet<String>())),
         Duration.ofMinutes(30)),

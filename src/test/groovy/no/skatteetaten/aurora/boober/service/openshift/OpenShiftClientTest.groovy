@@ -33,7 +33,7 @@ class OpenShiftClientTest extends AbstractSpec {
     given:
       def name = 'does not matter'
       def mockedResource = """{ "kind": "$kind", "metadata": { "name": "$name" } }"""
-      def command = new OpenshiftCommand(OperationType.CREATE, mapper.readValue(mockedResource, JsonNode))
+      def command = new OpenshiftCommand(OperationType.CREATE, "", mapper.readValue(mockedResource, JsonNode))
 
       def expectedClient = clients[expectedClientName]
       def otherClient = clients.values().with { remove(expectedClient); it }.first()
@@ -42,8 +42,11 @@ class OpenShiftClientTest extends AbstractSpec {
       openShiftClient.performOpenShiftCommand("aos", command)
 
     then:
-      1 * expectedClient.post(kind, 'aos', name, _ as JsonNode) >>
+
+      1 * expectedClient.post(_ as String, _ as JsonNode) >> {
+        String url, JsonNode payload ->
           new ResponseEntity(mapper.readValue("{}", JsonNode), HttpStatus.OK)
+      }
 
       0 * otherClient._
 
@@ -98,8 +101,8 @@ class OpenShiftClientTest extends AbstractSpec {
           ]
       ], JsonNode.class)
 
-      def cmd = new OpenshiftCommand(OperationType.CREATE, payload)
-      userClient.post("service", "foo", "bar", payload) >> {
+      def cmd = new OpenshiftCommand(OperationType.CREATE, "", payload)
+      userClient.post(_ as String, payload) >> {
         throw new OpenShiftException("Does not exist",
             new HttpClientErrorException(HttpStatus.SERVICE_UNAVAILABLE, "not available",
                 '''{ "failed" : "true"}'''.bytes,
@@ -123,8 +126,8 @@ class OpenShiftClientTest extends AbstractSpec {
           ]
       ], JsonNode.class)
 
-      def cmd = new OpenshiftCommand(OperationType.CREATE, payload)
-      userClient.post("service", "foo", "bar", payload) >> {
+      def cmd = new OpenshiftCommand(OperationType.CREATE, "", payload)
+      userClient.post(_ as String, payload) >> {
         throw new OpenShiftException("Does not exist",
             new HttpClientErrorException(HttpStatus.SERVICE_UNAVAILABLE, "not available", "failed".bytes,
                 Charset.defaultCharset()))
@@ -136,24 +139,5 @@ class OpenShiftClientTest extends AbstractSpec {
       !result.success
       result.responseBody.get("error").asText() == "failed"
 
-  }
-
-  def "Get image stream given ok response return success"() {
-    when:
-      def openShiftResponse = openShiftClient.getImageStream('namespace', 'name')
-
-    then:
-      1 * userClient.get('imagestream', 'namespace', 'name', true) >> ResponseEntity.ok(Mock(JsonNode))
-      openShiftResponse.success
-  }
-
-  def "Get image stream given exception return failed"() {
-    when:
-      def openShiftResponse = openShiftClient.getImageStream('namespace', 'name')
-
-    then:
-      1 * userClient.get('imagestream', 'namespace', 'name', true) >>
-          { throw new OpenShiftException('Test exception', new RuntimeException()) }
-      !openShiftResponse.success
   }
 }

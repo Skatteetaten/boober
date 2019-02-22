@@ -19,13 +19,14 @@ object BuildConfigGenerator {
         source: AuroraBuild,
         buildName: String,
         buildLabels: Map<String, String>,
-        ownerReference: OwnerReference
+        ownerReference: OwnerReference,
+        buildNamespace: String
     ): BuildConfig {
         return newBuildConfig {
-            apiVersion = "v1"
             metadata {
                 ownerReferences = listOf(ownerReference)
                 name = buildName
+                namespace = buildNamespace
                 labels = buildLabels
             }
 

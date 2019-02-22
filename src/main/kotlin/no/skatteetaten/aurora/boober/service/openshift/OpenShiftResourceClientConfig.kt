@@ -31,11 +31,14 @@ class OpenShiftResourceClientConfig(
     @Bean
     @ClientType(TokenSource.API_USER)
     @Primary
-    fun createUserDetailsOpenShiftResourceClient(): OpenShiftResourceClient = OpenShiftResourceClient(baseUrl, userDetailsTokenProvider, restTemplateWrapper)
+    fun createUserDetailsOpenShiftResourceClient(): OpenShiftResourceClient = OpenShiftResourceClient(
+        userDetailsTokenProvider,
+        restTemplateWrapper
+    )
 
     @Bean
     @ClientType(TokenSource.SERVICE_ACCOUNT)
     fun createServiceAccountOpenShiftResourceClient(): OpenShiftResourceClient {
-        return OpenShiftResourceClient(baseUrl, serviceAccountTokenProvider, restTemplateWrapper)
+        return OpenShiftResourceClient(serviceAccountTokenProvider, restTemplateWrapper)
     }
 }

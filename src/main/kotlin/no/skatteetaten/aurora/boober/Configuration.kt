@@ -32,7 +32,7 @@ import java.security.cert.X509Certificate
 import java.util.UUID
 
 enum class ServiceTypes {
-    BITBUCKET, GENERAL, AURORA, SKAP
+    BITBUCKET, GENERAL, AURORA, SKAP, OPENSHIFT
 }
 
 @Target(AnnotationTarget.TYPE, AnnotationTarget.FUNCTION, AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
@@ -66,6 +66,19 @@ class Configuration : BeanPostProcessor {
     ): RestTemplate {
 
         return restTemplateBuilder.requestFactory(clientHttpRequestFactory).build()
+    }
+
+    @Bean
+    @TargetService(ServiceTypes.OPENSHIFT)
+    fun openShiftRestTemplate(
+        restTemplateBuilder: RestTemplateBuilder,
+        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory,
+        @Value("\${openshift.url}") baseUrl: String
+    ): RestTemplate {
+
+        return restTemplateBuilder
+            .rootUri(baseUrl)
+            .requestFactory(clientHttpRequestFactory).build()
     }
 
     @Bean

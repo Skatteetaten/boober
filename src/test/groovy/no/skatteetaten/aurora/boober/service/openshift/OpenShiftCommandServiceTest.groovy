@@ -55,7 +55,8 @@ class OpenShiftCommandServiceTest extends AbstractAuroraDeploymentSpecSpringTest
   def "Gets existing resource from OpenShift and merges"() {
 
     given:
-      osClusterMock.expect(requestTo("$openShiftUrl/oapi/v1/namespaces/$NAMESPACE/deploymentconfigs/webleveranse")).
+      osClusterMock.
+          expect(requestTo("/apis/apps.openshift.io/v1/namespaces/$NAMESPACE/deploymentconfigs/webleveranse")).
           andRespond(withSuccess(loadResource("dc-webleveranse.json"), MediaType.APPLICATION_JSON))
 
       AuroraDeploymentSpecInternal deploymentSpec =

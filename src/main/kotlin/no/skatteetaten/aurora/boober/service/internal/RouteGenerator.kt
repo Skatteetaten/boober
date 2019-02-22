@@ -14,13 +14,14 @@ object RouteGenerator {
         serviceName: String,
         routeSuffix: String,
         routeLabels: Map<String, String>,
-        ownerReference: OwnerReference
+        ownerReference: OwnerReference,
+        routeNamespace: String
     ): Route {
         return newRoute {
-            apiVersion = "v1"
             metadata {
                 name = source.objectName
                 labels = routeLabels
+                namespace = routeNamespace
                 ownerReferences = listOf(ownerReference)
                 source.annotations?.let {
                     annotations = it.mapKeys { it.key.replace("|", "/") }

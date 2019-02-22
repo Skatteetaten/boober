@@ -34,7 +34,7 @@ class OpenShiftCommandServiceTest : ResourceLoader() {
     fun `Should parse error message from route`() {
         val json = loadJsonResource("route-failed.json")
         val response = OpenShiftResponse(
-            command = OpenshiftCommand(OperationType.CREATE),
+            command = OpenshiftCommand(OperationType.CREATE, ""),
             success = true,
             responseBody = json
         )

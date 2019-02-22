@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fkorotkov.kubernetes.newPatch
 import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
@@ -23,12 +22,16 @@ import no.skatteetaten.aurora.boober.service.openshift.OperationType.UPDATE
 import no.skatteetaten.aurora.boober.service.openshift.mergeWithExistingResource
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.apiBaseUrl
 import no.skatteetaten.aurora.boober.utils.convert
 import no.skatteetaten.aurora.boober.utils.deploymentConfig
 import no.skatteetaten.aurora.boober.utils.findDockerImageUrl
 import no.skatteetaten.aurora.boober.utils.findErrorMessage
 import no.skatteetaten.aurora.boober.utils.findImageChangeTriggerTagName
 import no.skatteetaten.aurora.boober.utils.imageStream
+import no.skatteetaten.aurora.boober.utils.namespacedNamedUrl
+import no.skatteetaten.aurora.boober.utils.namespacedResourceUrl
+import no.skatteetaten.aurora.boober.utils.nonGettableResources
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.springframework.stereotype.Service
@@ -158,20 +161,25 @@ class OpenShiftCommandService(
 
         val kind = newResource.openshiftKind
         val name = newResource.openshiftName
+        val baseUrl = newResource.apiBaseUrl
 
-        val existingResource = if (mergeWithExistingResource && kind != "imagestreamimport")
-            openShiftClient.get(kind, namespace, name, retryGetResourceOnFailure)
+        val resourceUrl = "$baseUrl/namespaces/$namespace/${kind}s"
+        val namedUrl = "$resourceUrl/$name"
+
+        val existingResource = if (mergeWithExistingResource && kind !in nonGettableResources)
+            openShiftClient.get(kind, namedUrl, retryGetResourceOnFailure)
         else null
 
         return if (existingResource == null) {
-            OpenshiftCommand(CREATE, payload = newResource)
+            OpenshiftCommand(CREATE, payload = newResource, url = resourceUrl)
         } else {
             val mergedResource = mergeWithExistingResource(newResource, existingResource.body)
             OpenshiftCommand(
                 operationType = UPDATE,
                 payload = mergedResource,
                 previous = existingResource.body,
-                generated = newResource
+                generated = newResource,
+                url = namedUrl
             )
         }
     }
@@ -192,12 +200,18 @@ class OpenShiftCommandService(
         )
     ): List<OpenshiftCommand> {
 
-        newPatch { }
         // TODO: This cannot be change until we remove the app label
         val labelSelectors = listOf("app=$name", "booberDeployId", "booberDeployId!=$deployId")
         return apiResources
             .flatMap { kind -> openShiftClient.getByLabelSelectors(kind, namespace, labelSelectors) }
-            .map { OpenshiftCommand(DELETE, payload = it, previous = it) }
+            .map {
+                try {
+                    val url = it.namespacedNamedUrl
+                    OpenshiftCommand(DELETE, payload = it, previous = it, url = url)
+                } catch (e: Throwable) {
+                    throw e
+                }
+            }
     }
 
     private fun mustRecreateRoute(newRoute: JsonNode, previousRoute: JsonNode?): Boolean {
@@ -225,7 +239,11 @@ class OpenShiftCommandService(
         val commands: List<OpenshiftCommand> =
             if (command.isType(UPDATE, "route") && mustRecreateRoute(command.payload, command.previous)) {
                 val deleteCommand = command.copy(operationType = DELETE)
-                val createCommand = command.copy(operationType = CREATE, payload = command.generated!!)
+                val createCommand = command.copy(
+                    operationType = CREATE,
+                    url = command.payload.namespacedResourceUrl,
+                    payload = command.generated!!
+                )
                 listOf(deleteCommand, createCommand)
             } else {
                 listOf(command)

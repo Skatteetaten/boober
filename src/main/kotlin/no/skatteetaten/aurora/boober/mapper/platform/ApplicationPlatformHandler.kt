@@ -129,7 +129,8 @@ data class AuroraDeployment(
     val replicas: Int,
     val serviceAccount: String?,
     val ttl: Duration?,
-    val pause: Boolean
+    val pause: Boolean,
+    val namespace: String
 )
 
 enum class DeploymentState {

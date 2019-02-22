@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import no.skatteetaten.aurora.boober.utils.apiBaseUrl
 import org.springframework.stereotype.Service
 
 @Service
@@ -80,11 +81,10 @@ class OpenShiftTemplateProcessor(
                 }
         }
 
-        val result = openShiftClient.post(
-            "processedtemplate",
-            namespace = auroraDeploymentSpecInternal.environment.namespace,
-            payload = template
-        )
+        val namespace = auroraDeploymentSpecInternal.environment.namespace
+        val url = "${template.apiBaseUrl}/namespaces/$namespace/processedtemplates"
+
+        val result = openShiftClient.post(url, payload = template)
 
         return result.body["objects"].asSequence().toList()
     }

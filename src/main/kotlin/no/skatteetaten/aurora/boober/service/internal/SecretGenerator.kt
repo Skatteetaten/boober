@@ -14,15 +14,15 @@ object SecretGenerator {
         secretLabels: Map<String, String>,
         secretData: Map<String, ByteArray>?,
         secretAnnotations: Map<String, String> = emptyMap(),
-        ownerReference: OwnerReference
+        ownerReference: OwnerReference,
+        secretNamespace: String
     ): Secret {
 
         return newSecret {
-            apiVersion = "v1"
-
             metadata {
                 labels = secretLabels
                 name = secretName
+                namespace = secretNamespace
                 ownerReferences = listOf(ownerReference)
                 secretAnnotations.isNotEmpty().whenTrue {
                     annotations = secretAnnotations

@@ -107,7 +107,9 @@ class RedeployService(
 
     fun performDeploymentRequest(namespace: String, name: String): OpenShiftResponse {
         val deploymentRequest = openShiftObjectGenerator.generateDeploymentRequest(name)
-        val command = OpenshiftCommand(OperationType.CREATE, deploymentRequest)
+        val url = "deploymentRequest.apiBaseUrl/namespace/$namespace/deploymentconfigs/$name/instantiate"
+        val command = OpenshiftCommand(OperationType.CREATE, payload = deploymentRequest, url = url)
+
         return openShiftClient.performOpenShiftCommand(namespace, command)
     }
 }

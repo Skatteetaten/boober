@@ -13,7 +13,6 @@ object ImageStreamImportGenerator {
 
     fun create(dockerImageUrl: String, imageStreamName: String): ImageStreamImport {
         return newImageStreamImport {
-            apiVersion = "v1"
             metadata {
                 name = imageStreamName
             }

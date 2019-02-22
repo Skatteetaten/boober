@@ -34,7 +34,7 @@ class OpenShiftRestTemplateWrapperTest extends AbstractAuroraDeploymentSpecSprin
   @Autowired
   OpenShiftRestTemplateWrapper restTemplateWrapper
 
-  @Value('${openshift.url}/oapi/v1/namespaces/aos/deploymentconfigs/webleveranse')
+  @Value('/apis/apps.openshift.io/v1/namespaces/aos/deploymentconfigs/webleveranse')
   String resourceUrl
 
   def setup() {

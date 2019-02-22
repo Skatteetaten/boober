@@ -8,8 +8,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 
 import groovy.json.JsonOutput
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
@@ -119,16 +117,19 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
 
       env           | name            | templateFile      | overrides
       "booberdev"   | "aos-simple"    | null              | booberDevAosSimpleOverrides
-      "booberdev"   | "tvinn"         | "atomhopper.json" | []
-      "booberdev"   | "reference"     | null              | []
-      "booberdev"   | "console"       | null              | []
-      "webseal"     | "sprocket"      | null              | []
-      "booberdev"   | "sprocket"      | null              | []
-      "booberdev"   | "reference-web" | null              | []
-      "secrettest"  | "aos-simple"    | null              | []
-      "release"     | "aos-simple"    | null              | []
-      "mounts"      | "aos-simple"    | null              | []
-      "secretmount" | "aos-simple"    | null              | []
+      /*    "booberdev"   | "tvinn"         | "atomhopper.json" | []
+
+          "booberdev"   | "reference"     | null              | []
+          "booberdev"   | "console"       | null              | []
+          "webseal"     | "sprocket"      | null              | []
+          "booberdev"   | "sprocket"      | null              | []
+          "booberdev"   | "reference-web" | null              | []
+          "secrettest"  | "aos-simple"    | null              | []
+          "release"     | "aos-simple"    | null              | []
+          "mounts"      | "aos-simple"    | null              | []
+          "secretmount" | "aos-simple"    | null              | []
+
+       */
   }
 
   def "generate rolebinding should include serviceaccount "() {

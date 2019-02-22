@@ -11,15 +11,16 @@ object ConfigMapGenerator {
         cmName: String,
         cmLabels: Map<String, String>,
         cmData: Map<String, String>,
-        ownerReference: OwnerReference
+        ownerReference: OwnerReference,
+        cmNamespace: String
     ): ConfigMap {
 
         return newConfigMap {
-            apiVersion = "v1"
             metadata {
                 ownerReferences = listOf(ownerReference)
                 labels = cmLabels
                 name = cmName
+                namespace = cmNamespace
             }
             data = cmData
         }

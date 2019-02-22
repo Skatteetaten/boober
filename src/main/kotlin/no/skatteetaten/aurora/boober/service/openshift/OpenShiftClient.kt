@@ -29,6 +29,7 @@ enum class OperationType { GET, CREATE, UPDATE, DELETE, NOOP }
 
 data class OpenshiftCommand @JvmOverloads constructor(
     val operationType: OperationType,
+    val url: String,
     val payload: JsonNode = NullNode.getInstance(),
     val previous: JsonNode? = null,
     val generated: JsonNode? = null
@@ -118,9 +119,9 @@ class OpenShiftClient(
         return try {
             val res: JsonNode? = when (command.operationType) {
                 OperationType.GET -> throw OpenShiftException("GET is unsupported") // We should probably consider implementing it, though
-                OperationType.CREATE -> performClient.post(kind, namespace, name, command.payload).body
-                OperationType.UPDATE -> performClient.put(kind, namespace, name, command.payload).body
-                OperationType.DELETE -> performClient.delete(kind, namespace, name).body
+                OperationType.CREATE -> performClient.post(command.url, command.payload).body
+                OperationType.UPDATE -> performClient.put(command.url, command.payload).body
+                OperationType.DELETE -> performClient.delete(command.url).body
                 OperationType.NOOP -> command.payload
             }
             OpenShiftResponse(command, res)
@@ -170,18 +171,6 @@ class OpenShiftClient(
         return OpenShiftGroups(getAllDeclaredUserGroups() + getAllImplicitUserGroups())
     }
 
-    fun getImageStream(namespace: String, name: String): OpenShiftResponse {
-
-        val performClient = getClientForKind("imagestream")
-        val command = OpenshiftCommand(OperationType.GET)
-        return try {
-            val res: JsonNode? = performClient.get("imagestream", namespace, name)?.body
-            OpenShiftResponse(command, res)
-        } catch (e: OpenShiftException) {
-            OpenShiftResponse.fromOpenShiftException(e, command)
-        }
-    }
-
     fun resourceExists(kind: String, namespace: String, name: String): Boolean {
         val response = getClientForKind(kind).get(kind, namespace, name, false)
         return response?.statusCode?.is2xxSuccessful ?: false
@@ -199,8 +188,8 @@ class OpenShiftClient(
         return false
     }
 
-    fun get(kind: String, namespace: String, name: String, retry: Boolean = true): ResponseEntity<JsonNode>? {
-        return getClientForKind(kind).get(kind, namespace, name, retry)
+    fun get(kind: String, url: String, retry: Boolean = true): ResponseEntity<JsonNode>? {
+        return getClientForKind(kind).get(url, retry = retry)
     }
 
     /**
@@ -208,7 +197,7 @@ class OpenShiftClient(
      */
     fun getByLabelSelectors(kind: String, namespace: String, labelSelectors: List<String>): List<JsonNode> {
         val queryString = urlEncode(Pair("labelSelector", labelSelectors.joinToString(",")))
-        val apiUrl = OpenShiftApiUrls.getCollectionPathForResource(baseUrl, kind, namespace)
+        val apiUrl = OpenShiftResourceClient.generateUrl(kind, namespace)
         val url = "$apiUrl?$queryString"
         val body = getClientForKind(kind).get(url)?.body
 
@@ -224,7 +213,7 @@ class OpenShiftClient(
      * the request.
      */
     private fun getClientForKind(kind: String): OpenShiftResourceClient {
-        return if (listOf("namespace", "route").contains(kind)) {
+        return if (listOf("namespace", "route").contains(kind.toLowerCase())) {
             serviceAccountClient
         } else {
             userClient

@@ -53,6 +53,44 @@ fun JsonNode.atNullable(path: String): JsonNode? {
 fun List<JsonNode>.deploymentConfig(): JsonNode? = this.find { it.openshiftKind == "deploymentconfig" }
 fun List<JsonNode>.imageStream(): JsonNode? = this.find { it.openshiftKind == "imagestream" }
 
+val kubernetesResources = setOf(
+    "namespace", "service", "configmap", "secret", "serviceaccount",
+    "replicationcontroller", "persistentvolumeclaim", "pod"
+)
+
+val nonGettableResources = setOf(
+    "processedtemplate", "deploymentrequest", "imagestreamimport"
+)
+
+val JsonNode.namespace: String
+    get() = this.get("metadata").get("namespace").asText()
+
+val JsonNode.apiVersion: String
+    get() = this.get("apiVersion").asText()
+
+val JsonNode.apiPrefix: String
+    get() :String {
+
+        return if (this.apiVersion == "v1") {
+            if (this.openshiftKind in kubernetesResources) {
+                "api"
+            } else {
+                "oapi"
+            }
+        } else {
+            "apis"
+        }
+    }
+
+val JsonNode.apiBaseUrl: String
+    get() = "/${this.apiPrefix}/${this.apiVersion}"
+
+val JsonNode.namespacedResourceUrl: String
+    get() = "${this.apiBaseUrl}/namespaces/${this.namespace}/${this.openshiftKind}s"
+val JsonNode.namespacedNamedUrl: String
+    get() = "${this.namespacedResourceUrl}/${this.openshiftName}"
+
+
 val JsonNode.openshiftKind: String
     get() = this.get("kind")?.asText()?.toLowerCase()
         ?: throw IllegalArgumentException("Kind must be set in file=$this")
@@ -177,3 +215,4 @@ fun jacksonYamlObjectMapper(): ObjectMapper =
     ObjectMapper(YAMLFactory().enable(JsonParser.Feature.ALLOW_COMMENTS)).registerKotlinModule()
 
 fun jsonMapper(): ObjectMapper = jacksonObjectMapper().enable(JsonParser.Feature.ALLOW_COMMENTS)
+
