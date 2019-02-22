@@ -217,11 +217,17 @@ data class Database(
     val generate: Boolean,
     val exposeTo: Map<String, String> = emptyMap(),
     val roles: Map<String, DatabasePermission> = emptyMap(),
-    val parameters: Map<String, String> = emptyMap()
+    val instance: DatabaseInstance
 ) {
     val spec: String
         get(): String = (id?.let { "$name:$id" } ?: name).toLowerCase()
 }
+
+data class DatabaseInstance(
+    val name: String? = null,
+    val fallback: Boolean = false,
+    val labels: Map<String, String> = emptyMap()
+)
 
 data class Probe(val path: String? = null, val port: Int, val delay: Int, val timeout: Int)
 
