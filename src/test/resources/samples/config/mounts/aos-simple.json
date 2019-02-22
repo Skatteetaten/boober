@@ -7,7 +7,7 @@
   },
   "segment": "aurora",
   "route": {
-    "aos-simple": {
+    "@name@": {
       "host": "@segment@.@env@"
     },
     "bar": {

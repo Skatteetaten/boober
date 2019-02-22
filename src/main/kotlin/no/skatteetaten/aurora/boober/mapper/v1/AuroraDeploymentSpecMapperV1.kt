@@ -51,9 +51,8 @@ class AuroraDeploymentSpecMapperV1(
         integration: AuroraIntegration?,
         localTemplate: AuroraLocalTemplate?,
         env: AuroraDeployEnvironment,
-        applicationFile: AuroraConfigFile,
         configVersion: String,
-        overrideFiles: Map<String, String>
+        files: List<AuroraConfigFile>
     ): AuroraDeploymentSpecInternal {
         val name: String = auroraDeploymentSpec["name"]
 
@@ -73,9 +72,8 @@ class AuroraDeploymentSpecMapperV1(
             template = template,
             localTemplate = localTemplate,
             integration = integration,
-            applicationFile = applicationFile,
+            files = files,
             configVersion = configVersion,
-            overrideFiles = overrideFiles,
             message = auroraDeploymentSpec.getOrNull<String>("message"),
             env = auroraDeploymentSpec.getConfigEnv(configHandlers)
         )

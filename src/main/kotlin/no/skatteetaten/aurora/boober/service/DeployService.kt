@@ -62,6 +62,19 @@ class DeployService(
                 applicationDeploymentRefs,
                 overrides
             )
+
+        val usedOverrideNames: List<String> =
+            deploymentSpecs.flatMap { spec -> spec.files.filter { it.override } }.map { it.configName }
+
+        val unusedOverrides = overrides.filter { !usedOverrideNames.contains(it.configName) }
+        if (unusedOverrides.isNotEmpty()) {
+            val overrideString = unusedOverrides.joinToString(",") { it.name }
+            val refString = applicationDeploymentRefs.joinToString(",")
+            throw IllegalArgumentException(
+                "Overrides files '$overrideString' does not apply to any deploymentReference ($refString)"
+            )
+        }
+
         val environments = prepareDeployEnvironments(deploymentSpecs)
         val deployResults: List<AuroraDeployResult> =
             deployFromSpecs(deploymentSpecs, environments, deploy, auroraConfigRefExact)
@@ -221,7 +234,8 @@ class DeployService(
         val provisions = Provisions(dbhSchemas)
 
         val updateBy = userDetailsProvider.getAuthenticatedUser().username.replace(":", "-")
-        val application = ApplicationDeploymentGenerator.generate(deploymentSpecInternal, deployId, cmd, updateBy, provisions)
+        val application =
+            ApplicationDeploymentGenerator.generate(deploymentSpecInternal, deployId, cmd, updateBy, provisions)
 
         val applicationCommand = openShiftCommandBuilder.createOpenShiftCommand(
             deploymentSpecInternal.environment.namespace,

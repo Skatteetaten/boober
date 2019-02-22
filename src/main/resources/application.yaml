@@ -43,7 +43,6 @@ boober:
 aurora:
     token:
         location: /u01/secrets/app/aurora-token/token
-
     starter:
         headerfilter:
             enabled: false
@@ -68,24 +67,13 @@ openshift:
 
 boober:
     dbh: http://dbh-aurora.${openshift.cluster}.paas.skead.no
-    skap: http://skap-aurora.${openshift.cluster}.paas.skead.no
+    #skap: http://skap-aurora.${openshift.cluster}.paas.skead.no
     openshift:
-        tokenLocation: /opt/boober
-    encrypt:
-        key: "komogsyngensang"
-    bitbucket:
-        project: "ac-dev"
-    git:
-        username: "boober-dev"
-        password: "boober-dev"
+        tokenLocation: /tmp/boober-token
 
 vault:
     operations:
         enabled: true
-    git:
-        project: "av-dev"
-        username: "boober-dev"
-        password: "boober-dev"
 
 aurora:
     token:

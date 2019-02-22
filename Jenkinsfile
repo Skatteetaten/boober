@@ -7,6 +7,7 @@ def overrides = [
     checkstyle : false,
     sonarQube: false,
     jiraFiksetIKomponentversjon: true,
+    chatRoom: "#aos-notifications",
     versionStrategy: [
       [branch: 'master', versionHint: '2']
     ]

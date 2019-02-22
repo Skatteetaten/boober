@@ -182,6 +182,11 @@ class OpenShiftClient(
         }
     }
 
+    fun resourceExists(kind: String, namespace: String, name: String): Boolean {
+        val response = getClientForKind(kind).get(kind, namespace, name, false)
+        return response?.statusCode?.is2xxSuccessful ?: false
+    }
+
     fun projectExists(name: String): Boolean {
         serviceAccountClient.get("$baseUrl/oapi/v1/projects/$name", retry = false)?.body?.let {
             val phase = it.at("/status/phase").textValue()

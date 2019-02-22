@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import spock.lang.Unroll
@@ -58,6 +59,7 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
       }
     }
 
+    openShiftClient.resourceExists(_, _, _) >> true
     openShiftClient.getByLabelSelectors(_, _, _) >> []
     redeployService.triggerRedeploy(_, _) >> new RedeployService.RedeployResult()
     deployLogService.markRelease(_, _) >> {
@@ -73,7 +75,6 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
 
     when:
       def deployResults = deployService.prepareDeployEnvironments(ads)
-
 
     then:
       deployResults.size() == 1
@@ -117,5 +118,20 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
       'release'     | 'aos-simple'
       'mounts'      | 'aos-simple'
       'secretmount' | 'aos-simple'
+  }
+
+  def "Throw error if override file is not used"() {
+    given:
+      def overrides = [
+          new AuroraConfigFile("utv/foobar", "foobar", true, false)
+      ]
+    when:
+
+      deployService.executeDeploy(configRef, [new ApplicationDeploymentRef("booberdev", 'reference')], overrides)
+
+    then:
+      def e = thrown(RuntimeException)
+      e.message=="Overrides files 'utv/foobar' does not apply to any deploymentReference (booberdev/reference)"
+
   }
 }

@@ -27,8 +27,8 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
 
     when:
 
-      def updateFileResponse= auroraConfig.updateFile("booberdev/console.json", updates)
-      def updatedAuroraConfig=updateFileResponse.second
+      def updateFileResponse = auroraConfig.updateFile("booberdev/console.json", updates)
+      def updatedAuroraConfig = updateFileResponse.second
     then:
       def version = updatedAuroraConfig.getFiles().stream()
           .filter({ it.configName == "booberdev/console.json" })
@@ -116,7 +116,7 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
     when:
       auroraConfig.getFilesForApplication(referanseAid)
 
-      then: "Should be missing utv/referanse"
+    then: "Should be missing utv/referanse"
       def ex = thrown(IllegalArgumentException)
       ex.message.contains("utv/referanse")
   }
@@ -151,7 +151,7 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
     when:
       def version = auroraConfig.getFiles().find { it.name == filename }.version
       def patchFileResponse = auroraConfig.patchFile(filename, jsonOp, version)
-      def patchedAuroraConfig=patchFileResponse.second
+      def patchedAuroraConfig = patchFileResponse.second
 
     then:
       def patchedFile = patchedAuroraConfig.getFiles().find { it.name == filename }
@@ -164,5 +164,22 @@ class AuroraConfigTest extends AbstractAuroraConfigTest {
 
   def overrideFile(String fileName) {
     new AuroraConfigFile(fileName, "{}", true, false)
+  }
+
+  def "Throw error if baseFile is missing"() {
+    given:
+      def auroraConfigJson = [
+          "about.json"        : DEFAULT_ABOUT,
+          "utv/about.json"    : DEFAULT_UTV_ABOUT,
+          "utv/reference.json": '''{ "webseal" : { "roles" : "foobar" }}''',
+      ]
+      def auroraConfig = createAuroraConfig(auroraConfigJson)
+
+    when:
+      auroraConfig.getFilesForApplication(new ApplicationDeploymentRef("utv", "reference"))
+
+    then:
+      def e = thrown(IllegalArgumentException)
+      e.message == "Some required AuroraConfig (json|yaml) files missing. BASE file with name reference."
   }
 }

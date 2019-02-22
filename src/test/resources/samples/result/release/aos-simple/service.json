@@ -5,7 +5,7 @@
     "annotations": {
       "prometheus.io/scrape": "false",
       "sprocket.sits.no/service.webseal": "test",
-      "sprocket.sits.no/service.webseal-roles": "admin dev"
+      "sprocket.sits.no/service.webseal-roles": "admin dev aos-simple"
     },
     "labels": {
       "app": "aos-simple",

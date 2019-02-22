@@ -15,10 +15,10 @@
   },
   "webseal": {
     "host": "test",
-    "roles": "admin dev"
+    "roles": "admin dev @name@"
   },
   "route": {    
-    "aos-simple": {
+    "@name@": {
       "path": "/foo",
       "annotations": {
         "haproxy.router.openshift.io|timeout": "30s"
