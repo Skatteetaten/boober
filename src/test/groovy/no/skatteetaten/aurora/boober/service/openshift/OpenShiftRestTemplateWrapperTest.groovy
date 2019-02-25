@@ -38,6 +38,7 @@ class OpenShiftRestTemplateWrapperTest extends AbstractAuroraDeploymentSpecSprin
   String resourceUrl
 
   def setup() {
+    osClusterMock.bindTo(restTemplateWrapper.restTemplate)
     Logger root = (Logger) LoggerFactory.getLogger("no.skatteetaten")
     root.setLevel(Level.DEBUG)
   }
@@ -60,7 +61,7 @@ class OpenShiftRestTemplateWrapperTest extends AbstractAuroraDeploymentSpecSprin
   def "Fails when exceeds retry attempts"() {
 
     given:
-      def resourceUrl = "$openShiftUrl/oapi/v1/namespaces/aos/deploymentconfigs/webleveranse"
+      def resourceUrl = "/oapi/v1/namespaces/aos/deploymentconfigs/webleveranse"
       3.times { osClusterMock.expect(requestTo(resourceUrl)).andRespond(withBadRequest()) }
 
     when:

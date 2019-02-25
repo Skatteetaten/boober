@@ -3,6 +3,9 @@ package no.skatteetaten.aurora.boober.service.openshift
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.token.TokenProvider
+import no.skatteetaten.aurora.boober.utils.findApiVersion
+import no.skatteetaten.aurora.boober.utils.findOpenShiftApiPrefix
+import no.skatteetaten.aurora.boober.utils.kindsWithoutNamespace
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
@@ -79,56 +82,25 @@ open class OpenShiftResourceClient(
         @JvmOverloads
         fun generateUrl(kind: String, namespace: String? = null, name: String? = null): String {
 
-            //So fun with consistent apis. NOT!
-            val kinds = if (kind == "deploymentrequest") {
-                "deploymentconfigs"
-            } else {
-                kind.toLowerCase() + "s"
-            }
+            val kinds = kind.toLowerCase() + "s"
 
-            val kindsWithoutNamespace = listOf(
-                "namespaces",
-                "projects",
-                "projectrequests",
-                "deploymentreqeusts",
-                "users",
-                "groups"
-            )
             if (kinds !in kindsWithoutNamespace && namespace == null) {
                 throw IllegalArgumentException("namespace required for resource kind $kind")
             }
 
             val namespaceSegment = namespace?.let { "/namespaces/$namespace" } ?: ""
 
-            val apiSegment = when (kind.toLowerCase()) {
-                "applicationdeployment" -> "apis/skatteetaten.no/v1"
-                "deploymentconfig" -> "apis/apps.openshift.io/v1"
-                "deploymentrequest" -> "apis/apps.openshift.io/v1"
-                "route" -> "apis/route.openshift.io/v1"
-                "user" -> "apis/user.openshift.io/v1"
-                "project" -> "apis/project.openshift.io/v1"
-                "template" -> "apis/template.openshift.io/v1"
-                "projectrequest" -> "apis/project.openshift.io/v1"
-                "imagestream" -> "apis/image.openshift.io/v1"
-                "imagestreamtag" -> "apis/image.openshift.io/v1"
-                "imagestreamimport" -> "apis/image.openshift.io/v1"
-                "rolebinding" -> "apps/image.openshift.io/v1"
-                "group" -> "apis/user.openshift.io/v1"
-                "buildconfig" -> "apis/build.openshift.io/v1"
-                "processedtemplate" -> "oapi/v1"
-                else -> "api/v1"
+            val apiVersion = findApiVersion(kind)
+            val apiPrefix = findOpenShiftApiPrefix(apiVersion, kind)
 
-            }
-
-            //TODO: I think this can go away
-            val namePart = name?.let {
+            val kindAndnamePart = name?.let {
                 if (kind.toLowerCase() == "deploymentrequest") {
-                    "/$name/instantiate"
+                    "deploymentconfigs/$name/instantiate"
                 } else {
-                    "/$name"
+                    "$kinds/$name"
                 }
-            } ?: ""
-            return "/$apiSegment$namespaceSegment/$kinds$namePart"
+            } ?: kinds
+            return "/$apiPrefix/$apiVersion$namespaceSegment/$kindAndnamePart"
         }
     }
 }
