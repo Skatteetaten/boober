@@ -12,6 +12,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.service.openshift.deploymentConfig
 import no.skatteetaten.aurora.boober.service.openshift.imageStream
 import no.skatteetaten.aurora.boober.service.openshift.imageStreamImport
+import no.skatteetaten.aurora.boober.utils.apiBaseUrl
 import no.skatteetaten.aurora.boober.utils.convert
 import no.skatteetaten.aurora.boober.utils.findCurrentImageHash
 import no.skatteetaten.aurora.boober.utils.findImageChangeTriggerTagName
@@ -107,7 +108,7 @@ class RedeployService(
 
     fun performDeploymentRequest(namespace: String, name: String): OpenShiftResponse {
         val deploymentRequest = openShiftObjectGenerator.generateDeploymentRequest(name)
-        val url = "deploymentRequest.apiBaseUrl/namespace/$namespace/deploymentconfigs/$name/instantiate"
+        val url = "${deploymentRequest.apiBaseUrl}/namespace/$namespace/deploymentconfigs/$name/instantiate"
         val command = OpenshiftCommand(OperationType.CREATE, payload = deploymentRequest, url = url)
 
         return openShiftClient.performOpenShiftCommand(namespace, command)
