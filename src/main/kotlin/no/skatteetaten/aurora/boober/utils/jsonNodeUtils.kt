@@ -195,4 +195,3 @@ fun jacksonYamlObjectMapper(): ObjectMapper =
     ObjectMapper(YAMLFactory().enable(JsonParser.Feature.ALLOW_COMMENTS)).registerKotlinModule()
 
 fun jsonMapper(): ObjectMapper = jacksonObjectMapper().enable(JsonParser.Feature.ALLOW_COMMENTS)
-

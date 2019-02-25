@@ -31,7 +31,6 @@ open class OpenShiftResourceClient(
         name: String,
         retry: Boolean = true
     ): ResponseEntity<JsonNode>? {
-        //if deploymentrequest or processedtemplates return null,
         if (kind in listOf("deploymentrequest", "processedtemplate")) return null
         val url = generateUrl(kind, namespace, name)
         return get(url, retry = retry)
