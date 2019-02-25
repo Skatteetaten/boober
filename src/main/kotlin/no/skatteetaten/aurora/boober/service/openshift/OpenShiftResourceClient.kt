@@ -92,14 +92,8 @@ open class OpenShiftResourceClient(
             val apiVersion = findApiVersion(kind)
             val apiPrefix = findOpenShiftApiPrefix(apiVersion, kind)
 
-            val kindAndnamePart = name?.let {
-                if (kind.toLowerCase() == "deploymentrequest") {
-                    "deploymentconfigs/$name/instantiate"
-                } else {
-                    "$kinds/$name"
-                }
-            } ?: kinds
-            return "/$apiPrefix/$apiVersion$namespaceSegment/$kindAndnamePart"
+            val namePart = name?.let { "/$name" } ?: ""
+            return "/$apiPrefix/$apiVersion$namespaceSegment/$kinds$namePart"
         }
     }
 }

@@ -17,8 +17,6 @@ class OpenshiftApiUrlsTest extends Specification {
 
     where:
       kind                | name  | namespace | url
-      "deploymentrequest" | "foo" | "bar"     |
-          "/apis/apps.openshift.io/v1/namespaces/bar/deploymentconfigs/foo/instantiate"
       "user"              | "foo" | null      | "/apis/user.openshift.io/v1/users/foo"
       "processedtemplate" | null  | "bar"     | "/oapi/v1/namespaces/bar/processedtemplates"
       "project"           | "foo" | null      | "/apis/project.openshift.io/v1/projects/foo"
