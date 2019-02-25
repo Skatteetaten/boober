@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.metadata
@@ -303,6 +304,7 @@ class OpenShiftObjectGenerator(
             val metadataJson: JsonNode = jacksonObjectMapper().convertValue(listOf(ownerReference))
             val metadataNode: ObjectNode = result["metadata"] as ObjectNode
             metadataNode.set("ownerReferences", metadataJson)
+            metadataNode.set("namespace", TextNode(auroraDeploymentSpecInternal.environment.namespace))
             result
         }
     }
