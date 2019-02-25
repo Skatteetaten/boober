@@ -16,6 +16,7 @@
       "name": "aos-simple"
     },
     "name": "aos-simple",
+    "namespace": "aos-mounts",
     "ownerReferences": [
       {
         "apiVersion": "skatteetaten.no/v1",

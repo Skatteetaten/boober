@@ -38,7 +38,6 @@ object ImageStreamGenerator {
         isNamespace: String
     ): ImageStream {
         return newImageStream {
-            apiVersion = "v1"
             metadata {
                 ownerReferences = listOf(reference)
                 name = isName

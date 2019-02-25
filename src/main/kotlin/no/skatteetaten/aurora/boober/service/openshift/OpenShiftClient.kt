@@ -112,7 +112,6 @@ class OpenShiftClient(
     fun performOpenShiftCommand(namespace: String, command: OpenshiftCommand): OpenShiftResponse {
 
         val kind = command.payload.openshiftKind
-        val name = command.payload.openshiftName
 
         val performClient = getClientForKind(kind)
 

@@ -17,6 +17,7 @@
       "deployTag": "develop-SNAPSHOT"
     },
     "name": "openshift-referanse-react",
+    "namespace": "aos-booberdev",
     "ownerReferences": [
       {
         "apiVersion": "skatteetaten.no/v1",

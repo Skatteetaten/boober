@@ -55,7 +55,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       def spec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
       def auroraConfigRef = new AuroraConfigRef("test", "master", "123")
       def command = new ApplicationDeploymentCommand([:], DEFAULT_AID, auroraConfigRef)
-      def schema = new DbhSchema("123-456", "MANAGED", new DatabaseInstance(1234, null), "", ["name":"referanse"], [])
+      def schema = new DbhSchema("123-456", "MANAGED", new DatabaseInstance(1234, null), "", ["name": "referanse"], [])
       def provisions = new Provisions([schema])
       def applicationDeployment = ApplicationDeploymentGenerator.generate(spec, "123", command, "luke", provisions)
     then:
@@ -78,7 +78,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
         def templateResult = this.getClass().getResource(templateFileName)
         JsonNode jsonResult = mapper.readTree(templateResult)
 
-        openShiftResourceClient.post("processedtemplate", _, null, _) >> {
+        openShiftResourceClient.post(_ as String, _ as JsonNode) >> {
           new ResponseEntity<JsonNode>(jsonResult, HttpStatus.OK)
         }
       }
@@ -117,19 +117,17 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
 
       env           | name            | templateFile      | overrides
       "booberdev"   | "aos-simple"    | null              | booberDevAosSimpleOverrides
-      /*    "booberdev"   | "tvinn"         | "atomhopper.json" | []
+      "booberdev"   | "tvinn"         | "atomhopper.json" | []
+      "booberdev"   | "reference"     | null              | []
+      "booberdev"   | "console"       | null              | []
+      "webseal"     | "sprocket"      | null              | []
+      "booberdev"   | "sprocket"      | null              | []
+      "booberdev"   | "reference-web" | null              | []
+      "secrettest"  | "aos-simple"    | null              | []
+      "release"     | "aos-simple"    | null              | []
+      "mounts"      | "aos-simple"    | null              | []
+      "secretmount" | "aos-simple"    | null              | []
 
-          "booberdev"   | "reference"     | null              | []
-          "booberdev"   | "console"       | null              | []
-          "webseal"     | "sprocket"      | null              | []
-          "booberdev"   | "sprocket"      | null              | []
-          "booberdev"   | "reference-web" | null              | []
-          "secrettest"  | "aos-simple"    | null              | []
-          "release"     | "aos-simple"    | null              | []
-          "mounts"      | "aos-simple"    | null              | []
-          "secretmount" | "aos-simple"    | null              | []
-
-       */
   }
 
   def "generate rolebinding should include serviceaccount "() {
@@ -157,7 +155,6 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
     and:
       rolebindings.size() == 2
   }
-
 
   def "generate rolebinding view should split groups"() {
 

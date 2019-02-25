@@ -17,6 +17,7 @@
       "deployTag": "1.0.0-b1.5.3-flange-8.152.18"
     },
     "name": "reference",
+    "namespace": "aos-booberdev",
     "ownerReferences": [
       {
         "apiVersion": "skatteetaten.no/v1",

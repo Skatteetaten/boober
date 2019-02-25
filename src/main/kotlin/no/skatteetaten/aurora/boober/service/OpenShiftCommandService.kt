@@ -134,7 +134,7 @@ class OpenShiftCommandService(
         val imageStream = jacksonObjectMapper().convertValue<ImageStream>(isCommand.payload)
         val isName = imageStream.metadata.name
         val dockerUrl = imageStream.findDockerImageUrl(tagName) ?: return null
-        val imageStreamImport = ImageStreamImportGenerator.create(dockerUrl, isName)
+        val imageStreamImport = ImageStreamImportGenerator.create(dockerUrl, isName, dc.metadata.namespace)
         return jacksonObjectMapper().convertValue(imageStreamImport)
     }
 

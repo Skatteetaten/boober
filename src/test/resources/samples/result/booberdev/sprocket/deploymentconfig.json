@@ -17,6 +17,7 @@
       "deployTag": "3"
     },
     "name": "sprocket",
+    "namespace": "aos-booberdev",
     "ownerReferences": [
       {
         "apiVersion": "skatteetaten.no/v1",

@@ -11,7 +11,7 @@ class ImageStreamImportGeneratorTest extends Specification {
       def generator = new ImageStreamImportGenerator()
 
     when:
-      def imageStreamImport = generator.create('dockerImageUrl', 'imageStreamName')
+      def imageStreamImport = generator.create('dockerImageUrl', 'imageStreamName', "imageStreamNamespace")
       def json = new ObjectMapper().writeValueAsString(imageStreamImport)
 
     then:

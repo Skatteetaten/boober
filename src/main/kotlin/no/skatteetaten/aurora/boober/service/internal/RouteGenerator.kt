@@ -20,8 +20,8 @@ object RouteGenerator {
         return newRoute {
             metadata {
                 name = source.objectName
-                labels = routeLabels
                 namespace = routeNamespace
+                labels = routeLabels
                 ownerReferences = listOf(ownerReference)
                 source.annotations?.let {
                     annotations = it.mapKeys { it.key.replace("|", "/") }

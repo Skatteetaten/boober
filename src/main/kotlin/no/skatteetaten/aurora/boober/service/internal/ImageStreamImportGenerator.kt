@@ -11,10 +11,11 @@ import io.fabric8.openshift.api.model.ImageStreamImport
 
 object ImageStreamImportGenerator {
 
-    fun create(dockerImageUrl: String, imageStreamName: String): ImageStreamImport {
+    fun create(dockerImageUrl: String, imageStreamName: String, isiNamespace: String): ImageStreamImport {
         return newImageStreamImport {
             metadata {
                 name = imageStreamName
+                namespace = isiNamespace
             }
             spec {
                 import = true

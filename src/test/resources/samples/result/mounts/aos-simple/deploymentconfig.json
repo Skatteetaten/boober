@@ -16,6 +16,7 @@
       "deployTag": "1.0.3-SNAPSHOT"
     },
     "name": "aos-simple",
+    "namespace": "aos-mounts",
     "ownerReferences": [
       {
         "apiVersion": "skatteetaten.no/v1",

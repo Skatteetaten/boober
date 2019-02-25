@@ -17,6 +17,7 @@
       "deployTag": "3"
     },
     "name": "sprocket",
+    "namespace": "aos-webseal",
     "ownerReferences": [
       {
         "apiVersion": "skatteetaten.no/v1",

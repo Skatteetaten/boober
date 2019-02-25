@@ -17,6 +17,7 @@
       "deployTag": "ref"
     },
     "name": "aos-simple",
+    "namespace": "aos-release",
     "ownerReferences": [
       {
         "apiVersion": "skatteetaten.no/v1",
