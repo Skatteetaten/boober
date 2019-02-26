@@ -18,6 +18,7 @@ import org.springframework.test.web.client.MockRestServiceServer
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import no.skatteetaten.aurora.boober.Configuration
+import no.skatteetaten.aurora.boober.model.DatabaseInstance
 import no.skatteetaten.aurora.boober.service.AbstractSpec
 import no.skatteetaten.aurora.boober.service.ProvisioningException
 import no.skatteetaten.aurora.boober.service.SpringTestUtils
@@ -48,6 +49,7 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
   @Autowired
   DatabaseSchemaProvisioner provisioner
 
+  def databaseInstance = new DatabaseInstance(null, true, [affiliation: "aos"])
   def id = "fd59dba9-7d67-4ea2-bb98-081a5df8c387"
   def appName = "reference"
   def schemaName = "reference"
@@ -56,10 +58,9 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
 
   def details = new SchemaRequestDetails(
       schemaName,
-      [:],
       [new SchemaUser("SCHEMA", "a", "aos")],
       DatabaseEngine.ORACLE,
-      "aos")
+      "aos", databaseInstance)
 
   def "Schema request with id succeeds when schema exists"() {
 
@@ -113,7 +114,9 @@ class DatabaseSchemaProvisionerTest extends AbstractSpec {
           labels + [userId: 'aurora'],
           details.users,
           details.engine,
-          details.parameters)
+          details.databaseInstance.labels,
+          details.databaseInstance.name,
+          details.databaseInstance.fallback)
 
       def body = new ObjectMapper().writeValueAsString(createBody)
       dbhServer.expect(requestTo("${DBH_HOST}/api/v1/schema/?labels=$labelsString&roles=SCHEMA&engine=ORACLE")).

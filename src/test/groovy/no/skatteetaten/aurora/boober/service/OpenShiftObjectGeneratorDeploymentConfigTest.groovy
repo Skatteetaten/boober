@@ -6,7 +6,7 @@ import static no.skatteetaten.aurora.boober.service.resourceprovisioning.Externa
 import groovy.json.JsonSlurper
 import io.fabric8.kubernetes.api.model.OwnerReference
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseInstance
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaInstance
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResult
@@ -30,7 +30,7 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObje
       def provisioningResult = new ProvisioningResult(
           new SchemaProvisionResults([new SchemaProvisionResult(
               createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec)[0],
-              new DbhSchema("", "", new DatabaseInstance(1512, ""), "", [:], []), "")
+              new DbhSchema("", "", new DatabaseSchemaInstance(1512, ""), "", [:], []), "")
           ]), null, null)
 
     when:
@@ -111,7 +111,7 @@ class OpenShiftObjectGeneratorDeploymentConfigTest extends AbstractOpenShiftObje
     return new ProvisioningResult(
         new SchemaProvisionResults([new SchemaProvisionResult(
             createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpec)[0],
-            new DbhSchema("", "", new DatabaseInstance(1512, ""), "", [:], []), "")
+            new DbhSchema("", "", new DatabaseSchemaInstance(1512, ""), "", [:], []), "")
         ]), null, null)
   }
 }

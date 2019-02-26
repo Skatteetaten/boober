@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
+import no.skatteetaten.aurora.boober.model.DatabaseInstance
 import no.skatteetaten.aurora.boober.service.ProvisioningException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.utils.logger
@@ -21,17 +22,19 @@ sealed class SchemaProvisionRequest {
 
 data class SchemaRequestDetails(
     val schemaName: String,
-    val parameters: Map<String, String>,
     val users: List<SchemaUser>,
     val engine: DatabaseEngine,
-    val affiliation: String
+    val affiliation: String,
+    val databaseInstance: DatabaseInstance
 )
 
 data class SchemaRequestPayload(
     val labels: Map<String, String>,
     val users: List<SchemaUser>,
     val engine: DatabaseEngine,
-    val parameters: Map<String, String>
+    val instanceLabels: Map<String, String>,
+    val instanceName: String? = null,
+    val instanceFallback: Boolean = false
 )
 
 data class SchemaUser(
@@ -66,12 +69,12 @@ data class SchemaProvisionResults(val results: List<SchemaProvisionResult>)
 
 data class DbhUser(val username: String, val password: String, val type: String)
 
-data class DatabaseInstance(val port: Long, val host: String?)
+data class DatabaseSchemaInstance(val port: Long, val host: String?)
 
 data class DbhSchema(
     val id: String,
     val type: String,
-    val databaseInstance: DatabaseInstance,
+    val databaseInstance: DatabaseSchemaInstance,
     val jdbcUrl: String,
     val labels: Map<String, String> = mapOf(),
     private val users: List<DbhUser> = listOf()
@@ -153,7 +156,6 @@ class DatabaseSchemaProvisioner(
         val user = userDetailsProvider.getAuthenticatedUser()
         val labels = mapOf(
             "affiliation" to request.details.affiliation,
-            // TODO should we really hard code this here? Why not just send in environment here?
             "environment" to "${request.details.affiliation}-${request.environment}",
             "application" to request.application,
             "name" to request.details.schemaName,
@@ -179,7 +181,6 @@ class DatabaseSchemaProvisioner(
         details: SchemaRequestDetails
     ): Pair<DbhSchema, String>? {
 
-        // TODO: BAS?
         val labelsString = toLabelsString(labels)
         val roleString = details.users.joinToString(",") { it.name }
         val response: ResponseEntity<JsonNode> = try {
@@ -203,7 +204,9 @@ class DatabaseSchemaProvisioner(
             SchemaRequestPayload(
                 users = details.users,
                 engine = details.engine,
-                parameters = details.parameters,
+                instanceName = details.databaseInstance.name,
+                instanceFallback = details.databaseInstance.fallback,
+                instanceLabels = details.databaseInstance.labels,
                 labels = labels
             )
 
@@ -233,18 +236,22 @@ class DatabaseSchemaProvisioner(
     }
 
     private fun createProvisioningException(message: String, e: Exception): ProvisioningException {
-        fun parseErrorResponse(responseMessage: String?): String {
+        fun parseErrorResponse(responseMessage: String?): DbhErrorResponse {
             return try {
-                val dbhResponse = mapper.readValue(responseMessage, DbhErrorResponse::class.java)
-                dbhResponse.errorMessage
+                mapper.readValue(responseMessage, DbhErrorResponse::class.java)
             } catch (e: Exception) {
-                ""
+                DbhErrorResponse("", emptyList(), 0)
             }
         }
         return when (e) {
             is HttpClientErrorException -> {
                 val dbhErrorResponse = parseErrorResponse(e.responseBodyAsString)
-                ProvisioningException("$message cause=$dbhErrorResponse", e)
+                val errorMessage = if (dbhErrorResponse.items.isNotEmpty()) {
+                    dbhErrorResponse.items.first()
+                } else {
+                    ""
+                }
+                ProvisioningException("$message cause=$errorMessage status=${dbhErrorResponse.status}", e)
             }
             else -> ProvisioningException(message, e)
         }
@@ -256,5 +263,5 @@ class DatabaseSchemaProvisioner(
 
     data class DbApiEnvelope(val status: String, val items: List<DbhSchema> = listOf())
 
-    data class DbhErrorResponse(val errorMessage: String)
+    data class DbhErrorResponse(val status: String, val items: List<String>, val totalCount: Int)
 }

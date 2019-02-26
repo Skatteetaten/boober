@@ -15,7 +15,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.service.internal.ApplicationDeploymentGenerator
 import no.skatteetaten.aurora.boober.service.internal.Provisions
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseInstance
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaInstance
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultResults
@@ -55,7 +55,8 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       def spec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
       def auroraConfigRef = new AuroraConfigRef("test", "master", "123")
       def command = new ApplicationDeploymentCommand([:], DEFAULT_AID, auroraConfigRef)
-      def schema = new DbhSchema("123-456", "MANAGED", new DatabaseInstance(1234, null), "", ["name": "referanse"], [])
+      def schema = new DbhSchema("123-456", "MANAGED", new DatabaseSchemaInstance(1234, null), "",
+          ["name": "referanse"], [])
       def provisions = new Provisions([schema])
       def applicationDeployment = ApplicationDeploymentGenerator.generate(spec, "123", command, "luke", provisions)
     then:

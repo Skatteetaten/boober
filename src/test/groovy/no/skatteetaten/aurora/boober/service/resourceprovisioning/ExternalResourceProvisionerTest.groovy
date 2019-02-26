@@ -4,15 +4,17 @@ import static no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.aid
 
 import no.skatteetaten.aurora.boober.model.AbstractAuroraDeploymentSpecTest
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
+import no.skatteetaten.aurora.boober.model.DatabaseInstance
 
 class ExternalResourceProvisionerTest extends AbstractAuroraDeploymentSpecTest {
 
+  def databaseInstance = new DatabaseInstance(null, true, [affiliation: "aos"])
   def details = new SchemaRequestDetails(
       "reference",
-      [:],
       [new SchemaUser("SCHEMA", "a", "aos")],
       DatabaseEngine.ORACLE,
-      "aos")
+      "aos",
+      databaseInstance)
 
   def "Auto provisioned named schema"() {
     given:
