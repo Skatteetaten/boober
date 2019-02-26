@@ -6,6 +6,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.aid
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.MediaType
 import org.springframework.test.web.client.MockRestServiceServer
 
@@ -36,6 +37,9 @@ class OpenShiftCommandServiceTest extends AbstractAuroraDeploymentSpecSpringTest
 }'''
   ]
 
+  @Value('${openshift.url}')
+  String openShiftUrl
+
   @Autowired
   OpenShiftObjectGenerator objectGenerator
 
@@ -52,7 +56,8 @@ class OpenShiftCommandServiceTest extends AbstractAuroraDeploymentSpecSpringTest
 
     given:
       osClusterMock.
-          expect(requestTo("/apis/apps.openshift.io/v1/namespaces/$NAMESPACE/deploymentconfigs/webleveranse")).
+          expect(requestTo(
+              "$openShiftUrl/apis/apps.openshift.io/v1/namespaces/$NAMESPACE/deploymentconfigs/webleveranse")).
           andRespond(withSuccess(loadResource("dc-webleveranse.json"), MediaType.APPLICATION_JSON))
 
       AuroraDeploymentSpecInternal deploymentSpec =
