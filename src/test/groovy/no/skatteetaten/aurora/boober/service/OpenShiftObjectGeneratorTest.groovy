@@ -140,7 +140,8 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
     when:
       AuroraDeploymentSpecInternal deploymentSpec = AuroraDeploymentSpecService.
           createAuroraDeploymentSpecInternal(auroraConfig, aid, [])
-      def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.environment.permissions)
+      def rolebindings = objectGenerator.
+          generateRolebindings(deploymentSpec.environment.permissions, deploymentSpec.environment.namespace)
 
     then:
       def adminRolebinding = rolebindings.find { it.at("/metadata/name").asText() == "admin" }
@@ -166,7 +167,8 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
     when:
       AuroraDeploymentSpecInternal deploymentSpec = AuroraDeploymentSpecService.
           createAuroraDeploymentSpecInternal(auroraConfig, aid, [])
-      def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.environment.permissions)
+      def rolebindings = objectGenerator.
+          generateRolebindings(deploymentSpec.environment.permissions, deploymentSpec.environment.namespace)
 
     then:
       def adminRolebinding = rolebindings.find { it.at("/metadata/name").asText() == "admin" }

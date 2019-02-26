@@ -22,18 +22,18 @@ import no.skatteetaten.aurora.boober.service.openshift.OperationType.UPDATE
 import no.skatteetaten.aurora.boober.service.openshift.mergeWithExistingResource
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.apiBaseUrl
 import no.skatteetaten.aurora.boober.utils.convert
 import no.skatteetaten.aurora.boober.utils.deploymentConfig
 import no.skatteetaten.aurora.boober.utils.findDockerImageUrl
 import no.skatteetaten.aurora.boober.utils.findErrorMessage
 import no.skatteetaten.aurora.boober.utils.findImageChangeTriggerTagName
 import no.skatteetaten.aurora.boober.utils.imageStream
+import no.skatteetaten.aurora.boober.utils.namedUrl
 import no.skatteetaten.aurora.boober.utils.namespacedNamedUrl
 import no.skatteetaten.aurora.boober.utils.namespacedResourceUrl
 import no.skatteetaten.aurora.boober.utils.nonGettableResources
 import no.skatteetaten.aurora.boober.utils.openshiftKind
-import no.skatteetaten.aurora.boober.utils.openshiftName
+import no.skatteetaten.aurora.boober.utils.resourceUrl
 import org.springframework.stereotype.Service
 
 @Service
@@ -45,21 +45,33 @@ class OpenShiftCommandService(
     fun generateProjectRequest(environment: AuroraDeployEnvironment): OpenshiftCommand {
 
         val projectRequest = openShiftObjectGenerator.generateProjectRequest(environment)
-        return createOpenShiftCommand(environment.namespace, projectRequest, false, false)
+        return createOpenShiftCommand(
+            newResource = projectRequest,
+            mergeWithExistingResource = false,
+            retryGetResourceOnFailure = false
+        )
     }
 
     fun generateNamespace(environment: AuroraDeployEnvironment): OpenshiftCommand {
         val namespace = openShiftObjectGenerator.generateNamespace(environment)
-        return createMergedUpdateCommand(environment.namespace, namespace)
+        return createOpenShiftCommand(
+            newResource = namespace,
+            mergeWithExistingResource = true,
+            retryGetResourceOnFailure = true
+        )
     }
 
     fun generateRolebindings(environment: AuroraDeployEnvironment): List<OpenshiftCommand> {
-        return openShiftObjectGenerator.generateRolebindings(environment.permissions)
-            .map { createOpenShiftCommand(environment.namespace, it, true, true) }
+        return openShiftObjectGenerator.generateRolebindings(environment.permissions, environment.namespace)
+            .map {
+                createOpenShiftCommand(
+                    namespace = environment.namespace,
+                    newResource = it,
+                    mergeWithExistingResource = true,
+                    retryGetResourceOnFailure = true
+                )
+            }
     }
-
-    private fun createMergedUpdateCommand(namespace: String, it: JsonNode) =
-        createOpenShiftCommand(namespace, it, true, true).let { it.copy(operationType = UPDATE) }
 
     fun generateOpenshiftObjects(
         deployId: String,
@@ -153,18 +165,18 @@ class OpenShiftCommandService(
      * many objects.
      */
     fun createOpenShiftCommand(
-        namespace: String,
+        namespace: String? = null,
         newResource: JsonNode,
         mergeWithExistingResource: Boolean = true,
         retryGetResourceOnFailure: Boolean = false
     ): OpenshiftCommand {
 
+        val (resourceUrl, namedUrl) = if (namespace == null) {
+            newResource.resourceUrl to newResource.namedUrl
+        } else {
+            newResource.namespacedResourceUrl to newResource.namespacedNamedUrl
+        }
         val kind = newResource.openshiftKind
-        val name = newResource.openshiftName
-        val baseUrl = newResource.apiBaseUrl
-
-        val resourceUrl = "$baseUrl/namespaces/$namespace/${kind}s"
-        val namedUrl = "$resourceUrl/$name"
 
         val existingResource = if (mergeWithExistingResource && kind !in nonGettableResources)
             openShiftClient.get(kind, namedUrl, retryGetResourceOnFailure)

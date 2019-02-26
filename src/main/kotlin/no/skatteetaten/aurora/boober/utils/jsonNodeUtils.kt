@@ -65,6 +65,12 @@ val JsonNode.apiPrefix: String
 val JsonNode.apiBaseUrl: String
     get() = "/${this.apiPrefix}/${this.apiVersion}"
 
+val JsonNode.resourceUrl: String
+    get() = "${this.apiBaseUrl}/${this.openshiftKind}s"
+
+val JsonNode.namedUrl: String
+    get() = "${this.resourceUrl}/${this.openshiftName}"
+
 val JsonNode.namespacedResourceUrl: String
     get() = "${this.apiBaseUrl}/namespaces/${this.namespace}/${this.openshiftKind}s"
 

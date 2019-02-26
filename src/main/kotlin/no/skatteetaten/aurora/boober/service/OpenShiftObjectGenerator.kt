@@ -111,7 +111,6 @@ class OpenShiftObjectGenerator(
     fun generateProjectRequest(environment: AuroraDeployEnvironment): JsonNode {
 
         val projectRequest = newProjectRequest {
-            apiVersion = "v1"
             metadata {
                 name = environment.namespace
             }
@@ -123,7 +122,6 @@ class OpenShiftObjectGenerator(
     fun generateNamespace(environment: AuroraDeployEnvironment): JsonNode {
 
         val namespace = newNamespace {
-            apiVersion = "v1"
             metadata {
                 val ttl = environment.ttl?.let {
                     val removeInstant = now + it
@@ -137,12 +135,12 @@ class OpenShiftObjectGenerator(
         return mapper.convertValue(namespace)
     }
 
-    fun generateRolebindings(permissions: Permissions): List<JsonNode> {
+    fun generateRolebindings(permissions: Permissions, namespace: String): List<JsonNode> {
 
-        val admin = RolebindingGenerator.create("admin", permissions.admin)
+        val admin = RolebindingGenerator.create("admin", permissions.admin, namespace)
 
         val view = permissions.view?.let {
-            RolebindingGenerator.create("view", it)
+            RolebindingGenerator.create("view", it, namespace)
         }
 
         return listOf(admin).addIfNotNull(view).map { mapper.convertValue<JsonNode>(it) }
