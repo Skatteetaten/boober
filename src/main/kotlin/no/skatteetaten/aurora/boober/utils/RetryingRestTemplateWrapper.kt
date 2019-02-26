@@ -64,7 +64,13 @@ open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate) {
                 )
             }
         } else {
-            restTemplate.exchange(requestEntity, type.java)
+            restTemplate.exchange(
+                requestEntity.url.toString(),
+                requestEntity.method,
+                requestEntity,
+                type.java,
+                emptyMap<String, String>()
+            )
         }
         logger.trace("Body={}", responseEntity.body)
         return responseEntity
