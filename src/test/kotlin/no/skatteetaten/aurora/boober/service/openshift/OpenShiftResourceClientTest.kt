@@ -7,7 +7,6 @@ import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.service.openshift.token.TokenProvider
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.http.HttpHeaders
@@ -28,12 +27,12 @@ class OpenShiftResourceClientTest {
         openShiftRestTemplateWrapper
     )
 
-    @Disabled("Can not get rootUri on restTemplate to work with mockWebServer")
     @Test
     fun `Patch user annotation`() {
         val response = """{ "metadata": { "annotations": { "foo": "bar" } } }"""
 
         val request = server.execute(response) {
+            //val responseEntity= restTemplate.patchForObject("/foo", null, JsonNode::class.java) // denne funker!
             val responseEntity = openShiftResourceClient.strategicMergePatch("user", "username", TextNode("{}"))
             assert(responseEntity.statusCode.value()).isEqualTo(200)
         }

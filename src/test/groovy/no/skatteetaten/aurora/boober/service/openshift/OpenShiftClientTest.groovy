@@ -25,7 +25,7 @@ class OpenShiftClientTest extends AbstractSpec {
 
   def mapper = new ObjectMapper()
 
-  def openShiftClient = new OpenShiftClient("", userClient, serviceAccountClient, mapper)
+  def openShiftClient = new OpenShiftClient(userClient, serviceAccountClient, mapper)
 
 
   def "Uses correct resource client based on OpenShift kind"() {
@@ -65,8 +65,10 @@ class OpenShiftClientTest extends AbstractSpec {
     given:
       def response = loadResource("response_groups.json")
       def userResponse = loadResource("response_users.json")
-      serviceAccountClient.get("/oapi/v1/groups/", _, _) >> new ResponseEntity(new ObjectMapper().readValue(response, JsonNode), OK)
-      serviceAccountClient.get("/oapi/v1/users", _, _) >> new ResponseEntity(new ObjectMapper().readValue(userResponse, JsonNode), OK)
+      serviceAccountClient.get("/apis/user.openshift.io/v1/groups", _, _) >>
+          new ResponseEntity(new ObjectMapper().readValue(response, JsonNode), OK)
+      serviceAccountClient.get("/apis/user.openshift.io/v1/users", _, _) >>
+          new ResponseEntity(new ObjectMapper().readValue(userResponse, JsonNode), OK)
 
     when:
       def openShiftGroups = openShiftClient.getGroups()

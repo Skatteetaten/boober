@@ -55,7 +55,13 @@ open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate) {
         val responseEntity = if (retry) {
             retryTemplate.execute<ResponseEntity<U>, RestClientException> {
                 it.setAttribute(REQUEST_ENTITY, requestEntity)
-                restTemplate.exchange(requestEntity, type.java)
+                restTemplate.exchange(
+                    requestEntity.url.toString(),
+                    requestEntity.method,
+                    requestEntity,
+                    type.java,
+                    emptyMap<String, String>()
+                )
             }
         } else {
             restTemplate.exchange(requestEntity, type.java)

@@ -9,6 +9,7 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.service.OpenShiftException
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient.Companion.generateUrl
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
@@ -18,7 +19,6 @@ import org.apache.http.client.utils.URLEncodedUtils
 import org.apache.http.message.BasicNameValuePair
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
@@ -101,7 +101,6 @@ data class OpenShiftGroups(private val groupUserPairs: List<UserGroup>) {
 
 @Service
 class OpenShiftClient(
-    @Value("\${openshift.url}") val baseUrl: String,
     @ClientType(API_USER) val userClient: OpenShiftResourceClient,
     @ClientType(SERVICE_ACCOUNT) val serviceAccountClient: OpenShiftResourceClient,
     val mapper: ObjectMapper
@@ -131,7 +130,7 @@ class OpenShiftClient(
 
     fun findCurrentUser(token: String): JsonNode? {
 
-        val url = "$baseUrl/oapi/v1/users/~"
+        val url = generateUrl(kind = "user", name = "~")
         val headers: HttpHeaders = userClient.createHeaders(token)
 
         val currentUser = userClient.get(url, headers)
@@ -141,7 +140,9 @@ class OpenShiftClient(
     @Cacheable("templates")
     fun getTemplate(template: String): JsonNode? {
         return try {
-            serviceAccountClient.get("$baseUrl/oapi/v1/namespaces/openshift/templates/$template")?.body
+
+            val url = generateUrl(kind = "template", namespace = "openshift", name = template)
+            serviceAccountClient.get(url)?.body
         } catch (e: Exception) {
             logger.debug("Failed getting template={}", template)
             null
@@ -152,7 +153,8 @@ class OpenShiftClient(
     fun getGroups(): OpenShiftGroups {
 
         fun getAllDeclaredUserGroups(): List<UserGroup> {
-            val groupItems = getResponseBodyItems("$baseUrl/oapi/v1/groups/")
+            val url = generateUrl(kind = "group")
+            val groupItems = getResponseBodyItems(url)
             return groupItems
                 .filter { it["users"] is ArrayNode }
                 .flatMap {
@@ -163,7 +165,7 @@ class OpenShiftClient(
 
         fun getAllImplicitUserGroups(): List<UserGroup> {
             val implicitGroup = "system:authenticated"
-            val userItems = getResponseBodyItems("$baseUrl/oapi/v1/users")
+            val userItems = getResponseBodyItems(generateUrl("user"))
             return userItems.map { UserGroup(it["metadata"]["name"].asText(), implicitGroup) }
         }
 
@@ -176,7 +178,8 @@ class OpenShiftClient(
     }
 
     fun projectExists(name: String): Boolean {
-        serviceAccountClient.get("$baseUrl/oapi/v1/projects/$name", retry = false)?.body?.let {
+        val url = generateUrl("project", name = name)
+        serviceAccountClient.get(url, retry = false)?.body?.let {
             val phase = it.at("/status/phase").textValue()
             if (phase == "Active") {
                 return true
@@ -196,7 +199,7 @@ class OpenShiftClient(
      */
     fun getByLabelSelectors(kind: String, namespace: String, labelSelectors: List<String>): List<JsonNode> {
         val queryString = urlEncode(Pair("labelSelector", labelSelectors.joinToString(",")))
-        val apiUrl = OpenShiftResourceClient.generateUrl(kind, namespace)
+        val apiUrl = generateUrl(kind, namespace)
         val url = "$apiUrl?$queryString"
         val body = getClientForKind(kind).get(url)?.body
 

@@ -6,7 +6,6 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.aid
 
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.MediaType
 import org.springframework.test.web.client.MockRestServiceServer
 
@@ -23,9 +22,6 @@ class OpenShiftCommandServiceTest extends AbstractAuroraDeploymentSpecSpringTest
   String ENVIRONMENT = "utv"
 
   String NAMESPACE = "$AFFILIATION-$ENVIRONMENT"
-
-  @Value('${openshift.url}')
-  String openShiftUrl
 
   @Autowired
   MockRestServiceServer osClusterMock
