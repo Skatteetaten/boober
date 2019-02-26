@@ -46,9 +46,11 @@ object ApplicationDeploymentGenerator {
             ),
             metadata = ObjectMetaBuilder()
                 .withName(deploymentSpecInternal.name)
+                .withNamespace(deploymentSpecInternal.environment.namespace)
                 .withLabels(
                     mapOf(
                         "app" to deploymentSpecInternal.name,
+                        "name" to deploymentSpecInternal.name,
                         "updatedBy" to updateBy,
                         "affiliation" to deploymentSpecInternal.environment.affiliation,
                         "booberDeployId" to deployId,

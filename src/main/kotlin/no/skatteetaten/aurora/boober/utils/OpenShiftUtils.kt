@@ -43,7 +43,7 @@ val apiGroups: Map<String, List<String>> =
         "user.openshift.io/v1" to listOf("user", "group"),
         "project.openshift.io/v1" to listOf("project", "projectrequest"),
         "template.openshift.io/v1" to listOf("template"),
-        "images.openshift.io/v1" to listOf("imagestream", "imagestreamtag", "imagestreamimport"),
+        "image.openshift.io/v1" to listOf("imagestream", "imagestreamtag", "imagestreamimport"),
         "authorization.openshift.io/v1" to listOf("rolebinding"),
         "build.openshift.io/v1" to listOf("buildconfig")
 

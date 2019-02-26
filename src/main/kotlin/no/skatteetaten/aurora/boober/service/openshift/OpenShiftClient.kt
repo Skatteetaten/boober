@@ -15,8 +15,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientCo
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
-import org.apache.http.client.utils.URLEncodedUtils
-import org.apache.http.message.BasicNameValuePair
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
@@ -198,14 +196,17 @@ class OpenShiftClient(
      * @param labelSelectors examples: name=someapp, name!=someapp (name label not like), name (name label must be set)
      */
     fun getByLabelSelectors(kind: String, namespace: String, labelSelectors: List<String>): List<JsonNode> {
-        val queryString = urlEncode(Pair("labelSelector", labelSelectors.joinToString(",")))
+        val queryString = labelSelectors.joinToString(",")
+
         val apiUrl = generateUrl(kind, namespace)
-        val url = "$apiUrl?$queryString"
+        val url = "$apiUrl?labelSelector=$queryString"
         val body = getClientForKind(kind).get(url)?.body
 
         val items = body?.get("items")?.toList() ?: emptyList()
         return items.filterIsInstance<ObjectNode>()
-            .onEach { it.put("kind", kind) }
+            .onEach {
+                it.put("kind", kind)
+            }
     }
 
     /**
@@ -225,12 +226,5 @@ class OpenShiftClient(
     private fun getResponseBodyItems(url: String): ArrayNode {
         val response: ResponseEntity<JsonNode> = serviceAccountClient.get(url)!!
         return response.body["items"] as ArrayNode
-    }
-
-    companion object {
-
-        @JvmStatic
-        fun urlEncode(vararg queryParams: Pair<String, String>) =
-            URLEncodedUtils.format(queryParams.map { BasicNameValuePair(it.first, it.second) }, Charsets.UTF_8)
     }
 }

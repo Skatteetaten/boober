@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.model.openshift
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
-import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.ObjectMeta
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
@@ -11,22 +10,10 @@ import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class ApplicationDeployment(
     val spec: ApplicationDeploymentSpec,
-    private var metadata: ObjectMeta,
-    private val kind: String = "ApplicationDeployment",
-    private var apiVersion: String = "skatteetaten.no/v1"
-) : HasMetadata {
-
-    override fun getMetadata() = metadata
-    override fun getKind() = kind
-    override fun getApiVersion() = apiVersion
-    override fun setMetadata(metadata: ObjectMeta?) {
-        metadata?.let { this.metadata = it }
-    }
-
-    override fun setApiVersion(version: String?) {
-        version?.let { this.apiVersion = it }
-    }
-}
+    val metadata: ObjectMeta,
+    val kind: String = "ApplicationDeployment",
+    val apiVersion: String = "skatteetaten.no/v1"
+)
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)

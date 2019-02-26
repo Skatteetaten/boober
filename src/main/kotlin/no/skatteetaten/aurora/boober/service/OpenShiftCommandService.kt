@@ -14,6 +14,7 @@ import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.model.openshift.findErrorMessage
 import no.skatteetaten.aurora.boober.service.internal.ImageStreamImportGenerator
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType.CREATE
@@ -33,6 +34,7 @@ import no.skatteetaten.aurora.boober.utils.namespacedNamedUrl
 import no.skatteetaten.aurora.boober.utils.namespacedResourceUrl
 import no.skatteetaten.aurora.boober.utils.nonGettableResources
 import no.skatteetaten.aurora.boober.utils.openshiftKind
+import no.skatteetaten.aurora.boober.utils.openshiftName
 import no.skatteetaten.aurora.boober.utils.resourceUrl
 import org.springframework.stereotype.Service
 
@@ -212,13 +214,16 @@ class OpenShiftCommandService(
         )
     ): List<OpenshiftCommand> {
 
-        // TODO: This cannot be change until we remove the app label
         val labelSelectors = listOf("app=$name", "booberDeployId", "booberDeployId!=$deployId")
         return apiResources
             .flatMap { kind -> openShiftClient.getByLabelSelectors(kind, namespace, labelSelectors) }
             .map {
                 try {
-                    val url = it.namespacedNamedUrl
+                    val url = OpenShiftResourceClient.generateUrl(
+                        kind = it.openshiftKind,
+                        name = it.openshiftName,
+                        namespace = namespace
+                    )
                     OpenshiftCommand(DELETE, payload = it, previous = it, url = url)
                 } catch (e: Throwable) {
                     throw e
