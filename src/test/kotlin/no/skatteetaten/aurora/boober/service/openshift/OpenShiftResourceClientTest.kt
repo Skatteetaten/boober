@@ -32,7 +32,6 @@ class OpenShiftResourceClientTest {
         val response = """{ "metadata": { "annotations": { "foo": "bar" } } }"""
 
         val request = server.execute(response) {
-            //val responseEntity= restTemplate.patchForObject("/foo", null, JsonNode::class.java) // denne funker!
             val responseEntity = openShiftResourceClient.strategicMergePatch("user", "username", TextNode("{}"))
             assert(responseEntity.statusCode.value()).isEqualTo(200)
         }
