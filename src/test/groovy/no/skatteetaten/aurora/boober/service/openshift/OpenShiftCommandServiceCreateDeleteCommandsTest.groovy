@@ -92,8 +92,7 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest extends Specification {
 
       responses.each {
         def kind = it.key
-        def queryString = "labelSelector=app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
-
+        def queryString = "labelSelector=app=$name,booberDeployId,booberDeployId!=$deployId"
         def apiUrl = OpenShiftResourceClient.generateUrl(kind, namespace)
         def url = "$apiUrl?$queryString" as String
         userClient.get(url, _, true) >> ResponseEntity.ok(it.value)
