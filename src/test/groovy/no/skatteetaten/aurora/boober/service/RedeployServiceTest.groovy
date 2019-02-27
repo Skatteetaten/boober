@@ -2,9 +2,9 @@ package no.skatteetaten.aurora.boober.service
 
 import static com.fasterxml.jackson.databind.node.NullNode.getInstance
 
-import static no.skatteetaten.aurora.boober.utils.OpenShiftTestUtils.deploymentConfig
-import static no.skatteetaten.aurora.boober.utils.OpenShiftTestUtils.imageStream
-import static no.skatteetaten.aurora.boober.utils.OpenShiftTestUtils.imageStreamImportResponse
+import static no.skatteetaten.aurora.boober.utils.OpenShiftTestDataBuilders.deploymentConfig
+import static no.skatteetaten.aurora.boober.utils.OpenShiftTestDataBuilders.imageStream
+import static no.skatteetaten.aurora.boober.utils.OpenShiftTestDataBuilders.imageStreamImportResponse
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper

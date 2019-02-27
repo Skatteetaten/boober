@@ -25,7 +25,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 
-object OpenShiftTestUtils {
+object OpenShiftTestDataBuilders {
 
     @JvmStatic
     @JvmOverloads
