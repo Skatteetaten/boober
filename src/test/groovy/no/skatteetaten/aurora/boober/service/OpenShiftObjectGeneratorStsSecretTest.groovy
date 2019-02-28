@@ -20,7 +20,7 @@ class OpenShiftObjectGeneratorStsSecretTest extends AbstractOpenShiftObjectGener
       def provisioningResult = new StsProvisioningResult(cn, cert, cert.notAfter - Duration.ofDays(14))
 
     when: "secret has been created"
-      def secret = StsSecretGenerator.create("aos-simple", provisioningResult, [:], new OwnerReference())
+      def secret = StsSecretGenerator.create("aos-simple", provisioningResult, [:], new OwnerReference(), "aos-test")
 
     then: "the secret should be correct"
       secret != null

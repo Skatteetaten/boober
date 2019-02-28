@@ -36,7 +36,7 @@ class UserAnnotationService(
 
     fun getAnnotations(): Map<String, JsonNode> {
         val name = userDetailsProvider.getAuthenticatedUser().username
-        val response = serviceAccountClient.get("user", "", name)
+        val response = serviceAccountClient.get("user", name = name)
         return getResponseAnnotations(response)
     }
 

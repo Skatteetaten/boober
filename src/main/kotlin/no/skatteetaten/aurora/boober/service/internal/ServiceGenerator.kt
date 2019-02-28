@@ -43,10 +43,10 @@ object ServiceGenerator {
                 if (auroraDeploymentSpecInternal.deploy.toxiProxy != null) PortNumbers.TOXIPROXY_HTTP_PORT else PortNumbers.INTERNAL_HTTP_PORT
 
             newService {
-                apiVersion = "v1"
                 metadata {
                     ownerReferences = listOf(reference)
                     name = auroraDeploymentSpecInternal.name
+                    namespace = auroraDeploymentSpecInternal.environment.namespace
                     annotations = prometheusAnnotations.addIfNotNull(webseal).addIfNotNull(websealRoles)
                     labels = serviceLabels
                 }

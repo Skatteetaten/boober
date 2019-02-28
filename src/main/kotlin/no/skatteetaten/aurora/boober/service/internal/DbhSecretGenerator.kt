@@ -20,11 +20,12 @@ object DbhSecretGenerator {
         appName: String,
         schemaProvisionResults: SchemaProvisionResults,
         labels: Map<String, String>,
-        ownerReference: OwnerReference
+        ownerReference: OwnerReference,
+        namespace: String
     ): List<Secret> {
 
         return schemaProvisionResults.results.map {
-            createDbhSecret(it, appName, labels, ownerReference)
+            createDbhSecret(it, appName, labels, ownerReference, namespace)
         }
     }
 
@@ -32,7 +33,8 @@ object DbhSecretGenerator {
         it: SchemaProvisionResult,
         appName: String,
         labels: Map<String, String>,
-        ownerReference: OwnerReference
+        ownerReference: OwnerReference,
+        namespace: String
     ): Secret {
         val connectionProperties = createConnectionProperties(it.dbhSchema)
         val infoFile = createInfoFile(it.dbhSchema)
@@ -48,7 +50,8 @@ object DbhSecretGenerator {
                 "name" to it.dbhSchema.username
             )
                 .mapValues { it.value.toByteArray() },
-            ownerReference = ownerReference
+            ownerReference = ownerReference,
+            secretNamespace = namespace
         )
     }
 

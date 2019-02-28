@@ -64,7 +64,7 @@ class OpenShiftObjectGenerator(
 
         val deploymentRequest = mapOf(
             "kind" to "DeploymentRequest",
-            "apiVersion" to "v1",
+            "apiVersion" to "apps.openshift.io/v1",
             "name" to name,
             "latest" to true,
             "force" to true
@@ -99,7 +99,8 @@ class OpenShiftObjectGenerator(
                         mounts = mounts ?: emptyList(),
                         labels = labels,
                         provisioningResult = provisioningResult,
-                        ownerReference = ownerReference
+                        ownerReference = ownerReference,
+                        namespace = auroraDeploymentSpecInternal.environment.namespace
                     )
                 )
                 .addIfNotNull(generateRoute(auroraDeploymentSpecInternal, labels, ownerReference))
@@ -110,7 +111,6 @@ class OpenShiftObjectGenerator(
     fun generateProjectRequest(environment: AuroraDeployEnvironment): JsonNode {
 
         val projectRequest = newProjectRequest {
-            apiVersion = "v1"
             metadata {
                 name = environment.namespace
             }
@@ -122,7 +122,6 @@ class OpenShiftObjectGenerator(
     fun generateNamespace(environment: AuroraDeployEnvironment): JsonNode {
 
         val namespace = newNamespace {
-            apiVersion = "v1"
             metadata {
                 val ttl = environment.ttl?.let {
                     val removeInstant = now + it
@@ -136,12 +135,12 @@ class OpenShiftObjectGenerator(
         return mapper.convertValue(namespace)
     }
 
-    fun generateRolebindings(permissions: Permissions): List<JsonNode> {
+    fun generateRolebindings(permissions: Permissions, namespace: String): List<JsonNode> {
 
-        val admin = RolebindingGenerator.create("admin", permissions.admin)
+        val admin = RolebindingGenerator.create("admin", permissions.admin, namespace)
 
         val view = permissions.view?.let {
-            RolebindingGenerator.create("view", it)
+            RolebindingGenerator.create("view", it, namespace)
         }
 
         return listOf(admin).addIfNotNull(view).map { mapper.convertValue<JsonNode>(it) }
@@ -213,10 +212,16 @@ class OpenShiftObjectGenerator(
             )
 
             val imageStream = if (auroraDeploymentSpecInternal.type == TemplateType.development) {
-                ImageStreamGenerator.createLocalImageStream(auroraDeploymentSpecInternal.name, labels, reference)
+                ImageStreamGenerator.createLocalImageStream(
+                    isName = auroraDeploymentSpecInternal.name,
+                    isLabels = labels,
+                    reference = reference,
+                    isNamespace = auroraDeploymentSpecInternal.environment.namespace
+                )
             } else {
                 ImageStreamGenerator.createRemoteImageStream(
                     isName = auroraDeploymentSpecInternal.name,
+                    isNamespace = auroraDeploymentSpecInternal.environment.namespace,
                     isLabels = labels,
                     dockerRegistry = dockerRegistry,
                     dockerImagePath = it.dockerImagePath,
@@ -297,9 +302,7 @@ class OpenShiftObjectGenerator(
             val metadataJson: JsonNode = jacksonObjectMapper().convertValue(listOf(ownerReference))
             val metadataNode: ObjectNode = result["metadata"] as ObjectNode
             metadataNode.set("ownerReferences", metadataJson)
-
-            // TODO: AOS-2740 Denne linjen kan bort når vi fikset APIGroups endelig
-            (result as ObjectNode).set("apiVersion", TextNode("v1"))
+            metadataNode.set("namespace", TextNode(auroraDeploymentSpecInternal.environment.namespace))
             result
         }
     }
@@ -315,7 +318,8 @@ class OpenShiftObjectGenerator(
                 serviceName = auroraDeploymentSpecInternal.name,
                 routeSuffix = routeSuffix,
                 routeLabels = routeLabels,
-                ownerReference = ownerReference
+                ownerReference = ownerReference,
+                routeNamespace = auroraDeploymentSpecInternal.environment.namespace
             )
             mapper.convertValue<JsonNode>(route)
         }
@@ -334,7 +338,8 @@ class OpenShiftObjectGenerator(
                 mounts = mounts ?: emptyList(),
                 labels = labels,
                 provisioningResult = provisioningResult,
-                ownerReference = ownerReference
+                ownerReference = ownerReference,
+                namespace = deploymentSpecInternal.environment.namespace
             )
         }
     }
@@ -344,15 +349,16 @@ class OpenShiftObjectGenerator(
         mounts: List<Mount>,
         labels: Map<String, String>,
         provisioningResult: ProvisioningResult?,
-        ownerReference: OwnerReference
+        ownerReference: OwnerReference,
+        namespace: String
     ): List<JsonNode> {
 
         val schemaSecrets = provisioningResult?.schemaProvisionResults
-            ?.let { DbhSecretGenerator.create(appName, it, labels, ownerReference) }
+            ?.let { DbhSecretGenerator.create(appName, it, labels, ownerReference, namespace) }
             ?: emptyList()
 
         val stsSecret = provisioningResult?.stsProvisioningResult
-            ?.let { StsSecretGenerator.create(appName, it, labels, ownerReference) }
+            ?.let { StsSecretGenerator.create(appName, it, labels, ownerReference, namespace) }
 
         val schemaSecretNames = schemaSecrets.map { it.metadata.name }
 
@@ -367,7 +373,9 @@ class OpenShiftObjectGenerator(
                                 cmName = mount.getNamespacedVolumeName(appName),
                                 cmLabels = labels,
                                 cmData = it,
-                                ownerReference = ownerReference
+                                ownerReference = ownerReference,
+                                cmNamespace = namespace
+
                             )
                         }
                     Secret -> mount.secretVaultName
@@ -377,7 +385,8 @@ class OpenShiftObjectGenerator(
                                 secretName = mount.getNamespacedVolumeName(appName),
                                 secretLabels = labels,
                                 secretData = it,
-                                ownerReference = ownerReference
+                                ownerReference = ownerReference,
+                                secretNamespace = namespace
                             )
                         }
                     PVC -> null
@@ -399,7 +408,13 @@ class OpenShiftObjectGenerator(
                 deployId,
                 name = deploymentSpecInternal.name
             )
-            val build = BuildConfigGenerator.generate(it, deploymentSpecInternal.name, labels, ownerReference)
+            val build = BuildConfigGenerator.generate(
+                it,
+                deploymentSpecInternal.name,
+                labels,
+                ownerReference,
+                deploymentSpecInternal.environment.namespace
+            )
 
             listOf(mapper.convertValue(build))
         }

@@ -10,27 +10,31 @@ import no.skatteetaten.aurora.boober.model.Permission
 
 object RolebindingGenerator {
 
-    fun create(rolebindingName: String, permission: Permission): RoleBinding {
+    fun create(
+        rolebindingName: String,
+        permission: Permission,
+        rolebindingNamespace: String
+    ): RoleBinding {
 
         return newRoleBinding {
-            apiVersion = "v1"
             metadata {
                 name = rolebindingName
+                namespace = rolebindingNamespace
             }
 
             permission.groups?.let {
                 groupNames = it.toList()
             }
-            permission.users?.let {
+            permission.users.let {
                 userNames = it.toList()
             }
 
-            val userRefeerences: List<ObjectReference> = permission.users?.map {
+            val userRefeerences: List<ObjectReference> = permission.users.map {
                 newObjectReference {
                     kind = "User"
                     name = it
                 }
-            } ?: emptyList()
+            }
             val groupRefeerences = permission.groups?.map {
                 newObjectReference {
                     kind = "Group"

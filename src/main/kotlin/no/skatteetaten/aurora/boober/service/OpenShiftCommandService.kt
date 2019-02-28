@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fkorotkov.kubernetes.newPatch
 import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
@@ -15,6 +14,7 @@ import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.model.openshift.findErrorMessage
 import no.skatteetaten.aurora.boober.service.internal.ImageStreamImportGenerator
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType.CREATE
@@ -29,8 +29,13 @@ import no.skatteetaten.aurora.boober.utils.findDockerImageUrl
 import no.skatteetaten.aurora.boober.utils.findErrorMessage
 import no.skatteetaten.aurora.boober.utils.findImageChangeTriggerTagName
 import no.skatteetaten.aurora.boober.utils.imageStream
+import no.skatteetaten.aurora.boober.utils.namedUrl
+import no.skatteetaten.aurora.boober.utils.namespacedNamedUrl
+import no.skatteetaten.aurora.boober.utils.namespacedResourceUrl
+import no.skatteetaten.aurora.boober.utils.nonGettableResources
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
+import no.skatteetaten.aurora.boober.utils.resourceUrl
 import org.springframework.stereotype.Service
 
 @Service
@@ -42,21 +47,33 @@ class OpenShiftCommandService(
     fun generateProjectRequest(environment: AuroraDeployEnvironment): OpenshiftCommand {
 
         val projectRequest = openShiftObjectGenerator.generateProjectRequest(environment)
-        return createOpenShiftCommand(environment.namespace, projectRequest, false, false)
+        return createOpenShiftCommand(
+            newResource = projectRequest,
+            mergeWithExistingResource = false,
+            retryGetResourceOnFailure = false
+        )
     }
 
     fun generateNamespace(environment: AuroraDeployEnvironment): OpenshiftCommand {
         val namespace = openShiftObjectGenerator.generateNamespace(environment)
-        return createMergedUpdateCommand(environment.namespace, namespace)
+        return createOpenShiftCommand(
+            newResource = namespace,
+            mergeWithExistingResource = true,
+            retryGetResourceOnFailure = true
+        )
     }
 
     fun generateRolebindings(environment: AuroraDeployEnvironment): List<OpenshiftCommand> {
-        return openShiftObjectGenerator.generateRolebindings(environment.permissions)
-            .map { createOpenShiftCommand(environment.namespace, it, true, true) }
+        return openShiftObjectGenerator.generateRolebindings(environment.permissions, environment.namespace)
+            .map {
+                createOpenShiftCommand(
+                    namespace = environment.namespace,
+                    newResource = it,
+                    mergeWithExistingResource = true,
+                    retryGetResourceOnFailure = true
+                )
+            }
     }
-
-    private fun createMergedUpdateCommand(namespace: String, it: JsonNode) =
-        createOpenShiftCommand(namespace, it, true, true).let { it.copy(operationType = UPDATE) }
 
     fun generateOpenshiftObjects(
         deployId: String,
@@ -131,7 +148,7 @@ class OpenShiftCommandService(
         val imageStream = jacksonObjectMapper().convertValue<ImageStream>(isCommand.payload)
         val isName = imageStream.metadata.name
         val dockerUrl = imageStream.findDockerImageUrl(tagName) ?: return null
-        val imageStreamImport = ImageStreamImportGenerator.create(dockerUrl, isName)
+        val imageStreamImport = ImageStreamImportGenerator.create(dockerUrl, isName, dc.metadata.namespace)
         return jacksonObjectMapper().convertValue(imageStreamImport)
     }
 
@@ -150,28 +167,33 @@ class OpenShiftCommandService(
      * many objects.
      */
     fun createOpenShiftCommand(
-        namespace: String,
+        namespace: String? = null,
         newResource: JsonNode,
         mergeWithExistingResource: Boolean = true,
         retryGetResourceOnFailure: Boolean = false
     ): OpenshiftCommand {
 
+        val (resourceUrl, namedUrl) = if (namespace == null) {
+            newResource.resourceUrl to newResource.namedUrl
+        } else {
+            newResource.namespacedResourceUrl to newResource.namespacedNamedUrl
+        }
         val kind = newResource.openshiftKind
-        val name = newResource.openshiftName
 
-        val existingResource = if (mergeWithExistingResource && kind != "imagestreamimport")
-            openShiftClient.get(kind, namespace, name, retryGetResourceOnFailure)
+        val existingResource = if (mergeWithExistingResource && kind !in nonGettableResources)
+            openShiftClient.get(kind, namedUrl, retryGetResourceOnFailure)
         else null
 
         return if (existingResource == null) {
-            OpenshiftCommand(CREATE, payload = newResource)
+            OpenshiftCommand(CREATE, payload = newResource, url = resourceUrl)
         } else {
             val mergedResource = mergeWithExistingResource(newResource, existingResource.body)
             OpenshiftCommand(
                 operationType = UPDATE,
                 payload = mergedResource,
                 previous = existingResource.body,
-                generated = newResource
+                generated = newResource,
+                url = namedUrl
             )
         }
     }
@@ -192,12 +214,21 @@ class OpenShiftCommandService(
         )
     ): List<OpenshiftCommand> {
 
-        newPatch { }
-        // TODO: This cannot be change until we remove the app label
         val labelSelectors = listOf("app=$name", "booberDeployId", "booberDeployId!=$deployId")
         return apiResources
             .flatMap { kind -> openShiftClient.getByLabelSelectors(kind, namespace, labelSelectors) }
-            .map { OpenshiftCommand(DELETE, payload = it, previous = it) }
+            .map {
+                try {
+                    val url = OpenShiftResourceClient.generateUrl(
+                        kind = it.openshiftKind,
+                        name = it.openshiftName,
+                        namespace = namespace
+                    )
+                    OpenshiftCommand(DELETE, payload = it, previous = it, url = url)
+                } catch (e: Throwable) {
+                    throw e
+                }
+            }
     }
 
     private fun mustRecreateRoute(newRoute: JsonNode, previousRoute: JsonNode?): Boolean {
@@ -225,7 +256,11 @@ class OpenShiftCommandService(
         val commands: List<OpenshiftCommand> =
             if (command.isType(UPDATE, "route") && mustRecreateRoute(command.payload, command.previous)) {
                 val deleteCommand = command.copy(operationType = DELETE)
-                val createCommand = command.copy(operationType = CREATE, payload = command.generated!!)
+                val createCommand = command.copy(
+                    operationType = CREATE,
+                    url = command.payload.namespacedResourceUrl,
+                    payload = command.generated!!
+                )
                 listOf(deleteCommand, createCommand)
             } else {
                 listOf(command)

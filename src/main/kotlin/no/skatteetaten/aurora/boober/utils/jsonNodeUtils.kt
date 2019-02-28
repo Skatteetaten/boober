@@ -53,6 +53,30 @@ fun JsonNode.atNullable(path: String): JsonNode? {
 fun List<JsonNode>.deploymentConfig(): JsonNode? = this.find { it.openshiftKind == "deploymentconfig" }
 fun List<JsonNode>.imageStream(): JsonNode? = this.find { it.openshiftKind == "imagestream" }
 
+val JsonNode.namespace: String
+    get() = this.get("metadata").get("namespace").asText()
+
+val JsonNode.apiVersion: String
+    get() = this.get("apiVersion").asText()
+
+val JsonNode.apiPrefix: String
+    get() = findOpenShiftApiPrefix(this.apiVersion, this.openshiftKind)
+
+val JsonNode.apiBaseUrl: String
+    get() = "/${this.apiPrefix}/${this.apiVersion}"
+
+val JsonNode.resourceUrl: String
+    get() = "${this.apiBaseUrl}/${this.openshiftKind}s"
+
+val JsonNode.namedUrl: String
+    get() = "${this.resourceUrl}/${this.openshiftName}"
+
+val JsonNode.namespacedResourceUrl: String
+    get() = "${this.apiBaseUrl}/namespaces/${this.namespace}/${this.openshiftKind}s"
+
+val JsonNode.namespacedNamedUrl: String
+    get() = "${this.namespacedResourceUrl}/${this.openshiftName}"
+
 val JsonNode.openshiftKind: String
     get() = this.get("kind")?.asText()?.toLowerCase()
         ?: throw IllegalArgumentException("Kind must be set in file=$this")

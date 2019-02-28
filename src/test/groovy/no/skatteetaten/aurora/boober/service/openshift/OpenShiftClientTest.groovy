@@ -11,7 +11,6 @@ import org.springframework.web.client.HttpClientErrorException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import kotlin.Pair
 import no.skatteetaten.aurora.boober.service.AbstractSpec
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 
@@ -25,7 +24,7 @@ class OpenShiftClientTest extends AbstractSpec {
 
   def mapper = new ObjectMapper()
 
-  def openShiftClient = new OpenShiftClient("", userClient, serviceAccountClient, mapper)
+  def openShiftClient = new OpenShiftClient(userClient, serviceAccountClient, mapper)
 
 
   def "Uses correct resource client based on OpenShift kind"() {
@@ -33,7 +32,7 @@ class OpenShiftClientTest extends AbstractSpec {
     given:
       def name = 'does not matter'
       def mockedResource = """{ "kind": "$kind", "metadata": { "name": "$name" } }"""
-      def command = new OpenshiftCommand(OperationType.CREATE, mapper.readValue(mockedResource, JsonNode))
+      def command = new OpenshiftCommand(OperationType.CREATE, "", mapper.readValue(mockedResource, JsonNode))
 
       def expectedClient = clients[expectedClientName]
       def otherClient = clients.values().with { remove(expectedClient); it }.first()
@@ -42,8 +41,11 @@ class OpenShiftClientTest extends AbstractSpec {
       openShiftClient.performOpenShiftCommand("aos", command)
 
     then:
-      1 * expectedClient.post(kind, 'aos', name, _ as JsonNode) >>
+
+      1 * expectedClient.post(_ as String, _ as JsonNode) >> {
+        String url, JsonNode payload ->
           new ResponseEntity(mapper.readValue("{}", JsonNode), HttpStatus.OK)
+      }
 
       0 * otherClient._
 
@@ -62,8 +64,10 @@ class OpenShiftClientTest extends AbstractSpec {
     given:
       def response = loadResource("response_groups.json")
       def userResponse = loadResource("response_users.json")
-      serviceAccountClient.get("/oapi/v1/groups/", _, _) >> new ResponseEntity(new ObjectMapper().readValue(response, JsonNode), OK)
-      serviceAccountClient.get("/oapi/v1/users", _, _) >> new ResponseEntity(new ObjectMapper().readValue(userResponse, JsonNode), OK)
+      serviceAccountClient.get("/apis/user.openshift.io/v1/groups", _, _) >>
+          new ResponseEntity(new ObjectMapper().readValue(response, JsonNode), OK)
+      serviceAccountClient.get("/apis/user.openshift.io/v1/users", _, _) >>
+          new ResponseEntity(new ObjectMapper().readValue(userResponse, JsonNode), OK)
 
     when:
       def openShiftGroups = openShiftClient.getGroups()
@@ -78,16 +82,6 @@ class OpenShiftClientTest extends AbstractSpec {
       ['mTestUser', 'k2222222', 'k1111111', 'k1222222', 'k3333333', 'k4444444', 'k3222222', 'k4222222', 'k7111111', 'y5555555', 'y8888888', 'y9999999', 'm2111111', 'm3111111', 'm4111111', 'm5111111', 'm5222222', 'm6222222', 'y6222222', 'm6111111', 'm6666666', 'm7777777', 'm8111111', 'x9111111']
   }
 
-  def "UrlEncode label selectors"() {
-
-    given:
-      def name = "someappname"
-      def deployId = "adeployid"
-      def queryParam = new Pair("labelSelector",
-          ["app=$name" as String, "booberDeployId", "booberDeployId!=$deployId" as String].join(","))
-    expect:
-      OpenShiftClient.urlEncode(queryParam) == "labelSelector=app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
-  }
 
   def "Should record exception when command fails"() {
     given:
@@ -98,8 +92,8 @@ class OpenShiftClientTest extends AbstractSpec {
           ]
       ], JsonNode.class)
 
-      def cmd = new OpenshiftCommand(OperationType.CREATE, payload)
-      userClient.post("service", "foo", "bar", payload) >> {
+      def cmd = new OpenshiftCommand(OperationType.CREATE, "", payload)
+      userClient.post(_ as String, payload) >> {
         throw new OpenShiftException("Does not exist",
             new HttpClientErrorException(HttpStatus.SERVICE_UNAVAILABLE, "not available",
                 '''{ "failed" : "true"}'''.bytes,
@@ -123,8 +117,8 @@ class OpenShiftClientTest extends AbstractSpec {
           ]
       ], JsonNode.class)
 
-      def cmd = new OpenshiftCommand(OperationType.CREATE, payload)
-      userClient.post("service", "foo", "bar", payload) >> {
+      def cmd = new OpenshiftCommand(OperationType.CREATE, "", payload)
+      userClient.post(_ as String, payload) >> {
         throw new OpenShiftException("Does not exist",
             new HttpClientErrorException(HttpStatus.SERVICE_UNAVAILABLE, "not available", "failed".bytes,
                 Charset.defaultCharset()))
@@ -136,24 +130,5 @@ class OpenShiftClientTest extends AbstractSpec {
       !result.success
       result.responseBody.get("error").asText() == "failed"
 
-  }
-
-  def "Get image stream given ok response return success"() {
-    when:
-      def openShiftResponse = openShiftClient.getImageStream('namespace', 'name')
-
-    then:
-      1 * userClient.get('imagestream', 'namespace', 'name', true) >> ResponseEntity.ok(Mock(JsonNode))
-      openShiftResponse.success
-  }
-
-  def "Get image stream given exception return failed"() {
-    when:
-      def openShiftResponse = openShiftClient.getImageStream('namespace', 'name')
-
-    then:
-      1 * userClient.get('imagestream', 'namespace', 'name', true) >>
-          { throw new OpenShiftException('Test exception', new RuntimeException()) }
-      !openShiftResponse.success
   }
 }

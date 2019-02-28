@@ -79,7 +79,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
         def templateResult = this.getClass().getResource(templateFileName)
         JsonNode jsonResult = mapper.readTree(templateResult)
 
-        openShiftResourceClient.post("processedtemplate", _, null, _) >> {
+        openShiftResourceClient.post(_ as String, _ as JsonNode) >> {
           new ResponseEntity<JsonNode>(jsonResult, HttpStatus.OK)
         }
       }
@@ -128,6 +128,7 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       "release"     | "aos-simple"    | null              | []
       "mounts"      | "aos-simple"    | null              | []
       "secretmount" | "aos-simple"    | null              | []
+
   }
 
   def "generate rolebinding should include serviceaccount "() {
@@ -139,7 +140,8 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
     when:
       AuroraDeploymentSpecInternal deploymentSpec = AuroraDeploymentSpecService.
           createAuroraDeploymentSpecInternal(auroraConfig, aid, [])
-      def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.environment.permissions)
+      def rolebindings = objectGenerator.
+          generateRolebindings(deploymentSpec.environment.permissions, deploymentSpec.environment.namespace)
 
     then:
       def adminRolebinding = rolebindings.find { it.at("/metadata/name").asText() == "admin" }
@@ -156,7 +158,6 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
       rolebindings.size() == 2
   }
 
-
   def "generate rolebinding view should split groups"() {
 
     given:
@@ -166,7 +167,8 @@ class OpenShiftObjectGeneratorTest extends AbstractOpenShiftObjectGeneratorTest 
     when:
       AuroraDeploymentSpecInternal deploymentSpec = AuroraDeploymentSpecService.
           createAuroraDeploymentSpecInternal(auroraConfig, aid, [])
-      def rolebindings = objectGenerator.generateRolebindings(deploymentSpec.environment.permissions)
+      def rolebindings = objectGenerator.
+          generateRolebindings(deploymentSpec.environment.permissions, deploymentSpec.environment.namespace)
 
     then:
       def adminRolebinding = rolebindings.find { it.at("/metadata/name").asText() == "admin" }

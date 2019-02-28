@@ -19,6 +19,7 @@
       "paused": "true"
     },
     "name": "aos-simple",
+    "namespace": "aos-test",
     "ownerReferences": [
       {
         "apiVersion": "skatteetaten.no/v1",

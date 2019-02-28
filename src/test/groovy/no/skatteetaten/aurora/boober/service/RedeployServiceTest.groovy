@@ -1,22 +1,14 @@
 package no.skatteetaten.aurora.boober.service
 
+import static com.fasterxml.jackson.databind.node.NullNode.getInstance
+
+import static no.skatteetaten.aurora.boober.utils.OpenShiftTestDataBuilders.deploymentConfig
+import static no.skatteetaten.aurora.boober.utils.OpenShiftTestDataBuilders.imageStream
+import static no.skatteetaten.aurora.boober.utils.OpenShiftTestDataBuilders.imageStreamImportResponse
+
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.NullNode
 
-import io.fabric8.kubernetes.api.model.ObjectMeta
-import io.fabric8.kubernetes.api.model.ObjectReference
-import io.fabric8.openshift.api.model.DeploymentConfig
-import io.fabric8.openshift.api.model.DeploymentConfigSpec
-import io.fabric8.openshift.api.model.DeploymentTriggerImageChangeParams
-import io.fabric8.openshift.api.model.DeploymentTriggerPolicy
-import io.fabric8.openshift.api.model.ImageStream
-import io.fabric8.openshift.api.model.ImageStreamSpec
-import io.fabric8.openshift.api.model.ImageStreamStatus
-import io.fabric8.openshift.api.model.NamedTagEventList
-import io.fabric8.openshift.api.model.TagEvent
-import io.fabric8.openshift.api.model.TagReference
-import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
@@ -26,13 +18,22 @@ import spock.lang.Specification
 
 class RedeployServiceTest extends Specification {
   def defaultImageHash = '123'
-  def emptyJsonNode = NullNode.getInstance()
+  def emptyJsonNode = getInstance()
 
+  def deploymentRequest = [
+      "kind"      : "DeploymentRequest",
+      "apiVersion": "apps.openshift.io/v1",
+      "name"      : "foobar",
+      "latest"    : true,
+      "force"     : true
+  ]
+
+  def deploymentRequestNode = new ObjectMapper().convertValue(deploymentRequest, JsonNode.class)
   def imageStream = imageStream()
   def deploymentConfig = deploymentConfig()
 
   def openShiftObjectGenerator = Mock(OpenShiftObjectGenerator) {
-    generateDeploymentRequest('name') >> emptyJsonNode
+    generateDeploymentRequest('foobar') >> deploymentRequestNode
   }
   def openShiftClient = Mock(OpenShiftClient)
   def redeployService = new RedeployService(openShiftClient, openShiftObjectGenerator)
@@ -48,7 +49,7 @@ class RedeployServiceTest extends Specification {
 
   def "Should throw error if dc is null"() {
     given:
-      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> openShiftResponse()
+      openShiftClient.performOpenShiftCommand('aos-test', _ as OpenshiftCommand) >> openShiftResponse()
 
     when:
       redeployService.triggerRedeploy([], TemplateType.deploy)
@@ -61,7 +62,7 @@ class RedeployServiceTest extends Specification {
   def "Redeploy given null ImageStream return success"() {
 
     given:
-      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> openShiftResponse()
+      openShiftClient.performOpenShiftCommand('aos-test', _ as OpenshiftCommand) >> openShiftResponse()
 
     when:
       def response = redeployService.triggerRedeploy([deploymentConfig], TemplateType.deploy)
@@ -73,7 +74,7 @@ class RedeployServiceTest extends Specification {
 
   def "Redeploy with paused deploy will run manual deploy"() {
     given:
-      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> imageStreamImportResponse()
+      openShiftClient.performOpenShiftCommand('aos-test', _ as OpenshiftCommand) >> imageStreamImportResponse()
 
     when:
       def response = redeployService.
@@ -87,7 +88,7 @@ class RedeployServiceTest extends Specification {
 
   def "Redeploy with newly created imagestream will not import"() {
     given:
-      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> imageStreamImportResponse()
+      openShiftClient.performOpenShiftCommand('aos-test', _ as OpenshiftCommand) >> imageStreamImportResponse()
 
     when:
       def response = redeployService.
@@ -101,7 +102,7 @@ class RedeployServiceTest extends Specification {
 
   def "Redeploy given image is already imported return success"() {
     given:
-      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> imageStreamImportResponse()
+      openShiftClient.performOpenShiftCommand('aos-test', _ as OpenshiftCommand) >> imageStreamImportResponse()
 
     when:
       def response = redeployService.triggerRedeploy([deploymentConfig, imageStream], TemplateType.deploy)
@@ -113,7 +114,8 @@ class RedeployServiceTest extends Specification {
 
   def "Redeploy given image is not imported return success"() {
     given:
-      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> imageStreamImportResponse('234')
+      openShiftClient.performOpenShiftCommand('aos-test', _ as OpenshiftCommand) >>
+          imageStreamImportResponse('234')
 
     when:
       def response = redeployService.triggerRedeploy([deploymentConfig, imageStream], TemplateType.deploy)
@@ -126,7 +128,7 @@ class RedeployServiceTest extends Specification {
   def "Redeploy given no type in DeploymentConfig perform deployment request and return success"() {
     given:
       def deploymentConfigWithoutType = deploymentConfig(null)
-      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> openShiftResponse()
+      openShiftClient.performOpenShiftCommand('aos-test', _ as OpenshiftCommand) >> openShiftResponse()
 
     when:
       def response = redeployService.triggerRedeploy([deploymentConfigWithoutType, imageStream], TemplateType.deploy)
@@ -138,11 +140,12 @@ class RedeployServiceTest extends Specification {
 
   def "Redeploy with same image will run explicit deploy"() {
     given:
-      openShiftClient.performOpenShiftCommand('affiliation', _ as OpenshiftCommand) >> openShiftResponse()
+      openShiftClient.performOpenShiftCommand('aos-test', _ as OpenshiftCommand) >> openShiftResponse()
 
     when:
       def response = redeployService.
-          triggerRedeploy([deploymentConfig, imageStream, imageStreamImportResponse(defaultImageHash)],
+          triggerRedeploy(
+              [deploymentConfig, imageStream, imageStreamImportResponse(defaultImageHash)],
               TemplateType.deploy)
 
     then:
@@ -154,7 +157,8 @@ class RedeployServiceTest extends Specification {
   def "Redeploy with different image will not run explicit deploy"() {
     when:
       def response = redeployService.
-          triggerRedeploy([deploymentConfig, imageStream, imageStreamImportResponse("hash")], TemplateType.deploy)
+          triggerRedeploy([deploymentConfig, imageStream, imageStreamImportResponse("hash")],
+              TemplateType.deploy)
 
     then:
       response.success
@@ -162,64 +166,8 @@ class RedeployServiceTest extends Specification {
       response.message == "New application version found."
   }
 
-
-  private static OpenShiftResponse deploymentConfig(String type = 'ImageChange', int replicas = 1) {
-
-    def deploymentConfig = new DeploymentConfig(
-        metadata: new ObjectMeta(namespace: 'affiliation', name: 'name'),
-        spec: new DeploymentConfigSpec(
-            replicas: replicas,
-            triggers: [new DeploymentTriggerPolicy(type: type,
-                imageChangeParams: new DeploymentTriggerImageChangeParams(
-                    from: new ObjectReference(name: 'referanse:default')))])
-    )
-    def mapper = new ObjectMapper()
-    JsonNode dc = mapper.convertValue(deploymentConfig, JsonNode.class)
-    def dcCommand = new OpenshiftCommand(OperationType.CREATE, dc, dc)
-    return new OpenShiftResponse(dcCommand, dc, true)
-  }
-
-  private OpenShiftResponse imageStream(String dockerImageUrl = 'dockerImageUrl',
-      OperationType type = OperationType.UPDATE) {
-    def is = new ImageStream(
-        metadata: new ObjectMeta(namespace: 'affiliation', name: 'name', resourceVersion: '123'),
-        status: new ImageStreamStatus(
-            tags: [new NamedTagEventList(items: [new TagEvent(image: defaultImageHash)], tag: "default")]
-        ),
-        spec: new ImageStreamSpec(
-            tags: [new TagReference(name: 'default', from: new ObjectReference(name: dockerImageUrl))]
-        ))
-    def mapper = new ObjectMapper();
-    JsonNode dc = mapper.convertValue(is, JsonNode.class)
-    def dcCommand = new OpenshiftCommand(type, dc)
-    return new OpenShiftResponse(dcCommand, dc, true)
-  }
-
-  private OpenShiftResponse imageStreamImportResponse(String imageHash = defaultImageHash) {
-    def imageStreamImport = AuroraConfigHelperKt.imageStreamImport(imageHash)
-
-    def mapper = new ObjectMapper()
-    def isiJson = mapper.convertValue(imageStreamImport, JsonNode.class)
-    return new OpenShiftResponse(
-        new OpenshiftCommand(OperationType.CREATE, emptyJsonNode), isiJson)
-  }
-
   private OpenShiftResponse openShiftResponse(JsonNode responseBody = emptyJsonNode) {
-    return new OpenShiftResponse(new OpenshiftCommand(OperationType.CREATE, emptyJsonNode), responseBody)
-  }
-
-  private OpenShiftResponse failedResponse(JsonNode jsonNode = emptyJsonNode, String errorMessage) {
-    return new OpenShiftResponse(
-        new OpenshiftCommand(OperationType.CREATE, emptyJsonNode), jsonNode, false, errorMessage
-    )
-  }
-
-  private OpenShiftResponse failedImageStreamImportResponse(String errorMessage) {
-    def imageStreamImport = AuroraConfigHelperKt.imageStreamImport(defaultImageHash, false, errorMessage)
-
-    def mapper = new ObjectMapper()
-    def isiJson = mapper.convertValue(imageStreamImport, JsonNode.class)
-    return openShiftResponse(isiJson)
+    return new OpenShiftResponse(new OpenshiftCommand(OperationType.CREATE, "", emptyJsonNode), responseBody)
   }
 
 }

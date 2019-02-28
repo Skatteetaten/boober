@@ -18,7 +18,8 @@ object StsSecretGenerator {
         appName: String,
         stsProvisionResults: StsProvisioningResult,
         labels: Map<String, String>,
-        ownerReference: OwnerReference
+        ownerReference: OwnerReference,
+        namespace: String
     ): Secret {
 
         val secretName = "$appName-cert"
@@ -28,17 +29,18 @@ object StsSecretGenerator {
         return SecretGenerator.create(
             secretName = secretName,
             secretLabels = labels.addIfNotNull(RENEW_AFTER_LABEL to stsProvisionResults.renewAt.epochSecond.toString()),
-            secretAnnotations = mapOf(
-                APP_ANNOTATION to appName,
-                COMMON_NAME_ANNOTATION to stsProvisionResults.cn
-            ),
-            ownerReference = ownerReference,
             secretData = mapOf(
                 "privatekey.key" to cert.key,
                 "keystore.jks" to cert.keystore,
                 "certificate.crt" to cert.crt,
                 "descriptor.properties" to createDescriptorFile(baseUrl, "ca", cert.storePassword, cert.keyPassword)
-            )
+            ),
+            secretAnnotations = mapOf(
+                APP_ANNOTATION to appName,
+                COMMON_NAME_ANNOTATION to stsProvisionResults.cn
+            ),
+            ownerReference = ownerReference,
+            secretNamespace = namespace
         )
     }
 

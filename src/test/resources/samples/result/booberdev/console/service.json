@@ -18,6 +18,7 @@
       "name": "openshift-console-api"
     },
     "name": "openshift-console-api",
+    "namespace": "aos-booberdev",
     "ownerReferences": [
       {
         "apiVersion": "skatteetaten.no/v1",

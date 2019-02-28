@@ -9,16 +9,14 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.service.OpenShiftException
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient.Companion.generateUrl
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
-import org.apache.http.client.utils.URLEncodedUtils
-import org.apache.http.message.BasicNameValuePair
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
@@ -29,6 +27,7 @@ enum class OperationType { GET, CREATE, UPDATE, DELETE, NOOP }
 
 data class OpenshiftCommand @JvmOverloads constructor(
     val operationType: OperationType,
+    val url: String,
     val payload: JsonNode = NullNode.getInstance(),
     val previous: JsonNode? = null,
     val generated: JsonNode? = null
@@ -100,7 +99,6 @@ data class OpenShiftGroups(private val groupUserPairs: List<UserGroup>) {
 
 @Service
 class OpenShiftClient(
-    @Value("\${openshift.url}") val baseUrl: String,
     @ClientType(API_USER) val userClient: OpenShiftResourceClient,
     @ClientType(SERVICE_ACCOUNT) val serviceAccountClient: OpenShiftResourceClient,
     val mapper: ObjectMapper
@@ -111,16 +109,15 @@ class OpenShiftClient(
     fun performOpenShiftCommand(namespace: String, command: OpenshiftCommand): OpenShiftResponse {
 
         val kind = command.payload.openshiftKind
-        val name = command.payload.openshiftName
 
         val performClient = getClientForKind(kind)
 
         return try {
             val res: JsonNode? = when (command.operationType) {
                 OperationType.GET -> throw OpenShiftException("GET is unsupported") // We should probably consider implementing it, though
-                OperationType.CREATE -> performClient.post(kind, namespace, name, command.payload).body
-                OperationType.UPDATE -> performClient.put(kind, namespace, name, command.payload).body
-                OperationType.DELETE -> performClient.delete(kind, namespace, name).body
+                OperationType.CREATE -> performClient.post(command.url, command.payload).body
+                OperationType.UPDATE -> performClient.put(command.url, command.payload).body
+                OperationType.DELETE -> performClient.delete(command.url).body
                 OperationType.NOOP -> command.payload
             }
             OpenShiftResponse(command, res)
@@ -131,7 +128,7 @@ class OpenShiftClient(
 
     fun findCurrentUser(token: String): JsonNode? {
 
-        val url = "$baseUrl/oapi/v1/users/~"
+        val url = generateUrl(kind = "user", name = "~")
         val headers: HttpHeaders = userClient.createHeaders(token)
 
         val currentUser = userClient.get(url, headers)
@@ -141,7 +138,9 @@ class OpenShiftClient(
     @Cacheable("templates")
     fun getTemplate(template: String): JsonNode? {
         return try {
-            serviceAccountClient.get("$baseUrl/oapi/v1/namespaces/openshift/templates/$template")?.body
+
+            val url = generateUrl(kind = "template", namespace = "openshift", name = template)
+            serviceAccountClient.get(url)?.body
         } catch (e: Exception) {
             logger.debug("Failed getting template={}", template)
             null
@@ -152,7 +151,8 @@ class OpenShiftClient(
     fun getGroups(): OpenShiftGroups {
 
         fun getAllDeclaredUserGroups(): List<UserGroup> {
-            val groupItems = getResponseBodyItems("$baseUrl/oapi/v1/groups/")
+            val url = generateUrl(kind = "group")
+            val groupItems = getResponseBodyItems(url)
             return groupItems
                 .filter { it["users"] is ArrayNode }
                 .flatMap {
@@ -163,23 +163,11 @@ class OpenShiftClient(
 
         fun getAllImplicitUserGroups(): List<UserGroup> {
             val implicitGroup = "system:authenticated"
-            val userItems = getResponseBodyItems("$baseUrl/oapi/v1/users")
+            val userItems = getResponseBodyItems(generateUrl("user"))
             return userItems.map { UserGroup(it["metadata"]["name"].asText(), implicitGroup) }
         }
 
         return OpenShiftGroups(getAllDeclaredUserGroups() + getAllImplicitUserGroups())
-    }
-
-    fun getImageStream(namespace: String, name: String): OpenShiftResponse {
-
-        val performClient = getClientForKind("imagestream")
-        val command = OpenshiftCommand(OperationType.GET)
-        return try {
-            val res: JsonNode? = performClient.get("imagestream", namespace, name)?.body
-            OpenShiftResponse(command, res)
-        } catch (e: OpenShiftException) {
-            OpenShiftResponse.fromOpenShiftException(e, command)
-        }
     }
 
     fun resourceExists(kind: String, namespace: String, name: String): Boolean {
@@ -188,7 +176,8 @@ class OpenShiftClient(
     }
 
     fun projectExists(name: String): Boolean {
-        serviceAccountClient.get("$baseUrl/oapi/v1/projects/$name", retry = false)?.body?.let {
+        val url = generateUrl("project", name = name)
+        serviceAccountClient.get(url, retry = false)?.body?.let {
             val phase = it.at("/status/phase").textValue()
             if (phase == "Active") {
                 return true
@@ -199,22 +188,25 @@ class OpenShiftClient(
         return false
     }
 
-    fun get(kind: String, namespace: String, name: String, retry: Boolean = true): ResponseEntity<JsonNode>? {
-        return getClientForKind(kind).get(kind, namespace, name, retry)
+    fun get(kind: String, url: String, retry: Boolean = true): ResponseEntity<JsonNode>? {
+        return getClientForKind(kind).get(url, retry = retry)
     }
 
     /**
      * @param labelSelectors examples: name=someapp, name!=someapp (name label not like), name (name label must be set)
      */
     fun getByLabelSelectors(kind: String, namespace: String, labelSelectors: List<String>): List<JsonNode> {
-        val queryString = urlEncode(Pair("labelSelector", labelSelectors.joinToString(",")))
-        val apiUrl = OpenShiftApiUrls.getCollectionPathForResource(baseUrl, kind, namespace)
-        val url = "$apiUrl?$queryString"
+        val queryString = labelSelectors.joinToString(",")
+
+        val apiUrl = generateUrl(kind, namespace)
+        val url = "$apiUrl?labelSelector=$queryString"
         val body = getClientForKind(kind).get(url)?.body
 
         val items = body?.get("items")?.toList() ?: emptyList()
         return items.filterIsInstance<ObjectNode>()
-            .onEach { it.put("kind", kind) }
+            .onEach {
+                it.put("kind", kind)
+            }
     }
 
     /**
@@ -224,7 +216,7 @@ class OpenShiftClient(
      * the request.
      */
     private fun getClientForKind(kind: String): OpenShiftResourceClient {
-        return if (listOf("namespace", "route").contains(kind)) {
+        return if (listOf("namespace", "route").contains(kind.toLowerCase())) {
             serviceAccountClient
         } else {
             userClient
@@ -234,12 +226,5 @@ class OpenShiftClient(
     private fun getResponseBodyItems(url: String): ArrayNode {
         val response: ResponseEntity<JsonNode> = serviceAccountClient.get(url)!!
         return response.body["items"] as ArrayNode
-    }
-
-    companion object {
-
-        @JvmStatic
-        fun urlEncode(vararg queryParams: Pair<String, String>) =
-            URLEncodedUtils.format(queryParams.map { BasicNameValuePair(it.first, it.second) }, Charsets.UTF_8)
     }
 }

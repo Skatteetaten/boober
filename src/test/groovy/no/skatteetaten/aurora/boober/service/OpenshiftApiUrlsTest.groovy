@@ -1,47 +1,36 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftApiUrls
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import spock.lang.Specification
 import spock.lang.Unroll
 
 class OpenshiftApiUrlsTest extends Specification {
 
-  String baseUrl = ""
-
   @Unroll
-  def "Should create correct create url for #kind"() {
+  def "Should create correct url for #kind"() {
 
     given:
-      def result = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, namespace, name)
+      def result = OpenShiftResourceClient.generateUrl(kind, namespace, name)
 
     expect:
-      result.create == url
+      result == url
 
     where:
       kind                | name  | namespace | url
-      "deploymentrequest" | "foo" | "bar"     | "/oapi/v1/namespaces/bar/deploymentconfigs/foo/instantiate"
-      "user"              | "foo" | null      | "/oapi/v1/users"
-      "processedtemplate" | "foo" | "bar"     | "/oapi/v1/namespaces/bar/processedtemplates"
-
+      "user"              | "foo" | null      | "/apis/user.openshift.io/v1/users/foo"
+      "processedtemplate" | null  | "bar"     | "/oapi/v1/namespaces/bar/processedtemplates"
+      "project"           | "foo" | null      | "/apis/project.openshift.io/v1/projects/foo"
+      "service"           | "foo" | "bar"     | "/api/v1/namespaces/bar/services/foo"
   }
 
-  @Unroll
-  def "Should create correct get url for #kind"() {
+  def "Should get exception if generating url that requires namespace with no namespace"() {
 
-    given:
-      def url = OpenShiftApiUrls.createOpenShiftApiUrls(baseUrl, kind, namespace, name)
+    when:
+      OpenShiftResourceClient.generateUrl("applicationdeployment", null, null)
 
-    expect:
-
-      url.get == result
-
-
-    where:
-      kind                | name  | namespace | result
-      "deploymentrequest" | "foo" | "bar"     | null
-      "user"              | "foo" | null      | "/oapi/v1/users/foo"
-      "project"           | "foo" | null      | "/oapi/v1/projects/foo"
-      "service"           | "foo" | "bar"     | "/api/v1/namespaces/bar/services/foo"
+    then:
+      def e = thrown(IllegalArgumentException)
+      e.message == "namespace required for resource kind applicationdeployment"
 
   }
 }

@@ -55,10 +55,22 @@ open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate) {
         val responseEntity = if (retry) {
             retryTemplate.execute<ResponseEntity<U>, RestClientException> {
                 it.setAttribute(REQUEST_ENTITY, requestEntity)
-                restTemplate.exchange(requestEntity, type.java)
+                restTemplate.exchange(
+                    requestEntity.url.toString(),
+                    requestEntity.method,
+                    requestEntity,
+                    type.java,
+                    emptyMap<String, String>()
+                )
             }
         } else {
-            restTemplate.exchange(requestEntity, type.java)
+            restTemplate.exchange(
+                requestEntity.url.toString(),
+                requestEntity.method,
+                requestEntity,
+                type.java,
+                emptyMap<String, String>()
+            )
         }
         logger.trace("Body={}", responseEntity.body)
         return responseEntity
@@ -91,7 +103,7 @@ class RetryLogger(val logger: Logger) : RetryListenerSupport() {
 
         val requestEntity: RequestEntity<*> = context?.getAttribute(REQUEST_ENTITY) as RequestEntity<*>
         if (context.getAttribute(RetryContext.EXHAUSTED)?.let { it as Boolean } == true) {
-            logger.error("Request failed. Giving up. url=${requestEntity.url}, method=${requestEntity.method}")
+            logger.warn("Request status=failed. Giving up. url=${requestEntity.url}, method=${requestEntity.method}")
         } else {
             val tokenSnippet = getTokenSnippetFromAuthHeader(requestEntity.headers)
             logger.debug("Requested url=${requestEntity.url}, method=${requestEntity.method}, tokenSnippet=$tokenSnippet")
@@ -131,7 +143,7 @@ class RetryLogger(val logger: Logger) : RetryListenerSupport() {
             params["messageFromResponse"] = messageFromResponse
         }
 
-        val message = StringBuilder("Request failed. ")
+        val message = StringBuilder("Request status=retrying ")
         params.map { "${it.key}=${it.value}" }.joinTo(message, ", ")
         logger.warn(message.toString())
     }

@@ -15,13 +15,14 @@ object ImageStreamGenerator {
     fun createLocalImageStream(
         isName: String,
         isLabels: Map<String, String>,
-        reference: OwnerReference
+        reference: OwnerReference,
+        isNamespace: String
     ): ImageStream {
         return newImageStream {
-            apiVersion = "v1"
             metadata {
                 ownerReferences = listOf(reference)
                 name = isName
+                namespace = isNamespace
                 labels = isLabels
             }
         }
@@ -33,13 +34,14 @@ object ImageStreamGenerator {
         dockerRegistry: String,
         dockerImagePath: String,
         dockerTag: String,
-        reference: OwnerReference
+        reference: OwnerReference,
+        isNamespace: String
     ): ImageStream {
         return newImageStream {
-            apiVersion = "v1"
             metadata {
                 ownerReferences = listOf(reference)
                 name = isName
+                namespace = isNamespace
                 labels = isLabels
             }
             spec {

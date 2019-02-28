@@ -13,7 +13,8 @@
         "name": "tvinn",
         "uid": "123-123"
       }
-    ]
+    ],
+    "namespace": "aos-booberdev"
   },
   "spec": {
     "replicas": 1,

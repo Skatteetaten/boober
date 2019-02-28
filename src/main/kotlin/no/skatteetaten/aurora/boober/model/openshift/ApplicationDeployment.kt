@@ -9,10 +9,10 @@ import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class ApplicationDeployment(
-    val kind: String = "ApplicationDeployment",
+    val spec: ApplicationDeploymentSpec,
     val metadata: ObjectMeta,
-    val apiVersion: String = "skatteetaten.no/v1",
-    val spec: ApplicationDeploymentSpec
+    val kind: String = "ApplicationDeployment",
+    val apiVersion: String = "skatteetaten.no/v1"
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

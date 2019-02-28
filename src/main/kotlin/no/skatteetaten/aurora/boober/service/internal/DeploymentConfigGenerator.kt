@@ -34,9 +34,9 @@ object DeploymentConfigGenerator {
             metadata {
                 ownerReferences = listOf(reference)
                 annotations = auroraDeployment.annotations
-                apiVersion = "v1"
                 labels = auroraDeployment.labels
                 name = auroraDeployment.name
+                namespace = auroraDeployment.namespace
             }
             spec {
                 strategy {

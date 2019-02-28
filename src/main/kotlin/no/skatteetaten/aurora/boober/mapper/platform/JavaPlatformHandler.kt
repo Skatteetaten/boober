@@ -49,7 +49,8 @@ class JavaPlatformHandler : ApplicationPlatformHandler("java") {
             replicas = auroraDeploymentSpecInternal.deploy.replicas,
             serviceAccount = auroraDeploymentSpecInternal.deploy.serviceAccount,
             ttl = auroraDeploymentSpecInternal.deploy.ttl,
-            pause = auroraDeploymentSpecInternal.deploy.pause
+            pause = auroraDeploymentSpecInternal.deploy.pause,
+            namespace = auroraDeploymentSpecInternal.environment.namespace
         )
     }
 

@@ -10,6 +10,7 @@
       "booberDeployId": "123"
     },
     "name": "tvinn-config",
+    "namespace": "aos-booberdev",
     "ownerReferences": [
       {
         "apiVersion": "skatteetaten.no/v1",

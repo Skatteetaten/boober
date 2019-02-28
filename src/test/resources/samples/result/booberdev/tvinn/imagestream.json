@@ -10,7 +10,8 @@
         "name": "tvinn",
         "uid": "123-123"
       }
-    ]
+    ],
+    "namespace": "aos-booberdev"
   },
   "spec": {
     "dockerImageRepository": "docker-registry.aurora.sits.no:5000/aurora/atomhopper",

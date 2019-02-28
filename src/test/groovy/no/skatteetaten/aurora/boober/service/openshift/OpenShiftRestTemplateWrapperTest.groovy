@@ -25,21 +25,25 @@ import no.skatteetaten.aurora.boober.utils.RetryLogger
 
 class OpenShiftRestTemplateWrapperTest extends AbstractAuroraDeploymentSpecSpringTest {
 
-  @Value('${openshift.url}')
-  String openShiftUrl
-
   @Autowired
   MockRestServiceServer osClusterMock
 
   @Autowired
   OpenShiftRestTemplateWrapper restTemplateWrapper
 
-  @Value('${openshift.url}/oapi/v1/namespaces/aos/deploymentconfigs/webleveranse')
+  @Value('/apis/apps.openshift.io/v1/namespaces/aos/deploymentconfigs/webleveranse')
+  String relativeUrl
+
+  @Value('${openshift.url}')
+  String openShiftUrl
+
   String resourceUrl
 
   def setup() {
+    osClusterMock.bindTo(restTemplateWrapper.restTemplate)
     Logger root = (Logger) LoggerFactory.getLogger("no.skatteetaten")
     root.setLevel(Level.DEBUG)
+    resourceUrl = openShiftUrl + relativeUrl
   }
 
   def "Succeeds even if the request fails a couple of times"() {
@@ -60,7 +64,6 @@ class OpenShiftRestTemplateWrapperTest extends AbstractAuroraDeploymentSpecSprin
   def "Fails when exceeds retry attempts"() {
 
     given:
-      def resourceUrl = "$openShiftUrl/oapi/v1/namespaces/aos/deploymentconfigs/webleveranse"
       3.times { osClusterMock.expect(requestTo(resourceUrl)).andRespond(withBadRequest()) }
 
     when:
@@ -73,7 +76,6 @@ class OpenShiftRestTemplateWrapperTest extends AbstractAuroraDeploymentSpecSprin
   def "Fails immediately when retry is disabled"() {
 
     given:
-      def resourceUrl = "$openShiftUrl/oapi/v1/namespaces/aos/deploymentconfigs/webleveranse"
       1.times { osClusterMock.expect(requestTo(resourceUrl)).andRespond(withBadRequest()) }
       0 * osClusterMock._
 

@@ -18,6 +18,7 @@ class SpringTestUtils {
   static class MockRestServiceServiceInitializer {
 
     @Autowired
+    @TargetService(ServiceTypes.OPENSHIFT)
     RestTemplate restTemplate
 
     @Bean

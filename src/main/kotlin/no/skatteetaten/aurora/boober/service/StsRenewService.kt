@@ -11,7 +11,6 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.whenTrue
 import org.springframework.stereotype.Service
-import java.lang.IllegalArgumentException
 import java.util.Optional
 
 data class RenewRequest(
@@ -51,7 +50,8 @@ class StsRenewService(
             appName = request.name,
             stsProvisionResults = stsResult,
             labels = labels,
-            ownerReference = request.ownerReference
+            ownerReference = request.ownerReference,
+            namespace = request.namespace
         )
         val json = jacksonObjectMapper().convertValue<JsonNode>(secret)
         val command = commandService.createOpenShiftCommand(request.namespace, json)

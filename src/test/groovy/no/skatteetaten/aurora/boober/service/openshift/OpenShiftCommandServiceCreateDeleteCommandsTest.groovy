@@ -86,17 +86,15 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest extends Specification {
       def name = "aos-simple"
       def namespace = "booberdev"
       def deployId = "abc123"
-      def baseUrl = "http://localhost"
       def aid = new ApplicationDeploymentRef(namespace, name)
 
       def responses = createResponsesFromResultFiles(aid)
 
       responses.each {
         def kind = it.key
-        def queryString = "labelSelector=app%3D$name%2CbooberDeployId%2CbooberDeployId%21%3D$deployId"
-        def apiUrl = OpenShiftApiUrls.getCollectionPathForResource(baseUrl, kind, namespace)
+        def queryString = "labelSelector=app=$name,booberDeployId,booberDeployId!=$deployId"
+        def apiUrl = OpenShiftResourceClient.generateUrl(kind, namespace)
         def url = "$apiUrl?$queryString" as String
-
         userClient.get(url, _, true) >> ResponseEntity.ok(it.value)
       }
 
@@ -104,7 +102,7 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest extends Specification {
       def commands = openShiftCommandBuilder.createOpenShiftDeleteCommands(name, namespace, deployId)
 
     then:
-      ["BuildConfig", "DeploymentConfig", "ConfigMap", "ImageStream", "Route", "Service"].forEach {
+      ["BuildConfig", "DeploymentConfig", "ConfigMap", "ImageStream", "Service"].forEach {
         assert containsKind(it, commands)
       }
   }
