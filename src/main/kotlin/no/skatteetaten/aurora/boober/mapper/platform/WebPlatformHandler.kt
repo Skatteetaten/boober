@@ -67,8 +67,8 @@ class WebPlatformHandler : ApplicationPlatformHandler("web") {
 
     override fun handlers(type: TemplateType): Set<AuroraConfigFieldHandler> = when(type) {
         development -> setOf(
-                AuroraConfigFieldHandler("baseImage/name", defaultValue = "wrench"),
-                AuroraConfigFieldHandler("baseImage/version", defaultValue = "0")
+                AuroraConfigFieldHandler("baseImage/name", defaultValue = "wrench8"),
+                AuroraConfigFieldHandler("baseImage/version", defaultValue = "1")
             )
         else -> emptySet()
     }
