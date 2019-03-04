@@ -4,6 +4,7 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.v1.PortNumbers
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.Mount
+import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.springframework.stereotype.Component
@@ -54,16 +55,11 @@ class JavaPlatformHandler : ApplicationPlatformHandler("java") {
         )
     }
 
-    override fun handlers(handlers: Set<AuroraConfigFieldHandler>): Set<AuroraConfigFieldHandler> {
-
-        val buildHandlers = handlers.find { it.name.startsWith("baseImage") }
-            ?.let {
-                setOf(
-                    AuroraConfigFieldHandler("baseImage/name", defaultValue = "flange"),
-                    AuroraConfigFieldHandler("baseImage/version", defaultValue = "8")
-                )
-            }
-
-        return handlers.addIfNotNull(buildHandlers)
+    override fun handlers(type: TemplateType): Set<AuroraConfigFieldHandler> = when(type) {
+        development -> setOf(
+            AuroraConfigFieldHandler("baseImage/name", defaultValue = "flange"),
+            AuroraConfigFieldHandler("baseImage/version", defaultValue = "8")
+        )
+        else -> emptySet()
     }
 }

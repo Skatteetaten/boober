@@ -38,8 +38,6 @@ class AuroraBuildMapperV1(
     val handlers = listOf(
         AuroraConfigFieldHandler("builder/name", defaultValue = "architect"),
         AuroraConfigFieldHandler("builder/version", defaultValue = "1"),
-        AuroraConfigFieldHandler("baseImage/name"),
-        AuroraConfigFieldHandler("baseImage/version"),
         AuroraConfigFieldHandler(
             "groupId",
             validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),

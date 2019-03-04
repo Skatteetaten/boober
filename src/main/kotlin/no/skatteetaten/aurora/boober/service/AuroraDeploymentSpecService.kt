@@ -103,7 +103,7 @@ class AuroraDeploymentSpecService(
                     TemplateType.template -> routeMapper.handlers + volumeMapper.handlers + templateMapper.handlers
                 }).toSet()
 
-            val handlers = applicationHandler.handlers(rawHandlers)
+            val handlers = rawHandlers + applicationHandler.handlers(header.type)
 
             val deploymentSpec = AuroraDeploymentSpec.create(
                 handlers = handlers,
