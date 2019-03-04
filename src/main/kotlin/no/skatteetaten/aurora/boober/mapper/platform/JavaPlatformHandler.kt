@@ -57,8 +57,8 @@ class JavaPlatformHandler : ApplicationPlatformHandler("java") {
 
     override fun handlers(type: TemplateType): Set<AuroraConfigFieldHandler> = when(type) {
         development -> setOf(
-            AuroraConfigFieldHandler("baseImage/name", defaultValue = "flange"),
-            AuroraConfigFieldHandler("baseImage/version", defaultValue = "8")
+            AuroraConfigFieldHandler("baseImage/name", defaultValue = "wingnut8"),
+            AuroraConfigFieldHandler("baseImage/version", defaultValue = "1")
         )
         else -> emptySet()
     }
