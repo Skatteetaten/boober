@@ -55,7 +55,7 @@ class JavaPlatformHandler : ApplicationPlatformHandler("java") {
         )
     }
 
-    override fun handlers(type: TemplateType): Set<AuroraConfigFieldHandler> = when(type) {
+    override fun handlers(type: TemplateType): Set<AuroraConfigFieldHandler> = when (type) {
         development -> setOf(
             AuroraConfigFieldHandler("baseImage/name", defaultValue = "wingnut8"),
             AuroraConfigFieldHandler("baseImage/version", defaultValue = "1")
