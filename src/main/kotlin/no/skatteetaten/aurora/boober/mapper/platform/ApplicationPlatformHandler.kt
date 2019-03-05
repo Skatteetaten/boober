@@ -24,6 +24,7 @@ import no.skatteetaten.aurora.boober.model.MountType.ConfigMap
 import no.skatteetaten.aurora.boober.model.MountType.PVC
 import no.skatteetaten.aurora.boober.model.MountType.Secret
 import no.skatteetaten.aurora.boober.model.Probe
+import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.service.internal.createDbEnv
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
@@ -33,7 +34,7 @@ import no.skatteetaten.aurora.boober.utils.withNonBlank
 import java.time.Duration
 
 abstract class ApplicationPlatformHandler(val name: String) {
-    open fun handlers(handlers: Set<AuroraConfigFieldHandler>): Set<AuroraConfigFieldHandler> = handlers
+    open fun handlers(type: TemplateType): Set<AuroraConfigFieldHandler> = emptySet()
 
     abstract fun handleAuroraDeployment(
         auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,

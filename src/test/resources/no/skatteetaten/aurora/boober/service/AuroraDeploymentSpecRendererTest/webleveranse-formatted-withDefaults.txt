@@ -65,7 +65,7 @@
     version:                "1"                          // default
   }
   baseImage: {
-    name:                   "wrench"                     // default
-    version:                "0"                          // default
+    name:                   "wrench8"                    // default
+    version:                "1"                          // default
   }
 }
