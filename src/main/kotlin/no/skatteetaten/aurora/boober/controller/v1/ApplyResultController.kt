@@ -1,9 +1,9 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
+import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.controller.Responder
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
-import no.skatteetaten.aurora.boober.service.DeployHistoryEntry
 import no.skatteetaten.aurora.boober.service.DeployLogService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -21,7 +21,7 @@ class ApplyResultController(private val deployLogService: DeployLogService, priv
         @PathVariable auroraConfigName: String
     ): Response {
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
-        val applicationResults: List<DeployHistoryEntry> = deployLogService.deployHistory(ref)
+        val applicationResults: List<JsonNode> = deployLogService.deployHistory(ref)
         return responder.create(applicationResults)
     }
 
