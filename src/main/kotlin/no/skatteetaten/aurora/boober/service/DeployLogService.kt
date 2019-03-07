@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.utils.Instants.now
@@ -72,13 +73,13 @@ class DeployLogService(
         return result.copy(openShiftResponses = filteredResponses)
     }
 
-    fun deployHistory(ref: AuroraConfigRef): List<DeployHistoryEntry> {
+    fun deployHistory(ref: AuroraConfigRef): List<JsonNode> {
         val files = bitbucketService.getFiles(project, repo, ref.name)
         return files.mapNotNull { bitbucketService.getFile(project, repo, "${ref.name}/$it") }
-            .map { mapper.readValue<DeployHistoryEntry>(it) }
+            .map { mapper.readValue<JsonNode>(it) }
     }
 
-    fun findDeployResultById(ref: AuroraConfigRef, deployId: String): DeployHistoryEntry? {
+    fun findDeployResultById(ref: AuroraConfigRef, deployId: String): JsonNode? {
         return bitbucketService.getFile(project, repo, "${ref.name}/$deployId.json")?.let {
             mapper.readValue(it)
         }
