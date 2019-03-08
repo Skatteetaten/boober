@@ -146,6 +146,21 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
       ex.errors[0].field.path == 'name'
   }
 
+  def "Should throw AuroraConfigException due to wrong version"() {
+
+    given:
+      def aid = DEFAULT_AID
+      modify(auroraConfigJson, "${aid.application}.json", {
+        put("version", "foo/bar")
+      })
+    when:
+      createDeploymentSpec(auroraConfigJson, aid)
+
+    then:
+      def ex = thrown(AuroraConfigException)
+      ex.errors[0].message == "Version must be a 128 characters or less, alphanumeric and can contain dots and dashes"
+  }
+
   def "Should throw AuroraConfigException due to missing required properties"() {
 
     given:
@@ -158,7 +173,7 @@ class AuroraDeploymentSpecBuilderTest extends AbstractAuroraDeploymentSpecTest {
 
     then:
       def ex = thrown(AuroraConfigException)
-      ex.errors[0].message == "Version must be set"
+      ex.errors[0].message == "Version must be a 128 characters or less, alphanumeric and can contain dots and dashes"
   }
 
   def "Fails when affiliation is not in about file"() {

@@ -4,6 +4,7 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraTemplate
+import no.skatteetaten.aurora.boober.utils.pattern
 
 class AuroraTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>) {
 
@@ -20,7 +21,13 @@ class AuroraTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>) {
                 null
             }
         }),
-        AuroraConfigFieldHandler("version"),
+        AuroraConfigFieldHandler("version", validator = {
+            it.pattern(
+                "^[\\w][\\w.-]{0,127}$",
+                "Version must be a 128 characters or less, alphanumeric and can contain dots and dashes",
+                false
+            )
+        }),
         AuroraConfigFieldHandler("replicas")
     )
 

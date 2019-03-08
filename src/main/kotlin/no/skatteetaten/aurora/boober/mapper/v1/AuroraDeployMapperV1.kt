@@ -17,8 +17,8 @@ import no.skatteetaten.aurora.boober.model.ToxiProxy
 import no.skatteetaten.aurora.boober.utils.durationString
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.length
-import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.oneOf
+import no.skatteetaten.aurora.boober.utils.pattern
 import no.skatteetaten.aurora.boober.utils.removeExtension
 
 class AuroraDeployMapperV1(
@@ -38,7 +38,12 @@ class AuroraDeployMapperV1(
         AuroraConfigFieldHandler(
             "groupId",
             validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
-        AuroraConfigFieldHandler("version", validator = { it.notBlank("Version must be set") }),
+        AuroraConfigFieldHandler("version", validator = {
+            it.pattern(
+                "^[\\w][\\w.-]{0,127}$",
+                "Version must be a 128 characters or less, alphanumeric and can contain dots and dashes"
+            )
+        }),
         AuroraConfigFieldHandler("releaseTo"),
         AuroraConfigFieldHandler(
             "deployStrategy/type",
