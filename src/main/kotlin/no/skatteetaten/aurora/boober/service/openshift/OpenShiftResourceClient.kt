@@ -6,6 +6,8 @@ import no.skatteetaten.aurora.boober.service.openshift.token.TokenProvider
 import no.skatteetaten.aurora.boober.utils.findApiVersion
 import no.skatteetaten.aurora.boober.utils.findOpenShiftApiPrefix
 import no.skatteetaten.aurora.boober.utils.kindsWithoutNamespace
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
@@ -15,6 +17,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.client.HttpClientErrorException
 import java.net.URI
 
+val logger: Logger = LoggerFactory.getLogger(OpenShiftResourceClient::class.java)
 open class OpenShiftResourceClient(
     val tokenProvider: TokenProvider,
     val restTemplateWrapper: OpenShiftRestTemplateWrapper
@@ -71,7 +74,8 @@ open class OpenShiftResourceClient(
         restTemplateWrapper.exchange(requestEntity, retry)
     } catch (e: HttpClientErrorException) {
         if (e.statusCode != HttpStatus.NOT_FOUND) {
-            throw OpenShiftException("An error occurred while communicating with OpenShift", e)
+            logger.info("Failed communicating with openShift code=${e.statusCode} message=${e.message}")
+            throw OpenShiftException("openShiftCommunicationError code=${e.statusCode.value()}", e)
         }
         null
     }
