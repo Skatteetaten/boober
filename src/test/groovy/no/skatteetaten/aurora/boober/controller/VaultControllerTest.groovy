@@ -72,10 +72,12 @@ class VaultControllerTest extends Specification {
       def payload = new AuroraSecretVaultPayload(vaultName, [],
           ["latest.properties": B64.encoder.encodeToString("foo bar=baz".bytes)])
 
+      def output = JsonOutput.toJson(payload)
+
     when:
       ResultActions result = mockMvc.perform(
           put("/v1/vault/$vaultCollectionName")
-              .content(JsonOutput.toJson(payload))
+              .content(output)
               .contentType(APPLICATION_JSON))
 
     then:
