@@ -6,6 +6,8 @@ import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraLocalTemplate
+import no.skatteetaten.aurora.boober.model.AuroraTemplateResource
+import no.skatteetaten.aurora.boober.model.AuroraTemplateResources
 import no.skatteetaten.aurora.boober.utils.pattern
 
 class AuroraLocalTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>, val auroraConfig: AuroraConfig) {
@@ -27,7 +29,11 @@ class AuroraLocalTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>, 
                 false
             )
         }),
-        AuroraConfigFieldHandler("replicas")
+        AuroraConfigFieldHandler("replicas"),
+        AuroraConfigFieldHandler("resources/cpu/min"),
+        AuroraConfigFieldHandler("resources/cpu/max"),
+        AuroraConfigFieldHandler("resources/memory/min"),
+        AuroraConfigFieldHandler("resources/memory/max")
     )
 
     fun findParameters(): List<AuroraConfigFieldHandler> {
@@ -44,7 +50,17 @@ class AuroraLocalTemplateMapperV1(val applicationFiles: List<AuroraConfigFile>, 
             parameters = auroraDeploymentSpec.getParameters(parameterHandlers),
             templateJson = extractTemplateJson(auroraDeploymentSpec),
             version = auroraDeploymentSpec.getOrNull("version"),
-            replicas = auroraDeploymentSpec.getOrNull("replicas")
+            replicas = auroraDeploymentSpec.getOrNull("replicas"),
+            resources = AuroraTemplateResources(
+                request = AuroraTemplateResource(
+                    cpu = auroraDeploymentSpec.getOrNull("resources/cpu/min"),
+                    memory = auroraDeploymentSpec.getOrNull("resources/memory/min")
+                ),
+                limit = AuroraTemplateResource(
+                    cpu = auroraDeploymentSpec.getOrNull("resources/cpu/max"),
+                    memory = auroraDeploymentSpec.getOrNull("resources/memory/max")
+                )
+            )
         )
     }
 
