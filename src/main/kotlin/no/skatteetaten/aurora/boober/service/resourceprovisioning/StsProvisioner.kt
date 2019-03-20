@@ -61,9 +61,9 @@ class StsProvisioner(
                 builder.build().encode().toUri(),
                 Resource::class.java
             )
-            val keyPassword = response.headers.getFirst("key-password")
-            val storePassword = response.headers.getFirst("store-password")
-            val cert = createStsCert(response.body.inputStream, keyPassword, storePassword)
+            val keyPassword = response.headers.getFirst("key-password")!!
+            val storePassword = response.headers.getFirst("store-password")!!
+            val cert = createStsCert(response.body!!.inputStream, keyPassword, storePassword)
             StsProvisioningResult(
                 cert = cert,
                 cn = cn,

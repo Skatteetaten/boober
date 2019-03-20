@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import no.skatteetaten.aurora.filter.logging.AuroraHeaderFilter
 import no.skatteetaten.aurora.filter.logging.RequestKorrelasjon
@@ -12,7 +11,6 @@ import org.encryptor4j.factory.AbsKeyFactory
 import org.encryptor4j.factory.KeyFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.beans.factory.config.BeanPostProcessor
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.Bean
@@ -42,8 +40,8 @@ annotation class TargetService(val value: ServiceTypes)
 
 @Configuration
 @EnableRetry
-class Configuration : BeanPostProcessor {
-
+class Configuration { /*: BeanPostProcessor {
+    // TODO: do we need this?
     override fun postProcessBeforeInitialization(bean: Any, beanName: String?): Any = bean
 
     override fun postProcessAfterInitialization(bean: Any, beanName: String?): Any {
@@ -53,6 +51,7 @@ class Configuration : BeanPostProcessor {
 
         return bean
     }
+    */
 
     @Bean
     fun keyFactory(): KeyFactory = object : AbsKeyFactory("AES", 128) {}
@@ -65,7 +64,7 @@ class Configuration : BeanPostProcessor {
         clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
     ): RestTemplate {
 
-        return restTemplateBuilder.requestFactory(clientHttpRequestFactory).build()
+        return restTemplateBuilder.requestFactory { clientHttpRequestFactory }.build()
     }
 
     @Bean
@@ -78,7 +77,7 @@ class Configuration : BeanPostProcessor {
 
         return restTemplateBuilder
             .rootUri(baseUrl)
-            .requestFactory(clientHttpRequestFactory).build()
+            .requestFactory { clientHttpRequestFactory }.build()
     }
 
     @Bean
@@ -93,9 +92,9 @@ class Configuration : BeanPostProcessor {
     ): RestTemplate {
 
         return restTemplateBuilder
-            .requestFactory(clientHttpRequestFactory)
+            .requestFactory { clientHttpRequestFactory }
             .rootUri(bitbucketUrl)
-            .basicAuthorization(username, password)
+            .basicAuthentication(username, password)
             .build()
     }
 
@@ -113,7 +112,7 @@ class Configuration : BeanPostProcessor {
         val clientIdHeaderName = "KlientID"
 
         return restTemplateBuilder
-            .requestFactory(clientHttpRequestFactory)
+            .requestFactory { clientHttpRequestFactory }
             .interceptors(ClientHttpRequestInterceptor { request, body, execution ->
                 request.headers.apply {
                     set(HttpHeaders.AUTHORIZATION, "aurora-token ${sharedSecretReader.secret}")
@@ -139,7 +138,7 @@ class Configuration : BeanPostProcessor {
         val clientIdHeaderName = "KlientID"
 
         return restTemplateBuilder
-            .requestFactory(clientHttpRequestFactory)
+            .requestFactory { clientHttpRequestFactory }
             .interceptors(ClientHttpRequestInterceptor { request, body, execution ->
                 request.headers.apply {
                     set(HttpHeaders.AUTHORIZATION, "Bearer aurora-token ${sharedSecretReader.secret}")

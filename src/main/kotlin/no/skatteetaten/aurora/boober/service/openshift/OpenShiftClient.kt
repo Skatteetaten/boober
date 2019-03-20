@@ -225,6 +225,6 @@ class OpenShiftClient(
 
     private fun getResponseBodyItems(url: String): ArrayNode {
         val response: ResponseEntity<JsonNode> = serviceAccountClient.get(url)!!
-        return response.body["items"] as ArrayNode
+        return response.body!!["items"] as ArrayNode
     }
 }

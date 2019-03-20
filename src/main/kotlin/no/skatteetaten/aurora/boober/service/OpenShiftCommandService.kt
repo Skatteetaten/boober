@@ -187,7 +187,7 @@ class OpenShiftCommandService(
         return if (existingResource == null) {
             OpenshiftCommand(CREATE, payload = newResource, url = resourceUrl)
         } else {
-            val mergedResource = mergeWithExistingResource(newResource, existingResource.body)
+            val mergedResource = mergeWithExistingResource(newResource, existingResource.body!!)
             OpenshiftCommand(
                 operationType = UPDATE,
                 payload = mergedResource,

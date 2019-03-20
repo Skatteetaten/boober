@@ -2,10 +2,10 @@ package no.skatteetaten.aurora.boober.service.internal
 
 import com.fkorotkov.kubernetes.newObjectReference
 import com.fkorotkov.openshift.metadata
-import com.fkorotkov.openshift.newRoleBinding
+import com.fkorotkov.openshift.newOpenshiftRoleBinding
 import com.fkorotkov.openshift.roleRef
 import io.fabric8.kubernetes.api.model.ObjectReference
-import io.fabric8.openshift.api.model.RoleBinding
+import io.fabric8.openshift.api.model.OpenshiftRoleBinding
 import no.skatteetaten.aurora.boober.model.Permission
 
 object RolebindingGenerator {
@@ -14,9 +14,9 @@ object RolebindingGenerator {
         rolebindingName: String,
         permission: Permission,
         rolebindingNamespace: String
-    ): RoleBinding {
+    ): OpenshiftRoleBinding {
 
-        return newRoleBinding {
+        return newOpenshiftRoleBinding {
             metadata {
                 name = rolebindingName
                 namespace = rolebindingNamespace

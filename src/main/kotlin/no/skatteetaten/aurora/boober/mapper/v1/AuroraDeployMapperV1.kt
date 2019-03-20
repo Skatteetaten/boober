@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
-import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
@@ -20,6 +19,7 @@ import no.skatteetaten.aurora.boober.utils.length
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.pattern
 import no.skatteetaten.aurora.boober.utils.removeExtension
+import org.springframework.boot.convert.DurationStyle
 
 class AuroraDeployMapperV1(
     val applicationDeploymentRef: ApplicationDeploymentRef,
@@ -132,7 +132,7 @@ class AuroraDeployMapperV1(
             liveness = getProbe(auroraDeploymentSpec, "liveness"),
             readiness = getProbe(auroraDeploymentSpec, "readiness"),
             ttl = auroraDeploymentSpec.getOrNull<String>("ttl")
-                ?.let { StringToDurationConverter().convert(it) },
+                ?.let { DurationStyle.SIMPLE.parse(it) },
             toxiProxy = getToxiProxy(auroraDeploymentSpec, "toxiproxy"),
             pause = pause
         )

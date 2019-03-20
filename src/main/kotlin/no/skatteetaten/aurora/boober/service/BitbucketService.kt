@@ -59,7 +59,7 @@ class BitbucketService(
 
         val url = "/rest/api/1.0/projects/$project/repos?limit=1000"
         val repoList = restTemplateWrapper.get(JsonNode::class, url).body
-        val values = repoList["values"] as ArrayNode
+        val values = repoList!!["values"] as ArrayNode
 
         return values.map {
             it["slug"].textValue()
