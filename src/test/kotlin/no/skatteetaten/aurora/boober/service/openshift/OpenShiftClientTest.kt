@@ -168,33 +168,29 @@ class OpenShiftClientTest : ResourceLoader() {
         assertThat(result.responseBody?.get("failed")?.asText()).isEqualTo("true")
     }
 
-    /*
-    val "Should record exception when command fails with non json body"()
-    {
-        given:
-        JsonNode payload = mapper . convertValue ([
-            kind    : "service",
-        metadata: [
-        "name": "bar"
-        ]
-        ], JsonNode.class)
+    @Test
+    fun `Should record exception when command fails with string body`() {
+        val jsonMap = mapOf(
+            "kind" to "service",
+            "metadata" to mapOf("name" to "bar")
+        )
 
-        val cmd = OpenshiftCommand(OperationType.CREATE, "", payload)
-        userClient.post(_ as String, payload) > > {
-            throw  OpenShiftException(
-                "Does not exist",
-                HttpClientErrorException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "not available", "failed".bytes,
-                    Charset.valaultCharset()
-                )
+        val payload: JsonNode = jsonMapper().convertValue(jsonMap)
+
+        val cmd = OpenshiftCommand(OperationType.CREATE, "http://service.foo", payload)
+
+        every { userClient.post(cmd.url, payload) } throws OpenShiftException(
+            "Does not exist",
+            HttpClientErrorException(
+                HttpStatus.SERVICE_UNAVAILABLE, "not available",
+                """failed""".toByteArray(),
+                Charset.defaultCharset()
             )
-        }
-        when:
+        )
 
         val result = openShiftClient.performOpenShiftCommand("foo", cmd)
-        then:
-        !result.success
-        result.responseBody.get("error").asText() == "failed"
+
+        assertThat(result.success).isFalse()
+        assertThat(result.responseBody?.get("error")?.asText()).isEqualTo("failed")
     }
-    */
 }
