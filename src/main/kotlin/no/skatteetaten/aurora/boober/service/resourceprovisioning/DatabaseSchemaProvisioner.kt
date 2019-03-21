@@ -137,9 +137,8 @@ class DatabaseSchemaProvisioner(
         val roleString = details.users.joinToString(",") { it.name }
         val response: ResponseEntity<JsonNode> = try {
             restTemplate.getForEntity(
-                "{0}/api/v1/schema/{1}?affiliation={2}&roles={3}",
+                "$dbhUrl/api/v1/schema/{1}?affiliation={2}&roles={3}",
                 JsonNode::class.java,
-                dbhUrl,
                 id,
                 details.affiliation,
                 roleString
@@ -185,7 +184,7 @@ class DatabaseSchemaProvisioner(
         val roleString = details.users.joinToString(",") { it.name }
         val response: ResponseEntity<JsonNode> = try {
             restTemplate.getForEntity(
-                "{0}/api/v1/schema/?labels={1}&roles={2}&engine={3}", JsonNode::class.java, dbhUrl,
+                "$dbhUrl/api/v1/schema/?labels={1}&roles={2}&engine={3}", JsonNode::class.java,
                 labelsString, roleString, details.engine
             )
         } catch (e: Exception) {
@@ -211,7 +210,7 @@ class DatabaseSchemaProvisioner(
             )
 
         val response: ResponseEntity<JsonNode> = try {
-            restTemplate.postForEntity("{0}/api/v1/schema/", payload, JsonNode::class.java, dbhUrl)
+            restTemplate.postForEntity("$dbhUrl/api/v1/schema/", payload, JsonNode::class.java)
         } catch (e: Exception) {
             throw createProvisioningException("Unable to create database schema.", e)
         }

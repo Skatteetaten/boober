@@ -16,11 +16,8 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.test.web.client.MockRestServiceServer
-import org.springframework.web.client.RestTemplate
 
 import no.skatteetaten.aurora.boober.Configuration
-import no.skatteetaten.aurora.boober.ServiceTypes
-import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 
 @AutoConfigureWebClient
@@ -49,7 +46,7 @@ class BitbucketServiceTest extends AbstractSpec {
       def url = "https://git.aurora.skead.no/rest/api/1.0/projects/ao/repos/auroradeploymenttags/browse/filename.json"
       mockServer.expect(requestTo(url))
           .andExpect(method(HttpMethod.PUT))
-          .andExpect(header(HttpHeaders.CONTENT_TYPE, startsWith("multipart/form-data;boundary=")))
+          .andExpect(header(HttpHeaders.CONTENT_TYPE, startsWith("multipart/form-data;charset=UTF-8;boundary=")))
           .andExpect(content().string(StringContains.containsString('name="message"')))
           .andExpect(content().string(StringContains.containsString('name="content"')))
 
