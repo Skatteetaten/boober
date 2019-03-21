@@ -28,7 +28,6 @@ class StsProvisionerTest : ResourceLoader() {
         renewBeforeDays = 14,
         cluster = "utv"
     )
-
     val cn = "boobertest"
 
     @Test
@@ -50,36 +49,4 @@ class StsProvisionerTest : ResourceLoader() {
         }
     }
 
-    /*
-    public static final String SKAP_HOST = "http://localhost:8082"
-
-    @Autowired
-    MockRestServiceServer skapServer
-
-    @Autowired
-    StsProvisioner provisioner
-
-    def cn = "boobertest"
-
-    def "should provision sts from command"() {
-
-        given:
-
-        def headers = new HttpHeaders()
-        headers.add("key-password", "ca")
-        headers.add("store-password", "")
-
-        skapServer.expect(requestTo("${SKAP_HOST}/certificate?cn=${cn}&cluster=utv&name=foo&namespace=bar")).
-            andRespond(withSuccess(loadByteResource("keystore.jks"), MediaType.APPLICATION_OCTET_STREAM).headers(headers))
-
-        when:
-        def provisionResult = provisioner.generateCertificate(cn, "foo", "bar")
-
-        then:
-        provisionResult != null
-        def keystore = KeyStore.getInstance("JKS")
-        keystore.load(new ByteArrayInputStream(provisionResult.cert.keystore), "".toCharArray())
-        keystore != null
-    }
-    */
 }
