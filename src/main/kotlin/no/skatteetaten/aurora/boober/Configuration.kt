@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import no.skatteetaten.aurora.filter.logging.AuroraHeaderFilter
 import no.skatteetaten.aurora.filter.logging.RequestKorrelasjon
@@ -12,7 +11,6 @@ import org.encryptor4j.factory.AbsKeyFactory
 import org.encryptor4j.factory.KeyFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.beans.factory.config.BeanPostProcessor
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.web.client.RestTemplateBuilder
@@ -43,14 +41,18 @@ annotation class TargetService(val value: ServiceTypes)
 
 @Configuration
 @EnableRetry
-class Configuration : BeanPostProcessor {
-    override fun postProcessAfterInitialization(bean: Any, beanName: String): Any? {
-        if (beanName == "_halObjectMapper" && bean is ObjectMapper) {
-            configureObjectMapper(bean)
-        }
+class Configuration {
 
-        return super.postProcessAfterInitialization(bean, beanName)
-    }
+    /*  o
+  }: BeanPostProcessor {
+      override fun postProcessAfterInitialization(bean: Any, beanName: String): Any? {
+          if (beanName == "_halObjectMapper" && bean is ObjectMapper) {
+              configureObjectMapper(bean)
+          }
+
+          return super.postProcessAfterInitialization(bean, beanName)
+      }
+      */
 
     @Bean
     fun keyFactory(): KeyFactory = object : AbsKeyFactory("AES", 128) {}
