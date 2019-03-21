@@ -94,6 +94,8 @@ data class OpenShiftGroups(private val groupUserPairs: List<UserGroup>) {
 
     fun getGroupsForUser(user: String) = userGroups[user] ?: emptyList()
 
+    fun getUsersForGroup(group: String) = groupUsers[group] ?: emptyList()
+
     fun groupExist(group: String) = groupUsers.containsKey(group)
 }
 
