@@ -45,8 +45,6 @@ class StsProvisionerTest : ResourceLoader() {
                 this.load(ByteArrayInputStream(provisionResult.cert.keystore), "".toCharArray())
             }
             assertThat(keystore).isNotNull()
-
         }
     }
-
 }

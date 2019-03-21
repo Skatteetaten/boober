@@ -28,6 +28,4 @@ open class ResourceLoader {
     fun loadBufferResource(resourceName: String, folder: String = this.javaClass.simpleName): Buffer {
         return Buffer().readFrom(getResourceUrl(resourceName, folder).openStream())
     }
-
-
 }

@@ -28,7 +28,7 @@ import spock.lang.Specification
 class VaultControllerTest extends Specification {
 
   @Rule
-  JUnitRestDocumentation restDocumentation = new JUnitRestDocumentation('test/docs/generated-snippets')
+  JUnitRestDocumentation restDocumentation = new JUnitRestDocumentation('test/generated-snippets')
 
   MockMvc mockMvc
 
@@ -67,7 +67,7 @@ class VaultControllerTest extends Specification {
       result.andExpect(status().isOk())
   }
 
-  @Ignore("Jeg skjønner ikke hvorfor denne nå plutselig feiler.")
+  @Ignore
   def "Fails when provided secret key is invalid"() {
 
     given:

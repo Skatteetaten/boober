@@ -12,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.restdocs.JUnitRestDocumentation
 import org.springframework.restdocs.mockmvc.RestDocumentationResultHandler
 import org.springframework.restdocs.snippet.Snippet
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.web.context.WebApplicationContext
@@ -22,7 +23,7 @@ import spock.lang.Specification
 abstract class AbstractControllerTest extends Specification {
 
   @Rule
-  JUnitRestDocumentation jUnitRestDocumentation = new JUnitRestDocumentation("target/docs/generated-snippets")
+  JUnitRestDocumentation jUnitRestDocumentation = new JUnitRestDocumentation("build/generated-snippets")
 
   MockMvc mockMvc
 

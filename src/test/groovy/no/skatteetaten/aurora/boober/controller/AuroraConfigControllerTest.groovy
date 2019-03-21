@@ -29,7 +29,7 @@ import no.skatteetaten.aurora.boober.service.AuroraConfigService
 class AuroraConfigControllerTest extends AbstractAuroraConfigTest {
 
   @Rule
-  JUnitRestDocumentation restDocumentation = new JUnitRestDocumentation('test/docs/generated-snippets')
+  JUnitRestDocumentation restDocumentation = new JUnitRestDocumentation('test/generated-snippets')
 
   MockMvc mockMvc
 
