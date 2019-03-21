@@ -29,7 +29,7 @@ import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
     UserDetailsProvider,
     SpringTestUtils.SkapMockRestServiceServiceInitializer
 ])
-class StsProvisionerTest extends AbstractSpec {
+class StsProvisionerTestOLD extends AbstractSpec {
 
   public static final String SKAP_HOST = "http://localhost:8082"
 

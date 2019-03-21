@@ -43,7 +43,7 @@ annotation class TargetService(val value: ServiceTypes)
 @EnableRetry
 class Configuration {
 
-    /*  o
+    /*
   }: BeanPostProcessor {
       override fun postProcessAfterInitialization(bean: Any, beanName: String): Any? {
           if (beanName == "_halObjectMapper" && bean is ObjectMapper) {

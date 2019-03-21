@@ -12,6 +12,7 @@ import no.skatteetaten.aurora.boober.Configuration
 import no.skatteetaten.aurora.boober.service.internal.SharedSecretReader
 import spock.lang.Specification
 
+// TODO: Rewirte to normal test with normal mock
 @RestClientTest
 @SpringBootTest(classes = [
     Configuration,

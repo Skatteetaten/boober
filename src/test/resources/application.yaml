@@ -37,7 +37,7 @@ vault:
         password: "bar"
 
 management:
-    port: 0
+    server.port: 0
 
 openshift:
     cluster: utv

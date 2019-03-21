@@ -49,7 +49,7 @@ class StsProvisioner(
 
     fun generateCertificate(cn: String, name: String, envName: String): StsProvisioningResult {
 
-        val builder = UriComponentsBuilder.fromHttpUrl("/certificate")
+        val builder = UriComponentsBuilder.fromPath("/certificate")
             .queryParam("cn", cn)
             .queryParam("cluster", cluster)
             .queryParam("name", name)
