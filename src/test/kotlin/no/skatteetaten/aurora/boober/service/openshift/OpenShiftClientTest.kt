@@ -1,11 +1,14 @@
 package no.skatteetaten.aurora.boober.service.openshift
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.http.HttpStatus
@@ -13,12 +16,18 @@ import org.springframework.http.ResponseEntity
 
 class OpenShiftClientTest : ResourceLoader() {
 
+    @BeforeEach
+    fun setup() {
+        clearAllMocks()
+    }
+
     val userClient = mockk<OpenShiftResourceClient>()
 
     val serviceAccountClient = mockk<OpenShiftResourceClient>()
 
     val mapper = ObjectMapper()
 
+    val emptyNode = mapper.readValue<JsonNode>("{}")
     val openShiftClient = OpenShiftClient(userClient, serviceAccountClient, mapper)
 
     fun resourceClients() = listOf(
@@ -43,11 +52,12 @@ class OpenShiftClientTest : ResourceLoader() {
         val mockedResource = """{ "kind": "${data.kind}", "metadata": { "name": "$name" } }"""
         val command = OpenshiftCommand(OperationType.CREATE, "http://foo/bar", mapper.readValue(mockedResource))
         val otherClient = if (data.client == serviceAccountClient) userClient else serviceAccountClient
-        openShiftClient.performOpenShiftCommand("aos", command)
 
         every {
             data.client.post(command.url, command.payload)
-        } returns ResponseEntity(mapper.readValue("{}"), HttpStatus.OK)
+        } returns ResponseEntity(emptyNode, HttpStatus.OK)
+
+        openShiftClient.performOpenShiftCommand("aos", command)
 
         verify(exactly = 1) { data.client.post(any(), any()) }
         verify(exactly = 0) { otherClient.post(any(), any()) }
