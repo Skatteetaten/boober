@@ -12,6 +12,7 @@ import no.skatteetaten.aurora.boober.service.AbstractAuroraDeploymentSpecSpringT
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 import spock.lang.Unroll
 
+// TODO: Do not use spring
 class ResourceMergerTest extends AbstractAuroraDeploymentSpecSpringTest {
 
   String ENVIRONMENT = "utv"

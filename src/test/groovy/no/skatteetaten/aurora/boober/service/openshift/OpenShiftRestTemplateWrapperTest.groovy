@@ -23,6 +23,7 @@ import groovy.json.JsonOutput
 import no.skatteetaten.aurora.boober.service.AbstractAuroraDeploymentSpecSpringTest
 import no.skatteetaten.aurora.boober.utils.RetryLogger
 
+// TODO: Use MockWebServer do not use spring
 class OpenShiftRestTemplateWrapperTest extends AbstractAuroraDeploymentSpecSpringTest {
 
   @Autowired

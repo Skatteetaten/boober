@@ -12,6 +12,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import spock.lang.Unroll
 
+// TODO: Tar mye tid. 2.5 sek stykke. This is the only test that uses this abstract class
 class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
 
   @Autowired

@@ -19,6 +19,7 @@ import org.springframework.web.context.WebApplicationContext
 
 import spock.lang.Specification
 
+// TODO: Move to new way to test controllers like in clerek
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 abstract class AbstractControllerTest extends Specification {
 

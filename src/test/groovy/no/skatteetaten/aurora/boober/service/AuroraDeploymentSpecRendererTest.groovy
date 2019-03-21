@@ -9,6 +9,7 @@ import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import spock.lang.Unroll
 
+// TODO: remove spinning up spring
 class AuroraDeploymentSpecRendererTest extends AbstractAuroraDeploymentSpecSpringTest {
 
   ObjectMapper mapper = new ObjectMapper()

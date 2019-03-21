@@ -13,6 +13,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftRestTemplateWrap
 import no.skatteetaten.aurora.boober.service.openshift.token.ServiceAccountTokenProvider
 import no.skatteetaten.aurora.boober.service.openshift.token.UserDetailsTokenProvider
 
+// TODO: No classes really need this, remove once everything is gone
 @WithUserDetails("aurora")
 @AutoConfigureWebClient
 @SpringBootTest(classes = [

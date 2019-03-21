@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 
+// TODO: Test this further downstream. OpenShiftClient projectExist test
 class DeployServiceProjectTerminatingTest extends AbstractMockedOpenShiftSpecification {
 
   @Autowired

@@ -26,6 +26,7 @@ import no.skatteetaten.aurora.boober.model.AuroraVersioningException
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 
+// TODO: Asciidoc test mockmvc
 class AuroraConfigControllerTest extends AbstractAuroraConfigTest {
 
   @Rule

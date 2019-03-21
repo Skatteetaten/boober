@@ -18,6 +18,7 @@ import no.skatteetaten.aurora.boober.service.AbstractAuroraDeploymentSpecSpringT
 import no.skatteetaten.aurora.boober.service.OpenShiftCommandService
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 
+// TODO: Remove spinning up spring
 class OpenShiftCommandServiceTest extends AbstractAuroraDeploymentSpecSpringTest {
 
   String ENVIRONMENT = "utv"
