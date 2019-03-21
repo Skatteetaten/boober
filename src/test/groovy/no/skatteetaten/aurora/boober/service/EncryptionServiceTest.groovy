@@ -30,6 +30,7 @@ class EncryptionServiceTest extends Specification {
       Metrics.globalRegistry
     }
   }
+
   @Autowired
   EncryptionService service
 
