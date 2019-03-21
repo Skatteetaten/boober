@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Metrics
 import no.skatteetaten.aurora.AuroraMetrics
+import no.skatteetaten.aurora.boober.Configuration
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigHelperKt
@@ -41,7 +42,7 @@ import spock.mock.DetachedMockFactory
 
 @AutoConfigureWebClient(registerRestTemplate = true)
 @SpringBootTest(classes = [
-    no.skatteetaten.aurora.boober.Configuration,
+    Configuration,
     DeployService,
     OpenShiftObjectGenerator,
     OpenShiftCommandService,
@@ -57,8 +58,7 @@ import spock.mock.DetachedMockFactory
     AuroraDeploymentSpecValidator,
     SharedSecretReader,
     OpenShiftObjectLabelService,
-    BitbucketRestTemplateWrapper,
-    BitbucketService
+    BitbucketRestTemplateWrapper
 ])
 class AbstractMockedOpenShiftSpecification extends AbstractSpec {
 
