@@ -51,5 +51,5 @@ dependencies {
     testImplementation("io.mockk:mockk:1.9.2")
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.13")
     testImplementation("com.nhaarman:mockito-kotlin:1.6.0")
-    testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:0.2.5")
+    testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:0.4.0")
 }
