@@ -284,7 +284,6 @@ class OpenShiftObjectGenerator(
                     resources?.request?.memory?.let { containerResources.requests["memory"] = Quantity(it) }
                 }
 
-
                 jacksonObjectMapper().convertValue(dc)
             } else if (it.openshiftKind == "service" && it.openshiftName == auroraDeploymentSpecInternal.name) {
 
