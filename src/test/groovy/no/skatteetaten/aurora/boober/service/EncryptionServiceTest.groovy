@@ -21,6 +21,7 @@ import spock.lang.Specification
     SharedSecretReader
 ])
 class EncryptionServiceTest extends Specification {
+
   @org.springframework.context.annotation.Configuration
   static class Config {
 

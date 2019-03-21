@@ -56,6 +56,7 @@ data class AuroraSecretVaultPayload(
     val secrets: Map<String, String>?
 ) {
     val secretsDecoded: Map<String, ByteArray>?
+        @JsonIgnore
         get() = secrets?.map { Pair(it.key, B64.decode(it.value)) }?.toMap()
 }
 

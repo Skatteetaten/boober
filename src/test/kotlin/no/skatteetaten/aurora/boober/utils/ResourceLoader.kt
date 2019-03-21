@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.utils
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import okio.Buffer
 import org.springframework.util.ResourceUtils
 import java.net.URL
 
@@ -19,4 +20,14 @@ open class ResourceLoader {
 
     fun loadJsonResource(resourceName: String): JsonNode =
         jacksonObjectMapper().readValue(loadResource(resourceName))
+
+    fun loadByteResource(resourceName: String, folder: String = this.javaClass.simpleName): ByteArray {
+        return getResourceUrl(resourceName, folder).openStream().readBytes()
+    }
+
+    fun loadBufferResource(resourceName: String, folder: String = this.javaClass.simpleName): Buffer {
+        return Buffer().readFrom(getResourceUrl(resourceName, folder).openStream())
+    }
+
+
 }

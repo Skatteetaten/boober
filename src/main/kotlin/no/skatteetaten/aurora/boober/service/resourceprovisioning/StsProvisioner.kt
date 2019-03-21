@@ -42,7 +42,6 @@ data class StsProvisioningResult(
 class StsProvisioner(
     @TargetService(ServiceTypes.SKAP)
     val restTemplate: RestTemplate,
-    @Value("\${boober.skap}") val skapUrl: String,
     @Value("\${boober.sts.renewBeforeDays:14}") val renewBeforeDays: Long,
     @Value("\${openshift.cluster}") val cluster: String
 ) {
@@ -50,7 +49,7 @@ class StsProvisioner(
 
     fun generateCertificate(cn: String, name: String, envName: String): StsProvisioningResult {
 
-        val builder = UriComponentsBuilder.fromHttpUrl("$skapUrl/certificate")
+        val builder = UriComponentsBuilder.fromHttpUrl("/certificate")
             .queryParam("cn", cn)
             .queryParam("cluster", cluster)
             .queryParam("name", name)
