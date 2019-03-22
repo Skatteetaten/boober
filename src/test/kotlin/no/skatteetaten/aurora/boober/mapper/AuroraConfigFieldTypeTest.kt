@@ -16,7 +16,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.GLOBAL
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.GLOBAL_OVERRIDE
 import org.apache.commons.text.StringSubstitutor
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.EnumSource
 
 class AuroraConfigFieldTypeTest {
 
@@ -25,20 +25,20 @@ class AuroraConfigFieldTypeTest {
     val substitutor = StringSubstitutor()
 
     @ParameterizedTest
-    @MethodSource("arguments")
-    fun `should determine type of field`(it: AuroraConfigFieldTestData) {
+    @EnumSource(Arguments::class)
+    fun `should determine type of field`(it: Arguments) {
 
         val acf = AuroraConfigField(
             setOf(
                 AuroraConfigFieldSource(
-                    AuroraConfigFile(it.fileName, "", it.isOverride, it.isDefault),
+                    AuroraConfigFile(it.field.fileName, "", it.field.isOverride, it.field.isDefault),
                     value,
                     false
                 )
             ), substitutor
         )
 
-        assertThat(acf.fileType).isEqualTo(it.type)
+        assertThat(acf.fileType).isEqualTo(it.field.type)
     }
 
     data class AuroraConfigFieldTestData(
@@ -48,17 +48,17 @@ class AuroraConfigFieldTypeTest {
         val type: AuroraConfigFileType
     )
 
-    fun arguments() = listOf(
-        AuroraConfigFieldTestData("fileName", false, true, DEFAULT),
-        AuroraConfigFieldTestData("about.json", false, false, GLOBAL),
-        AuroraConfigFieldTestData("about.json", true, false, GLOBAL_OVERRIDE),
-        AuroraConfigFieldTestData("reference.json", false, false, BASE),
-        AuroraConfigFieldTestData("reference.json", true, false, BASE_OVERRIDE),
-        AuroraConfigFieldTestData("utv/about.json", false, false, ENV),
-        AuroraConfigFieldTestData("utv/about.json", true, false, ENV_OVERRIDE),
-        AuroraConfigFieldTestData("utv/about-template.json", false, false, ENV),
-        AuroraConfigFieldTestData("utv/about-template.json", true, false, ENV_OVERRIDE),
-        AuroraConfigFieldTestData("utv/reference.json", false, false, APP),
-        AuroraConfigFieldTestData("utv/reference.json", true, false, APP_OVERRIDE)
-    )
+    enum class Arguments(val field: AuroraConfigFieldTestData) {
+        FILENAME(AuroraConfigFieldTestData("fileName", false, true, DEFAULT)),
+        ABOUT(AuroraConfigFieldTestData("about.json", false, false, GLOBAL)),
+        ABOUT_OVERRIDE(AuroraConfigFieldTestData("about.json", true, false, GLOBAL_OVERRIDE)),
+        REFERENCE(AuroraConfigFieldTestData("reference.json", false, false, BASE)),
+        REFERENCE_OVERRIDE(AuroraConfigFieldTestData("reference.json", true, false, BASE_OVERRIDE)),
+        UTV_ABOUT(AuroraConfigFieldTestData("utv/about.json", false, false, ENV)),
+        UTV_ABOUT_OVERRIDE(AuroraConfigFieldTestData("utv/about.json", true, false, ENV_OVERRIDE)),
+        UTV_ABOUT_TEMPLATE(AuroraConfigFieldTestData("utv/about-template.json", false, false, ENV)),
+        UTV_ABOUT_TEMPLATE_OVERRIDE(AuroraConfigFieldTestData("utv/about-template.json", true, false, ENV_OVERRIDE)),
+        UTV_REFERENCE(AuroraConfigFieldTestData("utv/reference.json", false, false, APP)),
+        UTV_REFERENCE_OVERRIDE(AuroraConfigFieldTestData("utv/reference.json", true, false, APP_OVERRIDE))
+    }
 }

@@ -46,7 +46,6 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest2() {
             """{ "type" : "deploy", "groupId" : "foo", "version": "1"}"""
         auroraConfigJson["utv/this-name-is-stupid-stupid-stupidly-long-for-no-reason.json"] = """{ "name" : "foo"}"""
 
-
         assertThat {
             createDeploymentSpec(auroraConfigJson, aid("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"))
         }.thrownError {
@@ -60,7 +59,6 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest2() {
         auroraConfigJson["reference.json"] = REFERENCE
         auroraConfigJson["utv/reference.json"] = """{}"""
 
-
         assertThat {
             createDeploymentSpec(auroraConfigJson, aid("utv", "reference"))
         }.doesNotThrowAnyException()
@@ -72,7 +70,6 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest2() {
         auroraConfigJson["this-name-is-stupid-stupid-stupidly-long-for-no-reason.json"] =
             """{ "type" : "deploy", "groupId" : "foo", "version": "1"}"""
         auroraConfigJson["utv/this-name-is-stupid-stupid-stupidly-long-for-no-reason.json"] = """{}"""
-
 
         assertThat {
             createDeploymentSpec(auroraConfigJson, aid("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"))
@@ -184,18 +181,27 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest2() {
     enum class SecretVaultTestDataEnum(val vault: SecretVaultTestData) {
         CONFIGFILE_STRING(SecretVaultTestData("""{ "secretVault": "vaultName" }""", "vaultName", emptyList())),
         CONFIGFILE_OBJECT(SecretVaultTestData("""{ "secretVault": {"name": "test"} }""", "test", emptyList())),
-        CONFIGFILE_EMPTY_KEYS(SecretVaultTestData("""{ "secretVault": {"name": "test", "keys": []} }""", "test", emptyList())),
-        WITH_KEYS(SecretVaultTestData(
-            """{ "secretVault": {"name": "test", "keys": ["test1", "test2"]} }""",
-            "test",
-            listOf("test1", "test2")
-        )),
-        WITH_KEYMAPPINGS(SecretVaultTestData(
-            """{ "secretVault": {"name": "test", "keys": ["test1"], "keyMappings":{"test1":"newtestkey"}} }""",
-            "test",
-            listOf("test1")
-        ))
-
+        CONFIGFILE_EMPTY_KEYS(
+            SecretVaultTestData(
+                """{ "secretVault": {"name": "test", "keys": []} }""",
+                "test",
+                emptyList()
+            )
+        ),
+        WITH_KEYS(
+            SecretVaultTestData(
+                """{ "secretVault": {"name": "test", "keys": ["test1", "test2"]} }""",
+                "test",
+                listOf("test1", "test2")
+            )
+        ),
+        WITH_KEYMAPPINGS(
+            SecretVaultTestData(
+                """{ "secretVault": {"name": "test", "keys": ["test1"], "keyMappings":{"test1":"newtestkey"}} }""",
+                "test",
+                listOf("test1")
+            )
+        )
     }
 
     @ParameterizedTest
@@ -285,7 +291,6 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest2() {
 
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
-
         assertThat(deploymentSpec.integration?.database).isEqualTo(
             listOf(
                 Database(
@@ -360,7 +365,6 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest2() {
 
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
-
         assertThat(deploymentSpec.integration?.database?.first()).isEqualTo(
             Database(
                 name = "foo",
@@ -388,7 +392,6 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest2() {
         }
 
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
-
 
         assertThat(deploymentSpec.integration?.certificate).isEqualTo("foooo")
     }
@@ -430,7 +433,6 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest2() {
         }
 
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
-
 
         assertThat(deploymentSpec.route?.route?.get(0)?.host).isEqualTo("aos-simple-aos-utv")
     }
