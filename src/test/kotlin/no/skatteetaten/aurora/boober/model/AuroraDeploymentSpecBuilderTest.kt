@@ -13,7 +13,7 @@ import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.ai
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.EnumSource
 
 class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest2() {
 
@@ -181,46 +181,46 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest2() {
         val keys: List<String>
     )
 
-    fun secretVaultTestData() = listOf(
-
-        SecretVaultTestData("""{ "secretVault": "vaultName" }""", "vaultName", emptyList()),
-        SecretVaultTestData("""{ "secretVault": {"name": "test"} }""", "test", emptyList()),
-        SecretVaultTestData("""{ "secretVault": {"name": "test", "keys": []} }""", "test", emptyList()),
-        SecretVaultTestData(
+    enum class SecretVaultTestDataEnum(val vault: SecretVaultTestData) {
+        CONFIGFILE_STRING(SecretVaultTestData("""{ "secretVault": "vaultName" }""", "vaultName", emptyList())),
+        CONFIGFILE_OBJECT(SecretVaultTestData("""{ "secretVault": {"name": "test"} }""", "test", emptyList())),
+        CONFIGFILE_EMPTY_KEYS(SecretVaultTestData("""{ "secretVault": {"name": "test", "keys": []} }""", "test", emptyList())),
+        WITH_KEYS(SecretVaultTestData(
             """{ "secretVault": {"name": "test", "keys": ["test1", "test2"]} }""",
             "test",
             listOf("test1", "test2")
-        ),
-        SecretVaultTestData(
+        )),
+        WITH_KEYMAPPINGS(SecretVaultTestData(
             """{ "secretVault": {"name": "test", "keys": ["test1"], "keyMappings":{"test1":"newtestkey"}} }""",
             "test",
             listOf("test1")
-        )
-    )
+        ))
+
+    }
 
     @ParameterizedTest
-    @MethodSource("secretVaultTestData")
-    fun `Parses variants of secretVault config correctly`(testData: SecretVaultTestData) {
+    @EnumSource(SecretVaultTestDataEnum::class)
+    fun `Parses variants of secretVault config correctly`(testData: SecretVaultTestDataEnum) {
 
-        auroraConfigJson["utv/aos-simple.json"] = testData.configFile
+        auroraConfigJson["utv/aos-simple.json"] = testData.vault.configFile
 
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
-        assertThat(deploymentSpec.volume?.secretVaultKeys).isEqualTo(testData.keys)
-        assertThat(deploymentSpec.volume?.secretVaultName).isEqualTo(testData.vaultName)
+        assertThat(deploymentSpec.volume?.secretVaultKeys).isEqualTo(testData.vault.keys)
+        assertThat(deploymentSpec.volume?.secretVaultName).isEqualTo(testData.vault.vaultName)
     }
 
-    fun permissionsTestData(): List<Any> = listOf(
-        "APP_PaaS_utv APP_PaaS_drift",
-        listOf("APP_PaaS_utv", "APP_PaaS_drift")
-    )
+    enum class PermissionsTestData(val values: Any) {
+        SINGLE_VALUE("APP_PaaS_utv APP_PaaS_drift"),
+        LIST(listOf("APP_PaaS_utv", "APP_PaaS_drift"))
+    }
 
     @ParameterizedTest
-    @MethodSource("permissionsTestData")
-    fun `Permissions supports both space separated string`(permissions: Any) {
+    @EnumSource(PermissionsTestData::class)
+    fun `Permissions supports both space separated string`(permissions: PermissionsTestData) {
 
         modify(auroraConfigJson, "about.json") {
-            it["permissions"] = mapOf("admin" to permissions)
+            it["permissions"] = mapOf("admin" to permissions.values)
         }
 
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
@@ -232,18 +232,18 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest2() {
         )
     }
 
-    fun websealRolesTestData(): List<Any> = listOf(
-        "role1,role2,3",
-        "role1, role2, 3",
-        listOf("role1", "role2", 3)
-    )
+    enum class WebsealRolesTestData(val values: Any) {
+        COMMA_SEPARATED("role1,role2,3"),
+        COMMA_SEPARATED_WITH_SPACE("role1, role2, 3"),
+        LIST(listOf("role1", "role2", 3))
+    }
 
     @ParameterizedTest
-    @MethodSource("websealRolesTestData")
-    fun `Webseal roles supports both comma separated string and array`(roleConfig: Any) {
+    @EnumSource(WebsealRolesTestData::class)
+    fun `Webseal roles supports both comma separated string and array`(roleConfig: WebsealRolesTestData) {
 
         modify(auroraConfigJson, "utv/aos-simple.json") {
-            it["webseal"] = mapOf("roles" to roleConfig)
+            it["webseal"] = mapOf("roles" to roleConfig.values)
         }
 
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
