@@ -7,6 +7,8 @@ import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import assertk.catch
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
+import no.skatteetaten.aurora.boober.mapper.v1.DatabaseFlavor
+import no.skatteetaten.aurora.boober.mapper.v1.DatabasePermission.READ
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.aid
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -179,7 +181,7 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest2() {
         val keys: List<String>
     )
 
-    fun secretVaultTestData(): List<SecretVaultTestData> = listOf(
+    fun secretVaultTestData() = listOf(
 
         SecretVaultTestData("""{ "secretVault": "vaultName" }""", "vaultName", emptyList()),
         SecretVaultTestData("""{ "secretVault": {"name": "test"} }""", "test", emptyList()),
@@ -194,12 +196,10 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest2() {
             "test",
             listOf("test1")
         )
-
     )
 
     @ParameterizedTest
     @MethodSource("secretVaultTestData")
-    @Test
     fun `Parses variants of secretVault config correctly`(testData: SecretVaultTestData) {
 
         auroraConfigJson["utv/aos-simple.json"] = testData.configFile
@@ -251,201 +251,197 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest2() {
         assertThat(deploymentSpec.integration?.webseal?.roles).isEqualTo("role1,role2,3")
     }
 
-    /*
+    @Test
     fun `Fails when annotation has wrong separator`() {
 
         val auroraConfigJson = defaultAuroraConfig()
         auroraConfigJson["utv/aos-simple.json"] = """{
 "route": {
     "console": {
-    "annotations": {
-    "haproxy.router.openshift.io/timeout": "600s"
-}
-}
-}
+      "annotations": {
+        "haproxy.router.openshift.io/timeout": "600s"
+       }
+     }
+  }
 }
 """
 
+        val e: AuroraConfigException =
+            catch { createDeploymentSpec(auroraConfigJson, DEFAULT_AID) } as AuroraConfigException
 
-        createDeploymentSpec(auroraConfigJson, aid("utv", "aos-simple"))
-
-        val e = thrown AuroraConfigException
-            e.message == """Config for application aos-simple in environment utv contains errors. Annotation haproxy.router.openshift.io/timeout cannot contain "/". Use "|" instead."""
+        assertThat(e).isNotNull()
+        assertThat(e.message).isEqualTo("""Config for application aos-simple in environment utv contains errors. Annotation haproxy.router.openshift.io/timeout cannot contain '/'. Use '|' instead.""")
     }
 
+    @Test
     fun `Should use overridden db name when set to default at higher level`() {
 
-        val aid = DEFAULT_AID
-        modify(auroraConfigJson, "about.json", {
-            put("database", true)
-        })
-        modify(auroraConfigJson, "utv/aos-simple.json", {
-            put("database", ["foobar": "auto"])
-        })
+        modify(auroraConfigJson, "about.json") {
+            it["database"] = true
+        }
+        modify(auroraConfigJson, "utv/aos-simple.json") {
+            it["database"] = mapOf("foobar" to "auto")
+        }
 
-        val deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
+        val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
 
-        deploymentSpec.integration.database ==
-            [new Database ("foobar", null, DatabaseFlavor.ORACLE_MANAGED, true, [:], [:], defaultDatabaseInstance)]
+        assertThat(deploymentSpec.integration?.database).isEqualTo(
+            listOf(
+                Database(
+                    name = "foobar",
+                    flavor = DatabaseFlavor.ORACLE_MANAGED,
+                    instance = defaultDatabaseInstance,
+                    generate = true
+                )
+            )
+        )
     }
 
+    @Test
     fun `Should use databaseDefaults`() {
 
-        val aid = DEFAULT_AID
-        modify(auroraConfigJson, "about.json", {
-            put(
-                "databaseDefaults", [
-                    "name"    : "ohyeah",
-            "flavor"  : "POSTGRES_MANAGED",
-            "generate": false,
-            "roles"   : [
-            "jalla": "READ"
-            ],
-            "exposeTo": [
-            "foobar": "jalla"
-            ],
-            "instance": [
-            "name"    : "corrusant",
-            "fallback": true,
-            "labels"  : [
-            "type": "ytelse"
-            ]
-            ],
-            ])
-        })
-        modify(auroraConfigJson, "utv/aos-simple.json", {
-            put("database", true)
-        })
+        modify(auroraConfigJson, "about.json") {
+            it["databaseDefaults"] = mapOf(
+                "name" to "ohyeah",
+                "flavor" to "POSTGRES_MANAGED",
+                "generate" to false,
+                "roles" to mapOf("jalla" to "READ"),
+                "exposeTo" to mapOf("foobar" to "jalla"),
+                "instance" to mapOf("name" to "corrusant", "fallback" to true, "labels" to mapOf("type" to "ytelse"))
+            )
+        }
+        modify(auroraConfigJson, "utv/aos-simple.json") {
+            it["database"] = true
+        }
 
-        val deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
+        val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
-        val instance = new DatabaseInstance ("corrusant", true, [type: "ytelse", affiliation: "aos"])
-        deploymentSpec.integration.database ==
-            [new Database ("ohyeah", null, DatabaseFlavor.POSTGRES_MANAGED, false, [foobar: "jalla"], [jalla: READ],
-        instance)]
+        val instance = DatabaseInstance("corrusant", true, mapOf("type" to "ytelse", "affiliation" to "aos"))
+
+        assertThat(deploymentSpec.integration?.database).isEqualTo(
+            listOf(
+                Database(
+                    name = "ohyeah",
+                    flavor = DatabaseFlavor.POSTGRES_MANAGED,
+                    generate = false,
+                    roles = mapOf("jalla" to READ),
+                    exposeTo = mapOf("foobar" to "jalla"),
+                    instance = instance
+                )
+            )
+        )
     }
 
+    @Test
     fun `Should use expanded database configuration`() {
 
-        val aid = DEFAULT_AID
-        modify(auroraConfigJson, "about.json", {
-            put(
-                "databaseDefaults", [
-                    name    : "ohyeah",
-            flavor  : "POSTGRES_MANAGED",
-            generate: false,
-            roles   : [
-            jalla: "READ"
-            ],
-            exposeTo: [
-            foobar: "jalla"
-            ],
-            instance: [
-            labels: [
-            foo: "bar"
-            ]
-            ]
-            ])
-        })
-        modify(auroraConfigJson, "utv/aos-simple.json", {
-            put(
-                "database", [
-                    foo:[
-                id      : "123",
-            roles   : [
-            read: "READ"
-            ],
-            exposeTo: [
-            foobar: "read"
-            ],
-            instance: [
-            labels: [
-            baz: "bar"
-            ]
-            ]
-            ]
-            ])
-        })
+        modify(auroraConfigJson, "about.json") {
+            it["databaseDefaults"] = mapOf(
+                "name" to "ohyeah",
+                "flavor" to "POSTGRES_MANAGED",
+                "generate" to false,
+                "roles" to mapOf("jalla" to "READ"),
+                "exposeTo" to mapOf("foobar" to "jalla"),
+                "instance" to mapOf("labels" to mapOf("foo" to "bar"))
+            )
+        }
 
-        val deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
+        modify(auroraConfigJson, "utv/aos-simple.json") {
+            it["database"] = mapOf(
+                "foo" to mapOf(
+                    "id" to "123",
+                    "roles" to mapOf("read" to "READ"),
+                    "exposeTo" to mapOf("foobar" to "read"),
+                    "instance" to mapOf("labels" to mapOf("bar" to "baz"))
+                )
+            )
+        }
+
+        val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
 
-        deploymentSpec.integration.database ==
-            [new Database ("foo", "123", DatabaseFlavor.POSTGRES_MANAGED, false,
-                [foobar: "read"],
-        [jalla: READ, read: READ],
-        new DatabaseInstance (null, false, [foo: "bar", baz: "bar", affiliation: "aos"]))]
+        assertThat(deploymentSpec.integration?.database?.first()).isEqualTo(
+            Database(
+                name = "foo",
+                id = "123",
+                flavor = DatabaseFlavor.POSTGRES_MANAGED,
+                generate = false,
+                exposeTo = mapOf("foobar" to "read"),
+                roles = mapOf("jalla" to READ, "read" to READ),
+                instance = DatabaseInstance(
+                    fallback = false, labels = mapOf("foo" to "bar", "bar" to "baz", "affiliation" to "aos")
+                )
+
+            )
+        )
     }
 
+    @Test
     fun `Should use overridden cert name when set to default at higher level`() {
 
-        val aid = DEFAULT_AID
-        modify(auroraConfigJson, "about.json", {
-            put("certificate", true)
-        })
-        modify(auroraConfigJson, "utv/aos-simple.json", {
-            put("certificate", ["commonName": "foooo"])
-        })
+        modify(auroraConfigJson, "about.json") {
+            it["certificate"] = true
+        }
+        modify(auroraConfigJson, "utv/aos-simple.json") {
+            it["certificate"] = mapOf("commonName" to "foooo")
+        }
 
-        val deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
+        val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
 
-        deploymentSpec.integration.certificate == "foooo"
+        assertThat(deploymentSpec.integration?.certificate).isEqualTo("foooo")
     }
 
+    @Test
     fun `Should use overridden cert name when explicitly disabled at higher level`() {
 
         val aid = DEFAULT_AID
-        modify(auroraConfigJson, "aos-simple.json", {
-            put("certificate", false)
-        })
-        modify(auroraConfigJson, "utv/aos-simple.json", {
-            put("certificate", ["commonName": "foooo"])
-        })
+        modify(auroraConfigJson, "aos-simple.json") {
+            it["certificate"] = false
+        }
+
+        modify(auroraConfigJson, "utv/aos-simple.json") {
+            it["certificate"] = mapOf("commonName" to "foooo")
+        }
 
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
 
-
-        deploymentSpec.integration.certificate == "foooo"
+        assertThat(deploymentSpec.integration?.certificate).isEqualTo("foooo")
     }
 
+    @Test
     fun `Should generate route with complex config`() {
 
-        val aid = DEFAULT_AID
+        modify(auroraConfigJson, "utv/aos-simple.json") {
+            it["route"] = mapOf("foo" to mapOf("host" to "host"))
+        }
 
-        modify(auroraConfigJson, "utv/aos-simple.json", {
-            put("route", [foo:[host: "host"]])
-        })
+        val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
-        val deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
-
-
-        deploymentSpec.route.route[0].host == "host"
+        assertThat(deploymentSpec.route?.route?.get(0)?.host).isEqualTo("host")
     }
 
+    @Test
     fun `Should generate route with simple config`() {
 
-        val aid = DEFAULT_AID
+        modify(this.auroraConfigJson, "utv/aos-simple.json") {
+            it["route"] = true
+        }
 
-        modify(auroraConfigJson, "utv/aos-simple.json", {
-            put("route", true)
-        })
-
-        val deploymentSpec = createDeploymentSpec(auroraConfigJson, aid)
+        val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
 
-        deploymentSpec.route.route[0].host == "aos-simple-aos-utv"
+        assertThat(deploymentSpec.route?.route?.get(0)?.host).isEqualTo("aos-simple-aos-utv")
     }
 
+    @Test
     fun `Should use base file name as default artifactId`() {
 
         auroraConfigJson["utv/reference.json"] = """{ "baseFile" : "aos-simple.json"}"""
 
         val spec = createDeploymentSpec(auroraConfigJson, aid("utv", "reference"))
 
-
-        spec.deploy.artifactId == "aos-simple"
+        assertThat(spec.deploy?.artifactId).isEqualTo("aos-simple")
     }
-    */
 }
