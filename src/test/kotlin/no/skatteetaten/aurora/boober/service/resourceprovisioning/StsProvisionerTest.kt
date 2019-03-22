@@ -2,8 +2,8 @@ package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
 import assertk.assertThat
 import assertk.assertions.isNotNull
-import no.skatteetaten.aurora.boober.service.openshift.execute
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
+import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.execute
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.jupiter.api.AfterEach
