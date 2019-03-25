@@ -13,7 +13,7 @@ import java.net.URL
 
 open class ResourceLoader {
 
-    //TODO: jeg får ikke denne til å funke med @Before
+    // TODO: jeg får ikke denne til å funke med @Before
     @BeforeEach
     fun setupBefore() {
         AuroraDeploymentSpecService.APPLICATION_PLATFORM_HANDLERS =

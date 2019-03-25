@@ -1,11 +1,12 @@
 package no.skatteetaten.aurora.boober.service.openshift
 
-import assertk.assert
+import assertk.assertThat
 import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.databind.node.TextNode
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.service.openshift.token.TokenProvider
+import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.execute
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.jupiter.api.Test
 import org.springframework.boot.web.client.RestTemplateBuilder
@@ -33,9 +34,9 @@ class OpenShiftResourceClientTest {
 
         val request = server.execute(response) {
             val responseEntity = openShiftResourceClient.strategicMergePatch("user", "username", TextNode("{}"))
-            assert(responseEntity.statusCode.value()).isEqualTo(200)
+            assertThat(responseEntity.statusCode.value()).isEqualTo(200)
         }
-        assert(request.headers[HttpHeaders.CONTENT_TYPE]).isEqualTo("application/strategic-merge-patch+json")
-        assert(request.path).isEqualTo("/apis/user.openshift.io/v1/users/username")
+        assertThat(request.first().headers[HttpHeaders.CONTENT_TYPE]).isEqualTo("application/strategic-merge-patch+json")
+        assertThat(request.first().path).isEqualTo("/apis/user.openshift.io/v1/users/username")
     }
 }

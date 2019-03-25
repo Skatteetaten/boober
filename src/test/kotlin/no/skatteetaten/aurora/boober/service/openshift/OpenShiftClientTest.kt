@@ -18,12 +18,15 @@ import no.skatteetaten.aurora.boober.utils.jsonMapper
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.OK
 import org.springframework.http.ResponseEntity
 import org.springframework.web.client.HttpClientErrorException
 import java.nio.charset.Charset
+
+private val userClient = mockk<OpenShiftResourceClient>()
+private val serviceAccountClient = mockk<OpenShiftResourceClient>()
 
 class OpenShiftClientTest : ResourceLoader() {
 
@@ -32,45 +35,41 @@ class OpenShiftClientTest : ResourceLoader() {
         clearAllMocks()
     }
 
-    val userClient = mockk<OpenShiftResourceClient>()
-
-    val serviceAccountClient = mockk<OpenShiftResourceClient>()
-
     val mapper = ObjectMapper()
 
     val emptyNode = mapper.readValue<JsonNode>("{}")
     val openShiftClient = OpenShiftClient(userClient, serviceAccountClient, mapper)
-
-    fun resourceClients() = listOf(
-        ResourceClientData("rolebinding", userClient),
-        ResourceClientData("route", serviceAccountClient),
-        ResourceClientData("namespace", serviceAccountClient),
-        ResourceClientData("service", userClient),
-        ResourceClientData("deploymentconfig", userClient),
-        ResourceClientData("imagestream", userClient)
-    )
 
     data class ResourceClientData(
         val kind: String,
         val client: OpenShiftResourceClient
     )
 
+    enum class ResourceClients(val data: ResourceClientData) {
+        ROLEBINDING(ResourceClientData("rolebinding", userClient)),
+        ROUTE(ResourceClientData("route", serviceAccountClient)),
+        NAMESPACE(ResourceClientData("namespace", serviceAccountClient)),
+        SERVICE(ResourceClientData("service", userClient)),
+        DEPLOYMENTCONFIG(ResourceClientData("deploymentconfig", userClient)),
+        IMAGESTREAM(ResourceClientData("imagestream", userClient))
+    }
+
     @ParameterizedTest
-    @MethodSource("resourceClients")
-    fun `Uses correct resource client based on OpenShift kind`(data: ResourceClientData) {
+    @EnumSource(ResourceClients::class)
+    fun `Uses correct resource client based on OpenShift kind`(client: ResourceClients) {
 
         val name = "does not matter"
-        val mockedResource = """{ "kind": "${data.kind}", "metadata": { "name": "$name" } }"""
+        val mockedResource = """{ "kind": "${client.data.kind}", "metadata": { "name": "$name" } }"""
         val command = OpenshiftCommand(OperationType.CREATE, "http://foo/bar", mapper.readValue(mockedResource))
-        val otherClient = if (data.client == serviceAccountClient) userClient else serviceAccountClient
+        val otherClient = if (client.data.client == serviceAccountClient) userClient else serviceAccountClient
 
         every {
-            data.client.post(command.url, command.payload)
+            client.data.client.post(command.url, command.payload)
         } returns ResponseEntity(emptyNode, OK)
 
         openShiftClient.performOpenShiftCommand("aos", command)
 
-        verify(exactly = 1) { data.client.post(any(), any()) }
+        verify(exactly = 1) { client.data.client.post(any(), any()) }
         verify(exactly = 0) { otherClient.post(any(), any()) }
     }
 
