@@ -127,7 +127,7 @@ abstract class AbstractAuroraConfigTest2 : ResourceLoader() {
         fileName: String,
         fn: (MutableMap<String, Any>) -> Unit
     ): MutableMap<String, String> {
-        val file = auroraConfig[fileName]!!
+        val file = auroraConfig[fileName] ?: "{}"
         val modified = modify(file, fn)
 
         auroraConfig[fileName] = modified
