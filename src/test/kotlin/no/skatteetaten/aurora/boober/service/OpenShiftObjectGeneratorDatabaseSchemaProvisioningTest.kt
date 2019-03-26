@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream
 import java.util.Properties
 
-class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest : AbstractOpenShiftObjectGeneratorTest2() {
+class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest : AbstractOpenShiftObjectGeneratorTest() {
 
     lateinit var objectGenerator: OpenShiftObjectGenerator
 

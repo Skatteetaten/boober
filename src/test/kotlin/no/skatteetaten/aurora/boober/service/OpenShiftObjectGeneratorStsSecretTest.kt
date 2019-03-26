@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream
 import java.time.Duration
 
-class OpenShiftObjectGeneratorStsSecretTest : AbstractOpenShiftObjectGeneratorTest2() {
+class OpenShiftObjectGeneratorStsSecretTest : AbstractOpenShiftObjectGeneratorTest() {
 
     @Test
     fun `sts secret is correctly generated`() {

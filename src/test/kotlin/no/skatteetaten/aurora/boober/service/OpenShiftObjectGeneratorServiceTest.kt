@@ -8,7 +8,7 @@ import io.fabric8.kubernetes.api.model.Service
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class OpenShiftObjectGeneratorServiceTest : AbstractOpenShiftObjectGeneratorTest2() {
+class OpenShiftObjectGeneratorServiceTest : AbstractOpenShiftObjectGeneratorTest() {
 
     lateinit var objectGenerator: OpenShiftObjectGenerator
 

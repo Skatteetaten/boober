@@ -10,7 +10,7 @@ import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.ai
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class OpenShiftObjectGeneratorImageStreamTest : AbstractOpenShiftObjectGeneratorTest2() {
+class OpenShiftObjectGeneratorImageStreamTest : AbstractOpenShiftObjectGeneratorTest() {
 
     lateinit var objectGenerator: OpenShiftObjectGenerator
 

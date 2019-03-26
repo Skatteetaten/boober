@@ -18,7 +18,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisio
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class OpenShiftObjectGeneratorDeploymentConfigTest : AbstractOpenShiftObjectGeneratorTest2() {
+class OpenShiftObjectGeneratorDeploymentConfigTest : AbstractOpenShiftObjectGeneratorTest() {
 
     lateinit var objectGenerator: OpenShiftObjectGenerator
 

@@ -14,7 +14,7 @@ import no.skatteetaten.aurora.boober.utils.base64Decode
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class OpenShiftObjectGeneratorMountTest : AbstractOpenShiftObjectGeneratorTest2() {
+class OpenShiftObjectGeneratorMountTest : AbstractOpenShiftObjectGeneratorTest() {
 
     lateinit var objectGenerator: OpenShiftObjectGenerator
 
