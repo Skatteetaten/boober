@@ -29,9 +29,7 @@ class ResourceMergerTest : AbstractAuroraConfigTest2() {
         "about.json" to DEFAULT_ABOUT,
         "utv/about.json" to DEFAULT_UTV_ABOUT,
         "webleveranse.json" to WEB_LEVERANSE,
-        "utv/webleveranse.json" to """{
-    "type" : "development",
-    "version" : "dev-SNAPSHOT" }"""
+        "utv/webleveranse.json" to """{ "type" : "development", "version" : "dev-SNAPSHOT" }"""
     )
 
     val userDetailsProvider = mockk<UserDetailsProvider>()

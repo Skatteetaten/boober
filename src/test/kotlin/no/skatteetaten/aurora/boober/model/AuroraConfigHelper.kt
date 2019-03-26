@@ -22,17 +22,7 @@ fun getAuroraConfigSamples(): AuroraConfig {
     return AuroraConfig(nodes.map { AuroraConfigFile(it.key, it.value, false) }, "aos", "master")
 }
 
-@JvmOverloads
-fun createAuroraConfig(
-    aid: ApplicationDeploymentRef,
-    affiliation: String = "aos",
-    additionalFile: String? = null,
-    refName: String = "master"
-): AuroraConfig {
-    val files = getSampleFiles(aid, additionalFile)
 
-    return AuroraConfig(files.map { AuroraConfigFile(it.key, it.value, false) }, affiliation, refName)
-}
 
 @JvmOverloads
 fun getSampleFiles(aid: ApplicationDeploymentRef, additionalFile: String? = null): Map<String, String> {

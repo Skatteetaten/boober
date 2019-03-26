@@ -1,10 +1,12 @@
 package no.skatteetaten.aurora.boober.model
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.aid
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import no.skatteetaten.aurora.boober.utils.jsonMapper
+import java.io.File
 
 // TODO: Kan vi lese denne auroraConfigen fra noen filer? Vi har jo noen filer vi bruker i andre tester
 abstract class AbstractAuroraConfigTest2 : ResourceLoader() {
@@ -116,10 +118,48 @@ abstract class AbstractAuroraConfigTest2 : ResourceLoader() {
 
     val DEFAULT_AID = aid("utv", "aos-simple")
 
+    fun createAuroraConfig(
+        aid: ApplicationDeploymentRef,
+        affiliation: String = "aos",
+        additionalFile: String? = null,
+        refName: String = "master"
+    ): AuroraConfig {
+        val files = getSampleFiles(aid, additionalFile)
+
+        return AuroraConfig(files.map { AuroraConfigFile(it.key, it.value, false) }, affiliation, refName)
+    }
+
     fun createAuroraConfig(auroraConfigJson: Map<String, String>): AuroraConfig {
 
         val auroraConfigFiles = auroraConfigJson.map { AuroraConfigFile(it.key, it.value) }
         return AuroraConfig(auroraConfigFiles, "aos", "master")
+    }
+
+    fun getResultFiles(aid: ApplicationDeploymentRef): Map<String, JsonNode?> {
+        val baseFolder = File(
+            AuroraConfigHelper::class.java
+                .getResource("/samples/result/${aid.environment}/${aid.application}").file
+        )
+
+        return getFiles(baseFolder)
+    }
+
+    private fun getFiles(baseFolder: File, name: String = ""): Map<String, JsonNode?> {
+        return baseFolder.listFiles().toHashSet().associate {
+            val json = convertFileToJsonNode(it)
+
+            var appName = json?.at("/metadata/name")?.textValue()
+            if (name.isNotBlank()) {
+                appName = name
+            }
+
+            val file = json?.at("/kind")?.textValue() + "/" + appName
+            file.toLowerCase() to json
+        }
+    }
+
+    private fun convertFileToJsonNode(file: File): JsonNode? {
+        return jsonMapper().readValue(file, JsonNode::class.java)
     }
 
     fun modify(
