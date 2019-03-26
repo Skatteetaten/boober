@@ -1,31 +1,6 @@
 package no.skatteetaten.aurora.boober.controller
-
-import static org.springframework.http.MediaType.APPLICATION_JSON
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.patch
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.put
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-
-import org.junit.Rule
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpStatus
-import org.springframework.restdocs.JUnitRestDocumentation
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.ResultActions
-import org.springframework.test.web.servlet.setup.MockMvcBuilders
-
-import groovy.json.JsonOutput
-import no.skatteetaten.aurora.boober.controller.internal.ErrorHandler
-import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigControllerV1
-import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigResponder
-import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraVersioningException
-import no.skatteetaten.aurora.boober.service.AuroraConfigRef
-import no.skatteetaten.aurora.boober.service.AuroraConfigService
-
+/*
+  TODO: Bytte denne ut med de nye controller testene
 // TODO: Asciidoc test mockmvc
 class AuroraConfigControllerTest extends AbstractAuroraConfigTest {
 
@@ -121,3 +96,4 @@ class AuroraConfigControllerTest extends AbstractAuroraConfigTest {
       result.andExpect(status().isOk())
   }
 }
+ */

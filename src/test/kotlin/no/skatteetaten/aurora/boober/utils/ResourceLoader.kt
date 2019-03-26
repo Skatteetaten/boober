@@ -29,8 +29,8 @@ open class ResourceLoader {
         return ResourceUtils.getURL(path)
     }
 
-    fun loadJsonResource(resourceName: String): JsonNode =
-        jacksonObjectMapper().readValue(loadResource(resourceName))
+    fun loadJsonResource(resourceName: String, folder: String = this.javaClass.simpleName): JsonNode =
+        jacksonObjectMapper().readValue(loadResource(resourceName, folder))
 
     fun loadByteResource(resourceName: String, folder: String = this.javaClass.simpleName): ByteArray {
         return getResourceUrl(resourceName, folder).openStream().readBytes()
