@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
-import assertk.assert
+import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
@@ -38,7 +38,7 @@ class OpenShiftCommandServiceTest : ResourceLoader() {
             success = true,
             responseBody = json
         )
-        assert(service.findErrorMessage(response)).isEqualTo("route ref3 already exposes foobar.paas-bjarte-dev.utv.paas.skead.no and is older")
+        assertThat(service.findErrorMessage(response)).isEqualTo("route ref3 already exposes foobar.paas-bjarte-dev.utv.paas.skead.no and is older")
     }
 
     @Test
@@ -47,8 +47,8 @@ class OpenShiftCommandServiceTest : ResourceLoader() {
         createOpenShiftClientMock(json)
         val resultList = service.createAndApplyObjects(namespace, json, false)
 
-        assert(resultList.size).isEqualTo(1)
-        assert(resultList.first().success).isTrue()
+        assertThat(resultList.size).isEqualTo(1)
+        assertThat(resultList.first().success).isTrue()
     }
 
     @Test
@@ -57,10 +57,10 @@ class OpenShiftCommandServiceTest : ResourceLoader() {
         createOpenShiftClientMock(json)
 
         val resultList = service.createAndApplyObjects(namespace, json, false)
-        assert(resultList.size).isEqualTo(1)
+        assertThat(resultList.size).isEqualTo(1)
         val result = resultList.first()
-        assert(result.success).isFalse()
-        assert(result.exception)
+        assertThat(result.success).isFalse()
+        assertThat(result.exception)
             .isEqualTo("dockerimage.image.openshift.io \"docker-registry.aurora.sits.no:5000/no_skatteetaten_aurora_demo/whoami:foobar\" not found")
     }
 

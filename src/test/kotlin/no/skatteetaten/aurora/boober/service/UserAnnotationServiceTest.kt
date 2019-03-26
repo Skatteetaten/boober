@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
-import assertk.assert
+import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isTrue
 import assertk.assertions.startsWith
@@ -32,13 +32,13 @@ class UserAnnotationServiceTest {
     @Test
     fun `Given filters map return valid json patch for adding user annotations`() {
         val json = userAnnotationService.createUpdatePatch("filters", """{"key":{"nested-key":"value"}}""".toJson())
-        assert(json.at("/metadata/annotations/filters").textValue()).startsWith(base64Prefix)
+        assertThat(json.at("/metadata/annotations/filters").textValue()).startsWith(base64Prefix)
     }
 
     @Test
     fun `Given key create valid json patch for removing user annotations`() {
         val json = userAnnotationService.createRemovePatch("filters")
-        assert(json.at("/metadata/annotations/filters").isNull).isTrue()
+        assertThat(json.at("/metadata/annotations/filters").isNull).isTrue()
     }
 
     @Test
@@ -50,7 +50,7 @@ class UserAnnotationServiceTest {
         } returns ResponseEntity.ok("""{"metadata":{"annotations":{"key":"$entry"}}}""".toJson())
 
         val response = userAnnotationService.getAnnotations()
-        assert(response["key"]?.at("/key1")?.textValue()).isEqualTo("value1")
+        assertThat(response["key"]?.at("/key1")?.textValue()).isEqualTo("value1")
     }
 
     @Test
@@ -62,7 +62,7 @@ class UserAnnotationServiceTest {
         } returns ResponseEntity.ok("""{"metadata":{"annotations":{"key":"$entry"}}}""".toJson())
 
         val response = userAnnotationService.getAnnotations()
-        assert(response["key"]?.textValue()).isEqualTo("test value")
+        assertThat(response["key"]?.textValue()).isEqualTo("test value")
     }
 
     @Test
@@ -72,7 +72,7 @@ class UserAnnotationServiceTest {
         } returns ResponseEntity.ok("""{"metadata":{"annotations":{"key":"value"}}}""".toJson())
 
         val response = userAnnotationService.getAnnotations()
-        assert(response["key"]?.textValue()).isEqualTo("value")
+        assertThat(response["key"]?.textValue()).isEqualTo("value")
     }
 
     @Test
@@ -82,7 +82,7 @@ class UserAnnotationServiceTest {
         } returns ResponseEntity.ok("""{"metadata":{"annotations":{"key":"value"}}}""".toJson())
 
         val response = userAnnotationService.deleteAnnotations("filters")
-        assert(response["key"]?.textValue()).isEqualTo("value")
+        assertThat(response["key"]?.textValue()).isEqualTo("value")
     }
 
     @Test
@@ -92,6 +92,6 @@ class UserAnnotationServiceTest {
         } returns ResponseEntity.ok("""{}""".toJson())
 
         val response = userAnnotationService.deleteAnnotations("filters")
-        assert(response.isEmpty()).isTrue()
+        assertThat(response.isEmpty()).isTrue()
     }
 }
