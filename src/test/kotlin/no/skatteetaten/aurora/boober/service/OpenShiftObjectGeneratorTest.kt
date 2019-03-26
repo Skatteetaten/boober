@@ -25,7 +25,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 
-class OpenShiftObjectGeneratorTest : AbstractOpenShiftObjectGeneratorTest() {
+class OpenShiftObjectGeneratorTest : AbstractOpenShiftObjectGeneratorTest2() {
 
     lateinit var objectGenerator: OpenShiftObjectGenerator
 

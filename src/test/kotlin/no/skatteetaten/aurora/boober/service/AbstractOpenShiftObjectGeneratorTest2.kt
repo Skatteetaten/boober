@@ -13,7 +13,7 @@ import no.skatteetaten.aurora.boober.utils.jsonMapper
 import org.junit.jupiter.api.BeforeEach
 import java.time.Instant
 
-open class AbstractOpenShiftObjectGeneratorTest : AbstractAuroraConfigTest2() {
+open class AbstractOpenShiftObjectGeneratorTest2 : AbstractAuroraConfigTest2() {
 
     val DEPLOY_ID = "123"
 

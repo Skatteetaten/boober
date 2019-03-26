@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.ServiceTypes
@@ -71,6 +72,7 @@ data class DbhUser(val username: String, val password: String, val type: String)
 
 data class DatabaseSchemaInstance(val port: Long, val host: String?)
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class DbhSchema(
     val id: String,
     val type: String,
@@ -260,6 +262,7 @@ class DatabaseSchemaProvisioner(
         .map { "${it.key}=${it.value}" }
         .joinToString(",")
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     data class DbApiEnvelope(val status: String, val items: List<DbhSchema> = listOf())
 
     data class DbhErrorResponse(val status: String, val items: List<String>, val totalCount: Int)
