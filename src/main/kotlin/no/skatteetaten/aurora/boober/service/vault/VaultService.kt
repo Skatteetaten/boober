@@ -189,7 +189,7 @@ class VaultService(
         }
     }
 
-    private fun findVaultCollection(vaultCollectionName: String): VaultCollection {
+    fun findVaultCollection(vaultCollectionName: String): VaultCollection {
 
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo -> vaultCollection })
     }
@@ -205,7 +205,7 @@ class VaultService(
 
         // Note that a properties file can be delimitered by space and =, very few people know this so we check for it
         @JvmStatic
-        protected fun assertSecretKeysAreValid(secrets: Map<String, ByteArray>) {
+        fun assertSecretKeysAreValid(secrets: Map<String, ByteArray>) {
             val filesToKeys = secrets.filter { it.key.endsWith(".properties") }
                 .mapValues {
                     String(it.value)
