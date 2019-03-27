@@ -198,20 +198,22 @@ class OpenShiftCommandService(
         }
     }
 
+    val deletableResources = listOf(
+        "BuildConfig",
+        "DeploymentConfig",
+        "ConfigMap",
+        "Secret",
+        "Service",
+        "Route",
+        "ImageStream"
+    )
+
     @JvmOverloads
     fun createOpenShiftDeleteCommands(
         name: String,
         namespace: String,
         deployId: String,
-        apiResources: List<String> = listOf(
-            "BuildConfig",
-            "DeploymentConfig",
-            "ConfigMap",
-            "Secret",
-            "Service",
-            "Route",
-            "ImageStream"
-        )
+        apiResources: List<String> = deletableResources
     ): List<OpenshiftCommand> {
 
         val labelSelectors = listOf("app=$name", "booberDeployId", "booberDeployId!=$deployId")
