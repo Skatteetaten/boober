@@ -58,12 +58,12 @@ class VaultServiceTest {
 
         every {
             encryptionService.decrypt(capture(decrypt))
-        } returns decrypt.captured.toByteArray()
+        } answers { decrypt.captured.toByteArray() }
 
 
         every {
             encryptionService.encrypt(capture(encrypt))
-        } returns String(encrypt.captured)
+        } answers { String(encrypt.captured) }
     }
 
     @Test
