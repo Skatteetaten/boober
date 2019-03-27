@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service.vault
 import assertk.assertThat
 import assertk.assertions.containsAll
 import assertk.assertions.hasMessage
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isInstanceOf
@@ -202,7 +203,7 @@ class VaultServiceTest {
         var vault =
             vaultService.createOrUpdateFileInVault(COLLECTION_NAME, VAULT_NAME, fileName, contents.toByteArray())
 
-        assertThat(vault.permissions).isNull()
+        assertThat(vault.permissions).isEmpty()
         vaultService.setVaultPermissions(COLLECTION_NAME, VAULT_NAME, listOf("UTV"))
         vault = vaultService.findVault(COLLECTION_NAME, VAULT_NAME)
 
