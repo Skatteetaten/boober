@@ -1,9 +1,12 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
 import assertk.assertThat
+import assertk.assertions.contains
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
+import io.mockk.every
 import io.mockk.mockk
+import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.DatabaseInstance
 import no.skatteetaten.aurora.boober.service.ProvisioningException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
@@ -19,7 +22,9 @@ class DatabaseSchemaProvisionerTest : ResourceLoader() {
     private val server = MockWebServer()
     private val baseUrl = server.url("/")
 
-    val userDetailsProvider: UserDetailsProvider = mockk()
+    val userDetailsProvider: UserDetailsProvider = mockk {
+        every { getAuthenticatedUser() } returns User("username", "token")
+    }
 
     val provisioner = DatabaseSchemaProvisioner(
         dbhUrl = baseUrl.toString(),
@@ -63,30 +68,28 @@ class DatabaseSchemaProvisionerTest : ResourceLoader() {
         }
     }
 
-    /*
     @Test
     fun `Matching of application coordinates to schema`() {
-        server.execute(loadResource("schema_$id.json")) {
-            val provisionResult = provisioner.provisionSchemas(listOf(
-                SchemaForAppRequest("utv","reference", true, details)
-            ))
+        val request = server.execute(loadResource("schema_$id.json")) {
+            val provisionResult = provisioner.provisionSchemas(
+                listOf(SchemaForAppRequest("utv", "reference", true, details))
+            )
             assertSchemaIsCorrect(provisionResult)
-        }
+        }.first()
+
+        assertThat(request.path).contains("labels=affiliation%3Daos,environment%3Daos-utv,application%3Dreference,name%3Dreference")
+        assertThat(request.path).contains("roles=SCHEMA&engine=ORACLE")
 
         /*
-
-        TODO: Dette mangler vi med execute..
         def labelsString = labels . collect { k, v -> "$k%3D$v" }.join(",")
         dbhServer.expect(requestTo("${DBH_HOST}/api/v1/schema/?labels=$labelsString&roles=SCHEMA&engine=ORACLE"))
             .andRespond(withSuccess(loadResource("schema_${id}.json"), MediaType.APPLICATION_JSON))
-*/
+            */
     }
-    */
 
-    /*
     @Test
     fun `Creates new schema if schema is missing`() {
-
+/*
         def labelsString = labels . collect { k, v -> "$k%3D$v" }.join(",")
         def createBody = new SchemaRequestPayload(
             labels + [userId: "aurora"],
@@ -108,11 +111,9 @@ class DatabaseSchemaProvisionerTest : ResourceLoader() {
         def provisionResult = provisioner .
         provisionSchemas([new SchemaForAppRequest ("utv", "reference", true, details)])
 
-
-        assertSchemaIsCorrect(provisionResult)
+        assertSchemaIsCorrect(provisionResult)*/
     }
 
-    */
     fun assertSchemaIsCorrect(provisionResult: SchemaProvisionResults) {
 
         val results = provisionResult.results
