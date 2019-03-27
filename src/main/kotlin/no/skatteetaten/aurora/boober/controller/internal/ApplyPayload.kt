@@ -15,5 +15,4 @@ data class ApplyPayload(
     fun overridesToAuroraConfigFiles(): List<AuroraConfigFile> {
         return overrides.map { AuroraConfigFile(it.key, it.value, true) }
     }
-
 }
