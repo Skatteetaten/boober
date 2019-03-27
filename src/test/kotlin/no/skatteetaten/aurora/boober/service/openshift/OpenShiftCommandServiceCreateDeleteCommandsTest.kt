@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service.openshift
 import assertk.assertThat
 import assertk.assertions.isTrue
 import com.fasterxml.jackson.databind.JsonNode
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
@@ -26,6 +27,7 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest {
     @BeforeEach
     fun setupTest() {
 
+        clearAllMocks()
         every {
             userClient.getAuthorizationHeaders()
         } returns HttpHeaders()
