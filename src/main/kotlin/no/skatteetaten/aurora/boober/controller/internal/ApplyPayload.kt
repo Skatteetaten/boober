@@ -9,7 +9,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class ApplyPayload(
     val applicationDeploymentRefs: List<ApplicationDeploymentRef> = emptyList(),
-    val applicationIds: List<ApplicationDeploymentRef> = emptyList(),
     val overrides: Map<String, String> = mapOf(),
     val deploy: Boolean = true
 ) {
@@ -17,6 +16,4 @@ data class ApplyPayload(
         return overrides.map { AuroraConfigFile(it.key, it.value, true) }
     }
 
-    val allRefs: List<ApplicationDeploymentRef>
-        get() = applicationDeploymentRefs + applicationIds
 }

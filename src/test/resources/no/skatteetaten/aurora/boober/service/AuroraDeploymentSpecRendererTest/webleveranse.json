@@ -226,15 +226,5 @@
         "value": true
       }
     ]
-  },
-  "applicationId": {
-    "source": "static",
-    "value": "utv/webleveranse",
-    "sources": [
-      {
-        "name": "static",
-        "value": "utv/webleveranse"
-      }
-    ]
   }
 }
