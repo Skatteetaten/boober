@@ -5,14 +5,14 @@ import assertk.assertions.isEqualTo
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest2
+import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 
 import org.junit.jupiter.api.Test
 
-class DeployLogServiceTest : AbstractAuroraConfigTest2() {
+class DeployLogServiceTest : AbstractAuroraConfigTest() {
 
     @Test
     fun `Should mark release`() {

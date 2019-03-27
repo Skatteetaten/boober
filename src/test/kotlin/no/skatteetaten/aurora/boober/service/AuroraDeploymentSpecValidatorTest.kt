@@ -9,7 +9,7 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest2
+import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
 import no.skatteetaten.aurora.boober.service.openshift.UserGroup
@@ -23,7 +23,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.Optional
 
-class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest2() {
+class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
     lateinit var auroraConfigJson: MutableMap<String, String>
 

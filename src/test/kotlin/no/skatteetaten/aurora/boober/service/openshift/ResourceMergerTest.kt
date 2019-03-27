@@ -9,7 +9,7 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest2
+import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.aid
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 
-class ResourceMergerTest : AbstractAuroraConfigTest2() {
+class ResourceMergerTest : AbstractAuroraConfigTest() {
 
     val ENVIRONMENT = "utv"
 

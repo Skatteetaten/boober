@@ -8,7 +8,7 @@ import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import org.junit.jupiter.api.Test
 
-class AuroraConfigTest : AbstractAuroraConfigTest2() {
+class AuroraConfigTest : AbstractAuroraConfigTest() {
 
     val aid = ApplicationDeploymentRef("booberdev", "console")
 

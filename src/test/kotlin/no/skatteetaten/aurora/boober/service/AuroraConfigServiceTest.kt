@@ -13,13 +13,13 @@ import io.mockk.mockk
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
-import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest2
+import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest
 import no.skatteetaten.aurora.boober.model.AuroraVersioningException
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.File
 
-class AuroraConfigServiceTest : AbstractAuroraConfigTest2() {
+class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
 
     val REMOTE_REPO_FOLDER = File("build/gitrepos_auroraconfig_bare").absoluteFile.absolutePath
     val CHECKOUT_PATH = File("build/auroraconfigs").absoluteFile.absolutePath

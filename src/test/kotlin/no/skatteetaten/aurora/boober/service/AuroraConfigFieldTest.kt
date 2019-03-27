@@ -3,10 +3,10 @@ package no.skatteetaten.aurora.boober.service
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraVolumeMapperV1
-import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest2
+import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest
 import org.junit.jupiter.api.Test
 
-class AuroraConfigFieldTest : AbstractAuroraConfigTest2() {
+class AuroraConfigFieldTest : AbstractAuroraConfigTest() {
 
     @Test
     fun `Should generate correct config extractors`() {

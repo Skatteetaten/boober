@@ -2,13 +2,13 @@ package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest2
+import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.aid
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.DatabaseInstance
 import org.junit.jupiter.api.Test
 
-class ExternalResourceProvisionerTest : AbstractAuroraConfigTest2() {
+class ExternalResourceProvisionerTest : AbstractAuroraConfigTest() {
 
     val databaseInstance = DatabaseInstance(fallback = true, labels = mapOf("affiliation" to "aos"))
     val details = SchemaRequestDetails(

@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.utils
 
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -38,5 +40,13 @@ open class ResourceLoader {
 
     fun loadBufferResource(resourceName: String, folder: String = this.javaClass.simpleName): Buffer {
         return Buffer().readFrom(getResourceUrl(resourceName, folder).openStream())
+    }
+
+    fun compareJson(jsonNode: JsonNode, target: JsonNode): Boolean {
+        val writer = jsonMapper().writerWithDefaultPrettyPrinter()
+        val targetString = writer.writeValueAsString(target)
+        val nodeString = writer.writeValueAsString(jsonNode)
+        assertThat(targetString).isEqualTo(nodeString)
+        return true
     }
 }

@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 
-class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest2() {
+class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
 
     lateinit var auroraConfigJson: MutableMap<String, String>
 

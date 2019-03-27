@@ -4,7 +4,7 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest2
+import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.aid
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
@@ -13,7 +13,7 @@ import no.skatteetaten.aurora.boober.utils.jsonMapper
 import org.junit.jupiter.api.BeforeEach
 import java.time.Instant
 
-open class AbstractOpenShiftObjectGeneratorTest : AbstractAuroraConfigTest2() {
+open class AbstractOpenShiftObjectGeneratorTest : AbstractAuroraConfigTest() {
 
     val DEPLOY_ID = "123"
 

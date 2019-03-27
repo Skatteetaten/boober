@@ -9,7 +9,7 @@ import no.skatteetaten.aurora.boober.utils.jsonMapper
 import java.io.File
 
 // TODO: Kan vi lese denne auroraConfigen fra noen filer? Vi har jo noen filer vi bruker i andre tester
-abstract class AbstractAuroraConfigTest2 : ResourceLoader() {
+abstract class AbstractAuroraConfigTest : ResourceLoader() {
 
     val AFFILIATION = "aos"
 

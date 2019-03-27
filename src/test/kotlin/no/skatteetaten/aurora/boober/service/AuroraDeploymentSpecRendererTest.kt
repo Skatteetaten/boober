@@ -2,14 +2,13 @@ package no.skatteetaten.aurora.boober.service
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest2
+import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 
-class AuroraDeploymentSpecRendererTest : AbstractAuroraConfigTest2() {
+class AuroraDeploymentSpecRendererTest : AbstractAuroraConfigTest() {
 
     val auroraConfigJson = mutableMapOf(
         "about.json" to DEFAULT_ABOUT,
@@ -81,11 +80,4 @@ class AuroraDeploymentSpecRendererTest : AbstractAuroraConfigTest2() {
         return "${aid.application}${formattedText}${valaultSuffix}.${type}"
     }
 
-    fun compareJson(jsonNode: JsonNode, target: JsonNode): Boolean {
-        val writer = mapper.writerWithDefaultPrettyPrinter()
-        val targetString = writer.writeValueAsString(target)
-        val nodeString = writer.writeValueAsString(jsonNode)
-        assertThat(targetString).isEqualTo(nodeString)
-        return true
-    }
 }
