@@ -242,7 +242,7 @@ class DeployServiceTest extends AbstractMockedOpenShiftSpecification {
   def affiliation = "aos"
   def configRef = new AuroraConfigRef(affiliation, "master", "123")
 
-  final ApplicationDeploymentRef aid = new ApplicationDeploymentRef(ENV_NAME, APP_NAME)
+  final ApplicationDeploymentRef adr = new ApplicationDeploymentRef(ENV_NAME, APP_NAME)
 
   def setup() {
     openShiftClient.projectExists(_) >> {

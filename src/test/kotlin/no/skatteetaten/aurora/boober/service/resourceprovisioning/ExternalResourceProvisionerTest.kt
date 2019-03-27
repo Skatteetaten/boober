@@ -3,7 +3,7 @@ package no.skatteetaten.aurora.boober.service.resourceprovisioning
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.aid
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.adr
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.DatabaseInstance
 import org.junit.jupiter.api.Test
@@ -72,6 +72,6 @@ class ExternalResourceProvisionerTest : AbstractAuroraConfigTest() {
         config["reference.json"] = REF_APP_JSON
         config["utv/reference.json"] = dbSpec
 
-        return createDeploymentSpec(config, aid("utv", "reference"))
+        return createDeploymentSpec(config, adr("utv", "reference"))
     }
 }

@@ -5,7 +5,7 @@ import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.AbstractAuroraConfigTest
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.aid
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.adr
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.utils.Instants
@@ -51,7 +51,7 @@ open class AbstractOpenShiftObjectGeneratorTest : AbstractAuroraConfigTest() {
                 "utv/about.json" to DEFAULT_UTV_ABOUT,
                 "reference.json" to REF_APP_JSON,
                 "utv/reference.json" to """{ "toxiproxy" : { "version" : "2.1.3" } }"""
-            ), aid("utv", "reference")
+            ), adr("utv", "reference")
         )
     }
 
@@ -62,7 +62,7 @@ open class AbstractOpenShiftObjectGeneratorTest : AbstractAuroraConfigTest() {
                 "utv/about.json" to DEFAULT_UTV_ABOUT,
                 "webleveranse.json" to WEB_LEVERANSE,
                 "utv/webleveranse.json" to """{ "type": "deploy", "version" : "1.0.8", "database" : { "REFerence" : "auto" }, "toxiproxy" : { "version" : "2.1.3" } }"""
-            ), aid("utv", "webleveranse")
+            ), adr("utv", "webleveranse")
         )
     }
 }

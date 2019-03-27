@@ -9,7 +9,7 @@ import assertk.catch
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.mapper.v1.DatabaseFlavor
 import no.skatteetaten.aurora.boober.mapper.v1.DatabasePermission.READ
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.aid
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.adr
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -35,7 +35,7 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
             """{ "name" : "foo", "artifactId" : "foo"}"""
 
         assertThat {
-            createDeploymentSpec(auroraConfigJson, aid("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"))
+            createDeploymentSpec(auroraConfigJson, adr("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"))
         }.doesNotThrowAnyException()
     }
 
@@ -47,7 +47,7 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
         auroraConfigJson["utv/this-name-is-stupid-stupid-stupidly-long-for-no-reason.json"] = """{ "name" : "foo"}"""
 
         assertThat {
-            createDeploymentSpec(auroraConfigJson, aid("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"))
+            createDeploymentSpec(auroraConfigJson, adr("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"))
         }.thrownError {
             isInstanceOf(AuroraConfigException::class)
         }
@@ -60,7 +60,7 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
         auroraConfigJson["utv/reference.json"] = """{}"""
 
         assertThat {
-            createDeploymentSpec(auroraConfigJson, aid("utv", "reference"))
+            createDeploymentSpec(auroraConfigJson, adr("utv", "reference"))
         }.doesNotThrowAnyException()
     }
 
@@ -72,7 +72,7 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
         auroraConfigJson["utv/this-name-is-stupid-stupid-stupidly-long-for-no-reason.json"] = """{}"""
 
         assertThat {
-            createDeploymentSpec(auroraConfigJson, aid("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"))
+            createDeploymentSpec(auroraConfigJson, adr("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"))
         }.thrownError {
             isInstanceOf(AuroraConfigException::class)
         }
@@ -442,7 +442,7 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
 
         auroraConfigJson["utv/reference.json"] = """{ "baseFile" : "aos-simple.json"}"""
 
-        val spec = createDeploymentSpec(auroraConfigJson, aid("utv", "reference"))
+        val spec = createDeploymentSpec(auroraConfigJson, adr("utv", "reference"))
 
         assertThat(spec.deploy?.artifactId).isEqualTo("aos-simple")
     }

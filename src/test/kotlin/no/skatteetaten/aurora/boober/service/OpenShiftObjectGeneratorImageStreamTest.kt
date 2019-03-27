@@ -6,7 +6,7 @@ import assertk.assertions.isLessThanOrEqualTo
 import com.fasterxml.jackson.module.kotlin.convertValue
 import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.openshift.api.model.ImageStream
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.aid
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.adr
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -29,7 +29,7 @@ class OpenShiftObjectGeneratorImageStreamTest : AbstractOpenShiftObjectGenerator
             "utv/aos-simple.json" to """{ "version": "SNAPSHOT-feature_MFU_3056-20171122.091423-23-b2.2.5-oracle8-1.4.0" }"""
         )
 
-        val deploymentSpec = createDeploymentSpec(auroraConfigJson = auroraConfigJson, ref = aid("utv", "aos-simple"))
+        val deploymentSpec = createDeploymentSpec(auroraConfigJson = auroraConfigJson, ref = adr("utv", "aos-simple"))
 
         val imageStream = objectGenerator.generateImageStream(
             deployId = "deploy-id",

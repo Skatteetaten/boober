@@ -34,7 +34,7 @@ class AuroraDeploymentSpecRendererTest : AbstractAuroraConfigTest() {
     @ParameterizedTest
     @EnumSource(PointerStringTestData::class)
     fun `Should create a Map of AuroraDeploymentSpec pointers`(test: PointerStringTestData) {
-        val aid = ApplicationDeploymentRef.aid(test.env, test.app)
+        val aid = ApplicationDeploymentRef.adr(test.env, test.app)
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, aid).spec
 
         val renderedJson = renderSpecAsJson(deploymentSpec, test.default)
@@ -60,7 +60,7 @@ class AuroraDeploymentSpecRendererTest : AbstractAuroraConfigTest() {
     @ParameterizedTest
     @EnumSource(PointerJsonTestData::class)
     fun `Should render formatted json-like output for pointers`(test: PointerJsonTestData) {
-        val aid = ApplicationDeploymentRef.aid(test.env, test.app)
+        val aid = ApplicationDeploymentRef.adr(test.env, test.app)
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, aid).spec
         val renderedJson = renderJsonForAuroraDeploymentSpecPointers(deploymentSpec, test.default)
         val filename = getFilename(aid, test.default, true, "txt")

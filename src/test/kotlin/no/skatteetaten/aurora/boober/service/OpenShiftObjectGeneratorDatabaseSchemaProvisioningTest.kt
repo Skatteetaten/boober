@@ -10,7 +10,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.openshift.api.model.DeploymentConfig
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.aid
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.adr
 import no.skatteetaten.aurora.boober.service.internal.DbhSecretGenerator
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaInstance
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
@@ -46,7 +46,7 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest : AbstractOpenShift
                 "utv/about.json" to DEFAULT_UTV_ABOUT,
                 "reference.json" to REF_APP_JSON_LONG_DB_NAME,
                 "utv/reference.json" to """{}"""
-            ), aid("utv", appName)
+            ), adr("utv", appName)
         )
 
         val schema = DbhSchema(

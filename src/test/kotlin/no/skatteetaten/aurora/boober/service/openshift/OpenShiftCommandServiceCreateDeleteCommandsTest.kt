@@ -26,9 +26,9 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest {
         val name = "aos-simple"
         val namespace = "secretmount"
         val deployId = "abc123"
-        val aid = ApplicationDeploymentRef(namespace, name)
+        val adr = ApplicationDeploymentRef(namespace, name)
 
-        val responses = createResponsesFromResultFiles(aid)
+        val responses = createResponsesFromResultFiles(adr)
 
         responses.forEach {
             val kind = it.key
@@ -47,9 +47,9 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest {
         }
     }
 
-    fun createResponsesFromResultFiles(aid: ApplicationDeploymentRef): Map<String, JsonNode> {
+    fun createResponsesFromResultFiles(adr: ApplicationDeploymentRef): Map<String, JsonNode> {
 
-        return getResultFiles(aid).map {
+        return getResultFiles(adr).map {
             val responseBody = jsonMapper().createObjectNode()
             val items = jsonMapper().createArrayNode()
 

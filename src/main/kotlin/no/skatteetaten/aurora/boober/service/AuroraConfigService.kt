@@ -137,7 +137,7 @@ class AuroraConfigService(
     private fun saveFile(newFile: AuroraConfigFile, auroraConfig: AuroraConfig): AuroraConfig {
 
         val watch = StopWatch()
-        watch.start("find affected aid")
+        watch.start("find affected adr")
         val affectedAid = auroraConfig.getApplicationDeploymentRefs().filter {
             val files = auroraConfig.getFilesForApplication(it)
             files.any { it.name == newFile.name }
@@ -145,7 +145,7 @@ class AuroraConfigService(
 
         watch.stop()
         watch.start("validate")
-        logger.debug("Affected AID for file={} aid={}", newFile, affectedAid)
+        logger.debug("Affected AID for file={} adr={}", newFile, affectedAid)
         // This will validate both AuroraConfig and External validation for the affected AID
         createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig), affectedAid)
         watch.stop()

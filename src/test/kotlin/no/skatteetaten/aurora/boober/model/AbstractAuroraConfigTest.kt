@@ -2,7 +2,7 @@ package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.readValue
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.aid
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.adr
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import no.skatteetaten.aurora.boober.utils.jsonMapper
@@ -116,7 +116,7 @@ abstract class AbstractAuroraConfigTest : ResourceLoader() {
         "utv/aos-simple.json" to """{ }"""
     )
 
-    val DEFAULT_AID = aid("utv", "aos-simple")
+    val DEFAULT_AID = adr("utv", "aos-simple")
 
     fun createAuroraConfig(
         aid: ApplicationDeploymentRef,

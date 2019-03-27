@@ -7,7 +7,7 @@ import assertk.assertions.startsWith
 import com.fasterxml.jackson.module.kotlin.convertValue
 import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.kubernetes.api.model.Secret
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.aid
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.adr
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultResults
 import no.skatteetaten.aurora.boober.utils.base64Decode
@@ -44,7 +44,7 @@ class OpenShiftObjectGeneratorMountTest : AbstractOpenShiftObjectGeneratorTest()
 
         )
 
-        val deploymentSpec = createDeploymentSpec(auroraConfigJson, aid("utv", "aos-simple"))
+        val deploymentSpec = createDeploymentSpec(auroraConfigJson, adr("utv", "aos-simple"))
 
         val jsonMounts = objectGenerator.generateSecretsAndConfigMapsInTest(
             "deploy-id", deploymentSpec, null, deploymentSpec.name,
@@ -111,7 +111,7 @@ class OpenShiftObjectGeneratorMountTest : AbstractOpenShiftObjectGeneratorTest()
 
         val vaultFileName = "latest.properties"
         val vaultFileContents = "FOO=BAR"
-        val deploymentSpec = createDeploymentSpec(auroraConfigJson, aid("utv", "aos-simple"))
+        val deploymentSpec = createDeploymentSpec(auroraConfigJson, adr("utv", "aos-simple"))
         val provisioningResult = ProvisioningResult(
             schemaProvisionResults = null,
             vaultResults = VaultResults(mapOf("test" to mapOf(vaultFileName to vaultFileContents.toByteArray()))),

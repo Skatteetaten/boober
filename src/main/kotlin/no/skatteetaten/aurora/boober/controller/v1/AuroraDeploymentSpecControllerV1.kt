@@ -28,7 +28,7 @@ class AuroraDeploymentSpecControllerV1(
     @GetMapping("/")
     fun findAllDeploymentSpecs(
         @PathVariable auroraConfigName: String,
-        @RequestParam(name = "aid", required = false) aidStrings: List<String>,
+        @RequestParam(name = "adr", required = false) aidStrings: List<String>,
         @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
     ): Response {
 

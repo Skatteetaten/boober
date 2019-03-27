@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.openshift.api.model.DeploymentConfig
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.aid
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.adr
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaInstance
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
@@ -36,7 +36,7 @@ class OpenShiftObjectGeneratorDeploymentConfigTest : AbstractOpenShiftObjectGene
                 "utv/about.json" to DEFAULT_UTV_ABOUT,
                 "reference.json" to REF_APP_JSON,
                 "utv/reference.json" to """{ "name": "something-different", "certificate": false }"""
-            ), aid("utv", "reference")
+            ), adr("utv", "reference")
         )
 
         val provisioningResult = ProvisioningResult(
