@@ -23,6 +23,7 @@ import no.skatteetaten.aurora.boober.service.recreateFolder
 import no.skatteetaten.aurora.boober.service.recreateRepo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import java.io.File
 
 class VaultServiceTest {
@@ -51,7 +52,7 @@ class VaultServiceTest {
 
         every {
             userDetailsProvider.getAuthenticatedUser()
-        } returns User("aurora", "token", "Aurora Test User")
+        } returns User("aurora", "token", "Aurora Test User", listOf(SimpleGrantedAuthority("UTV")))
 
         val decrypt = slot<String>()
         val encrypt = slot<ByteArray>()
