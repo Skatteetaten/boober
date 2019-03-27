@@ -36,7 +36,7 @@ class DeployLogServiceTest : AbstractAuroraConfigTest() {
 
         val deployer = Deployer("Test Testesen", "test0test.no")
 
-        val fileName = "test/${deployId}.json"
+        val fileName = "test/$deployId.json"
 
         every {
             bitbucketService.uploadFile("ao", "auroradeploymenttags", fileName, "DEPLOY/utv-foo/bar", any())
@@ -74,13 +74,12 @@ class DeployLogServiceTest : AbstractAuroraConfigTest() {
         val deployer = Deployer("Test Testesen", "test0test.no")
 
         val error = RuntimeException("Some really bad stuff happend")
-        val fileName = "test/${deployId}.json"
+        val fileName = "test/$deployId.json"
         every {
             bitbucketService.uploadFile("ao", "auroradeploymenttags", fileName, "DEPLOY/utv-foo/bar", any())
         } throws error
 
         val response = service.markRelease(listOf(deployResult), deployer)
-
 
         assertThat(response.size).isEqualTo(1)
         val answer = response.first()

@@ -41,7 +41,7 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
 
     @BeforeEach
     fun setup() {
-        recreateRepo(File(REMOTE_REPO_FOLDER, "${AURORA_CONFIG_NAME}.git"))
+        recreateRepo(File(REMOTE_REPO_FOLDER, "$AURORA_CONFIG_NAME.git"))
         recreateFolder(File(CHECKOUT_PATH))
         clearAllMocks()
 
@@ -78,7 +78,6 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
         val fileToChange = "utv/aos-simple.json"
         val theFileToChange = auroraConfig.files.find { it.name == fileToChange }
 
-
         assertThat {
             auroraConfigService.updateAuroraConfigFile(
                 ref,
@@ -100,7 +99,6 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
         val fileToChange = "utv/aos-simple.json"
         val theFileToChange = auroraConfig.files.find { it.name == fileToChange }
 
-
         auroraConfigService.updateAuroraConfigFile(
             ref,
             fileToChange,
@@ -120,13 +118,11 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
 
         var auroraConfig = auroraConfigService.findAuroraConfig(ref)
 
-
         assertThat(auroraConfig.files.size).isEqualTo(0)
 
         auroraConfig = createAuroraConfig(defaultAuroraConfig())
         auroraConfigService.save(auroraConfig)
         auroraConfig = auroraConfigService.findAuroraConfig(ref)
-
 
         assertThat(auroraConfig.files.size).isEqualTo(4)
         assertThat(auroraConfig.files.map { it.name }).containsAll(
@@ -162,7 +158,6 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
         )
         auroraConfigService.save(auroraConfig)
 
-
         auroraConfig = auroraConfigService.findAuroraConfig(ref)
 
         assertThat(auroraConfig.files.size).isEqualTo(4)
@@ -178,7 +173,6 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
         var auroraConfig = createAuroraConfig(defaultAuroraConfig())
         auroraConfigService.save(auroraConfig)
 
-
         auroraConfig = createAuroraConfig(
             mapOf(
 
@@ -187,7 +181,6 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
             )
         )
         auroraConfigService.save(auroraConfig)
-
 
         auroraConfig = auroraConfigService.findAuroraConfig(ref)
 

@@ -102,7 +102,6 @@ class RedeployServiceTest {
                 TemplateType.deploy
             )
 
-
         assertThat(response.success).isTrue()
         assertThat(response.message).isEqualTo("No new application version found. Config changes deployment succeeded.")
         assertThat(response.openShiftResponses.size).isEqualTo(1)
@@ -118,7 +117,6 @@ class RedeployServiceTest {
             listOf(deploymentConfig, imageStream("dockerUrl", OperationType.CREATE)),
             TemplateType.deploy
         )
-
 
         assertThat(response.success).isTrue()
         assertThat(response.message).isEqualTo("New application version found.")
@@ -144,7 +142,6 @@ class RedeployServiceTest {
         } returns imageStreamImportResponse("234")
 
         val response = redeployService.triggerRedeploy(listOf(deploymentConfig, imageStream), TemplateType.deploy)
-
 
         assertThat(response.success).isTrue()
         assertThat(response.openShiftResponses.size).isEqualTo(1)
@@ -178,7 +175,6 @@ class RedeployServiceTest {
             TemplateType.deploy
         )
 
-
         assertThat(response.success).isTrue()
         assertThat(response.openShiftResponses.size).isEqualTo(1)
         assertThat(response.message).isEqualTo("No new application version found. Config changes deployment succeeded.")
@@ -191,7 +187,6 @@ class RedeployServiceTest {
             listOf(deploymentConfig, imageStream, imageStreamImportResponse("hash")),
             TemplateType.deploy
         )
-
 
         assertThat(response.success).isTrue()
         assertThat(response.openShiftResponses.size).isEqualTo(0)

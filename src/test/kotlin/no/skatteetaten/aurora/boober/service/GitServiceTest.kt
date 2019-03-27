@@ -35,7 +35,7 @@ class GitServiceTest : ResourceLoader() {
 
     @BeforeEach
     fun setup() {
-        recreateRepo(File(REMOTE_REPO_FOLDER, "${REPO_NAME}.git"))
+        recreateRepo(File(REMOTE_REPO_FOLDER, "$REPO_NAME.git"))
         recreateFolder(File(CHECKOUT_PATH))
         every { userDetailsProvider.getAuthenticatedUser() } returns User("aurora", "token", "Aurora Test User")
     }
@@ -49,7 +49,6 @@ class GitServiceTest : ResourceLoader() {
 
         val repoUser1 = gitService.checkoutRepository(REPO_NAME, BRANCH_NAME, USER1_FOLDER)
         val testFile = File(CHECKOUT_PATH, "$USER1_FOLDER/test.txt")
-
 
         listOf("First", "Second", "Third").forEach {
             testFile.writeText(it)
@@ -72,7 +71,7 @@ class GitServiceTest : ResourceLoader() {
     fun `Verify checking out repository with refName`() {
         val TEST_REPO_NAME = "boober-test"
         val remoteRepoFolder = File(REMOTE_REPO_FOLDER)
-        ZipUtils.unzip(File(getResourceUrl("${TEST_REPO_NAME}.zip").file), remoteRepoFolder)
+        ZipUtils.unzip(File(getResourceUrl("$TEST_REPO_NAME.zip").file), remoteRepoFolder)
         val localGitService = GitService(
             userDetails = userDetailsProvider,
             url = "${remoteRepoFolder.absolutePath}/%s.git",

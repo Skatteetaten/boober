@@ -47,7 +47,6 @@ class AuroraConfigTest : AbstractAuroraConfigTest() {
         val updates = """{ "version": "4"}"""
         val fileName = "boobertest/console.json"
 
-
         assertThat(auroraConfig.findFile(fileName)).isNull()
 
         val updatedAuroraConfig = auroraConfig.updateFile(fileName, updates).second

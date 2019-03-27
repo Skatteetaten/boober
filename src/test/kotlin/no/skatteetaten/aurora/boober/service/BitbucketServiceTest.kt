@@ -73,7 +73,7 @@ class BitbucketServiceTest : ResourceLoader() {
     @Test
     fun `Verify get repo names`() {
 
-        //def url = "https://git.aurora.skead.no/rest/api/1.0/projects/$project/repos?limit=1000"
+        // def url = "https://git.aurora.skead.no/rest/api/1.0/projects/$project/repos?limit=1000"
         server.execute(
             """{
             "values" : [

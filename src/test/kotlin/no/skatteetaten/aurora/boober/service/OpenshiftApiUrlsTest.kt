@@ -39,7 +39,6 @@ class OpenshiftApiUrlsTest {
         }.thrownError {
             isInstanceOf(IllegalArgumentException::class)
             hasMessage("namespace required for resource kind applicationdeployment")
-
         }
     }
 }

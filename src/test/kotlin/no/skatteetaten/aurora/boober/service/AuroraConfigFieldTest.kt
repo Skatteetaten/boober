@@ -27,7 +27,6 @@ class AuroraConfigFieldTest : AbstractAuroraConfigTest() {
         val files = auroraConfig.files
         val mapper = AuroraVolumeMapperV1(files)
 
-
         assertThat(mapper.configHandlers.map { it.path }).isEqualTo(
             listOf(
                 "/config/foo",
@@ -38,5 +37,3 @@ class AuroraConfigFieldTest : AbstractAuroraConfigTest() {
         )
     }
 }
-
-

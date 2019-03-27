@@ -65,7 +65,6 @@ class DeployServiceProjectTerminatingTest {
             deployService.prepareDeployEnvironment(env)
         }.thrownError {
             isInstanceOf(IllegalStateException::class)
-
         }
     }
 }

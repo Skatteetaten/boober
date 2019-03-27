@@ -76,8 +76,6 @@ class AuroraDeploymentSpecRendererTest : AbstractAuroraConfigTest() {
     ): String {
         val valaultSuffix = if (includevalaults) "-withDefaults" else ""
         val formattedText = if (formatted) "-formatted" else ""
-
-        return "${aid.application}${formattedText}${valaultSuffix}.${type}"
+        return "${aid.application}$formattedText$valaultSuffix.$type"
     }
-
 }

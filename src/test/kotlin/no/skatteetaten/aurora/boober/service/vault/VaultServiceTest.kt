@@ -49,7 +49,7 @@ class VaultServiceTest {
     @BeforeEach
     fun setup() {
         clearAllMocks()
-        recreateRepo(File(REMOTE_REPO_FOLDER, "${COLLECTION_NAME}.git"))
+        recreateRepo(File(REMOTE_REPO_FOLDER, "$COLLECTION_NAME.git"))
 
         every {
             userDetailsProvider.getAuthenticatedUser()
@@ -61,7 +61,6 @@ class VaultServiceTest {
         every {
             encryptionService.decrypt(capture(decrypt))
         } answers { decrypt.captured.toByteArray() }
-
 
         every {
             encryptionService.encrypt(capture(encrypt))

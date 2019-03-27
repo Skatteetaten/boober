@@ -106,8 +106,8 @@ class ResourceMergerTest : AbstractAuroraConfigTest() {
     fun `Should update`(test: OpenShiftResourceTypeTestData) {
 
         val type = test.name.toLowerCase()
-        val oldResource = loadJsonResource("openshift-objects/${type}.json")
-        val newResource = loadJsonResource("openshift-objects/${type}-new.json")
+        val oldResource = loadJsonResource("openshift-objects/$type.json")
+        val newResource = loadJsonResource("openshift-objects/$type-new.json")
         val merged = mergeWithExistingResource(newResource, oldResource)
         test.fields.forEach {
             assertThat(merged.at(it)).isEqualTo(oldResource.at(it))

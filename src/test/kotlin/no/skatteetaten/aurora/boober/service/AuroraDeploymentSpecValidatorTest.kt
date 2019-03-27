@@ -74,7 +74,6 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
         every { openShiftClient.getGroups() } returns OpenShiftGroups(emptyList())
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
-
         assertThat {
             specValidator.assertIsValid(deploymentSpec)
         }.thrownError {
@@ -198,11 +197,9 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
         auroraConfigJson["aos-simple.json"] =
             """{ "type": "template", "name": "aos-simple", "template": "atomhopper" }"""
 
-
         every { openShiftClient.getGroups() } returns OpenShiftGroups(listOf(UserGroup("foo", "APP_PaaS_utv")))
         every { openShiftClient.getTemplate("atomhopper") } returns null
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
-
 
         assertThat {
             specValidator.assertIsValid(deploymentSpec)
@@ -217,12 +214,10 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
         auroraConfigJson["aos-simple.json"] =
             """{ "type": "template", "name": "aos-simple", "template": "atomhopper", "parameters" : { "FOO" : "BAR"} }"""
 
-
         every { openShiftClient.getGroups() } returns OpenShiftGroups(listOf(UserGroup("foo", "APP_PaaS_utv")))
         every { openShiftClient.getTemplate("atomhopper") } returns atomhopperTemplate
 
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
-
 
         assertThat {
             specValidator.assertIsValid(deploymentSpec)
@@ -237,7 +232,6 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         auroraConfigJson["aos-simple.json"] =
             """{ "type": "template", "name": "aos-simple", "template": "atomhopper" }"""
-
 
         every { openShiftClient.getGroups() } returns OpenShiftGroups(listOf(UserGroup("foo", "APP_PaaS_utv")))
         every { openShiftClient.getTemplate("atomhopper") } returns atomhopperTemplate
@@ -262,7 +256,6 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
         every { openShiftClient.getGroups() } returns OpenShiftGroups(listOf(UserGroup("foo", "APP_PaaS_utv")))
         every { vaultService.vaultExists(vaultCollection, "test") } returns false
         every { vaultService.vaultExists(vaultCollection, "test2") } returns true
-
 
         assertThat {
             specValidator.assertIsValid(deploymentSpec)
@@ -333,7 +326,6 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
         every { vaultService.findVaultKeys("aos", "test", "latest.properties") } returns setOf("test-key2")
-
 
         assertThat {
             specValidator.validateSecretVaultKeys(deploymentSpec)

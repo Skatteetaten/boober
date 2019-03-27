@@ -74,7 +74,6 @@ class OpenShiftRestTemplateWrapperTest : ResourceLoader() {
                 isInstanceOf(HttpClientErrorException::class)
             }
             // TOOD: hvordan kan jeg her sjekke at den ikke gjør flere kall?
-
         }
     }
 

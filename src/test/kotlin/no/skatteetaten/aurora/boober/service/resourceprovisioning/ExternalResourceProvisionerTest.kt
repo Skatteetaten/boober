@@ -47,7 +47,6 @@ class ExternalResourceProvisionerTest : AbstractAuroraConfigTest() {
 
         val requests = ExternalResourceProvisioner.createSchemaProvisionRequestsFromDeploymentSpec(spec)
 
-
         assertThat(requests.size).isEqualTo(1)
         assertThat(requests.first()).isEqualTo(SchemaIdRequest("fd59dba9-7d67-4ea2-bb98-081a5df8c387", details))
     }
@@ -64,7 +63,6 @@ class ExternalResourceProvisionerTest : AbstractAuroraConfigTest() {
         val spec = createDeploySpecWithDbSpec(dbSpec)
 
         val requests = ExternalResourceProvisioner.createSchemaProvisionRequestsFromDeploymentSpec(spec)
-
 
         assertThat(requests.size).isEqualTo(2)
     }
