@@ -134,10 +134,6 @@ data class AuroraDeployment(
     val namespace: String
 )
 
-enum class DeploymentState {
-    Stateless, Stateful, Daemon
-}
-
 fun List<Mount>?.volumeMount(): List<VolumeMount>? {
     return this?.map {
         newVolumeMount {
