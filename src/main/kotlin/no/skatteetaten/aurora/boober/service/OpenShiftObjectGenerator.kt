@@ -13,6 +13,7 @@ import com.fkorotkov.openshift.newProjectRequest
 import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.openshift.api.model.DeploymentConfig
+import no.skatteetaten.aurora.boober.mapper.platform.AuroraContainer
 import no.skatteetaten.aurora.boober.mapper.platform.createEnvVars
 import no.skatteetaten.aurora.boober.mapper.platform.podVolumes
 import no.skatteetaten.aurora.boober.mapper.platform.volumeMount
@@ -175,12 +176,14 @@ class OpenShiftObjectGenerator(
             auroraDeploymentSpecInternal,
             mounts?.filter { it.targetContainer == ToxiProxyDefaults.NAME })
 
+        val baseContainer =
+            applicationPlatformHandler.createBaseContainer(auroraDeploymentSpecInternal, mounts, routeSuffix)
+        val auroraContainers: List<AuroraContainer> = applicationPlatformHandler.createContainers(baseContainer)
         val deployment = applicationPlatformHandler.handleAuroraDeployment(
             auroraDeploymentSpecInternal,
             labels,
             mounts,
-            routeSuffix,
-            sidecarContainers
+            auroraContainers.addIfNotNull(sidecarContainers)
         )
 
         val containers = deployment.containers.map { ContainerGenerator.create(it) }
@@ -195,7 +198,15 @@ class OpenShiftObjectGenerator(
         serviceLabels: Map<String, String>,
         reference: OwnerReference
     ): JsonNode? {
-        return ServiceGenerator.generateService(auroraDeploymentSpecInternal, serviceLabels, reference)
+
+        val applicationPlatformHandler =
+            AuroraDeploymentSpecService.APPLICATION_PLATFORM_HANDLERS[auroraDeploymentSpecInternal.applicationPlatform]
+                ?: throw IllegalArgumentException("ApplicationPlatformHandler ${auroraDeploymentSpecInternal.applicationPlatform} is not present")
+
+        val podPort = applicationPlatformHandler.httpExposePort(auroraDeploymentSpecInternal)
+
+        // TODO: An applicationDeployment should be able to adapt the services
+        return ServiceGenerator.generateService(auroraDeploymentSpecInternal, serviceLabels, reference, podPort)
             ?.let { mapper.convertValue(it) }
     }
 

@@ -36,13 +36,50 @@ import java.time.Duration
 abstract class ApplicationPlatformHandler(val name: String) {
     open fun handlers(type: TemplateType): Set<AuroraConfigFieldHandler> = emptySet()
 
-    abstract fun handleAuroraDeployment(
+    fun createBaseContainer(
+        auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
+        mounts: List<Mount>?,
+        routeSuffix: String
+    ): AuroraContainer {
+        return AuroraContainer(
+            name = auroraDeploymentSpecInternal.name,
+            tcpPorts = mapOf(),
+            readiness = auroraDeploymentSpecInternal.deploy!!.readiness,
+            liveness = auroraDeploymentSpecInternal.deploy.liveness,
+            limit = auroraDeploymentSpecInternal.deploy.resources.limit,
+            request = auroraDeploymentSpecInternal.deploy.resources.request,
+            env = createEnvVars(mounts, auroraDeploymentSpecInternal, routeSuffix),
+            mounts = mounts?.filter { it.targetContainer == null }
+        )
+    }
+
+    open fun handleAuroraDeployment(
         auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
         labels: Map<String, String>,
         mounts: List<Mount>?,
-        routeSuffix: String,
-        sidecarContainers: List<AuroraContainer>?
-    ): AuroraDeployment
+        containers: List<AuroraContainer>
+    ): AuroraDeployment {
+        val tag = when (auroraDeploymentSpecInternal.type) {
+            TemplateType.development -> "latest"
+            else -> "default"
+        }
+
+        return AuroraDeployment(
+            name = auroraDeploymentSpecInternal.name,
+            tag = tag,
+            containers = containers,
+            labels = createLabels(auroraDeploymentSpecInternal.name, auroraDeploymentSpecInternal.deploy!!, labels),
+            mounts = mounts,
+            annotations = createAnnotations(auroraDeploymentSpecInternal),
+            deployStrategy = auroraDeploymentSpecInternal.deploy.deployStrategy,
+            replicas = auroraDeploymentSpecInternal.deploy.replicas,
+            serviceAccount = auroraDeploymentSpecInternal.deploy.serviceAccount,
+            ttl = auroraDeploymentSpecInternal.deploy.ttl,
+            pause = auroraDeploymentSpecInternal.deploy.pause,
+            namespace = auroraDeploymentSpecInternal.environment.namespace
+        )
+    }
+
 
     fun createAnnotations(specInternal: AuroraDeploymentSpecInternal): Map<String, String> {
 
@@ -103,6 +140,14 @@ abstract class ApplicationPlatformHandler(val name: String) {
             )
         }
     }
+
+    abstract fun createContainers(baseContainer: AuroraContainer): List<AuroraContainer>
+
+    /*
+      Override this if you want to expose a different port
+     */
+    open fun httpExposePort(auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal): Int =
+        if (auroraDeploymentSpecInternal.deploy?.toxiProxy != null) PortNumbers.TOXIPROXY_HTTP_PORT else PortNumbers.INTERNAL_HTTP_PORT
 }
 
 data class AuroraContainer(
