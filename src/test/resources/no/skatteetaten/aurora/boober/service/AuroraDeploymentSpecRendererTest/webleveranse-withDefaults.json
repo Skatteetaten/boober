@@ -225,48 +225,6 @@
       ]
     }
   },
-  "databaseDefaults": {
-    "flavor": {
-      "source": "default",
-      "value": "ORACLE_MANAGED",
-      "sources": [
-        {
-          "name": "default",
-          "value": "ORACLE_MANAGED"
-        }
-      ]
-    },
-    "generate": {
-      "source": "default",
-      "value": true,
-      "sources": [
-        {
-          "name": "default",
-          "value": true
-        }
-      ]
-    },
-    "name": {
-      "source": "default",
-      "value": "@name@",
-      "sources": [
-        {
-          "name": "default",
-          "value": "@name@"
-        }
-      ]
-    }
-  },
-  "webseal": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
-  },
   "artifactId": {
     "source": "webleveranse.json",
     "value": "openshift-referanse-react",
@@ -451,32 +409,6 @@
       }
     ]
   },
-  "route": {
-    "source": "webleveranse.json",
-    "value": true,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      },
-      {
-        "name": "webleveranse.json",
-        "value": true
-      }
-    ]
-  },
-  "routeDefaults": {
-    "host": {
-      "source": "default",
-      "value": "@name@-@affiliation@-@env@",
-      "sources": [
-        {
-          "name": "default",
-          "value": "@name@-@affiliation@-@env@"
-        }
-      ]
-    }
-  },
   "builder": {
     "name": {
       "source": "default",
@@ -517,6 +449,74 @@
         {
           "name": "default",
           "value": "1"
+        }
+      ]
+    }
+  },
+  "databaseDefaults": {
+    "flavor": {
+      "source": "default",
+      "value": "ORACLE_MANAGED",
+      "sources": [
+        {
+          "name": "default",
+          "value": "ORACLE_MANAGED"
+        }
+      ]
+    },
+    "generate": {
+      "source": "default",
+      "value": true,
+      "sources": [
+        {
+          "name": "default",
+          "value": true
+        }
+      ]
+    },
+    "name": {
+      "source": "default",
+      "value": "@name@",
+      "sources": [
+        {
+          "name": "default",
+          "value": "@name@"
+        }
+      ]
+    }
+  },
+  "webseal": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "route": {
+    "source": "webleveranse.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "webleveranse.json",
+        "value": true
+      }
+    ]
+  },
+  "routeDefaults": {
+    "host": {
+      "source": "default",
+      "value": "@name@-@affiliation@-@env@",
+      "sources": [
+        {
+          "name": "default",
+          "value": "@name@-@affiliation@-@env@"
         }
       ]
     }

@@ -20,20 +20,20 @@ class AuroraDeploymentSpecRendererTest : AbstractAuroraConfigTest() {
     )
     val mapper = jsonMapper()
 
-    enum class PointerStringTestData(
+    enum class SpecJsonData(
         val env: String,
         val app: String,
         val default: Boolean
     ) {
-        WEB("utv", "webleveranse", false),
-        WEB_ALL("utv", "webleveranse", true),
-        REF_ALL("utv", "reference", true),
-        REF("utv", "reference", false)
+        WEBLEVERANSE_JSON("utv", "webleveranse", false),
+        WEBLEVERANSE_WITH_DEFAULTS_JSON("utv", "webleveranse", true),
+        REFERENCE_WITH_DEFAULTS_JSON("utv", "reference", true),
+        REFERENCE_JSON("utv", "reference", false)
     }
 
     @ParameterizedTest
-    @EnumSource(PointerStringTestData::class)
-    fun `Should create a Map of AuroraDeploymentSpec pointers`(test: PointerStringTestData) {
+    @EnumSource(SpecJsonData::class)
+    fun `Should create a json of AuroraDeploymentSpec pointers`(test: SpecJsonData) {
         val aid = ApplicationDeploymentRef.adr(test.env, test.app)
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, aid).spec
 
@@ -46,20 +46,20 @@ class AuroraDeploymentSpecRendererTest : AbstractAuroraConfigTest() {
         compareJson(expectedJson, json)
     }
 
-    enum class PointerJsonTestData(
+    enum class SpecStringData(
         val env: String,
         val app: String,
         val default: Boolean
     ) {
-        WEB("utv", "webleveranse", false),
-        WEB_ALL("utv", "webleveranse", true),
-        REF_ALL("utv", "reference", true),
-        REF("utv", "reference", false)
+        WEBLEVERANSE_FORMATTED_TXT("utv", "webleveranse", false),
+        WEBLEVERANSE_FORMATTED_WITH_DEFAULTS_TXT("utv", "webleveranse", true),
+        REFERENCE_FORMATTED_WITH_DEFAULTS_TXT("utv", "reference", true),
+        REFERENCE_FORMATTED_TXT("utv", "reference", false)
     }
 
     @ParameterizedTest
-    @EnumSource(PointerJsonTestData::class)
-    fun `Should render formatted json-like output for pointers`(test: PointerJsonTestData) {
+    @EnumSource(SpecStringData::class)
+    fun `Should render formatted output for pointers`(test: SpecStringData) {
         val aid = ApplicationDeploymentRef.adr(test.env, test.app)
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, aid).spec
         val renderedJson = renderJsonForAuroraDeploymentSpecPointers(deploymentSpec, test.default)

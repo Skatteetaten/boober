@@ -26,12 +26,6 @@
     type:                   "rolling"                    // webleveranse.json
     timeout:                180                          // default
   }
-  databaseDefaults: {
-    flavor:                 "ORACLE_MANAGED"             // default
-    generate:               true                         // default
-    name:                   "@name@"                     // default
-  }
-  webseal:                  false                        // default
   artifactId:               "openshift-referanse-react"  // webleveranse.json
   groupId:                  "no.skatteetaten.aurora"     // webleveranse.json
   version:                  "1"                          // utv/webleveranse.json
@@ -56,10 +50,6 @@
   pause:                    false                        // default
   alarm:                    true                         // default
   toxiproxy:                false                        // default
-  route:                    true                         // webleveranse.json
-  routeDefaults: {
-    host:                   "@name@-@affiliation@-@env@" // default
-  }
   builder: {
     name:                   "architect"                  // default
     version:                "1"                          // default
@@ -67,5 +57,15 @@
   baseImage: {
     name:                   "wrench8"                    // default
     version:                "1"                          // default
+  }
+  databaseDefaults: {
+    flavor:                 "ORACLE_MANAGED"             // default
+    generate:               true                         // default
+    name:                   "@name@"                     // default
+  }
+  webseal:                  false                        // default
+  route:                    true                         // webleveranse.json
+  routeDefaults: {
+    host:                   "@name@-@affiliation@-@env@" // default
   }
 }

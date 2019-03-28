@@ -3,19 +3,14 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraBuild
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 
 class AuroraBuildMapperV1(
-    val name: String,
-    applicationFiles: List<AuroraConfigFile>
+    val name: String
 ) {
 
     fun build(auroraDeploymentSpec: AuroraDeploymentSpec): AuroraBuild {
 
         val name: String = auroraDeploymentSpec["name"]
-        val groupId: String = auroraDeploymentSpec["groupId"]
-        val artifactId: String = auroraDeploymentSpec["artifactId"]
-        val version: String = auroraDeploymentSpec["version"]
 
         return AuroraBuild(
             applicationPlatform = auroraDeploymentSpec["applicationPlatform"],
@@ -23,9 +18,9 @@ class AuroraBuildMapperV1(
             baseVersion = auroraDeploymentSpec["baseImage/version"],
             builderName = auroraDeploymentSpec["builder/name"],
             builderVersion = auroraDeploymentSpec["builder/version"],
-            version = version,
-            groupId = groupId,
-            artifactId = artifactId,
+            version = auroraDeploymentSpec["version"],
+            groupId = auroraDeploymentSpec["groupId"],
+            artifactId = auroraDeploymentSpec["artifactId"],
             outputKind = "ImageStreamTag",
             outputName = "$name:latest"
         )

@@ -11,12 +11,12 @@
   }
   envName:                  "utv"                    // folderName
   name:                     "reference"              // fileName
-  webseal: {
-    roles:                  "foobar"                 // utv/reference.json
-  }
   artifactId:               "reference"              // fileName
   groupId:                  "no.skatteetaten.aurora" // reference.json
   version:                  "1"                      // reference.json
   replicas:                 1                        // reference.json
+  webseal: {
+    roles:                  "foobar"                 // utv/reference.json
+  }
   route:                    true                     // reference.json
 }

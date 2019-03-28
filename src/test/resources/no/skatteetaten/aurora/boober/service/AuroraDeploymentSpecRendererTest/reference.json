@@ -101,18 +101,6 @@
       }
     ]
   },
-  "webseal": {
-    "roles": {
-      "source": "utv/reference.json",
-      "value": "foobar",
-      "sources": [
-        {
-          "name": "utv/reference.json",
-          "value": "foobar"
-        }
-      ]
-    }
-  },
   "artifactId": {
     "source": "fileName",
     "value": "reference",
@@ -156,6 +144,18 @@
         "value": 1
       }
     ]
+  },
+  "webseal": {
+    "roles": {
+      "source": "utv/reference.json",
+      "value": "foobar",
+      "sources": [
+        {
+          "name": "utv/reference.json",
+          "value": "foobar"
+        }
+      ]
+    }
   },
   "route": {
     "source": "reference.json",
