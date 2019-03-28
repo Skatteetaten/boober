@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/v1/apply-result/{auroraConfigName}")
 class ApplyResultController(private val deployLogService: DeployLogService, private val responder: Responder) {
 
-    @GetMapping("/")
+    @GetMapping("/") // FIXME path should not end with /, causes issues with the wiremock pattern
     fun deployHistory(
         @PathVariable auroraConfigName: String
     ): Response {
