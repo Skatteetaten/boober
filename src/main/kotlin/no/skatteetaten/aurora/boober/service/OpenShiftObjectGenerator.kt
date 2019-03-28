@@ -157,6 +157,7 @@ class OpenShiftObjectGenerator(
             generateDeploymentConfig(deploymentSpecInternal, labels, mounts, ownerReference)
         }
 
+    // TODO: Hele denne bør egentlig ligge i ApplicationPlattformen
     fun generateDeploymentConfig(
         auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
         labels: Map<String, String>,
@@ -193,6 +194,8 @@ class OpenShiftObjectGenerator(
         return mapper.convertValue(dc)
     }
 
+    // TODO: Hele denne bør egentlig ligge i ApplicationPlattformen, og man bør kunne lage flere services.
+    // Alle ressurser som krever deploy bør ligge der.
     fun generateService(
         auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
         serviceLabels: Map<String, String>,
@@ -205,7 +208,6 @@ class OpenShiftObjectGenerator(
 
         val podPort = applicationPlatformHandler.httpExposePort(auroraDeploymentSpecInternal)
 
-        // TODO: An applicationDeployment should be able to adapt the services
         return ServiceGenerator.generateService(auroraDeploymentSpecInternal, serviceLabels, reference, podPort)
             ?.let { mapper.convertValue(it) }
     }
