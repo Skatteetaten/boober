@@ -35,7 +35,7 @@ class ApplyResultControllerTest(@Autowired private val mockMvc: MockMvc) {
             willReturn(content)
         }.mockResponse
 
-        mockMvc.get(Path("/v1/apply-result/aos/")) {
+        mockMvc.get(Path("/v1/apply-result/{auroraConfigName}/", "aos")) {
             statusIsOk().responseJsonPath("$").equalsObject(deployHistory)
         }
     }
