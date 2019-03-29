@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.controller.v1
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.given
 import no.skatteetaten.aurora.boober.controller.Responder
+import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.service.vault.VaultService
 import no.skatteetaten.aurora.boober.utils.createTestVault
 import no.skatteetaten.aurora.mockmvc.extensions.Path
@@ -53,6 +54,40 @@ class VaultControllerV1Test(@Autowired private val mockMvc: MockMvc) {
         }.mockResponse
 
         mockMvc.get(Path("/v1/vault/{vaultCollection}", collectionKey)) {
+            statusIsOk().responseJsonPath("$").equalsObject(vaults)
+        }
+    }
+
+    @Test
+    fun `get vault in collection`() {
+
+        given(service.findVault(collectionKey, "secret")).willReturn(vault1.vault)
+
+        val vaults = given(responder.create(any())).withContractResponse("vault/vaults") {
+            willReturn(content)
+        }.mockResponse
+
+        mockMvc.get(Path("/v1/vault/{vaultCollection}/{vaultKey}", collectionKey, "secret")) {
+            statusIsOk().responseJsonPath("$").equalsObject(vaults)
+        }
+    }
+
+    @Test
+    fun `get vault file`() {
+
+        val fileContents = "SECRET_PASS=asdlfkjaølfjaøf".toByteArray()
+        given(service.findFileInVault(collectionKey, "secret", "latest.properties")).willReturn(fileContents)
+
+        val vaults = Response(items = listOf(VaultFileResource.fromDecodedBytes(fileContents)))
+
+        mockMvc.get(
+            Path(
+                "/v1/vault/{vaultCollection}/{vaultKey}/{fileName}",
+                collectionKey,
+                "secret",
+                "latest.properties"
+            )
+        ) {
             statusIsOk().responseJsonPath("$").equalsObject(vaults)
         }
     }
