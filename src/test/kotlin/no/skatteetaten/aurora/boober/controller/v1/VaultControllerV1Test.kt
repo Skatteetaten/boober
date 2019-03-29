@@ -7,8 +7,11 @@ import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.service.vault.VaultService
 import no.skatteetaten.aurora.boober.utils.createTestVault
 import no.skatteetaten.aurora.mockmvc.extensions.Path
+import no.skatteetaten.aurora.mockmvc.extensions.contentType
+import no.skatteetaten.aurora.mockmvc.extensions.delete
 import no.skatteetaten.aurora.mockmvc.extensions.get
 import no.skatteetaten.aurora.mockmvc.extensions.mock.withContractResponse
+import no.skatteetaten.aurora.mockmvc.extensions.put
 import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
 import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
 import org.junit.jupiter.api.Test
@@ -16,6 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 
 @AutoConfigureRestDocs
@@ -80,6 +85,7 @@ class VaultControllerV1Test(@Autowired private val mockMvc: MockMvc) {
 
         val vaults = Response(items = listOf(VaultFileResource.fromDecodedBytes(fileContents)))
 
+        // TODO assert header Etag
         mockMvc.get(
             Path(
                 "/v1/vault/{vaultCollection}/{vaultKey}/{fileName}",
@@ -89,6 +95,36 @@ class VaultControllerV1Test(@Autowired private val mockMvc: MockMvc) {
             )
         ) {
             statusIsOk().responseJsonPath("$").equalsObject(vaults)
+        }
+    }
+
+    @Test
+    fun `save vault`() {
+        given(service.import(any(), any(), any(), any())).willReturn(vault1.vault)
+
+        val vaults = given(responder.create(any())).withContractResponse("vault/vaults") {
+            willReturn(content)
+        }.mockResponse
+
+        val payload = AuroraSecretVaultPayload(
+            name = "myvault",
+            permissions = emptyList(),
+            secrets = mapOf("latest.properites" to "U0VDUkVUX1BBU1M9YXNkbGZramHDuGxmamHDuGY=")
+        )
+        mockMvc.put(
+            path = Path("/v1/vault/{vaultCollection}", collectionKey),
+            headers = HttpHeaders().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE),
+            body = payload
+        ) {
+            statusIsOk().responseJsonPath("$").equalsObject(vaults)
+        }
+    }
+
+    @Test
+    fun `delete vault in collection`() {
+
+        mockMvc.delete(Path("/v1/vault/{vaultCollection}/{vaultKey}", collectionKey, "secret")) {
+            statusIsOk()
         }
     }
 }

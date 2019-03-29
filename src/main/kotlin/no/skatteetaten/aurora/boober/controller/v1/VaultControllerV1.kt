@@ -186,11 +186,11 @@ class VaultControllerV1(
         val fileName = getVaultFileNameFromRequestUri(vaultCollection, vaultName, request)
 
         vaultService.createOrUpdateFileInVault(
-            vaultCollection,
-            vaultName,
-            fileName,
-            fileContents,
-            clearQuotes(ifMatchHeader)
+            vaultCollectionName = vaultCollection,
+            vaultName = vaultName,
+            fileName = fileName,
+            fileContents = fileContents,
+            previousSignature = clearQuotes(ifMatchHeader)
         )
         writeVaultFileResponse(fileContents, response)
     }
