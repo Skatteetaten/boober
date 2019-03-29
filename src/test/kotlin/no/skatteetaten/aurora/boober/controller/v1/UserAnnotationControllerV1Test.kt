@@ -34,7 +34,7 @@ class UserAnnotationControllerV1Test(@Autowired private val mockMvc: MockMvc) {
     val patchedAnnotations = mapOf("myCustomAnnotation" to TextNode("rocks"), "foo" to TextNode("bar"))
 
     @Test
-    fun `Get user annoation with key`() {
+    fun `Get user annotation with key`() {
 
         val key = "myCustomAnnotation"
         given(userAnnotationService.getAnnotations()).willReturn(singleAnnotation)
@@ -48,7 +48,7 @@ class UserAnnotationControllerV1Test(@Autowired private val mockMvc: MockMvc) {
     }
 
     @Test
-    fun `Get all annotions`() {
+    fun `Get all annotations`() {
 
         given(userAnnotationService.getAnnotations()).willReturn(existingAnnotations)
         val annotations = given(responder.create(existingAnnotations)).withContractResponse("userannotation/all") {
