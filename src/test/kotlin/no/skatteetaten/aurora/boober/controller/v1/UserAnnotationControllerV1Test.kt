@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
 import com.fasterxml.jackson.databind.node.TextNode
-import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.given
 import no.skatteetaten.aurora.boober.service.UserAnnotationService
 import no.skatteetaten.aurora.mockmvc.extensions.Path
@@ -12,7 +11,6 @@ import no.skatteetaten.aurora.mockmvc.extensions.mock.withContractResponse
 import no.skatteetaten.aurora.mockmvc.extensions.patch
 import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
 import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs
@@ -32,32 +30,28 @@ class UserAnnotationControllerV1Test(@Autowired private val mockMvc: MockMvc) {
     private lateinit var responder: UserAnnotationResponder
 
     val existingAnnotations = mapOf("myCustomAnnotation" to TextNode("123abc"), "foo" to TextNode("bar"))
-    val afterDeleteAnnotations = mapOf("myCustomAnnotation" to TextNode("123abc"))
+    val singleAnnotation = mapOf("myCustomAnnotation" to TextNode("123abc"))
     val patchedAnnotations = mapOf("myCustomAnnotation" to TextNode("rocks"), "foo" to TextNode("bar"))
-
-    @BeforeEach
-    fun setup() {
-        given(userAnnotationService.getAnnotations()).willReturn(existingAnnotations)
-        given(userAnnotationService.deleteAnnotations(any())).willReturn(afterDeleteAnnotations)
-        given(userAnnotationService.updateAnnotations(any(), any())).willReturn(
-            patchedAnnotations
-        )
-    }
 
     @Test
     fun `Get user annoation with key`() {
-        val annotations = given(responder.create(any())).withContractResponse("userannotation/single") {
+
+        val key = "myCustomAnnotation"
+        given(userAnnotationService.getAnnotations()).willReturn(singleAnnotation)
+        val annotations = given(responder.create(singleAnnotation)).withContractResponse("userannotation/single") {
             willReturn(content)
         }.mockResponse
 
-        mockMvc.get(Path("/v1/users/annotations/{key}", "myCustomAnnotation")) {
+        mockMvc.get(Path("/v1/users/annotations/{key}", key)) {
             statusIsOk().responseJsonPath("$").equalsObject(annotations)
         }
     }
 
     @Test
     fun `Get all annotions`() {
-        val annotations = given(responder.create(any())).withContractResponse("userannotation/all") {
+
+        given(userAnnotationService.getAnnotations()).willReturn(existingAnnotations)
+        val annotations = given(responder.create(existingAnnotations)).withContractResponse("userannotation/all") {
             willReturn(content)
         }.mockResponse
 
@@ -69,12 +63,18 @@ class UserAnnotationControllerV1Test(@Autowired private val mockMvc: MockMvc) {
     @Test
     fun `Update annotation`() {
 
-        val annotations = given(responder.create(any())).withContractResponse("userannotation/updated") {
+        val key = "myCustomAnnotation"
+        val body = TextNode("rocks")
+
+        given(userAnnotationService.updateAnnotations(key, body)).willReturn(
+            patchedAnnotations
+        )
+        val annotations = given(responder.create(patchedAnnotations)).withContractResponse("userannotation/updated") {
             willReturn(content)
         }.mockResponse
 
         mockMvc.patch(
-            path = Path("/v1/users/annotations/{key}", "myCustomAnnotation"),
+            path = Path("/v1/users/annotations/{key}", key),
             headers = HttpHeaders().contentType(),
             body = TextNode("rocks")
         ) {
@@ -84,13 +84,15 @@ class UserAnnotationControllerV1Test(@Autowired private val mockMvc: MockMvc) {
 
     @Test
     fun `delete annotations`() {
+        val key = "foo"
 
-        val annotations = given(responder.create(any())).withContractResponse("userannotation/single") {
+        given(userAnnotationService.deleteAnnotations(key)).willReturn(singleAnnotation)
+        val annotations = given(responder.create(singleAnnotation)).withContractResponse("userannotation/single") {
             willReturn(content)
         }.mockResponse
 
         mockMvc.delete(
-            path = Path("/v1/users/annotations/{key}", "myCustomAnnotation"),
+            path = Path("/v1/users/annotations/{key}", key),
             headers = HttpHeaders().contentType()
         ) {
             statusIsOk().responseJsonPath("$").equalsObject(annotations)
