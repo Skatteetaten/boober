@@ -80,7 +80,6 @@ abstract class ApplicationPlatformHandler(val name: String) {
         )
     }
 
-
     fun createAnnotations(specInternal: AuroraDeploymentSpecInternal): Map<String, String> {
 
         val deploy = specInternal.deploy!!
