@@ -30,6 +30,8 @@ boober:
         token: foo
 
 vault:
+    operations:
+        enabled: true
     git:
         urlPattern: "file:///tmp/vaulttest/%s"
         checkoutPath: "build/vaultcheckout"

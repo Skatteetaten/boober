@@ -71,15 +71,20 @@ data class VaultWithAccessResource(
 ) {
     companion object {
         fun fromEncryptedFileVault(it: EncryptedFileVault): VaultWithAccessResource {
-            return VaultWithAccessResource(it.name, true, encodeSecrets(it.secrets), it.permissions)
+            return VaultWithAccessResource(
+                name = it.name,
+                hasAccess = true,
+                secrets = encodeSecrets(it.secrets),
+                permissions = it.permissions
+            )
         }
 
         fun fromVaultWithAccess(it: VaultWithAccess): VaultWithAccessResource {
             return VaultWithAccessResource(
-                it.vaultName,
-                it.hasAccess,
-                encodeSecrets(it.vault?.secrets),
-                it.vault?.permissions
+                name = it.vaultName,
+                hasAccess = it.hasAccess,
+                secrets = encodeSecrets(it.vault?.secrets),
+                permissions = it.vault?.permissions
             )
         }
 
