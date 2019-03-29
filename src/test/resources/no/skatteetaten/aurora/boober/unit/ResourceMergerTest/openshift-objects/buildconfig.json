@@ -1,0 +1,91 @@
+{
+  "kind": "BuildConfig",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "referanse",
+    "namespace": "foobar",
+    "selfLink": "/oapi/v1/namespaces/paas-boober/buildconfigs/referansedev",
+    "uid": "995fd38a-1eb9-11e7-8cd7-00505683244e",
+    "resourceVersion": "48398819",
+    "creationTimestamp": "2017-04-11T13:20:14Z",
+    "labels": {
+      "affiliation": "paas",
+      "app": "referansedev",
+      "updatedBy": "m89870"
+    }
+  },
+  "spec": {
+    "triggers": [
+      {
+        "type": "ImageChange",
+        "imageChange": {
+          "lastTriggeredImageID": "docker-registry.aurora.sits.no:5000/aurora/wingnut@sha256:ac9d16657f113e078a5bd79bb5811247291ae5f0368db2caab7e6421d1649382",
+          "from": {
+            "kind": "ImageStreamTag",
+            "namespace": "openshift",
+            "name": "wingnut:8"
+          }
+        }
+      },
+      {
+        "type": "ImageChange",
+        "imageChange": {
+          "lastTriggeredImageID": "docker-registry.aurora.sits.no:5000/aurora/leveransepakkebygger@sha256:fff250bf10be6f61110cb65f0846b8a6cfca10d90fe064c80e9247a19eaef99d"
+        }
+      }
+    ],
+    "runPolicy": "Serial",
+    "source": {
+      "type": "None"
+    },
+    "strategy": {
+      "type": "Custom",
+      "customStrategy": {
+        "from": {
+          "kind": "ImageStreamTag",
+          "namespace": "openshift",
+          "name": "architect:1"
+        },
+        "env": [
+          {
+            "name": "ARTIFACT_ID",
+            "value": "openshift-referanse-springboot-server"
+          },
+          {
+            "name": "GROUP_ID",
+            "value": "ske.aurora.openshift.referanse"
+          },
+          {
+            "name": "VERSION",
+            "value": "0.0.95"
+          },
+          {
+            "name": "DOCKER_BASE_VERSION",
+            "value": "1"
+          },
+          {
+            "name": "DOCKER_BASE_IMAGE",
+            "value": "aurora/wingnut"
+          },
+          {
+            "name": "PUSH_EXTRA_TAGS",
+            "value": "latest,major,minor,patch"
+          }
+        ],
+        "exposeDockerSocket": true
+      }
+    },
+    "output": {
+      "to": {
+        "kind": "ImageStreamTag",
+        "name": "referansedev:latest"
+      }
+    },
+    "resources": {},
+    "postCommit": {},
+    "nodeSelector": null
+  },
+  "status": {
+    "lastVersion": 1
+  }
+}

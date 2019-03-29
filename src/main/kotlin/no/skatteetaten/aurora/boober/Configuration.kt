@@ -43,17 +43,6 @@ annotation class TargetService(val value: ServiceTypes)
 @EnableRetry
 class Configuration {
 
-    /*
-  }: BeanPostProcessor {
-      override fun postProcessAfterInitialization(bean: Any, beanName: String): Any? {
-          if (beanName == "_halObjectMapper" && bean is ObjectMapper) {
-              configureObjectMapper(bean)
-          }
-
-          return super.postProcessAfterInitialization(bean, beanName)
-      }
-      */
-
     @Bean
     fun keyFactory(): KeyFactory = object : AbsKeyFactory("AES", 128) {}
 
