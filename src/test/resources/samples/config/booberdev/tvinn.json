@@ -10,6 +10,16 @@
       }
     }
   },
+  "resources": {
+    "memory": {
+      "min": "1Gi",
+      "max": "2Gi"
+    },
+    "cpu": {
+      "min": "100m",
+      "max": "1000m"
+    }
+  },
   "webseal": {
     "host": "test",
     "roles": "admin dev"
