@@ -12,6 +12,7 @@ import com.fkorotkov.openshift.metadata
 import com.fkorotkov.openshift.newProjectRequest
 import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.kubernetes.api.model.Quantity
+import io.fabric8.kubernetes.api.model.ResourceRequirements
 import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.platform.createEnvVars
@@ -277,7 +278,16 @@ class OpenShiftObjectGenerator(
                     container.volumeMounts.addAll(mounts.volumeMount() ?: listOf())
                     container.env.addAll(createEnvVars(mounts, auroraDeploymentSpecInternal, routeSuffix))
 
+                    if (container.resources == null) {
+                        container.resources = ResourceRequirements()
+                    }
                     val containerResources = container.resources
+                    if (containerResources.limits == null) {
+                        containerResources.limits = mutableMapOf()
+                    }
+                    if (containerResources.requests == null) {
+                        containerResources.requests = mutableMapOf()
+                    }
                     resources?.limit?.cpu?.let { containerResources.limits["cpu"] = Quantity(it) }
                     resources?.limit?.memory?.let { containerResources.limits["memory"] = Quantity(it) }
                     resources?.request?.cpu?.let { containerResources.requests["cpu"] = Quantity(it) }
