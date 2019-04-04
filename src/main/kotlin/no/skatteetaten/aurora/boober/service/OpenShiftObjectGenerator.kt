@@ -11,6 +11,8 @@ import com.fkorotkov.kubernetes.newNamespace
 import com.fkorotkov.openshift.metadata
 import com.fkorotkov.openshift.newProjectRequest
 import io.fabric8.kubernetes.api.model.OwnerReference
+import io.fabric8.kubernetes.api.model.Quantity
+import io.fabric8.kubernetes.api.model.ResourceRequirements
 import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.platform.AuroraContainer
@@ -281,10 +283,30 @@ class OpenShiftObjectGenerator(
                 val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it)
                 val spec = dc.spec.template.spec
                 spec.volumes.addAll(mounts.podVolumes(auroraDeploymentSpecInternal.name))
-                spec.containers.forEach {
-                    it.volumeMounts.addAll(mounts.volumeMount() ?: listOf())
-                    it.env.addAll(createEnvVars(mounts, auroraDeploymentSpecInternal, routeSuffix))
+
+                val resources = auroraDeploymentSpecInternal.template?.resources
+                    ?: auroraDeploymentSpecInternal.localTemplate?.resources
+
+                spec.containers.forEach { container ->
+                    container.volumeMounts.addAll(mounts.volumeMount() ?: listOf())
+                    container.env.addAll(createEnvVars(mounts, auroraDeploymentSpecInternal, routeSuffix))
+
+                    if (container.resources == null) {
+                        container.resources = ResourceRequirements()
+                    }
+                    val containerResources = container.resources
+                    if (containerResources.limits == null) {
+                        containerResources.limits = mutableMapOf()
+                    }
+                    if (containerResources.requests == null) {
+                        containerResources.requests = mutableMapOf()
+                    }
+                    resources?.limit?.cpu?.let { containerResources.limits["cpu"] = Quantity(it) }
+                    resources?.limit?.memory?.let { containerResources.limits["memory"] = Quantity(it) }
+                    resources?.request?.cpu?.let { containerResources.requests["cpu"] = Quantity(it) }
+                    resources?.request?.memory?.let { containerResources.requests["memory"] = Quantity(it) }
                 }
+
                 jacksonObjectMapper().convertValue(dc)
             } else if (it.openshiftKind == "service" && it.openshiftName == auroraDeploymentSpecInternal.name) {
 
