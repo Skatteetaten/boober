@@ -1,11 +1,4 @@
 {
-  "success": true,
-  "message": "OK",
-  "items": [
-    {
-      "name": "filename",
-      "contents": "contents"
-    }
-  ],
-  "count": 1
+  "name": "filename",
+  "contents": "contents"
 }

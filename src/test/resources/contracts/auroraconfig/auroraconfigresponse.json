@@ -1,17 +1,10 @@
 {
-  "success": true,
-  "message": "OK",
-  "items": [
+  "name": "paas",
+  "version": "1",
+  "files": [
     {
-      "name": "paas",
-      "version": "1",
-      "files": [
-        {
-          "name": "filename",
-          "contents": "contents"
-        }
-      ]
+      "name": "filename",
+      "contents": "contents"
     }
-  ],
-  "count": 1
+  ]
 }
