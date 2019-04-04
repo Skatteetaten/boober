@@ -1,15 +1,10 @@
-{
-  "success": true,
-  "message": "OK",
-  "items": [
-    {
-      "deployId": "123",
-      "deployer": {
-        "name": "Aurora Test User",
-        "email": "aurora@skatteetaten.no"
-      },
-      "time": "2018-12-12T00:00:00Z"
-    }
-  ],
-  "count": 1
-}
+[
+  {
+    "deployId": "123",
+    "deployer": {
+      "name": "Aurora Test User",
+      "email": "aurora@skatteetaten.no"
+    },
+    "time": "2018-12-12T00:00:00Z"
+  }
+]

@@ -1,12 +1,12 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
-import com.fasterxml.jackson.databind.node.NullNode
 import com.nhaarman.mockito_kotlin.any
-import no.skatteetaten.aurora.boober.controller.Responder
+import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.service.DeployLogService
 import no.skatteetaten.aurora.mockmvc.extensions.Path
 import no.skatteetaten.aurora.mockmvc.extensions.get
 import no.skatteetaten.aurora.mockmvc.extensions.mock.withContractResponse
+import no.skatteetaten.aurora.mockmvc.extensions.mock.withNullableContractResponse
 import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
 import no.skatteetaten.aurora.mockmvc.extensions.status
 import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
@@ -26,30 +26,28 @@ class ApplyResultControllerTest(@Autowired private val mockMvc: MockMvc) {
     @MockBean
     private lateinit var deployLogService: DeployLogService
 
-    @MockBean
-    private lateinit var responder: Responder
-
     @Test
     fun `Get deploy history`() {
-        val deployHistory = given(responder.create(any())).withContractResponse("applyresult/deployhistory") {
-            willReturn(content)
-        }.mockResponse
+        val deployHistory =
+            given(deployLogService.deployHistory(any())).withContractResponse("applyresult/deployhistory") {
+                willReturn(content)
+            }.mockResponse
 
         mockMvc.get(Path("/v1/apply-result/{auroraConfigName}/", "aos")) {
-            statusIsOk().responseJsonPath("$").equalsObject(deployHistory)
+            statusIsOk().responseJsonPath("$").equalsObject(Response(items = deployHistory))
         }
     }
 
     @Test
     fun `Get deploy history by id`() {
-        given(deployLogService.findDeployResultById(any(), any())).willReturn(NullNode.instance)
-        val deployHistory =
-            given(responder.create(any<Any>())).withContractResponse("applyresult/deployhistory") {
-                willReturn(content)
-            }.mockResponse
+        val deployResult = given(
+            deployLogService.findDeployResultById(any(), any())
+        ).withNullableContractResponse("applyresult/deployhistory") {
+            willReturn(content)
+        }.mockResponse
 
         mockMvc.get(Path("/v1/apply-result/aos/{deployId}", "123")) {
-            statusIsOk().responseJsonPath("$").equalsObject(deployHistory)
+            statusIsOk().responseJsonPath("$").equalsObject(Response(item = deployResult))
         }
     }
 

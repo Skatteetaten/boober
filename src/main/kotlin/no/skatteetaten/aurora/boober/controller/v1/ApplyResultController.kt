@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.controller.Responder
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.DeployLogService
@@ -14,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/v1/apply-result/{auroraConfigName}")
-class ApplyResultController(private val deployLogService: DeployLogService, private val responder: Responder) {
+class ApplyResultController(private val deployLogService: DeployLogService) {
 
     @GetMapping("/") // FIXME path should not end with /
     fun deployHistory(
@@ -22,7 +21,7 @@ class ApplyResultController(private val deployLogService: DeployLogService, priv
     ): Response {
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         val applicationResults: List<JsonNode> = deployLogService.deployHistory(ref)
-        return responder.create(applicationResults)
+        return Response(items = applicationResults)
     }
 
     @GetMapping("/{deployId}")
@@ -34,7 +33,7 @@ class ApplyResultController(private val deployLogService: DeployLogService, priv
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         val deployResult = deployLogService.findDeployResultById(ref, deployId)
         return deployResult?.let {
-            ResponseEntity(responder.create(deployResult), HttpStatus.OK)
+            ResponseEntity(Response(item = deployResult), HttpStatus.OK)
         } ?: ResponseEntity(HttpStatus.NOT_FOUND)
     }
 }
