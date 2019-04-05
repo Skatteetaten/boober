@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/v1/apply/{auroraConfigName}")
 class DeployControllerV1(private val deployService: DeployService, private val responder: DeployResponder) {
 
-    @PutMapping()
+    @PutMapping
     fun apply(@PathVariable auroraConfigName: String, @RequestBody payload: ApplyPayload): Response {
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
@@ -55,6 +55,7 @@ class DeployControllerV1(private val deployService: DeployService, private val r
         val tagResponse: TagResult? = null,
         val projectExist: Boolean = false
     )
+
     data class Deploy(
         val version: String
     )
