@@ -2,12 +2,13 @@ package no.skatteetaten.aurora.boober.controller.v1
 
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.given
-import no.skatteetaten.aurora.boober.controller.Responder
 import no.skatteetaten.aurora.boober.controller.internal.Response
+import no.skatteetaten.aurora.boober.service.vault.EncryptedFileVault
 import no.skatteetaten.aurora.boober.service.vault.VaultService
+import no.skatteetaten.aurora.boober.service.vault.VaultWithAccess
 import no.skatteetaten.aurora.boober.utils.createTestVault
 import no.skatteetaten.aurora.mockmvc.extensions.Path
-import no.skatteetaten.aurora.mockmvc.extensions.contentType
+import no.skatteetaten.aurora.mockmvc.extensions.contentTypeJson
 import no.skatteetaten.aurora.mockmvc.extensions.delete
 import no.skatteetaten.aurora.mockmvc.extensions.get
 import no.skatteetaten.aurora.mockmvc.extensions.mock.withContractResponse
@@ -20,7 +21,6 @@ import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDoc
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.HttpHeaders
-import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 
 @AutoConfigureRestDocs
@@ -31,9 +31,10 @@ class VaultControllerV1Test(@Autowired private val mockMvc: MockMvc) {
     private lateinit var service: VaultService
 
     @MockBean
-    private lateinit var responder: Responder
+    private lateinit var responder: VaultResponder
 
     val collectionKey = "myvaultcollection"
+
     val vault1 = createTestVault(
         vaultCollectionName = collectionKey,
         vaultName = "secret",
@@ -50,13 +51,11 @@ class VaultControllerV1Test(@Autowired private val mockMvc: MockMvc) {
 
     @Test
     fun `List vaults in collection`() {
-
         val allVaults = listOf(vault1, vault2)
         given(service.findAllVaultsWithUserAccessInVaultCollection(collectionKey)).willReturn(allVaults)
 
-        val vaults = given(responder.create(any())).withContractResponse("vault/allvaults") {
-            willReturn(content)
-        }.mockResponse
+        val vaults = given(responder.create(any<List<VaultWithAccess>>()))
+            .withContractResponse("vault/allvaults") { willReturn(content) }.mockResponse
 
         mockMvc.get(Path("/v1/vault/{vaultCollection}", collectionKey)) {
             statusIsOk().responseJsonPath("$").equalsObject(vaults)
@@ -64,13 +63,11 @@ class VaultControllerV1Test(@Autowired private val mockMvc: MockMvc) {
     }
 
     @Test
-    fun `get vault in collection`() {
-
+    fun `Get vault in collection`() {
         given(service.findVault(collectionKey, "secret")).willReturn(vault1.vault)
 
-        val vaults = given(responder.create(any())).withContractResponse("vault/vaults") {
-            willReturn(content)
-        }.mockResponse
+        val vaults = given(responder.create(any<EncryptedFileVault>()))
+            .withContractResponse("vault/vaults") { willReturn(content) }.mockResponse
 
         mockMvc.get(Path("/v1/vault/{vaultCollection}/{vaultKey}", collectionKey, "secret")) {
             statusIsOk().responseJsonPath("$").equalsObject(vaults)
@@ -78,8 +75,7 @@ class VaultControllerV1Test(@Autowired private val mockMvc: MockMvc) {
     }
 
     @Test
-    fun `get vault file`() {
-
+    fun `Get vault file`() {
         val fileContents = "SECRET_PASS=asdlfkjaølfjaøf".toByteArray()
         given(service.findFileInVault(collectionKey, "secret", "latest.properties")).willReturn(fileContents)
 
@@ -99,12 +95,11 @@ class VaultControllerV1Test(@Autowired private val mockMvc: MockMvc) {
     }
 
     @Test
-    fun `save vault`() {
+    fun `Save vault`() {
         given(service.import(any(), any(), any(), any())).willReturn(vault1.vault)
 
-        val vaults = given(responder.create(any())).withContractResponse("vault/vaults") {
-            willReturn(content)
-        }.mockResponse
+        val vaults = given(responder.create(any<EncryptedFileVault>()))
+            .withContractResponse("vault/vaults") { willReturn(content) }.mockResponse
 
         val payload = AuroraSecretVaultPayload(
             name = "myvault",
@@ -113,7 +108,7 @@ class VaultControllerV1Test(@Autowired private val mockMvc: MockMvc) {
         )
         mockMvc.put(
             path = Path("/v1/vault/{vaultCollection}", collectionKey),
-            headers = HttpHeaders().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE),
+            headers = HttpHeaders().contentTypeJson(),
             body = payload
         ) {
             statusIsOk().responseJsonPath("$").equalsObject(vaults)
@@ -121,10 +116,9 @@ class VaultControllerV1Test(@Autowired private val mockMvc: MockMvc) {
     }
 
     @Test
-    fun `delete vault in collection`() {
-
+    fun `Delete vault in collection`() {
         mockMvc.delete(Path("/v1/vault/{vaultCollection}/{vaultKey}", collectionKey, "secret")) {
-            statusIsOk()
+            statusIsOk().responseJsonPath("$.success").isTrue()
         }
     }
 }
