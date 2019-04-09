@@ -18,7 +18,7 @@ import javax.servlet.http.HttpServletRequest
 @EnableWebSecurity
 class WebSecurityConfig(
     val authenticationManager: BearerAuthenticationManager,
-    @Value("\${management.port}") val managementPort: Int
+    @Value("\${management.server.port}") val managementPort: Int
 ) : WebSecurityConfigurerAdapter() {
 
     private val logger = LoggerFactory.getLogger(WebSecurityConfig::class.java)
