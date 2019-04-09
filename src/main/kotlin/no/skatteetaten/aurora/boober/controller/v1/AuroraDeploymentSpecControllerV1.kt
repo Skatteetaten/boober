@@ -9,6 +9,7 @@ import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService
 import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
 import no.skatteetaten.aurora.boober.service.renderSpecAsJson
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.springframework.stereotype.Component
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -28,12 +29,18 @@ class AuroraDeploymentSpecControllerV1(
     @GetMapping("/")
     fun findAllDeploymentSpecs(
         @PathVariable auroraConfigName: String,
-        @RequestParam(name = "adr", required = false) aidStrings: List<String>,
-        @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
+        @RequestParam aid: List<String>?,
+        @RequestParam adr: List<String>?,
+        @RequestParam includeDefaults: Boolean?
     ): Response {
 
+        val adrList = listOf<String>().addIfNotNull(aid).addIfNotNull(adr)
+
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
-        return responder.create(auroraDeploymentSpecService.getAuroraDeploymentSpecs(ref, aidStrings), includeDefaults)
+        return responder.create(
+            auroraDeploymentSpecService.getAuroraDeploymentSpecs(ref, adrList),
+            includeDefaults ?: true
+        )
     }
 
     @GetMapping("/{environment}/")
