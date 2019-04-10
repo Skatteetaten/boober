@@ -1,0 +1,15 @@
+{
+  "success": true,
+  "message": "Application was successfully deleted",
+  "items": [
+    {
+      "applicationRef": {
+        "namespace": "demo-tull",
+        "name": "whoami"
+      },
+      "success": true,
+      "reason": "Application was successfully deleted"
+    }
+  ],
+  "count": 1
+}
