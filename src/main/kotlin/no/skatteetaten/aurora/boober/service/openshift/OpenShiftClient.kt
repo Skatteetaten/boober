@@ -114,10 +114,10 @@ class OpenShiftClient(
 
         return try {
             val res: JsonNode? = when (command.operationType) {
-                OperationType.GET -> throw OpenShiftException("GET is unsupported") // We should probably consider implementing it, though
+                OperationType.GET -> performClient.get(command.url, retry = false)?.body
                 OperationType.CREATE -> performClient.post(command.url, command.payload).body
                 OperationType.UPDATE -> performClient.put(command.url, command.payload).body
-                OperationType.DELETE -> performClient.delete(command.url).body
+                OperationType.DELETE -> performClient.delete(command.url)?.body
                 OperationType.NOOP -> command.payload
             }
             OpenShiftResponse(command, res)
