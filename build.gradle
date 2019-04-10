@@ -110,6 +110,8 @@ dependencies {
       "com.willowtreeapps.assertk:assertk:0.10",
       "org.junit.jupiter:junit-jupiter-params:$junitVersion",
       "org.junit.jupiter:junit-jupiter-api:$junitVersion",
+      "no.skatteetaten.aurora:mockmvc-extensions-kotlin:0.6.2",
+      "com.nhaarman:mockito-kotlin:1.6.0"
   )
   testCompile("org.springframework.cloud:spring-cloud-starter-contract-verifier") {
     exclude group: "org.codehaus.groovy"
