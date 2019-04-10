@@ -1,0 +1,14 @@
+[{
+  "kind": "Status",
+  "apiVersion": "v1",
+  "metadata": {},
+  "status": "Failure",
+  "message": "openshift error",
+  "reason": "down",
+  "details": {
+    "name": "boobedsadasdar",
+    "group": "skatteetaten.no",
+    "kind": "applicationdeployments"
+  },
+  "code": 403
+}]
