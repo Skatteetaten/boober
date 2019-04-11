@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/v1/apply-result/{auroraConfigName}")
 class ApplyResultController(private val deployLogService: DeployLogService) {
 
-    @GetMapping("/") // FIXME path should not end with /
+    @GetMapping
     fun deployHistory(
         @PathVariable auroraConfigName: String
     ): Response {

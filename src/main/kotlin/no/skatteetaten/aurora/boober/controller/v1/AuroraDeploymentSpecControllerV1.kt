@@ -26,7 +26,7 @@ class AuroraDeploymentSpecControllerV1(
     val responder: AuroraDeploymentSpecResponder
 ) {
 
-    @GetMapping("/")
+    @GetMapping
     fun findAllDeploymentSpecs(
         @PathVariable auroraConfigName: String,
         @RequestParam aid: List<String>?,
