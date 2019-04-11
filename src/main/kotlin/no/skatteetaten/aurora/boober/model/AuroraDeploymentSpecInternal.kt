@@ -171,15 +171,26 @@ data class AuroraLocalTemplate(
     val parameters: Map<String, String>?,
     val templateJson: JsonNode,
     val version: String? = null,
-    val replicas: Int? = null
+    val replicas: Int? = null,
+    val resources: AuroraTemplateResources
 )
 
 data class AuroraTemplate(
     val parameters: Map<String, String>?,
     val template: String,
     val version: String? = null,
-    val replicas: Int? = null
+    val replicas: Int? = null,
+    val resources: AuroraTemplateResources
+)
 
+data class AuroraTemplateResource(
+    val cpu: String?,
+    val memory: String?
+)
+
+data class AuroraTemplateResources(
+    val limit: AuroraTemplateResource,
+    val request: AuroraTemplateResource
 )
 
 enum class MountType(val kind: String) {

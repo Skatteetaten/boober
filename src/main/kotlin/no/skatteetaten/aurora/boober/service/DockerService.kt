@@ -29,7 +29,7 @@ class DockerService(val httpClient: RestTemplate) {
     fun tag(cmd: TagCommand): TagResult {
         val manifest = getManifest(cmd.fromRegistry, cmd.name, cmd.from)
         val response = if (manifest.statusCode.is2xxSuccessful && manifest.hasBody()) {
-            putManifest(cmd.toRegistry, cmd.name, cmd.to, manifest.body)
+            putManifest(cmd.toRegistry, cmd.name, cmd.to, manifest.body!!)
         } else manifest
         return TagResult(cmd, NullNode.instance, response.statusCode.is2xxSuccessful)
     }

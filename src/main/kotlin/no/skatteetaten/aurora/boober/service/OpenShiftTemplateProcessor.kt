@@ -86,7 +86,7 @@ class OpenShiftTemplateProcessor(
 
         val result = openShiftClient.post(url, payload = template)
 
-        return result.body["objects"].asSequence().toList()
+        return result.body!!["objects"].asSequence().toList()
     }
 
     fun validateTemplateParameters(templateJson: JsonNode, parameters: Map<String, String>): List<String> {

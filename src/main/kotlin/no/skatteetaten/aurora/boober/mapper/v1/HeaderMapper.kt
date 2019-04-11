@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
-import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
@@ -19,6 +18,7 @@ import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.pattern
 import no.skatteetaten.aurora.boober.utils.removeExtension
 import no.skatteetaten.aurora.boober.utils.startsWith
+import org.springframework.boot.convert.DurationStyle
 
 /**
  * The header contains the sources that are required to parse the AuroraConfig files and create a merged file for a
@@ -82,7 +82,7 @@ class HeaderMapper(
             envName = auroraDeploymentSpec.getOrNull("env/name")
                 ?: auroraDeploymentSpec["envName"],
             ttl = auroraDeploymentSpec.getOrNull<String>("env/ttl")
-                ?.let { StringToDurationConverter().convert(it) },
+                ?.let { DurationStyle.SIMPLE.parse(it) },
             permissions = extractPermissions(auroraDeploymentSpec)
         )
 

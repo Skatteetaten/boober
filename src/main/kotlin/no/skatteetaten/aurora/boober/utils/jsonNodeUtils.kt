@@ -8,7 +8,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import io.micrometer.spring.autoconfigure.export.StringToDurationConverter
+import org.springframework.boot.convert.DurationStyle
 
 inline fun <reified T : Any> JsonNode.convert(): T = jacksonObjectMapper().convertValue(this)
 
@@ -154,7 +154,7 @@ fun JsonNode?.durationString(): Exception? {
         return null
     }
 
-    StringToDurationConverter().convert(this.textValue())
+    DurationStyle.SIMPLE.parse(this.textValue())
     return null
 }
 

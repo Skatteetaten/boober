@@ -8,8 +8,6 @@ import no.skatteetaten.aurora.boober.model.Probe
 
 data class ToxiProxyConfig(val name: String, val listen: String, val upstream: String)
 
-// TODO Sjekke korrekt syntax for konstanter i Kotlin
-
 object ToxiProxyDefaults {
 
     const val NAME = "toxiproxy"

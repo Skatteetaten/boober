@@ -94,6 +94,8 @@ data class OpenShiftGroups(private val groupUserPairs: List<UserGroup>) {
 
     fun getGroupsForUser(user: String) = userGroups[user] ?: emptyList()
 
+    fun getUsersForGroup(group: String) = groupUsers[group] ?: emptyList()
+
     fun groupExist(group: String) = groupUsers.containsKey(group)
 }
 
@@ -225,6 +227,6 @@ class OpenShiftClient(
 
     private fun getResponseBodyItems(url: String): ArrayNode {
         val response: ResponseEntity<JsonNode> = serviceAccountClient.get(url)!!
-        return response.body["items"] as ArrayNode
+        return response.body!!["items"] as ArrayNode
     }
 }

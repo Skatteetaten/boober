@@ -56,7 +56,7 @@ class ExternalResourceProvisioner(
 
     companion object {
         @JvmStatic
-        protected fun createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpecInternal: AuroraDeploymentSpecInternal): List<SchemaProvisionRequest> {
+        fun createSchemaProvisionRequestsFromDeploymentSpec(deploymentSpecInternal: AuroraDeploymentSpecInternal): List<SchemaProvisionRequest> {
             val databaseSpecs = deploymentSpecInternal.integration?.database ?: listOf()
             // TODO: If we want to support non managed databsaes we need to filter the flavor on managed here.
             return databaseSpecs.map {

@@ -93,20 +93,26 @@ class AuroraDeploymentSpecService(
             val routeMapper = AuroraRouteMapperV1(applicationFiles, header.name, replacer)
             val localTemplateMapper = AuroraLocalTemplateMapperV1(applicationFiles, auroraConfig)
             val templateMapper = AuroraTemplateMapperV1(applicationFiles)
-            val buildMapper = AuroraBuildMapperV1(header.name, applicationFiles)
+            val buildMapper = AuroraBuildMapperV1(header.name)
 
-            val rawHandlers =
-                (headerMapper.handlers + deploymentSpecMapper.handlers + integrationMapper.handlers + when (header.type) {
-                    TemplateType.deploy -> deployMapper.handlers + routeMapper.handlers + volumeMapper.handlers
-                    TemplateType.development -> deployMapper.handlers + routeMapper.handlers + volumeMapper.handlers + buildMapper.handlers
-                    TemplateType.localTemplate -> routeMapper.handlers + volumeMapper.handlers + localTemplateMapper.handlers
-                    TemplateType.template -> routeMapper.handlers + volumeMapper.handlers + templateMapper.handlers
-                }).toSet()
+            val typeHandlers = when (header.type) {
+                TemplateType.deploy -> deployMapper.handlers
+                TemplateType.development -> deployMapper.handlers + buildMapper.handlers
+                TemplateType.localTemplate -> localTemplateMapper.handlers
+                TemplateType.template -> templateMapper.handlers
+            }
 
-            val handlers = rawHandlers + applicationHandler.handlers(header.type)
+            val handlers =
+                headerMapper.handlers +
+                    deploymentSpecMapper.handlers +
+                    typeHandlers +
+                    applicationHandler.handlers(header.type) +
+                    integrationMapper.handlers +
+                    routeMapper.handlers +
+                    volumeMapper.handlers
 
             val deploymentSpec = AuroraDeploymentSpec.create(
-                handlers = handlers,
+                handlers = handlers.toSet(),
                 files = applicationFiles,
                 applicationDeploymentRef = applicationDeploymentRef,
                 configVersion = auroraConfig.version,
@@ -114,7 +120,6 @@ class AuroraDeploymentSpecService(
             )
 
             AuroraDeploymentSpecConfigFieldValidator(
-
                 applicationDeploymentRef = applicationDeploymentRef,
                 applicationFiles = applicationFiles,
                 fieldHandlers = handlers,
@@ -127,8 +132,7 @@ class AuroraDeploymentSpecService(
 
             validateRoutes(route, applicationDeploymentRef)
 
-            val build =
-                if (header.type == TemplateType.development) buildMapper.build(deploymentSpec) else null
+            val build = if (header.type == TemplateType.development) buildMapper.build(deploymentSpec) else null
             val deploy =
                 if (header.type == TemplateType.deploy || header.type == TemplateType.development) deployMapper.deploy(
                     deploymentSpec
@@ -225,7 +229,7 @@ class AuroraDeploymentSpecService(
         return AuroraDeploymentSpecService.createAuroraDeploymentSpec(
             auroraConfig = auroraConfig,
             overrideFiles = overrides,
-            applicationDeploymentRef = ApplicationDeploymentRef.aid(environment, application)
+            applicationDeploymentRef = ApplicationDeploymentRef.adr(environment, application)
         )
     }
 }

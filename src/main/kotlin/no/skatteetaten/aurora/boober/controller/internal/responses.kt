@@ -7,7 +7,9 @@ data class Response(
     val message: String = "OK",
     val items: List<Any> = emptyList(),
     val count: Int = items.size
-)
+) {
+    constructor(item: Any) : this(items = listOf(item))
+}
 
 data class KeyValueResponse<T>(
     val success: Boolean = true,

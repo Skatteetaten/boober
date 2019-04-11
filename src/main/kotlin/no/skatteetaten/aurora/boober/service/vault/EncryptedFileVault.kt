@@ -54,6 +54,7 @@ class VaultCollection private constructor(
     }
 }
 
+// TODO: Det er uheldig at denne klassen som er helt ut i controlleren har avhengighet til filsystetem.
 class EncryptedFileVault private constructor(
     val vaultFolder: File,
     private val encryptor: Encryptor,
