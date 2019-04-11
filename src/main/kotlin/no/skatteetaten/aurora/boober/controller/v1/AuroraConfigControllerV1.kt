@@ -93,7 +93,7 @@ class AuroraConfigControllerV1(
         @PathVariable name: String
     ): Response {
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
-        return responder.create(auroraConfigService.findAuroraConfigFileNames(ref))
+        return Response(items = auroraConfigService.findAuroraConfigFileNames(ref))
     }
 
     @PutMapping("/validate")
@@ -171,6 +171,4 @@ class AuroraConfigResponder {
             .let { listOf(AuroraConfigFileResource(it.name, it.contents, it.type)) }
         return Response(items = configFiles)
     }
-
-    fun create(fileNames: List<String>) = Response(items = fileNames)
 }

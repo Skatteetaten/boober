@@ -59,9 +59,9 @@ class VaultService(
             ?: throw IllegalArgumentException("Vault not found name=$vaultName"))
 
     fun vaultExists(vaultCollectionName: String, vaultName: String): Boolean {
-        return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, _ ->
+        return withVaultCollectionAndRepoForUpdate(vaultCollectionName) { vaultCollection, _ ->
             vaultCollection.findVaultByName(vaultName) != null
-        })
+        }
     }
 
     @JvmOverloads
@@ -74,13 +74,13 @@ class VaultService(
     ): EncryptedFileVault {
 
         assertSecretKeysAreValid(mapOf(fileName to fileContents))
-        return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
+        return withVaultCollectionAndRepoForUpdate(vaultCollectionName) { vaultCollection, repo ->
             val vault = findVaultByNameIfAllowed(vaultCollection, vaultName) ?: vaultCollection.createVault(vaultName)
 
             vault.updateFile(fileName, fileContents, previousSignature)
             gitService.commitAndPushChanges(repo)
             vault
-        })
+        }
     }
 
     fun findFileInVault(
@@ -94,31 +94,31 @@ class VaultService(
 
     fun deleteFileInVault(vaultCollectionName: String, vaultName: String, fileName: String): EncryptedFileVault? {
 
-        return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
+        return withVaultCollectionAndRepoForUpdate(vaultCollectionName) { vaultCollection, repo ->
             val vault = findVault(vaultCollection, vaultName)
             vault.deleteFile(fileName)
             gitService.commitAndPushChanges(repo)
             vault
-        })
+        }
     }
 
     fun deleteVault(vaultCollectionName: String, vaultName: String) {
-        return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
+        return withVaultCollectionAndRepoForUpdate(vaultCollectionName) { vaultCollection, repo ->
             findVaultByNameIfAllowed(vaultCollection, vaultName) ?: return@withVaultCollectionAndRepoForUpdate
 
             vaultCollection.deleteVault(vaultName)
             gitService.commitAndPushChanges(repo)
-        })
+        }
     }
 
     fun setVaultPermissions(vaultCollectionName: String, vaultName: String, groupPermissions: List<String>) {
 
         assertCurrentUserHasAccess(groupPermissions)
-        return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
+        return withVaultCollectionAndRepoForUpdate(vaultCollectionName) { vaultCollection, repo ->
             val vault = findVault(vaultCollection, vaultName)
             vault.permissions = groupPermissions
             gitService.commitAndPushChanges(repo)
-        })
+        }
     }
 
     fun import(
@@ -131,7 +131,7 @@ class VaultService(
         assertCurrentUserHasAccess(permissions)
 
         assertSecretKeysAreValid(secrets)
-        return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo ->
+        return withVaultCollectionAndRepoForUpdate(vaultCollectionName) { vaultCollection, repo ->
             vaultCollection.createVault(vaultName).let { vault ->
                 vault.clear()
                 secrets.forEach({ name, contents -> vault.updateFile(name, contents) })
@@ -139,7 +139,7 @@ class VaultService(
                 gitService.commitAndPushChanges(repo)
                 vault
             }
-        })
+        }
     }
 
     fun reencryptVaultCollection(vaultCollectionName: String, newKey: String) {
@@ -189,7 +189,7 @@ class VaultService(
         }
     }
 
-    private fun findVaultCollection(vaultCollectionName: String): VaultCollection {
+    fun findVaultCollection(vaultCollectionName: String): VaultCollection {
 
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName, { vaultCollection, repo -> vaultCollection })
     }
@@ -205,7 +205,7 @@ class VaultService(
 
         // Note that a properties file can be delimitered by space and =, very few people know this so we check for it
         @JvmStatic
-        protected fun assertSecretKeysAreValid(secrets: Map<String, ByteArray>) {
+        fun assertSecretKeysAreValid(secrets: Map<String, ByteArray>) {
             val filesToKeys = secrets.filter { it.key.endsWith(".properties") }
                 .mapValues {
                     String(it.value)

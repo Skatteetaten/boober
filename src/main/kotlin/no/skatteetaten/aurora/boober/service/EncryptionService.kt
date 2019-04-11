@@ -38,17 +38,17 @@ class EncryptionService(
     }
 
     fun encrypt(message: ByteArray): String {
-        return metrics.withMetrics("encrypt", {
+        return metrics.withMetrics("encrypt") {
             val result = encryptor.encrypt(message)
             val encoded = Base64.getEncoder().encodeToString(result)
 
             "$version$LINE_SEPERATOR$encoded"
-        })
+        }
     }
 
     fun decrypt(source: String): ByteArray {
 
-        return metrics.withMetrics("decrypt", {
+        return metrics.withMetrics("decrypt") {
             val split = source.split(LINE_SEPERATOR)
             val fileFormatVersion = split[0]
             // If/when we use new versions of encryption here we can use an encryptor for that specific version when we decode.
@@ -57,6 +57,6 @@ class EncryptionService(
             val decrypted = encryptor.decrypt(cipherText)
 
             if (fileFormatVersion == VERSION1) Base64.getDecoder().decode(decrypted) else decrypted
-        })
+        }
     }
 }

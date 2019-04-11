@@ -10,7 +10,7 @@ data class VaultRequest(val collectionName: String, val name: String, val keys: 
 typealias VaultData = Map<String, ByteArray>
 typealias VaultIndex = Map<String, VaultData>
 
-class VaultResults(private val vaultIndex: VaultIndex) {
+class VaultResults(val vaultIndex: VaultIndex) {
     fun getVaultData(secretVaultName: String): VaultData {
         return vaultIndex.get(secretVaultName)
             ?: throw IllegalArgumentException("No data for vault $secretVaultName was provisioned")

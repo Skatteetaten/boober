@@ -55,7 +55,7 @@ object DbhSecretGenerator {
         )
     }
 
-    private fun createInfoFile(dbhSchema: DbhSchema): String {
+    fun createInfoFile(dbhSchema: DbhSchema): String {
 
         val infoFile = mapOf(
             "database" to mapOf(

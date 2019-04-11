@@ -1,5 +1,3 @@
-@file:JvmName("RequestHelper")
-
 package no.skatteetaten.aurora.boober.controller.v1
 
 import org.springframework.web.context.request.RequestContextHolder

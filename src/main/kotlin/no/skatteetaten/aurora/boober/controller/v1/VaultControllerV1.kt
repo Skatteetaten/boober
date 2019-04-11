@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.controller.v1
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.controller.Responder
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.v1.VaultOperation.reencrypt
 import no.skatteetaten.aurora.boober.controller.v1.VaultWithAccessResource.Companion.fromEncryptedFileVault
@@ -14,6 +13,7 @@ import no.skatteetaten.aurora.boober.service.vault.VaultWithAccess
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
+import org.springframework.stereotype.Component
 import org.springframework.util.AntPathMatcher
 import org.springframework.util.DigestUtils
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -56,6 +56,7 @@ data class AuroraSecretVaultPayload(
     val secrets: Map<String, String>?
 ) {
     val secretsDecoded: Map<String, ByteArray>?
+        @JsonIgnore
         get() = secrets?.map { Pair(it.key, B64.decode(it.value)) }?.toMap()
 }
 
@@ -75,10 +76,10 @@ data class VaultWithAccessResource(
 
         fun fromVaultWithAccess(it: VaultWithAccess): VaultWithAccessResource {
             return VaultWithAccessResource(
-                it.vaultName,
-                it.hasAccess,
-                encodeSecrets(it.vault?.secrets),
-                it.vault?.permissions
+                name = it.vaultName,
+                hasAccess = it.hasAccess,
+                secrets = encodeSecrets(it.vault?.secrets),
+                permissions = it.vault?.permissions
             )
         }
 
@@ -111,7 +112,7 @@ data class VaultOperationPayload(val operationName: VaultOperation, val paramete
 @RequestMapping("/v1/vault/{vaultCollection}")
 class VaultControllerV1(
     private val vaultService: VaultService,
-    private val responder: Responder,
+    private val responder: VaultResponder,
     @Value("\${vault.operations.enabled:false}") private val operationsEnabled: Boolean
 ) {
 
@@ -131,10 +132,8 @@ class VaultControllerV1(
 
     @GetMapping
     fun listVaults(@PathVariable vaultCollection: String): Response {
-
         val resources = vaultService.findAllVaultsWithUserAccessInVaultCollection(vaultCollection)
-            .map(::fromVaultWithAccess)
-        return responder.create(items = resources)
+        return responder.create(resources)
     }
 
     @PutMapping
@@ -147,14 +146,14 @@ class VaultControllerV1(
             vaultCollection, vaultPayload.name, vaultPayload.permissions, vaultPayload.secretsDecoded
                 ?: emptyMap()
         )
-        return responder.create(items = listOf(vault).map(::fromEncryptedFileVault))
+        return responder.create(vault)
     }
 
     @GetMapping("/{vault}")
     fun getVault(@PathVariable vaultCollection: String, @PathVariable vault: String): Response {
         val resources = listOf(vaultService.findVault(vaultCollection, vault))
             .map(::fromEncryptedFileVault)
-        return responder.create(items = resources)
+        return Response(items = resources)
     }
 
     @GetMapping("/{vault}/**")
@@ -185,11 +184,11 @@ class VaultControllerV1(
         val fileName = getVaultFileNameFromRequestUri(vaultCollection, vaultName, request)
 
         vaultService.createOrUpdateFileInVault(
-            vaultCollection,
-            vaultName,
-            fileName,
-            fileContents,
-            clearQuotes(ifMatchHeader)
+            vaultCollectionName = vaultCollection,
+            vaultName = vaultName,
+            fileName = fileName,
+            fileContents = fileContents,
+            previousSignature = clearQuotes(ifMatchHeader)
         )
         writeVaultFileResponse(fileContents, response)
     }
@@ -200,16 +199,15 @@ class VaultControllerV1(
         @PathVariable("vault") vaultName: String,
         request: HttpServletRequest
     ): Response {
-
         val fileName = getVaultFileNameFromRequestUri(vaultCollection, vaultName, request)
         vaultService.deleteFileInVault(vaultCollection, vaultName, fileName)?.let(::fromEncryptedFileVault)
-        return responder.create()
+        return Response()
     }
 
     @DeleteMapping("/{vault}")
     fun delete(@PathVariable vaultCollection: String, @PathVariable vault: String): Response {
         vaultService.deleteVault(vaultCollection, vault)
-        return responder.create()
+        return Response()
     }
 
     private fun getVaultFileNameFromRequestUri(
@@ -238,4 +236,14 @@ class VaultControllerV1(
         response.writer.flush()
         response.writer.close()
     }
+}
+
+@Component
+class VaultResponder {
+
+    fun create(vaultsWithAccess: List<VaultWithAccess>) =
+        Response(items = vaultsWithAccess.map(::fromVaultWithAccess))
+
+    fun create(encryptedFileVault: EncryptedFileVault) =
+        Response(items = listOf(encryptedFileVault).map(::fromEncryptedFileVault))
 }

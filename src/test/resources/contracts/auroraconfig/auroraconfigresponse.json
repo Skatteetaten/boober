@@ -1,0 +1,10 @@
+{
+  "name": "paas",
+  "version": "1",
+  "files": [
+    {
+      "name": "filename",
+      "contents": "contents"
+    }
+  ]
+}

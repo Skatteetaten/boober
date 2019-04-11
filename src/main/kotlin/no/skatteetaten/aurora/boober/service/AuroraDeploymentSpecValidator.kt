@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.Optional
 
+// TODO: Kan vi fjerne Optional her og bruke nullable?
 @Service
 class AuroraDeploymentSpecValidator(
     val openShiftClient: OpenShiftClient,
@@ -40,7 +41,7 @@ class AuroraDeploymentSpecValidator(
         validateExistingResources(deploymentSpecInternal)
     }
 
-    protected fun validateExistingResources(spec: AuroraDeploymentSpecInternal) {
+    fun validateExistingResources(spec: AuroraDeploymentSpecInternal) {
         if (spec.cluster != cluster) return
         val existingMounts = spec.volume?.mounts?.filter { it.exist } ?: return
 
@@ -69,7 +70,7 @@ class AuroraDeploymentSpecValidator(
         }
     }
 
-    protected fun validateVaultExistence(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
+    fun validateVaultExistence(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
         val vaultNames = (deploymentSpecInternal.volume?.mounts
             ?.filter { it.type == MountType.Secret }
             ?.mapNotNull { it.secretVaultName }
@@ -84,7 +85,7 @@ class AuroraDeploymentSpecValidator(
         }
     }
 
-    protected fun validateDatabase(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
+    fun validateDatabase(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
         // We cannot validate database schemas for applications that are not deployed on the current cluster.
         if (deploymentSpecInternal.cluster != cluster) return
         val databases = deploymentSpecInternal.integration?.database
@@ -140,7 +141,7 @@ class AuroraDeploymentSpecValidator(
         }
     }
 
-    protected fun validateKeyMappings(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
+    fun validateKeyMappings(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
         deploymentSpecInternal.volume?.let { volume ->
             val keyMappings = volume.keyMappings.takeIfNotEmpty() ?: return
             val keys = volume.secretVaultKeys.takeIfNotEmpty() ?: return
@@ -156,7 +157,7 @@ class AuroraDeploymentSpecValidator(
      * Note that this method always uses the latest.properties file regardless of the version of the application and
      * the contents of the vault. TODO: to determine if another properties file should be used instead.
      */
-    protected fun validateSecretVaultKeys(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
+    fun validateSecretVaultKeys(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
 
         deploymentSpecInternal.volume?.let { volume ->
             val vaultName = volume.secretVaultName ?: return

@@ -42,7 +42,6 @@ data class StsProvisioningResult(
 class StsProvisioner(
     @TargetService(ServiceTypes.SKAP)
     val restTemplate: RestTemplate,
-    @Value("\${boober.skap}") val skapUrl: String,
     @Value("\${boober.sts.renewBeforeDays:14}") val renewBeforeDays: Long,
     @Value("\${openshift.cluster}") val cluster: String
 ) {
@@ -50,7 +49,7 @@ class StsProvisioner(
 
     fun generateCertificate(cn: String, name: String, envName: String): StsProvisioningResult {
 
-        val builder = UriComponentsBuilder.fromHttpUrl("$skapUrl/certificate")
+        val builder = UriComponentsBuilder.fromPath("/certificate")
             .queryParam("cn", cn)
             .queryParam("cluster", cluster)
             .queryParam("name", name)
@@ -58,17 +57,17 @@ class StsProvisioner(
 
         return try {
             val response = restTemplate.getForEntity(
-                builder.build().encode().toUri(),
-                Resource::class.java
+                builder.build().encode().toUriString(),
+                Resource::class.java,
+                emptyMap<String, String>()
             )
-            val keyPassword = response.headers.getFirst("key-password")
-            val storePassword = response.headers.getFirst("store-password")
-            val cert = createStsCert(response.body.inputStream, keyPassword, storePassword)
+            val keyPassword = response.headers.getFirst("key-password")!!
+            val storePassword = response.headers.getFirst("store-password")!!
+            val cert = createStsCert(response.body!!.inputStream, keyPassword, storePassword)
             StsProvisioningResult(
                 cert = cert,
                 cn = cn,
                 renewAt = cert.notAfter - Duration.ofDays(renewBeforeDays)
-                // TODO: Denne må fikses, Her må vi ha en  Duration fra nå til denne renewAt.
             )
         } catch (e: Exception) {
             throw ProvisioningException(

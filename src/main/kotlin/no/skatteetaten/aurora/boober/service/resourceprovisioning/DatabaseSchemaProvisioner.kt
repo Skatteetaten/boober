@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.ServiceTypes
@@ -71,6 +72,7 @@ data class DbhUser(val username: String, val password: String, val type: String)
 
 data class DatabaseSchemaInstance(val port: Long, val host: String?)
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class DbhSchema(
     val id: String,
     val type: String,
@@ -137,9 +139,8 @@ class DatabaseSchemaProvisioner(
         val roleString = details.users.joinToString(",") { it.name }
         val response: ResponseEntity<JsonNode> = try {
             restTemplate.getForEntity(
-                "{0}/api/v1/schema/{1}?affiliation={2}&roles={3}",
+                "$dbhUrl/api/v1/schema/{1}?affiliation={2}&roles={3}",
                 JsonNode::class.java,
-                dbhUrl,
                 id,
                 details.affiliation,
                 roleString
@@ -185,7 +186,7 @@ class DatabaseSchemaProvisioner(
         val roleString = details.users.joinToString(",") { it.name }
         val response: ResponseEntity<JsonNode> = try {
             restTemplate.getForEntity(
-                "{0}/api/v1/schema/?labels={1}&roles={2}&engine={3}", JsonNode::class.java, dbhUrl,
+                "$dbhUrl/api/v1/schema/?labels={1}&roles={2}&engine={3}", JsonNode::class.java,
                 labelsString, roleString, details.engine
             )
         } catch (e: Exception) {
@@ -211,7 +212,7 @@ class DatabaseSchemaProvisioner(
             )
 
         val response: ResponseEntity<JsonNode> = try {
-            restTemplate.postForEntity("{0}/api/v1/schema/", payload, JsonNode::class.java, dbhUrl)
+            restTemplate.postForEntity("$dbhUrl/api/v1/schema/", payload, JsonNode::class.java)
         } catch (e: Exception) {
             throw createProvisioningException("Unable to create database schema.", e)
         }
@@ -261,6 +262,7 @@ class DatabaseSchemaProvisioner(
         .map { "${it.key}=${it.value}" }
         .joinToString(",")
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     data class DbApiEnvelope(val status: String, val items: List<DbhSchema> = listOf())
 
     data class DbhErrorResponse(val status: String, val items: List<String>, val totalCount: Int)

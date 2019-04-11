@@ -18,26 +18,16 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/v1/apply/{auroraConfigName}")
 class DeployControllerV1(private val deployService: DeployService, private val responder: DeployResponder) {
 
-    @PutMapping()
+    @PutMapping
     fun apply(@PathVariable auroraConfigName: String, @RequestBody payload: ApplyPayload): Response {
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         val auroraDeployResults: List<DeployResponse> = deployService.executeDeploy(
-            ref,
-            payload.allRefs,
-            payload.overridesToAuroraConfigFiles(),
-            payload.deploy
+            ref = ref,
+            applicationDeploymentRefs = payload.applicationDeploymentRefs,
+            overrides = payload.overridesToAuroraConfigFiles(),
+            deploy = payload.deploy
         ).map {
-            val spec = it.auroraDeploymentSpecInternal?.let {
-                Spec(
-                    name = it.name,
-                    cluster = it.cluster,
-                    deploy = it.deploy?.let {
-                        Deploy(it.version)
-                    },
-                    environment = Environment(it.environment.namespace)
-                )
-            }
             DeployResponse(
                 deployId = it.deployId,
                 success = it.success,
@@ -46,9 +36,8 @@ class DeployControllerV1(private val deployService: DeployService, private val r
                 tagResponse = it.tagResponse,
                 projectExist = it.projectExist,
                 openShiftResponses = it.openShiftResponses,
-                auroraDeploymentSpec = spec,
-                deploymentSpec = it.auroraDeploymentSpecInternal?.let {
-                    renderSpecAsJson(it.spec, true)
+                deploymentSpec = it.auroraDeploymentSpecInternal?.let { internalSpec ->
+                    renderSpecAsJson(internalSpec.spec, true)
                 }
             )
         }
@@ -57,7 +46,6 @@ class DeployControllerV1(private val deployService: DeployService, private val r
     }
 
     data class DeployResponse(
-        val auroraDeploymentSpec: Spec? = null, // TODO: remove this when AO is updated
         val deploymentSpec: Map<String, Any>?,
         val deployId: String,
         val openShiftResponses: List<OpenShiftResponse>,
@@ -66,13 +54,6 @@ class DeployControllerV1(private val deployService: DeployService, private val r
         val reason: String? = null,
         val tagResponse: TagResult? = null,
         val projectExist: Boolean = false
-    )
-
-    data class Spec(
-        val name: String,
-        val cluster: String,
-        val deploy: Deploy?,
-        val environment: Environment
     )
 
     data class Deploy(

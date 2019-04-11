@@ -16,7 +16,8 @@ object ServiceGenerator {
     fun generateService(
         auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
         serviceLabels: Map<String, String>,
-        reference: OwnerReference
+        reference: OwnerReference,
+        podPort: Int
     ): Service? {
         return auroraDeploymentSpecInternal.deploy?.let { deploy ->
 
@@ -38,10 +39,6 @@ object ServiceGenerator {
                     "prometheus.io/port" to "${it.port}"
                 )
             } ?: mapOf("prometheus.io/scrape" to "false")
-
-            val podPort =
-                if (auroraDeploymentSpecInternal.deploy.toxiProxy != null) PortNumbers.TOXIPROXY_HTTP_PORT else PortNumbers.INTERNAL_HTTP_PORT
-
             newService {
                 metadata {
                     ownerReferences = listOf(reference)

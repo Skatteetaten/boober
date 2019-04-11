@@ -15,6 +15,7 @@ import io.fabric8.kubernetes.api.model.Quantity
 import io.fabric8.kubernetes.api.model.ResourceRequirements
 import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.openshift.api.model.DeploymentConfig
+import no.skatteetaten.aurora.boober.mapper.platform.AuroraContainer
 import no.skatteetaten.aurora.boober.mapper.platform.createEnvVars
 import no.skatteetaten.aurora.boober.mapper.platform.podVolumes
 import no.skatteetaten.aurora.boober.mapper.platform.volumeMount
@@ -158,6 +159,7 @@ class OpenShiftObjectGenerator(
             generateDeploymentConfig(deploymentSpecInternal, labels, mounts, ownerReference)
         }
 
+    // TODO: Hele denne bør egentlig ligge i ApplicationPlattformen
     fun generateDeploymentConfig(
         auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
         labels: Map<String, String>,
@@ -177,12 +179,14 @@ class OpenShiftObjectGenerator(
             auroraDeploymentSpecInternal,
             mounts?.filter { it.targetContainer == ToxiProxyDefaults.NAME })
 
+        val baseContainer =
+            applicationPlatformHandler.createBaseContainer(auroraDeploymentSpecInternal, mounts, routeSuffix)
+        val auroraContainers: List<AuroraContainer> = applicationPlatformHandler.createContainers(baseContainer)
         val deployment = applicationPlatformHandler.handleAuroraDeployment(
             auroraDeploymentSpecInternal,
             labels,
             mounts,
-            routeSuffix,
-            sidecarContainers
+            auroraContainers.addIfNotNull(sidecarContainers)
         )
 
         val containers = deployment.containers.map { ContainerGenerator.create(it) }
@@ -192,12 +196,21 @@ class OpenShiftObjectGenerator(
         return mapper.convertValue(dc)
     }
 
+    // TODO: Hele denne bør egentlig ligge i ApplicationPlattformen, og man bør kunne lage flere services.
+    // Alle ressurser som krever deploy bør ligge der.
     fun generateService(
         auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
         serviceLabels: Map<String, String>,
         reference: OwnerReference
     ): JsonNode? {
-        return ServiceGenerator.generateService(auroraDeploymentSpecInternal, serviceLabels, reference)
+
+        val applicationPlatformHandler =
+            AuroraDeploymentSpecService.APPLICATION_PLATFORM_HANDLERS[auroraDeploymentSpecInternal.applicationPlatform]
+                ?: throw IllegalArgumentException("ApplicationPlatformHandler ${auroraDeploymentSpecInternal.applicationPlatform} is not present")
+
+        val podPort = applicationPlatformHandler.httpExposePort(auroraDeploymentSpecInternal)
+
+        return ServiceGenerator.generateService(auroraDeploymentSpecInternal, serviceLabels, reference, podPort)
             ?.let { mapper.convertValue(it) }
     }
 

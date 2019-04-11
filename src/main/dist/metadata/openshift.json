@@ -2,7 +2,7 @@
   "docker": {
     "maintainer": "Aurora OpenShift Utvikling <utvpaas@skatteetaten.no>",
     "labels": {
-      "io.k8s.description": "Controler for creating/updating application objects",
+      "io.k8s.description": "Controller for creating/updating application objects",
       "io.openshift.tags": "openshift,springboot,kotlin"
     }
   },

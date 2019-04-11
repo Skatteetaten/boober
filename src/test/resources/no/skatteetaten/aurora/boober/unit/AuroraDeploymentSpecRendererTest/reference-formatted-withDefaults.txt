@@ -1,0 +1,65 @@
+{
+  applicationDeploymentRef: "utv/reference"              // static
+  configVersion:            "master"                     // static
+  schemaVersion:            "v1"                         // about.json
+  type:                     "deploy"                     // reference.json
+  applicationPlatform:      "java"                       // default
+  affiliation:              "aos"                        // about.json
+  segment:                  "aurora"                     // about.json
+  cluster:                  "utv"                        // utv/about.json
+  permissions: {
+    admin:                  "APP_PaaS_utv"               // about.json
+  }
+  envName:                  "utv"                        // folderName
+  name:                     "reference"                  // fileName
+  certificate:              false                        // default
+  database:                 false                        // default
+  prometheus: {
+    path:                   "/prometheus"                // default
+    port:                   8081                         // default
+  }
+  management: {
+    path:                   "actuator"                   // default
+    port:                   "8081"                       // default
+  }
+  deployStrategy: {
+    type:                   "rolling"                    // default
+    timeout:                180                          // default
+  }
+  artifactId:               "reference"                  // fileName
+  groupId:                  "no.skatteetaten.aurora"     // reference.json
+  version:                  "1"                          // reference.json
+  resources: {
+    cpu: {
+      min:                  "10m"                        // default
+      max:                  "2000m"                      // default
+    }
+    memory: {
+      min:                  "128Mi"                      // default
+      max:                  "512Mi"                      // default
+    }
+  }
+  replicas:                 1                            // reference.json
+  readiness: {
+    port:                   8080                         // default
+    delay:                  10                           // default
+    timeout:                1                            // default
+  }
+  liveness:                 false                        // default
+  debug:                    false                        // default
+  pause:                    false                        // default
+  alarm:                    true                         // default
+  toxiproxy:                false                        // default
+  databaseDefaults: {
+    flavor:                 "ORACLE_MANAGED"             // default
+    generate:               true                         // default
+    name:                   "@name@"                     // default
+  }
+  webseal: {
+    roles:                  "foobar"                     // utv/reference.json
+  }
+  route:                    true                         // reference.json
+  routeDefaults: {
+    host:                   "@name@-@affiliation@-@env@" // default
+  }
+}

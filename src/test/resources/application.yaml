@@ -30,6 +30,8 @@ boober:
         token: foo
 
 vault:
+    operations:
+        enabled: true
     git:
         urlPattern: "file:///tmp/vaulttest/%s"
         checkoutPath: "build/vaultcheckout"
@@ -37,7 +39,7 @@ vault:
         password: "bar"
 
 management:
-    port: 0
+    server.port: 0
 
 openshift:
     cluster: utv

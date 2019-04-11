@@ -57,7 +57,7 @@ open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate) {
                 it.setAttribute(REQUEST_ENTITY, requestEntity)
                 restTemplate.exchange(
                     requestEntity.url.toString(),
-                    requestEntity.method,
+                    requestEntity.method!!,
                     requestEntity,
                     type.java,
                     emptyMap<String, String>()
@@ -66,7 +66,7 @@ open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate) {
         } else {
             restTemplate.exchange(
                 requestEntity.url.toString(),
-                requestEntity.method,
+                requestEntity.method!!,
                 requestEntity,
                 type.java,
                 emptyMap<String, String>()

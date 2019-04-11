@@ -1,0 +1,15 @@
+{
+  "success": true,
+  "message": "OK",
+  "items": [
+    {
+      "name": "secret",
+      "hasAccess": true,
+      "secrets": {
+        "latest.properties": "U0VDUkVUX1BBU1M9YXNkbGZramHDuGxmamHDuGY="
+      },
+      "permissions": []
+    }
+  ],
+  "count": 1
+}
