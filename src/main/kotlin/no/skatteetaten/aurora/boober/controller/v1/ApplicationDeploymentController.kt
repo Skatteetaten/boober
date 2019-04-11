@@ -70,16 +70,17 @@ data class ExistsResponse(
 class ApplicationDeploymentResponder {
 
     fun createDeleteResponse(deleteResponse: List<DeleteResponse>) =
+        // TODO: Verify that top message is the same as an item erorr message
         Response(
             items = deleteResponse,
-            success = deleteResponse.all { it.success },
+            success = deleteResponse.any { !it.success },
             message = deleteResponse.find { it.reason.toUpperCase() != "OK" }?.reason ?: "OK"
         )
 
     fun createExistsResponse(existsResponse: List<ExistsResponse>) =
         Response(
             items = existsResponse,
-            success = existsResponse.all { it.success },
+            success = existsResponse.any { !it.success },
             message = existsResponse.find { it.message.toUpperCase() != "OK" }?.message ?: "OK"
         )
 }

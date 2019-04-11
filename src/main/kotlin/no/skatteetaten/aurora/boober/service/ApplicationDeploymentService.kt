@@ -41,6 +41,8 @@ class ApplicationDeploymentService(
             val openshiftResponse =
                 openShiftClient.performOpenShiftCommand(it.applicationRef.namespace, it.cmd)
 
+            val applicationDeploymentExists = openshiftResponse.responseBody != null
+
             if (!openshiftResponse.success) {
                 logger.error(openshiftResponse.exception)
                 DeleteApplicationDeploymentResponse(
@@ -51,7 +53,7 @@ class ApplicationDeploymentService(
             } else {
                 DeleteApplicationDeploymentResponse(
                     applicationRef = it.applicationRef,
-                    success = openshiftResponse.success,
+                    success = openshiftResponse.success && applicationDeploymentExists,
                     message = openshiftResponse.exception ?: "Application was successfully deleted"
                 )
             }
