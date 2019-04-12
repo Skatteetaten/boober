@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.service.ApplicationDeploymentService
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
@@ -62,15 +61,14 @@ data class DeleteResponse(
 data class ExistsResponse(
     val applicationRef: ApplicationRef,
     val exists: Boolean,
-    @JsonIgnore val success: Boolean,
-    @JsonIgnore val message: String
+    val success: Boolean,
+    val message: String
 )
 
 @Component
 class ApplicationDeploymentResponder {
 
     fun createDeleteResponse(deleteResponse: List<DeleteResponse>) =
-        // TODO: Verify that top message is the same as an item erorr message
         Response(
             items = deleteResponse,
             success = deleteResponse.any { !it.success },

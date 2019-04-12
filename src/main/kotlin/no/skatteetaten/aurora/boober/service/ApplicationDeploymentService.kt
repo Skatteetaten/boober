@@ -48,13 +48,18 @@ class ApplicationDeploymentService(
                 DeleteApplicationDeploymentResponse(
                     applicationRef = it.applicationRef,
                     success = false,
-                    message = openshiftResponse.exception ?: "An error occured when trying to delete the ApplicationDeployment"
+                    message = openshiftResponse.exception
+                        ?: "An Openshift Communication error happened when deleting ApplicationDeployment"
                 )
             } else {
+                val message =
+                    if (!applicationDeploymentExists) "ApplicationDeployment does not exist"
+                    else openshiftResponse.exception ?: "Application was successfully deleted"
+
                 DeleteApplicationDeploymentResponse(
                     applicationRef = it.applicationRef,
                     success = openshiftResponse.success && applicationDeploymentExists,
-                    message = openshiftResponse.exception ?: "Application was successfully deleted"
+                    message = message
                 )
             }
         }
@@ -74,7 +79,8 @@ class ApplicationDeploymentService(
                     applicationRef = it.applicationRef,
                     exists = false,
                     success = false,
-                    message = openshiftResponse.exception ?: "An error occured when checking if ApplicationDeployment exists"
+                    message = openshiftResponse.exception
+                        ?: "An error occured when checking if ApplicationDeployment exists"
                 )
             } else {
 
