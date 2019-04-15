@@ -47,7 +47,7 @@ class ApplicationDeploymentController(
 
         return Response(
             items = deleteResponses,
-            success = deleteResponses.any { !it.success },
+            success = !deleteResponses.any { !it.success },
             message = deleteResponses.find { it.reason.toUpperCase() != "OK" }?.reason ?: "OK"
         )
     }
@@ -77,7 +77,7 @@ class ApplicationDeploymentController(
 
         return Response(
             items = existsResponse,
-            success = existsResponse.any { !it.success },
+            success = !existsResponse.any { !it.success },
             message = existsResponse.find { it.message.toUpperCase() != "OK" }?.message ?: "OK"
         )
     }

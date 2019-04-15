@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
-import com.nhaarman.mockito_kotlin.any
 import no.skatteetaten.aurora.boober.service.ApplicationDeploymentService
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.mockmvc.extensions.Path
@@ -37,7 +36,7 @@ class ApplicationDeploymentControllerTest(@Autowired private val mockMvc: MockMv
         val payload = ApplicationDeploymentPayload(listOf(applicationRef))
 
         val response = given(
-            applicationDeploymentService.executeDelete(any())
+            applicationDeploymentService.executeDelete(payload.applicationRefs)
         ).withContractResponse("applicationdeployment/delete") {
             willReturn(content)
         }.mockResponse
@@ -49,7 +48,9 @@ class ApplicationDeploymentControllerTest(@Autowired private val mockMvc: MockMv
         ) {
             statusIsOk()
                 .responseJsonPath("$.success").isTrue()
-                .responseJsonPath("$.items").equalsObject(response)
+                .responseJsonPath("$.items[0].reason").equalsValue(response[0].message)
+                .responseJsonPath("$.items[0].applicationRef").equalsObject(applicationRef)
+
         }
     }
 }
