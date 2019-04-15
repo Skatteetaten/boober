@@ -53,7 +53,6 @@ class ApplicationDeploymentControllerTest(@Autowired private val mockMvc: MockMv
                 .responseJsonPath("$.success").isTrue()
                 .responseJsonPath("$.items[0].reason").equalsValue("Application was successfully deleted")
                 .responseJsonPath("$.items[0].applicationRef").equalsObject(applicationRef)
-
         }
     }
 
@@ -82,7 +81,6 @@ class ApplicationDeploymentControllerTest(@Autowired private val mockMvc: MockMv
                 .responseJsonPath("$.items[0].message").equalsValue("Application exists")
                 .responseJsonPath("$.items[0].exists").equalsValue(true)
                 .responseJsonPath("$.items[0].applicationRef").equalsObject(ApplicationRef("demo-deploy", "reference"))
-
         }
     }
 }
