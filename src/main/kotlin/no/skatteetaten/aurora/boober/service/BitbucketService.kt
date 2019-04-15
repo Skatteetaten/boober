@@ -28,7 +28,7 @@ class BitbucketService(
 
     fun uploadFile(project: String, repo: String, fileName: String, message: String, content: String): String? {
 
-        val url = "/rest/api/1.0/projects/$project/repos/$repo/browse/{fileName}"
+        val url = "/rest/api/1.0/projects/$project/repos/$repo/browse/$fileName"
         val headers = HttpHeaders().apply {
             contentType = MediaType.MULTIPART_FORM_DATA
         }
@@ -38,21 +38,21 @@ class BitbucketService(
             add("content", content)
         }
 
-        return restTemplateWrapper.put(body, headers, String::class, url, fileName).body
+        return restTemplateWrapper.put(body, headers, String::class, url).body
     }
 
     fun getFiles(project: String, repo: String, prefix: String): List<String> {
-        val url = "/rest/api/1.0/projects/$project/repos/$repo/files/{prefix}?limit=100000"
+        val url = "/rest/api/1.0/projects/$project/repos/$repo/files/$prefix?limit=100000"
 
-        return restTemplateWrapper.get(JsonNode::class, url, prefix).body?.let { jsonNode ->
+        return restTemplateWrapper.get(JsonNode::class, url).body?.let { jsonNode ->
             val values = jsonNode["values"] as ArrayNode
             values.map { it.asText() }
         } ?: emptyList()
     }
 
     fun getFile(project: String, repo: String, fileName: String): String? {
-        val url = "/projects/$project/repos/$repo/raw/{fileName}"
-        return restTemplateWrapper.get(String::class, url, fileName).body
+        val url = "/projects/$project/repos/$repo/raw/$fileName"
+        return restTemplateWrapper.get(String::class, url).body
     }
 
     fun getRepoNames(project: String): List<String> {
