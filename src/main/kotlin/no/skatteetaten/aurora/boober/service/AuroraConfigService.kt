@@ -7,6 +7,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.slf4j.MDCContext
 import no.skatteetaten.aurora.boober.controller.security.SpringSecurityThreadContextElement
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.model.ApplicationRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
@@ -167,6 +168,14 @@ class AuroraConfigService(
         logger.debug(watch.prettyPrint())
         return auroraConfig
     }
+
+    fun expandDeploymentRefToApplicationRef(
+        ref: AuroraConfigRef,
+        adr: List<ApplicationDeploymentRef>
+    ): List<ApplicationRef> =
+        createValidatedAuroraDeploymentSpecs(ref, adr).map {
+            ApplicationRef(it.environment.namespace, it.name)
+        }
 
     @JvmOverloads
     fun createValidatedAuroraDeploymentSpecs(

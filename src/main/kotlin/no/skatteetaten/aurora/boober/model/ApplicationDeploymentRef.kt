@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.model
 
+data class ApplicationRef(val namespace: String, val name: String)
+
 data class ApplicationDeploymentRef(val environment: String, val application: String) {
     override fun toString() = "$environment/$application"
 

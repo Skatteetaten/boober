@@ -206,7 +206,7 @@ class AuroraDeploymentSpecService(
             .let { getAuroraDeploymentSpecs(auroraConfig, it) }
     }
 
-    fun getAuroraDeploymentSpecs(
+    private fun getAuroraDeploymentSpecs(
         auroraConfig: AuroraConfig,
         applicationDeploymentRefs: List<ApplicationDeploymentRef>
     ): List<AuroraDeploymentSpec> {

@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.controller.v1
 
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.model.ApplicationRef
 import no.skatteetaten.aurora.boober.service.ApplicationDeploymentService
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController
 
 data class ApplicationDeploymentRefPayload(val adr: List<ApplicationDeploymentRef>)
 data class ApplicationDeploymentPayload(val applicationRefs: List<ApplicationRef>)
-data class ApplicationRef(val namespace: String, val name: String)
 
 data class DeleteResponse(
     val applicationRef: ApplicationRef,
@@ -59,9 +59,7 @@ class ApplicationDeploymentController(
     ): Response {
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
-        val applicationRefs = auroraConfigService.createValidatedAuroraDeploymentSpecs(ref, adrPayload.adr).map {
-            ApplicationRef(it.environment.namespace, it.name)
-        }
+        val applicationRefs = auroraConfigService.expandDeploymentRefToApplicationRef(ref, adrPayload.adr)
 
         val applicationDeploymentResponse =
             applicationDeploymentService.checkApplicationDeploymentsExists(applicationRefs)

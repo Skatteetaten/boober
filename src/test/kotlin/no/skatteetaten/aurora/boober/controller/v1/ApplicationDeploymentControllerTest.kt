@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
+import com.nhaarman.mockito_kotlin.any
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.model.ApplicationRef
 import no.skatteetaten.aurora.boober.service.ApplicationDeploymentService
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.mockmvc.extensions.Path
@@ -35,11 +38,11 @@ class ApplicationDeploymentControllerTest(@Autowired private val mockMvc: MockMv
         val applicationRef = ApplicationRef("demo-deploy", "test")
         val payload = ApplicationDeploymentPayload(listOf(applicationRef))
 
-        val response = given(
+        given(
             applicationDeploymentService.executeDelete(payload.applicationRefs)
         ).withContractResponse("applicationdeployment/delete") {
             willReturn(content)
-        }.mockResponse
+        }
 
         mockMvc.post(
             path = Path("/v1/applicationdeployment/delete"),
@@ -48,8 +51,37 @@ class ApplicationDeploymentControllerTest(@Autowired private val mockMvc: MockMv
         ) {
             statusIsOk()
                 .responseJsonPath("$.success").isTrue()
-                .responseJsonPath("$.items[0].reason").equalsValue(response[0].message)
+                .responseJsonPath("$.items[0].reason").equalsValue("Application was successfully deleted")
                 .responseJsonPath("$.items[0].applicationRef").equalsObject(applicationRef)
+
+        }
+    }
+
+    @Test
+    fun `list applicationRef given applicationDeploymentRef`() {
+        val adr = ApplicationDeploymentRef("deploy", "reference")
+        val payload = ApplicationDeploymentRefPayload(listOf(adr))
+
+        val applicationRef = given(auroraConfigService.expandDeploymentRefToApplicationRef(any(), any()))
+            .withContractResponse("applicationdeployment/applications") {
+                willReturn(content)
+            }.mockResponse
+
+        given(applicationDeploymentService.checkApplicationDeploymentsExists(applicationRef))
+            .withContractResponse("applicationdeployment/applications_status") {
+                willReturn(content)
+            }
+
+        mockMvc.post(
+            path = Path("/v1/applicationdeployment/demo?reference=test"),
+            headers = HttpHeaders().contentTypeJson(),
+            body = payload
+        ) {
+            statusIsOk()
+                .responseJsonPath("$.success").isTrue()
+                .responseJsonPath("$.items[0].message").equalsValue("Application exists")
+                .responseJsonPath("$.items[0].exists").equalsValue(true)
+                .responseJsonPath("$.items[0].applicationRef").equalsObject(ApplicationRef("demo-deploy", "reference"))
 
         }
     }
