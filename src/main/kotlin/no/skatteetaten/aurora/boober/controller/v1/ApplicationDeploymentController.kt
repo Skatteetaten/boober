@@ -1,23 +1,40 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
 import no.skatteetaten.aurora.boober.controller.internal.Response
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.service.ApplicationDeploymentService
+import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import org.springframework.stereotype.Component
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
+data class ApplicationDeploymentRefPayload(val adr: List<ApplicationDeploymentRef>)
 data class ApplicationDeploymentPayload(val applicationRefs: List<ApplicationRef>)
 data class ApplicationRef(val namespace: String, val name: String)
+
+data class DeleteResponse(
+    val applicationRef: ApplicationRef,
+    val success: Boolean,
+    val reason: String
+)
+
+data class ExistsResponse(
+    val applicationRef: ApplicationRef,
+    val exists: Boolean,
+    val success: Boolean,
+    val message: String
+)
 
 @RestController
 @RequestMapping("/v1/applicationdeployment")
 class ApplicationDeploymentController(
     val applicationDeploymentService: ApplicationDeploymentService,
-    val applicationDeploymentDeleteResponder: ApplicationDeploymentResponder,
-    val auroraConfigService: AuroraConfigService
+    val auroraConfigService: AuroraConfigService,
+    val applicationDeploymentDeleteResponder: ApplicationDeploymentResponder
 ) {
 
     @PostMapping("/delete")
@@ -33,13 +50,21 @@ class ApplicationDeploymentController(
         return applicationDeploymentDeleteResponder.createDeleteResponse(deleteResponses)
     }
 
-    @PostMapping
-    fun applicationDeploymentExists(@RequestBody applicationDeploymentPayload: ApplicationDeploymentPayload): Response {
+    @PostMapping("/{auroraConfigName}")
+    fun applicationDeploymentExists(
+        @PathVariable auroraConfigName: String,
+        @RequestBody adrPayload: ApplicationDeploymentRefPayload
+    ): Response {
 
-        val getApplicationDeploymentResponse =
-            applicationDeploymentService.checkApplicationDeploymentsExists(applicationDeploymentPayload.applicationRefs)
+        val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
+        val applicationRefs = auroraConfigService.createValidatedAuroraDeploymentSpecs(ref, adrPayload.adr).map {
+            ApplicationRef(it.environment.namespace, it.name)
+        }
 
-        val existsResponse = getApplicationDeploymentResponse.map {
+        val applicationDeploymentResponse =
+            applicationDeploymentService.checkApplicationDeploymentsExists(applicationRefs)
+
+        val existsResponse = applicationDeploymentResponse.map {
             ExistsResponse(
                 applicationRef = it.applicationRef,
                 exists = it.exists,
@@ -52,18 +77,6 @@ class ApplicationDeploymentController(
     }
 }
 
-data class DeleteResponse(
-    val applicationRef: ApplicationRef,
-    val success: Boolean,
-    val reason: String
-)
-
-data class ExistsResponse(
-    val applicationRef: ApplicationRef,
-    val exists: Boolean,
-    val success: Boolean,
-    val message: String
-)
 
 @Component
 class ApplicationDeploymentResponder {

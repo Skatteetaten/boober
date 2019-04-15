@@ -1,15 +1,14 @@
 package no.skatteetaten.aurora.boober.controller.v1
-/*
+
 import com.nhaarman.mockito_kotlin.any
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.service.ApplicationDeploymentService
+import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.DeleteApplicationDeploymentResponse
 import no.skatteetaten.aurora.mockmvc.extensions.Path
-import no.skatteetaten.aurora.mockmvc.extensions.mock.withContractResponse
 import no.skatteetaten.aurora.mockmvc.extensions.post
 import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
 import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
-import org.junit.Ignore
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.mockito.BDDMockito.given
 import org.springframework.beans.factory.annotation.Autowired
@@ -17,22 +16,20 @@ import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDoc
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.web.servlet.MockMvc
-*/
-/*@Disabled("TODO: implement this after springcleaning")
+
 @AutoConfigureRestDocs
 @WebMvcTest(
-    value = [ApplicationDeploymentController::class, ApplicationDeploymentResponder::class],
+    value = [ApplicationDeploymentController::class],
     secure = false
 )
-class ApplicationDeploymentControllerTest {
-
-    @Autowired
-    private lateinit var mockMvc: MockMvc
+class ApplicationDeploymentControllerTest(@Autowired private val mockMvc: MockMvc) {
 
     @MockBean
-    private lateinit var applicationDeploymentDeleteResponder: ApplicationDeploymentResponder
+    private lateinit var applicationDeploymentService: ApplicationDeploymentService
 
-    @Ignore
+    @MockBean
+    private lateinit var auroraConfigService: AuroraConfigService
+
     @Test
     fun `delete ApplicationDeployment given two ApplicationDeploymentRef return success`() {
         val path = "/v1/ApplicationDeploymentdelete"
@@ -60,4 +57,4 @@ class ApplicationDeploymentControllerTest {
                 .responseJsonPath("$").equalsObject(deleteResponse)
         }
     }
-}*/
+}
