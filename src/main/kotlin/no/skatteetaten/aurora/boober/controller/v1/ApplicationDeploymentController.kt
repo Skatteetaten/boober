@@ -5,7 +5,6 @@ import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.service.ApplicationDeploymentService
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
-import org.springframework.stereotype.Component
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -33,8 +32,7 @@ data class ExistsResponse(
 @RequestMapping("/v1/applicationdeployment")
 class ApplicationDeploymentController(
     val applicationDeploymentService: ApplicationDeploymentService,
-    val auroraConfigService: AuroraConfigService,
-    val applicationDeploymentDeleteResponder: ApplicationDeploymentResponder
+    val auroraConfigService: AuroraConfigService
 ) {
 
     @PostMapping("/delete")
@@ -47,7 +45,11 @@ class ApplicationDeploymentController(
             DeleteResponse(applicationRef = it.applicationRef, success = it.success, reason = it.message)
         }
 
-        return applicationDeploymentDeleteResponder.createDeleteResponse(deleteResponses)
+        return Response(
+            items = deleteResponses,
+            success = deleteResponses.any { !it.success },
+            message = deleteResponses.find { it.reason.toUpperCase() != "OK" }?.reason ?: "OK"
+        )
     }
 
     @PostMapping("/{auroraConfigName}")
@@ -73,25 +75,11 @@ class ApplicationDeploymentController(
             )
         }
 
-        return applicationDeploymentDeleteResponder.createExistsResponse(existsResponse)
-    }
-}
-
-
-@Component
-class ApplicationDeploymentResponder {
-
-    fun createDeleteResponse(deleteResponse: List<DeleteResponse>) =
-        Response(
-            items = deleteResponse,
-            success = deleteResponse.any { !it.success },
-            message = deleteResponse.find { it.reason.toUpperCase() != "OK" }?.reason ?: "OK"
-        )
-
-    fun createExistsResponse(existsResponse: List<ExistsResponse>) =
-        Response(
+        return Response(
             items = existsResponse,
             success = existsResponse.any { !it.success },
             message = existsResponse.find { it.message.toUpperCase() != "OK" }?.message ?: "OK"
         )
+    }
 }
+
