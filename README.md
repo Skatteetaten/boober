@@ -9,6 +9,21 @@ The component is named after the Boober Fraggle (http://muppet.wikia.com/wiki/Bo
 
 ## How to run locally
 
+### Setup init.gradle
+ 
+In order to use this project you must set repositories in your `~/.gradle/init.gradle` file
+ 
+     allprojects {
+         ext.repos= {
+             mavenCentral()
+             jcenter()
+         }
+         repositories repos
+         buildscript {
+          repositories repos
+         }
+     }
+
 ### Setup the API
 
 In order to setup boober correctly set the following variables in `$HOME/.spring-boot-devtools.properties` file.
