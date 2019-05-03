@@ -101,8 +101,8 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
         } else null
 
         return StringBuilder().apply {
-            e.message?.let { append(it + ".") }
-            openShiftMessage?.let { append(" " + it) }
+            e.message?.let { append("$it.") }
+            openShiftMessage?.let { append(" $it") }
         }.toString()
     }
 }
