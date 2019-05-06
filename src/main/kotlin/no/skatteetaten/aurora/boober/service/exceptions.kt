@@ -52,3 +52,5 @@ class ProvisioningException @JvmOverloads constructor(message: String, cause: Th
 class AuroraConfigServiceException(message: String, cause: Throwable? = null) : ServiceException(message, cause)
 
 class GitReferenceException(message: String, cause: Throwable? = null) : ServiceException(message, cause)
+
+class DeployLogServiceException(message: String, cause: Throwable? = null) : ServiceException(message, cause)

@@ -7,6 +7,7 @@ import no.skatteetaten.aurora.boober.utils.Instants.now
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import org.springframework.web.client.HttpClientErrorException
 
 @Service
 class DeployLogService(
@@ -80,8 +81,12 @@ class DeployLogService(
     }
 
     fun findDeployResultById(ref: AuroraConfigRef, deployId: String): JsonNode? {
-        return bitbucketService.getFile(project, repo, "${ref.name}/$deployId.json")?.let {
-            mapper.readValue(it)
+        return try {
+            bitbucketService.getFile(project, repo, "${ref.name}/$deployId.json")?.let {
+                mapper.readValue(it)
+            }
+        } catch (e: HttpClientErrorException) {
+            throw DeployLogServiceException("DeployId $deployId was not found for affiliation ${ref.name}", e)
         }
     }
 }
