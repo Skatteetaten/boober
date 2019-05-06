@@ -104,8 +104,6 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
             }
         } else null
 
-        logger.info("Openshift message: $openShiftMessage")
-
         return StringBuilder().apply {
             e.message?.let { append("$it.") }
             openShiftMessage?.let { append(" $it") }
