@@ -68,7 +68,8 @@ class ApplyResultControllerTest(@Autowired private val mockMvc: MockMvc) {
 
         mockMvc.get(Path("/v1/apply-result/aos/abc123")) {
             status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .responseJsonPath("$.message").equalsValue("DeployId abc123 was not found for affiliation aos.")
+                .responseJsonPath("$.message").contains("abc123")
+                .responseJsonPath("$.message").contains("aos")
         }
     }
 }
