@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.utils.Instants.now
 import no.skatteetaten.aurora.boober.utils.openshiftKind
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
@@ -16,6 +18,8 @@ class DeployLogService(
     @Value("\${boober.bitbucket.tags.project}") val project: String,
     @Value("\${boober.bitbucket.tags.repo}") val repo: String
 ) {
+
+    val logger: Logger = LoggerFactory.getLogger(DeployLogService::class.java)
 
     private val DEPLOY_PREFIX = "DEPLOY"
 
@@ -86,7 +90,8 @@ class DeployLogService(
                 mapper.readValue(it)
             }
         } catch (e: HttpClientErrorException) {
-            throw DeployLogServiceException("DeployId $deployId was not found for affiliation ${ref.name}", e)
+            logger.warn("Client exception when finding deploy result ${e.message}")
+            throw DeployLogServiceException("DeployId $deployId was not found for affiliation ${ref.name}")
         }
     }
 }
