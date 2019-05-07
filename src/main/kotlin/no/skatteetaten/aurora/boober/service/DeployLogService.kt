@@ -5,8 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.utils.Instants.now
 import no.skatteetaten.aurora.boober.utils.openshiftKind
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.client.HttpClientErrorException
 
 @Service
 class DeployLogService(
@@ -15,6 +19,8 @@ class DeployLogService(
     @Value("\${boober.bitbucket.tags.project}") val project: String,
     @Value("\${boober.bitbucket.tags.repo}") val repo: String
 ) {
+
+    val logger: Logger = LoggerFactory.getLogger(DeployLogService::class.java)
 
     private val DEPLOY_PREFIX = "DEPLOY"
 
@@ -80,8 +86,17 @@ class DeployLogService(
     }
 
     fun findDeployResultById(ref: AuroraConfigRef, deployId: String): JsonNode? {
-        return bitbucketService.getFile(project, repo, "${ref.name}/$deployId.json")?.let {
-            mapper.readValue(it)
+        return try {
+            bitbucketService.getFile(project, repo, "${ref.name}/$deployId.json")?.let {
+                mapper.readValue(it)
+            }
+        } catch (e: HttpClientErrorException) {
+            logger.warn("Client exception when finding deploy result, status=${e.statusCode} message=\"${e.message}\"")
+            if (e.statusCode == HttpStatus.NOT_FOUND) {
+                throw DeployLogServiceException("DeployId $deployId was not found for affiliation ${ref.name}")
+            } else {
+                throw e
+            }
         }
     }
 }

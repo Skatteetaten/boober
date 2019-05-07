@@ -7,6 +7,7 @@ import no.skatteetaten.aurora.boober.model.AuroraVersioningException
 import no.skatteetaten.aurora.boober.model.ErrorDetail
 import no.skatteetaten.aurora.boober.model.PreconditionFailureException
 import no.skatteetaten.aurora.boober.service.AuroraConfigServiceException
+import no.skatteetaten.aurora.boober.service.DeployLogServiceException
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.ServiceException
@@ -33,6 +34,9 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
 
     @ExceptionHandler(AuroraConfigServiceException::class)
     fun handleAuroraConfigServiceErrors(ex: ServiceException, req: WebRequest) = handleException(ex, req, INTERNAL_SERVER_ERROR)
+
+    @ExceptionHandler(DeployLogServiceException::class)
+    fun handleDeployLogServiceErrors(ex: ServiceException, req: WebRequest) = handleException(ex, req, INTERNAL_SERVER_ERROR)
 
     @ExceptionHandler(AuroraConfigException::class)
     fun handleValidationErrors(ex: AuroraConfigException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
@@ -101,8 +105,8 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
         } else null
 
         return StringBuilder().apply {
-            e.message?.let { append(it + ".") }
-            openShiftMessage?.let { append(" " + it) }
+            e.message?.let { append("$it.") }
+            openShiftMessage?.let { append(" $it") }
         }.toString()
     }
 }
