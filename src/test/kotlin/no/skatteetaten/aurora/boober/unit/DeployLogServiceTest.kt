@@ -76,7 +76,7 @@ class DeployLogServiceTest : AbstractAuroraConfigTest() {
     }
 
     @Test
-    fun `Should throw DeployLogServiceException when git file not found`() {
+    fun `Find deploy result by id throws DeployLogServiceException when git file not found`() {
         every { bitbucketService.getFile(any(), any(), any()) } throws
             HttpClientErrorException.create(
                 HttpStatus.NOT_FOUND,
@@ -90,6 +90,23 @@ class DeployLogServiceTest : AbstractAuroraConfigTest() {
             service.findDeployResultById(AuroraConfigRef("test", "master", "123"), "abc123")
         }
         assertThat(exception).isNotNull().isInstanceOf(DeployLogServiceException::class)
+    }
+
+    @Test
+    fun `Find deploy result by id throws HttpClientErrorException given bad request`() {
+        every { bitbucketService.getFile(any(), any(), any()) } throws
+            HttpClientErrorException.create(
+                HttpStatus.BAD_REQUEST,
+                "",
+                HttpHeaders(),
+                "400".toByteArray(),
+                Charset.defaultCharset()
+            )
+
+        val exception = catch {
+            service.findDeployResultById(AuroraConfigRef("test", "master", "123"), "abc123")
+        }
+        assertThat(exception).isNotNull().isInstanceOf(HttpClientErrorException::class)
     }
 
     private fun createDeployResult() = listOf(

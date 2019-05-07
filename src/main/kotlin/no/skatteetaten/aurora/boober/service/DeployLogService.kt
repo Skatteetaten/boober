@@ -8,6 +8,7 @@ import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
 
@@ -90,8 +91,12 @@ class DeployLogService(
                 mapper.readValue(it)
             }
         } catch (e: HttpClientErrorException) {
-            logger.warn("Client exception when finding deploy result ${e.message}")
-            throw DeployLogServiceException("DeployId $deployId was not found for affiliation ${ref.name}")
+            logger.warn("Client exception when finding deploy result, status=${e.statusCode} message=\"${e.message}\"")
+            if (e.statusCode == HttpStatus.NOT_FOUND) {
+                throw DeployLogServiceException("DeployId $deployId was not found for affiliation ${ref.name}")
+            } else {
+                throw e
+            }
         }
     }
 }
