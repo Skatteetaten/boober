@@ -78,7 +78,14 @@ class ApplicationDeploymentService(
                 it == HttpStatus.SC_FORBIDDEN
             } ?: false
 
-            if (!openshiftResponse.success && !forbidden) {
+            if (forbidden) {
+                GetApplicationDeploymentResponse(
+                    applicationRef = it.applicationRef,
+                    exists = false,
+                    success = true,
+                    message = "OK"
+                )
+            } else if (!openshiftResponse.success) {
                 logger.error(openshiftResponse.exception)
                 GetApplicationDeploymentResponse(
                     applicationRef = it.applicationRef,
