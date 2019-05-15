@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import org.apache.http.HttpStatus
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -73,7 +74,11 @@ class ApplicationDeploymentService(
             val openshiftResponse =
                 openShiftClient.performOpenShiftCommand(it.applicationRef.namespace, it.cmd)
 
-            if (!openshiftResponse.success) {
+            val forbidden = openshiftResponse.httpErrorCode?.let {
+                it == HttpStatus.SC_FORBIDDEN
+            } ?: false
+
+            if (!openshiftResponse.success && !forbidden) {
                 logger.error(openshiftResponse.exception)
                 GetApplicationDeploymentResponse(
                     applicationRef = it.applicationRef,

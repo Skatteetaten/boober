@@ -44,7 +44,8 @@ data class OpenShiftResponse @JvmOverloads constructor(
     val command: OpenshiftCommand,
     val responseBody: JsonNode? = null,
     val success: Boolean = true,
-    val exception: String? = null
+    val exception: String? = null,
+    val httpErrorCode: Int? = null
 ) {
 
     companion object {
@@ -59,7 +60,12 @@ data class OpenShiftResponse @JvmOverloads constructor(
             } else {
                 null
             }
-            return OpenShiftResponse(command, response, success = false, exception = e.message)
+            val httpCode = if (e.cause is HttpClientErrorException) {
+                e.cause.statusCode.value()
+            } else {
+                null
+            }
+            return OpenShiftResponse(command, response, success = false, exception = e.message, httpErrorCode = httpCode)
         }
     }
 }
