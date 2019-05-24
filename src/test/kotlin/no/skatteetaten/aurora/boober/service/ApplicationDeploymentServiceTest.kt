@@ -91,7 +91,7 @@ class ApplicationDeploymentServiceTest {
     @Test
     fun `get ApplicationDeployments given OpenShift Error return Response with failure`() {
         val response = MockResponse()
-            .setResponseCode(403)
+            .setResponseCode(400)
             .setJsonFileAsBody("no/skatteetaten/aurora/boober/service/ApplicationDeployment/ApplicationDeploymentOpenshiftError.json")
 
         val requests = server.execute(response, response) {
