@@ -47,9 +47,9 @@ open class OpenShiftResourceClient(
         return exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.POST, URI(url)))!!
     }
 
-    fun delete(url: String): ResponseEntity<JsonNode> {
+    fun delete(url: String): ResponseEntity<JsonNode>? {
         val headers: HttpHeaders = getAuthorizationHeaders()
-        return exchange(RequestEntity<JsonNode>(headers, HttpMethod.DELETE, URI(url)))!!
+        return exchange(RequestEntity<JsonNode>(headers, HttpMethod.DELETE, URI(url)), retry = false)
     }
 
     fun strategicMergePatch(kind: String, name: String? = null, payload: JsonNode): ResponseEntity<JsonNode> {

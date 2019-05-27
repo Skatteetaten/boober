@@ -1,0 +1,10 @@
+[
+    {
+      "applicationRef": {
+        "namespace": "demo-deploy",
+        "name": "test"
+      },
+      "success": true,
+      "message": "Application was successfully deleted"
+    }
+]

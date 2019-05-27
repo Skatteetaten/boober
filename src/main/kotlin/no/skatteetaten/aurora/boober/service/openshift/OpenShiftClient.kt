@@ -44,7 +44,8 @@ data class OpenShiftResponse @JvmOverloads constructor(
     val command: OpenshiftCommand,
     val responseBody: JsonNode? = null,
     val success: Boolean = true,
-    val exception: String? = null
+    val exception: String? = null,
+    val httpErrorCode: Int? = null
 ) {
 
     companion object {
@@ -59,7 +60,12 @@ data class OpenShiftResponse @JvmOverloads constructor(
             } else {
                 null
             }
-            return OpenShiftResponse(command, response, success = false, exception = e.message)
+            val httpCode = if (e.cause is HttpClientErrorException) {
+                e.cause.statusCode.value()
+            } else {
+                null
+            }
+            return OpenShiftResponse(command, response, success = false, exception = e.message, httpErrorCode = httpCode)
         }
     }
 }
@@ -116,10 +122,10 @@ class OpenShiftClient(
 
         return try {
             val res: JsonNode? = when (command.operationType) {
-                OperationType.GET -> throw OpenShiftException("GET is unsupported") // We should probably consider implementing it, though
+                OperationType.GET -> performClient.get(command.url, retry = false)?.body
                 OperationType.CREATE -> performClient.post(command.url, command.payload).body
                 OperationType.UPDATE -> performClient.put(command.url, command.payload).body
-                OperationType.DELETE -> performClient.delete(command.url).body
+                OperationType.DELETE -> performClient.delete(command.url)?.body
                 OperationType.NOOP -> command.payload
             }
             OpenShiftResponse(command, res)

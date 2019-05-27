@@ -211,7 +211,7 @@ class AuroraDeploymentSpecService(
         applicationDeploymentRefs: List<ApplicationDeploymentRef>
     ): List<AuroraDeploymentSpec> {
         return applicationDeploymentRefs.map {
-            AuroraDeploymentSpecService.createAuroraDeploymentSpec(
+            createAuroraDeploymentSpec(
                 auroraConfig,
                 it,
                 listOf()
@@ -226,7 +226,7 @@ class AuroraDeploymentSpecService(
         overrides: List<AuroraConfigFile> = emptyList()
     ): AuroraDeploymentSpec {
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
-        return AuroraDeploymentSpecService.createAuroraDeploymentSpec(
+        return createAuroraDeploymentSpec(
             auroraConfig = auroraConfig,
             overrideFiles = overrides,
             applicationDeploymentRef = ApplicationDeploymentRef.adr(environment, application)

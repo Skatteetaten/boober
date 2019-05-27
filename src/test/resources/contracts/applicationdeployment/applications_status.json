@@ -1,0 +1,11 @@
+[
+  {
+    "applicationRef": {
+      "namespace": "demo-deploy",
+      "name": "reference"
+    },
+    "exists": true,
+    "success": true,
+    "message": "Application exists"
+  }
+]
