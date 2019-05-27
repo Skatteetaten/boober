@@ -38,7 +38,8 @@ private fun createMountsFromDeploymentSpec(deploymentSpecInternal: AuroraDeploym
         )
     }
 
-    val secretVaultMount = deploymentSpecInternal.volume?.secretVaultName?.let {
+    //TODO: Remove
+    val secretVaultMount = deploymentSpecInternal.volume?.secrets?.get(0)?.secretVaultName?.let {
         Mount(
             path = "/u01/config/secret",
             type = MountType.Secret,

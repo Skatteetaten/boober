@@ -5,7 +5,12 @@ import no.skatteetaten.aurora.boober.utils.PropertiesException
 import no.skatteetaten.aurora.boober.utils.filterProperties
 import org.springframework.stereotype.Service
 
-data class VaultRequest(val collectionName: String, val name: String, val keys: List<String>, val keyMappings: Map<String, String>?)
+data class VaultRequest(
+    val collectionName: String,
+    val name: String,
+    val keys: List<String> = emptyList(),
+    val keyMappings: Map<String, String>? = null
+)
 
 typealias VaultData = Map<String, ByteArray>
 typealias VaultIndex = Map<String, VaultData>

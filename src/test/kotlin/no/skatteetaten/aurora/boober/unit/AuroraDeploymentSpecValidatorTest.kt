@@ -296,7 +296,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
-        assertThat(deploymentSpec.volume?.secretVaultName).isEqualTo("foo2")
+        assertThat(deploymentSpec.volume?.secrets?.first()?.secretVaultName).isEqualTo("foo2")
     }
 
     @Test

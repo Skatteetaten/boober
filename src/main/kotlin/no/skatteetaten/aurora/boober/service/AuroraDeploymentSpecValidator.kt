@@ -76,7 +76,8 @@ class AuroraDeploymentSpecValidator(
             ?.mapNotNull { it.secretVaultName }
             ?: emptyList())
             .toMutableList()
-        deploymentSpecInternal.volume?.secretVaultName?.let { vaultNames.add(it) }
+        //TODO: Remove?
+        deploymentSpecInternal.volume?.secrets?.first()?.secretVaultName?.let { vaultNames.add(it) }
 
         vaultNames.forEach {
             val vaultCollectionName = deploymentSpecInternal.environment.affiliation
@@ -142,9 +143,9 @@ class AuroraDeploymentSpecValidator(
     }
 
     fun validateKeyMappings(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
-        deploymentSpecInternal.volume?.let { volume ->
-            val keyMappings = volume.keyMappings.takeIfNotEmpty() ?: return
-            val keys = volume.secretVaultKeys.takeIfNotEmpty() ?: return
+        deploymentSpecInternal.volume?.secrets?.get(0)?.let { secret ->
+            val keyMappings = secret.keyMappings.takeIfNotEmpty() ?: return
+            val keys = secret.secretVaultKeys.takeIfNotEmpty() ?: return
             val diff = keyMappings.keys - keys
             if (diff.isNotEmpty()) {
                 throw AuroraDeploymentSpecValidationException("The secretVault keyMappings $diff were not found in keys")
@@ -159,9 +160,9 @@ class AuroraDeploymentSpecValidator(
      */
     fun validateSecretVaultKeys(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
 
-        deploymentSpecInternal.volume?.let { volume ->
-            val vaultName = volume.secretVaultName ?: return
-            val keys = volume.secretVaultKeys.takeIfNotEmpty() ?: return
+        deploymentSpecInternal.volume?.secrets?.get(0)?.let { secret ->
+            val vaultName = secret.secretVaultName ?: return
+            val keys = secret.secretVaultKeys.takeIfNotEmpty() ?: return
 
             val vaultKeys = vaultService.findVaultKeys(
                 deploymentSpecInternal.environment.affiliation,

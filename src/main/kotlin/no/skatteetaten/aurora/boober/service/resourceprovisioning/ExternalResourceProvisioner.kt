@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
+import no.skatteetaten.aurora.boober.model.AuroraSecret
 import no.skatteetaten.aurora.boober.model.Database
 import org.springframework.stereotype.Service
 import java.util.Optional
@@ -83,17 +84,23 @@ class ExternalResourceProvisioner(
         protected fun createVaultRequests(deploymentSpecInternal: AuroraDeploymentSpecInternal): List<VaultRequest> {
             val volume = deploymentSpecInternal.volume ?: return listOf()
 
-            val secretVaultNames = volume.mounts?.mapNotNull { it.secretVaultName }.orEmpty()
-            val allVaultNames = volume.secretVaultName?.let { secretVaultNames + listOf(it) } ?: secretVaultNames
-
-            return allVaultNames.map {
+            val volumeRequests = volume.mounts?.mapNotNull { it.secretVaultName }?.map {
                 VaultRequest(
                     collectionName = deploymentSpecInternal.environment.affiliation,
-                    name = it,
-                    keys = volume.secretVaultKeys,
-                    keyMappings = volume.keyMappings
+                    name = it
                 )
-            }
+            } ?: emptyList()
+
+            val envRequests = volume.secrets?.map { secret: AuroraSecret ->
+                VaultRequest(
+                    collectionName = deploymentSpecInternal.environment.affiliation,
+                    name = secret.secretVaultName,
+                    keys = secret.secretVaultKeys,
+                    keyMappings = secret.keyMappings
+                )
+
+            } ?: emptyList()
+            return volumeRequests + envRequests
         }
     }
 }

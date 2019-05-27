@@ -217,7 +217,16 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
                 "test",
                 listOf("test1")
             )
-        )
+        ),
+        NEW_SYNTAX(
+            SecretVaultTestData(
+                """{ "secretVaults": { "test" :{} }}""",
+                "test",
+                emptyList()
+            )
+        ),
+
+
     }
 
     @ParameterizedTest
@@ -228,8 +237,8 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
 
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
-        assertThat(deploymentSpec.volume?.secretVaultKeys).isEqualTo(testData.vault.keys)
-        assertThat(deploymentSpec.volume?.secretVaultName).isEqualTo(testData.vault.vaultName)
+        assertThat(deploymentSpec.volume?.secrets?.get(0)?.secretVaultKeys).isEqualTo(testData.vault.keys)
+        assertThat(deploymentSpec.volume?.secrets?.get(0)?.secretVaultName).isEqualTo(testData.vault.vaultName)
     }
 
     enum class PermissionsTestData(val values: Any) {
