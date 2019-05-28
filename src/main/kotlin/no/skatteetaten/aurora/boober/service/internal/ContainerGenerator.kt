@@ -46,6 +46,8 @@ object ContainerGenerator {
             }
             env = adcContainer.env + portEnv
 
+            envFrom = adcContainer.envFrom
+
             resources {
                 limits = fromAdcResource(adcContainer.limit)
                 requests = fromAdcResource(adcContainer.request)

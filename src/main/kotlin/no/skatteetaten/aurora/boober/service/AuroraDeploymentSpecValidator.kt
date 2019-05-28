@@ -39,6 +39,7 @@ class AuroraDeploymentSpecValidator(
         validateKeyMappings(deploymentSpecInternal)
         validateSecretVaultKeys(deploymentSpecInternal)
         validateExistingResources(deploymentSpecInternal)
+        // TODO: Validate that we do not have multiple secrets with the same information in vault
     }
 
     fun validateExistingResources(spec: AuroraDeploymentSpecInternal) {
@@ -76,8 +77,6 @@ class AuroraDeploymentSpecValidator(
             ?.mapNotNull { it.secretVaultName }
             ?: emptyList())
             .toMutableList()
-        //TODO: Remove?
-        deploymentSpecInternal.volume?.secrets?.first()?.secretVaultName?.let { vaultNames.add(it) }
 
         vaultNames.forEach {
             val vaultCollectionName = deploymentSpecInternal.environment.affiliation

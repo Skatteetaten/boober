@@ -5,6 +5,9 @@ import no.skatteetaten.aurora.boober.utils.PropertiesException
 import no.skatteetaten.aurora.boober.utils.filterProperties
 import org.springframework.stereotype.Service
 
+// TODO: We can have multiple files from the same vault, so this needs
+// name, vaultName and file
+
 data class VaultRequest(
     val collectionName: String,
     val name: String,
@@ -15,9 +18,14 @@ data class VaultRequest(
 typealias VaultData = Map<String, ByteArray>
 typealias VaultIndex = Map<String, VaultData>
 
+class VaultSecretEnvResult(
+    val name: String,
+    val secrets: VaultData
+)
+
 class VaultResults(val vaultIndex: VaultIndex) {
     fun getVaultData(secretVaultName: String): VaultData {
-        return vaultIndex.get(secretVaultName)
+        return vaultIndex[secretVaultName]
             ?: throw IllegalArgumentException("No data for vault $secretVaultName was provisioned")
     }
 }
@@ -29,18 +37,20 @@ class VaultProvider(val vaultService: VaultService) {
 
         val filteredVaultIndex = vaultRequests.associateBy(
             { it.name },
-            {
-                val vaultContents = vaultService.findVault(it.collectionName, it.name).secrets
-                try {
-                    filterVaultData(vaultContents, it.keys, it.keyMappings)
-                } catch (pe: PropertiesException) {
-                    val propName = it.name
-                    throw RuntimeException("Error when reading properties from $propName.", pe)
-                }
-            }
+            { findVaultData(it) }
         )
 
         return VaultResults(filteredVaultIndex)
+    }
+
+    fun findVaultData(it: VaultRequest): VaultData {
+        val vaultContents = vaultService.findVault(it.collectionName, it.name).secrets
+        return try {
+            filterVaultData(vaultContents, it.keys, it.keyMappings)
+        } catch (pe: PropertiesException) {
+            val propName = it.name
+            throw RuntimeException("Error when reading properties from $propName.", pe)
+        }
     }
 
     private fun filterVaultData(vaultData: VaultData, secretVaultKeys: List<String>, keyMappings: Map<String, String>?): VaultData {

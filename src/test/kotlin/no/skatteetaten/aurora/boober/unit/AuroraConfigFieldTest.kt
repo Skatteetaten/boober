@@ -4,6 +4,7 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import no.skatteetaten.aurora.boober.mapper.v1.AuroraVolumeMapperV1
 import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
+import org.apache.commons.text.StringSubstitutor
 import org.junit.jupiter.api.Test
 
 class AuroraConfigFieldTest : AbstractAuroraConfigTest() {
@@ -25,7 +26,7 @@ class AuroraConfigFieldTest : AbstractAuroraConfigTest() {
 
         val auroraConfig = createAuroraConfig(auroraConfigJson)
         val files = auroraConfig.files
-        val mapper = AuroraVolumeMapperV1(files)
+        val mapper = AuroraVolumeMapperV1(files, "foo", StringSubstitutor())
 
         assertThat(mapper.configHandlers.map { it.path }).isEqualTo(
             listOf(

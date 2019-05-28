@@ -3,13 +3,17 @@ package no.skatteetaten.aurora.boober.service.resourceprovisioning
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.AuroraSecret
 import no.skatteetaten.aurora.boober.model.Database
+import org.springframework.core.io.ByteArrayResource
+import org.springframework.core.io.support.PropertiesLoaderUtils
 import org.springframework.stereotype.Service
 import java.util.Optional
 
+// TODO: check tests where this is used
 class ProvisioningResult(
-    val schemaProvisionResults: SchemaProvisionResults?,
-    val vaultResults: VaultResults?,
-    val stsProvisioningResult: StsProvisioningResult?
+    val schemaProvisionResults: SchemaProvisionResults? = null,
+    val vaultResults: VaultResults? = null,
+    val stsProvisioningResult: StsProvisioningResult? = null,
+    val vaultSecretEnvResult: List<VaultSecretEnvResult> = emptyList()
 )
 
 @Service
@@ -23,8 +27,32 @@ class ExternalResourceProvisioner(
 
         val stsProvisioningResult = handleSts(deploymentSpecInternal)
         val schemaProvisionResult = handleSchemaProvisioning(deploymentSpecInternal)
-        val schemaResults = handleVaults(deploymentSpecInternal)
-        return ProvisioningResult(schemaProvisionResult, schemaResults, stsProvisioningResult)
+        val vaultResults = handleVaults(deploymentSpecInternal)
+        val secretEnvResults = handleSecretEnv(deploymentSpecInternal)
+
+
+        return ProvisioningResult(schemaProvisionResult, vaultResults, stsProvisioningResult, secretEnvResults)
+    }
+
+    // TODO: extract til en funksjon inne i map
+    private fun handleSecretEnv(deploymentSpecInternal: AuroraDeploymentSpecInternal): List<VaultSecretEnvResult> {
+        return deploymentSpecInternal.volume?.secrets?.mapNotNull { secret: AuroraSecret ->
+            val request = VaultRequest(
+                collectionName = deploymentSpecInternal.environment.affiliation,
+                name = secret.secretVaultName,
+                keys = secret.secretVaultKeys,
+                keyMappings = secret.keyMappings
+            )
+            vaultProvider.findVaultData(request)[secret.file]?.let { file ->
+                //TODO: Flytte filterProperties hit.
+                val propertiesFiles = PropertiesLoaderUtils.loadProperties(ByteArrayResource(file))
+                propertiesFiles.map {
+                    it.key.toString() to it.value.toString().toByteArray()
+                }
+            }?.let {
+                VaultSecretEnvResult(secret.name, it.toMap())
+            }
+        } ?: emptyList()
     }
 
     private fun handleSts(deploymentSpec: AuroraDeploymentSpecInternal): StsProvisioningResult? {
@@ -51,7 +79,12 @@ class ExternalResourceProvisioner(
 
     private fun handleVaults(deploymentSpecInternal: AuroraDeploymentSpecInternal): VaultResults? {
 
-        val vaultRequests = createVaultRequests(deploymentSpecInternal)
+        val vaultRequests = deploymentSpecInternal.volume?.mounts?.mapNotNull { it.secretVaultName }?.map {
+            VaultRequest(
+                collectionName = deploymentSpecInternal.environment.affiliation,
+                name = it
+            )
+        } ?: emptyList()
         return vaultProvider.findVaultData(vaultRequests)
     }
 
@@ -78,29 +111,6 @@ class ExternalResourceProvisioner(
                     )
                 }
             }
-        }
-
-        @JvmStatic
-        protected fun createVaultRequests(deploymentSpecInternal: AuroraDeploymentSpecInternal): List<VaultRequest> {
-            val volume = deploymentSpecInternal.volume ?: return listOf()
-
-            val volumeRequests = volume.mounts?.mapNotNull { it.secretVaultName }?.map {
-                VaultRequest(
-                    collectionName = deploymentSpecInternal.environment.affiliation,
-                    name = it
-                )
-            } ?: emptyList()
-
-            val envRequests = volume.secrets?.map { secret: AuroraSecret ->
-                VaultRequest(
-                    collectionName = deploymentSpecInternal.environment.affiliation,
-                    name = secret.secretVaultName,
-                    keys = secret.secretVaultKeys,
-                    keyMappings = secret.keyMappings
-                )
-
-            } ?: emptyList()
-            return volumeRequests + envRequests
         }
     }
 }

@@ -84,9 +84,7 @@ class OpenShiftObjectGeneratorDatabaseSchemaProvisioningTest : AbstractOpenShift
                         responseText = responseText
                     )
                 )
-            ),
-            vaultResults = null,
-            stsProvisioningResult = null
+            )
         )
 
         val objects = objectGenerator.generateApplicationObjects(

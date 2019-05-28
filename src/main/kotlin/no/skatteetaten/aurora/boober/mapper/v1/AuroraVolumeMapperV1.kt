@@ -9,10 +9,16 @@ import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureEndsWith
+import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.required
+import org.apache.commons.text.StringSubstitutor
 
-class AuroraVolumeMapperV1(private val applicationFiles: List<AuroraConfigFile>) {
+class AuroraVolumeMapperV1(
+    private val applicationFiles: List<AuroraConfigFile>,
+    val name: String,
+    val replacer: StringSubstitutor
+) {
 
     private val mountHandlers = createMountHandlers()
     val configHandlers = applicationFiles.findConfigFieldHandlers()
@@ -34,18 +40,18 @@ class AuroraVolumeMapperV1(private val applicationFiles: List<AuroraConfigFile>)
             )
         }
 
+        // TODO: Remmeber replacer of $it
         val secretVaults = applicationFiles.findSubKeys("secretVaults").mapNotNull {
             val enabled: Boolean = auroraDeploymentSpec["secretVaults/$it/enabled"]
 
             if (!enabled) {
                 null
             } else {
-
                 AuroraSecret(
                     secretVaultKeys = auroraDeploymentSpec.getOrNull("secretVaults/$it/keys") ?: listOf(),
                     keyMappings = auroraDeploymentSpec.getOrNull("secretVaults/$it/keyMappings"),
                     file = auroraDeploymentSpec["secretVaults/$it/file"],
-                    name = it,
+                    name = replacer.replace(it).ensureStartWith(name, "-"),
                     secretVaultName = auroraDeploymentSpec["secretVaults/$it/name"]
                 )
             }

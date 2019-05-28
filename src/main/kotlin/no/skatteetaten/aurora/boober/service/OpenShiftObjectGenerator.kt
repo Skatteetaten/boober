@@ -42,8 +42,10 @@ import no.skatteetaten.aurora.boober.service.internal.StsSecretGenerator
 import no.skatteetaten.aurora.boober.service.internal.findAndCreateMounts
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultSecretEnvResult
 import no.skatteetaten.aurora.boober.utils.Instants.now
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.slf4j.Logger
@@ -86,7 +88,15 @@ class OpenShiftObjectGenerator(
         return withLabelsAndMounts(deployId, auroraDeploymentSpecInternal, provisioningResult) { labels, mounts ->
 
             listOf<JsonNode>()
-                .addIfNotNull(generateDeploymentConfig(auroraDeploymentSpecInternal, labels, mounts, ownerReference))
+                .addIfNotNull(
+                    generateDeploymentConfig(
+                        auroraDeploymentSpecInternal,
+                        labels,
+                        mounts,
+                        ownerReference,
+                        provisioningResult?.vaultSecretEnvResult ?: emptyList()
+                    )
+                )
                 .addIfNotNull(
                     generateService(
                         auroraDeploymentSpecInternal,
@@ -153,10 +163,11 @@ class OpenShiftObjectGenerator(
         deployId: String,
         deploymentSpecInternal: AuroraDeploymentSpecInternal,
         provisioningResult: ProvisioningResult? = null,
-        ownerReference: OwnerReference
+        ownerReference: OwnerReference,
+        secretEnv: List<VaultSecretEnvResult>? = null
     ): JsonNode? =
         withLabelsAndMounts(deployId, deploymentSpecInternal, provisioningResult) { labels, mounts ->
-            generateDeploymentConfig(deploymentSpecInternal, labels, mounts, ownerReference)
+            generateDeploymentConfig(deploymentSpecInternal, labels, mounts, ownerReference, secretEnv ?: emptyList())
         }
 
     // TODO: Hele denne bør egentlig ligge i ApplicationPlattformen
@@ -164,7 +175,8 @@ class OpenShiftObjectGenerator(
         auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
         labels: Map<String, String>,
         mounts: List<Mount>?,
-        ownerReference: OwnerReference
+        ownerReference: OwnerReference,
+        secretEnv: List<VaultSecretEnvResult>
     ): JsonNode? {
 
         if (auroraDeploymentSpecInternal.deploy == null) {
@@ -180,7 +192,7 @@ class OpenShiftObjectGenerator(
             mounts?.filter { it.targetContainer == ToxiProxyDefaults.NAME })
 
         val baseContainer =
-            applicationPlatformHandler.createBaseContainer(auroraDeploymentSpecInternal, mounts, routeSuffix)
+            applicationPlatformHandler.createBaseContainer(auroraDeploymentSpecInternal, mounts, routeSuffix, secretEnv)
         val auroraContainers: List<AuroraContainer> = applicationPlatformHandler.createContainers(baseContainer)
         val deployment = applicationPlatformHandler.handleAuroraDeployment(
             auroraDeploymentSpecInternal,
@@ -397,6 +409,15 @@ class OpenShiftObjectGenerator(
 
         val schemaSecretNames = schemaSecrets.map { it.metadata.name }
 
+        val secretEnvSecrets = provisioningResult?.vaultSecretEnvResult?.map {
+            SecretGenerator.create(
+                secretName = it.name.ensureStartWith(appName, "-"),
+                secretData = it.secrets,
+                secretNamespace = namespace,
+                secretLabels = labels,
+                ownerReference = ownerReference
+            )
+        }
         return mounts
             .filter { !it.exist }
             .filter { !schemaSecretNames.contains(it.volumeName) }
@@ -429,6 +450,7 @@ class OpenShiftObjectGenerator(
             }
             .plus(schemaSecrets)
             .addIfNotNull(stsSecret)
+            .addIfNotNull(secretEnvSecrets)
             .map { mapper.convertValue<JsonNode>(it) }
     }
 

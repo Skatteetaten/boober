@@ -253,26 +253,6 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
     }
 
     @Test
-    fun `Fails when vault does not exist`() {
-
-        auroraConfigJson["utv/aos-simple.json"] =
-            """{ "secretVault": "test", "mounts": { "secret": { "type": "Secret", "secretVault": "test2", "path": "/tmp" } } }"""
-        val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
-        val vaultCollection = deploymentSpec.environment.affiliation
-
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(listOf(UserGroup("foo", "APP_PaaS_utv")))
-        every { vaultService.vaultExists(vaultCollection, "test") } returns false
-        every { vaultService.vaultExists(vaultCollection, "test2") } returns true
-
-        assertThat {
-            specValidator.assertIsValid(deploymentSpec)
-        }.thrownError {
-            hasMessage("Referenced Vault test in Vault Collection $vaultCollection does not exist")
-            isInstanceOf(AuroraDeploymentSpecValidationException::class)
-        }
-    }
-
-    @Test
     fun `Succeeds when vault exists`() {
 
         auroraConfigJson["utv/aos-simple.json"] =
