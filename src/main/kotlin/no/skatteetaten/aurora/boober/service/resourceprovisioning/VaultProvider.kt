@@ -1,12 +1,7 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
 import no.skatteetaten.aurora.boober.service.vault.VaultService
-import no.skatteetaten.aurora.boober.utils.PropertiesException
-import no.skatteetaten.aurora.boober.utils.filterProperties
 import org.springframework.stereotype.Service
-
-// TODO: We can have multiple files from the same vault, so this needs
-// name, vaultName and file
 
 data class VaultRequest(
     val collectionName: String,
@@ -44,24 +39,6 @@ class VaultProvider(val vaultService: VaultService) {
     }
 
     fun findVaultData(it: VaultRequest): VaultData {
-        val vaultContents = vaultService.findVault(it.collectionName, it.name).secrets
-        return try {
-            filterVaultData(vaultContents, it.keys, it.keyMappings)
-        } catch (pe: PropertiesException) {
-            val propName = it.name
-            throw RuntimeException("Error when reading properties from $propName.", pe)
-        }
-    }
-
-    private fun filterVaultData(vaultData: VaultData, secretVaultKeys: List<String>, keyMappings: Map<String, String>?): VaultData {
-        return vaultData
-            .mapValues {
-                // if the vault contain a .properties-file, we filter based on secretVaultKeys
-                if (it.key.contains(".properties")) {
-                    filterProperties(it.value, secretVaultKeys, keyMappings)
-                } else {
-                    it.value
-                }
-            }.toMap()
+        return vaultService.findVault(it.collectionName, it.name).secrets.mapValues { it.value }
     }
 }

@@ -56,7 +56,6 @@ class AuroraVolumeMapperV1(
             }
         }
         val secrets = secretVaults.addIfNotNull(secret)
-        // TODO: Fix.
         return AuroraVolume(
             secrets = secrets,
             config = getApplicationConfigFiles(auroraDeploymentSpec),

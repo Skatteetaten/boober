@@ -3,12 +3,10 @@ package no.skatteetaten.aurora.boober.service.resourceprovisioning
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.AuroraSecret
 import no.skatteetaten.aurora.boober.model.Database
-import org.springframework.core.io.ByteArrayResource
-import org.springframework.core.io.support.PropertiesLoaderUtils
+import no.skatteetaten.aurora.boober.utils.filterProperties
 import org.springframework.stereotype.Service
 import java.util.Optional
 
-// TODO: check tests where this is used
 class ProvisioningResult(
     val schemaProvisionResults: SchemaProvisionResults? = null,
     val vaultResults: VaultResults? = null,
@@ -33,7 +31,6 @@ class ExternalResourceProvisioner(
         return ProvisioningResult(schemaProvisionResult, vaultResults, stsProvisioningResult, secretEnvResults)
     }
 
-    // TODO: extract til en funksjon inne i map
     private fun handleSecretEnv(deploymentSpecInternal: AuroraDeploymentSpecInternal): List<VaultSecretEnvResult> {
         return deploymentSpecInternal.volume?.secrets?.mapNotNull { secret: AuroraSecret ->
             val request = VaultRequest(
@@ -43,9 +40,8 @@ class ExternalResourceProvisioner(
                 keyMappings = secret.keyMappings
             )
             vaultProvider.findVaultData(request)[secret.file]?.let { file ->
-                // TODO: Flytte filterProperties hit.
-                val propertiesFiles = PropertiesLoaderUtils.loadProperties(ByteArrayResource(file))
-                propertiesFiles.map {
+                val properties = filterProperties(file, secret.secretVaultKeys, secret.keyMappings)
+                properties.map {
                     it.key.toString() to it.value.toString().toByteArray()
                 }
             }?.let {

@@ -6,13 +6,12 @@ import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.util.Properties
 
-fun filterProperties(properties: ByteArray, keys: List<String>, keyMappings: Map<String, String>?): ByteArray =
+fun filterProperties(properties: ByteArray, keys: List<String>, keyMappings: Map<String, String>?): Properties =
     try {
         PropertiesLoaderUtils
             .loadProperties(ByteArrayResource(properties))
             .filter(keys)
             .replaceKeyMappings(keyMappings)
-            .toByteArray()
     } catch (ioe: IOException) {
         throw PropertiesException("Encountered a problem while reading properties.", ioe)
     }
