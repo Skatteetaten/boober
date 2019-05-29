@@ -2,7 +2,7 @@ package no.skatteetaten.aurora.boober.unit
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import assertk.assertions.isNull
+import assertk.assertions.isNullOrEmpty
 import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -67,6 +67,13 @@ class SecretVaultsMapperTest : AbstractAuroraConfigTest() {
                 emptyList()
             )
         ),
+        NEW_SYNTAX_WITH_REPLACER(
+            SecretVaultTestData(
+                """{ "secretVaults": { "@name@" :{} }}""",
+                "aos-simple",
+                emptyList()
+            )
+        ),
     }
 
     @ParameterizedTest
@@ -85,6 +92,6 @@ class SecretVaultsMapperTest : AbstractAuroraConfigTest() {
     fun `skip vault that is not enabled`() {
         auroraConfigJson["utv/aos-simple.json"] = """{ "secretVaults": { "test" : { "enabled" : false }}}"""
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
-        assertThat(deploymentSpec.volume?.secrets).isNull()
+        assertThat(deploymentSpec.volume?.secrets).isNullOrEmpty()
     }
 }

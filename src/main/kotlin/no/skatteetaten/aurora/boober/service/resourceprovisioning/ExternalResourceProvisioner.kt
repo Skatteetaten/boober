@@ -30,7 +30,6 @@ class ExternalResourceProvisioner(
         val vaultResults = handleVaults(deploymentSpecInternal)
         val secretEnvResults = handleSecretEnv(deploymentSpecInternal)
 
-
         return ProvisioningResult(schemaProvisionResult, vaultResults, stsProvisioningResult, secretEnvResults)
     }
 
@@ -44,7 +43,7 @@ class ExternalResourceProvisioner(
                 keyMappings = secret.keyMappings
             )
             vaultProvider.findVaultData(request)[secret.file]?.let { file ->
-                //TODO: Flytte filterProperties hit.
+                // TODO: Flytte filterProperties hit.
                 val propertiesFiles = PropertiesLoaderUtils.loadProperties(ByteArrayResource(file))
                 propertiesFiles.map {
                     it.key.toString() to it.value.toString().toByteArray()

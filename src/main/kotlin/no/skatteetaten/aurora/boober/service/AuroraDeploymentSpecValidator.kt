@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
+import no.skatteetaten.aurora.boober.model.AuroraSecret
 import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
@@ -28,6 +29,8 @@ class AuroraDeploymentSpecValidator(
 
     val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpecValidator::class.java)
 
+    // TODO: We thro on the first validation error, so if there are multiple things wrong it will not show.
+    // IMHO exception are wrong here. Return an error result and collect them. If it is nonEmpty then throw.
     @Throws(AuroraDeploymentSpecValidationException::class)
     fun assertIsValid(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
 
@@ -39,7 +42,7 @@ class AuroraDeploymentSpecValidator(
         validateKeyMappings(deploymentSpecInternal)
         validateSecretVaultKeys(deploymentSpecInternal)
         validateExistingResources(deploymentSpecInternal)
-        // TODO: Validate that we do not have multiple secrets with the same information in vault
+        validateDuplicateSecretEnvNames(deploymentSpecInternal)
     }
 
     fun validateExistingResources(spec: AuroraDeploymentSpecInternal) {
@@ -142,36 +145,64 @@ class AuroraDeploymentSpecValidator(
     }
 
     fun validateKeyMappings(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
-        deploymentSpecInternal.volume?.secrets?.get(0)?.let { secret ->
-            val keyMappings = secret.keyMappings.takeIfNotEmpty() ?: return
-            val keys = secret.secretVaultKeys.takeIfNotEmpty() ?: return
-            val diff = keyMappings.keys - keys
-            if (diff.isNotEmpty()) {
-                throw AuroraDeploymentSpecValidationException("The secretVault keyMappings $diff were not found in keys")
-            }
+        deploymentSpecInternal.volume?.secrets?.forEach { secret ->
+            validateKeyMapping(secret)
         }
+    }
+
+    private fun validateKeyMapping(secret: AuroraSecret): Boolean {
+        val keyMappings = secret.keyMappings.takeIfNotEmpty() ?: return true
+        val keys = secret.secretVaultKeys.takeIfNotEmpty() ?: return true
+        val diff = keyMappings.keys - keys
+        if (diff.isNotEmpty()) {
+            throw AuroraDeploymentSpecValidationException("The secretVault keyMappings $diff were not found in keys")
+        }
+        return false
     }
 
     /**
      * Validates that any secretVaultKeys specified actually exist in the vault.
      * Note that this method always uses the latest.properties file regardless of the version of the application and
-     * the contents of the vault. TODO: to determine if another properties file should be used instead.
+     * the contents of the vault.
      */
     fun validateSecretVaultKeys(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
 
-        deploymentSpecInternal.volume?.secrets?.get(0)?.let { secret ->
-            val vaultName = secret.secretVaultName ?: return
-            val keys = secret.secretVaultKeys.takeIfNotEmpty() ?: return
+        deploymentSpecInternal.volume?.secrets?.forEach { secret ->
+            validateSecretVaultKey(secret, deploymentSpecInternal)
+        }
+    }
 
-            val vaultKeys = vaultService.findVaultKeys(
-                deploymentSpecInternal.environment.affiliation,
-                vaultName,
-                "latest.properties"
+    private fun validateSecretVaultKey(
+        secret: AuroraSecret,
+        deploymentSpecInternal: AuroraDeploymentSpecInternal
+    ): Boolean {
+        val vaultName = secret.secretVaultName
+        val keys = secret.secretVaultKeys.takeIfNotEmpty() ?: return true
+
+        val vaultKeys = vaultService.findVaultKeys(
+            deploymentSpecInternal.environment.affiliation,
+            vaultName,
+            secret.file
+        )
+        val missingKeys = keys - vaultKeys
+        if (missingKeys.isNotEmpty()) {
+            throw AuroraDeploymentSpecValidationException("The keys $missingKeys were not found in the secret vault")
+        }
+        return false
+    }
+
+    /*
+     * Validates that the name property of a secret it unique
+     */
+    @Throws(AuroraDeploymentSpecValidationException::class)
+    fun validateDuplicateSecretEnvNames(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
+        val secretNames = deploymentSpecInternal.volume?.secrets?.map { it.name } ?: emptyList()
+        if (secretNames.size != secretNames.toSet().size) {
+            throw AuroraDeploymentSpecValidationException(
+                "SecretVaults does not have unique names=[${secretNames.joinToString(
+                    ", "
+                )}]"
             )
-            val missingKeys = keys - vaultKeys
-            if (missingKeys.isNotEmpty()) {
-                throw AuroraDeploymentSpecValidationException("The keys $missingKeys were not found in the secret vault")
-            }
         }
     }
 }

@@ -36,11 +36,10 @@ class AuroraVolumeMapperV1(
                 keyMappings = auroraDeploymentSpec.getKeyMappings(secretVaultKeyMappingHandler),
                 secretVaultKeys = getSecretVaultKeys(auroraDeploymentSpec),
                 file = "latest.properties",
-                name = it
+                name = it.ensureStartWith(name, "-")
             )
         }
 
-        // TODO: Remmeber replacer of $it
         val secretVaults = applicationFiles.findSubKeys("secretVaults").mapNotNull {
             val enabled: Boolean = auroraDeploymentSpec["secretVaults/$it/enabled"]
 
@@ -57,9 +56,9 @@ class AuroraVolumeMapperV1(
             }
         }
         val secrets = secretVaults.addIfNotNull(secret)
-        //TODO: Fix.
+        // TODO: Fix.
         return AuroraVolume(
-            secrets = if (secrets.isEmpty()) null else secrets,
+            secrets = secrets,
             config = getApplicationConfigFiles(auroraDeploymentSpec),
             mounts = getMounts(auroraDeploymentSpec)
         )
@@ -76,7 +75,6 @@ class AuroraVolumeMapperV1(
                 AuroraConfigFieldHandler("secretVaults/$key/keys"),
                 AuroraConfigFieldHandler("secretVaults/$key/keyMappings")
             )
-
         }
     }
 

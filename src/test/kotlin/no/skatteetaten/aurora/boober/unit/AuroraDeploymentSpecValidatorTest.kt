@@ -323,6 +323,23 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
     }
 
     @Test
+    fun `Fails when name of secrets is not unique`() {
+
+        auroraConfigJson["utv/aos-simple.json"] = """{
+            |"secretVault": { "name": "test", "keys": ["test-key1"] },
+            |"secretVaults" : { "test" : {} }
+            |}""".trimMargin()
+        val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+        assertThat {
+            specValidator.validateDuplicateSecretEnvNames(deploymentSpec)
+        }.thrownError {
+            isInstanceOf(AuroraDeploymentSpecValidationException::class)
+            hasMessage("SecretVaults does not have unique names=[aos-simple-test, aos-simple-test]")
+        }
+    }
+
+    @Test
     fun `Fails when existing mount not exist`() {
 
         auroraConfigJson["utv/aos-simple.json"] =

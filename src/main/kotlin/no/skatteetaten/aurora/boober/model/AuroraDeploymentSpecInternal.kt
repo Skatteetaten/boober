@@ -118,7 +118,7 @@ data class AuroraSecret(
 )
 
 data class AuroraVolume(
-    val secrets: List<AuroraSecret>?,
+    val secrets: List<AuroraSecret>,
     val config: Map<String, String>?,
     val mounts: List<Mount>?
 )
