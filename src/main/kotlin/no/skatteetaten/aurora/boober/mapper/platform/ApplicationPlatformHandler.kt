@@ -59,16 +59,6 @@ abstract class ApplicationPlatformHandler(val name: String) {
         )
     }
 
-    fun createEnvFrom(secretEnv: List<VaultSecretEnvResult>): List<EnvFromSource> {
-        return secretEnv.map {
-            newEnvFromSource {
-                secretRef = newSecretEnvSource {
-                    name = it.name
-                }
-            }
-        }
-    }
-
     open fun handleAuroraDeployment(
         auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
         labels: Map<String, String>,
@@ -224,6 +214,16 @@ fun List<Mount>?.podVolumes(dcName: String): List<Volume> {
             }
         }
     } ?: emptyList()
+}
+
+fun createEnvFrom(secretEnv: List<VaultSecretEnvResult>): List<EnvFromSource> {
+    return secretEnv.map {
+        newEnvFromSource {
+            secretRef = newSecretEnvSource {
+                name = it.name
+            }
+        }
+    }
 }
 
 fun createEnvVars(

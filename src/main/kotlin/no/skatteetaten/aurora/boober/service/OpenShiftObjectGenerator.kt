@@ -16,6 +16,7 @@ import io.fabric8.kubernetes.api.model.ResourceRequirements
 import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.platform.AuroraContainer
+import no.skatteetaten.aurora.boober.mapper.platform.createEnvFrom
 import no.skatteetaten.aurora.boober.mapper.platform.createEnvVars
 import no.skatteetaten.aurora.boober.mapper.platform.podVolumes
 import no.skatteetaten.aurora.boober.mapper.platform.volumeMount
@@ -117,7 +118,14 @@ class OpenShiftObjectGenerator(
                     )
                 )
                 .addIfNotNull(generateRoute(auroraDeploymentSpecInternal, labels, ownerReference))
-                .addIfNotNull(generateTemplates(auroraDeploymentSpecInternal, mounts, ownerReference))
+                .addIfNotNull(
+                    generateTemplates(
+                        auroraDeploymentSpecInternal,
+                        mounts,
+                        ownerReference,
+                        provisioningResult?.vaultSecretEnvResult
+                    )
+                )
         }
     }
 
@@ -264,7 +272,8 @@ class OpenShiftObjectGenerator(
     fun generateTemplates(
         auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
         mounts: List<Mount>?,
-        ownerReference: OwnerReference
+        ownerReference: OwnerReference,
+        vaultSecretEnvResult: List<VaultSecretEnvResult>?
     ): List<JsonNode>? {
 
         val localTemplate = auroraDeploymentSpecInternal.localTemplate?.let {
@@ -301,6 +310,9 @@ class OpenShiftObjectGenerator(
 
                 spec.containers.forEach { container ->
                     container.volumeMounts.addAll(mounts.volumeMount() ?: listOf())
+                    vaultSecretEnvResult?.let {
+                        container.envFrom.addAll(createEnvFrom(it))
+                    }
                     container.env.addAll(createEnvVars(mounts, auroraDeploymentSpecInternal, routeSuffix))
 
                     if (container.resources == null) {
