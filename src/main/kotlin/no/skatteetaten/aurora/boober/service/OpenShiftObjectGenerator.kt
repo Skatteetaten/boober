@@ -123,7 +123,7 @@ class OpenShiftObjectGenerator(
                         auroraDeploymentSpecInternal,
                         mounts,
                         ownerReference,
-                        provisioningResult?.vaultSecretEnvResult
+                        provisioningResult?.vaultSecretEnvResult ?: emptyList()
                     )
                 )
         }
@@ -273,7 +273,7 @@ class OpenShiftObjectGenerator(
         auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
         mounts: List<Mount>?,
         ownerReference: OwnerReference,
-        vaultSecretEnvResult: List<VaultSecretEnvResult>?
+        vaultSecretEnvResult: List<VaultSecretEnvResult>
     ): List<JsonNode>? {
 
         val localTemplate = auroraDeploymentSpecInternal.localTemplate?.let {
@@ -310,9 +310,7 @@ class OpenShiftObjectGenerator(
 
                 spec.containers.forEach { container ->
                     container.volumeMounts.addAll(mounts.volumeMount() ?: listOf())
-                    vaultSecretEnvResult?.let { secretFrom ->
-                        container.envFrom.addAll(createEnvFrom(secretFrom))
-                    }
+                    container.envFrom.addAll(createEnvFrom(vaultSecretEnvResult))
                     container.env.addAll(createEnvVars(mounts, auroraDeploymentSpecInternal, routeSuffix))
 
                     if (container.resources == null) {
