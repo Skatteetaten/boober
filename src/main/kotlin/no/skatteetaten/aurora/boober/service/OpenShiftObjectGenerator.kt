@@ -310,8 +310,8 @@ class OpenShiftObjectGenerator(
 
                 spec.containers.forEach { container ->
                     container.volumeMounts.addAll(mounts.volumeMount() ?: listOf())
-                    vaultSecretEnvResult?.let {
-                        container.envFrom.addAll(createEnvFrom(it))
+                    vaultSecretEnvResult?.let { secretFrom ->
+                        container.envFrom.addAll(createEnvFrom(secretFrom))
                     }
                     container.env.addAll(createEnvVars(mounts, auroraDeploymentSpecInternal, routeSuffix))
 
