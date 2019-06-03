@@ -323,6 +323,28 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
     }
 
     @Test
+    fun `Fails when file is not present in vault`() {
+
+        auroraConfigJson["utv/aos-simple.json"] = """{ "secretVaults": { "name": { "file" : "foo.properties"}}}"""
+        val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+        every {
+            vaultService.findFileInVault(
+                "aos",
+                "test",
+                "foo.properties"
+            )
+        } throws IllegalArgumentException("Could not find vault file")
+
+        assertThat {
+            specValidator.validateSecretVaultFiles(deploymentSpec)
+        }.thrownError {
+            isInstanceOf(AuroraDeploymentSpecValidationException::class)
+            hasMessage("File with name=foo.properties is not present in vault=name in collection=aos")
+        }
+    }
+
+    @Test
     fun `Fails when name of secrets is not unique`() {
 
         auroraConfigJson["utv/aos-simple.json"] = """{

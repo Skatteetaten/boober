@@ -39,9 +39,10 @@ class AuroraDeploymentSpecValidator(
         validateDatabase(deploymentSpecInternal)
         validateSkap(deploymentSpecInternal)
         validateVaultExistence(deploymentSpecInternal)
+        validateExistingResources(deploymentSpecInternal)
+        validateSecretVaultFiles(deploymentSpecInternal)
         validateKeyMappings(deploymentSpecInternal)
         validateSecretVaultKeys(deploymentSpecInternal)
-        validateExistingResources(deploymentSpecInternal)
         validateDuplicateSecretEnvNames(deploymentSpecInternal)
     }
 
@@ -189,6 +190,24 @@ class AuroraDeploymentSpecValidator(
             throw AuroraDeploymentSpecValidationException("The keys $missingKeys were not found in the secret vault")
         }
         return false
+    }
+
+    fun validateSecretVaultFiles(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
+        deploymentSpecInternal.volume?.secrets?.forEach { secret ->
+            validateSecretVaultFile(secret, deploymentSpecInternal)
+        }
+    }
+
+    private fun validateSecretVaultFile(secret: AuroraSecret, deploymentSpecInternal: AuroraDeploymentSpecInternal) {
+        try {
+            vaultService.findFileInVault(
+                vaultCollectionName = deploymentSpecInternal.environment.affiliation,
+                vaultName = secret.secretVaultName,
+                fileName = secret.file
+            )
+        } catch (e: Exception) {
+            throw AuroraDeploymentSpecValidationException("File with name=${secret.file} is not present in vault=${secret.secretVaultName} in collection=${deploymentSpecInternal.environment.affiliation}")
+        }
     }
 
     /*
