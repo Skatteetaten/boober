@@ -37,7 +37,8 @@ class DeployServiceProjectTerminatingTest {
         userDetailsProvider = userDetailsProvider,
         deployLogService = mockk(),
         cluster = "utv",
-        dockerRegistry = "docker.registry"
+        dockerRegistry = "docker.registry",
+        releaseDockerRegistry = "docker.registry"
     )
 
     val group = "APP_demo_drift"

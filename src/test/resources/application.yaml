@@ -26,6 +26,8 @@ boober:
         password: "bar"
     docker:
         registry: "docker-registry.aurora.sits.no:5000"
+        releases: "docker-registry.aurora.sits.no:5000"
+        token: "test"
     openshift:
         token: foo
 

@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
@@ -22,7 +23,10 @@ data class TagCommand @JvmOverloads constructor(
 )
 
 @Service
-class DockerService(val httpClient: RestTemplate) {
+class DockerService(
+    val httpClient: RestTemplate,
+    @Value("\${boober.docker.token}") val token: String
+) {
 
     val DOCKER_MANIFEST_V2: MediaType = MediaType.valueOf("application/vnd.docker.distribution.manifest.v2+json")
 
@@ -47,7 +51,8 @@ class DockerService(val httpClient: RestTemplate) {
         val manifestURI = generateManifestURI(registryUrl, name, tag)
         val headers = HttpHeaders()
         headers.contentType = DOCKER_MANIFEST_V2
-        val req = RequestEntity<JsonNode>(payload, headers, HttpMethod.PUT, manifestURI)
+        headers.setBearerAuth(token)
+        val req = RequestEntity(payload, headers, HttpMethod.PUT, manifestURI)
         return httpClient.exchange(req, JsonNode::class.java)
     }
 

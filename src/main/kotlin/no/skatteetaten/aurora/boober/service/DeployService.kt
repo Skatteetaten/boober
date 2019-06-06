@@ -37,7 +37,8 @@ class DeployService(
     val userDetailsProvider: UserDetailsProvider,
     val deployLogService: DeployLogService,
     @Value("\${openshift.cluster}") val cluster: String,
-    @Value("\${boober.docker.registry}") val dockerRegistry: String
+    @Value("\${boober.docker.registry}") val dockerRegistry: String,
+    @Value("\${boober.docker.releases}") val releaseDockerRegistry: String
 ) {
 
     val logger: Logger = LoggerFactory.getLogger(DeployService::class.java)
@@ -269,7 +270,15 @@ class DeployService(
 
         val tagResult = deploymentSpecInternal.deploy?.takeIf { it.releaseTo != null }?.let {
             val dockerGroup = it.groupId.dockerGroupSafeName()
-            dockerService.tag(TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry))
+            dockerService.tag(
+                TagCommand(
+                    name = "$dockerGroup/${it.artifactId}",
+                    from = it.version,
+                    to = it.releaseTo!!,
+                    fromRegistry = dockerRegistry,
+                    toRegistry = releaseDockerRegistry
+                )
+            )
         }
         val rawResult = AuroraDeployResult(
             command = cmd,

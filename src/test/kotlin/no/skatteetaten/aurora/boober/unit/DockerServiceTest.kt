@@ -20,7 +20,7 @@ import org.springframework.web.client.RestTemplate
 class DockerServiceTest {
 
     val httpClient = mockk<RestTemplate>()
-    val service = DockerService(httpClient)
+    val service = DockerService(httpClient, "test")
     val mapper = jsonMapper()
 
     @BeforeEach
