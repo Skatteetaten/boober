@@ -124,7 +124,6 @@ class AuroraDeploymentSpecValidator(
         if (openShiftGroups.isEmpty) {
             throw AuroraDeploymentSpecValidationException("All groups=[${adminGroups.joinToString(", ")}] are empty")
         }
-
     }
 
     private fun validateTemplateIfSet(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
