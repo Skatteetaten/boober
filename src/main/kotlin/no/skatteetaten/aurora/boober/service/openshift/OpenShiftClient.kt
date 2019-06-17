@@ -88,8 +88,6 @@ fun List<OpenShiftResponse>.imageStreamImport(): OpenShiftResponse? = this.resou
 
 data class OpenShiftGroups(val groupUsers: Map<String, List<String>>) {
 
-    val isEmpty: Boolean = !groupUsers.values.any { it.isNotEmpty() }
-
     fun getGroupsForUser(user: String): List<String> = groupUsers.filter { it.value.contains(user) }.keys.toList()
 
     fun getUsersForGroup(group: String) = groupUsers[group] ?: emptyList()
