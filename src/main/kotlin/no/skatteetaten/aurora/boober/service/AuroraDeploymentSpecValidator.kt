@@ -120,6 +120,14 @@ class AuroraDeploymentSpecValidator(
         if (nonExistantDeclaredGroups.isNotEmpty()) {
             throw AuroraDeploymentSpecValidationException("$nonExistantDeclaredGroups are not valid groupNames")
         }
+
+        val sumMembers = adminGroups.sumBy {
+            openShiftGroups.groupUsers[it]?.size ?: 0
+        }
+
+        if (0 == sumMembers) {
+            throw AuroraDeploymentSpecValidationException("All groups=[${adminGroups.joinToString(", ")}] are empty")
+        }
     }
 
     private fun validateTemplateIfSet(deploymentSpecInternal: AuroraDeploymentSpecInternal) {

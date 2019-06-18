@@ -16,7 +16,6 @@ import no.skatteetaten.aurora.boober.service.ProvisioningException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
-import no.skatteetaten.aurora.boober.service.openshift.UserGroup
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaInstance
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
@@ -73,10 +72,23 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
     }
 
     @Test
+    fun `Fails when admin groups contains no users`() {
+        auroraConfigJson["utv/about.json"] = """{ "permissions": { "admin": "APP_PaaS_utv" }, "cluster" : "utv" }"""
+        val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf("APP_PaaS_utv" to emptyList()))
+        assertThat {
+            specValidator.assertIsValid(deploymentSpec)
+        }.thrownError {
+            isInstanceOf(AuroraDeploymentSpecValidationException::class)
+            hasMessage("All groups=[APP_PaaS_utv] are empty")
+        }
+    }
+
+    @Test
     fun `Fails when admin groups does not exist`() {
 
         auroraConfigJson["utv/about.json"] = """{ "permissions": { "admin": "APP_PaaS_utv" }, "cluster" : "utv" }"""
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(emptyList())
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(emptyMap())
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
         assertThat {
@@ -90,7 +102,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
     fun `Fails when sts service not specified`() {
 
         auroraConfigJson["utv/aos-simple.json"] = """{ "certificate": true }"""
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(listOf(UserGroup("foo", "APP_PaaS_utv")))
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf("APP_PaaS_utv" to listOf("foo")))
         every { openShiftClient.getTemplate("atomhopper") } returns null
 
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
@@ -123,7 +135,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
             cluster = "utv"
         )
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(listOf(UserGroup("foo", "APP_PaaS_utv")))
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf("APP_PaaS_utv" to listOf("foo")))
         every { openShiftClient.getTemplate("atomhopper") } returns null
 
         assertThat {
@@ -139,7 +151,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         auroraConfigJson["utv/aos-simple.json"] = """{ "database": { "foo" : "123-123-123" } }"""
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(listOf(UserGroup("foo", "APP_PaaS_utv")))
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf("APP_PaaS_utv" to listOf("foo")))
         every { openShiftClient.getTemplate("atomhopper") } returns null
         every { dbClient.findSchemaById("123-123-123", any()) } returns dbhSchema
 
@@ -167,7 +179,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         auroraConfigJson["utv/aos-simple.json"] = """{ "database": { "foo" : "123-123-123" } }"""
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(listOf(UserGroup("foo", "APP_PaaS_utv")))
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf("APP_PaaS_utv" to listOf("foo")))
         every { openShiftClient.getTemplate("atomhopper") } returns null
         every {
             dbClient.findSchemaById(
@@ -204,7 +216,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
         auroraConfigJson["aos-simple.json"] =
             """{ "type": "template", "name": "aos-simple", "template": "atomhopper" }"""
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(listOf(UserGroup("foo", "APP_PaaS_utv")))
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf("APP_PaaS_utv" to listOf("foo")))
         every { openShiftClient.getTemplate("atomhopper") } returns null
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
@@ -221,7 +233,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
         auroraConfigJson["aos-simple.json"] =
             """{ "type": "template", "name": "aos-simple", "template": "atomhopper", "parameters" : { "FOO" : "BAR"} }"""
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(listOf(UserGroup("foo", "APP_PaaS_utv")))
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf("APP_PaaS_utv" to listOf("foo")))
         every { openShiftClient.getTemplate("atomhopper") } returns atomhopperTemplate
 
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
@@ -240,7 +252,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
         auroraConfigJson["aos-simple.json"] =
             """{ "type": "template", "name": "aos-simple", "template": "atomhopper" }"""
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(listOf(UserGroup("foo", "APP_PaaS_utv")))
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf("APP_PaaS_utv" to listOf("foo")))
         every { openShiftClient.getTemplate("atomhopper") } returns atomhopperTemplate
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
@@ -260,7 +272,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
         val vaultCollection = deploymentSpec.environment.affiliation
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(listOf(UserGroup("foo", "APP_PaaS_utv")))
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf("APP_PaaS_utv" to listOf("foo")))
         every { vaultService.vaultExists(vaultCollection, "test") } returns false
         every { vaultService.vaultExists(vaultCollection, "test2") } returns true
 
