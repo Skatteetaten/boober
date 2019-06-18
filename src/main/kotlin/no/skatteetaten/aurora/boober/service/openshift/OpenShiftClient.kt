@@ -44,7 +44,8 @@ data class OpenShiftResponse @JvmOverloads constructor(
     val command: OpenshiftCommand,
     val responseBody: JsonNode? = null,
     val success: Boolean = true,
-    val exception: String? = null
+    val exception: String? = null,
+    val httpErrorCode: Int? = null
 ) {
 
     companion object {
@@ -59,7 +60,18 @@ data class OpenShiftResponse @JvmOverloads constructor(
             } else {
                 null
             }
-            return OpenShiftResponse(command, response, success = false, exception = e.message)
+            val httpCode = if (e.cause is HttpClientErrorException) {
+                e.cause.statusCode.value()
+            } else {
+                null
+            }
+            return OpenShiftResponse(
+                command,
+                response,
+                success = false,
+                exception = e.message,
+                httpErrorCode = httpCode
+            )
         }
     }
 }
@@ -80,19 +92,9 @@ fun List<OpenShiftResponse>.deploymentConfig(): OpenShiftResponse? = this.resour
 fun List<OpenShiftResponse>.imageStream(): OpenShiftResponse? = this.resource("imagestream")
 fun List<OpenShiftResponse>.imageStreamImport(): OpenShiftResponse? = this.resource("imagestreamimport")
 
-data class UserGroup(val user: String, val group: String)
+data class OpenShiftGroups(val groupUsers: Map<String, List<String>>) {
 
-data class OpenShiftGroups(private val groupUserPairs: List<UserGroup>) {
-
-    private val groupUsers: Map<String, List<String>> by lazy {
-        groupUserPairs.groupBy({ it.group }, { it.user })
-    }
-
-    private val userGroups: Map<String, List<String>> by lazy {
-        groupUserPairs.groupBy({ it.user }, { it.group })
-    }
-
-    fun getGroupsForUser(user: String) = userGroups[user] ?: emptyList()
+    fun getGroupsForUser(user: String): List<String> = groupUsers.filter { it.value.contains(user) }.keys.toList()
 
     fun getUsersForGroup(group: String) = groupUsers[group] ?: emptyList()
 
@@ -116,10 +118,10 @@ class OpenShiftClient(
 
         return try {
             val res: JsonNode? = when (command.operationType) {
-                OperationType.GET -> throw OpenShiftException("GET is unsupported") // We should probably consider implementing it, though
+                OperationType.GET -> performClient.get(command.url, retry = false)?.body
                 OperationType.CREATE -> performClient.post(command.url, command.payload).body
                 OperationType.UPDATE -> performClient.put(command.url, command.payload).body
-                OperationType.DELETE -> performClient.delete(command.url).body
+                OperationType.DELETE -> performClient.delete(command.url)?.body
                 OperationType.NOOP -> command.payload
             }
             OpenShiftResponse(command, res)
@@ -152,21 +154,21 @@ class OpenShiftClient(
     @Cacheable("groups")
     fun getGroups(): OpenShiftGroups {
 
-        fun getAllDeclaredUserGroups(): List<UserGroup> {
+        fun getAllDeclaredUserGroups(): Map<String, List<String>> {
             val url = generateUrl(kind = "group")
             val groupItems = getResponseBodyItems(url)
             return groupItems
                 .filter { it["users"] is ArrayNode }
-                .flatMap {
-                    val name = it["metadata"]["name"].asText()
-                    (it["users"] as ArrayNode).map { UserGroup(it.asText(), name) }
+                .associate { users ->
+                    val name = users["metadata"]["name"].asText()
+                    name to (users["users"] as ArrayNode).map { it.asText() }
                 }
         }
 
-        fun getAllImplicitUserGroups(): List<UserGroup> {
+        fun getAllImplicitUserGroups(): Map<String, List<String>> {
             val implicitGroup = "system:authenticated"
             val userItems = getResponseBodyItems(generateUrl("user"))
-            return userItems.map { UserGroup(it["metadata"]["name"].asText(), implicitGroup) }
+            return mapOf(implicitGroup to userItems.map { it["metadata"]["name"].asText() })
         }
 
         return OpenShiftGroups(getAllDeclaredUserGroups() + getAllImplicitUserGroups())

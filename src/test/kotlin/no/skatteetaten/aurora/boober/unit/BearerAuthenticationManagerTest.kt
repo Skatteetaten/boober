@@ -11,7 +11,6 @@ import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.BearerAuthenticationManager
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
-import no.skatteetaten.aurora.boober.service.openshift.UserGroup
 import org.junit.jupiter.api.Test
 import org.springframework.security.authentication.TestingAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -35,8 +34,9 @@ class BearerAuthenticationManagerTest {
         every {
             openShiftClient.getGroups()
         } returns OpenShiftGroups(
-            listOf(
-                UserGroup("aurora", "APP_PaaS_drift"), UserGroup("aurora", "APP_PaaS_utv")
+            mapOf(
+                "APP_PaaS_drift" to listOf("aurora"),
+                "APP_PaaS_utv" to listOf("aurora")
             )
         )
 

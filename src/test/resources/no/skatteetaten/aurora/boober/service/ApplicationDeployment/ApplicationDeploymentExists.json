@@ -1,0 +1,50 @@
+{
+  "apiVersion": "skatteetaten.no/v1",
+  "kind": "ApplicationDeployment",
+  "metadata": {
+    "annotations": {},
+    "clusterName": "",
+    "creationTimestamp": "2019-04-08T11:31:46Z",
+    "generation": 1,
+    "labels": {
+      "affiliation": "aurora",
+      "app": "boober",
+      "applicationId": "084e4b73de9f5ca676be711dd57def75f0e51b65",
+      "booberDeployId": "d6c0a6b",
+      "id": "2963bd5994f812c5b8104cbdbb0bb4663ceb78d0",
+      "name": "boober",
+      "removeAfter": "1555068051",
+      "updatedBy": "user"
+    },
+    "name": "boober",
+    "namespace": "aurora-dev",
+    "resourceVersion": "559489056",
+    "selfLink": "/apis/skatteetaten.no/v1/namespaces/aurora-dev/applicationdeployments/boober",
+    "uid": ""
+  },
+  "spec": {
+    "applicationDeploymentId": "2963bd5994f812c5b8104cbdbb0bb4663ceb78d0",
+    "applicationDeploymentName": "boober",
+    "applicationId": "084e4b73de9f5ca676be711dd57def75f0e51b65",
+    "applicationName": "boober",
+    "command": {
+      "applicationDeploymentRef": {
+        "application": "boober",
+        "environment": "dev-utv"
+      },
+      "auroraConfig": {
+        "name": "aurora",
+        "refName": "master",
+        "resolvedRef": "bc18522e"
+      },
+      "overrideFiles": {}
+    },
+    "databases": [],
+    "deployTag": "feature_AOS_3127_slette_applicationdeployment-SNAPSHOT",
+    "managementPath": ":8081/actuator",
+    "selector": {
+      "name": "boober"
+    },
+    "splunkIndex": ""
+  }
+}
