@@ -19,7 +19,8 @@ fun JsonNode.findAllPointers(maxLevel: Int): List<String> {
         if (root.startsWith("/mount") && root.split("/").size > maxLevel) {
             return listOf(root)
         }
-        if (root.startsWith("/secretVault/keyMappings")) {
+
+        if (root.startsWith("/secretVault") && root.contains("keyMappings")) {
             return listOf()
         }
 
