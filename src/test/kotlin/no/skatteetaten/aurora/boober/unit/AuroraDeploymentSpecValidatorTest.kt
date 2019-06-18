@@ -279,7 +279,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
         assertThat {
             specValidator.assertIsValid(deploymentSpec)
         }.thrownError {
-            hasMessage("Referenced Vault test in Vault Collection $vaultCollection does not exist")
+            hasMessage("File with name=latest.properties is not present in vault=test in collection=aos")
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
         }
     }
@@ -308,14 +308,28 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
-        assertThat(deploymentSpec.volume?.secretVaultName).isEqualTo("foo2")
+        assertThat(deploymentSpec.volume?.secrets?.first()?.secretVaultName).isEqualTo("foo2")
     }
 
+    @Test
+    fun `Fails when secretVaults keyMappings contains values not in keys`() {
+
+        auroraConfigJson["utv/aos-simple.json"] =
+            """{ "secretVaults": {"test" : { "keys":["test-key1"], "keyMappings": { "test-key2":"value" } }}}"""
+        val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+        assertThat {
+            specValidator.validateKeyMappings(deploymentSpec)
+        }.thrownError {
+            isInstanceOf(AuroraDeploymentSpecValidationException::class)
+            hasMessage("The secretVault keyMappings [test-key2] were not found in keys")
+        }
+    }
     @Test
     fun `Fails when secretVault keyMappings contains values not in keys`() {
 
         auroraConfigJson["utv/aos-simple.json"] =
-            """{ "secretVault": { "name": "test", "keys":["test-key1"], "keyMappings": { "test-key2":"value" } }}"""
+            """{ "secretVault": { "name" : "test", "keys":["test-key1"], "keyMappings": { "test-key2":"value" } }}"""
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
         assertThat {
@@ -351,6 +365,45 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
         }.thrownError {
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
             hasMessage("The keys [test-key1] were not found in the secret vault")
+        }
+    }
+
+    @Test
+    fun `Fails when file is not present in vault`() {
+
+        auroraConfigJson["utv/aos-simple.json"] = """{ "secretVaults": { "name": { "file" : "foo.properties"}}}"""
+        val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+        every {
+            vaultService.findFileInVault(
+                "aos",
+                "test",
+                "foo.properties"
+            )
+        } throws IllegalArgumentException("Could not find vault file")
+
+        assertThat {
+            specValidator.validateSecretVaultFiles(deploymentSpec)
+        }.thrownError {
+            isInstanceOf(AuroraDeploymentSpecValidationException::class)
+            hasMessage("File with name=foo.properties is not present in vault=name in collection=aos")
+        }
+    }
+
+    @Test
+    fun `Fails when name of secrets is not unique`() {
+
+        auroraConfigJson["utv/aos-simple.json"] = """{
+            |"secretVault": { "name": "test", "keys": ["test-key1"] },
+            |"secretVaults" : { "test" : {} }
+            |}""".trimMargin()
+        val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+        assertThat {
+            specValidator.validateDuplicateSecretEnvNames(deploymentSpec)
+        }.thrownError {
+            isInstanceOf(AuroraDeploymentSpecValidationException::class)
+            hasMessage("SecretVaults does not have unique names=[aos-simple-test, aos-simple-test]")
         }
     }
 

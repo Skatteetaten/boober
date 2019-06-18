@@ -65,7 +65,13 @@ data class OpenShiftResponse @JvmOverloads constructor(
             } else {
                 null
             }
-            return OpenShiftResponse(command, response, success = false, exception = e.message, httpErrorCode = httpCode)
+            return OpenShiftResponse(
+                command,
+                response,
+                success = false,
+                exception = e.message,
+                httpErrorCode = httpCode
+            )
         }
     }
 }

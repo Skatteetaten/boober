@@ -108,10 +108,17 @@ data class AuroraDeploymentSpecInternal(
         ?: localTemplate?.version
 }
 
-data class AuroraVolume(
-    val secretVaultName: String?,
+data class AuroraSecret(
+    val secretVaultName: String,
     val secretVaultKeys: List<String>,
     val keyMappings: Map<String, String>?,
+    val file: String,
+    val name: String
+
+)
+
+data class AuroraVolume(
+    val secrets: List<AuroraSecret>,
     val config: Map<String, String>?,
     val mounts: List<Mount>?
 )

@@ -3,30 +3,78 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraSecret
 import no.skatteetaten.aurora.boober.model.AuroraVolume
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureEndsWith
+import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.required
+import org.apache.commons.text.StringSubstitutor
 
-class AuroraVolumeMapperV1(private val applicationFiles: List<AuroraConfigFile>) {
+class AuroraVolumeMapperV1(
+    private val applicationFiles: List<AuroraConfigFile>,
+    val name: String,
+    val replacer: StringSubstitutor
+) {
 
     private val mountHandlers = createMountHandlers()
     val configHandlers = applicationFiles.findConfigFieldHandlers()
     private val secretVaultHandlers = createSecretVaultHandlers()
     private val secretVaultKeyMappingHandler = createSecretVaultKeyMappingHandler()
 
-    val handlers = configHandlers + mountHandlers + secretVaultHandlers + listOfNotNull(secretVaultKeyMappingHandler)
+    val handlers = configHandlers + mountHandlers +
+        secretVaultHandlers + listOfNotNull(secretVaultKeyMappingHandler) +
+        createSecretVaultsHandlers()
 
     fun createAuroraVolume(auroraDeploymentSpec: AuroraDeploymentSpec): AuroraVolume {
+        val secret = getSecretVault(auroraDeploymentSpec)?.let {
+            AuroraSecret(
+                secretVaultName = it,
+                keyMappings = auroraDeploymentSpec.getKeyMappings(secretVaultKeyMappingHandler),
+                secretVaultKeys = getSecretVaultKeys(auroraDeploymentSpec),
+                file = "latest.properties",
+                name = it.ensureStartWith(name, "-")
+            )
+        }
+
+        val secretVaults = applicationFiles.findSubKeys("secretVaults").mapNotNull {
+            val enabled: Boolean = auroraDeploymentSpec["secretVaults/$it/enabled"]
+
+            if (!enabled) {
+                null
+            } else {
+                AuroraSecret(
+                    secretVaultKeys = auroraDeploymentSpec.getOrNull("secretVaults/$it/keys") ?: listOf(),
+                    keyMappings = auroraDeploymentSpec.getOrNull("secretVaults/$it/keyMappings"),
+                    file = auroraDeploymentSpec["secretVaults/$it/file"],
+                    name = replacer.replace(it).ensureStartWith(name, "-"),
+                    secretVaultName = auroraDeploymentSpec["secretVaults/$it/name"]
+                )
+            }
+        }
+        val secrets = secretVaults.addIfNotNull(secret)
         return AuroraVolume(
-            secretVaultName = getSecretVault(auroraDeploymentSpec),
-            secretVaultKeys = getSecretVaultKeys(auroraDeploymentSpec),
-            keyMappings = auroraDeploymentSpec.getKeyMappings(secretVaultKeyMappingHandler),
+            secrets = secrets,
             config = getApplicationConfigFiles(auroraDeploymentSpec),
             mounts = getMounts(auroraDeploymentSpec)
         )
+    }
+
+    private fun createSecretVaultsHandlers(): List<AuroraConfigFieldHandler> {
+        val vaults = applicationFiles.findSubKeys("secretVaults")
+
+        return vaults.flatMap { key ->
+            listOf(
+                AuroraConfigFieldHandler("secretVaults/$key/name", defaultValue = key),
+                AuroraConfigFieldHandler("secretVaults/$key/enabled", defaultValue = true),
+                AuroraConfigFieldHandler("secretVaults/$key/file", defaultValue = "latest.properties"),
+                AuroraConfigFieldHandler("secretVaults/$key/keys"),
+                AuroraConfigFieldHandler("secretVaults/$key/keyMappings")
+            )
+        }
     }
 
     private fun createSecretVaultKeyMappingHandler() =

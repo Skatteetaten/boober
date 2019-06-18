@@ -3,10 +3,13 @@ package no.skatteetaten.aurora.boober.mapper.platform
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.configMap
+import com.fkorotkov.kubernetes.newEnvFromSource
+import com.fkorotkov.kubernetes.newSecretEnvSource
 import com.fkorotkov.kubernetes.newVolume
 import com.fkorotkov.kubernetes.newVolumeMount
 import com.fkorotkov.kubernetes.persistentVolumeClaim
 import com.fkorotkov.kubernetes.secret
+import io.fabric8.kubernetes.api.model.EnvFromSource
 import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.EnvVarBuilder
 import io.fabric8.kubernetes.api.model.Volume
@@ -27,6 +30,7 @@ import no.skatteetaten.aurora.boober.model.Probe
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.service.internal.createDbEnv
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultSecretEnvResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterNullValues
@@ -39,7 +43,8 @@ abstract class ApplicationPlatformHandler(val name: String) {
     fun createBaseContainer(
         auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
         mounts: List<Mount>?,
-        routeSuffix: String
+        routeSuffix: String,
+        secretEnv: List<VaultSecretEnvResult>
     ): AuroraContainer {
         return AuroraContainer(
             name = auroraDeploymentSpecInternal.name,
@@ -49,6 +54,7 @@ abstract class ApplicationPlatformHandler(val name: String) {
             limit = auroraDeploymentSpecInternal.deploy.resources.limit,
             request = auroraDeploymentSpecInternal.deploy.resources.request,
             env = createEnvVars(mounts, auroraDeploymentSpecInternal, routeSuffix),
+            envFrom = createEnvFrom(secretEnv),
             mounts = mounts?.filter { it.targetContainer == null }
         )
     }
@@ -158,6 +164,7 @@ data class AuroraContainer(
     val limit: AuroraDeploymentConfigResource,
     val request: AuroraDeploymentConfigResource,
     val env: List<EnvVar>,
+    val envFrom: List<EnvFromSource> = emptyList(),
     val mounts: List<Mount>? = null,
     val shouldHaveImageChange: Boolean = true,
     val image: String? = null
@@ -207,6 +214,16 @@ fun List<Mount>?.podVolumes(dcName: String): List<Volume> {
             }
         }
     } ?: emptyList()
+}
+
+fun createEnvFrom(secretEnv: List<VaultSecretEnvResult>): List<EnvFromSource> {
+    return secretEnv.map {
+        newEnvFromSource {
+            secretRef = newSecretEnvSource {
+                name = it.name
+            }
+        }
+    }
 }
 
 fun createEnvVars(

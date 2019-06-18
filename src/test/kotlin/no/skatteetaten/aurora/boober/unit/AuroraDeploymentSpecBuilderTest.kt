@@ -175,63 +175,6 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
         assertThat(e).isNotNull()
         assertThat(e.message).isEqualTo("Config for application aos-simple in environment utv contains errors. Affiliation can only contain letters and must be no longer than 10 characters.")
     }
-
-    data class SecretVaultTestData(
-        val configFile: String,
-        val vaultName: String,
-        val keys: List<String>
-    )
-
-    enum class SecretVaultTestDataEnum(val vault: SecretVaultTestData) {
-        CONFIGFILE_STRING(
-            SecretVaultTestData(
-                """{ "secretVault": "vaultName" }""",
-                "vaultName",
-                emptyList()
-            )
-        ),
-        CONFIGFILE_OBJECT(
-            SecretVaultTestData(
-                """{ "secretVault": {"name": "test"} }""",
-                "test",
-                emptyList()
-            )
-        ),
-        CONFIGFILE_EMPTY_KEYS(
-            SecretVaultTestData(
-                """{ "secretVault": {"name": "test", "keys": []} }""",
-                "test",
-                emptyList()
-            )
-        ),
-        WITH_KEYS(
-            SecretVaultTestData(
-                """{ "secretVault": {"name": "test", "keys": ["test1", "test2"]} }""",
-                "test",
-                listOf("test1", "test2")
-            )
-        ),
-        WITH_KEYMAPPINGS(
-            SecretVaultTestData(
-                """{ "secretVault": {"name": "test", "keys": ["test1"], "keyMappings":{"test1":"newtestkey"}} }""",
-                "test",
-                listOf("test1")
-            )
-        )
-    }
-
-    @ParameterizedTest
-    @EnumSource(SecretVaultTestDataEnum::class)
-    fun `Parses variants of secretVault config correctly`(testData: SecretVaultTestDataEnum) {
-
-        auroraConfigJson["utv/aos-simple.json"] = testData.vault.configFile
-
-        val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
-
-        assertThat(deploymentSpec.volume?.secretVaultKeys).isEqualTo(testData.vault.keys)
-        assertThat(deploymentSpec.volume?.secretVaultName).isEqualTo(testData.vault.vaultName)
-    }
-
     enum class PermissionsTestData(val values: Any) {
         SINGLE_VALUE("APP_PaaS_utv APP_PaaS_drift"),
         LIST(listOf("APP_PaaS_utv", "APP_PaaS_drift"))
