@@ -40,6 +40,7 @@ class AuroraDeploymentSpecValidator(
         validateSkap(deploymentSpecInternal)
         validateVaultExistence(deploymentSpecInternal)
         validateExistingResources(deploymentSpecInternal)
+        validateSecretNames(deploymentSpecInternal)
         validateSecretVaultFiles(deploymentSpecInternal)
         validateKeyMappings(deploymentSpecInternal)
         validateSecretVaultKeys(deploymentSpecInternal)
@@ -153,6 +154,13 @@ class AuroraDeploymentSpecValidator(
         }
     }
 
+    fun validateSecretNames(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
+        deploymentSpecInternal.volume?.secrets?.forEach { secret ->
+            if (secret.name.length > 63) {
+                throw AuroraDeploymentSpecValidationException("The name of the secretVault=${secret.name} is too long. Max 63 characters. Note that we prefix the vaultName with @name@- it does not already")
+            }
+        }
+    }
     fun validateKeyMappings(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
         deploymentSpecInternal.volume?.secrets?.forEach { secret ->
             validateKeyMapping(secret)

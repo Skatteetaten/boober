@@ -10,6 +10,7 @@ import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
+import no.skatteetaten.aurora.boober.utils.normalizeKubernetesName
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.required
 import org.apache.commons.text.StringSubstitutor
@@ -36,7 +37,7 @@ class AuroraVolumeMapperV1(
                 keyMappings = auroraDeploymentSpec.getKeyMappings(secretVaultKeyMappingHandler),
                 secretVaultKeys = getSecretVaultKeys(auroraDeploymentSpec),
                 file = "latest.properties",
-                name = it.ensureStartWith(name, "-")
+                name = it.ensureStartWith(name, "-").normalizeKubernetesName()
             )
         }
 
@@ -50,7 +51,7 @@ class AuroraVolumeMapperV1(
                     secretVaultKeys = auroraDeploymentSpec.getOrNull("secretVaults/$it/keys") ?: listOf(),
                     keyMappings = auroraDeploymentSpec.getOrNull("secretVaults/$it/keyMappings"),
                     file = auroraDeploymentSpec["secretVaults/$it/file"],
-                    name = replacer.replace(it).ensureStartWith(name, "-"),
+                    name = replacer.replace(it).ensureStartWith(name, "-").normalizeKubernetesName(),
                     secretVaultName = auroraDeploymentSpec["secretVaults/$it/name"]
                 )
             }

@@ -391,6 +391,24 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
     }
 
     @Test
+    fun `Fails when the name of the the secretVault is to long`() {
+
+        auroraConfigJson["utv/aos-simple.json"] = """{
+            |"secretVaults": {
+            |  "this-is-way-more-then-63-characters-long-secretVault-name" : { }
+            |  }
+            |}""".trimMargin()
+        val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+        assertThat {
+            specValidator.validateSecretNames(deploymentSpec)
+        }.thrownError {
+            isInstanceOf(AuroraDeploymentSpecValidationException::class)
+            hasMessage("The name of the secretVault=aos-simple-this-is-way-more-then-63-characters-long-secretvault-name is too long. Max 63 characters. Note that we prefix the vaultName with @name@- it does not already")
+        }
+    }
+
+    @Test
     fun `Fails when name of secrets is not unique`() {
 
         auroraConfigJson["utv/aos-simple.json"] = """{
