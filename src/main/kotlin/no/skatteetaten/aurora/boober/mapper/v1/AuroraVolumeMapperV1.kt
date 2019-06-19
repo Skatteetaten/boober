@@ -37,7 +37,7 @@ class AuroraVolumeMapperV1(
                 keyMappings = auroraDeploymentSpec.getKeyMappings(secretVaultKeyMappingHandler),
                 secretVaultKeys = getSecretVaultKeys(auroraDeploymentSpec),
                 file = "latest.properties",
-                name = it.ensureStartWith(name, "-").normalizeKubernetesName()
+                name = name
             )
         }
 

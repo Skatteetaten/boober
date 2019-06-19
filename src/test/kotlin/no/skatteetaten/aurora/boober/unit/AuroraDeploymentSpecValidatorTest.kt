@@ -413,7 +413,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         auroraConfigJson["utv/aos-simple.json"] = """{
             |"secretVault": { "name": "test", "keys": ["test-key1"] },
-            |"secretVaults" : { "test" : {} }
+            |"secretVaults" : { "aos-simple" : {} }
             |}""".trimMargin()
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
@@ -421,7 +421,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
             specValidator.validateDuplicateSecretEnvNames(deploymentSpec)
         }.thrownError {
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
-            hasMessage("SecretVaults does not have unique names=[aos-simple-test, aos-simple-test]")
+            hasMessage("SecretVaults does not have unique names=[aos-simple, aos-simple]")
         }
     }
 
