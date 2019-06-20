@@ -157,7 +157,7 @@ class AuroraDeploymentSpecValidator(
     fun validateSecretNames(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
         deploymentSpecInternal.volume?.secrets?.forEach { secret ->
             if (secret.name.length > 63) {
-                throw AuroraDeploymentSpecValidationException("The name of the secretVault=${secret.name} is too long. Max 63 characters. Note that we prefix the vaultName with @name@- it does not already")
+                throw AuroraDeploymentSpecValidationException("The name of the secretVault=${secret.name} is too long. Max 63 characters. Note that we ensure that the name starts with @name@-")
             }
         }
     }
