@@ -14,7 +14,17 @@
       "path": "/bar",
       "host": "@segment@.@env@",
       "annotations": {
-        "haproxy.router.openshift.io|timeout": "30s"
+        "haproxy.router.openshift.io|timeout": "30s",
+        "wembley.sits.no|apiPathsWithScopes": [
+          {
+            "path": "/foo/bar",
+            "scopes": "TEST, TEST1"
+          },
+          {
+            "path": "/foo/baz",
+            "scopes": "FOO, BAR"
+          }
+        ]
       }
     }
   }
