@@ -15,6 +15,9 @@ fun String.ensureEndsWith(endsWith: String, seperator: String = ""): String {
     return "$this$seperator$endsWith"
 }
 
+// A kubernetes name must lowercase and cannot contain _.
+fun String.normalizeKubernetesName() = this.toLowerCase().replace("_", "-")
+
 fun String.ensureStartWith(startWith: String, seperator: String = ""): String {
     if (this.startsWith(startWith)) {
         return this

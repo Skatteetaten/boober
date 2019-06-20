@@ -1,9 +1,12 @@
 package no.skatteetaten.aurora.boober.unit
 
 import assertk.assertThat
+import assertk.assertions.contains
 import assertk.assertions.hasMessage
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
+import assertk.assertions.isNotNull
+import assertk.assertions.message
 import com.fasterxml.jackson.databind.JsonNode
 import io.mockk.clearAllMocks
 import io.mockk.every
@@ -391,19 +394,38 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
     }
 
     @Test
+    fun `Fails when the name of the the secretVault is to long`() {
+
+        auroraConfigJson["utv/aos-simple.json"] = """{
+            "secretVaults": {
+              "this-is-way-more-then-63-characters-long-secretVault-name" : { }
+              }
+            }""".trimIndent()
+        val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+        assertThat {
+            specValidator.validateSecretNames(deploymentSpec)
+        }.thrownError {
+            isInstanceOf(AuroraDeploymentSpecValidationException::class)
+            message().isNotNull()
+                .contains("secretVault=aos-simple-this-is-way-more-then-63-characters-long-secretvault-name is too long.")
+        }
+    }
+
+    @Test
     fun `Fails when name of secrets is not unique`() {
 
         auroraConfigJson["utv/aos-simple.json"] = """{
-            |"secretVault": { "name": "test", "keys": ["test-key1"] },
-            |"secretVaults" : { "test" : {} }
-            |}""".trimMargin()
+            "secretVault": { "name": "test", "keys": ["test-key1"] },
+            "secretVaults" : { "aos-simple" : {} }
+            }""".trimIndent()
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
         assertThat {
             specValidator.validateDuplicateSecretEnvNames(deploymentSpec)
         }.thrownError {
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
-            hasMessage("SecretVaults does not have unique names=[aos-simple-test, aos-simple-test]")
+            hasMessage("SecretVaults does not have unique names=[aos-simple, aos-simple]")
         }
     }
 
