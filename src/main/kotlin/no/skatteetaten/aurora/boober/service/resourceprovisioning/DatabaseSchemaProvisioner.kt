@@ -1,8 +1,11 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.model.DatabaseInstance
@@ -14,6 +17,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
+import org.springframework.web.client.RestClientResponseException
 import org.springframework.web.client.RestTemplate
 
 sealed class SchemaProvisionRequest {
@@ -214,7 +218,7 @@ class DatabaseSchemaProvisioner(
         val response: ResponseEntity<JsonNode> = try {
             restTemplate.postForEntity("$dbhUrl/api/v1/schema/", payload, JsonNode::class.java)
         } catch (e: Exception) {
-            throw createProvisioningException("Unable to create database schema.", e)
+            throw createProvisioningException("Unable to create database schema.${e.getDbhErrorMessage()}", e)
         }
 
         return parseResponseFailIfEmpty(response)
@@ -266,4 +270,16 @@ class DatabaseSchemaProvisioner(
     data class DbApiEnvelope(val status: String, val items: List<DbhSchema> = listOf())
 
     data class DbhErrorResponse(val status: String, val items: List<String>, val totalCount: Int)
+
+    private fun Exception.getDbhErrorMessage(): String {
+        if (this is RestClientResponseException) {
+            try {
+                return jacksonObjectMapper().readValue<DbhErrorResponse>(this.responseBodyAsString)
+                    .let { it.items.firstOrNull()?.let { msg -> " $msg." } ?: "" }
+            } catch (ignored: JsonMappingException) {
+            }
+        }
+
+        return ""
+    }
 }
