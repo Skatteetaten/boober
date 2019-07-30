@@ -271,15 +271,15 @@ class DatabaseSchemaProvisioner(
 
     data class DbhErrorResponse(val status: String, val items: List<String>, val totalCount: Int)
 
-    private fun Exception.getDbhErrorMessage(): String {
-        if (this is RestClientResponseException) {
+    private fun Exception.getDbhErrorMessage() =
+        if (this !is RestClientResponseException) {
+            ""
+        } else {
             try {
-                return jacksonObjectMapper().readValue<DbhErrorResponse>(this.responseBodyAsString)
-                    .let { it.items.firstOrNull()?.let { msg -> " $msg." } ?: "" }
+                jacksonObjectMapper().readValue<DbhErrorResponse>(this.responseBodyAsString).items.firstOrNull()
+                    ?.let { msg -> " $msg." } ?: ""
             } catch (ignored: JsonMappingException) {
+                ""
             }
         }
-
-        return ""
-    }
 }
