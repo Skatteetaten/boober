@@ -93,8 +93,9 @@ class AuroraDeploymentSpec(
             .filter { it.path.startsWith("/$prefix") }
             .associate {
                 val (_, _, _, field) = it.name.split("/", limit = 4)
-                val value: String = this[it.name]
-                field to value
+                val value: Any = this[it.name]
+                val escapedValue: String = convertValueToString(value)
+                field to escapedValue
             }
     }
 
