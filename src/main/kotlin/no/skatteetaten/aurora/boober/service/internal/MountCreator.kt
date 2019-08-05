@@ -38,18 +38,6 @@ private fun createMountsFromDeploymentSpec(deploymentSpecInternal: AuroraDeploym
         )
     }
 
-    val secretVaultMount = deploymentSpecInternal.volume?.secretVaultName?.let {
-        Mount(
-            path = "/u01/config/secret",
-            type = MountType.Secret,
-            volumeName = deploymentSpecInternal.name,
-            mountName = "secrets",
-            exist = false,
-            content = null,
-            secretVaultName = it
-        )
-    }
-
     val certMount = deploymentSpecInternal.integration?.certificate?.let {
         Mount(
             path = "/u01/secrets/app/${deploymentSpecInternal.name}-cert",
@@ -60,7 +48,7 @@ private fun createMountsFromDeploymentSpec(deploymentSpecInternal: AuroraDeploym
             content = null
         )
     }
-    return listOf<Mount>().addIfNotNull(secretVaultMount).addIfNotNull(configMount).addIfNotNull(certMount)
+    return listOf<Mount>().addIfNotNull(configMount).addIfNotNull(certMount)
         .addIfNotNull(deploymentSpecInternal.volume?.mounts)
 }
 

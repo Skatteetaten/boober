@@ -1,9 +1,12 @@
 package no.skatteetaten.aurora.boober.unit
 
 import assertk.assertThat
+import assertk.assertions.contains
 import assertk.assertions.hasMessage
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
+import assertk.assertions.isNotNull
+import assertk.assertions.message
 import com.fasterxml.jackson.databind.JsonNode
 import io.mockk.clearAllMocks
 import io.mockk.every
@@ -16,7 +19,6 @@ import no.skatteetaten.aurora.boober.service.ProvisioningException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
-import no.skatteetaten.aurora.boober.service.openshift.UserGroup
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaInstance
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
@@ -73,10 +75,23 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
     }
 
     @Test
+    fun `Fails when admin groups contains no users`() {
+        auroraConfigJson["utv/about.json"] = """{ "permissions": { "admin": "APP_PaaS_utv" }, "cluster" : "utv" }"""
+        val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf("APP_PaaS_utv" to emptyList()))
+        assertThat {
+            specValidator.assertIsValid(deploymentSpec)
+        }.thrownError {
+            isInstanceOf(AuroraDeploymentSpecValidationException::class)
+            hasMessage("All groups=[APP_PaaS_utv] are empty")
+        }
+    }
+
+    @Test
     fun `Fails when admin groups does not exist`() {
 
         auroraConfigJson["utv/about.json"] = """{ "permissions": { "admin": "APP_PaaS_utv" }, "cluster" : "utv" }"""
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(emptyList())
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(emptyMap())
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
         assertThat {
@@ -90,7 +105,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
     fun `Fails when sts service not specified`() {
 
         auroraConfigJson["utv/aos-simple.json"] = """{ "certificate": true }"""
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(listOf(UserGroup("foo", "APP_PaaS_utv")))
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf("APP_PaaS_utv" to listOf("foo")))
         every { openShiftClient.getTemplate("atomhopper") } returns null
 
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
@@ -123,7 +138,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
             cluster = "utv"
         )
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(listOf(UserGroup("foo", "APP_PaaS_utv")))
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf("APP_PaaS_utv" to listOf("foo")))
         every { openShiftClient.getTemplate("atomhopper") } returns null
 
         assertThat {
@@ -139,7 +154,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         auroraConfigJson["utv/aos-simple.json"] = """{ "database": { "foo" : "123-123-123" } }"""
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(listOf(UserGroup("foo", "APP_PaaS_utv")))
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf("APP_PaaS_utv" to listOf("foo")))
         every { openShiftClient.getTemplate("atomhopper") } returns null
         every { dbClient.findSchemaById("123-123-123", any()) } returns dbhSchema
 
@@ -167,7 +182,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         auroraConfigJson["utv/aos-simple.json"] = """{ "database": { "foo" : "123-123-123" } }"""
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(listOf(UserGroup("foo", "APP_PaaS_utv")))
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf("APP_PaaS_utv" to listOf("foo")))
         every { openShiftClient.getTemplate("atomhopper") } returns null
         every {
             dbClient.findSchemaById(
@@ -204,7 +219,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
         auroraConfigJson["aos-simple.json"] =
             """{ "type": "template", "name": "aos-simple", "template": "atomhopper" }"""
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(listOf(UserGroup("foo", "APP_PaaS_utv")))
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf("APP_PaaS_utv" to listOf("foo")))
         every { openShiftClient.getTemplate("atomhopper") } returns null
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
@@ -221,7 +236,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
         auroraConfigJson["aos-simple.json"] =
             """{ "type": "template", "name": "aos-simple", "template": "atomhopper", "parameters" : { "FOO" : "BAR"} }"""
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(listOf(UserGroup("foo", "APP_PaaS_utv")))
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf("APP_PaaS_utv" to listOf("foo")))
         every { openShiftClient.getTemplate("atomhopper") } returns atomhopperTemplate
 
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
@@ -240,7 +255,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
         auroraConfigJson["aos-simple.json"] =
             """{ "type": "template", "name": "aos-simple", "template": "atomhopper" }"""
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(listOf(UserGroup("foo", "APP_PaaS_utv")))
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf("APP_PaaS_utv" to listOf("foo")))
         every { openShiftClient.getTemplate("atomhopper") } returns atomhopperTemplate
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
@@ -260,14 +275,14 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
         val vaultCollection = deploymentSpec.environment.affiliation
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(listOf(UserGroup("foo", "APP_PaaS_utv")))
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf("APP_PaaS_utv" to listOf("foo")))
         every { vaultService.vaultExists(vaultCollection, "test") } returns false
         every { vaultService.vaultExists(vaultCollection, "test2") } returns true
 
         assertThat {
             specValidator.assertIsValid(deploymentSpec)
         }.thrownError {
-            hasMessage("Referenced Vault test in Vault Collection $vaultCollection does not exist")
+            hasMessage("File with name=latest.properties is not present in vault=test in collection=aos")
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
         }
     }
@@ -296,14 +311,28 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
-        assertThat(deploymentSpec.volume?.secretVaultName).isEqualTo("foo2")
+        assertThat(deploymentSpec.volume?.secrets?.first()?.secretVaultName).isEqualTo("foo2")
     }
 
+    @Test
+    fun `Fails when secretVaults keyMappings contains values not in keys`() {
+
+        auroraConfigJson["utv/aos-simple.json"] =
+            """{ "secretVaults": {"test" : { "keys":["test-key1"], "keyMappings": { "test-key2":"value" } }}}"""
+        val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+        assertThat {
+            specValidator.validateKeyMappings(deploymentSpec)
+        }.thrownError {
+            isInstanceOf(AuroraDeploymentSpecValidationException::class)
+            hasMessage("The secretVault keyMappings [test-key2] were not found in keys")
+        }
+    }
     @Test
     fun `Fails when secretVault keyMappings contains values not in keys`() {
 
         auroraConfigJson["utv/aos-simple.json"] =
-            """{ "secretVault": { "name": "test", "keys":["test-key1"], "keyMappings": { "test-key2":"value" } }}"""
+            """{ "secretVault": { "name" : "test", "keys":["test-key1"], "keyMappings": { "test-key2":"value" } }}"""
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
 
         assertThat {
@@ -339,6 +368,64 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
         }.thrownError {
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
             hasMessage("The keys [test-key1] were not found in the secret vault")
+        }
+    }
+
+    @Test
+    fun `Fails when file is not present in vault`() {
+
+        auroraConfigJson["utv/aos-simple.json"] = """{ "secretVaults": { "name": { "file" : "foo.properties"}}}"""
+        val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+        every {
+            vaultService.findFileInVault(
+                "aos",
+                "test",
+                "foo.properties"
+            )
+        } throws IllegalArgumentException("Could not find vault file")
+
+        assertThat {
+            specValidator.validateSecretVaultFiles(deploymentSpec)
+        }.thrownError {
+            isInstanceOf(AuroraDeploymentSpecValidationException::class)
+            hasMessage("File with name=foo.properties is not present in vault=name in collection=aos")
+        }
+    }
+
+    @Test
+    fun `Fails when the name of the the secretVault is to long`() {
+
+        auroraConfigJson["utv/aos-simple.json"] = """{
+            "secretVaults": {
+              "this-is-way-more-then-63-characters-long-secretVault-name" : { }
+              }
+            }""".trimIndent()
+        val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+        assertThat {
+            specValidator.validateSecretNames(deploymentSpec)
+        }.thrownError {
+            isInstanceOf(AuroraDeploymentSpecValidationException::class)
+            message().isNotNull()
+                .contains("secretVault=aos-simple-this-is-way-more-then-63-characters-long-secretvault-name is too long.")
+        }
+    }
+
+    @Test
+    fun `Fails when name of secrets is not unique`() {
+
+        auroraConfigJson["utv/aos-simple.json"] = """{
+            "secretVault": { "name": "test", "keys": ["test-key1"] },
+            "secretVaults" : { "aos-simple" : {} }
+            }""".trimIndent()
+        val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
+
+        assertThat {
+            specValidator.validateDuplicateSecretEnvNames(deploymentSpec)
+        }.thrownError {
+            isInstanceOf(AuroraDeploymentSpecValidationException::class)
+            hasMessage("SecretVaults does not have unique names=[aos-simple, aos-simple]")
         }
     }
 

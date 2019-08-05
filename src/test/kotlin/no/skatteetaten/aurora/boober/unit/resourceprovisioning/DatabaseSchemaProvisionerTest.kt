@@ -1,9 +1,12 @@
 package no.skatteetaten.aurora.boober.unit.resourceprovisioning
 
+import assertk.Assert
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
+import assertk.assertions.isNotNull
+import assertk.catch
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.User
@@ -12,6 +15,7 @@ import no.skatteetaten.aurora.boober.service.ProvisioningException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseEngine
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner.DbApiEnvelope
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaIdRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResults
@@ -68,7 +72,7 @@ class DatabaseSchemaProvisionerTest : ResourceLoader() {
                     )
                 )
             )
-            assertSchemaIsCorrect(provisionResult)
+            assertThat(provisionResult).schemaIsCorrect()
         }
     }
 
@@ -102,49 +106,69 @@ class DatabaseSchemaProvisionerTest : ResourceLoader() {
                     )
                 )
             )
-            assertSchemaIsCorrect(provisionResult)
+            assertThat(provisionResult).schemaIsCorrect()
         }.first()
 
         assertThat(request.path).contains("labels=affiliation%3Daos,environment%3Daos-utv,application%3Dreference,name%3Dreference")
         assertThat(request.path).contains("roles=SCHEMA&engine=ORACLE")
-
-        /*
-        def labelsString = labels . collect { k, v -> "$k%3D$v" }.join(",")
-        dbhServer.expect(requestTo("${DBH_HOST}/api/v1/schema/?labels=$labelsString&roles=SCHEMA&engine=ORACLE"))
-            .andRespond(withSuccess(loadResource("schema_${id}.json"), MediaType.APPLICATION_JSON))
-            */
     }
 
     @Test
     fun `Creates new schema if schema is missing`() {
-/*
-        def labelsString = labels . collect { k, v -> "$k%3D$v" }.join(",")
-        def createBody = new SchemaRequestPayload(
-            labels + [userId: "aurora"],
-        details.users,
-        details.engine,
-        details.databaseInstance.labels,
-        details.databaseInstance.name,
-        details.databaseInstance.fallback)
+        val responses = server.execute(
+            DbApiEnvelope(""),
+            loadResource("schema_$id.json")
+        ) {
+            provisioner.provisionSchemas(
+                listOf(
+                    SchemaForAppRequest(
+                        "utv",
+                        "reference",
+                        true,
+                        details
+                    )
+                )
+            )
+        }
 
-        def body = new ObjectMapper().writeValueAsString(createBody)
-        dbhServer.expect(requestTo("${DBH_HOST}/api/v1/schema/?labels=$labelsString&roles=SCHEMA&engine=ORACLE"))
-            .andRespond(withSuccess(loadResource("schema_empty_response.json"), MediaType.APPLICATION_JSON))
-
-        dbhServer.expect(requestTo("${DBH_HOST}/api/v1/schema/")).andExpect(method(HttpMethod.POST))
-            .andExpect(content().string(body))
-            .andRespond(withSuccess(loadResource("schema_${id}.json"), MediaType.APPLICATION_JSON))
-
-
-        def provisionResult = provisioner .
-        provisionSchemas([new SchemaForAppRequest ("utv", "reference", true, details)])
-
-        assertSchemaIsCorrect(provisionResult)*/
+        assertThat(responses[0].path).contains("/api/v1/schema/?labels=affiliation%3Daos,environment%3Daos-utv,application%3Dreference,name%3Dreference&roles=SCHEMA&engine=ORACLE")
+        assertThat(responses[1].path).contains("/api/v1/schema/")
     }
 
-    fun assertSchemaIsCorrect(provisionResult: SchemaProvisionResults) {
+    @Test
+    fun `Handle dbh exception when creating new schema`() {
+        server.execute(
+            200 to DbApiEnvelope(""),
+            500 to """{"status":"Failed","totalCount":1,"items":["ORA-00059: maximum number of DB_FILES exceeded"]}"""
+        ) {
+            val exception = catch {
+                provisioner.provisionSchemas(
+                    listOf(SchemaForAppRequest("utv", "reference", true, details))
+                )
+            }
 
-        val results = provisionResult.results
+            assertThat(exception?.message).isNotNull().contains("ORA-00059: maximum number of DB_FILES exceeded")
+        }
+    }
+
+    @Test
+    fun `Handle generic exception when creating new schema`() {
+        server.execute(
+            200 to DbApiEnvelope(""),
+            500 to "{}"
+        ) {
+            val exception = catch {
+                provisioner.provisionSchemas(
+                    listOf(SchemaForAppRequest("utv", "reference", true, details))
+                )
+            }
+
+            assertThat(exception?.message).isNotNull().contains("Unable to create database schema")
+        }
+    }
+
+    private fun Assert<SchemaProvisionResults>.schemaIsCorrect() = given { r ->
+        val results = r.results
         assertThat(results.size).isEqualTo(1)
         val schema = results[0].dbhSchema
         assertThat(schema.jdbcUrl).isEqualTo("jdbc:oracle:thin:@some-db-server01.skead.no:1521/dbhotel")

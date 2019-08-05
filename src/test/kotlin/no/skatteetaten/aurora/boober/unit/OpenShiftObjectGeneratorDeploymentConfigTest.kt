@@ -57,7 +57,7 @@ class OpenShiftObjectGeneratorDeploymentConfigTest : AbstractOpenShiftObjectGene
                         responseText = ""
                     )
                 )
-            ), vaultResults = null, stsProvisioningResult = null
+            )
         )
 
         val dcResource = objectGenerator.generateDeploymentConfig(
@@ -155,7 +155,7 @@ class OpenShiftObjectGeneratorDeploymentConfigTest : AbstractOpenShiftObjectGene
                         ), responseText = ""
                     )
                 )
-            ), vaultResults = null, stsProvisioningResult = null
+            )
         )
     }
 }

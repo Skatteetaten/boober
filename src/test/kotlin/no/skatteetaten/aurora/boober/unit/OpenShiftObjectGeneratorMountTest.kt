@@ -10,7 +10,7 @@ import io.fabric8.kubernetes.api.model.Secret
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.adr
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultResults
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultSecretEnvResult
 import no.skatteetaten.aurora.boober.utils.AbstractOpenShiftObjectGeneratorTest
 import no.skatteetaten.aurora.boober.utils.base64Decode
 import org.junit.jupiter.api.BeforeEach
@@ -111,13 +111,16 @@ class OpenShiftObjectGeneratorMountTest : AbstractOpenShiftObjectGeneratorTest()
 }"""
         )
 
-        val vaultFileName = "latest.properties"
-        val vaultFileContents = "FOO=BAR"
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, adr("utv", "aos-simple"))
+        val propertyValue = "BAR"
+        val propertyKey = "FOO"
         val provisioningResult = ProvisioningResult(
-            schemaProvisionResults = null,
-            vaultResults = VaultResults(mapOf("test" to mapOf(vaultFileName to vaultFileContents.toByteArray()))),
-            stsProvisioningResult = null
+            vaultSecretEnvResult = listOf(
+                VaultSecretEnvResult(
+                    name = "test",
+                    secrets = mapOf(propertyKey to propertyValue.toByteArray())
+                )
+            )
         )
 
         val jsonMounts = objectGenerator.generateSecretsAndConfigMapsInTest(
@@ -132,6 +135,6 @@ class OpenShiftObjectGeneratorMountTest : AbstractOpenShiftObjectGeneratorTest()
         val mount = mapper.convertValue<Secret>(jsonMounts.first())
         assertThat(mount.kind).isEqualTo("Secret")
 
-        assertThat(mount.data[vaultFileName]?.base64Decode()).isEqualTo(vaultFileContents)
+        assertThat(mount.data[propertyKey]?.base64Decode()).isEqualTo(propertyValue)
     }
 }

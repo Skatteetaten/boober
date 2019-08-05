@@ -1,14 +1,16 @@
-[{
-  "kind": "Status",
-  "apiVersion": "v1",
-  "metadata": {},
-  "status": "Failure",
-  "message": "applicationdeployments.skatteetaten.no \"boobedsadasdar\" not found",
-  "reason": "NotFound",
-  "details": {
-    "name": "boobedsadasdar",
-    "group": "skatteetaten.no",
-    "kind": "applicationdeployments"
-  },
-  "code": 404
-}]
+[
+  {
+    "kind": "Status",
+    "apiVersion": "v1",
+    "metadata": {},
+    "status": "Failure",
+    "message": "applicationdeployments.skatteetaten.no \"boobedsadasdar\" not found",
+    "reason": "NotFound",
+    "details": {
+      "name": "boobedsadasdar",
+      "group": "skatteetaten.no",
+      "kind": "applicationdeployments"
+    },
+    "code": 404
+  }
+]

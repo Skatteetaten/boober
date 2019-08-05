@@ -20,6 +20,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchema
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultResults
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultSecretEnvResult
 import no.skatteetaten.aurora.boober.utils.AbstractOpenShiftObjectGeneratorTest
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.junit.jupiter.api.BeforeEach
@@ -78,6 +79,8 @@ class OpenShiftObjectGeneratorTest : AbstractOpenShiftObjectGeneratorTest() {
         val env: String,
         val appName: String,
         val templateFile: String? = null,
+        val secretEnv: List<VaultSecretEnvResult> = listOf(),
+        val secretName: String? = null,
         val overrides: List<AuroraConfigFile> = emptyList()
     ) {
         BOOBERDEV_SIMPLE(
@@ -94,7 +97,14 @@ class OpenShiftObjectGeneratorTest : AbstractOpenShiftObjectGeneratorTest() {
         BOOBERDEV_CONSOLE("booberdev", "console"),
         WEBSEAL_SPROCKET("webseal", "sprocket"),
         BOOBERDEV_REFERANSE_WEB("booberdev", "reference-web"),
-        SECRETTEST_SIMPLE("secrettest", "aos-simple"),
+        SECRETTEST_SIMPLE(
+            "secrettest", "aos-simple", secretEnv = listOf(
+                VaultSecretEnvResult(
+                    name = "foo",
+                    secrets = mapOf("FOO" to "BAR".toByteArray(), "BAR" to "baz".toByteArray())
+                )
+            )
+        ),
         RELEASE_SIMPLE("release", "aos-simple"),
         MOUNTS_SIMPLE("mounts", "aos-simple"),
         SECRETMOUNT_SIMPLE("secretmount", "aos-simple"),
@@ -105,9 +115,8 @@ class OpenShiftObjectGeneratorTest : AbstractOpenShiftObjectGeneratorTest() {
     fun `should create openshift objects`(test: OpenShiftObjectCreationTestData) {
 
         val provisioningResult = ProvisioningResult(
-            schemaProvisionResults = null,
-            vaultResults = VaultResults(mapOf("foo" to mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray()))),
-            stsProvisioningResult = null
+            vaultSecretEnvResult = test.secretEnv,
+            vaultResults = VaultResults(mapOf("foo" to mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray())))
         )
 
         val aid = ApplicationDeploymentRef(test.env, test.appName)
