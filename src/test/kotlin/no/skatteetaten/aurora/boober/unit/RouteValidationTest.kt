@@ -18,6 +18,8 @@ class RouteValidationTest : ResourceLoader() {
         application = "reference"
     )
 
+    //TODO: test validation of tls and route host if tls is set
+
     @Test
     fun `Should not allow two routes with the same name`() {
 
