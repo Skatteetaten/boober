@@ -31,7 +31,6 @@ class JavaPlatformHandler : ApplicationPlatformHandler("java") {
                 AuroraConfigFieldHandler("baseImage/version", defaultValue = "1")
             )
             else -> emptySet()
-
         }
         return typeHandlers +
             AuroraConfigFieldHandler(

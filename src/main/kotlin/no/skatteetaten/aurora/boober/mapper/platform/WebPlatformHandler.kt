@@ -33,7 +33,6 @@ class WebPlatformHandler : ApplicationPlatformHandler("web") {
                 AuroraConfigFieldHandler("baseImage/version", defaultValue = "1")
             )
             else -> emptySet()
-
         }
         return typeHandlers +
             AuroraConfigFieldHandler(

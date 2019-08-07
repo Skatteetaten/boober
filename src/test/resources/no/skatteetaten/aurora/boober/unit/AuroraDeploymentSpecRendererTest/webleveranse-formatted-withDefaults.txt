@@ -58,6 +58,14 @@
     name:                   "wrench8"                    // default
     version:                "1"                          // default
   }
+  routeDefaults: {
+    tls: {
+      insecurePolicy:       "redirect"                   // default
+      enabled:              false                        // default
+      termination:          "edge"                       // default
+    }
+    host:                   "@name@-@affiliation@-@env@" // default
+  }
   databaseDefaults: {
     flavor:                 "ORACLE_MANAGED"             // default
     generate:               true                         // default
@@ -65,7 +73,4 @@
   }
   webseal:                  false                        // default
   route:                    true                         // webleveranse.json
-  routeDefaults: {
-    host:                   "@name@-@affiliation@-@env@" // default
-  }
 }

@@ -83,7 +83,7 @@ class AuroraRouteMapperV1(
 
     fun findRouteHandlers(): List<AuroraConfigFieldHandler> {
 
-        //TODO: switch to findSubKeysExpanded
+        // TODO: switch to findSubKeysExpanded
         val routeHandlers = applicationFiles.findSubKeys("route")
 
         return routeHandlers.flatMap { routeName ->
