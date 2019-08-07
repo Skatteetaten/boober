@@ -72,8 +72,7 @@ class AuroraRouteMapperV1(
 
             Route(
                 objectName = replacer.replace(it).ensureStartWith(name, "-"),
-                host = auroraDeploymentSpec.getOrNull("$route/$it/host")
-                    ?: auroraDeploymentSpec["routeDefaults/host"],
+                host = auroraDeploymentSpec.getOrDefault(route, it, "host"),
                 path = auroraDeploymentSpec.getOrNull("$route/$it/path"),
                 annotations = auroraDeploymentSpec.getRouteAnnotations("$route/$it/annotations", handlers),
                 tls = secure
@@ -83,18 +82,14 @@ class AuroraRouteMapperV1(
 
     fun findRouteHandlers(): List<AuroraConfigFieldHandler> {
 
-        // TODO: switch to findSubKeysExpanded
-        val routeHandlers = applicationFiles.findSubKeys("route")
+        val routeHandlers = applicationFiles.findSubKeysExpanded("route")
 
-        return routeHandlers.flatMap { routeName ->
+        return routeHandlers.flatMap { key ->
 
-            val tlsHandlers = findRouteTlsHandlers("route/$routeName/tls")
             listOf(
-                AuroraConfigFieldHandler("route/$routeName/host"),
-                AuroraConfigFieldHandler(
-                    "route/$routeName/path",
-                    validator = { it?.startsWith("/", "Path must start with /") })
-            ) + tlsHandlers + findRouteAnnotationHandlers("route/$routeName")
+                AuroraConfigFieldHandler("$key/host"),
+                AuroraConfigFieldHandler("$key/path", validator = { it?.startsWith("/", "Path must start with /") })
+            ) + findRouteTlsHandlers("$key/tls") + findRouteAnnotationHandlers(key)
         }
     }
 
