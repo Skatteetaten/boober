@@ -4,8 +4,10 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraRoute
+import no.skatteetaten.aurora.boober.model.InsecurePolicy
 import no.skatteetaten.aurora.boober.model.Route
 import no.skatteetaten.aurora.boober.model.SecureRoute
+import no.skatteetaten.aurora.boober.model.TlsTermination
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.startsWith
@@ -23,8 +25,8 @@ class AuroraRouteMapperV1(
         AuroraConfigFieldHandler("routeDefaults/tls/enabled", defaultValue = false),
         AuroraConfigFieldHandler(
             "routeDefaults/tls/termination",
-            defaultValue = "edge",
-            validator = { it.oneOf(listOf("edge", "passthrough")) })
+            defaultValue = TlsTermination.edge,
+            validator = { it.oneOf(TlsTermination.values().map { v -> v.name }) })
     ) +
         findRouteAnnotationHandlers("routeDefaults")
 
@@ -94,9 +96,9 @@ class AuroraRouteMapperV1(
                     validator = { it?.startsWith("/", "Path must start with /") }),
                 AuroraConfigFieldHandler("$key/tls/enabled"),
                 AuroraConfigFieldHandler("$key/tls/insecurePolicy",
-                    validator = { it.oneOf(listOf("Deny", "Allow", "Redirect"), required = false) }),
+                    validator = { it.oneOf(InsecurePolicy.values().map { v -> v.name }, required = false) }),
                 AuroraConfigFieldHandler("$key/tls/termination",
-                    validator = { it.oneOf(listOf("edge", "passthrough"), required = false) })
+                    validator = { it.oneOf(TlsTermination.values().map { v -> v.name }, required = false) })
 
             ) + findRouteAnnotationHandlers(key)
         }

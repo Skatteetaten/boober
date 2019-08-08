@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.mapper.platform
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.v1.PortNumbers
+import no.skatteetaten.aurora.boober.model.InsecurePolicy
 import no.skatteetaten.aurora.boober.model.TemplateType
 import no.skatteetaten.aurora.boober.model.TemplateType.development
 import no.skatteetaten.aurora.boober.utils.oneOf
@@ -35,7 +36,8 @@ class JavaPlatformHandler : ApplicationPlatformHandler("java") {
         return typeHandlers +
             AuroraConfigFieldHandler(
                 "routeDefaults/tls/insecurePolicy",
-                defaultValue = "Deny",
-                validator = { it.oneOf(listOf("Deny", "Allow", "Redirect")) })
+                defaultValue = InsecurePolicy.Deny,
+                validator = { it.oneOf(InsecurePolicy.values().map { v -> v.name }) })
+
     }
 }

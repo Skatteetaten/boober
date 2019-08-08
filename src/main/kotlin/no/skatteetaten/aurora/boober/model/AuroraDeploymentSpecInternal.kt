@@ -260,9 +260,19 @@ data class Route(
         get(): String = if (path != null) "$host$path" else host
 }
 
+enum class InsecurePolicy(policy: String) {
+    Redirect("redirect"),
+    Deny("deny"),
+    Allow("allow")
+}
+
+enum class TlsTermination {
+    edge, passthrough
+}
+
 data class SecureRoute(
-    val insecurePolicy: String,
-    val termination: String
+    val insecurePolicy: InsecurePolicy,
+    val termination: TlsTermination
 )
 
 data class AuroraDeploymentConfigFlags(

@@ -7,8 +7,10 @@ import assertk.assertions.isNotNull
 import assertk.catch
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraRoute
+import no.skatteetaten.aurora.boober.model.InsecurePolicy
 import no.skatteetaten.aurora.boober.model.Route
 import no.skatteetaten.aurora.boober.model.SecureRoute
+import no.skatteetaten.aurora.boober.model.TlsTermination
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import org.junit.jupiter.api.Test
@@ -24,7 +26,11 @@ class RouteValidationTest : ResourceLoader() {
     fun `Should not allow tls route with dot in host`() {
         val routes = AuroraRoute(
             route = listOf(
-                Route(objectName = "ref1", host = "test.aurora", tls = SecureRoute("Deny", "edge"))
+                Route(
+                    objectName = "ref1",
+                    host = "test.aurora",
+                    tls = SecureRoute(InsecurePolicy.Deny, TlsTermination.edge)
+                )
             )
         )
         val error = catch { AuroraDeploymentSpecService.validateRoutes(routes, ref) }

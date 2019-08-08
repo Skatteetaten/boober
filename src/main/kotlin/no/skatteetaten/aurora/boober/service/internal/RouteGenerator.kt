@@ -35,8 +35,8 @@ object RouteGenerator {
                 }
                 source.tls?.let {
                     tls {
-                        insecureEdgeTerminationPolicy = it.insecurePolicy
-                        termination = it.termination
+                        insecureEdgeTerminationPolicy = it.insecurePolicy.name
+                        termination = it.termination.name.toLowerCase()
                     }
                 }
                 host = "${source.host}$routeSuffix"
