@@ -38,6 +38,5 @@ class JavaPlatformHandler : ApplicationPlatformHandler("java") {
                 "routeDefaults/tls/insecurePolicy",
                 defaultValue = InsecurePolicy.None,
                 validator = { it.oneOf(InsecurePolicy.values().map { v -> v.name }) })
-
     }
 }
