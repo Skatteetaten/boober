@@ -262,7 +262,7 @@ data class Route(
 
 enum class InsecurePolicy(policy: String) {
     Redirect("redirect"),
-    Deny("deny"),
+    None("none"),
     Allow("allow")
 }
 

@@ -320,10 +320,10 @@
     "tls" : {
       "insecurePolicy" : {
         "source" : "default",
-        "value": "Deny",
+        "value": "None",
         "sources" : [ {
           "name" : "default",
-          "value": "Deny"
+          "value": "None"
         } ]
       },
       "enabled" : {

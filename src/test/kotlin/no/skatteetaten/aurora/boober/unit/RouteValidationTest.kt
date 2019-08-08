@@ -29,7 +29,7 @@ class RouteValidationTest : ResourceLoader() {
                 Route(
                     objectName = "ref1",
                     host = "test.aurora",
-                    tls = SecureRoute(InsecurePolicy.Deny, TlsTermination.edge)
+                    tls = SecureRoute(InsecurePolicy.None, TlsTermination.edge)
                 )
             )
         )

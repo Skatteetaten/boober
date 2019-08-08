@@ -27,7 +27,7 @@
     "host": "aos-simple-aos-booberdev.utv.paas.skead.no",
     "path": "/foo",
     "tls": {
-      "insecureEdgeTerminationPolicy": "Deny",
+      "insecureEdgeTerminationPolicy": "None",
       "termination": "edge"
     },
     "to": {
