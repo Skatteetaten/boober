@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.unit
 
 import assertk.assertThat
+import assertk.assertions.hasMessage
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
 import assertk.catch
@@ -29,7 +30,7 @@ class RouteValidationTest : ResourceLoader() {
         val error = catch { AuroraDeploymentSpecService.validateRoutes(routes, ref) }
 
         assertThat(error).isNotNull()
-        assertThat(error?.message).isEqualTo("Application reference in environment utv have a tls enabled route with a '.' in the host. Route name=ref1 with tls uses '.' in host name.")
+            .hasMessage("Application reference in environment utv have a tls enabled route with a '.' in the host. Route name=ref1 with tls uses '.' in host name.")
     }
 
     @Test

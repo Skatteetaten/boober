@@ -171,7 +171,6 @@ class AuroraDeploymentSpecService(
                         errors = listOf(ConfigFieldErrorDetail.illegal(message = "Route name=${it.objectName} with tls uses '.' in host name"))
                     )
                 }
-
             }
 
             val routeNames = auroraRoute.route.groupBy { it.objectName }

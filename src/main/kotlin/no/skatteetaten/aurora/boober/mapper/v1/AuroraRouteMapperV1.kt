@@ -63,8 +63,8 @@ class AuroraRouteMapperV1(
         return routes.map {
 
             val secure =
-                if (applicationFiles.findSubKeys("$route/$it/tls").isNotEmpty()
-                    || auroraDeploymentSpec["routeDefaults/tls/enabled"]
+                if (applicationFiles.findSubKeys("$route/$it/tls").isNotEmpty() ||
+                    auroraDeploymentSpec["routeDefaults/tls/enabled"]
                 ) {
                     SecureRoute(
                         auroraDeploymentSpec.getOrDefault(route, it, "tls/insecurePolicy"),
