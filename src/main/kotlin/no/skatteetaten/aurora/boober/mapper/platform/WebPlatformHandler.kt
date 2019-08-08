@@ -37,7 +37,7 @@ class WebPlatformHandler : ApplicationPlatformHandler("web") {
         return typeHandlers +
             AuroraConfigFieldHandler(
                 "routeDefaults/tls/insecurePolicy",
-                defaultValue = "redirect",
-                validator = { it.oneOf(listOf("deny", "allow", "redirect")) })
+                defaultValue = "Redirect",
+                validator = { it.oneOf(listOf("Deny", "Allow", "Redirect")) })
     }
 }

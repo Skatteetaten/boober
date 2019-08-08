@@ -7,6 +7,7 @@ import assertk.catch
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraRoute
 import no.skatteetaten.aurora.boober.model.Route
+import no.skatteetaten.aurora.boober.model.SecureRoute
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import org.junit.jupiter.api.Test
@@ -18,7 +19,18 @@ class RouteValidationTest : ResourceLoader() {
         application = "reference"
     )
 
-    //TODO: test validation of tls and route host if tls is set
+    @Test
+    fun `Should not allow tls route with dot in host`() {
+        val routes = AuroraRoute(
+            route = listOf(
+                Route(objectName = "ref1", host = "test.aurora", tls = SecureRoute("Deny", "edge"))
+            )
+        )
+        val error = catch { AuroraDeploymentSpecService.validateRoutes(routes, ref) }
+
+        assertThat(error).isNotNull()
+        assertThat(error?.message).isEqualTo("Application reference in environment utv have a tls enabled route with a '.' in the host. Route name=ref1 with tls uses '.' in host name.")
+    }
 
     @Test
     fun `Should not allow two routes with the same name`() {

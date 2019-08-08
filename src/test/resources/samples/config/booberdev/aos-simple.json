@@ -12,6 +12,14 @@
   "deployStrategy": {
     "type": "recreate"
   },
+  "route": {
+    "@name@": {
+      "tls": {
+        "enabled": "true",
+        "termination": "edge"
+      }
+    }
+  },
   "pause": true,
   "message": "Aurora <3",
   "releaseTo": ""

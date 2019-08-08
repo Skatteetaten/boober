@@ -105,6 +105,7 @@ class AuroraDeploymentSpecService(
             val handlers =
                 headerMapper.handlers +
                     deploymentSpecMapper.handlers +
+                    deploymentSpecMapper.handlers +
                     typeHandlers +
                     applicationHandler.handlers(header.type) +
                     integrationMapper.handlers +
@@ -162,6 +163,17 @@ class AuroraDeploymentSpecService(
             auroraRoute: AuroraRoute,
             applicationDeploymentRef: ApplicationDeploymentRef
         ) {
+
+            auroraRoute.route.forEach {
+                if (it.tls != null && it.host.contains('.')) {
+                    throw AuroraConfigException(
+                        "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} have a tls enabled route with a '.' in the host",
+                        errors = listOf(ConfigFieldErrorDetail.illegal(message = "Route name=${it.objectName} with tls uses '.' in host name"))
+                    )
+                }
+
+            }
+
             val routeNames = auroraRoute.route.groupBy { it.objectName }
             val duplicateRoutes = routeNames.filter { it.value.size > 1 }.map { it.key }
 

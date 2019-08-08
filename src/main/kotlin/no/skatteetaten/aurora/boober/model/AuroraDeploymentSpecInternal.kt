@@ -262,7 +262,7 @@ data class Route(
 
 data class SecureRoute(
     val insecurePolicy: String,
-    val tlsTermination: String
+    val termination: String
 )
 
 data class AuroraDeploymentConfigFlags(

@@ -35,7 +35,7 @@ class JavaPlatformHandler : ApplicationPlatformHandler("java") {
         return typeHandlers +
             AuroraConfigFieldHandler(
                 "routeDefaults/tls/insecurePolicy",
-                defaultValue = "deny",
-                validator = { it.oneOf(listOf("deny", "allow", "redirect")) })
+                defaultValue = "Deny",
+                validator = { it.oneOf(listOf("Deny", "Allow", "Redirect")) })
     }
 }

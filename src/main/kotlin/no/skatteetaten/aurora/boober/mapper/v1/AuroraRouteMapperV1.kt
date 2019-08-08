@@ -63,7 +63,9 @@ class AuroraRouteMapperV1(
         return routes.map {
 
             val secure =
-                if (applicationFiles.findSubKeys("$route/$it/tls").isNotEmpty() || auroraDeploymentSpec["routeDefaults/tls/enabled"]) {
+                if (applicationFiles.findSubKeys("$route/$it/tls").isNotEmpty()
+                    || auroraDeploymentSpec["routeDefaults/tls/enabled"]
+                ) {
                     SecureRoute(
                         auroraDeploymentSpec.getOrDefault(route, it, "tls/insecurePolicy"),
                         auroraDeploymentSpec.getOrDefault(route, it, "tls/termination")
@@ -88,19 +90,16 @@ class AuroraRouteMapperV1(
 
             listOf(
                 AuroraConfigFieldHandler("$key/host"),
-                AuroraConfigFieldHandler("$key/path", validator = { it?.startsWith("/", "Path must start with /") })
-            ) + findRouteTlsHandlers("$key/tls") + findRouteAnnotationHandlers(key)
-        }
-    }
+                AuroraConfigFieldHandler("$key/path",
+                    validator = { it?.startsWith("/", "Path must start with /") }),
+                AuroraConfigFieldHandler("$key/tls/enabled"),
+                AuroraConfigFieldHandler("$key/tls/insecurePolicy",
+                    validator = { it.oneOf(listOf("Deny", "Allow", "Redirect"), required = false) }),
+                AuroraConfigFieldHandler("$key/tls/termination",
+                    validator = { it.oneOf(listOf("edge", "passthrough"), required = false) })
 
-    fun findRouteTlsHandlers(prefix: String): List<AuroraConfigFieldHandler> {
-        return applicationFiles.findSubHandlers("$prefix/enabled") +
-            applicationFiles.findSubHandlers("$prefix/insecurePolicy", validatorFn = {
-                { it.oneOf(listOf("deny", "allow", "redirect")) }
-            }) +
-            applicationFiles.findSubHandlers("$prefix/termination", validatorFn = {
-                { it.oneOf(listOf("edge", "passthrough")) }
-            })
+            ) + findRouteAnnotationHandlers(key)
+        }
     }
 
     fun findRouteAnnotationHandlers(prefix: String): List<AuroraConfigFieldHandler> {

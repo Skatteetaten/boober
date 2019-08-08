@@ -368,10 +368,10 @@
     "tls" : {
       "insecurePolicy" : {
         "source" : "default",
-        "value" : "redirect",
+        "value": "Redirect",
         "sources" : [ {
           "name" : "default",
-          "value" : "redirect"
+          "value": "Redirect"
         } ]
       },
       "enabled" : {

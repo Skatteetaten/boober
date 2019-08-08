@@ -159,9 +159,13 @@ fun JsonNode?.durationString(): Exception? {
     return null
 }
 
-fun JsonNode?.oneOf(candidates: List<String>): Exception? {
+fun JsonNode?.oneOf(candidates: List<String>, required: Boolean = true): Exception? {
     if (this == null || !this.isTextual) {
-        return IllegalArgumentException("Must be one of [" + candidates.joinToString() + "]")
+        return if (required) {
+            IllegalArgumentException("Must be one of [" + candidates.joinToString() + "]")
+        } else {
+            null
+        }
     }
     if (!candidates.contains(this.textValue())) {
         return IllegalArgumentException("Must be one of [" + candidates.joinToString() + "]")

@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service.internal
 import com.fkorotkov.openshift.metadata
 import com.fkorotkov.openshift.newRoute
 import com.fkorotkov.openshift.spec
+import com.fkorotkov.openshift.tls
 import com.fkorotkov.openshift.to
 import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.openshift.api.model.Route
@@ -24,13 +25,19 @@ object RouteGenerator {
                 labels = routeLabels
                 ownerReferences = listOf(ownerReference)
                 source.annotations?.let {
-                    annotations = it.mapKeys { it.key.replace("|", "/") }
+                    annotations = it.mapKeys { kv -> kv.key.replace("|", "/") }
                 }
             }
             spec {
                 to {
                     kind = "Service"
                     name = serviceName
+                }
+                source.tls?.let {
+                    tls {
+                        insecureEdgeTerminationPolicy = it.insecurePolicy
+                        termination = it.termination
+                    }
                 }
                 host = "${source.host}$routeSuffix"
                 source.path?.let {

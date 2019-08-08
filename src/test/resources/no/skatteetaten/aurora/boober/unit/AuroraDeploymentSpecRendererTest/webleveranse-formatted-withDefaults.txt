@@ -60,7 +60,7 @@
   }
   routeDefaults: {
     tls: {
-      insecurePolicy:       "redirect"                   // default
+      insecurePolicy:       "Redirect"                   // default
       enabled:              false                        // default
       termination:          "edge"                       // default
     }
