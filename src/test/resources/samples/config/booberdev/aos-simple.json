@@ -16,7 +16,8 @@
     "@name@": {
       "tls": {
         "enabled": "true",
-        "termination": "edge"
+        "termination": "edge",
+        "insecurePolicy": "Allow"
       }
     }
   },

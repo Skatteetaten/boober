@@ -260,10 +260,8 @@ data class Route(
         get(): String = if (path != null) "$host$path" else host
 }
 
-enum class InsecurePolicy(policy: String) {
-    Redirect("redirect"),
-    None("none"),
-    Allow("allow")
+enum class InsecurePolicy {
+    Redirect, None, Allow
 }
 
 enum class TlsTermination {
