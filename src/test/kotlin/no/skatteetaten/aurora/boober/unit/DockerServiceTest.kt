@@ -8,6 +8,7 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
+import no.skatteetaten.aurora.boober.service.CantusRestTemplateWrapper
 import no.skatteetaten.aurora.boober.service.DockerService
 import no.skatteetaten.aurora.boober.service.TagCommand
 import no.skatteetaten.aurora.boober.utils.jsonMapper
@@ -20,7 +21,7 @@ import org.springframework.web.client.RestTemplate
 class DockerServiceTest {
 
     val httpClient = mockk<RestTemplate>()
-    val service = DockerService(httpClient, "test")
+    val service = DockerService(CantusRestTemplateWrapper(httpClient))
     val mapper = jsonMapper()
 
     @BeforeEach
@@ -33,8 +34,8 @@ class DockerServiceTest {
         val manifest: JsonNode = mapper.convertValue(mapOf("manifest" to "foo"))
 
         every {
-            httpClient.exchange(any(), any() as Class<*>)
-        } returns ResponseEntity(manifest, HttpStatus.OK) andThen ResponseEntity<JsonNode>(null, HttpStatus.CREATED)
+            httpClient.exchange(any(), any(), any(), any() as Class<*>, any() as Map<String, *>)
+        } returns ResponseEntity(manifest, HttpStatus.OK)
 
         val response = service.tag(
             TagCommand(
@@ -49,12 +50,12 @@ class DockerServiceTest {
     }
 
     @Test
-    fun `Should not tag if we cannot find manifest`() {
+    fun `Should record failure`() {
         val manifest: JsonNode = mapper.convertValue(mapOf("manifest" to "foo"))
 
         every {
-            httpClient.exchange(any(), any() as Class<*>)
-        } returns ResponseEntity(manifest, HttpStatus.BAD_REQUEST)
+            httpClient.exchange(any(), any(), any(), any() as Class<*>, any() as Map<String, *>)
+        } returns ResponseEntity(manifest, HttpStatus.BAD_GATEWAY)
 
         val response = service.tag(
             TagCommand(
