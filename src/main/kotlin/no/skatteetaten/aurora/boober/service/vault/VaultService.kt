@@ -19,7 +19,7 @@ data class VaultWithAccess @JvmOverloads constructor(
 ) {
     companion object {
         fun create(vault: EncryptedFileVault, user: User): VaultWithAccess {
-            val hasAccess = user.hasAnyRole(vault.permissions)
+            val hasAccess = user.hasAccess(vault.permissions)
             return VaultWithAccess(if (hasAccess) vault else null, vault.name, hasAccess)
         }
     }
@@ -165,7 +165,8 @@ class VaultService(
 
     private fun assertCurrentUserHasAccess(permissions: List<String>) {
         val user = userDetailsProvider.getAuthenticatedUser()
-        if (!user.hasAnyRole(permissions)) {
+
+        if (!user.hasAccess(permissions)) {
             val message = "You (${user.username}) do not have required permissions ($permissions) to " +
                 "operate on this vault. You have ${user.authorities.map { it.authority }}"
             throw UnauthorizedAccessException(message)

@@ -16,6 +16,10 @@ class User(
         return authorities.any { it.authority == role }
     }
 
+    fun hasAccess(roles: Collection<String>): Boolean {
+        return (this.username.startsWith("system:serviceaccount") && roles.contains(this.username)) ||
+            this.hasAnyRole(roles)
+    }
     fun hasAnyRole(roles: Collection<String>?): Boolean {
 
         if (roles?.isEmpty() != false) return true
