@@ -1,8 +1,10 @@
 package no.skatteetaten.aurora.boober.unit
 
+import assertk.all
 import assertk.assertThat
 import assertk.assertions.hasMessage
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import org.junit.jupiter.api.Test
@@ -36,7 +38,7 @@ class OpenshiftApiUrlsTest {
 
         assertThat {
             OpenShiftResourceClient.generateUrl("applicationdeployment", null, null)
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(IllegalArgumentException::class)
             hasMessage("namespace required for resource kind applicationdeployment")
         }
