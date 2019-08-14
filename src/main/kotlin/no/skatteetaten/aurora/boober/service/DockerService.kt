@@ -33,8 +33,8 @@ class DockerService(
 ) {
     fun tag(cmd: TagCommand): TagResult {
         val cantusCmd = CantusTagCommand(
-            "${cmd.fromRegistry}/${cmd.name}:${cmd.from}".replace(".", "-"),
-            "${cmd.toRegistry}/${cmd.name}:${cmd.to}".replace(".", "-")
+            "${cmd.fromRegistry}/${cmd.name}:${cmd.from}"
+            "${cmd.toRegistry}/${cmd.name}:${cmd.to}"
         )
         val resultEntity = client.post(body = cantusCmd, type = JsonNode::class, url = "/tag")
         return TagResult(cmd, resultEntity.body, resultEntity.statusCode.is2xxSuccessful)
