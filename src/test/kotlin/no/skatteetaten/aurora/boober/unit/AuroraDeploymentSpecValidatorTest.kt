@@ -1,11 +1,14 @@
 package no.skatteetaten.aurora.boober.unit
 
+import assertk.all
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.hasMessage
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotNull
+import assertk.assertions.isSuccess
 import assertk.assertions.message
 import com.fasterxml.jackson.databind.JsonNode
 import io.mockk.clearAllMocks
@@ -69,7 +72,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
         val deploymentSpec = createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
         assertThat {
             specValidator.assertIsValid(deploymentSpec)
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
         }
     }
@@ -81,7 +84,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
         every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf("APP_PaaS_utv" to emptyList()))
         assertThat {
             specValidator.assertIsValid(deploymentSpec)
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
             hasMessage("All groups=[APP_PaaS_utv] are empty")
         }
@@ -96,7 +99,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         assertThat {
             specValidator.assertIsValid(deploymentSpec)
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
         }
     }
@@ -117,7 +120,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         assertThat {
             validator.assertIsValid(deploymentSpec)
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
             hasMessage("No sts service found in this cluster")
         }
@@ -143,7 +146,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         assertThat {
             validator.assertIsValid(deploymentSpec)
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
             hasMessage("No webseal service found in this cluster")
         }
@@ -171,7 +174,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         assertThat {
             validator.assertIsValid(deploymentSpec)
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
             hasMessage("No database service found in this cluster")
         }
@@ -195,7 +198,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         assertThat {
             specValidator.assertIsValid(deploymentSpec)
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
             hasMessage("Database schema with id=123-123-123 and affiliation=aos does not exist")
         }
@@ -210,7 +213,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
             ""
         )
 
-        assertThat { specValidator.validateDatabase(deploymentSpec) }.doesNotThrowAnyException()
+        assertThat { specValidator.validateDatabase(deploymentSpec) }.isSuccess()
     }
 
     @Test
@@ -225,7 +228,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         assertThat {
             specValidator.assertIsValid(deploymentSpec)
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
         }
     }
@@ -243,7 +246,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         assertThat {
             specValidator.assertIsValid(deploymentSpec)
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
             hasMessage("Required template parameters [FEED_NAME, DB_NAME, DOMAIN_NAME] not set. Template does not contain parameter(s) [FOO]")
         }
@@ -261,7 +264,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         assertThat {
             specValidator.assertIsValid(deploymentSpec)
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
             hasMessage("Required template parameters [FEED_NAME, DB_NAME, DOMAIN_NAME] not set")
         }
@@ -281,7 +284,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         assertThat {
             specValidator.assertIsValid(deploymentSpec)
-        }.thrownError {
+        }.isFailure().all {
             hasMessage("File with name=latest.properties is not present in vault=test in collection=aos")
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
         }
@@ -300,7 +303,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         assertThat {
             specValidator.validateVaultExistence(deploymentSpec)
-        }.doesNotThrowAnyException()
+        }.isSuccess()
     }
 
     @Test
@@ -323,7 +326,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         assertThat {
             specValidator.validateKeyMappings(deploymentSpec)
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
             hasMessage("The secretVault keyMappings [test-key2] were not found in keys")
         }
@@ -337,7 +340,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         assertThat {
             specValidator.validateKeyMappings(deploymentSpec)
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
             hasMessage("The secretVault keyMappings [test-key2] were not found in keys")
         }
@@ -352,7 +355,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         assertThat {
             specValidator.validateKeyMappings(deploymentSpec)
-        }.doesNotThrowAnyException()
+        }.isSuccess()
     }
 
     @Test
@@ -365,7 +368,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         assertThat {
             specValidator.validateSecretVaultKeys(deploymentSpec)
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
             hasMessage("The keys [test-key1] were not found in the secret vault")
         }
@@ -387,7 +390,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         assertThat {
             specValidator.validateSecretVaultFiles(deploymentSpec)
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
             hasMessage("File with name=foo.properties is not present in vault=name in collection=aos")
         }
@@ -405,7 +408,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         assertThat {
             specValidator.validateSecretNames(deploymentSpec)
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
             message().isNotNull()
                 .contains("secretVault=aos-simple-this-is-way-more-then-63-characters-long-secretvault-name is too long.")
@@ -423,7 +426,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         assertThat {
             specValidator.validateDuplicateSecretEnvNames(deploymentSpec)
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
             hasMessage("SecretVaults does not have unique names=[aos-simple, aos-simple]")
         }
@@ -440,7 +443,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
 
         assertThat {
             specValidator.validateExistingResources(deploymentSpec)
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
             hasMessage("Required existing resource with type=Secret namespace=aos-utv name=secret does not exist.")
         }

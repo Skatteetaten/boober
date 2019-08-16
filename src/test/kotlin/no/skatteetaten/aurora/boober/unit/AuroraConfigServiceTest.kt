@@ -1,8 +1,10 @@
 package no.skatteetaten.aurora.boober.unit
 
+import assertk.all
 import assertk.assertThat
 import assertk.assertions.containsAll
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotNull
 import assertk.catch
@@ -67,14 +69,14 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
     fun `Throws exception when AuroraConfig cannot be found`() {
 
         assertThat {
-            auroraConfigService.findAuroraConfig(
-                AuroraConfigRef(
-                    "no_such_affiliation",
-                    "master",
-                    "123"
+                auroraConfigService.findAuroraConfig(
+                    AuroraConfigRef(
+                        "no_such_affiliation",
+                        "master",
+                        "123"
+                    )
                 )
-            )
-        }.thrownError {
+            }.isFailure().all {
             isInstanceOf(IllegalArgumentException::class)
         }
     }
@@ -104,7 +106,7 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
                 """foo {"version": "1.0.0"}""",
                 theFileToChange?.version
             )
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(AuroraConfigException::class)
         }
     }

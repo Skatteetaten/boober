@@ -1,10 +1,13 @@
 package no.skatteetaten.aurora.boober.unit
 
+import assertk.all
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
+import assertk.assertions.isSuccess
 import assertk.catch
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.mapper.v1.DatabaseFlavor
@@ -40,7 +43,7 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
 
         assertThat {
             createDeploymentSpec(auroraConfigJson, adr("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"))
-        }.doesNotThrowAnyException()
+        }.isSuccess()
     }
 
     @Test
@@ -52,7 +55,7 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
 
         assertThat {
             createDeploymentSpec(auroraConfigJson, adr("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"))
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(AuroraConfigException::class)
         }
     }
@@ -65,7 +68,7 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
 
         assertThat {
             createDeploymentSpec(auroraConfigJson, adr("utv", "reference"))
-        }.doesNotThrowAnyException()
+        }.isSuccess()
     }
 
     @Test
@@ -77,7 +80,7 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
 
         assertThat {
             createDeploymentSpec(auroraConfigJson, adr("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"))
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(AuroraConfigException::class)
         }
     }
@@ -90,7 +93,7 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
 
         assertThat {
             createDeploymentSpec(auroraConfigJson, DEFAULT_AID)
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(AuroraConfigException::class)
         }
     }

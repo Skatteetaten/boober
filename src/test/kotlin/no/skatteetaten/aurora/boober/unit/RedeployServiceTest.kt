@@ -1,8 +1,10 @@
 package no.skatteetaten.aurora.boober.unit
 
+import assertk.all
 import assertk.assertThat
 import assertk.assertions.hasMessage
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isTrue
 import com.fasterxml.jackson.databind.JsonNode
@@ -74,7 +76,7 @@ class RedeployServiceTest {
 
         assertThat {
             redeployService.triggerRedeploy(listOf(), TemplateType.deploy)
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(IllegalArgumentException::class)
             hasMessage("Missing DeploymentConfig")
         }

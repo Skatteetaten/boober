@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.unit
 import assertk.assertThat
 import assertk.assertions.containsAll
 import assertk.assertions.isEqualTo
+import assertk.assertions.isSuccess
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
@@ -59,7 +60,7 @@ class GitServiceTest : ResourceLoader() {
             gitService.commitAndPushChanges(repoUser1, "$it commit")
         }
 
-        assertThat { gitService.checkoutRepository(REPO_NAME, BRANCH_NAME, USER2_FOLDER) }.doesNotThrowAnyException()
+        assertThat { gitService.checkoutRepository(REPO_NAME, BRANCH_NAME, USER2_FOLDER) }.isSuccess()
 
         repoUser1.reset().setMode(ResetCommand.ResetType.HARD).setRef("HEAD~1").call()
         repoUser1.push().setForce(true).call()

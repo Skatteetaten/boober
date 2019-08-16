@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
-import assertk.assert
+import assertk.assertThat
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -47,10 +47,10 @@ class ApplicationDeploymentServiceTest {
         val requests = server.execute(response, response) {
             val deleteResponse =
                 applicationDeploymentDeleteService.executeDelete(applicationRefs)
-            assert(deleteResponse.filter { it.success }.size).isEqualTo(2)
+            assertThat(deleteResponse.filter { it.success }.size).isEqualTo(2)
         }
 
-        assert(requests.size).isEqualTo(2)
+        assertThat(requests.size).isEqualTo(2)
     }
 
     @Test
@@ -62,9 +62,9 @@ class ApplicationDeploymentServiceTest {
         val requests = server.execute(response, response) {
             val failureResponse = applicationDeploymentDeleteService.checkApplicationDeploymentsExists(applicationRefs)
 
-            assert(failureResponse.filter { !it.exists }.size).isEqualTo(2)
+            assertThat(failureResponse.filter { !it.exists }.size).isEqualTo(2)
         }
-        assert(requests.size).isEqualTo(2)
+        assertThat(requests.size).isEqualTo(2)
     }
     // TODO: introduce test for token when springcleaning is in master
     /*fun Assert<RecordedRequest>.containsBearerToken() = given { request ->
@@ -82,10 +82,10 @@ class ApplicationDeploymentServiceTest {
         val requests = server.execute(response, response) {
             val getResponse = applicationDeploymentDeleteService.checkApplicationDeploymentsExists(applicationRefs)
 
-            assert(getResponse.filter { it.exists }.size).isEqualTo(2)
+            assertThat(getResponse.filter { it.exists }.size).isEqualTo(2)
         }
 
-        assert(requests.size).isEqualTo(2)
+        assertThat(requests.size).isEqualTo(2)
     }
 
     @Test
@@ -97,10 +97,10 @@ class ApplicationDeploymentServiceTest {
         val requests = server.execute(response, response) {
             val getResponse = applicationDeploymentDeleteService.checkApplicationDeploymentsExists(applicationRefs)
 
-            assert(getResponse.filter { !it.success }.size).isEqualTo(2)
-            assert(getResponse.filter { it.message.contains("OK") }).isEmpty()
+            assertThat(getResponse.filter { !it.success }.size).isEqualTo(2)
+            assertThat(getResponse.filter { it.message.contains("OK") }).isEmpty()
         }
 
-        assert(requests.size).isEqualTo(2)
+        assertThat(requests.size).isEqualTo(2)
     }
 }
