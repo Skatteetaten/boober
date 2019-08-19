@@ -287,8 +287,9 @@ class DeployService(
             tagResponse = tagResult
         )
 
-        logger.info("TagResult=$tagResult")
+        logger.info("TagResult=${tagResult?.success}")
         if (tagResult != null && !tagResult.success) {
+            logger.info("tag result not successfull")
             return rawResult.copy(
                 success = false,
                 reason = "Tag command failed."
