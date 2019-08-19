@@ -35,8 +35,9 @@ We use a local repository for distributionUrl in our gradle-wrapper.properties, 
 In order to setup boober correctly set the following variables in `$HOME/.spring-boot-devtools.properties` file.
 
     boober.encrypt.key= <encrypt key>
-    boober.git.password= <bitbucket password for boober user>
-    vault.git.password= <vault password for boober>
+    integrations.bitbucket.password= <bitbucket password for boober user>
+    integrations.aurora.config.git.password= <AuroraConfig git password for boober user>
+    integrations.aurora.vault.git.password= <vault password for boober>
 
 You also need to set the token for the sa that has the correct privileges in the file `/tmp/boober-token`. 
 

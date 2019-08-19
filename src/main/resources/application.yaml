@@ -4,11 +4,6 @@ info:
     podLinks:
         metrics: "{metricsHostname}/dashboard/db/openshift-project-spring-actuator-view-instance?var-ds=openshift-{cluster}-ose&var-namespace={namespace}&var-app={name}&var-instance={podName}"
 
-openshift:
-    cluster: utv
-    port: 8443
-    url: https://${openshift.cluster}-master.paas.skead.no:${openshift.port}
-
 spring:
     profiles:
         active: local
@@ -17,28 +12,36 @@ spring:
             spec: maximumSize=2000,expireAfterWrite=300s
             cache-names: groups, templates
 
-vault:
-    git:
-        project: av
-        checkoutPath: "/tmp/boobervault"
-        urlPattern: https://git.aurora.skead.no/scm/${vault.git.project}/%s.git
+integrations:
+    bitbucket:
+        url: "https://git.aurora.skead.no/"
+    aurora:
+        deployLog:
+            git:
+                project: "ao"
+                repo: "auroradeploymenttags"
+        config:
+            git:
+                project: "ac"
+                urlPattern: https://git.aurora.skead.no/scm/${integrations.aurora.config.git.project}/%s.git
+                checkoutPath: "/tmp/boober"
+        vault:
+            git:
+                project: "av"
+                urlPattern: https://git.aurora.skead.no/scm/${integrations.aurora.vault.git.project}/%s.git
+                checkoutPath: "/tmp/boobervault"
+        openshift:
+            cluster: utv
+            port: 8443
+            url: https://${integrations.openshift.cluster}-master.paas.skead.no:${integrations.openshift.port}
+        docker:
+            registry: "docker-registry.aurora.sits.no:5000"
 
 boober:
-    bitbucket:
-        project: "ac"
-        url: "https://git.aurora.skead.no/"
-        tags:
-            project: "ao"
-            repo: "auroradeploymenttags"
-    git:
-        checkoutPath: "/tmp/boober"
-        urlPattern: https://git.aurora.skead.no/scm/${boober.bitbucket.project}/%s.git
-    docker:
-        registry: "docker-registry.aurora.sits.no:5000"
     openshift:
         tokenLocation: /var/run/secrets/kubernetes.io/serviceaccount/token
     route:
-        suffix: ".${openshift.cluster}.paas.skead.no"
+        suffix: ".${integrations.openshift.cluster}.paas.skead.no"
 
 aurora:
     token:
@@ -60,14 +63,17 @@ logging:
 spring:
     profiles: local
 
-openshift:
-    cluster: utv
-    port: 8443
-    url: https://${openshift.cluster}-master.paas.skead.no:${openshift.port}
+integrations:
+    dbh:
+        url: http://dbh-aurora.${integrations.openshift.cluster}.paas.skead.no
+    skap:
+        #url: http://skap-aurora.${integrations.openshift.cluster}.paas.skead.no
+    openshift:
+        cluster: utv
+        port: 8443
+        url: https://${integrations.openshift.cluster}-master.paas.skead.no:${integrations.openshift.port}
 
 boober:
-    dbh: http://dbh-aurora.${openshift.cluster}.paas.skead.no
-    #skap: http://skap-aurora.${openshift.cluster}.paas.skead.no
     openshift:
         tokenLocation: /tmp/boober-token
 

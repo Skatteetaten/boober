@@ -39,9 +39,9 @@ class AuroraConfigService(
     @TargetDomain(AURORA_CONFIG) val gitService: GitService,
     val bitbucketProjectService: BitbucketService,
     val deploymentSpecValidator: AuroraDeploymentSpecValidator,
-    @Value("\${openshift.cluster}") val cluster: String,
+    @Value("\${integrations.openshift.cluster}") val cluster: String,
     @Value("\${boober.validationPoolSize:6}") val validationPoolSize: Int,
-    @Value("\${boober.bitbucket.project}") val project: String
+    @Value("\${integrations.aurora.config.git.project}") val project: String
 ) {
 
     val logger: Logger = getLogger(AuroraConfigService::class.java)

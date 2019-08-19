@@ -39,10 +39,10 @@ class GitServices(
     @TargetDomain(Domain.AURORA_CONFIG)
     @Primary
     fun auroraConfigGitService(
-        @Value("\${boober.git.urlPattern}") url: String,
-        @Value("\${boober.git.checkoutPath}") checkoutPath: String,
-        @Value("\${boober.git.username}") username: String,
-        @Value("\${boober.git.password}") password: String
+        @Value("\${integrations.aurora.config.git.urlPattern}") url: String,
+        @Value("\${integrations.aurora.config.git.checkoutPath}") checkoutPath: String,
+        @Value("\${integrations.aurora.config.git.username}") username: String,
+        @Value("\${integrations.aurora.config.git.password}") password: String
     ): GitService {
         return GitService(userDetails, url, checkoutPath, username, password, metrics)
     }
@@ -50,10 +50,10 @@ class GitServices(
     @Bean
     @TargetDomain(Domain.VAULT)
     fun vaultGitService(
-        @Value("\${vault.git.urlPattern}") url: String,
-        @Value("\${vault.git.checkoutPath}") checkoutPath: String,
-        @Value("\${vault.git.username}") username: String,
-        @Value("\${vault.git.password}") password: String
+        @Value("\${integrations.aurora.vault.git.urlPattern}") url: String,
+        @Value("\${integrations.aurora.vault.git.checkoutPath}") checkoutPath: String,
+        @Value("\${integrations.aurora.vault.git.username}") username: String,
+        @Value("\${integrations.aurora.vault.git.password}") password: String
     ): GitService {
         return GitService(userDetails, url, checkoutPath, username, password, metrics)
     }

@@ -8,39 +8,49 @@ aurora:
     token:
         value: token
 
-boober:
+integrations:
     bitbucket:
-        project: "ac"
-        url: "https://git.aurora.skead.no/"
-        tags:
-            project: "ao"
-            repo: "auroradeploymenttags"
-    dbh: http://localhost:8080
-    skap: http://localhost:8082
-    encrypt:
-        key: "komogsyngensang"
-    git:
-        urlPattern: "file:///tmp/boobertest/%s"
-        checkoutPath: "build/boobercheckout"
         username: "foo"
         password: "bar"
+        url: "https://git.aurora.skead.no/"
+    aurora:
+        config:
+            git:
+                username: "foo"
+                password: "bar"
+                project: "ac"
+                urlPattern: "file:///tmp/boobertest/%s"
+                checkoutPath: "build/boobercheckout"
+        deployLog:
+            git:
+                project: "ao"
+                repo: "auroradeploymenttags"
+        vault:
+            git:
+                username: "foo"
+                password: "bar"
+                urlPattern: "file:///tmp/vaulttest/%s"
+                checkoutPath: "build/vaultcheckout"
+    openshift:
+        cluster: utv
+        url: https://${integrations.openshift.cluster}-master.paas.skead.no:8443
+    dbh:
+        url: "http://localhost:8080"
+    skap:
+        url: "http://localhost:8082"
     docker:
         registry: "docker-registry.aurora.sits.no:5000"
+
+boober:
+    encrypt:
+        key: "komogsyngensang"
     openshift:
         token: foo
 
 vault:
     operations:
         enabled: true
-    git:
-        urlPattern: "file:///tmp/vaulttest/%s"
-        checkoutPath: "build/vaultcheckout"
-        username: "foo"
-        password: "bar"
 
 management:
     server.port: 0
 
-openshift:
-    cluster: utv
-    url: https://${openshift.cluster}-master.paas.skead.no:8443

@@ -38,12 +38,12 @@ data class StsProvisioningResult(
 )
 
 @Service
-@ConditionalOnProperty("boober.skap")
+@ConditionalOnProperty("integrations.skap.url")
 class StsProvisioner(
     @TargetService(ServiceTypes.SKAP)
     val restTemplate: RestTemplate,
     @Value("\${boober.sts.renewBeforeDays:14}") val renewBeforeDays: Long,
-    @Value("\${openshift.cluster}") val cluster: String
+    @Value("\${integrations.openshift.cluster}") val cluster: String
 ) {
     val logger: Logger = LoggerFactory.getLogger(StsProvisioner::class.java)
 
