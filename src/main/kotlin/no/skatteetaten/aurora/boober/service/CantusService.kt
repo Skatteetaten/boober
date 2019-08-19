@@ -42,7 +42,7 @@ class CantusService(
             "${cmd.toRegistry}/${cmd.name}:${cmd.to}"
         )
         val resultEntity = client.post(body = cantusCmd, type = JsonNode::class, url = "/tag")
-        logger.debug("Response from cantus code=${resultEntity.statusCode} body=${resultEntity.body}")
+        logger.info("Response from cantus code=${resultEntity.statusCode} body=${resultEntity.body}")
         return TagResult(cmd, resultEntity.body, resultEntity.statusCode.is2xxSuccessful)
     }
 }
