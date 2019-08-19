@@ -286,13 +286,15 @@ class DeployService(
             auroraDeploymentSpecInternal = deploymentSpecInternal,
             tagResponse = tagResult
         )
-        // TODO: Denne funker ikke
-        tagResult?.takeIf { !it.success }?.let {
+
+        logger.info("TagResult=$tagResult")
+        if (tagResult != null && !tagResult.success) {
             return rawResult.copy(
                 success = false,
                 reason = "Tag command failed."
             )
         }
+
 
         logger.debug("Apply objects")
         val openShiftResponses: List<OpenShiftResponse> = listOf(applicationResult) +
