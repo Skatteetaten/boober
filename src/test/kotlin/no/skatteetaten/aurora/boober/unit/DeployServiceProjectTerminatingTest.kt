@@ -31,7 +31,7 @@ class DeployServiceProjectTerminatingTest {
         auroraConfigService = mockk(),
         openShiftCommandBuilder = mockk(),
         openShiftClient = openShiftClient,
-        dockerService = mockk(),
+        cantusService = mockk(),
         resourceProvisioner = mockk(),
         redeployService = mockk(),
         userDetailsProvider = userDetailsProvider,

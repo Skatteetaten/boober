@@ -9,7 +9,7 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.service.CantusRestTemplateWrapper
-import no.skatteetaten.aurora.boober.service.DockerService
+import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.service.TagCommand
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import org.junit.jupiter.api.BeforeEach
@@ -18,10 +18,10 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.client.RestTemplate
 
-class DockerServiceTest {
+class CantusServiceTest {
 
     val httpClient = mockk<RestTemplate>()
-    val service = DockerService(CantusRestTemplateWrapper(httpClient))
+    val service = CantusService(CantusRestTemplateWrapper(httpClient))
     val mapper = jsonMapper()
 
     @BeforeEach

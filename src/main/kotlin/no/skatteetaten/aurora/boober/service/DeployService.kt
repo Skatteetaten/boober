@@ -31,7 +31,7 @@ class DeployService(
     val auroraConfigService: AuroraConfigService,
     val openShiftCommandBuilder: OpenShiftCommandService,
     val openShiftClient: OpenShiftClient,
-    val dockerService: DockerService,
+    val cantusService: CantusService,
     val resourceProvisioner: ExternalResourceProvisioner,
     val redeployService: RedeployService,
     val userDetailsProvider: UserDetailsProvider,
@@ -270,7 +270,7 @@ class DeployService(
 
         val tagResult = deploymentSpecInternal.deploy?.takeIf { it.releaseTo != null }?.let {
             val dockerGroup = it.groupId.dockerGroupSafeName()
-            dockerService.tag(
+            cantusService.tag(
                 TagCommand(
                     name = "$dockerGroup/${it.artifactId}",
                     from = it.version,
@@ -286,6 +286,7 @@ class DeployService(
             auroraDeploymentSpecInternal = deploymentSpecInternal,
             tagResponse = tagResult
         )
+        // TODO: Denne funker ikke
         tagResult?.takeIf { !it.success }?.let {
             return rawResult.copy(
                 success = false,
