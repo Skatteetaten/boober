@@ -295,7 +295,6 @@ class DeployService(
             )
         }
 
-
         logger.debug("Apply objects")
         val openShiftResponses: List<OpenShiftResponse> = listOf(applicationResult) +
             applyOpenShiftApplicationObjects(
