@@ -13,7 +13,7 @@ import org.springframework.test.web.servlet.MockMvc
 @AutoConfigureRestDocs
 @WebMvcTest(
     controllers = [ClientConfigControllerV1::class],
-    properties = ["integrations.aurora.config.git.urlPattern=abc", "integrations.openshift.cluster=test", "integrations.openshift.url=test"],
+    properties = ["integrations.aurora.config.git.urlPattern=abc", "openshift.cluster=test", "integrations.openshift.url=test"],
     secure = false
 )
 class ClientConfigControllerV1Test(@Autowired private val mockMvc: MockMvc) {

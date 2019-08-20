@@ -78,7 +78,7 @@ class GitServiceTest : ResourceLoader() {
         ZipUtils.unzip(File(getResourceUrl("$TEST_REPO_NAME.zip").file), remoteRepoFolder)
         val localGitService = GitService(
             userDetails = userDetailsProvider,
-            url = "${remoteRepoFolder.absolutePath}/%s.git",
+            urlPattern = "${remoteRepoFolder.absolutePath}/%s.git",
             checkoutPath = CHECKOUT_PATH,
             username = "",
             password = "",

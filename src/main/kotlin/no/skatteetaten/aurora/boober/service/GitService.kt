@@ -39,29 +39,29 @@ class GitServices(
     @TargetDomain(Domain.AURORA_CONFIG)
     @Primary
     fun auroraConfigGitService(
-        @Value("\${integrations.aurora.config.git.urlPattern}") url: String,
-        @Value("\${integrations.aurora.config.git.checkoutPath}") checkoutPath: String,
-        @Value("\${integrations.aurora.config.git.username}") username: String,
-        @Value("\${integrations.aurora.config.git.password}") password: String
+        @Value("\${integrations.bitbucket.username}") username: String,
+        @Value("\${integrations.bitbucket.password}") password: String,
+        @Value("\${integrations.aurora.config.git.urlPattern}") urlPattern: String,
+        @Value("\${integrations.aurora.config.git.checkoutPath}") checkoutPath: String
     ): GitService {
-        return GitService(userDetails, url, checkoutPath, username, password, metrics)
+        return GitService(userDetails, urlPattern, checkoutPath, username, password, metrics)
     }
 
     @Bean
     @TargetDomain(Domain.VAULT)
     fun vaultGitService(
-        @Value("\${integrations.aurora.vault.git.urlPattern}") url: String,
-        @Value("\${integrations.aurora.vault.git.checkoutPath}") checkoutPath: String,
-        @Value("\${integrations.aurora.vault.git.username}") username: String,
-        @Value("\${integrations.aurora.vault.git.password}") password: String
+        @Value("\${integrations.bitbucket.username}") username: String,
+        @Value("\${integrations.bitbucket.password}") password: String,
+        @Value("\${integrations.aurora.config.git.urlPattern}") urlPattern: String,
+        @Value("\${integrations.aurora.vault.git.checkoutPath}") checkoutPath: String
     ): GitService {
-        return GitService(userDetails, url, checkoutPath, username, password, metrics)
+        return GitService(userDetails, urlPattern, checkoutPath, username, password, metrics)
     }
 }
 
 open class GitService(
     val userDetails: UserDetailsProvider,
-    val url: String,
+    val urlPattern: String,
     val checkoutPath: String,
     val username: String,
     val password: String,
@@ -163,7 +163,7 @@ open class GitService(
     private fun cloneRepository(repositoryName: String, repoPath: File): Git {
         return metrics.withMetrics("git_checkout") {
             val dir = repoPath.apply { mkdirs() }
-            val uri = url.format(repositoryName)
+            val uri = urlPattern.format(repositoryName)
 
             try {
                 Git.cloneRepository()

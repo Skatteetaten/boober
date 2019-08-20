@@ -43,7 +43,7 @@ class StsProvisioner(
     @TargetService(ServiceTypes.SKAP)
     val restTemplate: RestTemplate,
     @Value("\${boober.sts.renewBeforeDays:14}") val renewBeforeDays: Long,
-    @Value("\${integrations.openshift.cluster}") val cluster: String
+    @Value("\${openshift.cluster}") val cluster: String
 ) {
     val logger: Logger = LoggerFactory.getLogger(StsProvisioner::class.java)
 

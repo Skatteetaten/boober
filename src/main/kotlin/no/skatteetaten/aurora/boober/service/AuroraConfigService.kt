@@ -39,7 +39,7 @@ class AuroraConfigService(
     @TargetDomain(AURORA_CONFIG) val gitService: GitService,
     val bitbucketProjectService: BitbucketService,
     val deploymentSpecValidator: AuroraDeploymentSpecValidator,
-    @Value("\${integrations.openshift.cluster}") val cluster: String,
+    @Value("\${openshift.cluster}") val cluster: String,
     @Value("\${boober.validationPoolSize:6}") val validationPoolSize: Int,
     @Value("\${integrations.aurora.config.git.project}") val project: String
 ) {

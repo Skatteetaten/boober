@@ -12,6 +12,9 @@ spring:
             spec: maximumSize=2000,expireAfterWrite=300s
             cache-names: groups, templates
 
+openshift:
+    cluster: utv
+
 integrations:
     bitbucket:
         url: "https://git.aurora.skead.no/"
@@ -23,17 +26,16 @@ integrations:
         config:
             git:
                 project: "ac"
-                urlPattern: https://git.aurora.skead.no/scm/${integrations.aurora.config.git.project}/%s.git
                 checkoutPath: "/tmp/boober"
+                urlPattern: ${integrations.bitbucket.url}/scm/${integrations.aurora.config.git.project}/%s.git
         vault:
             git:
                 project: "av"
-                urlPattern: https://git.aurora.skead.no/scm/${integrations.aurora.vault.git.project}/%s.git
                 checkoutPath: "/tmp/boobervault"
+                urlPattern: ${integrations.bitbucket.url}/scm/${integrations.aurora.vault.git.project}/%s.git
         openshift:
-            cluster: utv
             port: 8443
-            url: https://${integrations.openshift.cluster}-master.paas.skead.no:${integrations.openshift.port}
+            url: https://${openshift.cluster}-master.paas.skead.no:${integrations.openshift.port}
         docker:
             registry: "docker-registry.aurora.sits.no:5000"
 
@@ -41,7 +43,7 @@ boober:
     openshift:
         tokenLocation: /var/run/secrets/kubernetes.io/serviceaccount/token
     route:
-        suffix: ".${integrations.openshift.cluster}.paas.skead.no"
+        suffix: ".${openshift.cluster}.paas.skead.no"
 
 aurora:
     token:
@@ -63,15 +65,18 @@ logging:
 spring:
     profiles: local
 
+openshift:
+    cluster: utv
+
 integrations:
     dbh:
-        url: http://dbh-aurora.${integrations.openshift.cluster}.paas.skead.no
+        url: http://dbh-aurora.${openshift.cluster}.paas.skead.no
     skap:
-        #url: http://skap-aurora.${integrations.openshift.cluster}.paas.skead.no
+        #url: http://skap-aurora.${openshift.cluster}.paas.skead.no
     openshift:
         cluster: utv
         port: 8443
-        url: https://${integrations.openshift.cluster}-master.paas.skead.no:${integrations.openshift.port}
+        url: https://${openshift.cluster}-master.paas.skead.no:${integrations.openshift.port}
 
 boober:
     openshift:

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/v1/clientconfig")
 class ClientConfigControllerV1(
     @Value("\${integrations.aurora.config.git.urlPattern}") val gitUrlPattern: String,
-    @Value("\${integrations.openshift.cluster}") val openshiftCluster: String,
+    @Value("\${openshift.cluster}") val openshiftCluster: String,
     @Value("\${integrations.openshift.url}") val openshiftUrl: String
 ) {
 

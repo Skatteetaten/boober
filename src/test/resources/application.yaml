@@ -8,6 +8,9 @@ aurora:
     token:
         value: token
 
+openshift:
+    cluster: utv
+
 integrations:
     bitbucket:
         username: "foo"
@@ -16,8 +19,6 @@ integrations:
     aurora:
         config:
             git:
-                username: "foo"
-                password: "bar"
                 project: "ac"
                 urlPattern: "file:///tmp/boobertest/%s"
                 checkoutPath: "build/boobercheckout"
@@ -27,13 +28,10 @@ integrations:
                 repo: "auroradeploymenttags"
         vault:
             git:
-                username: "foo"
-                password: "bar"
                 urlPattern: "file:///tmp/vaulttest/%s"
                 checkoutPath: "build/vaultcheckout"
     openshift:
-        cluster: utv
-        url: https://${integrations.openshift.cluster}-master.paas.skead.no:8443
+        url: https://${openshift.cluster}-master.paas.skead.no:8443
     dbh:
         url: "http://localhost:8080"
     skap:

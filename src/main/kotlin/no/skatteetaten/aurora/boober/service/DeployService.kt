@@ -36,7 +36,7 @@ class DeployService(
     val redeployService: RedeployService,
     val userDetailsProvider: UserDetailsProvider,
     val deployLogService: DeployLogService,
-    @Value("\${integrations.openshift.cluster}") val cluster: String,
+    @Value("\${openshift.cluster}") val cluster: String,
     @Value("\${integrations.docker.registry}") val dockerRegistry: String
 ) {
 
