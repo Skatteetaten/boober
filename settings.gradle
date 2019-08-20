@@ -1,1 +1,11 @@
+pluginManagement {
+  resolutionStrategy {
+    eachPlugin {
+      if (requested.id.id == 'org.springframework.cloud.contract') {
+        useVersion getProperty("aurora.springCloudContractVersion")
+      }
+    }
+  }
+}
+
 rootProject.name = artifactId

@@ -1,8 +1,10 @@
 package no.skatteetaten.aurora.boober.unit
 
+import assertk.all
 import assertk.assertThat
 import assertk.assertions.hasMessage
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isNull
 import assertk.assertions.isTrue
@@ -105,7 +107,7 @@ class AuroraConfigTest : AbstractAuroraConfigTest() {
 
         assertThat {
             auroraConfig.getFilesForApplication(referanseAid)
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(IllegalArgumentException::class)
             hasMessage("Should find applicationFile utv/referanse.(json|yaml)")
         }
@@ -167,7 +169,7 @@ class AuroraConfigTest : AbstractAuroraConfigTest() {
                     "reference"
                 )
             )
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(IllegalArgumentException::class)
             hasMessage("Some required AuroraConfig (json|yaml) files missing. BASE file with name reference.")
         }

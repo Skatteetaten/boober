@@ -1,7 +1,9 @@
 package no.skatteetaten.aurora.boober.unit
 
+import assertk.all
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftRestTemplateWrapper
@@ -38,7 +40,7 @@ class OpenShiftRestTemplateWrapperTest : ResourceLoader() {
             200 to resource
         ) {
             val entity: ResponseEntity<JsonNode> = restTemplateWrapper.exchange(
-                RequestEntity<Object>(HttpMethod.GET, URI(resourceUrl)), true
+                RequestEntity<Any>(HttpMethod.GET, URI(resourceUrl)), true
             )
 
             compareJson(resource, entity.body!!)
@@ -54,9 +56,9 @@ class OpenShiftRestTemplateWrapperTest : ResourceLoader() {
         ) {
             assertThat {
                 restTemplateWrapper.exchange(
-                    RequestEntity<Object>(HttpMethod.GET, URI(resourceUrl)), true
+                    RequestEntity<Any>(HttpMethod.GET, URI(resourceUrl)), true
                 )
-            }.thrownError {
+            }.isFailure().all {
                 isInstanceOf(HttpClientErrorException::class)
             }
         }
@@ -70,9 +72,9 @@ class OpenShiftRestTemplateWrapperTest : ResourceLoader() {
         ) {
             assertThat {
                 restTemplateWrapper.exchange(
-                    RequestEntity<Object>(HttpMethod.GET, URI(resourceUrl)), false
+                    RequestEntity<Any>(HttpMethod.GET, URI(resourceUrl)), false
                 )
-            }.thrownError {
+            }.isFailure().all {
                 isInstanceOf(HttpClientErrorException::class)
             }
             // TOOD: hvordan kan jeg her sjekke at den ikke gjør flere kall?
