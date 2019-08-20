@@ -74,7 +74,6 @@ integrations:
     skap:
         #url: http://skap-aurora.${openshift.cluster}.paas.skead.no
     openshift:
-        cluster: utv
         port: 8443
         url: https://${openshift.cluster}-master.paas.skead.no:${integrations.openshift.port}
 
