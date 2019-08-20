@@ -52,7 +52,7 @@ class GitServices(
     fun vaultGitService(
         @Value("\${integrations.bitbucket.username}") username: String,
         @Value("\${integrations.bitbucket.password}") password: String,
-        @Value("\${integrations.aurora.config.git.urlPattern}") urlPattern: String,
+        @Value("\${integrations.aurora.vault.git.urlPattern}") urlPattern: String,
         @Value("\${integrations.aurora.vault.git.checkoutPath}") checkoutPath: String
     ): GitService {
         return GitService(userDetails, urlPattern, checkoutPath, username, password, metrics)
