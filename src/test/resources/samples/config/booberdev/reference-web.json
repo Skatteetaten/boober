@@ -1,1 +1,8 @@
-{ }
+{
+  "routeDefaults": {
+    "tls": {
+      "enabled": "true",
+      "insecurePolicy": "None"
+    }
+  }
+}
