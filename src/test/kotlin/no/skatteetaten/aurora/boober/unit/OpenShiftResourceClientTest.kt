@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.unit
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isNotNull
 import com.fasterxml.jackson.databind.node.TextNode
 import io.mockk.every
 import io.mockk.mockk
@@ -39,7 +40,7 @@ class OpenShiftResourceClientTest {
             val responseEntity = openShiftResourceClient.strategicMergePatch("user", "username", TextNode("{}"))
             assertThat(responseEntity.statusCode.value()).isEqualTo(200)
         }
-        assertThat(request.first().headers[HttpHeaders.CONTENT_TYPE]).isEqualTo("application/strategic-merge-patch+json")
-        assertThat(request.first().path).isEqualTo("/apis/user.openshift.io/v1/users/username")
+        assertThat(request.first()?.headers?.get(HttpHeaders.CONTENT_TYPE)).isNotNull().isEqualTo("application/strategic-merge-patch+json")
+        assertThat(request.first()?.path).isNotNull().isEqualTo("/apis/user.openshift.io/v1/users/username")
     }
 }
