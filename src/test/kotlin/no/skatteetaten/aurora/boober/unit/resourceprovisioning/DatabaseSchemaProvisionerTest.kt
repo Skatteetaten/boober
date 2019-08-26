@@ -143,11 +143,11 @@ class DatabaseSchemaProvisionerTest : ResourceLoader() {
             200 to DbApiEnvelope(""),
             500 to """{"status":"Failed","totalCount":1,"items":["ORA-00059: maximum number of DB_FILES exceeded"]}"""
         ) {
-           assertThat{
+            assertThat {
                 provisioner.provisionSchemas(
                     listOf(SchemaForAppRequest("utv", "reference", true, details))
                 )
-            }.isFailure().messageContains("ORA-00059: maximum number of DB_FILES exceeded")
+                }.isFailure().messageContains("ORA-00059: maximum number of DB_FILES exceeded")
         }
     }
 
@@ -157,7 +157,7 @@ class DatabaseSchemaProvisionerTest : ResourceLoader() {
             200 to DbApiEnvelope(""),
             500 to "{}"
         ) {
-            assertThat{
+            assertThat {
                 provisioner.provisionSchemas(
                     listOf(SchemaForAppRequest("utv", "reference", true, details))
                 )

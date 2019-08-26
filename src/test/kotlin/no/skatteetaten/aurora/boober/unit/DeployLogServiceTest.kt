@@ -86,7 +86,7 @@ class DeployLogServiceTest : AbstractAuroraConfigTest() {
                 Charset.defaultCharset()
             )
 
-        assertThat{
+        assertThat {
             service.findDeployResultById(AuroraConfigRef("test", "master", "123"), "abc123")
         }.isFailure().isNotNull().isInstanceOf(DeployLogServiceException::class)
     }
@@ -102,7 +102,7 @@ class DeployLogServiceTest : AbstractAuroraConfigTest() {
                 Charset.defaultCharset()
             )
 
-        assertThat{
+        assertThat {
             service.findDeployResultById(AuroraConfigRef("test", "master", "123"), "abc123")
         }.isFailure().isNotNull().isInstanceOf(HttpClientErrorException::class)
     }
