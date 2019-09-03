@@ -442,9 +442,7 @@ class OpenShiftObjectGenerator(
                             )
                         }
                     Secret -> mount.secretVaultName
-                        ?.let {
-                            provisioningResult?.vaultResults?.getVaultData("$appName-$it")
-                        }
+                        ?.let { provisioningResult?.vaultResults?.getVaultData(it) }
                         ?.let {
                             SecretGenerator.create(
                                 secretName = mount.getNamespacedVolumeName(appName),

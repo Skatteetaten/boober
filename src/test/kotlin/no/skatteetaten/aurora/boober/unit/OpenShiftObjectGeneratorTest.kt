@@ -116,7 +116,7 @@ class OpenShiftObjectGeneratorTest : AbstractOpenShiftObjectGeneratorTest() {
 
         val provisioningResult = ProvisioningResult(
             vaultSecretEnvResult = test.secretEnv,
-            vaultResults = VaultResults(mapOf("${test.appName}-foo" to mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray())))
+            vaultResults = VaultResults(mapOf("foo" to mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray())))
         )
 
         val aid = ApplicationDeploymentRef(test.env, test.appName)
