@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service.resourceprovisioning
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.AuroraSecret
 import no.skatteetaten.aurora.boober.model.Database
+import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterProperties
 import org.springframework.stereotype.Service
 import java.util.Optional
@@ -45,7 +46,7 @@ class ExternalResourceProvisioner(
                     it.key.toString() to it.value.toString().toByteArray()
                 }
             }?.let {
-                VaultSecretEnvResult(secret.name, it.toMap())
+                VaultSecretEnvResult(secret.name.ensureStartWith(deploymentSpecInternal.name, "-"), it.toMap())
             }
         } ?: emptyList()
     }
