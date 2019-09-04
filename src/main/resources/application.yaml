@@ -22,12 +22,11 @@ integrations:
         url: "http://dbh"
     skap:
         url: "http://skap"
-
+    deployLog:
+        git:
+            project: "ao"
+            repo: "auroradeploymenttags"
     aurora:
-        deployLog:
-            git:
-                project: "ao"
-                repo: "auroradeploymenttags"
         config:
             git:
                 project: "ac"
