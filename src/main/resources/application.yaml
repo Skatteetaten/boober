@@ -38,11 +38,11 @@ integrations:
                 project: "av"
                 checkoutPath: "/tmp/boobervault"
                 urlPattern: ${integrations.bitbucket.url}/scm/${integrations.aurora.vault.git.project}/%s.git
-        openshift:
-            port: 8443
-            url: https://${openshift.cluster}-master.paas.skead.no:${integrations.openshift.port}
-        docker:
-            registry: "docker-registry.aurora.sits.no:5000"
+    openshift:
+        port: 8443
+        url: https://${openshift.cluster}-master.paas.skead.no:${integrations.openshift.port}
+    docker:
+        registry: "docker-registry.aurora.sits.no:5000"
 
 boober:
     openshift:
