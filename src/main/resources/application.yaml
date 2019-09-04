@@ -18,6 +18,11 @@ openshift:
 integrations:
     bitbucket:
         url: "https://git.aurora.skead.no/"
+    dbh:
+        url: "http://dbh"
+    skap:
+        url: "http://skap"
+
     aurora:
         deployLog:
             git:
