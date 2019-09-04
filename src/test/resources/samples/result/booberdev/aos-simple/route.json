@@ -26,6 +26,10 @@
   "spec": {
     "host": "aos-simple-aos-booberdev.utv.paas.skead.no",
     "path": "/foo",
+    "tls": {
+      "insecureEdgeTerminationPolicy": "Allow",
+      "termination": "edge"
+    },
     "to": {
       "kind": "Service",
       "name": "aos-simple"

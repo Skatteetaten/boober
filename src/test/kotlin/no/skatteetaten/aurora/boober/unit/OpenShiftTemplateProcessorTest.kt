@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.unit
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotEmpty
+import assertk.assertions.isSuccess
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.every
@@ -39,7 +40,7 @@ class OpenShiftTemplateProcessorTest : ResourceLoader() {
         val params = mapOf("AFFILIATION" to "aos", "VOLUME_CAPACITY" to "512Mi")
         assertThat {
             templateProcessor.validateTemplateParameters(templateJson, params)
-        }.doesNotThrowAnyException()
+        }.isSuccess()
     }
 
     @Test
@@ -48,7 +49,7 @@ class OpenShiftTemplateProcessorTest : ResourceLoader() {
         val params = mapOf("AFFILIATION" to "aos")
         assertThat {
             templateProcessor.validateTemplateParameters(templateJson, params)
-        }.doesNotThrowAnyException()
+        }.isSuccess()
     }
 
     @Test

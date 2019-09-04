@@ -22,6 +22,10 @@
   },
   "spec": {
     "host": "openshift-referanse-react-aos-booberdev.utv.paas.skead.no",
+    "tls": {
+      "insecureEdgeTerminationPolicy": "None",
+      "termination": "edge"
+    },
     "to": {
       "kind": "Service",
       "name": "openshift-referanse-react"

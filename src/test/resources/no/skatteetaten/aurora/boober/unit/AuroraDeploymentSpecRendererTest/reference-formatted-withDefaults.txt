@@ -50,6 +50,14 @@
   pause:                    false                        // default
   alarm:                    true                         // default
   toxiproxy:                false                        // default
+  routeDefaults: {
+    tls: {
+      insecurePolicy:       "None"                       // default
+      enabled:              false                        // default
+      termination:          "edge"                       // default
+    }
+    host:                   "@name@-@affiliation@-@env@" // default
+  }
   databaseDefaults: {
     flavor:                 "ORACLE_MANAGED"             // default
     generate:               true                         // default
@@ -59,7 +67,4 @@
     roles:                  "foobar"                     // utv/reference.json
   }
   route:                    true                         // reference.json
-  routeDefaults: {
-    host:                   "@name@-@affiliation@-@env@" // default
-  }
 }
