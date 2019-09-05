@@ -17,7 +17,7 @@ openshift:
 
 integrations:
     bitbucket:
-        url: "https://git.aurora.skead.no"
+        url: "https://git.aurora.skead.no/"
     dbh:
         url: "http://dbh"
     skap:
@@ -31,12 +31,12 @@ integrations:
             git:
                 project: "ac"
                 checkoutPath: "/tmp/boober"
-                urlPattern: ${integrations.bitbucket.url}/scm/${integrations.aurora.config.git.project}/%s.git
+                urlPattern: ${integrations.bitbucket.url}scm/${integrations.aurora.config.git.project}/%s.git
         vault:
             git:
                 project: "av"
                 checkoutPath: "/tmp/boobervault"
-                urlPattern: ${integrations.bitbucket.url}/scm/${integrations.aurora.vault.git.project}/%s.git
+                urlPattern: ${integrations.bitbucket.url}scm/${integrations.aurora.vault.git.project}/%s.git
     openshift:
         port: 8443
         url: https://${openshift.cluster}-master.paas.skead.no:${integrations.openshift.port}
