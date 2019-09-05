@@ -12,9 +12,6 @@ spring:
             spec: maximumSize=2000,expireAfterWrite=300s
             cache-names: groups, templates
 
-openshift:
-    cluster: utv
-
 integrations:
     bitbucket:
         url: "https://git.aurora.skead.no/"
