@@ -54,7 +54,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class OpenShiftObjectGenerator(
-    @Value("\${boober.docker.registry}") val dockerRegistry: String,
+    @Value("\${integrations.docker.registry}") val dockerRegistry: String,
     val openShiftObjectLabelService: OpenShiftObjectLabelService,
     val mapper: ObjectMapper,
     val openShiftTemplateProcessor: OpenShiftTemplateProcessor,
