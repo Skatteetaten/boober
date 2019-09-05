@@ -17,7 +17,7 @@ openshift:
 
 integrations:
     bitbucket:
-        url: "https://git.aurora.skead.no/"
+        url: "https://git.aurora.skead.no"
     dbh:
         url: "http://dbh"
     skap:
