@@ -253,11 +253,25 @@ data class Route(
     val objectName: String,
     val host: String,
     val path: String? = null,
-    val annotations: Map<String, String>? = null
+    val annotations: Map<String, String>? = null,
+    val tls: SecureRoute? = null
 ) {
     val target: String
         get(): String = if (path != null) "$host$path" else host
 }
+
+enum class InsecurePolicy {
+    Redirect, None, Allow
+}
+
+enum class TlsTermination {
+    edge, passthrough
+}
+
+data class SecureRoute(
+    val insecurePolicy: InsecurePolicy,
+    val termination: TlsTermination
+)
 
 data class AuroraDeploymentConfigFlags(
     val debug: Boolean = false,

@@ -106,13 +106,13 @@ data class DbhSchema(
 }
 
 @Service
-@ConditionalOnProperty("boober.dbh")
+@ConditionalOnProperty("integrations.dbh.url")
 class DatabaseSchemaProvisioner(
     @TargetService(ServiceTypes.AURORA)
     val restTemplate: RestTemplate,
     val mapper: ObjectMapper,
     val userDetailsProvider: UserDetailsProvider,
-    @Value("\${boober.dbh}") val dbhUrl: String
+    @Value("\${integrations.dbh.url}") val dbhUrl: String
 ) {
     val logger by logger()
 

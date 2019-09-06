@@ -16,7 +16,6 @@ import io.fabric8.kubernetes.api.model.ResourceRequirements
 import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.platform.AuroraContainer
-import no.skatteetaten.aurora.boober.mapper.platform.createEnvFrom
 import no.skatteetaten.aurora.boober.mapper.platform.createEnvVars
 import no.skatteetaten.aurora.boober.mapper.platform.podVolumes
 import no.skatteetaten.aurora.boober.mapper.platform.volumeMount
@@ -46,7 +45,6 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningRe
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultSecretEnvResult
 import no.skatteetaten.aurora.boober.utils.Instants.now
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.slf4j.Logger
@@ -56,7 +54,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class OpenShiftObjectGenerator(
-    @Value("\${boober.docker.registry}") val dockerRegistry: String,
+    @Value("\${integrations.docker.registry}") val dockerRegistry: String,
     val openShiftObjectLabelService: OpenShiftObjectLabelService,
     val mapper: ObjectMapper,
     val openShiftTemplateProcessor: OpenShiftTemplateProcessor,
@@ -310,8 +308,14 @@ class OpenShiftObjectGenerator(
 
                 spec.containers.forEach { container ->
                     container.volumeMounts.addAll(mounts.volumeMount() ?: listOf())
-                    container.envFrom.addAll(createEnvFrom(vaultSecretEnvResult))
-                    container.env.addAll(createEnvVars(mounts, auroraDeploymentSpecInternal, routeSuffix))
+                    container.env.addAll(
+                        createEnvVars(
+                            mounts,
+                            auroraDeploymentSpecInternal,
+                            routeSuffix,
+                            vaultSecretEnvResult
+                        )
+                    )
 
                     if (container.resources == null) {
                         container.resources = ResourceRequirements()
@@ -421,7 +425,7 @@ class OpenShiftObjectGenerator(
 
         val secretEnvSecrets = provisioningResult?.vaultSecretEnvResult?.map {
             SecretGenerator.create(
-                secretName = it.name.ensureStartWith(appName, "-"),
+                secretName = it.name,
                 secretData = it.secrets,
                 secretNamespace = namespace,
                 secretLabels = labels,

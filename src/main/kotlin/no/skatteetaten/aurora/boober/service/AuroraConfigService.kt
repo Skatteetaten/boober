@@ -41,7 +41,7 @@ class AuroraConfigService(
     val deploymentSpecValidator: AuroraDeploymentSpecValidator,
     @Value("\${openshift.cluster}") val cluster: String,
     @Value("\${boober.validationPoolSize:6}") val validationPoolSize: Int,
-    @Value("\${boober.bitbucket.project}") val project: String
+    @Value("\${integrations.aurora.config.git.project}") val project: String
 ) {
 
     val logger: Logger = getLogger(AuroraConfigService::class.java)

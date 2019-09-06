@@ -1,14 +1,17 @@
 package no.skatteetaten.aurora.boober.unit
 
+import assertk.all
 import assertk.assertThat
 import assertk.assertions.containsAll
 import assertk.assertions.hasMessage
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
 import assertk.assertions.isFalse
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
+import assertk.assertions.isSuccess
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.clearAllMocks
 import io.mockk.every
@@ -111,7 +114,7 @@ class VaultServiceTest {
                 permissions = listOf(),
                 secrets = contents
             )
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(IllegalArgumentException::class)
             hasMessage("Vault key=[latest.properties/INVALID KEY] is not valid. Regex used for matching ^[-._a-zA-Z0-9]+\$")
         }
@@ -128,7 +131,7 @@ class VaultServiceTest {
         lines.forEach { line ->
             assertThat {
                 VaultService.assertSecretKeysAreValid(mapOf("latest.properties" to line.toByteArray()))
-            }.thrownError { isInstanceOf(IllegalArgumentException::class) }
+            }.isFailure().all { isInstanceOf(IllegalArgumentException::class) }
         }
     }
 
@@ -141,7 +144,7 @@ class VaultServiceTest {
         lines.forEach { line ->
             assertThat {
                 VaultService.assertSecretKeysAreValid(mapOf("latest.properties" to line.toByteArray()))
-            }.doesNotThrowAnyException()
+            }.isSuccess()
         }
     }
 
@@ -189,11 +192,11 @@ class VaultServiceTest {
 
         assertThat {
             vaultService.findVault(COLLECTION_NAME, VAULT_NAME)
-        }.thrownError { isInstanceOf(IllegalArgumentException::class) }
+        }.isFailure().all { isInstanceOf(IllegalArgumentException::class) }
 
         assertThat {
             vaultService.findVault(COLLECTION_NAME, VAULT_NAME)
-        }.thrownError { isInstanceOf(IllegalArgumentException::class) }
+        }.isFailure().all { isInstanceOf(IllegalArgumentException::class) }
     }
 
     @Test
@@ -224,7 +227,7 @@ class VaultServiceTest {
 
         assertThat {
             vaultService.findVault(COLLECTION_NAME, VAULT_NAME)
-        }.thrownError { isInstanceOf(UnauthorizedAccessException::class) }
+        }.isFailure().all { isInstanceOf(UnauthorizedAccessException::class) }
 
         val vaults = vaultService.findAllVaultsWithUserAccessInVaultCollection(COLLECTION_NAME)
         val vaultWithAccess = vaults.find { it.vaultName == VAULT_NAME }!!
@@ -238,7 +241,7 @@ class VaultServiceTest {
     fun `Set vault permissions when user are not in any group should throw UnauthorizedAccessException`() {
         assertThat {
             vaultService.setVaultPermissions(COLLECTION_NAME, VAULT_NAME, listOf("admin"))
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(UnauthorizedAccessException::class)
             hasMessage("You (aurora) do not have required permissions ([admin]) to operate on this vault. You have [UTV]")
         }

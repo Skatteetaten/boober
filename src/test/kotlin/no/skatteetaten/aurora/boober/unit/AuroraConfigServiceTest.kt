@@ -1,8 +1,10 @@
 package no.skatteetaten.aurora.boober.unit
 
+import assertk.all
 import assertk.assertThat
 import assertk.assertions.containsAll
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotNull
 import assertk.catch
@@ -74,7 +76,7 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
                     "123"
                 )
             )
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(IllegalArgumentException::class)
         }
     }
@@ -104,7 +106,7 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
                 """foo {"version": "1.0.0"}""",
                 theFileToChange?.version
             )
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(AuroraConfigException::class)
         }
     }

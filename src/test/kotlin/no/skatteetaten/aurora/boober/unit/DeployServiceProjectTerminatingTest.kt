@@ -1,6 +1,8 @@
 package no.skatteetaten.aurora.boober.unit
 
+import assertk.all
 import assertk.assertThat
+import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import io.mockk.every
 import io.mockk.mockk
@@ -67,7 +69,7 @@ class DeployServiceProjectTerminatingTest {
 
         assertThat {
             deployService.prepareDeployEnvironment(env)
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(IllegalStateException::class)
         }
     }

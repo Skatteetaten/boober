@@ -393,6 +393,50 @@
       }
     ]
   },
+  "routeDefaults": {
+    "tls": {
+      "insecurePolicy": {
+        "source": "default",
+        "value": "None",
+        "sources": [
+          {
+            "name": "default",
+            "value": "None"
+          }
+        ]
+      },
+      "enabled": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      },
+      "termination": {
+        "source": "default",
+        "value": "edge",
+        "sources": [
+          {
+            "name": "default",
+            "value": "edge"
+          }
+        ]
+      }
+    },
+    "host": {
+      "source": "default",
+      "value": "@name@-@affiliation@-@env@",
+      "sources": [
+        {
+          "name": "default",
+          "value": "@name@-@affiliation@-@env@"
+        }
+      ]
+    }
+  },
   "databaseDefaults": {
     "flavor": {
       "source": "default",
@@ -450,17 +494,5 @@
         "value": true
       }
     ]
-  },
-  "routeDefaults": {
-    "host": {
-      "source": "default",
-      "value": "@name@-@affiliation@-@env@",
-      "sources": [
-        {
-          "name": "default",
-          "value": "@name@-@affiliation@-@env@"
-        }
-      ]
-    }
   }
 }

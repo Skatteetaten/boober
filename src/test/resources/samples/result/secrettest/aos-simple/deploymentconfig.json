@@ -112,6 +112,26 @@
                 "value": "/u01/secrets/app/aos-simple-cert"
               },
               {
+                "name": "FOO",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "FOO",
+                    "name": "aos-simple-foo",
+                    "optional": false
+                  }
+                }
+              },
+              {
+                "name": "BAR",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "BAR",
+                    "name": "aos-simple-foo",
+                    "optional": false
+                  }
+                }
+              },
+              {
                 "name": "HTTP_PORT",
                 "value": "8080"
               },
@@ -122,13 +142,6 @@
               {
                 "name": "JOLOKIA_HTTP_PORT",
                 "value": "8778"
-              }
-            ],
-            "envFrom": [
-              {
-                "secretRef": {
-                  "name": "foo"
-                }
               }
             ],
             "imagePullPolicy": "IfNotPresent",

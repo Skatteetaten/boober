@@ -1,9 +1,11 @@
 package no.skatteetaten.aurora.boober.unit.resourceprovisioning
 
 import assertk.Assert
+import assertk.all
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotNull
 import assertk.catch
@@ -89,7 +91,7 @@ class DatabaseSchemaProvisionerTest : ResourceLoader() {
                         )
                     )
                 )
-            }.thrownError { isInstanceOf(ProvisioningException::class) }
+            }.isFailure().all { isInstanceOf(ProvisioningException::class) }
         }
     }
 
@@ -109,8 +111,9 @@ class DatabaseSchemaProvisionerTest : ResourceLoader() {
             assertThat(provisionResult).schemaIsCorrect()
         }.first()
 
-        assertThat(request.path).contains("labels=affiliation%3Daos,environment%3Daos-utv,application%3Dreference,name%3Dreference")
-        assertThat(request.path).contains("roles=SCHEMA&engine=ORACLE")
+        assertThat(request.path).isNotNull()
+            .contains("labels=affiliation%3Daos,environment%3Daos-utv,application%3Dreference,name%3Dreference")
+        assertThat(request.path).isNotNull().contains("roles=SCHEMA&engine=ORACLE")
     }
 
     @Test
@@ -131,8 +134,9 @@ class DatabaseSchemaProvisionerTest : ResourceLoader() {
             )
         }
 
-        assertThat(responses[0].path).contains("/api/v1/schema/?labels=affiliation%3Daos,environment%3Daos-utv,application%3Dreference,name%3Dreference&roles=SCHEMA&engine=ORACLE")
-        assertThat(responses[1].path).contains("/api/v1/schema/")
+        assertThat(responses[0].path).isNotNull()
+            .contains("/api/v1/schema/?labels=affiliation%3Daos,environment%3Daos-utv,application%3Dreference,name%3Dreference&roles=SCHEMA&engine=ORACLE")
+        assertThat(responses[1].path).isNotNull().contains("/api/v1/schema/")
     }
 
     @Test
