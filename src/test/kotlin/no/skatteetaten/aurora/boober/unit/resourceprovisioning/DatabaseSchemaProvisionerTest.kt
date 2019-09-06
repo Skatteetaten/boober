@@ -147,7 +147,7 @@ class DatabaseSchemaProvisionerTest : ResourceLoader() {
                 provisioner.provisionSchemas(
                     listOf(SchemaForAppRequest("utv", "reference", true, details))
                 )
-                }.isFailure().messageContains("ORA-00059: maximum number of DB_FILES exceeded")
+                }.isNotNull().isFailure().messageContains("ORA-00059: maximum number of DB_FILES exceeded")
         }
     }
 
@@ -161,7 +161,7 @@ class DatabaseSchemaProvisionerTest : ResourceLoader() {
                 provisioner.provisionSchemas(
                     listOf(SchemaForAppRequest("utv", "reference", true, details))
                 )
-            }.isFailure().messageContains("Unable to create database schema")
+            }.isNotNull().isFailure().messageContains("Unable to create database schema")
         }
     }
 

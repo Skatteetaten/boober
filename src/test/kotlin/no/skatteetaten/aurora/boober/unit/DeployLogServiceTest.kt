@@ -88,7 +88,7 @@ class DeployLogServiceTest : AbstractAuroraConfigTest() {
 
         assertThat {
             service.findDeployResultById(AuroraConfigRef("test", "master", "123"), "abc123")
-        }.isFailure().isNotNull().isInstanceOf(DeployLogServiceException::class)
+        }.isNotNull().isFailure().isInstanceOf(DeployLogServiceException::class)
     }
 
     @Test
@@ -104,7 +104,7 @@ class DeployLogServiceTest : AbstractAuroraConfigTest() {
 
         assertThat {
             service.findDeployResultById(AuroraConfigRef("test", "master", "123"), "abc123")
-        }.isFailure().isNotNull().isInstanceOf(HttpClientErrorException::class)
+        }.isNotNull().isFailure().isInstanceOf(HttpClientErrorException::class)
     }
 
     private fun createDeployResult() = listOf(
