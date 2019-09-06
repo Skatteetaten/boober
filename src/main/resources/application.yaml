@@ -90,9 +90,6 @@ aurora:
     token:
         value: token
 
-management:
-    port: 8081
-
 ---
 spring:
     profiles: openshift
