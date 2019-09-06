@@ -100,7 +100,7 @@ class OpenShiftObjectGeneratorTest : AbstractOpenShiftObjectGeneratorTest() {
         SECRETTEST_SIMPLE(
             "secrettest", "aos-simple", secretEnv = listOf(
                 VaultSecretEnvResult(
-                    name = "foo",
+                    name = "aos-simple-foo",
                     secrets = mapOf("FOO" to "BAR".toByteArray(), "BAR" to "baz".toByteArray())
                 )
             )

@@ -38,7 +38,7 @@ data class StsProvisioningResult(
 )
 
 @Service
-@ConditionalOnProperty("boober.skap")
+@ConditionalOnProperty("integrations.skap.url")
 class StsProvisioner(
     @TargetService(ServiceTypes.SKAP)
     val restTemplate: RestTemplate,

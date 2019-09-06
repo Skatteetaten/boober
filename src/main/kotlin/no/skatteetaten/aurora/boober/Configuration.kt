@@ -62,7 +62,7 @@ class Configuration {
     fun openShiftRestTemplate(
         restTemplateBuilder: RestTemplateBuilder,
         clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory,
-        @Value("\${openshift.url}") baseUrl: String
+        @Value("\${integrations.openshift.url}") baseUrl: String
     ): RestTemplate {
 
         return restTemplateBuilder
@@ -75,9 +75,9 @@ class Configuration {
     @TargetService(ServiceTypes.BITBUCKET)
     fun bitbucketRestTemplate(
         restTemplateBuilder: RestTemplateBuilder,
-        @Value("\${boober.git.username}") username: String,
-        @Value("\${boober.git.password}") password: String,
-        @Value("\${boober.bitbucket.url}") bitbucketUrl: String,
+        @Value("\${integrations.bitbucket.username}") username: String,
+        @Value("\${integrations.bitbucket.password}") password: String,
+        @Value("\${integrations.bitbucket.url}") bitbucketUrl: String,
         clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
     ): RestTemplate {
 
@@ -90,13 +90,13 @@ class Configuration {
 
     @Bean
     @TargetService(ServiceTypes.SKAP)
-    @ConditionalOnProperty("boober.skap")
+    @ConditionalOnProperty("integrations.skap.url")
     fun skapRestTemplate(
         restTemplateBuilder: RestTemplateBuilder,
         @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
         @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
         @Value("\${spring.application.name}") applicationName: String,
-        @Value("\${boober.skap}") skapUrl: String,
+        @Value("\${integrations.skap.url}") skapUrl: String,
         sharedSecretReader: SharedSecretReader,
         clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
     ): RestTemplate {
