@@ -3,13 +3,10 @@ package no.skatteetaten.aurora.boober.mapper.platform
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.configMap
-import com.fkorotkov.kubernetes.newEnvFromSource
-import com.fkorotkov.kubernetes.newSecretEnvSource
 import com.fkorotkov.kubernetes.newVolume
 import com.fkorotkov.kubernetes.newVolumeMount
 import com.fkorotkov.kubernetes.persistentVolumeClaim
 import com.fkorotkov.kubernetes.secret
-import io.fabric8.kubernetes.api.model.EnvFromSource
 import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.EnvVarBuilder
 import io.fabric8.kubernetes.api.model.Volume
@@ -53,8 +50,7 @@ abstract class ApplicationPlatformHandler(val name: String) {
             liveness = auroraDeploymentSpecInternal.deploy.liveness,
             limit = auroraDeploymentSpecInternal.deploy.resources.limit,
             request = auroraDeploymentSpecInternal.deploy.resources.request,
-            env = createEnvVars(mounts, auroraDeploymentSpecInternal, routeSuffix),
-            envFrom = createEnvFrom(secretEnv),
+            env = createEnvVars(mounts, auroraDeploymentSpecInternal, routeSuffix, secretEnv),
             mounts = mounts?.filter { it.targetContainer == null }
         )
     }
@@ -164,7 +160,6 @@ data class AuroraContainer(
     val limit: AuroraDeploymentConfigResource,
     val request: AuroraDeploymentConfigResource,
     val env: List<EnvVar>,
-    val envFrom: List<EnvFromSource> = emptyList(),
     val mounts: List<Mount>? = null,
     val shouldHaveImageChange: Boolean = true,
     val image: String? = null
@@ -216,20 +211,11 @@ fun List<Mount>?.podVolumes(dcName: String): List<Volume> {
     } ?: emptyList()
 }
 
-fun createEnvFrom(secretEnv: List<VaultSecretEnvResult>): List<EnvFromSource> {
-    return secretEnv.map {
-        newEnvFromSource {
-            secretRef = newSecretEnvSource {
-                name = it.name
-            }
-        }
-    }
-}
-
 fun createEnvVars(
     mounts: List<Mount>?,
     auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
-    routeSuffix: String
+    routeSuffix: String,
+    secretEnv: List<VaultSecretEnvResult>
 ): List<EnvVar> {
 
     val mountEnv = mounts?.associate {
@@ -277,5 +263,17 @@ fun createEnvVars(
 
     val env = envs.mapKeys { it.key.replace(".", "_").replace("-", "_") }
 
-    return env.map { EnvVarBuilder().withName(it.key).withValue(it.value).build() }
+    val envMap: Map<String, EnvVar> = env.mapValues { EnvVarBuilder().withName(it.key).withValue(it.value).build() }
+
+    val secretEnvMap: Map<String, EnvVar> = secretEnv.flatMap { result ->
+        result.secrets.map { secretValue ->
+            secretValue.key to EnvVarBuilder().withName(secretValue.key)
+                .withNewValueFrom()
+                .withNewSecretKeyRef(secretValue.key, result.name, false)
+                .endValueFrom()
+                .build()
+        }
+    }.toMap()
+    val allEnv = envMap + secretEnvMap
+    return allEnv.values.toList()
 }

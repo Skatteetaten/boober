@@ -16,8 +16,8 @@ import org.springframework.web.client.HttpClientErrorException
 class DeployLogService(
     val bitbucketService: BitbucketService,
     val mapper: ObjectMapper,
-    @Value("\${boober.bitbucket.tags.project}") val project: String,
-    @Value("\${boober.bitbucket.tags.repo}") val repo: String
+    @Value("\${integrations.deployLog.git.project}") val project: String,
+    @Value("\${integrations.deployLog.git.repo}") val repo: String
 ) {
 
     val logger: Logger = LoggerFactory.getLogger(DeployLogService::class.java)

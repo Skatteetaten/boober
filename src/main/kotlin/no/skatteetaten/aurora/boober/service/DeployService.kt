@@ -37,7 +37,7 @@ class DeployService(
     val userDetailsProvider: UserDetailsProvider,
     val deployLogService: DeployLogService,
     @Value("\${openshift.cluster}") val cluster: String,
-    @Value("\${boober.docker.registry}") val dockerRegistry: String
+    @Value("\${integrations.docker.registry}") val dockerRegistry: String
 ) {
 
     val logger: Logger = LoggerFactory.getLogger(DeployService::class.java)

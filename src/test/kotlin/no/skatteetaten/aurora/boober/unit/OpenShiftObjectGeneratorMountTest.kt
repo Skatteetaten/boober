@@ -117,7 +117,7 @@ class OpenShiftObjectGeneratorMountTest : AbstractOpenShiftObjectGeneratorTest()
         val provisioningResult = ProvisioningResult(
             vaultSecretEnvResult = listOf(
                 VaultSecretEnvResult(
-                    name = "test",
+                    name = "aos-simple-test",
                     secrets = mapOf(propertyKey to propertyValue.toByteArray())
                 )
             )
@@ -134,7 +134,7 @@ class OpenShiftObjectGeneratorMountTest : AbstractOpenShiftObjectGeneratorTest()
         assertThat(jsonMounts.size).isEqualTo(1)
         val mount = mapper.convertValue<Secret>(jsonMounts.first())
         assertThat(mount.kind).isEqualTo("Secret")
-
+        assertThat(mount.metadata.name).isEqualTo("${deploymentSpec.name}-test")
         assertThat(mount.data[propertyKey]?.base64Decode()).isEqualTo(propertyValue)
     }
 }
