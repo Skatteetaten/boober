@@ -8,7 +8,8 @@ import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import assertk.assertions.isSuccess
-import assertk.catch
+import assertk.assertions.message
+import assertk.assertions.messageContains
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.mapper.v1.DatabaseFlavor
 import no.skatteetaten.aurora.boober.mapper.v1.DatabasePermission.READ
@@ -123,10 +124,10 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
             it["name"] = "test%qwe)"
         }
 
-        val e: AuroraConfigException =
-            catch { createDeploymentSpec(auroraConfigJson, DEFAULT_AID) } as AuroraConfigException
-        assertThat(e).isNotNull()
-        assertThat(e.errors[0].field?.path).isEqualTo("name")
+        assertThat {
+            createDeploymentSpec(auroraConfigJson, DEFAULT_AID) as AuroraConfigException
+        }.isNotNull().isFailure().isInstanceOf(AuroraConfigException::class)
+            .messageContains("Name must be alphanumeric and no more than 40 characters.")
     }
 
     @Test
@@ -136,10 +137,10 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
             it["version"] = "foo/bar"
         }
 
-        val e: AuroraConfigException =
-            catch { createDeploymentSpec(auroraConfigJson, DEFAULT_AID) } as AuroraConfigException
-        assertThat(e).isNotNull()
-        assertThat(e.errors[0].message).isEqualTo("Version must be a 128 characters or less, alphanumeric and can contain dots and dashes")
+        assertThat {
+            createDeploymentSpec(auroraConfigJson, DEFAULT_AID) as AuroraConfigException
+        }.isNotNull().isFailure().isInstanceOf(AuroraConfigException::class)
+            .messageContains("Version must be a 128 characters or less, alphanumeric and can contain dots and dashes")
     }
 
     @Test
@@ -149,10 +150,10 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
             it.remove("version")
         }
 
-        val e: AuroraConfigException =
-            catch { createDeploymentSpec(auroraConfigJson, DEFAULT_AID) } as AuroraConfigException
-        assertThat(e).isNotNull()
-        assertThat(e.errors[0].message).isEqualTo("Version must be a 128 characters or less, alphanumeric and can contain dots and dashes")
+        assertThat {
+            createDeploymentSpec(auroraConfigJson, DEFAULT_AID) as AuroraConfigException
+        }.isNotNull().isFailure().isInstanceOf(AuroraConfigException::class)
+            .messageContains("Version must be a 128 characters or less, alphanumeric and can contain dots and dashes")
     }
 
     @Test
@@ -160,11 +161,11 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
 
         auroraConfigJson["utv/aos-simple.json"] = """{ "affiliation": "aaregistere" }"""
 
-        val e: AuroraConfigException =
-            catch { createDeploymentSpec(auroraConfigJson, DEFAULT_AID) } as AuroraConfigException
-
-        assertThat(e).isNotNull()
-        assertThat(e.message).isEqualTo("Config for application aos-simple in environment utv contains errors. Invalid Source field=affiliation requires an about source. Actual source is source=utv/aos-simple.json.")
+        assertThat {
+            createDeploymentSpec(auroraConfigJson, DEFAULT_AID) as AuroraConfigException
+        }.isNotNull().isFailure().isInstanceOf(AuroraConfigException::class)
+            .message()
+            .isEqualTo("Config for application aos-simple in environment utv contains errors. Invalid Source field=affiliation requires an about source. Actual source is source=utv/aos-simple.json.")
     }
 
     @Test
@@ -172,12 +173,13 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
 
         auroraConfigJson["utv/about.json"] = """{ "affiliation": "aaregistere", "cluster" : "utv" }"""
 
-        val e: AuroraConfigException =
-            catch { createDeploymentSpec(auroraConfigJson, DEFAULT_AID) } as AuroraConfigException
-
-        assertThat(e).isNotNull()
-        assertThat(e.message).isEqualTo("Config for application aos-simple in environment utv contains errors. Affiliation can only contain letters and must be no longer than 10 characters.")
+        assertThat {
+            createDeploymentSpec(auroraConfigJson, DEFAULT_AID) as AuroraConfigException
+        }.isNotNull().isFailure().isInstanceOf(AuroraConfigException::class)
+            .message()
+            .isEqualTo("Config for application aos-simple in environment utv contains errors. Affiliation can only contain letters and must be no longer than 10 characters.")
     }
+
     enum class PermissionsTestData(val values: Any) {
         SINGLE_VALUE("APP_PaaS_utv APP_PaaS_drift"),
         LIST(listOf("APP_PaaS_utv", "APP_PaaS_drift"))
@@ -234,11 +236,11 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
 }
 """
 
-        val e: AuroraConfigException =
-            catch { createDeploymentSpec(auroraConfigJson, DEFAULT_AID) } as AuroraConfigException
-
-        assertThat(e).isNotNull()
-        assertThat(e.message).isEqualTo("""Config for application aos-simple in environment utv contains errors. Annotation haproxy.router.openshift.io/timeout cannot contain '/'. Use '|' instead.""")
+        assertThat {
+            createDeploymentSpec(auroraConfigJson, DEFAULT_AID) as AuroraConfigException
+        }.isNotNull().isFailure().isInstanceOf(AuroraConfigException::class)
+            .message()
+            .isEqualTo("""Config for application aos-simple in environment utv contains errors. Annotation haproxy.router.openshift.io/timeout cannot contain '/'. Use '|' instead.""")
     }
 
     @Test

@@ -7,7 +7,7 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotNull
-import assertk.catch
+import assertk.assertions.message
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.clearAllMocks
 import io.mockk.every
@@ -69,14 +69,14 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
     fun `Throws exception when AuroraConfig cannot be found`() {
 
         assertThat {
-                auroraConfigService.findAuroraConfig(
-                    AuroraConfigRef(
-                        "no_such_affiliation",
-                        "master",
-                        "123"
-                    )
+            auroraConfigService.findAuroraConfig(
+                AuroraConfigRef(
+                    "no_such_affiliation",
+                    "master",
+                    "123"
                 )
-            }.isFailure().all {
+            )
+        }.isFailure().all {
             isInstanceOf(IllegalArgumentException::class)
         }
     }
@@ -218,12 +218,13 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
         val fileToChange = "${aid.environment}/${aid.application}.json"
         val auroraConfig = createAuroraConfig(defaultAuroraConfig())
         auroraConfigService.save(auroraConfig)
+        var count = 0
 
-        val error = catch {
+        assertThat {
             auroraConfigService.updateAuroraConfigFile(ref, fileToChange, """{"version": "1.0.0"}""", "incorrect hash")
-        } as AuroraVersioningException
-
-        assertThat(error).isNotNull()
-        assertThat(error.errors.size).isEqualTo(1)
+                as AuroraVersioningException
+        }.isNotNull().isFailure()
+            .message().all { count++ }
+        assertThat(count).isEqualTo(1)
     }
 }

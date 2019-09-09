@@ -27,7 +27,7 @@ dependencies {
 
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
 
-    implementation("com.fkorotkov:kubernetes-dsl:2.1")
+    implementation("com.fkorotkov:kubernetes-dsl:2.2")
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-aop")
@@ -38,9 +38,8 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
 
-    testImplementation("com.squareup.okhttp3:mockwebserver:4.1.0")
     testImplementation("io.mockk:mockk:1.9.3")
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.19")
     testImplementation("com.nhaarman:mockito-kotlin:1.6.0")
-    testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:0.6.5")
+    testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:1.0.0")
 }
