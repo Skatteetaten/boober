@@ -3,8 +3,9 @@ package no.skatteetaten.aurora.boober.unit
 import assertk.assertThat
 import assertk.assertions.hasMessage
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
 import assertk.assertions.isNotNull
-import assertk.catch
+import assertk.assertions.message
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraRoute
 import no.skatteetaten.aurora.boober.model.InsecurePolicy
@@ -33,9 +34,9 @@ class RouteValidationTest : ResourceLoader() {
                 )
             )
         )
-        val error = catch { AuroraDeploymentSpecService.validateRoutes(routes, ref) }
-
-        assertThat(error).isNotNull()
+        assertThat {
+            AuroraDeploymentSpecService.validateRoutes(routes, ref)
+        }.isNotNull().isFailure()
             .hasMessage("Application reference in environment utv have a tls enabled route with a '.' in the host. Route name=ref1 with tls uses '.' in host name.")
     }
 
@@ -51,10 +52,11 @@ class RouteValidationTest : ResourceLoader() {
             )
         )
 
-        val error = catch { AuroraDeploymentSpecService.validateRoutes(routes, ref) }
-
-        assertThat(error).isNotNull()
-        assertThat(error?.message).isEqualTo("Application reference in environment utv have routes with duplicate names. Route name=ref1 is duplicated, Route name=ref2 is duplicated.")
+        assertThat {
+            AuroraDeploymentSpecService.validateRoutes(routes, ref)
+        }.isNotNull().isFailure()
+            .message()
+            .isEqualTo("Application reference in environment utv have routes with duplicate names. Route name=ref1 is duplicated, Route name=ref2 is duplicated.")
     }
 
     @Test
@@ -67,10 +69,11 @@ class RouteValidationTest : ResourceLoader() {
             )
         )
 
-        val error = catch { AuroraDeploymentSpecService.validateRoutes(routes, ref) }
-
-        assertThat(error).isNotNull()
-        assertThat(error?.message).isEqualTo("Application reference in environment utv have duplicated targets. target=test-aurora is duplicated in routes ref1,ref2.")
+        assertThat {
+            AuroraDeploymentSpecService.validateRoutes(routes, ref)
+        }.isNotNull().isFailure()
+            .message()
+            .isEqualTo("Application reference in environment utv have duplicated targets. target=test-aurora is duplicated in routes ref1,ref2.")
     }
 
     @Test
@@ -83,9 +86,9 @@ class RouteValidationTest : ResourceLoader() {
             )
         )
 
-        val error = catch { AuroraDeploymentSpecService.validateRoutes(routes, ref) }
-
-        assertThat(error).isNotNull()
-        assertThat(error?.message).isEqualTo("Application reference in environment utv have duplicated targets. target=test-aurora/aurora is duplicated in routes ref1,ref2.")
+        assertThat {
+            AuroraDeploymentSpecService.validateRoutes(routes, ref)
+        }.isNotNull().isFailure()
+            .message().isEqualTo("Application reference in environment utv have duplicated targets. target=test-aurora/aurora is duplicated in routes ref1,ref2.")
     }
 }

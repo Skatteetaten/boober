@@ -2,9 +2,9 @@ package no.skatteetaten.aurora.boober.unit
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotNull
-import assertk.catch
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -86,10 +86,9 @@ class DeployLogServiceTest : AbstractAuroraConfigTest() {
                 Charset.defaultCharset()
             )
 
-        val exception = catch {
+        assertThat {
             service.findDeployResultById(AuroraConfigRef("test", "master", "123"), "abc123")
-        }
-        assertThat(exception).isNotNull().isInstanceOf(DeployLogServiceException::class)
+        }.isNotNull().isFailure().isInstanceOf(DeployLogServiceException::class)
     }
 
     @Test
@@ -103,10 +102,9 @@ class DeployLogServiceTest : AbstractAuroraConfigTest() {
                 Charset.defaultCharset()
             )
 
-        val exception = catch {
+        assertThat {
             service.findDeployResultById(AuroraConfigRef("test", "master", "123"), "abc123")
-        }
-        assertThat(exception).isNotNull().isInstanceOf(HttpClientErrorException::class)
+        }.isNotNull().isFailure().isInstanceOf(HttpClientErrorException::class)
     }
 
     private fun createDeployResult() = listOf(

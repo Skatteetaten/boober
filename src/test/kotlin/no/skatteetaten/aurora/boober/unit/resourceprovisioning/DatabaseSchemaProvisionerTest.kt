@@ -8,7 +8,7 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotNull
-import assertk.catch
+import assertk.assertions.messageContains
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.User
@@ -111,9 +111,9 @@ class DatabaseSchemaProvisionerTest : ResourceLoader() {
             assertThat(provisionResult).schemaIsCorrect()
         }.first()
 
-        assertThat(request.path).isNotNull()
+        assertThat(request?.path).isNotNull()
             .contains("labels=affiliation%3Daos,environment%3Daos-utv,application%3Dreference,name%3Dreference")
-        assertThat(request.path).isNotNull().contains("roles=SCHEMA&engine=ORACLE")
+        assertThat(request?.path).isNotNull().contains("roles=SCHEMA&engine=ORACLE")
     }
 
     @Test
@@ -134,9 +134,9 @@ class DatabaseSchemaProvisionerTest : ResourceLoader() {
             )
         }
 
-        assertThat(responses[0].path).isNotNull()
+        assertThat(responses[0]?.path).isNotNull()
             .contains("/api/v1/schema/?labels=affiliation%3Daos,environment%3Daos-utv,application%3Dreference,name%3Dreference&roles=SCHEMA&engine=ORACLE")
-        assertThat(responses[1].path).isNotNull().contains("/api/v1/schema/")
+        assertThat(responses[1]?.path).isNotNull().contains("/api/v1/schema/")
     }
 
     @Test
@@ -145,13 +145,11 @@ class DatabaseSchemaProvisionerTest : ResourceLoader() {
             200 to DbApiEnvelope(""),
             500 to """{"status":"Failed","totalCount":1,"items":["ORA-00059: maximum number of DB_FILES exceeded"]}"""
         ) {
-            val exception = catch {
+            assertThat {
                 provisioner.provisionSchemas(
                     listOf(SchemaForAppRequest("utv", "reference", true, details))
                 )
-            }
-
-            assertThat(exception?.message).isNotNull().contains("ORA-00059: maximum number of DB_FILES exceeded")
+                }.isNotNull().isFailure().messageContains("ORA-00059: maximum number of DB_FILES exceeded")
         }
     }
 
@@ -161,13 +159,11 @@ class DatabaseSchemaProvisionerTest : ResourceLoader() {
             200 to DbApiEnvelope(""),
             500 to "{}"
         ) {
-            val exception = catch {
+            assertThat {
                 provisioner.provisionSchemas(
                     listOf(SchemaForAppRequest("utv", "reference", true, details))
                 )
-            }
-
-            assertThat(exception?.message).isNotNull().contains("Unable to create database schema")
+            }.isNotNull().isFailure().messageContains("Unable to create database schema")
         }
     }
 
