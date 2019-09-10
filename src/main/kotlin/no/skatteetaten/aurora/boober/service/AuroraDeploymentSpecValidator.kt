@@ -9,6 +9,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaIdReques
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.createSchemaDetails
 import no.skatteetaten.aurora.boober.service.vault.VaultService
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.takeIfNotEmpty
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -77,11 +78,10 @@ class AuroraDeploymentSpecValidator(
     }
 
     fun validateVaultExistence(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
-        val vaultNames = (deploymentSpecInternal.volume?.mounts
-            ?.filter { it.type == MountType.Secret }
-            ?.mapNotNull { it.secretVaultName }
-            ?: emptyList())
-            .toMutableList()
+        val vaultNames = (deploymentSpecInternal.volume?.let { volume ->
+            val secretMounts = volume.mounts?.filter { it.type == MountType.Secret }?.mapNotNull { it.secretVaultName }
+            volume.secrets.map { it.secretVaultName }.addIfNotNull(secretMounts)
+        } ?: emptyList()).toMutableList()
 
         vaultNames.forEach {
             val vaultCollectionName = deploymentSpecInternal.environment.affiliation
@@ -161,6 +161,7 @@ class AuroraDeploymentSpecValidator(
             }
         }
     }
+
     fun validateKeyMappings(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
         deploymentSpecInternal.volume?.secrets?.forEach { secret ->
             validateKeyMapping(secret)
