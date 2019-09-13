@@ -78,12 +78,17 @@ class AuroraDeploymentSpecValidator(
     }
 
     fun validateVaultExistence(deploymentSpecInternal: AuroraDeploymentSpecInternal) {
-        val vaultNames = (deploymentSpecInternal.volume?.let { volume ->
-            val secretMounts = volume.mounts?.filter { it.type == MountType.Secret }?.mapNotNull { it.secretVaultName }
-            volume.secrets.map { it.secretVaultName }.addIfNotNull(secretMounts)
-        } ?: emptyList()).toMutableList()
+        val vaultNames = deploymentSpecInternal.volume?.let { volume ->
+            val secretMounts = volume.mounts
+                ?.filter { it.type == MountType.Secret }
+                ?.mapNotNull { it.secretVaultName }
 
-        vaultNames.forEach {
+            volume.secrets
+                .map { it.secretVaultName }
+                .addIfNotNull(secretMounts)
+        }
+
+        vaultNames?.forEach {
             val vaultCollectionName = deploymentSpecInternal.environment.affiliation
             if (!vaultService.vaultExists(vaultCollectionName, it))
                 throw AuroraDeploymentSpecValidationException("Referenced Vault $it in Vault Collection $vaultCollectionName does not exist")
