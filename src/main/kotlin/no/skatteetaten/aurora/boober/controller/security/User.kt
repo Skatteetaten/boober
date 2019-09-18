@@ -28,7 +28,7 @@ class User(
     }
 
     val tokenSnippet: String
-        get() = token.substring(0, min(token.length, 5))
+        get() = token.takeLast(5)
 
     val groupNames: List<String>
         get() = authorities.map { it.authority }
