@@ -29,7 +29,7 @@ class UserTest {
     }
 
     @Test
-    fun `return a token snippet containing the last five characters`() {
+    fun `return a token snippet that contains the last five characters`() {
         val user = User("linus", "abcde12345", "Jenkins ")
         assertThat(user.tokenSnippet).isEqualTo("12345")
     }
