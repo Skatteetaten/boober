@@ -67,9 +67,9 @@ object ContainerGenerator {
         "memory" to quantity(resource.memory)
     )
 
-    private fun quantity(str: String) = QuantityBuilder().withAmount(str).build()
+    fun quantity(str: String) = QuantityBuilder().withAmount(str).build()
 
-    private fun fromProbe(it: Probe): io.fabric8.kubernetes.api.model.Probe = newProbe {
+    fun fromProbe(it: Probe): io.fabric8.kubernetes.api.model.Probe = newProbe {
 
         if (it.path != null) {
             httpGet {
