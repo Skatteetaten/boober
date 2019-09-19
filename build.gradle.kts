@@ -22,6 +22,9 @@ dependencies {
     implementation("org.eclipse.jgit:org.eclipse.jgit:4.11.0.201803080745-r")
     implementation("com.github.fge:json-patch:1.9")
     implementation("org.encryptor4j:encryptor4j:0.1.2")
+    // The above library uses an vulnerable bcprov, set the fixed version here, hopefully this will work.
+    // pr is sent to maintainer
+    implementation("org.bouncycastle:bcprov-jdk15on:1.63")
     implementation("com.github.ben-manes.caffeine:caffeine:2.7.0")
     implementation("org.apache.commons:commons-text:1.7")
 
