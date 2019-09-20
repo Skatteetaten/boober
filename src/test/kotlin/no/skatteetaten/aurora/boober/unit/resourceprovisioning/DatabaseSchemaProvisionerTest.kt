@@ -111,7 +111,8 @@ class DatabaseSchemaProvisionerTest : ResourceLoader() {
             assertThat(provisionResult).schemaIsCorrect()
         }.first()
 
-        assertThat(request?.path).isNotNull().contains("labels=affiliation%3Daos,environment%3Daos-utv,application%3Dreference,name%3Dreference")
+        assertThat(request?.path).isNotNull()
+            .contains("labels=affiliation%3Daos,environment%3Daos-utv,application%3Dreference,name%3Dreference")
         assertThat(request?.path).isNotNull().contains("roles=SCHEMA&engine=ORACLE")
     }
 
@@ -133,7 +134,8 @@ class DatabaseSchemaProvisionerTest : ResourceLoader() {
             )
         }
 
-        assertThat(responses[0]?.path).isNotNull().contains("/api/v1/schema/?labels=affiliation%3Daos,environment%3Daos-utv,application%3Dreference,name%3Dreference&roles=SCHEMA&engine=ORACLE")
+        assertThat(responses[0]?.path).isNotNull()
+            .contains("/api/v1/schema/?labels=affiliation%3Daos,environment%3Daos-utv,application%3Dreference,name%3Dreference&roles=SCHEMA&engine=ORACLE")
         assertThat(responses[1]?.path).isNotNull().contains("/api/v1/schema/")
     }
 

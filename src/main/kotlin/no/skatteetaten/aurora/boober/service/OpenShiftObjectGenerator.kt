@@ -308,7 +308,14 @@ class OpenShiftObjectGenerator(
 
                 spec.containers.forEach { container ->
                     container.volumeMounts.addAll(mounts.volumeMount() ?: listOf())
-                    container.env.addAll(createEnvVars(mounts, auroraDeploymentSpecInternal, routeSuffix, vaultSecretEnvResult))
+                    container.env.addAll(
+                        createEnvVars(
+                            mounts,
+                            auroraDeploymentSpecInternal,
+                            routeSuffix,
+                            vaultSecretEnvResult
+                        )
+                    )
 
                     if (container.resources == null) {
                         container.resources = ResourceRequirements()

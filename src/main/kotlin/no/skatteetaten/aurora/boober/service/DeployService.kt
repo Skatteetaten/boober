@@ -31,13 +31,14 @@ class DeployService(
     val auroraConfigService: AuroraConfigService,
     val openShiftCommandBuilder: OpenShiftCommandService,
     val openShiftClient: OpenShiftClient,
-    val dockerService: DockerService,
+    val cantusService: CantusService,
     val resourceProvisioner: ExternalResourceProvisioner,
     val redeployService: RedeployService,
     val userDetailsProvider: UserDetailsProvider,
     val deployLogService: DeployLogService,
     @Value("\${openshift.cluster}") val cluster: String,
-    @Value("\${integrations.docker.registry}") val dockerRegistry: String
+    @Value("\${integrations.docker.registry}") val dockerRegistry: String,
+    @Value("\${integrations.docker.releases}") val releaseDockerRegistry: String
 ) {
 
     val logger: Logger = LoggerFactory.getLogger(DeployService::class.java)
@@ -269,7 +270,15 @@ class DeployService(
 
         val tagResult = deploymentSpecInternal.deploy?.takeIf { it.releaseTo != null }?.let {
             val dockerGroup = it.groupId.dockerGroupSafeName()
-            dockerService.tag(TagCommand("$dockerGroup/${it.artifactId}", it.version, it.releaseTo!!, dockerRegistry))
+            cantusService.tag(
+                TagCommand(
+                    name = "$dockerGroup/${it.artifactId}",
+                    from = it.version,
+                    to = it.releaseTo!!,
+                    fromRegistry = dockerRegistry,
+                    toRegistry = releaseDockerRegistry
+                )
+            )
         }
         val rawResult = AuroraDeployResult(
             command = cmd,
@@ -277,7 +286,10 @@ class DeployService(
             auroraDeploymentSpecInternal = deploymentSpecInternal,
             tagResponse = tagResult
         )
-        tagResult?.takeIf { !it.success }?.let {
+
+        logger.info("TagResult=${tagResult?.success}")
+        if (tagResult != null && !tagResult.success) {
+            logger.info("tag result not successfull")
             return rawResult.copy(
                 success = false,
                 reason = "Tag command failed."

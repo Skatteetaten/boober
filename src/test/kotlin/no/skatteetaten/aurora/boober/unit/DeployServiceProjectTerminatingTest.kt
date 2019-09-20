@@ -33,13 +33,14 @@ class DeployServiceProjectTerminatingTest {
         auroraConfigService = mockk(),
         openShiftCommandBuilder = mockk(),
         openShiftClient = openShiftClient,
-        dockerService = mockk(),
+        cantusService = mockk(),
         resourceProvisioner = mockk(),
         redeployService = mockk(),
         userDetailsProvider = userDetailsProvider,
         deployLogService = mockk(),
         cluster = "utv",
-        dockerRegistry = "docker.registry"
+        dockerRegistry = "docker.registry",
+        releaseDockerRegistry = "docker.registry"
     )
 
     val group = "APP_demo_drift"

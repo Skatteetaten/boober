@@ -112,21 +112,22 @@
                 "value": "/u01/secrets/app/aos-simple-cert"
               },
               {
-                "name" : "FOO",
-                "valueFrom" : {
-                  "secretKeyRef" : {
-                    "key" : "FOO",
-                    "name" : "aos-simple-foo",
-                    "optional" : false
+                "name": "FOO",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "FOO",
+                    "name": "aos-simple-foo",
+                    "optional": false
                   }
                 }
-              }, {
-                "name" : "BAR",
-                "valueFrom" : {
-                  "secretKeyRef" : {
-                    "key" : "BAR",
-                    "name" : "aos-simple-foo",
-                    "optional" : false
+              },
+              {
+                "name": "BAR",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "BAR",
+                    "name": "aos-simple-foo",
+                    "optional": false
                   }
                 }
               },

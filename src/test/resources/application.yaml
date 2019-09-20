@@ -8,9 +8,6 @@ aurora:
     token:
         value: token
 
-openshift:
-    cluster: utv
-
 integrations:
     bitbucket:
         username: "foo"
@@ -38,17 +35,29 @@ integrations:
         url: "http://localhost:8082"
     docker:
         registry: "docker-registry.aurora.sits.no:5000"
+        releases: "docker-registry.aurora.sits.no:5000"
+
 
 boober:
     encrypt:
         key: "komogsyngensang"
+        releases: "docker-registry.aurora.sits.no:5000"
+        token: "test"
     openshift:
         token: foo
 
 vault:
     operations:
         enabled: true
+    git:
+        urlPattern: "file:///tmp/vaulttest/%s"
+        checkoutPath: "build/vaultcheckout"
+        username: "foo"
+        password: "bar"
 
 management:
     server.port: 0
 
+openshift:
+    cluster: utv
+    url: https://${openshift.cluster}-master.paas.skead.no:8443

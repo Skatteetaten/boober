@@ -18,6 +18,7 @@ import org.springframework.web.client.HttpServerErrorException
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestClientResponseException
 import org.springframework.web.client.RestTemplate
+import java.net.URI
 import kotlin.reflect.KClass
 
 private const val REQUEST_ENTITY = "requestEntity"
@@ -34,6 +35,15 @@ open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate) {
     fun <U : Any> get(headers: HttpHeaders, type: KClass<U>, url: String, vararg uriVars: Any): ResponseEntity<U> {
         val uri = restTemplate.uriTemplateHandler.expand(url, *uriVars)
         return exchange(RequestEntity<Any>(headers, HttpMethod.GET, uri), type)
+    }
+
+    fun <T, U : Any> post(
+        body: T,
+        headers: HttpHeaders = HttpHeaders.EMPTY,
+        type: KClass<U>,
+        url: String
+    ): ResponseEntity<U> {
+        return exchange(RequestEntity(body, headers, HttpMethod.POST, URI.create(url)), type)
     }
 
     fun <T, U : Any> put(

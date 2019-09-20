@@ -31,7 +31,7 @@ import java.security.cert.X509Certificate
 import java.util.UUID
 
 enum class ServiceTypes {
-    BITBUCKET, GENERAL, AURORA, SKAP, OPENSHIFT
+    BITBUCKET, GENERAL, AURORA, SKAP, OPENSHIFT, CANTUS
 }
 
 @Target(AnnotationTarget.TYPE, AnnotationTarget.FUNCTION, AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
@@ -86,6 +86,35 @@ class Configuration {
             .rootUri(bitbucketUrl)
             .basicAuthentication(username, password)
             .build()
+    }
+
+    @Bean
+    @TargetService(ServiceTypes.CANTUS)
+    fun cantusRestTemplate(
+        restTemplateBuilder: RestTemplateBuilder,
+        @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
+        @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
+        @Value("\${spring.application.name}") applicationName: String,
+        @Value("\${integrations.cantus.url}") cantusUrl: String,
+        @Value("\${integrations.cantus.token}") cantusToken: String,
+        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
+    ): RestTemplate {
+
+        val clientIdHeaderName = "KlientID"
+
+        return restTemplateBuilder
+            .requestFactory { clientHttpRequestFactory }
+            .rootUri(cantusUrl)
+            .interceptors(ClientHttpRequestInterceptor { request, body, execution ->
+                request.headers.apply {
+                    set(HttpHeaders.AUTHORIZATION, "Bearer $cantusToken")
+                    set(AuroraHeaderFilter.KORRELASJONS_ID, RequestKorrelasjon.getId())
+                    set(clientIdHeaderName, applicationName)
+                    set("Meldingsid", UUID.randomUUID().toString())
+                }
+
+                execution.execute(request, body)
+            }).build()
     }
 
     @Bean
