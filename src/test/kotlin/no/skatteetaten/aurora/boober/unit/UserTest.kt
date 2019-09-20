@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.unit
 
 import assertk.assertThat
+import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import no.skatteetaten.aurora.boober.controller.security.User
@@ -25,5 +26,11 @@ class UserTest {
     fun `normal user with  username equals rolename should not have access`() {
         val user = User("linus", "asfd111111123", "Jenkins ")
         assertThat(user.hasAccess(listOf("APP_foobar_utv", "linus"))).isFalse()
+    }
+
+    @Test
+    fun `return a token snippet that contains the last five characters`() {
+        val user = User("linus", "abcde12345", "Jenkins ")
+        assertThat(user.tokenSnippet).isEqualTo("12345")
     }
 }

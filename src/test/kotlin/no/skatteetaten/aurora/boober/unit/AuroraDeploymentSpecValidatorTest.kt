@@ -285,7 +285,7 @@ class AuroraDeploymentSpecValidatorTest : AbstractAuroraConfigTest() {
         assertThat {
             specValidator.assertIsValid(deploymentSpec)
         }.isFailure().all {
-            hasMessage("File with name=latest.properties is not present in vault=test in collection=aos")
+            hasMessage("Referenced Vault test in Vault Collection aos does not exist")
             isInstanceOf(AuroraDeploymentSpecValidationException::class)
         }
     }

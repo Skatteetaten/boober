@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.controller.security
 
 import org.springframework.security.core.GrantedAuthority
-import kotlin.math.min
 import org.springframework.security.core.userdetails.User as SpringSecurityUser
 
 class User(
@@ -20,6 +19,7 @@ class User(
         return (this.username.startsWith("system:serviceaccount") && roles.contains(this.username)) ||
             this.hasAnyRole(roles)
     }
+
     fun hasAnyRole(roles: Collection<String>?): Boolean {
 
         if (roles?.isEmpty() != false) return true
@@ -28,7 +28,7 @@ class User(
     }
 
     val tokenSnippet: String
-        get() = token.substring(0, min(token.length, 5))
+        get() = token.takeLast(5)
 
     val groupNames: List<String>
         get() = authorities.map { it.authority }
