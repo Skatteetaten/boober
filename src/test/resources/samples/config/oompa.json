@@ -1,0 +1,13 @@
+{
+  "template": "atomhopper",
+  "database": true,
+  "parameters": {
+    "SPLUNK_INDEX": "safir-test",
+    "FEED_NAME": "tolldeklarasjon",
+    "DOMAIN_NAME": "localhost",
+    "DB_NAME": "tvinn"
+  },
+  "config": {
+    "FOO": "bar"
+  }
+}

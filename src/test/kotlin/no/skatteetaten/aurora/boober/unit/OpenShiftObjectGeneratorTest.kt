@@ -7,6 +7,7 @@ import assertk.assertions.isNotNull
 import assertk.assertions.size
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder
 import io.mockk.every
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
@@ -254,16 +255,4 @@ class OpenShiftObjectGeneratorTest : AbstractOpenShiftObjectGeneratorTest() {
         return "$kind/$name"
     }
 
-    @Test
-    fun `generate resources`() {
-
-        val aid = ApplicationDeploymentRef("booberdev", "console")
-        val auroraConfig = createAuroraConfig(aid, AFFILIATION, null)
-
-        val resources =
-                AuroraDeploymentSpecService.createResources( auroraConfig, aid )
-
-        assertThat(resources.size).isEqualTo(3)
-
-    }
 }

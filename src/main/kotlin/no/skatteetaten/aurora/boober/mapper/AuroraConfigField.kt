@@ -19,9 +19,9 @@ import org.slf4j.LoggerFactory
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class AuroraConfigField(
-    val sources: Set<AuroraConfigFieldSource>,
-    @JsonIgnore
-    val replacer: StringSubstitutor = StringSubstitutor()
+        val sources: Set<AuroraConfigFieldSource>,
+        @JsonIgnore
+        val replacer: StringSubstitutor = StringSubstitutor()
 ) {
 
     private val source: AuroraConfigFieldSource get() = sources.last()
@@ -62,22 +62,28 @@ data class AuroraConfigField(
             value.isArray -> (value() as List<Any?>).map { it?.toString() } // Convert any non-string values in the array to string
             else -> emptyList()
         }.filter { !it.isNullOrBlank() }
-            .mapNotNull { it?.trim() }
-            .map { replacer.replace(it) }
-            .toSet()
+                .mapNotNull { it?.trim() }
+                .map { replacer.replace(it) }
+                .toSet()
     }
 }
 
 data class AuroraConfigFieldSource(
-    val configFile: AuroraConfigFile,
-    val value: JsonNode,
-    val canBeSimplified: Boolean = false
+        val configFile: AuroraConfigFile,
+        val value: JsonNode,
+        val canBeSimplified: Boolean = false
 )
 
 class AuroraDeploymentSpec(
-    val fields: Map<String, AuroraConfigField>,
-    val replacer: StringSubstitutor
+        val fields: Map<String, AuroraConfigField>,
+        val replacer: StringSubstitutor
 ) {
+
+    fun getSubKeyNames(start: String): Set<String> {
+        return fields.keys
+                .filter { it.startsWith(start) }
+                .map { it.substringAfter("/").substringBefore("/") }.toSet()
+    }
 
     fun getConfigEnv(configExtractors: List<AuroraConfigFieldHandler>): Map<String, String> {
         return configExtractors.filter { it.name.count { it == '/' } == 1 }.associate {
@@ -88,15 +94,36 @@ class AuroraDeploymentSpec(
         }
     }
 
+    fun getRouteAnnotations(prefix: String): Map<String, String> {
+        return fields.keys
+                .filter { it.startsWith(prefix) }
+                .associate {
+                    val field = it.removePrefix(prefix)
+                    val value: Any = this[it]
+                    val escapedValue: String = convertValueToString(value)
+                    field to escapedValue
+                }
+    }
+
+    fun getParameters(): Map<String, String> {
+        return fields.keys
+                .filter { it.startsWith("parameters/") }
+                .associate {
+                    val field = it.removePrefix("parameters/")
+                    val value: String = this[it]
+                    field to value
+                }
+    }
+
     fun getRouteAnnotations(prefix: String, extractors: List<AuroraConfigFieldHandler>): Map<String, String> {
         return extractors
-            .filter { it.path.startsWith("/$prefix") }
-            .associate {
-                val (_, _, _, field) = it.name.split("/", limit = 4)
-                val value: Any = this[it.name]
-                val escapedValue: String = convertValueToString(value)
-                field to escapedValue
-            }
+                .filter { it.path.startsWith("/$prefix") }
+                .associate {
+                    val (_, _, _, field) = it.name.split("/", limit = 4)
+                    val value: Any = this[it.name]
+                    val escapedValue: String = convertValueToString(value)
+                    field to escapedValue
+                }
     }
 
     fun getParameters(parameterExtractors: List<AuroraConfigFieldHandler>): Map<String, String>? {
@@ -109,7 +136,7 @@ class AuroraDeploymentSpec(
     }
 
     fun getKeyMappings(keyMappingsExtractor: AuroraConfigFieldHandler?): Map<String, String>? =
-        keyMappingsExtractor?.let { getOrNull(it.name) }
+            keyMappingsExtractor?.let { getOrNull(it.name) }
 
     fun isSimplifiedAndDisabled(name: String): Boolean {
         return isSimplifiedConfig(name) && !get<Boolean>(name)
@@ -144,21 +171,21 @@ class AuroraDeploymentSpec(
 
     fun getSubKeys(name: String): Map<String, AuroraConfigField> {
         val subKeys = fields
-            .filter { it.key.startsWith("$name/") }
-            .mapKeys { replacer.replace(it.key) }
+                .filter { it.key.startsWith("$name/") }
+                .mapKeys { replacer.replace(it.key) }
         return subKeys
     }
 
     inline operator fun <reified T> get(name: String): T = fields[name]!!.value()
 
     inline fun <reified T> getOrDefault(
-        root: String,
-        index: String,
-        suffix: String,
-        defaultRoot: String = "${root}Defaults"
+            root: String,
+            index: String,
+            suffix: String,
+            defaultRoot: String = "${root}Defaults"
     ): T {
         return getOrNull("$root/$index/$suffix")
-            ?: get("$defaultRoot/$suffix")
+                ?: get("$defaultRoot/$suffix")
     }
 
     /**
@@ -176,41 +203,41 @@ class AuroraDeploymentSpec(
         val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpec::class.java)
 
         fun create(
-            handlers: Set<AuroraConfigFieldHandler>,
-            files: List<AuroraConfigFile>,
-            applicationDeploymentRef: ApplicationDeploymentRef,
-            configVersion: String,
-            replacer: StringSubstitutor = StringSubstitutor()
+                handlers: Set<AuroraConfigFieldHandler>,
+                files: List<AuroraConfigFile>,
+                applicationDeploymentRef: ApplicationDeploymentRef,
+                configVersion: String,
+                replacer: StringSubstitutor = StringSubstitutor()
         ): AuroraDeploymentSpec {
 
             val mapper = jacksonObjectMapper()
 
             val staticFields: List<Pair<String, AuroraConfigFieldSource>> =
-                listOf(
-                    "applicationDeploymentRef" to
-                        AuroraConfigFieldSource(
-                            AuroraConfigFile("static", "{}", isDefault = true),
-                            mapper.convertValue(applicationDeploymentRef.toString())
-                        ),
-                    "configVersion" to
-                        AuroraConfigFieldSource(
-                            AuroraConfigFile("static", "{}", isDefault = true),
-                            mapper.convertValue(configVersion)
-                        )
-                )
+                    listOf(
+                            "applicationDeploymentRef" to
+                                    AuroraConfigFieldSource(
+                                            AuroraConfigFile("static", "{}", isDefault = true),
+                                            mapper.convertValue(applicationDeploymentRef.toString())
+                                    ),
+                            "configVersion" to
+                                    AuroraConfigFieldSource(
+                                            AuroraConfigFile("static", "{}", isDefault = true),
+                                            mapper.convertValue(configVersion)
+                                    )
+                    )
 
             val fields: List<Pair<String, AuroraConfigFieldSource>> = handlers.flatMap { handler ->
                 val defaultValue = handler.defaultValue?.let {
                     listOf(
-                        handler.name to AuroraConfigFieldSource(
-                            configFile = AuroraConfigFile(
-                                name = handler.defaultSource,
-                                contents = "",
-                                isDefault = true
-                            ),
-                            canBeSimplified = handler.canBeSimplifiedConfig,
-                            value = mapper.convertValue(handler.defaultValue)
-                        )
+                            handler.name to AuroraConfigFieldSource(
+                                    configFile = AuroraConfigFile(
+                                            name = handler.defaultSource,
+                                            contents = "",
+                                            isDefault = true
+                                    ),
+                                    canBeSimplified = handler.canBeSimplifiedConfig,
+                                    value = mapper.convertValue(handler.defaultValue)
+                            )
                     )
                 } ?: emptyList()
 
@@ -226,9 +253,9 @@ class AuroraDeploymentSpec(
                             null
                         } else {
                             handler.name to AuroraConfigFieldSource(
-                                configFile = file,
-                                value = it,
-                                canBeSimplified = handler.canBeSimplifiedConfig
+                                    configFile = file,
+                                    value = it,
+                                    canBeSimplified = handler.canBeSimplifiedConfig
                             )
                         }
                     }
@@ -239,41 +266,41 @@ class AuroraDeploymentSpec(
             val allFields: List<Pair<String, AuroraConfigFieldSource>> = staticFields + fields
 
             val groupedFields: Map<String, AuroraConfigField> = allFields
-                .groupBy({ it.first }) { it.second }
-                .mapValues { AuroraConfigField(it.value.toSet(), replacer) }
+                    .groupBy({ it.first }) { it.second }
+                    .mapValues { AuroraConfigField(it.value.toSet(), replacer) }
             return AuroraDeploymentSpec(groupedFields, replacer)
         }
     }
 
     fun present(
-        includeDefaults: Boolean = true,
-        transformer: (Map.Entry<String, AuroraConfigField>) -> Map<String, Any>
+            includeDefaults: Boolean = true,
+            transformer: (Map.Entry<String, AuroraConfigField>) -> Map<String, Any>
     ): Map<String, Any> {
 
         val excludePaths = this.fields.filter { isSimplifiedAndDisabled(it.key) }.map { "${it.key}/" }
         val map: MutableMap<String, Any> = mutableMapOf()
         this.fields
-            .filter { field ->
-                val simpleCheck = if (field.value.canBeSimplified) {
-                    this.isSimplifiedConfig(field.key)
-                } else {
-                    true
+                .filter { field ->
+                    val simpleCheck = if (field.value.canBeSimplified) {
+                        this.isSimplifiedConfig(field.key)
+                    } else {
+                        true
+                    }
+
+                    val defaultCheck = if (!includeDefaults) {
+                        field.value.name != "default"
+                    } else {
+                        true
+                    }
+
+                    val excludeCheck = excludePaths.none { field.key.startsWith(it) }
+
+                    simpleCheck && defaultCheck && excludeCheck
                 }
-
-                val defaultCheck = if (!includeDefaults) {
-                    field.value.name != "default"
-                } else {
-                    true
+                .mapValues { transformer(it) }
+                .forEach {
+                    map.deepSet(it.key.split("/"), it.value)
                 }
-
-                val excludeCheck = excludePaths.none { field.key.startsWith(it) }
-
-                simpleCheck && defaultCheck && excludeCheck
-            }
-            .mapValues { transformer(it) }
-            .forEach {
-                map.deepSet(it.key.split("/"), it.value)
-            }
         return map
     }
 

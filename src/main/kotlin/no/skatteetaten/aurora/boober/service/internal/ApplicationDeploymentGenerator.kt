@@ -44,7 +44,7 @@ object ApplicationDeploymentGenerator {
                 command = cmd,
                 message = deploymentSpecInternal.message
             ),
-            metadata = ObjectMetaBuilder()
+            _metadata = ObjectMetaBuilder()
                 .withName(deploymentSpecInternal.name)
                 .withNamespace(deploymentSpecInternal.environment.namespace)
                 .withLabels(
