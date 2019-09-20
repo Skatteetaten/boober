@@ -73,7 +73,7 @@ integrations:
     dbh:
         url: http://dbh-aurora.${openshift.cluster}.paas.skead.no
     skap:
-        url: http://localyost:9090
+    #url: http://skap-aurora.${openshift.cluster}.paas.skead.no
     openshift:
         port: 8443
         url: https://${openshift.cluster}-master.paas.skead.no:${integrations.openshift.port}

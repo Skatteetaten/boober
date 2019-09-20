@@ -34,12 +34,13 @@ class DeployService(
     val auroraDeploymentContextService: AuroraDeploymentContextService,
     val openShiftCommandBuilder: OpenShiftCommandService,
     val openShiftClient: OpenShiftClient,
-    val dockerService: DockerService,
+    val cantusService: CantusService,
     val redeployService: RedeployService,
     val userDetailsProvider: UserDetailsProvider,
     val deployLogService: DeployLogService,
     @Value("\${openshift.cluster}") val cluster: String,
-    @Value("\${integrations.docker.registry}") val dockerRegistry: String
+    @Value("\${integrations.docker.registry}") val dockerRegistry: String,
+    @Value("\${integrations.docker.releases}") val releaseDockerRegistry: String
 ) {
 
     val logger: Logger = LoggerFactory.getLogger(DeployService::class.java)
@@ -240,14 +241,20 @@ class DeployService(
         val ownerReferenceUid = appResponse.at("/metadata/uid").textValue()
 
         val tagResult = context.spec.takeIf { it.releaseTo != null }?.let {
-            dockerService.tag(TagCommand(it.dockerImagePath, it.version, it.releaseTo!!, dockerRegistry))
+            cantusService.tag(
+                TagCommand(it.dockerImagePath, it.version, it.releaseTo!!, dockerRegistry)
+            )
         }
+
         val rawResult = AuroraDeployResult(
             tagResponse = tagResult,
             deployCommand = cmd,
             projectExist = env.projectExist
         )
-        tagResult?.takeIf { !it.success }?.let {
+
+        logger.info("TagResult=${tagResult?.success}")
+        if (tagResult != null && !tagResult.success) {
+            logger.info("tag result not successfull")
             return rawResult.copy(
                 success = false,
                 reason = "Tag command failed."
