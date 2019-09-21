@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.feature
 import com.fkorotkov.openshift.*
 import io.fabric8.openshift.api.model.Route
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.v1.findSubHandlers
 import no.skatteetaten.aurora.boober.mapper.v1.findSubKeysExpanded
@@ -16,8 +17,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class RouteFeature(val routeSuffix: String = ".foo.bar") : Feature {
-    override fun handlers(header: AuroraDeploymentSpec, adr: ApplicationDeploymentRef, files: List<AuroraConfigFile>, auroraConfig: AuroraConfig): Set<AuroraConfigFieldHandler> {
-        return findRouteHandlers(files) + setOf(
+    override fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler> {
+        return findRouteHandlers(header.applicationFiles) + setOf(
                 AuroraConfigFieldHandler("route", defaultValue = false, canBeSimplifiedConfig = true),
                 AuroraConfigFieldHandler("routeDefaults/host", defaultValue = "@name@-@affiliation@-@env@"),
                 AuroraConfigFieldHandler("routeDefaults/tls/enabled", defaultValue = false),
@@ -26,11 +27,11 @@ class RouteFeature(val routeSuffix: String = ".foo.bar") : Feature {
                         defaultValue = TlsTermination.edge,
                         validator = { it.oneOf(TlsTermination.values().map { v -> v.name }) })
         ) +
-                findRouteAnnotationHandlers("routeDefaults", files)
+                findRouteAnnotationHandlers("routeDefaults", header.applicationFiles)
 
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, auroraConfig: AuroraConfig): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentContext): Set<AuroraResource> {
         val route = "route"
 
         if (adc.isSimplifiedConfig(route)) {

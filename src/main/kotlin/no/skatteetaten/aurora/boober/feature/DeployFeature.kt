@@ -6,21 +6,20 @@ import io.fabric8.kubernetes.api.model.*
 import io.fabric8.kubernetes.api.model.Probe
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.mapper.v1.PortNumbers
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.service.internal.ContainerGenerator.auroraContainer
 import no.skatteetaten.aurora.boober.utils.*
-import org.springframework.stereotype.Component
 
-val AuroraDeploymentSpec.envName get(): String = this.getOrNull("env/name") ?: this["envName"]
-val AuroraDeploymentSpec.name get(): String = this["name"]
-val AuroraDeploymentSpec.affiliation get(): String = this["affiliation"]
-val AuroraDeploymentSpec.type get(): TemplateType = this["type"]
+val AuroraDeploymentContext.envName get(): String = this.getOrNull("env/name") ?: this["envName"]
+val AuroraDeploymentContext.name get(): String = this["name"]
+val AuroraDeploymentContext.affiliation get(): String = this["affiliation"]
+val AuroraDeploymentContext.type get(): TemplateType = this["type"]
 
-val AuroraDeploymentSpec.namespace
+val AuroraDeploymentContext.namespace
     get(): String {
         return when {
             envName.isBlank() -> affiliation
@@ -28,18 +27,18 @@ val AuroraDeploymentSpec.namespace
             else -> "$affiliation-$envName"
         }
     }
-val AuroraDeploymentSpec.releaseTo: String? get() = this.getOrNull<String>("releaseTo")?.takeUnless { it.isEmpty() }
-val AuroraDeploymentSpec.groupId: String get() = this["groupId"]
-val AuroraDeploymentSpec.artifactId: String get() = this["artifactId"]
-val AuroraDeploymentSpec.dockerGroup get() = groupId.replace(".", "_")
+val AuroraDeploymentContext.releaseTo: String? get() = this.getOrNull<String>("releaseTo")?.takeUnless { it.isEmpty() }
+val AuroraDeploymentContext.groupId: String get() = this["groupId"]
+val AuroraDeploymentContext.artifactId: String get() = this["artifactId"]
+val AuroraDeploymentContext.dockerGroup get() = groupId.replace(".", "_")
 
-val AuroraDeploymentSpec.dockerImagePath: String get() = "$dockerGroup/${this.artifactId}"
+val AuroraDeploymentContext.dockerImagePath: String get() = "$dockerGroup/${this.artifactId}"
 
-val AuroraDeploymentSpec.dockerTag: String get() = releaseTo ?: this["version"]
+val AuroraDeploymentContext.dockerTag: String get() = releaseTo ?: this["version"]
 
 
 //transform to resource right away?
-fun AuroraDeploymentSpec.probe(name: String): Probe? {
+fun AuroraDeploymentContext.probe(name: String): Probe? {
     val adc = this
     return this.featureEnabled(name) { field ->
         newProbe {
@@ -59,7 +58,7 @@ fun AuroraDeploymentSpec.probe(name: String): Probe? {
     }
 }
 
-fun AuroraDeploymentSpec.extractPlaceHolders(): Map<String, String> {
+fun AuroraDeploymentContext.extractPlaceHolders(): Map<String, String> {
     val segmentPair = this.getOrNull<String>("segment")?.let {
         "segment" to it
     }
@@ -72,37 +71,46 @@ fun AuroraDeploymentSpec.extractPlaceHolders(): Map<String, String> {
     return placeholders
 }
 
+val deployVersion = AuroraConfigFieldHandler("version", validator = {
+    it.pattern(
+            "^[\\w][\\w.-]{0,127}$",
+            "Version must be a 128 characters or less, alphanumeric and can contain dots and dashes"
+    )
+})
 
-fun gav(files: List<AuroraConfigFile>, adr:ApplicationDeploymentRef) = setOf(
-        AuroraConfigFieldHandler("artifactId",
-                defaultValue = files.find { it.type == AuroraConfigFileType.BASE }?.name?.removeExtension()
-                        ?: adr.application,
-                defaultSource = "fileName",
-                validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
+fun gav(files: List<AuroraConfigFile>, adr: ApplicationDeploymentRef): Set<AuroraConfigFieldHandler> {
 
-        AuroraConfigFieldHandler(
-                "groupId",
-                validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
-        AuroraConfigFieldHandler("version", validator = {
-            it.pattern(
-                    "^[\\w][\\w.-]{0,127}$",
-                    "Version must be a 128 characters or less, alphanumeric and can contain dots and dashes"
-            )
-        })
-)
+
+    return setOf(
+            AuroraConfigFieldHandler("artifactId",
+                    defaultValue = files.find { it.type == AuroraConfigFileType.BASE }?.name?.removeExtension()
+                            ?: adr.application,
+                    defaultSource = "fileName",
+                    validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
+
+            AuroraConfigFieldHandler(
+                    "groupId",
+                    validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
+            deployVersion
+    )
+}
+
+val AuroraDeploymentContext.managementPath
+    get() = this.featureEnabled("management") {
+        val path = this.get<String>("$it/path").ensureStartWith("/")
+        val port = this.get<Int>("$it/port").toString().ensureStartWith(":")
+        "$port$path"
+    }
 
 @org.springframework.stereotype.Service
 class DeployFeature() : Feature {
 
-    override fun enable(header: AuroraDeploymentSpec): Boolean {
+    override fun enable(header: AuroraDeploymentContext): Boolean {
         return header.type in listOf(TemplateType.deploy, TemplateType.development)
     }
 
 
-    override fun handlers(header: AuroraDeploymentSpec,
-                          adr: ApplicationDeploymentRef,
-                          files: List<AuroraConfigFile>,
-                          auroraConfig: AuroraConfig) = gav(files, adr) + setOf(
+    override fun handlers(header: AuroraDeploymentContext) = gav(header.applicationFiles, header.adr) + setOf(
             AuroraConfigFieldHandler("releaseTo"),
             AuroraConfigFieldHandler(
                     "deployStrategy/type",
@@ -111,12 +119,11 @@ class DeployFeature() : Feature {
             AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = 180),
             AuroraConfigFieldHandler("replicas", defaultValue = 1),
             AuroraConfigFieldHandler("serviceAccount"),
+
             AuroraConfigFieldHandler("prometheus", defaultValue = true, canBeSimplifiedConfig = true),
             AuroraConfigFieldHandler("prometheus/path", defaultValue = "/prometheus"),
             AuroraConfigFieldHandler("prometheus/port", defaultValue = 8081),
-            AuroraConfigFieldHandler("management", defaultValue = true, canBeSimplifiedConfig = true),
-            AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
-            AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
+
             AuroraConfigFieldHandler("readiness", defaultValue = true, canBeSimplifiedConfig = true),
             AuroraConfigFieldHandler("readiness/port", defaultValue = 8080),
             AuroraConfigFieldHandler("readiness/path"),
@@ -131,7 +138,7 @@ class DeployFeature() : Feature {
 
 
     //this is java
-    override fun generate(adc: AuroraDeploymentSpec, auroraConfig: AuroraConfig): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentContext): Set<AuroraResource> {
 
         val containerInput: Map<String, Map<String, Int>> =
                 mapOf("${adc.name}-java" to mapOf(
@@ -152,7 +159,8 @@ class DeployFeature() : Feature {
         )
     }
 
-    fun createService(adc: AuroraDeploymentSpec): Service {
+
+    fun createService(adc: AuroraDeploymentContext): Service {
 
         val prometheus = adc.featureEnabled("prometheus") {
             HttpEndpoint(adc["$it/path"], adc.getOrNull("$it/port"))
@@ -192,7 +200,7 @@ class DeployFeature() : Feature {
         }
     }
 
-    fun createImageStream(adc: AuroraDeploymentSpec, dockerRegistry: String) = newImageStream {
+    fun createImageStream(adc: AuroraDeploymentContext, dockerRegistry: String) = newImageStream {
         metadata {
             name = adc.name
             namespace = adc.namespace
@@ -216,7 +224,7 @@ class DeployFeature() : Feature {
         }
     }
 
-    fun createContainer(adc: AuroraDeploymentSpec, containerName: String, containerPorts: Map<String, Int>): Container {
+    fun createContainer(adc: AuroraDeploymentContext, containerName: String, containerPorts: Map<String, Int>): Container {
 
         return auroraContainer {
             name = containerName
@@ -249,7 +257,7 @@ class DeployFeature() : Feature {
 
 
     fun create(
-            adc: AuroraDeploymentSpec,
+            adc: AuroraDeploymentContext,
             container: List<Container>
     ): DeploymentConfig {
 

@@ -7,6 +7,7 @@ import io.fabric8.kubernetes.api.model.Quantity
 import io.fabric8.kubernetes.api.model.QuantityBuilder
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
@@ -16,11 +17,11 @@ import no.skatteetaten.aurora.boober.service.Feature
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 
-fun AuroraDeploymentSpec.quantity(resource: String, classifier: String): Pair<String, Quantity> = resource to QuantityBuilder().withAmount(this["resources/$resource/$classifier"]).build()
+fun AuroraDeploymentContext.quantity(resource: String, classifier: String): Pair<String, Quantity> = resource to QuantityBuilder().withAmount(this["resources/$resource/$classifier"]).build()
 
 @Service
 class DeploymentConfigFeature() : Feature {
-    override fun handlers(header: AuroraDeploymentSpec, adr: ApplicationDeploymentRef, files: List<AuroraConfigFile>, auroraConfig: AuroraConfig): Set<AuroraConfigFieldHandler> {
+    override fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler> {
         return setOf(
                 AuroraConfigFieldHandler("resources/cpu/min", defaultValue = "10m"),
                 AuroraConfigFieldHandler("resources/cpu/max", defaultValue = "2000m"),
@@ -29,7 +30,7 @@ class DeploymentConfigFeature() : Feature {
         )
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>): Set<AuroraResource> {
+    override fun modify(adc: AuroraDeploymentContext, resources: Set<AuroraResource>){
         resources.forEach {
             if (it.resource.kind == "DeploymentConfig") {
                 val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
@@ -41,6 +42,5 @@ class DeploymentConfigFeature() : Feature {
                 }
             }
         }
-        return resources
     }
 }

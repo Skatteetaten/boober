@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.HasMetadata
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.v1.findSubKeys
 import no.skatteetaten.aurora.boober.model.*
@@ -18,7 +19,7 @@ import org.springframework.stereotype.Service
 @Service
 class LocalTemplateFeature() : AbstractTemplateFeature() {
 
-    override fun enable(header: AuroraDeploymentSpec) = header.type == TemplateType.localTemplate
+    override fun enable(header: AuroraDeploymentContext) = header.type == TemplateType.localTemplate
 
     override fun templateHandlers(files: List<AuroraConfigFile>, auroraConfig: AuroraConfig): Set<AuroraConfigFieldHandler> {
         return setOf(AuroraConfigFieldHandler("templateFile", validator = { json ->
@@ -31,9 +32,9 @@ class LocalTemplateFeature() : AbstractTemplateFeature() {
         }))
     }
 
-    override fun findTemplate(adc: AuroraDeploymentSpec, auroraConfig: AuroraConfig): JsonNode {
+    override fun findTemplate(adc: AuroraDeploymentContext): JsonNode {
         val templateFile = adc.get<String>("templateFile").let { fileName ->
-            auroraConfig.files.find { it.name == fileName }?.asJsonNode
+            adc.auroraConfig.files.find { it.name == fileName }?.asJsonNode
         }
         return templateFile ?: throw IllegalArgumentException("templateFile is required")
     }

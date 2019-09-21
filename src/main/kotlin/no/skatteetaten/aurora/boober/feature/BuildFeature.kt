@@ -8,6 +8,7 @@ import io.fabric8.openshift.api.model.BuildConfig
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
@@ -19,12 +20,12 @@ import org.springframework.stereotype.Service
 
 @Service
 class BuildFeature() : Feature {
-    override fun enable(header: AuroraDeploymentSpec): Boolean {
+    override fun enable(header: AuroraDeploymentContext): Boolean {
         return header.type == TemplateType.development
     }
 
-    override fun handlers(header: AuroraDeploymentSpec, adr: ApplicationDeploymentRef, files: List<AuroraConfigFile>, auroraConfig: AuroraConfig): Set<AuroraConfigFieldHandler> {
-        return gav(files, adr) + setOf(
+    override fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler> {
+        return gav(header.applicationFiles, header.adr) + setOf(
                 AuroraConfigFieldHandler("builder/name", defaultValue = "architect"),
                 AuroraConfigFieldHandler("builder/version", defaultValue = "1"),
                 AuroraConfigFieldHandler("baseImage/name", defaultValue = "wingnut8"),
@@ -32,13 +33,13 @@ class BuildFeature() : Feature {
         )
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, auroraConfig: AuroraConfig): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentContext): Set<AuroraResource> {
         return setOf(
                 AuroraResource("${adc.name}-bc", createBuild(adc))
         )
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>): Set<AuroraResource> {
+    override fun modify(adc: AuroraDeploymentContext, resources: Set<AuroraResource>) {
         resources.forEach {
             if (it.resource.kind == "ImageStream") {
                 val imageStream: ImageStream = jacksonObjectMapper().convertValue(it.resource)
@@ -55,10 +56,9 @@ class BuildFeature() : Feature {
             }
 
         }
-        return resources
     }
 
-    fun createBuild(adc: AuroraDeploymentSpec): BuildConfig {
+    fun createBuild(adc: AuroraDeploymentContext): BuildConfig {
         return newBuildConfig {
             metadata {
                 name = adc.name

@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.mapper.v1
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
@@ -13,11 +14,11 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class AuroraDeploymentSpecConfigFieldValidator(
-    val applicationDeploymentRef: ApplicationDeploymentRef,
-    val applicationFiles: List<AuroraConfigFile>,
-    val fieldHandlers: Set<AuroraConfigFieldHandler>,
-    val auroraDeploymentSpec: AuroraDeploymentSpec
-) {
+        val applicationDeploymentRef: ApplicationDeploymentRef,
+        val applicationFiles: List<AuroraConfigFile>,
+        val fieldHandlers: Set<AuroraConfigFieldHandler>,
+        val fields: Map<String, AuroraConfigField>
+        ) {
     val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpecConfigFieldValidator::class.java)
 
     companion object {
@@ -28,23 +29,23 @@ class AuroraDeploymentSpecConfigFieldValidator(
     fun validate(fullValidation: Boolean = true) {
 
         val envPointers = listOf(
-            "env/name", "env/ttl", "envName", "affiliation",
-            "permissions/admin", "permissions/view", "permissions/adminServiceAccount"
+                "env/name", "env/ttl", "envName", "affiliation",
+                "permissions/admin", "permissions/view", "permissions/adminServiceAccount"
         )
 
         val errors: List<ConfigFieldErrorDetail> = fieldHandlers.mapNotNull { e ->
-            val rawField = auroraDeploymentSpec.fields[e.name]
+            val rawField = fields[e.name]
             if (rawField == null) {
                 e.validator(null)?.let {
                     ConfigFieldErrorDetail.missing(it.localizedMessage, e.path)
                 }
             } else {
                 val invalidEnvSource =
-                    envPointers.contains(e.name) && !rawField.isDefault && rawField.name.let {
-                        !it.split("/").last().startsWith(
-                            "about"
-                        )
-                    }
+                        envPointers.contains(e.name) && !rawField.isDefault && rawField.name.let {
+                            !it.split("/").last().startsWith(
+                                    "about"
+                            )
+                        }
 
                 logger.trace("Validating field=${e.name}")
                 val auroraConfigField: JsonNode? = rawField.value
@@ -55,14 +56,14 @@ class AuroraDeploymentSpecConfigFieldValidator(
 
                 val err = when {
                     invalidEnvSource -> ConfigFieldErrorDetail.illegal(
-                        "Invalid Source field=${e.name} requires an about source. Actual source is source=${rawField.name}",
-                        e.name, rawField
+                            "Invalid Source field=${e.name} requires an about source. Actual source is source=${rawField.name}",
+                            e.name, rawField
                     )
                     result == null -> null
                     auroraConfigField != null -> ConfigFieldErrorDetail.illegal(
-                        result.localizedMessage,
-                        e.name,
-                        rawField
+                            result.localizedMessage,
+                            e.name,
+                            rawField
                     )
                     else -> ConfigFieldErrorDetail.missing(result.localizedMessage, e.path)
                 }
@@ -84,8 +85,8 @@ class AuroraDeploymentSpecConfigFieldValidator(
         (errors + unmappedErrors).takeIf { it.isNotEmpty() }?.let {
             val aid = applicationDeploymentRef
             throw AuroraConfigException(
-                "Config for application ${aid.application} in environment ${aid.environment} contains errors",
-                errors = it
+                    "Config for application ${aid.application} in environment ${aid.environment} contains errors",
+                    errors = it
             )
         }
     }

@@ -1,9 +1,10 @@
 package no.skatteetaten.aurora.boober.service
 
 import io.fabric8.kubernetes.api.model.HasMetadata
-import no.skatteetaten.aurora.boober.feature.*
+import no.skatteetaten.aurora.boober.feature.extractPlaceHolders
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
 import no.skatteetaten.aurora.boober.mapper.v1.*
@@ -27,18 +28,11 @@ data class AuroraResource(
 
 interface Feature {
 
-    fun enable(header: AuroraDeploymentSpec): Boolean = true
-    fun handlers(header: AuroraDeploymentSpec,
-                 adr: ApplicationDeploymentRef,
-                 files: List<AuroraConfigFile>,
-                 auroraConfig: AuroraConfig): Set<AuroraConfigFieldHandler>
-
-    fun validate(adc: AuroraDeploymentSpec) = Unit
-
-    fun generate(adc: AuroraDeploymentSpec, auroraConfig: AuroraConfig): Set<AuroraResource> = emptySet()
-
-    //Can this just mutate and we do not have to fold?
-    fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>): Set<AuroraResource> = resources
+    fun enable(header: AuroraDeploymentContext): Boolean = true
+    fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler>
+    fun validate(adc: AuroraDeploymentContext) = Unit
+    fun generate(adc: AuroraDeploymentContext): Set<AuroraResource> = emptySet()
+    fun modify(adc: AuroraDeploymentContext, resources: Set<AuroraResource>) = Unit
 
 }
 
@@ -52,25 +46,27 @@ class AuroraDeploymentSpecService(
     fun createResources(
             auroraConfig: AuroraConfig,
             applicationDeploymentRef: ApplicationDeploymentRef,
-            overrideFiles: List<AuroraConfigFile> = listOf()
+            overrideFiles: List<AuroraConfigFile> = listOf(),
+            deployId: String
     ): Set<AuroraResource> {
 
-        val applicationFiles = auroraConfig.getFilesForApplication(applicationDeploymentRef, overrideFiles)
+        val applicationFiles: List<AuroraConfigFile> = auroraConfig.getFilesForApplication(applicationDeploymentRef, overrideFiles)
 
         val headerMapper = HeaderMapper(applicationDeploymentRef, applicationFiles)
         val headerSpec =
-                AuroraDeploymentSpec.create(
-                        headerMapper.handlers,
-                        applicationFiles,
-                        applicationDeploymentRef,
-                        auroraConfig.version
+                AuroraDeploymentContext.create(
+                        handlers = headerMapper.handlers,
+                        files = applicationFiles,
+                        applicationDeploymentRef = applicationDeploymentRef,
+                        auroraConfig = auroraConfig,
+                        deployId = deployId
                 )
 
         AuroraDeploymentSpecConfigFieldValidator(
                 applicationDeploymentRef = applicationDeploymentRef,
                 applicationFiles = applicationFiles,
                 fieldHandlers = headerMapper.handlers,
-                auroraDeploymentSpec = headerSpec
+                fields = headerSpec.fields
         ).validate(false)
         /*
 
@@ -99,31 +95,33 @@ class AuroraDeploymentSpecService(
 
 
         val featureHandlers: Map<Feature, Set<AuroraConfigFieldHandler>> = activeFeatures.associateWith {
-            it.handlers(headerSpec, applicationDeploymentRef, applicationFiles, auroraConfig)
+            it.handlers(headerSpec)
         }
 
+        //The order here really matters unfortunately. Version is handled differently
         val allHandlers: Set<AuroraConfigFieldHandler> = (featureHandlers.flatMap { it.value } + headerMapper.handlers).toSet()
 
-        val spec = AuroraDeploymentSpec.create(
+        val spec = AuroraDeploymentContext.create(
                 handlers = allHandlers,
                 files = applicationFiles,
                 applicationDeploymentRef = applicationDeploymentRef,
-                configVersion = auroraConfig.version,
-                replacer = StringSubstitutor(headerSpec.extractPlaceHolders(), "@", "@")
+                auroraConfig = auroraConfig,
+                replacer = StringSubstitutor(headerSpec.extractPlaceHolders(), "@", "@"),
+                deployId = deployId
         )
         AuroraDeploymentSpecConfigFieldValidator(
                 applicationDeploymentRef = applicationDeploymentRef,
                 applicationFiles = applicationFiles,
                 fieldHandlers = allHandlers,
-                auroraDeploymentSpec = spec
+                fields = spec.fields
         ).validate(false)
 
-        val featureAdc: Map<Feature, AuroraDeploymentSpec> = featureHandlers.mapValues { (_, handlers) ->
+        val featureAdc: Map<Feature, AuroraDeploymentContext> = featureHandlers.mapValues { (_, handlers) ->
             val paths = handlers.map { it.name } + headerMapper.handlers.map { it.name }
             val fields = spec.fields.filterKeys {
                 paths.contains(it)
             }
-            AuroraDeploymentSpec(replacer = spec.replacer, fields = fields)
+            spec.copy(fields = fields)
         }
 
 
@@ -141,14 +139,22 @@ class AuroraDeploymentSpecService(
          */
 
         val featureResources: Set<AuroraResource> = featureAdc.flatMap {
-            it.key.generate(it.value, auroraConfig)
+            it.key.generate(it.value)
         }.toSet()
 
+        //Mutation!
+        featureAdc.forEach {
+            it.key.modify(it.value, featureResources)
+        }
+
+        return featureResources
+        /*
         return featureAdc
                 .toList()
                 .fold(featureResources) { resources, (feature, adc): Pair<Feature, AuroraDeploymentSpec> ->
                     feature.modify(adc, resources)
                 }
+         */
     }
 
 
@@ -196,7 +202,7 @@ class AuroraDeploymentSpecService(
                     applicationDeploymentRef = applicationDeploymentRef,
                     applicationFiles = applicationFiles,
                     fieldHandlers = headerMapper.handlers,
-                    auroraDeploymentSpec = headerSpec
+                    fields = headerSpec.fields
             ).validate(false)
 
             val platform: String = headerSpec["applicationPlatform"]
@@ -244,7 +250,7 @@ class AuroraDeploymentSpecService(
                     applicationDeploymentRef = applicationDeploymentRef,
                     applicationFiles = applicationFiles,
                     fieldHandlers = handlers,
-                    auroraDeploymentSpec = deploymentSpec
+                    fields = deploymentSpec.fields
             ).validate()
 
             val integration = integrationMapper.integrations(deploymentSpec)

@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.feature
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class TemplateFeature(val openShiftClient: OpenShiftResourceClient) : AbstractTemplateFeature() {
-    override fun enable(header: AuroraDeploymentSpec) = header.type == TemplateType.template
+    override fun enable(header: AuroraDeploymentContext) = header.type == TemplateType.template
 
     override fun templateHandlers(files: List<AuroraConfigFile>, auroraConfig: AuroraConfig): Set<AuroraConfigFieldHandler> {
         return setOf(
@@ -27,7 +28,7 @@ class TemplateFeature(val openShiftClient: OpenShiftResourceClient) : AbstractTe
         )
     }
 
-    override fun findTemplate(adc: AuroraDeploymentSpec, auroraConfig: AuroraConfig): JsonNode {
+    override fun findTemplate(adc: AuroraDeploymentContext): JsonNode {
         return openShiftClient.get("template", "openshift", adc["template"])?.body as ObjectNode
     }
 }

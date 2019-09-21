@@ -7,6 +7,7 @@ import assertk.assertions.isNotNull
 import assertk.assertions.size
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder
 import io.mockk.every
@@ -40,6 +41,7 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
 
     val features: List<Feature> = listOf(
             DeployFeature(),
+            CommonLabelFeature(userDetailsProvider),
             DeploymentConfigFeature(),
             RouteFeature(".foo.bar"),
             LocalTemplateFeature(),
@@ -55,7 +57,7 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
                 featuers = features
         )
         val template: String = this.javaClass.getResource("/samples/config/templates/atomhopper.json").readText()
-
+        every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "token", "Aurora OpenShift")
         every { openShiftResourceClient.get("template", "openshift", "atomhopper", true) } returns
                 ResponseEntity.ok(jacksonObjectMapper().readTree(template))
     }
@@ -63,13 +65,12 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
     enum class ResourceCreationTestData(
             val appName: String,
             val env: String,
-            val numberOfResources: Int,
             val aditionalFile: String? = null
     ) {
-        DEPLOY("booberdev", "console", 4),
-        DEVELOPMENT("mounts", "aos-simple", 6),
-        LOCAL_TEMPLATE("booberdev", "tvinn", 4, "templates/atomhopper.json"),
-        TEMPLATE("booberdev", "oompa", 4)
+        DEPLOY("booberdev", "console"),
+        DEVELOPMENT("mounts", "aos-simple"),
+        LOCAL_TEMPLATE("booberdev", "tvinn", "templates/atomhopper.json"),
+        TEMPLATE("booberdev", "oompa")
     }
 
 
@@ -80,12 +81,25 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
         val aid = ApplicationDeploymentRef(test.appName, test.env)
         val auroraConfig = createAuroraConfig(aid, AFFILIATION, test.aditionalFile)
 
-        val resources = service.createResources(auroraConfig, aid)
+        val resources = service.createResources(auroraConfig, aid, deployId = "123")
         val writer = jacksonObjectMapper().writerWithDefaultPrettyPrinter()
-        resources.forEach {
-            println(writer.writeValueAsString(it))
-        }
-        assertThat(resources.size).isEqualTo(test.numberOfResources)
 
+
+        val resultFiles = getResultFiles(aid)
+
+        val keys = resultFiles.keys
+
+        val generatedObjects = resources.map{
+            val json:JsonNode = jacksonObjectMapper().convertValue(it.resource)
+            json
+        }
+
+       generatedObjects.forEach {
+            val key = getKey(it)
+            assertThat(keys).contains(key)
+            compareJson("/samples/result/${aid.environment}/${aid.application} $key", resultFiles[key]!!, it)
+        }
+
+        assertThat(generatedObjects.map { getKey(it) }.toSet()).isEqualTo(resultFiles.keys)
     }
 }

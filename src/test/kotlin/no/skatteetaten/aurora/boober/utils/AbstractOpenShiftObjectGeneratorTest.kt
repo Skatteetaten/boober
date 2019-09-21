@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.utils
 
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import com.fasterxml.jackson.databind.JsonNode
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -71,5 +74,29 @@ open class AbstractOpenShiftObjectGeneratorTest : AbstractAuroraConfigTest() {
                 "utv/webleveranse.json" to """{ "type": "deploy", "version" : "1.0.8", "database" : { "REFerence" : "auto" }, "toxiproxy" : { "version" : "2.1.3" } }"""
             ), adr("utv", "webleveranse")
         )
+    }
+    fun getKey(it: JsonNode): String {
+        val kind = it.get("kind").asText().toLowerCase()
+        val metadata = it.get("metadata")
+
+        val name = if (metadata == null) {
+            it.get("name").asText().toLowerCase()
+        } else {
+            metadata.get("name").asText().toLowerCase()
+        }
+
+        return "$kind/$name"
+    }
+
+
+    // TODO: almost duplicate elsewhere
+    fun compareJson(file: String, jsonNode: JsonNode, target: JsonNode): Boolean {
+        val writer = mapper.writerWithDefaultPrettyPrinter()
+        val targetString = writer.writeValueAsString(target)
+        val nodeString = writer.writeValueAsString(jsonNode)
+        val expected = "$file\n" + targetString
+        val actual = "$file\n" + nodeString
+        assertThat(expected).isEqualTo(actual)
+        return true
     }
 }
