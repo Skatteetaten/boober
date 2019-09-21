@@ -43,7 +43,7 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
             DeployFeature(),
             CommonLabelFeature(userDetailsProvider),
             DeploymentConfigFeature(),
-            RouteFeature(".foo.bar"),
+            RouteFeature(".utv.paas.skead.no"),
             LocalTemplateFeature(),
             TemplateFeature(openShiftResourceClient),
             BuildFeature()

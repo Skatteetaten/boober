@@ -1,11 +1,14 @@
 package no.skatteetaten.aurora.boober.feature
 
+import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.openshift.*
+import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.Route
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.v1.findSubHandlers
+import no.skatteetaten.aurora.boober.mapper.v1.findSubKeys
 import no.skatteetaten.aurora.boober.mapper.v1.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.AuroraResource
@@ -31,33 +34,49 @@ class RouteFeature(val routeSuffix: String = ".foo.bar") : Feature {
 
     }
 
-    override fun generate(adc: AuroraDeploymentContext): Set<AuroraResource> {
-        val route = "route"
 
-        if (adc.isSimplifiedConfig(route)) {
+    override fun generate(adc: AuroraDeploymentContext): Set<AuroraResource> {
+
+        return getRoute(adc).map {
+            AuroraResource("${it.objectName}-route", generateRoute(
+                    route = it,
+                    routeNamespace = adc.namespace,
+                    serviceName = adc.name,
+                    routeSuffix = routeSuffix
+            ))
+        }.toSet()
+    }
+
+    fun getRoute(adc: AuroraDeploymentContext): List<no.skatteetaten.aurora.boober.model.Route> {
+
+        val route = "route"
+        val simplified = adc.isSimplifiedConfig(route)
+
+        if (simplified) {
             if (adc[route]) {
+
                 val secure = if (adc["routeDefaults/tls/enabled"]) {
                     SecureRoute(
                             adc["routeDefaults/tls/insecurePolicy"],
                             adc["routeDefaults/tls/termination"]
                     )
                 } else null
-
-                return setOf(AuroraResource("${adc.name}-route", generateRoute(
-                        routeName = adc.name,
-                        routeNamespace = adc.namespace,
-                        routeHost = adc["routeDefaults/host"],
-                        routeTls = secure
-                )))
+                return listOf(
+                        Route(
+                                objectName = adc.name,
+                                host = adc["routeDefaults/host"],
+                                tls = secure
+                        )
+                )
             }
-            return emptySet()
+            return listOf()
         }
-        val routes = adc.getSubKeyNames("$route/")
+        val routes = adc.applicationFiles.findSubKeys(route)
+
         return routes.map {
 
-            // TODO what if route/it/tls/enabled is set to false?
             val secure =
-                    if (adc.getSubKeyNames("$route/$it/tls/").isNotEmpty() ||
+                    if (adc.applicationFiles.findSubKeys("$route/$it/tls").isNotEmpty() ||
                             adc["routeDefaults/tls/enabled"]
                     ) {
                         SecureRoute(
@@ -66,48 +85,58 @@ class RouteFeature(val routeSuffix: String = ".foo.bar") : Feature {
                         )
                     } else null
 
-
-            val routeName = adc.replacer.replace(it).ensureStartWith(adc.name, "-")
-            AuroraResource("$routeName-route", generateRoute(
-                    routeName = routeName,
-                    routeNamespace = adc.namespace,
-                    routeHost = adc.getOrDefault(route, it, "host"),
-                    serviceName = adc.name,
-                    routeTls = secure,
-                    routePath = adc.getOrNull("$route/$it/path"),
-                    routeAnnotations = adc.getRouteAnnotations("$route/$it/annotations/")
-            ))
-        }.toSet()
+            Route(
+                    objectName = adc.replacer.replace(it).ensureStartWith(adc.name, "-"),
+                    host = adc.getOrDefault(route, it, "host"),
+                    path = adc.getOrNull("$route/$it/path"),
+                    annotations = adc.getRouteAnnotations("$route/$it/annotations/"),
+                    tls = secure
+            )
+        }
     }
 
-    fun generateRoute(routeName: String,
-                      routeNamespace: String,
-                      routeHost: String,
-                      serviceName: String = routeName,
-                      routeTls: SecureRoute? = null,
-                      routePath: String? = null,
-                      routeAnnotations: Map<String, String> = emptyMap()
+    override fun modify(adc: AuroraDeploymentContext, resources: Set<AuroraResource>) {
+        getRoute(adc).firstOrNull()?.let {
+            val url = it.url(routeSuffix)
+            val routeVars = mapOf("ROUTE_NAME" to url,
+                    "ROUTE_URL" to "${it.protocol}$url"
+            ).toEnvVars()
+            resources.forEach {
+                if (it.resource.kind == "DeploymentConfig") {
+                    val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
+                    dc.spec.template.spec.containers.forEach { container ->
+                        container.env.addAll(routeVars)
+                    }
+                }
+            }
+        }
+    }
 
+    fun generateRoute(
+            route: no.skatteetaten.aurora.boober.model.Route,
+            routeNamespace: String,
+            serviceName: String,
+            routeSuffix: String
     ): Route {
         return newRoute {
             metadata {
-                name = routeName
+                name = route.objectName
                 namespace = routeNamespace
-                annotations = routeAnnotations.mapKeys { kv -> kv.key.replace("|", "/") }
+                annotations = route.annotations?.mapKeys { kv -> kv.key.replace("|", "/") }
             }
             spec {
                 to {
                     kind = "Service"
                     name = serviceName
                 }
-                routeTls?.let {
+                route.tls?.let {
                     tls {
                         insecureEdgeTerminationPolicy = it.insecurePolicy.name
                         termination = it.termination.name.toLowerCase()
                     }
                 }
-                host = "${routeHost}$routeSuffix"
-                routePath?.let {
+                host = "${route.host}${routeSuffix}"
+                route.path?.let {
                     path = it
                 }
             }

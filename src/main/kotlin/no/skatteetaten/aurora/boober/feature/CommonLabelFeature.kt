@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.feature
 
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fkorotkov.kubernetes.newOwnerReference
 import io.fabric8.kubernetes.api.model.ObjectMeta
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
@@ -39,6 +40,15 @@ class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature
 
         resources.forEach {
             it.resource.metadata.labels = it.resource.metadata.labels?.addIfNotNull(commonLabels) ?: commonLabels
+
+            it.resource.metadata.ownerReferences = listOf(
+                    newOwnerReference {
+                        apiVersion = "skatteetaten.no/v1"
+                        kind = "ApplicationDeployment"
+                        name = adc.name
+                        uid = "123-123" // TODO: fix, probably need to fix this after AD is created in cluster?
+                    }
+            )
             if (it.resource.kind == "DeploymentConfig") {
                 val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
                 if (dc.spec.template.metadata == null) {
