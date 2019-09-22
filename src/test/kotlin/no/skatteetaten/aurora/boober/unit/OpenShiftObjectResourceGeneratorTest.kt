@@ -3,39 +3,25 @@ package no.skatteetaten.aurora.boober.unit
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.isEqualTo
-import assertk.assertions.isNotNull
-import assertk.assertions.size
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.feature.*
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.DatabaseInstance
-import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.service.*
-import no.skatteetaten.aurora.boober.service.internal.ApplicationDeploymentGenerator
-import no.skatteetaten.aurora.boober.service.internal.Provisions
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.*
 import no.skatteetaten.aurora.boober.utils.AbstractOpenShiftObjectGeneratorTest
-import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import java.io.ByteArrayInputStream
-import java.time.Duration
 import java.time.Instant
 
 class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTest() {
@@ -54,6 +40,7 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
             BuildFeature(),
             DatabaseFeature(databaseSchemaProvisioner),
             WebsealFeature(),
+            ConfigFeature(),
             StsFeature(stsProvisioner)
     )
 
@@ -73,17 +60,21 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
         val stsResult = StsProvisioningResult("commonName", cert, Instant.EPOCH)
         every { stsProvisioner.generateCertificate(any(), any(), any()) } returns stsResult
 
+
+    }
+
+    private fun createDatabaseResult(appName: String, env: String): SchemaProvisionResults {
         val databaseInstance = DatabaseInstance(fallback = true, labels = mapOf("affiliation" to "aos"))
         val details = SchemaRequestDetails(
-                schemaName = "openshift-console-api",
+                schemaName = appName,
                 users = listOf(SchemaUser("SCHEMA", "a", "aos")),
                 engine = DatabaseEngine.ORACLE,
                 affiliation = "aos",
                 databaseInstance = databaseInstance
         )
         val request = SchemaForAppRequest(
-                "booberdev",
-                "openshift-console-api",
+                env,
+                appName,
                 true,
                 details
         )
@@ -104,17 +95,18 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
                         )
                 )
         )
-        every { databaseSchemaProvisioner.provisionSchemas(any()) } returns result
+        return result
     }
 
     enum class ResourceCreationTestData(
-            val appName: String,
             val env: String,
+            val appName: String,
+            val dbName: String = appName,
             val aditionalFile: String? = null
     ) {
-        DEPLOY("booberdev", "console"),
+        DEPLOY("booberdev", "console", "openshift-console-api"),
         DEVELOPMENT("mounts", "aos-simple"),
-        LOCAL_TEMPLATE("booberdev", "tvinn", "templates/atomhopper.json"),
+        LOCAL_TEMPLATE("booberdev", "tvinn", aditionalFile = "templates/atomhopper.json"),
         //TEMPLATE("booberdev", "oompa")
     }
 
@@ -123,8 +115,10 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
     @EnumSource(ResourceCreationTestData::class)
     fun `generate resources for deploy`(test: ResourceCreationTestData) {
 
-        val aid = ApplicationDeploymentRef(test.appName, test.env)
+        val aid = ApplicationDeploymentRef(test.env, test.appName)
         val auroraConfig = createAuroraConfig(aid, AFFILIATION, test.aditionalFile)
+        every { databaseSchemaProvisioner.provisionSchemas(any()) } returns createDatabaseResult(test.dbName, test.env)
+
         val resources = service.createResources(auroraConfig, aid, deployId = "123")
         val resultFiles = getResultFiles(aid)
         val keys = resultFiles.keys

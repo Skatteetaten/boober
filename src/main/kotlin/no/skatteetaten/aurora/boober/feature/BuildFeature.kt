@@ -94,7 +94,7 @@ class BuildFeature() : Feature {
                     }
                     output {
                         to {
-                            kind = "ImageStream"
+                            kind = "ImageStreamTag"
                             name = "${adc.name}:latest"
                         }
                     }

@@ -51,7 +51,7 @@ class DatabaseFeature(
         val schemaProvisionResult = databaseSchemaProvisioner.provisionSchemas(schemaRequests)
 
         return schemaProvisionResult.results.map {
-            val secretName = "${it.request.details.schemaName}-db".replace("_", "-").toLowerCase().ensureStartWith(adc.name)
+            val secretName = "${it.request.details.schemaName}-db".replace("_", "-").toLowerCase().ensureStartWith(adc.name, "-")
             DbhSecretGenerator.createDbhSecret(it, secretName, adc.namespace)
         }.map {
             AuroraResource("${it.metadata.name}-secret", it)

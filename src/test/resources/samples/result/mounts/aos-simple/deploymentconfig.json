@@ -1,226 +1,189 @@
 {
-  "apiVersion": "apps.openshift.io/v1",
-  "kind": "DeploymentConfig",
-  "metadata": {
-    "annotations": {
-      "boober.skatteetaten.no/applicationFile": "mounts/aos-simple.json",
-      "console.skatteetaten.no/alarm": "true"
+  "apiVersion" : "apps.openshift.io/v1",
+  "kind" : "DeploymentConfig",
+  "metadata" : {
+    "annotations" : {
+      "boober.skatteetaten.no/applicationFile" : "mounts/aos-simple.json",
+      "console.skatteetaten.no/alarm" : "true"
     },
-    "labels": {
-      "app": "aos-simple",
-      "updatedBy": "hero",
-      "affiliation": "aos",
-      "updateInBoober": "true",
-      "booberDeployId": "123",
-      "name": "aos-simple",
-      "deployTag": "1.0.3-SNAPSHOT"
+    "labels" : {
+      "app" : "aos-simple",
+      "updatedBy" : "hero",
+      "affiliation" : "aos",
+      "updateInBoober" : "true",
+      "booberDeployId" : "123",
+      "name" : "aos-simple",
+      "deployTag" : "1.0.3-SNAPSHOT"
     },
-    "name": "aos-simple",
-    "namespace": "aos-mounts",
-    "ownerReferences": [
-      {
-        "apiVersion": "skatteetaten.no/v1",
-        "kind": "ApplicationDeployment",
-        "name": "aos-simple",
-        "uid": "123-123"
-      }
-    ]
+    "name" : "aos-simple",
+    "namespace" : "aos-mounts",
+    "ownerReferences" : [ {
+      "apiVersion" : "skatteetaten.no/v1",
+      "kind" : "ApplicationDeployment",
+      "name" : "aos-simple",
+      "uid" : "123-123"
+    } ]
   },
-  "spec": {
-    "replicas": 1,
-    "selector": {
-      "name": "aos-simple"
+  "spec" : {
+    "replicas" : 1,
+    "selector" : {
+      "name" : "aos-simple"
     },
-    "strategy": {
-      "rollingParams": {
-        "intervalSeconds": 1,
-        "maxSurge": "25%",
-        "maxUnavailable": 0,
-        "timeoutSeconds": 180,
-        "updatePeriodSeconds": 1
+    "strategy" : {
+      "rollingParams" : {
+        "intervalSeconds" : 1,
+        "maxSurge" : "25%",
+        "maxUnavailable" : 0,
+        "timeoutSeconds" : 180,
+        "updatePeriodSeconds" : 1
       },
-      "type": "Rolling"
+      "type" : "Rolling"
     },
-    "template": {
-      "metadata": {
-        "labels": {
-          "app": "aos-simple",
-          "updatedBy": "hero",
-          "affiliation": "aos",
-          "updateInBoober": "true",
-          "booberDeployId": "123",
-          "name": "aos-simple",
-          "deployTag": "1.0.3-SNAPSHOT"
+    "template" : {
+      "metadata" : {
+        "labels" : {
+          "app" : "aos-simple",
+          "updatedBy" : "hero",
+          "affiliation" : "aos",
+          "updateInBoober" : "true",
+          "booberDeployId" : "123",
+          "name" : "aos-simple",
+          "deployTag" : "1.0.3-SNAPSHOT"
         }
       },
-      "spec": {
-        "containers": [
-          {
-            "env": [
-              {
-                "name": "POD_NAME",
-                "valueFrom": {
-                  "fieldRef": {
-                    "apiVersion": "v1",
-                    "fieldPath": "metadata.name"
-                  }
-                }
-              },
-              {
-                "name": "POD_NAMESPACE",
-                "valueFrom": {
-                  "fieldRef": {
-                    "apiVersion": "v1",
-                    "fieldPath": "metadata.namespace"
-                  }
-                }
-              },
-              {
-                "name": "HTTP_PORT",
-                "value": "8080"
-              },
-              {
-                "name": "MANAGEMENT_HTTP_PORT",
-                "value": "8081"
-              },
-              {
-                "name": "JOLOKIA_HTTP_PORT",
-                "value": "8778"
-              },
-              {
-                "name": "OPENSHIFT_CLUSTER",
-                "value": "utv"
-              },
-              {
-                "name": "APP_NAME",
-                "value": "aos-simple"
-              },
-              {
-                "name": "SPLUNK_INDEX",
-                "value": "openshift-test"
-              },
-              {
-                "name": "ROUTE_NAME",
-                "value": "aurora.mounts.utv.paas.skead.no/foo"
-              },
-              {
-                "name": "ROUTE_URL",
-                "value": "http://aurora.mounts.utv.paas.skead.no/foo"
-              },
-              {
-                "name": "STS_CERTIFICATE_URL",
-                "value": "/u01/secrets/app/aos-simple-cert/certificate.crt"
-              },
-              {
-                "name": "STS_PRIVATE_KEY_URL",
-                "value": "/u01/secrets/app/aos-simple-cert/privatekey.key"
-              },
-              {
-                "name": "STS_KEYSTORE_DESCRIPTOR",
-                "value": "/u01/secrets/app/aos-simple-cert/descriptor.properties"
-              },
-              {
-                "name": "VOLUME_CONFIG",
-                "value": "/u01/config/configmap"
-              },
-              {
-                "name": "VOLUME_AOS_SIMPLE_CERT",
-                "value": "/u01/secrets/app/aos-simple-cert"
+      "spec" : {
+        "containers" : [ {
+          "env" : [ {
+            "name" : "POD_NAME",
+            "valueFrom" : {
+              "fieldRef" : {
+                "apiVersion" : "v1",
+                "fieldPath" : "metadata.name"
               }
-            ],
-            "imagePullPolicy": "IfNotPresent",
-            "name": "aos-simple-java",
-            "ports": [
-              {
-                "containerPort": 8080,
-                "name": "http",
-                "protocol": "TCP"
-              },
-              {
-                "containerPort": 8081,
-                "name": "management",
-                "protocol": "TCP"
-              },
-              {
-                "containerPort": 8778,
-                "name": "jolokia",
-                "protocol": "TCP"
+            }
+          }, {
+            "name" : "POD_NAMESPACE",
+            "valueFrom" : {
+              "fieldRef" : {
+                "apiVersion" : "v1",
+                "fieldPath" : "metadata.namespace"
               }
-            ],
-            "readinessProbe": {
-              "initialDelaySeconds": 10,
-              "tcpSocket": {
-                "port": 8080
-              },
-              "timeoutSeconds": 1
+            }
+          }, {
+            "name" : "HTTP_PORT",
+            "value" : "8080"
+          }, {
+            "name" : "MANAGEMENT_HTTP_PORT",
+            "value" : "8081"
+          }, {
+            "name" : "JOLOKIA_HTTP_PORT",
+            "value" : "8778"
+          }, {
+            "name" : "OPENSHIFT_CLUSTER",
+            "value" : "utv"
+          }, {
+            "name" : "APP_NAME",
+            "value" : "aos-simple"
+          }, {
+            "name" : "SPLUNK_INDEX",
+            "value" : "openshift-test"
+          }, {
+            "name" : "ROUTE_NAME",
+            "value" : "aurora.mounts.utv.paas.skead.no/foo"
+          }, {
+            "name" : "ROUTE_URL",
+            "value" : "http://aurora.mounts.utv.paas.skead.no/foo"
+          }, {
+            "name" : "VOLUME_CONFIG",
+            "value" : "/u01/config/configmap"
+          }, {
+            "name" : "STS_CERTIFICATE_URL",
+            "value" : "/u01/secrets/app/aos-simple-cert/certificate.crt"
+          }, {
+            "name" : "STS_PRIVATE_KEY_URL",
+            "value" : "/u01/secrets/app/aos-simple-cert/privatekey.key"
+          }, {
+            "name" : "STS_KEYSTORE_DESCRIPTOR",
+            "value" : "/u01/secrets/app/aos-simple-cert/descriptor.properties"
+          }, {
+            "name" : "VOLUME_AOS_SIMPLE_CERT",
+            "value" : "/u01/secrets/app/aos-simple-cert"
+          } ],
+          "imagePullPolicy" : "IfNotPresent",
+          "name" : "aos-simple-java",
+          "ports" : [ {
+            "containerPort" : 8080,
+            "name" : "http",
+            "protocol" : "TCP"
+          }, {
+            "containerPort" : 8081,
+            "name" : "management",
+            "protocol" : "TCP"
+          }, {
+            "containerPort" : 8778,
+            "name" : "jolokia",
+            "protocol" : "TCP"
+          } ],
+          "readinessProbe" : {
+            "initialDelaySeconds" : 10,
+            "tcpSocket" : {
+              "port" : 8080
             },
-            "resources": {
-              "limits": {
-                "cpu": "2000m",
-                "memory": "128Mi"
-              },
-              "requests": {
-                "cpu": "10m",
-                "memory": "128Mi"
-              }
-            },
-            "securityContext": {
-              "privileged": false
-            },
-            "terminationMessagePath": "/dev/termination-log",
-            "volumeMounts": [
-              {
-                "mountPath": "/u01/logs",
-                "name": "application-log-volume"
-              },
-              {
-                "mountPath": "/u01/config/configmap",
-                "name": "config"
-              },
-              {
-                "mountPath": "/u01/secrets/app/aos-simple-cert",
-                "name": "aos-simple-cert"
-              }
-            ]
-          }
-        ],
-        "dnsPolicy": "ClusterFirst",
-        "restartPolicy": "Always",
-        "volumes": [
-          {
-            "configMap": {
-              "name": "aos-simple"
-            },
-            "name": "config"
+            "timeoutSeconds" : 1
           },
-          {
-            "name": "aos-simple-cert",
-            "secret": {
-              "secretName": "aos-simple-cert"
+          "resources" : {
+            "limits" : {
+              "cpu" : "2000m",
+              "memory" : "128Mi"
+            },
+            "requests" : {
+              "cpu" : "10m",
+              "memory" : "128Mi"
             }
           },
-          {
-            "emptyDir": {
-            },
-            "name": "application-log-volume"
+          "securityContext" : {
+            "privileged" : false
+          },
+          "terminationMessagePath" : "/dev/termination-log",
+          "volumeMounts" : [ {
+            "mountPath" : "/u01/logs",
+            "name" : "application-log-volume"
+          }, {
+            "mountPath" : "/u01/config/configmap",
+            "name" : "config"
+          }, {
+            "mountPath" : "/u01/secrets/app/aos-simple-cert",
+            "name" : "aos-simple-cert"
+          } ]
+        } ],
+        "dnsPolicy" : "ClusterFirst",
+        "restartPolicy" : "Always",
+        "volumes" : [ {
+          "emptyDir" : { },
+          "name" : "application-log-volume"
+        }, {
+          "configMap" : {
+            "name" : "aos-simple"
+          },
+          "name" : "config"
+        }, {
+          "name" : "aos-simple-cert",
+          "secret" : {
+            "secretName" : "aos-simple-cert"
           }
-        ]
+        } ]
       }
     },
-    "triggers": [
-      {
-        "imageChangeParams": {
-          "automatic": true,
-          "containerNames": [
-            "aos-simple-java"
-          ],
-          "from": {
-            "kind": "ImageStreamTag",
-            "name": "aos-simple:latest"
-          }
-        },
-        "type": "ImageChange"
-      }
-    ]
+    "triggers" : [ {
+      "imageChangeParams" : {
+        "automatic" : true,
+        "containerNames" : [ "aos-simple-java" ],
+        "from" : {
+          "kind" : "ImageStreamTag",
+          "name" : "aos-simple:latest"
+        }
+      },
+      "type" : "ImageChange"
+    } ]
   }
 }
