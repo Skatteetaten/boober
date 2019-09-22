@@ -1,16 +1,22 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fkorotkov.kubernetes.metadata
-import com.fkorotkov.kubernetes.newSecret
+import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fkorotkov.kubernetes.*
 import io.fabric8.kubernetes.api.model.Secret
+import io.fabric8.kubernetes.api.model.Volume
+import io.fabric8.kubernetes.api.model.VolumeMount
+import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
+import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.service.addEnvVar
 import no.skatteetaten.aurora.boober.service.internal.StsSecretGenerator
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
+import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import org.apache.commons.codec.binary.Base64
 import org.springframework.stereotype.Service
 
@@ -33,6 +39,7 @@ class StsFeature(val sts: StsProvisioner) : Feature {
         } ?: emptySet<AuroraResource>()
 
     }
+
 
     fun create(
             appName: String,
@@ -78,15 +85,39 @@ class StsFeature(val sts: StsProvisioner) : Feature {
         return "$groupId.$name"
     }
 
+
     override fun modify(adc: AuroraDeploymentContext, resources: Set<AuroraResource>) {
         if (adc["certificate"]) {
             val baseUrl = "/u01/secrets/app/${adc.name}-cert"
             val stsVars = mapOf(
                     "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
                     "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
-                    "STS_KEYSTORE_DESCRIPTOR" to "$baseUrl/descriptor.properties"
+                    "STS_KEYSTORE_DESCRIPTOR" to "$baseUrl/descriptor.properties",
+                    "VOLUME_${adc.name}_CERT".toUpperCase() to baseUrl
             ).toEnvVars()
-            resources.addEnvVar(stsVars)
+
+            val mount = newVolumeMount {
+                name = "${adc.name}-cert"
+                mountPath = baseUrl
+            }
+
+            val volume = newVolume {
+                name = "${adc.name}-cert"
+                secret {
+                    secretName = "${adc.name}-cert"
+                }
+            }
+
+            resources.forEach {
+                if (it.resource.kind == "DeploymentConfig") {
+                    val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
+                    dc.spec.template.spec.volumes.plusAssign(volume)
+                    dc.spec.template.spec.containers.forEach { container ->
+                        container.volumeMounts.plusAssign(mount)
+                        container.env.addAll(stsVars)
+                    }
+                }
+            }
         }
     }
 

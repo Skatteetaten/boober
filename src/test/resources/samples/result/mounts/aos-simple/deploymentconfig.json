@@ -76,6 +76,18 @@
                 }
               },
               {
+                "name": "HTTP_PORT",
+                "value": "8080"
+              },
+              {
+                "name": "MANAGEMENT_HTTP_PORT",
+                "value": "8081"
+              },
+              {
+                "name": "JOLOKIA_HTTP_PORT",
+                "value": "8778"
+              },
+              {
                 "name": "OPENSHIFT_CLUSTER",
                 "value": "utv"
               },
@@ -114,18 +126,6 @@
               {
                 "name": "VOLUME_AOS_SIMPLE_CERT",
                 "value": "/u01/secrets/app/aos-simple-cert"
-              },
-              {
-                "name": "HTTP_PORT",
-                "value": "8080"
-              },
-              {
-                "name": "MANAGEMENT_HTTP_PORT",
-                "value": "8081"
-              },
-              {
-                "name": "JOLOKIA_HTTP_PORT",
-                "value": "8778"
               }
             ],
             "imagePullPolicy": "IfNotPresent",
