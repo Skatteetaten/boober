@@ -13,6 +13,7 @@ import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.service.internal.ContainerGenerator.auroraContainer
 import no.skatteetaten.aurora.boober.utils.*
+import org.springframework.beans.factory.annotation.Value
 
 val AuroraDeploymentContext.envName get(): String = this.getOrNull("env/name") ?: this["envName"]
 val AuroraDeploymentContext.name get(): String = this["name"]
@@ -34,7 +35,8 @@ val AuroraDeploymentContext.dockerGroup get() = groupId.replace(".", "_")
 
 val AuroraDeploymentContext.dockerImagePath: String get() = "$dockerGroup/${this.artifactId}"
 
-val AuroraDeploymentContext.dockerTag: String get() = releaseTo ?: this["version"]
+val AuroraDeploymentContext.version: String get() = this["version"]
+val AuroraDeploymentContext.dockerTag: String get() = releaseTo ?: version
 
 
 //transform to resource right away?
@@ -102,8 +104,10 @@ val AuroraDeploymentContext.managementPath
         "$port$path"
     }
 
+// TODO: @Value
 @org.springframework.stereotype.Service
-class DeployFeature() : Feature {
+class DeployFeature(
+        @Value("\${integrations.docker.registry}") val dockerRegistry: String) : Feature {
 
     override fun enable(header: AuroraDeploymentContext): Boolean {
         return header.type in listOf(TemplateType.deploy, TemplateType.development)
@@ -153,8 +157,8 @@ class DeployFeature() : Feature {
         return setOf(
                 AuroraResource("${adc.name}-dc", create(adc, container)),
                 AuroraResource("${adc.name}-service", createService(adc)),
-                // TODO: Parameterize docker registry
-                AuroraResource("${adc.name}-is", createImageStream(adc, "http://docker.registry"))
+                AuroraResource("${adc.name}-is", createImageStream(adc, dockerRegistry))
+
 
         )
     }
@@ -204,6 +208,7 @@ class DeployFeature() : Feature {
         metadata {
             name = adc.name
             namespace = adc.namespace
+            labels = mapOf("releasedVersion" to adc.version)
         }
         spec {
             dockerImageRepository = "$dockerRegistry/${adc.dockerImagePath}"

@@ -7,7 +7,8 @@
       "updatedBy": "hero",
       "affiliation": "aos",
       "updateInBoober": "true",
-      "booberDeployId": "123"
+      "booberDeployId": "123",
+      "name": "openshift-console-api"
     },
     "name": "openshift-console-api",
     "namespace": "aos-booberdev",

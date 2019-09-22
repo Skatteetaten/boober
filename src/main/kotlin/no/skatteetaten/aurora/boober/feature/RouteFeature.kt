@@ -13,6 +13,7 @@ import no.skatteetaten.aurora.boober.mapper.v1.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
+import no.skatteetaten.aurora.boober.service.addEnvVar
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.startsWith
@@ -98,17 +99,11 @@ class RouteFeature(val routeSuffix: String = ".foo.bar") : Feature {
     override fun modify(adc: AuroraDeploymentContext, resources: Set<AuroraResource>) {
         getRoute(adc).firstOrNull()?.let {
             val url = it.url(routeSuffix)
-            val routeVars = mapOf("ROUTE_NAME" to url,
+            val routeVars = mapOf(
+                    "ROUTE_NAME" to url,
                     "ROUTE_URL" to "${it.protocol}$url"
             ).toEnvVars()
-            resources.forEach {
-                if (it.resource.kind == "DeploymentConfig") {
-                    val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
-                    dc.spec.template.spec.containers.forEach { container ->
-                        container.env.addAll(routeVars)
-                    }
-                }
-            }
+            resources.addEnvVar(routeVars)
         }
     }
 

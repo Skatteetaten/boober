@@ -44,7 +44,7 @@ object StsSecretGenerator {
         )
     }
 
-    private fun createDescriptorFile(
+    fun createDescriptorFile(
         jksPath: String,
         alias: String,
         storePassword: String,

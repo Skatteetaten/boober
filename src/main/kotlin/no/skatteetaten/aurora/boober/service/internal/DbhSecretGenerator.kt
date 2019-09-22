@@ -1,8 +1,12 @@
 package no.skatteetaten.aurora.boober.service.internal
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fkorotkov.kubernetes.metadata
+import com.fkorotkov.kubernetes.newSecret
 import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.kubernetes.api.model.Secret
+import no.skatteetaten.aurora.boober.feature.name
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.Database
 import no.skatteetaten.aurora.boober.model.Mount
@@ -10,6 +14,7 @@ import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResult
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResults
+import org.apache.commons.codec.binary.Base64
 import java.io.ByteArrayOutputStream
 import java.util.Properties
 
@@ -17,11 +22,11 @@ object DbhSecretGenerator {
 
     @JvmStatic
     fun create(
-        appName: String,
-        schemaProvisionResults: SchemaProvisionResults,
-        labels: Map<String, String>,
-        ownerReference: OwnerReference,
-        namespace: String
+            appName: String,
+            schemaProvisionResults: SchemaProvisionResults,
+            labels: Map<String, String>,
+            ownerReference: OwnerReference,
+            namespace: String
     ): List<Secret> {
 
         return schemaProvisionResults.results.map {
@@ -29,58 +34,59 @@ object DbhSecretGenerator {
         }
     }
 
+
     private fun createDbhSecret(
-        it: SchemaProvisionResult,
-        appName: String,
-        labels: Map<String, String>,
-        ownerReference: OwnerReference,
-        namespace: String
+            it: SchemaProvisionResult,
+            appName: String,
+            labels: Map<String, String>,
+            ownerReference: OwnerReference,
+            namespace: String
     ): Secret {
         val connectionProperties = createConnectionProperties(it.dbhSchema)
         val infoFile = createInfoFile(it.dbhSchema)
 
         return SecretGenerator.create(
-            secretName = it.createName(appName),
-            secretLabels = labels,
-            secretData = mapOf(
-                "db.properties" to connectionProperties,
-                "id" to it.dbhSchema.id,
-                "info" to infoFile,
-                "jdbcurl" to it.dbhSchema.jdbcUrl,
-                "name" to it.dbhSchema.username
-            )
-                .mapValues { it.value.toByteArray() },
-            ownerReference = ownerReference,
-            secretNamespace = namespace
+                secretName = it.createName(appName),
+                secretLabels = labels,
+                secretData = mapOf(
+                        "db.properties" to connectionProperties,
+                        "id" to it.dbhSchema.id,
+                        "info" to infoFile,
+                        "jdbcurl" to it.dbhSchema.jdbcUrl,
+                        "name" to it.dbhSchema.username
+                )
+                        .mapValues { it.value.toByteArray() },
+                ownerReference = ownerReference,
+                secretNamespace = namespace
         )
     }
 
     fun createInfoFile(dbhSchema: DbhSchema): String {
 
         val infoFile = mapOf(
-            "database" to mapOf(
-                "id" to dbhSchema.id,
-                "name" to dbhSchema.username,
-                "createdDate" to null,
-                "lastUsedDate" to null,
-                "host" to dbhSchema.databaseInstance.host,
-                "port" to dbhSchema.databaseInstance.port,
-                "service" to dbhSchema.service,
-                "jdbcUrl" to dbhSchema.jdbcUrl,
-                "users" to listOf(
-                    mapOf(
-                        "username" to dbhSchema.username,
-                        "password" to dbhSchema.password,
-                        "type" to dbhSchema.userType
-                    )
-                ),
-                "labels" to dbhSchema.labels
-            )
+                "database" to mapOf(
+                        "id" to dbhSchema.id,
+                        "name" to dbhSchema.username,
+                        "createdDate" to null,
+                        "lastUsedDate" to null,
+                        "host" to dbhSchema.databaseInstance.host,
+                        "port" to dbhSchema.databaseInstance.port,
+                        "service" to dbhSchema.service,
+                        "jdbcUrl" to dbhSchema.jdbcUrl,
+                        "users" to listOf(
+                                mapOf(
+                                        "username" to dbhSchema.username,
+                                        "password" to dbhSchema.password,
+                                        "type" to dbhSchema.userType
+                                )
+                        ),
+                        "labels" to dbhSchema.labels
+                )
         )
         return jacksonObjectMapper().writeValueAsString(infoFile)
     }
 
-    private fun createConnectionProperties(dbhSchema: DbhSchema): String {
+    fun createConnectionProperties(dbhSchema: DbhSchema): String {
         return Properties().run {
             put("jdbc.url", dbhSchema.jdbcUrl)
             put("jdbc.user", dbhSchema.username)
@@ -91,6 +97,29 @@ object DbhSecretGenerator {
             bos.toString("UTF-8")
         }
     }
+
+    fun createDbhSecret(
+            schemaProvisionResult: SchemaProvisionResult,
+            secretName: String,
+            secretNamespace: String
+    ): Secret {
+        val connectionProperties = DbhSecretGenerator.createConnectionProperties(schemaProvisionResult.dbhSchema)
+        val infoFile = DbhSecretGenerator.createInfoFile(schemaProvisionResult.dbhSchema)
+
+        return newSecret {
+            metadata {
+                name = secretName
+                namespace = secretNamespace
+            }
+            data = mapOf(
+                    "db.properties" to connectionProperties,
+                    "id" to schemaProvisionResult.dbhSchema.id,
+                    "info" to infoFile,
+                    "jdbcurl" to schemaProvisionResult.dbhSchema.jdbcUrl,
+                    "name" to schemaProvisionResult.dbhSchema.username
+            ).mapValues { it.value.toByteArray() }.mapValues { Base64.encodeBase64String(it.value) }
+        }
+    }
 }
 
 fun Database.createDbEnv(envName: String): List<Pair<String, String>> {
@@ -98,27 +127,29 @@ fun Database.createDbEnv(envName: String): List<Pair<String, String>> {
     val envName = envName.replace("-", "_").toUpperCase()
 
     return listOf(
-        envName to "$path/info",
-        "${envName}_PROPERTIES" to "$path/db.properties"
+            envName to "$path/info",
+            "${envName}_PROPERTIES" to "$path/db.properties"
     )
 }
 
 fun SchemaProvisionResults.createDatabaseMounts(
-    deploymentSpecInternal: AuroraDeploymentSpecInternal
+        deploymentSpecInternal: AuroraDeploymentSpecInternal
 ): List<Mount> {
     return results.map {
         val mountPath = "${it.request.details.schemaName}-db".toLowerCase()
         Mount(
-            path = "/u01/secrets/app/$mountPath",
-            type = MountType.Secret,
-            mountName = mountPath,
-            volumeName = it.createName(deploymentSpecInternal.name),
-            exist = true,
-            content = null
+                path = "/u01/secrets/app/$mountPath",
+                type = MountType.Secret,
+                mountName = mountPath,
+                volumeName = it.createName(deploymentSpecInternal.name),
+                exist = true,
+                content = null
         )
     }
 }
 
+
+
 // TODO: Skal denne ha startsWith?
 fun SchemaProvisionResult.createName(appName: String) =
-    "$appName-${this.request.details.schemaName}-db".replace("_", "-").toLowerCase()
+        "$appName-${this.request.details.schemaName}-db".replace("_", "-").toLowerCase()

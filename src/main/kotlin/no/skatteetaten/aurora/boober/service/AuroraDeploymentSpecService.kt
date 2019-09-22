@@ -1,6 +1,10 @@
 package no.skatteetaten.aurora.boober.service
 
+import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.HasMetadata
+import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.feature.extractPlaceHolders
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
@@ -25,6 +29,17 @@ data class AuroraResource(
         val name: String,
         val resource: HasMetadata
 )
+
+fun Set<AuroraResource>.addEnvVar(envVars: List<EnvVar>) {
+    this.forEach {
+        if (it.resource.kind == "DeploymentConfig") {
+            val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
+            dc.spec.template.spec.containers.forEach { container ->
+                container.env.addAll(envVars)
+            }
+        }
+    }
+}
 
 interface Feature {
 
@@ -91,7 +106,7 @@ class AuroraDeploymentSpecService(
 - Webseal
 */
 
-        val activeFeatures = featuers.filter { it.enable(headerSpec)}
+        val activeFeatures = featuers.filter { it.enable(headerSpec) }
 
 
         val featureHandlers: Map<Feature, Set<AuroraConfigFieldHandler>> = activeFeatures.associateWith {

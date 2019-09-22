@@ -1,10 +1,7 @@
 package no.skatteetaten.aurora.boober.mapper.v1
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.mapper.Validator
-import no.skatteetaten.aurora.boober.mapper.defaultValidator
+import no.skatteetaten.aurora.boober.mapper.*
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 
 fun List<AuroraConfigFile>.findSubKeysExpanded(name: String): Set<String> {
@@ -20,7 +17,14 @@ fun List<AuroraConfigFile>.findSubKeys(name: String): Set<String> {
         ac.asJsonNode.at("/$name")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
     }.toSet()
 }
-
+inline fun <reified T> List<AuroraConfigFile>.associateSubKeys(
+        name: String,
+        spec: AuroraDeploymentContext
+): Map<String, T> {
+    return this.findSubKeys(name).associateWith {
+        spec.get<T>("$name/$it")
+    }
+}
 inline fun <reified T> List<AuroraConfigFile>.associateSubKeys(
     name: String,
     spec: AuroraDeploymentSpec

@@ -88,7 +88,7 @@ class DeploymentConfigFeature() : Feature {
         return mapOf(
                 "OPENSHIFT_CLUSTER" to adc["cluster"],
                 "APP_NAME" to adc.name,
-                "SPLUNK_INDEX" to adc["splunkIndex"]
+                "SPLUNK_INDEX" to adc.getOrNull<String>("splunkIndex")
         ).addIfNotNull(debugEnv).filterNullValues()
 
     }
