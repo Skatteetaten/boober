@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.feature
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.*
+import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
@@ -12,12 +13,15 @@ import no.skatteetaten.aurora.boober.mapper.v1.findSubKeys
 import no.skatteetaten.aurora.boober.model.AuroraSecret
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
-import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.ensureEndsWith
-import no.skatteetaten.aurora.boober.utils.ensureStartWith
-import no.skatteetaten.aurora.boober.utils.normalizeKubernetesName
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultSecretEnvResult
+import no.skatteetaten.aurora.boober.utils.*
+import org.apache.commons.codec.binary.Base64
 
-class ConfigFeature() : Feature {
+class ConfigFeature(
+        val vaultProvider: VaultProvider
+) : Feature {
 
     fun secretVaultKeyMappingHandlers(header: AuroraDeploymentContext) = header.applicationFiles.find {
         it.asJsonNode.at("/secretVault/keyMappings") != null
@@ -49,10 +53,21 @@ class ConfigFeature() : Feature {
     }
 
     override fun generate(adc: AuroraDeploymentContext): Set<AuroraResource> {
-        val vaults = getSecretVaults(adc)
 
-        // TODO: Create secretVaults
-        val configMap = getApplicationConfigFiles(adc)?.let {
+        val secretEnvResult = handleSecretEnv(adc)
+
+        val secrets: List<AuroraResource> = secretEnvResult.map {
+            val secret = newSecret {
+                metadata {
+                    name = it.name
+                    namespace = adc.namespace
+                }
+                data = it.secrets.mapValues { Base64.encodeBase64String(it.value) }
+            }
+            AuroraResource("${secret.metadata.name}-${secret.kind}", secret)
+        }
+
+        val configMap: AuroraResource? = getApplicationConfigFiles(adc)?.let {
             AuroraResource("${adc.name}-configmap", newConfigMap {
                 metadata {
                     name = adc.name
@@ -61,12 +76,47 @@ class ConfigFeature() : Feature {
                 data = it
             })
         }
-        val resources: Set<AuroraResource> = emptySet()
 
-        return resources.addIfNotNull(configMap)
+        return secrets.addIfNotNull(configMap).toSet()
+    }
+
+
+    private fun handleSecretEnv(adc: AuroraDeploymentContext): List<VaultSecretEnvResult> {
+        val secrets = getSecretVaults(adc)
+        return secrets.mapNotNull { secret: AuroraSecret ->
+            val request = VaultRequest(
+                    collectionName = adc.affiliation,
+                    name = secret.secretVaultName,
+                    keys = secret.secretVaultKeys,
+                    keyMappings = secret.keyMappings
+            )
+            vaultProvider.findVaultDataSingle(request)[secret.file]?.let { file ->
+                val properties = filterProperties(file, secret.secretVaultKeys, secret.keyMappings)
+                properties.map {
+                    it.key.toString() to it.value.toString().toByteArray()
+                }
+            }?.let {
+                VaultSecretEnvResult(secret.secretVaultName.ensureStartWith(adc.name, "-"), it.toMap())
+            }
+        }
     }
 
     override fun modify(adc: AuroraDeploymentContext, resources: Set<AuroraResource>) {
+
+        val secretEnv: List<EnvVar> = handleSecretEnv(adc).flatMap { result ->
+            result.secrets.map { secretValue ->
+                newEnvVar {
+                    name = secretValue.key
+                    valueFrom {
+                        secretKeyRef {
+                            key = secretValue.key
+                            name = result.name
+                            optional = false
+                        }
+                    }
+                }
+            }
+        }
         val env = adc.getConfigEnv(configHandlers(adc)).toEnvVars()
         val configVolumeAndMount = getApplicationConfigFiles(adc)?.let {
             val mount = newVolumeMount {
@@ -82,7 +132,6 @@ class ConfigFeature() : Feature {
             }
             mount to volume
         }
-        // TODO: add env from secretMounts
         resources.forEach {
             if (it.resource.kind == "DeploymentConfig") {
                 val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
@@ -93,6 +142,9 @@ class ConfigFeature() : Feature {
                 dc.spec.template.spec.containers.forEach { container ->
                     if (env.isNotEmpty()) {
                         container.env.addAll(env)
+                    }
+                    if (secretEnv.isNotEmpty()) {
+                        container.env.addAll(secretEnv)
                     }
                     configVolumeAndMount?.let { (mount, _) ->
                         container.env.add(newEnvVar {
@@ -106,7 +158,7 @@ class ConfigFeature() : Feature {
         }
     }
 
-    private fun getSecretVaults(adc: AuroraDeploymentContext) {
+    private fun getSecretVaults(adc: AuroraDeploymentContext): List<AuroraSecret> {
         val secret = getSecretVault(adc)?.let {
             AuroraSecret(
                     secretVaultName = it,
@@ -133,7 +185,7 @@ class ConfigFeature() : Feature {
             }
         }
 
-        val secrets = secretVaults.addIfNotNull(secret)
+        return secretVaults.addIfNotNull(secret)
     }
 
     private fun getApplicationConfigFiles(adc: AuroraDeploymentContext): Map<String, String>? {

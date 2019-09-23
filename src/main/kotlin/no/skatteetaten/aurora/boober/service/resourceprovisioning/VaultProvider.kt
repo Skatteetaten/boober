@@ -32,13 +32,13 @@ class VaultProvider(val vaultService: VaultService) {
 
         val filteredVaultIndex = vaultRequests.associateBy(
             { it.name },
-            { findVaultData(it) }
+            { findVaultDataSingle(it) }
         )
 
         return VaultResults(filteredVaultIndex)
     }
 
-    fun findVaultData(it: VaultRequest): VaultData {
+    fun findVaultDataSingle(it: VaultRequest): VaultData {
         return vaultService.findVault(it.collectionName, it.name).secrets.mapValues { it.value }
     }
 }

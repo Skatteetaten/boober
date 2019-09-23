@@ -180,13 +180,13 @@ data class AuroraDeployment(
     val namespace: String
 )
 
-fun List<Mount>?.volumeMount(): List<VolumeMount>? {
+fun List<Mount>?.volumeMount(): List<VolumeMount> {
     return this?.map {
         newVolumeMount {
             name = it.normalizeMountName()
             mountPath = it.path
         }
-    }
+    } ?: emptyList()
 }
 
 fun List<Mount>?.podVolumes(dcName: String): List<Volume> {

@@ -61,7 +61,7 @@ class DatabaseFeature(
 
     fun Database.createDatabaseVolumesAndMounts(appName: String): Pair<Volume, VolumeMount> {
         val mountName = "${this.name}-db".toLowerCase()
-        val volumeName = mountName.replace("_", "-").toLowerCase().ensureStartWith(appName)
+        val volumeName = mountName.replace("_", "-").toLowerCase().ensureStartWith(appName, "-")
 
         val mount = newVolumeMount {
             name = mountName

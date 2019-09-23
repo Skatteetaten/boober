@@ -1,214 +1,180 @@
 {
-  "apiVersion": "apps.openshift.io/v1",
-  "kind": "DeploymentConfig",
-  "metadata": {
-    "annotations": {
-      "boober.skatteetaten.no/applicationFile": "booberdev/reference.json",
-      "console.skatteetaten.no/alarm": "true",
-      "console.skatteetaten.no/management-path": ":8081/actuator"
+  "apiVersion" : "apps.openshift.io/v1",
+  "kind" : "DeploymentConfig",
+  "metadata" : {
+    "annotations" : {
+      "boober.skatteetaten.no/applicationFile" : "booberdev/reference.json",
+      "console.skatteetaten.no/alarm" : "true",
+      "console.skatteetaten.no/management-path" : ":8081/actuator"
     },
-    "labels": {
-      "app": "reference",
-      "updatedBy": "hero",
-      "affiliation": "aos",
-      "updateInBoober": "true",
-      "booberDeployId": "123",
-      "name": "reference",
-      "deployTag": "1.0.0-b1.5.3-flange-8.152.18"
+    "labels" : {
+      "app" : "reference",
+      "updatedBy" : "hero",
+      "affiliation" : "aos",
+      "updateInBoober" : "true",
+      "booberDeployId" : "123",
+      "name" : "reference",
+      "deployTag" : "1.0.0-b1.5.3-flange-8.152.18"
     },
-    "name": "reference",
-    "namespace": "aos-booberdev",
-    "ownerReferences": [
-      {
-        "apiVersion": "skatteetaten.no/v1",
-        "kind": "ApplicationDeployment",
-        "name": "reference",
-        "uid": "123-123"
-      }
-    ]
+    "name" : "reference",
+    "namespace" : "aos-booberdev",
+    "ownerReferences" : [ {
+      "apiVersion" : "skatteetaten.no/v1",
+      "kind" : "ApplicationDeployment",
+      "name" : "reference",
+      "uid" : "123-123"
+    } ]
   },
-  "spec": {
-    "replicas": 1,
-    "selector": {
-      "name": "reference"
+  "spec" : {
+    "replicas" : 1,
+    "selector" : {
+      "name" : "reference"
     },
-    "strategy": {
-      "rollingParams": {
-        "intervalSeconds": 1,
-        "maxSurge": "25%",
-        "maxUnavailable": 0,
-        "timeoutSeconds": 180,
-        "updatePeriodSeconds": 1
+    "strategy" : {
+      "rollingParams" : {
+        "intervalSeconds" : 1,
+        "maxSurge" : "25%",
+        "maxUnavailable" : 0,
+        "timeoutSeconds" : 180,
+        "updatePeriodSeconds" : 1
       },
-      "type": "Rolling"
+      "type" : "Rolling"
     },
-    "template": {
-      "metadata": {
-        "labels": {
-          "app": "reference",
-          "updatedBy": "hero",
-          "affiliation": "aos",
-          "updateInBoober": "true",
-          "booberDeployId": "123",
-          "name": "reference",
-          "deployTag": "1.0.0-b1.5.3-flange-8.152.18"
+    "template" : {
+      "metadata" : {
+        "labels" : {
+          "app" : "reference",
+          "updatedBy" : "hero",
+          "affiliation" : "aos",
+          "updateInBoober" : "true",
+          "booberDeployId" : "123",
+          "name" : "reference",
+          "deployTag" : "1.0.0-b1.5.3-flange-8.152.18"
         }
       },
-      "spec": {
-        "containers": [
-          {
-            "env": [
-              {
-                "name": "POD_NAME",
-                "valueFrom": {
-                  "fieldRef": {
-                    "apiVersion": "v1",
-                    "fieldPath": "metadata.name"
-                  }
-                }
-              },
-              {
-                "name": "POD_NAMESPACE",
-                "valueFrom": {
-                  "fieldRef": {
-                    "apiVersion": "v1",
-                    "fieldPath": "metadata.namespace"
-                  }
-                }
-              },
-              {
-                "name": "OPENSHIFT_CLUSTER",
-                "value": "utv"
-              },
-              {
-                "name": "APP_NAME",
-                "value": "reference"
-              },
-              {
-                "name": "SPLUNK_INDEX",
-                "value": "openshift-test"
-              },
-              {
-                "name": "ROUTE_NAME",
-                "value": "reference.ao.booberdev.utv.paas.skead.no"
-              },
-              {
-                "name": "ROUTE_URL",
-                "value": "http://reference.ao.booberdev.utv.paas.skead.no"
-              },
-              {
-                "name": "STS_CERTIFICATE_URL",
-                "value": "/u01/secrets/app/reference-cert/certificate.crt"
-              },
-              {
-                "name": "STS_PRIVATE_KEY_URL",
-                "value": "/u01/secrets/app/reference-cert/privatekey.key"
-              },
-              {
-                "name": "STS_KEYSTORE_DESCRIPTOR",
-                "value": "/u01/secrets/app/reference-cert/descriptor.properties"
-              },
-              {
-                "name": "VOLUME_REFERENCE_CERT",
-                "value": "/u01/secrets/app/reference-cert"
-              },
-              {
-                "name": "HTTP_PORT",
-                "value": "8080"
-              },
-              {
-                "name": "MANAGEMENT_HTTP_PORT",
-                "value": "8081"
-              },
-              {
-                "name": "JOLOKIA_HTTP_PORT",
-                "value": "8778"
+      "spec" : {
+        "containers" : [ {
+          "env" : [ {
+            "name" : "POD_NAME",
+            "valueFrom" : {
+              "fieldRef" : {
+                "apiVersion" : "v1",
+                "fieldPath" : "metadata.name"
               }
-            ],
-            "imagePullPolicy": "IfNotPresent",
-            "name": "reference-java",
-            "ports": [
-              {
-                "containerPort": 8080,
-                "name": "http",
-                "protocol": "TCP"
-              },
-              {
-                "containerPort": 8081,
-                "name": "management",
-                "protocol": "TCP"
-              },
-              {
-                "containerPort": 8778,
-                "name": "jolokia",
-                "protocol": "TCP"
+            }
+          }, {
+            "name" : "POD_NAMESPACE",
+            "valueFrom" : {
+              "fieldRef" : {
+                "apiVersion" : "v1",
+                "fieldPath" : "metadata.namespace"
               }
-            ],
-            "readinessProbe": {
-              "httpGet": {
-                "path": "/foo",
-                "port": 8080
-              },
-              "initialDelaySeconds": 10,
-              "timeoutSeconds": 1
+            }
+          }, {
+            "name" : "HTTP_PORT",
+            "value" : "8080"
+          }, {
+            "name" : "MANAGEMENT_HTTP_PORT",
+            "value" : "8081"
+          }, {
+            "name" : "JOLOKIA_HTTP_PORT",
+            "value" : "8778"
+          }, {
+            "name" : "OPENSHIFT_CLUSTER",
+            "value" : "utv"
+          }, {
+            "name" : "APP_NAME",
+            "value" : "reference"
+          }, {
+            "name" : "SPLUNK_INDEX",
+            "value" : "openshift-test"
+          }, {
+            "name" : "ROUTE_NAME",
+            "value" : "reference.ao.booberdev.utv.paas.skead.no"
+          }, {
+            "name" : "ROUTE_URL",
+            "value" : "http://reference.ao.booberdev.utv.paas.skead.no"
+          }, {
+            "name" : "STS_CERTIFICATE_URL",
+            "value" : "/u01/secrets/app/reference-cert/certificate.crt"
+          }, {
+            "name" : "STS_PRIVATE_KEY_URL",
+            "value" : "/u01/secrets/app/reference-cert/privatekey.key"
+          }, {
+            "name" : "STS_KEYSTORE_DESCRIPTOR",
+            "value" : "/u01/secrets/app/reference-cert/descriptor.properties"
+          }, {
+            "name" : "VOLUME_REFERENCE_CERT",
+            "value" : "/u01/secrets/app/reference-cert"
+          } ],
+          "imagePullPolicy" : "IfNotPresent",
+          "name" : "reference-java",
+          "ports" : [ {
+            "containerPort" : 8080,
+            "name" : "http",
+            "protocol" : "TCP"
+          }, {
+            "containerPort" : 8081,
+            "name" : "management",
+            "protocol" : "TCP"
+          }, {
+            "containerPort" : 8778,
+            "name" : "jolokia",
+            "protocol" : "TCP"
+          } ],
+          "readinessProbe" : {
+            "httpGet" : {
+              "path" : "/foo",
+              "port" : 8080
             },
-            "resources": {
-              "limits": {
-                "cpu": "2000m",
-                "memory": "512Mi"
-              },
-              "requests": {
-                "cpu": "10m",
-                "memory": "128Mi"
-              }
+            "initialDelaySeconds" : 10,
+            "timeoutSeconds" : 1
+          },
+          "resources" : {
+            "limits" : {
+              "cpu" : "2000m",
+              "memory" : "512Mi"
             },
-            "securityContext": {
-              "privileged": false
-            },
-            "terminationMessagePath": "/dev/termination-log",
-            "volumeMounts": [
-              {
-                "mountPath": "/u01/logs",
-                "name": "application-log-volume"
-              },
-              {
-                "mountPath": "/u01/secrets/app/reference-cert",
-                "name": "reference-cert"
-              }
-            ]
-          }
-        ],
-        "dnsPolicy": "ClusterFirst",
-        "restartPolicy": "Always",
-        "volumes": [
-          {
-            "name": "reference-cert",
-            "secret": {
-              "secretName": "reference-cert"
+            "requests" : {
+              "cpu" : "10m",
+              "memory" : "128Mi"
             }
           },
-          {
-            "emptyDir": {
-            },
-            "name": "application-log-volume"
+          "securityContext" : {
+            "privileged" : false
+          },
+          "terminationMessagePath" : "/dev/termination-log",
+          "volumeMounts" : [ {
+            "mountPath" : "/u01/logs",
+            "name" : "application-log-volume"
+          }, {
+            "mountPath" : "/u01/secrets/app/reference-cert",
+            "name" : "reference-cert"
+          } ]
+        } ],
+        "dnsPolicy" : "ClusterFirst",
+        "restartPolicy" : "Always",
+        "volumes" : [ {
+          "emptyDir" : { },
+          "name" : "application-log-volume"
+        }, {
+          "name" : "reference-cert",
+          "secret" : {
+            "secretName" : "reference-cert"
           }
-        ]
+        } ]
       }
     },
-    "triggers": [
-      {
-        "imageChangeParams": {
-          "automatic": true,
-          "containerNames": [
-            "reference-java"
-          ],
-          "from": {
-            "kind": "ImageStreamTag",
-            "name": "reference:default"
-          }
-        },
-        "type": "ImageChange"
-      }
-    ]
+    "triggers" : [ {
+      "imageChangeParams" : {
+        "automatic" : true,
+        "containerNames" : [ "reference-java" ],
+        "from" : {
+          "kind" : "ImageStreamTag",
+          "name" : "reference:default"
+        }
+      },
+      "type" : "ImageChange"
+    } ]
   }
 }

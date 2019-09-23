@@ -1,36 +1,33 @@
 {
-  "apiVersion": "image.openshift.io/v1",
-  "kind": "ImageStream",
-  "metadata": {
-    "labels": {
-      "app": "reference",
-      "updatedBy": "hero",
-      "affiliation": "aos",
-      "updateInBoober": "true",
-      "booberDeployId": "123",
-      "releasedVersion": "1.0.0-b1.5.3-flange-8.152.18"
+  "apiVersion" : "image.openshift.io/v1",
+  "kind" : "ImageStream",
+  "metadata" : {
+    "labels" : {
+      "releasedVersion" : "1.0.0-b1.5.3-flange-8.152.18",
+      "app" : "reference",
+      "updatedBy" : "hero",
+      "affiliation" : "aos",
+      "updateInBoober" : "true",
+      "booberDeployId" : "123",
+      "name" : "reference"
     },
-    "name": "reference",
-    "namespace": "aos-booberdev",
-    "ownerReferences": [
-      {
-        "apiVersion": "skatteetaten.no/v1",
-        "kind": "ApplicationDeployment",
-        "name": "reference",
-        "uid": "123-123"
-      }
-    ]
+    "name" : "reference",
+    "namespace" : "aos-booberdev",
+    "ownerReferences" : [ {
+      "apiVersion" : "skatteetaten.no/v1",
+      "kind" : "ApplicationDeployment",
+      "name" : "reference",
+      "uid" : "123-123"
+    } ]
   },
-  "spec": {
-    "dockerImageRepository": "docker-registry.aurora.sits.no:5000/no_skatteetaten_aurora_openshift/reference",
-    "tags": [
-      {
-        "from": {
-          "kind": "DockerImage",
-          "name": "docker-registry.aurora.sits.no:5000/no_skatteetaten_aurora_openshift/reference:1.0.0-b1.5.3-flange-8.152.18"
-        },
-        "name": "default"
-      }
-    ]
+  "spec" : {
+    "dockerImageRepository" : "docker-registry.aurora.sits.no:5000/no_skatteetaten_aurora_openshift/reference",
+    "tags" : [ {
+      "from" : {
+        "kind" : "DockerImage",
+        "name" : "docker-registry.aurora.sits.no:5000/no_skatteetaten_aurora_openshift/reference:1.0.0-b1.5.3-flange-8.152.18"
+      },
+      "name" : "default"
+    } ]
   }
 }

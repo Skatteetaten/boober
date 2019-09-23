@@ -3,6 +3,10 @@ package no.skatteetaten.aurora.boober.feature
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.*
+import io.fabric8.kubernetes.api.model.ConfigMap
+import io.fabric8.kubernetes.api.model.Secret
+import io.fabric8.kubernetes.api.model.Volume
+import io.fabric8.kubernetes.api.model.VolumeMount
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
@@ -11,12 +15,19 @@ import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.required
+import org.apache.commons.codec.binary.Base64
 import org.springframework.stereotype.Service
 
 @Service
-class MountFeature() : Feature {
+class MountFeature(
+        val vaultProvider: VaultProvider
+) : Feature {
     override fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler> {
         val mountKeys = header.applicationFiles.findSubKeys("mounts")
 
@@ -39,9 +50,19 @@ class MountFeature() : Feature {
 
     override fun generate(adc: AuroraDeploymentContext): Set<AuroraResource> {
 
-        val mounts = getMounts(adc).filter { !it.exist && it.type == MountType.ConfigMap && it.content != null }
+        val mounts = getMounts(adc)
+        val configMounts = mounts.filter { !it.exist && it.type == MountType.ConfigMap && it.content != null }
 
-        val configMaps = mounts.filter { it.type == MountType.ConfigMap }
+        val secrets = generateSecrets(mounts, adc)
+        val configMaps = generateConfigMaps(configMounts, adc)
+
+        return configMaps.addIfNotNull(secrets).map {
+            AuroraResource("${it.metadata.name}-${it.kind}", it)
+        }.toSet()
+    }
+
+    private fun generateConfigMaps(configMounts: List<Mount>, adc: AuroraDeploymentContext): List<ConfigMap> {
+        return configMounts.filter { it.type == MountType.ConfigMap }
                 .filter { it.content != null }
                 .map {
                     newConfigMap {
@@ -52,43 +73,50 @@ class MountFeature() : Feature {
                         data = it.content
                     }
                 }
+    }
 
+    private fun generateSecrets(mounts: List<Mount>, adc: AuroraDeploymentContext): List<Secret> {
+        val secretVaults = mounts.filter { !it.exist && it.type == MountType.Secret && it.secretVaultName != null }
 
-        return configMaps.map {
-            AuroraResource("${it.metadata.name}-${it.kind}", it)
-        }.toSet()
+        val vaultReponse = secretVaults.map {
+            VaultRequest(
+                    collectionName = adc.affiliation,
+                    name = it.secretVaultName!!
+            )
+        }.let {
+            vaultProvider.findVaultData(it)
+        }
+
+        return secretVaults.map {
+            newSecret {
+                metadata {
+                    name = it.volumeName.ensureStartWith(adc.name, "-")
+                    namespace = adc.namespace
+                }
+                data = vaultReponse.getVaultData(it.secretVaultName!!).mapValues { Base64.encodeBase64String(it.value) }
+            }
+        }
     }
 
     override fun modify(adc: AuroraDeploymentContext, resources: Set<AuroraResource>) {
 
-        val mounts: List<Mount> = getMounts(adc).filter { !it.exist && it.type == MountType.ConfigMap && it.content != null }
+        val mounts = getMounts(adc)
+
 
         if (mounts.isNotEmpty()) {
+
+            val volumes = mounts.podVolumes(adc.name)
+            val volumeMounts = mounts.volumeMount()
 
             val envVars = mounts.map {
                 "VOLUME_${it.volumeName}".toUpperCase() to it.path
             }.toMap().toEnvVars()
 
-            val volumeMounts = mounts.map {
-                newVolumeMount {
-                    name = it.mountName
-                    mountPath = it.path
-                }
-            }
-
-            val volume = mounts.map {
-                newVolume {
-                    name = it.mountName
-                    configMap {
-                        name = it.volumeName
-                    }
-                }
-            }
 
             resources.forEach {
                 if (it.resource.kind == "DeploymentConfig") {
                     val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
-                    dc.spec.template.spec.volumes.plusAssign(volume)
+                    dc.spec.template.spec.volumes.plusAssign(volumes)
                     dc.spec.template.spec.containers.forEach { container ->
                         container.volumeMounts.plusAssign(volumeMounts)
                         container.env.addAll(envVars)
@@ -133,4 +161,33 @@ class MountFeature() : Feature {
         }
     }
 
+}
+
+fun List<Mount>.volumeMount(): List<VolumeMount> {
+    return this.map {
+        newVolumeMount {
+            name = it.normalizeMountName()
+            mountPath = it.path
+        }
+    }
+}
+
+fun List<Mount>.podVolumes(appName: String): List<Volume> {
+    return this.map {
+        val volumeName = it.getNamespacedVolumeName(appName)
+        newVolume {
+            name = it.normalizeMountName()
+            when (it.type) {
+                MountType.ConfigMap -> configMap {
+                    name = volumeName
+                }
+                MountType.Secret -> secret {
+                    secretName = volumeName
+                }
+                MountType.PVC -> persistentVolumeClaim {
+                    claimName = volumeName
+                }
+            }
+        }
+    }
 }

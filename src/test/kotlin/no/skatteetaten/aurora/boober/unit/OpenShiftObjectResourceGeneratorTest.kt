@@ -29,6 +29,7 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
 
     lateinit var service: AuroraDeploymentSpecService
 
+    val vaultProvider: VaultProvider = mockk()
     val stsProvisioner: StsProvisioner = mockk()
     val databaseSchemaProvisioner: DatabaseSchemaProvisioner = mockk()
     val features: List<Feature> = listOf(
@@ -41,9 +42,9 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
             BuildFeature(),
             DatabaseFeature(databaseSchemaProvisioner),
             WebsealFeature(),
-            ConfigFeature(),
+            ConfigFeature(vaultProvider),
             StsFeature(stsProvisioner),
-            MountFeature()
+            MountFeature(vaultProvider)
     )
 
     @BeforeEach
@@ -58,46 +59,46 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
         every { openShiftResourceClient.get("template", "openshift", "atomhopper", true) } returns
                 ResponseEntity.ok(jacksonObjectMapper().readTree(template))
 
+        every { vaultProvider.findVaultDataSingle(any()) } returns
+                mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray())
+
+        every { vaultProvider.findVaultData(any()) } returns
+                VaultResults(mapOf("foo" to mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray())))
+
         val cert = StsProvisioner.createStsCert(ByteArrayInputStream(loadByteResource("keystore.jks")), "ca", "")
         val stsResult = StsProvisioningResult("commonName", cert, Instant.EPOCH)
         every { stsProvisioner.generateCertificate(any(), any(), any()) } returns stsResult
 
-
     }
 
-    private fun createDatabaseResult(appName: String, env: String): SchemaProvisionResults {
+    private fun createDatabaseResult(databaseNames: String, env: String): SchemaProvisionResults {
         val databaseInstance = DatabaseInstance(fallback = true, labels = mapOf("affiliation" to "aos"))
-        val details = SchemaRequestDetails(
-                schemaName = appName,
-                users = listOf(SchemaUser("SCHEMA", "a", "aos")),
-                engine = DatabaseEngine.ORACLE,
-                affiliation = "aos",
-                databaseInstance = databaseInstance
-        )
-        val request = SchemaForAppRequest(
-                env,
-                appName,
-                true,
-                details
-        )
-
-        val result = SchemaProvisionResults(
-                listOf(
-                        SchemaProvisionResult(
-                                request = request,
-                                dbhSchema = DbhSchema(
-                                        id = "123",
-                                        type = "SCHEMA",
-                                        databaseInstance = DatabaseSchemaInstance(1512, "localhost"),
-                                        jdbcUrl = "foo/bar/baz",
-                                        labels = emptyMap(),
-                                        users = listOf(DbhUser("username", "password", type = "SCHEMA"))
-                                ),
-                                responseText = "OK"
-                        )
-                )
-        )
-        return result
+        val databases = databaseNames.split((",")).map { appName ->
+            SchemaProvisionResult(
+                    request = SchemaForAppRequest(
+                            environment = env,
+                            application = appName,
+                            generate = true,
+                            details = SchemaRequestDetails(
+                                    schemaName = appName,
+                                    users = listOf(SchemaUser("SCHEMA", "a", "aos")),
+                                    engine = DatabaseEngine.ORACLE,
+                                    affiliation = "aos",
+                                    databaseInstance = databaseInstance
+                            )
+                    ),
+                    dbhSchema = DbhSchema(
+                            id = "123",
+                            type = "SCHEMA",
+                            databaseInstance = DatabaseSchemaInstance(1512, "localhost"),
+                            jdbcUrl = "foo/bar/baz",
+                            labels = emptyMap(),
+                            users = listOf(DbhUser("username", "password", type = "SCHEMA"))
+                    ),
+                    responseText = "OK"
+            )
+        }
+        return SchemaProvisionResults(databases)
     }
 
     enum class ResourceCreationTestData(
@@ -116,9 +117,16 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
                         name = "booberdev/aos-simple.json",
                         contents = """{ "version": "1.0.4"}""",
                         override = true
-                )
-        )
+                ))
         ),
+        BOOBERDEV_REFERANSE("booberdev", "reference"),
+
+        //This should really have two databases, but we only have one
+        WEBSEAL_SPROCKET("webseal", "sprocket", "sprocket,reference"),
+        BOOBERDEV_REFERANSE_WEB("booberdev", "reference-web"),
+        SECRETTEST_SIMPLE("secrettest", "aos-simple"),
+        RELEASE_SIMPLE("release", "aos-simple"),
+        SECRETMOUNT_SIMPLE("secretmount", "aos-simple"),
     }
 
 

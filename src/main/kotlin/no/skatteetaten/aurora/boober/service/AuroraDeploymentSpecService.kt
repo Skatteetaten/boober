@@ -163,13 +163,6 @@ class AuroraDeploymentSpecService(
         }
 
         return featureResources
-        /*
-        return featureAdc
-                .toList()
-                .fold(featureResources) { resources, (feature, adc): Pair<Feature, AuroraDeploymentSpec> ->
-                    feature.modify(adc, resources)
-                }
-         */
     }
 
 

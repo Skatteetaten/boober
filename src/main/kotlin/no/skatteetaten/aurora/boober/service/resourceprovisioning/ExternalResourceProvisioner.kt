@@ -40,7 +40,7 @@ class ExternalResourceProvisioner(
                 keys = secret.secretVaultKeys,
                 keyMappings = secret.keyMappings
             )
-            vaultProvider.findVaultData(request)[secret.file]?.let { file ->
+            vaultProvider.findVaultDataSingle(request)[secret.file]?.let { file ->
                 val properties = filterProperties(file, secret.secretVaultKeys, secret.keyMappings)
                 properties.map {
                     it.key.toString() to it.value.toString().toByteArray()
