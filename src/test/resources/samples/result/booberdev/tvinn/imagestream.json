@@ -11,6 +11,7 @@
       "name" : "tvinn"
     },
     "name" : "tvinn",
+    "namespace" : "aos-booberdev",
     "ownerReferences" : [ {
       "apiVersion" : "skatteetaten.no/v1",
       "kind" : "ApplicationDeployment",

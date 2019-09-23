@@ -1,9 +1,6 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fasterxml.jackson.module.kotlin.convertValue
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.openshift.*
-import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.Route
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
@@ -95,6 +92,8 @@ class RouteFeature(val routeSuffix: String = ".foo.bar") : Feature {
             )
         }
     }
+
+    // TODO: Validation
 
     override fun modify(adc: AuroraDeploymentContext, resources: Set<AuroraResource>) {
         getRoute(adc).firstOrNull()?.let {

@@ -12,6 +12,7 @@ import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.feature.*
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.DatabaseInstance
 import no.skatteetaten.aurora.boober.service.*
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.*
@@ -41,7 +42,8 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
             DatabaseFeature(databaseSchemaProvisioner),
             WebsealFeature(),
             ConfigFeature(),
-            StsFeature(stsProvisioner)
+            StsFeature(stsProvisioner),
+            MountFeature()
     )
 
     @BeforeEach
@@ -102,12 +104,21 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
             val env: String,
             val appName: String,
             val dbName: String = appName,
-            val aditionalFile: String? = null
+            val additionalFile: String? = null,
+            val overrides: List<AuroraConfigFile> = emptyList()
     ) {
         DEPLOY("booberdev", "console", "openshift-console-api"),
         DEVELOPMENT("mounts", "aos-simple"),
-        LOCAL_TEMPLATE("booberdev", "tvinn", aditionalFile = "templates/atomhopper.json"),
-        //TEMPLATE("booberdev", "oompa")
+        LOCAL_TEMPLATE("booberdev", "tvinn", additionalFile = "templates/atomhopper.json"),
+        BOOBERDEV_SIMPLE(
+                "booberdev", "aos-simple", overrides = listOf(
+                AuroraConfigFile(
+                        name = "booberdev/aos-simple.json",
+                        contents = """{ "version": "1.0.4"}""",
+                        override = true
+                )
+        )
+        ),
     }
 
 
@@ -116,10 +127,10 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
     fun `generate resources for deploy`(test: ResourceCreationTestData) {
 
         val aid = ApplicationDeploymentRef(test.env, test.appName)
-        val auroraConfig = createAuroraConfig(aid, AFFILIATION, test.aditionalFile)
+        val auroraConfig = createAuroraConfig(aid, AFFILIATION, test.additionalFile)
         every { databaseSchemaProvisioner.provisionSchemas(any()) } returns createDatabaseResult(test.dbName, test.env)
 
-        val resources = service.createResources(auroraConfig, aid, deployId = "123")
+        val resources = service.createResources(auroraConfig, aid, deployId = "123", overrideFiles = test.overrides)
         val resultFiles = getResultFiles(aid)
         val keys = resultFiles.keys
         val generatedObjects = resources.map {

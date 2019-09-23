@@ -140,7 +140,7 @@ class AuroraDeploymentSpecService(
         }
 
 
-        //deep validation
+        // TODO: fix validation, send in deep flag or not
         /*
         val errors: Map<Feature, Exception> = featureAdc.mapNotNull {
             try {

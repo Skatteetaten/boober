@@ -65,6 +65,9 @@ class DeploymentConfigFeature() : Feature {
                 dc.metadata.labels = it.resource.metadata.labels?.addIfNotNull(dcLabels) ?: dcLabels
                 dc.metadata.annotations = it.resource.metadata.annotations?.addIfNotNull(dcAnnotations) ?: dcAnnotations
 
+                if(adc["pause"]) {
+                    dc.spec.replicas = 0
+                }
                 dc.spec.template.spec.containers.forEach { container ->
                     container.env.addAll(envVars)
                     container.resources {

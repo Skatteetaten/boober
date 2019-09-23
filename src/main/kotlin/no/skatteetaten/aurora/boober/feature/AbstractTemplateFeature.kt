@@ -63,6 +63,7 @@ abstract class AbstractTemplateFeature() : Feature {
 
         return templateResult.map {
             val resource: HasMetadata = jacksonObjectMapper().convertValue(it)
+            resource.metadata.namespace=adc.namespace
             AuroraResource("${resource.metadata.name}-${resource.kind}", resource)
         }.toSet()
     }
