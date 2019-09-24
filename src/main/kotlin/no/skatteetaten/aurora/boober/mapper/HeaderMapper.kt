@@ -1,16 +1,8 @@
-package no.skatteetaten.aurora.boober.mapper.v1
+package no.skatteetaten.aurora.boober.mapper
 
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
-import no.skatteetaten.aurora.boober.mapper.v1.AuroraDeploymentSpecConfigFieldValidator.Companion.namePattern
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
-import no.skatteetaten.aurora.boober.model.AuroraDeployHeader
-import no.skatteetaten.aurora.boober.model.Permission
-import no.skatteetaten.aurora.boober.model.Permissions
-import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.feature.InsecurePolicy
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpecConfigFieldValidator.Companion.namePattern
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService
 import no.skatteetaten.aurora.boober.utils.durationString
 import no.skatteetaten.aurora.boober.utils.notBlank
@@ -18,8 +10,21 @@ import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.pattern
 import no.skatteetaten.aurora.boober.utils.removeExtension
 import no.skatteetaten.aurora.boober.utils.startsWith
-import org.springframework.boot.convert.DurationStyle
 
+
+enum class ApplicationPlatform(val baseImageName:String, val baseImageVersion:Int, val insecurePolicy: InsecurePolicy) {
+    java("wingnut8", 1, InsecurePolicy.None),
+    web("wrench8", 1, InsecurePolicy.Redirect)
+}
+
+
+enum class TemplateType {
+    deploy, development, localTemplate, template
+}
+
+
+
+val AuroraDeploymentContext.applicationPlatform: ApplicationPlatform get() = this["applicationPlatform"]
 /**
  * The header contains the sources that are required to parse the AuroraConfig files and create a merged file for a
  * particular application. This merged file is then the subject to further parsing and validation and may in it self
@@ -38,11 +43,11 @@ class HeaderMapper(
 
     val handlers = setOf(
         AuroraConfigFieldHandler("schemaVersion", validator = { it.oneOf(VALID_SCHEMA_VERSIONS) }),
-        AuroraConfigFieldHandler("type", validator = { it.oneOf(TemplateType.values().map { it.toString() }) }),
+        AuroraConfigFieldHandler("type", validator = { node -> node.oneOf(TemplateType.values().map { it.toString() }) }),
         AuroraConfigFieldHandler(
             "applicationPlatform",
             defaultValue = "java",
-            validator = { it.oneOf(AuroraDeploymentSpecService.APPLICATION_PLATFORM_HANDLERS.keys.toList()) }),
+            validator = { node -> node.oneOf(ApplicationPlatform.values().map{ it.toString()}) }),
         AuroraConfigFieldHandler("affiliation", validator = {
             it.pattern(
                 "^[a-z]{1,10}$",
@@ -72,29 +77,6 @@ class HeaderMapper(
         })
     )
 
-    fun createHeader(
-        auroraDeploymentSpec: AuroraDeploymentSpec,
-        applicationHandler: ApplicationPlatformHandler
-    ): AuroraDeployHeader {
-
-        val env = AuroraDeployEnvironment(
-            affiliation = auroraDeploymentSpec["affiliation"],
-            envName = auroraDeploymentSpec.getOrNull("env/name")
-                ?: auroraDeploymentSpec["envName"],
-            ttl = auroraDeploymentSpec.getOrNull<String>("env/ttl")
-                ?.let { DurationStyle.SIMPLE.parse(it) },
-            permissions = extractPermissions(auroraDeploymentSpec)
-        )
-
-        return AuroraDeployHeader(
-            env,
-            auroraDeploymentSpec["type"],
-            applicationHandler,
-            auroraDeploymentSpec["name"],
-            auroraDeploymentSpec["cluster"],
-            auroraDeploymentSpec.getOrNull<String>("segment")
-        )
-    }
 
     fun extractPermissions(deploymentSpec: AuroraDeploymentSpec): Permissions {
 
@@ -115,3 +97,15 @@ class HeaderMapper(
         return file ?: throw IllegalArgumentException("Should find applicationFile $fileName")
     }
 }
+
+
+
+data class Permissions(
+        val admin: Permission,
+        val view: Permission? = null
+)
+
+data class Permission(
+        val groups: Set<String>?,
+        val users: Set<String> = emptySet()
+)

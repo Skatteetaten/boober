@@ -11,16 +11,16 @@ import com.fkorotkov.openshift.strategy
 import com.fkorotkov.openshift.to
 import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.openshift.api.model.BuildConfig
-import no.skatteetaten.aurora.boober.model.AuroraBuild
+import no.skatteetaten.aurora.boober.feature.AuroraBuild
 
 object BuildConfigGenerator {
 
     fun generate(
-        source: AuroraBuild,
-        buildName: String,
-        buildLabels: Map<String, String>,
-        ownerReference: OwnerReference,
-        buildNamespace: String
+            source: AuroraBuild,
+            buildName: String,
+            buildLabels: Map<String, String>,
+            ownerReference: OwnerReference,
+            buildNamespace: String
     ): BuildConfig {
         return newBuildConfig {
             metadata {

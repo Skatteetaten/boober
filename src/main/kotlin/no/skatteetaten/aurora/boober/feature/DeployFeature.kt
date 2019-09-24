@@ -7,11 +7,11 @@ import io.fabric8.kubernetes.api.model.Probe
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
-import no.skatteetaten.aurora.boober.mapper.v1.PortNumbers
+import no.skatteetaten.aurora.boober.mapper.PortNumbers
+import no.skatteetaten.aurora.boober.mapper.TemplateType
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
-import no.skatteetaten.aurora.boober.service.internal.ContainerGenerator.auroraContainer
 import no.skatteetaten.aurora.boober.utils.*
 import org.springframework.beans.factory.annotation.Value
 
@@ -326,4 +326,44 @@ class DeployFeature(
             }
         }
     }
+}
+data class HttpEndpoint(
+        val path: String,
+        val port: Int?
+)
+
+fun auroraContainer(block: Container.() -> Unit = {}): Container {
+    val instance = Container()
+    instance.block()
+    instance.terminationMessagePath = "/dev/termination-log"
+    instance.imagePullPolicy = "IfNotPresent"
+    instance.securityContext {
+        privileged = false
+    }
+    instance.volumeMounts = listOf(newVolumeMount {
+        name = "application-log-volume"
+        mountPath = "/u01/logs"
+    }) + instance.volumeMounts
+
+    instance.env = listOf(
+            newEnvVar {
+                name = "POD_NAME"
+                valueFrom {
+                    fieldRef {
+                        apiVersion = "v1"
+                        fieldPath = "metadata.name"
+                    }
+                }
+            },
+            newEnvVar {
+                name = "POD_NAMESPACE"
+                valueFrom {
+                    fieldRef {
+                        apiVersion = "v1"
+                        fieldPath = "metadata.namespace"
+                    }
+                }
+            }
+    ) + instance.env
+    return instance
 }

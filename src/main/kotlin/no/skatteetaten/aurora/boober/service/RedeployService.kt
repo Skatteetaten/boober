@@ -1,9 +1,12 @@
 package no.skatteetaten.aurora.boober.service
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
 import io.fabric8.openshift.api.model.ImageStreamImport
-import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.mapper.TemplateType
 import no.skatteetaten.aurora.boober.model.openshift.isDifferentImage
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
@@ -20,35 +23,34 @@ import org.springframework.stereotype.Service
 
 @Service
 class RedeployService(
-    val openShiftClient: OpenShiftClient,
-    val openShiftObjectGenerator: OpenShiftObjectGenerator
+        val openShiftClient: OpenShiftClient
 ) {
 
     data class RedeployResult @JvmOverloads constructor(
-        val openShiftResponses: List<OpenShiftResponse> = listOf(),
-        val success: Boolean = true,
-        val message: String? = null
+            val openShiftResponses: List<OpenShiftResponse> = listOf(),
+            val success: Boolean = true,
+            val message: String? = null
     ) {
 
         companion object {
             fun fromOpenShiftResponses(
-                openShiftResponses: List<OpenShiftResponse>,
-                extraMessage: String = ""
+                    openShiftResponses: List<OpenShiftResponse>,
+                    extraMessage: String = ""
             ): RedeployResult {
                 val success = openShiftResponses.all { it.success }
                 val message = if (success) "succeeded." else "failed."
                 return RedeployResult(
-                    openShiftResponses = openShiftResponses,
-                    success = success,
-                    message = "$extraMessage $message"
+                        openShiftResponses = openShiftResponses,
+                        success = success,
+                        message = "$extraMessage $message"
                 )
             }
         }
     }
 
     fun triggerRedeploy(
-        openShiftResponses: List<OpenShiftResponse>,
-        type: TemplateType
+            openShiftResponses: List<OpenShiftResponse>,
+            type: TemplateType
     ): RedeployResult {
 
         if (type == TemplateType.development) {
@@ -67,7 +69,7 @@ class RedeployService(
         val wasPaused = oldDcResource?.spec?.replicas == 0
 
         val deploymentConfig = dcResource?.responseBody?.let { it.convert<DeploymentConfig>() }
-            ?: throw IllegalArgumentException("Missing DeploymentConfig")
+                ?: throw IllegalArgumentException("Missing DeploymentConfig")
 
         if (isResource?.command?.operationType == OperationType.CREATE) {
             return RedeployResult(message = "New application version found.")
@@ -94,8 +96,8 @@ class RedeployService(
         val namespace = imageStream.metadata.namespace
         val deploymentRequestResponse = performDeploymentRequest(namespace, deploymentConfig.metadata.name)
         return RedeployResult.fromOpenShiftResponses(
-            listOf(deploymentRequestResponse),
-            "$versionMessage Config changes deployment"
+                listOf(deploymentRequestResponse),
+                "$versionMessage Config changes deployment"
         )
     }
 
@@ -107,10 +109,23 @@ class RedeployService(
     }
 
     fun performDeploymentRequest(namespace: String, name: String): OpenShiftResponse {
-        val deploymentRequest = openShiftObjectGenerator.generateDeploymentRequest(name)
+        val deploymentRequest = generateDeploymentRequest(name)
         val url = "${deploymentRequest.apiBaseUrl}/namespaces/$namespace/deploymentconfigs/$name/instantiate"
         val command = OpenshiftCommand(OperationType.CREATE, payload = deploymentRequest, url = url)
 
         return openShiftClient.performOpenShiftCommand(namespace, command)
+    }
+
+    fun generateDeploymentRequest(name: String): JsonNode {
+
+        val deploymentRequest = mapOf(
+                "kind" to "DeploymentRequest",
+                "apiVersion" to "apps.openshift.io/v1",
+                "name" to name,
+                "latest" to true,
+                "force" to true
+        )
+
+        return jacksonObjectMapper().convertValue(deploymentRequest)
     }
 }

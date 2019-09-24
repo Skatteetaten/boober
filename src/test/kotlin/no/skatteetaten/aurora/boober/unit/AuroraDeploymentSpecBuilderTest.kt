@@ -1,21 +1,15 @@
 package no.skatteetaten.aurora.boober.unit
 
-import assertk.all
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotNull
-import assertk.assertions.isNull
-import assertk.assertions.isSuccess
 import assertk.assertions.message
 import assertk.assertions.messageContains
+import no.skatteetaten.aurora.boober.feature.DatabaseInstance
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
-import no.skatteetaten.aurora.boober.mapper.v1.DatabaseFlavor
-import no.skatteetaten.aurora.boober.mapper.v1.DatabasePermission.READ
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.adr
-import no.skatteetaten.aurora.boober.model.Database
-import no.skatteetaten.aurora.boober.model.DatabaseInstance
 import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -24,6 +18,7 @@ import org.junit.jupiter.params.provider.EnumSource
 
 class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
 
+    /*
     lateinit var auroraConfigJson: MutableMap<String, String>
 
     @BeforeEach
@@ -414,4 +409,6 @@ class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
 
         assertThat(spec.deploy?.artifactId).isEqualTo("aos-simple")
     }
+
+     */
 }

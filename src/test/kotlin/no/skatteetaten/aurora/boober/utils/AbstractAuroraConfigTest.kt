@@ -6,7 +6,6 @@ import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.adr
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService
 import java.io.File
 
@@ -194,10 +193,5 @@ abstract class AbstractAuroraConfigTest : ResourceLoader() {
         return jsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(content)
     }
 
-    fun createDeploymentSpec(
-        auroraConfigJson: Map<String, String>,
-        ref: ApplicationDeploymentRef
-    ): AuroraDeploymentSpecInternal {
-        return AuroraDeploymentSpecService.createAuroraDeploymentSpecInternal(createAuroraConfig(auroraConfigJson), ref)
-    }
+
 }

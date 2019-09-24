@@ -5,12 +5,6 @@ import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newSecret
 import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.kubernetes.api.model.Secret
-import no.skatteetaten.aurora.boober.feature.name
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
-import no.skatteetaten.aurora.boober.model.Database
-import no.skatteetaten.aurora.boober.model.Mount
-import no.skatteetaten.aurora.boober.model.MountType
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResult
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResults
@@ -122,31 +116,7 @@ object DbhSecretGenerator {
     }
 }
 
-fun Database.createDbEnv(envName: String): List<Pair<String, String>> {
-    val path = "/u01/secrets/app/${this.name.toLowerCase()}-db"
-    val envName = envName.replace("-", "_").toUpperCase()
 
-    return listOf(
-            envName to "$path/info",
-            "${envName}_PROPERTIES" to "$path/db.properties"
-    )
-}
-
-fun SchemaProvisionResults.createDatabaseMounts(
-        deploymentSpecInternal: AuroraDeploymentSpecInternal
-): List<Mount> {
-    return results.map {
-        val mountPath = "${it.request.details.schemaName}-db".toLowerCase()
-        Mount(
-                path = "/u01/secrets/app/$mountPath",
-                type = MountType.Secret,
-                mountName = mountPath,
-                volumeName = it.createName(deploymentSpecInternal.name),
-                exist = true,
-                content = null
-        )
-    }
-}
 
 
 

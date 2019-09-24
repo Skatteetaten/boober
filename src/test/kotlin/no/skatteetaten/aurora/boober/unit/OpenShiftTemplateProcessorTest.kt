@@ -1,20 +1,6 @@
 package no.skatteetaten.aurora.boober.unit
 
-import assertk.assertThat
-import assertk.assertions.isEqualTo
-import assertk.assertions.isNotEmpty
-import assertk.assertions.isSuccess
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.readValue
-import io.mockk.every
-import io.mockk.mockk
-import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.service.OpenShiftTemplateProcessor
-import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
-import no.skatteetaten.aurora.boober.utils.jsonMapper
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
 
 // TODO: reimplement
 class OpenShiftTemplateProcessorTest : ResourceLoader() {

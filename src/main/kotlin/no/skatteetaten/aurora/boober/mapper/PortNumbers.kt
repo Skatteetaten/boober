@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.mapper.v1
+package no.skatteetaten.aurora.boober.mapper
 
 object PortNumbers {
 

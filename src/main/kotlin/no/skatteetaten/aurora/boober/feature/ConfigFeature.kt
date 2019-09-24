@@ -7,11 +7,9 @@ import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
-import no.skatteetaten.aurora.boober.mapper.v1.convertValueToString
-import no.skatteetaten.aurora.boober.mapper.v1.findConfigFieldHandlers
-import no.skatteetaten.aurora.boober.mapper.v1.findSubKeys
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
-import no.skatteetaten.aurora.boober.model.AuroraSecret
+import no.skatteetaten.aurora.boober.mapper.convertValueToString
+import no.skatteetaten.aurora.boober.mapper.findConfigFieldHandlers
+import no.skatteetaten.aurora.boober.mapper.findSubKeys
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
@@ -65,6 +63,7 @@ class ConfigFeature(
                 .addIfNotNull(validateSecretNames(secrets))
                 .addIfNotNull(validateKeyMappings(secrets))
                 .addIfNotNull(validateSecretVaultKeys(secrets, adc.affiliation))
+                .addIfNotNull(validateSecretVaultFiles(secrets, adc.affiliation))
                 .addIfNotNull(validateDuplicateSecretEnvNames(secrets))
     }
 
@@ -335,3 +334,12 @@ class ConfigFeature(
     private fun getSecretVaultKeys(auroraDeploymentSpec: AuroraDeploymentContext): List<String> =
             auroraDeploymentSpec.getOrNull("secretVault/keys") ?: listOf()
 }
+
+data class AuroraSecret(
+        val secretVaultName: String,
+        val secretVaultKeys: List<String>,
+        val keyMappings: Map<String, String>?,
+        val file: String,
+        val name: String
+
+)

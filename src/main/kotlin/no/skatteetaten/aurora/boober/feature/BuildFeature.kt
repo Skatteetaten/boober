@@ -7,16 +7,23 @@ import com.fkorotkov.openshift.*
 import io.fabric8.openshift.api.model.BuildConfig
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
-import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.mapper.*
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import org.springframework.stereotype.Service
+
+data class AuroraBuild(
+        val baseName: String,
+        val baseVersion: String,
+        val builderName: String,
+        val builderVersion: String,
+        val groupId: String,
+        val artifactId: String,
+        val version: String,
+        val outputKind: String,
+        val outputName: String,
+        val applicationPlatform: String
+)
 
 // TODO: Abstract build
 @Service
@@ -26,15 +33,31 @@ class BuildFeature() : Feature {
     }
 
     override fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler> {
+
+        val applicationPlatform: ApplicationPlatform = header.applicationPlatform
         return gav(header.applicationFiles, header.adr) + setOf(
                 AuroraConfigFieldHandler("builder/name", defaultValue = "architect"),
                 AuroraConfigFieldHandler("builder/version", defaultValue = "1"),
-                AuroraConfigFieldHandler("baseImage/name", defaultValue = "wingnut8"),
-                AuroraConfigFieldHandler("baseImage/version", defaultValue = "1")
+                AuroraConfigFieldHandler("baseImage/name", defaultValue = applicationPlatform.baseImageName),
+                AuroraConfigFieldHandler("baseImage/version", defaultValue = applicationPlatform.baseImageVersion)
         )
     }
 
     override fun generate(adc: AuroraDeploymentContext): Set<AuroraResource> {
+        /*
+        return AuroraBuild(
+            applicationPlatform = auroraDeploymentSpec["applicationPlatform"],
+            baseName = auroraDeploymentSpec["baseImage/name"],
+            baseVersion = auroraDeploymentSpec["baseImage/version"],
+            builderName = auroraDeploymentSpec["builder/name"],
+            builderVersion = auroraDeploymentSpec["builder/version"],
+            version = auroraDeploymentSpec["version"],
+            groupId = auroraDeploymentSpec["groupId"],
+            artifactId = auroraDeploymentSpec["artifactId"],
+            outputKind = "ImageStreamTag",
+            outputName = "$name:latest"
+        )
+         */
         return setOf(
                 AuroraResource("${adc.name}-bc", createBuild(adc))
         )

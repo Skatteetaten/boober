@@ -8,9 +8,7 @@ import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
 import io.fabric8.openshift.api.model.ImageStreamImport
 import io.fabric8.openshift.api.model.Route
-import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
-import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.mapper.TemplateType
 import no.skatteetaten.aurora.boober.model.openshift.findErrorMessage
 import no.skatteetaten.aurora.boober.service.internal.ImageStreamImportGenerator
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -21,7 +19,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OperationType.CREATE
 import no.skatteetaten.aurora.boober.service.openshift.OperationType.DELETE
 import no.skatteetaten.aurora.boober.service.openshift.OperationType.UPDATE
 import no.skatteetaten.aurora.boober.service.openshift.mergeWithExistingResource
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.convert
 import no.skatteetaten.aurora.boober.utils.deploymentConfig
@@ -40,41 +37,12 @@ import org.springframework.stereotype.Service
 
 @Service
 class OpenShiftCommandService(
-    val openShiftClient: OpenShiftClient,
-    val openShiftObjectGenerator: OpenShiftObjectGenerator
+    val openShiftClient: OpenShiftClient
 ) {
 
-    fun generateProjectRequest(environment: AuroraDeployEnvironment): OpenshiftCommand {
 
-        val projectRequest = openShiftObjectGenerator.generateProjectRequest(environment)
-        return createOpenShiftCommand(
-            newResource = projectRequest,
-            mergeWithExistingResource = false,
-            retryGetResourceOnFailure = false
-        )
-    }
 
-    fun generateNamespace(environment: AuroraDeployEnvironment): OpenshiftCommand {
-        val namespace = openShiftObjectGenerator.generateNamespace(environment)
-        return createOpenShiftCommand(
-            newResource = namespace,
-            mergeWithExistingResource = true,
-            retryGetResourceOnFailure = true
-        )
-    }
-
-    fun generateRolebindings(environment: AuroraDeployEnvironment): List<OpenshiftCommand> {
-        return openShiftObjectGenerator.generateRolebindings(environment.permissions, environment.namespace)
-            .map {
-                createOpenShiftCommand(
-                    namespace = environment.namespace,
-                    newResource = it,
-                    mergeWithExistingResource = true,
-                    retryGetResourceOnFailure = true
-                )
-            }
-    }
-
+    /* TODO: Fix
     fun generateOpenshiftObjects(
         deployId: String,
         deploymentSpecInternal: AuroraDeploymentSpecInternal,
@@ -93,13 +61,13 @@ class OpenShiftCommandService(
         )
 
         return orderObjects(unorderedObjects, deploymentSpecInternal.type, namespace, mergeWithExistingResource)
-    }
+    } */
 
     fun orderObjects(
-        objects: List<JsonNode>,
-        templateType: TemplateType,
-        namespace: String,
-        mergeWithExistingResource: Boolean
+            objects: List<JsonNode>,
+            templateType: TemplateType,
+            namespace: String,
+            mergeWithExistingResource: Boolean
     ): List<JsonNode> {
         // we cannot asume any order of the commands.
         val objectsWithoutISAndDc: List<JsonNode> =

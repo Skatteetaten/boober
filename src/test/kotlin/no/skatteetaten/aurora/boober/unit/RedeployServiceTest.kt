@@ -9,12 +9,9 @@ import assertk.assertions.isInstanceOf
 import assertk.assertions.isTrue
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
-import com.fasterxml.jackson.module.kotlin.convertValue
-import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
-import no.skatteetaten.aurora.boober.model.TemplateType
-import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
+import no.skatteetaten.aurora.boober.mapper.TemplateType
 import no.skatteetaten.aurora.boober.service.RedeployService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
@@ -23,8 +20,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.OpenShiftTestDataBuilders.deploymentConfig
 import no.skatteetaten.aurora.boober.utils.OpenShiftTestDataBuilders.imageStream
 import no.skatteetaten.aurora.boober.utils.OpenShiftTestDataBuilders.imageStreamImportResponse
-import no.skatteetaten.aurora.boober.utils.jsonMapper
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class RedeployServiceTest {
@@ -32,32 +27,16 @@ class RedeployServiceTest {
     val valaultImageHash = "123"
     val emptyJsonNode = NullNode.getInstance()
 
-    val deploymentRequest = mapOf(
-        "kind" to "DeploymentRequest",
-        "apiVersion" to "apps.openshift.io/v1",
-        "name" to "foobar",
-        "latest" to true,
-        "force" to true
-    )
 
-    val deploymentRequestNode: JsonNode = jsonMapper().convertValue(deploymentRequest)
+
 
     val imageStream = imageStream()
     val deploymentConfig = deploymentConfig()
 
-    val openShiftObjectGenerator = mockk<OpenShiftObjectGenerator>()
     val openShiftClient = mockk<OpenShiftClient>()
 
-    @BeforeEach
-    fun setup() {
-        clearAllMocks()
-        every {
-            openShiftObjectGenerator.generateDeploymentRequest("foobar")
-        } returns deploymentRequestNode
-    }
-
     val redeployService =
-        RedeployService(openShiftClient, openShiftObjectGenerator)
+        RedeployService(openShiftClient)
 
     @Test
     fun `Should not run explicit deploy for development type`() {

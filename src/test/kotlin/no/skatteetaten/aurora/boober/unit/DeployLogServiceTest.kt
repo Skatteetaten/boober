@@ -107,6 +107,7 @@ class DeployLogServiceTest : AbstractAuroraConfigTest() {
         }.isNotNull().isFailure().isInstanceOf(HttpClientErrorException::class)
     }
 
+
     private fun createDeployResult() = listOf(
         AuroraDeployResult(
             command = ApplicationDeploymentCommand(
@@ -114,7 +115,7 @@ class DeployLogServiceTest : AbstractAuroraConfigTest() {
                 applicationDeploymentRef = ApplicationDeploymentRef("foo", "bar"),
                 auroraConfig = AuroraConfigRef("test", "master", "123")
             ),
-            auroraDeploymentSpecInternal = createDeploymentSpec(defaultAuroraConfig(), DEFAULT_AID),
+            auroraDeploymentSpecInternal = null, //TOOD: fix
             deployId = deployId,
             reason = "DONE"
         )

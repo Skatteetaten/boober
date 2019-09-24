@@ -11,7 +11,7 @@ import io.fabric8.openshift.api.model.Route
 object RouteGenerator {
 
     fun generateRoute(
-        source: no.skatteetaten.aurora.boober.model.Route,
+        source: no.skatteetaten.aurora.boober.feature.Route,
         serviceName: String,
         routeSuffix: String,
         routeLabels: Map<String, String>,

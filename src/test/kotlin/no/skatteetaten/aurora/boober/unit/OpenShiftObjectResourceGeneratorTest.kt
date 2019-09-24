@@ -13,7 +13,6 @@ import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.feature.*
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.DatabaseInstance
 import no.skatteetaten.aurora.boober.service.*
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.*
@@ -22,7 +21,6 @@ import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
-import org.springframework.http.ResponseEntity
 import java.io.ByteArrayInputStream
 import java.time.Instant
 
@@ -54,7 +52,6 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
     fun setupTest() {
         service = AuroraDeploymentSpecService(
                 auroraConfigService = mockk(),
-                aphBeans = emptyList(),
                 featuers = features
         )
         val template: String = this.javaClass.getResource("/samples/config/templates/atomhopper.json").readText()

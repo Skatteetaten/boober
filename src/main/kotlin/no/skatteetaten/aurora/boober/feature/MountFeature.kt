@@ -10,10 +10,7 @@ import io.fabric8.kubernetes.api.model.VolumeMount
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
-import no.skatteetaten.aurora.boober.mapper.v1.findSubKeys
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
-import no.skatteetaten.aurora.boober.model.Mount
-import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.mapper.findSubKeys
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
@@ -228,4 +225,32 @@ fun List<Mount>.podVolumes(appName: String): List<Volume> {
             }
         }
     }
+}
+
+enum class MountType(val kind: String) {
+    ConfigMap("configmap"),
+    Secret("secret"),
+    PVC("persistentvolumeclaim")
+}
+
+data class Mount(
+        val path: String,
+        val type: MountType,
+        val mountName: String,
+        val volumeName: String,
+        val exist: Boolean,
+        val content: Map<String, String>? = null,
+        val secretVaultName: String? = null,
+        val targetContainer: String? = null
+) {
+    fun getNamespacedVolumeName(appName: String): String {
+        val name = if (exist) {
+            this.volumeName
+        } else {
+            this.volumeName.ensureStartWith(appName, "-")
+        }
+        return name.replace("_", "-").toLowerCase()
+    }
+
+    fun normalizeMountName() = mountName.replace("_", "-").toLowerCase()
 }

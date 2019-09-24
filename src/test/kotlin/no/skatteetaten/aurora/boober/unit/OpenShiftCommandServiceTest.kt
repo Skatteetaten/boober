@@ -10,7 +10,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import no.skatteetaten.aurora.boober.service.OpenShiftCommandService
-import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
@@ -23,13 +22,12 @@ class OpenShiftCommandServiceTest : ResourceLoader() {
 
     private val namespace = "fragleberget"
     private val openshiftClient = mockk<OpenShiftClient>()
-    private val generator = mockk<OpenShiftObjectGenerator>()
 
-    private val service = OpenShiftCommandService(openshiftClient, generator)
+    private val service = OpenShiftCommandService(openshiftClient)
 
     @AfterEach
     fun tearDown() {
-        clearMocks(openshiftClient, generator)
+        clearMocks(openshiftClient)
     }
 
     @Test

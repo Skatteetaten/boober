@@ -9,9 +9,6 @@ import com.fkorotkov.openshift.metadata
 import com.fkorotkov.openshift.newProjectRequest
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
-import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
-import no.skatteetaten.aurora.boober.model.Permissions
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.service.internal.RolebindingGenerator
@@ -28,6 +25,7 @@ class EnvironmentFeature(val openShiftClient: OpenShiftClient) : Feature {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
+    /*
     fun generateNamespace(environment: AuroraDeployEnvironment): JsonNode {
 
         val namespace = newNamespace {
@@ -100,5 +98,5 @@ class EnvironmentFeature(val openShiftClient: OpenShiftClient) : Feature {
 
         return listOf(admin).addIfNotNull(view).map { jacksonObjectMapper().convertValue<JsonNode>(it) }
     }
-
+*/
 }

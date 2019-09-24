@@ -8,6 +8,7 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.filterNullValues
 import org.springframework.stereotype.Service
 
+// TODO: Integration with webseal provisioner
 @Service
 class WebsealFeature() : Feature {
     override fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler> {

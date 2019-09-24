@@ -1,24 +1,11 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.module.kotlin.convertValue
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.OwnerReference
-import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder
-import no.skatteetaten.aurora.boober.feature.cluster
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
-import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
-import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
-import no.skatteetaten.aurora.boober.service.internal.ApplicationDeploymentGenerator
-import no.skatteetaten.aurora.boober.service.internal.Provisions
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
-import no.skatteetaten.aurora.boober.service.openshift.describeString
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.ExternalResourceProvisioner
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.whenFalse
 import org.slf4j.Logger
@@ -34,7 +21,6 @@ class DeployService(
     val openShiftCommandBuilder: OpenShiftCommandService,
     val openShiftClient: OpenShiftClient,
     val dockerService: DockerService,
-    val resourceProvisioner: ExternalResourceProvisioner,
     val redeployService: RedeployService,
     val userDetailsProvider: UserDetailsProvider,
     val deployLogService: DeployLogService,
@@ -42,6 +28,7 @@ class DeployService(
     @Value("\${integrations.docker.registry}") val dockerRegistry: String
 ) {
 
+    /* TOOD: Fix
     val logger: Logger = LoggerFactory.getLogger(DeployService::class.java)
 
     @JvmOverloads
@@ -77,7 +64,6 @@ class DeployService(
             )
         }
 
-        /*
         val environments = prepareDeployEnvironments(deploymentSpecs)
         val deployResults: List<AuroraDeployResult> =
             deployFromSpecs(deploymentSpecs, environments, deploy, auroraConfigRefExact)
@@ -86,11 +72,9 @@ class DeployService(
             Deployer(it.fullName ?: it.username, "${it.username}@skatteetaten.no")
         }
         return deployLogService.markRelease(deployResults, deployer)
-        */
         return emptyList();
     }
 
-    /*
     fun prepareDeployEnvironments(deploymentSpecInternals: List<AuroraDeploymentContext>): Map<AuroraDeployEnvironment, AuroraDeployResult> {
 
         return deploymentSpecInternals
@@ -99,7 +83,6 @@ class DeployService(
             .distinct()
             .associate(this::prepareDeployEnvironment)
     }
-     */
 
     fun prepareDeployEnvironment(environment: AuroraDeployEnvironment): Pair<AuroraDeployEnvironment, AuroraDeployResult> {
 
@@ -169,7 +152,6 @@ class DeployService(
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
 
         return emptyList()
-        /*
     return deploymentSpecInternals.map {
 
         val cmd = ApplicationDeploymentCommand(
@@ -214,10 +196,8 @@ class DeployService(
         }.also {
             logger.info("Deploy done username=${authenticatedUser.username} fullName='${authenticatedUser.fullName}' deployId=${it.deployId} app=${it.auroraDeploymentSpecInternal?.name} namespace=${it.auroraDeploymentSpecInternal?.environment?.namespace} success=${it.success} ignored=${it.ignored} reason=${it.reason}")
         }
-        }*/
     }
 
-/*
     fun deployFromSpec(
         deploymentSpecInternal: AuroraDeploymentContext,
         shouldDeploy: Boolean,
@@ -335,7 +315,6 @@ class DeployService(
             reason = redeployResult.message
         )
     }
- */
 
     private fun applyOpenShiftApplicationObjects(
         deployId: String,
@@ -371,4 +350,5 @@ class DeployService(
 
         return openShiftApplicationResponses.addIfNotNull(deleteOldObjectResponses)
     }
+ */
 }

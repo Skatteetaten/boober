@@ -2,12 +2,7 @@ package no.skatteetaten.aurora.boober.feature
 
 import com.fkorotkov.openshift.*
 import io.fabric8.openshift.api.model.Route
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
-import no.skatteetaten.aurora.boober.mapper.v1.findSubHandlers
-import no.skatteetaten.aurora.boober.mapper.v1.findSubKeys
-import no.skatteetaten.aurora.boober.mapper.v1.findSubKeysExpanded
+import no.skatteetaten.aurora.boober.mapper.*
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
@@ -20,10 +15,16 @@ import org.springframework.stereotype.Service
 @Service
 class RouteFeature(val routeSuffix: String = ".foo.bar") : Feature {
     override fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler> {
+        val applicationPlatform: ApplicationPlatform = header.applicationPlatform
+
         return findRouteHandlers(header.applicationFiles) + setOf(
                 AuroraConfigFieldHandler("route", defaultValue = false, canBeSimplifiedConfig = true),
                 AuroraConfigFieldHandler("routeDefaults/host", defaultValue = "@name@-@affiliation@-@env@"),
                 AuroraConfigFieldHandler("routeDefaults/tls/enabled", defaultValue = false),
+                AuroraConfigFieldHandler(
+                        "routeDefaults/tls/insecurePolicy",
+                        defaultValue = applicationPlatform.insecurePolicy,
+                        validator = { it.oneOf(InsecurePolicy.values().map { v -> v.name }) }),
                 AuroraConfigFieldHandler(
                         "routeDefaults/tls/termination",
                         defaultValue = TlsTermination.edge,
@@ -46,7 +47,7 @@ class RouteFeature(val routeSuffix: String = ".foo.bar") : Feature {
         }.toSet()
     }
 
-    fun getRoute(adc: AuroraDeploymentContext): List<no.skatteetaten.aurora.boober.model.Route> {
+    fun getRoute(adc: AuroraDeploymentContext): List<no.skatteetaten.aurora.boober.feature.Route> {
 
         val route = "route"
         val simplified = adc.isSimplifiedConfig(route)
@@ -108,7 +109,7 @@ class RouteFeature(val routeSuffix: String = ".foo.bar") : Feature {
     }
 
     fun generateRoute(
-            route: no.skatteetaten.aurora.boober.model.Route,
+            route: no.skatteetaten.aurora.boober.feature.Route,
             routeNamespace: String,
             serviceName: String,
             routeSuffix: String
@@ -208,3 +209,38 @@ class RouteFeature(val routeSuffix: String = ".foo.bar") : Feature {
         }
     }
 }
+
+data class Route(
+        val objectName: String,
+        val host: String,
+        val path: String? = null,
+        val annotations: Map<String, String>? = null,
+        val tls: SecureRoute? = null
+) {
+    val target: String
+        get(): String = if (path != null) "$host$path" else host
+
+    val protocol: String
+        get(): String = if (tls != null) "https://" else "http://"
+
+    fun url(urlSuffix: String) = "$host$urlSuffix".let { if (path != null) "$it${path.ensureStartWith("/")}" else it }
+}
+
+data class AuroraRoute(
+        val route: List<no.skatteetaten.aurora.boober.feature.Route>
+)
+
+
+
+enum class InsecurePolicy {
+    Redirect, None, Allow
+}
+
+enum class TlsTermination {
+    edge, passthrough
+}
+
+data class SecureRoute(
+        val insecurePolicy: InsecurePolicy,
+        val termination: TlsTermination
+)

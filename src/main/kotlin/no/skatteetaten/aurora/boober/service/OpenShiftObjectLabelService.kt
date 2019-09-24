@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import org.springframework.stereotype.Service
 
 @Service
@@ -34,24 +33,5 @@ class OpenShiftObjectLabelService(private val userDetailsProvider: UserDetailsPr
             }
             return tail
         }
-    }
-
-    fun createCommonLabels(
-        auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
-        deployId: String,
-        additionalLabels: Map<String, String> = mapOf(),
-        name: String = auroraDeploymentSpecInternal.name
-    ): Map<String, String> {
-        val labels = mapOf(
-            // TODO: Deprecated. This should be removed once all old objects are gone. name should be used instead
-            "app" to name,
-            "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
-            "affiliation" to auroraDeploymentSpecInternal.environment.affiliation,
-            // TODO: This updateInBoober label can be removed
-            "updateInBoober" to "true",
-            "booberDeployId" to deployId
-        )
-
-        return toOpenShiftLabelNameSafeMap(labels + additionalLabels)
     }
 }

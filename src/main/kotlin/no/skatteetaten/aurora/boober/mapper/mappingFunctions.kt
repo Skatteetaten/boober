@@ -1,7 +1,6 @@
-package no.skatteetaten.aurora.boober.mapper.v1
+package no.skatteetaten.aurora.boober.mapper
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.mapper.*
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 
 fun List<AuroraConfigFile>.findSubKeysExpanded(name: String): Set<String> {

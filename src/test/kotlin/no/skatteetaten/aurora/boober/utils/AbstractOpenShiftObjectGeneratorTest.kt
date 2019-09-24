@@ -4,18 +4,10 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.databind.JsonNode
 import io.mockk.clearAllMocks
-import io.mockk.every
 import io.mockk.mockk
-import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.adr
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
-import no.skatteetaten.aurora.boober.service.OpenShiftObjectGenerator
-import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
-import no.skatteetaten.aurora.boober.service.OpenShiftTemplateProcessor
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import org.junit.jupiter.api.BeforeEach
-import java.time.Instant
 
 open class AbstractOpenShiftObjectGeneratorTest : AbstractAuroraConfigTest() {
 
@@ -31,29 +23,8 @@ open class AbstractOpenShiftObjectGeneratorTest : AbstractAuroraConfigTest() {
         clearAllMocks()
     }
 
-    fun createObjectGenerator(username: String = "aurora"): OpenShiftObjectGenerator {
 
-        Instants.determineNow = { Instant.EPOCH }
-        every { userDetailsProvider.getAuthenticatedUser() } returns User(username, "token", "Aurora OpenShift")
-
-        val templateProcessor = OpenShiftTemplateProcessor(
-            userDetailsProvider,
-            openShiftResourceClient,
-            mapper
-        )
-
-        return OpenShiftObjectGenerator(
-            dockerRegistry = "docker-registry.aurora.sits.no:5000",
-            openShiftObjectLabelService = OpenShiftObjectLabelService(
-                userDetailsProvider
-            ),
-            mapper = mapper,
-            openShiftTemplateProcessor = templateProcessor,
-            openShiftClient = openShiftResourceClient,
-            routeSuffix = ".utv.paas.skead.no"
-        )
-    }
-
+    /*
     fun specJavaWithToxiproxy(): AuroraDeploymentSpecInternal {
         return createDeploymentSpec(
             mapOf(
@@ -75,6 +46,7 @@ open class AbstractOpenShiftObjectGeneratorTest : AbstractAuroraConfigTest() {
             ), adr("utv", "webleveranse")
         )
     }
+    */
     fun getKey(it: JsonNode): String {
         val kind = it.get("kind").asText().toLowerCase()
         val metadata = it.get("metadata")

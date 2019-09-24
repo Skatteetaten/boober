@@ -9,21 +9,17 @@ import com.fkorotkov.kubernetes.secret
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
 import io.fabric8.openshift.api.model.DeploymentConfig
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
-import no.skatteetaten.aurora.boober.mapper.v1.*
+import no.skatteetaten.aurora.boober.mapper.*
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.service.internal.DbhSecretGenerator
-import no.skatteetaten.aurora.boober.service.internal.createDbEnv
 import no.skatteetaten.aurora.boober.service.internal.createName
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.*
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
-import org.aspectj.weaver.tools.cache.SimpleCacheFactory.path
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -314,3 +310,91 @@ class DatabaseFeature(
         }
     }
 }
+
+
+enum class DatabaseFlavor(val engine: DatabaseEngine, val managed: Boolean, val defaultFallback: Boolean) {
+    ORACLE_MANAGED(
+            engine = DatabaseEngine.ORACLE,
+            managed = true,
+            defaultFallback = true
+    ),
+    POSTGRES_MANAGED(
+            engine = DatabaseEngine.POSTGRES,
+            managed = true,
+            defaultFallback = false
+    )
+}
+
+enum class DatabasePermission(
+        val permissionString: String
+) {
+    READ("r"),
+    WRITE("rw"),
+    ALL("a")
+}
+
+data class Database(
+        val name: String,
+        val id: String? = null,
+        val flavor: DatabaseFlavor,
+        val generate: Boolean,
+        val exposeTo: Map<String, String> = emptyMap(),
+        val roles: Map<String, DatabasePermission> = emptyMap(),
+        val instance: DatabaseInstance
+) {
+    val spec: String
+        get(): String = (id?.let { "$name:$id" } ?: name).toLowerCase()
+}
+
+data class DatabaseInstance(
+        val name: String? = null,
+        val fallback: Boolean = false,
+        val labels: Map<String, String> = emptyMap()
+)
+
+
+fun Database.createSchemaDetails(affiliation: String): SchemaRequestDetails {
+
+    val users = if (this.roles.isEmpty()) {
+        listOf(SchemaUser(name = "SCHEMA", role = "a", affiliation = affiliation))
+    } else this.roles.map { role ->
+        val exportedRole = this.exposeTo.filter { it.value == role.key }.map { it.key }.firstOrNull()
+        val userAffiliation = exportedRole ?: affiliation
+        SchemaUser(name = role.key, role = role.value.permissionString, affiliation = userAffiliation)
+    }
+
+    return SchemaRequestDetails(
+            schemaName = this.name.toLowerCase(),
+            databaseInstance = this.instance,
+            affiliation = affiliation,
+            users = users,
+            engine = this.flavor.engine
+    )
+}
+
+fun Database.createDbEnv(envName: String): List<Pair<String, String>> {
+    val path = "/u01/secrets/app/${this.name.toLowerCase()}-db"
+    val envName = envName.replace("-", "_").toUpperCase()
+
+    return listOf(
+            envName to "$path/info",
+            "${envName}_PROPERTIES" to "$path/db.properties"
+    )
+}
+
+/*
+fun SchemaProvisionResults.createDatabaseMounts(
+        deploymentSpecInternal: AuroraDeploymentSpecInternal
+): List<Mount> {
+    return results.map {
+        val mountPath = "${it.request.details.schemaName}-db".toLowerCase()
+        Mount(
+                path = "/u01/secrets/app/$mountPath",
+                type = MountType.Secret,
+                mountName = mountPath,
+                volumeName = it.createName(deploymentSpecInternal.name),
+                exist = true,
+                content = null
+        )
+    }
+}*/

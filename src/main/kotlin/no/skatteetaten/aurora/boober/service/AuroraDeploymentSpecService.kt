@@ -6,19 +6,10 @@ import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.feature.extractPlaceHolders
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.mapper.platform.ApplicationPlatformHandler
-import no.skatteetaten.aurora.boober.mapper.v1.*
+import no.skatteetaten.aurora.boober.mapper.*
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
-import no.skatteetaten.aurora.boober.model.AuroraRoute
-import no.skatteetaten.aurora.boober.model.ConfigFieldErrorDetail
-import no.skatteetaten.aurora.boober.model.TemplateType
 import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -57,7 +48,6 @@ typealias FeatureSpec = Map<Feature, AuroraDeploymentContext>
 @Service
 class AuroraDeploymentSpecService(
         val auroraConfigService: AuroraConfigService,
-        val aphBeans: List<ApplicationPlatformHandler>,
         val featuers: List<Feature>
 ) {
 
@@ -162,21 +152,6 @@ class AuroraDeploymentSpecService(
         }
 
         return featureResources
-    }
-
-
-    companion object {
-        val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpecService::class.java)
-
-        @JvmStatic
-        var APPLICATION_PLATFORM_HANDLERS: Map<String, ApplicationPlatformHandler> = emptyMap()
-
-    }
-
-    @PostConstruct
-    fun initializeHandlers() {
-        APPLICATION_PLATFORM_HANDLERS = aphBeans.associateBy { it.name }
-        logger.info("Boober started with applicationPlatformHandlers ${APPLICATION_PLATFORM_HANDLERS.keys}")
     }
 
     fun getAuroraDeploymentSpecsForEnvironment(ref: AuroraConfigRef, environment: String): List<AuroraDeploymentContext> {

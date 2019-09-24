@@ -6,14 +6,14 @@ import com.fkorotkov.openshift.newOpenshiftRoleBinding
 import com.fkorotkov.openshift.roleRef
 import io.fabric8.kubernetes.api.model.ObjectReference
 import io.fabric8.openshift.api.model.OpenshiftRoleBinding
-import no.skatteetaten.aurora.boober.model.Permission
+import no.skatteetaten.aurora.boober.mapper.Permission
 
 object RolebindingGenerator {
 
     fun create(
-        rolebindingName: String,
-        permission: Permission,
-        rolebindingNamespace: String
+            rolebindingName: String,
+            permission: Permission,
+            rolebindingNamespace: String
     ): OpenshiftRoleBinding {
 
         return newOpenshiftRoleBinding {
