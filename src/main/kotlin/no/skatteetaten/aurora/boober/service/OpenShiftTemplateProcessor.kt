@@ -9,22 +9,24 @@ import com.fasterxml.jackson.databind.node.TextNode
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.utils.apiBaseUrl
+import no.skatteetaten.aurora.boober.utils.getBoolean
 import org.springframework.stereotype.Service
 
 @Service
+//TODO : DELETE
 class OpenShiftTemplateProcessor(
-    val userDetailsProvider: UserDetailsProvider,
-    val openShiftClient: OpenShiftResourceClient,
-    val mapper: ObjectMapper
+        val userDetailsProvider: UserDetailsProvider,
+        val openShiftClient: OpenShiftResourceClient,
+        val mapper: ObjectMapper
 ) {
 
     val populatedParameters: Set<String> = setOf("REPLICAS", "SPLUNK_INDEX", "NAME", "VERSION")
     fun generateObjects(
-        template: ObjectNode,
-        parameters: Map<String, String>?,
-        auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
-        version: String?,
-        replicas: Int?
+            template: ObjectNode,
+            parameters: Map<String, String>?,
+            auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal,
+            version: String?,
+            replicas: Int?
     ): List<JsonNode> {
 
         val adcParameters = (parameters ?: emptyMap()).toMutableMap()
@@ -44,11 +46,11 @@ class OpenShiftTemplateProcessor(
 
             // mutation in progress. stay away.
             parameters
-                .filter { adcParameterKeys.contains(it["name"].textValue()) }
-                .forEach {
-                    val node = it as ObjectNode
-                    node.put("value", adcParameters[it["name"].textValue()] as String)
-                }
+                    .filter { adcParameterKeys.contains(it["name"].textValue()) }
+                    .forEach {
+                        val node = it as ObjectNode
+                        node.put("value", adcParameters[it["name"].textValue()] as String)
+                    }
         }
 
         if (!template.has("labels")) {
@@ -74,11 +76,11 @@ class OpenShiftTemplateProcessor(
 
         if (version != null) {
             template["parameters"]
-                .filter { it["name"].asText() == "VERSION" }
-                .map {
-                    (it as ObjectNode).put("value", version)
-                    labels.put("updateInBoober", "true")
-                }
+                    .filter { it["name"].asText() == "VERSION" }
+                    .map {
+                        (it as ObjectNode).put("value", version)
+                        labels.put("updateInBoober", "true")
+                    }
         }
 
         val namespace = auroraDeploymentSpecInternal.environment.namespace
@@ -97,7 +99,7 @@ class OpenShiftTemplateProcessor(
 
         val requiredMissingParameters = templateParameters.filter {
 
-            val isRequiredParameter = getBoolean(it, REQUIRED_ATTRIBUTE)
+            val isRequiredParameter = it.getBoolean(REQUIRED_ATTRIBUTE)
             val noDefaultValueSpecified = it[VALUE_ATTRIBUTE] == null
 
             isRequiredParameter && noDefaultValueSpecified
@@ -139,13 +141,5 @@ class OpenShiftTemplateProcessor(
 
         private val PARAMETERS_ATTRIBUTE = "parameters"
 
-        private fun getBoolean(it: JsonNode, nodeName: String): Boolean {
-            val valueNode = it[nodeName]
-            return when (valueNode) {
-                is BooleanNode -> valueNode.booleanValue()
-                is TextNode -> valueNode.textValue() == "true"
-                else -> false
-            }
-        }
     }
 }

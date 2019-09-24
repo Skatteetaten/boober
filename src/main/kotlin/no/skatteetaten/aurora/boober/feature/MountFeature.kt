@@ -11,10 +11,13 @@ import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.mapper.v1.findSubKeys
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.Mount
 import no.skatteetaten.aurora.boober.model.MountType
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
@@ -22,11 +25,14 @@ import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.required
 import org.apache.commons.codec.binary.Base64
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class MountFeature(
-        val vaultProvider: VaultProvider
+        val vaultProvider: VaultProvider,
+        @Value("\${openshift.cluster}") val cluster: String,
+        val openShiftClient: OpenShiftClient
 ) : Feature {
     override fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler> {
         val mountKeys = header.applicationFiles.findSubKeys("mounts")
@@ -125,6 +131,38 @@ class MountFeature(
             }
         }
     }
+
+    override fun validate(adc: AuroraDeploymentContext, fullValidation: Boolean): List<Exception> {
+        if (!fullValidation || adc.cluster != cluster) {
+            return emptyList()
+        }
+        val mounts = getMounts(adc)
+        return validateExistingMounts(mounts, adc).addIfNotNull(validateVaultExistence(mounts, adc))
+    }
+
+    fun validateVaultExistence(mounts: List<Mount>, adc: AuroraDeploymentContext): List<AuroraDeploymentSpecValidationException> {
+        val secretMounts = mounts.filter { it.type == MountType.Secret }.mapNotNull { it.secretVaultName }
+        return secretMounts.mapNotNull {
+            val vaultCollectionName = adc.affiliation
+            if (!vaultProvider.vaultService.vaultExists(vaultCollectionName, it)) {
+                AuroraDeploymentSpecValidationException("Referenced Vault $it in Vault Collection $vaultCollectionName does not exist")
+            } else null
+        }
+    }
+
+    private fun validateExistingMounts(mounts: List<Mount>, adc: AuroraDeploymentContext): List<Exception> {
+        return mounts.filter { it.exist }.mapNotNull {
+            if (!openShiftClient.resourceExists(
+                            kind = it.type.kind,
+                            namespace = adc.namespace,
+                            name = it.volumeName
+                    )
+            ) {
+                AuroraDeploymentSpecValidationException("Required existing resource with type=${it.type} namespace=${adc.namespace} name=${it.volumeName} does not exist.")
+            } else null
+        }
+    }
+
 
     private fun getMounts(auroraDeploymentSpec: AuroraDeploymentContext): List<Mount> {
 

@@ -13,6 +13,7 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.mapper.v1.*
 import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.service.internal.DbhSecretGenerator
@@ -23,11 +24,13 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
 import org.aspectj.weaver.tools.cache.SimpleCacheFactory.path
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class DatabaseFeature(
-        val databaseSchemaProvisioner: DatabaseSchemaProvisioner
+        val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
+        @Value("\${openshift.cluster}") val cluster: String
 ) : Feature {
     val databaseDefaultsKey = "databaseDefaults"
 
@@ -39,6 +42,25 @@ class DatabaseFeature(
         return (dbDefaultsHandlers + dbHandlers + listOf(
                 AuroraConfigFieldHandler("database", defaultValue = false, canBeSimplifiedConfig = true)
         )).toSet()
+    }
+
+    override fun validate(adc: AuroraDeploymentContext, fullValidation: Boolean): List<Exception> {
+        val databases = findDatabases(adc)
+        if (!fullValidation || adc.cluster != cluster || databases.isEmpty()) {
+            return emptyList()
+        }
+
+        //TODO: here we should probably validate if generate is false aswell?
+        return databases.filter { it.id != null }
+                .map { SchemaIdRequest(it.id!!, it.createSchemaDetails(adc.affiliation)) }
+                .mapNotNull {
+                    try {
+                        databaseSchemaProvisioner.findSchemaById(it.id, it.details)
+                        null
+                    } catch (e: Exception) {
+                        AuroraDeploymentSpecValidationException("Database schema with id=${it.id} and affiliation=${it.details.affiliation} does not exist")
+                    }
+                }
     }
 
     // TODO: Handle errors, probably need to return both resources and errors and propagate

@@ -7,12 +7,15 @@ import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import org.springframework.stereotype.Service
 
 @Service
-class TemplateFeature(val openShiftClient: OpenShiftResourceClient) : AbstractTemplateFeature() {
+class TemplateFeature(val openShiftClient: OpenShiftClient) : AbstractTemplateFeature() {
     override fun enable(header: AuroraDeploymentContext) = header.type == TemplateType.template
 
     override fun templateHandlers(files: List<AuroraConfigFile>, auroraConfig: AuroraConfig): Set<AuroraConfigFieldHandler> {
@@ -28,7 +31,10 @@ class TemplateFeature(val openShiftClient: OpenShiftResourceClient) : AbstractTe
         )
     }
 
+
+
+
     override fun findTemplate(adc: AuroraDeploymentContext): JsonNode {
-        return openShiftClient.get("template", "openshift", adc["template"])?.body as ObjectNode
+        return openShiftClient.getTemplate(adc["template"])
     }
 }

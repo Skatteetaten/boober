@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.feature
 
 import com.fkorotkov.openshift.*
 import io.fabric8.openshift.api.model.Route
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.mapper.v1.findSubHandlers
@@ -166,5 +167,44 @@ class RouteFeature(val routeSuffix: String = ".foo.bar") : Feature {
                 } else null
             }
         }).toSet()
+    }
+
+    // TODO: Incorporate
+    fun validateRoutes(
+            auroraRoute: AuroraRoute,
+            applicationDeploymentRef: ApplicationDeploymentRef
+    ) {
+
+        auroraRoute.route.forEach {
+            if (it.tls != null && it.host.contains('.')) {
+                throw AuroraConfigException(
+                        "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} have a tls enabled route with a '.' in the host",
+                        errors = listOf(ConfigFieldErrorDetail.illegal(message = "Route name=${it.objectName} with tls uses '.' in host name"))
+                )
+            }
+        }
+
+        val routeNames = auroraRoute.route.groupBy { it.objectName }
+        val duplicateRoutes = routeNames.filter { it.value.size > 1 }.map { it.key }
+
+        if (duplicateRoutes.isNotEmpty()) {
+            throw AuroraConfigException(
+                    "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} have routes with duplicate names",
+                    errors = duplicateRoutes.map {
+                        ConfigFieldErrorDetail.illegal(message = "Route name=$it is duplicated")
+                    }
+            )
+        }
+
+        val duplicatedHosts = auroraRoute.route.groupBy { it.target }.filter { it.value.size > 1 }
+        if (duplicatedHosts.isNotEmpty()) {
+            throw AuroraConfigException(
+                    "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} have duplicated targets",
+                    errors = duplicatedHosts.map { route ->
+                        val routes = route.value.joinToString(",") { it.objectName }
+                        ConfigFieldErrorDetail.illegal(message = "target=${route.key} is duplicated in routes $routes")
+                    }
+            )
+        }
     }
 }

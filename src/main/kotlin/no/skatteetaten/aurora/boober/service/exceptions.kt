@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.ApplicationError
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
@@ -13,7 +14,7 @@ abstract class ServiceException(message: String?, cause: Throwable?) : RuntimeEx
 
 class OpenShiftException(messages: String?, cause: Throwable? = null) : ServiceException(messages, cause)
 
-class AuroraDeploymentSpecValidationException(message: String) : ServiceException(message)
+class AuroraDeploymentSpecValidationException(message: String, cause: Throwable? = null) : ServiceException(message, cause)
 
 class UnauthorizedAccessException(message: String) : ServiceException(message)
 
@@ -38,7 +39,7 @@ class MultiApplicationValidationException(
     }
 }
 
-fun List<Pair<AuroraDeploymentSpecInternal?, ExceptionWrapper?>>.onErrorThrow(block: (List<ExceptionWrapper>) -> Exception): List<AuroraDeploymentSpecInternal> {
+fun List<Pair<AuroraDeploymentContext?, ExceptionWrapper?>>.onErrorThrow(block: (List<ExceptionWrapper>) -> Exception): List<AuroraDeploymentContext> {
     this.mapNotNull { it.second }
         .takeIf { it.isNotEmpty() }
         ?.let { throw block(it) }

@@ -52,6 +52,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
+
+// TODO: DELETE
 @Component
 class OpenShiftObjectGenerator(
     @Value("\${integrations.docker.registry}") val dockerRegistry: String,

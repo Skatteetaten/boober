@@ -3,7 +3,7 @@ package no.skatteetaten.aurora.boober.controller.v1
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.controller.internal.Response
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService
@@ -70,7 +70,7 @@ class AuroraDeploymentSpecControllerV1(
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         return responder.create(
-            auroraDeploymentSpecService.getAuroraDeploymentSpec(
+            auroraDeploymentSpecService.getAuroraDeploymentContext(
                 ref = ref,
                 environment = environment,
                 application = application,
@@ -99,7 +99,7 @@ class AuroraDeploymentSpecControllerV1(
     ): Response {
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
-        val spec = auroraDeploymentSpecService.getAuroraDeploymentSpec(
+        val spec = auroraDeploymentSpecService.getAuroraDeploymentContext(
             ref = ref,
             environment = environment,
             application = application,
@@ -114,10 +114,10 @@ class AuroraDeploymentSpecControllerV1(
 class AuroraDeploymentSpecResponder {
     fun create(formatted: String) = Response(items = listOf(formatted))
 
-    fun create(specInternal: AuroraDeploymentSpec, includeDefaults: Boolean): Response =
+    fun create(specInternal: AuroraDeploymentContext, includeDefaults: Boolean): Response =
         create(listOf(specInternal), includeDefaults)
 
-    fun create(specs: List<AuroraDeploymentSpec>, includeDefaults: Boolean): Response {
+    fun create(specs: List<AuroraDeploymentContext>, includeDefaults: Boolean): Response {
         val fields = specs.map { renderSpecAsJson(it, includeDefaults) }
         return Response(items = fields)
     }

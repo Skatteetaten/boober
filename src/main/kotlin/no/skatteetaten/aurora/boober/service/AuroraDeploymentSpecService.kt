@@ -41,15 +41,18 @@ fun Set<AuroraResource>.addEnvVar(envVars: List<EnvVar>) {
     }
 }
 
+// TODO: Web, toxiproxy, ttl, environment, message, applicationDeployment
 interface Feature {
 
     fun enable(header: AuroraDeploymentContext): Boolean = true
     fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler>
-    fun validate(adc: AuroraDeploymentContext) = Unit
+    fun validate(adc: AuroraDeploymentContext, fullValidation: Boolean): List<Exception> = emptyList()
     fun generate(adc: AuroraDeploymentContext): Set<AuroraResource> = emptySet()
     fun modify(adc: AuroraDeploymentContext, resources: Set<AuroraResource>) = Unit
 
 }
+
+typealias FeatureSpec = Map<Feature, AuroraDeploymentContext>
 
 @Service
 class AuroraDeploymentSpecService(
@@ -58,12 +61,14 @@ class AuroraDeploymentSpecService(
         val featuers: List<Feature>
 ) {
 
-    fun createResources(
+
+    fun createAuroraDeploymentContext(
             auroraConfig: AuroraConfig,
             applicationDeploymentRef: ApplicationDeploymentRef,
             overrideFiles: List<AuroraConfigFile> = listOf(),
-            deployId: String
-    ): Set<AuroraResource> {
+            deployId: String = "none",
+            fullValidation: Boolean = false
+    ): Pair<AuroraDeploymentContext, Map<Feature, AuroraDeploymentContext>> {
 
         val applicationFiles: List<AuroraConfigFile> = auroraConfig.getFilesForApplication(applicationDeploymentRef, overrideFiles)
 
@@ -83,38 +88,15 @@ class AuroraDeploymentSpecService(
                 fieldHandlers = headerMapper.handlers,
                 fields = headerSpec.fields
         ).validate(false)
-        /*
-
-//Hvordan skal vi håndetere ressurser som allerede finnes i clusteret og merging av dem?
-//Skal vi hente dem først og ha dem med i algoritmen, eller skal vi merge dem etterpå slik som nå?
-//Undersøke: Spillet resrouceVersion av owner reference noe
-//hvilke features har vi
-
-- parse en template fra fil
-- parse en template fra en ressurs i clusteret
-- DBH
-- STS cert
-- Config
-- Mounts
-- AuroraVault
-- AuroraLabel: Legger på alle standard labels
-- AuroraDeployment: Lager AuroraDeployment og setter owner reference på alle andre i modify
-- Build
-- DeploymentConfig
-- Route
-- BigIP
-- Webseal
-*/
 
         val activeFeatures = featuers.filter { it.enable(headerSpec) }
 
 
         val featureHandlers: Map<Feature, Set<AuroraConfigFieldHandler>> = activeFeatures.associateWith {
-            it.handlers(headerSpec)
+            it.handlers(headerSpec) + headerMapper.handlers
         }
 
-        //The order here really matters unfortunately. Version is handled differently
-        val allHandlers: Set<AuroraConfigFieldHandler> = (featureHandlers.flatMap { it.value } + headerMapper.handlers).toSet()
+        val allHandlers: Set<AuroraConfigFieldHandler> = featureHandlers.flatMap { it.value }.toSet()
 
         val spec = AuroraDeploymentContext.create(
                 handlers = allHandlers,
@@ -123,35 +105,52 @@ class AuroraDeploymentSpecService(
                 auroraConfig = auroraConfig,
                 replacer = StringSubstitutor(headerSpec.extractPlaceHolders(), "@", "@"),
                 deployId = deployId
+
         )
         AuroraDeploymentSpecConfigFieldValidator(
                 applicationDeploymentRef = applicationDeploymentRef,
                 applicationFiles = applicationFiles,
                 fieldHandlers = allHandlers,
                 fields = spec.fields
-        ).validate(false)
-
+        ).validate(fullValidation)
         val featureAdc: Map<Feature, AuroraDeploymentContext> = featureHandlers.mapValues { (_, handlers) ->
-            val paths = handlers.map { it.name } + headerMapper.handlers.map { it.name }
+            val paths = handlers.map { it.name }
             val fields = spec.fields.filterKeys {
                 paths.contains(it)
             }
             spec.copy(fields = fields)
         }
 
-
-        // TODO: fix validation, send in deep flag or not
         /*
+        TODO: Fix
         val errors: Map<Feature, Exception> = featureAdc.mapNotNull {
             try {
-                it.key.validate(it.value)
+                it.key.validate(it.value, fullValidation)
                 null
-            } catch (e:Exception){
+            } catch (e: Exception) {
                 it.key to e
 
             }
         }.toMap()
+
          */
+
+        // TODO: what do we do with errors here?
+        return spec to featureAdc
+    }
+
+    fun createResources(
+            auroraConfig: AuroraConfig,
+            applicationDeploymentRef: ApplicationDeploymentRef,
+            overrideFiles: List<AuroraConfigFile> = listOf(),
+            deployId: String
+    ): Set<AuroraResource> {
+
+        // TODO: ADC should contain AuroraDeploymentSpec and featureADC, then we can just generate resoruces whereever.
+        val (spec, featureAdc) = createAuroraDeploymentContext(auroraConfig, applicationDeploymentRef, overrideFiles, deployId)
+
+
+
 
         val featureResources: Set<AuroraResource> = featureAdc.flatMap {
             it.key.generate(it.value)
@@ -172,164 +171,6 @@ class AuroraDeploymentSpecService(
         @JvmStatic
         var APPLICATION_PLATFORM_HANDLERS: Map<String, ApplicationPlatformHandler> = emptyMap()
 
-        @JvmOverloads
-        @JvmStatic
-        fun createAuroraDeploymentSpec(
-                auroraConfig: AuroraConfig,
-                applicationDeploymentRef: ApplicationDeploymentRef,
-                overrideFiles: List<AuroraConfigFile> = listOf()
-        ): AuroraDeploymentSpec {
-            return createAuroraDeploymentSpecInternal(
-                    auroraConfig,
-                    applicationDeploymentRef,
-                    overrideFiles
-            ).spec
-        }
-
-
-        @JvmOverloads
-        @JvmStatic
-        fun createAuroraDeploymentSpecInternal(
-                auroraConfig: AuroraConfig,
-                applicationDeploymentRef: ApplicationDeploymentRef,
-                overrideFiles: List<AuroraConfigFile> = listOf()
-        ): AuroraDeploymentSpecInternal {
-
-            val applicationFiles = auroraConfig.getFilesForApplication(applicationDeploymentRef, overrideFiles)
-
-            val headerMapper = HeaderMapper(applicationDeploymentRef, applicationFiles)
-            val headerSpec =
-                    AuroraDeploymentSpec.create(
-                            headerMapper.handlers,
-                            applicationFiles,
-                            applicationDeploymentRef,
-                            auroraConfig.version
-                    )
-
-            AuroraDeploymentSpecConfigFieldValidator(
-                    applicationDeploymentRef = applicationDeploymentRef,
-                    applicationFiles = applicationFiles,
-                    fieldHandlers = headerMapper.handlers,
-                    fields = headerSpec.fields
-            ).validate(false)
-
-            val platform: String = headerSpec["applicationPlatform"]
-
-            val applicationHandler: ApplicationPlatformHandler = APPLICATION_PLATFORM_HANDLERS[platform]
-                    ?: throw IllegalArgumentException("ApplicationPlatformHandler $platform is not present")
-
-            val header = headerMapper.createHeader(headerSpec, applicationHandler)
-
-            val replacer = StringSubstitutor(header.extractPlaceHolders(), "@", "@")
-            val deploymentSpecMapper = AuroraDeploymentSpecMapperV1(applicationDeploymentRef, applicationFiles)
-            val deployMapper = AuroraDeployMapperV1(applicationDeploymentRef, applicationFiles)
-            val integrationMapper = AuroraIntegrationsMapperV1(applicationFiles, header.name, header.env.affiliation)
-            val volumeMapper = AuroraVolumeMapperV1(applicationFiles, header.name, replacer)
-            val routeMapper = AuroraRouteMapperV1(applicationFiles, header.name, replacer)
-            val localTemplateMapper = AuroraLocalTemplateMapperV1(applicationFiles, auroraConfig)
-            val templateMapper = AuroraTemplateMapperV1(applicationFiles)
-            val buildMapper = AuroraBuildMapperV1(header.name)
-
-            val typeHandlers = when (header.type) {
-                TemplateType.deploy -> deployMapper.handlers
-                TemplateType.development -> deployMapper.handlers + buildMapper.handlers
-                TemplateType.localTemplate -> localTemplateMapper.handlers
-                TemplateType.template -> templateMapper.handlers
-            }
-
-            val handlers =
-                    headerMapper.handlers +
-                            deploymentSpecMapper.handlers +
-                            typeHandlers +
-                            applicationHandler.handlers(header.type) +
-                            integrationMapper.handlers +
-                            routeMapper.handlers +
-                            volumeMapper.handlers
-
-            val deploymentSpec = AuroraDeploymentSpec.create(
-                    handlers = handlers.toSet(),
-                    files = applicationFiles,
-                    applicationDeploymentRef = applicationDeploymentRef,
-                    configVersion = auroraConfig.version,
-                    replacer = replacer
-            )
-
-            AuroraDeploymentSpecConfigFieldValidator(
-                    applicationDeploymentRef = applicationDeploymentRef,
-                    applicationFiles = applicationFiles,
-                    fieldHandlers = handlers,
-                    fields = deploymentSpec.fields
-            ).validate()
-
-            val integration = integrationMapper.integrations(deploymentSpec)
-            val volume = volumeMapper.createAuroraVolume(deploymentSpec)
-            val route = routeMapper.route(deploymentSpec)
-
-            validateRoutes(route, applicationDeploymentRef)
-
-            val build = if (header.type == TemplateType.development) buildMapper.build(deploymentSpec) else null
-            val deploy =
-                    if (header.type == TemplateType.deploy || header.type == TemplateType.development) deployMapper.deploy(
-                            deploymentSpec
-                    ) else null
-            val template =
-                    if (header.type == TemplateType.template) templateMapper.template(deploymentSpec) else null
-            val localTemplate =
-                    if (header.type == TemplateType.localTemplate) localTemplateMapper.localTemplate(deploymentSpec) else null
-
-            return deploymentSpecMapper.createAuroraDeploymentSpec(
-                    auroraDeploymentSpec = deploymentSpec,
-                    volume = volume,
-                    route = route,
-                    build = build,
-                    deploy = deploy,
-                    template = template,
-                    integration = integration,
-                    localTemplate = localTemplate,
-                    env = header.env,
-                    configVersion = auroraConfig.version,
-                    files = applicationFiles
-            )
-        }
-
-        @JvmStatic
-        fun validateRoutes(
-                auroraRoute: AuroraRoute,
-                applicationDeploymentRef: ApplicationDeploymentRef
-        ) {
-
-            auroraRoute.route.forEach {
-                if (it.tls != null && it.host.contains('.')) {
-                    throw AuroraConfigException(
-                            "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} have a tls enabled route with a '.' in the host",
-                            errors = listOf(ConfigFieldErrorDetail.illegal(message = "Route name=${it.objectName} with tls uses '.' in host name"))
-                    )
-                }
-            }
-
-            val routeNames = auroraRoute.route.groupBy { it.objectName }
-            val duplicateRoutes = routeNames.filter { it.value.size > 1 }.map { it.key }
-
-            if (duplicateRoutes.isNotEmpty()) {
-                throw AuroraConfigException(
-                        "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} have routes with duplicate names",
-                        errors = duplicateRoutes.map {
-                            ConfigFieldErrorDetail.illegal(message = "Route name=$it is duplicated")
-                        }
-                )
-            }
-
-            val duplicatedHosts = auroraRoute.route.groupBy { it.target }.filter { it.value.size > 1 }
-            if (duplicatedHosts.isNotEmpty()) {
-                throw AuroraConfigException(
-                        "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} have duplicated targets",
-                        errors = duplicatedHosts.map { route ->
-                            val routes = route.value.joinToString(",") { it.objectName }
-                            ConfigFieldErrorDetail.illegal(message = "target=${route.key} is duplicated in routes $routes")
-                        }
-                )
-            }
-        }
     }
 
     @PostConstruct
@@ -338,14 +179,14 @@ class AuroraDeploymentSpecService(
         logger.info("Boober started with applicationPlatformHandlers ${APPLICATION_PLATFORM_HANDLERS.keys}")
     }
 
-    fun getAuroraDeploymentSpecsForEnvironment(ref: AuroraConfigRef, environment: String): List<AuroraDeploymentSpec> {
+    fun getAuroraDeploymentSpecsForEnvironment(ref: AuroraConfigRef, environment: String): List<AuroraDeploymentContext> {
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         return auroraConfig.getApplicationDeploymentRefs()
                 .filter { it.environment == environment }
                 .let { getAuroraDeploymentSpecs(auroraConfig, it) }
     }
 
-    fun getAuroraDeploymentSpecs(ref: AuroraConfigRef, aidStrings: List<String>): List<AuroraDeploymentSpec> {
+    fun getAuroraDeploymentSpecs(ref: AuroraConfigRef, aidStrings: List<String>): List<AuroraDeploymentContext> {
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         return aidStrings.map(ApplicationDeploymentRef.Companion::fromString)
                 .let { getAuroraDeploymentSpecs(auroraConfig, it) }
@@ -354,27 +195,26 @@ class AuroraDeploymentSpecService(
     private fun getAuroraDeploymentSpecs(
             auroraConfig: AuroraConfig,
             applicationDeploymentRefs: List<ApplicationDeploymentRef>
-    ): List<AuroraDeploymentSpec> {
+    ): List<AuroraDeploymentContext> {
         return applicationDeploymentRefs.map {
-            createAuroraDeploymentSpec(
-                    auroraConfig,
-                    it,
-                    listOf()
-            )
+            createAuroraDeploymentContext(
+                    auroraConfig = auroraConfig,
+                    applicationDeploymentRef = it
+            ).first
         }
     }
 
-    fun getAuroraDeploymentSpec(
+    fun getAuroraDeploymentContext(
             ref: AuroraConfigRef,
             environment: String,
             application: String,
             overrides: List<AuroraConfigFile> = emptyList()
-    ): AuroraDeploymentSpec {
+    ): AuroraDeploymentContext {
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
-        return createAuroraDeploymentSpec(
+        return createAuroraDeploymentContext(
                 auroraConfig = auroraConfig,
                 overrideFiles = overrides,
                 applicationDeploymentRef = ApplicationDeploymentRef.adr(environment, application)
-        )
+        ).first
     }
 }

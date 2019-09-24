@@ -37,7 +37,7 @@ class DeployControllerV1(private val deployService: DeployService, private val r
                 projectExist = it.projectExist,
                 openShiftResponses = it.openShiftResponses,
                 deploymentSpec = it.auroraDeploymentSpecInternal?.let { internalSpec ->
-                    renderSpecAsJson(internalSpec.spec, true)
+                    renderSpecAsJson(internalSpec, true)
                 }
             )
         }

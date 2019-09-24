@@ -10,7 +10,9 @@ import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.mapper.v1.convertValueToString
 import no.skatteetaten.aurora.boober.mapper.v1.findConfigFieldHandlers
 import no.skatteetaten.aurora.boober.mapper.v1.findSubKeys
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.AuroraSecret
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
@@ -18,9 +20,11 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultSecretEnvResult
 import no.skatteetaten.aurora.boober.utils.*
 import org.apache.commons.codec.binary.Base64
+import org.springframework.beans.factory.annotation.Value
 
 class ConfigFeature(
-        val vaultProvider: VaultProvider
+        val vaultProvider: VaultProvider,
+        @Value("\${openshift.cluster}") val cluster: String
 ) : Feature {
 
     fun secretVaultKeyMappingHandlers(header: AuroraDeploymentContext) = header.applicationFiles.find {
@@ -50,6 +54,109 @@ class ConfigFeature(
                 .addIfNotNull(secretVaultsHandlers)
                 .addIfNotNull(configHandlers(header))
                 .toSet()
+    }
+
+    override fun validate(adc: AuroraDeploymentContext, fullValidation: Boolean): List<Exception> {
+        if (!fullValidation || adc.cluster != cluster) {
+            return emptyList()
+        }
+        val secrets = getSecretVaults(adc)
+        return validateVaultExistence(secrets, adc.affiliation)
+                .addIfNotNull(validateSecretNames(secrets))
+                .addIfNotNull(validateKeyMappings(secrets))
+                .addIfNotNull(validateSecretVaultKeys(secrets, adc.affiliation))
+                .addIfNotNull(validateDuplicateSecretEnvNames(secrets))
+    }
+
+    fun validateVaultExistence(secrets: List<AuroraSecret>, vaultCollectionName: String): List<AuroraDeploymentSpecValidationException> {
+
+        return secrets.map { it.secretVaultName }
+                .mapNotNull {
+                    if (!vaultProvider.vaultService.vaultExists(vaultCollectionName, it)) {
+                        AuroraDeploymentSpecValidationException("Referenced Vault $it in Vault Collection $vaultCollectionName does not exist")
+                    } else null
+                }
+
+    }
+
+    fun validateSecretNames(secrets: List<AuroraSecret>): List<AuroraDeploymentSpecValidationException> {
+        return secrets.mapNotNull { secret ->
+            if (secret.name.length > 63) {
+                AuroraDeploymentSpecValidationException("The name of the secretVault=${secret.name} is too long. Max 63 characters. Note that we ensure that the name starts with @name@-")
+            } else null
+        }
+    }
+
+    fun validateKeyMappings(secrets: List<AuroraSecret>): List<AuroraDeploymentSpecValidationException> {
+        return secrets.mapNotNull { validateKeyMapping(it) }
+    }
+
+    private fun validateKeyMapping(secret: AuroraSecret): AuroraDeploymentSpecValidationException? {
+        val keyMappings = secret.keyMappings.takeIfNotEmpty() ?: return null
+        val keys = secret.secretVaultKeys.takeIfNotEmpty() ?: return null
+        val diff = keyMappings.keys - keys
+        return if (diff.isNotEmpty()) {
+            AuroraDeploymentSpecValidationException("The secretVault keyMappings $diff were not found in keys")
+        } else null
+    }
+
+    /**
+     * Validates that any secretVaultKeys specified actually exist in the vault.
+     * Note that this method always uses the latest.properties file regardless of the version of the application and
+     * the contents of the vault.
+     */
+    fun validateSecretVaultKeys(secrets: List<AuroraSecret>, vaultCollection: String): List<AuroraDeploymentSpecValidationException> {
+        return secrets.mapNotNull {
+            validateSecretVaultKey(it, vaultCollection)
+        }
+    }
+
+    private fun validateSecretVaultKey(
+            secret: AuroraSecret,
+            vaultCollection: String
+    ): AuroraDeploymentSpecValidationException? {
+        val vaultName = secret.secretVaultName
+        val keys = secret.secretVaultKeys.takeIfNotEmpty() ?: return null
+
+        val vaultKeys = vaultProvider.vaultService.findVaultKeys(vaultCollection, vaultName, secret.file)
+        val missingKeys = keys - vaultKeys
+        return if (missingKeys.isNotEmpty()) {
+            throw AuroraDeploymentSpecValidationException("The keys $missingKeys were not found in the secret vault")
+        } else null
+    }
+
+    fun validateSecretVaultFiles(secrets: List<AuroraSecret>, vaultCollection: String): List<AuroraDeploymentSpecValidationException> {
+        return secrets.mapNotNull {
+            validateSecretVaultFile(it, vaultCollection)
+        }
+    }
+
+    private fun validateSecretVaultFile(secret: AuroraSecret, vaultCollectionName: String): AuroraDeploymentSpecValidationException? {
+        return try {
+            vaultProvider.vaultService.findFileInVault(
+                    vaultCollectionName = vaultCollectionName,
+                    vaultName = secret.secretVaultName,
+                    fileName = secret.file
+            )
+            null
+        } catch (e: Exception) {
+            AuroraDeploymentSpecValidationException("File with name=${secret.file} is not present in vault=${secret.secretVaultName} in collection=${vaultCollectionName}")
+        }
+    }
+
+    /*
+     * Validates that the name property of a secret it unique
+     */
+    fun validateDuplicateSecretEnvNames(secrets: List<AuroraSecret>): AuroraDeploymentSpecValidationException? {
+
+        val secretNames = secrets.map { it.name }
+        return if (secretNames.size != secretNames.toSet().size) {
+            AuroraDeploymentSpecValidationException(
+                    "SecretVaults does not have unique names=[${secretNames.joinToString(
+                            ", "
+                    )}]"
+            )
+        } else null
     }
 
     override fun generate(adc: AuroraDeploymentContext): Set<AuroraResource> {

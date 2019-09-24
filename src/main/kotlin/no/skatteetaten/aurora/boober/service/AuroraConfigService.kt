@@ -6,6 +6,10 @@ import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.slf4j.MDCContext
 import no.skatteetaten.aurora.boober.controller.security.SpringSecurityThreadContextElement
+import no.skatteetaten.aurora.boober.feature.cluster
+import no.skatteetaten.aurora.boober.feature.name
+import no.skatteetaten.aurora.boober.feature.namespace
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.ApplicationRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
@@ -38,7 +42,7 @@ data class AuroraConfigRef(
 class AuroraConfigService(
     @TargetDomain(AURORA_CONFIG) val gitService: GitService,
     val bitbucketProjectService: BitbucketService,
-    val deploymentSpecValidator: AuroraDeploymentSpecValidator,
+    val auroraDeploymentSpecService: AuroraDeploymentSpecService,
     @Value("\${openshift.cluster}") val cluster: String,
     @Value("\${boober.validationPoolSize:6}") val validationPoolSize: Int,
     @Value("\${integrations.aurora.config.git.project}") val project: String
@@ -148,7 +152,7 @@ class AuroraConfigService(
         watch.start("validate")
         logger.debug("Affected AID for file={} adr={}", newFile, affectedAid)
         // This will validate both AuroraConfig and External validation for the affected AID
-        createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig), affectedAid)
+        createValidatedAuroraDeploymentContexts(AuroraConfigWithOverrides(auroraConfig), affectedAid)
         watch.stop()
 
         val checkoutDir = getAuroraConfigFolder(auroraConfig.name)
@@ -173,20 +177,20 @@ class AuroraConfigService(
         ref: AuroraConfigRef,
         adr: List<ApplicationDeploymentRef>
     ): List<ApplicationRef> =
-        createValidatedAuroraDeploymentSpecs(ref, adr).map {
-            ApplicationRef(it.environment.namespace, it.name)
+        createValidatedAuroraDeploymentContexts(ref, adr).map {
+            ApplicationRef(it.namespace, it.name)
         }
 
     @JvmOverloads
-    fun createValidatedAuroraDeploymentSpecs(
+    fun createValidatedAuroraDeploymentContexts(
         ref: AuroraConfigRef,
         applicationDeploymentRefs: List<ApplicationDeploymentRef>,
         overrideFiles: List<AuroraConfigFile> = listOf(),
         resourceValidation: Boolean = true
-    ): List<AuroraDeploymentSpecInternal> {
+    ): List<AuroraDeploymentContext> {
 
         val auroraConfig = findAuroraConfig(ref)
-        return createValidatedAuroraDeploymentSpecs(
+        return createValidatedAuroraDeploymentContexts(
             AuroraConfigWithOverrides(auroraConfig, overrideFiles),
             applicationDeploymentRefs
         )
@@ -197,7 +201,7 @@ class AuroraConfigService(
         overrideFiles: List<AuroraConfigFile> = listOf(),
         resourceValidation: Boolean = true
     ) {
-        createValidatedAuroraDeploymentSpecs(
+        createValidatedAuroraDeploymentContexts(
             AuroraConfigWithOverrides(auroraConfig, overrideFiles),
             auroraConfig.getApplicationDeploymentRefs(),
             resourceValidation
@@ -228,14 +232,14 @@ class AuroraConfigService(
         }
     }
 
-    private fun createValidatedAuroraDeploymentSpecs(
+    private fun createValidatedAuroraDeploymentContexts(
         auroraConfigWithOverrides: AuroraConfigWithOverrides,
         applicationDeploymentRefs: List<ApplicationDeploymentRef>,
         resourceValidation: Boolean = true
-    ): List<AuroraDeploymentSpecInternal> {
+    ): List<AuroraDeploymentContext> {
 
         val stopWatch = StopWatch().apply { start() }
-        val specInternals: List<AuroraDeploymentSpecInternal> = runBlocking(
+        val specInternals: List<AuroraDeploymentContext> = runBlocking(
             MDCContext() + SpringSecurityThreadContextElement()
         ) {
             applicationDeploymentRefs.map { aid ->
@@ -243,9 +247,9 @@ class AuroraConfigService(
                     try {
                         val spec =
                             createValidatedAuroraDeploymentSpec(auroraConfigWithOverrides, aid, resourceValidation)
-                        Pair<AuroraDeploymentSpecInternal?, ExceptionWrapper?>(first = spec, second = null)
+                        Pair<AuroraDeploymentContext?, ExceptionWrapper?>(first = spec, second = null)
                     } catch (e: Throwable) {
-                        Pair<AuroraDeploymentSpecInternal?, ExceptionWrapper?>(
+                        Pair<AuroraDeploymentContext?, ExceptionWrapper?>(
                             first = null,
                             second = ExceptionWrapper(aid, e)
                         )
@@ -263,21 +267,19 @@ class AuroraConfigService(
         auroraConfigWithOverrides: AuroraConfigWithOverrides,
         aid: ApplicationDeploymentRef,
         resourceValidation: Boolean = true
-    ): AuroraDeploymentSpecInternal {
+    ): AuroraDeploymentContext {
 
         val stopWatch = StopWatch().apply { start() }
-        val spec = AuroraDeploymentSpecService.createAuroraDeploymentSpecInternal(
+        val context = auroraDeploymentSpecService.createAuroraDeploymentContext(
             auroraConfig = auroraConfigWithOverrides.auroraConfig,
             applicationDeploymentRef = aid,
-            overrideFiles = auroraConfigWithOverrides.overrideFiles
-        )
-        if (spec.cluster == cluster && resourceValidation) {
-            deploymentSpecValidator.assertIsValid(spec)
-        }
+            overrideFiles = auroraConfigWithOverrides.overrideFiles,
+                fullValidation = resourceValidation
+        ).first
         stopWatch.stop()
 
         logger.debug("Created ADC for app=${aid.application}, env=${aid.environment} in ${stopWatch.totalTimeMillis} millis")
 
-        return spec
+        return context
     }
 }

@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
@@ -8,7 +9,8 @@ import java.util.UUID
 
 data class AuroraDeployResult @JvmOverloads constructor(
     val command: ApplicationDeploymentCommand? = null,
-    val auroraDeploymentSpecInternal: AuroraDeploymentSpecInternal? = null,
+    //TODO: This cannot be here
+    val auroraDeploymentSpecInternal: AuroraDeploymentContext? = null,
     val deployId: String = UUID.randomUUID().toString().substring(0, 7),
     val openShiftResponses: List<OpenShiftResponse> = listOf(),
     val success: Boolean = true,

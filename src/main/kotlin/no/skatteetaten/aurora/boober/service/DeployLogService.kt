@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import no.skatteetaten.aurora.boober.feature.cluster
 import no.skatteetaten.aurora.boober.utils.Instants.now
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.slf4j.Logger
@@ -42,7 +43,7 @@ class DeployLogService(
                         deployer = deployer,
                         time = now,
                         deploymentSpec = result.auroraDeploymentSpecInternal?.let {
-                            renderSpecAsJson(it.spec, true)
+                            renderSpecAsJson(it, true)
                         } ?: mapOf(),
                         deployId = result.deployId,
                         success = result.success,

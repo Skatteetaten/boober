@@ -60,6 +60,8 @@ fun AuroraDeploymentContext.probe(name: String): Probe? {
     }
 }
 
+val AuroraDeploymentContext.cluster: String get() = this["cluster"]
+
 fun AuroraDeploymentContext.extractPlaceHolders(): Map<String, String> {
     val segmentPair = this.getOrNull<String>("segment")?.let {
         "segment" to it
@@ -68,7 +70,7 @@ fun AuroraDeploymentContext.extractPlaceHolders(): Map<String, String> {
             "name" to name,
             "env" to envName,
             "affiliation" to affiliation,
-            "cluster" to this["cluster"]
+            "cluster" to cluster
     ).addIfNotNull(segmentPair)
     return placeholders
 }

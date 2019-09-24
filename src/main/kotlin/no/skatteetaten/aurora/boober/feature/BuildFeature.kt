@@ -18,6 +18,7 @@ import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import org.springframework.stereotype.Service
 
+// TODO: Abstract build
 @Service
 class BuildFeature() : Feature {
     override fun enable(header: AuroraDeploymentContext): Boolean {

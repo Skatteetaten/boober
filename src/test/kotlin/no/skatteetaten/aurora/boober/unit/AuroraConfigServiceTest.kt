@@ -48,7 +48,7 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
     val auroraConfigService = AuroraConfigService(
         gitService = gitService,
         bitbucketProjectService = mockk(),
-        deploymentSpecValidator = mockk(),
+        auroraDeploymentSpecService = mockk(),
         cluster = "qa",
         validationPoolSize = 6,
         project = "ac"
