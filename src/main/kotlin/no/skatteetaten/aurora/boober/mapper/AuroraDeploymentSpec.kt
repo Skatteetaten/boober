@@ -47,6 +47,7 @@ data class AuroraDeploymentCommand(
 
 }
 
+//TODO this is very wrong
 fun AuroraDeploymentContext.validate(fullValidation: Boolean): Map<Feature, java.lang.Exception> {
     return this.features.mapNotNull {
         try {

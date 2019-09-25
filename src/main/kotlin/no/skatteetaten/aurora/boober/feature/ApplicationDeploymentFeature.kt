@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.feature
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.utils.durationString
 import org.springframework.stereotype.Service
@@ -16,7 +17,14 @@ class ApplicationDeploymentFeature() : Feature{
                 AuroraConfigFieldHandler("message"),
                 AuroraConfigFieldHandler("ttl", validator = { it.durationString() })
         )
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    //TODO: MODIFY: Template/LocalTemplate/Deploy must set appId and applicationDeploymentId
+
+    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraResource> {
+
+
+        return setOf()
     }
     /*
     val appId: String

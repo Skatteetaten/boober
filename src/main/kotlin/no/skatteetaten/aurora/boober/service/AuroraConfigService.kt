@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.skatteetaten.aurora.boober.mapper.createAuroraDeploymentCommand
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -139,7 +140,9 @@ class AuroraConfigService(
         watch.start("validate")
         logger.debug("Affected AID for file={} adr={}", newFile, affectedAid)
         // This will validate both AuroraConfig and External validation for the affected AID
-        auroraDeploymentSpecService.createValidatedAuroraDeploymentContexts(AuroraConfigWithOverrides(auroraConfig), affectedAid)
+        auroraDeploymentSpecService.createValidatedAuroraDeploymentContexts(affectedAid.map {
+            createAuroraDeploymentCommand(auroraConfig, it)
+        })
         watch.stop()
 
         val checkoutDir = getAuroraConfigFolder(auroraConfig.name)
@@ -166,11 +169,10 @@ class AuroraConfigService(
             overrideFiles: List<AuroraConfigFile> = listOf(),
             resourceValidation: Boolean = true
     ) {
-        auroraDeploymentSpecService.createValidatedAuroraDeploymentContexts(
-                AuroraConfigWithOverrides(auroraConfig, overrideFiles),
-                auroraConfig.getApplicationDeploymentRefs(),
-                resourceValidation
-        )
+        val commands = auroraConfig.getApplicationDeploymentRefs().map {
+            createAuroraDeploymentCommand(auroraConfig, it, overrideFiles)
+        }
+        auroraDeploymentSpecService.createValidatedAuroraDeploymentContexts(commands, resourceValidation)
     }
 
     private fun getAuroraConfigFolder(name: String) = File(gitService.checkoutPath, name)

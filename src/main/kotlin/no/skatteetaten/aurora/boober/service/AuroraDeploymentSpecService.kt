@@ -64,32 +64,37 @@ class AuroraDeploymentSpecService(
     fun expandDeploymentRefToApplicationRef(
             auroraConfig: AuroraConfig,
             adr: List<ApplicationDeploymentRef>
-    ): List<ApplicationRef> = createValidatedAuroraDeploymentContexts(
-            AuroraConfigWithOverrides(auroraConfig),
-            adr).map {
-        ApplicationRef(it.namespace, it.name)
+    ): List<ApplicationRef> {
+
+        val commands = adr.map {
+            createAuroraDeploymentCommand(auroraConfig, it)
+        }
+        return createValidatedAuroraDeploymentContexts(commands)
+                .map {
+                    ApplicationRef(it.spec.namespace, it.spec.name)
+                }
     }
 
     fun createValidatedAuroraDeploymentContexts(
-            auroraConfigWithOverrides: AuroraConfigWithOverrides,
-            applicationDeploymentRefs: List<ApplicationDeploymentRef>,
+            commands: List<AuroraDeploymentCommand>,
             resourceValidation: Boolean = true
-    ): List<AuroraDeploymentSpec> {
+    ): List<AuroraDeploymentContext> {
 
         val stopWatch = StopWatch().apply { start() }
-        val specInternals: List<AuroraDeploymentSpec> = runBlocking(
+        val specInternals: List<AuroraDeploymentContext> = runBlocking(
                 MDCContext() + SpringSecurityThreadContextElement()
         ) {
-            applicationDeploymentRefs.map { aid ->
+            commands.map { cmd ->
                 async(dispatcher) {
                     try {
-                        val deployCommand = createAuroraDeploymentCommand(auroraConfigWithOverrides.auroraConfig, aid, auroraConfigWithOverrides.overrideFiles, "123")
-                        val spec = createAuroraDeploymentContext(deployCommand).spec
-                        Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = spec, second = null)
+                        val context = createAuroraDeploymentContext(cmd)
+                        context.validate(resourceValidation)
+
+                        Pair<AuroraDeploymentContext?, ExceptionWrapper?>(first = context, second = null)
                     } catch (e: Throwable) {
-                        Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(
+                        Pair<AuroraDeploymentContext?, ExceptionWrapper?>(
                                 first = null,
-                                second = ExceptionWrapper(aid, e)
+                                second = ExceptionWrapper(cmd.adr, e)
                         )
                     }
                 }
@@ -97,7 +102,8 @@ class AuroraDeploymentSpecService(
                     .map { it.await() }
         }.onErrorThrow(::MultiApplicationValidationException)
         stopWatch.stop()
-        logger.debug("Validated AuroraConfig ${auroraConfigWithOverrides.auroraConfig.name} with ${applicationDeploymentRefs.size} applications in ${stopWatch.totalTimeMillis} millis")
+        val name= commands.first().auroraConfig.name
+        logger.debug("Validated AuroraConfig ${name} with ${commands.size} applications in ${stopWatch.totalTimeMillis} millis")
         return specInternals
     }
 
@@ -156,15 +162,12 @@ class AuroraDeploymentSpecService(
     }
 
 
-
     fun getAuroraDeploymentSpecs(
             auroraConfig: AuroraConfig,
             applicationDeploymentRefs: List<ApplicationDeploymentRef>
     ): List<AuroraDeploymentSpec> {
         return applicationDeploymentRefs.map {
-            createAuroraDeploymentContext(
-                    createAuroraDeploymentCommand(auroraConfig, it)
-            ).spec
+            createAuroraDeploymentContext(createAuroraDeploymentCommand(auroraConfig, it)).spec
         }
     }
 }
