@@ -48,5 +48,6 @@ class WebDeployFeature(dockerRegistry: String) : AbstractDeployFeature(dockerReg
                 }
             }
         }
+        super.modify(adc, resources, cmd)
     }
 }

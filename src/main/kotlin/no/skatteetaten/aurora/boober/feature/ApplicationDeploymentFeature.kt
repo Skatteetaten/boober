@@ -1,17 +1,33 @@
 package no.skatteetaten.aurora.boober.feature
 
+import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fkorotkov.kubernetes.newObjectMeta
+import com.fkorotkov.kubernetes.newOwnerReference
+import io.fabric8.kubernetes.api.model.ObjectMeta
+import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
+import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
+import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
+import no.skatteetaten.aurora.boober.utils.Instants
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.durationString
+import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.stereotype.Service
+import java.time.Duration
+import java.time.Instant
+
+
+val AuroraDeploymentSpec.ttl: Duration? get() = this.getOrNull("ttl")
 
 @Service
-class ApplicationDeploymentFeature() : Feature{
+class ApplicationDeploymentFeature() : Feature {
 
-    //message, ttl
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
                 AuroraConfigFieldHandler("message"),
@@ -19,80 +35,46 @@ class ApplicationDeploymentFeature() : Feature{
         )
     }
 
-    //TODO: MODIFY: Template/LocalTemplate/Deploy must set appId and applicationDeploymentId
-
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraResource> {
 
-
-        return setOf()
-    }
-    /*
-    val appId: String
-        get() =
-            template?.let {
-                it.template
-            } ?: localTemplate?.let {
-                "local" + it.templateJson.openshiftName
-            } ?: deploy?.let {
-                "${it.groupId}/${it.artifactId}"
-            } ?: throw RuntimeException("Not valid deployment")
-
-             val appName: String
-        get() =
-            template?.let {
-                it.template
-            } ?: localTemplate?.let {
-                "local" + it.templateJson.openshiftName
-            } ?: deploy?.let {
-                it.artifactId
-            } ?: throw RuntimeException("Not valid deployment")
-
-             @JvmStatic
-    fun generate(
-        deploymentSpecInternal: AuroraDeploymentSpecInternal,
-        deployId: String,
-        cmd: ApplicationDeploymentCommand,
-        updateBy: String,
-        provisions: Provisions
-    ): ApplicationDeployment {
-
-        val ttl = deploymentSpecInternal.deploy?.ttl?.let {
+        val applicationDeploymentId = DigestUtils.sha1Hex("${adc.namespace}/${adc.name}")
+        val ttl = adc.ttl?.let {
             val removeInstant = Instants.now + it
             "removeAfter" to removeInstant.epochSecond.toString()
         }
-        val applicationId = DigestUtils.sha1Hex(deploymentSpecInternal.appId)
-        val applicationDeploymentId = DigestUtils.sha1Hex(deploymentSpecInternal.appDeploymentId)
-        return ApplicationDeployment(
-            spec = ApplicationDeploymentSpec(
-                selector = mapOf("name" to deploymentSpecInternal.name),
-                deployTag = deploymentSpecInternal.version,
-                applicationId = applicationId,
-                applicationDeploymentId = applicationDeploymentId,
-                applicationName = deploymentSpecInternal.appName,
-                applicationDeploymentName = deploymentSpecInternal.name,
-                databases = provisions.dbhSchemas.map { it.id },
-                splunkIndex = deploymentSpecInternal.integration?.splunkIndex,
-                managementPath = deploymentSpecInternal.deploy?.managementPath,
-                releaseTo = deploymentSpecInternal.deploy?.releaseTo,
-                command = cmd,
-                message = deploymentSpecInternal.message
-            ),
-            _metadata = ObjectMetaBuilder()
-                .withName(deploymentSpecInternal.name)
-                .withNamespace(deploymentSpecInternal.environment.namespace)
-                .withLabels(
-                    mapOf(
-                        "app" to deploymentSpecInternal.name,
-                        "name" to deploymentSpecInternal.name,
-                        "updatedBy" to updateBy,
-                        "affiliation" to deploymentSpecInternal.environment.affiliation,
-                        "booberDeployId" to deployId,
-                        "applicationId" to applicationId,
-                        "id" to applicationDeploymentId
-                    ).addIfNotNull(ttl)
-                )
-                .build()
-        )
+
+        return setOf(AuroraResource("${adc.name}-ad", ApplicationDeployment(
+                spec = ApplicationDeploymentSpec(
+                        selector = mapOf("name" to adc.name),
+                        message = adc.getOrNull("message"),
+                        applicationDeploymentName = adc.name,
+                        applicationDeploymentId = applicationDeploymentId,
+                        command = ApplicationDeploymentCommand(
+                                cmd.overrideFiles,
+                                cmd.adr,
+                                cmd.auroraConfigRef)
+                ),
+                _metadata = newObjectMeta {
+                    name = adc.name
+                    namespace = adc.namespace
+                    labels = mapOf("id" to applicationDeploymentId).addIfNotNull(ttl)
+                }
+        )))
     }
-     */
+
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
+
+        resources.forEach {
+            if (it.resource.metadata.namespace != null && it.resource.kind != "ApplicationDeployment") {
+                it.resource.metadata.ownerReferences = listOf(
+                        newOwnerReference {
+                            apiVersion = "skatteetaten.no/v1"
+                            kind = "ApplicationDeployment"
+                            name = adc.name
+                            uid = "123-123"
+                        }
+                )
+            }
+        }
+    }
 }

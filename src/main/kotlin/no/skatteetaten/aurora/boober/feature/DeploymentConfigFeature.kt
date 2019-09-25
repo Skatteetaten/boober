@@ -9,6 +9,7 @@ import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
@@ -17,6 +18,8 @@ import no.skatteetaten.aurora.boober.utils.filterNullValues
 import org.springframework.stereotype.Service
 
 fun AuroraDeploymentSpec.quantity(resource: String, classifier: String): Pair<String, Quantity> = resource to QuantityBuilder().withAmount(this["resources/$resource/$classifier"]).build()
+
+val AuroraDeploymentSpec.splunkIndex: String? get() = this.getOrNull<String>("splunkIndex")
 
 fun Map<String, String>.toEnvVars(): List<EnvVar> = this
         .mapKeys { it.key.replace(".", "_").replace("-", "_") }
@@ -49,7 +52,15 @@ class DeploymentConfigFeature() : Feature {
         val dcAnnotations = createDcAnnotations(adc, cmd)
         val envVars = createEnvVars(adc).toEnvVars()
         resources.forEach {
-            if (it.resource.kind == "DeploymentConfig") {
+            if (it.resource.kind == "ApplicationDeployment") {
+                val ad: ApplicationDeployment = jacksonObjectMapper().convertValue(it.resource)
+                val spec = ad.spec
+                spec.splunkIndex = adc.splunkIndex
+                spec.releaseTo = adc.releaseTo
+                spec.deployTag = adc.dockerTag
+                spec.managementPath = adc.managementPath
+
+            } else if (it.resource.kind == "DeploymentConfig") {
                 val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
 
                 if (dc.spec.template.metadata == null) {
@@ -86,7 +97,7 @@ class DeploymentConfigFeature() : Feature {
         return mapOf(
                 "OPENSHIFT_CLUSTER" to adc["cluster"],
                 "APP_NAME" to adc.name,
-                "SPLUNK_INDEX" to adc.getOrNull<String>("splunkIndex")
+                "SPLUNK_INDEX" to adc.splunkIndex
         ).addIfNotNull(debugEnv).filterNullValues()
 
     }

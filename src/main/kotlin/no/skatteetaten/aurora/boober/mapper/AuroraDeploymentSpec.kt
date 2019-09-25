@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
+import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.utils.atNullable
@@ -18,7 +19,8 @@ fun createAuroraDeploymentCommand(
         auroraConfig: AuroraConfig,
         applicationDeploymentRef: ApplicationDeploymentRef,
         overrideFiles: List<AuroraConfigFile> = emptyList(),
-        deployId: String? = null)
+        deployId: String? = null,
+        auroraConfigRef: AuroraConfigRef)
         : AuroraDeploymentCommand {
     val applicationFiles: List<AuroraConfigFile> = auroraConfig.getFilesForApplication(applicationDeploymentRef, overrideFiles)
 
@@ -26,7 +28,8 @@ fun createAuroraDeploymentCommand(
             auroraConfig = auroraConfig,
             applicationFiles = applicationFiles,
             adr = applicationDeploymentRef,
-            deployId = deployId ?: "empty"
+            deployId = deployId ?: "empty",
+            auroraConfigRef = auroraConfigRef
     )
 }
 
@@ -34,10 +37,9 @@ data class AuroraDeploymentCommand(
         val auroraConfig: AuroraConfig,
         val applicationFiles: List<AuroraConfigFile>,
         val adr: ApplicationDeploymentRef,
-        val deployId: String
+        val deployId: String,
+        val auroraConfigRef: AuroraConfigRef
 ) {
-
-
     val applicationFile: AuroraConfigFile
         get() = applicationFiles.find { it.type == AuroraConfigFileType.APP && !it.override }!!
 

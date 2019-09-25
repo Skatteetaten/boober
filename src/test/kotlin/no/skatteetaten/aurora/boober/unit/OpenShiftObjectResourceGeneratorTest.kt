@@ -111,9 +111,9 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
             val additionalFile: String? = null,
             val overrides: List<AuroraConfigFile> = emptyList()
     ) {
-        DEPLOY("booberdev", "console", "openshift-console-api"),
-        DEVELOPMENT("mounts", "aos-simple"),
-        LOCAL_TEMPLATE("booberdev", "tvinn", additionalFile = "templates/atomhopper.json"),
+        BOOBERDEV_CONSOLE("booberdev", "console", "openshift-console-api"),
+        MOUNTS_SIMPLE("mounts", "aos-simple"),
+        BOOBERDEV_TVINN("booberdev", "tvinn", additionalFile = "templates/atomhopper.json"),
         BOOBERDEV_SIMPLE(
                 "booberdev", "aos-simple", overrides = listOf(
                 AuroraConfigFile(
@@ -141,7 +141,7 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
         every { databaseSchemaProvisioner.provisionSchemas(any()) } returns createDatabaseResult(test.dbName, test.env)
 
         val deployCommand = createAuroraDeploymentCommand(
-                auroraConfig = auroraConfig, applicationDeploymentRef = aid, overrideFiles = test.overrides, deployId = "123"
+                auroraConfig = auroraConfig, applicationDeploymentRef = aid, overrideFiles = test.overrides, deployId = "123", auroraConfigRef = AuroraConfigRef("test", "master", "123abb")
         )
         val ctx = service.createAuroraDeploymentContext(deployCommand)
         val resources = ctx.createResources()

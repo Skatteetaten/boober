@@ -63,11 +63,12 @@ class AuroraDeploymentSpecService(
 
     fun expandDeploymentRefToApplicationRef(
             auroraConfig: AuroraConfig,
-            adr: List<ApplicationDeploymentRef>
+            adr: List<ApplicationDeploymentRef>,
+            ref: AuroraConfigRef
     ): List<ApplicationRef> {
 
         val commands = adr.map {
-            createAuroraDeploymentCommand(auroraConfig, it)
+            createAuroraDeploymentCommand(auroraConfig, it, auroraConfigRef = ref)
         }
         return createValidatedAuroraDeploymentContexts(commands)
                 .map {
@@ -164,10 +165,11 @@ class AuroraDeploymentSpecService(
 
     fun getAuroraDeploymentSpecs(
             auroraConfig: AuroraConfig,
-            applicationDeploymentRefs: List<ApplicationDeploymentRef>
+            applicationDeploymentRefs: List<ApplicationDeploymentRef>,
+            ref: AuroraConfigRef
     ): List<AuroraDeploymentSpec> {
         return applicationDeploymentRefs.map {
-            createAuroraDeploymentContext(createAuroraDeploymentCommand(auroraConfig, it)).spec
+            createAuroraDeploymentContext(createAuroraDeploymentCommand(auroraConfig, it, auroraConfigRef = ref)).spec
         }
     }
 }

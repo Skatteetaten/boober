@@ -104,6 +104,7 @@ object DbhSecretGenerator {
             metadata {
                 name = secretName
                 namespace = secretNamespace
+                labels = mapOf("dbhId" to schemaProvisionResult.dbhSchema.id)
             }
             data = mapOf(
                     "db.properties" to connectionProperties,

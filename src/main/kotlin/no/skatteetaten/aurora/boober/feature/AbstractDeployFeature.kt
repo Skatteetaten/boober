@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.feature
 
+import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.*
 import com.fkorotkov.openshift.*
 import io.fabric8.kubernetes.api.model.*
@@ -7,9 +9,11 @@ import io.fabric8.kubernetes.api.model.Probe
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.*
 import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.utils.*
+import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.beans.factory.annotation.Value
 
 val AuroraDeploymentSpec.envName get(): String = this.getOrNull("env/name") ?: this["envName"]
@@ -155,6 +159,18 @@ abstract class AbstractDeployFeature(
         )
     }
 
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
+        val name = "${adc.artifactId}"
+        val id = DigestUtils.sha1Hex("${adc.groupId}/${adc.artifactId}")
+        resources.forEach {
+            if (it.resource.kind == "ApplicationDeployment") {
+                val ad: ApplicationDeployment = jacksonObjectMapper().convertValue(it.resource)
+                ad.spec.applicationName = name
+                ad.spec.applicationId = id
+            }
+        }
+
+    }
 
     fun createService(adc: AuroraDeploymentSpec): Service {
 

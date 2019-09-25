@@ -40,7 +40,7 @@ class AuroraDeploymentSpecControllerV1(
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         val specs = adrList.map(ApplicationDeploymentRef.Companion::fromString)
-                .let { auroraDeploymentSpecService.getAuroraDeploymentSpecs(auroraConfig, it) }
+                .let { auroraDeploymentSpecService.getAuroraDeploymentSpecs(auroraConfig, it, ref) }
         return responder.create(
                 specs,
                 includeDefaults ?: true
@@ -58,7 +58,7 @@ class AuroraDeploymentSpecControllerV1(
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         val specs = auroraConfig.getApplicationDeploymentRefs()
                 .filter { it.environment == environment }
-                .let { auroraDeploymentSpecService.getAuroraDeploymentSpecs(auroraConfig, it) }
+                .let { auroraDeploymentSpecService.getAuroraDeploymentSpecs(auroraConfig, it, ref) }
         return responder.create(specs, includeDefaults)
     }
 
@@ -75,7 +75,12 @@ class AuroraDeploymentSpecControllerV1(
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
-        val cmd = createAuroraDeploymentCommand(auroraConfig = auroraConfig, overrideFiles = overrideFiles, applicationDeploymentRef = ApplicationDeploymentRef.adr(environment, application))
+        val cmd = createAuroraDeploymentCommand(
+                auroraConfig = auroraConfig,
+                overrideFiles = overrideFiles,
+                applicationDeploymentRef = ApplicationDeploymentRef.adr(environment, application),
+                auroraConfigRef = ref
+        )
         return responder.create(auroraDeploymentSpecService.createAuroraDeploymentContext(cmd).spec)
     }
 
@@ -107,7 +112,8 @@ class AuroraDeploymentSpecControllerV1(
                 createAuroraDeploymentCommand(
                         auroraConfig = auroraConfig,
                         applicationDeploymentRef = applicationDeploymentRef,
-                        overrideFiles = extractOverrides(overrides)
+                        overrideFiles = extractOverrides(overrides),
+                        auroraConfigRef = ref
                 )
         ).spec
 

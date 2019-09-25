@@ -1,7 +1,9 @@
 package no.skatteetaten.aurora.boober.model.openshift
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonPropertyOrder
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.ObjectMeta
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceColumnDefinition
@@ -10,10 +12,14 @@ import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder(value = ["apiVersion", "kind", "metadata", "spec"])
 data class ApplicationDeployment(
         val spec: ApplicationDeploymentSpec,
+        @JsonIgnore
         var _metadata: ObjectMeta?,
+        @JsonIgnore
         val _kind: String = "ApplicationDeployment",
+        @JsonIgnore
         var _apiVersion: String = "skatteetaten.no/v1"
 ) : HasMetadata { //or just KubernetesResource?
     override fun getMetadata(): ObjectMeta {
@@ -40,18 +46,18 @@ data class ApplicationDeployment(
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class ApplicationDeploymentSpec(
-        val applicationId: String,
-        val applicationDeploymentId: String,
-        val applicationName: String,
-        val applicationDeploymentName: String,
-        val databases: List<String>,
-        val splunkIndex: String? = null,
-        val managementPath: String?,
-        val releaseTo: String?,
-        val deployTag: String?,
+        var applicationId: String? = null,
         val selector: Map<String, String>,
+        val applicationDeploymentId: String,
+        var applicationName: String? = null,
+        val applicationDeploymentName: String,
+        var databases: List<String> = emptyList(),
+        var splunkIndex: String? = null,
+        var managementPath: String?  = null,
+        var releaseTo: String? = null,
+        var deployTag: String? = null,
         val command: ApplicationDeploymentCommand,
-        val message: String?
+        val message: String? = null
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

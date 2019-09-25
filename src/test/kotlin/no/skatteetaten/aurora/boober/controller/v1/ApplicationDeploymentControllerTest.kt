@@ -23,8 +23,8 @@ import org.springframework.test.web.servlet.MockMvc
 
 @AutoConfigureRestDocs
 @WebMvcTest(
-    value = [ApplicationDeploymentController::class],
-    secure = false
+        value = [ApplicationDeploymentController::class],
+        secure = false
 )
 class ApplicationDeploymentControllerTest(@Autowired private val mockMvc: MockMvc) {
 
@@ -42,20 +42,20 @@ class ApplicationDeploymentControllerTest(@Autowired private val mockMvc: MockMv
         val payload = ApplicationDeploymentPayload(listOf(applicationRef))
 
         given(
-            applicationDeploymentService.executeDelete(payload.applicationRefs)
+                applicationDeploymentService.executeDelete(payload.applicationRefs)
         ).withContractResponse("applicationdeployment/delete") {
             willReturn(content)
         }
 
         mockMvc.post(
-            path = Path("/v1/applicationdeployment/delete"),
-            headers = HttpHeaders().contentTypeJson(),
-            body = payload
+                path = Path("/v1/applicationdeployment/delete"),
+                headers = HttpHeaders().contentTypeJson(),
+                body = payload
         ) {
             statusIsOk()
-                .responseJsonPath("$.success").isTrue()
-                .responseJsonPath("$.items[0].reason").equalsValue("Application was successfully deleted")
-                .responseJsonPath("$.items[0].applicationRef").equalsObject(applicationRef)
+                    .responseJsonPath("$.success").isTrue()
+                    .responseJsonPath("$.items[0].reason").equalsValue("Application was successfully deleted")
+                    .responseJsonPath("$.items[0].applicationRef").equalsObject(applicationRef)
         }
     }
 
@@ -64,26 +64,26 @@ class ApplicationDeploymentControllerTest(@Autowired private val mockMvc: MockMv
         val adr = ApplicationDeploymentRef("deploy", "reference")
         val payload = ApplicationDeploymentRefPayload(listOf(adr))
 
-        val applicationRef = given(auroraDeploymentSpecService.expandDeploymentRefToApplicationRef(any(), any()))
-            .withContractResponse("applicationdeployment/applications") {
-                willReturn(content)
-            }.mockResponse
+        val applicationRef = given(auroraDeploymentSpecService.expandDeploymentRefToApplicationRef(any(), any(), any()))
+                .withContractResponse("applicationdeployment/applications") {
+                    willReturn(content)
+                }.mockResponse
 
         given(applicationDeploymentService.checkApplicationDeploymentsExists(applicationRef))
-            .withContractResponse("applicationdeployment/applications_status") {
-                willReturn(content)
-            }
+                .withContractResponse("applicationdeployment/applications_status") {
+                    willReturn(content)
+                }
 
         mockMvc.post(
-            path = Path("/v1/applicationdeployment/demo?reference=test"),
-            headers = HttpHeaders().contentTypeJson(),
-            body = payload
+                path = Path("/v1/applicationdeployment/demo?reference=test"),
+                headers = HttpHeaders().contentTypeJson(),
+                body = payload
         ) {
             statusIsOk()
-                .responseJsonPath("$.success").isTrue()
-                .responseJsonPath("$.items[0].message").equalsValue("Application exists")
-                .responseJsonPath("$.items[0].exists").equalsValue(true)
-                .responseJsonPath("$.items[0].applicationRef").equalsObject(ApplicationRef("demo-deploy", "reference"))
+                    .responseJsonPath("$.success").isTrue()
+                    .responseJsonPath("$.items[0].message").equalsValue("Application exists")
+                    .responseJsonPath("$.items[0].exists").equalsValue(true)
+                    .responseJsonPath("$.items[0].applicationRef").equalsObject(ApplicationRef("demo-deploy", "reference"))
         }
     }
 }

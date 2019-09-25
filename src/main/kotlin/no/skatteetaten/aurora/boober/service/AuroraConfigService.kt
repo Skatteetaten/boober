@@ -88,7 +88,7 @@ class AuroraConfigService(
         val oldAuroraConfig = findAuroraConfig(ref)
         val (newFile, auroraConfig) = oldAuroraConfig.updateFile(fileName, contents, previousVersion)
 
-        return saveFile(newFile, auroraConfig)
+        return saveFile(newFile, auroraConfig, ref)
     }
 
     fun patchAuroraConfigFile(
@@ -101,7 +101,7 @@ class AuroraConfigService(
         val auroraConfig = findAuroraConfig(ref)
         val (newFile, updatedAuroraConfig) = auroraConfig.patchFile(filename, jsonPatchOp, previousVersion)
 
-        return saveFile(newFile, updatedAuroraConfig)
+        return saveFile(newFile, updatedAuroraConfig, ref)
     }
 
     fun save(auroraConfig: AuroraConfig): AuroraConfig {
@@ -127,7 +127,7 @@ class AuroraConfigService(
         return auroraConfig
     }
 
-    private fun saveFile(newFile: AuroraConfigFile, auroraConfig: AuroraConfig): AuroraConfig {
+    private fun saveFile(newFile: AuroraConfigFile, auroraConfig: AuroraConfig, ref: AuroraConfigRef): AuroraConfig {
 
         val watch = StopWatch()
         watch.start("find affected adr")
@@ -141,7 +141,7 @@ class AuroraConfigService(
         logger.debug("Affected AID for file={} adr={}", newFile, affectedAid)
         // This will validate both AuroraConfig and External validation for the affected AID
         auroraDeploymentSpecService.createValidatedAuroraDeploymentContexts(affectedAid.map {
-            createAuroraDeploymentCommand(auroraConfig, it)
+            createAuroraDeploymentCommand(auroraConfig, it, auroraConfigRef = ref)
         })
         watch.stop()
 
@@ -167,10 +167,11 @@ class AuroraConfigService(
     fun validateAuroraConfig(
             auroraConfig: AuroraConfig,
             overrideFiles: List<AuroraConfigFile> = listOf(),
-            resourceValidation: Boolean = true
+            resourceValidation: Boolean = true,
+            auroraConfigRef: AuroraConfigRef
     ) {
         val commands = auroraConfig.getApplicationDeploymentRefs().map {
-            createAuroraDeploymentCommand(auroraConfig, it, overrideFiles)
+            createAuroraDeploymentCommand(auroraConfig, it, overrideFiles, auroraConfigRef = auroraConfigRef)
         }
         auroraDeploymentSpecService.createValidatedAuroraDeploymentContexts(commands, resourceValidation)
     }

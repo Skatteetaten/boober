@@ -4,17 +4,24 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fkorotkov.kubernetes.resources
 import io.fabric8.kubernetes.api.model.HasMetadata
+import io.fabric8.kubernetes.api.model.ObjectMeta
+import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.findSubKeys
 import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.filterNullValues
 import no.skatteetaten.aurora.boober.utils.getBoolean
+import no.skatteetaten.aurora.boober.utils.openshiftName
+import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.text.StringSubstitutor
 
 
@@ -41,6 +48,20 @@ abstract class AbstractTemplateFeature() : Feature {
                 AuroraConfigFieldHandler("replicas"),
                 AuroraConfigFieldHandler("splunkIndex")
         )
+    }
+
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
+        val type = adc.type
+        val template = findTemplate(adc, cmd)
+        val name = template.openshiftName
+        val id = DigestUtils.sha1Hex("${type.name.toLowerCase()}-$name")
+        resources.forEach {
+            if (it.resource.kind == "ApplicationDeployment") {
+                val ad: ApplicationDeployment = jacksonObjectMapper().convertValue(it.resource)
+                ad.spec.applicationName = name
+                ad.spec.applicationId = id
+            }
+        }
     }
 
     override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraDeploymentCommand): List<Exception> {
@@ -76,7 +97,7 @@ abstract class AbstractTemplateFeature() : Feature {
 
     fun findParameters(adc: AuroraDeploymentSpec): Map<String, String> {
         val parameters = mapOf(
-                "SPLUNK_INDEX" to adc.getOrNull<String>("splunkIndex"),
+                "SPLUNK_INDEX" to adc.splunkIndex,
                 "VERSION" to adc.getOrNull<String>("version"),
                 "REPLICAS" to adc.getOrNull<String>("replicas"),
                 "NAME" to adc.name
