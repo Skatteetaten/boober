@@ -317,6 +317,7 @@ class AuroraDeploymentSpec(
 }
 
 
+//Does not need entire auroraConfig only templateFiles
 data class AuroraDeploymentContext(
         val fields: Map<String, AuroraConfigField>,
         val replacer: StringSubstitutor,

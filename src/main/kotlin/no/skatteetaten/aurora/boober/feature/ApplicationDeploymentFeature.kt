@@ -4,7 +4,9 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.utils.durationString
+import org.springframework.stereotype.Service
 
+@Service
 class ApplicationDeploymentFeature() : Feature{
 
     //message, ttl

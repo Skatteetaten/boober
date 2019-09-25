@@ -5,16 +5,25 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.openshift.api.model.DeploymentConfig
+import kotlinx.coroutines.async
+import kotlinx.coroutines.newFixedThreadPoolContext
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.slf4j.MDCContext
+import no.skatteetaten.aurora.boober.controller.security.SpringSecurityThreadContextElement
 import no.skatteetaten.aurora.boober.feature.extractPlaceHolders
+import no.skatteetaten.aurora.boober.feature.name
+import no.skatteetaten.aurora.boober.feature.namespace
 import no.skatteetaten.aurora.boober.mapper.*
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.model.ApplicationRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import javax.annotation.PostConstruct
+import org.springframework.util.StopWatch
 
 data class AuroraResource(
         val name: String,
@@ -47,10 +56,55 @@ typealias FeatureSpec = Map<Feature, AuroraDeploymentContext>
 
 @Service
 class AuroraDeploymentSpecService(
-        val auroraConfigService: AuroraConfigService,
-        val featuers: List<Feature>
+        val featuers: List<Feature>,
+        @Value("\${boober.validationPoolSize:6}") val validationPoolSize: Int
 ) {
 
+    val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpecService::class.java)
+    private val dispatcher = newFixedThreadPoolContext(validationPoolSize, "validationPool")
+
+    fun expandDeploymentRefToApplicationRef(
+            auroraConfig: AuroraConfig,
+            adr: List<ApplicationDeploymentRef>
+    ): List<ApplicationRef> = createValidatedAuroraDeploymentContexts(
+            AuroraConfigWithOverrides(auroraConfig),
+            adr).map {
+        ApplicationRef(it.namespace, it.name)
+    }
+
+    fun createValidatedAuroraDeploymentContexts(
+            auroraConfigWithOverrides: AuroraConfigWithOverrides,
+            applicationDeploymentRefs: List<ApplicationDeploymentRef>,
+            resourceValidation: Boolean = true
+    ): List<AuroraDeploymentContext> {
+
+        val stopWatch = StopWatch().apply { start() }
+        val specInternals: List<AuroraDeploymentContext> = runBlocking(
+                MDCContext() + SpringSecurityThreadContextElement()
+        ) {
+            applicationDeploymentRefs.map { aid ->
+                async(dispatcher) {
+                    try {
+                        val spec = createAuroraDeploymentContext(
+                                auroraConfig = auroraConfigWithOverrides.auroraConfig,
+                                applicationDeploymentRef = aid,
+                                overrideFiles = auroraConfigWithOverrides.overrideFiles
+                        ).first
+                        Pair<AuroraDeploymentContext?, ExceptionWrapper?>(first = spec, second = null)
+                    } catch (e: Throwable) {
+                        Pair<AuroraDeploymentContext?, ExceptionWrapper?>(
+                                first = null,
+                                second = ExceptionWrapper(aid, e)
+                        )
+                    }
+                }
+            }
+                    .map { it.await() }
+        }.onErrorThrow(::MultiApplicationValidationException)
+        stopWatch.stop()
+        logger.debug("Validated AuroraConfig ${auroraConfigWithOverrides.auroraConfig.name} with ${applicationDeploymentRefs.size} applications in ${stopWatch.totalTimeMillis} millis")
+        return specInternals
+    }
 
     fun createAuroraDeploymentContext(
             auroraConfig: AuroraConfig,
@@ -139,8 +193,6 @@ class AuroraDeploymentSpecService(
         val (spec, featureAdc) = createAuroraDeploymentContext(auroraConfig, applicationDeploymentRef, overrideFiles, deployId)
 
 
-
-
         val featureResources: Set<AuroraResource> = featureAdc.flatMap {
             it.key.generate(it.value)
         }.toSet()
@@ -153,20 +205,7 @@ class AuroraDeploymentSpecService(
         return featureResources
     }
 
-    fun getAuroraDeploymentSpecsForEnvironment(ref: AuroraConfigRef, environment: String): List<AuroraDeploymentContext> {
-        val auroraConfig = auroraConfigService.findAuroraConfig(ref)
-        return auroraConfig.getApplicationDeploymentRefs()
-                .filter { it.environment == environment }
-                .let { getAuroraDeploymentSpecs(auroraConfig, it) }
-    }
-
-    fun getAuroraDeploymentSpecs(ref: AuroraConfigRef, aidStrings: List<String>): List<AuroraDeploymentContext> {
-        val auroraConfig = auroraConfigService.findAuroraConfig(ref)
-        return aidStrings.map(ApplicationDeploymentRef.Companion::fromString)
-                .let { getAuroraDeploymentSpecs(auroraConfig, it) }
-    }
-
-    private fun getAuroraDeploymentSpecs(
+    fun getAuroraDeploymentSpecs(
             auroraConfig: AuroraConfig,
             applicationDeploymentRefs: List<ApplicationDeploymentRef>
     ): List<AuroraDeploymentContext> {
@@ -176,19 +215,5 @@ class AuroraDeploymentSpecService(
                     applicationDeploymentRef = it
             ).first
         }
-    }
-
-    fun getAuroraDeploymentContext(
-            ref: AuroraConfigRef,
-            environment: String,
-            application: String,
-            overrides: List<AuroraConfigFile> = emptyList()
-    ): AuroraDeploymentContext {
-        val auroraConfig = auroraConfigService.findAuroraConfig(ref)
-        return createAuroraDeploymentContext(
-                auroraConfig = auroraConfig,
-                overrideFiles = overrides,
-                applicationDeploymentRef = ApplicationDeploymentRef.adr(environment, application)
-        ).first
     }
 }

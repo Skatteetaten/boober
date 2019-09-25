@@ -50,7 +50,6 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
         bitbucketProjectService = mockk(),
         auroraDeploymentSpecService = mockk(),
         cluster = "qa",
-        validationPoolSize = 6,
         project = "ac"
     )
 

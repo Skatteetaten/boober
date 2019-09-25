@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.boober.model.ApplicationRef
 import no.skatteetaten.aurora.boober.service.ApplicationDeploymentService
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -32,6 +33,7 @@ data class ExistsResponse(
 @RequestMapping("/v1/applicationdeployment")
 class ApplicationDeploymentController(
     val applicationDeploymentService: ApplicationDeploymentService,
+    val auroraDeploymentSpecService: AuroraDeploymentSpecService,
     val auroraConfigService: AuroraConfigService
 ) {
 
@@ -59,7 +61,8 @@ class ApplicationDeploymentController(
     ): Response {
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
-        val applicationRefs = auroraConfigService.expandDeploymentRefToApplicationRef(ref, adrPayload.adr)
+        val auroraConfig = auroraConfigService.findAuroraConfig(ref)
+        val applicationRefs = auroraDeploymentSpecService.expandDeploymentRefToApplicationRef(auroraConfig, adrPayload.adr)
 
         val applicationDeploymentResponse =
             applicationDeploymentService.checkApplicationDeploymentsExists(applicationRefs)

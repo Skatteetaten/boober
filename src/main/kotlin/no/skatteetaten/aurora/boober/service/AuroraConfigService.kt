@@ -26,30 +26,28 @@ import org.springframework.util.StopWatch
 import java.io.File
 
 class AuroraConfigWithOverrides(
-    var auroraConfig: AuroraConfig,
-    val overrideFiles: List<AuroraConfigFile> = listOf()
+        var auroraConfig: AuroraConfig,
+        val overrideFiles: List<AuroraConfigFile> = listOf()
 )
 
 data class AuroraConfigRef(
-    val name: String,
-    val refName: String,
-    val resolvedRef: String? = null
+        val name: String,
+        val refName: String,
+        val resolvedRef: String? = null
 )
 
 @Service
 class AuroraConfigService(
-    @TargetDomain(AURORA_CONFIG) val gitService: GitService,
-    val bitbucketProjectService: BitbucketService,
-    val auroraDeploymentSpecService: AuroraDeploymentSpecService,
-    @Value("\${openshift.cluster}") val cluster: String,
-    @Value("\${boober.validationPoolSize:6}") val validationPoolSize: Int,
-    @Value("\${integrations.aurora.config.git.project}") val project: String
+        @TargetDomain(AURORA_CONFIG) val gitService: GitService,
+        val bitbucketProjectService: BitbucketService,
+        val auroraDeploymentSpecService: AuroraDeploymentSpecService,
+        @Value("\${openshift.cluster}") val cluster: String,
+        @Value("\${integrations.aurora.config.git.project}") val project: String
 ) {
 
     val logger: Logger = getLogger(AuroraConfigService::class.java)
     val mapper = jacksonObjectMapper()
 
-    private val dispatcher = newFixedThreadPoolContext(validationPoolSize, "validationPool")
 
     fun findAllAuroraConfigNames(): List<String> {
 
@@ -62,8 +60,8 @@ class AuroraConfigService(
     }
 
     fun findAuroraConfigFilesForApplicationDeployment(
-        ref: AuroraConfigRef,
-        adr: ApplicationDeploymentRef
+            ref: AuroraConfigRef,
+            adr: ApplicationDeploymentRef
     ): List<AuroraConfigFile> {
         return findAuroraConfig(ref).getFilesForApplication(adr)
     }
@@ -84,15 +82,15 @@ class AuroraConfigService(
 
         val auroraConfig = findAuroraConfig(ref)
         return auroraConfig.findFile(fileName)
-            ?: throw IllegalArgumentException("No such file $fileName in AuroraConfig ${ref.name}")
+                ?: throw IllegalArgumentException("No such file $fileName in AuroraConfig ${ref.name}")
     }
 
     @JvmOverloads
     fun updateAuroraConfigFile(
-        ref: AuroraConfigRef,
-        fileName: String,
-        contents: String,
-        previousVersion: String? = null
+            ref: AuroraConfigRef,
+            fileName: String,
+            contents: String,
+            previousVersion: String? = null
     ): AuroraConfig {
 
         val oldAuroraConfig = findAuroraConfig(ref)
@@ -102,10 +100,10 @@ class AuroraConfigService(
     }
 
     fun patchAuroraConfigFile(
-        ref: AuroraConfigRef,
-        filename: String,
-        jsonPatchOp: String,
-        previousVersion: String? = null
+            ref: AuroraConfigRef,
+            filename: String,
+            jsonPatchOp: String,
+            previousVersion: String? = null
     ): AuroraConfig {
 
         val auroraConfig = findAuroraConfig(ref)
@@ -150,7 +148,7 @@ class AuroraConfigService(
         watch.start("validate")
         logger.debug("Affected AID for file={} adr={}", newFile, affectedAid)
         // This will validate both AuroraConfig and External validation for the affected AID
-        createValidatedAuroraDeploymentContexts(AuroraConfigWithOverrides(auroraConfig), affectedAid)
+        auroraDeploymentSpecService.createValidatedAuroraDeploymentContexts(AuroraConfigWithOverrides(auroraConfig), affectedAid)
         watch.stop()
 
         val checkoutDir = getAuroraConfigFolder(auroraConfig.name)
@@ -171,38 +169,16 @@ class AuroraConfigService(
         return auroraConfig
     }
 
-    fun expandDeploymentRefToApplicationRef(
-        ref: AuroraConfigRef,
-        adr: List<ApplicationDeploymentRef>
-    ): List<ApplicationRef> =
-        createValidatedAuroraDeploymentContexts(ref, adr).map {
-            ApplicationRef(it.namespace, it.name)
-        }
-
-    @JvmOverloads
-    fun createValidatedAuroraDeploymentContexts(
-        ref: AuroraConfigRef,
-        applicationDeploymentRefs: List<ApplicationDeploymentRef>,
-        overrideFiles: List<AuroraConfigFile> = listOf(),
-        resourceValidation: Boolean = true
-    ): List<AuroraDeploymentContext> {
-
-        val auroraConfig = findAuroraConfig(ref)
-        return createValidatedAuroraDeploymentContexts(
-            AuroraConfigWithOverrides(auroraConfig, overrideFiles),
-            applicationDeploymentRefs
-        )
-    }
 
     fun validateAuroraConfig(
-        auroraConfig: AuroraConfig,
-        overrideFiles: List<AuroraConfigFile> = listOf(),
-        resourceValidation: Boolean = true
+            auroraConfig: AuroraConfig,
+            overrideFiles: List<AuroraConfigFile> = listOf(),
+            resourceValidation: Boolean = true
     ) {
-        createValidatedAuroraDeploymentContexts(
-            AuroraConfigWithOverrides(auroraConfig, overrideFiles),
-            auroraConfig.getApplicationDeploymentRefs(),
-            resourceValidation
+        auroraDeploymentSpecService.createValidatedAuroraDeploymentContexts(
+                AuroraConfigWithOverrides(auroraConfig, overrideFiles),
+                auroraConfig.getApplicationDeploymentRefs(),
+                resourceValidation
         )
     }
 
@@ -224,59 +200,9 @@ class AuroraConfigService(
             throw IllegalArgumentException("No such AuroraConfig ${ref.name}")
         } catch (e: Exception) {
             throw AuroraConfigServiceException(
-                "An unexpected error occurred when checking out AuroraConfig with name ${ref.name}",
-                e
+                    "An unexpected error occurred when checking out AuroraConfig with name ${ref.name}",
+                    e
             )
         }
-    }
-
-    private fun createValidatedAuroraDeploymentContexts(
-        auroraConfigWithOverrides: AuroraConfigWithOverrides,
-        applicationDeploymentRefs: List<ApplicationDeploymentRef>,
-        resourceValidation: Boolean = true
-    ): List<AuroraDeploymentContext> {
-
-        val stopWatch = StopWatch().apply { start() }
-        val specInternals: List<AuroraDeploymentContext> = runBlocking(
-            MDCContext() + SpringSecurityThreadContextElement()
-        ) {
-            applicationDeploymentRefs.map { aid ->
-                async(dispatcher) {
-                    try {
-                        val spec =
-                            createValidatedAuroraDeploymentSpec(auroraConfigWithOverrides, aid, resourceValidation)
-                        Pair<AuroraDeploymentContext?, ExceptionWrapper?>(first = spec, second = null)
-                    } catch (e: Throwable) {
-                        Pair<AuroraDeploymentContext?, ExceptionWrapper?>(
-                            first = null,
-                            second = ExceptionWrapper(aid, e)
-                        )
-                    }
-                }
-            }
-                .map { it.await() }
-        }.onErrorThrow(::MultiApplicationValidationException)
-        stopWatch.stop()
-        logger.debug("Validated AuroraConfig ${auroraConfigWithOverrides.auroraConfig.name} with ${applicationDeploymentRefs.size} applications in ${stopWatch.totalTimeMillis} millis")
-        return specInternals
-    }
-
-    private fun createValidatedAuroraDeploymentSpec(
-        auroraConfigWithOverrides: AuroraConfigWithOverrides,
-        aid: ApplicationDeploymentRef,
-        resourceValidation: Boolean = true
-    ): AuroraDeploymentContext {
-
-        val stopWatch = StopWatch().apply { start() }
-        val context = auroraDeploymentSpecService.createAuroraDeploymentContext(
-            auroraConfig = auroraConfigWithOverrides.auroraConfig,
-            applicationDeploymentRef = aid,
-            overrideFiles = auroraConfigWithOverrides.overrideFiles
-        ).first
-        stopWatch.stop()
-
-        logger.debug("Created ADC for app=${aid.application}, env=${aid.environment} in ${stopWatch.totalTimeMillis} millis")
-
-        return context
     }
 }

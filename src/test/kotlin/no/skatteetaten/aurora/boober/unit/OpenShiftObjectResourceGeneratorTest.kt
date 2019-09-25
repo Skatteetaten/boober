@@ -45,14 +45,15 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
             WebsealFeature(),
             ConfigFeature(vaultProvider, cluster),
             StsFeature(stsProvisioner),
-            MountFeature(vaultProvider,cluster, openShiftClient)
+            MountFeature(vaultProvider,cluster, openShiftClient),
+            ApplicationDeploymentFeature()
     )
 
     @BeforeEach
     fun setupTest() {
         service = AuroraDeploymentSpecService(
-                auroraConfigService = mockk(),
-                featuers = features
+                featuers = features,
+                validationPoolSize = 1
         )
         val template: String = this.javaClass.getResource("/samples/config/templates/atomhopper.json").readText()
         every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "token", "Aurora OpenShift")

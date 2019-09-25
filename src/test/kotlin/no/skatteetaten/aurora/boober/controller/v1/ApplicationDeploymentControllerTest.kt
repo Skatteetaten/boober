@@ -5,6 +5,7 @@ import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.ApplicationRef
 import no.skatteetaten.aurora.boober.service.ApplicationDeploymentService
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService
 import no.skatteetaten.aurora.mockmvc.extensions.Path
 import no.skatteetaten.aurora.mockmvc.extensions.contentTypeJson
 import no.skatteetaten.aurora.mockmvc.extensions.mock.withContractResponse
@@ -30,6 +31,8 @@ class ApplicationDeploymentControllerTest(@Autowired private val mockMvc: MockMv
     @MockBean
     private lateinit var applicationDeploymentService: ApplicationDeploymentService
 
+    @MockBean
+    private lateinit var auroraDeploymentSpecService: AuroraDeploymentSpecService
     @MockBean
     private lateinit var auroraConfigService: AuroraConfigService
 
@@ -61,7 +64,7 @@ class ApplicationDeploymentControllerTest(@Autowired private val mockMvc: MockMv
         val adr = ApplicationDeploymentRef("deploy", "reference")
         val payload = ApplicationDeploymentRefPayload(listOf(adr))
 
-        val applicationRef = given(auroraConfigService.expandDeploymentRefToApplicationRef(any(), any()))
+        val applicationRef = given(auroraDeploymentSpecService.expandDeploymentRefToApplicationRef(any(), any()))
             .withContractResponse("applicationdeployment/applications") {
                 willReturn(content)
             }.mockResponse
