@@ -41,6 +41,7 @@ class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature
         resources.forEach {
             it.resource.metadata.labels = it.resource.metadata.labels?.addIfNotNull(commonLabels) ?: commonLabels
 
+            //TODO: Move to ApplicationDeploymentFeature
             it.resource.metadata.ownerReferences = listOf(
                     newOwnerReference {
                         apiVersion = "skatteetaten.no/v1"

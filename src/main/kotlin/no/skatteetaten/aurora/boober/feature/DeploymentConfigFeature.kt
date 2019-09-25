@@ -27,12 +27,7 @@ fun Map<String, String>.toEnvVars(): List<EnvVar> = this
 @Service
 class DeploymentConfigFeature() : Feature {
     override fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler> {
-        //TODO: Do not like this consider field to see if version is required on templateType enum?
-        val version = when (header.type) {
-            in listOf(TemplateType.deploy, TemplateType.development) -> deployVersion
-            in listOf(TemplateType.localTemplate, TemplateType.template) -> templateVersion
-            else -> null
-        }
+
         return setOf(
                 AuroraConfigFieldHandler("management", defaultValue = true, canBeSimplifiedConfig = true),
                 AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
@@ -45,8 +40,8 @@ class DeploymentConfigFeature() : Feature {
                 AuroraConfigFieldHandler("resources/memory/min", defaultValue = "128Mi"),
                 AuroraConfigFieldHandler("resources/memory/max", defaultValue = "512Mi"),
                 AuroraConfigFieldHandler("splunkIndex"),
-                AuroraConfigFieldHandler("debug", defaultValue = false)
-        ).addIfNotNull(version)
+                AuroraConfigFieldHandler("debug", defaultValue = false),
+                header.versionHandler)
     }
 
     override fun modify(adc: AuroraDeploymentContext, resources: Set<AuroraResource>) {
@@ -65,7 +60,7 @@ class DeploymentConfigFeature() : Feature {
                 dc.metadata.labels = it.resource.metadata.labels?.addIfNotNull(dcLabels) ?: dcLabels
                 dc.metadata.annotations = it.resource.metadata.annotations?.addIfNotNull(dcAnnotations) ?: dcAnnotations
 
-                if(adc["pause"]) {
+                if (adc["pause"]) {
                     dc.spec.replicas = 0
                 }
                 dc.spec.template.spec.containers.forEach { container ->

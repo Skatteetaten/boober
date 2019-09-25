@@ -25,7 +25,6 @@ data class AuroraBuild(
         val applicationPlatform: String
 )
 
-// TODO: Abstract build
 @Service
 class BuildFeature() : Feature {
     override fun enable(header: AuroraDeploymentContext): Boolean {
@@ -35,7 +34,7 @@ class BuildFeature() : Feature {
     override fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler> {
 
         val applicationPlatform: ApplicationPlatform = header.applicationPlatform
-        return gav(header.applicationFiles, header.adr) + setOf(
+        return header.gavHandlers + setOf(
                 AuroraConfigFieldHandler("builder/name", defaultValue = "architect"),
                 AuroraConfigFieldHandler("builder/version", defaultValue = "1"),
                 AuroraConfigFieldHandler("baseImage/name", defaultValue = applicationPlatform.baseImageName),
@@ -44,20 +43,6 @@ class BuildFeature() : Feature {
     }
 
     override fun generate(adc: AuroraDeploymentContext): Set<AuroraResource> {
-        /*
-        return AuroraBuild(
-            applicationPlatform = auroraDeploymentSpec["applicationPlatform"],
-            baseName = auroraDeploymentSpec["baseImage/name"],
-            baseVersion = auroraDeploymentSpec["baseImage/version"],
-            builderName = auroraDeploymentSpec["builder/name"],
-            builderVersion = auroraDeploymentSpec["builder/version"],
-            version = auroraDeploymentSpec["version"],
-            groupId = auroraDeploymentSpec["groupId"],
-            artifactId = auroraDeploymentSpec["artifactId"],
-            outputKind = "ImageStreamTag",
-            outputName = "$name:latest"
-        )
-         */
         return setOf(
                 AuroraResource("${adc.name}-bc", createBuild(adc))
         )

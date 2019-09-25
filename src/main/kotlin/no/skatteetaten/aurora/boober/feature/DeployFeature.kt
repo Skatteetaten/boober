@@ -72,29 +72,31 @@ fun AuroraDeploymentContext.extractPlaceHolders(): Map<String, String> {
     return placeholders
 }
 
-val deployVersion = AuroraConfigFieldHandler("version", validator = {
-    it.pattern(
-            "^[\\w][\\w.-]{0,127}$",
-            "Version must be a 128 characters or less, alphanumeric and can contain dots and dashes"
-    )
-})
 
-fun gav(files: List<AuroraConfigFile>, adr: ApplicationDeploymentRef): Set<AuroraConfigFieldHandler> {
+val AuroraDeploymentContext.versionHandler: AuroraConfigFieldHandler
+    get() =
+        AuroraConfigFieldHandler("version", validator = {
+            it.pattern(
+                    "^[\\w][\\w.-]{0,127}$",
+                    "Version must be a 128 characters or less, alphanumeric and can contain dots and dashes",
+                    this.type.versionRequired
+            )
+        })
 
+val AuroraDeploymentContext.gavHandlers: Set<AuroraConfigFieldHandler>
+    get() =
+        setOf(
+                AuroraConfigFieldHandler("artifactId",
+                        defaultValue = this.applicationFiles.find { it.type == AuroraConfigFileType.BASE }?.name?.removeExtension()
+                                ?: this.adr.application,
+                        defaultSource = "fileName",
+                        validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
 
-    return setOf(
-            AuroraConfigFieldHandler("artifactId",
-                    defaultValue = files.find { it.type == AuroraConfigFileType.BASE }?.name?.removeExtension()
-                            ?: adr.application,
-                    defaultSource = "fileName",
-                    validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
-
-            AuroraConfigFieldHandler(
-                    "groupId",
-                    validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
-            deployVersion
-    )
-}
+                AuroraConfigFieldHandler(
+                        "groupId",
+                        validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
+                this.versionHandler
+        )
 
 val AuroraDeploymentContext.managementPath
     get() = this.featureEnabled("management") {
@@ -114,7 +116,7 @@ abstract class AbstractDeployFeature(
         return header.type in listOf(TemplateType.deploy, TemplateType.development) && enable(header.applicationPlatform)
     }
 
-    override fun handlers(header: AuroraDeploymentContext) = gav(header.applicationFiles, header.adr) + setOf(
+    override fun handlers(header: AuroraDeploymentContext) = header.gavHandlers + setOf(
             AuroraConfigFieldHandler("releaseTo"),
             AuroraConfigFieldHandler(
                     "deployStrategy/type",

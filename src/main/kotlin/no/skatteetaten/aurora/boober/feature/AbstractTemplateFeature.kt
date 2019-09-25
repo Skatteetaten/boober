@@ -18,14 +18,6 @@ import no.skatteetaten.aurora.boober.utils.pattern
 import org.apache.commons.text.StringSubstitutor
 
 
-val templateVersion = AuroraConfigFieldHandler("version", validator = {
-    it.pattern(
-            "^[\\w][\\w.-]{0,127}$",
-            "Version must be a 128 characters or less, alphanumeric and can contain dots and dashes",
-            false
-    )
-})
-
 abstract class AbstractTemplateFeature() : Feature {
 
 
@@ -45,7 +37,7 @@ abstract class AbstractTemplateFeature() : Feature {
             }.toSet()
         }
         return findParameters() + templateHandlers(header.applicationFiles, header.auroraConfig) + setOf(
-                templateVersion,
+                header.versionHandler,
                 AuroraConfigFieldHandler("replicas"),
                 AuroraConfigFieldHandler("splunkIndex")
         )

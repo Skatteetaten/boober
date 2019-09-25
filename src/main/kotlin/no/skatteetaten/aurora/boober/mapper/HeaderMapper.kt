@@ -16,7 +16,7 @@ enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: 
 }
 
 
-enum class TemplateType(versionRequired: Boolean) {
+enum class TemplateType(val versionRequired: Boolean) {
     deploy(true), development(true), localTemplate(false), template(false)
 }
 
