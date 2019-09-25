@@ -14,47 +14,6 @@ import java.util.Properties
 
 object DbhSecretGenerator {
 
-    @JvmStatic
-    fun create(
-            appName: String,
-            schemaProvisionResults: SchemaProvisionResults,
-            labels: Map<String, String>,
-            ownerReference: OwnerReference,
-            namespace: String
-    ): List<Secret> {
-
-        return schemaProvisionResults.results.map {
-            createDbhSecret(it, appName, labels, ownerReference, namespace)
-        }
-    }
-
-
-    private fun createDbhSecret(
-            it: SchemaProvisionResult,
-            appName: String,
-            labels: Map<String, String>,
-            ownerReference: OwnerReference,
-            namespace: String
-    ): Secret {
-        val connectionProperties = createConnectionProperties(it.dbhSchema)
-        val infoFile = createInfoFile(it.dbhSchema)
-
-        return SecretGenerator.create(
-                secretName = it.createName(appName),
-                secretLabels = labels,
-                secretData = mapOf(
-                        "db.properties" to connectionProperties,
-                        "id" to it.dbhSchema.id,
-                        "info" to infoFile,
-                        "jdbcurl" to it.dbhSchema.jdbcUrl,
-                        "name" to it.dbhSchema.username
-                )
-                        .mapValues { it.value.toByteArray() },
-                ownerReference = ownerReference,
-                secretNamespace = namespace
-        )
-    }
-
     fun createInfoFile(dbhSchema: DbhSchema): String {
 
         val infoFile = mapOf(
