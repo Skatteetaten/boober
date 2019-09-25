@@ -1,11 +1,7 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fasterxml.jackson.module.kotlin.convertValue
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.newObjectMeta
 import com.fkorotkov.kubernetes.newOwnerReference
-import io.fabric8.kubernetes.api.model.ObjectMeta
-import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
@@ -18,12 +14,11 @@ import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.durationString
 import org.apache.commons.codec.digest.DigestUtils
+import org.springframework.boot.convert.DurationStyle.*
 import org.springframework.stereotype.Service
 import java.time.Duration
-import java.time.Instant
 
-
-val AuroraDeploymentSpec.ttl: Duration? get() = this.getOrNull("ttl")
+val AuroraDeploymentSpec.ttl: Duration? get() = this.getOrNull<String>("ttl")?.let { SIMPLE.parse(it) }
 
 @Service
 class ApplicationDeploymentFeature() : Feature {

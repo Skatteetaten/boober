@@ -1,0 +1,41 @@
+{
+  "apiVersion" : "skatteetaten.no/v1",
+  "kind" : "ApplicationDeployment",
+  "metadata" : {
+    "labels" : {
+      "id" : "f61d705430cd2abe5b4ffe9f0dbbb0400eafc633",
+      "app" : "aos-simple",
+      "updatedBy" : "hero",
+      "affiliation" : "aos",
+      "updateInBoober" : "true",
+      "booberDeployId" : "123",
+      "name" : "aos-simple"
+    },
+    "name" : "aos-simple",
+    "namespace" : "aos-secretmount"
+  },
+  "spec" : {
+    "applicationId" : "7abf72388235de0b5602f884db4200295ed23837",
+    "selector" : {
+      "name" : "aos-simple"
+    },
+    "applicationDeploymentId" : "f61d705430cd2abe5b4ffe9f0dbbb0400eafc633",
+    "applicationName" : "aos-simple",
+    "applicationDeploymentName" : "aos-simple",
+    "databases" : [ "123" ],
+    "splunkIndex" : "openshift-test",
+    "deployTag" : "1.0.3-SNAPSHOT",
+    "command" : {
+      "overrideFiles" : { },
+      "applicationDeploymentRef" : {
+        "environment" : "secretmount",
+        "application" : "aos-simple"
+      },
+      "auroraConfig" : {
+        "name" : "test",
+        "refName" : "master",
+        "resolvedRef" : "123abb"
+      }
+    }
+  }
+}

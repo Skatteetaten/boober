@@ -19,6 +19,7 @@ import no.skatteetaten.aurora.boober.service.*
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.*
 import no.skatteetaten.aurora.boober.utils.AbstractOpenShiftObjectGeneratorTest
+import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.params.ParameterizedTest
@@ -134,7 +135,7 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
     @ParameterizedTest
     @EnumSource(ResourceCreationTestData::class)
     fun `generate resources for deploy`(test: ResourceCreationTestData) {
-
+        Instants.determineNow = { Instant.EPOCH }
         // TODO: toxiproxy, advanced db, see coverage, TTL, validation
         val aid = ApplicationDeploymentRef(test.env, test.appName)
         val auroraConfig = createAuroraConfig(aid, AFFILIATION, test.additionalFile)

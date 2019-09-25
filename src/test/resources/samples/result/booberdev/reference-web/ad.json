@@ -3,35 +3,33 @@
   "kind" : "ApplicationDeployment",
   "metadata" : {
     "labels" : {
-      "id" : "71ac9e2f6f1f0b02fafb22e3336137a7ed6f2598",
-      "removeAfter" : "86400",
-      "app" : "reference",
+      "id" : "cd3c35f71824ee2664db66ed4894a9917f3ef5b7",
+      "app" : "openshift-referanse-react",
       "updatedBy" : "hero",
       "affiliation" : "aos",
       "updateInBoober" : "true",
       "booberDeployId" : "123",
-      "name" : "reference"
+      "name" : "openshift-referanse-react"
     },
-    "name" : "reference",
+    "name" : "openshift-referanse-react",
     "namespace" : "aos-booberdev"
   },
   "spec" : {
-    "applicationId" : "4f99affe6e2316fd3de91e788ea622ea29563c8e",
+    "applicationId" : "1590fc38ff96cbe228a5003e20e3ef3893e8bc06",
     "selector" : {
-      "name" : "reference"
+      "name" : "openshift-referanse-react"
     },
-    "applicationDeploymentId" : "71ac9e2f6f1f0b02fafb22e3336137a7ed6f2598",
-    "applicationName" : "reference",
-    "applicationDeploymentName" : "reference",
+    "applicationDeploymentId" : "cd3c35f71824ee2664db66ed4894a9917f3ef5b7",
+    "applicationName" : "openshift-referanse-react",
+    "applicationDeploymentName" : "openshift-referanse-react",
     "databases" : [ "123" ],
-    "splunkIndex" : "openshift-test",
     "managementPath" : ":8081/actuator",
-    "deployTag" : "1.0.0-b1.5.3-flange-8.152.18",
+    "deployTag" : "develop-SNAPSHOT",
     "command" : {
       "overrideFiles" : { },
       "applicationDeploymentRef" : {
         "environment" : "booberdev",
-        "application" : "reference"
+        "application" : "reference-web"
       },
       "auroraConfig" : {
         "name" : "test",
