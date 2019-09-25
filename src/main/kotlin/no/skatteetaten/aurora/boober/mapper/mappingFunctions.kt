@@ -24,14 +24,7 @@ inline fun <reified T> List<AuroraConfigFile>.associateSubKeys(
         spec.get<T>("$name/$it")
     }
 }
-inline fun <reified T> List<AuroraConfigFile>.associateSubKeys(
-    name: String,
-    spec: AuroraDeploymentSpec
-): Map<String, T> {
-    return this.findSubKeys(name).associateWith {
-        spec.get<T>("$name/$it")
-    }
-}
+
 
 fun List<AuroraConfigFile>.findSubHandlers(
     key: String,

@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
 import com.nhaarman.mockito_kotlin.any
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService
 import no.skatteetaten.aurora.mockmvc.extensions.Path
 import no.skatteetaten.aurora.mockmvc.extensions.get

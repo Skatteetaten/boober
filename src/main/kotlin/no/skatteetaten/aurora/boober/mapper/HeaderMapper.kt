@@ -76,7 +76,7 @@ class HeaderMapper(
     )
 
 
-    fun extractPermissions(deploymentSpec: AuroraDeploymentSpec): Permissions {
+    fun extractPermissions(deploymentSpec: AuroraDeploymentContext): Permissions {
 
         val viewGroups = deploymentSpec.getDelimitedStringOrArrayAsSet("permissions/view", " ")
         val adminGroups = deploymentSpec.getDelimitedStringOrArrayAsSet("permissions/admin", " ")
