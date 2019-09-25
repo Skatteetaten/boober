@@ -11,6 +11,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
+//TOOD: This is duplicated
 data class ApplicationDeploymentCommand(
     val cmd: OpenshiftCommand,
     val applicationRef: ApplicationRef
