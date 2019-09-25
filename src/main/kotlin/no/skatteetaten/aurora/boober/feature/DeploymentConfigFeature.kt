@@ -7,8 +7,8 @@ import com.fkorotkov.kubernetes.resources
 import io.fabric8.kubernetes.api.model.*
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
-import no.skatteetaten.aurora.boober.mapper.TemplateType
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
@@ -16,7 +16,7 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.filterNullValues
 import org.springframework.stereotype.Service
 
-fun AuroraDeploymentContext.quantity(resource: String, classifier: String): Pair<String, Quantity> = resource to QuantityBuilder().withAmount(this["resources/$resource/$classifier"]).build()
+fun AuroraDeploymentSpec.quantity(resource: String, classifier: String): Pair<String, Quantity> = resource to QuantityBuilder().withAmount(this["resources/$resource/$classifier"]).build()
 
 fun Map<String, String>.toEnvVars(): List<EnvVar> = this
         .mapKeys { it.key.replace(".", "_").replace("-", "_") }
@@ -26,7 +26,7 @@ fun Map<String, String>.toEnvVars(): List<EnvVar> = this
 
 @Service
 class DeploymentConfigFeature() : Feature {
-    override fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler> {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
 
         return setOf(
                 AuroraConfigFieldHandler("management", defaultValue = true, canBeSimplifiedConfig = true),
@@ -44,9 +44,9 @@ class DeploymentConfigFeature() : Feature {
                 header.versionHandler)
     }
 
-    override fun modify(adc: AuroraDeploymentContext, resources: Set<AuroraResource>) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
         val dcLabels = createDcLabels(adc)
-        val dcAnnotations = createDcAnnotations(adc)
+        val dcAnnotations = createDcAnnotations(adc, cmd)
         val envVars = createEnvVars(adc).toEnvVars()
         resources.forEach {
             if (it.resource.kind == "DeploymentConfig") {
@@ -74,7 +74,7 @@ class DeploymentConfigFeature() : Feature {
         }
     }
 
-    fun createEnvVars(adc: AuroraDeploymentContext): Map<String, String> {
+    fun createEnvVars(adc: AuroraDeploymentSpec): Map<String, String> {
 
         val debugEnv = if (adc["debug"]) {
             mapOf(
@@ -91,7 +91,7 @@ class DeploymentConfigFeature() : Feature {
 
     }
 
-    fun createDcLabels(adc: AuroraDeploymentContext): Map<String, String> {
+    fun createDcLabels(adc: AuroraDeploymentSpec): Map<String, String> {
 
         val pauseLabel = if (adc["pause"]) {
             "paused" to "true"
@@ -101,17 +101,17 @@ class DeploymentConfigFeature() : Feature {
         return OpenShiftObjectLabelService.toOpenShiftLabelNameSafeMap(allLabels)
     }
 
-    fun createDcAnnotations(adc: AuroraDeploymentContext): Map<String, String> {
+    fun createDcAnnotations(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Map<String, String> {
 
         fun escapeOverrides(): String? {
             val files =
-                    adc.overrideFiles.mapValues { jacksonObjectMapper().readValue(it.value, JsonNode::class.java) }
+                    cmd.overrideFiles.mapValues { jacksonObjectMapper().readValue(it.value, JsonNode::class.java) }
             val content = jacksonObjectMapper().writeValueAsString(files)
             return content.takeIf { it != "{}" }
         }
 
         return mapOf(
-                "boober.skatteetaten.no/applicationFile" to adc.applicationFile.name,
+                "boober.skatteetaten.no/applicationFile" to cmd.applicationFile.name,
                 "console.skatteetaten.no/alarm" to adc["alarm"],
                 "boober.skatteetaten.no/overrides" to escapeOverrides(),
                 "console.skatteetaten.no/management-path" to adc.managementPath,

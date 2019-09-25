@@ -9,7 +9,8 @@ import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.findSubKeys
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.AuroraResource
@@ -31,8 +32,8 @@ class MountFeature(
         @Value("\${openshift.cluster}") val cluster: String,
         val openShiftClient: OpenShiftClient
 ) : Feature {
-    override fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler> {
-        val mountKeys = header.applicationFiles.findSubKeys("mounts")
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
+        val mountKeys = cmd.applicationFiles.findSubKeys("mounts")
 
         return mountKeys.flatMap { mountName ->
             listOf(
@@ -51,9 +52,9 @@ class MountFeature(
         }.toSet()
     }
 
-    override fun generate(adc: AuroraDeploymentContext): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraResource> {
 
-        val mounts = getMounts(adc)
+        val mounts = getMounts(adc, cmd)
         val configMounts = mounts.filter { !it.exist && it.type == MountType.ConfigMap && it.content != null }
 
         val secrets = generateSecrets(mounts, adc)
@@ -64,7 +65,7 @@ class MountFeature(
         }.toSet()
     }
 
-    private fun generateConfigMaps(configMounts: List<Mount>, adc: AuroraDeploymentContext): List<ConfigMap> {
+    private fun generateConfigMaps(configMounts: List<Mount>, adc: AuroraDeploymentSpec): List<ConfigMap> {
         return configMounts.filter { it.type == MountType.ConfigMap }
                 .filter { it.content != null }
                 .map {
@@ -78,7 +79,7 @@ class MountFeature(
                 }
     }
 
-    private fun generateSecrets(mounts: List<Mount>, adc: AuroraDeploymentContext): List<Secret> {
+    private fun generateSecrets(mounts: List<Mount>, adc: AuroraDeploymentSpec): List<Secret> {
         val secretVaults = mounts.filter { !it.exist && it.type == MountType.Secret && it.secretVaultName != null }
 
         val vaultReponse = secretVaults.map {
@@ -101,9 +102,9 @@ class MountFeature(
         }
     }
 
-    override fun modify(adc: AuroraDeploymentContext, resources: Set<AuroraResource>) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
 
-        val mounts = getMounts(adc)
+        val mounts = getMounts(adc, cmd)
 
 
         if (mounts.isNotEmpty()) {
@@ -129,15 +130,15 @@ class MountFeature(
         }
     }
 
-    override fun validate(adc: AuroraDeploymentContext, fullValidation: Boolean): List<Exception> {
+    override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraDeploymentCommand): List<Exception> {
         if (!fullValidation || adc.cluster != cluster) {
             return emptyList()
         }
-        val mounts = getMounts(adc)
+        val mounts = getMounts(adc, cmd)
         return validateExistingMounts(mounts, adc).addIfNotNull(validateVaultExistence(mounts, adc))
     }
 
-    fun validateVaultExistence(mounts: List<Mount>, adc: AuroraDeploymentContext): List<AuroraDeploymentSpecValidationException> {
+    fun validateVaultExistence(mounts: List<Mount>, adc: AuroraDeploymentSpec): List<AuroraDeploymentSpecValidationException> {
         val secretMounts = mounts.filter { it.type == MountType.Secret }.mapNotNull { it.secretVaultName }
         return secretMounts.mapNotNull {
             val vaultCollectionName = adc.affiliation
@@ -147,7 +148,7 @@ class MountFeature(
         }
     }
 
-    private fun validateExistingMounts(mounts: List<Mount>, adc: AuroraDeploymentContext): List<Exception> {
+    private fun validateExistingMounts(mounts: List<Mount>, adc: AuroraDeploymentSpec): List<Exception> {
         return mounts.filter { it.exist }.mapNotNull {
             if (!openShiftClient.resourceExists(
                             kind = it.type.kind,
@@ -161,10 +162,10 @@ class MountFeature(
     }
 
 
-    private fun getMounts(auroraDeploymentSpec: AuroraDeploymentContext): List<Mount> {
+    private fun getMounts(auroraDeploymentSpec: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): List<Mount> {
 
         // TODO: review to not use handlers
-        val mountHandlers = handlers(auroraDeploymentSpec);
+        val mountHandlers = handlers(auroraDeploymentSpec, cmd);
 
         if (mountHandlers.isEmpty()) {
             return listOf()

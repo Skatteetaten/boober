@@ -1,7 +1,8 @@
 package no.skatteetaten.aurora.boober.feature
 
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.utils.durationString
 import org.springframework.stereotype.Service
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Service
 class ApplicationDeploymentFeature() : Feature{
 
     //message, ttl
-    override fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler> {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
                 AuroraConfigFieldHandler("message"),
                 AuroraConfigFieldHandler("ttl", validator = { it.durationString() })

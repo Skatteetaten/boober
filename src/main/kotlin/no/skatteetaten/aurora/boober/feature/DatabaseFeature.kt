@@ -15,7 +15,6 @@ import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationExcep
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.service.internal.DbhSecretGenerator
-import no.skatteetaten.aurora.boober.service.internal.createName
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.*
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
@@ -30,18 +29,18 @@ class DatabaseFeature(
 ) : Feature {
     val databaseDefaultsKey = "databaseDefaults"
 
-    override fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler> {
-        val dbHandlers = findDbHandlers(header.applicationFiles)
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
+        val dbHandlers = findDbHandlers(cmd.applicationFiles)
 
-        val dbDefaultsHandlers = findDbDefaultHandlers(header.applicationFiles)
+        val dbDefaultsHandlers = findDbDefaultHandlers(cmd.applicationFiles)
 
         return (dbDefaultsHandlers + dbHandlers + listOf(
                 AuroraConfigFieldHandler("database", defaultValue = false, canBeSimplifiedConfig = true)
         )).toSet()
     }
 
-    override fun validate(adc: AuroraDeploymentContext, fullValidation: Boolean): List<Exception> {
-        val databases = findDatabases(adc)
+    override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraDeploymentCommand): List<Exception> {
+        val databases = findDatabases(adc, cmd)
         if (!fullValidation || adc.cluster != cluster || databases.isEmpty()) {
             return emptyList()
         }
@@ -60,10 +59,10 @@ class DatabaseFeature(
     }
 
     // TODO: Handle errors, probably need to return both resources and errors and propagate
-    override fun generate(adc: AuroraDeploymentContext): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraResource> {
 
         //can we just create schemaRequest manually here?
-        val databases = findDatabases(adc)
+        val databases = findDatabases(adc, cmd)
 
         val schemaRequests = createSchemaRequest(databases, adc)
         val schemaProvisionResult = databaseSchemaProvisioner.provisionSchemas(schemaRequests)
@@ -97,8 +96,8 @@ class DatabaseFeature(
     }
 
 
-    override fun modify(adc: AuroraDeploymentContext, resources: Set<AuroraResource>) {
-        val databases = findDatabases(adc)
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
+        val databases = findDatabases(adc, cmd)
         val dbEnv = databases.flatMap { it.createDbEnv("${it.name}_db") }.addIfNotNull(databases.firstOrNull()?.createDbEnv("db")).toMap().toEnvVars()
 
         val volumeAndMounts = databases.map { it.createDatabaseVolumesAndMounts(adc.name) }
@@ -118,7 +117,7 @@ class DatabaseFeature(
         }
     }
 
-    fun createSchemaRequest(databases: List<Database>, adc: AuroraDeploymentContext): List<SchemaProvisionRequest> {
+    fun createSchemaRequest(databases: List<Database>, adc: AuroraDeploymentSpec): List<SchemaProvisionRequest> {
         return databases.map {
 
             val details = it.createSchemaDetails(adc.affiliation)
@@ -138,9 +137,9 @@ class DatabaseFeature(
         }
     }
 
-    private fun findDatabases(adc: AuroraDeploymentContext): List<Database> {
+    private fun findDatabases(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): List<Database> {
         val defaultFlavor: DatabaseFlavor = adc["$databaseDefaultsKey/flavor"]
-        val defaultInstance = findInstance(adc, "$databaseDefaultsKey/instance", defaultFlavor.defaultFallback)
+        val defaultInstance = findInstance(adc, cmd, "$databaseDefaultsKey/instance", defaultFlavor.defaultFallback)
                 ?: DatabaseInstance(fallback = defaultFlavor.defaultFallback)
 
         val defaultDb = Database(
@@ -148,14 +147,14 @@ class DatabaseFeature(
                 flavor = defaultFlavor,
                 generate = adc["$databaseDefaultsKey/generate"],
                 instance = defaultInstance.copy(labels = defaultInstance.labels + mapOf("affiliation" to adc.affiliation)),
-                roles = adc.applicationFiles.associateSubKeys("$databaseDefaultsKey/roles", adc),
-                exposeTo = adc.applicationFiles.associateSubKeys("$databaseDefaultsKey/exposeTo", adc)
+                roles = cmd.applicationFiles.associateSubKeys("$databaseDefaultsKey/roles", adc),
+                exposeTo = cmd.applicationFiles.associateSubKeys("$databaseDefaultsKey/exposeTo", adc)
 
         )
         if (adc.isSimplifiedAndEnabled("database")) {
             return listOf(defaultDb)
         }
-        return adc.applicationFiles.findSubKeys("database").map { db ->
+        return cmd.applicationFiles.findSubKeys("database").map { db ->
             val key = "database/$db"
             val isSimple = adc.fields.containsKey(key)
 
@@ -167,10 +166,10 @@ class DatabaseFeature(
                 )
             } else {
 
-                val roles = adc.applicationFiles.associateSubKeys<DatabasePermission>("$key/roles", adc)
-                val exposeTo = adc.applicationFiles.associateSubKeys<String>("$key/exposeTo", adc)
+                val roles = cmd.applicationFiles.associateSubKeys<DatabasePermission>("$key/roles", adc)
+                val exposeTo = cmd.applicationFiles.associateSubKeys<String>("$key/exposeTo", adc)
                 val flavor: DatabaseFlavor = adc.getOrNull("$key/flavor") ?: defaultDb.flavor
-                val instance = findInstance(adc, "$key/instance", flavor.defaultFallback)
+                val instance = findInstance(adc, cmd, "$key/instance", flavor.defaultFallback)
                 val value: String = adc.getOrNull("$key/id") ?: ""
 
                 val instanceName = instance?.name ?: defaultDb.instance.name
@@ -196,7 +195,8 @@ class DatabaseFeature(
     }
 
     private fun findInstance(
-            adc: AuroraDeploymentContext,
+            adc: AuroraDeploymentSpec,
+            cmd: AuroraDeploymentCommand,
             key: String,
             defaultFallback: Boolean
     ): DatabaseInstance? {
@@ -207,7 +207,7 @@ class DatabaseFeature(
         return DatabaseInstance(
                 name = adc.getOrNull("$key/name"),
                 fallback = adc.getOrNull("$key/fallback") ?: defaultFallback,
-                labels = adc.applicationFiles.associateSubKeys("$key/labels", adc)
+                labels = cmd.applicationFiles.associateSubKeys("$key/labels", adc)
         )
     }
 

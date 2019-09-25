@@ -1,8 +1,8 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 
-fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentContext, includeDefaults: Boolean): String {
+fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean): String {
 
     val fields = renderSpecAsJsonOld(includeDefaults, deploymentSpec)
 
@@ -42,7 +42,7 @@ fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentCo
         } + "}"
 }
 
-fun renderSpecAsJson(deploymentSpec: AuroraDeploymentContext, includeDefaults: Boolean): Map<String, Any> {
+fun renderSpecAsJson(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean): Map<String, Any> {
 
     val jsonSpec = deploymentSpec.present(includeDefaults) {
         mapOf(
@@ -57,7 +57,7 @@ fun renderSpecAsJson(deploymentSpec: AuroraDeploymentContext, includeDefaults: B
 
 fun renderSpecAsJsonOld(
     includeDefaults: Boolean,
-    deploymentSpecInternal: AuroraDeploymentContext
+    deploymentSpecInternal: AuroraDeploymentSpec
 ): Map<String, Any> {
     return deploymentSpecInternal.present(includeDefaults) {
         mapOf(

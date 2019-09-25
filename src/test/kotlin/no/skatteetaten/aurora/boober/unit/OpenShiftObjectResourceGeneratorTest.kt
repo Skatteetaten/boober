@@ -11,6 +11,8 @@ import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.feature.*
+import no.skatteetaten.aurora.boober.mapper.createAuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.createResources
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.*
@@ -138,7 +140,11 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
         val auroraConfig = createAuroraConfig(aid, AFFILIATION, test.additionalFile)
         every { databaseSchemaProvisioner.provisionSchemas(any()) } returns createDatabaseResult(test.dbName, test.env)
 
-        val resources = service.createResources(auroraConfig, aid, deployId = "123", overrideFiles = test.overrides)
+        val deployCommand = createAuroraDeploymentCommand(
+                auroraConfig = auroraConfig, applicationDeploymentRef = aid, overrideFiles = test.overrides, deployId = "123"
+        )
+        val ctx = service.createAuroraDeploymentContext(deployCommand)
+        val resources = ctx.createResources()
         val resultFiles = getResultFiles(aid)
         val keys = resultFiles.keys
         val generatedObjects = resources.map {

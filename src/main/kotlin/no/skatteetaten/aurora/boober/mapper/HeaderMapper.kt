@@ -21,7 +21,7 @@ enum class TemplateType(val versionRequired: Boolean) {
 }
 
 
-val AuroraDeploymentContext.applicationPlatform: ApplicationPlatform get() = this["applicationPlatform"]
+val AuroraDeploymentSpec.applicationPlatform: ApplicationPlatform get() = this["applicationPlatform"]
 
 /**
  * The header contains the sources that are required to parse the AuroraConfig files and create a merged file for a
@@ -76,7 +76,7 @@ class HeaderMapper(
     )
 
 
-    fun extractPermissions(deploymentSpec: AuroraDeploymentContext): Permissions {
+    fun extractPermissions(deploymentSpec: AuroraDeploymentSpec): Permissions {
 
         val viewGroups = deploymentSpec.getDelimitedStringOrArrayAsSet("permissions/view", " ")
         val adminGroups = deploymentSpec.getDelimitedStringOrArrayAsSet("permissions/admin", " ")

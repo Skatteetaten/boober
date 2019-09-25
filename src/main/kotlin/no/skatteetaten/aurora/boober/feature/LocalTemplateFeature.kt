@@ -2,7 +2,8 @@ package no.skatteetaten.aurora.boober.feature
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.TemplateType
 import no.skatteetaten.aurora.boober.model.*
 import org.springframework.stereotype.Service
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Service
 @Service
 class LocalTemplateFeature() : AbstractTemplateFeature() {
 
-    override fun enable(header: AuroraDeploymentContext) = header.type == TemplateType.localTemplate
+    override fun enable(header: AuroraDeploymentSpec) = header.type == TemplateType.localTemplate
 
     override fun templateHandlers(files: List<AuroraConfigFile>, auroraConfig: AuroraConfig): Set<AuroraConfigFieldHandler> {
         return setOf(AuroraConfigFieldHandler("templateFile", validator = { json ->
@@ -23,9 +24,9 @@ class LocalTemplateFeature() : AbstractTemplateFeature() {
         }))
     }
 
-    override fun findTemplate(adc: AuroraDeploymentContext): JsonNode {
+    override fun findTemplate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): JsonNode {
         val templateFile = adc.get<String>("templateFile").let { fileName ->
-            adc.auroraConfig.files.find { it.name == fileName }?.asJsonNode
+            cmd.auroraConfig.files.find { it.name == fileName }?.asJsonNode
         }
         return templateFile ?: throw IllegalArgumentException("templateFile is required")
     }

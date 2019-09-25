@@ -2,22 +2,22 @@ package no.skatteetaten.aurora.boober.feature
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.EnvVar
-import io.fabric8.kubernetes.api.model.Probe
 import no.skatteetaten.aurora.boober.feature.ToxiProxyDefaults.TOXIPROXY_REPOSITORY
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.PortNumbers
 import no.skatteetaten.aurora.boober.service.Feature
 
 class ToxiproxySidecarFeature() : Feature {
-    override fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler> {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
                 AuroraConfigFieldHandler("toxiproxy", defaultValue = false, canBeSimplifiedConfig = true),
                 AuroraConfigFieldHandler("toxiproxy/version", defaultValue = "2.1.3")
         )
     }
 
-    private fun createToxiProxyMounts(deploymentSpecInternal: AuroraDeploymentContext): List<Mount> {
+    private fun createToxiProxyMounts(deploymentSpecInternal: AuroraDeploymentSpec): List<Mount> {
 /*
         return deploymentSpecInternal.deploy?.toxiProxy?.let {
             listOf(
@@ -37,7 +37,7 @@ class ToxiproxySidecarFeature() : Feature {
         return emptyList()
     }
 
-    fun getToxiProxy(auroraDeploymentSpec: AuroraDeploymentContext, name: String): ToxiProxy? {
+    fun getToxiProxy(auroraDeploymentSpec: AuroraDeploymentSpec, name: String): ToxiProxy? {
         return auroraDeploymentSpec.featureEnabled(name) {
             ToxiProxy(auroraDeploymentSpec["$it/version"])
         }

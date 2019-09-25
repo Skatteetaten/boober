@@ -6,7 +6,8 @@ import com.fkorotkov.kubernetes.newOwnerReference
 import io.fabric8.kubernetes.api.model.ObjectMeta
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
@@ -18,25 +19,25 @@ import org.springframework.stereotype.Service
 class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature {
 
     //all handlers are in  header
-    override fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler> {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
         return emptySet()
     }
 
-    fun createCommonLabels(adc: AuroraDeploymentContext): Map<String, String> {
+    fun createCommonLabels(adc: AuroraDeploymentSpec, deployId: String): Map<String, String> {
         val labels = mapOf(
                 "app" to adc.name,
                 "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
                 "affiliation" to adc.affiliation,
                 "updateInBoober" to "true",
-                "booberDeployId" to adc.deployId,
+                "booberDeployId" to deployId,
                 "name" to adc.name
         )
 
         return OpenShiftObjectLabelService.toOpenShiftLabelNameSafeMap(labels)
     }
 
-    override fun modify(adc: AuroraDeploymentContext, resources: Set<AuroraResource>) {
-        val commonLabels = createCommonLabels(adc)
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
+        val commonLabels = createCommonLabels(adc, cmd.deployId)
 
         resources.forEach {
             it.resource.metadata.labels = it.resource.metadata.labels?.addIfNotNull(commonLabels) ?: commonLabels

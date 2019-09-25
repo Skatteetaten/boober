@@ -6,7 +6,8 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.HasMetadata
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.findSubKeys
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
@@ -14,7 +15,6 @@ import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.utils.filterNullValues
 import no.skatteetaten.aurora.boober.utils.getBoolean
-import no.skatteetaten.aurora.boober.utils.pattern
 import org.apache.commons.text.StringSubstitutor
 
 
@@ -23,30 +23,30 @@ abstract class AbstractTemplateFeature() : Feature {
 
     abstract fun templateHandlers(files: List<AuroraConfigFile>, auroraConfig: AuroraConfig): Set<AuroraConfigFieldHandler>
 
-    abstract fun findTemplate(adc: AuroraDeploymentContext): JsonNode
+    abstract fun findTemplate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): JsonNode
 
 
-    override fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler> {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
 
         fun findParameters(): Set<AuroraConfigFieldHandler> {
 
-            val parameterKeys = header.applicationFiles.findSubKeys("parameters")
+            val parameterKeys = cmd.applicationFiles.findSubKeys("parameters")
 
             return parameterKeys.map { parameter ->
                 AuroraConfigFieldHandler("parameters/$parameter")
             }.toSet()
         }
-        return findParameters() + templateHandlers(header.applicationFiles, header.auroraConfig) + setOf(
+        return findParameters() + templateHandlers(cmd.applicationFiles, cmd.auroraConfig) + setOf(
                 header.versionHandler,
                 AuroraConfigFieldHandler("replicas"),
                 AuroraConfigFieldHandler("splunkIndex")
         )
     }
 
-    override fun validate(adc: AuroraDeploymentContext, fullValidation: Boolean): List<Exception> {
+    override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraDeploymentCommand): List<Exception> {
 
         val templateJson = try {
-            findTemplate(adc)
+            findTemplate(adc, cmd)
         } catch (e: Exception) {
             return listOf(AuroraDeploymentSpecValidationException("Could not find template", e))
         }
@@ -60,11 +60,11 @@ abstract class AbstractTemplateFeature() : Feature {
 
     }
 
-    override fun generate(adc: AuroraDeploymentContext): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraResource> {
 
         val parameters = findParameters(adc)
 
-        val templateJson = findTemplate(adc)
+        val templateJson = findTemplate(adc, cmd)
         val templateResult = processTemplate(templateJson, parameters)
 
         return templateResult.map {
@@ -74,7 +74,7 @@ abstract class AbstractTemplateFeature() : Feature {
         }.toSet()
     }
 
-    fun findParameters(adc: AuroraDeploymentContext): Map<String, String> {
+    fun findParameters(adc: AuroraDeploymentSpec): Map<String, String> {
         val parameters = mapOf(
                 "SPLUNK_INDEX" to adc.getOrNull<String>("splunkIndex"),
                 "VERSION" to adc.getOrNull<String>("version"),

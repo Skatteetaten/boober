@@ -6,20 +6,37 @@ import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
+import no.skatteetaten.aurora.boober.service.AuroraResource
+import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.utils.atNullable
 import no.skatteetaten.aurora.boober.utils.deepSet
 import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-data class AuroraDeploymentContext(
-        val fields: Map<String, AuroraConfigField>,
-        val replacer: StringSubstitutor,
+fun createAuroraDeploymentCommand(
+        auroraConfig: AuroraConfig,
+        applicationDeploymentRef: ApplicationDeploymentRef,
+        overrideFiles: List<AuroraConfigFile> = emptyList(),
+        deployId: String? = null)
+        : AuroraDeploymentCommand {
+    val applicationFiles: List<AuroraConfigFile> = auroraConfig.getFilesForApplication(applicationDeploymentRef, overrideFiles)
+
+    return AuroraDeploymentCommand(
+            auroraConfig = auroraConfig,
+            applicationFiles = applicationFiles,
+            adr = applicationDeploymentRef,
+            deployId = deployId ?: "empty"
+    )
+}
+
+data class AuroraDeploymentCommand(
         val auroraConfig: AuroraConfig,
         val applicationFiles: List<AuroraConfigFile>,
         val adr: ApplicationDeploymentRef,
         val deployId: String
 ) {
+
 
     val applicationFile: AuroraConfigFile
         get() = applicationFiles.find { it.type == AuroraConfigFileType.APP && !it.override }!!
@@ -27,6 +44,49 @@ data class AuroraDeploymentContext(
 
     val overrideFiles: Map<String, String>
         get() = applicationFiles.filter { it.override }.associate { it.name to it.contents }
+
+}
+
+fun AuroraDeploymentContext.validate(fullValidation: Boolean): Map<Feature, java.lang.Exception> {
+    return this.features.mapNotNull {
+        try {
+            it.key.validate(it.value, fullValidation, this.cmd)
+            null
+        } catch (e: Exception) {
+            it.key to e
+
+        }
+    }.toMap()
+
+}
+
+fun AuroraDeploymentContext.createResources(): Set<AuroraResource> {
+
+    val featureResources: Set<AuroraResource> = this.features.flatMap {
+        it.key.generate(it.value, this.cmd)
+    }.toSet()
+
+    //Mutation!
+    this.features.forEach {
+        it.key.modify(it.value, featureResources, this.cmd)
+    }
+
+    return featureResources
+}
+
+typealias FeatureSpec = Map<Feature, AuroraDeploymentSpec>
+
+data class AuroraDeploymentContext(
+        val spec: AuroraDeploymentSpec,
+        val cmd: AuroraDeploymentCommand,
+        val features: FeatureSpec
+
+)
+
+data class AuroraDeploymentSpec(
+        val fields: Map<String, AuroraConfigField>,
+        val replacer: StringSubstitutor
+) {
 
 
     fun getConfigEnv(configExtractors: List<AuroraConfigFieldHandler>): Map<String, String> {
@@ -125,16 +185,15 @@ data class AuroraDeploymentContext(
 
     companion object {
 
-        val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentContext::class.java)
+        val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpec::class.java)
 
         fun create(
                 handlers: Set<AuroraConfigFieldHandler>,
                 files: List<AuroraConfigFile>,
                 applicationDeploymentRef: ApplicationDeploymentRef,
-                auroraConfig: AuroraConfig,
                 replacer: StringSubstitutor = StringSubstitutor(),
-                deployId: String
-        ): AuroraDeploymentContext {
+                auroraConfigVersion: String
+        ): AuroraDeploymentSpec {
 
             val mapper = jacksonObjectMapper()
 
@@ -148,7 +207,7 @@ data class AuroraDeploymentContext(
                             "configVersion" to
                                     AuroraConfigFieldSource(
                                             AuroraConfigFile("static", "{}", isDefault = true),
-                                            mapper.convertValue(auroraConfig.version)
+                                            mapper.convertValue(auroraConfigVersion)
                                     )
                     )
 
@@ -194,13 +253,9 @@ data class AuroraDeploymentContext(
             val groupedFields: Map<String, AuroraConfigField> = allFields
                     .groupBy({ it.first }) { it.second }
                     .mapValues { AuroraConfigField(it.value.toSet(), replacer) }
-            return AuroraDeploymentContext(
+            return AuroraDeploymentSpec(
                     fields = groupedFields,
-                    replacer = replacer,
-                    applicationFiles = files,
-                    adr = applicationDeploymentRef,
-                    auroraConfig = auroraConfig,
-                    deployId = deployId
+                    replacer = replacer
             )
         }
     }

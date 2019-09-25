@@ -6,7 +6,8 @@ import com.fkorotkov.kubernetes.*
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.service.internal.StsSecretGenerator
@@ -17,14 +18,14 @@ import org.springframework.stereotype.Service
 
 @Service
 class StsFeature(val sts: StsProvisioner) : Feature {
-    override fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler> {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
                 AuroraConfigFieldHandler("certificate", defaultValue = false, canBeSimplifiedConfig = true),
                 AuroraConfigFieldHandler("certificate/commonName")
         )
     }
 
-    override fun generate(adc: AuroraDeploymentContext): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraResource> {
 
         // TODO: Handle failure
         return findCertificate(adc, adc.name)?.let {
@@ -66,7 +67,7 @@ class StsFeature(val sts: StsProvisioner) : Feature {
 
     }
 
-    fun findCertificate(adc: AuroraDeploymentContext, name: String): String? {
+    fun findCertificate(adc: AuroraDeploymentSpec, name: String): String? {
 
         val simplified = adc.isSimplifiedConfig("certificate")
         if (!simplified) {
@@ -82,7 +83,7 @@ class StsFeature(val sts: StsProvisioner) : Feature {
     }
 
 
-    override fun modify(adc: AuroraDeploymentContext, resources: Set<AuroraResource>) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
         if (adc["certificate"]) {
             val baseUrl = "/u01/secrets/app/${adc.name}-cert"
             val stsVars = mapOf(

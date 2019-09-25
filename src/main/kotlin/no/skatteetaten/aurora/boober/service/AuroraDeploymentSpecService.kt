@@ -17,7 +17,6 @@ import no.skatteetaten.aurora.boober.mapper.*
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.ApplicationRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -44,15 +43,14 @@ fun Set<AuroraResource>.addEnvVar(envVars: List<EnvVar>) {
 // TODO: Web, toxiproxy, ttl, environment, message, applicationDeployment
 interface Feature {
 
-    fun enable(header: AuroraDeploymentContext): Boolean = true
-    fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler>
-    fun validate(adc: AuroraDeploymentContext, fullValidation: Boolean): List<Exception> = emptyList()
-    fun generate(adc: AuroraDeploymentContext): Set<AuroraResource> = emptySet()
-    fun modify(adc: AuroraDeploymentContext, resources: Set<AuroraResource>) = Unit
+    fun enable(header: AuroraDeploymentSpec): Boolean = true
+    fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler>
+    fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraDeploymentCommand): List<Exception> = emptyList()
+    fun generate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraResource> = emptySet()
+    fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) = Unit
 
 }
 
-typealias FeatureSpec = Map<Feature, AuroraDeploymentContext>
 
 @Service
 class AuroraDeploymentSpecService(
@@ -76,23 +74,20 @@ class AuroraDeploymentSpecService(
             auroraConfigWithOverrides: AuroraConfigWithOverrides,
             applicationDeploymentRefs: List<ApplicationDeploymentRef>,
             resourceValidation: Boolean = true
-    ): List<AuroraDeploymentContext> {
+    ): List<AuroraDeploymentSpec> {
 
         val stopWatch = StopWatch().apply { start() }
-        val specInternals: List<AuroraDeploymentContext> = runBlocking(
+        val specInternals: List<AuroraDeploymentSpec> = runBlocking(
                 MDCContext() + SpringSecurityThreadContextElement()
         ) {
             applicationDeploymentRefs.map { aid ->
                 async(dispatcher) {
                     try {
-                        val spec = createAuroraDeploymentContext(
-                                auroraConfig = auroraConfigWithOverrides.auroraConfig,
-                                applicationDeploymentRef = aid,
-                                overrideFiles = auroraConfigWithOverrides.overrideFiles
-                        ).first
-                        Pair<AuroraDeploymentContext?, ExceptionWrapper?>(first = spec, second = null)
+                        val deployCommand = createAuroraDeploymentCommand(auroraConfigWithOverrides.auroraConfig, aid, auroraConfigWithOverrides.overrideFiles, "123")
+                        val spec = createAuroraDeploymentContext(deployCommand).spec
+                        Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(first = spec, second = null)
                     } catch (e: Throwable) {
-                        Pair<AuroraDeploymentContext?, ExceptionWrapper?>(
+                        Pair<AuroraDeploymentSpec?, ExceptionWrapper?>(
                                 first = null,
                                 second = ExceptionWrapper(aid, e)
                         )
@@ -107,27 +102,21 @@ class AuroraDeploymentSpecService(
     }
 
     fun createAuroraDeploymentContext(
-            auroraConfig: AuroraConfig,
-            applicationDeploymentRef: ApplicationDeploymentRef,
-            overrideFiles: List<AuroraConfigFile> = listOf(),
-            deployId: String = "none"
-    ): Pair<AuroraDeploymentContext, Map<Feature, AuroraDeploymentContext>> {
+            deployCommand: AuroraDeploymentCommand
+    ): AuroraDeploymentContext {
 
-        val applicationFiles: List<AuroraConfigFile> = auroraConfig.getFilesForApplication(applicationDeploymentRef, overrideFiles)
-
-        val headerMapper = HeaderMapper(applicationDeploymentRef, applicationFiles)
+        val headerMapper = HeaderMapper(deployCommand.adr, deployCommand.applicationFiles)
         val headerSpec =
-                AuroraDeploymentContext.create(
+                AuroraDeploymentSpec.create(
                         handlers = headerMapper.handlers,
-                        files = applicationFiles,
-                        applicationDeploymentRef = applicationDeploymentRef,
-                        auroraConfig = auroraConfig,
-                        deployId = deployId
+                        files = deployCommand.applicationFiles,
+                        applicationDeploymentRef = deployCommand.adr,
+                        auroraConfigVersion = deployCommand.auroraConfig.version
                 )
 
         AuroraDeploymentSpecConfigFieldValidator(
-                applicationDeploymentRef = applicationDeploymentRef,
-                applicationFiles = applicationFiles,
+                applicationDeploymentRef = deployCommand.adr,
+                applicationFiles = deployCommand.applicationFiles,
                 fieldHandlers = headerMapper.handlers,
                 fields = headerSpec.fields
         ).validate(false)
@@ -136,27 +125,25 @@ class AuroraDeploymentSpecService(
 
 
         val featureHandlers: Map<Feature, Set<AuroraConfigFieldHandler>> = activeFeatures.associateWith {
-            it.handlers(headerSpec) + headerMapper.handlers
+            it.handlers(headerSpec, deployCommand) + headerMapper.handlers
         }
 
         val allHandlers: Set<AuroraConfigFieldHandler> = featureHandlers.flatMap { it.value }.toSet()
 
-        val spec = AuroraDeploymentContext.create(
+        val spec = AuroraDeploymentSpec.create(
                 handlers = allHandlers,
-                files = applicationFiles,
-                applicationDeploymentRef = applicationDeploymentRef,
-                auroraConfig = auroraConfig,
-                replacer = StringSubstitutor(headerSpec.extractPlaceHolders(), "@", "@"),
-                deployId = deployId
-
+                files = deployCommand.applicationFiles,
+                applicationDeploymentRef = deployCommand.adr,
+                auroraConfigVersion = deployCommand.auroraConfig.version,
+                replacer = StringSubstitutor(headerSpec.extractPlaceHolders(), "@", "@")
         )
         AuroraDeploymentSpecConfigFieldValidator(
-                applicationDeploymentRef = applicationDeploymentRef,
-                applicationFiles = applicationFiles,
+                applicationDeploymentRef = deployCommand.adr,
+                applicationFiles = deployCommand.applicationFiles,
                 fieldHandlers = allHandlers,
                 fields = spec.fields
         ).validate()
-        val featureAdc: Map<Feature, AuroraDeploymentContext> = featureHandlers.mapValues { (_, handlers) ->
+        val featureAdc: Map<Feature, AuroraDeploymentSpec> = featureHandlers.mapValues { (_, handlers) ->
             val paths = handlers.map { it.name }
             val fields = spec.fields.filterKeys {
                 paths.contains(it)
@@ -164,56 +151,20 @@ class AuroraDeploymentSpecService(
             spec.copy(fields = fields)
         }
 
-        /*
-        TODO: Fix
-        val errors: Map<Feature, Exception> = featureAdc.mapNotNull {
-            try {
-                it.key.validate(it.value, fullValidation)
-                null
-            } catch (e: Exception) {
-                it.key to e
 
-            }
-        }.toMap()
-
-         */
-
-        // TODO: what do we do with errors here?
-        return spec to featureAdc
+        return AuroraDeploymentContext(spec, cmd = deployCommand, features = featureAdc)
     }
 
-    fun createResources(
-            auroraConfig: AuroraConfig,
-            applicationDeploymentRef: ApplicationDeploymentRef,
-            overrideFiles: List<AuroraConfigFile> = listOf(),
-            deployId: String
-    ): Set<AuroraResource> {
 
-        // TODO: ADC should contain AuroraDeploymentSpec and featureADC, then we can just generate resoruces whereever.
-        val (spec, featureAdc) = createAuroraDeploymentContext(auroraConfig, applicationDeploymentRef, overrideFiles, deployId)
-
-
-        val featureResources: Set<AuroraResource> = featureAdc.flatMap {
-            it.key.generate(it.value)
-        }.toSet()
-
-        //Mutation!
-        featureAdc.forEach {
-            it.key.modify(it.value, featureResources)
-        }
-
-        return featureResources
-    }
 
     fun getAuroraDeploymentSpecs(
             auroraConfig: AuroraConfig,
             applicationDeploymentRefs: List<ApplicationDeploymentRef>
-    ): List<AuroraDeploymentContext> {
+    ): List<AuroraDeploymentSpec> {
         return applicationDeploymentRefs.map {
             createAuroraDeploymentContext(
-                    auroraConfig = auroraConfig,
-                    applicationDeploymentRef = it
-            ).first
+                    createAuroraDeploymentCommand(auroraConfig, it)
+            ).spec
         }
     }
 }

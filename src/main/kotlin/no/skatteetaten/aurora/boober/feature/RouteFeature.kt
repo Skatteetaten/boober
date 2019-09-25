@@ -14,10 +14,10 @@ import org.springframework.stereotype.Service
 
 @Service
 class RouteFeature(val routeSuffix: String) : Feature {
-    override fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler> {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
         val applicationPlatform: ApplicationPlatform = header.applicationPlatform
 
-        return findRouteHandlers(header.applicationFiles) + setOf(
+        return findRouteHandlers(cmd.applicationFiles) + setOf(
                 AuroraConfigFieldHandler("route", defaultValue = false, canBeSimplifiedConfig = true),
                 AuroraConfigFieldHandler("routeDefaults/host", defaultValue = "@name@-@affiliation@-@env@"),
                 AuroraConfigFieldHandler("routeDefaults/tls/enabled", defaultValue = false),
@@ -30,14 +30,14 @@ class RouteFeature(val routeSuffix: String) : Feature {
                         defaultValue = TlsTermination.edge,
                         validator = { it.oneOf(TlsTermination.values().map { v -> v.name }) })
         ) +
-                findRouteAnnotationHandlers("routeDefaults", header.applicationFiles)
+                findRouteAnnotationHandlers("routeDefaults", cmd.applicationFiles)
 
     }
 
 
-    override fun generate(adc: AuroraDeploymentContext): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraResource> {
 
-        return getRoute(adc).map {
+        return getRoute(adc, cmd).map {
             AuroraResource("${it.objectName}-route", generateRoute(
                     route = it,
                     routeNamespace = adc.namespace,
@@ -47,7 +47,7 @@ class RouteFeature(val routeSuffix: String) : Feature {
         }.toSet()
     }
 
-    fun getRoute(adc: AuroraDeploymentContext): List<no.skatteetaten.aurora.boober.feature.Route> {
+    fun getRoute(adc: AuroraDeploymentSpec, cmd:AuroraDeploymentCommand): List<no.skatteetaten.aurora.boober.feature.Route> {
 
         val route = "route"
         val simplified = adc.isSimplifiedConfig(route)
@@ -71,12 +71,12 @@ class RouteFeature(val routeSuffix: String) : Feature {
             }
             return listOf()
         }
-        val routes = adc.applicationFiles.findSubKeys(route)
+        val routes = cmd.applicationFiles.findSubKeys(route)
 
         return routes.map {
 
             val secure =
-                    if (adc.applicationFiles.findSubKeys("$route/$it/tls").isNotEmpty() ||
+                    if (cmd.applicationFiles.findSubKeys("$route/$it/tls").isNotEmpty() ||
                             adc["routeDefaults/tls/enabled"]
                     ) {
                         SecureRoute(
@@ -97,8 +97,8 @@ class RouteFeature(val routeSuffix: String) : Feature {
 
     // TODO: Validation
 
-    override fun modify(adc: AuroraDeploymentContext, resources: Set<AuroraResource>) {
-        getRoute(adc).firstOrNull()?.let {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
+        getRoute(adc, cmd).firstOrNull()?.let {
             val url = it.url(routeSuffix)
             val routeVars = mapOf(
                     "ROUTE_NAME" to url,

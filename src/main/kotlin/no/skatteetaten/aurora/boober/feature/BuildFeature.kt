@@ -27,14 +27,14 @@ data class AuroraBuild(
 
 @Service
 class BuildFeature() : Feature {
-    override fun enable(header: AuroraDeploymentContext): Boolean {
+    override fun enable(header: AuroraDeploymentSpec): Boolean {
         return header.type == TemplateType.development
     }
 
-    override fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler> {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
 
         val applicationPlatform: ApplicationPlatform = header.applicationPlatform
-        return header.gavHandlers + setOf(
+        return gavHandlers(header, cmd) + setOf(
                 AuroraConfigFieldHandler("builder/name", defaultValue = "architect"),
                 AuroraConfigFieldHandler("builder/version", defaultValue = "1"),
                 AuroraConfigFieldHandler("baseImage/name", defaultValue = applicationPlatform.baseImageName),
@@ -42,13 +42,13 @@ class BuildFeature() : Feature {
         )
     }
 
-    override fun generate(adc: AuroraDeploymentContext): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraResource> {
         return setOf(
                 AuroraResource("${adc.name}-bc", createBuild(adc))
         )
     }
 
-    override fun modify(adc: AuroraDeploymentContext, resources: Set<AuroraResource>) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
         resources.forEach {
             if (it.resource.kind == "ImageStream") {
                 val imageStream: ImageStream = jacksonObjectMapper().convertValue(it.resource)
@@ -67,7 +67,7 @@ class BuildFeature() : Feature {
         }
     }
 
-    fun createBuild(adc: AuroraDeploymentContext): BuildConfig {
+    fun createBuild(adc: AuroraDeploymentSpec): BuildConfig {
         return newBuildConfig {
             metadata {
                 name = adc.name

@@ -3,25 +3,19 @@ package no.skatteetaten.aurora.boober.feature
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.newEnvVar
-import com.fkorotkov.kubernetes.resources
 import com.fkorotkov.openshift.customStrategy
 import io.fabric8.kubernetes.api.model.Container
-import io.fabric8.kubernetes.api.model.ObjectMeta
 import io.fabric8.openshift.api.model.BuildConfig
-import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.ApplicationPlatform
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.PortNumbers
 import no.skatteetaten.aurora.boober.service.AuroraResource
-import no.skatteetaten.aurora.boober.service.Feature
-import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.kindsWithoutNamespace
 import org.springframework.stereotype.Service
 
 @Service
 class WebDeployFeature(dockerRegistry: String) : AbstractDeployFeature(dockerRegistry) {
-    override fun createContainers(adc: AuroraDeploymentContext): List<Container> {
+    override fun createContainers(adc: AuroraDeploymentSpec): List<Container> {
         return listOf(
                 createContainer(
                         adc = adc,
@@ -40,7 +34,7 @@ class WebDeployFeature(dockerRegistry: String) : AbstractDeployFeature(dockerReg
 
     override fun enable(platform: ApplicationPlatform) = platform == ApplicationPlatform.web
 
-    override fun modify(adc: AuroraDeploymentContext, resources: Set<AuroraResource>) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
         resources.forEach {
             if (it.resource.kind == "BuildConfig") {
                 val bc: BuildConfig = jacksonObjectMapper().convertValue(it.resource)

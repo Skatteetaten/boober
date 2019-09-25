@@ -5,11 +5,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.*
 import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.openshift.api.model.DeploymentConfig
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
-import no.skatteetaten.aurora.boober.mapper.convertValueToString
-import no.skatteetaten.aurora.boober.mapper.findConfigFieldHandlers
-import no.skatteetaten.aurora.boober.mapper.findSubKeys
+import no.skatteetaten.aurora.boober.mapper.*
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
@@ -25,17 +21,17 @@ class ConfigFeature(
         @Value("\${openshift.cluster}") val cluster: String
 ) : Feature {
 
-    fun secretVaultKeyMappingHandlers(header: AuroraDeploymentContext) = header.applicationFiles.find {
+    fun secretVaultKeyMappingHandlers(cmd: AuroraDeploymentCommand) = cmd.applicationFiles.find {
         it.asJsonNode.at("/secretVault/keyMappings") != null
     }?.let {
         AuroraConfigFieldHandler("secretVault/keyMappings")
     }
 
-    fun configHandlers(header: AuroraDeploymentContext) = header.applicationFiles.findConfigFieldHandlers()
+    fun configHandlers(cmd: AuroraDeploymentCommand) = cmd.applicationFiles.findConfigFieldHandlers()
 
-    override fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler> {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
 
-        val secretVaultsHandlers = header.applicationFiles.findSubKeys("secretVaults").flatMap { key ->
+        val secretVaultsHandlers = cmd.applicationFiles.findSubKeys("secretVaults").flatMap { key ->
             listOf(
                     AuroraConfigFieldHandler("secretVaults/$key/name", defaultValue = key),
                     AuroraConfigFieldHandler("secretVaults/$key/enabled", defaultValue = true),
@@ -48,17 +44,17 @@ class ConfigFeature(
                 AuroraConfigFieldHandler("secretVault"),
                 AuroraConfigFieldHandler("secretVault/name"),
                 AuroraConfigFieldHandler("secretVault/keys"))
-                .addIfNotNull(secretVaultKeyMappingHandlers(header))
+                .addIfNotNull(secretVaultKeyMappingHandlers(cmd))
                 .addIfNotNull(secretVaultsHandlers)
-                .addIfNotNull(configHandlers(header))
+                .addIfNotNull(configHandlers(cmd))
                 .toSet()
     }
 
-    override fun validate(adc: AuroraDeploymentContext, fullValidation: Boolean): List<Exception> {
+    override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraDeploymentCommand): List<Exception> {
         if (!fullValidation || adc.cluster != cluster) {
             return emptyList()
         }
-        val secrets = getSecretVaults(adc)
+        val secrets = getSecretVaults(adc, cmd)
         return validateVaultExistence(secrets, adc.affiliation)
                 .addIfNotNull(validateSecretNames(secrets))
                 .addIfNotNull(validateKeyMappings(secrets))
@@ -158,9 +154,9 @@ class ConfigFeature(
         } else null
     }
 
-    override fun generate(adc: AuroraDeploymentContext): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraResource> {
 
-        val secretEnvResult = handleSecretEnv(adc)
+        val secretEnvResult = handleSecretEnv(adc, cmd)
 
         val secrets: List<AuroraResource> = secretEnvResult.map {
             val secret = newSecret {
@@ -173,7 +169,7 @@ class ConfigFeature(
             AuroraResource("${secret.metadata.name}-${secret.kind}", secret)
         }
 
-        val configMap: AuroraResource? = getApplicationConfigFiles(adc)?.let {
+        val configMap: AuroraResource? = getApplicationConfigFiles(adc, cmd)?.let {
             AuroraResource("${adc.name}-configmap", newConfigMap {
                 metadata {
                     name = adc.name
@@ -187,8 +183,8 @@ class ConfigFeature(
     }
 
 
-    private fun handleSecretEnv(adc: AuroraDeploymentContext): List<VaultSecretEnvResult> {
-        val secrets = getSecretVaults(adc)
+    private fun handleSecretEnv(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): List<VaultSecretEnvResult> {
+        val secrets = getSecretVaults(adc, cmd)
         return secrets.mapNotNull { secret: AuroraSecret ->
             val request = VaultRequest(
                     collectionName = adc.affiliation,
@@ -207,9 +203,9 @@ class ConfigFeature(
         }
     }
 
-    override fun modify(adc: AuroraDeploymentContext, resources: Set<AuroraResource>) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
 
-        val secretEnv: List<EnvVar> = handleSecretEnv(adc).flatMap { result ->
+        val secretEnv: List<EnvVar> = handleSecretEnv(adc, cmd).flatMap { result ->
             result.secrets.map { secretValue ->
                 newEnvVar {
                     name = secretValue.key
@@ -223,8 +219,8 @@ class ConfigFeature(
                 }
             }
         }
-        val env = adc.getConfigEnv(configHandlers(adc)).toEnvVars()
-        val configVolumeAndMount = getApplicationConfigFiles(adc)?.let {
+        val env = adc.getConfigEnv(configHandlers(cmd)).toEnvVars()
+        val configVolumeAndMount = getApplicationConfigFiles(adc, cmd)?.let {
             val mount = newVolumeMount {
                 name = "config"
                 mountPath = "/u01/config/configmap"
@@ -264,18 +260,18 @@ class ConfigFeature(
         }
     }
 
-    private fun getSecretVaults(adc: AuroraDeploymentContext): List<AuroraSecret> {
+    private fun getSecretVaults(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): List<AuroraSecret> {
         val secret = getSecretVault(adc)?.let {
             AuroraSecret(
                     secretVaultName = it,
-                    keyMappings = adc.getKeyMappings(secretVaultKeyMappingHandlers(adc)),
+                    keyMappings = adc.getKeyMappings(secretVaultKeyMappingHandlers(cmd)),
                     secretVaultKeys = getSecretVaultKeys(adc),
                     file = "latest.properties",
                     name = adc.name
             )
         }
 
-        val secretVaults = adc.applicationFiles.findSubKeys("secretVaults").mapNotNull {
+        val secretVaults = cmd.applicationFiles.findSubKeys("secretVaults").mapNotNull {
             val enabled: Boolean = adc["secretVaults/$it/enabled"]
 
             if (!enabled) {
@@ -294,12 +290,12 @@ class ConfigFeature(
         return secretVaults.addIfNotNull(secret)
     }
 
-    private fun getApplicationConfigFiles(adc: AuroraDeploymentContext): Map<String, String>? {
+    private fun getApplicationConfigFiles(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Map<String, String>? {
 
         data class ConfigFieldValue(val fileName: String, val field: String, val escapedValue: String)
 
         fun extractConfigFieldValues(): List<ConfigFieldValue> {
-            return configHandlers(adc)
+            return configHandlers(cmd)
                     .map { it.name }
                     .filter { it.count { it == '/' } > 1 }
                     .map { name ->
@@ -327,11 +323,11 @@ class ConfigFeature(
         return configFileIndex.map { it.key to it.value.toPropertiesFile() }.toMap()
     }
 
-    private fun getSecretVault(auroraDeploymentSpec: AuroraDeploymentContext): String? =
+    private fun getSecretVault(auroraDeploymentSpec: AuroraDeploymentSpec): String? =
             auroraDeploymentSpec.getOrNull("secretVault/name")
                     ?: auroraDeploymentSpec.getOrNull("secretVault")
 
-    private fun getSecretVaultKeys(auroraDeploymentSpec: AuroraDeploymentContext): List<String> =
+    private fun getSecretVaultKeys(auroraDeploymentSpec: AuroraDeploymentSpec): List<String> =
             auroraDeploymentSpec.getOrNull("secretVault/keys") ?: listOf()
 }
 
