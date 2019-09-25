@@ -5,10 +5,7 @@ import com.fkorotkov.openshift.*
 import io.fabric8.kubernetes.api.model.*
 import io.fabric8.kubernetes.api.model.Probe
 import io.fabric8.openshift.api.model.DeploymentConfig
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
-import no.skatteetaten.aurora.boober.mapper.PortNumbers
-import no.skatteetaten.aurora.boober.mapper.TemplateType
+import no.skatteetaten.aurora.boober.mapper.*
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
@@ -106,15 +103,16 @@ val AuroraDeploymentContext.managementPath
         "$port$path"
     }
 
-// TODO: @Value
-@org.springframework.stereotype.Service
-class DeployFeature(
+abstract class AbstractDeployFeature(
         @Value("\${integrations.docker.registry}") val dockerRegistry: String) : Feature {
 
-    override fun enable(header: AuroraDeploymentContext): Boolean {
-        return header.type in listOf(TemplateType.deploy, TemplateType.development)
-    }
+    abstract fun createContainers(adc: AuroraDeploymentContext): List<Container>
 
+    abstract fun enable(platform: ApplicationPlatform): Boolean
+
+    override fun enable(header: AuroraDeploymentContext): Boolean {
+        return header.type in listOf(TemplateType.deploy, TemplateType.development) && enable(header.applicationPlatform)
+    }
 
     override fun handlers(header: AuroraDeploymentContext) = gav(header.applicationFiles, header.adr) + setOf(
             AuroraConfigFieldHandler("releaseTo"),
@@ -146,16 +144,7 @@ class DeployFeature(
     //this is java
     override fun generate(adc: AuroraDeploymentContext): Set<AuroraResource> {
 
-        val containerInput: Map<String, Map<String, Int>> =
-                mapOf("${adc.name}-java" to mapOf(
-                        "http" to PortNumbers.INTERNAL_HTTP_PORT,
-                        "management" to PortNumbers.INTERNAL_ADMIN_PORT,
-                        "jolokia" to PortNumbers.JOLOKIA_HTTP_PORT)
-                )
-
-        val container = containerInput.map {
-            createContainer(adc, it.key, it.value)
-        }
+        val container = createContainers(adc)
         return setOf(
                 AuroraResource("${adc.name}-dc", create(adc, container)),
                 AuroraResource("${adc.name}-service", createService(adc)),
@@ -231,7 +220,7 @@ class DeployFeature(
         }
     }
 
-    fun createContainer(adc: AuroraDeploymentContext, containerName: String, containerPorts: Map<String, Int>): Container {
+    fun createContainer(adc: AuroraDeploymentContext, containerName: String, containerPorts: Map<String, Int>, containerArgs: List<String> = emptyList()): Container {
 
         return auroraContainer {
             name = containerName
@@ -243,8 +232,7 @@ class DeployFeature(
                 }
             }
 
-            // TODO: args
-            //args = adcContainer.args
+            args = containerArgs
 
             val portEnv = containerPorts.map {
                 val portName = if (it.key == "http") "HTTP_PORT" else "${it.key}_HTTP_PORT".toUpperCase()
@@ -327,6 +315,7 @@ class DeployFeature(
         }
     }
 }
+
 data class HttpEndpoint(
         val path: String,
         val port: Int?

@@ -1,74 +1,64 @@
 {
-  "apiVersion": "build.openshift.io/v1",
-  "kind": "BuildConfig",
-  "metadata": {
-    "labels": {
-      "app": "openshift-referanse-react",
-      "updatedBy": "hero",
-      "affiliation": "aos",
-      "updateInBoober": "true",
-      "booberDeployId": "123"
+  "apiVersion" : "build.openshift.io/v1",
+  "kind" : "BuildConfig",
+  "metadata" : {
+    "labels" : {
+      "app" : "openshift-referanse-react",
+      "updatedBy" : "hero",
+      "affiliation" : "aos",
+      "updateInBoober" : "true",
+      "booberDeployId" : "123",
+      "name" : "openshift-referanse-react"
     },
-    "name": "openshift-referanse-react",
-    "namespace": "aos-booberdev",
-    "ownerReferences": [
-      {
-        "apiVersion": "skatteetaten.no/v1",
-        "kind": "ApplicationDeployment",
-        "name": "openshift-referanse-react",
-        "uid": "123-123"
-      }
-    ]
+    "name" : "openshift-referanse-react",
+    "namespace" : "aos-booberdev",
+    "ownerReferences" : [ {
+      "apiVersion" : "skatteetaten.no/v1",
+      "kind" : "ApplicationDeployment",
+      "name" : "openshift-referanse-react",
+      "uid" : "123-123"
+    } ]
   },
-  "spec": {
-    "output": {
-      "to": {
-        "kind": "ImageStreamTag",
-        "name": "openshift-referanse-react:latest"
+  "spec" : {
+    "output" : {
+      "to" : {
+        "kind" : "ImageStreamTag",
+        "name" : "openshift-referanse-react:latest"
       }
     },
-    "strategy": {
-      "customStrategy": {
-        "env": [
-          {
-            "name": "ARTIFACT_ID",
-            "value": "openshift-referanse-react"
-          },
-          {
-            "name": "GROUP_ID",
-            "value": "no.skatteetaten.aurora"
-          },
-          {
-            "name": "VERSION",
-            "value": "develop-SNAPSHOT"
-          },
-          {
-            "name": "DOCKER_BASE_VERSION",
-            "value": "1"
-          },
-          {
-            "name": "DOCKER_BASE_IMAGE",
-            "value": "aurora/wrench8"
-          },
-          {
-            "name": "PUSH_EXTRA_TAGS",
-            "value": "latest,major,minor,patch"
-          },
-          {
-            "name": "APPLICATION_TYPE",
-            "value": "nodejs"
-          }
-        ],
-        "exposeDockerSocket": true,
-        "from": {
-          "kind": "ImageStreamTag",
-          "name": "architect:1",
-          "namespace": "openshift"
+    "strategy" : {
+      "customStrategy" : {
+        "env" : [ {
+          "name" : "ARTIFACT_ID",
+          "value" : "openshift-referanse-react"
+        }, {
+          "name" : "GROUP_ID",
+          "value" : "no.skatteetaten.aurora"
+        }, {
+          "name" : "VERSION",
+          "value" : "develop-SNAPSHOT"
+        }, {
+          "name" : "DOCKER_BASE_VERSION",
+          "value" : "1"
+        }, {
+          "name" : "DOCKER_BASE_IMAGE",
+          "value" : "aurora/wrench8"
+        }, {
+          "name" : "PUSH_EXTRA_TAGS",
+          "value" : "latest,major,minor,patch"
+        }, {
+          "name" : "APPLICATION_TYPE",
+          "value" : "nodejs"
+        } ],
+        "exposeDockerSocket" : true,
+        "from" : {
+          "kind" : "ImageStreamTag",
+          "name" : "architect:1",
+          "namespace" : "openshift"
         }
       },
-      "type": "Custom"
+      "type" : "Custom"
     },
-    "triggers": [
-    ]
+    "triggers" : [ ]
   }
 }

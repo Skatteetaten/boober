@@ -34,7 +34,8 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
     val stsProvisioner: StsProvisioner = mockk()
     val databaseSchemaProvisioner: DatabaseSchemaProvisioner = mockk()
     val features: List<Feature> = listOf(
-            DeployFeature("docker-registry.aurora.sits.no:5000"),
+            JavaDeployFeature("docker-registry.aurora.sits.no:5000"),
+            WebDeployFeature("docker-registry.aurora.sits.no:5000"),
             CommonLabelFeature(userDetailsProvider),
             DeploymentConfigFeature(),
             RouteFeature(".utv.paas.skead.no"),
@@ -45,7 +46,7 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
             WebsealFeature(),
             ConfigFeature(vaultProvider, cluster),
             StsFeature(stsProvisioner),
-            MountFeature(vaultProvider,cluster, openShiftClient),
+            MountFeature(vaultProvider, cluster, openShiftClient),
             ApplicationDeploymentFeature()
     )
 
@@ -120,10 +121,8 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
                 ))
         ),
         BOOBERDEV_REFERANSE("booberdev", "reference"),
-
-        //This should really have two databases, but we only have one
         WEBSEAL_SPROCKET("webseal", "sprocket", "sprocket,reference"),
-      //  BOOBERDEV_REFERANSE_WEB("booberdev", "reference-web"),
+        BOOBERDEV_REFERANSE_WEB("booberdev", "reference-web"),
         SECRETTEST_SIMPLE("secrettest", "aos-simple"),
         RELEASE_SIMPLE("release", "aos-simple"),
         SECRETMOUNT_SIMPLE("secretmount", "aos-simple"),
@@ -134,7 +133,7 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
     @EnumSource(ResourceCreationTestData::class)
     fun `generate resources for deploy`(test: ResourceCreationTestData) {
 
-        // TODO: Web, toxiproxy, advanced db, see coverage, TTL, validation
+        // TODO: toxiproxy, advanced db, see coverage, TTL, validation
         val aid = ApplicationDeploymentRef(test.env, test.appName)
         val auroraConfig = createAuroraConfig(aid, AFFILIATION, test.additionalFile)
         every { databaseSchemaProvisioner.provisionSchemas(any()) } returns createDatabaseResult(test.dbName, test.env)

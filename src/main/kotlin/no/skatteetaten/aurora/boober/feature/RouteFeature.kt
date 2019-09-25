@@ -13,7 +13,7 @@ import no.skatteetaten.aurora.boober.utils.startsWith
 import org.springframework.stereotype.Service
 
 @Service
-class RouteFeature(val routeSuffix: String = ".foo.bar") : Feature {
+class RouteFeature(val routeSuffix: String) : Feature {
     override fun handlers(header: AuroraDeploymentContext): Set<AuroraConfigFieldHandler> {
         val applicationPlatform: ApplicationPlatform = header.applicationPlatform
 
@@ -23,7 +23,7 @@ class RouteFeature(val routeSuffix: String = ".foo.bar") : Feature {
                 AuroraConfigFieldHandler("routeDefaults/tls/enabled", defaultValue = false),
                 AuroraConfigFieldHandler(
                         "routeDefaults/tls/insecurePolicy",
-                        defaultValue = applicationPlatform.insecurePolicy,
+                        defaultValue = InsecurePolicy.valueOf(applicationPlatform.insecurePolicy),
                         validator = { it.oneOf(InsecurePolicy.values().map { v -> v.name }) }),
                 AuroraConfigFieldHandler(
                         "routeDefaults/tls/termination",
@@ -229,7 +229,6 @@ data class Route(
 data class AuroraRoute(
         val route: List<no.skatteetaten.aurora.boober.feature.Route>
 )
-
 
 
 enum class InsecurePolicy {
