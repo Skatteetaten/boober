@@ -56,8 +56,7 @@ class AuroraDeploymentSpecService(
             auroraConfig: AuroraConfig,
             applicationDeploymentRef: ApplicationDeploymentRef,
             overrideFiles: List<AuroraConfigFile> = listOf(),
-            deployId: String = "none",
-            fullValidation: Boolean = false
+            deployId: String = "none"
     ): Pair<AuroraDeploymentContext, Map<Feature, AuroraDeploymentContext>> {
 
         val applicationFiles: List<AuroraConfigFile> = auroraConfig.getFilesForApplication(applicationDeploymentRef, overrideFiles)
@@ -102,7 +101,7 @@ class AuroraDeploymentSpecService(
                 applicationFiles = applicationFiles,
                 fieldHandlers = allHandlers,
                 fields = spec.fields
-        ).validate(fullValidation)
+        ).validate()
         val featureAdc: Map<Feature, AuroraDeploymentContext> = featureHandlers.mapValues { (_, handlers) ->
             val paths = handlers.map { it.name }
             val fields = spec.fields.filterKeys {

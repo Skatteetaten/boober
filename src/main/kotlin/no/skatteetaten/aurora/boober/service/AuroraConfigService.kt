@@ -271,8 +271,7 @@ class AuroraConfigService(
         val context = auroraDeploymentSpecService.createAuroraDeploymentContext(
             auroraConfig = auroraConfigWithOverrides.auroraConfig,
             applicationDeploymentRef = aid,
-            overrideFiles = auroraConfigWithOverrides.overrideFiles,
-                fullValidation = resourceValidation
+            overrideFiles = auroraConfigWithOverrides.overrideFiles
         ).first
         stopWatch.stop()
 
