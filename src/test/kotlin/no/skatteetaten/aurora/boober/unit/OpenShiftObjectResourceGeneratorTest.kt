@@ -51,8 +51,8 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
             ConfigFeature(vaultProvider, cluster),
             StsFeature(stsProvisioner),
             MountFeature(vaultProvider, cluster, openShiftClient),
-            ApplicationDeploymentFeature()
-            //EnvironmentFeature()
+            ApplicationDeploymentFeature(),
+            EnvironmentFeature(openShiftClient)
     )
 
     @BeforeEach

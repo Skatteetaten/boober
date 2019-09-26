@@ -40,7 +40,7 @@ class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature
         val commonLabels = createCommonLabels(adc, cmd.deployId)
 
         resources.forEach {
-            if(it.namespaced) {
+            if (it.resource.metadata.namespace != null && !it.header) {
                 it.resource.metadata.labels = it.resource.metadata.labels?.addIfNotNull(commonLabels) ?: commonLabels
             }
             if (it.resource.kind == "DeploymentConfig") {

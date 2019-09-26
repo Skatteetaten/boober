@@ -60,7 +60,7 @@ class ApplicationDeploymentFeature() : Feature {
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
 
         resources.forEach {
-            if (it.resource.metadata.namespace != null && it.resource.kind != "ApplicationDeployment") {
+            if (it.resource.metadata.namespace != null && it.resource.kind !in listOf("ApplicationDeployment", "RoleBinding")) {
                 it.resource.metadata.ownerReferences = listOf(
                         newOwnerReference {
                             apiVersion = "skatteetaten.no/v1"

@@ -30,35 +30,30 @@ import org.springframework.util.StopWatch
 data class AuroraResource(
         val name: String,
         val resource: HasMetadata,
-        val namespaced: Boolean = true,
-        val header: Boolean = true //these resources are only created once for each deploy
+        val header: Boolean = false //these resources are only created once for each deploy){}
 )
 
 fun Set<AuroraResource>.addEnvVar(envVars: List<EnvVar>) {
-    this.forEach {
-        if (it.resource.kind == "DeploymentConfig") {
-            val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
-            dc.allNonSideCarContainers.forEach { container ->
-                container.env.addAll(envVars)
-            }
+    this.filter { it.resource.kind == "DeploymentConfig" }.forEach {
+        val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
+        dc.allNonSideCarContainers.forEach { container ->
+            container.env.addAll(envVars)
         }
     }
 }
 
 fun Set<AuroraResource>.addVolumesAndMounts(envVars: List<EnvVar> = emptyList(), volumes: List<Volume> = emptyList(), volumeMounts: List<VolumeMount> = emptyList()) {
-    this.forEach {
-        if (it.resource.kind == "DeploymentConfig") {
-            val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
-            dc.spec.template.spec.volumes = dc.spec.template.spec.volumes.addIfNotNull(volumes)
-            dc.allNonSideCarContainers.forEach { container ->
-                container.volumeMounts = container.volumeMounts.addIfNotNull(volumeMounts)
-                container.env = container.env.addIfNotNull(envVars)
-            }
+    this.filter { it.resource.kind == "DeploymentConfig" }.forEach {
+        val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
+        dc.spec.template.spec.volumes = dc.spec.template.spec.volumes.addIfNotNull(volumes)
+        dc.allNonSideCarContainers.forEach { container ->
+            container.volumeMounts = container.volumeMounts.addIfNotNull(volumeMounts)
+            container.env = container.env.addIfNotNull(envVars)
         }
     }
 }
 
-// TODO: Web, toxiproxy, ttl, environment, message, applicationDeployment
+// TODO:  environment
 interface Feature {
 
     fun enable(header: AuroraDeploymentSpec): Boolean = true

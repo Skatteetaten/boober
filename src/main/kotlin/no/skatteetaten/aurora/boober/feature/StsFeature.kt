@@ -1,14 +1,10 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fasterxml.jackson.module.kotlin.convertValue
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.*
 import io.fabric8.kubernetes.api.model.Secret
-import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.mapper.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.service.addVolumesAndMounts
@@ -106,9 +102,7 @@ class StsFeature(val sts: StsProvisioner) : Feature {
                     secretName = "${adc.name}-cert"
                 }
             }
-
             resources.addVolumesAndMounts(stsVars, listOf(volume), listOf(mount))
-
         }
     }
 

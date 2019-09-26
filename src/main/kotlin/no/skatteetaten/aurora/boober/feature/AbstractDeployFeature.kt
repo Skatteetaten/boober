@@ -257,8 +257,6 @@ abstract class AbstractDeployFeature(
             }
             env = portEnv
 
-
-
             adc.probe("liveness")?.let {
                 livenessProbe = it
             }

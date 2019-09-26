@@ -8,13 +8,13 @@ import com.fkorotkov.kubernetes.newVolumeMount
 import com.fkorotkov.kubernetes.secret
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
-import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.*
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
+import no.skatteetaten.aurora.boober.service.addVolumesAndMounts
 import no.skatteetaten.aurora.boober.service.internal.DbhSecretGenerator
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.*
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
@@ -106,22 +106,16 @@ class DatabaseFeature(
         val volumes = volumeAndMounts.map { it.first }
         val volumeMounts = volumeAndMounts.map { it.second }
 
-
         val databaseId = resources.filter { it.resource.kind == "Secret" }.mapNotNull { it.resource.metadata.labels["dbhId"] }
 
         resources.forEach {
             if (it.resource.kind == "ApplicationDeployment") {
                 val ad: ApplicationDeployment = jacksonObjectMapper().convertValue(it.resource)
                 ad.spec.databases = databaseId
-            } else if (it.resource.kind == "DeploymentConfig") {
-                val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
-                dc.spec.template.spec.volumes = dc.spec.template.spec.volumes.addIfNotNull(volumes)
-                dc.allNonSideCarContainers.forEach { container ->
-                    container.env = container.env.addIfNotNull(dbEnv)
-                    container.volumeMounts = container.volumeMounts.addIfNotNull(volumeMounts)
-                }
             }
         }
+
+        resources.addVolumesAndMounts(dbEnv, volumes, volumeMounts)
     }
 
     fun createSchemaRequest(databases: List<Database>, adc: AuroraDeploymentSpec): List<SchemaProvisionRequest> {

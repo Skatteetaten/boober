@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.mapper
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpecConfigFieldValidator.Companion.namePattern
@@ -8,7 +11,6 @@ import no.skatteetaten.aurora.boober.utils.durationString
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.pattern
-import no.skatteetaten.aurora.boober.utils.removeExtension
 import no.skatteetaten.aurora.boober.utils.startsWith
 
 val DeploymentConfig.allNonSideCarContainers:List<Container> get() =
@@ -26,6 +28,20 @@ enum class TemplateType(val versionRequired: Boolean) {
 
 
 val AuroraDeploymentSpec.applicationPlatform: ApplicationPlatform get() = this["applicationPlatform"]
+
+
+fun generateDeploymentRequest(name: String): JsonNode {
+
+    val deploymentRequest = mapOf(
+            "kind" to "DeploymentRequest",
+            "apiVersion" to "apps.openshift.io/v1",
+            "name" to name,
+            "latest" to true,
+            "force" to true
+    )
+
+    return jacksonObjectMapper().convertValue(deploymentRequest)
+}
 
 /**
  * The header contains the sources that are required to parse the AuroraConfig files and create a merged file for a
@@ -78,26 +94,6 @@ class HeaderMapper(
                 it?.startsWith("about-", "envFile must start with about")
             })
     )
-
-
-    fun extractPermissions(deploymentSpec: AuroraDeploymentSpec): Permissions {
-
-        val viewGroups = deploymentSpec.getDelimitedStringOrArrayAsSet("permissions/view", " ")
-        val adminGroups = deploymentSpec.getDelimitedStringOrArrayAsSet("permissions/admin", " ")
-        // if sa present add to admin users.
-        val adminUsers = deploymentSpec.getDelimitedStringOrArrayAsSet("permissions/adminServiceAccount", " ")
-
-        val adminPermission = Permission(adminGroups, adminUsers)
-        val viewPermission = if (viewGroups.isNotEmpty()) Permission(viewGroups) else null
-
-        return Permissions(admin = adminPermission, view = viewPermission)
-    }
-
-    fun getApplicationFile(): AuroraConfigFile {
-        val fileName = "${applicationDeploymentRef.environment}/${applicationDeploymentRef.application}"
-        val file = applicationFiles.find { it.name.removeExtension() == fileName && !it.override }
-        return file ?: throw IllegalArgumentException("Should find applicationFile $fileName")
-    }
 }
 
 
