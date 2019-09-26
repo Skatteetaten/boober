@@ -9,6 +9,7 @@ import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.mapper.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
@@ -74,7 +75,7 @@ class DeploymentConfigFeature() : Feature {
                 if (adc["pause"]) {
                     dc.spec.replicas = 0
                 }
-                dc.spec.template.spec.containers.forEach { container ->
+                dc.allNonSideCarContainers.forEach { container ->
                     container.env.addAll(envVars)
                     container.resources {
                         requests = mapOf(adc.quantity("cpu", "min"), adc.quantity("memory", "min"))

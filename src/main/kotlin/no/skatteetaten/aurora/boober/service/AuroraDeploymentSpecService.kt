@@ -4,6 +4,8 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.HasMetadata
+import io.fabric8.kubernetes.api.model.Volume
+import io.fabric8.kubernetes.api.model.VolumeMount
 import io.fabric8.openshift.api.model.DeploymentConfig
 import kotlinx.coroutines.async
 import kotlinx.coroutines.newFixedThreadPoolContext
@@ -17,6 +19,7 @@ import no.skatteetaten.aurora.boober.mapper.*
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.ApplicationRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -26,15 +29,30 @@ import org.springframework.util.StopWatch
 
 data class AuroraResource(
         val name: String,
-        val resource: HasMetadata
+        val resource: HasMetadata,
+        val namespaced: Boolean = true,
+        val header: Boolean = true //these resources are only created once for each deploy
 )
 
 fun Set<AuroraResource>.addEnvVar(envVars: List<EnvVar>) {
     this.forEach {
         if (it.resource.kind == "DeploymentConfig") {
             val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
-            dc.spec.template.spec.containers.forEach { container ->
+            dc.allNonSideCarContainers.forEach { container ->
                 container.env.addAll(envVars)
+            }
+        }
+    }
+}
+
+fun Set<AuroraResource>.addVolumesAndMounts(envVars: List<EnvVar> = emptyList(), volumes: List<Volume> = emptyList(), volumeMounts: List<VolumeMount> = emptyList()) {
+    this.forEach {
+        if (it.resource.kind == "DeploymentConfig") {
+            val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
+            dc.spec.template.spec.volumes = dc.spec.template.spec.volumes.addIfNotNull(volumes)
+            dc.allNonSideCarContainers.forEach { container ->
+                container.volumeMounts = container.volumeMounts.addIfNotNull(volumeMounts)
+                container.env = container.env.addIfNotNull(envVars)
             }
         }
     }
@@ -103,7 +121,7 @@ class AuroraDeploymentSpecService(
                     .map { it.await() }
         }.onErrorThrow(::MultiApplicationValidationException)
         stopWatch.stop()
-        val name= commands.first().auroraConfig.name
+        val name = commands.first().auroraConfig.name
         logger.debug("Validated AuroraConfig ${name} with ${commands.size} applications in ${stopWatch.totalTimeMillis} millis")
         return specInternals
     }

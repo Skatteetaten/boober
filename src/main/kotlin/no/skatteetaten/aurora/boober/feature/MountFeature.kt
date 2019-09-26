@@ -3,18 +3,13 @@ package no.skatteetaten.aurora.boober.feature
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.*
-import io.fabric8.kubernetes.api.model.ConfigMap
-import io.fabric8.kubernetes.api.model.Secret
-import io.fabric8.kubernetes.api.model.Volume
-import io.fabric8.kubernetes.api.model.VolumeMount
+import io.fabric8.kubernetes.api.model.*
 import io.fabric8.openshift.api.model.DeploymentConfig
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.mapper.findSubKeys
+import no.skatteetaten.aurora.boober.mapper.*
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
+import no.skatteetaten.aurora.boober.service.addVolumesAndMounts
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
@@ -25,6 +20,7 @@ import no.skatteetaten.aurora.boober.utils.required
 import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+
 
 @Service
 class MountFeature(
@@ -117,16 +113,7 @@ class MountFeature(
             }.toMap().toEnvVars()
 
 
-            resources.forEach {
-                if (it.resource.kind == "DeploymentConfig") {
-                    val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
-                    dc.spec.template.spec.volumes.plusAssign(volumes)
-                    dc.spec.template.spec.containers.forEach { container ->
-                        container.volumeMounts.plusAssign(volumeMounts)
-                        container.env.addAll(envVars)
-                    }
-                }
-            }
+            resources.addVolumesAndMounts(envVars, volumes, volumeMounts)
         }
     }
 

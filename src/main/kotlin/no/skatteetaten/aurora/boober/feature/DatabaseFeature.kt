@@ -115,10 +115,10 @@ class DatabaseFeature(
                 ad.spec.databases = databaseId
             } else if (it.resource.kind == "DeploymentConfig") {
                 val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
-                dc.spec.template.spec.volumes.plusAssign(volumes)
-                dc.spec.template.spec.containers.forEach { container ->
-                    container.env.addAll(dbEnv)
-                    container.volumeMounts.plusAssign(volumeMounts)
+                dc.spec.template.spec.volumes = dc.spec.template.spec.volumes.addIfNotNull(volumes)
+                dc.allNonSideCarContainers.forEach { container ->
+                    container.env = container.env.addIfNotNull(dbEnv)
+                    container.volumeMounts = container.volumeMounts.addIfNotNull(volumeMounts)
                 }
             }
         }

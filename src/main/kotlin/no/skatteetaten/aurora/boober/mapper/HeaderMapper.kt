@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.mapper
 
+import io.fabric8.kubernetes.api.model.Container
+import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpecConfigFieldValidator.Companion.namePattern
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.utils.durationString
@@ -9,6 +11,8 @@ import no.skatteetaten.aurora.boober.utils.pattern
 import no.skatteetaten.aurora.boober.utils.removeExtension
 import no.skatteetaten.aurora.boober.utils.startsWith
 
+val DeploymentConfig.allNonSideCarContainers:List<Container> get() =
+    this.spec.template.spec.containers.filter{ !it.name.endsWith("sidecar")}
 
 enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: Int, val insecurePolicy: String) {
     java("wingnut8", 1, "None"),

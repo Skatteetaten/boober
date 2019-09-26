@@ -9,13 +9,16 @@ import no.skatteetaten.aurora.boober.mapper.*
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
+import no.skatteetaten.aurora.boober.service.addVolumesAndMounts
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultSecretEnvResult
 import no.skatteetaten.aurora.boober.utils.*
 import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 
+@Service
 class ConfigFeature(
         val vaultProvider: VaultProvider,
         @Value("\${openshift.cluster}") val cluster: String
@@ -219,45 +222,38 @@ class ConfigFeature(
                 }
             }
         }
-        val env = adc.getConfigEnv(configHandlers(cmd)).toEnvVars()
-        val configVolumeAndMount = getApplicationConfigFiles(adc, cmd)?.let {
-            val mount = newVolumeMount {
+
+        val configSecretExist = getApplicationConfigFiles(adc, cmd)
+
+        val mounts = configSecretExist?.let {
+            listOf(newVolumeMount {
                 name = "config"
                 mountPath = "/u01/config/configmap"
-            }
+            })
+        } ?: emptyList()
 
-            val volume = newVolume {
+        val volumes = configSecretExist?.let {
+            listOf(newVolume {
                 name = "config"
                 configMap {
                     name = adc.name
                 }
             }
-            mount to volume
-        }
-        resources.forEach {
-            if (it.resource.kind == "DeploymentConfig") {
-                val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
+            )
+        } ?: emptyList()
 
-                configVolumeAndMount?.let { (_, volume) ->
-                    dc.spec.template.spec.volumes.plusAssign(volume)
-                }
-                dc.spec.template.spec.containers.forEach { container ->
-                    if (env.isNotEmpty()) {
-                        container.env.addAll(env)
-                    }
-                    if (secretEnv.isNotEmpty()) {
-                        container.env.addAll(secretEnv)
-                    }
-                    configVolumeAndMount?.let { (mount, _) ->
-                        container.env.add(newEnvVar {
-                            name = "VOLUME_CONFIG"
-                            value = "/u01/config/configmap"
-                        })
-                        container.volumeMounts.plusAssign(mount)
-                    }
-                }
+        val configEnv = configSecretExist?.let {
+            newEnvVar {
+                name = "VOLUME_CONFIG"
+                value = "/u01/config/configmap"
             }
         }
+
+        val env = adc.getConfigEnv(configHandlers(cmd))
+                .toEnvVars()
+                .addIfNotNull(configEnv)
+                .addIfNotNull(secretEnv)
+        resources.addVolumesAndMounts(env, volumes, mounts)
     }
 
     private fun getSecretVaults(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): List<AuroraSecret> {

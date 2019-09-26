@@ -4,5 +4,6 @@
   "ttl": "1d",
   "readiness": {
     "path": "/foo"
-  }
+  },
+  "toxiproxy": true
 }

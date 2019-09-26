@@ -40,7 +40,9 @@ class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature
         val commonLabels = createCommonLabels(adc, cmd.deployId)
 
         resources.forEach {
-            it.resource.metadata.labels = it.resource.metadata.labels?.addIfNotNull(commonLabels) ?: commonLabels
+            if(it.namespaced) {
+                it.resource.metadata.labels = it.resource.metadata.labels?.addIfNotNull(commonLabels) ?: commonLabels
+            }
             if (it.resource.kind == "DeploymentConfig") {
                 val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
                 if (dc.spec.template.metadata == null) {

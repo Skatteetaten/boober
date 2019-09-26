@@ -37,6 +37,7 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
     val stsProvisioner: StsProvisioner = mockk()
     val databaseSchemaProvisioner: DatabaseSchemaProvisioner = mockk()
     val features: List<Feature> = listOf(
+            ToxiproxySidecarFeature(),
             JavaDeployFeature("docker-registry.aurora.sits.no:5000"),
             WebDeployFeature("docker-registry.aurora.sits.no:5000"),
             CommonLabelFeature(userDetailsProvider),
@@ -51,6 +52,7 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
             StsFeature(stsProvisioner),
             MountFeature(vaultProvider, cluster, openShiftClient),
             ApplicationDeploymentFeature()
+            //EnvironmentFeature()
     )
 
     @BeforeEach
