@@ -7,6 +7,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
+import no.skatteetaten.aurora.boober.service.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.utils.atNullable

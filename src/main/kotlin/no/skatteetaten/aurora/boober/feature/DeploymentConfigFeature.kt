@@ -28,6 +28,8 @@ fun Map<String, String>.toEnvVars(): List<EnvVar> = this
             EnvVarBuilder().withName(it.key).withValue(it.value).build()
         }
 
+val AuroraDeploymentSpec.pause:Boolean get() = this["pause"]
+
 @Service
 class DeploymentConfigFeature() : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
