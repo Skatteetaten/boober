@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.mapper.createAuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -46,9 +46,10 @@ class AuroraConfigService(
         return bitbucketProjectService.getRepoNames(project)
     }
 
-    fun findExactRef(ref: AuroraConfigRef): String? {
+    fun resolveToExactRef(ref: AuroraConfigRef): AuroraConfigRef {
 
-        return updateLocalFilesFromGit(ref)
+        val exactRef = updateLocalFilesFromGit(ref)
+        return exactRef?.let { ref.copy(resolvedRef = it) } ?: ref
     }
 
     fun findAuroraConfigFilesForApplicationDeployment(
@@ -141,7 +142,7 @@ class AuroraConfigService(
         logger.debug("Affected AID for file={} adr={}", newFile, affectedAid)
         // This will validate both AuroraConfig and External validation for the affected AID
         auroraDeploymentSpecService.createValidatedAuroraDeploymentContexts(affectedAid.map {
-            createAuroraDeploymentCommand(auroraConfig, it, auroraConfigRef = ref)
+            AuroraContextCommand(auroraConfig, it, ref)
         })
         watch.stop()
 
@@ -171,7 +172,7 @@ class AuroraConfigService(
             auroraConfigRef: AuroraConfigRef
     ) {
         val commands = auroraConfig.getApplicationDeploymentRefs().map {
-            createAuroraDeploymentCommand(auroraConfig, it, overrideFiles, auroraConfigRef = auroraConfigRef)
+            AuroraContextCommand(auroraConfig, it, auroraConfigRef, overrideFiles)
         }
         auroraDeploymentSpecService.createValidatedAuroraDeploymentContexts(commands, resourceValidation)
     }

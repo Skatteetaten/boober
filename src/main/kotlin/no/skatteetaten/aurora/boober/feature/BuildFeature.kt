@@ -31,7 +31,7 @@ class BuildFeature() : Feature {
         return header.type == TemplateType.development
     }
 
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
         val applicationPlatform: ApplicationPlatform = header.applicationPlatform
         return gavHandlers(header, cmd) + setOf(
@@ -42,13 +42,13 @@ class BuildFeature() : Feature {
         )
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
         return setOf(
                 AuroraResource("${adc.name}-bc", createBuild(adc))
         )
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         resources.forEach {
             if (it.resource.kind == "ImageStream") {
                 val imageStream: ImageStream = jacksonObjectMapper().convertValue(it.resource)

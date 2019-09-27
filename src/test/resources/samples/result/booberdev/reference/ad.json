@@ -23,7 +23,7 @@
     "applicationDeploymentId" : "71ac9e2f6f1f0b02fafb22e3336137a7ed6f2598",
     "applicationName" : "reference",
     "applicationDeploymentName" : "reference",
-    "databases" : [ "123" ],
+    "databases" : [ ],
     "splunkIndex" : "openshift-test",
     "managementPath" : ":8081/actuator",
     "deployTag" : "1.0.0-b1.5.3-flange-8.152.18",

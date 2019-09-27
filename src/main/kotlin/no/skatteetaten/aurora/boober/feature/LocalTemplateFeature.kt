@@ -2,7 +2,7 @@ package no.skatteetaten.aurora.boober.feature
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.TemplateType
 import no.skatteetaten.aurora.boober.model.*
@@ -24,7 +24,7 @@ class LocalTemplateFeature() : AbstractTemplateFeature() {
         }))
     }
 
-    override fun findTemplate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): JsonNode {
+    override fun findTemplate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): JsonNode {
         val templateFile = adc.get<String>("templateFile").let { fileName ->
             cmd.auroraConfig.files.find { it.name == fileName }?.asJsonNode
         }

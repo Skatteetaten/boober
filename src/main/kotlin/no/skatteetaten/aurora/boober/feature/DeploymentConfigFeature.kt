@@ -7,7 +7,7 @@ import com.fkorotkov.kubernetes.resources
 import io.fabric8.kubernetes.api.model.*
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
@@ -32,7 +32,7 @@ val AuroraDeploymentSpec.pause:Boolean get() = this["pause"]
 
 @Service
 class DeploymentConfigFeature() : Feature {
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
         return setOf(
                 AuroraConfigFieldHandler("management", defaultValue = true, canBeSimplifiedConfig = true),
@@ -50,7 +50,7 @@ class DeploymentConfigFeature() : Feature {
                 header.versionHandler)
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         val dcLabels = createDcLabels(adc)
         val dcAnnotations = createDcAnnotations(adc, cmd)
         val envVars = createEnvVars(adc).toEnvVars()
@@ -115,7 +115,7 @@ class DeploymentConfigFeature() : Feature {
         return OpenShiftObjectLabelService.toOpenShiftLabelNameSafeMap(allLabels)
     }
 
-    fun createDcAnnotations(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Map<String, String> {
+    fun createDcAnnotations(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, String> {
 
         fun escapeOverrides(): String? {
             val files =

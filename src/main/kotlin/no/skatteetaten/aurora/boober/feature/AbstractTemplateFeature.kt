@@ -6,7 +6,7 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.HasMetadata
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.findSubKeys
 import no.skatteetaten.aurora.boober.model.*
@@ -26,10 +26,10 @@ abstract class AbstractTemplateFeature() : Feature {
 
     abstract fun templateHandlers(files: List<AuroraConfigFile>, auroraConfig: AuroraConfig): Set<AuroraConfigFieldHandler>
 
-    abstract fun findTemplate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): JsonNode
+    abstract fun findTemplate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): JsonNode
 
 
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
         fun findParameters(): Set<AuroraConfigFieldHandler> {
 
@@ -46,7 +46,7 @@ abstract class AbstractTemplateFeature() : Feature {
         )
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         val type = adc.type
         val template = findTemplate(adc, cmd)
         val name = template.openshiftName
@@ -60,7 +60,7 @@ abstract class AbstractTemplateFeature() : Feature {
         }
     }
 
-    override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraDeploymentCommand): List<Exception> {
+    override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraContextCommand): List<Exception> {
 
         val templateJson = try {
             findTemplate(adc, cmd)
@@ -77,7 +77,7 @@ abstract class AbstractTemplateFeature() : Feature {
 
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         val parameters = findParameters(adc)
 

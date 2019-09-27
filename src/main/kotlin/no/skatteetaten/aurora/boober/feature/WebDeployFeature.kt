@@ -7,7 +7,7 @@ import com.fkorotkov.openshift.customStrategy
 import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.openshift.api.model.BuildConfig
 import no.skatteetaten.aurora.boober.mapper.ApplicationPlatform
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.PortNumbers
 import no.skatteetaten.aurora.boober.service.AuroraResource
@@ -41,7 +41,7 @@ class WebDeployFeature(@Value("\${integrations.docker.registry}") val registry: 
 
     override fun enable(platform: ApplicationPlatform) = platform == ApplicationPlatform.web
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         resources.forEach {
             if (it.resource.kind == "BuildConfig") {
                 val bc: BuildConfig = jacksonObjectMapper().convertValue(it.resource)

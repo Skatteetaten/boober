@@ -15,10 +15,10 @@ import org.springframework.web.client.HttpClientErrorException
 
 @Service
 class DeployLogService(
-    val bitbucketService: BitbucketService,
-    val mapper: ObjectMapper,
-    @Value("\${integrations.deployLog.git.project}") val project: String,
-    @Value("\${integrations.deployLog.git.repo}") val repo: String
+        val bitbucketService: BitbucketService,
+        val mapper: ObjectMapper,
+        @Value("\${integrations.deployLog.git.project}") val project: String,
+        @Value("\${integrations.deployLog.git.repo}") val repo: String
 ) {
 
     val logger: Logger = LoggerFactory.getLogger(DeployLogService::class.java)
@@ -28,42 +28,37 @@ class DeployLogService(
     private val FAILED_PREFIX = "FAILED"
 
     fun markRelease(
-        deployResult: List<AuroraDeployResult>,
-        deployer: Deployer
+            deployResult: List<AuroraDeployResult>,
+            deployer: Deployer
     ): List<AuroraDeployResult> {
 
         return deployResult
-            .map {
-                if (it.ignored || it.command == null) {
-                    it
-                } else {
-                    val result = filterDeployInformation(it)
+                .map { auroraDeployResult ->
+                    val result = filterDeployInformation(auroraDeployResult)
                     val deployHistory = DeployHistoryEntry(
-                        command = result.command!!,
-                        deployer = deployer,
-                        time = now,
-                        deploymentSpec = result.auroraDeploymentSpecInternal?.let {
-                            renderSpecAsJson(it, true)
-                        } ?: mapOf(),
-                        deployId = result.deployId,
-                        success = result.success,
-                        reason = result.reason ?: "",
-                        result = DeployHistoryEntryResult(result.openShiftResponses, result.tagResponse),
-                        projectExist = result.projectExist
+                            command = result.command,
+                            deployer = deployer,
+                            time = now,
+                            deploymentSpec = result.auroraDeploymentSpecInternal.let {
+                                renderSpecAsJson(it, true)
+                            } ?: mapOf(),
+                            deployId = result.deployId,
+                            success = result.success,
+                            reason = result.reason ?: "",
+                            result = DeployHistoryEntryResult(result.openShiftResponses, result.tagResponse),
+                            projectExist = result.projectExist
                     )
                     try {
                         val storeResult =
-                            storeDeployHistory(deployHistory, result.auroraDeploymentSpecInternal!!.cluster)
-                        it.copy(bitbucketStoreResult = storeResult)
+                                storeDeployHistory(deployHistory, result.auroraDeploymentSpecInternal!!.cluster)
+                        auroraDeployResult.copy(bitbucketStoreResult = storeResult)
                     } catch (e: Exception) {
-                        it.copy(
-                            bitbucketStoreResult = e.localizedMessage,
-                            deployId = "failed",
-                            reason = it.reason + " Failed to store deploy result."
+                        auroraDeployResult.copy(
+                                bitbucketStoreResult = e.localizedMessage,
+                                reason = auroraDeployResult.reason + " Failed to store deploy result."
                         )
                     }
                 }
-            }
     }
 
     fun storeDeployHistory(deployHistoryEntry: DeployHistoryEntry, cluster: String): String? {
@@ -83,7 +78,7 @@ class DeployLogService(
     fun deployHistory(ref: AuroraConfigRef): List<JsonNode> {
         val files = bitbucketService.getFiles(project, repo, ref.name)
         return files.mapNotNull { bitbucketService.getFile(project, repo, "${ref.name}/$it") }
-            .map { mapper.readValue<JsonNode>(it) }
+                .map { mapper.readValue<JsonNode>(it) }
     }
 
     fun findDeployResultById(ref: AuroraConfigRef, deployId: String): JsonNode? {

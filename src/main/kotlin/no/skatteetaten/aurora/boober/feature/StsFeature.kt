@@ -3,7 +3,7 @@ package no.skatteetaten.aurora.boober.feature
 import com.fkorotkov.kubernetes.*
 import io.fabric8.kubernetes.api.model.Secret
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
@@ -16,14 +16,14 @@ import org.springframework.stereotype.Service
 
 @Service
 class StsFeature(val sts: StsProvisioner) : Feature {
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
                 AuroraConfigFieldHandler("certificate", defaultValue = false, canBeSimplifiedConfig = true),
                 AuroraConfigFieldHandler("certificate/commonName")
         )
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         // TODO: Handle failure
         return findCertificate(adc, adc.name)?.let {
@@ -81,7 +81,7 @@ class StsFeature(val sts: StsProvisioner) : Feature {
     }
 
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         if (adc["certificate"]) {
             val baseUrl = "/u01/secrets/app/${adc.name}-cert"
             val stsVars = mapOf(

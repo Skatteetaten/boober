@@ -2,12 +2,12 @@ package no.skatteetaten.aurora.boober.mapper
 
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
-import no.skatteetaten.aurora.boober.service.AuroraDeployEnvironment
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.utils.atNullable
@@ -16,31 +16,31 @@ import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-fun createAuroraDeploymentCommand(
-        auroraConfig: AuroraConfig,
-        applicationDeploymentRef: ApplicationDeploymentRef,
-        overrideFiles: List<AuroraConfigFile> = emptyList(),
-        deployId: String? = null,
-        auroraConfigRef: AuroraConfigRef)
-        : AuroraDeploymentCommand {
-    val applicationFiles: List<AuroraConfigFile> = auroraConfig.getFilesForApplication(applicationDeploymentRef, overrideFiles)
 
-    return AuroraDeploymentCommand(
-            auroraConfig = auroraConfig,
-            applicationFiles = applicationFiles,
-            adr = applicationDeploymentRef,
-            deployId = deployId ?: "empty",
-            auroraConfigRef = auroraConfigRef
-    )
-}
-
-data class AuroraDeploymentCommand(
-        val auroraConfig: AuroraConfig,
-        val applicationFiles: List<AuroraConfigFile>,
-        val adr: ApplicationDeploymentRef,
+data class AuroraDeployCommand(
+        val headerResources: Set<AuroraResource>,
+        val resources: Set<AuroraResource>,
+        val context: AuroraDeploymentContext,
         val deployId: String,
-        val auroraConfigRef: AuroraConfigRef
+        val shouldDeploy: Boolean = true,
+        val user: User
+)
+
+data class AuroraContextCommand(
+        val auroraConfig: AuroraConfig,
+        val applicationDeploymentRef: ApplicationDeploymentRef,
+        val auroraConfigRef: AuroraConfigRef,
+        val overrides: List<AuroraConfigFile> = emptyList(),
+
+        //TODO: These two really does not belong here
+        val deployId: String = "none",
+        val shouldDeploy: Boolean = true
 ) {
+
+    val applicationFiles: List<AuroraConfigFile> by lazy {
+        auroraConfig.getFilesForApplication(applicationDeploymentRef, overrides)
+    }
+
     val applicationFile: AuroraConfigFile
         get() = applicationFiles.find { it.type == AuroraConfigFileType.APP && !it.override }!!
 
@@ -82,9 +82,8 @@ typealias FeatureSpec = Map<Feature, AuroraDeploymentSpec>
 
 data class AuroraDeploymentContext(
         val spec: AuroraDeploymentSpec,
-        val cmd: AuroraDeploymentCommand,
+        val cmd: AuroraContextCommand,
         val features: FeatureSpec
-
 )
 
 data class AuroraDeploymentSpec(

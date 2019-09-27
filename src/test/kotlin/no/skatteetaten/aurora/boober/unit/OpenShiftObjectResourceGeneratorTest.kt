@@ -11,7 +11,7 @@ import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.feature.*
-import no.skatteetaten.aurora.boober.mapper.createAuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
 import no.skatteetaten.aurora.boober.mapper.createResources
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -52,7 +52,7 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
             StsFeature(stsProvisioner),
             MountFeature(vaultProvider, cluster, openShiftClient),
             ApplicationDeploymentFeature(),
-            EnvironmentFeature(openShiftClient)
+            EnvironmentFeature(openShiftClient, userDetailsProvider)
     )
 
     @BeforeEach
@@ -138,13 +138,16 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
     @EnumSource(ResourceCreationTestData::class)
     fun `generate resources for deploy`(test: ResourceCreationTestData) {
         Instants.determineNow = { Instant.EPOCH }
-        // TODO: toxiproxy, advanced db, see coverage, TTL, validation
         val aid = ApplicationDeploymentRef(test.env, test.appName)
         val auroraConfig = createAuroraConfig(aid, AFFILIATION, test.additionalFile)
         every { databaseSchemaProvisioner.provisionSchemas(any()) } returns createDatabaseResult(test.dbName, test.env)
 
-        val deployCommand = createAuroraDeploymentCommand(
-                auroraConfig = auroraConfig, applicationDeploymentRef = aid, overrideFiles = test.overrides, deployId = "123", auroraConfigRef = AuroraConfigRef("test", "master", "123abb")
+        val deployCommand = AuroraContextCommand(
+                auroraConfig = auroraConfig,
+                applicationDeploymentRef = aid,
+                overrides = test.overrides,
+                deployId = "123",
+                auroraConfigRef = AuroraConfigRef("test", "master", "123abb")
         )
         val ctx = service.createAuroraDeploymentContext(deployCommand)
         val resources = ctx.createResources()
@@ -165,67 +168,6 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
             }
             compareJson(resultFiles[key]!!, it)
         }
-        assertThat(generatedObjects.map { getKey(it) }.toSet()).isEqualTo(resultFiles.keys)
+        assertThat(generatedObjects.map { getKey(it) }.toSortedSet()).isEqualTo(resultFiles.keys.toSortedSet())
     }
 }
-
-//TODO: reimplement
-/*
-@Test
-fun `generate rolebinding should include serviceaccount `() {
-
-    val aid = ApplicationDeploymentRef("booberdev", "console")
-    val auroraConfig = createAuroraConfig(aid, AFFILIATION, null)
-
-    val deploymentSpec =
-        AuroraDeploymentSpecService.createAuroraDeploymentSpecInternal(
-            auroraConfig,
-            aid
-        )
-    val rolebindings = objectGenerator.generateRolebindings(
-        deploymentSpec.environment.permissions,
-        deploymentSpec.environment.namespace
-    )
-
-    val adminRolebinding = rolebindings.find { it.at("/metadata/name").asText() == "admin" }!!
-    assertThat(adminRolebinding).isNotNull()
-
-    assertThat(
-        getArray(
-            adminRolebinding,
-            "/userNames"
-        )
-    ).isEqualTo(setOf("system:serviceaccount:paas:jenkinsbuilder"))
-    assertThat(getArray(adminRolebinding, "/groupNames")).isEqualTo(setOf("APP_PaaS_utv", "APP_PaaS_drift"))
-
-    val viewRolebinding = rolebindings.find { it.at("/metadata/name").asText() == "view" }
-    assertThat(viewRolebinding).isNotNull()
-    assertThat(rolebindings.size).isEqualTo(2)
-}    */
-
-/* TOOD: Reimplement
-@Test
-fun `generate rolebinding view should split groups`() {
-
-    val aid = ApplicationDeploymentRef("booberdev", "console")
-    val auroraConfig = createAuroraConfig(aid, AFFILIATION, null)
-
-    val deploymentSpec =
-        AuroraDeploymentSpecService.createAuroraDeploymentSpecInternal(
-            auroraConfig,
-            aid
-        )
-    val rolebindings = objectGenerator.generateRolebindings(
-        deploymentSpec.environment.permissions,
-        deploymentSpec.environment.namespace
-    )
-
-    val adminRolebinding = rolebindings.find { it.at("/metadata/name").asText() == "admin" }!!
-    assertThat(getArray(adminRolebinding, "/groupNames")).isEqualTo(setOf("APP_PaaS_utv", "APP_PaaS_drift"))
-
-    val viewRolebinding = rolebindings.find { it.at("/metadata/name").asText() == "view" }
-    assertThat(viewRolebinding).isNotNull()
-    assertThat(rolebindings.size).isEqualTo(2)
-}
-
- */

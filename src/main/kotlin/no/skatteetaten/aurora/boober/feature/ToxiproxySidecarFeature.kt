@@ -6,7 +6,7 @@ import com.fkorotkov.kubernetes.*
 import io.fabric8.kubernetes.api.model.*
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.PortNumbers
 import no.skatteetaten.aurora.boober.service.AuroraResource
@@ -22,14 +22,14 @@ val AuroraDeploymentSpec.toxiProxy: String?
 @org.springframework.stereotype.Service
 class ToxiproxySidecarFeature() : Feature {
 
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
                 AuroraConfigFieldHandler("toxiproxy", defaultValue = false, canBeSimplifiedConfig = true),
                 AuroraConfigFieldHandler("toxiproxy/version", defaultValue = "2.1.3")
         )
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         return adc.toxiProxy?.let {
             setOf(AuroraResource("${adc.name}-toxiproxy-config-cm",
@@ -45,7 +45,7 @@ class ToxiproxySidecarFeature() : Feature {
 
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
 
         val toxiProxy = adc.toxiProxy ?: return
 

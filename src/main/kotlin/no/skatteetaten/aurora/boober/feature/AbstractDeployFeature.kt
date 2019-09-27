@@ -87,11 +87,11 @@ val AuroraDeploymentSpec.versionHandler: AuroraConfigFieldHandler
             )
         })
 
-fun gavHandlers(spec: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand) =
+fun gavHandlers(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand) =
         setOf(
                 AuroraConfigFieldHandler("artifactId",
                         defaultValue = cmd.applicationFiles.find { it.type == AuroraConfigFileType.BASE }?.name?.removeExtension()
-                                ?: cmd.adr.application,
+                                ?: cmd.applicationDeploymentRef.application,
                         defaultSource = "fileName",
                         validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
 
@@ -119,7 +119,7 @@ abstract class AbstractDeployFeature(
         return header.type in listOf(TemplateType.deploy, TemplateType.development) && enable(header.applicationPlatform)
     }
 
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> = gavHandlers(header, cmd) + setOf(
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> = gavHandlers(header, cmd) + setOf(
             AuroraConfigFieldHandler("releaseTo"),
             AuroraConfigFieldHandler(
                     "deployStrategy/type",
@@ -147,7 +147,7 @@ abstract class AbstractDeployFeature(
 
 
     //this is java
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         val container = createContainers(adc)
         return setOf(
@@ -159,7 +159,7 @@ abstract class AbstractDeployFeature(
         )
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         val name = "${adc.artifactId}"
         val id = DigestUtils.sha1Hex("${adc.groupId}/${adc.artifactId}")
         resources.forEach {

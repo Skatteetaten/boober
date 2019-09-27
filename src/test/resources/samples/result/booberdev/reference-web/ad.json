@@ -22,7 +22,7 @@
     "applicationDeploymentId" : "cd3c35f71824ee2664db66ed4894a9917f3ef5b7",
     "applicationName" : "openshift-referanse-react",
     "applicationDeploymentName" : "openshift-referanse-react",
-    "databases" : [ "123" ],
+    "databases" : [ ],
     "managementPath" : ":8081/actuator",
     "deployTag" : "develop-SNAPSHOT",
     "command" : {

@@ -22,7 +22,7 @@
     "applicationDeploymentId" : "f61d705430cd2abe5b4ffe9f0dbbb0400eafc633",
     "applicationName" : "aos-simple",
     "applicationDeploymentName" : "aos-simple",
-    "databases" : [ "123" ],
+    "databases" : [ ],
     "splunkIndex" : "openshift-test",
     "deployTag" : "1.0.3-SNAPSHOT",
     "command" : {

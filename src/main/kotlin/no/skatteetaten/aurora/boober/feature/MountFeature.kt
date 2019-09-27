@@ -25,7 +25,7 @@ class MountFeature(
         @Value("\${openshift.cluster}") val cluster: String,
         val openShiftClient: OpenShiftClient
 ) : Feature {
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         val mountKeys = cmd.applicationFiles.findSubKeys("mounts")
 
         return mountKeys.flatMap { mountName ->
@@ -45,7 +45,7 @@ class MountFeature(
         }.toSet()
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         val mounts = getMounts(adc, cmd)
         val configMounts = mounts.filter { !it.exist && it.type == MountType.ConfigMap && it.content != null }
@@ -95,7 +95,7 @@ class MountFeature(
         }
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
 
         val mounts = getMounts(adc, cmd)
 
@@ -114,7 +114,7 @@ class MountFeature(
         }
     }
 
-    override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraDeploymentCommand): List<Exception> {
+    override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraContextCommand): List<Exception> {
         if (!fullValidation || adc.cluster != cluster) {
             return emptyList()
         }
@@ -146,7 +146,7 @@ class MountFeature(
     }
 
 
-    private fun getMounts(auroraDeploymentSpec: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): List<Mount> {
+    private fun getMounts(auroraDeploymentSpec: AuroraDeploymentSpec, cmd: AuroraContextCommand): List<Mount> {
 
         // TODO: review to not use handlers
         val mountHandlers = handlers(auroraDeploymentSpec, cmd);

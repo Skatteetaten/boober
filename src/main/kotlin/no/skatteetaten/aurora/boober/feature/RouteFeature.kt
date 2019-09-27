@@ -9,7 +9,7 @@ import io.fabric8.openshift.api.model.Route
 import no.skatteetaten.aurora.boober.mapper.ApplicationPlatform
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.applicationPlatform
 import no.skatteetaten.aurora.boober.mapper.findSubHandlers
@@ -29,7 +29,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : Feature {
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         val applicationPlatform: ApplicationPlatform = header.applicationPlatform
 
         return findRouteHandlers(cmd.applicationFiles) + setOf(
@@ -50,7 +50,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     }
 
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         return getRoute(adc, cmd).map {
             AuroraResource("${it.objectName}-route", generateRoute(
@@ -62,7 +62,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         }.toSet()
     }
 
-    fun getRoute(adc: AuroraDeploymentSpec, cmd:AuroraDeploymentCommand): List<no.skatteetaten.aurora.boober.feature.Route> {
+    fun getRoute(adc: AuroraDeploymentSpec, cmd:AuroraContextCommand): List<no.skatteetaten.aurora.boober.feature.Route> {
 
         val route = "route"
         val simplified = adc.isSimplifiedConfig(route)
@@ -112,7 +112,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
 
     // TODO: Validation
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         getRoute(adc, cmd).firstOrNull()?.let {
             val url = it.url(routeSuffix)
             val routeVars = mapOf(

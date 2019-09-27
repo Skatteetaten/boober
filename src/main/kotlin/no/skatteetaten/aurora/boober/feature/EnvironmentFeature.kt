@@ -8,27 +8,28 @@ import io.fabric8.kubernetes.api.model.Namespace
 import io.fabric8.openshift.api.model.OpenshiftRoleBinding
 import io.fabric8.openshift.api.model.ProjectRequest
 import no.skatteetaten.aurora.boober.mapper.*
-import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
-import no.skatteetaten.aurora.boober.service.AuroraResource
-import no.skatteetaten.aurora.boober.service.Feature
+import no.skatteetaten.aurora.boober.service.*
 import no.skatteetaten.aurora.boober.service.internal.RolebindingGenerator
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.springframework.boot.convert.DurationStyle
 import org.springframework.stereotype.Service
+import java.lang.IllegalArgumentException
 import java.time.Duration
 
 val AuroraDeploymentSpec.envTTL: Duration? get() = this.getOrNull<String>("env/ttl")?.let { DurationStyle.SIMPLE.parse(it) }
 
-// TODO: Add and
 @Service
-class EnvironmentFeature(val openShiftClient: OpenShiftClient) : Feature {
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
+class EnvironmentFeature(
+        val openShiftClient: OpenShiftClient,
+        val userDetailsProvider: UserDetailsProvider
+) : Feature {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf()
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         val rolebindings = generateRolebindings(adc).map {
             AuroraResource("${it.metadata.name}-${it.kind}", it, header = true)
@@ -89,15 +90,28 @@ class EnvironmentFeature(val openShiftClient: OpenShiftClient) : Feature {
         return listOf(admin).addIfNotNull(view)
     }
 
-    override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraDeploymentCommand): List<Exception> {
-        if (!fullValidation) return emptyList()
+    override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraContextCommand): List<Exception> {
 
-        return try {
+        val errors: List<Exception> = try {
             validateAdminGroups(adc)
             emptyList()
         } catch (e: Exception) {
             listOf(e)
         }
+
+        if (!fullValidation) return errors
+
+        val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
+
+        val permissions = extractPermissions(adc)
+        val userNotInAdminUsers = !permissions.admin.users.contains(authenticatedUser.username)
+        val adminGroups = permissions.admin.groups
+        val userNotInAnyAdminGroups = !authenticatedUser.hasAnyRole(adminGroups)
+
+        if (userNotInAdminUsers && userNotInAnyAdminGroups) {
+            return errors.addIfNotNull(IllegalArgumentException("User=${authenticatedUser.fullName} does not have access to admin this environment from the groups=${adminGroups}"))
+        }
+        return emptyList()
     }
 
     private fun validateAdminGroups(adc: AuroraDeploymentSpec) {

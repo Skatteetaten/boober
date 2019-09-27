@@ -2,11 +2,10 @@ package no.skatteetaten.aurora.boober.feature
 
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fkorotkov.kubernetes.newOwnerReference
 import io.fabric8.kubernetes.api.model.ObjectMeta
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
@@ -19,7 +18,7 @@ import org.springframework.stereotype.Service
 class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature {
 
     //all handlers are in  header
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return emptySet()
     }
 
@@ -36,7 +35,7 @@ class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature
         return OpenShiftObjectLabelService.toOpenShiftLabelNameSafeMap(labels)
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         val commonLabels = createCommonLabels(adc, cmd.deployId)
 
         resources.forEach {

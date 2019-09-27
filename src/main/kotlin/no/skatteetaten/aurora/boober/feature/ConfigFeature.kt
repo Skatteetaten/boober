@@ -21,15 +21,15 @@ class ConfigFeature(
         @Value("\${openshift.cluster}") val cluster: String
 ) : Feature {
 
-    fun secretVaultKeyMappingHandlers(cmd: AuroraDeploymentCommand) = cmd.applicationFiles.find {
+    fun secretVaultKeyMappingHandlers(cmd: AuroraContextCommand) = cmd.applicationFiles.find {
         it.asJsonNode.at("/secretVault/keyMappings") != null
     }?.let {
         AuroraConfigFieldHandler("secretVault/keyMappings")
     }
 
-    fun configHandlers(cmd: AuroraDeploymentCommand) = cmd.applicationFiles.findConfigFieldHandlers()
+    fun configHandlers(cmd: AuroraContextCommand) = cmd.applicationFiles.findConfigFieldHandlers()
 
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
         val secretVaultsHandlers = cmd.applicationFiles.findSubKeys("secretVaults").flatMap { key ->
             listOf(
@@ -50,7 +50,7 @@ class ConfigFeature(
                 .toSet()
     }
 
-    override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraDeploymentCommand): List<Exception> {
+    override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraContextCommand): List<Exception> {
         if (!fullValidation || adc.cluster != cluster) {
             return emptyList()
         }
@@ -154,7 +154,7 @@ class ConfigFeature(
         } else null
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         val secretEnvResult = handleSecretEnv(adc, cmd)
 
@@ -183,7 +183,7 @@ class ConfigFeature(
     }
 
 
-    private fun handleSecretEnv(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): List<VaultSecretEnvResult> {
+    private fun handleSecretEnv(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): List<VaultSecretEnvResult> {
         val secrets = getSecretVaults(adc, cmd)
         return secrets.mapNotNull { secret: AuroraSecret ->
             val request = VaultRequest(
@@ -203,7 +203,7 @@ class ConfigFeature(
         }
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
 
         val secretEnv: List<EnvVar> = handleSecretEnv(adc, cmd).flatMap { result ->
             result.secrets.map { secretValue ->
@@ -253,7 +253,7 @@ class ConfigFeature(
         resources.addVolumesAndMounts(env, volumes, mounts)
     }
 
-    private fun getSecretVaults(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): List<AuroraSecret> {
+    private fun getSecretVaults(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): List<AuroraSecret> {
         val secret = getSecretVault(adc)?.let {
             AuroraSecret(
                     secretVaultName = it,
@@ -283,7 +283,7 @@ class ConfigFeature(
         return secretVaults.addIfNotNull(secret)
     }
 
-    private fun getApplicationConfigFiles(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Map<String, String>? {
+    private fun getApplicationConfigFiles(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, String>? {
 
         data class ConfigFieldValue(val fileName: String, val field: String, val escapedValue: String)
 

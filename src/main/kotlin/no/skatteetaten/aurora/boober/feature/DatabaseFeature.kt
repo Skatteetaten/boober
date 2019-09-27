@@ -9,7 +9,7 @@ import com.fkorotkov.kubernetes.secret
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.associateSubKeys
 import no.skatteetaten.aurora.boober.mapper.findSubHandlers
@@ -42,7 +42,7 @@ class DatabaseFeature(
 ) : Feature {
     val databaseDefaultsKey = "databaseDefaults"
 
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         val dbHandlers = findDbHandlers(cmd.applicationFiles)
 
         val dbDefaultsHandlers = findDbDefaultHandlers(cmd.applicationFiles)
@@ -52,7 +52,7 @@ class DatabaseFeature(
         )).toSet()
     }
 
-    override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraDeploymentCommand): List<Exception> {
+    override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraContextCommand): List<Exception> {
         val databases = findDatabases(adc, cmd)
         if (!fullValidation || adc.cluster != cluster || databases.isEmpty()) {
             return emptyList()
@@ -72,7 +72,7 @@ class DatabaseFeature(
     }
 
     // TODO: Handle errors, probably need to return both resources and errors and propagate
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         //can we just create schemaRequest manually here?
         val databases = findDatabases(adc, cmd)
@@ -111,7 +111,7 @@ class DatabaseFeature(
     }
 
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         val databases = findDatabases(adc, cmd)
         if (databases.isEmpty()) return
         val dbEnv = databases.flatMap { it.createDbEnv("${it.name}_db") }.addIfNotNull(databases.firstOrNull()?.createDbEnv("db")).toMap().toEnvVars()
@@ -153,7 +153,7 @@ class DatabaseFeature(
         }
     }
 
-    private fun findDatabases(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): List<Database> {
+    private fun findDatabases(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): List<Database> {
         val defaultFlavor: DatabaseFlavor = adc["$databaseDefaultsKey/flavor"]
         val defaultInstance = findInstance(adc, cmd, "$databaseDefaultsKey/instance", defaultFlavor.defaultFallback)
                 ?: DatabaseInstance(fallback = defaultFlavor.defaultFallback)
@@ -212,7 +212,7 @@ class DatabaseFeature(
 
     private fun findInstance(
             adc: AuroraDeploymentSpec,
-            cmd: AuroraDeploymentCommand,
+            cmd: AuroraContextCommand,
             key: String,
             defaultFallback: Boolean
     ): DatabaseInstance? {

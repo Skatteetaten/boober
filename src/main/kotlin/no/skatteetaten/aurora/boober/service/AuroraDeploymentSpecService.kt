@@ -57,10 +57,10 @@ fun Set<AuroraResource>.addVolumesAndMounts(envVars: List<EnvVar> = emptyList(),
 interface Feature {
 
     fun enable(header: AuroraDeploymentSpec): Boolean = true
-    fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler>
-    fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraDeploymentCommand): List<Exception> = emptyList()
-    fun generate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraResource> = emptySet()
-    fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) = Unit
+    fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler>
+    fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraContextCommand): List<Exception> = emptyList()
+    fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> = emptySet()
+    fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) = Unit
 
 }
 
@@ -79,18 +79,13 @@ class AuroraDeploymentSpecService(
             adr: List<ApplicationDeploymentRef>,
             ref: AuroraConfigRef
     ): List<ApplicationRef> {
-
-        val commands = adr.map {
-            createAuroraDeploymentCommand(auroraConfig, it, auroraConfigRef = ref)
+        return getAuroraDeploymentContexts(auroraConfig, adr, ref).map {
+            ApplicationRef(it.spec.namespace, it.spec.name)
         }
-        return createValidatedAuroraDeploymentContexts(commands)
-                .map {
-                    ApplicationRef(it.spec.namespace, it.spec.name)
-                }
     }
 
     fun createValidatedAuroraDeploymentContexts(
-            commands: List<AuroraDeploymentCommand>,
+            commands: List<AuroraContextCommand>,
             resourceValidation: Boolean = true
     ): List<AuroraDeploymentContext> {
 
@@ -108,7 +103,7 @@ class AuroraDeploymentSpecService(
                     } catch (e: Throwable) {
                         Pair<AuroraDeploymentContext?, ExceptionWrapper?>(
                                 first = null,
-                                second = ExceptionWrapper(cmd.adr, e)
+                                second = ExceptionWrapper(cmd.applicationDeploymentRef, e)
                         )
                     }
                 }
@@ -122,20 +117,20 @@ class AuroraDeploymentSpecService(
     }
 
     fun createAuroraDeploymentContext(
-            deployCommand: AuroraDeploymentCommand
+            deployCommand: AuroraContextCommand
     ): AuroraDeploymentContext {
 
-        val headerMapper = HeaderMapper(deployCommand.adr, deployCommand.applicationFiles)
+        val headerMapper = HeaderMapper(deployCommand.applicationDeploymentRef, deployCommand.applicationFiles)
         val headerSpec =
                 AuroraDeploymentSpec.create(
                         handlers = headerMapper.handlers,
                         files = deployCommand.applicationFiles,
-                        applicationDeploymentRef = deployCommand.adr,
+                        applicationDeploymentRef = deployCommand.applicationDeploymentRef,
                         auroraConfigVersion = deployCommand.auroraConfig.version
                 )
 
         AuroraDeploymentSpecConfigFieldValidator(
-                applicationDeploymentRef = deployCommand.adr,
+                applicationDeploymentRef = deployCommand.applicationDeploymentRef,
                 applicationFiles = deployCommand.applicationFiles,
                 fieldHandlers = headerMapper.handlers,
                 fields = headerSpec.fields
@@ -153,12 +148,12 @@ class AuroraDeploymentSpecService(
         val spec = AuroraDeploymentSpec.create(
                 handlers = allHandlers,
                 files = deployCommand.applicationFiles,
-                applicationDeploymentRef = deployCommand.adr,
+                applicationDeploymentRef = deployCommand.applicationDeploymentRef,
                 auroraConfigVersion = deployCommand.auroraConfig.version,
                 replacer = StringSubstitutor(headerSpec.extractPlaceHolders(), "@", "@")
         )
         AuroraDeploymentSpecConfigFieldValidator(
-                applicationDeploymentRef = deployCommand.adr,
+                applicationDeploymentRef = deployCommand.applicationDeploymentRef,
                 applicationFiles = deployCommand.applicationFiles,
                 fieldHandlers = allHandlers,
                 fields = spec.fields
@@ -176,13 +171,13 @@ class AuroraDeploymentSpecService(
     }
 
 
-    fun getAuroraDeploymentSpecs(
+    fun getAuroraDeploymentContexts(
             auroraConfig: AuroraConfig,
             applicationDeploymentRefs: List<ApplicationDeploymentRef>,
             ref: AuroraConfigRef
-    ): List<AuroraDeploymentSpec> {
+    ): List<AuroraDeploymentContext> {
         return applicationDeploymentRefs.map {
-            createAuroraDeploymentContext(createAuroraDeploymentCommand(auroraConfig, it, auroraConfigRef = ref)).spec
+            createAuroraDeploymentContext(AuroraContextCommand(auroraConfig, it, ref))
         }
     }
 }

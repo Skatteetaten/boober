@@ -3,7 +3,7 @@ package no.skatteetaten.aurora.boober.feature
 import com.fkorotkov.kubernetes.newObjectMeta
 import com.fkorotkov.kubernetes.newOwnerReference
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
@@ -23,14 +23,14 @@ val AuroraDeploymentSpec.ttl: Duration? get() = this.getOrNull<String>("ttl")?.l
 @Service
 class ApplicationDeploymentFeature() : Feature {
 
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
                 AuroraConfigFieldHandler("message"),
                 AuroraConfigFieldHandler("ttl", validator = { it.durationString() })
         )
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         val applicationDeploymentId = DigestUtils.sha1Hex("${adc.namespace}/${adc.name}")
         val ttl = adc.ttl?.let {
@@ -46,7 +46,7 @@ class ApplicationDeploymentFeature() : Feature {
                         applicationDeploymentId = applicationDeploymentId,
                         command = ApplicationDeploymentCommand(
                                 cmd.overrideFiles,
-                                cmd.adr,
+                                cmd.applicationDeploymentRef,
                                 cmd.auroraConfigRef)
                 ),
                 _metadata = newObjectMeta {
@@ -57,7 +57,7 @@ class ApplicationDeploymentFeature() : Feature {
         )))
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
 
         resources.forEach {
             if (it.resource.metadata.namespace != null && it.resource.kind !in listOf("ApplicationDeployment", "RoleBinding")) {
