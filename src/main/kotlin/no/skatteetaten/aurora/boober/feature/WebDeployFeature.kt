@@ -11,23 +11,30 @@ import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.PortNumbers
 import no.skatteetaten.aurora.boober.service.AuroraResource
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class WebDeployFeature(dockerRegistry: String) : AbstractDeployFeature(dockerRegistry) {
+class WebDeployFeature(@Value("\${integrations.docker.registry}") val registry: String) :
+    AbstractDeployFeature(registry) {
+
     override fun createContainers(adc: AuroraDeploymentSpec): List<Container> {
         return listOf(
-                createContainer(
-                        adc = adc,
-                        containerName = "${adc.name}-node",
-                        containerArgs = listOf("/u01/bin/run_node"),
-                        containerPorts = mapOf("http" to PortNumbers.NODE_PORT,
-                                "management" to PortNumbers.INTERNAL_ADMIN_PORT)),
-                createContainer(
-                        adc = adc,
-                        containerName = "${adc.name}-nginx",
-                        containerArgs = listOf("/u01/bin/run_nginx"),
-                        containerPorts = mapOf("http" to PortNumbers.INTERNAL_HTTP_PORT))
+            createContainer(
+                adc = adc,
+                containerName = "${adc.name}-node",
+                containerArgs = listOf("/u01/bin/run_node"),
+                containerPorts = mapOf(
+                    "http" to PortNumbers.NODE_PORT,
+                    "management" to PortNumbers.INTERNAL_ADMIN_PORT
+                )
+            ),
+            createContainer(
+                adc = adc,
+                containerName = "${adc.name}-nginx",
+                containerArgs = listOf("/u01/bin/run_nginx"),
+                containerPorts = mapOf("http" to PortNumbers.INTERNAL_HTTP_PORT)
+            )
 
         )
     }
@@ -40,10 +47,10 @@ class WebDeployFeature(dockerRegistry: String) : AbstractDeployFeature(dockerReg
                 val bc: BuildConfig = jacksonObjectMapper().convertValue(it.resource)
                 bc.spec.strategy.customStrategy {
                     env.add(
-                            newEnvVar {
-                                name = "APPLICATION_TYPE"
-                                value = "nodejs"
-                            }
+                        newEnvVar {
+                            name = "APPLICATION_TYPE"
+                            value = "nodejs"
+                        }
                     )
                 }
             }

@@ -4,13 +4,19 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.openshift.api.model.OpenshiftRoleBinding
-import no.skatteetaten.aurora.boober.feature.*
+import no.skatteetaten.aurora.boober.feature.cluster
+import no.skatteetaten.aurora.boober.feature.dockerImagePath
+import no.skatteetaten.aurora.boober.feature.name
+import no.skatteetaten.aurora.boober.feature.namespace
+import no.skatteetaten.aurora.boober.feature.pause
+import no.skatteetaten.aurora.boober.feature.releaseTo
+import no.skatteetaten.aurora.boober.feature.type
+import no.skatteetaten.aurora.boober.feature.version
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.mapper.createAuroraDeploymentCommand
 import no.skatteetaten.aurora.boober.mapper.createResources
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.describeString
@@ -20,7 +26,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.*
+import java.util.UUID
 
 data class AuroraDeployEnvironment(val namespace: String, val resources: List<AuroraResource>) {
 
@@ -169,7 +175,6 @@ class DeployService(
         val namespaceName = environment.namespace
 
         val projectResponse = projectExist.whenFalse {
-
             openShiftCommandBuilder.createOpenShiftCommand(
                     newResource = environment.resources.find { it.resource.kind == "ProjectRequest" }?.resource
                             ?: throw Exception("Could not find project request"),
@@ -181,7 +186,11 @@ class DeployService(
             }
         }
         val resources = environment.resources.filter { it.resource.kind != "ProjectRequest" }.map {
-            openShiftCommandBuilder.createOpenShiftCommand(namespaceName, it.resource, true, true)
+            openShiftCommandBuilder.createOpenShiftCommand(
+                namespace = it.resource.metadata.namespace,
+                newResource = it.resource,
+                retryGetResourceOnFailure = true
+            )
         }
 
         val resourceResponse = resources.map { openShiftClient.performOpenShiftCommand(namespaceName, it) }
@@ -266,8 +275,9 @@ class DeployService(
             )
         }
 
-
-        val application = resources.first { it.resource.kind == "ApplicationDeployment" }.resource
+        val application = resources.first {
+            it.resource.kind == "ApplicationDeployment"
+        }.resource
 
         val applicationCommand = openShiftCommandBuilder.createOpenShiftCommand(
                 context.spec.namespace, application
@@ -275,9 +285,8 @@ class DeployService(
 
         val applicationResult = openShiftClient.performOpenShiftCommand(context.spec.namespace, applicationCommand)
 
-        val appResponse: ApplicationDeployment? = applicationResult.responseBody?.let {
-            jacksonObjectMapper().convertValue(it)
-        }
+        //TODO: Problem with deserializing ApplicationDeployment
+        val appResponse = applicationResult.responseBody
 
         if (appResponse == null) {
             return AuroraDeployResult(
@@ -293,7 +302,7 @@ class DeployService(
             )
         }
 
-        val ownerReferenceUid = appResponse.metadata.uid
+        val ownerReferenceUid = appResponse.at("/metadata/uid").textValue()
 
         val tagResult = context.spec.takeIf { it.releaseTo != null }?.let {
             dockerService.tag(TagCommand(it.dockerImagePath, it.version, it.releaseTo!!, dockerRegistry))

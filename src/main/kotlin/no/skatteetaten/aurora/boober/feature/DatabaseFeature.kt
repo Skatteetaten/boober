@@ -8,15 +8,27 @@ import com.fkorotkov.kubernetes.newVolumeMount
 import com.fkorotkov.kubernetes.secret
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
-import no.skatteetaten.aurora.boober.mapper.*
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.mapper.associateSubKeys
+import no.skatteetaten.aurora.boober.mapper.findSubHandlers
+import no.skatteetaten.aurora.boober.mapper.findSubKeys
+import no.skatteetaten.aurora.boober.mapper.findSubKeysExpanded
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.service.addVolumesAndMounts
 import no.skatteetaten.aurora.boober.service.internal.DbhSecretGenerator
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.*
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseEngine
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaIdRequest
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionRequest
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaRequestDetails
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaUser
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
@@ -65,6 +77,8 @@ class DatabaseFeature(
         //can we just create schemaRequest manually here?
         val databases = findDatabases(adc, cmd)
 
+        if (databases.isEmpty()) return emptySet()
+
         val schemaRequests = createSchemaRequest(databases, adc)
         val schemaProvisionResult = databaseSchemaProvisioner.provisionSchemas(schemaRequests)
 
@@ -99,6 +113,7 @@ class DatabaseFeature(
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraDeploymentCommand) {
         val databases = findDatabases(adc, cmd)
+        if (databases.isEmpty()) return
         val dbEnv = databases.flatMap { it.createDbEnv("${it.name}_db") }.addIfNotNull(databases.firstOrNull()?.createDbEnv("db")).toMap().toEnvVars()
 
         val volumeAndMounts = databases.map { it.createDatabaseVolumesAndMounts(adc.name) }

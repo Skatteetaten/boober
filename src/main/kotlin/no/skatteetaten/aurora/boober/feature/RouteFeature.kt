@@ -1,19 +1,34 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fkorotkov.openshift.*
+import com.fkorotkov.openshift.metadata
+import com.fkorotkov.openshift.newRoute
+import com.fkorotkov.openshift.spec
+import com.fkorotkov.openshift.tls
+import com.fkorotkov.openshift.to
 import io.fabric8.openshift.api.model.Route
-import no.skatteetaten.aurora.boober.mapper.*
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.mapper.ApplicationPlatform
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.mapper.applicationPlatform
+import no.skatteetaten.aurora.boober.mapper.findSubHandlers
+import no.skatteetaten.aurora.boober.mapper.findSubKeys
+import no.skatteetaten.aurora.boober.mapper.findSubKeysExpanded
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.ConfigFieldErrorDetail
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.service.addEnvVar
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.startsWith
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class RouteFeature(val routeSuffix: String) : Feature {
+class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraDeploymentCommand): Set<AuroraConfigFieldHandler> {
         val applicationPlatform: ApplicationPlatform = header.applicationPlatform
 

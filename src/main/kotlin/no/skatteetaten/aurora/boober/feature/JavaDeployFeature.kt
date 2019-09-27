@@ -4,10 +4,12 @@ import io.fabric8.kubernetes.api.model.Container
 import no.skatteetaten.aurora.boober.mapper.ApplicationPlatform
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.PortNumbers
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class JavaDeployFeature(dockerRegistry: String) : AbstractDeployFeature(dockerRegistry) {
+class JavaDeployFeature(@Value("\${integrations.docker.registry}") val registry: String) :
+    AbstractDeployFeature(registry) {
     override fun enable(platform: ApplicationPlatform) = platform == ApplicationPlatform.java
 
     override fun createContainers(adc: AuroraDeploymentSpec): List<Container> {

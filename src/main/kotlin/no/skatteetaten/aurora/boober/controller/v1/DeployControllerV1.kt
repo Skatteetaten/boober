@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/v1/apply/{auroraConfigName}")
 class DeployControllerV1(private val deployService: DeployService, private val responder: DeployResponder) {
 
-    /* TODO: fix
     @PutMapping
     fun apply(@PathVariable auroraConfigName: String, @RequestBody payload: ApplyPayload): Response {
 
@@ -46,8 +45,6 @@ class DeployControllerV1(private val deployService: DeployService, private val r
         return responder.create(auroraDeployResults)
     }
 
-
-     */
     data class DeployResponse(
         val deploymentSpec: Map<String, Any>?,
         val deployId: String,
