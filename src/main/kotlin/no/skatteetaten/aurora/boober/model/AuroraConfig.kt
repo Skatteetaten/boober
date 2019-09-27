@@ -5,7 +5,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.APP
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.BASE
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.ENV
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.GLOBAL
-import no.skatteetaten.aurora.boober.utils.filterNullValues
 import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.removeExtension
@@ -58,7 +57,7 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
         val fileSpec = findFileSpec(applicationDeploymentRef)
 
         val filesForApplication: Map<AuroraConfigFileSpec, AuroraConfigFile?> = findFiles(fileSpec, files)
-        val overrides: List<AuroraConfigFile> = findFiles(fileSpec, overrideFiles).filterNullValues().values.toList()
+        val overrides: List<AuroraConfigFile> = findFiles(fileSpec, overrideFiles).values.filterNotNull().toList()
 
         val missingFileSpec = filesForApplication.filterValues { it == null }.map { it.key }
         if (missingFileSpec.isNotEmpty()) {
@@ -68,7 +67,7 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
             throw IllegalArgumentException("Some required AuroraConfig (json|yaml) files missing. $missingFiles.")
         }
 
-        val applicationFiles = filesForApplication.filterNullValues().values.toList()
+        val applicationFiles = filesForApplication.values.filterNotNull().toList()
         return applicationFiles + overrides
     }
 
