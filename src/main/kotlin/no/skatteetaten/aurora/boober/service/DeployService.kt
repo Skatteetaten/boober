@@ -252,17 +252,14 @@ class DeployService(
         val namespace = context.spec.namespace
         val name = context.spec.name
 
-        //TODO: Should we fix deployId here aswell?
-        val jsonResources = deployCommand.resources.map {
-            it.resource.metadata.labels = it.resource.metadata.labels.addIfNotNull("booberDeployId" to deployCommand.deployId)
-            it.resource.metadata.ownerReferences.find {
+        val jsonResources = deployCommand.resources.map { resource ->
+            resource.resource.metadata.labels = resource.resource.metadata.labels.addIfNotNull("booberDeployId" to deployCommand.deployId)
+            resource.resource.metadata.ownerReferences.find {
                 it.kind == "ApplicationDeployment"
             }?.let {
                 it.uid = ownerReferenceUid
             }
-
-
-            jacksonObjectMapper().convertValue<JsonNode>(it.resource)
+            jacksonObjectMapper().convertValue<JsonNode>(resource.resource)
         }
 
         val objects = openShiftCommandBuilder.orderObjects(jsonResources, context.spec.type, context.spec.namespace, mergeWithExistingResource)
