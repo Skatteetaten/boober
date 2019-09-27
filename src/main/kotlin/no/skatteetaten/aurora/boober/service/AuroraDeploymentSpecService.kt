@@ -96,6 +96,7 @@ class AuroraDeploymentSpecService(
             commands.map { cmd ->
                 async(dispatcher) {
                     try {
+                        //TODO: Handle error here and make this code cleaner
                         val context = createAuroraDeploymentContext(cmd)
                         context.validate(resourceValidation)
 

@@ -170,8 +170,6 @@ class DeployService(
 
         val applicationCommand = openShiftCommandBuilder.createOpenShiftCommand(context.spec.namespace, application)
         val applicationResult = openShiftClient.performOpenShiftCommand(context.spec.namespace, applicationCommand)
-
-        //TODO: Problem with deserializing ApplicationDeployment
         val appResponse = applicationResult.responseBody
 
         if (appResponse == null) {
