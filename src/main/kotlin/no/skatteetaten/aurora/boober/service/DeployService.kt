@@ -65,6 +65,7 @@ class DeployService(
 
         val deploymentCtx = auroraDeploymentSpecService.createValidatedAuroraDeploymentContexts(commands)
         validateUnusedOverrideFiles(deploymentCtx, overrides, applicationDeploymentRefs)
+        // TODO handle errors
 
         val (validContexts, invalidContexts) = deploymentCtx.partition { it.spec.cluster == cluster }
         //TODO handle error here
@@ -82,11 +83,11 @@ class DeployService(
         }
 
 
-        val deployResults: Map<String, List<AuroraDeployResult>> = envDeploys.toMap().mapValues { (ns, commands) ->
+        val deployResults: Map<String, List<AuroraDeployResult>> = envDeploys.mapValues { (ns, commands) ->
             val env = prepareDeployEnvironment(ns, commands.first().headerResources)
 
             if (!env.success) {
-                throw Exception("handle this error")
+                throw Exception("handle this error, generating namespace failed")
             } else {
                 commands.map {
                     val result = deployFromSpec(it, env)
