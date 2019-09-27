@@ -56,8 +56,8 @@ object DbhSecretGenerator {
             secretName: String,
             secretNamespace: String
     ): Secret {
-        val connectionProperties = DbhSecretGenerator.createConnectionProperties(schemaProvisionResult.dbhSchema)
-        val infoFile = DbhSecretGenerator.createInfoFile(schemaProvisionResult.dbhSchema)
+        val connectionProperties = createConnectionProperties(schemaProvisionResult.dbhSchema)
+        val infoFile = createInfoFile(schemaProvisionResult.dbhSchema)
 
         return newSecret {
             metadata {
