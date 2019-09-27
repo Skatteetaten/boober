@@ -22,6 +22,7 @@ class DeployControllerV1(private val deployService: DeployService, private val r
     fun apply(@PathVariable auroraConfigName: String, @RequestBody payload: ApplyPayload): Response {
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
+
         val auroraDeployResults: List<DeployResponse> = deployService.executeDeploy(
             ref = ref,
             applicationDeploymentRefs = payload.applicationDeploymentRefs,

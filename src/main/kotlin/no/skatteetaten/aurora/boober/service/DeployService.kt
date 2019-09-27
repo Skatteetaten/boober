@@ -89,7 +89,7 @@ class DeployService(
 
         val commands = applicationDeploymentRefs.map {
             val deployId = UUID.randomUUID().toString().substring(0, 7)
-            createAuroraDeploymentCommand(auroraConfig, it, overrides, deployId, ref)
+            createAuroraDeploymentCommand(auroraConfig, it, overrides, deployId, auroraConfigRefExact)
         }
 
         val deploymentCtx = auroraDeploymentSpecService.createValidatedAuroraDeploymentContexts(commands)
