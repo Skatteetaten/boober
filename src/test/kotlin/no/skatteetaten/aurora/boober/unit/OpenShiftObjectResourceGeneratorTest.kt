@@ -146,7 +146,6 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
                 auroraConfig = auroraConfig,
                 applicationDeploymentRef = aid,
                 overrides = test.overrides,
-                deployId = "123",
                 auroraConfigRef = AuroraConfigRef("test", "master", "123abb")
         )
         val ctx = service.createAuroraDeploymentContext(deployCommand)

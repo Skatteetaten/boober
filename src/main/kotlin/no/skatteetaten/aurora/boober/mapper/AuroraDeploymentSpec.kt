@@ -30,11 +30,7 @@ data class AuroraContextCommand(
         val auroraConfig: AuroraConfig,
         val applicationDeploymentRef: ApplicationDeploymentRef,
         val auroraConfigRef: AuroraConfigRef,
-        val overrides: List<AuroraConfigFile> = emptyList(),
-
-        //TODO: These two really does not belong here
-        val deployId: String = "none",
-        val shouldDeploy: Boolean = true
+        val overrides: List<AuroraConfigFile> = emptyList()
 ) {
 
     val applicationFiles: List<AuroraConfigFile> by lazy {

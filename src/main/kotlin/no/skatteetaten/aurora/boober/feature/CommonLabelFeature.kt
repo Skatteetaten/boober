@@ -22,13 +22,12 @@ class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature
         return emptySet()
     }
 
-    fun createCommonLabels(adc: AuroraDeploymentSpec, deployId: String): Map<String, String> {
+    fun createCommonLabels(adc: AuroraDeploymentSpec): Map<String, String> {
         val labels = mapOf(
                 "app" to adc.name,
                 "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
                 "affiliation" to adc.affiliation,
                 "updateInBoober" to "true",
-                "booberDeployId" to deployId,
                 "name" to adc.name
         )
 
@@ -36,7 +35,7 @@ class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
-        val commonLabels = createCommonLabels(adc, cmd.deployId)
+        val commonLabels = createCommonLabels(adc)
 
         resources.forEach {
             if (it.resource.metadata.namespace != null && !it.header) {

@@ -60,8 +60,7 @@ class DeployService(
         val auroraConfig = auroraConfigService.findAuroraConfig(auroraConfigRefExact)
 
         val commands = applicationDeploymentRefs.map {
-            val deployId = UUID.randomUUID().toString().substring(0, 7)
-            AuroraContextCommand(auroraConfig, it, auroraConfigRefExact, overrides, deployId, deploy)
+            AuroraContextCommand(auroraConfig, it, auroraConfigRefExact, overrides)
         }
 
         val deploymentCtx = auroraDeploymentSpecService.createValidatedAuroraDeploymentContexts(commands)
@@ -203,7 +202,7 @@ class DeployService(
         logger.debug("Apply objects")
         val openShiftResponses: List<OpenShiftResponse> = listOf(applicationResult) +
                 applyOpenShiftApplicationObjects(
-                        resources, context, namespaceCreated, ownerReferenceUid
+                        cmd, namespaceCreated, ownerReferenceUid
                 )
 
         logger.debug("done applying objects")
@@ -243,22 +242,25 @@ class DeployService(
     }
 
     private fun applyOpenShiftApplicationObjects(
-            resources: Set<AuroraResource>,
-            context: AuroraDeploymentContext,
+            deployCommand: AuroraDeployCommand,
             mergeWithExistingResource: Boolean,
             ownerReferenceUid: String
     ): List<OpenShiftResponse> {
 
+        val context = deployCommand.context
         val namespace = context.spec.namespace
         val name = context.spec.name
 
         //TODO: Should we fix deployId here aswell?
-        val jsonResources = resources.filter { !it.header }.map {
+        val jsonResources = deployCommand.resources.map {
+            it.resource.metadata.labels = it.resource.metadata.labels.addIfNotNull("booberDeployId" to deployCommand.deployId)
             it.resource.metadata.ownerReferences.find {
                 it.kind == "ApplicationDeployment"
             }?.let {
                 it.uid = ownerReferenceUid
             }
+
+
             jacksonObjectMapper().convertValue<JsonNode>(it.resource)
         }
 
@@ -274,7 +276,7 @@ class DeployService(
         }
 
         val deleteOldObjectResponses = openShiftCommandBuilder
-                .createOpenShiftDeleteCommands(name, namespace, context.cmd.deployId)
+                .createOpenShiftDeleteCommands(name, namespace, deployCommand.deployId)
                 .map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         return openShiftApplicationResponses.addIfNotNull(deleteOldObjectResponses)
