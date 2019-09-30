@@ -17,12 +17,15 @@
     "host": "test",
     "roles": "admin dev @name@"
   },
+  "routeDefaults": {
+    "annotations": {
+      "haproxy.router.openshift.io|timeout": "30s",
+      "tullball": ""
+    }
+  },
   "route": {    
     "@name@": {
-      "path": "/foo",
-      "annotations": {
-        "haproxy.router.openshift.io|timeout": "30s"
-      }
+      "path": "/foo"
     }
   },
   "management": false,

@@ -8,6 +8,7 @@ import no.skatteetaten.aurora.boober.model.InsecurePolicy
 import no.skatteetaten.aurora.boober.model.Route
 import no.skatteetaten.aurora.boober.model.SecureRoute
 import no.skatteetaten.aurora.boober.model.TlsTermination
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.startsWith
@@ -41,6 +42,7 @@ class AuroraRouteMapperV1(
         val route = "route"
         val simplified = auroraDeploymentSpec.isSimplifiedConfig(route)
 
+        val defaultAnnotations = auroraDeploymentSpec.getRouteDefaultAnnotations("routeDefaults/annotations", handlers)
         if (simplified) {
             if (auroraDeploymentSpec[route]) {
 
@@ -54,7 +56,8 @@ class AuroraRouteMapperV1(
                     Route(
                         objectName = name,
                         host = auroraDeploymentSpec["routeDefaults/host"],
-                        tls = secure
+                        tls = secure,
+                        annotations = if (defaultAnnotations.isEmpty()) null else defaultAnnotations
                     )
                 )
             }
@@ -62,25 +65,35 @@ class AuroraRouteMapperV1(
         }
         val routes = applicationFiles.findSubKeys(route)
 
-        return routes.map {
+        return routes.mapNotNull {
+            if (!auroraDeploymentSpec.get<Boolean>("$route/$it/enabled")) {
+                null
+            } else {
+                val secure =
+                    if (applicationFiles.findSubKeys("$route/$it/tls").isNotEmpty() ||
+                        auroraDeploymentSpec["routeDefaults/tls/enabled"]
+                    ) {
+                        SecureRoute(
+                            auroraDeploymentSpec.getOrDefault(route, it, "tls/insecurePolicy"),
+                            auroraDeploymentSpec.getOrDefault(route, it, "tls/termination")
+                        )
+                    } else null
 
-            val secure =
-                if (applicationFiles.findSubKeys("$route/$it/tls").isNotEmpty() ||
-                    auroraDeploymentSpec["routeDefaults/tls/enabled"]
-                ) {
-                    SecureRoute(
-                        auroraDeploymentSpec.getOrDefault(route, it, "tls/insecurePolicy"),
-                        auroraDeploymentSpec.getOrDefault(route, it, "tls/termination")
+                val annotations = defaultAnnotations.addIfNotNull(
+                    auroraDeploymentSpec.getRouteAnnotations(
+                        "$route/$it/annotations",
+                        handlers
                     )
-                } else null
-
-            Route(
-                objectName = replacer.replace(it).ensureStartWith(name, "-"),
-                host = auroraDeploymentSpec.getOrDefault(route, it, "host"),
-                path = auroraDeploymentSpec.getOrNull("$route/$it/path"),
-                annotations = auroraDeploymentSpec.getRouteAnnotations("$route/$it/annotations", handlers),
-                tls = secure
-            )
+                )
+                val r = Route(
+                    objectName = replacer.replace(it).ensureStartWith(name, "-"),
+                    host = auroraDeploymentSpec.getOrDefault(route, it, "host"),
+                    path = auroraDeploymentSpec.getOrNull("$route/$it/path"),
+                    annotations = if (annotations.isEmpty()) null else annotations,
+                    tls = secure
+                )
+                r
+            }
         }
     }
 
@@ -91,6 +104,7 @@ class AuroraRouteMapperV1(
         return routeHandlers.flatMap { key ->
 
             listOf(
+                AuroraConfigFieldHandler("$key/enabled", defaultValue = true),
                 AuroraConfigFieldHandler("$key/host"),
                 AuroraConfigFieldHandler("$key/path",
                     validator = { it?.startsWith("/", "Path must start with /") }),

@@ -88,6 +88,19 @@ class AuroraDeploymentSpec(
         }
     }
 
+    fun getRouteDefaultAnnotations(prefix: String, extractors: List<AuroraConfigFieldHandler>): Map<String, String> {
+        return extractors
+            .filter { it.path.startsWith("/$prefix") }
+            .associate {
+                val (_, _, field) = it.name.split("/", limit = 3)
+                val value: Any = this[it.name]
+                val escapedValue: String = convertValueToString(value)
+                field to escapedValue
+            }.filter {
+                it.value.isNotBlank()
+            }
+    }
+
     fun getRouteAnnotations(prefix: String, extractors: List<AuroraConfigFieldHandler>): Map<String, String> {
         return extractors
             .filter { it.path.startsWith("/$prefix") }
@@ -96,6 +109,8 @@ class AuroraDeploymentSpec(
                 val value: Any = this[it.name]
                 val escapedValue: String = convertValueToString(value)
                 field to escapedValue
+            }.filter {
+                it.value.isNotBlank()
             }
     }
 
