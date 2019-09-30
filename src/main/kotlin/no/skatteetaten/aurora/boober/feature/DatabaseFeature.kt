@@ -71,7 +71,6 @@ class DatabaseFeature(
                 }
     }
 
-    // TODO: Handle errors, probably need to return both resources and errors and propagate
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         //can we just create schemaRequest manually here?

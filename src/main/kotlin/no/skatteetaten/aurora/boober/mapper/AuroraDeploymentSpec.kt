@@ -9,6 +9,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraResource
+import no.skatteetaten.aurora.boober.service.ContextErrors
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.utils.atNullable
 import no.skatteetaten.aurora.boober.utils.deepSet
@@ -46,32 +47,47 @@ data class AuroraContextCommand(
 
 }
 
-//TODO this is very wrong
-fun AuroraDeploymentContext.validate(fullValidation: Boolean): Map<Feature, java.lang.Exception> {
-    return this.features.mapNotNull {
+fun AuroraDeploymentContext.validate(fullValidation: Boolean): Map<Feature, List<java.lang.Exception>> {
+    return features.mapValues {
         try {
             it.key.validate(it.value, fullValidation, this.cmd)
-            null
         } catch (e: Exception) {
-            it.key to e
-
+            listOf(e)
         }
-    }.toMap()
+    }
 
 }
 
-fun AuroraDeploymentContext.createResources(): Set<AuroraResource> {
+fun AuroraDeploymentContext.createResources(): Pair<List<ContextErrors>, Set<AuroraResource>?> {
 
-    val featureResources: Set<AuroraResource> = this.features.flatMap {
-        it.key.generate(it.value, this.cmd)
-    }.toSet()
-
-    //Mutation!
-    this.features.forEach {
-        it.key.modify(it.value, featureResources, this.cmd)
+    val eitherErrorsOrFeatures: List<Pair<ContextErrors?, Set<AuroraResource>?>> = features.map {
+        try {
+            null to it.key.generate(it.value, this.cmd)
+        } catch (e: Throwable) {
+            ContextErrors(this.cmd, listOf(e)) to null
+        }
     }
 
-    return featureResources
+    //There was some errors when generating so we gather then up and return them and no resources
+    val errors = eitherErrorsOrFeatures.mapNotNull { it.first }
+    if (errors.isNotEmpty()) {
+        return errors to null
+    }
+
+    val featureResources = eitherErrorsOrFeatures.mapNotNull { it.second }.flatten().toSet()
+
+    //Mutation!
+    val modifyErrors = this.features.mapNotNull {
+        try {
+            it.key.modify(it.value, featureResources, this.cmd)
+            null
+        } catch (e: Throwable) {
+            ContextErrors(this.cmd, listOf(e))
+        }
+    }
+
+    return modifyErrors to featureResources
+
 }
 
 typealias FeatureSpec = Map<Feature, AuroraDeploymentSpec>

@@ -21,9 +21,9 @@ import java.nio.charset.Charset
 @RestController
 @RequestMapping("/v1/auroradeployspec/{auroraConfigName}")
 class AuroraDeploymentSpecControllerV1(
-        val auroraDeploymentSpecService: AuroraDeploymentSpecService,
+        val auroraDeploymentContextService: AuroraDeploymentContextService,
         val auroraConfigService: AuroraConfigService,
-        val responder: AuroraDeploymentSpecResponder
+        val responder: AuroraDeploymentContextResponder
 
 ) {
 
@@ -41,7 +41,7 @@ class AuroraDeploymentSpecControllerV1(
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         val specs = adrList.map(ApplicationDeploymentRef.Companion::fromString)
-                .let { auroraDeploymentSpecService.getAuroraDeploymentContexts(auroraConfig, it, ref) }
+                .let { auroraDeploymentContextService.getAuroraDeploymentContexts(auroraConfig, it, ref) }
         return responder.create(
                 specs,
                 includeDefaults ?: true
@@ -59,7 +59,7 @@ class AuroraDeploymentSpecControllerV1(
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         val specs = auroraConfig.getApplicationDeploymentRefs()
                 .filter { it.environment == environment }
-                .let { auroraDeploymentSpecService.getAuroraDeploymentContexts(auroraConfig, it, ref) }
+                .let { auroraDeploymentContextService.getAuroraDeploymentContexts(auroraConfig, it, ref) }
         return responder.create(specs, includeDefaults)
     }
 
@@ -82,7 +82,7 @@ class AuroraDeploymentSpecControllerV1(
                 auroraConfigRef = ref,
                 overrides = overrideFiles
         )
-        return responder.create(auroraDeploymentSpecService.createAuroraDeploymentContext(cmd))
+        return responder.create(auroraDeploymentContextService.createAuroraDeploymentContext(cmd))
     }
 
     fun extractOverrides(overrides: String?): List<AuroraConfigFile> {
@@ -109,7 +109,7 @@ class AuroraDeploymentSpecControllerV1(
 
         val applicationDeploymentRef = ApplicationDeploymentRef.adr(environment, application)
 
-        val spec = auroraDeploymentSpecService.createAuroraDeploymentContext(
+        val spec = auroraDeploymentContextService.createAuroraDeploymentContext(
                 AuroraContextCommand(
                         auroraConfig = auroraConfig,
                         applicationDeploymentRef = applicationDeploymentRef,
@@ -126,7 +126,7 @@ class AuroraDeploymentSpecControllerV1(
 }
 
 @Component
-class AuroraDeploymentSpecResponder {
+class AuroraDeploymentContextResponder {
     fun create(formatted: String) = Response(items = listOf(formatted))
 
     fun create(specInternal: AuroraDeploymentContext, includeDefaults: Boolean = true): Response =

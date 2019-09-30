@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.integration
 
 /*
+TODO: Rething entire concept
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
 import static no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
 

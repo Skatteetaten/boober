@@ -23,7 +23,6 @@ import org.springframework.test.web.servlet.MockMvc
 class DeployControllerV1Test(@Autowired private val mockMvc: MockMvc) {
 
 
-    /* TODO: Fix
     @MockBean
     private lateinit var deployService: DeployService
 
@@ -47,5 +46,4 @@ class DeployControllerV1Test(@Autowired private val mockMvc: MockMvc) {
         }
     }
 
-     */
 }

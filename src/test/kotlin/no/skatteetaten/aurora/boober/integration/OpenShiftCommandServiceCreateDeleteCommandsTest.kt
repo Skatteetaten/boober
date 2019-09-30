@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.boober.integration
 
-// TODO: Hva er egenltig vits å teste her?
+// TODO: Hva er egentlig vits å teste her?
 
 /*
 class OpenShiftCommandServiceCreateDeleteCommandsTest {

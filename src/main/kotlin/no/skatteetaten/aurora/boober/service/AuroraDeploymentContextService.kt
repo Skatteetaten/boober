@@ -7,11 +7,7 @@ import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
 import io.fabric8.openshift.api.model.DeploymentConfig
-import kotlinx.coroutines.async
 import kotlinx.coroutines.newFixedThreadPoolContext
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.slf4j.MDCContext
-import no.skatteetaten.aurora.boober.controller.security.SpringSecurityThreadContextElement
 import no.skatteetaten.aurora.boober.feature.extractPlaceHolders
 import no.skatteetaten.aurora.boober.feature.name
 import no.skatteetaten.aurora.boober.feature.namespace
@@ -25,7 +21,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import org.springframework.util.StopWatch
 
 data class AuroraResource(
         val name: String,
@@ -53,7 +48,6 @@ fun Set<AuroraResource>.addVolumesAndMounts(envVars: List<EnvVar> = emptyList(),
     }
 }
 
-// TODO:  environment
 interface Feature {
 
     fun enable(header: AuroraDeploymentSpec): Boolean = true
@@ -66,13 +60,12 @@ interface Feature {
 
 
 @Service
-class AuroraDeploymentSpecService(
+class AuroraDeploymentContextService(
         val featuers: List<Feature>,
         @Value("\${boober.validationPoolSize:6}") val validationPoolSize: Int
 ) {
 
-    val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpecService::class.java)
-    private val dispatcher = newFixedThreadPoolContext(validationPoolSize, "validationPool")
+    val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentContextService::class.java)
 
     fun expandDeploymentRefToApplicationRef(
             auroraConfig: AuroraConfig,
@@ -89,32 +82,27 @@ class AuroraDeploymentSpecService(
             resourceValidation: Boolean = true
     ): List<AuroraDeploymentContext> {
 
-        val stopWatch = StopWatch().apply { start() }
-        val specInternals: List<AuroraDeploymentContext> = runBlocking(
-                MDCContext() + SpringSecurityThreadContextElement()
-        ) {
-            commands.map { cmd ->
-                async(dispatcher) {
-                    try {
-                        //TODO: Handle error here and make this code cleaner
-                        val context = createAuroraDeploymentContext(cmd)
-                        context.validate(resourceValidation)
+        val result: List<Pair<AuroraDeploymentContext?, ContextErrors?>> = commands.map { cmd ->
+            try {
+                val context = createAuroraDeploymentContext(cmd)
 
-                        Pair<AuroraDeploymentContext?, ExceptionWrapper?>(first = context, second = null)
-                    } catch (e: Throwable) {
-                        Pair<AuroraDeploymentContext?, ExceptionWrapper?>(
-                                first = null,
-                                second = ExceptionWrapper(cmd.applicationDeploymentRef, e)
-                        )
-                    }
+                val errors = context.validate(resourceValidation).flatMap { it.value }
+
+                if (errors.isEmpty()) {
+                    context to null
+                } else {
+                    context to ContextErrors(cmd, errors)
                 }
+            } catch (e: Throwable) {
+                null to ContextErrors(cmd, listOf(e))
             }
-                    .map { it.await() }
-        }.onErrorThrow(::MultiApplicationValidationException)
-        stopWatch.stop()
-        val name = commands.first().auroraConfig.name
-        logger.debug("Validated AuroraConfig ${name} with ${commands.size} applications in ${stopWatch.totalTimeMillis} millis")
-        return specInternals
+        }
+
+        val errors = result.mapNotNull { it.second }
+        if (errors.isNotEmpty()) {
+            throw MultiApplicationValidationException(errors)
+        }
+        return result.mapNotNull { it.first }
     }
 
     fun createAuroraDeploymentContext(

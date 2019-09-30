@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
 import com.nhaarman.mockito_kotlin.any
-import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecService
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
 import no.skatteetaten.aurora.mockmvc.extensions.Path
 import no.skatteetaten.aurora.mockmvc.extensions.get
 import no.skatteetaten.aurora.mockmvc.extensions.mock.withContractResponse
@@ -23,14 +23,14 @@ class AuroraDeploymentSpecControllerV1Test(@Autowired private val mockMvc: MockM
 
     /*
     @MockBean
-    private lateinit var auroraDeploymentSpecService: AuroraDeploymentSpecService
+    private lateinit var auroraDeploymentContextService: AuroraDeploymentContextService
 
     @MockBean
-    private lateinit var responder: AuroraDeploymentSpecResponder
+    private lateinit var responder: AuroraDeploymentContextResponder
 
     @Test
     fun `Return all deployment specs`() {
-        given(auroraDeploymentSpecService.getAuroraDeploymentSpecs(any(), any())).willReturn(emptyList())
+        given(auroraDeploymentContextService.getAuroraDeploymentSpecs(any(), any())).willReturn(emptyList())
 
         val auroraDeploymentSpecs = given(responder.create(any<List<AuroraDeploymentSpec>>(), any()))
             .withContractResponse("auroradeploymentspec/deploymentspec") { willReturn(content) }.mockResponse
@@ -43,7 +43,7 @@ class AuroraDeploymentSpecControllerV1Test(@Autowired private val mockMvc: MockM
 
     @Test
     fun `Return deployment spec for env and app`() {
-        given(auroraDeploymentSpecService.getAuroraDeploymentContext(any(), any(), any(), any()))
+        given(auroraDeploymentContextService.getAuroraDeploymentContext(any(), any(), any(), any()))
             .willReturn(AuroraDeploymentSpec(emptyMap(), StringSubstitutor()))
 
         val auroraDeploymentSpec = given(responder.create(any<AuroraDeploymentSpec>(), any()))
@@ -57,7 +57,7 @@ class AuroraDeploymentSpecControllerV1Test(@Autowired private val mockMvc: MockM
 
     @Test
     fun `Return deployment spec for env and app formatted`() {
-        given(auroraDeploymentSpecService.getAuroraDeploymentContext(any(), any(), any(), any()))
+        given(auroraDeploymentContextService.getAuroraDeploymentContext(any(), any(), any(), any()))
             .willReturn(AuroraDeploymentSpec(emptyMap(), StringSubstitutor()))
 
         val auroraDeploymentSpecFormatted = given(responder.create(any()))
@@ -79,7 +79,7 @@ class AuroraDeploymentSpecControllerV1Test(@Autowired private val mockMvc: MockM
 
     @Test
     fun `Return deployment specs for env`() {
-        given(auroraDeploymentSpecService.getAuroraDeploymentSpecsForEnvironment(any(), any())).willReturn(emptyList())
+        given(auroraDeploymentContextService.getAuroraDeploymentSpecsForEnvironment(any(), any())).willReturn(emptyList())
 
         val auroraDeploymentSpec = given(responder.create(any<List<AuroraDeploymentSpec>>(), any()))
             .withContractResponse("auroradeploymentspec/deploymentspec") { willReturn(content) }.mockResponse
@@ -89,6 +89,6 @@ class AuroraDeploymentSpecControllerV1Test(@Autowired private val mockMvc: MockM
                 .responseJsonPath("$").equalsObject(auroraDeploymentSpec)
         }
     }
-
      */
+
 }

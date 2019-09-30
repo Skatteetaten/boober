@@ -16,10 +16,7 @@ import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraVersioningException
-import no.skatteetaten.aurora.boober.service.AuroraConfigRef
-import no.skatteetaten.aurora.boober.service.AuroraConfigService
-import no.skatteetaten.aurora.boober.service.GitService
-import no.skatteetaten.aurora.boober.service.UserDetailsProvider
+import no.skatteetaten.aurora.boober.service.*
 import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
 import no.skatteetaten.aurora.boober.utils.recreateFolder
 import no.skatteetaten.aurora.boober.utils.recreateRepo
@@ -38,19 +35,20 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
     val userDetailsProvider = mockk<UserDetailsProvider>()
     val auroraMetrics = AuroraMetrics(SimpleMeterRegistry())
     val gitService = GitService(
-        userDetailsProvider,
-        "$REMOTE_REPO_FOLDER/%s",
-        CHECKOUT_PATH,
-        "",
-        "",
-        auroraMetrics
+            userDetailsProvider,
+            "$REMOTE_REPO_FOLDER/%s",
+            CHECKOUT_PATH,
+            "",
+            "",
+            auroraMetrics
     )
+    val auroraDeploymentContextService: AuroraDeploymentContextService = mockk()
     val auroraConfigService = AuroraConfigService(
-        gitService = gitService,
-        bitbucketProjectService = mockk(),
-        auroraDeploymentSpecService = mockk(),
-        cluster = "qa",
-        project = "ac"
+            gitService = gitService,
+            bitbucketProjectService = mockk(),
+            auroraDeploymentContextService = auroraDeploymentContextService,
+            cluster = "qa",
+            project = "ac"
     )
 
     @BeforeEach
@@ -69,11 +67,11 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
 
         assertThat {
             auroraConfigService.findAuroraConfig(
-                AuroraConfigRef(
-                    "no_such_affiliation",
-                    "master",
-                    "123"
-                )
+                    AuroraConfigRef(
+                            "no_such_affiliation",
+                            "master",
+                            "123"
+                    )
             )
         }.isFailure().all {
             isInstanceOf(IllegalArgumentException::class)
@@ -100,10 +98,10 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
 
         assertThat {
             auroraConfigService.updateAuroraConfigFile(
-                ref,
-                fileToChange,
-                """foo {"version": "1.0.0"}""",
-                theFileToChange?.version
+                    ref,
+                    fileToChange,
+                    """foo {"version": "1.0.0"}""",
+                    theFileToChange?.version
             )
         }.isFailure().all {
             isInstanceOf(AuroraConfigException::class)
@@ -113,6 +111,7 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
     @Test
     fun `Should update one file in AuroraConfig`() {
 
+        every { auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(any(), any()) } returns emptyList()
         val auroraConfig = createAuroraConfig(defaultAuroraConfig())
         auroraConfigService.save(auroraConfig)
 
@@ -120,10 +119,10 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
         val theFileToChange = auroraConfig.files.find { it.name == fileToChange }
 
         auroraConfigService.updateAuroraConfigFile(
-            ref,
-            fileToChange,
-            """{"version": "1.0.0"}""",
-            theFileToChange?.version
+                ref,
+                fileToChange,
+                """{"version": "1.0.0"}""",
+                theFileToChange?.version
         )
 
         val git = gitService.checkoutRepository(ref.name, ref.refName)
@@ -146,10 +145,10 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
 
         assertThat(auroraConfig.files.size).isEqualTo(4)
         assertThat(auroraConfig.files.map { it.name }).containsAll(
-            "about.json",
-            "utv/about.json",
-            "utv/aos-simple.json",
-            "aos-simple.json"
+                "about.json",
+                "utv/about.json",
+                "utv/aos-simple.json",
+                "aos-simple.json"
         )
     }
 
@@ -169,12 +168,12 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
         type: deploy
         """
         auroraConfig = createAuroraConfig(
-            mapOf(
-                "about.json" to DEFAULT_ABOUT,
-                "utv/about.json" to DEFAULT_UTV_ABOUT,
-                "foo.yaml" to fooYaml,
-                "utv/foo.json" to """{ }"""
-            )
+                mapOf(
+                        "about.json" to DEFAULT_ABOUT,
+                        "utv/about.json" to DEFAULT_UTV_ABOUT,
+                        "foo.yaml" to fooYaml,
+                        "utv/foo.json" to """{ }"""
+                )
         )
         auroraConfigService.save(auroraConfig)
 
@@ -182,8 +181,8 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
 
         assertThat(auroraConfig.files.size).isEqualTo(4)
         assertThat(auroraConfig.files.map { it.name }).containsAll(
-            "foo.yaml",
-            "utv/foo.json"
+                "foo.yaml",
+                "utv/foo.json"
         )
     }
 
@@ -194,11 +193,11 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
         auroraConfigService.save(auroraConfig)
 
         auroraConfig = createAuroraConfig(
-            mapOf(
+                mapOf(
 
-                "about.json" to DEFAULT_ABOUT,
-                "utv/about.json" to DEFAULT_UTV_ABOUT
-            )
+                        "about.json" to DEFAULT_ABOUT,
+                        "utv/about.json" to DEFAULT_UTV_ABOUT
+                )
         )
         auroraConfigService.save(auroraConfig)
 
@@ -206,8 +205,8 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
 
         assertThat(auroraConfig.files.size).isEqualTo(2)
         assertThat(auroraConfig.files.map { it.name }).containsAll(
-            "about.json",
-            "utv/about.json"
+                "about.json",
+                "utv/about.json"
         )
     }
 
@@ -221,9 +220,9 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
 
         assertThat {
             auroraConfigService.updateAuroraConfigFile(ref, fileToChange, """{"version": "1.0.0"}""", "incorrect hash")
-                as AuroraVersioningException
+                    as AuroraVersioningException
         }.isNotNull().isFailure()
-            .message().all { count++ }
+                .message().all { count++ }
         assertThat(count).isEqualTo(1)
     }
 }

@@ -26,12 +26,13 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.lang.RuntimeException
 import java.util.UUID
 
 @Service
 class DeployService(
         val auroraConfigService: AuroraConfigService,
-        val auroraDeploymentSpecService: AuroraDeploymentSpecService,
+        val auroraDeploymentContextService: AuroraDeploymentContextService,
         val openShiftCommandBuilder: OpenShiftCommandService,
         val openShiftClient: OpenShiftClient,
         val dockerService: DockerService,
@@ -56,38 +57,27 @@ class DeployService(
             throw IllegalArgumentException("Specify applicationDeploymentRef")
         }
 
-        val auroraConfigRefExact = auroraConfigService.resolveToExactRef(ref)
-        val auroraConfig = auroraConfigService.findAuroraConfig(auroraConfigRefExact)
+        val commands = createContextCommands(ref, applicationDeploymentRefs, overrides)
 
-        val commands = applicationDeploymentRefs.map {
-            AuroraContextCommand(auroraConfig, it, auroraConfigRefExact, overrides)
-        }
+        val validContexts = createAuroraDeploymentContexts(commands)
 
-        val deploymentCtx = auroraDeploymentSpecService.createValidatedAuroraDeploymentContexts(commands)
-        validateUnusedOverrideFiles(deploymentCtx, overrides, applicationDeploymentRefs)
-        // TODO handle errors
+        val deployCommands = createDeployCommands(validContexts, deploy)
 
-        val (validContexts, invalidContexts) = deploymentCtx.partition { it.spec.cluster == cluster }
-        //TODO handle error here
-
-        val envDeploys: Map<String, List<AuroraDeployCommand>> = validContexts.groupBy({ it.spec.namespace }) { context ->
-            val (header, normal) = context.createResources().partition { it.header }
-            AuroraDeployCommand(
-                    headerResources = header.toSet(),
-                    resources = normal.toSet(),
-                    context = context,
-                    deployId = UUID.randomUUID().toString().substring(0, 7),
-                    shouldDeploy = deploy,
-                    user = userDetailsProvider.getAuthenticatedUser()
-            )
-        }
-
+        val envDeploys: Map<String, List<AuroraDeployCommand>> = deployCommands.groupBy { it.context.spec.namespace }
 
         val deployResults: Map<String, List<AuroraDeployResult>> = envDeploys.mapValues { (ns, commands) ->
             val env = prepareDeployEnvironment(ns, commands.first().headerResources)
 
             if (!env.success) {
-                throw Exception("handle this error, generating namespace failed")
+                commands.map {
+                    AuroraDeployResult(
+                            projectExist = env.projectExist,
+                            deployCommand = it,
+                            success = env.success,
+                            reason = env.reason,
+                            openShiftResponses = env.openShiftResponses
+                    )
+                }
             } else {
                 commands.map {
                     val result = deployFromSpec(it, env)
@@ -95,16 +85,70 @@ class DeployService(
                 }
             }
         }
-        //TODO: remove
         val deployer = userDetailsProvider.getAuthenticatedUser().let {
             Deployer(it.fullName ?: it.username, "${it.username}@skatteetaten.no")
         }
         return deployLogService.markRelease(deployResults.flatMap { it.value }, deployer)
     }
 
-    private fun validateUnusedOverrideFiles(deploymentCtx: List<AuroraDeploymentContext>, overrides: List<AuroraConfigFile>, applicationDeploymentRefs: List<ApplicationDeploymentRef>) {
+    private fun createDeployCommands(validContexts: List<AuroraDeploymentContext>, deploy: Boolean): List<AuroraDeployCommand> {
+        val result: List<Pair<List<ContextErrors>, AuroraDeployCommand?>> = validContexts.map { context ->
+            val (errors, resourceResults) = context.createResources()
+            when {
+                errors.isNotEmpty() -> errors to null
+                resourceResults == null -> listOf(ContextErrors(context.cmd, listOf(RuntimeException("No resources generated")))) to null
+                else -> {
+
+                    val (header, normal) = resourceResults.partition { it.header }
+                    emptyList<ContextErrors>() to AuroraDeployCommand(
+                            headerResources = header.toSet(),
+                            resources = normal.toSet(),
+                            context = context,
+                            deployId = UUID.randomUUID().toString().substring(0, 7),
+                            shouldDeploy = deploy,
+                            user = userDetailsProvider.getAuthenticatedUser()
+                    )
+                }
+            }
+        }
+
+        val resourceErrors = result.flatMap { it.first }
+        if (resourceErrors.isNotEmpty()) {
+            throw MultiApplicationValidationException(resourceErrors)
+        }
+
+        return result.mapNotNull { it.second }
+    }
+
+    private fun createAuroraDeploymentContexts(commands: List<AuroraContextCommand>): List<AuroraDeploymentContext> {
+        val deploymentCtx = auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(commands)
+        validateUnusedOverrideFiles(deploymentCtx)
+
+        val (validContexts, invalidContexts) = deploymentCtx.partition { it.spec.cluster == cluster }
+
+        if (invalidContexts.isNotEmpty()) {
+            val errors = invalidContexts.map {
+                ContextErrors(it.cmd, listOf(java.lang.IllegalArgumentException("Not valid in this cluster")))
+            }
+            throw MultiApplicationValidationException(errors)
+        }
+        return validContexts
+    }
+
+    private fun createContextCommands(ref: AuroraConfigRef, applicationDeploymentRefs: List<ApplicationDeploymentRef>, overrides: List<AuroraConfigFile>): List<AuroraContextCommand> {
+        val auroraConfigRefExact = auroraConfigService.resolveToExactRef(ref)
+        val auroraConfig = auroraConfigService.findAuroraConfig(auroraConfigRefExact)
+
+        return applicationDeploymentRefs.map {
+            AuroraContextCommand(auroraConfig, it, auroraConfigRefExact, overrides)
+        }
+    }
+
+    private fun validateUnusedOverrideFiles(deploymentCtx: List<AuroraDeploymentContext>) {
+        val overrides = deploymentCtx.first().cmd.overrides
         val usedOverrideNames: List<String> = deploymentCtx.flatMap { ctx -> ctx.cmd.applicationFiles.filter { it.override } }.map { it.configName }
 
+        val applicationDeploymentRefs = deploymentCtx.map { it.cmd.applicationDeploymentRef }
         val unusedOverrides = overrides.filter { !usedOverrideNames.contains(it.configName) }
         if (unusedOverrides.isNotEmpty()) {
             val overrideString = unusedOverrides.joinToString(",") { it.name }

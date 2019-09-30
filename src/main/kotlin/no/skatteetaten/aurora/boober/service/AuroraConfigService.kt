@@ -32,7 +32,7 @@ data class AuroraConfigRef(
 class AuroraConfigService(
         @TargetDomain(AURORA_CONFIG) val gitService: GitService,
         val bitbucketProjectService: BitbucketService,
-        val auroraDeploymentSpecService: AuroraDeploymentSpecService,
+        val auroraDeploymentContextService: AuroraDeploymentContextService,
         @Value("\${openshift.cluster}") val cluster: String,
         @Value("\${integrations.aurora.config.git.project}") val project: String
 ) {
@@ -141,7 +141,7 @@ class AuroraConfigService(
         watch.start("validate")
         logger.debug("Affected AID for file={} adr={}", newFile, affectedAid)
         // This will validate both AuroraConfig and External validation for the affected AID
-        auroraDeploymentSpecService.createValidatedAuroraDeploymentContexts(affectedAid.map {
+        auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(affectedAid.map {
             AuroraContextCommand(auroraConfig, it, ref)
         })
         watch.stop()
@@ -174,7 +174,7 @@ class AuroraConfigService(
         val commands = auroraConfig.getApplicationDeploymentRefs().map {
             AuroraContextCommand(auroraConfig, it, auroraConfigRef, overrideFiles)
         }
-        auroraDeploymentSpecService.createValidatedAuroraDeploymentContexts(commands, resourceValidation)
+        auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(commands, resourceValidation)
     }
 
     private fun getAuroraConfigFolder(name: String) = File(gitService.checkoutPath, name)

@@ -29,7 +29,7 @@ import java.time.Instant
 
 class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTest() {
 
-    lateinit var service: AuroraDeploymentSpecService
+    lateinit var service: AuroraDeploymentContextService
 
     val cluster = "utv"
     val openShiftClient: OpenShiftClient = mockk()
@@ -57,7 +57,7 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
 
     @BeforeEach
     fun setupTest() {
-        service = AuroraDeploymentSpecService(
+        service = AuroraDeploymentContextService(
                 featuers = features,
                 validationPoolSize = 1
         )
@@ -149,7 +149,9 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
                 auroraConfigRef = AuroraConfigRef("test", "master", "123abb")
         )
         val ctx = service.createAuroraDeploymentContext(deployCommand)
-        val resources = ctx.createResources()
+        val resourceResult = ctx.createResources()
+
+        val resources = resourceResult.second!!
         val resultFiles = getResultFiles(aid)
         val keys = resultFiles.keys
         val generatedObjects = resources.map {

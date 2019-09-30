@@ -21,6 +21,7 @@ import no.skatteetaten.aurora.boober.model.ConfigFieldErrorDetail
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.service.addEnvVar
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.startsWith
@@ -62,7 +63,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         }.toSet()
     }
 
-    fun getRoute(adc: AuroraDeploymentSpec, cmd:AuroraContextCommand): List<no.skatteetaten.aurora.boober.feature.Route> {
+    fun getRoute(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): List<no.skatteetaten.aurora.boober.feature.Route> {
 
         val route = "route"
         val simplified = adc.isSimplifiedConfig(route)
@@ -109,9 +110,6 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             )
         }
     }
-
-    // TODO: Validation
-
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         getRoute(adc, cmd).firstOrNull()?.let {
             val url = it.url(routeSuffix)
@@ -185,43 +183,46 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         }).toSet()
     }
 
-    // TODO: Incorporate
-    fun validateRoutes(
-            auroraRoute: AuroraRoute,
-            applicationDeploymentRef: ApplicationDeploymentRef
-    ) {
+    override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraContextCommand): List<Exception> {
+        val routes = getRoute(adc, cmd)
 
-        auroraRoute.route.forEach {
+
+        val applicationDeploymentRef = cmd.applicationDeploymentRef
+        val tlsErrors = routes.mapNotNull {
             if (it.tls != null && it.host.contains('.')) {
-                throw AuroraConfigException(
+                AuroraConfigException(
                         "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} have a tls enabled route with a '.' in the host",
                         errors = listOf(ConfigFieldErrorDetail.illegal(message = "Route name=${it.objectName} with tls uses '.' in host name"))
                 )
+            } else {
+                null
             }
-        }
+        } ?: emptyList()
 
-        val routeNames = auroraRoute.route.groupBy { it.objectName }
+        val routeNames = routes.groupBy { it.objectName }
         val duplicateRoutes = routeNames.filter { it.value.size > 1 }.map { it.key }
 
-        if (duplicateRoutes.isNotEmpty()) {
-            throw AuroraConfigException(
+        val duplicateRouteErrors = if (duplicateRoutes.isNotEmpty()) {
+            AuroraConfigException(
                     "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} have routes with duplicate names",
                     errors = duplicateRoutes.map {
                         ConfigFieldErrorDetail.illegal(message = "Route name=$it is duplicated")
                     }
             )
-        }
+        } else null
 
-        val duplicatedHosts = auroraRoute.route.groupBy { it.target }.filter { it.value.size > 1 }
-        if (duplicatedHosts.isNotEmpty()) {
-            throw AuroraConfigException(
+        val duplicatedHosts = routes.groupBy { it.target }.filter { it.value.size > 1 }
+        val duplicateHostError = if (duplicatedHosts.isNotEmpty()) {
+            AuroraConfigException(
                     "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} have duplicated targets",
                     errors = duplicatedHosts.map { route ->
                         val routes = route.value.joinToString(",") { it.objectName }
                         ConfigFieldErrorDetail.illegal(message = "target=${route.key} is duplicated in routes $routes")
                     }
             )
-        }
+        } else null
+
+        return tlsErrors.addIfNotNull(duplicateRouteErrors).addIfNotNull(duplicateHostError)
     }
 }
 
@@ -240,10 +241,6 @@ data class Route(
 
     fun url(urlSuffix: String) = "$host$urlSuffix".let { if (path != null) "$it${path.ensureStartWith("/")}" else it }
 }
-
-data class AuroraRoute(
-        val route: List<no.skatteetaten.aurora.boober.feature.Route>
-)
 
 
 enum class InsecurePolicy {
