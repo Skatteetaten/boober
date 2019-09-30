@@ -3,9 +3,8 @@ package no.skatteetaten.aurora.boober.feature
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fkorotkov.kubernetes.newVolume
-import com.fkorotkov.kubernetes.newVolumeMount
-import com.fkorotkov.kubernetes.secret
+import com.fkorotkov.kubernetes.*
+import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
@@ -21,19 +20,15 @@ import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationExcep
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.service.addVolumesAndMounts
-import no.skatteetaten.aurora.boober.service.internal.DbhSecretGenerator
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseEngine
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaIdRequest
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionRequest
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaRequestDetails
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaUser
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.*
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
+import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.io.ByteArrayOutputStream
+import java.util.*
 
 @Service
 class DatabaseFeature(
@@ -397,19 +392,69 @@ fun Database.createDbEnv(envName: String): List<Pair<String, String>> {
     )
 }
 
-/*
-fun SchemaProvisionResults.createDatabaseMounts(
-        deploymentSpecInternal: AuroraDeploymentSpecInternal
-): List<Mount> {
-    return results.map {
-        val mountPath = "${it.request.details.schemaName}-db".toLowerCase()
-        Mount(
-                path = "/u01/secrets/app/$mountPath",
-                type = MountType.Secret,
-                mountName = mountPath,
-                volumeName = it.createName(deploymentSpecInternal.name),
-                exist = true,
-                content = null
+
+object DbhSecretGenerator {
+
+    fun createInfoFile(dbhSchema: DbhSchema): String {
+
+        val infoFile = mapOf(
+                "database" to mapOf(
+                        "id" to dbhSchema.id,
+                        "name" to dbhSchema.username,
+                        "createdDate" to null,
+                        "lastUsedDate" to null,
+                        "host" to dbhSchema.databaseInstance.host,
+                        "port" to dbhSchema.databaseInstance.port,
+                        "service" to dbhSchema.service,
+                        "jdbcUrl" to dbhSchema.jdbcUrl,
+                        "users" to listOf(
+                                mapOf(
+                                        "username" to dbhSchema.username,
+                                        "password" to dbhSchema.password,
+                                        "type" to dbhSchema.userType
+                                )
+                        ),
+                        "labels" to dbhSchema.labels
+                )
         )
+        return jacksonObjectMapper().writeValueAsString(infoFile)
     }
-}*/
+
+    fun createConnectionProperties(dbhSchema: DbhSchema): String {
+        return Properties().run {
+            put("jdbc.url", dbhSchema.jdbcUrl)
+            put("jdbc.user", dbhSchema.username)
+            put("jdbc.password", dbhSchema.password)
+
+            val bos = ByteArrayOutputStream()
+            store(bos, "")
+            bos.toString("UTF-8")
+        }
+    }
+
+    fun createDbhSecret(
+            schemaProvisionResult: SchemaProvisionResult,
+            secretName: String,
+            secretNamespace: String
+    ): Secret {
+        val connectionProperties = createConnectionProperties(schemaProvisionResult.dbhSchema)
+        val infoFile = createInfoFile(schemaProvisionResult.dbhSchema)
+
+        return newSecret {
+            metadata {
+                name = secretName
+                namespace = secretNamespace
+                labels = mapOf("dbhId" to schemaProvisionResult.dbhSchema.id)
+            }
+            data = mapOf(
+                    "db.properties" to connectionProperties,
+                    "id" to schemaProvisionResult.dbhSchema.id,
+                    "info" to infoFile,
+                    "jdbcurl" to schemaProvisionResult.dbhSchema.jdbcUrl,
+                    "name" to schemaProvisionResult.dbhSchema.username
+            ).mapValues { it.value.toByteArray() }.mapValues { Base64.encodeBase64String(it.value) }
+        }
+    }
+}
+
+

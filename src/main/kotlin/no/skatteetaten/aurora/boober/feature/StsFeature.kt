@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.feature
 
 import com.fkorotkov.kubernetes.*
+import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.kubernetes.api.model.Secret
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
@@ -8,11 +9,14 @@ import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.service.addVolumesAndMounts
-import no.skatteetaten.aurora.boober.service.internal.StsSecretGenerator
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.whenTrue
 import org.apache.commons.codec.binary.Base64
 import org.springframework.stereotype.Service
+import java.io.ByteArrayOutputStream
+import java.util.*
 
 @Service
 class StsFeature(val sts: StsProvisioner) : Feature {
@@ -107,5 +111,68 @@ class StsFeature(val sts: StsProvisioner) : Feature {
     }
 
 
+}
+
+object StsSecretGenerator {
+
+    const val RENEW_AFTER_LABEL = "stsRenewAfter"
+    const val APP_ANNOTATION = "gillis.skatteetaten.no/app"
+    const val COMMON_NAME_ANNOTATION = "gillis.skatteetaten.no/commonName"
+
+    @JvmStatic
+    fun create(
+            appName: String,
+            stsProvisionResults: StsProvisioningResult,
+            labels: Map<String, String>,
+            ownerReference: OwnerReference,
+            namespace: String
+    ): Secret {
+
+        val secretName = "$appName-cert"
+        val baseUrl = "/u01/secrets/app/$secretName/keystore.jks"
+
+        val cert = stsProvisionResults.cert
+        val secretAnnotations = mapOf(
+                APP_ANNOTATION to appName,
+                COMMON_NAME_ANNOTATION to stsProvisionResults.cn
+        )
+        return newSecret {
+            metadata {
+                this.labels = labels.addIfNotNull(RENEW_AFTER_LABEL to stsProvisionResults.renewAt.epochSecond.toString())
+                name = secretName
+                this.namespace = namespace
+                ownerReferences = listOf(element = ownerReference)
+                secretAnnotations.isNotEmpty().whenTrue {
+                    annotations = secretAnnotations
+                }
+            }
+            mapOf(
+                    "privatekey.key" to cert.key,
+                    "keystore.jks" to cert.keystore,
+                    "certificate.crt" to cert.crt,
+                    "descriptor.properties" to createDescriptorFile(baseUrl, "ca", cert.storePassword, cert.keyPassword)
+            ).let {
+                data = it.mapValues { Base64.encodeBase64String(it.value) }
+            }
+        }
+    }
+
+    fun createDescriptorFile(
+            jksPath: String,
+            alias: String,
+            storePassword: String,
+            keyPassword: String
+    ): ByteArray {
+        return Properties().run {
+            put("keystore-file", jksPath)
+            put("alias", alias)
+            put("store-password", storePassword)
+            put("key-password", keyPassword)
+
+            val bos = ByteArrayOutputStream()
+            store(bos, "")
+            bos.toByteArray()
+        }
+    }
 }
 

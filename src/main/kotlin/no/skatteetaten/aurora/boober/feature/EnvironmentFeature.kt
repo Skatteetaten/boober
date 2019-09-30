@@ -2,14 +2,17 @@ package no.skatteetaten.aurora.boober.feature
 
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newNamespace
+import com.fkorotkov.kubernetes.newObjectReference
 import com.fkorotkov.openshift.metadata
+import com.fkorotkov.openshift.newOpenshiftRoleBinding
 import com.fkorotkov.openshift.newProjectRequest
+import com.fkorotkov.openshift.roleRef
 import io.fabric8.kubernetes.api.model.Namespace
+import io.fabric8.kubernetes.api.model.ObjectReference
 import io.fabric8.openshift.api.model.OpenshiftRoleBinding
 import io.fabric8.openshift.api.model.ProjectRequest
 import no.skatteetaten.aurora.boober.mapper.*
 import no.skatteetaten.aurora.boober.service.*
-import no.skatteetaten.aurora.boober.service.internal.RolebindingGenerator
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
@@ -81,10 +84,10 @@ class EnvironmentFeature(
 
         val permissions = extractPermissions(adc)
 
-        val admin = RolebindingGenerator.create("admin", permissions.admin, adc.namespace)
+        val admin = createRoleBinding("admin", permissions.admin, adc.namespace)
 
         val view = permissions.view?.let {
-            RolebindingGenerator.create("view", it, adc.namespace)
+            createRoleBinding("view", it, adc.namespace)
         }
 
         return listOf(admin).addIfNotNull(view)
@@ -134,6 +137,46 @@ class EnvironmentFeature(
 
         if (0 == sumMembers) {
             throw AuroraDeploymentSpecValidationException("All groups=[${adminGroups.joinToString(", ")}] are empty")
+        }
+    }
+
+    fun createRoleBinding(
+            rolebindingName: String,
+            permission: Permission,
+            rolebindingNamespace: String
+    ): OpenshiftRoleBinding {
+
+        return newOpenshiftRoleBinding {
+            metadata {
+                name = rolebindingName
+                namespace = rolebindingNamespace
+            }
+
+            permission.groups?.let {
+                groupNames = it.toList()
+            }
+            permission.users.let {
+                userNames = it.toList()
+            }
+
+            val userRefeerences: List<ObjectReference> = permission.users.map {
+                newObjectReference {
+                    kind = "User"
+                    name = it
+                }
+            }
+            val groupRefeerences = permission.groups?.map {
+                newObjectReference {
+                    kind = "Group"
+                    name = it
+                }
+            } ?: emptyList()
+
+            subjects = userRefeerences + groupRefeerences
+
+            roleRef {
+                name = rolebindingName
+            }
         }
     }
 

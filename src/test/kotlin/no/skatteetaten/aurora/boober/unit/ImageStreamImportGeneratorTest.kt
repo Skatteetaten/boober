@@ -2,9 +2,7 @@ package no.skatteetaten.aurora.boober.unit
 
 import assertk.assertThat
 import assertk.assertions.doesNotContain
-import assertk.assertions.isNotNull
 import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.service.internal.ImageStreamImportGenerator
 import org.junit.jupiter.api.Test
 
 class ImageStreamImportGeneratorTest {

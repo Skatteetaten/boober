@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.service.internal
+package no.skatteetaten.aurora.boober.utils
 
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value

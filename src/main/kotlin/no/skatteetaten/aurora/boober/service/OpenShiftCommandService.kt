@@ -3,15 +3,14 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fkorotkov.openshift.*
 import io.fabric8.kubernetes.api.model.HasMetadata
-import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
 import io.fabric8.openshift.api.model.ImageStreamImport
 import io.fabric8.openshift.api.model.Route
 import no.skatteetaten.aurora.boober.mapper.TemplateType
 import no.skatteetaten.aurora.boober.model.openshift.findErrorMessage
-import no.skatteetaten.aurora.boober.service.internal.ImageStreamImportGenerator
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
@@ -40,7 +39,6 @@ import org.springframework.stereotype.Service
 class OpenShiftCommandService(
         val openShiftClient: OpenShiftClient
 ) {
-
 
 
     fun orderObjects(
@@ -248,6 +246,35 @@ class OpenShiftCommandService(
             body.openshiftKind == "route" -> body.convert<Route>().findErrorMessage()
             body.openshiftKind == "imagestreamimport" -> body.convert<ImageStreamImport>().findErrorMessage()
             else -> null
+        }
+    }
+}
+
+object ImageStreamImportGenerator {
+
+    fun create(dockerImageUrl: String, imageStreamName: String, isiNamespace: String): ImageStreamImport {
+        return newImageStreamImport {
+            metadata {
+                name = imageStreamName
+                namespace = isiNamespace
+            }
+            spec {
+                import = true
+                images = listOf(newImageImportSpec {
+                    from {
+                        kind = "DockerImage"
+                        name = dockerImageUrl
+                    }
+
+                    to {
+                        name = "default"
+                    }
+
+                    importPolicy {
+                        scheduled = true
+                    }
+                })
+            }
         }
     }
 }
