@@ -2,17 +2,59 @@ package no.skatteetaten.aurora.boober.feature
 
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fkorotkov.kubernetes.*
-import com.fkorotkov.openshift.*
-import io.fabric8.kubernetes.api.model.*
+import com.fkorotkov.kubernetes.emptyDir
+import com.fkorotkov.kubernetes.fieldRef
+import com.fkorotkov.kubernetes.httpGet
+import com.fkorotkov.kubernetes.metadata
+import com.fkorotkov.kubernetes.newContainerPort
+import com.fkorotkov.kubernetes.newEnvVar
+import com.fkorotkov.kubernetes.newProbe
+import com.fkorotkov.kubernetes.newService
+import com.fkorotkov.kubernetes.newServicePort
+import com.fkorotkov.kubernetes.newVolume
+import com.fkorotkov.kubernetes.newVolumeMount
+import com.fkorotkov.kubernetes.securityContext
+import com.fkorotkov.kubernetes.spec
+import com.fkorotkov.kubernetes.tcpSocket
+import com.fkorotkov.kubernetes.valueFrom
+import com.fkorotkov.openshift.from
+import com.fkorotkov.openshift.imageChangeParams
+import com.fkorotkov.openshift.importPolicy
+import com.fkorotkov.openshift.metadata
+import com.fkorotkov.openshift.newDeploymentConfig
+import com.fkorotkov.openshift.newDeploymentTriggerPolicy
+import com.fkorotkov.openshift.newImageStream
+import com.fkorotkov.openshift.newTagReference
+import com.fkorotkov.openshift.recreateParams
+import com.fkorotkov.openshift.rollingParams
+import com.fkorotkov.openshift.spec
+import com.fkorotkov.openshift.strategy
+import com.fkorotkov.openshift.template
+import io.fabric8.kubernetes.api.model.Container
+import io.fabric8.kubernetes.api.model.EnvVarBuilder
+import io.fabric8.kubernetes.api.model.IntOrString
+import io.fabric8.kubernetes.api.model.IntOrStringBuilder
 import io.fabric8.kubernetes.api.model.Probe
+import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.openshift.api.model.DeploymentConfig
-import no.skatteetaten.aurora.boober.mapper.*
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.mapper.ApplicationPlatform
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.mapper.PortNumbers
+import no.skatteetaten.aurora.boober.mapper.TemplateType
+import no.skatteetaten.aurora.boober.mapper.applicationPlatform
+import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
+import no.skatteetaten.aurora.boober.model.AuroraVersion
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
-import no.skatteetaten.aurora.boober.utils.*
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.ensureStartWith
+import no.skatteetaten.aurora.boober.utils.length
+import no.skatteetaten.aurora.boober.utils.oneOf
+import no.skatteetaten.aurora.boober.utils.pattern
+import no.skatteetaten.aurora.boober.utils.removeExtension
 import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.beans.factory.annotation.Value
 
@@ -67,10 +109,10 @@ fun AuroraDeploymentSpec.extractPlaceHolders(): Map<String, String> {
         "segment" to it
     }
     val placeholders = mapOf(
-            "name" to name,
-            "env" to envName,
-            "affiliation" to affiliation,
-            "cluster" to cluster
+        "name" to name,
+        "env" to envName,
+        "affiliation" to affiliation,
+        "cluster" to cluster
     ).addIfNotNull(segmentPair)
     return placeholders
 }
@@ -79,25 +121,25 @@ val AuroraDeploymentSpec.versionHandler: AuroraConfigFieldHandler
     get() =
         AuroraConfigFieldHandler("version", validator = {
             it.pattern(
-                    "^[\\w][\\w.-]{0,127}$",
-                    "Version must be a 128 characters or less, alphanumeric and can contain dots and dashes",
-                    this.type.versionRequired
+                "^[\\w][\\w.-]{0,127}$",
+                "Version must be a 128 characters or less, alphanumeric and can contain dots and dashes",
+                this.type.versionRequired
             )
         })
 
 fun gavHandlers(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand) =
-        setOf(
-                AuroraConfigFieldHandler("artifactId",
-                        defaultValue = cmd.applicationFiles.find { it.type == AuroraConfigFileType.BASE }?.name?.removeExtension()
-                                ?: cmd.applicationDeploymentRef.application,
-                        defaultSource = "fileName",
-                        validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
+    setOf(
+        AuroraConfigFieldHandler("artifactId",
+            defaultValue = cmd.applicationFiles.find { it.type == AuroraConfigFileType.BASE }?.name?.removeExtension()
+                ?: cmd.applicationDeploymentRef.application,
+            defaultSource = "fileName",
+            validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
 
-                AuroraConfigFieldHandler(
-                        "groupId",
-                        validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
-                spec.versionHandler
-        )
+        AuroraConfigFieldHandler(
+            "groupId",
+            validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
+        spec.versionHandler
+    )
 
 val AuroraDeploymentSpec.managementPath
     get() = this.featureEnabled("management") {
@@ -115,15 +157,19 @@ abstract class AbstractDeployFeature(
     abstract fun enable(platform: ApplicationPlatform): Boolean
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
-        return header.type in listOf(TemplateType.deploy, TemplateType.development) && enable(header.applicationPlatform)
+        return header.type in listOf(
+            TemplateType.deploy,
+            TemplateType.development
+        ) && enable(header.applicationPlatform)
     }
 
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> = gavHandlers(header, cmd) + setOf(
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> =
+        gavHandlers(header, cmd) + setOf(
             AuroraConfigFieldHandler("releaseTo"),
             AuroraConfigFieldHandler(
-                    "deployStrategy/type",
-                    defaultValue = "rolling",
-                    validator = { it.oneOf(listOf("recreate", "rolling")) }),
+                "deployStrategy/type",
+                defaultValue = "rolling",
+                validator = { it.oneOf(listOf("recreate", "rolling")) }),
             AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = 180),
             AuroraConfigFieldHandler("replicas", defaultValue = 1),
             AuroraConfigFieldHandler("serviceAccount"),
@@ -142,16 +188,16 @@ abstract class AbstractDeployFeature(
             AuroraConfigFieldHandler("liveness/path"),
             AuroraConfigFieldHandler("liveness/delay", defaultValue = 10),
             AuroraConfigFieldHandler("liveness/timeout", defaultValue = 1)
-    )
+        )
 
     // this is java
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         val container = createContainers(adc)
         return setOf(
-                AuroraResource("${adc.name}-dc", create(adc, container)),
-                AuroraResource("${adc.name}-service", createService(adc)),
-                AuroraResource("${adc.name}-is", createImageStream(adc, dockerRegistry))
+            AuroraResource("${adc.name}-dc", create(adc, container)),
+            AuroraResource("${adc.name}-service", createService(adc)),
+            AuroraResource("${adc.name}-is", createImageStream(adc, dockerRegistry))
 
         )
     }
@@ -176,10 +222,10 @@ abstract class AbstractDeployFeature(
 
         val prometheusAnnotations = prometheus?.takeIf { it.path != "" }?.let {
             mapOf(
-                    "prometheus.io/scheme" to "http",
-                    "prometheus.io/scrape" to "true",
-                    "prometheus.io/path" to it.path,
-                    "prometheus.io/port" to "${it.port}"
+                "prometheus.io/scheme" to "http",
+                "prometheus.io/scrape" to "true",
+                "prometheus.io/path" to it.path,
+                "prometheus.io/port" to "${it.port}"
             )
         } ?: mapOf("prometheus.io/scrape" to "false")
 
@@ -192,13 +238,13 @@ abstract class AbstractDeployFeature(
 
             spec {
                 ports = listOf(
-                        newServicePort {
-                            name = "http"
-                            protocol = "TCP"
-                            port = PortNumbers.HTTP_PORT
-                            targetPort = IntOrString(PortNumbers.INTERNAL_HTTP_PORT)
-                            nodePort = 0
-                        }
+                    newServicePort {
+                        name = "http"
+                        protocol = "TCP"
+                        port = PortNumbers.HTTP_PORT
+                        targetPort = IntOrString(PortNumbers.INTERNAL_HTTP_PORT)
+                        nodePort = 0
+                    }
                 )
 
                 selector = mapOf("name" to adc.name)
@@ -217,23 +263,28 @@ abstract class AbstractDeployFeature(
         spec {
             dockerImageRepository = "$dockerRegistry/${adc.dockerImagePath}"
             tags = listOf(
-                    newTagReference {
-                        name = "default"
-                        from {
-                            kind = "DockerImage"
-                            name = "$dockerRegistry/${adc.dockerImagePath}:${adc.dockerTag}"
-                        }
-                        if (!AuroraVersion.isFullAuroraVersion(adc.dockerTag)) {
-                            importPolicy {
-                                scheduled = true
-                            }
+                newTagReference {
+                    name = "default"
+                    from {
+                        kind = "DockerImage"
+                        name = "$dockerRegistry/${adc.dockerImagePath}:${adc.dockerTag}"
+                    }
+                    if (!AuroraVersion.isFullAuroraVersion(adc.dockerTag)) {
+                        importPolicy {
+                            scheduled = true
                         }
                     }
+                }
             )
         }
     }
 
-    fun createContainer(adc: AuroraDeploymentSpec, containerName: String, containerPorts: Map<String, Int>, containerArgs: List<String> = emptyList()): Container {
+    fun createContainer(
+        adc: AuroraDeploymentSpec,
+        containerName: String,
+        containerPorts: Map<String, Int>,
+        containerArgs: List<String> = emptyList()
+    ): Container {
 
         return auroraContainer {
             name = containerName
@@ -292,17 +343,17 @@ abstract class AbstractDeployFeature(
                     }
                 }
                 triggers = listOf(
-                        newDeploymentTriggerPolicy {
-                            type = "ImageChange"
-                            imageChangeParams {
-                                automatic = true
-                                containerNames = container.map { it.name }
-                                from {
-                                    name = "${adc.name}:default"
-                                    kind = "ImageStreamTag"
-                                }
+                    newDeploymentTriggerPolicy {
+                        type = "ImageChange"
+                        imageChangeParams {
+                            automatic = true
+                            containerNames = container.map { it.name }
+                            from {
+                                name = "${adc.name}:default"
+                                kind = "ImageStreamTag"
                             }
                         }
+                    }
 
                 )
                 replicas = adc["replicas"]
@@ -345,24 +396,24 @@ fun auroraContainer(block: Container.() -> Unit = {}): Container {
     }) + instance.volumeMounts
 
     instance.env = listOf(
-            newEnvVar {
-                name = "POD_NAME"
-                valueFrom {
-                    fieldRef {
-                        apiVersion = "v1"
-                        fieldPath = "metadata.name"
-                    }
-                }
-            },
-            newEnvVar {
-                name = "POD_NAMESPACE"
-                valueFrom {
-                    fieldRef {
-                        apiVersion = "v1"
-                        fieldPath = "metadata.namespace"
-                    }
+        newEnvVar {
+            name = "POD_NAME"
+            valueFrom {
+                fieldRef {
+                    apiVersion = "v1"
+                    fieldPath = "metadata.name"
                 }
             }
+        },
+        newEnvVar {
+            name = "POD_NAMESPACE"
+            valueFrom {
+                fieldRef {
+                    apiVersion = "v1"
+                    fieldPath = "metadata.namespace"
+                }
+            }
+        }
     ) + instance.env
     return instance
 }

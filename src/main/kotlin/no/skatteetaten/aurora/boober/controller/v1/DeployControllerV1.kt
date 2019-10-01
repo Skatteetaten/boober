@@ -24,21 +24,21 @@ class DeployControllerV1(private val deployService: DeployService, private val r
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
 
         val auroraDeployResults: List<DeployResponse> = deployService.executeDeploy(
-                ref = ref,
-                applicationDeploymentRefs = payload.applicationDeploymentRefs,
-                overrides = payload.overridesToAuroraConfigFiles(),
-                deploy = payload.deploy
+            ref = ref,
+            applicationDeploymentRefs = payload.applicationDeploymentRefs,
+            overrides = payload.overridesToAuroraConfigFiles(),
+            deploy = payload.deploy
         ).map {
             DeployResponse(
-                    deployId = it.deployId,
-                    success = it.success,
-                    reason = it.reason,
-                    tagResponse = it.tagResponse,
-                    projectExist = it.projectExist,
-                    openShiftResponses = it.openShiftResponses,
-                    deploymentSpec = it.auroraDeploymentSpecInternal?.let { internalSpec ->
-                        renderSpecAsJson(internalSpec, true)
-                    }
+                deployId = it.deployId,
+                success = it.success,
+                reason = it.reason,
+                tagResponse = it.tagResponse,
+                projectExist = it.projectExist,
+                openShiftResponses = it.openShiftResponses,
+                deploymentSpec = it.auroraDeploymentSpecInternal.let { internalSpec ->
+                    renderSpecAsJson(internalSpec, true)
+                }
             )
         }
 
@@ -67,7 +67,7 @@ class DeployControllerV1(private val deployService: DeployService, private val r
 @Component
 class DeployResponder {
     fun create(deployResponses: List<DeployControllerV1.DeployResponse>) =
-            deployResponses.find { !it.success }
-                    ?.let { Response(items = deployResponses, success = false, message = it.reason ?: "Deploy failed") }
-                    ?: Response(items = deployResponses)
+        deployResponses.find { !it.success }
+            ?.let { Response(items = deployResponses, success = false, message = it.reason ?: "Deploy failed") }
+            ?: Response(items = deployResponses)
 }

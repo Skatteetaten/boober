@@ -10,23 +10,23 @@ import no.skatteetaten.aurora.boober.utils.filterNullValues
 import org.springframework.stereotype.Service
 
 @Service
-class WebsealFeature() : Feature {
+class WebsealFeature : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
-                AuroraConfigFieldHandler("webseal", defaultValue = false, canBeSimplifiedConfig = true),
-                AuroraConfigFieldHandler("webseal/host"),
-                AuroraConfigFieldHandler("webseal/roles")
+            AuroraConfigFieldHandler("webseal", defaultValue = false, canBeSimplifiedConfig = true),
+            AuroraConfigFieldHandler("webseal/host"),
+            AuroraConfigFieldHandler("webseal/roles")
         )
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         adc.featureEnabled("webseal") { field ->
             val roles = adc.getDelimitedStringOrArrayAsSet("$field/roles", ",")
-                    .takeIf { it.isNotEmpty() }?.joinToString(",")
+                .takeIf { it.isNotEmpty() }?.joinToString(",")
             val host = adc.getOrNull<String>("$field/host") ?: "${adc.name}-${adc.namespace}"
             val annotations = mapOf(
-                    "sprocket.sits.no/service.webseal" to host,
-                    "sprocket.sits.no/service.webseal-roles" to roles
+                "sprocket.sits.no/service.webseal" to host,
+                "sprocket.sits.no/service.webseal-roles" to roles
             ).filterNullValues()
 
             resources.forEach {

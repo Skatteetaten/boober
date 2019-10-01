@@ -74,7 +74,7 @@ class AuroraConfigService(
 
         val auroraConfig = findAuroraConfig(ref)
         return auroraConfig.findFile(fileName)
-                ?: throw IllegalArgumentException("No such file $fileName in AuroraConfig ${ref.name}")
+            ?: throw IllegalArgumentException("No such file $fileName in AuroraConfig ${ref.name}")
     }
 
     @JvmOverloads
@@ -193,8 +193,8 @@ class AuroraConfigService(
             throw IllegalArgumentException("No such AuroraConfig ${ref.name}")
         } catch (e: Exception) {
             throw AuroraConfigServiceException(
-                    "An unexpected error occurred when checking out AuroraConfig with name ${ref.name}",
-                    e
+                "An unexpected error occurred when checking out AuroraConfig with name ${ref.name}",
+                e
             )
         }
     }

@@ -1,222 +1,264 @@
 {
-  "apiVersion" : "apps.openshift.io/v1",
-  "kind" : "DeploymentConfig",
-  "metadata" : {
-    "annotations" : {
-      "boober.skatteetaten.no/applicationFile" : "booberdev/reference-web.json",
-      "console.skatteetaten.no/alarm" : "true",
-      "console.skatteetaten.no/management-path" : ":8081/actuator"
+  "apiVersion": "apps.openshift.io/v1",
+  "kind": "DeploymentConfig",
+  "metadata": {
+    "annotations": {
+      "boober.skatteetaten.no/applicationFile": "booberdev/reference-web.json",
+      "console.skatteetaten.no/alarm": "true",
+      "console.skatteetaten.no/management-path": ":8081/actuator"
     },
-    "labels" : {
-      "app" : "openshift-referanse-react",
-      "updatedBy" : "hero",
-      "affiliation" : "aos",
-      "updateInBoober" : "true",
-
-      "name" : "openshift-referanse-react",
-      "deployTag" : "develop-SNAPSHOT"
+    "labels": {
+      "app": "openshift-referanse-react",
+      "updatedBy": "hero",
+      "affiliation": "aos",
+      "updateInBoober": "true",
+      "name": "openshift-referanse-react",
+      "deployTag": "develop-SNAPSHOT"
     },
-    "name" : "openshift-referanse-react",
-    "namespace" : "aos-booberdev",
-    "ownerReferences" : [ {
-      "apiVersion" : "skatteetaten.no/v1",
-      "kind" : "ApplicationDeployment",
-      "name" : "openshift-referanse-react",
-      "uid" : "123-123"
-    } ]
+    "name": "openshift-referanse-react",
+    "namespace": "aos-booberdev",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "openshift-referanse-react",
+        "uid": "123-123"
+      }
+    ]
   },
-  "spec" : {
-    "replicas" : 1,
-    "selector" : {
-      "name" : "openshift-referanse-react"
+  "spec": {
+    "replicas": 1,
+    "selector": {
+      "name": "openshift-referanse-react"
     },
-    "strategy" : {
-      "rollingParams" : {
-        "intervalSeconds" : 1,
-        "maxSurge" : "25%",
-        "maxUnavailable" : 0,
-        "timeoutSeconds" : 180,
-        "updatePeriodSeconds" : 1
+    "strategy": {
+      "rollingParams": {
+        "intervalSeconds": 1,
+        "maxSurge": "25%",
+        "maxUnavailable": 0,
+        "timeoutSeconds": 180,
+        "updatePeriodSeconds": 1
       },
-      "type" : "Rolling"
+      "type": "Rolling"
     },
-    "template" : {
-      "metadata" : {
-        "labels" : {
-          "app" : "openshift-referanse-react",
-          "updatedBy" : "hero",
-          "affiliation" : "aos",
-          "updateInBoober" : "true",
-
-          "name" : "openshift-referanse-react",
-          "deployTag" : "develop-SNAPSHOT"
+    "template": {
+      "metadata": {
+        "labels": {
+          "app": "openshift-referanse-react",
+          "updatedBy": "hero",
+          "affiliation": "aos",
+          "updateInBoober": "true",
+          "name": "openshift-referanse-react",
+          "deployTag": "develop-SNAPSHOT"
         }
       },
-      "spec" : {
-        "containers" : [ {
-          "args" : [ "/u01/bin/run_node" ],
-          "env" : [ {
-            "name" : "POD_NAME",
-            "valueFrom" : {
-              "fieldRef" : {
-                "apiVersion" : "v1",
-                "fieldPath" : "metadata.name"
+      "spec": {
+        "containers": [
+          {
+            "args": [
+              "/u01/bin/run_node"
+            ],
+            "env": [
+              {
+                "name": "POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              },
+              {
+                "name": "POD_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "HTTP_PORT",
+                "value": "9090"
+              },
+              {
+                "name": "MANAGEMENT_HTTP_PORT",
+                "value": "8081"
+              },
+              {
+                "name": "OPENSHIFT_CLUSTER",
+                "value": "utv"
+              },
+              {
+                "name": "APP_NAME",
+                "value": "openshift-referanse-react"
+              },
+              {
+                "name": "ROUTE_NAME",
+                "value": "openshift-referanse-react-aos-booberdev.utv.paas.skead.no"
+              },
+              {
+                "name": "ROUTE_URL",
+                "value": "https://openshift-referanse-react-aos-booberdev.utv.paas.skead.no"
+              },
+              {
+                "name": "foo2",
+                "value": "baz"
               }
-            }
-          }, {
-            "name" : "POD_NAMESPACE",
-            "valueFrom" : {
-              "fieldRef" : {
-                "apiVersion" : "v1",
-                "fieldPath" : "metadata.namespace"
+            ],
+            "imagePullPolicy": "IfNotPresent",
+            "name": "openshift-referanse-react-node",
+            "ports": [
+              {
+                "containerPort": 9090,
+                "name": "http",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8081,
+                "name": "management",
+                "protocol": "TCP"
               }
-            }
-          }, {
-            "name" : "HTTP_PORT",
-            "value" : "9090"
-          }, {
-            "name" : "MANAGEMENT_HTTP_PORT",
-            "value" : "8081"
-          }, {
-            "name" : "OPENSHIFT_CLUSTER",
-            "value" : "utv"
-          }, {
-            "name" : "APP_NAME",
-            "value" : "openshift-referanse-react"
-          }, {
-            "name" : "ROUTE_NAME",
-            "value" : "openshift-referanse-react-aos-booberdev.utv.paas.skead.no"
-          }, {
-            "name" : "ROUTE_URL",
-            "value" : "https://openshift-referanse-react-aos-booberdev.utv.paas.skead.no"
-          }, {
-            "name" : "foo2",
-            "value" : "baz"
-          } ],
-          "imagePullPolicy" : "IfNotPresent",
-          "name" : "openshift-referanse-react-node",
-          "ports" : [ {
-            "containerPort" : 9090,
-            "name" : "http",
-            "protocol" : "TCP"
-          }, {
-            "containerPort" : 8081,
-            "name" : "management",
-            "protocol" : "TCP"
-          } ],
-          "readinessProbe" : {
-            "initialDelaySeconds" : 10,
-            "tcpSocket" : {
-              "port" : 8080
+            ],
+            "readinessProbe": {
+              "initialDelaySeconds": 10,
+              "tcpSocket": {
+                "port": 8080
+              },
+              "timeoutSeconds": 1
             },
-            "timeoutSeconds" : 1
-          },
-          "resources" : {
-            "limits" : {
-              "cpu" : "2000m",
-              "memory" : "512Mi"
-            },
-            "requests" : {
-              "cpu" : "10m",
-              "memory" : "128Mi"
-            }
-          },
-          "securityContext" : {
-            "privileged" : false
-          },
-          "terminationMessagePath" : "/dev/termination-log",
-          "volumeMounts" : [ {
-            "mountPath" : "/u01/logs",
-            "name" : "application-log-volume"
-          } ]
-        }, {
-          "args" : [ "/u01/bin/run_nginx" ],
-          "env" : [ {
-            "name" : "POD_NAME",
-            "valueFrom" : {
-              "fieldRef" : {
-                "apiVersion" : "v1",
-                "fieldPath" : "metadata.name"
+            "resources": {
+              "limits": {
+                "cpu": "2000m",
+                "memory": "512Mi"
+              },
+              "requests": {
+                "cpu": "10m",
+                "memory": "128Mi"
               }
-            }
-          }, {
-            "name" : "POD_NAMESPACE",
-            "valueFrom" : {
-              "fieldRef" : {
-                "apiVersion" : "v1",
-                "fieldPath" : "metadata.namespace"
+            },
+            "securityContext": {
+              "privileged": false
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "volumeMounts": [
+              {
+                "mountPath": "/u01/logs",
+                "name": "application-log-volume"
               }
-            }
-          }, {
-            "name" : "HTTP_PORT",
-            "value" : "8080"
-          }, {
-            "name" : "OPENSHIFT_CLUSTER",
-            "value" : "utv"
-          }, {
-            "name" : "APP_NAME",
-            "value" : "openshift-referanse-react"
-          }, {
-            "name" : "ROUTE_NAME",
-            "value" : "openshift-referanse-react-aos-booberdev.utv.paas.skead.no"
-          }, {
-            "name" : "ROUTE_URL",
-            "value" : "https://openshift-referanse-react-aos-booberdev.utv.paas.skead.no"
-          }, {
-            "name" : "foo2",
-            "value" : "baz"
-          } ],
-          "imagePullPolicy" : "IfNotPresent",
-          "name" : "openshift-referanse-react-nginx",
-          "ports" : [ {
-            "containerPort" : 8080,
-            "name" : "http",
-            "protocol" : "TCP"
-          } ],
-          "readinessProbe" : {
-            "initialDelaySeconds" : 10,
-            "tcpSocket" : {
-              "port" : 8080
+            ]
+          },
+          {
+            "args": [
+              "/u01/bin/run_nginx"
+            ],
+            "env": [
+              {
+                "name": "POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              },
+              {
+                "name": "POD_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "HTTP_PORT",
+                "value": "8080"
+              },
+              {
+                "name": "OPENSHIFT_CLUSTER",
+                "value": "utv"
+              },
+              {
+                "name": "APP_NAME",
+                "value": "openshift-referanse-react"
+              },
+              {
+                "name": "ROUTE_NAME",
+                "value": "openshift-referanse-react-aos-booberdev.utv.paas.skead.no"
+              },
+              {
+                "name": "ROUTE_URL",
+                "value": "https://openshift-referanse-react-aos-booberdev.utv.paas.skead.no"
+              },
+              {
+                "name": "foo2",
+                "value": "baz"
+              }
+            ],
+            "imagePullPolicy": "IfNotPresent",
+            "name": "openshift-referanse-react-nginx",
+            "ports": [
+              {
+                "containerPort": 8080,
+                "name": "http",
+                "protocol": "TCP"
+              }
+            ],
+            "readinessProbe": {
+              "initialDelaySeconds": 10,
+              "tcpSocket": {
+                "port": 8080
+              },
+              "timeoutSeconds": 1
             },
-            "timeoutSeconds" : 1
-          },
-          "resources" : {
-            "limits" : {
-              "cpu" : "2000m",
-              "memory" : "512Mi"
+            "resources": {
+              "limits": {
+                "cpu": "2000m",
+                "memory": "512Mi"
+              },
+              "requests": {
+                "cpu": "10m",
+                "memory": "128Mi"
+              }
             },
-            "requests" : {
-              "cpu" : "10m",
-              "memory" : "128Mi"
-            }
-          },
-          "securityContext" : {
-            "privileged" : false
-          },
-          "terminationMessagePath" : "/dev/termination-log",
-          "volumeMounts" : [ {
-            "mountPath" : "/u01/logs",
-            "name" : "application-log-volume"
-          } ]
-        } ],
-        "dnsPolicy" : "ClusterFirst",
-        "restartPolicy" : "Always",
-        "volumes" : [ {
-          "emptyDir" : { },
-          "name" : "application-log-volume"
-        } ]
+            "securityContext": {
+              "privileged": false
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "volumeMounts": [
+              {
+                "mountPath": "/u01/logs",
+                "name": "application-log-volume"
+              }
+            ]
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "restartPolicy": "Always",
+        "volumes": [
+          {
+            "emptyDir": {},
+            "name": "application-log-volume"
+          }
+        ]
       }
     },
-    "triggers" : [ {
-      "imageChangeParams" : {
-        "automatic" : true,
-        "containerNames" : [ "openshift-referanse-react-node", "openshift-referanse-react-nginx" ],
-        "from" : {
-          "kind" : "ImageStreamTag",
-          "name" : "openshift-referanse-react:latest"
-        }
-      },
-      "type" : "ImageChange"
-    } ]
+    "triggers": [
+      {
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "openshift-referanse-react-node",
+            "openshift-referanse-react-nginx"
+          ],
+          "from": {
+            "kind": "ImageStreamTag",
+            "name": "openshift-referanse-react:latest"
+          }
+        },
+        "type": "ImageChange"
+      }
+    ]
   }
 }

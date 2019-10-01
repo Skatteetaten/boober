@@ -2,8 +2,21 @@ package no.skatteetaten.aurora.boober.feature
 
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fkorotkov.kubernetes.*
-import io.fabric8.kubernetes.api.model.*
+import com.fkorotkov.kubernetes.configMap
+import com.fkorotkov.kubernetes.metadata
+import com.fkorotkov.kubernetes.newConfigMap
+import com.fkorotkov.kubernetes.newContainer
+import com.fkorotkov.kubernetes.newContainerPort
+import com.fkorotkov.kubernetes.newProbe
+import com.fkorotkov.kubernetes.newVolume
+import com.fkorotkov.kubernetes.newVolumeMount
+import com.fkorotkov.kubernetes.resources
+import com.fkorotkov.kubernetes.tcpSocket
+import io.fabric8.kubernetes.api.model.Container
+import io.fabric8.kubernetes.api.model.EnvVarBuilder
+import io.fabric8.kubernetes.api.model.IntOrString
+import io.fabric8.kubernetes.api.model.Quantity
+import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
@@ -20,12 +33,12 @@ val AuroraDeploymentSpec.toxiProxy: String?
         }
 
 @org.springframework.stereotype.Service
-class ToxiproxySidecarFeature() : Feature {
+class ToxiproxySidecarFeature : Feature {
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
-                AuroraConfigFieldHandler("toxiproxy", defaultValue = false, canBeSimplifiedConfig = true),
-                AuroraConfigFieldHandler("toxiproxy/version", defaultValue = "2.1.3")
+            AuroraConfigFieldHandler("toxiproxy", defaultValue = false, canBeSimplifiedConfig = true),
+            AuroraConfigFieldHandler("toxiproxy/version", defaultValue = "2.1.3")
         )
     }
 
@@ -33,13 +46,13 @@ class ToxiproxySidecarFeature() : Feature {
 
         return adc.toxiProxy?.let {
             setOf(AuroraResource("${adc.name}-toxiproxy-config-cm",
-                    newConfigMap {
-                        metadata {
-                            name = "${adc.name}-toxiproxy-config"
-                            namespace = adc.namespace
-                        }
-                        data = mapOf("config.json" to getToxiProxyConfig())
+                newConfigMap {
+                    metadata {
+                        name = "${adc.name}-toxiproxy-config"
+                        namespace = adc.namespace
                     }
+                    data = mapOf("config.json" to getToxiProxyConfig())
+                }
             ))
         } ?: emptySet()
     }
@@ -73,8 +86,8 @@ class ToxiproxySidecarFeature() : Feature {
 
     private fun createToxiProxyContainer(adc: AuroraDeploymentSpec, toxiproxyVersion: String): Container {
         val containerPorts = mapOf(
-                "http" to PortNumbers.TOXIPROXY_HTTP_PORT,
-                "management" to PortNumbers.TOXIPROXY_ADMIN_PORT
+            "http" to PortNumbers.TOXIPROXY_HTTP_PORT,
+            "management" to PortNumbers.TOXIPROXY_ADMIN_PORT
         )
         return newContainer {
             name = "${adc.name}-toxiproxy-sidecar"
@@ -90,19 +103,19 @@ class ToxiproxySidecarFeature() : Feature {
                 EnvVarBuilder().withName(portName).withValue(it.value.toString()).build()
             }
             volumeMounts = listOf(
-                    newVolumeMount {
-                        name = "${adc.name}-toxiproxy-config"
-                        mountPath = "/u01/config/configmap"
-                    }
+                newVolumeMount {
+                    name = "${adc.name}-toxiproxy-config"
+                    mountPath = "/u01/config/configmap"
+                }
             )
             resources {
                 limits = mapOf(
-                        "memory" to Quantity("256Mi"),
-                        "cpu" to Quantity("1")
+                    "memory" to Quantity("256Mi"),
+                    "cpu" to Quantity("1")
                 )
                 requests = mapOf(
-                        "memory" to Quantity("128Mi"),
-                        "cpu" to Quantity("10m")
+                    "memory" to Quantity("128Mi"),
+                    "cpu" to Quantity("10m")
                 )
             }
             image = "shopify/toxiproxy:$toxiproxyVersion"
@@ -122,9 +135,10 @@ data class ToxiProxyConfig(val name: String, val listen: String, val upstream: S
 
 fun getToxiProxyConfig(): String {
     val config = ToxiProxyConfig(
-            name = "app",
-            listen = "0.0.0.0:" + PortNumbers.TOXIPROXY_HTTP_PORT,
-            upstream = "0.0.0.0:" + PortNumbers.INTERNAL_HTTP_PORT)
+        name = "app",
+        listen = "0.0.0.0:" + PortNumbers.TOXIPROXY_HTTP_PORT,
+        upstream = "0.0.0.0:" + PortNumbers.INTERNAL_HTTP_PORT
+    )
 
     return jacksonObjectMapper().writeValueAsString(listOf(config))
 }

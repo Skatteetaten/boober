@@ -21,8 +21,8 @@ import org.springframework.test.web.servlet.MockMvc
 
 @AutoConfigureRestDocs
 @WebMvcTest(
-        value = [ApplicationDeploymentController::class],
-        secure = false
+    value = [ApplicationDeploymentController::class],
+    secure = false
 )
 class ApplicationDeploymentControllerTest(@Autowired private val mockMvc: MockMvc) {
 
@@ -40,20 +40,20 @@ class ApplicationDeploymentControllerTest(@Autowired private val mockMvc: MockMv
         val payload = ApplicationDeploymentPayload(listOf(applicationRef))
 
         given(
-                applicationDeploymentService.executeDelete(payload.applicationRefs)
+            applicationDeploymentService.executeDelete(payload.applicationRefs)
         ).withContractResponse("applicationdeployment/delete") {
             willReturn(content)
         }
 
         mockMvc.post(
-                path = Path("/v1/applicationdeployment/delete"),
-                headers = HttpHeaders().contentTypeJson(),
-                body = payload
+            path = Path("/v1/applicationdeployment/delete"),
+            headers = HttpHeaders().contentTypeJson(),
+            body = payload
         ) {
             statusIsOk()
-                    .responseJsonPath("$.success").isTrue()
-                    .responseJsonPath("$.items[0].reason").equalsValue("Application was successfully deleted")
-                    .responseJsonPath("$.items[0].applicationRef").equalsObject(applicationRef)
+                .responseJsonPath("$.success").isTrue()
+                .responseJsonPath("$.items[0].reason").equalsValue("Application was successfully deleted")
+                .responseJsonPath("$.items[0].applicationRef").equalsObject(applicationRef)
         }
     }
 

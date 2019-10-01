@@ -20,6 +20,7 @@ import com.fkorotkov.openshift.newTagReference
 import com.fkorotkov.openshift.spec
 import com.fkorotkov.openshift.status
 import io.fabric8.openshift.api.model.ImageStreamImport
+import no.skatteetaten.aurora.boober.service.ImageStreamImportGenerator
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType

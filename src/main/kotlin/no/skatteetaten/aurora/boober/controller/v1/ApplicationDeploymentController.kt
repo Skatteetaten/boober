@@ -62,7 +62,8 @@ class ApplicationDeploymentController(
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
-        val applicationRefs = auroraDeploymentContextService.expandDeploymentRefToApplicationRef(auroraConfig, adrPayload.adr, ref)
+        val applicationRefs =
+            auroraDeploymentContextService.expandDeploymentRefToApplicationRef(auroraConfig, adrPayload.adr, ref)
 
         val applicationDeploymentResponse =
             applicationDeploymentService.checkApplicationDeploymentsExists(applicationRefs)

@@ -6,7 +6,7 @@
       "app": "sprocket",
       "updatedBy": "hero",
       "affiliation": "aos",
-      "updateInBoober": "true",
+      "updateInBoober": "true"
     },
     "name": "sprocket-config",
     "namespace": "aos-booberdev",

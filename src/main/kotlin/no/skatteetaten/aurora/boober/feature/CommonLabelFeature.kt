@@ -24,11 +24,11 @@ class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature
 
     fun createCommonLabels(adc: AuroraDeploymentSpec): Map<String, String> {
         val labels = mapOf(
-                "app" to adc.name,
-                "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
-                "affiliation" to adc.affiliation,
-                "updateInBoober" to "true",
-                "name" to adc.name
+            "app" to adc.name,
+            "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
+            "affiliation" to adc.affiliation,
+            "updateInBoober" to "true",
+            "name" to adc.name
         )
 
         return OpenShiftObjectLabelService.toOpenShiftLabelNameSafeMap(labels)
@@ -47,7 +47,7 @@ class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature
                     dc.spec.template.metadata = ObjectMeta()
                 }
                 dc.spec.template.metadata.labels = dc.spec.template.metadata.labels?.addIfNotNull(commonLabels)
-                        ?: commonLabels
+                    ?: commonLabels
             }
         }
     }

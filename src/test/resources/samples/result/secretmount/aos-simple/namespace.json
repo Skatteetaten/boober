@@ -1,10 +1,10 @@
 {
-  "apiVersion" : "v1",
-  "kind" : "Namespace",
-  "metadata" : {
-    "labels" : {
-      "affiliation" : "aos"
+  "apiVersion": "v1",
+  "kind": "Namespace",
+  "metadata": {
+    "labels": {
+      "affiliation": "aos"
     },
-    "name" : "aos-secretmount"
+    "name": "aos-secretmount"
   }
 }

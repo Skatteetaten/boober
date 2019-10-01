@@ -11,17 +11,28 @@ import io.fabric8.kubernetes.api.model.Namespace
 import io.fabric8.kubernetes.api.model.ObjectReference
 import io.fabric8.openshift.api.model.OpenshiftRoleBinding
 import io.fabric8.openshift.api.model.ProjectRequest
-import no.skatteetaten.aurora.boober.mapper.*
-import no.skatteetaten.aurora.boober.service.*
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.mapper.Permission
+import no.skatteetaten.aurora.boober.mapper.Permissions
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
+import no.skatteetaten.aurora.boober.service.AuroraResource
+import no.skatteetaten.aurora.boober.service.Feature
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.springframework.boot.convert.DurationStyle
 import org.springframework.stereotype.Service
-import java.lang.IllegalArgumentException
 import java.time.Duration
 
-val AuroraDeploymentSpec.envTTL: Duration? get() = this.getOrNull<String>("env/ttl")?.let { DurationStyle.SIMPLE.parse(it) }
+val AuroraDeploymentSpec.envTTL: Duration?
+    get() = this.getOrNull<String>("env/ttl")?.let {
+        DurationStyle.SIMPLE.parse(
+            it
+        )
+    }
 
 @Service
 class EnvironmentFeature(
@@ -38,8 +49,8 @@ class EnvironmentFeature(
             AuroraResource("${it.metadata.name}-${it.kind}", it, header = true)
         }.toSet()
         return setOf(
-                AuroraResource("${adc.namespace}-prj", generateProjectRequest(adc), header = true),
-                AuroraResource("${adc.namespace}-ns", generateNamespace(adc), header = true)
+            AuroraResource("${adc.namespace}-prj", generateProjectRequest(adc), header = true),
+            AuroraResource("${adc.namespace}-ns", generateNamespace(adc), header = true)
         ).addIfNotNull(rolebindings).toSet()
     }
 
@@ -92,7 +103,11 @@ class EnvironmentFeature(
         return listOf(admin).addIfNotNull(view)
     }
 
-    override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraContextCommand): List<Exception> {
+    override fun validate(
+        adc: AuroraDeploymentSpec,
+        fullValidation: Boolean,
+        cmd: AuroraContextCommand
+    ): List<Exception> {
 
         val errors: List<Exception> = try {
             validateAdminGroups(adc)
@@ -121,7 +136,7 @@ class EnvironmentFeature(
 
         val adminGroups: Set<String> = permissions.admin.groups ?: setOf()
         adminGroups.takeIf { it.isEmpty() }
-                ?.let { throw AuroraDeploymentSpecValidationException("permissions.admin.groups cannot be empty") }
+            ?.let { throw AuroraDeploymentSpecValidationException("permissions.admin.groups cannot be empty") }
 
         val openShiftGroups = openShiftClient.getGroups()
 

@@ -1,17 +1,21 @@
 {
-  "apiVersion" : "authorization.openshift.io/v1",
-  "kind" : "RoleBinding",
-  "metadata" : {
-    "name" : "view",
-    "namespace" : "aos-secretmount"
+  "apiVersion": "authorization.openshift.io/v1",
+  "kind": "RoleBinding",
+  "metadata": {
+    "name": "view",
+    "namespace": "aos-secretmount"
   },
-  "groupNames" : [ "APP_PaaS_utv" ],
-  "roleRef" : {
-    "name" : "view"
+  "groupNames": [
+    "APP_PaaS_utv"
+  ],
+  "roleRef": {
+    "name": "view"
   },
-  "subjects" : [ {
-    "kind" : "Group",
-    "name" : "APP_PaaS_utv"
-  } ],
-  "userNames" : [ ]
+  "subjects": [
+    {
+      "kind": "Group",
+      "name": "APP_PaaS_utv"
+    }
+  ],
+  "userNames": []
 }

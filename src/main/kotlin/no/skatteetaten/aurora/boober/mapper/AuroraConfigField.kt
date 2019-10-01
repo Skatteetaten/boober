@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
@@ -56,9 +55,9 @@ data class AuroraConfigField(
             value.isArray -> (value() as List<Any?>).map { it?.toString() } // Convert any non-string values in the array to string
             else -> emptyList()
         }.filter { !it.isNullOrBlank() }
-                .mapNotNull { it?.trim() }
-                .map { replacer.replace(it) }
-                .toSet()
+            .mapNotNull { it?.trim() }
+            .map { replacer.replace(it) }
+            .toSet()
     }
 }
 

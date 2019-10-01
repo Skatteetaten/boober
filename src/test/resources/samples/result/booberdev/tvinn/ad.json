@@ -1,40 +1,41 @@
 {
-  "apiVersion" : "skatteetaten.no/v1",
-  "kind" : "ApplicationDeployment",
-  "metadata" : {
-    "labels" : {
-      "id" : "63e1671119e260c5278932d404fcac50c894c342",
-      "app" : "tvinn",
-      "updatedBy" : "hero",
-      "affiliation" : "aos",
-      "updateInBoober" : "true",
-
-      "name" : "tvinn"
+  "apiVersion": "skatteetaten.no/v1",
+  "kind": "ApplicationDeployment",
+  "metadata": {
+    "labels": {
+      "id": "63e1671119e260c5278932d404fcac50c894c342",
+      "app": "tvinn",
+      "updatedBy": "hero",
+      "affiliation": "aos",
+      "updateInBoober": "true",
+      "name": "tvinn"
     },
-    "name" : "tvinn",
-    "namespace" : "aos-booberdev"
+    "name": "tvinn",
+    "namespace": "aos-booberdev"
   },
-  "spec" : {
-    "applicationId" : "81e9586fcc0718312784c585bb94421ee89075ee",
-    "selector" : {
-      "name" : "tvinn"
+  "spec": {
+    "applicationId": "81e9586fcc0718312784c585bb94421ee89075ee",
+    "selector": {
+      "name": "tvinn"
     },
-    "applicationDeploymentId" : "63e1671119e260c5278932d404fcac50c894c342",
-    "applicationName" : "aurora-atomhopper",
-    "applicationDeploymentName" : "tvinn",
-    "databases" : [ "123" ],
-    "managementPath" : ":8081/actuator",
-    "deployTag" : "1",
-    "command" : {
-      "overrideFiles" : { },
-      "applicationDeploymentRef" : {
-        "environment" : "booberdev",
-        "application" : "tvinn"
+    "applicationDeploymentId": "63e1671119e260c5278932d404fcac50c894c342",
+    "applicationName": "aurora-atomhopper",
+    "applicationDeploymentName": "tvinn",
+    "databases": [
+      "123"
+    ],
+    "managementPath": ":8081/actuator",
+    "deployTag": "1",
+    "command": {
+      "overrideFiles": {},
+      "applicationDeploymentRef": {
+        "environment": "booberdev",
+        "application": "tvinn"
       },
-      "auroraConfig" : {
-        "name" : "test",
-        "refName" : "master",
-        "resolvedRef" : "123abb"
+      "auroraConfig": {
+        "name": "test",
+        "refName": "master",
+        "resolvedRef": "123abb"
       }
     }
   }

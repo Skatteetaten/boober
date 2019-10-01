@@ -1,42 +1,41 @@
 {
-  "apiVersion" : "skatteetaten.no/v1",
-  "kind" : "ApplicationDeployment",
-  "metadata" : {
-    "labels" : {
-      "id" : "71ac9e2f6f1f0b02fafb22e3336137a7ed6f2598",
-      "removeAfter" : "86400",
-      "app" : "reference",
-      "updatedBy" : "hero",
-      "affiliation" : "aos",
-      "updateInBoober" : "true",
-
-      "name" : "reference"
+  "apiVersion": "skatteetaten.no/v1",
+  "kind": "ApplicationDeployment",
+  "metadata": {
+    "labels": {
+      "id": "71ac9e2f6f1f0b02fafb22e3336137a7ed6f2598",
+      "removeAfter": "86400",
+      "app": "reference",
+      "updatedBy": "hero",
+      "affiliation": "aos",
+      "updateInBoober": "true",
+      "name": "reference"
     },
-    "name" : "reference",
-    "namespace" : "aos-booberdev"
+    "name": "reference",
+    "namespace": "aos-booberdev"
   },
-  "spec" : {
-    "applicationId" : "4f99affe6e2316fd3de91e788ea622ea29563c8e",
-    "selector" : {
-      "name" : "reference"
+  "spec": {
+    "applicationId": "4f99affe6e2316fd3de91e788ea622ea29563c8e",
+    "selector": {
+      "name": "reference"
     },
-    "applicationDeploymentId" : "71ac9e2f6f1f0b02fafb22e3336137a7ed6f2598",
-    "applicationName" : "reference",
-    "applicationDeploymentName" : "reference",
-    "databases" : [ ],
-    "splunkIndex" : "openshift-test",
-    "managementPath" : ":8081/actuator",
-    "deployTag" : "1.0.0-b1.5.3-flange-8.152.18",
-    "command" : {
-      "overrideFiles" : { },
-      "applicationDeploymentRef" : {
-        "environment" : "booberdev",
-        "application" : "reference"
+    "applicationDeploymentId": "71ac9e2f6f1f0b02fafb22e3336137a7ed6f2598",
+    "applicationName": "reference",
+    "applicationDeploymentName": "reference",
+    "databases": [],
+    "splunkIndex": "openshift-test",
+    "managementPath": ":8081/actuator",
+    "deployTag": "1.0.0-b1.5.3-flange-8.152.18",
+    "command": {
+      "overrideFiles": {},
+      "applicationDeploymentRef": {
+        "environment": "booberdev",
+        "application": "reference"
       },
-      "auroraConfig" : {
-        "name" : "test",
-        "refName" : "master",
-        "resolvedRef" : "123abb"
+      "auroraConfig": {
+        "name": "test",
+        "refName": "master",
+        "resolvedRef": "123abb"
       }
     }
   }

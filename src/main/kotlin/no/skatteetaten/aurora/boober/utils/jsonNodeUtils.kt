@@ -91,14 +91,14 @@ val JsonNode.namespacedNamedUrl: String
 
 val JsonNode.openshiftKind: String
     get() = this.get("kind")?.asText()?.toLowerCase()
-            ?: throw IllegalArgumentException("Kind must be set in file=$this")
+        ?: throw IllegalArgumentException("Kind must be set in file=$this")
 
 val JsonNode.openshiftName: String
     get() = when (this.openshiftKind) {
         "deploymentrequest" -> this.get("name")?.asText()
-                ?: throw IllegalArgumentException("name not specified for resource kind=${this.openshiftKind}")
+            ?: throw IllegalArgumentException("name not specified for resource kind=${this.openshiftKind}")
         else -> this.get("metadata")?.get("name")?.asText()
-                ?: throw IllegalArgumentException("name not specified for resource kind=${this.openshiftKind}")
+            ?: throw IllegalArgumentException("name not specified for resource kind=${this.openshiftKind}")
     }
 
 fun JsonNode.updateField(source: JsonNode, root: String, field: String, required: Boolean = false) {
@@ -129,8 +129,8 @@ fun JsonNode.mergeField(source: ObjectNode, root: String, field: String) {
 
     val mergedObject = sourceObject.deepCopy()
     this.at(jsonPtrExpr)
-            .takeIf { it is ObjectNode }
-            ?.also { mergedObject.setAll(it as ObjectNode) }
+        .takeIf { it is ObjectNode }
+        ?.also { mergedObject.setAll(it as ObjectNode) }
 
     (this.at(root) as ObjectNode).set(field, mergedObject)
 }
@@ -214,6 +214,6 @@ fun JsonNode?.length(length: Int, message: String, required: Boolean = true): Ex
 }
 
 fun jacksonYamlObjectMapper(): ObjectMapper =
-        ObjectMapper(YAMLFactory().enable(JsonParser.Feature.ALLOW_COMMENTS)).registerKotlinModule()
+    ObjectMapper(YAMLFactory().enable(JsonParser.Feature.ALLOW_COMMENTS)).registerKotlinModule()
 
 fun jsonMapper(): ObjectMapper = jacksonObjectMapper().enable(JsonParser.Feature.ALLOW_COMMENTS)

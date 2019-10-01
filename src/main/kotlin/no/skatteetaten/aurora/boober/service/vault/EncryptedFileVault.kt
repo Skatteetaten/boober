@@ -23,7 +23,8 @@ class VaultCollection private constructor(
 ) {
 
     companion object {
-        fun fromFolder(folder: File, encryptor: Encryptor, decryptor: Decryptor): VaultCollection = VaultCollection(folder, encryptor, decryptor)
+        fun fromFolder(folder: File, encryptor: Encryptor, decryptor: Decryptor): VaultCollection =
+            VaultCollection(folder, encryptor, decryptor)
     }
 
     val name: String
@@ -69,7 +70,11 @@ class EncryptedFileVault private constructor(
 
         @JvmStatic
         @JvmOverloads
-        fun createFromFolder(vaultFolder: File, encryptor: Encryptor = { String(it) }, decryptor: Decryptor = { it.toByteArray() }): EncryptedFileVault {
+        fun createFromFolder(
+            vaultFolder: File,
+            encryptor: Encryptor = { String(it) },
+            decryptor: Decryptor = { it.toByteArray() }
+        ): EncryptedFileVault {
 
             FileUtils.forceMkdir(vaultFolder)
             return EncryptedFileVault(vaultFolder, encryptor, decryptor)

@@ -1,8 +1,21 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fkorotkov.kubernetes.*
+import com.fkorotkov.kubernetes.configMap
+import com.fkorotkov.kubernetes.metadata
+import com.fkorotkov.kubernetes.newConfigMap
+import com.fkorotkov.kubernetes.newEnvVar
+import com.fkorotkov.kubernetes.newSecret
+import com.fkorotkov.kubernetes.newVolume
+import com.fkorotkov.kubernetes.newVolumeMount
+import com.fkorotkov.kubernetes.secretKeyRef
+import com.fkorotkov.kubernetes.valueFrom
 import io.fabric8.kubernetes.api.model.EnvVar
-import no.skatteetaten.aurora.boober.mapper.*
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.mapper.convertValueToString
+import no.skatteetaten.aurora.boober.mapper.findConfigFieldHandlers
+import no.skatteetaten.aurora.boober.mapper.findSubKeys
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
@@ -10,7 +23,12 @@ import no.skatteetaten.aurora.boober.service.addVolumesAndMounts
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultSecretEnvResult
-import no.skatteetaten.aurora.boober.utils.*
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.ensureEndsWith
+import no.skatteetaten.aurora.boober.utils.ensureStartWith
+import no.skatteetaten.aurora.boober.utils.filterProperties
+import no.skatteetaten.aurora.boober.utils.normalizeKubernetesName
+import no.skatteetaten.aurora.boober.utils.takeIfNotEmpty
 import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -33,44 +51,52 @@ class ConfigFeature(
 
         val secretVaultsHandlers = cmd.applicationFiles.findSubKeys("secretVaults").flatMap { key ->
             listOf(
-                    AuroraConfigFieldHandler("secretVaults/$key/name", defaultValue = key),
-                    AuroraConfigFieldHandler("secretVaults/$key/enabled", defaultValue = true),
-                    AuroraConfigFieldHandler("secretVaults/$key/file", defaultValue = "latest.properties"),
-                    AuroraConfigFieldHandler("secretVaults/$key/keys"),
-                    AuroraConfigFieldHandler("secretVaults/$key/keyMappings")
+                AuroraConfigFieldHandler("secretVaults/$key/name", defaultValue = key),
+                AuroraConfigFieldHandler("secretVaults/$key/enabled", defaultValue = true),
+                AuroraConfigFieldHandler("secretVaults/$key/file", defaultValue = "latest.properties"),
+                AuroraConfigFieldHandler("secretVaults/$key/keys"),
+                AuroraConfigFieldHandler("secretVaults/$key/keyMappings")
             )
         }
         return listOf(
-                AuroraConfigFieldHandler("secretVault"),
-                AuroraConfigFieldHandler("secretVault/name"),
-                AuroraConfigFieldHandler("secretVault/keys"))
-                .addIfNotNull(secretVaultKeyMappingHandlers(cmd))
-                .addIfNotNull(secretVaultsHandlers)
-                .addIfNotNull(configHandlers(cmd))
-                .toSet()
+            AuroraConfigFieldHandler("secretVault"),
+            AuroraConfigFieldHandler("secretVault/name"),
+            AuroraConfigFieldHandler("secretVault/keys")
+        )
+            .addIfNotNull(secretVaultKeyMappingHandlers(cmd))
+            .addIfNotNull(secretVaultsHandlers)
+            .addIfNotNull(configHandlers(cmd))
+            .toSet()
     }
 
-    override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraContextCommand): List<Exception> {
+    override fun validate(
+        adc: AuroraDeploymentSpec,
+        fullValidation: Boolean,
+        cmd: AuroraContextCommand
+    ): List<Exception> {
         if (!fullValidation || adc.cluster != cluster) {
             return emptyList()
         }
         val secrets = getSecretVaults(adc, cmd)
         return validateVaultExistence(secrets, adc.affiliation)
-                .addIfNotNull(validateSecretNames(secrets))
-                .addIfNotNull(validateKeyMappings(secrets))
-                .addIfNotNull(validateSecretVaultKeys(secrets, adc.affiliation))
-                .addIfNotNull(validateSecretVaultFiles(secrets, adc.affiliation))
-                .addIfNotNull(validateDuplicateSecretEnvNames(secrets))
+            .addIfNotNull(validateSecretNames(secrets))
+            .addIfNotNull(validateKeyMappings(secrets))
+            .addIfNotNull(validateSecretVaultKeys(secrets, adc.affiliation))
+            .addIfNotNull(validateSecretVaultFiles(secrets, adc.affiliation))
+            .addIfNotNull(validateDuplicateSecretEnvNames(secrets))
     }
 
-    fun validateVaultExistence(secrets: List<AuroraSecret>, vaultCollectionName: String): List<AuroraDeploymentSpecValidationException> {
+    fun validateVaultExistence(
+        secrets: List<AuroraSecret>,
+        vaultCollectionName: String
+    ): List<AuroraDeploymentSpecValidationException> {
 
         return secrets.map { it.secretVaultName }
-                .mapNotNull {
-                    if (!vaultProvider.vaultService.vaultExists(vaultCollectionName, it)) {
-                        AuroraDeploymentSpecValidationException("Referenced Vault $it in Vault Collection $vaultCollectionName does not exist")
-                    } else null
-                }
+            .mapNotNull {
+                if (!vaultProvider.vaultService.vaultExists(vaultCollectionName, it)) {
+                    AuroraDeploymentSpecValidationException("Referenced Vault $it in Vault Collection $vaultCollectionName does not exist")
+                } else null
+            }
     }
 
     fun validateSecretNames(secrets: List<AuroraSecret>): List<AuroraDeploymentSpecValidationException> {
@@ -99,7 +125,10 @@ class ConfigFeature(
      * Note that this method always uses the latest.properties file regardless of the version of the application and
      * the contents of the vault.
      */
-    fun validateSecretVaultKeys(secrets: List<AuroraSecret>, vaultCollection: String): List<AuroraDeploymentSpecValidationException> {
+    fun validateSecretVaultKeys(
+        secrets: List<AuroraSecret>,
+        vaultCollection: String
+    ): List<AuroraDeploymentSpecValidationException> {
         return secrets.mapNotNull {
             validateSecretVaultKey(it, vaultCollection)
         }
@@ -119,18 +148,24 @@ class ConfigFeature(
         } else null
     }
 
-    fun validateSecretVaultFiles(secrets: List<AuroraSecret>, vaultCollection: String): List<AuroraDeploymentSpecValidationException> {
+    fun validateSecretVaultFiles(
+        secrets: List<AuroraSecret>,
+        vaultCollection: String
+    ): List<AuroraDeploymentSpecValidationException> {
         return secrets.mapNotNull {
             validateSecretVaultFile(it, vaultCollection)
         }
     }
 
-    private fun validateSecretVaultFile(secret: AuroraSecret, vaultCollectionName: String): AuroraDeploymentSpecValidationException? {
+    private fun validateSecretVaultFile(
+        secret: AuroraSecret,
+        vaultCollectionName: String
+    ): AuroraDeploymentSpecValidationException? {
         return try {
             vaultProvider.vaultService.findFileInVault(
-                    vaultCollectionName = vaultCollectionName,
-                    vaultName = secret.secretVaultName,
-                    fileName = secret.file
+                vaultCollectionName = vaultCollectionName,
+                vaultName = secret.secretVaultName,
+                fileName = secret.file
             )
             null
         } catch (e: Exception) {
@@ -146,9 +181,9 @@ class ConfigFeature(
         val secretNames = secrets.map { it.name }
         return if (secretNames.size != secretNames.toSet().size) {
             AuroraDeploymentSpecValidationException(
-                    "SecretVaults does not have unique names=[${secretNames.joinToString(
-                            ", "
-                    )}]"
+                "SecretVaults does not have unique names=[${secretNames.joinToString(
+                    ", "
+                )}]"
             )
         } else null
     }
@@ -185,10 +220,10 @@ class ConfigFeature(
         val secrets = getSecretVaults(adc, cmd)
         return secrets.mapNotNull { secret: AuroraSecret ->
             val request = VaultRequest(
-                    collectionName = adc.affiliation,
-                    name = secret.secretVaultName,
-                    keys = secret.secretVaultKeys,
-                    keyMappings = secret.keyMappings
+                collectionName = adc.affiliation,
+                name = secret.secretVaultName,
+                keys = secret.secretVaultKeys,
+                keyMappings = secret.keyMappings
             )
             vaultProvider.findVaultDataSingle(request)[secret.file]?.let { file ->
                 val properties = filterProperties(file, secret.secretVaultKeys, secret.keyMappings)
@@ -245,20 +280,20 @@ class ConfigFeature(
         }
 
         val env = adc.getConfigEnv(configHandlers(cmd))
-                .toEnvVars()
-                .addIfNotNull(configEnv)
-                .addIfNotNull(secretEnv)
+            .toEnvVars()
+            .addIfNotNull(configEnv)
+            .addIfNotNull(secretEnv)
         resources.addVolumesAndMounts(env, volumes, mounts)
     }
 
     private fun getSecretVaults(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): List<AuroraSecret> {
         val secret = getSecretVault(adc)?.let {
             AuroraSecret(
-                    secretVaultName = it,
-                    keyMappings = adc.getKeyMappings(secretVaultKeyMappingHandlers(cmd)),
-                    secretVaultKeys = getSecretVaultKeys(adc),
-                    file = "latest.properties",
-                    name = adc.name
+                secretVaultName = it,
+                keyMappings = adc.getKeyMappings(secretVaultKeyMappingHandlers(cmd)),
+                secretVaultKeys = getSecretVaultKeys(adc),
+                file = "latest.properties",
+                name = adc.name
             )
         }
 
@@ -269,11 +304,11 @@ class ConfigFeature(
                 null
             } else {
                 AuroraSecret(
-                        secretVaultKeys = adc.getOrNull("secretVaults/$it/keys") ?: listOf(),
-                        keyMappings = adc.getOrNull("secretVaults/$it/keyMappings"),
-                        file = adc["secretVaults/$it/file"],
-                        name = adc.replacer.replace(it).ensureStartWith(adc.name, "-").normalizeKubernetesName(),
-                        secretVaultName = adc["secretVaults/$it/name"]
+                    secretVaultKeys = adc.getOrNull("secretVaults/$it/keys") ?: listOf(),
+                    keyMappings = adc.getOrNull("secretVaults/$it/keyMappings"),
+                    file = adc["secretVaults/$it/file"],
+                    name = adc.replacer.replace(it).ensureStartWith(adc.name, "-").normalizeKubernetesName(),
+                    secretVaultName = adc["secretVaults/$it/name"]
                 )
             }
         }
@@ -287,15 +322,15 @@ class ConfigFeature(
 
         fun extractConfigFieldValues(): List<ConfigFieldValue> {
             return configHandlers(cmd)
-                    .map { it.name }
-                    .filter { it.count { it == '/' } > 1 }
-                    .map { name ->
-                        val value: Any = adc[name]
-                        val escapedValue: String = convertValueToString(value)
-                        val (_, configFile, field) = name.split("/", limit = 3)
-                        val fileName = configFile.ensureEndsWith(".properties")
-                        ConfigFieldValue(fileName, field, escapedValue)
-                    }
+                .map { it.name }
+                .filter { it.count { it == '/' } > 1 }
+                .map { name ->
+                    val value: Any = adc[name]
+                    val escapedValue: String = convertValueToString(value)
+                    val (_, configFile, field) = name.split("/", limit = 3)
+                    val fileName = configFile.ensureEndsWith(".properties")
+                    ConfigFieldValue(fileName, field, escapedValue)
+                }
         }
 
         val configFieldValues = extractConfigFieldValues()
@@ -309,17 +344,17 @@ class ConfigFeature(
         }
 
         fun Map<String, String>.toPropertiesFile(): String = this
-                .map { "${it.key}=${it.value}" }
-                .joinToString(separator = System.getProperty("line.separator"))
+            .map { "${it.key}=${it.value}" }
+            .joinToString(separator = System.getProperty("line.separator"))
         return configFileIndex.map { it.key to it.value.toPropertiesFile() }.toMap()
     }
 
     private fun getSecretVault(auroraDeploymentSpec: AuroraDeploymentSpec): String? =
-            auroraDeploymentSpec.getOrNull("secretVault/name")
-                    ?: auroraDeploymentSpec.getOrNull("secretVault")
+        auroraDeploymentSpec.getOrNull("secretVault/name")
+            ?: auroraDeploymentSpec.getOrNull("secretVault")
 
     private fun getSecretVaultKeys(auroraDeploymentSpec: AuroraDeploymentSpec): List<String> =
-            auroraDeploymentSpec.getOrNull("secretVault/keys") ?: listOf()
+        auroraDeploymentSpec.getOrNull("secretVault/keys") ?: listOf()
 }
 
 data class AuroraSecret(

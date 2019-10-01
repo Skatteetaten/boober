@@ -21,7 +21,7 @@ class VaultSecretEnvResult(
 class VaultResults(val vaultIndex: VaultIndex) {
     fun getVaultData(secretVaultName: String): VaultData {
         return vaultIndex[secretVaultName]
-                ?: throw IllegalArgumentException("No data for vault $secretVaultName was provisioned")
+            ?: throw IllegalArgumentException("No data for vault $secretVaultName was provisioned")
     }
 }
 
@@ -32,8 +32,8 @@ class VaultProvider(val vaultService: VaultService) {
     fun findVaultData(vaultRequests: List<VaultRequest>): VaultResults {
 
         val filteredVaultIndex = vaultRequests.associateBy(
-                { it.name },
-                { findVaultDataSingle(it) }
+            { it.name },
+            { findVaultDataSingle(it) }
         )
 
         return VaultResults(filteredVaultIndex)

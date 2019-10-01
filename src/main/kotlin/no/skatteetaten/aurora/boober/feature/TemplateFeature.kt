@@ -14,16 +14,19 @@ import org.springframework.stereotype.Service
 class TemplateFeature(val openShiftClient: OpenShiftClient) : AbstractTemplateFeature() {
     override fun enable(header: AuroraDeploymentSpec) = header.type == TemplateType.template
 
-    override fun templateHandlers(files: List<AuroraConfigFile>, auroraConfig: AuroraConfig): Set<AuroraConfigFieldHandler> {
+    override fun templateHandlers(
+        files: List<AuroraConfigFile>,
+        auroraConfig: AuroraConfig
+    ): Set<AuroraConfigFieldHandler> {
         return setOf(
-                AuroraConfigFieldHandler("template", validator = { json ->
-                    val template = json?.textValue()
-                    if (template == null) {
-                        IllegalArgumentException("Template is required")
-                    } else {
-                        null
-                    }
-                })
+            AuroraConfigFieldHandler("template", validator = { json ->
+                val template = json?.textValue()
+                if (template == null) {
+                    IllegalArgumentException("Template is required")
+                } else {
+                    null
+                }
+            })
         )
     }
 

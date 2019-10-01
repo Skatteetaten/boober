@@ -143,8 +143,8 @@ class VaultServiceTest {
         )
         lines.forEach { line ->
             assertThat {
-                        VaultService.assertSecretKeysAreValid(mapOf("latest.properties" to line.toByteArray()))
-                    }.isSuccess()
+                VaultService.assertSecretKeysAreValid(mapOf("latest.properties" to line.toByteArray()))
+            }.isSuccess()
         }
     }
 

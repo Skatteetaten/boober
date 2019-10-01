@@ -22,7 +22,6 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
-import java.lang.IllegalArgumentException
 
 enum class OperationType { GET, CREATE, UPDATE, DELETE, NOOP }
 
@@ -67,11 +66,11 @@ data class OpenShiftResponse @JvmOverloads constructor(
                 null
             }
             return OpenShiftResponse(
-                    command,
-                    response,
-                    success = false,
-                    exception = e.message,
-                    httpErrorCode = httpCode
+                command,
+                response,
+                success = false,
+                exception = e.message,
+                httpErrorCode = httpCode
             )
         }
     }
@@ -87,7 +86,7 @@ fun List<OpenShiftResponse>.describe() = this.map {
 fun List<OpenShiftResponse>.describeString() = this.describe().joinToString(", ")
 
 fun List<OpenShiftResponse>.resource(kind: String): OpenShiftResponse? =
-        this.find { it.responseBody?.openshiftKind == kind }
+    this.find { it.responseBody?.openshiftKind == kind }
 
 fun List<OpenShiftResponse>.deploymentConfig(): OpenShiftResponse? = this.resource("deploymentconfig")
 fun List<OpenShiftResponse>.imageStream(): OpenShiftResponse? = this.resource("imagestream")
@@ -145,7 +144,7 @@ class OpenShiftClient(
 
         val url = generateUrl(kind = "template", namespace = "openshift", name = template)
         return serviceAccountClient.get(url)?.body
-                ?: throw IllegalArgumentException("Could not find template for url=$url")
+            ?: throw IllegalArgumentException("Could not find template for url=$url")
     }
 
     @Cacheable("groups")
@@ -155,11 +154,11 @@ class OpenShiftClient(
             val url = generateUrl(kind = "group")
             val groupItems = getResponseBodyItems(url)
             return groupItems
-                    .filter { it["users"] is ArrayNode }
-                    .associate { users ->
-                        val name = users["metadata"]["name"].asText()
-                        name to (users["users"] as ArrayNode).map { it.asText() }
-                    }
+                .filter { it["users"] is ArrayNode }
+                .associate { users ->
+                    val name = users["metadata"]["name"].asText()
+                    name to (users["users"] as ArrayNode).map { it.asText() }
+                }
         }
 
         fun getAllImplicitUserGroups(): Map<String, List<String>> {
@@ -205,9 +204,9 @@ class OpenShiftClient(
 
         val items = body?.get("items")?.toList() ?: emptyList()
         return items.filterIsInstance<ObjectNode>()
-                .onEach {
-                    it.put("kind", kind)
-                }
+            .onEach {
+                it.put("kind", kind)
+            }
     }
 
     /**

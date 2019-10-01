@@ -2,10 +2,10 @@
   "schemaVersion": "v1",
   "type": "development",
   "cluster": "utv",
-   "permissions": {
-     "adminServiceAccount": "system:serviceaccount:paas:jenkinsbuilder",
-     "view": "APP_PaaS_drift APP_PaaS_utv"
-   },
+  "permissions": {
+    "adminServiceAccount": "system:serviceaccount:paas:jenkinsbuilder",
+    "view": "APP_PaaS_drift APP_PaaS_utv"
+  },
   "env": {
     "ttl": "1d"
   }

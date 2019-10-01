@@ -105,7 +105,11 @@ class AuroraConfigControllerV1(
 
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         val auroraConfig = payload.toAuroraConfig(ref)
-        auroraConfigService.validateAuroraConfig(auroraConfig, resourceValidation = resourceValidation, auroraConfigRef = ref)
+        auroraConfigService.validateAuroraConfig(
+            auroraConfig,
+            resourceValidation = resourceValidation,
+            auroraConfigRef = ref
+        )
         return responder.create(auroraConfig)
     }
 

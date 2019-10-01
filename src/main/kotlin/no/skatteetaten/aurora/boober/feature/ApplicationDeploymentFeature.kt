@@ -14,19 +14,19 @@ import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.durationString
 import org.apache.commons.codec.digest.DigestUtils
-import org.springframework.boot.convert.DurationStyle.*
+import org.springframework.boot.convert.DurationStyle.SIMPLE
 import org.springframework.stereotype.Service
 import java.time.Duration
 
 val AuroraDeploymentSpec.ttl: Duration? get() = this.getOrNull<String>("ttl")?.let { SIMPLE.parse(it) }
 
 @Service
-class ApplicationDeploymentFeature() : Feature {
+class ApplicationDeploymentFeature : Feature {
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
-                AuroraConfigFieldHandler("message"),
-                AuroraConfigFieldHandler("ttl", validator = { it.durationString() })
+            AuroraConfigFieldHandler("message"),
+            AuroraConfigFieldHandler("ttl", validator = { it.durationString() })
         )
     }
 
@@ -39,35 +39,40 @@ class ApplicationDeploymentFeature() : Feature {
         }
 
         return setOf(AuroraResource("${adc.name}-ad", ApplicationDeployment(
-                spec = ApplicationDeploymentSpec(
-                        selector = mapOf("name" to adc.name),
-                        message = adc.getOrNull("message"),
-                        applicationDeploymentName = adc.name,
-                        applicationDeploymentId = applicationDeploymentId,
-                        command = ApplicationDeploymentCommand(
-                                cmd.overrideFiles,
-                                cmd.applicationDeploymentRef,
-                                cmd.auroraConfigRef)
-                ),
-                _metadata = newObjectMeta {
-                    name = adc.name
-                    namespace = adc.namespace
-                    labels = mapOf("id" to applicationDeploymentId).addIfNotNull(ttl)
-                }
+            spec = ApplicationDeploymentSpec(
+                selector = mapOf("name" to adc.name),
+                message = adc.getOrNull("message"),
+                applicationDeploymentName = adc.name,
+                applicationDeploymentId = applicationDeploymentId,
+                command = ApplicationDeploymentCommand(
+                    cmd.overrideFiles,
+                    cmd.applicationDeploymentRef,
+                    cmd.auroraConfigRef
+                )
+            ),
+            _metadata = newObjectMeta {
+                name = adc.name
+                namespace = adc.namespace
+                labels = mapOf("id" to applicationDeploymentId).addIfNotNull(ttl)
+            }
         )))
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
 
         resources.forEach {
-            if (it.resource.metadata.namespace != null && it.resource.kind !in listOf("ApplicationDeployment", "RoleBinding")) {
+            if (it.resource.metadata.namespace != null && it.resource.kind !in listOf(
+                    "ApplicationDeployment",
+                    "RoleBinding"
+                )
+            ) {
                 it.resource.metadata.ownerReferences = listOf(
-                        newOwnerReference {
-                            apiVersion = "skatteetaten.no/v1"
-                            kind = "ApplicationDeployment"
-                            name = adc.name
-                            uid = "123-123"
-                        }
+                    newOwnerReference {
+                        apiVersion = "skatteetaten.no/v1"
+                        kind = "ApplicationDeployment"
+                        name = adc.name
+                        uid = "123-123"
+                    }
                 )
             }
         }

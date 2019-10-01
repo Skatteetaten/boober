@@ -109,27 +109,27 @@ data class AuroraDeploymentSpec(
 
     fun getRouteAnnotations(prefix: String): Map<String, String> {
         return fields.keys
-                .filter { it.startsWith(prefix) }
-                .associate {
-                    val field = it.removePrefix(prefix)
-                    val value: Any = this[it]
-                    val escapedValue: String = convertValueToString(value)
-                    field to escapedValue
-                }
+            .filter { it.startsWith(prefix) }
+            .associate {
+                val field = it.removePrefix(prefix)
+                val value: Any = this[it]
+                val escapedValue: String = convertValueToString(value)
+                field to escapedValue
+            }
     }
 
     fun getParameters(): Map<String, String> {
         return fields.keys
-                .filter { it.startsWith("parameters/") }
-                .associate {
-                    val field = it.removePrefix("parameters/")
-                    val value: String = this[it]
-                    field to value
-                }
+            .filter { it.startsWith("parameters/") }
+            .associate {
+                val field = it.removePrefix("parameters/")
+                val value: String = this[it]
+                field to value
+            }
     }
 
     fun getKeyMappings(keyMappingsExtractor: AuroraConfigFieldHandler?): Map<String, String>? =
-            keyMappingsExtractor?.let { getOrNull(it.name) }
+        keyMappingsExtractor?.let { getOrNull(it.name) }
 
     fun isSimplifiedAndDisabled(name: String): Boolean {
         return isSimplifiedConfig(name) && !get<Boolean>(name)
@@ -164,8 +164,8 @@ data class AuroraDeploymentSpec(
 
     fun getSubKeys(name: String): Map<String, AuroraConfigField> {
         val subKeys = fields
-                .filter { it.key.startsWith("$name/") }
-                .mapKeys { replacer.replace(it.key) }
+            .filter { it.key.startsWith("$name/") }
+            .mapKeys { replacer.replace(it.key) }
         return subKeys
     }
 
@@ -178,7 +178,7 @@ data class AuroraDeploymentSpec(
         defaultRoot: String = "${root}Defaults"
     ): T {
         return getOrNull("$root/$index/$suffix")
-                ?: get("$defaultRoot/$suffix")
+            ?: get("$defaultRoot/$suffix")
     }
 
     /**
@@ -206,31 +206,31 @@ data class AuroraDeploymentSpec(
             val mapper = jacksonObjectMapper()
 
             val staticFields: List<Pair<String, AuroraConfigFieldSource>> =
-                    listOf(
-                            "applicationDeploymentRef" to
-                                    AuroraConfigFieldSource(
-                                            AuroraConfigFile("static", "{}", isDefault = true),
-                                            mapper.convertValue(applicationDeploymentRef.toString())
-                                    ),
-                            "configVersion" to
-                                    AuroraConfigFieldSource(
-                                            AuroraConfigFile("static", "{}", isDefault = true),
-                                            mapper.convertValue(auroraConfigVersion)
-                                    )
-                    )
+                listOf(
+                    "applicationDeploymentRef" to
+                        AuroraConfigFieldSource(
+                            AuroraConfigFile("static", "{}", isDefault = true),
+                            mapper.convertValue(applicationDeploymentRef.toString())
+                        ),
+                    "configVersion" to
+                        AuroraConfigFieldSource(
+                            AuroraConfigFile("static", "{}", isDefault = true),
+                            mapper.convertValue(auroraConfigVersion)
+                        )
+                )
 
             val fields: List<Pair<String, AuroraConfigFieldSource>> = handlers.flatMap { handler ->
                 val defaultValue = handler.defaultValue?.let {
                     listOf(
-                            handler.name to AuroraConfigFieldSource(
-                                    configFile = AuroraConfigFile(
-                                            name = handler.defaultSource,
-                                            contents = "",
-                                            isDefault = true
-                                    ),
-                                    canBeSimplified = handler.canBeSimplifiedConfig,
-                                    value = mapper.convertValue(handler.defaultValue)
-                            )
+                        handler.name to AuroraConfigFieldSource(
+                            configFile = AuroraConfigFile(
+                                name = handler.defaultSource,
+                                contents = "",
+                                isDefault = true
+                            ),
+                            canBeSimplified = handler.canBeSimplifiedConfig,
+                            value = mapper.convertValue(handler.defaultValue)
+                        )
                     )
                 } ?: emptyList()
 
@@ -246,9 +246,9 @@ data class AuroraDeploymentSpec(
                             null
                         } else {
                             handler.name to AuroraConfigFieldSource(
-                                    configFile = file,
-                                    value = it,
-                                    canBeSimplified = handler.canBeSimplifiedConfig
+                                configFile = file,
+                                value = it,
+                                canBeSimplified = handler.canBeSimplifiedConfig
                             )
                         }
                     }
@@ -259,11 +259,11 @@ data class AuroraDeploymentSpec(
             val allFields: List<Pair<String, AuroraConfigFieldSource>> = staticFields + fields
 
             val groupedFields: Map<String, AuroraConfigField> = allFields
-                    .groupBy({ it.first }) { it.second }
-                    .mapValues { AuroraConfigField(it.value.toSet(), replacer) }
+                .groupBy({ it.first }) { it.second }
+                .mapValues { AuroraConfigField(it.value.toSet(), replacer) }
             return AuroraDeploymentSpec(
-                    fields = groupedFields,
-                    replacer = replacer
+                fields = groupedFields,
+                replacer = replacer
             )
         }
     }
@@ -276,27 +276,27 @@ data class AuroraDeploymentSpec(
         val excludePaths = this.fields.filter { isSimplifiedAndDisabled(it.key) }.map { "${it.key}/" }
         val map: MutableMap<String, Any> = mutableMapOf()
         this.fields
-                .filter { field ->
-                    val simpleCheck = if (field.value.canBeSimplified) {
-                        this.isSimplifiedConfig(field.key)
-                    } else {
-                        true
-                    }
-
-                    val defaultCheck = if (!includeDefaults) {
-                        field.value.name != "default"
-                    } else {
-                        true
-                    }
-
-                    val excludeCheck = excludePaths.none { field.key.startsWith(it) }
-
-                    simpleCheck && defaultCheck && excludeCheck
+            .filter { field ->
+                val simpleCheck = if (field.value.canBeSimplified) {
+                    this.isSimplifiedConfig(field.key)
+                } else {
+                    true
                 }
-                .mapValues { transformer(it) }
-                .forEach {
-                    map.deepSet(it.key.split("/"), it.value)
+
+                val defaultCheck = if (!includeDefaults) {
+                    field.value.name != "default"
+                } else {
+                    true
                 }
+
+                val excludeCheck = excludePaths.none { field.key.startsWith(it) }
+
+                simpleCheck && defaultCheck && excludeCheck
+            }
+            .mapValues { transformer(it) }
+            .forEach {
+                map.deepSet(it.key.split("/"), it.value)
+            }
         return map
     }
 

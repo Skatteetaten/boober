@@ -18,6 +18,7 @@ import org.springframework.web.client.HttpClientErrorException
 import java.net.URI
 
 val logger: Logger = LoggerFactory.getLogger(OpenShiftResourceClient::class.java)
+
 open class OpenShiftResourceClient(
     val tokenProvider: TokenProvider,
     val restTemplateWrapper: OpenShiftRestTemplateWrapper

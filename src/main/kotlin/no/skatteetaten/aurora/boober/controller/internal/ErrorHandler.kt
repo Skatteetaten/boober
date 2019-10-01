@@ -33,10 +33,12 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
     fun handleValidationErrors(ex: ServiceException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
 
     @ExceptionHandler(AuroraConfigServiceException::class)
-    fun handleAuroraConfigServiceErrors(ex: ServiceException, req: WebRequest) = handleException(ex, req, INTERNAL_SERVER_ERROR)
+    fun handleAuroraConfigServiceErrors(ex: ServiceException, req: WebRequest) =
+        handleException(ex, req, INTERNAL_SERVER_ERROR)
 
     @ExceptionHandler(DeployLogServiceException::class)
-    fun handleDeployLogServiceErrors(ex: ServiceException, req: WebRequest) = handleException(ex, req, INTERNAL_SERVER_ERROR)
+    fun handleDeployLogServiceErrors(ex: ServiceException, req: WebRequest) =
+        handleException(ex, req, INTERNAL_SERVER_ERROR)
 
     @ExceptionHandler(AuroraConfigException::class)
     fun handleValidationErrors(ex: AuroraConfigException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
@@ -51,13 +53,15 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
     fun handleAccessRequest(ex: IllegalAccessException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
 
     @ExceptionHandler(MultiApplicationValidationException::class)
-    fun handleAccessRequest(ex: MultiApplicationValidationException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
+    fun handleAccessRequest(ex: MultiApplicationValidationException, req: WebRequest) =
+        handleException(ex, req, BAD_REQUEST)
 
     @ExceptionHandler(UnauthorizedAccessException::class)
     fun handleAccessRequest(ex: UnauthorizedAccessException, req: WebRequest) = handleException(ex, req, FORBIDDEN)
 
     @ExceptionHandler(PreconditionFailureException::class)
-    fun handleAccessRequest(ex: PreconditionFailureException, req: WebRequest) = handleException(ex, req, PRECONDITION_FAILED)
+    fun handleAccessRequest(ex: PreconditionFailureException, req: WebRequest) =
+        handleException(ex, req, PRECONDITION_FAILED)
 
     @ExceptionHandler(NoSuchResourceException::class)
     fun handleAccessRequest(ex: NoSuchResourceException, req: WebRequest) = handleException(ex, req, NOT_FOUND)

@@ -19,9 +19,11 @@ class TemplateProcessorTest {
 
         val parameters = templateJson.at("/parameters")
 
-        val valueParameters = parameters.filter { it["value"] != null }.associate { it["name"].asText() to it["value"].asText() }
+        val valueParameters =
+            parameters.filter { it["value"] != null }.associate { it["name"].asText() to it["value"].asText() }
 
-        val replacer: StringSubstitutor = StringSubstitutor(valueParameters + mapOf(
+        val replacer: StringSubstitutor = StringSubstitutor(
+            valueParameters + mapOf(
                 "NAME" to "tvinn",
                 "VERSION" to "1",
                 "SPLUNK_INDEX" to "safir",
@@ -29,12 +31,14 @@ class TemplateProcessorTest {
                 "DB_NAME" to "tvinn",
                 "HOST_NAME" to "localhost",
                 "DOMAIN_NAME" to "localhost"
-        ), "\${", "}")
+            ), "\${", "}"
+        )
 
         val replacedText = replacer.replace(template)
 
         val result = mapper.readTree(replacedText)
-        val atomhopperTemplate: JsonNode = mapper.readTree(this.javaClass.getResource("/samples/processedtemplate/booberdev/tvinn/atomhopper.json"))
+        val atomhopperTemplate: JsonNode =
+            mapper.readTree(this.javaClass.getResource("/samples/processedtemplate/booberdev/tvinn/atomhopper.json"))
 
         val resultString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(result)
         val expextedString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(atomhopperTemplate)

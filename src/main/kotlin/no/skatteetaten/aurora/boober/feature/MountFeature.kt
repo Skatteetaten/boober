@@ -1,8 +1,21 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fkorotkov.kubernetes.*
-import io.fabric8.kubernetes.api.model.*
-import no.skatteetaten.aurora.boober.mapper.*
+import com.fkorotkov.kubernetes.configMap
+import com.fkorotkov.kubernetes.metadata
+import com.fkorotkov.kubernetes.newConfigMap
+import com.fkorotkov.kubernetes.newSecret
+import com.fkorotkov.kubernetes.newVolume
+import com.fkorotkov.kubernetes.newVolumeMount
+import com.fkorotkov.kubernetes.persistentVolumeClaim
+import com.fkorotkov.kubernetes.secret
+import io.fabric8.kubernetes.api.model.ConfigMap
+import io.fabric8.kubernetes.api.model.Secret
+import io.fabric8.kubernetes.api.model.Volume
+import io.fabric8.kubernetes.api.model.VolumeMount
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.mapper.findSubKeys
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
@@ -29,17 +42,17 @@ class MountFeature(
 
         return mountKeys.flatMap { mountName ->
             listOf(
-                    AuroraConfigFieldHandler(
-                            "mounts/$mountName/path",
-                            validator = { it.required("Path is required for mount") }),
-                    AuroraConfigFieldHandler(
-                            "mounts/$mountName/type",
-                            validator = { it.oneOf(MountType.values().map { it.name }) }),
-                    AuroraConfigFieldHandler("mounts/$mountName/mountName", defaultValue = mountName),
-                    AuroraConfigFieldHandler("mounts/$mountName/volumeName", defaultValue = mountName),
-                    AuroraConfigFieldHandler("mounts/$mountName/exist", defaultValue = false),
-                    AuroraConfigFieldHandler("mounts/$mountName/content"),
-                    AuroraConfigFieldHandler("mounts/$mountName/secretVault")
+                AuroraConfigFieldHandler(
+                    "mounts/$mountName/path",
+                    validator = { it.required("Path is required for mount") }),
+                AuroraConfigFieldHandler(
+                    "mounts/$mountName/type",
+                    validator = { it.oneOf(MountType.values().map { it.name }) }),
+                AuroraConfigFieldHandler("mounts/$mountName/mountName", defaultValue = mountName),
+                AuroraConfigFieldHandler("mounts/$mountName/volumeName", defaultValue = mountName),
+                AuroraConfigFieldHandler("mounts/$mountName/exist", defaultValue = false),
+                AuroraConfigFieldHandler("mounts/$mountName/content"),
+                AuroraConfigFieldHandler("mounts/$mountName/secretVault")
             )
         }.toSet()
     }
@@ -59,16 +72,16 @@ class MountFeature(
 
     private fun generateConfigMaps(configMounts: List<Mount>, adc: AuroraDeploymentSpec): List<ConfigMap> {
         return configMounts.filter { it.type == MountType.ConfigMap }
-                .filter { it.content != null }
-                .map {
-                    newConfigMap {
-                        metadata {
-                            name = it.volumeName
-                            namespace = adc.namespace
-                        }
-                        data = it.content
+            .filter { it.content != null }
+            .map {
+                newConfigMap {
+                    metadata {
+                        name = it.volumeName
+                        namespace = adc.namespace
                     }
+                    data = it.content
                 }
+            }
     }
 
     private fun generateSecrets(mounts: List<Mount>, adc: AuroraDeploymentSpec): List<Secret> {
@@ -76,8 +89,8 @@ class MountFeature(
 
         val vaultReponse = secretVaults.map {
             VaultRequest(
-                    collectionName = adc.affiliation,
-                    name = it.secretVaultName!!
+                collectionName = adc.affiliation,
+                name = it.secretVaultName!!
             )
         }.let {
             vaultProvider.findVaultData(it)
@@ -111,7 +124,11 @@ class MountFeature(
         }
     }
 
-    override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraContextCommand): List<Exception> {
+    override fun validate(
+        adc: AuroraDeploymentSpec,
+        fullValidation: Boolean,
+        cmd: AuroraContextCommand
+    ): List<Exception> {
         if (!fullValidation || adc.cluster != cluster) {
             return emptyList()
         }
@@ -119,7 +136,10 @@ class MountFeature(
         return validateExistingMounts(mounts, adc).addIfNotNull(validateVaultExistence(mounts, adc))
     }
 
-    fun validateVaultExistence(mounts: List<Mount>, adc: AuroraDeploymentSpec): List<AuroraDeploymentSpecValidationException> {
+    fun validateVaultExistence(
+        mounts: List<Mount>,
+        adc: AuroraDeploymentSpec
+    ): List<AuroraDeploymentSpecValidationException> {
         val secretMounts = mounts.filter { it.type == MountType.Secret }.mapNotNull { it.secretVaultName }
         return secretMounts.mapNotNull {
             val vaultCollectionName = adc.affiliation
@@ -132,10 +152,10 @@ class MountFeature(
     private fun validateExistingMounts(mounts: List<Mount>, adc: AuroraDeploymentSpec): List<Exception> {
         return mounts.filter { it.exist }.mapNotNull {
             if (!openShiftClient.resourceExists(
-                            kind = it.type.kind,
-                            namespace = adc.namespace,
-                            name = it.volumeName
-                    )
+                    kind = it.type.kind,
+                    namespace = adc.namespace,
+                    name = it.volumeName
+                )
             ) {
                 AuroraDeploymentSpecValidationException("Required existing resource with type=${it.type} namespace=${adc.namespace} name=${it.volumeName} does not exist.")
             } else null
@@ -166,13 +186,13 @@ class MountFeature(
             }
             val secretVaultName = auroraDeploymentSpec.getOrNull<String?>("mounts/$mount/secretVault")
             Mount(
-                    path = auroraDeploymentSpec["mounts/$mount/path"],
-                    type = type,
-                    mountName = auroraDeploymentSpec["mounts/$mount/mountName"],
-                    volumeName = auroraDeploymentSpec["mounts/$mount/volumeName"],
-                    exist = auroraDeploymentSpec["mounts/$mount/exist"],
-                    content = content,
-                    secretVaultName = secretVaultName
+                path = auroraDeploymentSpec["mounts/$mount/path"],
+                type = type,
+                mountName = auroraDeploymentSpec["mounts/$mount/mountName"],
+                volumeName = auroraDeploymentSpec["mounts/$mount/volumeName"],
+                exist = auroraDeploymentSpec["mounts/$mount/exist"],
+                content = content,
+                secretVaultName = secretVaultName
             )
         }
     }

@@ -4,12 +4,12 @@
   "metadata": {
     "name": "${buildName}-test",
   "labels": {
-    #foreach ($label  in $labels.entrySet())
-      #if($velocityCount != 1)
-        ,
+      #foreach ($label  in $labels.entrySet())
+          #if($velocityCount != 1)
+            ,
+          #end
+        "${label.key}": "${label.value}"
       #end
-      "${label.key}": "${label.value}"
-    #end
   }
 },
 "specInternal": {

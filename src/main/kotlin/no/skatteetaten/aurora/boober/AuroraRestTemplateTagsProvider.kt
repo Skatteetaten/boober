@@ -19,6 +19,7 @@ class AuroraRestTemplateTagsProvider : RestTemplateExchangeTagsProvider {
         return Arrays.asList(
             RestTemplateExchangeTags.method(request),
             RestTemplateExchangeTags.status(response),
-            RestTemplateExchangeTags.clientName(request))
+            RestTemplateExchangeTags.clientName(request)
+        )
     }
 }

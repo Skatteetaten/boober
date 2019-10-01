@@ -3,11 +3,23 @@ package no.skatteetaten.aurora.boober.feature
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.newEnvVar
-import com.fkorotkov.openshift.*
+import com.fkorotkov.openshift.customStrategy
+import com.fkorotkov.openshift.from
+import com.fkorotkov.openshift.metadata
+import com.fkorotkov.openshift.newBuildConfig
+import com.fkorotkov.openshift.output
+import com.fkorotkov.openshift.spec
+import com.fkorotkov.openshift.strategy
+import com.fkorotkov.openshift.to
 import io.fabric8.openshift.api.model.BuildConfig
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
-import no.skatteetaten.aurora.boober.mapper.*
+import no.skatteetaten.aurora.boober.mapper.ApplicationPlatform
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.mapper.TemplateType
+import no.skatteetaten.aurora.boober.mapper.applicationPlatform
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import org.springframework.stereotype.Service
@@ -26,7 +38,7 @@ data class AuroraBuild(
 )
 
 @Service
-class BuildFeature() : Feature {
+class BuildFeature : Feature {
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return header.type == TemplateType.development
     }
@@ -35,16 +47,16 @@ class BuildFeature() : Feature {
 
         val applicationPlatform: ApplicationPlatform = header.applicationPlatform
         return gavHandlers(header, cmd) + setOf(
-                AuroraConfigFieldHandler("builder/name", defaultValue = "architect"),
-                AuroraConfigFieldHandler("builder/version", defaultValue = "1"),
-                AuroraConfigFieldHandler("baseImage/name", defaultValue = applicationPlatform.baseImageName),
-                AuroraConfigFieldHandler("baseImage/version", defaultValue = applicationPlatform.baseImageVersion)
+            AuroraConfigFieldHandler("builder/name", defaultValue = "architect"),
+            AuroraConfigFieldHandler("builder/version", defaultValue = "1"),
+            AuroraConfigFieldHandler("baseImage/name", defaultValue = applicationPlatform.baseImageName),
+            AuroraConfigFieldHandler("baseImage/version", defaultValue = applicationPlatform.baseImageVersion)
         )
     }
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
         return setOf(
-                AuroraResource("${adc.name}-bc", createBuild(adc))
+            AuroraResource("${adc.name}-bc", createBuild(adc))
         )
     }
 
@@ -84,12 +96,12 @@ class BuildFeature() : Feature {
                         }
 
                         val envMap = mapOf(
-                                "ARTIFACT_ID" to adc.artifactId,
-                                "GROUP_ID" to adc.groupId,
-                                "VERSION" to adc["version"],
-                                "DOCKER_BASE_VERSION" to adc["baseImage/version"],
-                                "DOCKER_BASE_IMAGE" to "aurora/${adc.get<String>("baseImage/name")}",
-                                "PUSH_EXTRA_TAGS" to "latest,major,minor,patch"
+                            "ARTIFACT_ID" to adc.artifactId,
+                            "GROUP_ID" to adc.groupId,
+                            "VERSION" to adc["version"],
+                            "DOCKER_BASE_VERSION" to adc["baseImage/version"],
+                            "DOCKER_BASE_IMAGE" to "aurora/${adc.get<String>("baseImage/name")}",
+                            "PUSH_EXTRA_TAGS" to "latest,major,minor,patch"
                         )
 
                         env = envMap.map {

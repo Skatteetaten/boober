@@ -12,7 +12,8 @@ abstract class ServiceException(message: String?, cause: Throwable?) : RuntimeEx
 
 class OpenShiftException(messages: String?, cause: Throwable? = null) : ServiceException(messages, cause)
 
-class AuroraDeploymentSpecValidationException(message: String, cause: Throwable? = null) : ServiceException(message, cause)
+class AuroraDeploymentSpecValidationException(message: String, cause: Throwable? = null) :
+    ServiceException(message, cause)
 
 class UnauthorizedAccessException(message: String) : ServiceException(message)
 
@@ -26,12 +27,12 @@ class MultiApplicationValidationException(
         return this.errors.flatMap {
             it.errors.map { t ->
                 ApplicationError(
-                        it.command.applicationDeploymentRef.application, it.command.applicationDeploymentRef.environment,
-                        when (t) {
-                            is AuroraConfigException -> t.errors
-                            is IllegalArgumentException -> listOf(ConfigFieldErrorDetail.illegal(t.message ?: ""))
-                            else -> listOf(ErrorDetail(message = t.message ?: ""))
-                        }
+                    it.command.applicationDeploymentRef.application, it.command.applicationDeploymentRef.environment,
+                    when (t) {
+                        is AuroraConfigException -> t.errors
+                        is IllegalArgumentException -> listOf(ConfigFieldErrorDetail.illegal(t.message ?: ""))
+                        else -> listOf(ErrorDetail(message = t.message ?: ""))
+                    }
                 )
             }
         }
@@ -39,7 +40,7 @@ class MultiApplicationValidationException(
 }
 
 class ProvisioningException @JvmOverloads constructor(message: String, cause: Throwable? = null) :
-        ServiceException(message, cause)
+    ServiceException(message, cause)
 
 class AuroraConfigServiceException(message: String, cause: Throwable? = null) : ServiceException(message, cause)
 

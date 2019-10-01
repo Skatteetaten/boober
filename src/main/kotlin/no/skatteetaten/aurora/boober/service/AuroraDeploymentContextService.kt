@@ -10,7 +10,14 @@ import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.feature.extractPlaceHolders
 import no.skatteetaten.aurora.boober.feature.name
 import no.skatteetaten.aurora.boober.feature.namespace
-import no.skatteetaten.aurora.boober.mapper.*
+import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpecConfigFieldValidator
+import no.skatteetaten.aurora.boober.mapper.HeaderMapper
+import no.skatteetaten.aurora.boober.mapper.allNonSideCarContainers
+import no.skatteetaten.aurora.boober.mapper.validate
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.ApplicationRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
@@ -36,7 +43,11 @@ fun Set<AuroraResource>.addEnvVar(envVars: List<EnvVar>) {
     }
 }
 
-fun Set<AuroraResource>.addVolumesAndMounts(envVars: List<EnvVar> = emptyList(), volumes: List<Volume> = emptyList(), volumeMounts: List<VolumeMount> = emptyList()) {
+fun Set<AuroraResource>.addVolumesAndMounts(
+    envVars: List<EnvVar> = emptyList(),
+    volumes: List<Volume> = emptyList(),
+    volumeMounts: List<VolumeMount> = emptyList()
+) {
     this.filter { it.resource.kind == "DeploymentConfig" }.forEach {
         val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
         dc.spec.template.spec.volumes = dc.spec.template.spec.volumes.addIfNotNull(volumes)
@@ -51,7 +62,9 @@ interface Feature {
 
     fun enable(header: AuroraDeploymentSpec): Boolean = true
     fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler>
-    fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraContextCommand): List<Exception> = emptyList()
+    fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraContextCommand): List<Exception> =
+        emptyList()
+
     fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> = emptySet()
     fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) = Unit
 }
@@ -108,18 +121,18 @@ class AuroraDeploymentContextService(
 
         val headerMapper = HeaderMapper(deployCommand.applicationDeploymentRef, deployCommand.applicationFiles)
         val headerSpec =
-                AuroraDeploymentSpec.create(
-                        handlers = headerMapper.handlers,
-                        files = deployCommand.applicationFiles,
-                        applicationDeploymentRef = deployCommand.applicationDeploymentRef,
-                        auroraConfigVersion = deployCommand.auroraConfig.version
-                )
+            AuroraDeploymentSpec.create(
+                handlers = headerMapper.handlers,
+                files = deployCommand.applicationFiles,
+                applicationDeploymentRef = deployCommand.applicationDeploymentRef,
+                auroraConfigVersion = deployCommand.auroraConfig.version
+            )
 
         AuroraDeploymentSpecConfigFieldValidator(
-                applicationDeploymentRef = deployCommand.applicationDeploymentRef,
-                applicationFiles = deployCommand.applicationFiles,
-                fieldHandlers = headerMapper.handlers,
-                fields = headerSpec.fields
+            applicationDeploymentRef = deployCommand.applicationDeploymentRef,
+            applicationFiles = deployCommand.applicationFiles,
+            fieldHandlers = headerMapper.handlers,
+            fields = headerSpec.fields
         ).validate(false)
 
         val activeFeatures = featuers.filter { it.enable(headerSpec) }
@@ -131,17 +144,17 @@ class AuroraDeploymentContextService(
         val allHandlers: Set<AuroraConfigFieldHandler> = featureHandlers.flatMap { it.value }.toSet()
 
         val spec = AuroraDeploymentSpec.create(
-                handlers = allHandlers,
-                files = deployCommand.applicationFiles,
-                applicationDeploymentRef = deployCommand.applicationDeploymentRef,
-                auroraConfigVersion = deployCommand.auroraConfig.version,
-                replacer = StringSubstitutor(headerSpec.extractPlaceHolders(), "@", "@")
+            handlers = allHandlers,
+            files = deployCommand.applicationFiles,
+            applicationDeploymentRef = deployCommand.applicationDeploymentRef,
+            auroraConfigVersion = deployCommand.auroraConfig.version,
+            replacer = StringSubstitutor(headerSpec.extractPlaceHolders(), "@", "@")
         )
         AuroraDeploymentSpecConfigFieldValidator(
-                applicationDeploymentRef = deployCommand.applicationDeploymentRef,
-                applicationFiles = deployCommand.applicationFiles,
-                fieldHandlers = allHandlers,
-                fields = spec.fields
+            applicationDeploymentRef = deployCommand.applicationDeploymentRef,
+            applicationFiles = deployCommand.applicationFiles,
+            fieldHandlers = allHandlers,
+            fields = spec.fields
         ).validate()
         val featureAdc: Map<Feature, AuroraDeploymentSpec> = featureHandlers.mapValues { (_, handlers) ->
             val paths = handlers.map { it.name }

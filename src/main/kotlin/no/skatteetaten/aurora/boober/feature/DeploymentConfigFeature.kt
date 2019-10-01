@@ -4,7 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.resources
-import io.fabric8.kubernetes.api.model.*
+import io.fabric8.kubernetes.api.model.EnvVar
+import io.fabric8.kubernetes.api.model.EnvVarBuilder
+import io.fabric8.kubernetes.api.model.ObjectMeta
+import io.fabric8.kubernetes.api.model.Quantity
+import io.fabric8.kubernetes.api.model.QuantityBuilder
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
@@ -18,36 +22,38 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.filterNullValues
 import org.springframework.stereotype.Service
 
-fun AuroraDeploymentSpec.quantity(resource: String, classifier: String): Pair<String, Quantity> = resource to QuantityBuilder().withAmount(this["resources/$resource/$classifier"]).build()
+fun AuroraDeploymentSpec.quantity(resource: String, classifier: String): Pair<String, Quantity> =
+    resource to QuantityBuilder().withAmount(this["resources/$resource/$classifier"]).build()
 
 val AuroraDeploymentSpec.splunkIndex: String? get() = this.getOrNull<String>("splunkIndex")
 
 fun Map<String, String>.toEnvVars(): List<EnvVar> = this
-        .mapKeys { it.key.replace(".", "_").replace("-", "_") }
-        .map {
-            EnvVarBuilder().withName(it.key).withValue(it.value).build()
-        }
+    .mapKeys { it.key.replace(".", "_").replace("-", "_") }
+    .map {
+        EnvVarBuilder().withName(it.key).withValue(it.value).build()
+    }
 
 val AuroraDeploymentSpec.pause: Boolean get() = this["pause"]
 
 @Service
-class DeploymentConfigFeature() : Feature {
+class DeploymentConfigFeature : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
         return setOf(
-                AuroraConfigFieldHandler("management", defaultValue = true, canBeSimplifiedConfig = true),
-                AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
-                AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
-                AuroraConfigFieldHandler("releaseTo"),
-                AuroraConfigFieldHandler("alarm", defaultValue = true),
-                AuroraConfigFieldHandler("pause", defaultValue = false),
-                AuroraConfigFieldHandler("resources/cpu/min", defaultValue = "10m"),
-                AuroraConfigFieldHandler("resources/cpu/max", defaultValue = "2000m"),
-                AuroraConfigFieldHandler("resources/memory/min", defaultValue = "128Mi"),
-                AuroraConfigFieldHandler("resources/memory/max", defaultValue = "512Mi"),
-                AuroraConfigFieldHandler("splunkIndex"),
-                AuroraConfigFieldHandler("debug", defaultValue = false),
-                header.versionHandler)
+            AuroraConfigFieldHandler("management", defaultValue = true, canBeSimplifiedConfig = true),
+            AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
+            AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
+            AuroraConfigFieldHandler("releaseTo"),
+            AuroraConfigFieldHandler("alarm", defaultValue = true),
+            AuroraConfigFieldHandler("pause", defaultValue = false),
+            AuroraConfigFieldHandler("resources/cpu/min", defaultValue = "10m"),
+            AuroraConfigFieldHandler("resources/cpu/max", defaultValue = "2000m"),
+            AuroraConfigFieldHandler("resources/memory/min", defaultValue = "128Mi"),
+            AuroraConfigFieldHandler("resources/memory/max", defaultValue = "512Mi"),
+            AuroraConfigFieldHandler("splunkIndex"),
+            AuroraConfigFieldHandler("debug", defaultValue = false),
+            header.versionHandler
+        )
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
@@ -91,15 +97,15 @@ class DeploymentConfigFeature() : Feature {
 
         val debugEnv = if (adc["debug"]) {
             mapOf(
-                    "ENABLE_REMOTE_DEBUG" to "true",
-                    "DEBUG_PORT" to "5005"
+                "ENABLE_REMOTE_DEBUG" to "true",
+                "DEBUG_PORT" to "5005"
             )
         } else null
 
         return mapOf(
-                "OPENSHIFT_CLUSTER" to adc["cluster"],
-                "APP_NAME" to adc.name,
-                "SPLUNK_INDEX" to adc.splunkIndex
+            "OPENSHIFT_CLUSTER" to adc["cluster"],
+            "APP_NAME" to adc.name,
+            "SPLUNK_INDEX" to adc.splunkIndex
         ).addIfNotNull(debugEnv).filterNullValues()
     }
 
@@ -117,17 +123,17 @@ class DeploymentConfigFeature() : Feature {
 
         fun escapeOverrides(): String? {
             val files =
-                    cmd.overrideFiles.mapValues { jacksonObjectMapper().readValue(it.value, JsonNode::class.java) }
+                cmd.overrideFiles.mapValues { jacksonObjectMapper().readValue(it.value, JsonNode::class.java) }
             val content = jacksonObjectMapper().writeValueAsString(files)
             return content.takeIf { it != "{}" }
         }
 
         return mapOf(
-                "boober.skatteetaten.no/applicationFile" to cmd.applicationFile.name,
-                "console.skatteetaten.no/alarm" to adc["alarm"],
-                "boober.skatteetaten.no/overrides" to escapeOverrides(),
-                "console.skatteetaten.no/management-path" to adc.managementPath,
-                "boober.skatteetaten.no/releaseTo" to adc.releaseTo
+            "boober.skatteetaten.no/applicationFile" to cmd.applicationFile.name,
+            "console.skatteetaten.no/alarm" to adc["alarm"],
+            "boober.skatteetaten.no/overrides" to escapeOverrides(),
+            "console.skatteetaten.no/management-path" to adc.managementPath,
+            "boober.skatteetaten.no/releaseTo" to adc.releaseTo
         ).filterNullValues().filterValues { !it.isBlank() }
     }
 }

@@ -27,9 +27,10 @@ data class AuroraDeployResult @JvmOverloads constructor(
 
     val command: ApplicationDeploymentCommand
         get() = ApplicationDeploymentCommand(
-                deployCommand.context.cmd.overrideFiles,
-                deployCommand.context.cmd.applicationDeploymentRef,
-                deployCommand.context.cmd.auroraConfigRef)
+            deployCommand.context.cmd.overrideFiles,
+            deployCommand.context.cmd.applicationDeploymentRef,
+            deployCommand.context.cmd.auroraConfigRef
+        )
 
     val deployId: String get() = deployCommand.deployId
 }

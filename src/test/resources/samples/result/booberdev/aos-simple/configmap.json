@@ -1,24 +1,26 @@
 {
-  "apiVersion" : "v1",
-  "kind" : "ConfigMap",
-  "metadata" : {
-    "labels" : {
-      "app" : "aos-simple",
-      "updatedBy" : "hero",
-      "affiliation" : "aos",
-      "updateInBoober" : "true",
-      "name" : "aos-simple"
+  "apiVersion": "v1",
+  "kind": "ConfigMap",
+  "metadata": {
+    "labels": {
+      "app": "aos-simple",
+      "updatedBy": "hero",
+      "affiliation": "aos",
+      "updateInBoober": "true",
+      "name": "aos-simple"
     },
-    "name" : "aos-simple",
-    "namespace" : "aos-booberdev",
-    "ownerReferences" : [ {
-      "apiVersion" : "skatteetaten.no/v1",
-      "kind" : "ApplicationDeployment",
-      "name" : "aos-simple",
-      "uid" : "123-123"
-    } ]
+    "name": "aos-simple",
+    "namespace": "aos-booberdev",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "aos-simple",
+        "uid": "123-123"
+      }
+    ]
   },
-  "data" : {
-    "1.properties" : "BAZ=BAR"
+  "data": {
+    "1.properties": "BAZ=BAR"
   }
 }

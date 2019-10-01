@@ -1,6 +1,10 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fkorotkov.kubernetes.*
+import com.fkorotkov.kubernetes.metadata
+import com.fkorotkov.kubernetes.newSecret
+import com.fkorotkov.kubernetes.newVolume
+import com.fkorotkov.kubernetes.newVolumeMount
+import com.fkorotkov.kubernetes.secret
 import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.kubernetes.api.model.Secret
 import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
@@ -16,14 +20,14 @@ import no.skatteetaten.aurora.boober.utils.whenTrue
 import org.apache.commons.codec.binary.Base64
 import org.springframework.stereotype.Service
 import java.io.ByteArrayOutputStream
-import java.util.*
+import java.util.Properties
 
 @Service
 class StsFeature(val sts: StsProvisioner) : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
-                AuroraConfigFieldHandler("certificate", defaultValue = false, canBeSimplifiedConfig = true),
-                AuroraConfigFieldHandler("certificate/commonName")
+            AuroraConfigFieldHandler("certificate", defaultValue = false, canBeSimplifiedConfig = true),
+            AuroraConfigFieldHandler("certificate/commonName")
         )
     }
 
@@ -49,19 +53,25 @@ class StsFeature(val sts: StsProvisioner) : Feature {
         val cert = stsProvisionResults.cert
         return newSecret {
             metadata {
-                labels = mapOf(StsSecretGenerator.RENEW_AFTER_LABEL to stsProvisionResults.renewAt.epochSecond.toString())
+                labels =
+                    mapOf(StsSecretGenerator.RENEW_AFTER_LABEL to stsProvisionResults.renewAt.epochSecond.toString())
                 name = secretName
                 namespace = secretNamespace
                 annotations = mapOf(
-                        StsSecretGenerator.APP_ANNOTATION to appName,
-                        StsSecretGenerator.COMMON_NAME_ANNOTATION to stsProvisionResults.cn
+                    StsSecretGenerator.APP_ANNOTATION to appName,
+                    StsSecretGenerator.COMMON_NAME_ANNOTATION to stsProvisionResults.cn
                 )
             }
             data = mapOf(
-                    "privatekey.key" to cert.key,
-                    "keystore.jks" to cert.keystore,
-                    "certificate.crt" to cert.crt,
-                    "descriptor.properties" to StsSecretGenerator.createDescriptorFile(baseUrl, "ca", cert.storePassword, cert.keyPassword)
+                "privatekey.key" to cert.key,
+                "keystore.jks" to cert.keystore,
+                "certificate.crt" to cert.crt,
+                "descriptor.properties" to StsSecretGenerator.createDescriptorFile(
+                    baseUrl,
+                    "ca",
+                    cert.storePassword,
+                    cert.keyPassword
+                )
             ).mapValues { Base64.encodeBase64String(it.value) }
         }
     }
@@ -85,10 +95,10 @@ class StsFeature(val sts: StsProvisioner) : Feature {
         if (adc["certificate"]) {
             val baseUrl = "/u01/secrets/app/${adc.name}-cert"
             val stsVars = mapOf(
-                    "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
-                    "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
-                    "STS_KEYSTORE_DESCRIPTOR" to "$baseUrl/descriptor.properties",
-                    "VOLUME_${adc.name}_CERT".toUpperCase() to baseUrl
+                "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
+                "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
+                "STS_KEYSTORE_DESCRIPTOR" to "$baseUrl/descriptor.properties",
+                "VOLUME_${adc.name}_CERT".toUpperCase() to baseUrl
             ).toEnvVars()
 
             val mount = newVolumeMount {
@@ -127,12 +137,13 @@ object StsSecretGenerator {
 
         val cert = stsProvisionResults.cert
         val secretAnnotations = mapOf(
-                APP_ANNOTATION to appName,
-                COMMON_NAME_ANNOTATION to stsProvisionResults.cn
+            APP_ANNOTATION to appName,
+            COMMON_NAME_ANNOTATION to stsProvisionResults.cn
         )
         return newSecret {
             metadata {
-                this.labels = labels.addIfNotNull(RENEW_AFTER_LABEL to stsProvisionResults.renewAt.epochSecond.toString())
+                this.labels =
+                    labels.addIfNotNull(RENEW_AFTER_LABEL to stsProvisionResults.renewAt.epochSecond.toString())
                 name = secretName
                 this.namespace = namespace
                 ownerReferences = listOf(element = ownerReference)
@@ -141,10 +152,10 @@ object StsSecretGenerator {
                 }
             }
             mapOf(
-                    "privatekey.key" to cert.key,
-                    "keystore.jks" to cert.keystore,
-                    "certificate.crt" to cert.crt,
-                    "descriptor.properties" to createDescriptorFile(baseUrl, "ca", cert.storePassword, cert.keyPassword)
+                "privatekey.key" to cert.key,
+                "keystore.jks" to cert.keystore,
+                "certificate.crt" to cert.crt,
+                "descriptor.properties" to createDescriptorFile(baseUrl, "ca", cert.storePassword, cert.keyPassword)
             ).let {
                 data = it.mapValues { Base64.encodeBase64String(it.value) }
             }

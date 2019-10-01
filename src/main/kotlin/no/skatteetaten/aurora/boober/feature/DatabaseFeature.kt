@@ -3,7 +3,11 @@ package no.skatteetaten.aurora.boober.feature
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fkorotkov.kubernetes.*
+import com.fkorotkov.kubernetes.metadata
+import com.fkorotkov.kubernetes.newSecret
+import com.fkorotkov.kubernetes.newVolume
+import com.fkorotkov.kubernetes.newVolumeMount
+import com.fkorotkov.kubernetes.secret
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
@@ -20,7 +24,15 @@ import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationExcep
 import no.skatteetaten.aurora.boober.service.AuroraResource
 import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.service.addVolumesAndMounts
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.*
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseEngine
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaIdRequest
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionRequest
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResult
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaRequestDetails
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaUser
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
@@ -28,7 +40,7 @@ import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.ByteArrayOutputStream
-import java.util.*
+import java.util.Properties
 
 @Service
 class DatabaseFeature(
@@ -43,11 +55,15 @@ class DatabaseFeature(
         val dbDefaultsHandlers = findDbDefaultHandlers(cmd.applicationFiles)
 
         return (dbDefaultsHandlers + dbHandlers + listOf(
-                AuroraConfigFieldHandler("database", defaultValue = false, canBeSimplifiedConfig = true)
+            AuroraConfigFieldHandler("database", defaultValue = false, canBeSimplifiedConfig = true)
         )).toSet()
     }
 
-    override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraContextCommand): List<Exception> {
+    override fun validate(
+        adc: AuroraDeploymentSpec,
+        fullValidation: Boolean,
+        cmd: AuroraContextCommand
+    ): List<Exception> {
         val databases = findDatabases(adc, cmd)
         if (!fullValidation || adc.cluster != cluster || databases.isEmpty()) {
             return emptyList()
@@ -55,15 +71,15 @@ class DatabaseFeature(
 
         // TODO: here we should probably validate if generate is false aswell?
         return databases.filter { it.id != null }
-                .map { SchemaIdRequest(it.id!!, it.createSchemaDetails(adc.affiliation)) }
-                .mapNotNull {
-                    try {
-                        databaseSchemaProvisioner.findSchemaById(it.id, it.details)
-                        null
-                    } catch (e: Exception) {
-                        AuroraDeploymentSpecValidationException("Database schema with id=${it.id} and affiliation=${it.details.affiliation} does not exist")
-                    }
+            .map { SchemaIdRequest(it.id!!, it.createSchemaDetails(adc.affiliation)) }
+            .mapNotNull {
+                try {
+                    databaseSchemaProvisioner.findSchemaById(it.id, it.details)
+                    null
+                } catch (e: Exception) {
+                    AuroraDeploymentSpecValidationException("Database schema with id=${it.id} and affiliation=${it.details.affiliation} does not exist")
                 }
+            }
     }
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
@@ -77,7 +93,8 @@ class DatabaseFeature(
         val schemaProvisionResult = databaseSchemaProvisioner.provisionSchemas(schemaRequests)
 
         return schemaProvisionResult.results.map {
-            val secretName = "${it.request.details.schemaName}-db".replace("_", "-").toLowerCase().ensureStartWith(adc.name, "-")
+            val secretName =
+                "${it.request.details.schemaName}-db".replace("_", "-").toLowerCase().ensureStartWith(adc.name, "-")
             DbhSecretGenerator.createDbhSecret(it, secretName, adc.namespace)
         }.map {
             AuroraResource("${it.metadata.name}-secret", it)
@@ -94,26 +111,28 @@ class DatabaseFeature(
         }
 
         val volume =
-                newVolume {
-                    name = volumeName
-                    secret {
-                        secretName = volumeName
-                    }
+            newVolume {
+                name = volumeName
+                secret {
+                    secretName = volumeName
                 }
+            }
         return volume to mount
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         val databases = findDatabases(adc, cmd)
         if (databases.isEmpty()) return
-        val dbEnv = databases.flatMap { it.createDbEnv("${it.name}_db") }.addIfNotNull(databases.firstOrNull()?.createDbEnv("db")).toMap().toEnvVars()
+        val dbEnv = databases.flatMap { it.createDbEnv("${it.name}_db") }
+            .addIfNotNull(databases.firstOrNull()?.createDbEnv("db")).toMap().toEnvVars()
 
         val volumeAndMounts = databases.map { it.createDatabaseVolumesAndMounts(adc.name) }
 
         val volumes = volumeAndMounts.map { it.first }
         val volumeMounts = volumeAndMounts.map { it.second }
 
-        val databaseId = resources.filter { it.resource.kind == "Secret" }.mapNotNull { it.resource.metadata.labels["dbhId"] }
+        val databaseId =
+            resources.filter { it.resource.kind == "Secret" }.mapNotNull { it.resource.metadata.labels["dbhId"] }
 
         resources.forEach {
             if (it.resource.kind == "ApplicationDeployment") {
@@ -131,15 +150,15 @@ class DatabaseFeature(
             val details = it.createSchemaDetails(adc.affiliation)
             if (it.id != null) {
                 SchemaIdRequest(
-                        id = it.id,
-                        details = details
+                    id = it.id,
+                    details = details
                 )
             } else {
                 SchemaForAppRequest(
-                        environment = adc.envName,
-                        application = adc.name,
-                        details = details,
-                        generate = it.generate
+                    environment = adc.envName,
+                    application = adc.name,
+                    details = details,
+                    generate = it.generate
                 )
             }
         }
@@ -148,15 +167,15 @@ class DatabaseFeature(
     private fun findDatabases(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): List<Database> {
         val defaultFlavor: DatabaseFlavor = adc["$databaseDefaultsKey/flavor"]
         val defaultInstance = findInstance(adc, cmd, "$databaseDefaultsKey/instance", defaultFlavor.defaultFallback)
-                ?: DatabaseInstance(fallback = defaultFlavor.defaultFallback)
+            ?: DatabaseInstance(fallback = defaultFlavor.defaultFallback)
 
         val defaultDb = Database(
-                name = adc["$databaseDefaultsKey/name"],
-                flavor = defaultFlavor,
-                generate = adc["$databaseDefaultsKey/generate"],
-                instance = defaultInstance.copy(labels = defaultInstance.labels + mapOf("affiliation" to adc.affiliation)),
-                roles = cmd.applicationFiles.associateSubKeys("$databaseDefaultsKey/roles", adc),
-                exposeTo = cmd.applicationFiles.associateSubKeys("$databaseDefaultsKey/exposeTo", adc)
+            name = adc["$databaseDefaultsKey/name"],
+            flavor = defaultFlavor,
+            generate = adc["$databaseDefaultsKey/generate"],
+            instance = defaultInstance.copy(labels = defaultInstance.labels + mapOf("affiliation" to adc.affiliation)),
+            roles = cmd.applicationFiles.associateSubKeys("$databaseDefaultsKey/roles", adc),
+            exposeTo = cmd.applicationFiles.associateSubKeys("$databaseDefaultsKey/exposeTo", adc)
 
         )
         if (adc.isSimplifiedAndEnabled("database")) {
@@ -169,8 +188,8 @@ class DatabaseFeature(
             if (isSimple) {
                 val value: String = adc[key]
                 defaultDb.copy(
-                        name = db,
-                        id = if (value == "auto" || value.isBlank()) null else value
+                    name = db,
+                    id = if (value == "auto" || value.isBlank()) null else value
                 )
             } else {
 
@@ -183,20 +202,20 @@ class DatabaseFeature(
                 val instanceName = instance?.name ?: defaultDb.instance.name
                 val instanceFallback = instance?.fallback ?: defaultDb.instance.fallback
                 val instanceLabels = emptyMap<String, String>().addIfNotNull(defaultDb.instance.labels)
-                        .addIfNotNull(instance?.labels)
+                    .addIfNotNull(instance?.labels)
 
                 Database(
-                        name = adc.getOrNull("$key/name") ?: db,
-                        id = if (value == "auto" || value.isBlank()) null else value,
-                        flavor = flavor,
-                        generate = adc.getOrNull("$key/generate") ?: defaultDb.generate,
-                        instance = DatabaseInstance(
-                                name = instanceName,
-                                fallback = instanceFallback,
-                                labels = instanceLabels
-                        ),
-                        roles = defaultDb.roles + roles,
-                        exposeTo = defaultDb.exposeTo + exposeTo
+                    name = adc.getOrNull("$key/name") ?: db,
+                    id = if (value == "auto" || value.isBlank()) null else value,
+                    flavor = flavor,
+                    generate = adc.getOrNull("$key/generate") ?: defaultDb.generate,
+                    instance = DatabaseInstance(
+                        name = instanceName,
+                        fallback = instanceFallback,
+                        labels = instanceLabels
+                    ),
+                    roles = defaultDb.roles + roles,
+                    exposeTo = defaultDb.exposeTo + exposeTo
                 )
             }
         }
@@ -213,9 +232,9 @@ class DatabaseFeature(
             return null
         }
         return DatabaseInstance(
-                name = adc.getOrNull("$key/name"),
-                fallback = adc.getOrNull("$key/fallback") ?: defaultFallback,
-                labels = cmd.applicationFiles.associateSubKeys("$key/labels", adc)
+            name = adc.getOrNull("$key/name"),
+            fallback = adc.getOrNull("$key/fallback") ?: defaultFallback,
+            labels = cmd.applicationFiles.associateSubKeys("$key/labels", adc)
         )
     }
 
@@ -231,14 +250,17 @@ class DatabaseFeature(
         }
     }
 
-    private fun createExpandedDbHandlers(db: String, applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
+    private fun createExpandedDbHandlers(
+        db: String,
+        applicationFiles: List<AuroraConfigFile>
+    ): List<AuroraConfigFieldHandler> {
 
         val mainHandlers = listOf(
-                AuroraConfigFieldHandler("$db/generate"),
-                AuroraConfigFieldHandler("$db/name"),
-                AuroraConfigFieldHandler("$db/id"),
-                AuroraConfigFieldHandler(
-                        "$db/flavor", validator = { node ->
+            AuroraConfigFieldHandler("$db/generate"),
+            AuroraConfigFieldHandler("$db/name"),
+            AuroraConfigFieldHandler("$db/id"),
+            AuroraConfigFieldHandler(
+                "$db/flavor", validator = { node ->
                     node?.oneOf(DatabaseFlavor.values().map { it.toString() })
                 })
         )
@@ -257,17 +279,17 @@ class DatabaseFeature(
     fun findDbDefaultHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
 
         val databaseDefaultHandler = listOf(
-                AuroraConfigFieldHandler(
-                        "$databaseDefaultsKey/flavor",
-                        defaultValue = DatabaseFlavor.ORACLE_MANAGED,
-                        validator = { node ->
-                            node.oneOf(DatabaseFlavor.values().map { it.toString() })
-                        }),
-                AuroraConfigFieldHandler("$databaseDefaultsKey/generate", defaultValue = true),
-                AuroraConfigFieldHandler(
-                        "$databaseDefaultsKey/name",
-                        defaultValue = "@name@"
-                ) // må vi ha på en validator her?
+            AuroraConfigFieldHandler(
+                "$databaseDefaultsKey/flavor",
+                defaultValue = DatabaseFlavor.ORACLE_MANAGED,
+                validator = { node ->
+                    node.oneOf(DatabaseFlavor.values().map { it.toString() })
+                }),
+            AuroraConfigFieldHandler("$databaseDefaultsKey/generate", defaultValue = true),
+            AuroraConfigFieldHandler(
+                "$databaseDefaultsKey/name",
+                defaultValue = "@name@"
+            ) // må vi ha på en validator her?
         )
 
         val databaseRolesHandlers = findRolesHandlers(databaseDefaultsKey, applicationFiles)
@@ -278,7 +300,10 @@ class DatabaseFeature(
         return listOf<AuroraConfigFieldHandler>() + databaseDefaultHandler + databaseRolesHandlers + databaseDefaultExposeToHandlers + instanceHandlers
     }
 
-    private fun findRolesHandlers(key: String, applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
+    private fun findRolesHandlers(
+        key: String,
+        applicationFiles: List<AuroraConfigFile>
+    ): List<AuroraConfigFieldHandler> {
         return applicationFiles.findSubHandlers("$key/roles", validatorFn = { k ->
             { node ->
                 node.oneOf(DatabasePermission.values().map { it.toString() })
@@ -286,7 +311,10 @@ class DatabaseFeature(
         })
     }
 
-    private fun findInstanceHandlers(key: String, applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
+    private fun findInstanceHandlers(
+        key: String,
+        applicationFiles: List<AuroraConfigFile>
+    ): List<AuroraConfigFieldHandler> {
         return applicationFiles.findSubKeys("$key/instance").flatMap {
             if (it == "labels") {
                 applicationFiles.findSubHandlers("$key/instance/$it")
@@ -296,7 +324,11 @@ class DatabaseFeature(
         }
     }
 
-    private fun findExposeToHandlers(key: String, validRoles: Set<String>, applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
+    private fun findExposeToHandlers(
+        key: String,
+        validRoles: Set<String>,
+        applicationFiles: List<AuroraConfigFile>
+    ): List<AuroraConfigFieldHandler> {
         return applicationFiles.findSubHandlers("$key/exposeTo", validatorFn = { exposeTo ->
             { node -> exposeToValidator(node, validRoles, exposeTo) }
         })
@@ -313,7 +345,7 @@ class DatabaseFeature(
         } else {
             val validRolesString = validRoles.joinToString(",")
             IllegalArgumentException(
-                    "Database cannot expose affiliation=$exposeTo with invalid role=$role. ValidRoles=$validRolesString"
+                "Database cannot expose affiliation=$exposeTo with invalid role=$role. ValidRoles=$validRolesString"
             )
         }
     }
@@ -321,14 +353,14 @@ class DatabaseFeature(
 
 enum class DatabaseFlavor(val engine: DatabaseEngine, val managed: Boolean, val defaultFallback: Boolean) {
     ORACLE_MANAGED(
-            engine = DatabaseEngine.ORACLE,
-            managed = true,
-            defaultFallback = true
+        engine = DatabaseEngine.ORACLE,
+        managed = true,
+        defaultFallback = true
     ),
     POSTGRES_MANAGED(
-            engine = DatabaseEngine.POSTGRES,
-            managed = true,
-            defaultFallback = false
+        engine = DatabaseEngine.POSTGRES,
+        managed = true,
+        defaultFallback = false
     )
 }
 
@@ -370,11 +402,11 @@ fun Database.createSchemaDetails(affiliation: String): SchemaRequestDetails {
     }
 
     return SchemaRequestDetails(
-            schemaName = this.name.toLowerCase(),
-            databaseInstance = this.instance,
-            affiliation = affiliation,
-            users = users,
-            engine = this.flavor.engine
+        schemaName = this.name.toLowerCase(),
+        databaseInstance = this.instance,
+        affiliation = affiliation,
+        users = users,
+        engine = this.flavor.engine
     )
 }
 
@@ -383,8 +415,8 @@ fun Database.createDbEnv(envName: String): List<Pair<String, String>> {
     val envName = envName.replace("-", "_").toUpperCase()
 
     return listOf(
-            envName to "$path/info",
-            "${envName}_PROPERTIES" to "$path/db.properties"
+        envName to "$path/info",
+        "${envName}_PROPERTIES" to "$path/db.properties"
     )
 }
 
@@ -393,24 +425,24 @@ object DbhSecretGenerator {
     fun createInfoFile(dbhSchema: DbhSchema): String {
 
         val infoFile = mapOf(
-                "database" to mapOf(
-                        "id" to dbhSchema.id,
-                        "name" to dbhSchema.username,
-                        "createdDate" to null,
-                        "lastUsedDate" to null,
-                        "host" to dbhSchema.databaseInstance.host,
-                        "port" to dbhSchema.databaseInstance.port,
-                        "service" to dbhSchema.service,
-                        "jdbcUrl" to dbhSchema.jdbcUrl,
-                        "users" to listOf(
-                                mapOf(
-                                        "username" to dbhSchema.username,
-                                        "password" to dbhSchema.password,
-                                        "type" to dbhSchema.userType
-                                )
-                        ),
-                        "labels" to dbhSchema.labels
-                )
+            "database" to mapOf(
+                "id" to dbhSchema.id,
+                "name" to dbhSchema.username,
+                "createdDate" to null,
+                "lastUsedDate" to null,
+                "host" to dbhSchema.databaseInstance.host,
+                "port" to dbhSchema.databaseInstance.port,
+                "service" to dbhSchema.service,
+                "jdbcUrl" to dbhSchema.jdbcUrl,
+                "users" to listOf(
+                    mapOf(
+                        "username" to dbhSchema.username,
+                        "password" to dbhSchema.password,
+                        "type" to dbhSchema.userType
+                    )
+                ),
+                "labels" to dbhSchema.labels
+            )
         )
         return jacksonObjectMapper().writeValueAsString(infoFile)
     }
@@ -442,11 +474,11 @@ object DbhSecretGenerator {
                 labels = mapOf("dbhId" to schemaProvisionResult.dbhSchema.id)
             }
             data = mapOf(
-                    "db.properties" to connectionProperties,
-                    "id" to schemaProvisionResult.dbhSchema.id,
-                    "info" to infoFile,
-                    "jdbcurl" to schemaProvisionResult.dbhSchema.jdbcUrl,
-                    "name" to schemaProvisionResult.dbhSchema.username
+                "db.properties" to connectionProperties,
+                "id" to schemaProvisionResult.dbhSchema.id,
+                "info" to infoFile,
+                "jdbcurl" to schemaProvisionResult.dbhSchema.jdbcUrl,
+                "name" to schemaProvisionResult.dbhSchema.username
             ).mapValues { it.value.toByteArray() }.mapValues { Base64.encodeBase64String(it.value) }
         }
     }

@@ -16,6 +16,7 @@ fun List<AuroraConfigFile>.findSubKeys(name: String): Set<String> {
         ac.asJsonNode.at("/$name")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
     }.toSet()
 }
+
 inline fun <reified T> List<AuroraConfigFile>.associateSubKeys(
     name: String,
     spec: AuroraDeploymentSpec

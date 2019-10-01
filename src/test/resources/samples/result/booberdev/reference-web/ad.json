@@ -1,40 +1,39 @@
 {
-  "apiVersion" : "skatteetaten.no/v1",
-  "kind" : "ApplicationDeployment",
-  "metadata" : {
-    "labels" : {
-      "id" : "cd3c35f71824ee2664db66ed4894a9917f3ef5b7",
-      "app" : "openshift-referanse-react",
-      "updatedBy" : "hero",
-      "affiliation" : "aos",
-      "updateInBoober" : "true",
-
-      "name" : "openshift-referanse-react"
+  "apiVersion": "skatteetaten.no/v1",
+  "kind": "ApplicationDeployment",
+  "metadata": {
+    "labels": {
+      "id": "cd3c35f71824ee2664db66ed4894a9917f3ef5b7",
+      "app": "openshift-referanse-react",
+      "updatedBy": "hero",
+      "affiliation": "aos",
+      "updateInBoober": "true",
+      "name": "openshift-referanse-react"
     },
-    "name" : "openshift-referanse-react",
-    "namespace" : "aos-booberdev"
+    "name": "openshift-referanse-react",
+    "namespace": "aos-booberdev"
   },
-  "spec" : {
-    "applicationId" : "1590fc38ff96cbe228a5003e20e3ef3893e8bc06",
-    "selector" : {
-      "name" : "openshift-referanse-react"
+  "spec": {
+    "applicationId": "1590fc38ff96cbe228a5003e20e3ef3893e8bc06",
+    "selector": {
+      "name": "openshift-referanse-react"
     },
-    "applicationDeploymentId" : "cd3c35f71824ee2664db66ed4894a9917f3ef5b7",
-    "applicationName" : "openshift-referanse-react",
-    "applicationDeploymentName" : "openshift-referanse-react",
-    "databases" : [ ],
-    "managementPath" : ":8081/actuator",
-    "deployTag" : "develop-SNAPSHOT",
-    "command" : {
-      "overrideFiles" : { },
-      "applicationDeploymentRef" : {
-        "environment" : "booberdev",
-        "application" : "reference-web"
+    "applicationDeploymentId": "cd3c35f71824ee2664db66ed4894a9917f3ef5b7",
+    "applicationName": "openshift-referanse-react",
+    "applicationDeploymentName": "openshift-referanse-react",
+    "databases": [],
+    "managementPath": ":8081/actuator",
+    "deployTag": "develop-SNAPSHOT",
+    "command": {
+      "overrideFiles": {},
+      "applicationDeploymentRef": {
+        "environment": "booberdev",
+        "application": "reference-web"
       },
-      "auroraConfig" : {
-        "name" : "test",
-        "refName" : "master",
-        "resolvedRef" : "123abb"
+      "auroraConfig": {
+        "name": "test",
+        "refName": "master",
+        "resolvedRef": "123abb"
       }
     }
   }

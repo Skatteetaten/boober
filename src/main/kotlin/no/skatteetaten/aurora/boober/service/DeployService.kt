@@ -26,7 +26,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.lang.RuntimeException
 import java.util.UUID
 
 @Service
@@ -71,11 +70,11 @@ class DeployService(
             if (!env.success) {
                 commands.map {
                     AuroraDeployResult(
-                            projectExist = env.projectExist,
-                            deployCommand = it,
-                            success = env.success,
-                            reason = env.reason,
-                            openShiftResponses = env.openShiftResponses
+                        projectExist = env.projectExist,
+                        deployCommand = it,
+                        success = env.success,
+                        reason = env.reason,
+                        openShiftResponses = env.openShiftResponses
                     )
                 }
             } else {
@@ -91,22 +90,30 @@ class DeployService(
         return deployLogService.markRelease(deployResults.flatMap { it.value }, deployer)
     }
 
-    private fun createDeployCommands(validContexts: List<AuroraDeploymentContext>, deploy: Boolean): List<AuroraDeployCommand> {
+    private fun createDeployCommands(
+        validContexts: List<AuroraDeploymentContext>,
+        deploy: Boolean
+    ): List<AuroraDeployCommand> {
         val result: List<Pair<List<ContextErrors>, AuroraDeployCommand?>> = validContexts.map { context ->
             val (errors, resourceResults) = context.createResources()
             when {
                 errors.isNotEmpty() -> errors to null
-                resourceResults == null -> listOf(ContextErrors(context.cmd, listOf(RuntimeException("No resources generated")))) to null
+                resourceResults == null -> listOf(
+                    ContextErrors(
+                        context.cmd,
+                        listOf(RuntimeException("No resources generated"))
+                    )
+                ) to null
                 else -> {
 
                     val (header, normal) = resourceResults.partition { it.header }
                     emptyList<ContextErrors>() to AuroraDeployCommand(
-                            headerResources = header.toSet(),
-                            resources = normal.toSet(),
-                            context = context,
-                            deployId = UUID.randomUUID().toString().substring(0, 7),
-                            shouldDeploy = deploy,
-                            user = userDetailsProvider.getAuthenticatedUser()
+                        headerResources = header.toSet(),
+                        resources = normal.toSet(),
+                        context = context,
+                        deployId = UUID.randomUUID().toString().substring(0, 7),
+                        shouldDeploy = deploy,
+                        user = userDetailsProvider.getAuthenticatedUser()
                     )
                 }
             }
@@ -135,7 +142,11 @@ class DeployService(
         return validContexts
     }
 
-    private fun createContextCommands(ref: AuroraConfigRef, applicationDeploymentRefs: List<ApplicationDeploymentRef>, overrides: List<AuroraConfigFile>): List<AuroraContextCommand> {
+    private fun createContextCommands(
+        ref: AuroraConfigRef,
+        applicationDeploymentRefs: List<ApplicationDeploymentRef>,
+        overrides: List<AuroraConfigFile>
+    ): List<AuroraContextCommand> {
         val auroraConfigRefExact = auroraConfigService.resolveToExactRef(ref)
         val auroraConfig = auroraConfigService.findAuroraConfig(auroraConfigRefExact)
 
@@ -146,7 +157,8 @@ class DeployService(
 
     private fun validateUnusedOverrideFiles(deploymentCtx: List<AuroraDeploymentContext>) {
         val overrides = deploymentCtx.first().cmd.overrides
-        val usedOverrideNames: List<String> = deploymentCtx.flatMap { ctx -> ctx.cmd.applicationFiles.filter { it.override } }.map { it.configName }
+        val usedOverrideNames: List<String> =
+            deploymentCtx.flatMap { ctx -> ctx.cmd.applicationFiles.filter { it.override } }.map { it.configName }
 
         val applicationDeploymentRefs = deploymentCtx.map { it.cmd.applicationDeploymentRef }
         val unusedOverrides = overrides.filter { !usedOverrideNames.contains(it.configName) }
@@ -154,7 +166,7 @@ class DeployService(
             val overrideString = unusedOverrides.joinToString(",") { it.name }
             val refString = applicationDeploymentRefs.joinToString(",")
             throw IllegalArgumentException(
-                    "Overrides files '$overrideString' does not apply to any deploymentReference ($refString)"
+                "Overrides files '$overrideString' does not apply to any deploymentReference ($refString)"
             )
         }
     }
@@ -166,20 +178,20 @@ class DeployService(
         val projectExist = openShiftClient.projectExists(namespace)
         val projectResponse = projectExist.whenFalse {
             openShiftCommandBuilder.createOpenShiftCommand(
-                    newResource = resources.find { it.resource.kind == "ProjectRequest" }?.resource
-                            ?: throw Exception("Could not find project request"),
-                    mergeWithExistingResource = false,
-                    retryGetResourceOnFailure = false
+                newResource = resources.find { it.resource.kind == "ProjectRequest" }?.resource
+                    ?: throw Exception("Could not find project request"),
+                mergeWithExistingResource = false,
+                retryGetResourceOnFailure = false
             ).let {
                 openShiftClient.performOpenShiftCommand(namespace, it)
-                        .also { Thread.sleep(2000) }
+                    .also { Thread.sleep(2000) }
             }
         }
         val otherEnvResources = resources.filter { it.resource.kind != "ProjectRequest" }.map {
             openShiftCommandBuilder.createOpenShiftCommand(
-                    namespace = it.resource.metadata.namespace,
-                    newResource = it.resource,
-                    retryGetResourceOnFailure = true
+                namespace = it.resource.metadata.namespace,
+                newResource = it.resource,
+                retryGetResourceOnFailure = true
             )
         }
         val resourceResponse = otherEnvResources.map { openShiftClient.performOpenShiftCommand(namespace, it) }
@@ -194,10 +206,11 @@ class DeployService(
         logger.info("Environment done. user='${authenticatedUser.fullName}' namespace=$namespace success=$success reason=$message")
 
         return AuroraEnvironmentResult(
-                openShiftResponses = environmentResponses,
-                success = success,
-                reason = message,
-                projectExist = projectExist)
+            openShiftResponses = environmentResponses,
+            success = success,
+            reason = message,
+            projectExist = projectExist
+        )
     }
 
     fun deployFromSpec(
@@ -217,10 +230,10 @@ class DeployService(
 
         if (appResponse == null) {
             return AuroraDeployResult(
-                    deployCommand = cmd,
-                    openShiftResponses = listOf(applicationResult),
-                    success = false,
-                    reason = "Creating application object failed"
+                deployCommand = cmd,
+                openShiftResponses = listOf(applicationResult),
+                success = false,
+                reason = "Creating application object failed"
             )
         }
 
@@ -230,28 +243,28 @@ class DeployService(
             dockerService.tag(TagCommand(it.dockerImagePath, it.version, it.releaseTo!!, dockerRegistry))
         }
         val rawResult = AuroraDeployResult(
-                tagResponse = tagResult,
-                deployCommand = cmd,
-                projectExist = env.projectExist
+            tagResponse = tagResult,
+            deployCommand = cmd,
+            projectExist = env.projectExist
         )
         tagResult?.takeIf { !it.success }?.let {
             return rawResult.copy(
-                    success = false,
-                    reason = "Tag command failed."
+                success = false,
+                reason = "Tag command failed."
             )
         }
 
         logger.debug("Apply objects")
         val openShiftResponses: List<OpenShiftResponse> = listOf(applicationResult) +
-                applyOpenShiftApplicationObjects(
-                        cmd, namespaceCreated, ownerReferenceUid
-                )
+            applyOpenShiftApplicationObjects(
+                cmd, namespaceCreated, ownerReferenceUid
+            )
 
         logger.debug("done applying objects")
         val success = openShiftResponses.all { it.success }
         val result = rawResult.copy(
-                openShiftResponses = openShiftResponses,
-                success = success
+            openShiftResponses = openShiftResponses,
+            success = success
         )
 
         if (!success) {
@@ -271,15 +284,15 @@ class DeployService(
 
         if (!redeployResult.success) {
             return result.copy(
-                    openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses),
-                    tagResponse = tagResult, success = false, reason = redeployResult.message
+                openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses),
+                tagResponse = tagResult, success = false, reason = redeployResult.message
             )
         }
 
         return result.copy(
-                openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses),
-                tagResponse = tagResult,
-                reason = redeployResult.message
+            openShiftResponses = openShiftResponses.addIfNotNull(redeployResult.openShiftResponses),
+            tagResponse = tagResult,
+            reason = redeployResult.message
         )
     }
 
@@ -294,7 +307,8 @@ class DeployService(
         val name = context.spec.name
 
         val jsonResources = deployCommand.resources.map { resource ->
-            resource.resource.metadata.labels = resource.resource.metadata.labels.addIfNotNull("booberDeployId" to deployCommand.deployId)
+            resource.resource.metadata.labels =
+                resource.resource.metadata.labels.addIfNotNull("booberDeployId" to deployCommand.deployId)
             resource.resource.metadata.ownerReferences.find {
                 it.kind == "ApplicationDeployment"
             }?.let {
@@ -303,7 +317,12 @@ class DeployService(
             jacksonObjectMapper().convertValue<JsonNode>(resource.resource)
         }
 
-        val objects = openShiftCommandBuilder.orderObjects(jsonResources, context.spec.type, context.spec.namespace, mergeWithExistingResource)
+        val objects = openShiftCommandBuilder.orderObjects(
+            jsonResources,
+            context.spec.type,
+            context.spec.namespace,
+            mergeWithExistingResource
+        )
 
         val openShiftApplicationResponses: List<OpenShiftResponse> = objects.flatMap {
             openShiftCommandBuilder.createAndApplyObjects(namespace, it, mergeWithExistingResource)
@@ -315,8 +334,8 @@ class DeployService(
         }
 
         val deleteOldObjectResponses = openShiftCommandBuilder
-                .createOpenShiftDeleteCommands(name, namespace, deployCommand.deployId)
-                .map { openShiftClient.performOpenShiftCommand(namespace, it) }
+            .createOpenShiftDeleteCommands(name, namespace, deployCommand.deployId)
+            .map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
         return openShiftApplicationResponses.addIfNotNull(deleteOldObjectResponses)
     }

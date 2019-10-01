@@ -33,32 +33,32 @@ class DeployLogService(
     ): List<AuroraDeployResult> {
 
         return deployResult
-                .map { auroraDeployResult ->
-                    val result = filterDeployInformation(auroraDeployResult)
-                    val deployHistory = DeployHistoryEntry(
-                            command = result.command,
-                            deployer = deployer,
-                            time = now,
-                            deploymentSpec = result.auroraDeploymentSpecInternal.let {
-                                renderSpecAsJson(it, true)
-                            } ?: mapOf(),
-                            deployId = result.deployId,
-                            success = result.success,
-                            reason = result.reason ?: "",
-                            result = DeployHistoryEntryResult(result.openShiftResponses, result.tagResponse),
-                            projectExist = result.projectExist
+            .map { auroraDeployResult ->
+                val result = filterDeployInformation(auroraDeployResult)
+                val deployHistory = DeployHistoryEntry(
+                    command = result.command,
+                    deployer = deployer,
+                    time = now,
+                    deploymentSpec = result.auroraDeploymentSpecInternal.let {
+                        renderSpecAsJson(it, true)
+                    },
+                    deployId = result.deployId,
+                    success = result.success,
+                    reason = result.reason ?: "",
+                    result = DeployHistoryEntryResult(result.openShiftResponses, result.tagResponse),
+                    projectExist = result.projectExist
+                )
+                try {
+                    val storeResult =
+                        storeDeployHistory(deployHistory, result.auroraDeploymentSpecInternal.cluster)
+                    auroraDeployResult.copy(bitbucketStoreResult = storeResult)
+                } catch (e: Exception) {
+                    auroraDeployResult.copy(
+                        bitbucketStoreResult = e.localizedMessage,
+                        reason = auroraDeployResult.reason + " Failed to store deploy result."
                     )
-                    try {
-                        val storeResult =
-                                storeDeployHistory(deployHistory, result.auroraDeploymentSpecInternal!!.cluster)
-                        auroraDeployResult.copy(bitbucketStoreResult = storeResult)
-                    } catch (e: Exception) {
-                        auroraDeployResult.copy(
-                                bitbucketStoreResult = e.localizedMessage,
-                                reason = auroraDeployResult.reason + " Failed to store deploy result."
-                        )
-                    }
                 }
+            }
     }
 
     fun storeDeployHistory(deployHistoryEntry: DeployHistoryEntry, cluster: String): String? {
@@ -78,7 +78,7 @@ class DeployLogService(
     fun deployHistory(ref: AuroraConfigRef): List<JsonNode> {
         val files = bitbucketService.getFiles(project, repo, ref.name)
         return files.mapNotNull { bitbucketService.getFile(project, repo, "${ref.name}/$it") }
-                .map { mapper.readValue<JsonNode>(it) }
+            .map { mapper.readValue<JsonNode>(it) }
     }
 
     fun findDeployResultById(ref: AuroraConfigRef, deployId: String): JsonNode? {

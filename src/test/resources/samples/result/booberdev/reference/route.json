@@ -1,29 +1,30 @@
 {
-  "apiVersion" : "route.openshift.io/v1",
-  "kind" : "Route",
-  "metadata" : {
-    "labels" : {
-      "app" : "reference",
-      "updatedBy" : "hero",
-      "affiliation" : "aos",
-      "updateInBoober" : "true",
-
-      "name" : "reference"
+  "apiVersion": "route.openshift.io/v1",
+  "kind": "Route",
+  "metadata": {
+    "labels": {
+      "app": "reference",
+      "updatedBy": "hero",
+      "affiliation": "aos",
+      "updateInBoober": "true",
+      "name": "reference"
     },
-    "name" : "reference",
-    "namespace" : "aos-booberdev",
-    "ownerReferences" : [ {
-      "apiVersion" : "skatteetaten.no/v1",
-      "kind" : "ApplicationDeployment",
-      "name" : "reference",
-      "uid" : "123-123"
-    } ]
+    "name": "reference",
+    "namespace": "aos-booberdev",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "reference",
+        "uid": "123-123"
+      }
+    ]
   },
-  "spec" : {
-    "host" : "reference.ao.booberdev.utv.paas.skead.no",
-    "to" : {
-      "kind" : "Service",
-      "name" : "reference"
+  "spec": {
+    "host": "reference.ao.booberdev.utv.paas.skead.no",
+    "to": {
+      "kind": "Service",
+      "name": "reference"
     }
   }
 }

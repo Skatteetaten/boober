@@ -33,34 +33,39 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         val applicationPlatform: ApplicationPlatform = header.applicationPlatform
 
         return findRouteHandlers(cmd.applicationFiles) + setOf(
-                AuroraConfigFieldHandler("route", defaultValue = false, canBeSimplifiedConfig = true),
-                AuroraConfigFieldHandler("routeDefaults/host", defaultValue = "@name@-@affiliation@-@env@"),
-                AuroraConfigFieldHandler("routeDefaults/tls/enabled", defaultValue = false),
-                AuroraConfigFieldHandler(
-                        "routeDefaults/tls/insecurePolicy",
-                        defaultValue = InsecurePolicy.valueOf(applicationPlatform.insecurePolicy),
-                        validator = { it.oneOf(InsecurePolicy.values().map { v -> v.name }) }),
-                AuroraConfigFieldHandler(
-                        "routeDefaults/tls/termination",
-                        defaultValue = TlsTermination.edge,
-                        validator = { it.oneOf(TlsTermination.values().map { v -> v.name }) })
+            AuroraConfigFieldHandler("route", defaultValue = false, canBeSimplifiedConfig = true),
+            AuroraConfigFieldHandler("routeDefaults/host", defaultValue = "@name@-@affiliation@-@env@"),
+            AuroraConfigFieldHandler("routeDefaults/tls/enabled", defaultValue = false),
+            AuroraConfigFieldHandler(
+                "routeDefaults/tls/insecurePolicy",
+                defaultValue = InsecurePolicy.valueOf(applicationPlatform.insecurePolicy),
+                validator = { it.oneOf(InsecurePolicy.values().map { v -> v.name }) }),
+            AuroraConfigFieldHandler(
+                "routeDefaults/tls/termination",
+                defaultValue = TlsTermination.edge,
+                validator = { it.oneOf(TlsTermination.values().map { v -> v.name }) })
         ) +
-                findRouteAnnotationHandlers("routeDefaults", cmd.applicationFiles)
+            findRouteAnnotationHandlers("routeDefaults", cmd.applicationFiles)
     }
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         return getRoute(adc, cmd).map {
-            AuroraResource("${it.objectName}-route", generateRoute(
+            AuroraResource(
+                "${it.objectName}-route", generateRoute(
                     route = it,
                     routeNamespace = adc.namespace,
                     serviceName = adc.name,
                     routeSuffix = routeSuffix
-            ))
+                )
+            )
         }.toSet()
     }
 
-    fun getRoute(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): List<no.skatteetaten.aurora.boober.feature.Route> {
+    fun getRoute(
+        adc: AuroraDeploymentSpec,
+        cmd: AuroraContextCommand
+    ): List<no.skatteetaten.aurora.boober.feature.Route> {
 
         val route = "route"
         val simplified = adc.isSimplifiedConfig(route)
@@ -70,16 +75,16 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
 
                 val secure = if (adc["routeDefaults/tls/enabled"]) {
                     SecureRoute(
-                            adc["routeDefaults/tls/insecurePolicy"],
-                            adc["routeDefaults/tls/termination"]
+                        adc["routeDefaults/tls/insecurePolicy"],
+                        adc["routeDefaults/tls/termination"]
                     )
                 } else null
                 return listOf(
-                        Route(
-                                objectName = adc.name,
-                                host = adc["routeDefaults/host"],
-                                tls = secure
-                        )
+                    Route(
+                        objectName = adc.name,
+                        host = adc["routeDefaults/host"],
+                        tls = secure
+                    )
                 )
             }
             return listOf()
@@ -89,30 +94,31 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         return routes.map {
 
             val secure =
-                    if (cmd.applicationFiles.findSubKeys("$route/$it/tls").isNotEmpty() ||
-                            adc["routeDefaults/tls/enabled"]
-                    ) {
-                        SecureRoute(
-                                adc.getOrDefault(route, it, "tls/insecurePolicy"),
-                                adc.getOrDefault(route, it, "tls/termination")
-                        )
-                    } else null
+                if (cmd.applicationFiles.findSubKeys("$route/$it/tls").isNotEmpty() ||
+                    adc["routeDefaults/tls/enabled"]
+                ) {
+                    SecureRoute(
+                        adc.getOrDefault(route, it, "tls/insecurePolicy"),
+                        adc.getOrDefault(route, it, "tls/termination")
+                    )
+                } else null
 
             Route(
-                    objectName = adc.replacer.replace(it).ensureStartWith(adc.name, "-"),
-                    host = adc.getOrDefault(route, it, "host"),
-                    path = adc.getOrNull("$route/$it/path"),
-                    annotations = adc.getRouteAnnotations("$route/$it/annotations/"),
-                    tls = secure
+                objectName = adc.replacer.replace(it).ensureStartWith(adc.name, "-"),
+                host = adc.getOrDefault(route, it, "host"),
+                path = adc.getOrNull("$route/$it/path"),
+                annotations = adc.getRouteAnnotations("$route/$it/annotations/"),
+                tls = secure
             )
         }
     }
+
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         getRoute(adc, cmd).firstOrNull()?.let {
             val url = it.url(routeSuffix)
             val routeVars = mapOf(
-                    "ROUTE_NAME" to url,
-                    "ROUTE_URL" to "${it.protocol}$url"
+                "ROUTE_NAME" to url,
+                "ROUTE_URL" to "${it.protocol}$url"
             ).toEnvVars()
             resources.addEnvVar(routeVars)
         }
@@ -156,20 +162,23 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         return routeHandlers.flatMap { key ->
 
             listOf(
-                    AuroraConfigFieldHandler("$key/host"),
-                    AuroraConfigFieldHandler("$key/path",
-                            validator = { it?.startsWith("/", "Path must start with /") }),
-                    AuroraConfigFieldHandler("$key/tls/enabled"),
-                    AuroraConfigFieldHandler("$key/tls/insecurePolicy",
-                            validator = { it.oneOf(InsecurePolicy.values().map { v -> v.name }, required = false) }),
-                    AuroraConfigFieldHandler("$key/tls/termination",
-                            validator = { it.oneOf(TlsTermination.values().map { v -> v.name }, required = false) })
+                AuroraConfigFieldHandler("$key/host"),
+                AuroraConfigFieldHandler("$key/path",
+                    validator = { it?.startsWith("/", "Path must start with /") }),
+                AuroraConfigFieldHandler("$key/tls/enabled"),
+                AuroraConfigFieldHandler("$key/tls/insecurePolicy",
+                    validator = { it.oneOf(InsecurePolicy.values().map { v -> v.name }, required = false) }),
+                AuroraConfigFieldHandler("$key/tls/termination",
+                    validator = { it.oneOf(TlsTermination.values().map { v -> v.name }, required = false) })
 
             ) + findRouteAnnotationHandlers(key, applicationFiles)
         }.toSet()
     }
 
-    fun findRouteAnnotationHandlers(prefix: String, applicationFiles: List<AuroraConfigFile>): Set<AuroraConfigFieldHandler> {
+    fun findRouteAnnotationHandlers(
+        prefix: String,
+        applicationFiles: List<AuroraConfigFile>
+    ): Set<AuroraConfigFieldHandler> {
 
         return applicationFiles.findSubHandlers("$prefix/annotations", validatorFn = { key ->
             {
@@ -180,41 +189,45 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         }).toSet()
     }
 
-    override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraContextCommand): List<Exception> {
+    override fun validate(
+        adc: AuroraDeploymentSpec,
+        fullValidation: Boolean,
+        cmd: AuroraContextCommand
+    ): List<Exception> {
         val routes = getRoute(adc, cmd)
 
         val applicationDeploymentRef = cmd.applicationDeploymentRef
         val tlsErrors = routes.mapNotNull {
             if (it.tls != null && it.host.contains('.')) {
                 AuroraConfigException(
-                        "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} have a tls enabled route with a '.' in the host",
-                        errors = listOf(ConfigFieldErrorDetail.illegal(message = "Route name=${it.objectName} with tls uses '.' in host name"))
+                    "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} have a tls enabled route with a '.' in the host",
+                    errors = listOf(ConfigFieldErrorDetail.illegal(message = "Route name=${it.objectName} with tls uses '.' in host name"))
                 )
             } else {
                 null
             }
-        } ?: emptyList()
+        }
 
         val routeNames = routes.groupBy { it.objectName }
         val duplicateRoutes = routeNames.filter { it.value.size > 1 }.map { it.key }
 
         val duplicateRouteErrors = if (duplicateRoutes.isNotEmpty()) {
             AuroraConfigException(
-                    "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} have routes with duplicate names",
-                    errors = duplicateRoutes.map {
-                        ConfigFieldErrorDetail.illegal(message = "Route name=$it is duplicated")
-                    }
+                "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} have routes with duplicate names",
+                errors = duplicateRoutes.map {
+                    ConfigFieldErrorDetail.illegal(message = "Route name=$it is duplicated")
+                }
             )
         } else null
 
         val duplicatedHosts = routes.groupBy { it.target }.filter { it.value.size > 1 }
         val duplicateHostError = if (duplicatedHosts.isNotEmpty()) {
             AuroraConfigException(
-                    "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} have duplicated targets",
-                    errors = duplicatedHosts.map { route ->
-                        val routes = route.value.joinToString(",") { it.objectName }
-                        ConfigFieldErrorDetail.illegal(message = "target=${route.key} is duplicated in routes $routes")
-                    }
+                "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} have duplicated targets",
+                errors = duplicatedHosts.map { route ->
+                    val routes = route.value.joinToString(",") { it.objectName }
+                    ConfigFieldErrorDetail.illegal(message = "target=${route.key} is duplicated in routes $routes")
+                }
             )
         } else null
 

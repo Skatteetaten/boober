@@ -9,7 +9,8 @@ import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
 import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.mapper.findSubKeys
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.AuroraResource
@@ -20,9 +21,12 @@ import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.text.StringSubstitutor
 
-abstract class AbstractTemplateFeature() : Feature {
+abstract class AbstractTemplateFeature : Feature {
 
-    abstract fun templateHandlers(files: List<AuroraConfigFile>, auroraConfig: AuroraConfig): Set<AuroraConfigFieldHandler>
+    abstract fun templateHandlers(
+        files: List<AuroraConfigFile>,
+        auroraConfig: AuroraConfig
+    ): Set<AuroraConfigFieldHandler>
 
     abstract fun findTemplate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): JsonNode
 
@@ -37,9 +41,9 @@ abstract class AbstractTemplateFeature() : Feature {
             }.toSet()
         }
         return findParameters() + templateHandlers(cmd.applicationFiles, cmd.auroraConfig) + setOf(
-                header.versionHandler,
-                AuroraConfigFieldHandler("replicas"),
-                AuroraConfigFieldHandler("splunkIndex")
+            header.versionHandler,
+            AuroraConfigFieldHandler("replicas"),
+            AuroraConfigFieldHandler("splunkIndex")
         )
     }
 
@@ -57,7 +61,11 @@ abstract class AbstractTemplateFeature() : Feature {
         }
     }
 
-    override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraContextCommand): List<Exception> {
+    override fun validate(
+        adc: AuroraDeploymentSpec,
+        fullValidation: Boolean,
+        cmd: AuroraContextCommand
+    ): List<Exception> {
 
         val templateJson = try {
             findTemplate(adc, cmd)
@@ -89,10 +97,10 @@ abstract class AbstractTemplateFeature() : Feature {
 
     fun findParameters(adc: AuroraDeploymentSpec): Map<String, String> {
         val parameters = mapOf(
-                "SPLUNK_INDEX" to adc.splunkIndex,
-                "VERSION" to adc.getOrNull<String>("version"),
-                "REPLICAS" to adc.getOrNull<String>("replicas"),
-                "NAME" to adc.name
+            "SPLUNK_INDEX" to adc.splunkIndex,
+            "VERSION" to adc.getOrNull<String>("version"),
+            "REPLICAS" to adc.getOrNull<String>("replicas"),
+            "NAME" to adc.name
         ) + adc.getParameters()
         return parameters.filterNullValues()
     }
@@ -107,7 +115,8 @@ abstract class AbstractTemplateFeature() : Feature {
 
         val parameters = templateJson.at("/parameters")
 
-        val valueParameters: Map<String, String> = parameters.filter { it["value"] != null }.associate { it["name"].asText() to it["value"].asText() }
+        val valueParameters: Map<String, String> =
+            parameters.filter { it["value"] != null }.associate { it["name"].asText() to it["value"].asText() }
 
         val replacer: StringSubstitutor = StringSubstitutor(valueParameters + input, "\${", "}")
         val replacedText = replacer.replace(mapper.writeValueAsString(templateJson))

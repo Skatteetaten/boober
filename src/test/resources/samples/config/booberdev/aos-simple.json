@@ -3,7 +3,7 @@
   "config": {
     "FOO": "baaaar",
     "BAR": "",
-    "1.properties" : {
+    "1.properties": {
       "BAZ": "BAR"
     }
   },

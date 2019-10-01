@@ -1,36 +1,38 @@
 {
-  "apiVersion" : "route.openshift.io/v1",
-  "kind" : "Route",
-  "metadata" : {
-    "annotations" : {
-      "haproxy.router.openshift.io/timeout" : "30s"
+  "apiVersion": "route.openshift.io/v1",
+  "kind": "Route",
+  "metadata": {
+    "annotations": {
+      "haproxy.router.openshift.io/timeout": "30s"
     },
-    "labels" : {
-      "app" : "aos-simple",
-      "updatedBy" : "hero",
-      "affiliation" : "aos",
-      "updateInBoober" : "true",
-      "name" : "aos-simple"
+    "labels": {
+      "app": "aos-simple",
+      "updatedBy": "hero",
+      "affiliation": "aos",
+      "updateInBoober": "true",
+      "name": "aos-simple"
     },
-    "name" : "aos-simple",
-    "namespace" : "aos-booberdev",
-    "ownerReferences" : [ {
-      "apiVersion" : "skatteetaten.no/v1",
-      "kind" : "ApplicationDeployment",
-      "name" : "aos-simple",
-      "uid" : "123-123"
-    } ]
+    "name": "aos-simple",
+    "namespace": "aos-booberdev",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "aos-simple",
+        "uid": "123-123"
+      }
+    ]
   },
-  "spec" : {
-    "host" : "aos-simple-aos-booberdev.utv.paas.skead.no",
-    "path" : "/foo",
-    "tls" : {
-      "insecureEdgeTerminationPolicy" : "Allow",
-      "termination" : "edge"
+  "spec": {
+    "host": "aos-simple-aos-booberdev.utv.paas.skead.no",
+    "path": "/foo",
+    "tls": {
+      "insecureEdgeTerminationPolicy": "Allow",
+      "termination": "edge"
     },
-    "to" : {
-      "kind" : "Service",
-      "name" : "aos-simple"
+    "to": {
+      "kind": "Service",
+      "name": "aos-simple"
     }
   }
 }

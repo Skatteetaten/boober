@@ -8,5 +8,6 @@ object Instants {
     var determineNow: () -> Instant = { Instant.now() }
 
     @JvmStatic
-    val now: Instant get() = determineNow()
+    val now: Instant
+        get() = determineNow()
 }

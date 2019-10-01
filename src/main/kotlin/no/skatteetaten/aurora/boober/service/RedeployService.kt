@@ -40,9 +40,9 @@ class RedeployService(
                 val success = openShiftResponses.all { it.success }
                 val message = if (success) "succeeded." else "failed."
                 return RedeployResult(
-                        openShiftResponses = openShiftResponses,
-                        success = success,
-                        message = "$extraMessage $message"
+                    openShiftResponses = openShiftResponses,
+                    success = success,
+                    message = "$extraMessage $message"
                 )
             }
         }
@@ -69,7 +69,7 @@ class RedeployService(
         val wasPaused = oldDcResource?.spec?.replicas == 0
 
         val deploymentConfig = dcResource?.responseBody?.let { it.convert<DeploymentConfig>() }
-                ?: throw IllegalArgumentException("Missing DeploymentConfig")
+            ?: throw IllegalArgumentException("Missing DeploymentConfig")
 
         if (isResource?.command?.operationType == OperationType.CREATE) {
             return RedeployResult(message = "New application version found.")
@@ -96,8 +96,8 @@ class RedeployService(
         val namespace = imageStream.metadata.namespace
         val deploymentRequestResponse = performDeploymentRequest(namespace, deploymentConfig.metadata.name)
         return RedeployResult.fromOpenShiftResponses(
-                listOf(deploymentRequestResponse),
-                "$versionMessage Config changes deployment"
+            listOf(deploymentRequestResponse),
+            "$versionMessage Config changes deployment"
         )
     }
 
@@ -119,11 +119,11 @@ class RedeployService(
     fun generateDeploymentRequest(name: String): JsonNode {
 
         val deploymentRequest = mapOf(
-                "kind" to "DeploymentRequest",
-                "apiVersion" to "apps.openshift.io/v1",
-                "name" to name,
-                "latest" to true,
-                "force" to true
+            "kind" to "DeploymentRequest",
+            "apiVersion" to "apps.openshift.io/v1",
+            "name" to name,
+            "latest" to true,
+            "force" to true
         )
 
         return jacksonObjectMapper().convertValue(deploymentRequest)
