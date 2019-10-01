@@ -85,14 +85,13 @@ class AuroraRouteMapperV1(
                         handlers
                     )
                 )
-                val r = Route(
+                Route(
                     objectName = replacer.replace(it).ensureStartWith(name, "-"),
                     host = auroraDeploymentSpec.getOrDefault(route, it, "host"),
                     path = auroraDeploymentSpec.getOrNull("$route/$it/path"),
                     annotations = if (annotations.isEmpty()) null else annotations,
                     tls = secure
                 )
-                r
             }
         }
     }
