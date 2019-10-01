@@ -109,43 +109,55 @@ class AuroraIntegrationsMapperV1(
         if (spec.isSimplifiedAndEnabled("database")) {
             return listOf(defaultDb)
         }
-        return applicationFiles.findSubKeys("database").map { db ->
-            val key = "database/$db"
-            val isSimple = spec.fields.containsKey(key)
+        return applicationFiles.findSubKeys("database").mapNotNull { db -> findDatabase(db, spec, defaultDb) }
+    }
 
-            if (isSimple) {
-                val value: String = spec[key]
-                defaultDb.copy(
-                    name = db,
-                    id = if (value == "auto" || value.isBlank()) null else value
-                )
-            } else {
+    private fun findDatabase(
+        db: String,
+        spec: AuroraDeploymentSpec,
+        defaultDb: Database
+    ): Database? {
+        val key = "database/$db"
+        val isSimple = spec.fields.containsKey(key)
 
-                val roles = applicationFiles.associateSubKeys<DatabasePermission>("$key/roles", spec)
-                val exposeTo = applicationFiles.associateSubKeys<String>("$key/exposeTo", spec)
-                val flavor: DatabaseFlavor = spec.getOrNull("$key/flavor") ?: defaultDb.flavor
-                val instance = findInstance(spec, "$key/instance", flavor.defaultFallback)
-                val value: String = spec.getOrNull("$key/id") ?: ""
-
-                val instanceName = instance?.name ?: defaultDb.instance.name
-                val instanceFallback = instance?.fallback ?: defaultDb.instance.fallback
-                val instanceLabels = emptyMap<String, String>().addIfNotNull(defaultDb.instance.labels)
-                    .addIfNotNull(instance?.labels)
-
-                Database(
-                    name = spec.getOrNull("$key/name") ?: db,
-                    id = if (value == "auto" || value.isBlank()) null else value,
-                    flavor = flavor,
-                    generate = spec.getOrNull("$key/generate") ?: defaultDb.generate,
-                    instance = DatabaseInstance(
-                        name = instanceName,
-                        fallback = instanceFallback,
-                        labels = instanceLabels
-                    ),
-                    roles = defaultDb.roles + roles,
-                    exposeTo = defaultDb.exposeTo + exposeTo
-                )
+        return if (isSimple) {
+            val value: String = spec[key]
+            if (value == "false") {
+                return null
             }
+            defaultDb.copy(
+                name = db,
+                id = if (value == "auto" || value.isBlank()) null else value
+            )
+        } else {
+
+            if (!spec.get<Boolean>("$key/enabled")) {
+                return null
+            }
+            val roles = applicationFiles.associateSubKeys<DatabasePermission>("$key/roles", spec)
+            val exposeTo = applicationFiles.associateSubKeys<String>("$key/exposeTo", spec)
+            val flavor: DatabaseFlavor = spec.getOrNull("$key/flavor") ?: defaultDb.flavor
+            val instance = findInstance(spec, "$key/instance", flavor.defaultFallback)
+            val value: String = spec.getOrNull("$key/id") ?: ""
+
+            val instanceName = instance?.name ?: defaultDb.instance.name
+            val instanceFallback = instance?.fallback ?: defaultDb.instance.fallback
+            val instanceLabels = emptyMap<String, String>().addIfNotNull(defaultDb.instance.labels)
+                .addIfNotNull(instance?.labels)
+
+            Database(
+                name = spec.getOrNull("$key/name") ?: db,
+                id = if (value == "auto" || value.isBlank()) null else value,
+                flavor = flavor,
+                generate = spec.getOrNull("$key/generate") ?: defaultDb.generate,
+                instance = DatabaseInstance(
+                    name = instanceName,
+                    fallback = instanceFallback,
+                    labels = instanceLabels
+                ),
+                roles = defaultDb.roles + roles,
+                exposeTo = defaultDb.exposeTo + exposeTo
+            )
         }
     }
 
@@ -179,7 +191,9 @@ class AuroraIntegrationsMapperV1(
 
     private fun createExpandedDbHandlers(db: String): List<AuroraConfigFieldHandler> {
 
+        // TODO: add enabled here
         val mainHandlers = listOf(
+            AuroraConfigFieldHandler("$db/enabled", defaultValue = true),
             AuroraConfigFieldHandler("$db/generate"),
             AuroraConfigFieldHandler("$db/name"),
             AuroraConfigFieldHandler("$db/id"),
