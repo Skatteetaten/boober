@@ -140,7 +140,9 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             metadata {
                 name = route.objectName
                 namespace = routeNamespace
-                annotations = route.annotations?.mapKeys { kv -> kv.key.replace("|", "/") }
+                if (route.annotations.isNotEmpty()) {
+                    annotations = route.annotations.mapKeys { kv -> kv.key.replace("|", "/") }
+                }
             }
             spec {
                 to {
@@ -246,7 +248,7 @@ data class Route(
     val objectName: String,
     val host: String,
     val path: String? = null,
-    val annotations: Map<String, String>? = null,
+    val annotations: Map<String, String>,
     val tls: SecureRoute? = null
 ) {
     val target: String
