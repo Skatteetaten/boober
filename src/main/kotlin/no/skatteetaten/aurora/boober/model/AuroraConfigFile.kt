@@ -77,7 +77,11 @@ data class AuroraConfigFile(
                 null
             }
 
-            mapper?.readValue(contents, JsonNode::class.java) ?: TextNode(contents)
+            val fixedContent = if ((name.endsWith(".yaml") || name.endsWith(".yml")) && contents.trim() == "---") {
+                "{}"
+            } else contents
+
+            mapper?.readValue(fixedContent, JsonNode::class.java) ?: TextNode(contents)
         } catch (e: Exception) {
             val message = "AuroraConfigFile=$name is not valid errorMessage=${e.message}"
             throw AuroraConfigException(message, listOf(ConfigFieldErrorDetail(INVALID, message)))
