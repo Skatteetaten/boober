@@ -1,30 +1,6 @@
 package no.skatteetaten.aurora.boober.unit
 
-import assertk.assertThat
-import assertk.assertions.isEqualTo
-import assertk.assertions.isFailure
-import assertk.assertions.isInstanceOf
-import assertk.assertions.isNotNull
-import io.mockk.clearMocks
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
-import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
-import no.skatteetaten.aurora.boober.service.AuroraConfigRef
-import no.skatteetaten.aurora.boober.service.AuroraDeployResult
-import no.skatteetaten.aurora.boober.service.BitbucketService
-import no.skatteetaten.aurora.boober.service.DeployLogService
-import no.skatteetaten.aurora.boober.service.DeployLogServiceException
-import no.skatteetaten.aurora.boober.service.Deployer
 import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
-import no.skatteetaten.aurora.boober.utils.jsonMapper
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Test
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpStatus
-import org.springframework.web.client.HttpClientErrorException
-import java.nio.charset.Charset
 
 class DeployLogServiceTest : AbstractAuroraConfigTest() {
 

@@ -18,12 +18,11 @@ import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
-
 @Service
 class MountFeature(
-        val vaultProvider: VaultProvider,
-        @Value("\${openshift.cluster}") val cluster: String,
-        val openShiftClient: OpenShiftClient
+    val vaultProvider: VaultProvider,
+    @Value("\${openshift.cluster}") val cluster: String,
+    val openShiftClient: OpenShiftClient
 ) : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         val mountKeys = cmd.applicationFiles.findSubKeys("mounts")
@@ -99,7 +98,6 @@ class MountFeature(
 
         val mounts = getMounts(adc, cmd)
 
-
         if (mounts.isNotEmpty()) {
 
             val volumes = mounts.podVolumes(adc.name)
@@ -108,7 +106,6 @@ class MountFeature(
             val envVars = mounts.map {
                 "VOLUME_${it.volumeName}".toUpperCase() to it.path
             }.toMap().toEnvVars()
-
 
             resources.addVolumesAndMounts(envVars, volumes, volumeMounts)
         }
@@ -145,11 +142,10 @@ class MountFeature(
         }
     }
 
-
     private fun getMounts(auroraDeploymentSpec: AuroraDeploymentSpec, cmd: AuroraContextCommand): List<Mount> {
 
         // TODO: review to not use handlers
-        val mountHandlers = handlers(auroraDeploymentSpec, cmd);
+        val mountHandlers = handlers(auroraDeploymentSpec, cmd)
 
         if (mountHandlers.isEmpty()) {
             return listOf()
@@ -180,7 +176,6 @@ class MountFeature(
             )
         }
     }
-
 }
 
 fun List<Mount>.volumeMount(): List<VolumeMount> {
@@ -219,14 +214,14 @@ enum class MountType(val kind: String) {
 }
 
 data class Mount(
-        val path: String,
-        val type: MountType,
-        val mountName: String,
-        val volumeName: String,
-        val exist: Boolean,
-        val content: Map<String, String>? = null,
-        val secretVaultName: String? = null,
-        val targetContainer: String? = null
+    val path: String,
+    val type: MountType,
+    val mountName: String,
+    val volumeName: String,
+    val exist: Boolean,
+    val content: Map<String, String>? = null,
+    val secretVaultName: String? = null,
+    val targetContainer: String? = null
 ) {
     fun getNamespacedVolumeName(appName: String): String {
         val name = if (exist) {

@@ -1,20 +1,6 @@
 package no.skatteetaten.aurora.boober.unit
 
-import assertk.assertThat
-import assertk.assertions.isEqualTo
-import assertk.assertions.isFailure
-import assertk.assertions.isInstanceOf
-import assertk.assertions.isNotNull
-import assertk.assertions.message
-import assertk.assertions.messageContains
-import no.skatteetaten.aurora.boober.feature.DatabaseInstance
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.adr
 import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
 
 class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
 

@@ -32,9 +32,9 @@ data class ExistsResponse(
 @RestController
 @RequestMapping("/v1/applicationdeployment")
 class ApplicationDeploymentController(
-        val applicationDeploymentService: ApplicationDeploymentService,
-        val auroraDeploymentContextService: AuroraDeploymentContextService,
-        val auroraConfigService: AuroraConfigService
+    val applicationDeploymentService: ApplicationDeploymentService,
+    val auroraDeploymentContextService: AuroraDeploymentContextService,
+    val auroraConfigService: AuroraConfigService
 ) {
 
     @PostMapping("/delete")

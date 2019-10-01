@@ -21,19 +21,19 @@ import java.nio.charset.Charset
 @RestController
 @RequestMapping("/v1/auroradeployspec/{auroraConfigName}")
 class AuroraDeploymentSpecControllerV1(
-        val auroraDeploymentContextService: AuroraDeploymentContextService,
-        val auroraConfigService: AuroraConfigService,
-        val responder: AuroraDeploymentContextResponder
+    val auroraDeploymentContextService: AuroraDeploymentContextService,
+    val auroraConfigService: AuroraConfigService,
+    val responder: AuroraDeploymentContextResponder
 
 ) {
 
     // TODO: How much of the logic here should be in a seperate service?
     @GetMapping
     fun findAllDeploymentSpecs(
-            @PathVariable auroraConfigName: String,
-            @RequestParam aid: List<String>?,
-            @RequestParam adr: List<String>?,
-            @RequestParam includeDefaults: Boolean?
+        @PathVariable auroraConfigName: String,
+        @RequestParam aid: List<String>?,
+        @RequestParam adr: List<String>?,
+        @RequestParam includeDefaults: Boolean?
     ): Response {
 
         val adrList = listOf<String>().addIfNotNull(aid).addIfNotNull(adr)
@@ -50,9 +50,9 @@ class AuroraDeploymentSpecControllerV1(
 
     @GetMapping("/{environment}/")
     fun findAllDeploymentSpecsForEnvironment(
-            @PathVariable auroraConfigName: String,
-            @PathVariable environment: String,
-            @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
+        @PathVariable auroraConfigName: String,
+        @PathVariable environment: String,
+        @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
     ): Response {
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
@@ -65,11 +65,11 @@ class AuroraDeploymentSpecControllerV1(
 
     @GetMapping("/{environment}/{application}")
     fun get(
-            @PathVariable auroraConfigName: String,
-            @PathVariable environment: String,
-            @PathVariable application: String,
-            @RequestParam(name = "overrides", required = false) overrides: String?,
-            @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
+        @PathVariable auroraConfigName: String,
+        @PathVariable environment: String,
+        @PathVariable application: String,
+        @RequestParam(name = "overrides", required = false) overrides: String?,
+        @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
     ): Response {
 
         val overrideFiles: List<AuroraConfigFile> = extractOverrides(overrides)
@@ -97,11 +97,11 @@ class AuroraDeploymentSpecControllerV1(
 
     @GetMapping("/{environment}/{application}/formatted")
     fun getJsonForMapOfPointers(
-            @PathVariable auroraConfigName: String,
-            @PathVariable environment: String,
-            @PathVariable application: String,
-            @RequestParam(name = "overrides", required = false) overrides: String?,
-            @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
+        @PathVariable auroraConfigName: String,
+        @PathVariable environment: String,
+        @PathVariable application: String,
+        @RequestParam(name = "overrides", required = false) overrides: String?,
+        @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
     ): Response {
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
@@ -121,8 +121,6 @@ class AuroraDeploymentSpecControllerV1(
         val formatted = renderJsonForAuroraDeploymentSpecPointers(spec, includeDefaults)
         return responder.create(formatted)
     }
-
-
 }
 
 @Component

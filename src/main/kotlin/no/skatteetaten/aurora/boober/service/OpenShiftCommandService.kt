@@ -37,15 +37,14 @@ import org.springframework.stereotype.Service
 
 @Service
 class OpenShiftCommandService(
-        val openShiftClient: OpenShiftClient
+    val openShiftClient: OpenShiftClient
 ) {
 
-
     fun orderObjects(
-            objects: List<JsonNode>,
-            templateType: TemplateType,
-            namespace: String,
-            mergeWithExistingResource: Boolean
+        objects: List<JsonNode>,
+        templateType: TemplateType,
+        namespace: String,
+        mergeWithExistingResource: Boolean
     ): List<JsonNode> {
         // we cannot asume any order of the commands.
         val objectsWithoutISAndDc: List<JsonNode> =
@@ -81,8 +80,8 @@ class OpenShiftCommandService(
     }
 
     private fun importImageStreamCommand(
-            dcCommand: OpenshiftCommand?,
-            isCommand: OpenshiftCommand?
+        dcCommand: OpenshiftCommand?,
+        isCommand: OpenshiftCommand?
     ): JsonNode? {
 
         if (dcCommand == null || isCommand == null) {
@@ -103,12 +102,11 @@ class OpenShiftCommandService(
         return dc.spec.replicas == 0
     }
 
-
     fun createOpenShiftCommand(
-            namespace: String? = null,
-            newResource: HasMetadata,
-            mergeWithExistingResource: Boolean = true,
-            retryGetResourceOnFailure: Boolean = false
+        namespace: String? = null,
+        newResource: HasMetadata,
+        mergeWithExistingResource: Boolean = true,
+        retryGetResourceOnFailure: Boolean = false
     ): OpenshiftCommand {
         val resource: JsonNode = jacksonObjectMapper().convertValue(newResource)
         return createOpenShiftCommand(namespace, resource, mergeWithExistingResource, retryGetResourceOnFailure)
@@ -124,10 +122,10 @@ class OpenShiftCommandService(
      * many objects.
      */
     fun createOpenShiftCommand(
-            namespace: String? = null,
-            newResource: JsonNode,
-            mergeWithExistingResource: Boolean = true,
-            retryGetResourceOnFailure: Boolean = false
+        namespace: String? = null,
+        newResource: JsonNode,
+        mergeWithExistingResource: Boolean = true,
+        retryGetResourceOnFailure: Boolean = false
     ): OpenshiftCommand {
 
         val (resourceUrl, namedUrl) = if (namespace == null) {
@@ -167,10 +165,10 @@ class OpenShiftCommandService(
 
     @JvmOverloads
     fun createOpenShiftDeleteCommands(
-            name: String,
-            namespace: String,
-            deployId: String,
-            apiResources: List<String> = deletableResources
+        name: String,
+        namespace: String,
+        deployId: String,
+        apiResources: List<String> = deletableResources
     ): List<OpenshiftCommand> {
 
         val labelSelectors = listOf("app=$name", "booberDeployId", "booberDeployId!=$deployId")
@@ -206,9 +204,9 @@ class OpenShiftCommandService(
 
     // TODO: This could be retried
     fun createAndApplyObjects(
-            namespace: String,
-            it: JsonNode,
-            mergeWithExistingResource: Boolean
+        namespace: String,
+        it: JsonNode,
+        mergeWithExistingResource: Boolean
     ): List<OpenShiftResponse> {
         val command = createOpenShiftCommand(namespace, it, mergeWithExistingResource)
 

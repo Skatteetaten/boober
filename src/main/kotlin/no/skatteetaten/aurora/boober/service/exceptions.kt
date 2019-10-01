@@ -19,7 +19,7 @@ class UnauthorizedAccessException(message: String) : ServiceException(message)
 data class ContextErrors(val command: AuroraContextCommand, val errors: List<Throwable>)
 
 class MultiApplicationValidationException(
-        val errors: List<ContextErrors> = listOf()
+    val errors: List<ContextErrors> = listOf()
 ) : ServiceException("An error occurred for one or more applications") {
 
     fun toValidationErrors(): List<ApplicationError> {

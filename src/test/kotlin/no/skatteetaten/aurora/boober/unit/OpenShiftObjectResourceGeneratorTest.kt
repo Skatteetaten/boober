@@ -74,7 +74,6 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
         val cert = StsProvisioner.createStsCert(ByteArrayInputStream(loadByteResource("keystore.jks")), "ca", "")
         val stsResult = StsProvisioningResult("commonName", cert, Instant.EPOCH)
         every { stsProvisioner.generateCertificate(any(), any(), any()) } returns stsResult
-
     }
 
     private fun createDatabaseResult(databaseNames: String, env: String): SchemaProvisionResults {
@@ -108,11 +107,11 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
     }
 
     enum class ResourceCreationTestData(
-            val env: String,
-            val appName: String,
-            val dbName: String = appName,
-            val additionalFile: String? = null,
-            val overrides: List<AuroraConfigFile> = emptyList()
+        val env: String,
+        val appName: String,
+        val dbName: String = appName,
+        val additionalFile: String? = null,
+        val overrides: List<AuroraConfigFile> = emptyList()
     ) {
         BOOBERDEV_CONSOLE("booberdev", "console", "openshift-console-api"),
         MOUNTS_SIMPLE("mounts", "aos-simple"),
@@ -132,7 +131,6 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
         RELEASE_SIMPLE("release", "aos-simple"),
         SECRETMOUNT_SIMPLE("secretmount", "aos-simple"),
     }
-
 
     @ParameterizedTest
     @EnumSource(ResourceCreationTestData::class)

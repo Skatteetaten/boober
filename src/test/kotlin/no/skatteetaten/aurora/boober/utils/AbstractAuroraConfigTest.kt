@@ -191,6 +191,4 @@ abstract class AbstractAuroraConfigTest : ResourceLoader() {
         fn(content)
         return jsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(content)
     }
-
-
 }

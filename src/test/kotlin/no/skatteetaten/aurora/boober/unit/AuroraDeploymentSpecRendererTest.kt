@@ -1,14 +1,6 @@
 package no.skatteetaten.aurora.boober.unit
 
-import assertk.assertThat
-import assertk.assertions.isEqualTo
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
-import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
-import no.skatteetaten.aurora.boober.service.renderSpecAsJson
 import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
-import no.skatteetaten.aurora.boober.utils.jsonMapper
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
 
 class AuroraDeploymentSpecRendererTest : AbstractAuroraConfigTest() {
 

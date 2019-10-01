@@ -13,16 +13,16 @@ import no.skatteetaten.aurora.boober.service.Feature
 import org.springframework.stereotype.Service
 
 data class AuroraBuild(
-        val baseName: String,
-        val baseVersion: String,
-        val builderName: String,
-        val builderVersion: String,
-        val groupId: String,
-        val artifactId: String,
-        val version: String,
-        val outputKind: String,
-        val outputName: String,
-        val applicationPlatform: String
+    val baseName: String,
+    val baseVersion: String,
+    val builderName: String,
+    val builderVersion: String,
+    val groupId: String,
+    val artifactId: String,
+    val version: String,
+    val outputKind: String,
+    val outputName: String,
+    val applicationPlatform: String
 )
 
 @Service
@@ -63,7 +63,6 @@ class BuildFeature() : Feature {
                     }
                 }
             }
-
         }
     }
 

@@ -17,21 +17,20 @@ import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-
 data class AuroraDeployCommand(
-        val headerResources: Set<AuroraResource>,
-        val resources: Set<AuroraResource>,
-        val context: AuroraDeploymentContext,
-        val deployId: String,
-        val shouldDeploy: Boolean = true,
-        val user: User
+    val headerResources: Set<AuroraResource>,
+    val resources: Set<AuroraResource>,
+    val context: AuroraDeploymentContext,
+    val deployId: String,
+    val shouldDeploy: Boolean = true,
+    val user: User
 )
 
 data class AuroraContextCommand(
-        val auroraConfig: AuroraConfig,
-        val applicationDeploymentRef: ApplicationDeploymentRef,
-        val auroraConfigRef: AuroraConfigRef,
-        val overrides: List<AuroraConfigFile> = emptyList()
+    val auroraConfig: AuroraConfig,
+    val applicationDeploymentRef: ApplicationDeploymentRef,
+    val auroraConfigRef: AuroraConfigRef,
+    val overrides: List<AuroraConfigFile> = emptyList()
 ) {
 
     val applicationFiles: List<AuroraConfigFile> by lazy {
@@ -41,10 +40,8 @@ data class AuroraContextCommand(
     val applicationFile: AuroraConfigFile
         get() = applicationFiles.find { it.type == AuroraConfigFileType.APP && !it.override }!!
 
-
     val overrideFiles: Map<String, String>
         get() = applicationFiles.filter { it.override }.associate { it.name to it.contents }
-
 }
 
 fun AuroraDeploymentContext.validate(fullValidation: Boolean): Map<Feature, List<java.lang.Exception>> {
@@ -55,7 +52,6 @@ fun AuroraDeploymentContext.validate(fullValidation: Boolean): Map<Feature, List
             listOf(e)
         }
     }
-
 }
 
 fun AuroraDeploymentContext.createResources(): Pair<List<ContextErrors>, Set<AuroraResource>?> {
@@ -68,7 +64,7 @@ fun AuroraDeploymentContext.createResources(): Pair<List<ContextErrors>, Set<Aur
         }
     }
 
-    //There was some errors when generating so we gather then up and return them and no resources
+    // There was some errors when generating so we gather then up and return them and no resources
     val errors = eitherErrorsOrFeatures.mapNotNull { it.first }
     if (errors.isNotEmpty()) {
         return errors to null
@@ -76,7 +72,7 @@ fun AuroraDeploymentContext.createResources(): Pair<List<ContextErrors>, Set<Aur
 
     val featureResources = eitherErrorsOrFeatures.mapNotNull { it.second }.flatten().toSet()
 
-    //Mutation!
+    // Mutation!
     val modifyErrors = this.features.mapNotNull {
         try {
             it.key.modify(it.value, featureResources, this.cmd)
@@ -87,22 +83,20 @@ fun AuroraDeploymentContext.createResources(): Pair<List<ContextErrors>, Set<Aur
     }
 
     return modifyErrors to featureResources
-
 }
 
 typealias FeatureSpec = Map<Feature, AuroraDeploymentSpec>
 
 data class AuroraDeploymentContext(
-        val spec: AuroraDeploymentSpec,
-        val cmd: AuroraContextCommand,
-        val features: FeatureSpec
+    val spec: AuroraDeploymentSpec,
+    val cmd: AuroraContextCommand,
+    val features: FeatureSpec
 )
 
 data class AuroraDeploymentSpec(
-        val fields: Map<String, AuroraConfigField>,
-        val replacer: StringSubstitutor
+    val fields: Map<String, AuroraConfigField>,
+    val replacer: StringSubstitutor
 ) {
-
 
     fun getConfigEnv(configExtractors: List<AuroraConfigFieldHandler>): Map<String, String> {
         return configExtractors.filter { it.name.count { it == '/' } == 1 }.associate {
@@ -133,7 +127,6 @@ data class AuroraDeploymentSpec(
                     field to value
                 }
     }
-
 
     fun getKeyMappings(keyMappingsExtractor: AuroraConfigFieldHandler?): Map<String, String>? =
             keyMappingsExtractor?.let { getOrNull(it.name) }
@@ -179,10 +172,10 @@ data class AuroraDeploymentSpec(
     inline operator fun <reified T> get(name: String): T = fields[name]!!.value()
 
     inline fun <reified T> getOrDefault(
-            root: String,
-            index: String,
-            suffix: String,
-            defaultRoot: String = "${root}Defaults"
+        root: String,
+        index: String,
+        suffix: String,
+        defaultRoot: String = "${root}Defaults"
     ): T {
         return getOrNull("$root/$index/$suffix")
                 ?: get("$defaultRoot/$suffix")
@@ -203,11 +196,11 @@ data class AuroraDeploymentSpec(
         val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpec::class.java)
 
         fun create(
-                handlers: Set<AuroraConfigFieldHandler>,
-                files: List<AuroraConfigFile>,
-                applicationDeploymentRef: ApplicationDeploymentRef,
-                replacer: StringSubstitutor = StringSubstitutor(),
-                auroraConfigVersion: String
+            handlers: Set<AuroraConfigFieldHandler>,
+            files: List<AuroraConfigFile>,
+            applicationDeploymentRef: ApplicationDeploymentRef,
+            replacer: StringSubstitutor = StringSubstitutor(),
+            auroraConfigVersion: String
         ): AuroraDeploymentSpec {
 
             val mapper = jacksonObjectMapper()
@@ -276,8 +269,8 @@ data class AuroraDeploymentSpec(
     }
 
     fun present(
-            includeDefaults: Boolean = true,
-            transformer: (Map.Entry<String, AuroraConfigField>) -> Map<String, Any>
+        includeDefaults: Boolean = true,
+        transformer: (Map.Entry<String, AuroraConfigField>) -> Map<String, Any>
     ): Map<String, Any> {
 
         val excludePaths = this.fields.filter { isSimplifiedAndDisabled(it.key) }.map { "${it.key}/" }

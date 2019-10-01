@@ -1,19 +1,9 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
-import com.nhaarman.mockito_kotlin.any
-import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
-import no.skatteetaten.aurora.mockmvc.extensions.Path
 import no.skatteetaten.aurora.mockmvc.extensions.get
-import no.skatteetaten.aurora.mockmvc.extensions.mock.withContractResponse
-import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
-import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
-import org.apache.commons.text.StringSubstitutor
-import org.junit.jupiter.api.Test
-import org.mockito.BDDMockito.given
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.web.servlet.MockMvc
 
 // TODO: Fix
@@ -90,5 +80,4 @@ class AuroraDeploymentSpecControllerV1Test(@Autowired private val mockMvc: MockM
         }
     }
      */
-
 }

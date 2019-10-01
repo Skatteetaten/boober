@@ -46,21 +46,21 @@ class DeployControllerV1(private val deployService: DeployService, private val r
     }
 
     data class DeployResponse(
-            val deploymentSpec: Map<String, Any>?,
-            val deployId: String,
-            val openShiftResponses: List<OpenShiftResponse>,
-            val success: Boolean = true,
-            val reason: String? = null,
-            val tagResponse: TagResult? = null,
-            val projectExist: Boolean = false
+        val deploymentSpec: Map<String, Any>?,
+        val deployId: String,
+        val openShiftResponses: List<OpenShiftResponse>,
+        val success: Boolean = true,
+        val reason: String? = null,
+        val tagResponse: TagResult? = null,
+        val projectExist: Boolean = false
     )
 
     data class Deploy(
-            val version: String
+        val version: String
     )
 
     data class Environment(
-            val namespace: String
+        val namespace: String
     )
 }
 

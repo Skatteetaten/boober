@@ -1,21 +1,5 @@
 package no.skatteetaten.aurora.boober.unit
 
-import assertk.all
-import assertk.assertThat
-import assertk.assertions.isFailure
-import assertk.assertions.isInstanceOf
-import io.mockk.every
-import io.mockk.mockk
-import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
-import no.skatteetaten.aurora.boober.service.AuroraConfigRef
-import no.skatteetaten.aurora.boober.service.DeployService
-import no.skatteetaten.aurora.boober.service.UserDetailsProvider
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.springframework.security.core.authority.SimpleGrantedAuthority
-
 class DeployServiceProjectTerminatingTest {
     /* TODO: Fix
     val ENV_NAME = "booberdev"

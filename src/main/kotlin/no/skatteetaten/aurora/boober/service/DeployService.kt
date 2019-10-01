@@ -31,26 +31,26 @@ import java.util.UUID
 
 @Service
 class DeployService(
-        val auroraConfigService: AuroraConfigService,
-        val auroraDeploymentContextService: AuroraDeploymentContextService,
-        val openShiftCommandBuilder: OpenShiftCommandService,
-        val openShiftClient: OpenShiftClient,
-        val dockerService: DockerService,
-        val redeployService: RedeployService,
-        val userDetailsProvider: UserDetailsProvider,
-        val deployLogService: DeployLogService,
-        @Value("\${openshift.cluster}") val cluster: String,
-        @Value("\${integrations.docker.registry}") val dockerRegistry: String
+    val auroraConfigService: AuroraConfigService,
+    val auroraDeploymentContextService: AuroraDeploymentContextService,
+    val openShiftCommandBuilder: OpenShiftCommandService,
+    val openShiftClient: OpenShiftClient,
+    val dockerService: DockerService,
+    val redeployService: RedeployService,
+    val userDetailsProvider: UserDetailsProvider,
+    val deployLogService: DeployLogService,
+    @Value("\${openshift.cluster}") val cluster: String,
+    @Value("\${integrations.docker.registry}") val dockerRegistry: String
 ) {
 
     val logger: Logger = LoggerFactory.getLogger(DeployService::class.java)
 
     @JvmOverloads
     fun executeDeploy(
-            ref: AuroraConfigRef,
-            applicationDeploymentRefs: List<ApplicationDeploymentRef>,
-            overrides: List<AuroraConfigFile> = listOf(),
-            deploy: Boolean = true
+        ref: AuroraConfigRef,
+        applicationDeploymentRefs: List<ApplicationDeploymentRef>,
+        overrides: List<AuroraConfigFile> = listOf(),
+        deploy: Boolean = true
     ): List<AuroraDeployResult> {
 
         if (applicationDeploymentRefs.isEmpty()) {
@@ -159,7 +159,6 @@ class DeployService(
         }
     }
 
-
     fun prepareDeployEnvironment(namespace: String, resources: Set<AuroraResource>): AuroraEnvironmentResult {
 
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
@@ -192,7 +191,7 @@ class DeployService(
             "One or more http calls to OpenShift failed"
         } else "Namespace created successfully."
 
-        logger.info("Environment done. user='${authenticatedUser.fullName}' namespace=${namespace} success=$success reason=$message")
+        logger.info("Environment done. user='${authenticatedUser.fullName}' namespace=$namespace success=$success reason=$message")
 
         return AuroraEnvironmentResult(
                 openShiftResponses = environmentResponses,
@@ -202,8 +201,8 @@ class DeployService(
     }
 
     fun deployFromSpec(
-            cmd: AuroraDeployCommand,
-            env: AuroraEnvironmentResult
+        cmd: AuroraDeployCommand,
+        env: AuroraEnvironmentResult
     ): AuroraDeployResult {
         val namespaceCreated = !env.projectExist
         val context = cmd.context
@@ -285,9 +284,9 @@ class DeployService(
     }
 
     private fun applyOpenShiftApplicationObjects(
-            deployCommand: AuroraDeployCommand,
-            mergeWithExistingResource: Boolean,
-            ownerReferenceUid: String
+        deployCommand: AuroraDeployCommand,
+        mergeWithExistingResource: Boolean,
+        ownerReferenceUid: String
     ): List<OpenShiftResponse> {
 
         val context = deployCommand.context

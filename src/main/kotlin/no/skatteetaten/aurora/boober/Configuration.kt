@@ -92,13 +92,13 @@ class Configuration {
     @TargetService(ServiceTypes.SKAP)
     @ConditionalOnProperty("integrations.skap.url")
     fun skapRestTemplate(
-            restTemplateBuilder: RestTemplateBuilder,
-            @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
-            @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
-            @Value("\${spring.application.name}") applicationName: String,
-            @Value("\${integrations.skap.url}") skapUrl: String,
-            sharedSecretReader: SharedSecretReader,
-            clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
+        restTemplateBuilder: RestTemplateBuilder,
+        @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
+        @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
+        @Value("\${spring.application.name}") applicationName: String,
+        @Value("\${integrations.skap.url}") skapUrl: String,
+        sharedSecretReader: SharedSecretReader,
+        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
     ): RestTemplate {
 
         val clientIdHeaderName = "KlientID"
@@ -122,10 +122,10 @@ class Configuration {
     @Bean
     @TargetService(ServiceTypes.AURORA)
     fun auroraRestTemplate(
-            restTemplateBuilder: RestTemplateBuilder,
-            @Value("\${spring.application.name}") applicationName: String,
-            sharedSecretReader: SharedSecretReader,
-            clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
+        restTemplateBuilder: RestTemplateBuilder,
+        @Value("\${spring.application.name}") applicationName: String,
+        sharedSecretReader: SharedSecretReader,
+        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
     ): RestTemplate {
 
         val clientIdHeaderName = "KlientID"

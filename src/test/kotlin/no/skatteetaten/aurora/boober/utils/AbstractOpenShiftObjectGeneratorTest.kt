@@ -1,7 +1,5 @@
 package no.skatteetaten.aurora.boober.utils
 
-import assertk.assertThat
-import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.databind.JsonNode
 import io.mockk.clearAllMocks
 import io.mockk.mockk
@@ -35,5 +33,4 @@ open class AbstractOpenShiftObjectGeneratorTest : AbstractAuroraConfigTest() {
 
         return "$kind/$name"
     }
-
 }

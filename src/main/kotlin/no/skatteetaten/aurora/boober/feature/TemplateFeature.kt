@@ -27,9 +27,6 @@ class TemplateFeature(val openShiftClient: OpenShiftClient) : AbstractTemplateFe
         )
     }
 
-
-
-
     override fun findTemplate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): JsonNode {
         return openShiftClient.getTemplate(adc["template"])
     }

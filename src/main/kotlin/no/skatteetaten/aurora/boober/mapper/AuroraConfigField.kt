@@ -6,22 +6,16 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
-import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
-import no.skatteetaten.aurora.boober.utils.atNullable
-import no.skatteetaten.aurora.boober.utils.deepSet
 import org.apache.commons.text.StringSubstitutor
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class AuroraConfigField(
-        val sources: Set<AuroraConfigFieldSource>,
-        @JsonIgnore
-        val replacer: StringSubstitutor = StringSubstitutor()
+    val sources: Set<AuroraConfigFieldSource>,
+    @JsonIgnore
+    val replacer: StringSubstitutor = StringSubstitutor()
 ) {
 
     private val source: AuroraConfigFieldSource get() = sources.last()
@@ -69,8 +63,7 @@ data class AuroraConfigField(
 }
 
 data class AuroraConfigFieldSource(
-        val configFile: AuroraConfigFile,
-        val value: JsonNode,
-        val canBeSimplified: Boolean = false
+    val configFile: AuroraConfigFile,
+    val value: JsonNode,
+    val canBeSimplified: Boolean = false
 )
-

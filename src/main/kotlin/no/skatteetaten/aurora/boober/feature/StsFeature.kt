@@ -36,14 +36,12 @@ class StsFeature(val sts: StsProvisioner) : Feature {
             val secret = create(adc.name, result, adc.namespace)
             setOf(AuroraResource("${secret.metadata.name}-secret", secret))
         } ?: emptySet<AuroraResource>()
-
     }
 
-
     fun create(
-            appName: String,
-            stsProvisionResults: StsProvisioningResult,
-            secretNamespace: String
+        appName: String,
+        stsProvisionResults: StsProvisioningResult,
+        secretNamespace: String
     ): Secret {
 
         val secretName = "$appName-cert"
@@ -66,7 +64,6 @@ class StsFeature(val sts: StsProvisioner) : Feature {
                     "descriptor.properties" to StsSecretGenerator.createDescriptorFile(baseUrl, "ca", cert.storePassword, cert.keyPassword)
             ).mapValues { Base64.encodeBase64String(it.value) }
         }
-
     }
 
     fun findCertificate(adc: AuroraDeploymentSpec, name: String): String? {
@@ -83,7 +80,6 @@ class StsFeature(val sts: StsProvisioner) : Feature {
         val groupId: String = adc.getOrNull<String>("groupId") ?: ""
         return "$groupId.$name"
     }
-
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         if (adc["certificate"]) {
@@ -109,8 +105,6 @@ class StsFeature(val sts: StsProvisioner) : Feature {
             resources.addVolumesAndMounts(stsVars, listOf(volume), listOf(mount))
         }
     }
-
-
 }
 
 object StsSecretGenerator {
@@ -121,11 +115,11 @@ object StsSecretGenerator {
 
     @JvmStatic
     fun create(
-            appName: String,
-            stsProvisionResults: StsProvisioningResult,
-            labels: Map<String, String>,
-            ownerReference: OwnerReference,
-            namespace: String
+        appName: String,
+        stsProvisionResults: StsProvisioningResult,
+        labels: Map<String, String>,
+        ownerReference: OwnerReference,
+        namespace: String
     ): Secret {
 
         val secretName = "$appName-cert"
@@ -158,10 +152,10 @@ object StsSecretGenerator {
     }
 
     fun createDescriptorFile(
-            jksPath: String,
-            alias: String,
-            storePassword: String,
-            keyPassword: String
+        jksPath: String,
+        alias: String,
+        storePassword: String,
+        keyPassword: String
     ): ByteArray {
         return Properties().run {
             put("keystore-file", jksPath)
@@ -175,4 +169,3 @@ object StsSecretGenerator {
         }
     }
 }
-

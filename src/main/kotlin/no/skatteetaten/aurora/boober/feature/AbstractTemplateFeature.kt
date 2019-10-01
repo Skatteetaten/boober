@@ -20,14 +20,11 @@ import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.text.StringSubstitutor
 
-
 abstract class AbstractTemplateFeature() : Feature {
-
 
     abstract fun templateHandlers(files: List<AuroraConfigFile>, auroraConfig: AuroraConfig): Set<AuroraConfigFieldHandler>
 
     abstract fun findTemplate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): JsonNode
-
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
@@ -74,7 +71,6 @@ abstract class AbstractTemplateFeature() : Feature {
         }
 
         return emptyList()
-
     }
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
@@ -170,6 +166,5 @@ abstract class AbstractTemplateFeature() : Feature {
         private val VALUE_ATTRIBUTE = "value"
 
         private val PARAMETERS_ATTRIBUTE = "parameters"
-
     }
 }

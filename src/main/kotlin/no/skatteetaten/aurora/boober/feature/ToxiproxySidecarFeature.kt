@@ -42,7 +42,6 @@ class ToxiproxySidecarFeature() : Feature {
                     }
             ))
         } ?: emptySet()
-
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {

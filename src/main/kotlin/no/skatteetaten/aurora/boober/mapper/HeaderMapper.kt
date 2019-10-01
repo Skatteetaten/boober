@@ -13,22 +13,19 @@ import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.pattern
 import no.skatteetaten.aurora.boober.utils.startsWith
 
-val DeploymentConfig.allNonSideCarContainers:List<Container> get() =
-    this.spec.template.spec.containers.filter{ !it.name.endsWith("sidecar")}
+val DeploymentConfig.allNonSideCarContainers: List<Container> get() =
+    this.spec.template.spec.containers.filter { !it.name.endsWith("sidecar") }
 
 enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: Int, val insecurePolicy: String) {
     java("wingnut8", 1, "None"),
     web("wrench8", 1, "Redirect")
 }
 
-
 enum class TemplateType(val versionRequired: Boolean) {
     deploy(true), development(true), localTemplate(false), template(false)
 }
 
-
 val AuroraDeploymentSpec.applicationPlatform: ApplicationPlatform get() = this["applicationPlatform"]
-
 
 fun generateDeploymentRequest(name: String): JsonNode {
 
@@ -49,8 +46,8 @@ fun generateDeploymentRequest(name: String): JsonNode {
  * be invalid.
  */
 class HeaderMapper(
-        val applicationDeploymentRef: ApplicationDeploymentRef,
-        val applicationFiles: List<AuroraConfigFile>
+    val applicationDeploymentRef: ApplicationDeploymentRef,
+    val applicationFiles: List<AuroraConfigFile>
 ) {
 
     private val VALID_SCHEMA_VERSIONS = listOf("v1")
@@ -96,13 +93,12 @@ class HeaderMapper(
     )
 }
 
-
 data class Permissions(
-        val admin: Permission,
-        val view: Permission? = null
+    val admin: Permission,
+    val view: Permission? = null
 )
 
 data class Permission(
-        val groups: Set<String>?,
-        val users: Set<String> = emptySet()
+    val groups: Set<String>?,
+    val users: Set<String> = emptySet()
 )

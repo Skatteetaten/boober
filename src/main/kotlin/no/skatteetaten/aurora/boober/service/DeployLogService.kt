@@ -15,10 +15,10 @@ import org.springframework.web.client.HttpClientErrorException
 
 @Service
 class DeployLogService(
-        val bitbucketService: BitbucketService,
-        val mapper: ObjectMapper,
-        @Value("\${integrations.deployLog.git.project}") val project: String,
-        @Value("\${integrations.deployLog.git.repo}") val repo: String
+    val bitbucketService: BitbucketService,
+    val mapper: ObjectMapper,
+    @Value("\${integrations.deployLog.git.project}") val project: String,
+    @Value("\${integrations.deployLog.git.repo}") val repo: String
 ) {
 
     val logger: Logger = LoggerFactory.getLogger(DeployLogService::class.java)
@@ -28,8 +28,8 @@ class DeployLogService(
     private val FAILED_PREFIX = "FAILED"
 
     fun markRelease(
-            deployResult: List<AuroraDeployResult>,
-            deployer: Deployer
+        deployResult: List<AuroraDeployResult>,
+        deployer: Deployer
     ): List<AuroraDeployResult> {
 
         return deployResult

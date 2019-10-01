@@ -19,7 +19,6 @@ class WebsealFeature() : Feature {
         )
     }
 
-
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         adc.featureEnabled("webseal") { field ->
             val roles = adc.getDelimitedStringOrArrayAsSet("$field/roles", ",")

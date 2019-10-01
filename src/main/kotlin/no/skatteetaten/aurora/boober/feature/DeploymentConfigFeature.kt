@@ -28,7 +28,7 @@ fun Map<String, String>.toEnvVars(): List<EnvVar> = this
             EnvVarBuilder().withName(it.key).withValue(it.value).build()
         }
 
-val AuroraDeploymentSpec.pause:Boolean get() = this["pause"]
+val AuroraDeploymentSpec.pause: Boolean get() = this["pause"]
 
 @Service
 class DeploymentConfigFeature() : Feature {
@@ -62,7 +62,6 @@ class DeploymentConfigFeature() : Feature {
                 spec.releaseTo = adc.releaseTo
                 spec.deployTag = adc.dockerTag
                 spec.managementPath = adc.managementPath
-
             } else if (it.resource.kind == "DeploymentConfig") {
                 val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
 
@@ -102,7 +101,6 @@ class DeploymentConfigFeature() : Feature {
                 "APP_NAME" to adc.name,
                 "SPLUNK_INDEX" to adc.splunkIndex
         ).addIfNotNull(debugEnv).filterNullValues()
-
     }
 
     fun createDcLabels(adc: AuroraDeploymentSpec): Map<String, String> {

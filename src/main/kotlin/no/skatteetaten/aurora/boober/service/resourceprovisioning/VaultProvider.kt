@@ -4,18 +4,18 @@ import no.skatteetaten.aurora.boober.service.vault.VaultService
 import org.springframework.stereotype.Service
 
 data class VaultRequest(
-        val collectionName: String,
-        val name: String,
-        val keys: List<String> = emptyList(),
-        val keyMappings: Map<String, String>? = null
+    val collectionName: String,
+    val name: String,
+    val keys: List<String> = emptyList(),
+    val keyMappings: Map<String, String>? = null
 )
 
 typealias VaultData = Map<String, ByteArray>
 typealias VaultIndex = Map<String, VaultData>
 
 class VaultSecretEnvResult(
-        val name: String,
-        val secrets: VaultData
+    val name: String,
+    val secrets: VaultData
 )
 
 class VaultResults(val vaultIndex: VaultIndex) {
@@ -25,11 +25,9 @@ class VaultResults(val vaultIndex: VaultIndex) {
     }
 }
 
-
 // TODO: Why a vault provider and a vault service?
 @Service
 class VaultProvider(val vaultService: VaultService) {
-
 
     fun findVaultData(vaultRequests: List<VaultRequest>): VaultResults {
 

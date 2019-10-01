@@ -7,7 +7,6 @@ import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
 import io.fabric8.openshift.api.model.DeploymentConfig
-import kotlinx.coroutines.newFixedThreadPoolContext
 import no.skatteetaten.aurora.boober.feature.extractPlaceHolders
 import no.skatteetaten.aurora.boober.feature.name
 import no.skatteetaten.aurora.boober.feature.namespace
@@ -23,9 +22,9 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 data class AuroraResource(
-        val name: String,
-        val resource: HasMetadata,
-        val header: Boolean = false //these resources are only created once for each deploy){}
+    val name: String,
+    val resource: HasMetadata,
+    val header: Boolean = false // these resources are only created once for each deploy){}
 )
 
 fun Set<AuroraResource>.addEnvVar(envVars: List<EnvVar>) {
@@ -55,22 +54,20 @@ interface Feature {
     fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraContextCommand): List<Exception> = emptyList()
     fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> = emptySet()
     fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) = Unit
-
 }
-
 
 @Service
 class AuroraDeploymentContextService(
-        val featuers: List<Feature>,
-        @Value("\${boober.validationPoolSize:6}") val validationPoolSize: Int
+    val featuers: List<Feature>,
+    @Value("\${boober.validationPoolSize:6}") val validationPoolSize: Int
 ) {
 
     val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentContextService::class.java)
 
     fun expandDeploymentRefToApplicationRef(
-            auroraConfig: AuroraConfig,
-            adr: List<ApplicationDeploymentRef>,
-            ref: AuroraConfigRef
+        auroraConfig: AuroraConfig,
+        adr: List<ApplicationDeploymentRef>,
+        ref: AuroraConfigRef
     ): List<ApplicationRef> {
         return getAuroraDeploymentContexts(auroraConfig, adr, ref).map {
             ApplicationRef(it.spec.namespace, it.spec.name)
@@ -78,8 +75,8 @@ class AuroraDeploymentContextService(
     }
 
     fun createValidatedAuroraDeploymentContexts(
-            commands: List<AuroraContextCommand>,
-            resourceValidation: Boolean = true
+        commands: List<AuroraContextCommand>,
+        resourceValidation: Boolean = true
     ): List<AuroraDeploymentContext> {
 
         val result: List<Pair<AuroraDeploymentContext?, ContextErrors?>> = commands.map { cmd ->
@@ -106,7 +103,7 @@ class AuroraDeploymentContextService(
     }
 
     fun createAuroraDeploymentContext(
-            deployCommand: AuroraContextCommand
+        deployCommand: AuroraContextCommand
     ): AuroraDeploymentContext {
 
         val headerMapper = HeaderMapper(deployCommand.applicationDeploymentRef, deployCommand.applicationFiles)
@@ -126,7 +123,6 @@ class AuroraDeploymentContextService(
         ).validate(false)
 
         val activeFeatures = featuers.filter { it.enable(headerSpec) }
-
 
         val featureHandlers: Map<Feature, Set<AuroraConfigFieldHandler>> = activeFeatures.associateWith {
             it.handlers(headerSpec, deployCommand) + headerMapper.handlers
@@ -155,15 +151,13 @@ class AuroraDeploymentContextService(
             spec.copy(fields = fields)
         }
 
-
         return AuroraDeploymentContext(spec, cmd = deployCommand, features = featureAdc)
     }
 
-
     fun getAuroraDeploymentContexts(
-            auroraConfig: AuroraConfig,
-            applicationDeploymentRefs: List<ApplicationDeploymentRef>,
-            ref: AuroraConfigRef
+        auroraConfig: AuroraConfig,
+        applicationDeploymentRefs: List<ApplicationDeploymentRef>,
+        ref: AuroraConfigRef
     ): List<AuroraDeploymentContext> {
         return applicationDeploymentRefs.map {
             createAuroraDeploymentContext(AuroraContextCommand(auroraConfig, it, ref))

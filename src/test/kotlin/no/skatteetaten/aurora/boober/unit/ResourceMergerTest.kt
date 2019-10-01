@@ -1,23 +1,6 @@
 package no.skatteetaten.aurora.boober.unit
 
-import assertk.assertThat
-import assertk.assertions.isEqualTo
-import assertk.assertions.isNotNull
-import io.fabric8.kubernetes.api.model.OwnerReference
-import io.mockk.clearAllMocks
-import io.mockk.every
-import io.mockk.mockk
-import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.adr
-import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
-import no.skatteetaten.aurora.boober.service.UserDetailsProvider
-import no.skatteetaten.aurora.boober.service.openshift.mergeWithExistingResource
 import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
-import no.skatteetaten.aurora.boober.utils.jsonMapper
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
 
 class ResourceMergerTest : AbstractAuroraConfigTest() {
 

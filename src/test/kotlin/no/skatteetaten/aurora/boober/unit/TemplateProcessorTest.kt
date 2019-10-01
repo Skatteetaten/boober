@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.commons.text.StringSubstitutor
 import org.junit.jupiter.api.Test
 
-
 class TemplateProcessorTest {
 
     @Test

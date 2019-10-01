@@ -23,19 +23,19 @@ import org.springframework.stereotype.Service
 
 @Service
 class RedeployService(
-        val openShiftClient: OpenShiftClient
+    val openShiftClient: OpenShiftClient
 ) {
 
     data class RedeployResult @JvmOverloads constructor(
-            val openShiftResponses: List<OpenShiftResponse> = listOf(),
-            val success: Boolean = true,
-            val message: String? = null
+        val openShiftResponses: List<OpenShiftResponse> = listOf(),
+        val success: Boolean = true,
+        val message: String? = null
     ) {
 
         companion object {
             fun fromOpenShiftResponses(
-                    openShiftResponses: List<OpenShiftResponse>,
-                    extraMessage: String = ""
+                openShiftResponses: List<OpenShiftResponse>,
+                extraMessage: String = ""
             ): RedeployResult {
                 val success = openShiftResponses.all { it.success }
                 val message = if (success) "succeeded." else "failed."
@@ -49,8 +49,8 @@ class RedeployService(
     }
 
     fun triggerRedeploy(
-            openShiftResponses: List<OpenShiftResponse>,
-            type: TemplateType
+        openShiftResponses: List<OpenShiftResponse>,
+        type: TemplateType
     ): RedeployResult {
 
         if (type == TemplateType.development) {

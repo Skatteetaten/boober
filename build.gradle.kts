@@ -1,6 +1,5 @@
 import com.adarshr.gradle.testlogger.theme.ThemeType
 
-
 plugins {
     id("org.springframework.cloud.contract")
     id("org.jetbrains.kotlin.jvm") version "1.3.41"

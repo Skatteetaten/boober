@@ -18,28 +18,27 @@ import org.springframework.util.StopWatch
 import java.io.File
 
 class AuroraConfigWithOverrides(
-        var auroraConfig: AuroraConfig,
-        val overrideFiles: List<AuroraConfigFile> = listOf()
+    var auroraConfig: AuroraConfig,
+    val overrideFiles: List<AuroraConfigFile> = listOf()
 )
 
 data class AuroraConfigRef(
-        val name: String,
-        val refName: String,
-        val resolvedRef: String? = null
+    val name: String,
+    val refName: String,
+    val resolvedRef: String? = null
 )
 
 @Service
 class AuroraConfigService(
-        @TargetDomain(AURORA_CONFIG) val gitService: GitService,
-        val bitbucketProjectService: BitbucketService,
-        val auroraDeploymentContextService: AuroraDeploymentContextService,
-        @Value("\${openshift.cluster}") val cluster: String,
-        @Value("\${integrations.aurora.config.git.project}") val project: String
+    @TargetDomain(AURORA_CONFIG) val gitService: GitService,
+    val bitbucketProjectService: BitbucketService,
+    val auroraDeploymentContextService: AuroraDeploymentContextService,
+    @Value("\${openshift.cluster}") val cluster: String,
+    @Value("\${integrations.aurora.config.git.project}") val project: String
 ) {
 
     val logger: Logger = getLogger(AuroraConfigService::class.java)
     val mapper = jacksonObjectMapper()
-
 
     fun findAllAuroraConfigNames(): List<String> {
 
@@ -53,8 +52,8 @@ class AuroraConfigService(
     }
 
     fun findAuroraConfigFilesForApplicationDeployment(
-            ref: AuroraConfigRef,
-            adr: ApplicationDeploymentRef
+        ref: AuroraConfigRef,
+        adr: ApplicationDeploymentRef
     ): List<AuroraConfigFile> {
         return findAuroraConfig(ref).getFilesForApplication(adr)
     }
@@ -80,10 +79,10 @@ class AuroraConfigService(
 
     @JvmOverloads
     fun updateAuroraConfigFile(
-            ref: AuroraConfigRef,
-            fileName: String,
-            contents: String,
-            previousVersion: String? = null
+        ref: AuroraConfigRef,
+        fileName: String,
+        contents: String,
+        previousVersion: String? = null
     ): AuroraConfig {
 
         val oldAuroraConfig = findAuroraConfig(ref)
@@ -93,10 +92,10 @@ class AuroraConfigService(
     }
 
     fun patchAuroraConfigFile(
-            ref: AuroraConfigRef,
-            filename: String,
-            jsonPatchOp: String,
-            previousVersion: String? = null
+        ref: AuroraConfigRef,
+        filename: String,
+        jsonPatchOp: String,
+        previousVersion: String? = null
     ): AuroraConfig {
 
         val auroraConfig = findAuroraConfig(ref)
@@ -164,12 +163,11 @@ class AuroraConfigService(
         return auroraConfig
     }
 
-
     fun validateAuroraConfig(
-            auroraConfig: AuroraConfig,
-            overrideFiles: List<AuroraConfigFile> = listOf(),
-            resourceValidation: Boolean = true,
-            auroraConfigRef: AuroraConfigRef
+        auroraConfig: AuroraConfig,
+        overrideFiles: List<AuroraConfigFile> = listOf(),
+        resourceValidation: Boolean = true,
+        auroraConfigRef: AuroraConfigRef
     ) {
         val commands = auroraConfig.getApplicationDeploymentRefs().map {
             AuroraContextCommand(auroraConfig, it, auroraConfigRef, overrideFiles)

@@ -9,7 +9,6 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.service.OpenShiftException
-import no.skatteetaten.aurora.boober.service.ServiceException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient.Companion.generateUrl
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
@@ -28,11 +27,11 @@ import java.lang.IllegalArgumentException
 enum class OperationType { GET, CREATE, UPDATE, DELETE, NOOP }
 
 data class OpenshiftCommand @JvmOverloads constructor(
-        val operationType: OperationType,
-        val url: String,
-        val payload: JsonNode = NullNode.getInstance(),
-        val previous: JsonNode? = null,
-        val generated: JsonNode? = null
+    val operationType: OperationType,
+    val url: String,
+    val payload: JsonNode = NullNode.getInstance(),
+    val previous: JsonNode? = null,
+    val generated: JsonNode? = null
 ) {
     fun isType(operationType: OperationType, kind: String): Boolean {
 
@@ -43,11 +42,11 @@ data class OpenshiftCommand @JvmOverloads constructor(
 }
 
 data class OpenShiftResponse @JvmOverloads constructor(
-        val command: OpenshiftCommand,
-        val responseBody: JsonNode? = null,
-        val success: Boolean = true,
-        val exception: String? = null,
-        val httpErrorCode: Int? = null
+    val command: OpenshiftCommand,
+    val responseBody: JsonNode? = null,
+    val success: Boolean = true,
+    val exception: String? = null,
+    val httpErrorCode: Int? = null
 ) {
 
     companion object {
@@ -105,9 +104,9 @@ data class OpenShiftGroups(val groupUsers: Map<String, List<String>>) {
 
 @Service
 class OpenShiftClient(
-        @ClientType(API_USER) val userClient: OpenShiftResourceClient,
-        @ClientType(SERVICE_ACCOUNT) val serviceAccountClient: OpenShiftResourceClient,
-        val mapper: ObjectMapper
+    @ClientType(API_USER) val userClient: OpenShiftResourceClient,
+    @ClientType(SERVICE_ACCOUNT) val serviceAccountClient: OpenShiftResourceClient,
+    val mapper: ObjectMapper
 ) {
 
     val logger: Logger = LoggerFactory.getLogger(OpenShiftClient::class.java)
@@ -147,7 +146,6 @@ class OpenShiftClient(
         val url = generateUrl(kind = "template", namespace = "openshift", name = template)
         return serviceAccountClient.get(url)?.body
                 ?: throw IllegalArgumentException("Could not find template for url=$url")
-
     }
 
     @Cacheable("groups")

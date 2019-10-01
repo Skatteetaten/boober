@@ -39,8 +39,7 @@ val AuroraDeploymentSpec.dockerImagePath: String get() = "$dockerGroup/${this.ar
 val AuroraDeploymentSpec.version: String get() = this["version"]
 val AuroraDeploymentSpec.dockerTag: String get() = releaseTo ?: version
 
-
-//transform to resource right away?
+// transform to resource right away?
 fun AuroraDeploymentSpec.probe(name: String): Probe? {
     val adc = this
     return this.featureEnabled(name) { field ->
@@ -76,7 +75,6 @@ fun AuroraDeploymentSpec.extractPlaceHolders(): Map<String, String> {
     return placeholders
 }
 
-
 val AuroraDeploymentSpec.versionHandler: AuroraConfigFieldHandler
     get() =
         AuroraConfigFieldHandler("version", validator = {
@@ -109,7 +107,8 @@ val AuroraDeploymentSpec.managementPath
     }
 
 abstract class AbstractDeployFeature(
-        @Value("\${integrations.docker.registry}") val dockerRegistry: String) : Feature {
+    @Value("\${integrations.docker.registry}") val dockerRegistry: String
+) : Feature {
 
     abstract fun createContainers(adc: AuroraDeploymentSpec): List<Container>
 
@@ -145,8 +144,7 @@ abstract class AbstractDeployFeature(
             AuroraConfigFieldHandler("liveness/timeout", defaultValue = 1)
     )
 
-
-    //this is java
+    // this is java
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         val container = createContainers(adc)
@@ -154,7 +152,6 @@ abstract class AbstractDeployFeature(
                 AuroraResource("${adc.name}-dc", create(adc, container)),
                 AuroraResource("${adc.name}-service", createService(adc)),
                 AuroraResource("${adc.name}-is", createImageStream(adc, dockerRegistry))
-
 
         )
     }
@@ -169,7 +166,6 @@ abstract class AbstractDeployFeature(
                 ad.spec.applicationId = id
             }
         }
-
     }
 
     fun createService(adc: AuroraDeploymentSpec): Service {
@@ -265,10 +261,9 @@ abstract class AbstractDeployFeature(
         }
     }
 
-
     fun create(
-            adc: AuroraDeploymentSpec,
-            container: List<Container>
+        adc: AuroraDeploymentSpec,
+        container: List<Container>
     ): DeploymentConfig {
 
         return newDeploymentConfig {
@@ -332,8 +327,8 @@ abstract class AbstractDeployFeature(
 }
 
 data class HttpEndpoint(
-        val path: String,
-        val port: Int?
+    val path: String,
+    val port: Int?
 )
 
 fun auroraContainer(block: Container.() -> Unit = {}): Container {

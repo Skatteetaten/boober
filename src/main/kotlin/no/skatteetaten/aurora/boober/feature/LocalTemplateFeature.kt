@@ -30,5 +30,4 @@ class LocalTemplateFeature() : AbstractTemplateFeature() {
         }
         return templateFile ?: throw IllegalArgumentException("templateFile is required")
     }
-
 }

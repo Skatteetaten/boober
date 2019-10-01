@@ -27,9 +27,6 @@ class RedeployServiceTest {
     val valaultImageHash = "123"
     val emptyJsonNode = NullNode.getInstance()
 
-
-
-
     val imageStream = imageStream()
     val deploymentConfig = deploymentConfig()
 

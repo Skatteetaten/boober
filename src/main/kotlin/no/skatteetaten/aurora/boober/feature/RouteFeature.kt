@@ -15,7 +15,6 @@ import no.skatteetaten.aurora.boober.mapper.applicationPlatform
 import no.skatteetaten.aurora.boober.mapper.findSubHandlers
 import no.skatteetaten.aurora.boober.mapper.findSubKeys
 import no.skatteetaten.aurora.boober.mapper.findSubKeysExpanded
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.ConfigFieldErrorDetail
 import no.skatteetaten.aurora.boober.service.AuroraResource
@@ -47,9 +46,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                         validator = { it.oneOf(TlsTermination.values().map { v -> v.name }) })
         ) +
                 findRouteAnnotationHandlers("routeDefaults", cmd.applicationFiles)
-
     }
-
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
@@ -122,10 +119,10 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     }
 
     fun generateRoute(
-            route: no.skatteetaten.aurora.boober.feature.Route,
-            routeNamespace: String,
-            serviceName: String,
-            routeSuffix: String
+        route: no.skatteetaten.aurora.boober.feature.Route,
+        routeNamespace: String,
+        serviceName: String,
+        routeSuffix: String
     ): Route {
         return newRoute {
             metadata {
@@ -144,7 +141,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                         termination = it.termination.name.toLowerCase()
                     }
                 }
-                host = "${route.host}${routeSuffix}"
+                host = "${route.host}$routeSuffix"
                 route.path?.let {
                     path = it
                 }
@@ -186,7 +183,6 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraContextCommand): List<Exception> {
         val routes = getRoute(adc, cmd)
 
-
         val applicationDeploymentRef = cmd.applicationDeploymentRef
         val tlsErrors = routes.mapNotNull {
             if (it.tls != null && it.host.contains('.')) {
@@ -227,11 +223,11 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
 }
 
 data class Route(
-        val objectName: String,
-        val host: String,
-        val path: String? = null,
-        val annotations: Map<String, String>? = null,
-        val tls: SecureRoute? = null
+    val objectName: String,
+    val host: String,
+    val path: String? = null,
+    val annotations: Map<String, String>? = null,
+    val tls: SecureRoute? = null
 ) {
     val target: String
         get(): String = if (path != null) "$host$path" else host
@@ -242,7 +238,6 @@ data class Route(
     fun url(urlSuffix: String) = "$host$urlSuffix".let { if (path != null) "$it${path.ensureStartWith("/")}" else it }
 }
 
-
 enum class InsecurePolicy {
     Redirect, None, Allow
 }
@@ -252,6 +247,6 @@ enum class TlsTermination {
 }
 
 data class SecureRoute(
-        val insecurePolicy: InsecurePolicy,
-        val termination: TlsTermination
+    val insecurePolicy: InsecurePolicy,
+    val termination: TlsTermination
 )

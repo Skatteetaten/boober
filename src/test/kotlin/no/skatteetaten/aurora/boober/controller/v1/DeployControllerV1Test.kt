@@ -22,7 +22,6 @@ import org.springframework.test.web.servlet.MockMvc
 @WebMvcTest(controllers = [DeployControllerV1::class], secure = false)
 class DeployControllerV1Test(@Autowired private val mockMvc: MockMvc) {
 
-
     @MockBean
     private lateinit var deployService: DeployService
 
@@ -45,5 +44,4 @@ class DeployControllerV1Test(@Autowired private val mockMvc: MockMvc) {
                 .responseJsonPath("$").equalsObject(response)
         }
     }
-
 }

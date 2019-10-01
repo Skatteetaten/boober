@@ -1,16 +1,6 @@
 package no.skatteetaten.aurora.boober.unit
 
-import assertk.assertThat
-import assertk.assertions.isEqualTo
-import com.fasterxml.jackson.module.kotlin.convertValue
-import io.fabric8.kubernetes.api.model.OwnerReference
-import io.fabric8.kubernetes.api.model.Secret
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.adr
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultSecretEnvResult
 import no.skatteetaten.aurora.boober.utils.AbstractOpenShiftObjectGeneratorTest
-import no.skatteetaten.aurora.boober.utils.base64Decode
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
 
 class OpenShiftObjectGeneratorMountTest : AbstractOpenShiftObjectGeneratorTest() {
 

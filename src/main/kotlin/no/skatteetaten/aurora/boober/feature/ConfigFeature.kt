@@ -17,8 +17,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class ConfigFeature(
-        val vaultProvider: VaultProvider,
-        @Value("\${openshift.cluster}") val cluster: String
+    val vaultProvider: VaultProvider,
+    @Value("\${openshift.cluster}") val cluster: String
 ) : Feature {
 
     fun secretVaultKeyMappingHandlers(cmd: AuroraContextCommand) = cmd.applicationFiles.find {
@@ -71,7 +71,6 @@ class ConfigFeature(
                         AuroraDeploymentSpecValidationException("Referenced Vault $it in Vault Collection $vaultCollectionName does not exist")
                     } else null
                 }
-
     }
 
     fun validateSecretNames(secrets: List<AuroraSecret>): List<AuroraDeploymentSpecValidationException> {
@@ -107,8 +106,8 @@ class ConfigFeature(
     }
 
     private fun validateSecretVaultKey(
-            secret: AuroraSecret,
-            vaultCollection: String
+        secret: AuroraSecret,
+        vaultCollection: String
     ): AuroraDeploymentSpecValidationException? {
         val vaultName = secret.secretVaultName
         val keys = secret.secretVaultKeys.takeIfNotEmpty() ?: return null
@@ -135,7 +134,7 @@ class ConfigFeature(
             )
             null
         } catch (e: Exception) {
-            AuroraDeploymentSpecValidationException("File with name=${secret.file} is not present in vault=${secret.secretVaultName} in collection=${vaultCollectionName}")
+            AuroraDeploymentSpecValidationException("File with name=${secret.file} is not present in vault=${secret.secretVaultName} in collection=$vaultCollectionName")
         }
     }
 
@@ -181,7 +180,6 @@ class ConfigFeature(
 
         return secrets.addIfNotNull(configMap).toSet()
     }
-
 
     private fun handleSecretEnv(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): List<VaultSecretEnvResult> {
         val secrets = getSecretVaults(adc, cmd)
@@ -325,10 +323,10 @@ class ConfigFeature(
 }
 
 data class AuroraSecret(
-        val secretVaultName: String,
-        val secretVaultKeys: List<String>,
-        val keyMappings: Map<String, String>?,
-        val file: String,
-        val name: String
+    val secretVaultName: String,
+    val secretVaultKeys: List<String>,
+    val keyMappings: Map<String, String>?,
+    val file: String,
+    val name: String
 
 )

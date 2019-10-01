@@ -32,8 +32,8 @@ import java.util.*
 
 @Service
 class DatabaseFeature(
-        val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
-        @Value("\${openshift.cluster}") val cluster: String
+    val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
+    @Value("\${openshift.cluster}") val cluster: String
 ) : Feature {
     val databaseDefaultsKey = "databaseDefaults"
 
@@ -53,7 +53,7 @@ class DatabaseFeature(
             return emptyList()
         }
 
-        //TODO: here we should probably validate if generate is false aswell?
+        // TODO: here we should probably validate if generate is false aswell?
         return databases.filter { it.id != null }
                 .map { SchemaIdRequest(it.id!!, it.createSchemaDetails(adc.affiliation)) }
                 .mapNotNull {
@@ -68,7 +68,7 @@ class DatabaseFeature(
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
-        //can we just create schemaRequest manually here?
+        // can we just create schemaRequest manually here?
         val databases = findDatabases(adc, cmd)
 
         if (databases.isEmpty()) return emptySet()
@@ -83,7 +83,6 @@ class DatabaseFeature(
             AuroraResource("${it.metadata.name}-secret", it)
         }.toSet()
     }
-
 
     fun Database.createDatabaseVolumesAndMounts(appName: String): Pair<Volume, VolumeMount> {
         val mountName = "${this.name}-db".toLowerCase()
@@ -103,7 +102,6 @@ class DatabaseFeature(
                 }
         return volume to mount
     }
-
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         val databases = findDatabases(adc, cmd)
@@ -205,10 +203,10 @@ class DatabaseFeature(
     }
 
     private fun findInstance(
-            adc: AuroraDeploymentSpec,
-            cmd: AuroraContextCommand,
-            key: String,
-            defaultFallback: Boolean
+        adc: AuroraDeploymentSpec,
+        cmd: AuroraContextCommand,
+        key: String,
+        defaultFallback: Boolean
     ): DatabaseInstance? {
 
         if (!adc.hasSubKeys(key)) {
@@ -305,9 +303,9 @@ class DatabaseFeature(
     }
 
     private fun exposeToValidator(
-            node: JsonNode?,
-            validRoles: Set<String>,
-            exposeTo: String
+        node: JsonNode?,
+        validRoles: Set<String>,
+        exposeTo: String
     ): Exception? {
         val role = node?.textValue() ?: ""
         return if (validRoles.contains(role)) {
@@ -320,7 +318,6 @@ class DatabaseFeature(
         }
     }
 }
-
 
 enum class DatabaseFlavor(val engine: DatabaseEngine, val managed: Boolean, val defaultFallback: Boolean) {
     ORACLE_MANAGED(
@@ -336,7 +333,7 @@ enum class DatabaseFlavor(val engine: DatabaseEngine, val managed: Boolean, val 
 }
 
 enum class DatabasePermission(
-        val permissionString: String
+    val permissionString: String
 ) {
     READ("r"),
     WRITE("rw"),
@@ -344,24 +341,23 @@ enum class DatabasePermission(
 }
 
 data class Database(
-        val name: String,
-        val id: String? = null,
-        val flavor: DatabaseFlavor,
-        val generate: Boolean,
-        val exposeTo: Map<String, String> = emptyMap(),
-        val roles: Map<String, DatabasePermission> = emptyMap(),
-        val instance: DatabaseInstance
+    val name: String,
+    val id: String? = null,
+    val flavor: DatabaseFlavor,
+    val generate: Boolean,
+    val exposeTo: Map<String, String> = emptyMap(),
+    val roles: Map<String, DatabasePermission> = emptyMap(),
+    val instance: DatabaseInstance
 ) {
     val spec: String
         get(): String = (id?.let { "$name:$id" } ?: name).toLowerCase()
 }
 
 data class DatabaseInstance(
-        val name: String? = null,
-        val fallback: Boolean = false,
-        val labels: Map<String, String> = emptyMap()
+    val name: String? = null,
+    val fallback: Boolean = false,
+    val labels: Map<String, String> = emptyMap()
 )
-
 
 fun Database.createSchemaDetails(affiliation: String): SchemaRequestDetails {
 
@@ -391,7 +387,6 @@ fun Database.createDbEnv(envName: String): List<Pair<String, String>> {
             "${envName}_PROPERTIES" to "$path/db.properties"
     )
 }
-
 
 object DbhSecretGenerator {
 
@@ -433,9 +428,9 @@ object DbhSecretGenerator {
     }
 
     fun createDbhSecret(
-            schemaProvisionResult: SchemaProvisionResult,
-            secretName: String,
-            secretNamespace: String
+        schemaProvisionResult: SchemaProvisionResult,
+        secretName: String,
+        secretNamespace: String
     ): Secret {
         val connectionProperties = createConnectionProperties(schemaProvisionResult.dbhSchema)
         val infoFile = createInfoFile(schemaProvisionResult.dbhSchema)
@@ -456,5 +451,3 @@ object DbhSecretGenerator {
         }
     }
 }
-
-

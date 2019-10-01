@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service
 @Service
 class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature {
 
-    //all handlers are in  header
+    // all handlers are in  header
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return emptySet()
     }

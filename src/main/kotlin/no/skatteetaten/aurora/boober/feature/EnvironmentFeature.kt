@@ -25,8 +25,8 @@ val AuroraDeploymentSpec.envTTL: Duration? get() = this.getOrNull<String>("env/t
 
 @Service
 class EnvironmentFeature(
-        val openShiftClient: OpenShiftClient,
-        val userDetailsProvider: UserDetailsProvider
+    val openShiftClient: OpenShiftClient,
+    val userDetailsProvider: UserDetailsProvider
 ) : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf()
@@ -64,7 +64,6 @@ class EnvironmentFeature(
                 name = adc.namespace
             }
         }
-
     }
 
     fun extractPermissions(deploymentSpec: AuroraDeploymentSpec): Permissions {
@@ -112,7 +111,7 @@ class EnvironmentFeature(
         val userNotInAnyAdminGroups = !authenticatedUser.hasAnyRole(adminGroups)
 
         if (userNotInAdminUsers && userNotInAnyAdminGroups) {
-            return errors.addIfNotNull(IllegalArgumentException("User=${authenticatedUser.fullName} does not have access to admin this environment from the groups=${adminGroups}"))
+            return errors.addIfNotNull(IllegalArgumentException("User=${authenticatedUser.fullName} does not have access to admin this environment from the groups=$adminGroups"))
         }
         return emptyList()
     }
@@ -141,9 +140,9 @@ class EnvironmentFeature(
     }
 
     fun createRoleBinding(
-            rolebindingName: String,
-            permission: Permission,
-            rolebindingNamespace: String
+        rolebindingName: String,
+        permission: Permission,
+        rolebindingNamespace: String
     ): OpenshiftRoleBinding {
 
         return newOpenshiftRoleBinding {
@@ -179,5 +178,4 @@ class EnvironmentFeature(
             }
         }
     }
-
 }
