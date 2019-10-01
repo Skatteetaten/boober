@@ -11,7 +11,6 @@
       "updatedBy": "hero",
       "affiliation": "aos",
       "updateInBoober": "true",
-      "booberDeployId": "123",
       "name": "aos-simple",
       "deployTag": "1.0.3-SNAPSHOT"
     },
