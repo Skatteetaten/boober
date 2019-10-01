@@ -191,7 +191,6 @@ class AuroraIntegrationsMapperV1(
 
     private fun createExpandedDbHandlers(db: String): List<AuroraConfigFieldHandler> {
 
-        // TODO: add enabled here
         val mainHandlers = listOf(
             AuroraConfigFieldHandler("$db/enabled", defaultValue = true),
             AuroraConfigFieldHandler("$db/generate"),
