@@ -181,43 +181,55 @@ class DatabaseFeature(
         if (adc.isSimplifiedAndEnabled("database")) {
             return listOf(defaultDb)
         }
-        return cmd.applicationFiles.findSubKeys("database").map { db ->
-            val key = "database/$db"
-            val isSimple = adc.fields.containsKey(key)
+        return cmd.applicationFiles.findSubKeys("database").mapNotNull { db -> findDatabases(db, adc, defaultDb, cmd) }
+    }
 
-            if (isSimple) {
-                val value: String = adc[key]
-                defaultDb.copy(
-                    name = db,
-                    id = if (value == "auto" || value.isBlank()) null else value
-                )
-            } else {
+    private fun findDatabases(
+        db: String,
+        adc: AuroraDeploymentSpec,
+        defaultDb: Database,
+        cmd: AuroraContextCommand
+    ): Database? {
+        val key = "database/$db"
+        val isSimple = adc.fields.containsKey(key)
 
-                val roles = cmd.applicationFiles.associateSubKeys<DatabasePermission>("$key/roles", adc)
-                val exposeTo = cmd.applicationFiles.associateSubKeys<String>("$key/exposeTo", adc)
-                val flavor: DatabaseFlavor = adc.getOrNull("$key/flavor") ?: defaultDb.flavor
-                val instance = findInstance(adc, cmd, "$key/instance", flavor.defaultFallback)
-                val value: String = adc.getOrNull("$key/id") ?: ""
-
-                val instanceName = instance?.name ?: defaultDb.instance.name
-                val instanceFallback = instance?.fallback ?: defaultDb.instance.fallback
-                val instanceLabels = emptyMap<String, String>().addIfNotNull(defaultDb.instance.labels)
-                    .addIfNotNull(instance?.labels)
-
-                Database(
-                    name = adc.getOrNull("$key/name") ?: db,
-                    id = if (value == "auto" || value.isBlank()) null else value,
-                    flavor = flavor,
-                    generate = adc.getOrNull("$key/generate") ?: defaultDb.generate,
-                    instance = DatabaseInstance(
-                        name = instanceName,
-                        fallback = instanceFallback,
-                        labels = instanceLabels
-                    ),
-                    roles = defaultDb.roles + roles,
-                    exposeTo = defaultDb.exposeTo + exposeTo
-                )
+        return if (isSimple) {
+            val value: String = adc[key]
+            if (value == "false") {
+                return null
             }
+            defaultDb.copy(
+                name = db,
+                id = if (value == "auto" || value.isBlank()) null else value
+            )
+        } else {
+            if (!adc.get<Boolean>("$key/enabled")) {
+                return null
+            }
+            val roles = cmd.applicationFiles.associateSubKeys<DatabasePermission>("$key/roles", adc)
+            val exposeTo = cmd.applicationFiles.associateSubKeys<String>("$key/exposeTo", adc)
+            val flavor: DatabaseFlavor = adc.getOrNull("$key/flavor") ?: defaultDb.flavor
+            val instance = findInstance(adc, cmd, "$key/instance", flavor.defaultFallback)
+            val value: String = adc.getOrNull("$key/id") ?: ""
+
+            val instanceName = instance?.name ?: defaultDb.instance.name
+            val instanceFallback = instance?.fallback ?: defaultDb.instance.fallback
+            val instanceLabels = emptyMap<String, String>().addIfNotNull(defaultDb.instance.labels)
+                .addIfNotNull(instance?.labels)
+
+            Database(
+                name = adc.getOrNull("$key/name") ?: db,
+                id = if (value == "auto" || value.isBlank()) null else value,
+                flavor = flavor,
+                generate = adc.getOrNull("$key/generate") ?: defaultDb.generate,
+                instance = DatabaseInstance(
+                    name = instanceName,
+                    fallback = instanceFallback,
+                    labels = instanceLabels
+                ),
+                roles = defaultDb.roles + roles,
+                exposeTo = defaultDb.exposeTo + exposeTo
+            )
         }
     }
 
@@ -256,6 +268,7 @@ class DatabaseFeature(
     ): List<AuroraConfigFieldHandler> {
 
         val mainHandlers = listOf(
+            AuroraConfigFieldHandler("$db/enabled", defaultValue = true),
             AuroraConfigFieldHandler("$db/generate"),
             AuroraConfigFieldHandler("$db/name"),
             AuroraConfigFieldHandler("$db/id"),

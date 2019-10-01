@@ -115,6 +115,8 @@ data class AuroraDeploymentSpec(
                 val value: Any = this[it]
                 val escapedValue: String = convertValueToString(value)
                 field to escapedValue
+            }.filter {
+                it.value.isNotBlank()
             }
     }
 

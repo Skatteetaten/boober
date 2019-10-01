@@ -70,6 +70,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         val route = "route"
         val simplified = adc.isSimplifiedConfig(route)
 
+        val defaultAnnotations = adc.getRouteAnnotations("routeDefaults/annotations")
         if (simplified) {
             if (adc[route]) {
 
@@ -83,7 +84,8 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                     Route(
                         objectName = adc.name,
                         host = adc["routeDefaults/host"],
-                        tls = secure
+                        tls = secure,
+                        annotations = defaultAnnotations
                     )
                 )
             }
@@ -91,25 +93,29 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         }
         val routes = cmd.applicationFiles.findSubKeys(route)
 
-        return routes.map {
+        return routes.mapNotNull {
 
-            val secure =
-                if (cmd.applicationFiles.findSubKeys("$route/$it/tls").isNotEmpty() ||
-                    adc["routeDefaults/tls/enabled"]
-                ) {
-                    SecureRoute(
-                        adc.getOrDefault(route, it, "tls/insecurePolicy"),
-                        adc.getOrDefault(route, it, "tls/termination")
-                    )
-                } else null
+            if (!adc.get<Boolean>("$route/$it/enabled")) {
+                null
+            } else {
+                val secure =
+                    if (cmd.applicationFiles.findSubKeys("$route/$it/tls").isNotEmpty() ||
+                        adc["routeDefaults/tls/enabled"]
+                    ) {
+                        SecureRoute(
+                            adc.getOrDefault(route, it, "tls/insecurePolicy"),
+                            adc.getOrDefault(route, it, "tls/termination")
+                        )
+                    } else null
 
-            Route(
-                objectName = adc.replacer.replace(it).ensureStartWith(adc.name, "-"),
-                host = adc.getOrDefault(route, it, "host"),
-                path = adc.getOrNull("$route/$it/path"),
-                annotations = adc.getRouteAnnotations("$route/$it/annotations/"),
-                tls = secure
-            )
+                Route(
+                    objectName = adc.replacer.replace(it).ensureStartWith(adc.name, "-"),
+                    host = adc.getOrDefault(route, it, "host"),
+                    path = adc.getOrNull("$route/$it/path"),
+                    annotations = defaultAnnotations.addIfNotNull(adc.getRouteAnnotations("$route/$it/annotations/")),
+                    tls = secure
+                )
+            }
         }
     }
 
@@ -162,6 +168,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         return routeHandlers.flatMap { key ->
 
             listOf(
+                AuroraConfigFieldHandler("$key/enabled", defaultValue = true),
                 AuroraConfigFieldHandler("$key/host"),
                 AuroraConfigFieldHandler("$key/path",
                     validator = { it?.startsWith("/", "Path must start with /") }),
