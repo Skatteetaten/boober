@@ -222,7 +222,7 @@ class AuroraConfigService(
             throw IllegalArgumentException("No such AuroraConfig ${ref.name}")
         } catch (e: Exception) {
             throw AuroraConfigServiceException(
-                "An unexpected error occurred when checking out AuroraConfig with name ${ref.name}",
+                "An unexpected error occurred when checking out AuroraConfig with name ${ref.name} (${e.message})",
                 e
             )
         }
