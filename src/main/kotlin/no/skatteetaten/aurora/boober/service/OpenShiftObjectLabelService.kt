@@ -2,6 +2,8 @@ package no.skatteetaten.aurora.boober.service
 
 import org.springframework.stereotype.Service
 
+// TODO: refactor to extention method on Map<String, String> and ensure that it is used everywhere we add labels
+
 @Service
 class OpenShiftObjectLabelService(private val userDetailsProvider: UserDetailsProvider) {
 

@@ -20,19 +20,6 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import org.springframework.stereotype.Service
 
-data class AuroraBuild(
-    val baseName: String,
-    val baseVersion: String,
-    val builderName: String,
-    val builderVersion: String,
-    val groupId: String,
-    val artifactId: String,
-    val version: String,
-    val outputKind: String,
-    val outputName: String,
-    val applicationPlatform: String
-)
-
 @Service
 class BuildFeature : Feature {
     override fun enable(header: AuroraDeploymentSpec): Boolean {
