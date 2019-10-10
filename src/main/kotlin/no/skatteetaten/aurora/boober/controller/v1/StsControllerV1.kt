@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
+// TODO: Inline responderen
 @RestController
 @RequestMapping("/v1/sts")
 class StsControllerV1(

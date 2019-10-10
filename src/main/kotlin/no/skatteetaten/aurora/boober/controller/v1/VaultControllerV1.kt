@@ -108,6 +108,7 @@ enum class VaultOperation {
 
 data class VaultOperationPayload(val operationName: VaultOperation, val parameters: Map<String, Any>)
 
+// TODO: Inline responderen. Flytt data klasser til model/vault?
 @RestController
 @RequestMapping("/v1/vault/{vaultCollection}")
 class VaultControllerV1(

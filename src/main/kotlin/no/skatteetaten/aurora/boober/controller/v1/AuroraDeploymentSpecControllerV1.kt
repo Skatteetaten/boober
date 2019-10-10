@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.util.UriUtils
 import java.nio.charset.Charset
 
+// TODO inline responderen
 @RestController
 @RequestMapping("/v1/auroradeployspec/{auroraConfigName}")
 class AuroraDeploymentSpecControllerV1(

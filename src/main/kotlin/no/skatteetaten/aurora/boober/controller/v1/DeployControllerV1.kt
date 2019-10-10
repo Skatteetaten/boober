@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
+// TODO: inline responderen
 @RestController
 @RequestMapping("/v1/apply/{auroraConfigName}")
 class DeployControllerV1(private val deployService: DeployService, private val responder: DeployResponder) {
