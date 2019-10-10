@@ -6,7 +6,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
 import io.fabric8.openshift.api.model.ImageStreamImport
-import no.skatteetaten.aurora.boober.mapper.TemplateType
+import no.skatteetaten.aurora.boober.feature.TemplateType
 import no.skatteetaten.aurora.boober.model.openshift.isDifferentImage
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse

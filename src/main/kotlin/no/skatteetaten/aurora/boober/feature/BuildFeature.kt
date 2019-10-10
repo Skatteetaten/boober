@@ -14,14 +14,10 @@ import com.fkorotkov.openshift.to
 import io.fabric8.openshift.api.model.BuildConfig
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
-import no.skatteetaten.aurora.boober.mapper.ApplicationPlatform
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.mapper.TemplateType
-import no.skatteetaten.aurora.boober.mapper.applicationPlatform
-import no.skatteetaten.aurora.boober.service.AuroraResource
-import no.skatteetaten.aurora.boober.service.Feature
+import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraResource
 import org.springframework.stereotype.Service
 
 data class AuroraBuild(
@@ -49,8 +45,14 @@ class BuildFeature : Feature {
         return gavHandlers(header, cmd) + setOf(
             AuroraConfigFieldHandler("builder/name", defaultValue = "architect"),
             AuroraConfigFieldHandler("builder/version", defaultValue = "1"),
-            AuroraConfigFieldHandler("baseImage/name", defaultValue = applicationPlatform.baseImageName),
-            AuroraConfigFieldHandler("baseImage/version", defaultValue = applicationPlatform.baseImageVersion)
+            AuroraConfigFieldHandler(
+                "baseImage/name",
+                defaultValue = applicationPlatform.baseImageName
+            ),
+            AuroraConfigFieldHandler(
+                "baseImage/version",
+                defaultValue = applicationPlatform.baseImageVersion
+            )
         )
     }
 

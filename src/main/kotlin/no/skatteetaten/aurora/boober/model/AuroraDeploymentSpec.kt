@@ -1,97 +1,13 @@
-package no.skatteetaten.aurora.boober.mapper
+package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
-import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
-import no.skatteetaten.aurora.boober.service.AuroraConfigRef
-import no.skatteetaten.aurora.boober.service.AuroraResource
-import no.skatteetaten.aurora.boober.service.ContextErrors
-import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.utils.atNullable
+import no.skatteetaten.aurora.boober.utils.convertValueToString
 import no.skatteetaten.aurora.boober.utils.deepSet
 import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
-data class AuroraDeployCommand(
-    val headerResources: Set<AuroraResource>,
-    val resources: Set<AuroraResource>,
-    val context: AuroraDeploymentContext,
-    val deployId: String,
-    val shouldDeploy: Boolean = true,
-    val user: User
-)
-
-data class AuroraContextCommand(
-    val auroraConfig: AuroraConfig,
-    val applicationDeploymentRef: ApplicationDeploymentRef,
-    val auroraConfigRef: AuroraConfigRef,
-    val overrides: List<AuroraConfigFile> = emptyList()
-) {
-
-    val applicationFiles: List<AuroraConfigFile> by lazy {
-        auroraConfig.getFilesForApplication(applicationDeploymentRef, overrides)
-    }
-
-    val applicationFile: AuroraConfigFile
-        get() = applicationFiles.find { it.type == AuroraConfigFileType.APP && !it.override }!!
-
-    val overrideFiles: Map<String, String>
-        get() = applicationFiles.filter { it.override }.associate { it.name to it.contents }
-}
-
-fun AuroraDeploymentContext.validate(fullValidation: Boolean): Map<Feature, List<java.lang.Exception>> {
-    return features.mapValues {
-        try {
-            it.key.validate(it.value, fullValidation, this.cmd)
-        } catch (e: Exception) {
-            listOf(e)
-        }
-    }
-}
-
-fun AuroraDeploymentContext.createResources(): Pair<List<ContextErrors>, Set<AuroraResource>?> {
-
-    val eitherErrorsOrFeatures: List<Pair<ContextErrors?, Set<AuroraResource>?>> = features.map {
-        try {
-            null to it.key.generate(it.value, this.cmd)
-        } catch (e: Throwable) {
-            ContextErrors(this.cmd, listOf(e)) to null
-        }
-    }
-
-    // There was some errors when generating so we gather then up and return them and no resources
-    val errors = eitherErrorsOrFeatures.mapNotNull { it.first }
-    if (errors.isNotEmpty()) {
-        return errors to null
-    }
-
-    val featureResources = eitherErrorsOrFeatures.mapNotNull { it.second }.flatten().toSet()
-
-    // Mutation!
-    val modifyErrors = this.features.mapNotNull {
-        try {
-            it.key.modify(it.value, featureResources, this.cmd)
-            null
-        } catch (e: Throwable) {
-            ContextErrors(this.cmd, listOf(e))
-        }
-    }
-
-    return modifyErrors to featureResources
-}
-
-typealias FeatureSpec = Map<Feature, AuroraDeploymentSpec>
-
-data class AuroraDeploymentContext(
-    val spec: AuroraDeploymentSpec,
-    val cmd: AuroraContextCommand,
-    val features: FeatureSpec
-)
 
 data class AuroraDeploymentSpec(
     val fields: Map<String, AuroraConfigField>,

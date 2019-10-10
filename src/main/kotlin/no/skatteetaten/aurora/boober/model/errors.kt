@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
 
 enum class ErrorType {
     ILLEGAL,

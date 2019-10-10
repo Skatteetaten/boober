@@ -1,9 +1,8 @@
 package no.skatteetaten.aurora.boober.feature
 
 import io.fabric8.kubernetes.api.model.Container
-import no.skatteetaten.aurora.boober.mapper.ApplicationPlatform
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.mapper.PortNumbers
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.PortNumbers
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 

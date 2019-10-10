@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
 import io.mockk.every
 import io.mockk.mockk
-import no.skatteetaten.aurora.boober.mapper.TemplateType
+import no.skatteetaten.aurora.boober.feature.TemplateType
 import no.skatteetaten.aurora.boober.service.RedeployService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse

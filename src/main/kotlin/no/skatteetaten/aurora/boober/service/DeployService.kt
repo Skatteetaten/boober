@@ -11,12 +11,13 @@ import no.skatteetaten.aurora.boober.feature.pause
 import no.skatteetaten.aurora.boober.feature.releaseTo
 import no.skatteetaten.aurora.boober.feature.type
 import no.skatteetaten.aurora.boober.feature.version
-import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
-import no.skatteetaten.aurora.boober.mapper.AuroraDeployCommand
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
-import no.skatteetaten.aurora.boober.mapper.createResources
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeployCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
+import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.createResources
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.describeString

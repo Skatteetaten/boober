@@ -1,12 +1,10 @@
-package no.skatteetaten.aurora.boober.mapper
+package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
 import org.apache.commons.text.StringSubstitutor
 
 @JsonIgnoreProperties(ignoreUnknown = true)

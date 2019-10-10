@@ -6,20 +6,17 @@ import com.fkorotkov.openshift.spec
 import com.fkorotkov.openshift.tls
 import com.fkorotkov.openshift.to
 import io.fabric8.openshift.api.model.Route
-import no.skatteetaten.aurora.boober.mapper.ApplicationPlatform
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.mapper.applicationPlatform
-import no.skatteetaten.aurora.boober.mapper.findSubHandlers
-import no.skatteetaten.aurora.boober.mapper.findSubKeys
-import no.skatteetaten.aurora.boober.mapper.findSubKeysExpanded
+import no.skatteetaten.aurora.boober.model.AuroraConfigException
+import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.ConfigFieldErrorDetail
-import no.skatteetaten.aurora.boober.service.AuroraResource
-import no.skatteetaten.aurora.boober.service.Feature
-import no.skatteetaten.aurora.boober.service.addEnvVar
+import no.skatteetaten.aurora.boober.model.addEnvVar
+import no.skatteetaten.aurora.boober.model.findSubHandlers
+import no.skatteetaten.aurora.boober.model.findSubKeys
+import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
@@ -33,9 +30,19 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         val applicationPlatform: ApplicationPlatform = header.applicationPlatform
 
         return findRouteHandlers(cmd.applicationFiles) + setOf(
-            AuroraConfigFieldHandler("route", defaultValue = false, canBeSimplifiedConfig = true),
-            AuroraConfigFieldHandler("routeDefaults/host", defaultValue = "@name@-@affiliation@-@env@"),
-            AuroraConfigFieldHandler("routeDefaults/tls/enabled", defaultValue = false),
+            AuroraConfigFieldHandler(
+                "route",
+                defaultValue = false,
+                canBeSimplifiedConfig = true
+            ),
+            AuroraConfigFieldHandler(
+                "routeDefaults/host",
+                defaultValue = "@name@-@affiliation@-@env@"
+            ),
+            AuroraConfigFieldHandler(
+                "routeDefaults/tls/enabled",
+                defaultValue = false
+            ),
             AuroraConfigFieldHandler(
                 "routeDefaults/tls/insecurePolicy",
                 defaultValue = InsecurePolicy.valueOf(applicationPlatform.insecurePolicy),

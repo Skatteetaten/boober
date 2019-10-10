@@ -1,8 +1,8 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
-import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.ApplicationError
+import no.skatteetaten.aurora.boober.model.AuroraConfigException
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.ConfigFieldErrorDetail
 import no.skatteetaten.aurora.boober.model.ErrorDetail
 

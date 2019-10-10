@@ -11,14 +11,11 @@ import io.fabric8.kubernetes.api.model.Namespace
 import io.fabric8.kubernetes.api.model.ObjectReference
 import io.fabric8.openshift.api.model.OpenshiftRoleBinding
 import io.fabric8.openshift.api.model.ProjectRequest
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.mapper.Permission
-import no.skatteetaten.aurora.boober.mapper.Permissions
+import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
-import no.skatteetaten.aurora.boober.service.AuroraResource
-import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.Instants
@@ -33,6 +30,17 @@ val AuroraDeploymentSpec.envTTL: Duration?
             it
         )
     }
+
+data class Permissions(
+    val admin: Permission,
+    val view: Permission? = null
+)
+
+data class Permission(
+    val groups: Set<String>?,
+    val users: Set<String> = emptySet()
+)
+
 
 @Service
 class EnvironmentFeature(

@@ -1,10 +1,9 @@
 package no.skatteetaten.aurora.boober.feature
 
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.service.AuroraResource
-import no.skatteetaten.aurora.boober.service.Feature
+import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.filterNullValues
 import org.springframework.stereotype.Service
@@ -13,7 +12,11 @@ import org.springframework.stereotype.Service
 class WebsealFeature : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
-            AuroraConfigFieldHandler("webseal", defaultValue = false, canBeSimplifiedConfig = true),
+            AuroraConfigFieldHandler(
+                "webseal",
+                defaultValue = false,
+                canBeSimplifiedConfig = true
+            ),
             AuroraConfigFieldHandler("webseal/host"),
             AuroraConfigFieldHandler("webseal/roles")
         )

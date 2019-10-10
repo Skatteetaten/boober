@@ -18,6 +18,7 @@ import no.skatteetaten.aurora.boober.feature.DatabaseFeature
 import no.skatteetaten.aurora.boober.feature.DatabaseInstance
 import no.skatteetaten.aurora.boober.feature.DeploymentConfigFeature
 import no.skatteetaten.aurora.boober.feature.EnvironmentFeature
+import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.feature.JavaDeployFeature
 import no.skatteetaten.aurora.boober.feature.LocalTemplateFeature
 import no.skatteetaten.aurora.boober.feature.MountFeature
@@ -27,13 +28,12 @@ import no.skatteetaten.aurora.boober.feature.TemplateFeature
 import no.skatteetaten.aurora.boober.feature.ToxiproxySidecarFeature
 import no.skatteetaten.aurora.boober.feature.WebDeployFeature
 import no.skatteetaten.aurora.boober.feature.WebsealFeature
-import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
-import no.skatteetaten.aurora.boober.mapper.createResources
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.model.createResources
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
-import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseEngine
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaInstance

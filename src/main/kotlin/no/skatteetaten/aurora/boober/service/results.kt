@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.boober.mapper.AuroraDeployCommand
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraDeployCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import java.time.Instant

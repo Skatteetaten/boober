@@ -10,15 +10,14 @@ import io.fabric8.kubernetes.api.model.ObjectMeta
 import io.fabric8.kubernetes.api.model.Quantity
 import io.fabric8.kubernetes.api.model.QuantityBuilder
 import io.fabric8.openshift.api.model.DeploymentConfig
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.mapper.allNonSideCarContainers
+import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
-import no.skatteetaten.aurora.boober.service.AuroraResource
-import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.filterNullValues
 import org.springframework.stereotype.Service
 
@@ -40,7 +39,11 @@ class DeploymentConfigFeature : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
         return setOf(
-            AuroraConfigFieldHandler("management", defaultValue = true, canBeSimplifiedConfig = true),
+            AuroraConfigFieldHandler(
+                "management",
+                defaultValue = true,
+                canBeSimplifiedConfig = true
+            ),
             AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
             AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
             AuroraConfigFieldHandler("releaseTo"),
@@ -48,8 +51,14 @@ class DeploymentConfigFeature : Feature {
             AuroraConfigFieldHandler("pause", defaultValue = false),
             AuroraConfigFieldHandler("resources/cpu/min", defaultValue = "10m"),
             AuroraConfigFieldHandler("resources/cpu/max", defaultValue = "2000m"),
-            AuroraConfigFieldHandler("resources/memory/min", defaultValue = "128Mi"),
-            AuroraConfigFieldHandler("resources/memory/max", defaultValue = "512Mi"),
+            AuroraConfigFieldHandler(
+                "resources/memory/min",
+                defaultValue = "128Mi"
+            ),
+            AuroraConfigFieldHandler(
+                "resources/memory/max",
+                defaultValue = "512Mi"
+            ),
             AuroraConfigFieldHandler("splunkIndex"),
             AuroraConfigFieldHandler("debug", defaultValue = false),
             header.versionHandler

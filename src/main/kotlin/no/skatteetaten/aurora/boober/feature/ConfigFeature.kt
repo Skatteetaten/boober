@@ -10,20 +10,19 @@ import com.fkorotkov.kubernetes.newVolumeMount
 import com.fkorotkov.kubernetes.secretKeyRef
 import com.fkorotkov.kubernetes.valueFrom
 import io.fabric8.kubernetes.api.model.EnvVar
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.mapper.convertValueToString
-import no.skatteetaten.aurora.boober.mapper.findConfigFieldHandlers
-import no.skatteetaten.aurora.boober.mapper.findSubKeys
+import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.addVolumesAndMounts
+import no.skatteetaten.aurora.boober.model.findConfigFieldHandlers
+import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
-import no.skatteetaten.aurora.boober.service.AuroraResource
-import no.skatteetaten.aurora.boober.service.Feature
-import no.skatteetaten.aurora.boober.service.addVolumesAndMounts
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultSecretEnvResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.convertValueToString
 import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterProperties
@@ -51,9 +50,18 @@ class ConfigFeature(
 
         val secretVaultsHandlers = cmd.applicationFiles.findSubKeys("secretVaults").flatMap { key ->
             listOf(
-                AuroraConfigFieldHandler("secretVaults/$key/name", defaultValue = key),
-                AuroraConfigFieldHandler("secretVaults/$key/enabled", defaultValue = true),
-                AuroraConfigFieldHandler("secretVaults/$key/file", defaultValue = "latest.properties"),
+                AuroraConfigFieldHandler(
+                    "secretVaults/$key/name",
+                    defaultValue = key
+                ),
+                AuroraConfigFieldHandler(
+                    "secretVaults/$key/enabled",
+                    defaultValue = true
+                ),
+                AuroraConfigFieldHandler(
+                    "secretVaults/$key/file",
+                    defaultValue = "latest.properties"
+                ),
                 AuroraConfigFieldHandler("secretVaults/$key/keys"),
                 AuroraConfigFieldHandler("secretVaults/$key/keyMappings")
             )
@@ -323,7 +331,7 @@ class ConfigFeature(
         fun extractConfigFieldValues(): List<ConfigFieldValue> {
             return configHandlers(cmd)
                 .map { it.name }
-                .filter { it.count { it == '/' } > 1 }
+                .filter { handler -> handler.count { it == '/' } > 1 }
                 .map { name ->
                     val value: Any = adc[name]
                     val escapedValue: String = convertValueToString(value)

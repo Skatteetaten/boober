@@ -1,8 +1,11 @@
-package no.skatteetaten.aurora.boober.mapper
+package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.model.AuroraConfigException
+import no.skatteetaten.aurora.boober.model.AuroraConfigField
+import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.ConfigFieldErrorDetail
 import no.skatteetaten.aurora.boober.utils.findAllPointers
@@ -17,11 +20,6 @@ class AuroraDeploymentSpecConfigFieldValidator(
 ) {
     val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpecConfigFieldValidator::class.java)
 
-    companion object {
-        val namePattern = "^[a-z][-a-z0-9]{0,38}[a-z0-9]$"
-    }
-
-    @JvmOverloads
     fun validate(fullValidation: Boolean = true) {
 
         val envPointers = listOf(

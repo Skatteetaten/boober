@@ -6,11 +6,10 @@ import com.fkorotkov.kubernetes.newEnvVar
 import com.fkorotkov.openshift.customStrategy
 import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.openshift.api.model.BuildConfig
-import no.skatteetaten.aurora.boober.mapper.ApplicationPlatform
-import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.mapper.PortNumbers
-import no.skatteetaten.aurora.boober.service.AuroraResource
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.PortNumbers
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 

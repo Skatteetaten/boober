@@ -1,73 +1,23 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.module.kotlin.convertValue
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.fabric8.kubernetes.api.model.EnvVar
-import io.fabric8.kubernetes.api.model.HasMetadata
-import io.fabric8.kubernetes.api.model.Volume
-import io.fabric8.kubernetes.api.model.VolumeMount
-import io.fabric8.openshift.api.model.DeploymentConfig
+import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.feature.extractPlaceHolders
+import no.skatteetaten.aurora.boober.feature.headerHandlers
 import no.skatteetaten.aurora.boober.feature.name
 import no.skatteetaten.aurora.boober.feature.namespace
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentContext
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpecConfigFieldValidator
-import no.skatteetaten.aurora.boober.mapper.HeaderMapper
-import no.skatteetaten.aurora.boober.mapper.allNonSideCarContainers
-import no.skatteetaten.aurora.boober.mapper.validate
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.ApplicationRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.validate
 import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-
-data class AuroraResource(
-    val name: String,
-    val resource: HasMetadata,
-    val header: Boolean = false // these resources are only created once for each deploy){}
-)
-
-fun Set<AuroraResource>.addEnvVar(envVars: List<EnvVar>) {
-    this.filter { it.resource.kind == "DeploymentConfig" }.forEach {
-        val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
-        dc.allNonSideCarContainers.forEach { container ->
-            container.env.addAll(envVars)
-        }
-    }
-}
-
-fun Set<AuroraResource>.addVolumesAndMounts(
-    envVars: List<EnvVar> = emptyList(),
-    volumes: List<Volume> = emptyList(),
-    volumeMounts: List<VolumeMount> = emptyList()
-) {
-    this.filter { it.resource.kind == "DeploymentConfig" }.forEach {
-        val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
-        dc.spec.template.spec.volumes = dc.spec.template.spec.volumes.addIfNotNull(volumes)
-        dc.allNonSideCarContainers.forEach { container ->
-            container.volumeMounts = container.volumeMounts.addIfNotNull(volumeMounts)
-            container.env = container.env.addIfNotNull(envVars)
-        }
-    }
-}
-
-interface Feature {
-
-    fun enable(header: AuroraDeploymentSpec): Boolean = true
-    fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler>
-    fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraContextCommand): List<Exception> =
-        emptyList()
-
-    fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> = emptySet()
-    fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) = Unit
-}
 
 @Service
 class AuroraDeploymentContextService(
@@ -119,10 +69,10 @@ class AuroraDeploymentContextService(
         deployCommand: AuroraContextCommand
     ): AuroraDeploymentContext {
 
-        val headerMapper = HeaderMapper(deployCommand.applicationDeploymentRef, deployCommand.applicationFiles)
+        val headerHandlers = deployCommand.applicationDeploymentRef.headerHandlers
         val headerSpec =
             AuroraDeploymentSpec.create(
-                handlers = headerMapper.handlers,
+                handlers = headerHandlers,
                 files = deployCommand.applicationFiles,
                 applicationDeploymentRef = deployCommand.applicationDeploymentRef,
                 auroraConfigVersion = deployCommand.auroraConfig.version
@@ -131,14 +81,14 @@ class AuroraDeploymentContextService(
         AuroraDeploymentSpecConfigFieldValidator(
             applicationDeploymentRef = deployCommand.applicationDeploymentRef,
             applicationFiles = deployCommand.applicationFiles,
-            fieldHandlers = headerMapper.handlers,
+            fieldHandlers = headerHandlers,
             fields = headerSpec.fields
         ).validate(false)
 
         val activeFeatures = featuers.filter { it.enable(headerSpec) }
 
         val featureHandlers: Map<Feature, Set<AuroraConfigFieldHandler>> = activeFeatures.associateWith {
-            it.handlers(headerSpec, deployCommand) + headerMapper.handlers
+            it.handlers(headerSpec, deployCommand) + headerHandlers
         }
 
         val allHandlers: Set<AuroraConfigFieldHandler> = featureHandlers.flatMap { it.value }.toSet()
@@ -164,7 +114,11 @@ class AuroraDeploymentContextService(
             spec.copy(fields = fields)
         }
 
-        return AuroraDeploymentContext(spec, cmd = deployCommand, features = featureAdc)
+        return AuroraDeploymentContext(
+            spec,
+            cmd = deployCommand,
+            features = featureAdc
+        )
     }
 
     fun getAuroraDeploymentContexts(
@@ -173,7 +127,13 @@ class AuroraDeploymentContextService(
         ref: AuroraConfigRef
     ): List<AuroraDeploymentContext> {
         return applicationDeploymentRefs.map {
-            createAuroraDeploymentContext(AuroraContextCommand(auroraConfig, it, ref))
+            createAuroraDeploymentContext(
+                AuroraContextCommand(
+                    auroraConfig,
+                    it,
+                    ref
+                )
+            )
         }
     }
 }

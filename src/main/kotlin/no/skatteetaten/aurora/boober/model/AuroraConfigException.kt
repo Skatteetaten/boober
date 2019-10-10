@@ -1,6 +1,4 @@
-package no.skatteetaten.aurora.boober.mapper
-
-import no.skatteetaten.aurora.boober.model.ConfigFieldErrorDetail
+package no.skatteetaten.aurora.boober.model
 
 class AuroraConfigException(
     message: String,

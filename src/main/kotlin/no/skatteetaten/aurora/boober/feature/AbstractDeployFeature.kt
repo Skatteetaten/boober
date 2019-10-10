@@ -37,18 +37,14 @@ import io.fabric8.kubernetes.api.model.IntOrStringBuilder
 import io.fabric8.kubernetes.api.model.Probe
 import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.openshift.api.model.DeploymentConfig
-import no.skatteetaten.aurora.boober.mapper.ApplicationPlatform
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.mapper.PortNumbers
-import no.skatteetaten.aurora.boober.mapper.TemplateType
-import no.skatteetaten.aurora.boober.mapper.applicationPlatform
+import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.AuroraVersion
+import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
-import no.skatteetaten.aurora.boober.service.AuroraResource
-import no.skatteetaten.aurora.boober.service.Feature
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.length
@@ -174,16 +170,31 @@ abstract class AbstractDeployFeature(
             AuroraConfigFieldHandler("replicas", defaultValue = 1),
             AuroraConfigFieldHandler("serviceAccount"),
 
-            AuroraConfigFieldHandler("prometheus", defaultValue = true, canBeSimplifiedConfig = true),
-            AuroraConfigFieldHandler("prometheus/path", defaultValue = "/prometheus"),
+            AuroraConfigFieldHandler(
+                "prometheus",
+                defaultValue = true,
+                canBeSimplifiedConfig = true
+            ),
+            AuroraConfigFieldHandler(
+                "prometheus/path",
+                defaultValue = "/prometheus"
+            ),
             AuroraConfigFieldHandler("prometheus/port", defaultValue = 8081),
 
-            AuroraConfigFieldHandler("readiness", defaultValue = true, canBeSimplifiedConfig = true),
+            AuroraConfigFieldHandler(
+                "readiness",
+                defaultValue = true,
+                canBeSimplifiedConfig = true
+            ),
             AuroraConfigFieldHandler("readiness/port", defaultValue = 8080),
             AuroraConfigFieldHandler("readiness/path"),
             AuroraConfigFieldHandler("readiness/delay", defaultValue = 10),
             AuroraConfigFieldHandler("readiness/timeout", defaultValue = 1),
-            AuroraConfigFieldHandler("liveness", defaultValue = false, canBeSimplifiedConfig = true),
+            AuroraConfigFieldHandler(
+                "liveness",
+                defaultValue = false,
+                canBeSimplifiedConfig = true
+            ),
             AuroraConfigFieldHandler("liveness/port", defaultValue = 8080),
             AuroraConfigFieldHandler("liveness/path"),
             AuroraConfigFieldHandler("liveness/delay", defaultValue = 10),

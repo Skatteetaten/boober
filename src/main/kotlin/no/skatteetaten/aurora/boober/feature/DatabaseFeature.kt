@@ -11,19 +11,18 @@ import com.fkorotkov.kubernetes.secret
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.mapper.associateSubKeys
-import no.skatteetaten.aurora.boober.mapper.findSubHandlers
-import no.skatteetaten.aurora.boober.mapper.findSubKeys
-import no.skatteetaten.aurora.boober.mapper.findSubKeysExpanded
+import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.addVolumesAndMounts
+import no.skatteetaten.aurora.boober.model.associateSubKeys
+import no.skatteetaten.aurora.boober.model.findSubHandlers
+import no.skatteetaten.aurora.boober.model.findSubKeys
+import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
-import no.skatteetaten.aurora.boober.service.AuroraResource
-import no.skatteetaten.aurora.boober.service.Feature
-import no.skatteetaten.aurora.boober.service.addVolumesAndMounts
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseEngine
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
@@ -55,7 +54,11 @@ class DatabaseFeature(
         val dbDefaultsHandlers = findDbDefaultHandlers(cmd.applicationFiles)
 
         return (dbDefaultsHandlers + dbHandlers + listOf(
-            AuroraConfigFieldHandler("database", defaultValue = false, canBeSimplifiedConfig = true)
+            AuroraConfigFieldHandler(
+                "database",
+                defaultValue = false,
+                canBeSimplifiedConfig = true
+            )
         )).toSet()
     }
 
@@ -298,7 +301,10 @@ class DatabaseFeature(
                 validator = { node ->
                     node.oneOf(DatabaseFlavor.values().map { it.toString() })
                 }),
-            AuroraConfigFieldHandler("$databaseDefaultsKey/generate", defaultValue = true),
+            AuroraConfigFieldHandler(
+                "$databaseDefaultsKey/generate",
+                defaultValue = true
+            ),
             AuroraConfigFieldHandler(
                 "$databaseDefaultsKey/name",
                 defaultValue = "@name@"

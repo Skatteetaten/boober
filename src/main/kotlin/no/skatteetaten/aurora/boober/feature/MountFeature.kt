@@ -12,14 +12,13 @@ import io.fabric8.kubernetes.api.model.ConfigMap
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.mapper.AuroraContextCommand
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.mapper.findSubKeys
+import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.addVolumesAndMounts
+import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
-import no.skatteetaten.aurora.boober.service.AuroraResource
-import no.skatteetaten.aurora.boober.service.Feature
-import no.skatteetaten.aurora.boober.service.addVolumesAndMounts
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
@@ -47,10 +46,19 @@ class MountFeature(
                     validator = { it.required("Path is required for mount") }),
                 AuroraConfigFieldHandler(
                     "mounts/$mountName/type",
-                    validator = { it.oneOf(MountType.values().map { it.name }) }),
-                AuroraConfigFieldHandler("mounts/$mountName/mountName", defaultValue = mountName),
-                AuroraConfigFieldHandler("mounts/$mountName/volumeName", defaultValue = mountName),
-                AuroraConfigFieldHandler("mounts/$mountName/exist", defaultValue = false),
+                    validator = { json -> json.oneOf(MountType.values().map { it.name }) }),
+                AuroraConfigFieldHandler(
+                    "mounts/$mountName/mountName",
+                    defaultValue = mountName
+                ),
+                AuroraConfigFieldHandler(
+                    "mounts/$mountName/volumeName",
+                    defaultValue = mountName
+                ),
+                AuroraConfigFieldHandler(
+                    "mounts/$mountName/exist",
+                    defaultValue = false
+                ),
                 AuroraConfigFieldHandler("mounts/$mountName/content"),
                 AuroraConfigFieldHandler("mounts/$mountName/secretVault")
             )
