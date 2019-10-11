@@ -4,6 +4,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.AuroraResourceSource
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.filterNullValues
 import org.springframework.stereotype.Service
@@ -34,6 +35,12 @@ class WebsealFeature : Feature {
 
             resources.forEach {
                 if (it.resource.kind == "Service") {
+                    it.sources.addIfNotNull(
+                        AuroraResourceSource(
+                            feature = this::class.java,
+                            comment = "Set annotations"
+                        )
+                    )
                     val allAnnotations = it.resource.metadata.annotations.addIfNotNull(annotations)
                     it.resource.metadata.annotations = allAnnotations
                 }

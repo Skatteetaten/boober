@@ -22,6 +22,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.AuroraResourceSource
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 
@@ -48,15 +49,14 @@ class ToxiproxySidecarFeature : Feature {
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         return adc.toxiProxy?.let {
-            setOf(AuroraResource("${adc.name}-toxiproxy-config-cm",
-                newConfigMap {
-                    metadata {
-                        name = "${adc.name}-toxiproxy-config"
-                        namespace = adc.namespace
-                    }
-                    data = mapOf("config.json" to getToxiProxyConfig())
+            val resource = newConfigMap {
+                metadata {
+                    name = "${adc.name}-toxiproxy-config"
+                    namespace = adc.namespace
                 }
-            ))
+                data = mapOf("config.json" to getToxiProxyConfig())
+            }
+            setOf(AuroraResource(resource, sources = setOf(AuroraResourceSource(this::class.java, initial = true))))
         } ?: emptySet()
     }
 
@@ -74,6 +74,12 @@ class ToxiproxySidecarFeature : Feature {
         val container = createToxiProxyContainer(adc, toxiProxy)
         resources.forEach {
             if (it.resource.kind == "DeploymentConfig") {
+                it.sources.addIfNotNull(
+                    AuroraResourceSource(
+                        feature = this::class.java,
+                        comment = "Added toxiprox volume and sidecar container"
+                    )
+                )
                 val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
                 val podSpec = dc.spec.template.spec
                 podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
@@ -83,6 +89,12 @@ class ToxiproxySidecarFeature : Feature {
                 service.spec.ports.filter { p -> p.name == "http" }.forEach { port ->
                     port.targetPort = IntOrString(PortNumbers.TOXIPROXY_HTTP_PORT)
                 }
+                it.sources.addIfNotNull(
+                    AuroraResourceSource(
+                        feature = this::class.java,
+                        comment = "Changed targetPort to point to toxiproxy"
+                    )
+                )
             }
         }
     }

@@ -14,6 +14,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.AuroraResourceSource
 import no.skatteetaten.aurora.boober.model.addVolumesAndMounts
 import no.skatteetaten.aurora.boober.model.findConfigFieldHandlers
 import no.skatteetaten.aurora.boober.model.findSubKeys
@@ -208,17 +209,18 @@ class ConfigFeature(
                 }
                 data = it.secrets.mapValues { Base64.encodeBase64String(it.value) }
             }
-            AuroraResource("${secret.metadata.name}-${secret.kind}", secret)
+            AuroraResource(secret, sources = setOf(AuroraResourceSource(this::class.java, initial = true)))
         }
 
         val configMap: AuroraResource? = getApplicationConfigFiles(adc, cmd)?.let {
-            AuroraResource("${adc.name}-configmap", newConfigMap {
+            val resource = newConfigMap {
                 metadata {
                     name = adc.name
                     namespace = adc.namespace
                 }
                 data = it
-            })
+            }
+            AuroraResource(resource, sources = setOf(AuroraResourceSource(this::class.java, initial = true)))
         }
 
         return secrets.addIfNotNull(configMap).toSet()
@@ -291,7 +293,7 @@ class ConfigFeature(
             .toEnvVars()
             .addIfNotNull(configEnv)
             .addIfNotNull(secretEnv)
-        resources.addVolumesAndMounts(env, volumes, mounts)
+        resources.addVolumesAndMounts(env, volumes, mounts, this::class.java)
     }
 
     private fun getSecretVaults(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): List<AuroraSecret> {

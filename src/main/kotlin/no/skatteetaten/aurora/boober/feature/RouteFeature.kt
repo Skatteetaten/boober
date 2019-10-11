@@ -12,6 +12,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.AuroraResourceSource
 import no.skatteetaten.aurora.boober.model.ConfigFieldErrorDetail
 import no.skatteetaten.aurora.boober.model.addEnvVar
 import no.skatteetaten.aurora.boober.model.findSubHandlers
@@ -58,14 +59,13 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         return getRoute(adc, cmd).map {
-            AuroraResource(
-                "${it.objectName}-route", generateRoute(
-                    route = it,
-                    routeNamespace = adc.namespace,
-                    serviceName = adc.name,
-                    routeSuffix = routeSuffix
-                )
+            val resource = generateRoute(
+                route = it,
+                routeNamespace = adc.namespace,
+                serviceName = adc.name,
+                routeSuffix = routeSuffix
             )
+            AuroraResource(resource, sources = setOf(AuroraResourceSource(this::class.java, initial = true)))
         }.toSet()
     }
 
@@ -133,7 +133,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                 "ROUTE_NAME" to url,
                 "ROUTE_URL" to "${it.protocol}$url"
             ).toEnvVars()
-            resources.addEnvVar(routeVars)
+            resources.addEnvVar(routeVars, this::class.java)
         }
     }
 

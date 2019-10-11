@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.AuroraResourceSource
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
@@ -37,7 +38,7 @@ class ApplicationDeploymentFeature : Feature {
             "removeAfter" to removeInstant.epochSecond.toString()
         }
 
-        return setOf(AuroraResource("${adc.name}-ad", ApplicationDeployment(
+        val resource = ApplicationDeployment(
             spec = ApplicationDeploymentSpec(
                 selector = mapOf("name" to adc.name),
                 message = adc.getOrNull("message"),
@@ -54,7 +55,8 @@ class ApplicationDeploymentFeature : Feature {
                 namespace = adc.namespace
                 labels = mapOf("id" to applicationDeploymentId).addIfNotNull(ttl)
             }
-        )))
+        )
+        return setOf(AuroraResource(resource, sources = setOf(AuroraResourceSource(this::class.java, initial = true))))
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
@@ -65,6 +67,12 @@ class ApplicationDeploymentFeature : Feature {
                     "RoleBinding"
                 )
             ) {
+                it.sources.addIfNotNull(
+                    AuroraResourceSource(
+                        feature = this::class.java,
+                        comment = "Set owner refrence to ApplicationDeployment"
+                    )
+                )
                 it.resource.metadata.ownerReferences = listOf(
                     newOwnerReference {
                         apiVersion = "skatteetaten.no/v1"

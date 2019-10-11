@@ -11,9 +11,11 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.AuroraResourceSource
 import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.filterNullValues
 import no.skatteetaten.aurora.boober.utils.getBoolean
 import no.skatteetaten.aurora.boober.utils.openshiftName
@@ -53,6 +55,12 @@ abstract class AbstractTemplateFeature : Feature {
         val id = DigestUtils.sha1Hex("${type.name.toLowerCase()}-$name")
         resources.forEach {
             if (it.resource.kind == "ApplicationDeployment") {
+                it.sources.addIfNotNull(
+                    AuroraResourceSource(
+                        feature = this::class.java,
+                        comment = "Added application name and id"
+                    )
+                )
                 val ad: ApplicationDeployment = jacksonObjectMapper().convertValue(it.resource)
                 ad.spec.applicationName = name
                 ad.spec.applicationId = id
@@ -90,7 +98,7 @@ abstract class AbstractTemplateFeature : Feature {
         return templateResult.map {
             val resource: HasMetadata = jacksonObjectMapper().convertValue(it)
             resource.metadata.namespace = adc.namespace
-            AuroraResource("${resource.metadata.name}-${resource.kind}", resource)
+            AuroraResource(resource, sources = setOf(AuroraResourceSource(this::class.java, initial = true)))
         }.toSet()
     }
 

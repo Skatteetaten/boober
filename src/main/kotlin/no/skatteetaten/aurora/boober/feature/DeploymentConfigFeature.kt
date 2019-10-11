@@ -14,6 +14,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.AuroraResourceSource
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
@@ -71,6 +72,12 @@ class DeploymentConfigFeature : Feature {
         val envVars = createEnvVars(adc).toEnvVars()
         resources.forEach {
             if (it.resource.kind == "ApplicationDeployment") {
+                it.sources.addIfNotNull(
+                    AuroraResourceSource(
+                        feature = this::class.java,
+                        comment = "Added information from deployment"
+                    )
+                )
                 val ad: ApplicationDeployment = jacksonObjectMapper().convertValue(it.resource)
                 val spec = ad.spec
                 spec.splunkIndex = adc.splunkIndex
@@ -79,7 +86,12 @@ class DeploymentConfigFeature : Feature {
                 spec.managementPath = adc.managementPath
             } else if (it.resource.kind == "DeploymentConfig") {
                 val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
-
+                it.sources.addIfNotNull(
+                    AuroraResourceSource(
+                        feature = this::class.java,
+                        comment = "Added labels, annotations, shared env vars and request limits"
+                    )
+                )
                 if (dc.spec.template.metadata == null) {
                     dc.spec.template.metadata = ObjectMeta()
                 }

@@ -8,6 +8,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.AuroraResourceSource
 import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
@@ -39,8 +40,20 @@ class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature
         resources.forEach {
             if (it.resource.metadata.namespace != null && !it.header) {
                 it.resource.metadata.labels = it.resource.metadata.labels?.addIfNotNull(commonLabels) ?: commonLabels
+                it.sources.addIfNotNull(
+                    AuroraResourceSource(
+                        feature = this::class.java,
+                        comment = "Added common labels to metadata"
+                    )
+                )
             }
             if (it.resource.kind == "DeploymentConfig") {
+                it.sources.addIfNotNull(
+                    AuroraResourceSource(
+                        feature = this::class.java,
+                        comment = "Added common labels to podSpec"
+                    )
+                )
                 val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
                 if (dc.spec.template.metadata == null) {
                     dc.spec.template.metadata = ObjectMeta()
