@@ -16,7 +16,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.AuroraResourceSource
 import no.skatteetaten.aurora.boober.model.addVolumesAndMounts
 import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
@@ -75,7 +74,7 @@ class MountFeature(
         val configMaps = generateConfigMaps(configMounts, adc)
 
         return configMaps.addIfNotNull(secrets).map {
-            AuroraResource(it, sources = setOf(AuroraResourceSource(this::class.java, initial = true)))
+            generateResource(it)
         }.toSet()
     }
 

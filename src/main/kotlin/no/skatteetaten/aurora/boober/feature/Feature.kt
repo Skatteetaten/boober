@@ -1,10 +1,13 @@
 package no.skatteetaten.aurora.boober.feature
 
+import io.fabric8.kubernetes.api.model.HasMetadata
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.AuroraResourceSource
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.durationString
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.oneOf
@@ -12,6 +15,12 @@ import no.skatteetaten.aurora.boober.utils.pattern
 import no.skatteetaten.aurora.boober.utils.startsWith
 
 interface Feature {
+
+    fun generateResource(content: HasMetadata, header: Boolean = false) =
+        AuroraResource(content, AuroraResourceSource(this::class.java), header = header)
+
+    fun modifyResource(resource: AuroraResource, comment: String) =
+        resource.sources.addIfNotNull(AuroraResourceSource(this::class.java, comment = comment))
 
     /*
       Should this feature run or not.
@@ -38,6 +47,7 @@ interface Feature {
 
         If any feature has thrown an error the process will stop
 
+        use the generateResource method in this interface as a helper to add the correct source
      */
     fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> = emptySet()
 
@@ -50,6 +60,7 @@ interface Feature {
 
         If any feature has thrown an error the process will stop
 
+        use the modifyResource method in this interface as a helper to add a source to your modification
      */
     fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) = Unit
 

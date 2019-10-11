@@ -18,8 +18,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.AuroraResourceSource
-import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.springframework.stereotype.Service
 
 @Service
@@ -46,31 +44,20 @@ class BuildFeature : Feature {
     }
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
-        return setOf(
-            AuroraResource(createBuild(adc), sources = setOf(AuroraResourceSource(this::class.java, initial = true)))
-        )
+        return setOf(generateResource(createBuild(adc)))
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         resources.forEach {
             if (it.resource.kind == "ImageStream") {
-                it.sources.addIfNotNull(
-                    AuroraResourceSource(
-                        feature = this::class.java,
-                        comment = "Remove spec from imagestream"
-                    )
-                )
+                modifyResource(it, "Remove spec from imagestream")
                 val imageStream: ImageStream = jacksonObjectMapper().convertValue(it.resource)
                 imageStream.spec = null
             }
 
             if (it.resource.kind == "DeploymentConfig") {
-                it.sources.addIfNotNull(
-                    AuroraResourceSource(
-                        feature = this::class.java,
-                        comment = "Change imageChangeTrigger to follow latest"
-                    )
-                )
+
+                modifyResource(it, "Change imageChangeTrigger to follow latest")
                 val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
                 dc.spec.triggers.forEach { dtp ->
                     if (dtp.type == "ImageChange") {

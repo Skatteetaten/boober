@@ -22,15 +22,14 @@ import java.time.Instant
  */
 data class AuroraResource(
     val resource: HasMetadata,
+    val createdSource: AuroraResourceSource,
     val header: Boolean = false, // these resources are only created once for each deploy){}){}
-    //TODO: Should we perhaps have a createdSource here to make it required?
     val sources: Set<AuroraResourceSource> = emptySet()
 )
 
 data class AuroraResourceSource(
     val feature: Class<out Feature>,
     val comment: String? = "",
-    val initial: Boolean = false,
     val time: Instant = Instants.now
 )
 

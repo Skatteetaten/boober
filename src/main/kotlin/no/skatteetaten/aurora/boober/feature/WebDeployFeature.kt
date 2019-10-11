@@ -9,9 +9,7 @@ import io.fabric8.openshift.api.model.BuildConfig
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.AuroraResourceSource
 import no.skatteetaten.aurora.boober.model.PortNumbers
-import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -45,12 +43,8 @@ class WebDeployFeature(@Value("\${integrations.docker.registry}") val registry: 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         resources.forEach {
             if (it.resource.kind == "BuildConfig") {
-                it.sources.addIfNotNull(
-                    AuroraResourceSource(
-                        feature = this::class.java,
-                        comment = "Set applicationType in build"
-                    )
-                )
+
+                modifyResource(it, "Set applicationType in build")
                 val bc: BuildConfig = jacksonObjectMapper().convertValue(it.resource)
                 bc.spec.strategy.customStrategy {
                     env.add(

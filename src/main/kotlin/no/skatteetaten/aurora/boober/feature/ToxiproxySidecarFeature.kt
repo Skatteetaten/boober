@@ -22,7 +22,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.AuroraResourceSource
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 
@@ -56,7 +55,7 @@ class ToxiproxySidecarFeature : Feature {
                 }
                 data = mapOf("config.json" to getToxiProxyConfig())
             }
-            setOf(AuroraResource(resource, sources = setOf(AuroraResourceSource(this::class.java, initial = true))))
+            setOf(generateResource(resource))
         } ?: emptySet()
     }
 
@@ -74,12 +73,7 @@ class ToxiproxySidecarFeature : Feature {
         val container = createToxiProxyContainer(adc, toxiProxy)
         resources.forEach {
             if (it.resource.kind == "DeploymentConfig") {
-                it.sources.addIfNotNull(
-                    AuroraResourceSource(
-                        feature = this::class.java,
-                        comment = "Added toxiprox volume and sidecar container"
-                    )
-                )
+                modifyResource(it, "Added toxiprox volume and sidecar container")
                 val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
                 val podSpec = dc.spec.template.spec
                 podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
@@ -89,12 +83,8 @@ class ToxiproxySidecarFeature : Feature {
                 service.spec.ports.filter { p -> p.name == "http" }.forEach { port ->
                     port.targetPort = IntOrString(PortNumbers.TOXIPROXY_HTTP_PORT)
                 }
-                it.sources.addIfNotNull(
-                    AuroraResourceSource(
-                        feature = this::class.java,
-                        comment = "Changed targetPort to point to toxiproxy"
-                    )
-                )
+
+                modifyResource(it, "Changed targetPort to point to toxiproxy")
             }
         }
     }

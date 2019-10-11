@@ -12,7 +12,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.AuroraResourceSource
 import no.skatteetaten.aurora.boober.model.ConfigFieldErrorDetail
 import no.skatteetaten.aurora.boober.model.addEnvVar
 import no.skatteetaten.aurora.boober.model.findSubHandlers
@@ -65,7 +64,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                 serviceName = adc.name,
                 routeSuffix = routeSuffix
             )
-            AuroraResource(resource, sources = setOf(AuroraResourceSource(this::class.java, initial = true)))
+            generateResource(resource)
         }.toSet()
     }
 

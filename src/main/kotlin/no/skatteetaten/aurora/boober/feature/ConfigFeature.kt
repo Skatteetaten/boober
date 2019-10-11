@@ -14,7 +14,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.AuroraResourceSource
 import no.skatteetaten.aurora.boober.model.addVolumesAndMounts
 import no.skatteetaten.aurora.boober.model.findConfigFieldHandlers
 import no.skatteetaten.aurora.boober.model.findSubKeys
@@ -209,7 +208,7 @@ class ConfigFeature(
                 }
                 data = it.secrets.mapValues { Base64.encodeBase64String(it.value) }
             }
-            AuroraResource(secret, sources = setOf(AuroraResourceSource(this::class.java, initial = true)))
+            generateResource(secret)
         }
 
         val configMap: AuroraResource? = getApplicationConfigFiles(adc, cmd)?.let {
@@ -220,7 +219,7 @@ class ConfigFeature(
                 }
                 data = it
             }
-            AuroraResource(resource, sources = setOf(AuroraResourceSource(this::class.java, initial = true)))
+            generateResource(resource)
         }
 
         return secrets.addIfNotNull(configMap).toSet()

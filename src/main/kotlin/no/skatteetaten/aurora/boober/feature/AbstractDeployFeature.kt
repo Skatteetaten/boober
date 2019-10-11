@@ -42,7 +42,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.AuroraResourceSource
 import no.skatteetaten.aurora.boober.model.AuroraVersion
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
@@ -204,18 +203,10 @@ abstract class AbstractDeployFeature(
 
     // this is java
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
-
-        val container = createContainers(adc)
         return setOf(
-            AuroraResource(
-                create(adc, container),
-                sources = setOf(AuroraResourceSource(this::class.java, initial = true))
-            ),
-            AuroraResource(createService(adc), sources = setOf(AuroraResourceSource(this::class.java, initial = true))),
-            AuroraResource(
-                createImageStream(adc, dockerRegistry),
-                sources = setOf(AuroraResourceSource(this::class.java, initial = true))
-            )
+            generateResource(create(adc, createContainers(adc))),
+            generateResource(createService(adc)),
+            generateResource(createImageStream(adc, dockerRegistry))
         )
     }
 
@@ -224,12 +215,7 @@ abstract class AbstractDeployFeature(
         val id = DigestUtils.sha1Hex("${adc.groupId}/$name")
         resources.forEach {
             if (it.resource.kind == "ApplicationDeployment") {
-                it.sources.addIfNotNull(
-                    AuroraResourceSource(
-                        feature = this::class.java,
-                        comment = "Added application name and id"
-                    )
-                )
+                modifyResource(it, "Added application name and id")
                 val ad: ApplicationDeployment = jacksonObjectMapper().convertValue(it.resource)
                 ad.spec.applicationName = name
                 ad.spec.applicationId = id

@@ -16,7 +16,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.AuroraResourceSource
 import no.skatteetaten.aurora.boober.model.addVolumesAndMounts
 import no.skatteetaten.aurora.boober.model.associateSubKeys
 import no.skatteetaten.aurora.boober.model.findSubHandlers
@@ -101,7 +100,7 @@ class DatabaseFeature(
                 "${it.request.details.schemaName}-db".replace("_", "-").toLowerCase().ensureStartWith(adc.name, "-")
             DbhSecretGenerator.createDbhSecret(it, secretName, adc.namespace)
         }.map {
-            AuroraResource(it, sources = setOf(AuroraResourceSource(this::class.java, initial = true)))
+            generateResource(it)
         }.toSet()
     }
 
@@ -142,12 +141,7 @@ class DatabaseFeature(
 
         resources.forEach {
             if (it.resource.kind == "ApplicationDeployment") {
-                it.sources.addIfNotNull(
-                    AuroraResourceSource(
-                        feature = this::class.java,
-                        comment = "Added databaseId"
-                    )
-                )
+                modifyResource(it, "Added databaseId")
                 val ad: ApplicationDeployment = jacksonObjectMapper().convertValue(it.resource)
                 ad.spec.databases = databaseId
             }

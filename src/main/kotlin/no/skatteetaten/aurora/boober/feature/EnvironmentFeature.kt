@@ -15,7 +15,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.AuroraResourceSource
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -42,7 +41,6 @@ data class Permission(
     val users: Set<String> = emptySet()
 )
 
-
 @Service
 class EnvironmentFeature(
     val openShiftClient: OpenShiftClient,
@@ -55,18 +53,17 @@ class EnvironmentFeature(
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         val rolebindings = generateRolebindings(adc).map {
-            AuroraResource(it, header = true, sources = setOf(AuroraResourceSource(this::class.java, initial = true)))
+            generateResource(it, header = true)
         }.toSet()
         return setOf(
-            AuroraResource(
+            generateResource(
                 generateProjectRequest(adc),
-                header = true,
-                sources = setOf(AuroraResourceSource(this::class.java, initial = true))
+                header = true
             ),
-            AuroraResource(
+
+            generateResource(
                 generateNamespace(adc),
-                header = true,
-                sources = setOf(AuroraResourceSource(this::class.java, initial = true))
+                header = true
             )
         ).addIfNotNull(rolebindings).toSet()
     }

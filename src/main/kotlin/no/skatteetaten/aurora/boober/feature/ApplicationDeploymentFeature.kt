@@ -6,7 +6,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.AuroraResourceSource
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
@@ -56,7 +55,7 @@ class ApplicationDeploymentFeature : Feature {
                 labels = mapOf("id" to applicationDeploymentId).addIfNotNull(ttl)
             }
         )
-        return setOf(AuroraResource(resource, sources = setOf(AuroraResourceSource(this::class.java, initial = true))))
+        return setOf(generateResource(resource))
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
@@ -67,12 +66,7 @@ class ApplicationDeploymentFeature : Feature {
                     "RoleBinding"
                 )
             ) {
-                it.sources.addIfNotNull(
-                    AuroraResourceSource(
-                        feature = this::class.java,
-                        comment = "Set owner refrence to ApplicationDeployment"
-                    )
-                )
+                modifyResource(it, "Set owner refrence to ApplicationDeployment")
                 it.resource.metadata.ownerReferences = listOf(
                     newOwnerReference {
                         apiVersion = "skatteetaten.no/v1"

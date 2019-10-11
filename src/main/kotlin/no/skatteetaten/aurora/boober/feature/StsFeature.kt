@@ -11,7 +11,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.AuroraResourceSource
 import no.skatteetaten.aurora.boober.model.addVolumesAndMounts
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
@@ -42,7 +41,7 @@ class StsFeature(val sts: StsProvisioner) : Feature {
             val result = sts.generateCertificate("", adc.name, adc.envName)
 
             val secret = create(adc.name, result, adc.namespace)
-            setOf(AuroraResource(secret, sources = setOf(AuroraResourceSource(this::class.java, initial = true))))
+            setOf(generateResource(secret))
         } ?: emptySet<AuroraResource>()
     }
 
