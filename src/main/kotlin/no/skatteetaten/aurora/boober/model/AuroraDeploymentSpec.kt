@@ -153,7 +153,7 @@ data class AuroraDeploymentSpec(
                 } ?: emptyList()
 
                 val result = defaultValue + files.mapNotNull { file ->
-                    file.asJsonNode.atNullable(handler.path)?.let {
+                    file.asJsonNode.atNullable(handler.name)?.let {
                         /*
                           If a handler can be simplified or complex we do not create
                           a source if it is complex

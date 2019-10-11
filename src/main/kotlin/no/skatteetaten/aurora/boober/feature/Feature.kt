@@ -13,13 +13,53 @@ import no.skatteetaten.aurora.boober.utils.startsWith
 
 interface Feature {
 
+    /*
+      Should this feature run or not.
+
+      You can either do this via Spring Conditional annotations to react to the environment,
+      or you can react on the header and toggle if you are active in that way.
+
+      If you look at BuildFeature you will see that it reacts on the Application.type to only enable
+      itself if the type is development
+     */
     fun enable(header: AuroraDeploymentSpec): Boolean = true
+
+    /*
+      Return a set of Handlers, see AuroraConfigFieldHandler for details on what a handler is
+     */
     fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler>
+
+    /*
+        Generate a set of AuroraResource from this feature
+
+        Resource generation of all features are run before the modify step occurs
+
+        If this method throws errors other features will still be run.
+
+        If any feature has thrown an error the process will stop
+
+     */
+    fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> = emptySet()
+
+    /*
+        Modify generated resources
+
+        Resource modification of all features are run before the validate step occurs
+
+        If this method throws errors other features will still modify the resources.
+
+        If any feature has thrown an error the process will stop
+
+     */
+    fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) = Unit
+
+    /*
+    Perform validation of this feature.
+
+    If this method throws it will be handled as a single error
+    */
     fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraContextCommand): List<Exception> =
         emptyList()
-
-    fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> = emptySet()
-    fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) = Unit
 }
 
 enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: Int, val insecurePolicy: String) {

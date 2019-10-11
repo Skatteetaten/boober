@@ -13,11 +13,18 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import java.time.Instant
 
+/*
+  An dataclass to hold a HasMetadata resource that will be mutated in the generation process
+
+  @param resource: Will be generated in one feature and then optionally mutated in other features
+  @param header: flag if this resource is part of the header that will only be done once for all applications in a given deploy command
+  @param sources: Set of sources to track what features have created a resource and what features that have changed it
+ */
 data class AuroraResource(
     val resource: HasMetadata,
     val header: Boolean = false, // these resources are only created once for each deploy){}){}
+    //TODO: Should we perhaps have a createdSource here to make it required?
     val sources: Set<AuroraResourceSource> = emptySet()
-
 )
 
 data class AuroraResourceSource(

@@ -3,17 +3,21 @@ package no.skatteetaten.aurora.boober.model
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.databind.JsonNode
 
-/*
- Some configField handlers can have sub keys but not be simplified config. So we need a boolean toggle for it.
- */
-
 typealias Validator = (JsonNode?) -> Exception?
 
 val defaultValidator: Validator = { null }
 
+/*
+  A handler into a given pointer into an AuroraConfig with default value and validation
+
+  @param name: the name of the pointer, this can be database/foo/enabled
+  @param validator: When extracting the value from this handler run this validator, if it returns an exception validation will fail
+  @param defaultValue: if this handler is not specified use this default value
+  @param defaultSource: what is the source of the default value, this can be used to say that a source is from the header
+  @param canBeSimplifiedConfig: Some handlers can either be a boolean or an object. This marker is used to flag that behavior
+ */
 data class AuroraConfigFieldHandler(
     val name: String,
-    val path: String = "/$name",
     // Dirty quick fix. This class should never be directly serialized to the http response.
     @JsonIgnore val validator: Validator = defaultValidator,
     val defaultValue: Any? = null,

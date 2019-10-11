@@ -55,7 +55,7 @@ fun JsonNode.getBoolean(nodeName: String): Boolean {
 }
 
 fun JsonNode.atNullable(path: String): JsonNode? {
-    val value = this.at(path)
+    val value = this.at(path.ensureStartWith("/"))
     if (value.isMissingNode) {
         return null
     }

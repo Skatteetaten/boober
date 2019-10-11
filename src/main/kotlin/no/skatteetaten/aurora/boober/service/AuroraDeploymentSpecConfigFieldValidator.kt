@@ -31,7 +31,7 @@ class AuroraDeploymentSpecConfigFieldValidator(
             val rawField = fields[e.name]
             if (rawField == null) {
                 e.validator(null)?.let {
-                    ConfigFieldErrorDetail.missing(it.localizedMessage, e.path)
+                    ConfigFieldErrorDetail.missing(it.localizedMessage, e.name)
                 }
             } else {
                 val invalidEnvSource =
@@ -59,7 +59,7 @@ class AuroraDeploymentSpecConfigFieldValidator(
                         e.name,
                         rawField
                     )
-                    else -> ConfigFieldErrorDetail.missing(result.localizedMessage, e.path)
+                    else -> ConfigFieldErrorDetail.missing(result.localizedMessage, e.name)
                 }
                 if (err != null) {
                     logger.trace("Error=$err message=${err.message}")
@@ -86,7 +86,7 @@ class AuroraDeploymentSpecConfigFieldValidator(
     }
 
     private fun getUnmappedPointers(): Map<String, List<String>> {
-        val allPaths = fieldHandlers.map { it.path }
+        val allPaths = fieldHandlers.map { "/${it.name}" }
 
         val filePointers = applicationFiles.associateBy({ it.configName }, { it.asJsonNode.findAllPointers(3) })
 
