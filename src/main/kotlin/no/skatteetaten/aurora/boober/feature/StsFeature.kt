@@ -35,8 +35,6 @@ class StsFeature(val sts: StsProvisioner) : Feature {
     }
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
-
-        // TODO: Handle failure
         return findCertificate(adc, adc.name)?.let {
             val result = sts.generateCertificate("", adc.name, adc.envName)
 

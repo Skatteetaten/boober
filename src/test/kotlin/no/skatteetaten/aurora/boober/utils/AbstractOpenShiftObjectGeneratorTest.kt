@@ -4,16 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode
 import io.mockk.clearAllMocks
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import org.junit.jupiter.api.BeforeEach
 
 open class AbstractOpenShiftObjectGeneratorTest : AbstractAuroraConfigTest() {
 
-    val DEPLOY_ID = "123"
-
     val userDetailsProvider = mockk<UserDetailsProvider>()
 
-    val openShiftResourceClient = mockk<OpenShiftResourceClient>()
     val mapper = jsonMapper()
 
     @BeforeEach

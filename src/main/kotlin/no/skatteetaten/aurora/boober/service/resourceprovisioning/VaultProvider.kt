@@ -25,7 +25,6 @@ class VaultResults(val vaultIndex: VaultIndex) {
     }
 }
 
-// TODO: Why a vault provider and a vault service?
 @Service
 class VaultProvider(val vaultService: VaultService) {
 
