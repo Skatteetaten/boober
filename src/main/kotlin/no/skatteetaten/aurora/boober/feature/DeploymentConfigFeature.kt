@@ -15,10 +15,10 @@ import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
-import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.filterNullValues
+import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.springframework.stereotype.Service
 
 fun AuroraDeploymentSpec.quantity(resource: String, classifier: String): Pair<String, Quantity> =
@@ -126,8 +126,7 @@ class DeploymentConfigFeature : Feature {
             "paused" to "true"
         } else null
 
-        val allLabels = mapOf("deployTag" to adc.dockerTag).addIfNotNull(pauseLabel)
-        return OpenShiftObjectLabelService.toOpenShiftLabelNameSafeMap(allLabels)
+        return mapOf("deployTag" to adc.dockerTag).addIfNotNull(pauseLabel).normalizeLabels()
     }
 
     fun createDcAnnotations(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, String> {

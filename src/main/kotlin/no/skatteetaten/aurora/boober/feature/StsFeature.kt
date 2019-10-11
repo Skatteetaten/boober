@@ -15,6 +15,7 @@ import no.skatteetaten.aurora.boober.model.addVolumesAndMounts
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import no.skatteetaten.aurora.boober.utils.whenTrue
 import org.apache.commons.codec.binary.Base64
 import org.springframework.stereotype.Service
@@ -55,7 +56,7 @@ class StsFeature(val sts: StsProvisioner) : Feature {
         return newSecret {
             metadata {
                 labels =
-                    mapOf(StsSecretGenerator.RENEW_AFTER_LABEL to stsProvisionResults.renewAt.epochSecond.toString())
+                    mapOf(StsSecretGenerator.RENEW_AFTER_LABEL to stsProvisionResults.renewAt.epochSecond.toString()).normalizeLabels()
                 name = secretName
                 namespace = secretNamespace
                 annotations = mapOf(
@@ -145,6 +146,7 @@ object StsSecretGenerator {
             metadata {
                 this.labels =
                     labels.addIfNotNull(RENEW_AFTER_LABEL to stsProvisionResults.renewAt.epochSecond.toString())
+                        .normalizeLabels()
                 name = secretName
                 this.namespace = namespace
                 ownerReferences = listOf(element = ownerReference)

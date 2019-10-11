@@ -8,9 +8,9 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.springframework.stereotype.Service
 
 @Service
@@ -30,7 +30,7 @@ class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature
             "name" to adc.name
         )
 
-        return OpenShiftObjectLabelService.toOpenShiftLabelNameSafeMap(labels)
+        return labels.normalizeLabels()
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
