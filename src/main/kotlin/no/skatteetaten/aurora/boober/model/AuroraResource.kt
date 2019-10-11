@@ -24,7 +24,7 @@ data class AuroraResource(
     val resource: HasMetadata,
     val createdSource: AuroraResourceSource,
     val header: Boolean = false, // these resources are only created once for each deploy){}){}
-    val sources: Set<AuroraResourceSource> = emptySet()
+    val sources: MutableSet<AuroraResourceSource> = mutableSetOf()
 )
 
 data class AuroraResourceSource(
@@ -53,7 +53,7 @@ fun Set<AuroraResource>.addVolumesAndMounts(
     clazz: Class<out Feature>
 ) {
     this.filter { it.resource.kind == "DeploymentConfig" }.forEach {
-        it.sources.addIfNotNull(AuroraResourceSource(feature = clazz, comment = "Added env vars, volume mount, volume"))
+        it.sources.add(AuroraResourceSource(feature = clazz, comment = "Added env vars, volume mount, volume"))
         val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
         dc.spec.template.spec.volumes = dc.spec.template.spec.volumes.addIfNotNull(volumes)
         dc.allNonSideCarContainers.forEach { container ->

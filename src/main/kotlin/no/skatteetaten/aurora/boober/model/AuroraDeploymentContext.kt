@@ -8,6 +8,7 @@ fun AuroraDeploymentContext.validate(fullValidation: Boolean): Map<Feature, List
         try {
             it.key.validate(it.value, fullValidation, this.cmd)
         } catch (e: Exception) {
+            throw e
             listOf(e)
         }
     }
@@ -49,5 +50,6 @@ typealias FeatureSpec = Map<Feature, AuroraDeploymentSpec>
 data class AuroraDeploymentContext(
     val spec: AuroraDeploymentSpec,
     val cmd: AuroraContextCommand,
-    val features: FeatureSpec
+    val features: FeatureSpec,
+    val featureHandlers: Map<Feature, Set<AuroraConfigFieldHandler>>
 )

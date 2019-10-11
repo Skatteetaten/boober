@@ -88,10 +88,7 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
 
     @BeforeEach
     fun setupTest() {
-        service = AuroraDeploymentContextService(
-            featuers = features,
-            validationPoolSize = 1
-        )
+        service = AuroraDeploymentContextService(featuers = features)
         val template: String = this.javaClass.getResource("/samples/config/templates/atomhopper.json").readText()
         every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "token", "Aurora OpenShift")
         every { openShiftClient.getTemplate("atomhopper") } returns (jacksonObjectMapper().readTree(template))

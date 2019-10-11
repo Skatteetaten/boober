@@ -16,13 +16,11 @@ import no.skatteetaten.aurora.boober.model.validate
 import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class AuroraDeploymentContextService(
-    val featuers: List<Feature>,
-    @Value("\${boober.validationPoolSize:6}") val validationPoolSize: Int
+    val featuers: List<Feature>
 ) {
 
     val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentContextService::class.java)
@@ -117,7 +115,8 @@ class AuroraDeploymentContextService(
         return AuroraDeploymentContext(
             spec,
             cmd = deployCommand,
-            features = featureAdc
+            features = featureAdc,
+            featureHandlers = featureHandlers
         )
     }
 

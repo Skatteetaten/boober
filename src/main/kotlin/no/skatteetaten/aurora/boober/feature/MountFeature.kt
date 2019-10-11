@@ -84,7 +84,7 @@ class MountFeature(
             .map {
                 newConfigMap {
                     metadata {
-                        name = it.volumeName
+                        name = it.volumeName.ensureStartWith(adc.name, "-")
                         namespace = adc.namespace
                     }
                     data = it.content
@@ -137,11 +137,22 @@ class MountFeature(
         fullValidation: Boolean,
         cmd: AuroraContextCommand
     ): List<Exception> {
-        if (!fullValidation || adc.cluster != cluster) {
-            return emptyList()
-        }
         val mounts = getMounts(adc, cmd)
-        return validateExistingMounts(mounts, adc).addIfNotNull(validateVaultExistence(mounts, adc))
+        val errors = validateConfigMapMountHasContent(mounts, adc)
+        if (!fullValidation || adc.cluster != cluster) {
+            return errors
+        }
+        return errors.addIfNotNull(validateExistingMounts(mounts, adc))
+            .addIfNotNull(validateVaultExistence(mounts, adc))
+    }
+
+    fun validateConfigMapMountHasContent(
+        mounts: List<Mount>,
+        adc: AuroraDeploymentSpec
+    ): List<AuroraDeploymentSpecValidationException> {
+        return mounts.filter { it.type == MountType.ConfigMap && it.content == null }.map {
+            AuroraDeploymentSpecValidationException("Mount with type=${it.type} namespace=${adc.namespace} name=${it.volumeName} does not have required content block")
+        }
     }
 
     fun validateVaultExistence(
@@ -188,7 +199,7 @@ class MountFeature(
             val type: MountType = auroraDeploymentSpec["mounts/$mount/type"]
 
             val content: Map<String, String>? = if (type == MountType.ConfigMap) {
-                auroraDeploymentSpec["mounts/$mount/content"]
+                auroraDeploymentSpec.getOrNull("mounts/$mount/content")
             } else {
                 null
             }
