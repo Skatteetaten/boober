@@ -5,7 +5,6 @@ import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.v1.UserAnnotationControllerV1
-import no.skatteetaten.aurora.boober.controller.v1.UserAnnotationResponder
 import no.skatteetaten.aurora.boober.service.UserAnnotationService
 import no.skatteetaten.aurora.boober.utils.toJson
 import org.junit.jupiter.api.AfterEach
@@ -21,10 +20,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetu
 class UserAnnotationControllerV1Test {
 
     private val userAnnotationService = mockk<UserAnnotationService>()
-    private val controller = UserAnnotationControllerV1(
-        userAnnotationService,
-        UserAnnotationResponder()
-    )
+    private val controller = UserAnnotationControllerV1(userAnnotationService)
     private val mockMvc = standaloneSetup(controller).build()
 
     @AfterEach

@@ -6,14 +6,12 @@ import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
 import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
 import no.skatteetaten.aurora.boober.service.renderSpecAsJson
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import org.springframework.stereotype.Component
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -22,17 +20,13 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.util.UriUtils
 import java.nio.charset.Charset
 
-// TODO inline responderen
 @RestController
 @RequestMapping("/v1/auroradeployspec/{auroraConfigName}")
 class AuroraDeploymentSpecControllerV1(
     val auroraDeploymentContextService: AuroraDeploymentContextService,
-    val auroraConfigService: AuroraConfigService,
-    val responder: AuroraDeploymentContextResponder
-
+    val auroraConfigService: AuroraConfigService
 ) {
 
-    // TODO: How much of the logic here should be in a seperate service?
     @GetMapping
     fun findAllDeploymentSpecs(
         @PathVariable auroraConfigName: String,
@@ -47,10 +41,11 @@ class AuroraDeploymentSpecControllerV1(
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         val specs = adrList.map(ApplicationDeploymentRef.Companion::fromString)
             .let { auroraDeploymentContextService.getAuroraDeploymentContexts(auroraConfig, it, ref) }
-        return responder.create(
-            specs,
-            includeDefaults ?: true
-        )
+        return Response(items = specs.map {
+            renderSpecAsJson(
+                it.spec, includeDefaults ?: true
+            )
+        })
     }
 
     @GetMapping("/{environment}/")
@@ -65,7 +60,7 @@ class AuroraDeploymentSpecControllerV1(
         val specs = auroraConfig.getApplicationDeploymentRefs()
             .filter { it.environment == environment }
             .let { auroraDeploymentContextService.getAuroraDeploymentContexts(auroraConfig, it, ref) }
-        return responder.create(specs, includeDefaults)
+        return Response(items = specs.map { renderSpecAsJson(it.spec, includeDefaults) })
     }
 
     @GetMapping("/{environment}/{application}")
@@ -87,7 +82,12 @@ class AuroraDeploymentSpecControllerV1(
             auroraConfigRef = ref,
             overrides = overrideFiles
         )
-        return responder.create(auroraDeploymentContextService.createAuroraDeploymentContext(cmd))
+        return Response(items = listOf(auroraDeploymentContextService.createAuroraDeploymentContext(cmd)).map {
+            renderSpecAsJson(
+                it.spec,
+                true
+            )
+        })
     }
 
     fun extractOverrides(overrides: String?): List<AuroraConfigFile> {
@@ -123,20 +123,7 @@ class AuroraDeploymentSpecControllerV1(
             )
         ).spec
 
-        val formatted = renderJsonForAuroraDeploymentSpecPointers(spec, includeDefaults)
-        return responder.create(formatted)
+        return Response(items = listOf(renderJsonForAuroraDeploymentSpecPointers(spec, includeDefaults)))
     }
 }
 
-@Component
-class AuroraDeploymentContextResponder {
-    fun create(formatted: String) = Response(items = listOf(formatted))
-
-    fun create(specInternal: AuroraDeploymentContext, includeDefaults: Boolean = true): Response =
-        create(listOf(specInternal), includeDefaults)
-
-    fun create(contexts: List<AuroraDeploymentContext>, includeDefaults: Boolean): Response {
-        val fields = contexts.map { renderSpecAsJson(it.spec, includeDefaults) }
-        return Response(items = fields)
-    }
-}

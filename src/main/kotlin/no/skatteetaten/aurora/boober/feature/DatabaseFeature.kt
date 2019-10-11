@@ -126,6 +126,8 @@ class DatabaseFeature(
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         val databases = findDatabases(adc, cmd)
         if (databases.isEmpty()) return
+
+        // TODO: tror vi trenger en klasse som har volume, mount og liste med env vars
         val dbEnv = databases.flatMap { it.createDbEnv("${it.name}_db") }
             .addIfNotNull(databases.firstOrNull()?.createDbEnv("db")).toMap().toEnvVars()
 
@@ -184,10 +186,10 @@ class DatabaseFeature(
         if (adc.isSimplifiedAndEnabled("database")) {
             return listOf(defaultDb)
         }
-        return cmd.applicationFiles.findSubKeys("database").mapNotNull { db -> findDatabases(db, adc, defaultDb, cmd) }
+        return cmd.applicationFiles.findSubKeys("database").mapNotNull { db -> findDatabase(db, adc, defaultDb, cmd) }
     }
 
-    private fun findDatabases(
+    private fun findDatabase(
         db: String,
         adc: AuroraDeploymentSpec,
         defaultDb: Database,
@@ -323,7 +325,7 @@ class DatabaseFeature(
         key: String,
         applicationFiles: List<AuroraConfigFile>
     ): List<AuroraConfigFieldHandler> {
-        return applicationFiles.findSubHandlers("$key/roles", validatorFn = { k ->
+        return applicationFiles.findSubHandlers("$key/roles", validatorFn = {
             { node ->
                 node.oneOf(DatabasePermission.values().map { it.toString() })
             }

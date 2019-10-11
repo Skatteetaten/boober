@@ -13,7 +13,6 @@ import no.skatteetaten.aurora.boober.service.vault.VaultWithAccess
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
-import org.springframework.stereotype.Component
 import org.springframework.util.AntPathMatcher
 import org.springframework.util.DigestUtils
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -108,12 +107,11 @@ enum class VaultOperation {
 
 data class VaultOperationPayload(val operationName: VaultOperation, val parameters: Map<String, Any>)
 
-// TODO: Inline responderen. Flytt data klasser til model/vault?
+// TODO: Flytt data klasser til model/vault?
 @RestController
 @RequestMapping("/v1/vault/{vaultCollection}")
 class VaultControllerV1(
     private val vaultService: VaultService,
-    private val responder: VaultResponder,
     @Value("\${vault.operations.enabled:false}") private val operationsEnabled: Boolean
 ) {
 
@@ -134,7 +132,7 @@ class VaultControllerV1(
     @GetMapping
     fun listVaults(@PathVariable vaultCollection: String): Response {
         val resources = vaultService.findAllVaultsWithUserAccessInVaultCollection(vaultCollection)
-        return responder.create(resources)
+        return Response(items = resources.map(::fromVaultWithAccess))
     }
 
     @PutMapping
@@ -147,7 +145,7 @@ class VaultControllerV1(
             vaultCollection, vaultPayload.name, vaultPayload.permissions, vaultPayload.secretsDecoded
                 ?: emptyMap()
         )
-        return responder.create(vault)
+        return Response(items = listOf(vault).map(::fromEncryptedFileVault))
     }
 
     @GetMapping("/{vault}")
@@ -237,14 +235,4 @@ class VaultControllerV1(
         response.writer.flush()
         response.writer.close()
     }
-}
-
-@Component
-class VaultResponder {
-
-    fun create(vaultsWithAccess: List<VaultWithAccess>) =
-        Response(items = vaultsWithAccess.map(::fromVaultWithAccess))
-
-    fun create(encryptedFileVault: EncryptedFileVault) =
-        Response(items = listOf(encryptedFileVault).map(::fromEncryptedFileVault))
 }

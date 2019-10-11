@@ -44,15 +44,13 @@ fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSp
 
 fun renderSpecAsJson(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean): Map<String, Any> {
 
-    val jsonSpec = deploymentSpec.present(includeDefaults) {
+    return deploymentSpec.present(includeDefaults) {
         mapOf(
             "source" to it.value.name,
             "value" to it.value.value,
             "sources" to it.value.sources.map { mapOf("name" to it.configFile.configName, "value" to it.value) }
         )
     }
-
-    return jsonSpec
 }
 
 fun renderSpecAsJsonOld(
