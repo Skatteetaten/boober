@@ -9,6 +9,7 @@ import io.fabric8.openshift.api.model.BuildConfig
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.Paths.binPath
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -22,7 +23,7 @@ class WebDeployFeature(@Value("\${integrations.docker.registry}") val registry: 
             createContainer(
                 adc = adc,
                 containerName = "${adc.name}-node",
-                containerArgs = listOf("/u01/bin/run_node"),
+                containerArgs = listOf("$binPath/run_node"),
                 containerPorts = mapOf(
                     "http" to PortNumbers.NODE_PORT,
                     "management" to PortNumbers.INTERNAL_ADMIN_PORT
@@ -31,7 +32,7 @@ class WebDeployFeature(@Value("\${integrations.docker.registry}") val registry: 
             createContainer(
                 adc = adc,
                 containerName = "${adc.name}-nginx",
-                containerArgs = listOf("/u01/bin/run_nginx"),
+                containerArgs = listOf("$binPath/run_nginx"),
                 containerPorts = mapOf("http" to PortNumbers.INTERNAL_HTTP_PORT)
             )
 

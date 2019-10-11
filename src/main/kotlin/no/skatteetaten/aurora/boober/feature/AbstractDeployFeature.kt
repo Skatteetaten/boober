@@ -43,6 +43,7 @@ import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.AuroraVersion
+import no.skatteetaten.aurora.boober.model.Paths
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
@@ -401,7 +402,7 @@ fun auroraContainer(block: Container.() -> Unit = {}): Container {
     }
     instance.volumeMounts = listOf(newVolumeMount {
         name = "application-log-volume"
-        mountPath = "/u01/logs"
+        mountPath = Paths.logPath
     }) + instance.volumeMounts
 
     instance.env = listOf(

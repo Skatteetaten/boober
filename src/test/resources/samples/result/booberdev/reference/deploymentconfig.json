@@ -178,7 +178,7 @@
           {
             "args": [
               "-config",
-              "/u01/config/config.json"
+              "/u01/config/toxiproxy/config.json"
             ],
             "env": [
               {
@@ -223,7 +223,7 @@
             },
             "volumeMounts": [
               {
-                "mountPath": "/u01/config/configmap",
+                "mountPath": "/u01/config/toxiproxy",
                 "name": "reference-toxiproxy-config"
               }
             ]

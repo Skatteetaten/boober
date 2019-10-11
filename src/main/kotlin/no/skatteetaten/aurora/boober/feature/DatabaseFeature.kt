@@ -16,6 +16,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.Paths.secretsPath
 import no.skatteetaten.aurora.boober.model.addVolumesAndMounts
 import no.skatteetaten.aurora.boober.model.associateSubKeys
 import no.skatteetaten.aurora.boober.model.findSubHandlers
@@ -110,7 +111,7 @@ class DatabaseFeature(
 
         val mount = newVolumeMount {
             name = mountName
-            mountPath = "/u01/secrets/app/$mountName"
+            mountPath = "$secretsPath/$mountName"
         }
 
         val volume =
@@ -127,6 +128,16 @@ class DatabaseFeature(
         val databases = findDatabases(adc, cmd)
         if (databases.isEmpty()) return
 
+        /*
+          TODO: Burde vi her hente secretene som ble laget og reagere på dem fremfor å finne databasene over på nytt?
+
+          Vi bør ha nok data under til å lage dbEnv/volume/volumeMount fra en secret
+          Kanskje vi må legge til en annotasjon i secreten for databasene som sier noe om basePath men det er ikke mye jobb
+          da slipper vi at man må gjenta pather og navn og slikt her.
+
+          Et problem er kanskje i volume mapper hvor man har secrets som ikke er laget her, men som skal finnes, de kan vi
+          ikke håndtere på denne måten
+         */
         // TODO: tror vi trenger en klasse som har volume, mount og liste med env vars
         val dbEnv = databases.flatMap { it.createDbEnv("${it.name}_db") }
             .addIfNotNull(databases.firstOrNull()?.createDbEnv("db")).toMap().toEnvVars()
@@ -433,7 +444,7 @@ fun Database.createSchemaDetails(affiliation: String): SchemaRequestDetails {
 }
 
 fun Database.createDbEnv(envName: String): List<Pair<String, String>> {
-    val path = "/u01/secrets/app/${this.name.toLowerCase()}-db"
+    val path = "$secretsPath/${this.name.toLowerCase()}-db"
     val envName = envName.replace("-", "_").toUpperCase()
 
     return listOf(

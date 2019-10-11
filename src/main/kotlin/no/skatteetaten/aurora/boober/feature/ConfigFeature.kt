@@ -14,6 +14,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.Paths.configPath
 import no.skatteetaten.aurora.boober.model.addVolumesAndMounts
 import no.skatteetaten.aurora.boober.model.findConfigFieldHandlers
 import no.skatteetaten.aurora.boober.model.findSubKeys
@@ -267,7 +268,7 @@ class ConfigFeature(
         val mounts = configSecretExist?.let {
             listOf(newVolumeMount {
                 name = "config"
-                mountPath = "/u01/config/configmap"
+                mountPath = "$configPath/configmap"
             })
         } ?: emptyList()
 
@@ -284,7 +285,7 @@ class ConfigFeature(
         val configEnv = configSecretExist?.let {
             newEnvVar {
                 name = "VOLUME_CONFIG"
-                value = "/u01/config/configmap"
+                value = "$configPath/configmap"
             }
         }
 

@@ -22,6 +22,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.Paths.configPath
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 
@@ -110,7 +111,7 @@ class ToxiproxySidecarFeature : Feature {
             volumeMounts = listOf(
                 newVolumeMount {
                     name = "${adc.name}-toxiproxy-config"
-                    mountPath = "/u01/config/configmap"
+                    mountPath = "$configPath/toxiproxy"
                 }
             )
             resources {
@@ -131,7 +132,7 @@ class ToxiproxySidecarFeature : Feature {
                 initialDelaySeconds = 10
                 timeoutSeconds = 1
             }
-            args = listOf("-config", "/u01/config/config.json")
+            args = listOf("-config", "$configPath/toxiproxy/config.json")
         }
     }
 }

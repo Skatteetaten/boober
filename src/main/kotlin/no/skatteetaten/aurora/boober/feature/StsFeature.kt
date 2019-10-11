@@ -11,6 +11,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.Paths.secretsPath
 import no.skatteetaten.aurora.boober.model.addVolumesAndMounts
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
@@ -51,7 +52,7 @@ class StsFeature(val sts: StsProvisioner) : Feature {
     ): Secret {
 
         val secretName = "$appName-cert"
-        val baseUrl = "/u01/secrets/app/$secretName/keystore.jks"
+        val baseUrl = "$secretsPath/$secretName/keystore.jks"
         val cert = stsProvisionResults.cert
         return newSecret {
             metadata {
@@ -95,7 +96,7 @@ class StsFeature(val sts: StsProvisioner) : Feature {
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         if (adc["certificate"]) {
-            val baseUrl = "/u01/secrets/app/${adc.name}-cert"
+            val baseUrl = "$secretsPath/${adc.name}-cert"
             val stsVars = mapOf(
                 "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
                 "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
@@ -135,7 +136,7 @@ object StsSecretGenerator {
     ): Secret {
 
         val secretName = "$appName-cert"
-        val baseUrl = "/u01/secrets/app/$secretName/keystore.jks"
+        val baseUrl = "$secretsPath/$secretName/keystore.jks"
 
         val cert = stsProvisionResults.cert
         val secretAnnotations = mapOf(
