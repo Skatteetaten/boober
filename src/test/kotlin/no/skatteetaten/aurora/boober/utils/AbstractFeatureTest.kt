@@ -2,11 +2,12 @@ package no.skatteetaten.aurora.boober.utils
 
 import assertk.Assert
 import assertk.Result
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.messageContains
-import com.fkorotkov.kubernetes.emptyDir
-import com.fkorotkov.kubernetes.newVolume
+import com.fkorotkov.kubernetes.newContainer
 import com.fkorotkov.kubernetes.spec
 import com.fkorotkov.openshift.from
 import com.fkorotkov.openshift.imageChangeParams
@@ -17,12 +18,13 @@ import com.fkorotkov.openshift.rollingParams
 import com.fkorotkov.openshift.spec
 import com.fkorotkov.openshift.strategy
 import com.fkorotkov.openshift.template
+import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.IntOrString
+import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.clearAllMocks
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.feature.DeploymentConfigFeature
 import no.skatteetaten.aurora.boober.feature.Feature
-import no.skatteetaten.aurora.boober.feature.auroraContainer
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
@@ -43,9 +45,6 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
 
     val openShiftClient: OpenShiftClient = mockk()
 
-    lateinit var service: AuroraDeploymentContextService
-    lateinit var ctx: AuroraDeploymentContext
-
     val FEATURE_ABOUT = """{
   "schemaVersion": "v1",
   "permissions": {
@@ -57,59 +56,53 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
   "cluster": "utv"
 }"""
 
-    val deploymentConfig = newDeploymentConfig {
+    fun createdcAuroraResource() =
+        AuroraResource(newDeploymentConfig {
 
-        metadata {
-            name = "simple"
-            namespace = "paas-utv"
-        }
-        spec {
-            strategy {
-                type = "Rolling"
-                rollingParams {
-                    intervalSeconds = 1
-                    maxSurge = IntOrString("25%")
-                    maxUnavailable = IntOrString(0)
-                    timeoutSeconds = 180
-                    updatePeriodSeconds = 1L
-                }
+            metadata {
+                name = "simple"
+                namespace = "paas-utv"
             }
-            triggers = listOf(
-                newDeploymentTriggerPolicy {
-                    type = "ImageChange"
-                    imageChangeParams {
-                        automatic = true
-                        containerNames = listOf("simple")
-                        from {
-                            name = "simple:default"
-                            kind = "ImageStreamTag"
-                        }
+            spec {
+                strategy {
+                    type = "Rolling"
+                    rollingParams {
+                        intervalSeconds = 1
+                        maxSurge = IntOrString("25%")
+                        maxUnavailable = IntOrString(0)
+                        timeoutSeconds = 180
+                        updatePeriodSeconds = 1L
                     }
                 }
-
-            )
-            replicas = 1
-            selector = mapOf("name" to "simple")
-            template {
-                spec {
-                    volumes = volumes + newVolume {
-                        name = "application-log-volume"
-                        emptyDir()
-                    }
-                    containers = listOf(
-                        auroraContainer {
-                            name = "simple"
+                triggers = listOf(
+                    newDeploymentTriggerPolicy {
+                        type = "ImageChange"
+                        imageChangeParams {
+                            automatic = true
+                            containerNames = listOf("simple")
+                            from {
+                                name = "simple:default"
+                                kind = "ImageStreamTag"
+                            }
                         }
-                    )
-                    restartPolicy = "Always"
-                    dnsPolicy = "ClusterFirst"
+                    }
+
+                )
+                replicas = 1
+                selector = mapOf("name" to "simple")
+                template {
+                    spec {
+                        containers = listOf(
+                            newContainer {
+                                name = "simple"
+                            }
+                        )
+                        restartPolicy = "Always"
+                        dnsPolicy = "ClusterFirst"
+                    }
                 }
             }
-        }
-    }
-
-    val dcAuroraResource =
-        AuroraResource(deploymentConfig, createdSource = AuroraResourceSource(DeploymentConfigFeature::class.java))
+        }, createdSource = AuroraResourceSource(DeploymentConfigFeature::class.java))
 
     abstract val feature: Feature
     val mapper = jsonMapper()
@@ -123,7 +116,6 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
 
     @BeforeEach
     fun setup() {
-
         Instants.determineNow = { Instant.EPOCH }
         clearAllMocks()
     }
@@ -181,5 +173,30 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
     ): Set<AuroraConfigFieldHandler> {
         val ctx = createAuroraDeploymentContext(app, base)
         return ctx.featureHandlers.values.first()
+    }
+
+    fun assertDeploymentConfigMountsVolume(
+        dc: DeploymentConfig,
+        attachment: HasMetadata,
+        additionalEnv: Map<String, String> = emptyMap()
+    ) {
+        val podSpec = dc.spec.template.spec
+
+        val volumeName = podSpec.volumes[0].name
+        val volumeEnvName = "VOLUME_${volumeName}".replace("-", "_").toUpperCase()
+        val volumeEnvValue = podSpec.containers[0].volumeMounts[0].mountPath
+
+        val expectedEnv = additionalEnv.addIfNotNull(volumeEnvName to volumeEnvValue)
+
+        assertThat(volumeName).isEqualTo(podSpec.containers[0].volumeMounts[0].name)
+        when {
+            attachment.kind == "ConfigMap" -> assertThat(podSpec.volumes[0].configMap.name).isEqualTo(attachment.metadata.name)
+            attachment.kind == "Secret" -> assertThat(podSpec.volumes[0].secret.secretName).isEqualTo(attachment.metadata.name)
+            attachment.kind == "PersistentVolumeClaim" -> assertThat(podSpec.volumes[0].persistentVolumeClaim.claimName).isEqualTo(
+                attachment.metadata.name
+            )
+        }
+        val env: Map<String, String> = podSpec.containers[0].env.associate { it.name to it.value }
+        assertThat(env).isEqualTo(expectedEnv)
     }
 }

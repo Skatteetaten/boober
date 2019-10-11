@@ -2,12 +2,16 @@ package no.skatteetaten.aurora.boober.feature
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import com.fkorotkov.kubernetes.metadata
+import com.fkorotkov.kubernetes.newPersistentVolumeClaim
+import com.fkorotkov.kubernetes.newSecret
 import io.fabric8.kubernetes.api.model.ConfigMap
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
-import no.skatteetaten.aurora.boober.service.vault.VaultService
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultResults
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -16,15 +20,16 @@ import org.junit.jupiter.params.provider.EnumSource
 class MountFeatureHandlerTest : AbstractFeatureTest() {
     override val feature: Feature
         get() =
-            MountFeature(VaultProvider(vaultService), cluster, openShiftClient)
+            MountFeature(vaultProvider, cluster, openShiftClient)
 
-    val vaultService: VaultService = mockk()
+    val vaultProvider: VaultProvider = mockk()
 
     val configMapJson = """{
               "mounts": {
                 "mount": {
                   "type": "ConfigMap",
                   "path": "/u01/foo",
+                  "mountName" : "mount",
                   "content" : {
                     "FOO" : "BAR"
                    }
@@ -32,6 +37,35 @@ class MountFeatureHandlerTest : AbstractFeatureTest() {
               }  
              }""".trimIndent()
 
+    val secretVaultJson = """{
+              "mounts": {
+                "mount": {
+                  "type": "Secret",
+                  "path": "/u01/foo",
+                  "secretVault" : "foo"
+                }
+              }  
+             }""".trimIndent()
+
+    val existingSecretJson = """{
+              "mounts": {
+                "mount": {
+                  "type": "Secret",
+                  "path": "/u01/foo",
+                  "exist" : true
+                }
+              }  
+             }""".trimIndent()
+
+    val existingPVCJson = """{
+              "mounts": {
+                "mount": {
+                  "type": "PVC",
+                  "path": "/u01/foo",
+                  "exist" : true
+                }
+              }  
+             }""".trimIndent()
     @Test
     fun `Should generate handlers`() {
         val handlers = createAuroraConfigFieldHandlers(configMapJson)
@@ -39,6 +73,15 @@ class MountFeatureHandlerTest : AbstractFeatureTest() {
         val mountHandlers = handlers.filter { it.name.startsWith("mounts") }
         assertThat(mountHandlers.size).isEqualTo(7)
     }
+
+    @Test
+    fun `Should generate handlers for no mounts`() {
+        val handlers = createAuroraConfigFieldHandlers("{}")
+
+        val mountHandlers = handlers.filter { it.name.startsWith("mounts") }
+        assertThat(mountHandlers.size).isEqualTo(0)
+    }
+
 
     enum class MountValidationTestCases(
         val jsonFragment: String,
@@ -75,34 +118,16 @@ class MountFeatureHandlerTest : AbstractFeatureTest() {
 
         every { openShiftClient.resourceExists("secret", "paas-utv", "mount") } returns false
 
-        val json = """{
-              "mounts": {
-                "mount": {
-                  "type": "Secret",
-                  "path": "/u01/foo",
-                  "exist" : true
-                }
-              }  
-             }""".trimIndent()
-        assertThat { createAuroraDeploymentContext(json) }
+        assertThat { createAuroraDeploymentContext(existingSecretJson) }
             .singleApplicationError("Required existing resource with type=Secret namespace=paas-utv name=mount does not exist")
     }
 
     @Test
     fun `test deep validation auroraVault exist`() {
 
-        every { vaultService.vaultExists("paas", "foo") } returns false
+        every { vaultProvider.vaultExists("paas", "foo") } returns false
 
-        val json = """{
-              "mounts": {
-                "mount": {
-                  "type": "Secret",
-                  "path": "/u01/foo",
-                  "secretVault" : "foo"
-                }
-              }  
-             }""".trimIndent()
-        assertThat { createAuroraDeploymentContext(json) }
+        assertThat { createAuroraDeploymentContext(secretVaultJson) }
             .singleApplicationError("Referenced Vault foo in Vault Collection paas does not exist")
     }
 
@@ -119,25 +144,79 @@ class MountFeatureHandlerTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `should modify deploymentConfig and add mount`() {
+    fun `should modify deploymentConfig and add configMap`() {
 
-        val resource = mutableSetOf(dcAuroraResource)
+        val resource = mutableSetOf(createdcAuroraResource())
         modifyResources(configMapJson, existingResources = resource)
 
         assertThat(resource.size).isEqualTo(2)
         val auroraResource = resource.first()
-        val configMap = resource.last().resource as ConfigMap
 
         assertThat(auroraResource.sources.first().feature).isEqualTo(MountFeature::class.java)
-
         val dc = auroraResource.resource as DeploymentConfig
-        val podSpec = dc.spec.template.spec
-        assertThat(podSpec.volumes.size).isEqualTo(2)
-        assertThat(podSpec.volumes[1].name).isEqualTo(podSpec.containers[0].volumeMounts[1].name)
-        assertThat(podSpec.volumes[1].configMap.name).isEqualTo(configMap.metadata.name)
-        assertThat(podSpec.containers[0].volumeMounts.size).isEqualTo(2)
-        assertThat(podSpec.containers[0].volumeMounts[1].mountPath).isEqualTo(podSpec.containers[0].env.last().value)
-        assertThat(podSpec.containers[0].env.size).isEqualTo(3)
-        assertThat(podSpec.containers[0].env.last().name).isEqualTo("VOLUME_MOUNT")
+        assertDeploymentConfigMountsVolume(dc, resource.last().resource)
+    }
+
+    @Test
+    fun `should modify deploymentConfig and add auroraVaultSecret`() {
+
+        every { vaultProvider.vaultExists("paas", "foo") } returns true
+
+        every { vaultProvider.findVaultData(listOf(VaultRequest("paas", "foo"))) } returns
+            VaultResults(mapOf("foo" to mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray())))
+
+        val resource = mutableSetOf(createdcAuroraResource())
+        modifyResources(secretVaultJson, existingResources = resource)
+
+        assertThat(resource.size).isEqualTo(2)
+        val auroraResource = resource.first()
+
+        assertThat(auroraResource.sources.first().feature).isEqualTo(MountFeature::class.java)
+        val dc = auroraResource.resource as DeploymentConfig
+        assertDeploymentConfigMountsVolume(dc, resource.last().resource)
+    }
+
+    @Test
+    fun `should modify deploymentConfig and add existing secret`() {
+
+        every { openShiftClient.resourceExists("secret", "paas-utv", "mount") } returns true
+
+        val resource = mutableSetOf(createdcAuroraResource())
+        modifyResources(existingSecretJson, existingResources = resource)
+
+        assertThat(resource.size).isEqualTo(1)
+        val auroraResource = resource.first()
+        val secret = newSecret {
+            metadata {
+                name = "mount"
+                namespace = "paas-utv"
+            }
+        }
+
+        assertThat(auroraResource.sources.first().feature).isEqualTo(MountFeature::class.java)
+        val dc = auroraResource.resource as DeploymentConfig
+        assertDeploymentConfigMountsVolume(dc, secret)
+    }
+
+    @Test
+    fun `should modify deploymentConfig and add existing pvc`() {
+
+        every { openShiftClient.resourceExists("persistentvolumeclaim", "paas-utv", "mount") } returns true
+
+        val resource = mutableSetOf(createdcAuroraResource())
+        modifyResources(existingPVCJson, existingResources = resource)
+
+        assertThat(resource.size).isEqualTo(1)
+        val auroraResource = resource.first()
+        val secret = newPersistentVolumeClaim {
+            metadata {
+                name = "mount"
+                namespace = "paas-utv"
+            }
+        }
+
+        assertThat(auroraResource.sources.first().feature).isEqualTo(MountFeature::class.java)
+        val dc = auroraResource.resource as DeploymentConfig
+        assertDeploymentConfigMountsVolume(dc, secret)
     }
 }

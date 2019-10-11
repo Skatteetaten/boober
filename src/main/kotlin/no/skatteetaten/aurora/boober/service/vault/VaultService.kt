@@ -32,12 +32,20 @@ class VaultService(
     val encryptionService: EncryptionService,
     val userDetailsProvider: UserDetailsProvider
 ) {
-
     fun findVaultKeys(vaultCollectionName: String, vaultName: String, fileName: String): Set<String> {
         val vaultCollection = findVaultCollection(vaultCollectionName)
         val vault = vaultCollection.findVaultByName(vaultName) ?: return emptySet()
         val content = vault.secrets[fileName] ?: return emptySet()
         return PropertiesLoaderUtils.loadProperties(ByteArrayResource(content)).stringPropertyNames()
+    }
+
+    fun findFileInVault(
+        vaultCollectionName: String,
+        vaultName: String,
+        fileName: String
+    ): ByteArray {
+        val vault = findVault(vaultCollectionName, vaultName)
+        return vault.getFile(fileName)
     }
 
     fun findAllVaultsWithUserAccessInVaultCollection(vaultCollectionName: String): List<VaultWithAccess> {
@@ -81,15 +89,6 @@ class VaultService(
             gitService.commitAndPushChanges(repo)
             vault
         }
-    }
-
-    fun findFileInVault(
-        vaultCollectionName: String,
-        vaultName: String,
-        fileName: String
-    ): ByteArray {
-        val vault = findVault(vaultCollectionName, vaultName)
-        return vault.getFile(fileName)
     }
 
     fun deleteFileInVault(vaultCollectionName: String, vaultName: String, fileName: String): EncryptedFileVault? {

@@ -102,7 +102,7 @@ class ConfigFeature(
 
         return secrets.map { it.secretVaultName }
             .mapNotNull {
-                if (!vaultProvider.vaultService.vaultExists(vaultCollectionName, it)) {
+                if (!vaultProvider.vaultExists(vaultCollectionName, it)) {
                     AuroraDeploymentSpecValidationException("Referenced Vault $it in Vault Collection $vaultCollectionName does not exist")
                 } else null
             }
@@ -150,7 +150,7 @@ class ConfigFeature(
         val vaultName = secret.secretVaultName
         val keys = secret.secretVaultKeys.takeIfNotEmpty() ?: return null
 
-        val vaultKeys = vaultProvider.vaultService.findVaultKeys(vaultCollection, vaultName, secret.file)
+        val vaultKeys = vaultProvider.findVaultKeys(vaultCollection, vaultName, secret.file)
         val missingKeys = keys - vaultKeys
         return if (missingKeys.isNotEmpty()) {
             throw AuroraDeploymentSpecValidationException("The keys $missingKeys were not found in the secret vault")
@@ -171,7 +171,7 @@ class ConfigFeature(
         vaultCollectionName: String
     ): AuroraDeploymentSpecValidationException? {
         return try {
-            vaultProvider.vaultService.findFileInVault(
+            vaultProvider.findFileInVault(
                 vaultCollectionName = vaultCollectionName,
                 vaultName = secret.secretVaultName,
                 fileName = secret.file

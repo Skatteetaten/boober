@@ -25,8 +25,25 @@ class VaultResults(val vaultIndex: VaultIndex) {
     }
 }
 
+// TODO: Why provider and service here?
 @Service
-class VaultProvider(val vaultService: VaultService) {
+class VaultProvider(private val vaultService: VaultService) {
+
+    fun findFileInVault(
+        vaultCollectionName: String,
+        vaultName: String,
+        fileName: String
+    ): ByteArray {
+        return vaultService.findFileInVault(vaultCollectionName, vaultName, fileName)
+    }
+
+    fun vaultExists(vaultCollectionName: String, vaultName: String): Boolean {
+        return vaultService.vaultExists(vaultCollectionName, vaultName)
+    }
+
+    fun findVaultKeys(vaultCollectionName: String, vaultName: String, fileName: String): Set<String> {
+        return vaultService.findVaultKeys(vaultCollectionName, vaultName, fileName)
+    }
 
     fun findVaultData(vaultRequests: List<VaultRequest>): VaultResults {
 

@@ -95,6 +95,9 @@ class MountFeature(
     private fun generateSecrets(mounts: List<Mount>, adc: AuroraDeploymentSpec): List<Secret> {
         val secretVaults = mounts.filter { !it.exist && it.type == MountType.Secret && it.secretVaultName != null }
 
+        if (secretVaults.isEmpty()) {
+            return emptyList()
+        }
         val vaultReponse = secretVaults.map {
             VaultRequest(
                 collectionName = adc.affiliation,
@@ -132,6 +135,8 @@ class MountFeature(
         }
     }
 
+    // TODO: Validate that PVC must have existing
+    // TODO: validate that existing and secretVault together will not work for Secret
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
@@ -162,7 +167,7 @@ class MountFeature(
         val secretMounts = mounts.filter { it.type == MountType.Secret }.mapNotNull { it.secretVaultName }
         return secretMounts.mapNotNull {
             val vaultCollectionName = adc.affiliation
-            if (!vaultProvider.vaultService.vaultExists(vaultCollectionName, it)) {
+            if (!vaultProvider.vaultExists(vaultCollectionName, it)) {
                 AuroraDeploymentSpecValidationException("Referenced Vault $it in Vault Collection $vaultCollectionName does not exist")
             } else null
         }
@@ -252,6 +257,7 @@ enum class MountType(val kind: String) {
     PVC("persistentvolumeclaim")
 }
 
+// TODO: Do we need the mount abstraction?
 data class Mount(
     val path: String,
     val type: MountType,
