@@ -22,6 +22,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.describeString
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.parallelMap
 import no.skatteetaten.aurora.boober.utils.whenFalse
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -152,7 +153,8 @@ class DeployService(
         val auroraConfigRefExact = auroraConfigService.resolveToExactRef(ref)
         val auroraConfig = auroraConfigService.findAuroraConfig(auroraConfigRefExact)
 
-        return applicationDeploymentRefs.map {
+        // TODO test out parallelMap
+        return applicationDeploymentRefs.parallelMap {
             AuroraContextCommand(auroraConfig, it, auroraConfigRefExact, overrides)
         }
     }

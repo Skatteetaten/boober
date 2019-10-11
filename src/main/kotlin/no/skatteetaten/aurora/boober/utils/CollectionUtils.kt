@@ -1,5 +1,12 @@
 package no.skatteetaten.aurora.boober.utils
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.slf4j.MDCContext
+import no.skatteetaten.aurora.boober.controller.security.SpringSecurityThreadContextElement
+
 fun <K, V> Map<K, V>.addIfNotNull(value: Pair<K, V>?): Map<K, V> {
     return value?.let {
         this + it
@@ -106,7 +113,7 @@ fun <T> Collection<T>?.nullOnEmpty(): Collection<T>? {
     return this
 }
 
-inline fun <K, V> Map<out K, V?>.filterNullValues(): Map<K, V> {
+fun <K, V> Map<out K, V?>.filterNullValues(): Map<K, V> {
     val result = LinkedHashMap<K, V>()
     for (entry in this) {
         entry.value?.let {
@@ -122,4 +129,19 @@ fun <T> Collection<T>?.takeIfNotEmpty(): Collection<T>? {
 
 fun <K, V> Map<K, V>?.takeIfNotEmpty(): Map<K, V>? {
     return this.takeIf { it?.isEmpty() == false }
+}
+
+// TODO: Hvor man vi bruke denne?
+fun <A, B> Iterable<A>.parallelMap(f: suspend (A) -> B): List<B> {
+    val iter = this
+    return runBlocking(
+        MDCContext() + SpringSecurityThreadContextElement()
+    ) {
+        iter.pmap(f)
+    }
+}
+
+// https://jivimberg.io/blog/2018/05/04/parallel-map-in-kotlin/
+suspend fun <A, B> Iterable<A>.pmap(f: suspend (A) -> B): List<B> = coroutineScope {
+    map { async { f(it) } }.awaitAll()
 }
