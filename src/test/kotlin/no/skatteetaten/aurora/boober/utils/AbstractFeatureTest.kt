@@ -38,7 +38,15 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import org.junit.jupiter.api.BeforeEach
 import java.time.Instant
 
+/*
+  Abstract class to test a single feature
+  Override the feature variable with the Feature you want to test
+
+  Look at the helper methods in this class to create handlers/resources for this feature
+ */
 abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
+
+    abstract val feature: Feature
 
     val cluster = "utv"
     val affiliation = "paas"
@@ -104,7 +112,6 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
             }
         }, createdSource = AuroraResourceSource(DeploymentConfigFeature::class.java))
 
-    abstract val feature: Feature
     val mapper = jsonMapper()
     val config = mutableMapOf(
         "about.json" to FEATURE_ABOUT,
