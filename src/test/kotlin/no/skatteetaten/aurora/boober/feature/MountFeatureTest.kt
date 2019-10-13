@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 
-class MountFeatureHandlerTest : AbstractFeatureTest() {
+class MountFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
         get() =
             MountFeature(vaultProvider, cluster, openShiftClient)
@@ -68,6 +68,7 @@ class MountFeatureHandlerTest : AbstractFeatureTest() {
              }""".trimIndent()
     @Test
     fun `Should generate handlers`() {
+
         val handlers = createAuroraConfigFieldHandlers(configMapJson)
 
         val mountHandlers = handlers.filter { it.name.startsWith("mounts") }
