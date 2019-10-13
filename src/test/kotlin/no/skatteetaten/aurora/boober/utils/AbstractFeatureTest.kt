@@ -123,7 +123,14 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
     fun <T> Assert<Result<T>>.singleApplicationError(expectedMessage: String) {
         this.isFailure()
             .isInstanceOf(MultiApplicationValidationException::class)
-            .transform { mae -> mae.errors.flatMap { it.errors }.first() }
+            .transform { mae ->
+                val errors = mae.errors.flatMap { it.errors }
+                if (errors.size != 1) {
+                    throw mae
+                } else {
+                    errors.first()
+                }
+            }
             .messageContains(expectedMessage)
     }
 
