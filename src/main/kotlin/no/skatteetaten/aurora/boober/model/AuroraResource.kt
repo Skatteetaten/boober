@@ -38,7 +38,7 @@ fun Set<AuroraResource>.addEnvVar(
     clazz: Class<out Feature>
 ) {
     this.filter { it.resource.kind == "DeploymentConfig" }.forEach {
-        it.sources.addIfNotNull(AuroraResourceSource(feature = clazz, comment = "Added env vars"))
+        it.sources.add(AuroraResourceSource(feature = clazz, comment = "Added env vars"))
         val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
         dc.allNonSideCarContainers.forEach { container ->
             container.env.addAll(envVars)
