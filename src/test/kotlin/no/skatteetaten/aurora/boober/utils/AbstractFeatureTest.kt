@@ -151,7 +151,7 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
         return service.createValidatedAuroraDeploymentContexts(listOf(deployCommand), fullValidation).first()
     }
 
-    fun genereateResources(
+    fun generateResources(
         app: String = """{}""",
         base: String = """{}""",
         existingResources: MutableSet<AuroraResource>? = null

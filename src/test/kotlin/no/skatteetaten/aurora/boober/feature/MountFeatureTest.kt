@@ -135,7 +135,7 @@ class MountFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should generate configMap`() {
 
-        val resources = genereateResources(configMapJson)
+        val resources = generateResources(configMapJson)
         assertThat(resources.size).isEqualTo(1)
 
         val configMap = resources.first().resource as ConfigMap
@@ -147,7 +147,7 @@ class MountFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should modify deploymentConfig and add configMap`() {
 
-        val resource = genereateResources(
+        val resource = generateResources(
             app = configMapJson,
             existingResources = mutableSetOf(createdcAuroraResource())
         )
@@ -168,7 +168,7 @@ class MountFeatureTest : AbstractFeatureTest() {
         every { vaultProvider.findVaultData(listOf(VaultRequest("paas", "foo"))) } returns
             VaultResults(mapOf("foo" to mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray())))
 
-        val resource = genereateResources(secretVaultJson, existingResources = mutableSetOf(createdcAuroraResource()))
+        val resource = generateResources(secretVaultJson, existingResources = mutableSetOf(createdcAuroraResource()))
 
         assertThat(resource.size).isEqualTo(2)
         val auroraResource = resource.first()
@@ -184,7 +184,7 @@ class MountFeatureTest : AbstractFeatureTest() {
         every { openShiftClient.resourceExists("secret", "paas-utv", "mount") } returns true
 
         val resource =
-            genereateResources(existingSecretJson, existingResources = mutableSetOf(createdcAuroraResource()))
+            generateResources(existingSecretJson, existingResources = mutableSetOf(createdcAuroraResource()))
 
         assertThat(resource.size).isEqualTo(1)
         val auroraResource = resource.first()
@@ -205,7 +205,7 @@ class MountFeatureTest : AbstractFeatureTest() {
 
         every { openShiftClient.resourceExists("persistentvolumeclaim", "paas-utv", "mount") } returns true
 
-        val resource = genereateResources(existingPVCJson, existingResources = mutableSetOf(createdcAuroraResource()))
+        val resource = generateResources(existingPVCJson, existingResources = mutableSetOf(createdcAuroraResource()))
 
         assertThat(resource.size).isEqualTo(1)
         val auroraResource = resource.first()
