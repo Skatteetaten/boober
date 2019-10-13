@@ -151,27 +151,27 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
         return service.createValidatedAuroraDeploymentContexts(listOf(deployCommand), fullValidation).first()
     }
 
-    fun generateResources(app: String = """{}""", base: String = """{}"""): Set<AuroraResource> {
-        val adc = createAuroraDeploymentContext(app, base)
-
-        return adc.features.flatMap {
-            it.key.generate(it.value, adc.cmd)
-        }.toSet()
-    }
-
-    fun modifyResources(
+    fun genereateResources(
         app: String = """{}""",
         base: String = """{}""",
-        existingResources: MutableSet<AuroraResource>
-    ) {
+        existingResources: MutableSet<AuroraResource>? = null
+    ): Set<AuroraResource> {
         val adc = createAuroraDeploymentContext(app, base)
 
-        val generated = generateResources(app, base)
+        val generated = adc.features.flatMap {
+            it.key.generate(it.value, adc.cmd)
+        }.toSet()
+
+        if (existingResources == null) {
+            return generated
+        }
+
         existingResources.addAll(generated)
 
         adc.features.forEach {
             it.key.modify(it.value, existingResources, adc.cmd)
         }
+        return existingResources
     }
 
     fun createAuroraConfigFieldHandlers(

@@ -66,6 +66,7 @@ class MountFeatureTest : AbstractFeatureTest() {
                 }
               }  
              }""".trimIndent()
+
     @Test
     fun `Should generate handlers`() {
 
@@ -82,7 +83,6 @@ class MountFeatureTest : AbstractFeatureTest() {
         val mountHandlers = handlers.filter { it.name.startsWith("mounts") }
         assertThat(mountHandlers.size).isEqualTo(0)
     }
-
 
     enum class MountValidationTestCases(
         val jsonFragment: String,
@@ -135,7 +135,7 @@ class MountFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should generate configMap`() {
 
-        val resources = generateResources(configMapJson)
+        val resources = genereateResources(configMapJson)
         assertThat(resources.size).isEqualTo(1)
 
         val configMap = resources.first().resource as ConfigMap
@@ -147,8 +147,10 @@ class MountFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should modify deploymentConfig and add configMap`() {
 
-        val resource = mutableSetOf(createdcAuroraResource())
-        modifyResources(configMapJson, existingResources = resource)
+        val resource = genereateResources(
+            app = configMapJson,
+            existingResources = mutableSetOf(createdcAuroraResource())
+        )
 
         assertThat(resource.size).isEqualTo(2)
         val auroraResource = resource.first()
@@ -166,8 +168,7 @@ class MountFeatureTest : AbstractFeatureTest() {
         every { vaultProvider.findVaultData(listOf(VaultRequest("paas", "foo"))) } returns
             VaultResults(mapOf("foo" to mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray())))
 
-        val resource = mutableSetOf(createdcAuroraResource())
-        modifyResources(secretVaultJson, existingResources = resource)
+        val resource = genereateResources(secretVaultJson, existingResources = mutableSetOf(createdcAuroraResource()))
 
         assertThat(resource.size).isEqualTo(2)
         val auroraResource = resource.first()
@@ -182,8 +183,8 @@ class MountFeatureTest : AbstractFeatureTest() {
 
         every { openShiftClient.resourceExists("secret", "paas-utv", "mount") } returns true
 
-        val resource = mutableSetOf(createdcAuroraResource())
-        modifyResources(existingSecretJson, existingResources = resource)
+        val resource =
+            genereateResources(existingSecretJson, existingResources = mutableSetOf(createdcAuroraResource()))
 
         assertThat(resource.size).isEqualTo(1)
         val auroraResource = resource.first()
@@ -204,8 +205,7 @@ class MountFeatureTest : AbstractFeatureTest() {
 
         every { openShiftClient.resourceExists("persistentvolumeclaim", "paas-utv", "mount") } returns true
 
-        val resource = mutableSetOf(createdcAuroraResource())
-        modifyResources(existingPVCJson, existingResources = resource)
+        val resource = genereateResources(existingPVCJson, existingResources = mutableSetOf(createdcAuroraResource()))
 
         assertThat(resource.size).isEqualTo(1)
         val auroraResource = resource.first()
