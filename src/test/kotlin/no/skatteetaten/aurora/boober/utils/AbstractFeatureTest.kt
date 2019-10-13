@@ -64,7 +64,7 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
   "cluster": "utv"
 }"""
 
-    fun createdcAuroraResource() =
+    fun createDCAuroraResource() =
         AuroraResource(newDeploymentConfig {
 
             metadata {

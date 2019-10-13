@@ -7,7 +7,6 @@ import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.AuroraResourceSource
-import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.durationString
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.oneOf
@@ -20,7 +19,7 @@ interface Feature {
         AuroraResource(content, AuroraResourceSource(this::class.java), header = header)
 
     fun modifyResource(resource: AuroraResource, comment: String) =
-        resource.sources.addIfNotNull(AuroraResourceSource(this::class.java, comment = comment))
+        resource.sources.add(AuroraResourceSource(this::class.java, comment = comment))
 
     /*
       Should this feature run or not.
