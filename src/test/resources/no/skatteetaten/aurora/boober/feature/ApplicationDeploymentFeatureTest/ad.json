@@ -1,0 +1,33 @@
+{
+  "apiVersion": "skatteetaten.no/v1",
+  "kind": "ApplicationDeployment",
+  "metadata": {
+    "labels": {
+      "id": "1d5da0b933ade4bfd6773579b9fb5cc2afb57378",
+      "removeAfter": "86400"
+    },
+    "name": "simple",
+    "namespace": "paas-utv"
+  },
+  "spec": {
+    "selector": {
+      "name": "simple"
+    },
+    "applicationDeploymentId": "1d5da0b933ade4bfd6773579b9fb5cc2afb57378",
+    "applicationDeploymentName": "simple",
+    "databases": [],
+    "command": {
+      "overrideFiles": {},
+      "applicationDeploymentRef": {
+        "environment": "utv",
+        "application": "simple"
+      },
+      "auroraConfig": {
+        "name": "test",
+        "refName": "master",
+        "resolvedRef": "123abb"
+      }
+    },
+    "message": "This is a note"
+  }
+}

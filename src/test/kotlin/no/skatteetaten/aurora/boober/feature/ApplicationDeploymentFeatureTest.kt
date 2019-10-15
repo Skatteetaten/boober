@@ -14,20 +14,20 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
     @Test
     fun `geneate application deployment`() {
 
+        //Right now this method only takes the app file and a single "empty" resource
+        //how should we model this to allow adding more AuroraConfigFiles and more empty resources
         val resources = generateResources(
-            """{ 
-                "message" : "This is a note", 
-                "ttl" : "1d"
-        }""".trimIndent(), existingResources = mutableSetOf(createDCAuroraResource())
+            """{ "message" : "This is a note", 
+                "ttl" : "1d" }""", createDCAuroraResource()
         )
 
-        // TODO: assert the content of the ad resource. From file or what?
-
+        assertThat(resources.size).isEqualTo(2)
         val ad = resources.last()
         val dc = resources.first()
-        assertThat(resources.size).isEqualTo(2)
-        assertThat(ad).createdByThisFeature()
-        assertThat(dc).modifiedWithComment("Set owner reference to ApplicationDeployment")
+        assertThat(ad).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("ad.json")
+
+        assertThat(dc).auroraResourceModifiedWithComment("Set owner reference to ApplicationDeployment")
         assertThat(dc.resource.metadata.ownerReferences[0]).isEqualTo(newOwnerReference {
             apiVersion = "skatteetaten.no/v1"
             kind = "ApplicationDeployment"

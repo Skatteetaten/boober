@@ -31,10 +31,10 @@ open class ResourceLoader {
         return Buffer().readFrom(getResourceUrl(resourceName, folder).openStream())
     }
 
-    fun compareJson(jsonNode: JsonNode, target: JsonNode): Boolean {
+    fun compareJson(actual: JsonNode, expected: JsonNode): Boolean {
         val writer = jsonMapper().writerWithDefaultPrettyPrinter()
-        val targetString = writer.writeValueAsString(target)
-        val nodeString = writer.writeValueAsString(jsonNode)
+        val targetString = writer.writeValueAsString(expected)
+        val nodeString = writer.writeValueAsString(actual)
         assertThat(targetString).isEqualTo(nodeString)
         return true
     }

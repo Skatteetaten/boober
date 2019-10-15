@@ -8,6 +8,9 @@ import assertk.assertions.isInstanceOf
 import assertk.assertions.messageContains
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.newContainer
 import com.fkorotkov.kubernetes.spec
 import com.fkorotkov.openshift.from
@@ -163,16 +166,18 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
 
     fun generateResources(
         app: String = """{}""",
-        base: String = """{}""",
-        existingResources: MutableSet<AuroraResource>? = null
+        vararg resources: AuroraResource
     ): Set<AuroraResource> {
+
+        val base: String = """{}"""
+        val existingResources = resources.toMutableSet()
         val adc = createAuroraDeploymentContext(app, base)
 
         val generated = adc.features.flatMap {
             it.key.generate(it.value, adc.cmd)
         }.toSet()
 
-        if (existingResources == null) {
+        if (existingResources.isEmpty()) {
             return generated
         }
 
@@ -192,13 +197,13 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
         return ctx.featureHandlers.values.first()
     }
 
-    fun Assert<AuroraResource>.mountsAttachment(
+    fun Assert<AuroraResource>.auroraResourceMountsAttachment(
         attachment: HasMetadata,
         additionalEnv: Map<String, String> = emptyMap()
-    ) = given { actual ->
+    ): Assert<AuroraResource> = transform { actual ->
 
         assertThat(actual.resource).isInstanceOf(DeploymentConfig::class.java)
-        assertThat(actual).modifiedWithComment("Added env vars, volume mount, volume")
+        assertThat(actual).auroraResourceModifiedWithComment("Added env vars, volume mount, volume")
 
         val dc = actual.resource as DeploymentConfig
         val podSpec = dc.spec.template.spec
@@ -219,19 +224,32 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
         }
         val env: Map<String, String> = podSpec.containers[0].env.associate { it.name to it.value }
         assertThat(env).isEqualTo(expectedEnv)
+        actual
     }
 
-    fun Assert<AuroraResource>.createdByThisFeature() = given { actual ->
+    fun Assert<AuroraResource>.auroraResourceCreatedByThisFeature(): Assert<AuroraResource> = transform { actual ->
         val expected = feature::class.java
-        if (expected == actual.createdSource.feature) return
-        expected(":${show(expected)} and:${show(actual.createdSource.feature)} to be the same")
-
+        if (expected == actual.createdSource.feature) {
+            actual
+        } else {
+            expected(":${show(expected)} and:${show(actual.createdSource.feature)} to be the same")
+        }
     }
 
-    fun Assert<AuroraResource>.modifiedWithComment(comment: String) = given { ar ->
+    fun Assert<AuroraResource>.auroraResourceMatchesFile(fileName: String): Assert<AuroraResource> = transform { ar ->
+        val actualJson: JsonNode = jacksonObjectMapper().convertValue(ar.resource)
+        val expectedJson = loadJsonResource(fileName)
+        compareJson(actualJson, expectedJson)
+        ar
+    }
+
+    fun Assert<AuroraResource>.auroraResourceModifiedWithComment(comment: String) = transform { ar ->
         val actual = ar.sources.first()
         val expected = AuroraResourceSource(feature::class.java, comment)
-        if (actual == expected) return
-        expected(":${show(expected)} and:${show(actual)} to be the same")
+        if (actual == expected) {
+            ar
+        } else {
+            expected(":${show(expected)} and:${show(actual)} to be the same")
+        }
     }
 }
