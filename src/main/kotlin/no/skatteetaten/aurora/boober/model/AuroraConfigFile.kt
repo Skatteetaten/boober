@@ -125,7 +125,6 @@ fun List<AuroraConfigFile>.findSubHandlers(
     }
 }
 
-// TODO denne featuren er det _ingen_ som bruker, kan vi fjerne den?
 fun List<AuroraConfigFile>.findConfigFieldHandlers(): List<AuroraConfigFieldHandler> {
 
     val name = "config"

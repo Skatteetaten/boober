@@ -83,6 +83,7 @@ enum class TemplateType(val versionRequired: Boolean) {
 
 val AuroraDeploymentSpec.applicationPlatform: ApplicationPlatform get() = this["applicationPlatform"]
 
+// TODO: validering av disse må testes
 val ApplicationDeploymentRef.headerHandlers: Set<AuroraConfigFieldHandler>
     get() {
 
