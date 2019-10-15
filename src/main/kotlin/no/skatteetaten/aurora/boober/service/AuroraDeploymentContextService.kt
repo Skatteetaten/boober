@@ -13,6 +13,7 @@ import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.validate
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -58,6 +59,7 @@ class AuroraDeploymentContextService(
 
         val errors = result.mapNotNull { it.second }
         if (errors.isNotEmpty()) {
+            logger.debug(errors.joinToString(","))
             throw MultiApplicationValidationException(errors)
         }
         return result.mapNotNull { it.first }
@@ -89,7 +91,8 @@ class AuroraDeploymentContextService(
             it.handlers(headerSpec, deployCommand) + headerHandlers
         }
 
-        val allHandlers: Set<AuroraConfigFieldHandler> = featureHandlers.flatMap { it.value }.toSet()
+        val allHandlers: Set<AuroraConfigFieldHandler> =
+            featureHandlers.flatMap { it.value }.toSet().addIfNotNull(headerHandlers)
 
         val spec = AuroraDeploymentSpec.create(
             handlers = allHandlers,
