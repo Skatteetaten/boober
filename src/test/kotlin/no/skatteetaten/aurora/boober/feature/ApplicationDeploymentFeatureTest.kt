@@ -18,7 +18,7 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
         //how should we model this to allow adding more AuroraConfigFiles and more empty resources
         val resources = generateResources(
             """{ "message" : "This is a note", 
-                "ttl" : "1d" }""", createDCAuroraResource()
+                "ttl" : "1d" }""", createEmptyDeploymentConfig()
         )
 
         assertThat(resources.size).isEqualTo(2)
@@ -27,7 +27,7 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
         assertThat(ad).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("ad.json")
 
-        assertThat(dc).auroraResourceModifiedWithComment("Set owner reference to ApplicationDeployment")
+        assertThat(dc).auroraResourceModifiedByThisFeatureWithComment("Set owner reference to ApplicationDeployment")
         assertThat(dc.resource.metadata.ownerReferences[0]).isEqualTo(newOwnerReference {
             apiVersion = "skatteetaten.no/v1"
             kind = "ApplicationDeployment"

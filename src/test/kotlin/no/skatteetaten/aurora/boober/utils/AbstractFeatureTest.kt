@@ -70,7 +70,7 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
 }"""
 
     //TODO: This should be read from a file, we should also provide IS, Service and AD objects that can be modified.
-    fun createDCAuroraResource() =
+    fun createEmptyDeploymentConfig() =
         AuroraResource(newDeploymentConfig {
 
             metadata {
@@ -203,7 +203,7 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
     ): Assert<AuroraResource> = transform { actual ->
 
         assertThat(actual.resource).isInstanceOf(DeploymentConfig::class.java)
-        assertThat(actual).auroraResourceModifiedWithComment("Added env vars, volume mount, volume")
+        assertThat(actual).auroraResourceModifiedByThisFeatureWithComment("Added env vars, volume mount, volume")
 
         val dc = actual.resource as DeploymentConfig
         val podSpec = dc.spec.template.spec
@@ -243,7 +243,7 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
         ar
     }
 
-    fun Assert<AuroraResource>.auroraResourceModifiedWithComment(comment: String) = transform { ar ->
+    fun Assert<AuroraResource>.auroraResourceModifiedByThisFeatureWithComment(comment: String) = transform { ar ->
         val actual = ar.sources.first()
         val expected = AuroraResourceSource(feature::class.java, comment)
         if (actual == expected) {
