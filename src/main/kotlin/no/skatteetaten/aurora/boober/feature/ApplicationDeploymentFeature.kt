@@ -66,7 +66,7 @@ class ApplicationDeploymentFeature : Feature {
                     "RoleBinding"
                 )
             ) {
-                modifyResource(it, "Set owner refrence to ApplicationDeployment")
+                modifyResource(it, "Set owner reference to ApplicationDeployment")
                 it.resource.metadata.ownerReferences = listOf(
                     newOwnerReference {
                         apiVersion = "skatteetaten.no/v1"

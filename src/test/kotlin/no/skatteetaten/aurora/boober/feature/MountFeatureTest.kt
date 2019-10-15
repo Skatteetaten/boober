@@ -6,7 +6,6 @@ import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newPersistentVolumeClaim
 import com.fkorotkov.kubernetes.newSecret
 import io.fabric8.kubernetes.api.model.ConfigMap
-import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
@@ -153,11 +152,11 @@ class MountFeatureTest : AbstractFeatureTest() {
         )
 
         assertThat(resource.size).isEqualTo(2)
-        val auroraResource = resource.first()
+        val dcResource = resource.first()
+        val attachmentResource = resource.last()
+        assertThat(attachmentResource).createdByThisFeature()
 
-        assertThat(auroraResource.sources.first().feature).isEqualTo(MountFeature::class.java)
-        val dc = auroraResource.resource as DeploymentConfig
-        assertDeploymentConfigMountsVolume(dc, resource.last().resource)
+        assertThat(dcResource).mountsAttachment(attachmentResource.resource)
     }
 
     @Test
@@ -169,13 +168,13 @@ class MountFeatureTest : AbstractFeatureTest() {
             VaultResults(mapOf("foo" to mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray())))
 
         val resource = generateResources(secretVaultJson, existingResources = mutableSetOf(createDCAuroraResource()))
-
         assertThat(resource.size).isEqualTo(2)
-        val auroraResource = resource.first()
 
-        assertThat(auroraResource.sources.first().feature).isEqualTo(MountFeature::class.java)
-        val dc = auroraResource.resource as DeploymentConfig
-        assertDeploymentConfigMountsVolume(dc, resource.last().resource)
+        val attachmentResource = resource.last()
+        assertThat(attachmentResource).createdByThisFeature()
+
+        val dcResource = resource.first()
+        assertThat(dcResource).mountsAttachment(attachmentResource.resource)
     }
 
     @Test
@@ -187,7 +186,7 @@ class MountFeatureTest : AbstractFeatureTest() {
             generateResources(existingSecretJson, existingResources = mutableSetOf(createDCAuroraResource()))
 
         assertThat(resource.size).isEqualTo(1)
-        val auroraResource = resource.first()
+        val dcResource = resource.first()
         val secret = newSecret {
             metadata {
                 name = "mount"
@@ -195,9 +194,8 @@ class MountFeatureTest : AbstractFeatureTest() {
             }
         }
 
-        assertThat(auroraResource.sources.first().feature).isEqualTo(MountFeature::class.java)
-        val dc = auroraResource.resource as DeploymentConfig
-        assertDeploymentConfigMountsVolume(dc, secret)
+        assertThat(dcResource).mountsAttachment(secret)
+
     }
 
     @Test
@@ -215,9 +213,7 @@ class MountFeatureTest : AbstractFeatureTest() {
                 namespace = "paas-utv"
             }
         }
+        assertThat(auroraResource).mountsAttachment(secret)
 
-        assertThat(auroraResource.sources.first().feature).isEqualTo(MountFeature::class.java)
-        val dc = auroraResource.resource as DeploymentConfig
-        assertDeploymentConfigMountsVolume(dc, secret)
     }
 }

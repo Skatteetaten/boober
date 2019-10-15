@@ -15,20 +15,19 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
     fun `geneate application deployment`() {
 
         val resources = generateResources(
-            """
-            "message" : "This is a note", 
-            "ttl" : "1d"
-        """.trimIndent(), existingResources = mutableSetOf(createDCAuroraResource())
+            """{ 
+                "message" : "This is a note", 
+                "ttl" : "1d"
+        }""".trimIndent(), existingResources = mutableSetOf(createDCAuroraResource())
         )
 
-        assertThat(resources.size).isEqualTo(2)
+        // TODO: assert the content of the ad resource. From file or what?
 
         val ad = resources.last()
-        assertThat(ad.createdSource.feature).isEqualTo(ApplicationDeploymentFeature::class.java)
-
         val dc = resources.first()
-        assertThat(dc.sources.first().feature).isEqualTo(ApplicationDeploymentFeature::class.java)
-        assertThat(dc.sources.first().comment).isEqualTo("Set owner refrence to ApplicationDeployment")
+        assertThat(resources.size).isEqualTo(2)
+        assertThat(ad).createdByThisFeature()
+        assertThat(dc).modifiedWithComment("Set owner reference to ApplicationDeployment")
         assertThat(dc.resource.metadata.ownerReferences[0]).isEqualTo(newOwnerReference {
             apiVersion = "skatteetaten.no/v1"
             kind = "ApplicationDeployment"
@@ -36,4 +35,9 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
             uid = "123-123"
         })
     }
+
+    @Test
+    fun `get error if ttl duration string is wrong`() {
+    }
 }
+

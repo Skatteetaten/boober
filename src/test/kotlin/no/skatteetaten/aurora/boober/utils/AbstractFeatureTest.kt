@@ -2,11 +2,12 @@ package no.skatteetaten.aurora.boober.utils
 
 import assertk.Assert
 import assertk.Result
-import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.messageContains
+import assertk.assertions.support.expected
+import assertk.assertions.support.show
 import com.fkorotkov.kubernetes.newContainer
 import com.fkorotkov.kubernetes.spec
 import com.fkorotkov.openshift.from
@@ -43,6 +44,7 @@ import java.time.Instant
   Override the feature variable with the Feature you want to test
 
   Look at the helper methods in this class to create handlers/resources for this feature
+
  */
 abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
 
@@ -64,6 +66,7 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
   "cluster": "utv"
 }"""
 
+    //TODO: This should be read from a file, we should also provide IS, Service and AD objects that can be modified.
     fun createDCAuroraResource() =
         AuroraResource(newDeploymentConfig {
 
@@ -189,11 +192,15 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
         return ctx.featureHandlers.values.first()
     }
 
-    fun assertDeploymentConfigMountsVolume(
-        dc: DeploymentConfig,
+    fun Assert<AuroraResource>.mountsAttachment(
         attachment: HasMetadata,
         additionalEnv: Map<String, String> = emptyMap()
-    ) {
+    ) = given { actual ->
+
+        assertThat(actual.resource).isInstanceOf(DeploymentConfig::class.java)
+        assertThat(actual).modifiedWithComment("Added env vars, volume mount, volume")
+
+        val dc = actual.resource as DeploymentConfig
         val podSpec = dc.spec.template.spec
 
         val volumeName = podSpec.volumes[0].name
@@ -212,5 +219,19 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
         }
         val env: Map<String, String> = podSpec.containers[0].env.associate { it.name to it.value }
         assertThat(env).isEqualTo(expectedEnv)
+    }
+
+    fun Assert<AuroraResource>.createdByThisFeature() = given { actual ->
+        val expected = feature::class.java
+        if (expected == actual.createdSource.feature) return
+        expected(":${show(expected)} and:${show(actual.createdSource.feature)} to be the same")
+
+    }
+
+    fun Assert<AuroraResource>.modifiedWithComment(comment: String) = given { ar ->
+        val actual = ar.sources.first()
+        val expected = AuroraResourceSource(feature::class.java, comment)
+        if (actual == expected) return
+        expected(":${show(expected)} and:${show(actual)} to be the same")
     }
 }
