@@ -6,7 +6,6 @@ import com.fkorotkov.kubernetes.newOwnerReference
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import org.junit.jupiter.api.Test
 
-// TODO: How should we assert on the created resources here? Should we have them on the file system or what?
 class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
         get() = ApplicationDeploymentFeature()
@@ -36,8 +35,14 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
         })
     }
 
+    // TODO:Is this a good error message?
     @Test
     fun `get error if ttl duration string is wrong`() {
+        assertThat {
+            createAuroraConfigFieldHandlers(
+                """{ "ttl" : "asd"  }"""
+            )
+        }.singleApplicationError("'asd' is not a valid simple duration")
     }
 }
 
