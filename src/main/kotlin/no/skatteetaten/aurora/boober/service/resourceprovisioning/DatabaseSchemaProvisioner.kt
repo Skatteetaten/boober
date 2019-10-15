@@ -12,6 +12,7 @@ import no.skatteetaten.aurora.boober.model.DatabaseInstance
 import no.skatteetaten.aurora.boober.service.ProvisioningException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.utils.logger
+import org.apache.commons.lang3.exception.ExceptionUtils
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.http.ResponseEntity
@@ -174,7 +175,8 @@ class DatabaseSchemaProvisioner(
             }
             find ?: createSchema(labels, request.details)
         } catch (e: Exception) {
-            val message = e.message.orEmpty() + " Schema query: ${toLabelsString(labels)}"
+            val rootCauseMessage = ExceptionUtils.getRootCauseMessage(e)
+            val message = "${e.message.orEmpty()} $rootCauseMessage  Schema query: ${toLabelsString(labels)}"
             throw ProvisioningException(message, e)
         }
 
