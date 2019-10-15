@@ -18,6 +18,7 @@ import com.fkorotkov.openshift.imageChangeParams
 import com.fkorotkov.openshift.metadata
 import com.fkorotkov.openshift.newDeploymentConfig
 import com.fkorotkov.openshift.newDeploymentTriggerPolicy
+import com.fkorotkov.openshift.newImageStream
 import com.fkorotkov.openshift.rollingParams
 import com.fkorotkov.openshift.spec
 import com.fkorotkov.openshift.strategy
@@ -27,12 +28,12 @@ import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.clearAllMocks
 import io.mockk.mockk
-import no.skatteetaten.aurora.boober.feature.DeploymentConfigFeature
 import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.AuroraResourceSource
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
@@ -49,6 +50,12 @@ import java.time.Instant
   Look at the helper methods in this class to create handlers/resources for this feature
 
  */
+
+class TestDefaultFeature : Feature {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
+        return emptySet()
+    }
+}
 abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
 
     abstract val feature: Feature
@@ -68,6 +75,18 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
   "type": "deploy",
   "cluster": "utv"
 }"""
+
+    fun createEmptyImageStream() =
+        AuroraResource(newImageStream {
+            metadata {
+                name = "simple"
+                namespace = "paas-utv"
+            }
+            spec {
+                dockerImageRepository = "docker.registry/org_test/simple"
+            }
+
+        }, createdSource = AuroraResourceSource(TestDefaultFeature::class.java))
 
     //TODO: This should be read from a file, we should also provide IS, Service and AD objects that can be modified.
     fun createEmptyDeploymentConfig() =
@@ -116,7 +135,7 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
                     }
                 }
             }
-        }, createdSource = AuroraResourceSource(DeploymentConfigFeature::class.java))
+        }, createdSource = AuroraResourceSource(TestDefaultFeature::class.java))
 
     val mapper = jsonMapper()
     val config = mutableMapOf(
@@ -239,7 +258,7 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
     fun Assert<AuroraResource>.auroraResourceMatchesFile(fileName: String): Assert<AuroraResource> = transform { ar ->
         val actualJson: JsonNode = jacksonObjectMapper().convertValue(ar.resource)
         val expectedJson = loadJsonResource(fileName)
-        compareJson(actualJson, expectedJson)
+        compareJson(expectedJson, actualJson)
         ar
     }
 

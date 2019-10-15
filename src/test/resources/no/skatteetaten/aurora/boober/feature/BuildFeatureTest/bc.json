@@ -1,0 +1,54 @@
+{
+  "apiVersion": "build.openshift.io/v1",
+  "kind": "BuildConfig",
+  "metadata": {
+    "name": "simple",
+    "namespace": "paas-utv"
+  },
+  "spec": {
+    "output": {
+      "to": {
+        "kind": "ImageStreamTag",
+        "name": "simple:latest"
+      }
+    },
+    "strategy": {
+      "customStrategy": {
+        "env": [
+          {
+            "name": "ARTIFACT_ID",
+            "value": "simple"
+          },
+          {
+            "name": "GROUP_ID",
+            "value": "org.test"
+          },
+          {
+            "name": "VERSION",
+            "value": "1"
+          },
+          {
+            "name": "DOCKER_BASE_VERSION",
+            "value": "1"
+          },
+          {
+            "name": "DOCKER_BASE_IMAGE",
+            "value": "aurora/wingnut8"
+          },
+          {
+            "name": "PUSH_EXTRA_TAGS",
+            "value": "latest,major,minor,patch"
+          }
+        ],
+        "exposeDockerSocket": true,
+        "from": {
+          "kind": "ImageStreamTag",
+          "name": "architect:1",
+          "namespace": "openshift"
+        }
+      },
+      "type": "Custom"
+    },
+    "triggers": []
+  }
+}
