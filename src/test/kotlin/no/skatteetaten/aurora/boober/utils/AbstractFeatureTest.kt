@@ -85,10 +85,9 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
             spec {
                 dockerImageRepository = "docker.registry/org_test/simple"
             }
-
         }, createdSource = AuroraResourceSource(TestDefaultFeature::class.java))
 
-    //TODO: This should be read from a file, we should also provide IS, Service and AD objects that can be modified.
+    // TODO: This should be read from a file, we should also provide IS, Service and AD objects that can be modified.
     fun createEmptyDeploymentConfig() =
         AuroraResource(newDeploymentConfig {
 
@@ -228,7 +227,7 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
         val podSpec = dc.spec.template.spec
 
         val volumeName = podSpec.volumes[0].name
-        val volumeEnvName = "VOLUME_${volumeName}".replace("-", "_").toUpperCase()
+        val volumeEnvName = "VOLUME_$volumeName".replace("-", "_").toUpperCase()
         val volumeEnvValue = podSpec.containers[0].volumeMounts[0].mountPath
 
         val expectedEnv = additionalEnv.addIfNotNull(volumeEnvName to volumeEnvValue)

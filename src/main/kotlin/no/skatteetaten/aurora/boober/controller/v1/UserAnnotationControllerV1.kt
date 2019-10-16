@@ -41,4 +41,3 @@ class UserAnnotationControllerV1(
         return KeyValueResponse(items = response)
     }
 }
-

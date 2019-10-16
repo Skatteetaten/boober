@@ -53,7 +53,7 @@ fun Set<AuroraResource>.addVolumesAndMounts(
     clazz: Class<out Feature>
 ) {
     this.filter { it.resource.kind == "DeploymentConfig" }.forEach {
-        //TODO: fix adding sources everywhere
+        // TODO: fix adding sources everywhere
         it.sources.add(AuroraResourceSource(feature = clazz, comment = "Added env vars, volume mount, volume"))
         val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
         dc.spec.template.spec.volumes = dc.spec.template.spec.volumes.addIfNotNull(volumes)

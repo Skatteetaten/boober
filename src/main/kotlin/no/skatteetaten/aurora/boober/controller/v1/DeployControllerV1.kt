@@ -64,4 +64,3 @@ class DeployControllerV1(private val deployService: DeployService) {
         val namespace: String
     )
 }
-

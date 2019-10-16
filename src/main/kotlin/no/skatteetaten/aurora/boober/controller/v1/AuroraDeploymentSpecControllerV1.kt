@@ -126,4 +126,3 @@ class AuroraDeploymentSpecControllerV1(
         return Response(items = listOf(renderJsonForAuroraDeploymentSpecPointers(spec, includeDefaults)))
     }
 }
-

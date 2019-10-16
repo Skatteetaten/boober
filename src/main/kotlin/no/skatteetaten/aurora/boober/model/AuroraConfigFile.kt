@@ -91,7 +91,6 @@ data class AuroraConfigFile(
     }
 }
 
-
 fun List<AuroraConfigFile>.findSubKeysExpanded(name: String): Set<String> {
     return this.flatMap { ac ->
         ac.asJsonNode.at("/$name")?.fieldNames()?.asSequence()?.toList() ?: emptyList()

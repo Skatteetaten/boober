@@ -13,8 +13,8 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
     @Test
     fun `geneate application deployment`() {
 
-        //Right now this method only takes the app file and a single "empty" resource
-        //how should we model this to allow adding more AuroraConfigFiles and more empty resources
+        // Right now this method only takes the app file and a single "empty" resource
+        // how should we model this to allow adding more AuroraConfigFiles and more empty resources
         val resources = generateResources(
             """{ "message" : "This is a note", 
                 "ttl" : "1d" }""", createEmptyDeploymentConfig()
@@ -45,4 +45,3 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
         }.singleApplicationError("'asd' is not a valid simple duration")
     }
 }
-
