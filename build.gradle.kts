@@ -22,7 +22,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:1.3.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2")
 
-    implementation("org.eclipse.jgit:org.eclipse.jgit:5.5.1.201910021850-r")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:4.11.0.201803080745-r")
     implementation("com.github.fge:json-patch:1.9")
     implementation("org.encryptor4j:encryptor4j:0.1.2")
     // The above library uses an vulnerable bcprov, set the fixed version here, hopefully this will work.
