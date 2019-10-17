@@ -19,6 +19,9 @@
         "termination": "edge",
         "insecurePolicy": "Allow"
       }
+    },
+    "foobar": {
+      "enabled": false
     }
   },
   "pause": true,

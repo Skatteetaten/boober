@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import java.io.File
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -16,6 +15,7 @@ import org.slf4j.LoggerFactory.getLogger
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
+import java.io.File
 
 class AuroraConfigWithOverrides(
     var auroraConfig: AuroraConfig,
@@ -193,7 +193,7 @@ class AuroraConfigService(
             throw IllegalArgumentException("No such AuroraConfig ${ref.name}")
         } catch (e: Exception) {
             throw AuroraConfigServiceException(
-                "An unexpected error occurred when checking out AuroraConfig with name ${ref.name}",
+                "An unexpected error occurred when checking out AuroraConfig with name ${ref.name} (${e.message})",
                 e
             )
         }
