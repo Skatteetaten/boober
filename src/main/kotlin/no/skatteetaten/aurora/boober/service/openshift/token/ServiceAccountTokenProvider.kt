@@ -3,12 +3,12 @@ package no.skatteetaten.aurora.boober.service.openshift.token
 import com.google.common.base.Supplier
 import com.google.common.base.Suppliers
 import com.google.common.io.Files
+import java.io.File
+import java.io.IOException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.io.File
-import java.io.IOException
 
 /**
  * Loader for the Application Token that will be used when loading resources from Openshift that does not require

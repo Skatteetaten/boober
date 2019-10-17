@@ -1,8 +1,8 @@
 package no.skatteetaten.aurora.boober.utils
 
+import java.io.File
 import no.skatteetaten.aurora.boober.service.vault.EncryptedFileVault
 import no.skatteetaten.aurora.boober.service.vault.VaultWithAccess
-import java.io.File
 
 fun recreateFolder(folder: File): File {
     if (folder.exists()) {

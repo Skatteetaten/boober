@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service.openshift
 
 import com.fasterxml.jackson.databind.JsonNode
+import java.net.URI
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.token.TokenProvider
 import no.skatteetaten.aurora.boober.utils.findApiVersion
@@ -15,7 +16,6 @@ import org.springframework.http.MediaType
 import org.springframework.http.RequestEntity
 import org.springframework.http.ResponseEntity
 import org.springframework.web.client.HttpClientErrorException
-import java.net.URI
 
 val logger: Logger = LoggerFactory.getLogger(OpenShiftResourceClient::class.java)
 

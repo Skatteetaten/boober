@@ -1,10 +1,10 @@
 package no.skatteetaten.aurora.boober.service
 
+import java.time.Instant
 import no.skatteetaten.aurora.boober.model.AuroraDeployCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
-import java.time.Instant
 
 data class AuroraEnvironmentResult @JvmOverloads constructor(
     val openShiftResponses: List<OpenShiftResponse> = listOf(),

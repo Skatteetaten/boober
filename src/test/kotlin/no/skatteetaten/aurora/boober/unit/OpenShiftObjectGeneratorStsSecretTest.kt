@@ -4,13 +4,13 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
 import io.fabric8.kubernetes.api.model.OwnerReference
+import java.io.ByteArrayInputStream
+import java.time.Duration
 import no.skatteetaten.aurora.boober.feature.StsSecretGenerator
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner.Companion.createStsCert
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
 import no.skatteetaten.aurora.boober.utils.AbstractOpenShiftObjectGeneratorTest
 import org.junit.jupiter.api.Test
-import java.io.ByteArrayInputStream
-import java.time.Duration
 
 class OpenShiftObjectGeneratorStsSecretTest : AbstractOpenShiftObjectGeneratorTest() {
 
