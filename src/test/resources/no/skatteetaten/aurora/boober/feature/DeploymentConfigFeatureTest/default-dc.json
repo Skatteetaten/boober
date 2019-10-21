@@ -1,0 +1,83 @@
+{
+  "apiVersion": "apps.openshift.io/v1",
+  "kind": "DeploymentConfig",
+  "metadata": {
+    "annotations": {
+      "boober.skatteetaten.no/applicationFile": "utv/simple.json",
+      "console.skatteetaten.no/alarm": "true",
+      "console.skatteetaten.no/management-path": ":8081/actuator"
+    },
+    "labels": {
+      "deployTag": "1"
+    },
+    "name": "simple",
+    "namespace": "paas-utv"
+  },
+  "spec": {
+    "replicas": 1,
+    "selector": {
+      "name": "simple"
+    },
+    "strategy": {
+      "rollingParams": {
+        "intervalSeconds": 1,
+        "maxSurge": "25%",
+        "maxUnavailable": 0,
+        "timeoutSeconds": 180,
+        "updatePeriodSeconds": 1
+      },
+      "type": "Rolling"
+    },
+    "template": {
+      "metadata": {
+        "labels": {
+          "deployTag": "1"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "env": [
+              {
+                "name": "OPENSHIFT_CLUSTER",
+                "value": "utv"
+              },
+              {
+                "name": "APP_NAME",
+                "value": "simple"
+              }
+            ],
+            "name": "simple",
+            "resources": {
+              "limits": {
+                "cpu": "2000m",
+                "memory": "512Mi"
+              },
+              "requests": {
+                "cpu": "10m",
+                "memory": "128Mi"
+              }
+            }
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "restartPolicy": "Always"
+      }
+    },
+    "triggers": [
+      {
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "simple"
+          ],
+          "from": {
+            "kind": "ImageStreamTag",
+            "name": "simple:default"
+          }
+        },
+        "type": "ImageChange"
+      }
+    ]
+  }
+}

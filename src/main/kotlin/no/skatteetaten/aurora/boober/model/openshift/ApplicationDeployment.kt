@@ -46,17 +46,17 @@ data class ApplicationDeployment(
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class ApplicationDeploymentSpec(
     var applicationId: String? = null,
-    val selector: Map<String, String>,
-    val applicationDeploymentId: String,
+    var selector: Map<String, String> = emptyMap(),
+    var applicationDeploymentId: String = "",
     var applicationName: String? = null,
-    val applicationDeploymentName: String,
+    var applicationDeploymentName: String = "",
     var databases: List<String> = emptyList(),
     var splunkIndex: String? = null,
     var managementPath: String? = null,
     var releaseTo: String? = null,
     var deployTag: String? = null,
-    val command: ApplicationDeploymentCommand,
-    val message: String? = null
+    var command: ApplicationDeploymentCommand? = null,
+    var message: String? = null
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
