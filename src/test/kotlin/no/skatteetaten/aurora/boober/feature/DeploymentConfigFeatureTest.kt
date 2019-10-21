@@ -8,7 +8,6 @@ import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import org.junit.jupiter.api.Test
 
-// TODO: Test handlers and override files
 class DeploymentConfigFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
         get() = DeploymentConfigFeature()
