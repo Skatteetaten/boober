@@ -9,8 +9,6 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.every
 import io.mockk.mockk
-import java.io.ByteArrayInputStream
-import java.time.Instant
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.feature.ApplicationDeploymentFeature
 import no.skatteetaten.aurora.boober.feature.BuildFeature
@@ -25,6 +23,7 @@ import no.skatteetaten.aurora.boober.feature.JavaDeployFeature
 import no.skatteetaten.aurora.boober.feature.LocalTemplateFeature
 import no.skatteetaten.aurora.boober.feature.MountFeature
 import no.skatteetaten.aurora.boober.feature.RouteFeature
+import no.skatteetaten.aurora.boober.feature.SecretVaultFeature
 import no.skatteetaten.aurora.boober.feature.StsFeature
 import no.skatteetaten.aurora.boober.feature.TemplateFeature
 import no.skatteetaten.aurora.boober.feature.ToxiproxySidecarFeature
@@ -57,7 +56,10 @@ import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import java.io.ByteArrayInputStream
+import java.time.Instant
 
+// TODO: Bør vi lage en "feit" test her som tester kombinasjonen av mange forskjellige features og kun det?
 class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTest() {
 
     lateinit var service: AuroraDeploymentContextService
@@ -79,7 +81,8 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
         BuildFeature(),
         DatabaseFeature(databaseSchemaProvisioner, cluster),
         WebsealFeature(),
-        ConfigFeature(vaultProvider, cluster),
+        SecretVaultFeature(vaultProvider, cluster),
+        ConfigFeature(),
         StsFeature(stsProvisioner),
         MountFeature(vaultProvider, cluster, openShiftClient),
         ApplicationDeploymentFeature(),

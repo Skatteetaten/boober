@@ -6,6 +6,7 @@ import assertk.assertions.isNull
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
+import org.apache.commons.lang3.RandomStringUtils
 import org.junit.jupiter.api.Test
 
 class BuildFeatureTest : AbstractFeatureTest() {
@@ -31,8 +32,49 @@ class BuildFeatureTest : AbstractFeatureTest() {
         }"""
         )
 
-        val handlers = adc.map { it.name }
         assertThat(adc.size).isEqualTo(22)
+    }
+
+    @Test
+    fun `should get error if groupId is missing`() {
+
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+           "type": "development", 
+           "version" : "1"
+        }"""
+            )
+        }.singleApplicationError("GroupId must be set and be shorter then 200 characters.")
+    }
+
+    @Test
+    fun `should get error if groupId is too long`() {
+
+        val groupId = RandomStringUtils.randomAlphanumeric(201)
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+           "type": "development", 
+           "version" : "1",
+           "groupId" : "$groupId"
+        }"""
+            )
+        }.singleApplicationError("GroupId must be set and be shorter then 200 characters.")
+    }
+
+    // TODO: Where should we test gav handlers? I would say in a seperate test or?
+    @Test
+    fun `should get error if version is not set`() {
+
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+           "type": "development", 
+           "groupId" : "org.test"
+        }"""
+            )
+        }.singleApplicationError("Version must be a 128 characters or less, alphanumeric and can contain dots and dashes.")
     }
 
     @Test
