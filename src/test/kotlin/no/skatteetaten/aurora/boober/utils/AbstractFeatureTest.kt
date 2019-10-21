@@ -2,10 +2,8 @@ package no.skatteetaten.aurora.boober.utils
 
 import assertk.Assert
 import assertk.Result
-import assertk.assertions.isEqualTo
-import assertk.assertions.isFailure
-import assertk.assertions.isInstanceOf
-import assertk.assertions.messageContains
+import assertk.all
+import assertk.assertions.*
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
 import com.fasterxml.jackson.databind.JsonNode
@@ -164,20 +162,40 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
         Instants.determineNow = { Instant.EPOCH }
         clearAllMocks()
     }
-
     fun <T> Assert<Result<T>>.singleApplicationError(expectedMessage: String) {
+        this.isFailure()
+                .isInstanceOf(MultiApplicationValidationException::class)
+                .transform { mae ->
+                    val errors = mae.errors.flatMap { it.errors }
+                    if (errors.size != 1) {
+                        throw mae
+                    } else {
+                        errors.first()
+                    }
+                }
+                .messageContains(expectedMessage)
+    }
+
+
+    fun <T> Assert<Result<T>>.applicationErrors(vararg message:String) {
+        this.applicationErrors(message.toList())
+    }
+
+    fun <T> Assert<Result<T>>.applicationErrors(messages:List<String>) {
         this.isFailure()
             .isInstanceOf(MultiApplicationValidationException::class)
             .transform { mae ->
                 val errors = mae.errors.flatMap { it.errors }
-                if (errors.size != 1) {
-                    throw mae
-                } else {
-                    errors.first()
+                errors.zip(messages).forEach { (actual, expected) ->
+                    if(!actual.localizedMessage.contains(expected)) {
+                        expected(":${show(actual.localizedMessage)} to contain:${show(expected)}")
+                    }
+
                 }
             }
-            .messageContains(expectedMessage)
     }
+
+
 
     fun createAuroraDeploymentContext(
         app: String = """{}""",
@@ -201,8 +219,7 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
         app: String = """{}""",
         vararg resource: AuroraResource
     ): Set<AuroraResource> {
-        return generateResources(app, resource.toMutableSet())
-    }
+        return generateResources(app, resource.toMutableSet())}
 
     fun generateResources(
         app: String = """{}""",

@@ -146,7 +146,12 @@ abstract class AbstractAuroraConfigTest : ResourceLoader() {
                 it.value
             )
         }
-        return AuroraConfig(auroraConfigFiles + manualFiles, "aos", "master")
+
+        val manualNames:List<String> = manualFiles.map{ it.configName}
+        val files = auroraConfigFiles.filterNot { manualNames.contains(it.configName)}
+
+
+        return AuroraConfig(files + manualFiles, "aos", "master")
     }
 
     fun getResultFiles(aid: ApplicationDeploymentRef): Map<String, JsonNode?> {

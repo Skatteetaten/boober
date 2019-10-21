@@ -142,15 +142,16 @@ class EnvironmentFeature(
         if (userNotInAdminUsers && userNotInAnyAdminGroups) {
             return errors.addIfNotNull(IllegalArgumentException("User=${authenticatedUser.fullName} does not have access to admin this environment from the groups=$adminGroups"))
         }
-        return emptyList()
+        return errors
     }
 
     private fun validateAdminGroups(adc: AuroraDeploymentSpec) {
         val permissions = extractPermissions(adc)
 
         val adminGroups: Set<String> = permissions.admin.groups ?: setOf()
-        adminGroups.takeIf { it.isEmpty() }
-            ?.let { throw AuroraDeploymentSpecValidationException("permissions.admin.groups cannot be empty") }
+        if (adminGroups.isEmpty()) {
+            throw AuroraDeploymentSpecValidationException("permissions.admin cannot be empty")
+        }
 
         val openShiftGroups = openShiftClient.getGroups()
 
