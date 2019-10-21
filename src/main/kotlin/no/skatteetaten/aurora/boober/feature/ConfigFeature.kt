@@ -72,9 +72,7 @@ class ConfigFeature : Feature {
             }
         }
 
-        val env = adc.getConfigEnv(configHandlers(cmd))
-            .toEnvVars()
-            .addIfNotNull(configEnv)
+        val env = adc.getConfigEnv(configHandlers(cmd)).toEnvVars().addIfNotNull(configEnv)
         resources.addVolumesAndMounts(env, volumes, mounts, this::class.java)
     }
 
