@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.feature
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import org.junit.jupiter.api.Test
@@ -41,14 +42,16 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
     fun `modify dc and ad for changed parameters`() {
 
         val resources = generateResources(
-            """{ 
+            app = """{ 
+                
                 "version" : "1",
-                "pause": true, 
                 "releaseTo" : "test", 
                 "splunkIndex" : "test",
                 "debug" : true
                 
-           }""", createEmptyDeploymentConfig(), createEmptyApplicationDeployment()
+           }""",
+            resources = mutableSetOf(createEmptyDeploymentConfig(), createEmptyApplicationDeployment()),
+            files = listOf(AuroraConfigFile("simple.json", """{ "pause" : true }""", override = true))
         )
 
         assertThat(resources.size).isEqualTo(2)

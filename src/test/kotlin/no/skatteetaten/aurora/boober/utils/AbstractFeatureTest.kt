@@ -32,6 +32,7 @@ import io.mockk.mockk
 import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -59,6 +60,7 @@ class TestDefaultFeature : Feature {
         return emptySet()
     }
 }
+
 abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
 
     abstract val feature: Feature
@@ -179,51 +181,65 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
 
     fun createAuroraDeploymentContext(
         app: String = """{}""",
-        base: String = """{}""",
-        fullValidation: Boolean = true
+        fullValidation: Boolean = true,
+        files: List<AuroraConfigFile> = emptyList()
     ): AuroraDeploymentContext {
         val service = AuroraDeploymentContextService(featuers = listOf(feature))
         val auroraConfig =
-            createAuroraConfig(config.addIfNotNull("simple.json" to base).addIfNotNull("utv/simple.json" to app))
+            createAuroraConfig(config.addIfNotNull("utv/simple.json" to app), files)
 
         val deployCommand = AuroraContextCommand(
             auroraConfig = auroraConfig,
             applicationDeploymentRef = aid,
-            auroraConfigRef = AuroraConfigRef("test", "master", "123abb")
+            auroraConfigRef = AuroraConfigRef("test", "master", "123abb"),
+            overrides = files.filter { it.override }
         )
         return service.createValidatedAuroraDeploymentContexts(listOf(deployCommand), fullValidation).first()
     }
 
     fun generateResources(
         app: String = """{}""",
-        vararg resources: AuroraResource
+        vararg resource: AuroraResource
+    ): Set<AuroraResource> {
+        return generateResources(app, resource.toMutableSet())
+    }
+
+    fun generateResources(
+        app: String = """{}""",
+        resource: AuroraResource,
+        files: List<AuroraConfigFile> = emptyList()
+    ): Set<AuroraResource> {
+        return generateResources(app, mutableSetOf(resource), files)
+    }
+
+    fun generateResources(
+        app: String = """{}""",
+        resources: MutableSet<AuroraResource> = mutableSetOf(),
+        files: List<AuroraConfigFile> = emptyList()
     ): Set<AuroraResource> {
 
-        val base: String = """{}"""
-        val existingResources = resources.toMutableSet()
-        val adc = createAuroraDeploymentContext(app, base)
+        val adc = createAuroraDeploymentContext(app, files = files)
 
         val generated = adc.features.flatMap {
             it.key.generate(it.value, adc.cmd)
         }.toSet()
 
-        if (existingResources.isEmpty()) {
+        if (resources.isEmpty()) {
             return generated
         }
 
-        existingResources.addAll(generated)
+        resources.addAll(generated)
 
         adc.features.forEach {
-            it.key.modify(it.value, existingResources, adc.cmd)
+            it.key.modify(it.value, resources, adc.cmd)
         }
-        return existingResources
+        return resources
     }
 
     fun createAuroraConfigFieldHandlers(
-        app: String = """{}""",
-        base: String = """{}"""
+        app: String = """{}"""
     ): Set<AuroraConfigFieldHandler> {
-        val ctx = createAuroraDeploymentContext(app, base)
+        val ctx = createAuroraDeploymentContext(app)
         return ctx.featureHandlers.values.first()
     }
 

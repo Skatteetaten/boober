@@ -90,7 +90,7 @@ class DeploymentConfigFeature : Feature {
                 dc.metadata.labels = it.resource.metadata.labels?.addIfNotNull(dcLabels) ?: dcLabels
                 dc.metadata.annotations = it.resource.metadata.annotations?.addIfNotNull(dcAnnotations) ?: dcAnnotations
 
-                if (adc["pause"]) {
+                if (adc.pause) {
                     dc.spec.replicas = 0
                 }
                 dc.allNonSideCarContainers.forEach { container ->
@@ -122,7 +122,7 @@ class DeploymentConfigFeature : Feature {
 
     fun createDcLabels(adc: AuroraDeploymentSpec): Map<String, String> {
 
-        val pauseLabel = if (adc["pause"]) {
+        val pauseLabel = if (adc.pause) {
             "paused" to "true"
         } else null
 

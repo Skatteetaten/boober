@@ -2,11 +2,11 @@ package no.skatteetaten.aurora.boober.utils
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.readValue
-import java.io.File
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef.Companion.adr
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import java.io.File
 
 // TODO: Kan vi lese denne auroraConfigen fra noen filer? Vi har jo noen filer vi bruker i andre tester
 abstract class AbstractAuroraConfigTest : ResourceLoader() {
@@ -135,7 +135,10 @@ abstract class AbstractAuroraConfigTest : ResourceLoader() {
         }, affiliation, refName)
     }
 
-    fun createAuroraConfig(auroraConfigJson: Map<String, String>): AuroraConfig {
+    fun createAuroraConfig(
+        auroraConfigJson: Map<String, String>,
+        manualFiles: List<AuroraConfigFile> = emptyList()
+    ): AuroraConfig {
 
         val auroraConfigFiles = auroraConfigJson.map {
             AuroraConfigFile(
@@ -143,7 +146,7 @@ abstract class AbstractAuroraConfigTest : ResourceLoader() {
                 it.value
             )
         }
-        return AuroraConfig(auroraConfigFiles, "aos", "master")
+        return AuroraConfig(auroraConfigFiles + manualFiles, "aos", "master")
     }
 
     fun getResultFiles(aid: ApplicationDeploymentRef): Map<String, JsonNode?> {
