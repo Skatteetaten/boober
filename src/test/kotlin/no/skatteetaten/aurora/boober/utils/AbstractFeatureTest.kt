@@ -2,6 +2,10 @@ package no.skatteetaten.aurora.boober.utils
 
 import assertk.Assert
 import assertk.Result
+import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
+import assertk.assertions.isInstanceOf
+import assertk.assertions.messageContains
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
 import com.fasterxml.jackson.databind.JsonNode
