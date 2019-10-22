@@ -147,9 +147,8 @@ abstract class AbstractAuroraConfigTest : ResourceLoader() {
             )
         }
 
-        val manualNames:List<String> = manualFiles.map{ it.configName}
-        val files = auroraConfigFiles.filterNot { manualNames.contains(it.configName)}
-
+        val manualNames: List<String> = manualFiles.map { it.configName }
+        val files = auroraConfigFiles.filterNot { manualNames.contains(it.configName) }
 
         return AuroraConfig(files + manualFiles, "aos", "master")
     }

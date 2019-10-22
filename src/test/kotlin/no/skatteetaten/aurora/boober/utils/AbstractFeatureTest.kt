@@ -2,8 +2,6 @@ package no.skatteetaten.aurora.boober.utils
 
 import assertk.Assert
 import assertk.Result
-import assertk.all
-import assertk.assertions.*
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
 import com.fasterxml.jackson.databind.JsonNode
@@ -176,26 +174,22 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
                 .messageContains(expectedMessage)
     }
 
-
-    fun <T> Assert<Result<T>>.applicationErrors(vararg message:String) {
+    fun <T> Assert<Result<T>>.applicationErrors(vararg message: String) {
         this.applicationErrors(message.toList())
     }
 
-    fun <T> Assert<Result<T>>.applicationErrors(messages:List<String>) {
+    fun <T> Assert<Result<T>>.applicationErrors(messages: List<String>) {
         this.isFailure()
             .isInstanceOf(MultiApplicationValidationException::class)
             .transform { mae ->
                 val errors = mae.errors.flatMap { it.errors }
                 errors.zip(messages).forEach { (actual, expected) ->
-                    if(!actual.localizedMessage.contains(expected)) {
+                    if (!actual.localizedMessage.contains(expected)) {
                         expected(":${show(actual.localizedMessage)} to contain:${show(expected)}")
                     }
-
                 }
             }
     }
-
-
 
     fun createAuroraDeploymentContext(
         app: String = """{}""",
@@ -219,7 +213,7 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
         app: String = """{}""",
         vararg resource: AuroraResource
     ): Set<AuroraResource> {
-        return generateResources(app, resource.toMutableSet())}
+        return generateResources(app, resource.toMutableSet()) }
 
     fun generateResources(
         app: String = """{}""",

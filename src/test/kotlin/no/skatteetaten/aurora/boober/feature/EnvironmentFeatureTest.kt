@@ -86,7 +86,6 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
                 SimpleGrantedAuthority("APP_PaaS_utv"))
         )
 
-
         val resources = generateResources(files = listOf(AuroraConfigFile("utv/about.json", """{
               "permissions" : {
                 "view" : "APP_PaaS_test",
@@ -105,6 +104,4 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
         assertThat(rolebindingResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("rolebinding.json")
         assertThat(viewRolebindingResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("rolebinding-view.json")
     }
-
-
 }
