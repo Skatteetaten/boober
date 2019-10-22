@@ -34,8 +34,8 @@ class WebsealFeature : Feature {
 
             resources.forEach {
                 if (it.resource.kind == "Service") {
-                    modifyResource(it, "Set annotations")
-                    val allAnnotations = it.resource.metadata.annotations.addIfNotNull(annotations)
+                    modifyResource(it, "Set webseal annotations")
+                    val allAnnotations = it.resource.metadata.annotations?.addIfNotNull(annotations) ?: annotations
                     it.resource.metadata.annotations = allAnnotations
                 }
             }

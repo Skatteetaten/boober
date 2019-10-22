@@ -11,8 +11,11 @@ import assertk.assertions.support.show
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newContainer
 import com.fkorotkov.kubernetes.newObjectMeta
+import com.fkorotkov.kubernetes.newService
+import com.fkorotkov.kubernetes.newServicePort
 import com.fkorotkov.kubernetes.spec
 import com.fkorotkov.openshift.from
 import com.fkorotkov.openshift.imageChangeParams
@@ -39,6 +42,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.AuroraResourceSource
+import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
@@ -91,6 +95,29 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
                 dockerImageRepository = "docker.registry/org_test/simple"
             }
         }, createdSource = AuroraResourceSource(TestDefaultFeature::class.java))
+
+    fun createEmptyService() = AuroraResource(newService {
+        metadata {
+            name = "simple"
+            namespace = "paas-utv"
+        }
+
+        spec {
+            ports = listOf(
+                newServicePort {
+                    name = "http"
+                    protocol = "TCP"
+                    port = PortNumbers.HTTP_PORT
+                    targetPort = IntOrString(PortNumbers.INTERNAL_HTTP_PORT)
+                    nodePort = 0
+                }
+            )
+
+            selector = mapOf("name" to "simple")
+            type = "ClusterIP"
+            sessionAffinity = "None"
+        }
+    }, createdSource = AuroraResourceSource(TestDefaultFeature::class.java))
 
     fun createEmptyApplicationDeployment() = AuroraResource(
         ApplicationDeployment(
@@ -164,18 +191,19 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
         Instants.determineNow = { Instant.EPOCH }
         clearAllMocks()
     }
+
     fun <T> Assert<Result<T>>.singleApplicationError(expectedMessage: String) {
         this.isFailure()
-                .isInstanceOf(MultiApplicationValidationException::class)
-                .transform { mae ->
-                    val errors = mae.errors.flatMap { it.errors }
-                    if (errors.size != 1) {
-                        throw mae
-                    } else {
-                        errors.first()
-                    }
+            .isInstanceOf(MultiApplicationValidationException::class)
+            .transform { mae ->
+                val errors = mae.errors.flatMap { it.errors }
+                if (errors.size != 1) {
+                    throw mae
+                } else {
+                    errors.first()
                 }
-                .messageContains(expectedMessage)
+            }
+            .messageContains(expectedMessage)
     }
 
     fun <T> Assert<Result<T>>.applicationErrors(vararg message: String) {
@@ -217,7 +245,8 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
         app: String = """{}""",
         vararg resource: AuroraResource
     ): Set<AuroraResource> {
-        return generateResources(app, resource.toMutableSet()) }
+        return generateResources(app, resource.toMutableSet())
+    }
 
     fun generateResources(
         app: String = """{}""",
