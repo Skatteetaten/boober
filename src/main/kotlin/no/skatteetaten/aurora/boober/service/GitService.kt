@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
+import mu.KotlinLogging
 import no.skatteetaten.aurora.AuroraMetrics
 import org.eclipse.jgit.api.CreateBranchCommand
 import org.eclipse.jgit.api.Git
@@ -11,13 +12,13 @@ import org.eclipse.jgit.lib.PersonIdent
 import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.revwalk.RevTag
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
+
+private val logger = KotlinLogging.logger {}
 
 @Configuration
 class GitServices(
@@ -67,8 +68,6 @@ open class GitService(
     val password: String,
     val metrics: AuroraMetrics
 ) {
-
-    val logger: Logger = LoggerFactory.getLogger(GitService::class.java)
 
     val cp = UsernamePasswordCredentialsProvider(username, password)
 

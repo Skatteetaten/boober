@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.feature.extractPlaceHolders
 import no.skatteetaten.aurora.boober.feature.headerHandlers
@@ -15,16 +16,14 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.validate
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.apache.commons.text.StringSubstitutor
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+
+private val logger = KotlinLogging.logger {}
 
 @Service
 class AuroraDeploymentContextService(
     val featuers: List<Feature>
 ) {
-
-    val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentContextService::class.java)
 
     fun expandDeploymentRefToApplicationRef(
         auroraConfig: AuroraConfig,

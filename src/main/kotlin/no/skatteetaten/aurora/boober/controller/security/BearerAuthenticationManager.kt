@@ -2,11 +2,10 @@ package no.skatteetaten.aurora.boober.controller.security
 
 import com.fasterxml.jackson.databind.JsonNode
 import java.util.regex.Pattern
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.openshiftName
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.CredentialsExpiredException
@@ -15,12 +14,12 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken
 import org.springframework.stereotype.Component
 
+private val logger = KotlinLogging.logger {}
+
 @Component
 class BearerAuthenticationManager(
     val openShiftClient: OpenShiftClient
 ) : AuthenticationManager {
-
-    val logger: Logger = LoggerFactory.getLogger(BearerAuthenticationManager::class.java)
 
     companion object {
         private val headerPattern: Pattern = Pattern.compile("Bearer\\s+(.*)", Pattern.CASE_INSENSITIVE)

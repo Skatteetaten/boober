@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import java.net.URI
 import kotlin.reflect.KClass
+import mu.KotlinLogging
 import org.slf4j.Logger
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -21,11 +22,11 @@ import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestClientResponseException
 import org.springframework.web.client.RestTemplate
 
+private val logger = KotlinLogging.logger {}
+
 private const val REQUEST_ENTITY = "requestEntity"
 
 open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate) {
-
-    private val logger by logger()
 
     private val retryTemplate = retryTemplate(logger)
 

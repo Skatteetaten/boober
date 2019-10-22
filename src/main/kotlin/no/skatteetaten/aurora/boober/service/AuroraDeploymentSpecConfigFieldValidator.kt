@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraConfigField
@@ -9,8 +10,8 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.ConfigFieldErrorDetail
 import no.skatteetaten.aurora.boober.utils.findAllPointers
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+
+private val logger = KotlinLogging.logger {}
 
 class AuroraDeploymentSpecConfigFieldValidator(
     val applicationDeploymentRef: ApplicationDeploymentRef,
@@ -18,7 +19,6 @@ class AuroraDeploymentSpecConfigFieldValidator(
     val fieldHandlers: Set<AuroraConfigFieldHandler>,
     val fields: Map<String, AuroraConfigField>
 ) {
-    val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpecConfigFieldValidator::class.java)
 
     fun validate(fullValidation: Boolean = true) {
 

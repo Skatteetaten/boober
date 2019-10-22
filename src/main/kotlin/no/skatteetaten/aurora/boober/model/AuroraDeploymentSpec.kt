@@ -6,8 +6,6 @@ import no.skatteetaten.aurora.boober.utils.atNullable
 import no.skatteetaten.aurora.boober.utils.convertValueToString
 import no.skatteetaten.aurora.boober.utils.deepSet
 import org.apache.commons.text.StringSubstitutor
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 data class AuroraDeploymentSpec(
     val fields: Map<String, AuroraConfigField>,
@@ -110,8 +108,6 @@ data class AuroraDeploymentSpec(
     inline fun <reified T> getOrNull(name: String): T? = fields[name]?.getNullableValue()
 
     companion object {
-
-        val logger: Logger = LoggerFactory.getLogger(AuroraDeploymentSpec::class.java)
 
         fun create(
             handlers: Set<AuroraConfigFieldHandler>,

@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.controller.v1
 import com.fasterxml.jackson.annotation.JsonRawValue
 import javax.servlet.http.HttpServletRequest
 import javax.validation.Valid
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.controller.NoSuchResourceException
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigResource.Companion.fromAuroraConfig
@@ -12,7 +13,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
-import no.skatteetaten.aurora.boober.utils.logger
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -27,6 +27,8 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+
+private val logger = KotlinLogging.logger {}
 
 data class AuroraConfigResource(
     val name: String,
@@ -63,8 +65,6 @@ class AuroraConfigControllerV1(
     private val auroraConfigService: AuroraConfigService,
     private val responder: AuroraConfigResponder
 ) {
-
-    val logger by logger()
 
     @GetMapping
     fun get(

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.util.UUID
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.cluster
 import no.skatteetaten.aurora.boober.feature.dockerImagePath
 import no.skatteetaten.aurora.boober.feature.name
@@ -25,10 +26,10 @@ import no.skatteetaten.aurora.boober.service.openshift.describeString
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.parallelMap
 import no.skatteetaten.aurora.boober.utils.whenFalse
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+
+private val logger = KotlinLogging.logger {}
 
 @Service
 class DeployService(
@@ -44,8 +45,6 @@ class DeployService(
     @Value("\${integrations.docker.registry}") val dockerRegistry: String,
     @Value("\${integrations.docker.releases}") val releaseDockerRegistry: String
 ) {
-
-    val logger: Logger = LoggerFactory.getLogger(DeployService::class.java)
 
     @JvmOverloads
     fun executeDeploy(
@@ -245,7 +244,13 @@ class DeployService(
 
         val tagResult = context.spec.takeIf { it.releaseTo != null }?.let {
             cantusService.tag(
-                TagCommand(it.dockerImagePath, it.version, it.releaseTo!!, dockerRegistry)
+                TagCommand(
+                    name = it.dockerImagePath,
+                    from = it.version,
+                    to = it.releaseTo!!,
+                    fromRegistry = dockerRegistry,
+                    toRegistry = releaseDockerRegistry
+                )
             )
         }
 

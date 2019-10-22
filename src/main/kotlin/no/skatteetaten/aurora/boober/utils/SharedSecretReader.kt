@@ -4,9 +4,11 @@ import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Paths
-import org.slf4j.LoggerFactory
+import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Component for reading the shared secret used for authentication. You may specify the shared secret directly using
@@ -29,16 +31,11 @@ class SharedSecretReader(
             return secretValue.takeIf { it.isNullOrBlank() }?.let {
                 val secretFile = File(secretLocation).absoluteFile
                 try {
-                    log.debug("Reading token from file {}", secretFile.absolutePath)
+                    logger.debug("Reading token from file {}", secretFile.absolutePath)
                     String(Files.readAllBytes(Paths.get(secretLocation)), Charsets.UTF_8)
                 } catch (e: IOException) {
                     throw IllegalStateException("Unable to read shared secret from specified location [${secretFile.absolutePath}]")
                 }
             } ?: secretValue!!
         }
-
-    companion object {
-
-        private val log = LoggerFactory.getLogger(SharedSecretReader::class.java)
-    }
 }

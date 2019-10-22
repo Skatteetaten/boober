@@ -1,14 +1,15 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.ServiceTypes.CANTUS
 import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
+
+private val logger = KotlinLogging.logger {}
 
 data class TagResult(val cmd: TagCommand, val response: JsonNode?, val success: Boolean)
 
@@ -33,8 +34,6 @@ class CantusRestTemplateWrapper(@TargetService(CANTUS) restTemplate: RestTemplat
 class CantusService(
     val client: CantusRestTemplateWrapper
 ) {
-
-    val logger: Logger = LoggerFactory.getLogger(CantusService::class.java)
 
     fun tag(cmd: TagCommand): TagResult {
         val cantusCmd = CantusTagCommand(

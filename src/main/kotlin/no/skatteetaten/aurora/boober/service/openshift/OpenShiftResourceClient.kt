@@ -2,13 +2,12 @@ package no.skatteetaten.aurora.boober.service.openshift
 
 import com.fasterxml.jackson.databind.JsonNode
 import java.net.URI
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.token.TokenProvider
 import no.skatteetaten.aurora.boober.utils.findApiVersion
 import no.skatteetaten.aurora.boober.utils.findOpenShiftApiPrefix
 import no.skatteetaten.aurora.boober.utils.kindsWithoutNamespace
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
@@ -17,7 +16,7 @@ import org.springframework.http.RequestEntity
 import org.springframework.http.ResponseEntity
 import org.springframework.web.client.HttpClientErrorException
 
-val logger: Logger = LoggerFactory.getLogger(OpenShiftResourceClient::class.java)
+private val logger = KotlinLogging.logger {}
 
 open class OpenShiftResourceClient(
     val tokenProvider: TokenProvider,

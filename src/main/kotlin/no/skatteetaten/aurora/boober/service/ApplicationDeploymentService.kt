@@ -1,15 +1,16 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.ApplicationRef
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import org.apache.http.HttpStatus
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+
+private val logger = KotlinLogging.logger {}
 
 // TOOD: This is duplicated
 data class ApplicationDeploymentCommand(
@@ -34,7 +35,6 @@ data class GetApplicationDeploymentResponse(
 class ApplicationDeploymentService(
     val openShiftClient: OpenShiftClient
 ) {
-    val logger: Logger = LoggerFactory.getLogger(ApplicationDeploymentService::class.java)
 
     fun executeDelete(applicationRefs: List<ApplicationRef>): List<DeleteApplicationDeploymentResponse> {
         val deleteCommands = createOpenshiftApplicationDeploymentCommands(applicationRefs, OperationType.DELETE)

@@ -3,9 +3,8 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -18,13 +17,13 @@ import org.springframework.web.client.RestTemplate
 class BitbucketRestTemplateWrapper(@Qualifier("bitbucket") restTemplate: RestTemplate) :
     RetryingRestTemplateWrapper(restTemplate)
 
+private val logger = KotlinLogging.logger {}
+
 @Service
 class BitbucketService(
     val restTemplateWrapper: BitbucketRestTemplateWrapper,
     val mapper: ObjectMapper
 ) {
-
-    val logger: Logger = LoggerFactory.getLogger(BitbucketService::class.java)
 
     fun uploadFile(project: String, repo: String, fileName: String, message: String, content: String): String? {
 

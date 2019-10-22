@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.io.File
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -11,11 +12,11 @@ import no.skatteetaten.aurora.boober.service.GitServices.TargetDomain
 import org.apache.commons.io.FileUtils
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.InvalidRemoteException
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory.getLogger
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
+
+private val logger = KotlinLogging.logger {}
 
 class AuroraConfigWithOverrides(
     var auroraConfig: AuroraConfig,
@@ -37,7 +38,6 @@ class AuroraConfigService(
     @Value("\${integrations.aurora.config.git.project}") val project: String
 ) {
 
-    val logger: Logger = getLogger(AuroraConfigService::class.java)
     val mapper = jacksonObjectMapper()
 
     fun findAllAuroraConfigNames(): List<String> {

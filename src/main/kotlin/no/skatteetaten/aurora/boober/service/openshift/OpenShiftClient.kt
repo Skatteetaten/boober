@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient.Companion.generateUrl
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
@@ -15,13 +16,13 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientCo
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
+
+private val logger = KotlinLogging.logger {}
 
 enum class OperationType { GET, CREATE, UPDATE, DELETE, NOOP }
 
@@ -107,8 +108,6 @@ class OpenShiftClient(
     @ClientType(SERVICE_ACCOUNT) val serviceAccountClient: OpenShiftResourceClient,
     val mapper: ObjectMapper
 ) {
-
-    val logger: Logger = LoggerFactory.getLogger(OpenShiftClient::class.java)
 
     fun performOpenShiftCommand(namespace: String, command: OpenshiftCommand): OpenShiftResponse {
 
