@@ -8,7 +8,6 @@ fun AuroraDeploymentContext.validate(fullValidation: Boolean): Map<Feature, List
         try {
             it.key.validate(it.value, fullValidation, this.cmd)
         } catch (e: Exception) {
-            throw e
             listOf(e)
         }
     }
