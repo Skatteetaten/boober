@@ -68,10 +68,11 @@
             "protocol" : "TCP"
           } ],
           "readinessProbe" : {
-            "initialDelaySeconds" : 10,
-            "tcpSocket" : {
-              "port" : 8080
+            "httpGet": {
+              "path": "/health",
+              "port": 8080
             },
+            "initialDelaySeconds" : 10,
             "timeoutSeconds" : 1
           },
           "securityContext" : {

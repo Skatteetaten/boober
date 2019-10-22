@@ -6,6 +6,7 @@ import com.fkorotkov.kubernetes.emptyDir
 import com.fkorotkov.kubernetes.fieldRef
 import com.fkorotkov.kubernetes.httpGet
 import com.fkorotkov.kubernetes.metadata
+import com.fkorotkov.kubernetes.newContainer
 import com.fkorotkov.kubernetes.newContainerPort
 import com.fkorotkov.kubernetes.newEnvVar
 import com.fkorotkov.kubernetes.newProbe
@@ -289,7 +290,38 @@ abstract class AbstractDeployFeature(
         containerArgs: List<String> = emptyList()
     ): Container {
 
-        return auroraContainer {
+        return newContainer {
+
+            terminationMessagePath = "/dev/termination-log"
+            imagePullPolicy = "IfNotPresent"
+            securityContext {
+                privileged = false
+            }
+            volumeMounts = listOf(newVolumeMount {
+                name = "application-log-volume"
+                mountPath = Paths.logPath
+            })
+
+            val standardEnv = listOf(
+                newEnvVar {
+                    name = "POD_NAME"
+                    valueFrom {
+                        fieldRef {
+                            apiVersion = "v1"
+                            fieldPath = "metadata.name"
+                        }
+                    }
+                },
+                newEnvVar {
+                    name = "POD_NAMESPACE"
+                    valueFrom {
+                        fieldRef {
+                            apiVersion = "v1"
+                            fieldPath = "metadata.namespace"
+                        }
+                    }
+                }
+            )
             name = containerName
             ports = containerPorts.map {
                 newContainerPort {
@@ -305,7 +337,7 @@ abstract class AbstractDeployFeature(
                 val portName = if (it.key == "http") "HTTP_PORT" else "${it.key}_HTTP_PORT".toUpperCase()
                 EnvVarBuilder().withName(portName).withValue(it.value.toString()).build()
             }
-            env = portEnv
+            env = standardEnv + portEnv
 
             adc.probe("liveness")?.let {
                 livenessProbe = it
@@ -384,39 +416,3 @@ data class HttpEndpoint(
     val path: String,
     val port: Int?
 )
-
-fun auroraContainer(block: Container.() -> Unit = {}): Container {
-    val instance = Container()
-    instance.block()
-    instance.terminationMessagePath = "/dev/termination-log"
-    instance.imagePullPolicy = "IfNotPresent"
-    instance.securityContext {
-        privileged = false
-    }
-    instance.volumeMounts = listOf(newVolumeMount {
-        name = "application-log-volume"
-        mountPath = Paths.logPath
-    }) + instance.volumeMounts
-
-    instance.env = listOf(
-        newEnvVar {
-            name = "POD_NAME"
-            valueFrom {
-                fieldRef {
-                    apiVersion = "v1"
-                    fieldPath = "metadata.name"
-                }
-            }
-        },
-        newEnvVar {
-            name = "POD_NAMESPACE"
-            valueFrom {
-                fieldRef {
-                    apiVersion = "v1"
-                    fieldPath = "metadata.namespace"
-                }
-            }
-        }
-    ) + instance.env
-    return instance
-}

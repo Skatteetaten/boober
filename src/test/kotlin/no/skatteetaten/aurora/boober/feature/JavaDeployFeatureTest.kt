@@ -38,8 +38,12 @@ class JavaDeployFeatureTest : AbstractFeatureTest() {
 
         val resources = generateResources(
             """{
+          "artifactId" : "simple",
           "version" : "1",
           "groupId" : "org.test",
+          "readiness" : {
+            "path" : "/health"
+          },
           "liveness" : true,
           "serviceAccount" : "hero",
           "deployStrategy" : {
