@@ -13,20 +13,25 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newContainer
+import com.fkorotkov.kubernetes.newEnvVar
 import com.fkorotkov.kubernetes.newObjectMeta
 import com.fkorotkov.kubernetes.newService
 import com.fkorotkov.kubernetes.newServicePort
 import com.fkorotkov.kubernetes.spec
+import com.fkorotkov.openshift.customStrategy
 import com.fkorotkov.openshift.from
 import com.fkorotkov.openshift.imageChangeParams
 import com.fkorotkov.openshift.metadata
+import com.fkorotkov.openshift.newBuildConfig
 import com.fkorotkov.openshift.newDeploymentConfig
 import com.fkorotkov.openshift.newDeploymentTriggerPolicy
 import com.fkorotkov.openshift.newImageStream
+import com.fkorotkov.openshift.output
 import com.fkorotkov.openshift.rollingParams
 import com.fkorotkov.openshift.spec
 import com.fkorotkov.openshift.strategy
 import com.fkorotkov.openshift.template
+import com.fkorotkov.openshift.to
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.openshift.api.model.DeploymentConfig
@@ -118,6 +123,47 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
             sessionAffinity = "None"
         }
     }, createdSource = AuroraResourceSource(TestDefaultFeature::class.java))
+
+    fun createEmptyBuildConfig() = AuroraResource(
+        newBuildConfig {
+            metadata {
+                name = "simple"
+                namespace = "paas-utv"
+            }
+
+            spec {
+                strategy {
+                    type = "Custom"
+                    customStrategy {
+                        from {
+                            kind = "ImageStreamTag"
+                            namespace = "openshift"
+                            name = "architect:1"
+                        }
+
+                        val envMap = mapOf(
+                            "ARTIFACT_ID" to "simpe",
+                            "GROUP_ID" to "org.test",
+                            "VERSION" to "1"
+                        )
+
+                        env = envMap.map {
+                            newEnvVar {
+                                name = it.key
+                                value = it.value
+                            }
+                        }
+                        exposeDockerSocket = true
+                    }
+                    output {
+                        to {
+                            kind = "ImageStreamTag"
+                            name = "simple:latest"
+                        }
+                    }
+                }
+            }
+        }, createdSource = AuroraResourceSource(TestDefaultFeature::class.java))
 
     fun createEmptyApplicationDeployment() = AuroraResource(
         ApplicationDeployment(
