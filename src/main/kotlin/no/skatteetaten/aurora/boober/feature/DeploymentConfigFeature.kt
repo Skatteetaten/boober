@@ -17,6 +17,7 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
+import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterNullValues
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.springframework.stereotype.Service
@@ -33,6 +34,13 @@ fun Map<String, String>.toEnvVars(): List<EnvVar> = this
     }
 
 val AuroraDeploymentSpec.pause: Boolean get() = this["pause"]
+
+val AuroraDeploymentSpec.managementPath
+    get() = this.featureEnabled("management") {
+        val path = this.get<String>("$it/path").ensureStartWith("/")
+        val port = this.get<Int>("$it/port").toString().ensureStartWith(":")
+        "$port$path"
+    }
 
 @Service
 class DeploymentConfigFeature : Feature {

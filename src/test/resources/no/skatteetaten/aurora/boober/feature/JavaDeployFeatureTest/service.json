@@ -1,0 +1,28 @@
+{
+  "apiVersion" : "v1",
+  "kind" : "Service",
+  "metadata" : {
+    "annotations" : {
+      "prometheus.io/scheme" : "http",
+      "prometheus.io/scrape" : "true",
+      "prometheus.io/path" : "/prometheus",
+      "prometheus.io/port" : "8081"
+    },
+    "name" : "simple",
+    "namespace" : "paas-utv"
+  },
+  "spec" : {
+    "ports" : [ {
+      "name" : "http",
+      "nodePort" : 0,
+      "port" : 80,
+      "protocol" : "TCP",
+      "targetPort" : 8080
+    } ],
+    "selector" : {
+      "name" : "simple"
+    },
+    "sessionAffinity" : "None",
+    "type" : "ClusterIP"
+  }
+}

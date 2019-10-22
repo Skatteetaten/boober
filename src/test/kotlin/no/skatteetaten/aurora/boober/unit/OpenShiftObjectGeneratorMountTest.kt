@@ -4,7 +4,7 @@ import no.skatteetaten.aurora.boober.utils.AbstractOpenShiftObjectGeneratorTest
 
 class OpenShiftObjectGeneratorMountTest : AbstractOpenShiftObjectGeneratorTest() {
 
-    /*
+    /* TODO: Move to features
     Test edge cases
     @Test
     fun `Verify properties entries contains a line for each property`() {

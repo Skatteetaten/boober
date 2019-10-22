@@ -5,6 +5,8 @@ import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
 class AuroraDeploymentSpecBuilderTest : AbstractAuroraConfigTest() {
 
     /*
+    // TODO: These tests must be copied to the relevant Feature tests.
+
     lateinit var auroraConfigJson: MutableMap<String, String>
 
     @BeforeEach

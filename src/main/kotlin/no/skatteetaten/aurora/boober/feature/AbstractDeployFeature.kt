@@ -138,13 +138,6 @@ fun gavHandlers(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand) =
         spec.versionHandler
     )
 
-val AuroraDeploymentSpec.managementPath
-    get() = this.featureEnabled("management") {
-        val path = this.get<String>("$it/path").ensureStartWith("/")
-        val port = this.get<Int>("$it/port").toString().ensureStartWith(":")
-        "$port$path"
-    }
-
 abstract class AbstractDeployFeature(
     @Value("\${integrations.docker.registry}") val dockerRegistry: String
 ) : Feature {
