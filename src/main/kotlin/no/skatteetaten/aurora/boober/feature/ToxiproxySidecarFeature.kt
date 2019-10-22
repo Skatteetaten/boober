@@ -74,7 +74,7 @@ class ToxiproxySidecarFeature : Feature {
         val container = createToxiProxyContainer(adc, toxiProxy)
         resources.forEach {
             if (it.resource.kind == "DeploymentConfig") {
-                modifyResource(it, "Added toxiprox volume and sidecar container")
+                modifyResource(it, "Added toxiproxy volume and sidecar container")
                 val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
                 val podSpec = dc.spec.template.spec
                 podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
