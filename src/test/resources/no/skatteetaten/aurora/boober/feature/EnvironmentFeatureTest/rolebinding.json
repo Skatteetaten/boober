@@ -10,8 +10,14 @@
     "name" : "admin"
   },
   "subjects" : [ {
+    "kind": "User",
+    "name": "foo:bar:baz"
+  },
+    {
     "kind" : "Group",
     "name" : "APP_PaaS_utv"
   } ],
-  "userNames" : [ ]
+  "userNames": [
+    "foo:bar:baz"
+  ]
 }

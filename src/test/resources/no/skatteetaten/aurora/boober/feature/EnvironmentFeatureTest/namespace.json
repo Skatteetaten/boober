@@ -3,7 +3,8 @@
   "kind" : "Namespace",
   "metadata" : {
     "labels" : {
-      "affiliation" : "paas"
+      "affiliation": "paas",
+      "removeAfter": "86400"
     },
     "name" : "paas-utv"
   }
