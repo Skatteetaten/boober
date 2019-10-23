@@ -9,8 +9,6 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.every
 import io.mockk.mockk
-import java.io.ByteArrayInputStream
-import java.time.Instant
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.feature.ApplicationDeploymentFeature
 import no.skatteetaten.aurora.boober.feature.BuildFeature
@@ -58,6 +56,8 @@ import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import java.io.ByteArrayInputStream
+import java.time.Instant
 
 // TODO: Bør vi lage en "feit" test her som tester kombinasjonen av mange forskjellige features og kun det?
 class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTest() {
@@ -81,7 +81,7 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
         BuildFeature(),
         DatabaseFeature(databaseSchemaProvisioner, cluster),
         WebsealFeature(),
-        SecretVaultFeature(vaultProvider, cluster),
+        SecretVaultFeature(vaultProvider),
         ConfigFeature(),
         StsFeature(stsProvisioner),
         MountFeature(vaultProvider, cluster, openShiftClient),

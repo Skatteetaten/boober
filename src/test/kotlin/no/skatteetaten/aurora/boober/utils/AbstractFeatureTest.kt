@@ -261,6 +261,9 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
             .isInstanceOf(MultiApplicationValidationException::class)
             .transform { mae ->
                 val errors = mae.errors.flatMap { it.errors }
+                if (errors.size != messages.size) {
+                    expected("You do not expect all error messages")
+                }
                 errors.zip(messages).forEach { (actual, expected) ->
                     if (!actual.localizedMessage.contains(expected)) {
                         expected(":${show(actual.localizedMessage)} to contain:${show(expected)}")

@@ -5,9 +5,7 @@ import org.springframework.stereotype.Service
 
 data class VaultRequest(
     val collectionName: String,
-    val name: String,
-    val keys: List<String> = emptyList(),
-    val keyMappings: Map<String, String>? = null
+    val name: String
 )
 
 typealias VaultData = Map<String, ByteArray>

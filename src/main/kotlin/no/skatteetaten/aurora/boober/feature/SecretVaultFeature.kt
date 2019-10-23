@@ -22,13 +22,11 @@ import no.skatteetaten.aurora.boober.utils.filterProperties
 import no.skatteetaten.aurora.boober.utils.normalizeKubernetesName
 import no.skatteetaten.aurora.boober.utils.takeIfNotEmpty
 import org.apache.commons.codec.binary.Base64
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class SecretVaultFeature(
-    val vaultProvider: VaultProvider,
-    @Value("\${openshift.cluster}") val cluster: String
+    val vaultProvider: VaultProvider
 ) : Feature {
 
     fun secretVaultKeyMappingHandlers(cmd: AuroraContextCommand) = cmd.applicationFiles.find {
@@ -97,6 +95,7 @@ class SecretVaultFeature(
             }
     }
 
+    // TODO: this can be done without full validation
     fun validateSecretNames(secrets: List<AuroraSecret>): List<AuroraDeploymentSpecValidationException> {
         return secrets.mapNotNull { secret ->
             if (secret.name.length > 63) {
@@ -207,9 +206,7 @@ class SecretVaultFeature(
         return secrets.mapNotNull { secret: AuroraSecret ->
             val request = VaultRequest(
                 collectionName = adc.affiliation,
-                name = secret.secretVaultName,
-                keys = secret.secretVaultKeys,
-                keyMappings = secret.keyMappings
+                name = secret.secretVaultName
             )
             vaultProvider.findVaultDataSingle(request)[secret.file]?.let { file ->
                 // TODO: Do we need to do this in the properties file? We can just do it afterwards where we map?

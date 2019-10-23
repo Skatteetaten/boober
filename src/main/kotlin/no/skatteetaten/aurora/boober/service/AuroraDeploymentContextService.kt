@@ -58,7 +58,10 @@ class AuroraDeploymentContextService(
 
         val errors = result.mapNotNull { it.second }
         if (errors.isNotEmpty()) {
-            logger.debug(errors.joinToString(","))
+            val errorMessages = errors.flatMap { err ->
+                err.errors.map { it.localizedMessage }
+            }
+            logger.debug(errorMessages.joinToString(","))
             throw MultiApplicationValidationException(errors)
         }
         return result.mapNotNull { it.first }
