@@ -1,26 +1,13 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fkorotkov.kubernetes.metadata
-import com.fkorotkov.kubernetes.newEnvVar
-import com.fkorotkov.kubernetes.newSecret
-import com.fkorotkov.kubernetes.secretKeyRef
-import com.fkorotkov.kubernetes.valueFrom
+import com.fkorotkov.kubernetes.*
 import io.fabric8.kubernetes.api.model.EnvVar
-import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.model.AuroraContextCommand
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.addEnvVar
-import no.skatteetaten.aurora.boober.model.findSubKeys
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultSecretEnvResult
-import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.ensureStartWith
-import no.skatteetaten.aurora.boober.utils.filterProperties
-import no.skatteetaten.aurora.boober.utils.normalizeKubernetesName
-import no.skatteetaten.aurora.boober.utils.takeIfNotEmpty
+import no.skatteetaten.aurora.boober.utils.*
 import org.apache.commons.codec.binary.Base64
 import org.springframework.stereotype.Service
 
@@ -70,12 +57,9 @@ class SecretVaultFeature(
         fullValidation: Boolean,
         cmd: AuroraContextCommand
     ): List<Exception> {
-        if (!fullValidation) {
-            return emptyList()
-        }
         val secrets = getSecretVaults(adc, cmd)
-        return validateVaultExistence(secrets, adc.affiliation)
-            .addIfNotNull(validateSecretNames(secrets))
+        return validateSecretNames(secrets)
+                .addIfNotNull(validateVaultExistence(secrets, adc.affiliation))
             .addIfNotNull(validateKeyMappings(secrets))
             .addIfNotNull(validateSecretVaultKeys(secrets, adc.affiliation))
             .addIfNotNull(validateSecretVaultFiles(secrets, adc.affiliation))
@@ -141,7 +125,7 @@ class SecretVaultFeature(
         val vaultKeys = vaultProvider.findVaultKeys(vaultCollection, vaultName, secret.file)
         val missingKeys = keys - vaultKeys
         return if (missingKeys.isNotEmpty()) {
-            throw AuroraDeploymentSpecValidationException("The keys $missingKeys were not found in the secret vault")
+            throw AuroraDeploymentSpecValidationException("The keys $missingKeys were not found in the secret vault=$vaultName in collection=$vaultCollection")
         } else null
     }
 

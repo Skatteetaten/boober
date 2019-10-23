@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.feature
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import assertk.assertions.isNotNull
 import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.openshift.api.model.DeploymentConfig
@@ -21,16 +20,83 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
     private val vaultProvider: VaultProvider = mockk()
 
     @Test
-    fun `does not have any normal validation rules`() {
+    fun `validate secretNames`() {
 
-        val context = createAuroraDeploymentContext(
+        val tooLongName = "this-secret-name-is-really-way-way-way-too-long-long-long-long"
+        mockVault(tooLongName)
+        assertThat {
+            createAuroraDeploymentContext(
             """{
-              "secretVault" : "foo" 
-             }""", fullValidation = false
-        )
-        assertThat(context).isNotNull()
+              "secretVaults" : {
+                  "$tooLongName" : {
+                    "enabled" : true
+                  }
+              }
+             }""")
+        }.singleApplicationError("The name of the secretVault=simple-this-secret-name-is-really-way-way-way-too-long-long-long-long is too long. Max 63 characters. Note that we ensure that the name starts with @name@-")
     }
 
+    @Test
+    fun `validate key mappings should exist in keys`() {
+
+        mockVault("foo")
+        every { vaultProvider.findVaultKeys("paas", "foo", "latest.properties") } returns setOf("FOO")
+        assertThat {
+            createAuroraDeploymentContext("""{
+              "secretVaults" : {
+                  "foo" : {
+                    "keys" : ["FOO"],
+                    "keyMappings" : { "BAR" : "BAZ" }
+                  }
+              }
+             }""")
+        }.singleApplicationError(
+                "The secretVault keyMappings [BAR] were not found in keys"
+        )
+    }
+
+    @Test
+    fun `should get error if secrets have duplicate names`() {
+
+        every { vaultProvider.vaultExists("paas", "simple") } returns true
+
+        assertThat {
+            createAuroraDeploymentContext(
+                    """{
+              "secretVault" : "simple",
+              "secretVaults" : {
+                "simple" : {
+                  "enabled" : "true"
+                } 
+              }
+             }""")
+        }.applicationErrors(
+                "File with name=latest.properties is not present in vault=simple in collection=paas",
+                "File with name=latest.properties is not present in vault=simple in collection=paas",
+                "SecretVaults does not have unique names=[simple, simple]"
+        )
+    }
+
+    @Test
+    fun `should get error if vault key doss not exist`() {
+
+        every { vaultProvider.vaultExists("paas", "foo") } returns true
+
+        every { vaultProvider.findVaultKeys("paas", "foo", "latest.properties") } returns setOf("FOO")
+
+        assertThat {
+            createAuroraDeploymentContext(
+                    """{
+              "secretVault" : {
+                "name" :"foo",
+                "keys" : ["MISSING"]
+              }
+             }"""
+            )
+        }.applicationErrors(
+                "The keys [MISSING] were not found in the secret vault=foo in collection=paas"
+        )
+    }
     @Test
     fun `should get error if vault does not exist`() {
 
