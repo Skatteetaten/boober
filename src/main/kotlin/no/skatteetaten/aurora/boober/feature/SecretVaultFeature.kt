@@ -72,7 +72,7 @@ class SecretVaultFeature(
         fullValidation: Boolean,
         cmd: AuroraContextCommand
     ): List<Exception> {
-        if (!fullValidation || adc.cluster != cluster) {
+        if (!fullValidation) {
             return emptyList()
         }
         val secrets = getSecretVaults(adc, cmd)
@@ -105,7 +105,7 @@ class SecretVaultFeature(
         }
     }
 
-    fun validateKeyMappings(secrets: List<AuroraSecret>): List<AuroraDeploymentSpecValidationException> {
+    private fun validateKeyMappings(secrets: List<AuroraSecret>): List<AuroraDeploymentSpecValidationException> {
         return secrets.mapNotNull { validateKeyMapping(it) }
     }
 
@@ -123,7 +123,7 @@ class SecretVaultFeature(
      * Note that this method always uses the latest.properties file regardless of the version of the application and
      * the contents of the vault.
      */
-    fun validateSecretVaultKeys(
+    private fun validateSecretVaultKeys(
         secrets: List<AuroraSecret>,
         vaultCollection: String
     ): List<AuroraDeploymentSpecValidationException> {
@@ -146,7 +146,7 @@ class SecretVaultFeature(
         } else null
     }
 
-    fun validateSecretVaultFiles(
+    private fun validateSecretVaultFiles(
         secrets: List<AuroraSecret>,
         vaultCollection: String
     ): List<AuroraDeploymentSpecValidationException> {
@@ -174,7 +174,7 @@ class SecretVaultFeature(
     /*
      * Validates that the name property of a secret it unique
      */
-    fun validateDuplicateSecretEnvNames(secrets: List<AuroraSecret>): AuroraDeploymentSpecValidationException? {
+    private fun validateDuplicateSecretEnvNames(secrets: List<AuroraSecret>): AuroraDeploymentSpecValidationException? {
 
         val secretNames = secrets.map { it.name }
         return if (secretNames.size != secretNames.toSet().size) {

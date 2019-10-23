@@ -7,11 +7,11 @@ import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
 import io.fabric8.openshift.api.model.DeploymentConfig
-import java.time.Instant
 import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
+import java.time.Instant
 
 /*
   An dataclass to hold a HasMetadata resource that will be mutated in the generation process
@@ -53,7 +53,6 @@ fun Set<AuroraResource>.addVolumesAndMounts(
     clazz: Class<out Feature>
 ) {
     this.filter { it.resource.kind == "DeploymentConfig" }.forEach {
-        // TODO: fix adding sources everywhere
         it.sources.add(AuroraResourceSource(feature = clazz, comment = "Added env vars, volume mount, volume"))
         val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
         dc.spec.template.spec.volumes = dc.spec.template.spec.volumes.addIfNotNull(volumes)
