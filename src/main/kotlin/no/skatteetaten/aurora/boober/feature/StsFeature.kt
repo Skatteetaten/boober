@@ -9,6 +9,7 @@ import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.kubernetes.api.model.Secret
 import java.io.ByteArrayOutputStream
 import java.util.Properties
+import no.skatteetaten.aurora.boober.feature.StsSecretGenerator.createDescriptorFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -32,19 +33,23 @@ class StsFeature(val sts: StsProvisioner) : Feature {
                 defaultValue = false,
                 canBeSimplifiedConfig = true
             ),
-            AuroraConfigFieldHandler("certificate/commonName")
+            AuroraConfigFieldHandler("certificate/commonName"),
+            header.groupIdHandler
         )
     }
 
+    // TODO: need to validate that if certificate is set to simple value then groupId must be set.
+
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
         return findCertificate(adc, adc.name)?.let {
-            val result = sts.generateCertificate("", adc.name, adc.envName)
+            val result = sts.generateCertificate(it, adc.name, adc.envName)
 
             val secret = create(adc.name, result, adc.namespace)
             setOf(generateResource(secret))
         } ?: emptySet<AuroraResource>()
     }
 
+    // TODO: a lot of this is duplicated below, fix
     fun create(
         appName: String,
         stsProvisionResults: StsProvisioningResult,
@@ -69,11 +74,11 @@ class StsFeature(val sts: StsProvisioner) : Feature {
                 "privatekey.key" to cert.key,
                 "keystore.jks" to cert.keystore,
                 "certificate.crt" to cert.crt,
-                "descriptor.properties" to StsSecretGenerator.createDescriptorFile(
-                    baseUrl,
-                    "ca",
-                    cert.storePassword,
-                    cert.keyPassword
+                "descriptor.properties" to createDescriptorFile(
+                    jksPath = baseUrl,
+                    alias = "ca",
+                    storePassword = cert.storePassword,
+                    keyPassword = cert.keyPassword
                 )
             ).mapValues { Base64.encodeBase64String(it.value) }
         }

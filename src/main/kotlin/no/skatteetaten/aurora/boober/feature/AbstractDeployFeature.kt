@@ -121,9 +121,14 @@ val AuroraDeploymentSpec.versionHandler: AuroraConfigFieldHandler
             it.pattern(
                 "^[\\w][\\w.-]{0,127}$",
                 "Version must be a 128 characters or less, alphanumeric and can contain dots and dashes",
-                this.type.versionRequired
+                this.type.groupAndVersionRequired
             )
         })
+
+val AuroraDeploymentSpec.groupIdHandler: AuroraConfigFieldHandler
+    get() = AuroraConfigFieldHandler(
+        "groupId",
+        validator = { it.length(200, "GroupId must be set and be shorter then 200 characters", this.type.groupAndVersionRequired) })
 
 fun gavHandlers(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand) =
     setOf(
@@ -133,9 +138,7 @@ fun gavHandlers(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand) =
             defaultSource = "fileName",
             validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
 
-        AuroraConfigFieldHandler(
-            "groupId",
-            validator = { it.length(200, "GroupId must be set and be shorter then 200 characters") }),
+        spec.groupIdHandler,
         spec.versionHandler
     )
 
