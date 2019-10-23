@@ -212,6 +212,7 @@ class SecretVaultFeature(
                 keyMappings = secret.keyMappings
             )
             vaultProvider.findVaultDataSingle(request)[secret.file]?.let { file ->
+                // TODO: Do we need to do this in the properties file? We can just do it afterwards where we map?
                 val properties = filterProperties(file, secret.secretVaultKeys, secret.keyMappings)
                 properties.map {
                     it.key.toString() to it.value.toString().toByteArray()
