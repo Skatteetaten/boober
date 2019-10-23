@@ -52,18 +52,19 @@ class SecretVaultFeature(
             .toSet()
     }
 
+    // TODO: Room for lots of better refactorings here.
     override fun validate(
-        adc: AuroraDeploymentSpec,
-        fullValidation: Boolean,
-        cmd: AuroraContextCommand
+            adc: AuroraDeploymentSpec,
+            fullValidation: Boolean,
+            cmd: AuroraContextCommand
     ): List<Exception> {
         val secrets = getSecretVaults(adc, cmd)
         return validateSecretNames(secrets)
                 .addIfNotNull(validateVaultExistence(secrets, adc.affiliation))
-            .addIfNotNull(validateKeyMappings(secrets))
-            .addIfNotNull(validateSecretVaultKeys(secrets, adc.affiliation))
-            .addIfNotNull(validateSecretVaultFiles(secrets, adc.affiliation))
-            .addIfNotNull(validateDuplicateSecretEnvNames(secrets))
+                .addIfNotNull(validateKeyMappings(secrets))
+                .addIfNotNull(validateSecretVaultKeys(secrets, adc.affiliation))
+                .addIfNotNull(validateSecretVaultFiles(secrets, adc.affiliation))
+                .addIfNotNull(validateDuplicateSecretEnvNames(secrets))
     }
 
     fun validateVaultExistence(
@@ -105,6 +106,7 @@ class SecretVaultFeature(
      * Validates that any secretVaultKeys specified actually exist in the vault.
      * Note that this method always uses the latest.properties file regardless of the version of the application and
      * the contents of the vault.
+     *  TODO: Note that this should really allow rewriting a key even if you do not specify it in the keys array.
      */
     private fun validateSecretVaultKeys(
         secrets: List<AuroraSecret>,
@@ -194,6 +196,7 @@ class SecretVaultFeature(
             )
             vaultProvider.findVaultDataSingle(request)[secret.file]?.let { file ->
                 // TODO: Do we need to do this in the properties file? We can just do it afterwards where we map?
+                // TODO: Do the rewriting of the keys in the DC and keep the secret keys the same as in the vault?
                 val properties = filterProperties(file, secret.secretVaultKeys, secret.keyMappings)
                 properties.map {
                     it.key.toString() to it.value.toString().toByteArray()
