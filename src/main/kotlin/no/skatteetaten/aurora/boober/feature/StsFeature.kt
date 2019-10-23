@@ -7,22 +7,21 @@ import com.fkorotkov.kubernetes.newVolumeMount
 import com.fkorotkov.kubernetes.secret
 import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.kubernetes.api.model.Secret
-import java.io.ByteArrayOutputStream
-import java.util.Properties
-import no.skatteetaten.aurora.boober.feature.StsSecretGenerator.createDescriptorFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.Paths.secretsPath
 import no.skatteetaten.aurora.boober.model.addVolumesAndMounts
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
-import no.skatteetaten.aurora.boober.utils.whenTrue
 import org.apache.commons.codec.binary.Base64
 import org.springframework.stereotype.Service
+import java.io.ByteArrayOutputStream
+import java.util.Properties
 
 @Service
 class StsFeature(val sts: StsProvisioner) : Feature {
@@ -38,50 +37,28 @@ class StsFeature(val sts: StsProvisioner) : Feature {
         )
     }
 
-    // TODO: need to validate that if certificate is set to simple value then groupId must be set.
+    override fun validate(
+        adc: AuroraDeploymentSpec,
+        fullValidation: Boolean,
+        cmd: AuroraContextCommand
+    ): List<Exception> {
+
+        val template = adc.type == TemplateType.localTemplate || adc.type == TemplateType.template
+        val groupIdNullOrEmpty = adc.getOrNull<String>("groupId").isNullOrEmpty()
+        if (template && adc.isSimplifiedConfig("certificate") && groupIdNullOrEmpty) {
+            return listOf(AuroraDeploymentSpecValidationException("groupId is required for type=template/localtemplate if certificate/commonName is not set"))
+        }
+        return emptyList()
+    }
+
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
         return findCertificate(adc, adc.name)?.let {
             val result = sts.generateCertificate(it, adc.name, adc.envName)
 
-            val secret = create(adc.name, result, adc.namespace)
+            val secret = StsSecretGenerator.create(adc.name, result, adc.namespace)
             setOf(generateResource(secret))
         } ?: emptySet<AuroraResource>()
-    }
-
-    // TODO: a lot of this is duplicated below, fix
-    fun create(
-        appName: String,
-        stsProvisionResults: StsProvisioningResult,
-        secretNamespace: String
-    ): Secret {
-
-        val secretName = "$appName-cert"
-        val baseUrl = "$secretsPath/$secretName/keystore.jks"
-        val cert = stsProvisionResults.cert
-        return newSecret {
-            metadata {
-                labels =
-                    mapOf(StsSecretGenerator.RENEW_AFTER_LABEL to stsProvisionResults.renewAt.epochSecond.toString()).normalizeLabels()
-                name = secretName
-                namespace = secretNamespace
-                annotations = mapOf(
-                    StsSecretGenerator.APP_ANNOTATION to appName,
-                    StsSecretGenerator.COMMON_NAME_ANNOTATION to stsProvisionResults.cn
-                )
-            }
-            data = mapOf(
-                "privatekey.key" to cert.key,
-                "keystore.jks" to cert.keystore,
-                "certificate.crt" to cert.crt,
-                "descriptor.properties" to createDescriptorFile(
-                    jksPath = baseUrl,
-                    alias = "ca",
-                    storePassword = cert.storePassword,
-                    keyPassword = cert.keyPassword
-                )
-            ).mapValues { Base64.encodeBase64String(it.value) }
-        }
     }
 
     fun findCertificate(adc: AuroraDeploymentSpec, name: String): String? {
@@ -131,7 +108,40 @@ object StsSecretGenerator {
     const val APP_ANNOTATION = "gillis.skatteetaten.no/app"
     const val COMMON_NAME_ANNOTATION = "gillis.skatteetaten.no/commonName"
 
-    @JvmStatic
+    fun create(
+        appName: String,
+        stsProvisionResults: StsProvisioningResult,
+        secretNamespace: String
+    ): Secret {
+
+        val secretName = "$appName-cert"
+        val baseUrl = "$secretsPath/$secretName/keystore.jks"
+        val cert = stsProvisionResults.cert
+        return newSecret {
+            metadata {
+                labels =
+                    mapOf(StsSecretGenerator.RENEW_AFTER_LABEL to stsProvisionResults.renewAt.epochSecond.toString()).normalizeLabels()
+                name = secretName
+                namespace = secretNamespace
+                annotations = mapOf(
+                    StsSecretGenerator.APP_ANNOTATION to appName,
+                    StsSecretGenerator.COMMON_NAME_ANNOTATION to stsProvisionResults.cn
+                )
+            }
+            data = mapOf(
+                "privatekey.key" to cert.key,
+                "keystore.jks" to cert.keystore,
+                "certificate.crt" to cert.crt,
+                "descriptor.properties" to createDescriptorFile(
+                    jksPath = baseUrl,
+                    alias = "ca",
+                    storePassword = cert.storePassword,
+                    keyPassword = cert.keyPassword
+                )
+            ).mapValues { Base64.encodeBase64String(it.value) }
+        }
+    }
+
     fun create(
         appName: String,
         stsProvisionResults: StsProvisioningResult,
@@ -140,35 +150,10 @@ object StsSecretGenerator {
         namespace: String
     ): Secret {
 
-        val secretName = "$appName-cert"
-        val baseUrl = "$secretsPath/$secretName/keystore.jks"
-
-        val cert = stsProvisionResults.cert
-        val secretAnnotations = mapOf(
-            APP_ANNOTATION to appName,
-            COMMON_NAME_ANNOTATION to stsProvisionResults.cn
-        )
-        return newSecret {
-            metadata {
-                this.labels =
-                    labels.addIfNotNull(RENEW_AFTER_LABEL to stsProvisionResults.renewAt.epochSecond.toString())
-                        .normalizeLabels()
-                name = secretName
-                this.namespace = namespace
-                ownerReferences = listOf(element = ownerReference)
-                secretAnnotations.isNotEmpty().whenTrue {
-                    annotations = secretAnnotations
-                }
-            }
-            mapOf(
-                "privatekey.key" to cert.key,
-                "keystore.jks" to cert.keystore,
-                "certificate.crt" to cert.crt,
-                "descriptor.properties" to createDescriptorFile(baseUrl, "ca", cert.storePassword, cert.keyPassword)
-            ).let {
-                data = it.mapValues { Base64.encodeBase64String(it.value) }
-            }
-        }
+        val secret = create(appName, stsProvisionResults, namespace)
+        secret.metadata.labels = secret.metadata.labels.addIfNotNull(labels)
+        secret.metadata.ownerReferences = listOf(ownerReference)
+        return secret
     }
 
     fun createDescriptorFile(
