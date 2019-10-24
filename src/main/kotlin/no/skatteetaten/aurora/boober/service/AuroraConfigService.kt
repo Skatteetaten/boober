@@ -18,11 +18,6 @@ import org.springframework.util.StopWatch
 
 private val logger = KotlinLogging.logger {}
 
-class AuroraConfigWithOverrides(
-    var auroraConfig: AuroraConfig,
-    val overrideFiles: List<AuroraConfigFile> = listOf()
-)
-
 data class AuroraConfigRef(
     val name: String,
     val refName: String,

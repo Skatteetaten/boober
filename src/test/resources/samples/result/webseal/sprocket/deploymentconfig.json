@@ -178,11 +178,11 @@
               },
               {
                 "mountPath": "/u01/secrets/app/referanse-db",
-                "name": "referanse-db"
+                "name": "sprocket-referanse-db"
               },
               {
                 "mountPath": "/u01/secrets/app/foo-db",
-                "name": "foo-db"
+                "name": "sprocket-foo-db"
               },
               {
                 "mountPath": "/u01/secrets/app/aurora-token",
