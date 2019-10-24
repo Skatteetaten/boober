@@ -13,6 +13,7 @@ import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.pattern
 import no.skatteetaten.aurora.boober.utils.startsWith
 
+// TODO: Bør passe på at validering utenfor cluster er rett. Mulig litt for mye ble slettet her.
 interface Feature {
 
     fun generateResource(content: HasMetadata, header: Boolean = false) =
@@ -29,6 +30,9 @@ interface Feature {
 
       If you look at BuildFeature you will see that it reacts on the Application.type to only enable
       itself if the type is development
+      TODO: bør bare ha type og applicationPlatform
+
+
      */
     fun enable(header: AuroraDeploymentSpec): Boolean = true
 

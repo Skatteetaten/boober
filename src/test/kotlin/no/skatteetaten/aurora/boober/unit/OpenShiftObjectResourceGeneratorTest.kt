@@ -9,15 +9,12 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.every
 import io.mockk.mockk
-import java.io.ByteArrayInputStream
-import java.time.Instant
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.feature.ApplicationDeploymentFeature
 import no.skatteetaten.aurora.boober.feature.BuildFeature
 import no.skatteetaten.aurora.boober.feature.CommonLabelFeature
 import no.skatteetaten.aurora.boober.feature.ConfigFeature
 import no.skatteetaten.aurora.boober.feature.DatabaseFeature
-import no.skatteetaten.aurora.boober.feature.DatabaseInstance
 import no.skatteetaten.aurora.boober.feature.DeploymentConfigFeature
 import no.skatteetaten.aurora.boober.feature.EnvironmentFeature
 import no.skatteetaten.aurora.boober.feature.Feature
@@ -31,6 +28,7 @@ import no.skatteetaten.aurora.boober.feature.TemplateFeature
 import no.skatteetaten.aurora.boober.feature.ToxiproxySidecarFeature
 import no.skatteetaten.aurora.boober.feature.WebDeployFeature
 import no.skatteetaten.aurora.boober.feature.WebsealFeature
+import no.skatteetaten.aurora.boober.feature.createDatabaseResult
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
@@ -38,16 +36,7 @@ import no.skatteetaten.aurora.boober.model.createResources
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseEngine
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaInstance
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhUser
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResult
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResults
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaRequestDetails
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaUser
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
@@ -58,6 +47,8 @@ import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import java.io.ByteArrayInputStream
+import java.time.Instant
 
 // TODO: Bør vi lage en "feit" test her som tester kombinasjonen av mange forskjellige features og kun det?
 class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTest() {
@@ -79,7 +70,7 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
         LocalTemplateFeature(),
         TemplateFeature(openShiftClient),
         BuildFeature(),
-        DatabaseFeature(databaseSchemaProvisioner, cluster),
+        DatabaseFeature(databaseSchemaProvisioner, "utv"),
         WebsealFeature(),
         SecretVaultFeature(vaultProvider),
         ConfigFeature(),
@@ -107,35 +98,6 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
         every { stsProvisioner.generateCertificate(any(), any(), any()) } returns stsResult
     }
 
-    private fun createDatabaseResult(databaseNames: String, env: String): SchemaProvisionResults {
-        val databaseInstance = DatabaseInstance(fallback = true, labels = mapOf("affiliation" to "aos"))
-        val databases = databaseNames.split((",")).map { appName ->
-            SchemaProvisionResult(
-                request = SchemaForAppRequest(
-                    environment = env,
-                    application = appName,
-                    generate = true,
-                    details = SchemaRequestDetails(
-                        schemaName = appName,
-                        users = listOf(SchemaUser("SCHEMA", "a", "aos")),
-                        engine = DatabaseEngine.ORACLE,
-                        affiliation = "aos",
-                        databaseInstance = databaseInstance
-                    )
-                ),
-                dbhSchema = DbhSchema(
-                    id = "123",
-                    type = "SCHEMA",
-                    databaseInstance = DatabaseSchemaInstance(1512, "localhost"),
-                    jdbcUrl = "foo/bar/baz",
-                    labels = emptyMap(),
-                    users = listOf(DbhUser("username", "password", type = "SCHEMA"))
-                ),
-                responseText = "OK"
-            )
-        }
-        return SchemaProvisionResults(databases)
-    }
 
     enum class ResourceCreationTestData(
         val env: String,

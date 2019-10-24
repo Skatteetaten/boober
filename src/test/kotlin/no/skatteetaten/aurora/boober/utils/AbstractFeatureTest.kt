@@ -38,7 +38,6 @@ import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.clearAllMocks
 import io.mockk.mockk
-import java.time.Instant
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
@@ -57,6 +56,7 @@ import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import org.junit.jupiter.api.BeforeEach
+import java.time.Instant
 
 /*
   Abstract class to test a single feature
@@ -383,7 +383,7 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
             )
         }
         val env: Map<String, String> = podSpec.containers[0].env.associate { it.name to it.value }
-        assertThat(env).isEqualTo(expectedEnv)
+        assertThat(env, "Env vars").isEqualTo(expectedEnv)
         actual
     }
 

@@ -11,8 +11,6 @@ import com.fkorotkov.kubernetes.secret
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
-import java.io.ByteArrayOutputStream
-import java.util.Properties
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
@@ -41,6 +39,8 @@ import no.skatteetaten.aurora.boober.utils.oneOf
 import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.io.ByteArrayOutputStream
+import java.util.Properties
 
 @Service
 class DatabaseFeature(
@@ -110,7 +110,7 @@ class DatabaseFeature(
         val volumeName = mountName.replace("_", "-").toLowerCase().ensureStartWith(appName, "-")
 
         val mount = newVolumeMount {
-            name = mountName
+            name = volumeName
             mountPath = "$secretsPath/$mountName"
         }
 
@@ -139,8 +139,11 @@ class DatabaseFeature(
           ikke håndtere på denne måten
          */
         // TODO: tror vi trenger en klasse som har volume, mount og liste med env vars
-        val dbEnv = databases.flatMap { it.createDbEnv("${it.name}_db") }
-            .addIfNotNull(databases.firstOrNull()?.createDbEnv("db")).toMap().toEnvVars()
+        val firstEnv = databases.firstOrNull()?.let {
+            createDbEnv("${it.name}-db", "db")
+        }
+        val dbEnv = databases.flatMap { createDbEnv("${it.name}-db") }
+            .addIfNotNull(firstEnv).toMap().toEnvVars()
 
         val volumeAndMounts = databases.map { it.createDatabaseVolumesAndMounts(adc.name) }
 
@@ -443,8 +446,8 @@ fun Database.createSchemaDetails(affiliation: String): SchemaRequestDetails {
     )
 }
 
-fun Database.createDbEnv(envName: String): List<Pair<String, String>> {
-    val path = "$secretsPath/${this.name.toLowerCase()}-db"
+fun createDbEnv(name: String, envName: String = name): List<Pair<String, String>> {
+    val path = "$secretsPath/${name.toLowerCase()}"
     val envName = envName.replace("-", "_").toUpperCase()
 
     return listOf(
