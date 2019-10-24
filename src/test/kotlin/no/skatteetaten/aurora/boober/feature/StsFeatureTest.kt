@@ -6,13 +6,13 @@ import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.every
 import io.mockk.mockk
+import java.io.ByteArrayInputStream
+import java.time.Duration
 import no.skatteetaten.aurora.boober.model.Paths.secretsPath
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import org.junit.jupiter.api.Test
-import java.io.ByteArrayInputStream
-import java.time.Duration
 
 class StsFeatureTest : AbstractFeatureTest() {
     override val feature: Feature

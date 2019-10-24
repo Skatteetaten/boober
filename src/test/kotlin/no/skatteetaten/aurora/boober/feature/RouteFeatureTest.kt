@@ -10,7 +10,7 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import org.junit.jupiter.api.Test
 
-//TODO: Det blir en del duplisering i testene, hvordan bør vi unngå det?
+// TODO: Det blir en del duplisering i testene, hvordan bør vi unngå det?
 
 class RouteFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -93,7 +93,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
         )
     }
 
-    //TODO: Does these error messages have to include the first sentence. All errors are wrapped in context about this.
+    // TODO: Does these error messages have to include the first sentence. All errors are wrapped in context about this.
     @Test
     fun `should get error if two routes have duplicate targets`() {
         assertThat {

@@ -15,7 +15,8 @@ class WebSealFeatureTest : AbstractFeatureTest() {
         val resources = modifyResources(
             """{
              "webseal" : true 
-           }""", createEmptyService())
+           }""", createEmptyService()
+        )
 
         val resource = resources.first()
         assertThat(resource).auroraResourceModifiedByThisFeatureWithComment("Set webseal annotations")
@@ -31,7 +32,8 @@ class WebSealFeatureTest : AbstractFeatureTest() {
                "host" : "simple2-paas-utv",
                "roles" : "foo,bar,baz"
              }
-           }""", createEmptyService())
+           }""", createEmptyService()
+        )
 
         val resource = resources.first()
         assertThat(resource).auroraResourceModifiedByThisFeatureWithComment("Set webseal annotations")

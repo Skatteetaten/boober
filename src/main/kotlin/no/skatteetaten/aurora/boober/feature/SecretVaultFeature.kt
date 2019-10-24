@@ -1,13 +1,25 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fkorotkov.kubernetes.*
+import com.fkorotkov.kubernetes.metadata
+import com.fkorotkov.kubernetes.newEnvVar
+import com.fkorotkov.kubernetes.newSecret
+import com.fkorotkov.kubernetes.secretKeyRef
+import com.fkorotkov.kubernetes.valueFrom
 import io.fabric8.kubernetes.api.model.EnvVar
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.addEnvVar
+import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultSecretEnvResult
-import no.skatteetaten.aurora.boober.utils.*
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.ensureStartWith
+import no.skatteetaten.aurora.boober.utils.filterProperties
+import no.skatteetaten.aurora.boober.utils.takeIfNotEmpty
 import org.apache.commons.codec.binary.Base64
 import org.springframework.stereotype.Service
 
@@ -54,9 +66,9 @@ class SecretVaultFeature(
 
     // TODO: Room for lots of better refactorings here.
     override fun validate(
-            adc: AuroraDeploymentSpec,
-            fullValidation: Boolean,
-            cmd: AuroraContextCommand
+        adc: AuroraDeploymentSpec,
+        fullValidation: Boolean,
+        cmd: AuroraContextCommand
     ): List<Exception> {
         val secrets = getSecretVaults(adc, cmd)
         return validateSecretNames(secrets)
