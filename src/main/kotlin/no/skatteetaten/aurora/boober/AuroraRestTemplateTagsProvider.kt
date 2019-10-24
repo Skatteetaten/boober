@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober
 
 import io.micrometer.core.instrument.Tag
-import java.util.Arrays
 import org.springframework.boot.actuate.metrics.web.client.RestTemplateExchangeTags
 import org.springframework.boot.actuate.metrics.web.client.RestTemplateExchangeTagsProvider
 import org.springframework.http.HttpRequest
@@ -16,7 +15,7 @@ class AuroraRestTemplateTagsProvider : RestTemplateExchangeTagsProvider {
         request: HttpRequest,
         response: ClientHttpResponse?
     ): Iterable<Tag> {
-        return Arrays.asList(
+        return listOf(
             RestTemplateExchangeTags.method(request),
             RestTemplateExchangeTags.status(response),
             RestTemplateExchangeTags.clientName(request)

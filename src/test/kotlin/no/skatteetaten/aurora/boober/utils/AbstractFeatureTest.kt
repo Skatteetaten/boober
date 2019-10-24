@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.utils
 
 import assertk.Assert
 import assertk.Result
+import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
@@ -37,6 +38,7 @@ import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.clearAllMocks
 import io.mockk.mockk
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
@@ -63,6 +65,8 @@ import java.time.Instant
   Look at the helper methods in this class to create handlers/resources for this feature
 
  */
+
+private val logger = KotlinLogging.logger {}
 
 class TestDefaultFeature : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
@@ -296,24 +300,34 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
     fun generateResources(
         app: String = """{}""",
         vararg resource: AuroraResource
-    ): Set<AuroraResource> {
-        return generateResources(app, resource.toMutableSet())
+    ): List<AuroraResource> {
+        return generateResources(app, resource.toMutableSet(), createdResources = 1)
+    }
+    fun generateResources(
+        app: String = """{}""",
+        createdResources: Int = 1,
+        vararg resource: AuroraResource
+    ): List<AuroraResource> {
+        return generateResources(app, resource.toMutableSet(), createdResources = createdResources)
     }
 
     fun generateResources(
         app: String = """{}""",
         resource: AuroraResource,
-        files: List<AuroraConfigFile> = emptyList()
-    ): Set<AuroraResource> {
-        return generateResources(app, mutableSetOf(resource), files)
+        files: List<AuroraConfigFile> = emptyList(),
+        createdResources: Int = 1
+    ): List<AuroraResource> {
+        return generateResources(app, mutableSetOf(resource), files, createdResources)
     }
 
     fun generateResources(
         app: String = """{}""",
         resources: MutableSet<AuroraResource> = mutableSetOf(),
-        files: List<AuroraConfigFile> = emptyList()
-    ): Set<AuroraResource> {
+        files: List<AuroraConfigFile> = emptyList(),
+        createdResources: Int = 1
+    ): List<AuroraResource> {
 
+        val numberOfEmptyResources = resources.size
         val adc = createAuroraDeploymentContext(app, files = files)
 
         val generated = adc.features.flatMap {
@@ -321,7 +335,7 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
         }.toSet()
 
         if (resources.isEmpty()) {
-            return generated
+            return generated.toList()
         }
 
         resources.addAll(generated)
@@ -329,7 +343,8 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
         adc.features.forEach {
             it.key.modify(it.value, resources, adc.cmd)
         }
-        return resources
+        assertThat(resources.size, "Number of resources").isEqualTo(numberOfEmptyResources + createdResources)
+        return resources.toList()
     }
 
     fun createAuroraConfigFieldHandlers(

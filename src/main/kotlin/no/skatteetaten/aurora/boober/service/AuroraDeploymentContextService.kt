@@ -1,8 +1,19 @@
 package no.skatteetaten.aurora.boober.service
 
 import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.feature.*
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.feature.Feature
+import no.skatteetaten.aurora.boober.feature.extractPlaceHolders
+import no.skatteetaten.aurora.boober.feature.headerHandlers
+import no.skatteetaten.aurora.boober.feature.name
+import no.skatteetaten.aurora.boober.feature.namespace
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.model.ApplicationRef
+import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.validate
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.apache.commons.text.StringSubstitutor
 import org.springframework.stereotype.Service
@@ -50,7 +61,7 @@ class AuroraDeploymentContextService(
             val errorMessages = errors.flatMap { err ->
                 err.errors.map { it.localizedMessage }
             }
-            logger.debug(errorMessages.joinToString("\n", prefix = "\n"))
+            logger.debug("Validation errors: ${errorMessages.joinToString("\n", prefix = "\n")}")
             throw MultiApplicationValidationException(errors)
         }
         return result.mapNotNull { it.first }

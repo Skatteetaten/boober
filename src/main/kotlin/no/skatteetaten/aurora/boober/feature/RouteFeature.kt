@@ -76,7 +76,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         val route = "route"
         val simplified = adc.isSimplifiedConfig(route)
 
-        val defaultAnnotations = adc.getRouteAnnotations("routeDefaults/annotations")
+        val defaultAnnotations = adc.getRouteAnnotations("routeDefaults/annotations/")
         if (simplified) {
             if (adc[route]) {
 
@@ -114,11 +114,13 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                         )
                     } else null
 
+                val annotations = adc.getRouteAnnotations("$route/$it/annotations/")
+                val allAnnotations = defaultAnnotations.addIfNotNull(annotations)
                 Route(
                     objectName = adc.replacer.replace(it).ensureStartWith(adc.name, "-"),
                     host = adc.getOrDefault(route, it, "host"),
                     path = adc.getOrNull("$route/$it/path"),
-                    annotations = defaultAnnotations.addIfNotNull(adc.getRouteAnnotations("$route/$it/annotations/")),
+                    annotations = allAnnotations,
                     tls = secure
                 )
             }
