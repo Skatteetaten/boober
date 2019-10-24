@@ -10,8 +10,6 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import org.junit.jupiter.api.Test
 
-// TODO: Det blir en del duplisering i testene, hvordan bør vi unngå det?
-
 class RouteFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
         get() = RouteFeature(".test.foo")

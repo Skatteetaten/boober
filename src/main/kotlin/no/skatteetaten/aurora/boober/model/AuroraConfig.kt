@@ -1,15 +1,12 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.github.fge.jsonpatch.JsonPatch
-import java.io.File
-import java.nio.charset.Charset
-import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.APP
-import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.BASE
-import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.ENV
-import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.GLOBAL
+import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.*
 import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.removeExtension
+import java.io.File
+import java.nio.charset.Charset
 
 data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val version: String) {
 
@@ -48,7 +45,6 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
             .map { val (environment, application) = it.split("/"); ApplicationDeploymentRef(environment, application) }
     }
 
-    @JvmOverloads
     fun getFilesForApplication(
         applicationDeploymentRef: ApplicationDeploymentRef,
         overrideFiles: List<AuroraConfigFile> = listOf()
@@ -143,6 +139,10 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
 
         val envFile = implementationFile.asJsonNode.get("envFile")?.asText()?.removeExtension()
             ?: "about"
+
+        if (!envFile.startsWith("about")) {
+            throw java.lang.IllegalArgumentException("envFile must start with about")
+        }
 
         return setOf(
             AuroraConfigFileSpec("about", GLOBAL),

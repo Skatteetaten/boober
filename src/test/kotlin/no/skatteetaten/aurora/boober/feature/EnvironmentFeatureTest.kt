@@ -1,16 +1,21 @@
 package no.skatteetaten.aurora.boober.feature
 
 import assertk.assertThat
+import assertk.assertions.isEqualTo
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.User
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 
+// TODO: test header mapper validation here
 class EnvironmentFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
         get() = EnvironmentFeature(openShiftClient, userDetailsProvider)
@@ -21,9 +26,9 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
     fun `should fail validation if current user is not in admin group`() {
 
         every { openShiftClient.getGroups() } returns OpenShiftGroups(
-            mapOf(
-                "APP_PaaS_utv" to listOf("luke")
-            )
+                mapOf(
+                        "APP_PaaS_utv" to listOf("luke")
+                )
         )
 
         every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "token", "Jayne Cobb")
@@ -37,9 +42,9 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
     fun `should fail validation if specified admin groups are empty`() {
 
         every { openShiftClient.getGroups() } returns OpenShiftGroups(
-            mapOf(
-                "APP_PaaS_utv" to emptyList()
-            )
+                mapOf(
+                        "APP_PaaS_utv" to emptyList()
+                )
         )
 
         every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "token", "Jayne Cobb")
@@ -47,8 +52,8 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
         assertThat {
             createAuroraDeploymentContext()
         }.applicationErrors(
-            "All groups=[APP_PaaS_utv] are empty",
-            "User=Jayne Cobb does not have access to admin this environment from the groups=[APP_PaaS_utv]"
+                "All groups=[APP_PaaS_utv] are empty",
+                "User=Jayne Cobb does not have access to admin this environment from the groups=[APP_PaaS_utv]"
         )
     }
 
@@ -56,24 +61,24 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
     fun `should fail validation if admin group is empty`() {
 
         every { openShiftClient.getGroups() } returns OpenShiftGroups(
-            mapOf(
-                "APP_PaaS_utv" to listOf("luke")
-            )
+                mapOf(
+                        "APP_PaaS_utv" to listOf("luke")
+                )
         )
 
         every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "token", "Jayne Cobb")
 
         assertThat {
             createAuroraDeploymentContext(
-                files = listOf(
-                    AuroraConfigFile(
-                        "utv/about.json", contents = """{
+                    files = listOf(
+                            AuroraConfigFile(
+                                    "utv/about.json", contents = """{
                   "permissions": {
                     "admin" : ""
                    }
                 }"""
+                            )
                     )
-                )
             )
         }.singleApplicationError("permissions.admin cannot be empty")
     }
@@ -82,9 +87,9 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
     fun `should fail validation if admin group does not exist`() {
 
         every { openShiftClient.getGroups() } returns OpenShiftGroups(
-            mapOf(
-                "APP_PaaS_test" to listOf("luke")
-            )
+                mapOf(
+                        "APP_PaaS_test" to listOf("luke")
+                )
         )
 
         every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "token", "Jayne Cobb")
@@ -97,22 +102,18 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should generate environment resources`() {
         every { openShiftClient.getGroups() } returns OpenShiftGroups(
-            mapOf(
-                "APP_PaaS_utv" to listOf("hero"), "APP_PaaS_test" to listOf()
-            )
+                mapOf("APP_PaaS_utv" to listOf("hero"), "APP_PaaS_test" to listOf())
         )
 
         every { userDetailsProvider.getAuthenticatedUser() } returns User(
-            "hero", "token", "Jayne Cobb", grantedAuthorities = listOf(
-                SimpleGrantedAuthority("APP_PaaS_utv")
-            )
-        )
+                "hero", "token", "Jayne Cobb", grantedAuthorities = listOf(
+                SimpleGrantedAuthority("APP_PaaS_utv")))
 
         val (projectResource, namespaceResource, rolebindingResource, viewRolebindingResource) =
-            generateResources(
-                files = listOf(
-                    AuroraConfigFile(
-                        "utv/about.json", """{
+                generateResources(
+                        files = listOf(
+                                AuroraConfigFile(
+                                        "utv/about.json", """{
               "permissions" : {
                 "view" : "APP_PaaS_test",
                 "adminServiceAccount" : "foo:bar:baz"
@@ -121,16 +122,110 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
                   "ttl" : "1d"
                 }
             }"""
-                    )
-                ),
-                createdResources = 4
-            )
+                                )
+                        ),
+                        createdResources = 4
+                )
 
         assertThat(projectResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("project.json")
         assertThat(namespaceResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("namespace.json")
         assertThat(rolebindingResource).auroraResourceCreatedByThisFeature()
-            .auroraResourceMatchesFile("rolebinding.json")
+                .auroraResourceMatchesFile("rolebinding.json")
         assertThat(viewRolebindingResource).auroraResourceCreatedByThisFeature()
-            .auroraResourceMatchesFile("rolebinding-view.json")
+                .auroraResourceMatchesFile("rolebinding-view.json")
+    }
+
+    @Test
+    fun `Should fail when name is not valid DNS952 label`() {
+        assertThat {
+            createAuroraDeploymentContext("""{
+             "name": "test%qwe)"
+            }""")
+        }.singleApplicationError("Name must be alphanumeric and no more than 40 characters")
+    }
+
+    @Test
+    fun `Fails when affiliation is not in about file`() {
+
+        assertThat {
+            createAuroraDeploymentContext("""{ "affiliation" : "foo"}""",
+                    files = listOf(AuroraConfigFile("about.json", """{
+                         "schemaVersion": "v1",
+                         "permissions": {
+                           "admin": "APP_PaaS_utv"
+                         },
+                         "type": "deploy",
+                         "cluster": "utv"
+                    }""")))
+        }.singleApplicationError("Invalid Source field=affiliation requires an about source. Actual source is source=utv/simple.json.")
+    }
+
+    @Test
+    fun `Fails when affiliation is too long`() {
+
+        assertThat {
+            createAuroraDeploymentContext(
+                    files = listOf(AuroraConfigFile("about.json", """{
+                         "schemaVersion": "v1",
+                         "affiliation" : "this-is-too-damn-long",
+                         "permissions": {
+                           "admin": "APP_PaaS_utv"
+                         },
+                         "type": "deploy",
+                         "cluster": "utv"
+                    }""")))
+        }.singleApplicationError("Affiliation can only contain letters and must be no longer than 10 characters")
+    }
+
+    @Test
+    fun `Fails when application name is too long and artifactId and name is blank`() {
+
+        assertThat {
+            createCustomAuroraDeploymentContext(
+                    ApplicationDeploymentRef("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"),
+                    "about.json" to FEATURE_ABOUT,
+                    "this-name-is-stupid-stupid-stupidly-long-for-no-reason.json" to """{ "groupId" : "org.test" }""",
+                    "utv/about.json" to "{}",
+                    "utv/this-name-is-stupid-stupid-stupidly-long-for-no-reason.json" to
+                            """{ "version" : "1" }"""
+            )
+        }.singleApplicationError("ArtifactId must be set and be shorter then 50 characters")
+    }
+
+    enum class PermissionsTestData(val values: String) {
+        SINGLE_VALUE(""""APP_PaaS_utv APP_PaaS_drift""""),
+        LIST("""["APP_PaaS_utv", "APP_PaaS_drift"] """)
+    }
+
+    @ParameterizedTest
+    @EnumSource(PermissionsTestData::class)
+    fun `Permissions supports both space separated string`(permissions: PermissionsTestData) {
+
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(
+                mapOf("APP_PaaS_utv" to listOf("hero"), "APP_PaaS_drift" to listOf())
+        )
+
+        every { userDetailsProvider.getAuthenticatedUser() } returns User(
+                "hero", "token", "Jayne Cobb", grantedAuthorities = listOf(
+                SimpleGrantedAuthority("APP_PaaS_utv")))
+
+        val ctx = createAuroraDeploymentContext(
+                files = listOf(AuroraConfigFile("about.json", """{
+               "schemaVersion": "v1",
+               "affiliation" : "paas",
+               "permissions": {
+                 "admin": ${permissions.values}
+               },
+               "type": "deploy",
+               "cluster": "utv"
+           }""")))
+
+        assertThat(ctx.spec.getDelimitedStringOrArrayAsSet("permissions/admin", " "))
+                .isEqualTo(
+                        setOf(
+                                "APP_PaaS_utv",
+                                "APP_PaaS_drift"
+                        )
+                )
     }
 }

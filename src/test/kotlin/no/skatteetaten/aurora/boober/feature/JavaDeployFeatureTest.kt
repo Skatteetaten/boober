@@ -2,6 +2,8 @@ package no.skatteetaten.aurora.boober.feature
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isSuccess
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import org.junit.jupiter.api.Test
@@ -63,4 +65,45 @@ class JavaDeployFeatureTest : AbstractFeatureTest() {
             .auroraResourceMatchesFile("service-no-prometheus.json")
         assertThat(isResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("is.json")
     }
+
+    @Test
+    fun `fileName can be long if both artifactId and name exist`() {
+
+        assertThat {
+            createCustomAuroraDeploymentContext(
+                    ApplicationDeploymentRef("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"),
+                    "about.json" to FEATURE_ABOUT,
+                    "this-name-is-stupid-stupid-stupidly-long-for-no-reason.json" to """{ "groupId" : "org.test" }""",
+                    "utv/about.json" to "{}",
+                    "utv/this-name-is-stupid-stupid-stupidly-long-for-no-reason.json" to
+                            """{ "name" : "foo", "artifactId" : "foo", "version" : "1" }"""
+            )
+        }.isSuccess()
+    }
+
+    @Test
+    fun `Fails when application name is too long and artifactId blank`() {
+
+        assertThat {
+            createCustomAuroraDeploymentContext(
+                    ApplicationDeploymentRef("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"),
+                    "about.json" to FEATURE_ABOUT,
+                    "this-name-is-stupid-stupid-stupidly-long-for-no-reason.json" to """{ "groupId" : "org.test" }""",
+                    "utv/about.json" to "{}",
+                    "utv/this-name-is-stupid-stupid-stupidly-long-for-no-reason.json" to
+                            """{ "name" : "foo", "version" : "1" }"""
+            )
+        }.singleApplicationError("ArtifactId must be set and be shorter then 50 characters")
+    }
+
+    @Test
+    fun `Fails when envFile does not start with about`() {
+        assertThat {
+            createAuroraDeploymentContext("""{
+                "envFile" : "foo.json"
+            }""")
+        }.singleApplicationError("envFile must start with about")
+    }
+
+
 }

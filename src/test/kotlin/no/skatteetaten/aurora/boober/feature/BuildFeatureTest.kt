@@ -20,21 +20,6 @@ class BuildFeatureTest : AbstractFeatureTest() {
         assertThat(adc.features.isEmpty())
     }
 
-    // TODO: How much value is there in this?
-    @Test
-    fun `should get default handlers`() {
-
-        val adc = createAuroraConfigFieldHandlers(
-            """{
-           "type": "development", 
-           "groupId": "org.test",
-           "version" : "1"
-        }"""
-        )
-
-        assertThat(adc.size).isEqualTo(22)
-    }
-
     @Test
     fun `should get error if groupId is missing`() {
 

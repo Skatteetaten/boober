@@ -6,13 +6,14 @@ import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.every
 import io.mockk.mockk
-import java.io.ByteArrayInputStream
-import java.time.Duration
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.Paths.secretsPath
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import org.junit.jupiter.api.Test
+import java.io.ByteArrayInputStream
+import java.time.Duration
 
 class StsFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -91,4 +92,31 @@ class StsFeatureTest : AbstractFeatureTest() {
             )
         )
     }
+
+    @Test
+    fun `Should use overridden cert name when set to default at higher level`() {
+
+        val ctx = createAuroraDeploymentContext("""{
+            "groupId" : "org.simple",
+            "certificate" : {
+              "commonName" : "fooo"
+            }
+        }""", files = listOf(AuroraConfigFile("utv/about.json", """{ "certificate" : "true" }""")))
+
+        assertThat(ctx.spec.certificateCommonName).isEqualTo("fooo")
+    }
+
+    @Test
+    fun `Should use overridden cert name when explicitly disabled at higher level`() {
+
+        val ctx = createAuroraDeploymentContext("""{
+            "groupId" : "org.simple",
+            "certificate" : {
+              "commonName" : "fooo"
+            }
+        }""", files = listOf(AuroraConfigFile("utv/about.json", """{ "certificate" : false }""")))
+
+        assertThat(ctx.spec.certificateCommonName).isEqualTo("fooo")
+    }
+
 }

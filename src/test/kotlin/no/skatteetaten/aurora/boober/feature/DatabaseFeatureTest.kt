@@ -13,22 +13,14 @@ import io.mockk.mockk
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseEngine
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaInstance
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhUser
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResult
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResults
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaRequestDetails
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaUser
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.*
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.junit.jupiter.api.Test
 
 private val logger = KotlinLogging.logger { }
 
+// TODO: Should teh provisionSchemas mock be better here?
 class DatabaseFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
         get() = DatabaseFeature(provisioner, "utv")
@@ -41,8 +33,102 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
         every { provisioner.provisionSchemas(any()) } returns createDatabaseResult("simple", "utv")
 
         val (adResource, dcResource, secretResource) = generateResources(
-            """{ 
+                """{ 
                "database" : true
+           }""", resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+        )
+
+        assertThat(dcResource).auroraDatabaseMounted(listOf(secretResource))
+        assertThat(adResource).auroraDatabaseIdsAdded(listOf(secretResource))
+    }
+
+    @Test
+    fun `should get error if trying to expose to invalid role`() {
+
+        assertThat {
+            createAuroraDeploymentContext(
+                    """{ 
+               "database" : true,
+               "databaseDefaults" : {
+                  "roles" : {
+                     "jalla" : "READ"
+                   },
+                  "exposeTo" : {
+                     "foobar" : "wrong"
+                   }
+                }
+           }"""
+            )
+        }.singleApplicationError("Database cannot expose affiliation=foobar with invalid role=wrong. ValidRoles=jalla.")
+    }
+
+    @Test
+    fun `should get error if schema with id does not exist`() {
+
+        every {
+            provisioner.findSchemaById("123456", any())
+        } throws IllegalArgumentException("Not found")
+
+        assertThat {
+            createAuroraDeploymentContext(
+                    """{ 
+               "database" : {
+                  "simple" : "123456"
+                }
+           }"""
+            )
+        }.singleApplicationError("Database schema with id=123456 and affiliation=paas does not exist")
+    }
+
+
+    @Test
+    fun `create database secret with instance defaults`() {
+
+        every { provisioner.provisionSchemas(any()) } returns createDatabaseResult("simple", "utv")
+
+        val (adResource, dcResource, secretResource) = generateResources(
+                """{ 
+               "database" : true,
+               "databaseDefaults" : {
+                  "flavor" : "POSTGRES_MANAGED",
+                  "generate" : false,
+                  "roles" : {
+                     "jalla" : "READ"
+                   },
+                  "exposeTo" : {
+                     "foobar" : "jalla"
+                   },
+                  "instance" : {
+                    "name" : "corrusant", 
+                    "fallback" : true, 
+                    "labels" : {
+                       "type" : "ytelse"
+                    }
+                  }
+                }
+           }""", resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+        )
+
+        assertThat(dcResource).auroraDatabaseMounted(listOf(secretResource))
+        assertThat(adResource).auroraDatabaseIdsAdded(listOf(secretResource))
+    }
+
+
+    @Test
+    fun `create database secret from id`() {
+
+
+        every {
+            provisioner.findSchemaById("123456", any())
+        } returns (schema to "Ok")
+
+        every { provisioner.provisionSchemas(any()) } returns createDatabaseResult("simple", "utv")
+
+        val (adResource, dcResource, secretResource) = generateResources(
+                """{ 
+               "database" : {
+                 "simple" : "123456"
+                }
            }""", resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
         )
 
@@ -54,7 +140,7 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
     fun `ignore false database`() {
 
         val result = generateResources(
-            """{ 
+                """{ 
                "database" : false
            }"""
         )
@@ -62,11 +148,12 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
         assertThat(result).isEmpty()
     }
 
+
     @Test
     fun `ignore false databases`() {
 
         val result = generateResources(
-            """{ 
+                """{ 
                "database" : {
                  "foo" : false,
                  "bar" : "false"
@@ -83,14 +170,14 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
         every { provisioner.provisionSchemas(any()) } returns createDatabaseResult("foo,bar", "utv")
 
         val (adResource, dcResource, fooDatabase, barDatabase) = generateResources(
-            """{ 
+                """{ 
                "database" : {
                  "foo" : "auto",
-                  "bar" : "auto"
+                 "bar" : "auto"
                 }
            }""",
-            createdResources = 2,
-            resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+                createdResources = 2,
+                resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
         )
 
         assertThat(dcResource).auroraDatabaseMounted(listOf(fooDatabase, barDatabase))
@@ -103,7 +190,7 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
         every { provisioner.provisionSchemas(any()) } returns createDatabaseResult("foo,bar", "utv")
 
         val (adResource, dcResource, fooDatabase, barDatabase) = generateResources(
-            """{ 
+                """{ 
                "database" : {
                  "foo" : {
                    "enabled" : true
@@ -113,8 +200,8 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
                   }
                 }
            }""",
-            createdResources = 2,
-            resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+                createdResources = 2,
+                resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
         )
 
         assertThat(dcResource).auroraDatabaseMounted(listOf(fooDatabase, barDatabase))
@@ -127,7 +214,7 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
         every { provisioner.provisionSchemas(any()) } returns createDatabaseResult("foo", "utv")
 
         val (adResource, dcResource, fooDatabase) = generateResources(
-            """{ 
+                """{ 
                "database" : {
                  "foo" : {
                    "enabled" : true
@@ -137,7 +224,7 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
                   }
                 }
            }""",
-            resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+                resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
         )
 
         assertThat(dcResource).auroraDatabaseMounted(listOf(fooDatabase))
@@ -145,7 +232,7 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
     }
 
     fun Assert<AuroraResource>.auroraDatabaseIdsAdded(
-        databases: List<AuroraResource>
+            databases: List<AuroraResource>
     ): Assert<AuroraResource> = transform { actual ->
 
         assertThat(actual).auroraResourceModifiedByThisFeatureWithComment("Added databaseId")
@@ -160,7 +247,7 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
     }
 
     fun Assert<AuroraResource>.auroraDatabaseMounted(
-        databases: List<AuroraResource>
+            databases: List<AuroraResource>
     ): Assert<AuroraResource> = transform { actual ->
 
         assertThat(actual.resource).isInstanceOf(DeploymentConfig::class.java)
@@ -194,7 +281,7 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
             assertThat(it).auroraResourceCreatedByThisFeature()
             val secret = it.resource as Secret
             assertThat(secret.data.keys.toList())
-                .isEqualTo(listOf("db.properties", "id", "info", "jdbcurl", "name"))
+                    .isEqualTo(listOf("db.properties", "id", "info", "jdbcurl", "name"))
 
             val volume = podSpec.volumes[index]
             val volumeMount = container.volumeMounts[index]
@@ -209,8 +296,18 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
     }
 }
 
+val schema = DbhSchema(
+        id = "123",
+        type = "SCHEMA",
+        databaseInstance = DatabaseSchemaInstance(1512, "localhost"),
+        jdbcUrl = "foo/bar/baz",
+        labels = emptyMap(),
+        users = listOf(DbhUser("username", "password", type = "SCHEMA"))
+)
+
 fun createDatabaseResult(databaseNames: String, env: String): SchemaProvisionResults {
     val databaseInstance = DatabaseInstance(fallback = true, labels = mapOf("affiliation" to "aos"))
+
     val databases = databaseNames.split((",")).map { appName ->
         SchemaProvisionResult(
             request = SchemaForAppRequest(
@@ -225,14 +322,7 @@ fun createDatabaseResult(databaseNames: String, env: String): SchemaProvisionRes
                     databaseInstance = databaseInstance
                 )
             ),
-            dbhSchema = DbhSchema(
-                id = "123",
-                type = "SCHEMA",
-                databaseInstance = DatabaseSchemaInstance(1512, "localhost"),
-                jdbcUrl = "foo/bar/baz",
-                labels = emptyMap(),
-                users = listOf(DbhUser("username", "password", type = "SCHEMA"))
-            ),
+                dbhSchema = schema,
             responseText = "OK"
         )
     }

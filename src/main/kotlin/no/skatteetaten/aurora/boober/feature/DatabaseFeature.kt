@@ -3,36 +3,15 @@ package no.skatteetaten.aurora.boober.feature
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fkorotkov.kubernetes.metadata
-import com.fkorotkov.kubernetes.newSecret
-import com.fkorotkov.kubernetes.newVolume
-import com.fkorotkov.kubernetes.newVolumeMount
-import com.fkorotkov.kubernetes.secret
+import com.fkorotkov.kubernetes.*
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
-import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraContextCommand
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.model.Paths.secretsPath
-import no.skatteetaten.aurora.boober.model.addVolumesAndMounts
-import no.skatteetaten.aurora.boober.model.associateSubKeys
-import no.skatteetaten.aurora.boober.model.findSubHandlers
-import no.skatteetaten.aurora.boober.model.findSubKeys
-import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseEngine
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaIdRequest
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionRequest
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResult
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaRequestDetails
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaUser
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.*
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
@@ -40,7 +19,7 @@ import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.ByteArrayOutputStream
-import java.util.Properties
+import java.util.*
 
 @Service
 class DatabaseFeature(
@@ -138,7 +117,6 @@ class DatabaseFeature(
           Et problem er kanskje i volume mapper hvor man har secrets som ikke er laget her, men som skal finnes, de kan vi
           ikke håndtere på denne måten
          */
-        // TODO: tror vi trenger en klasse som har volume, mount og liste med env vars
         val firstEnv = databases.firstOrNull()?.let {
             createDbEnv("${it.name}-db", "db")
         }
@@ -416,10 +394,7 @@ data class Database(
     val exposeTo: Map<String, String> = emptyMap(),
     val roles: Map<String, DatabasePermission> = emptyMap(),
     val instance: DatabaseInstance
-) {
-    val spec: String
-        get(): String = (id?.let { "$name:$id" } ?: name).toLowerCase()
-}
+)
 
 data class DatabaseInstance(
     val name: String? = null,
