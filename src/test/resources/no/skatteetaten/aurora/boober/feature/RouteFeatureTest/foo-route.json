@@ -1,0 +1,15 @@
+{
+  "apiVersion": "route.openshift.io/v1",
+  "kind": "Route",
+  "metadata": {
+    "name": "simple-foo",
+    "namespace": "paas-utv"
+  },
+  "spec": {
+    "host": "simple-foo.test.foo",
+    "to": {
+      "kind": "Service",
+      "name": "simple"
+    }
+  }
+}
