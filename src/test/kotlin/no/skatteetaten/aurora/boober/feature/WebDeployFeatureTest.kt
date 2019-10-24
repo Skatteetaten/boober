@@ -15,16 +15,14 @@ class WebDeployFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should generate resource for web application`() {
 
-        val resources = generateResources(
+        val (adResource, bcResource, dcResource, serviceResource, isResource) = generateResources(
             """{
           "version" : "1",
           "groupId" : "org.test",
           "applicationPlatform" : "web"
-      }""", resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyBuildConfig())
+      }""", resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyBuildConfig()),
+            createdResources = 3
         )
-
-        assertThat(resources.size).isEqualTo(5)
-        val (adResource, bcResource, dcResource, serviceResource, isResource) = resources.toList()
 
         assertThat(bcResource).auroraResourceModifiedByThisFeatureWithComment("Set applicationType in build")
         val bc = bcResource.resource as BuildConfig

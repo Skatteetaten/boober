@@ -15,12 +15,11 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should add toxiproxy to dc and change service port`() {
 
-        val resources = generateResources("""{
+        val (serviceResource, dcResource, configResource) = generateResources(
+            """{
              "toxiproxy" : true 
-           }""", createEmptyService(), createEmptyDeploymentConfig())
-
-        assertThat(resources.size).isEqualTo(3)
-        val (serviceResource, dcResource, configResource) = resources.toList()
+           }""", createEmptyService(), createEmptyDeploymentConfig()
+        )
 
         assertThat(serviceResource).auroraResourceModifiedByThisFeatureWithComment("Changed targetPort to point to toxiproxy")
         val service = serviceResource.resource as Service

@@ -12,11 +12,11 @@ class WebSealFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should annotate service with webseal labels`() {
 
-        val resources = generateResources("""{
+        val resources = modifyResources(
+            """{
              "webseal" : true 
            }""", createEmptyService())
 
-        assertThat(resources.size).isEqualTo(1)
         val resource = resources.first()
         assertThat(resource).auroraResourceModifiedByThisFeatureWithComment("Set webseal annotations")
         assertThat(resource.resource.metadata.annotations["sprocket.sits.no/service.webseal"]).isEqualTo("simple-paas-utv")
@@ -25,14 +25,14 @@ class WebSealFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should annotate service with webseal labels and roles`() {
 
-        val resources = generateResources("""{
+        val resources = modifyResources(
+            """{
              "webseal" : {
                "host" : "simple2-paas-utv",
                "roles" : "foo,bar,baz"
              }
            }""", createEmptyService())
 
-        assertThat(resources.size).isEqualTo(1)
         val resource = resources.first()
         assertThat(resource).auroraResourceModifiedByThisFeatureWithComment("Set webseal annotations")
         assertThat(resource.resource.metadata.annotations["sprocket.sits.no/service.webseal"]).isEqualTo("simple2-paas-utv")

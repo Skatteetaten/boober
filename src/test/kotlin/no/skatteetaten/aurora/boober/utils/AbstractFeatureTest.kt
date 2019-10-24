@@ -303,12 +303,15 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
     ): List<AuroraResource> {
         return generateResources(app, resource.toMutableSet(), createdResources = 1)
     }
-    fun generateResources(
+
+    /*
+      Will not generate any resources
+     */
+    fun modifyResources(
         app: String = """{}""",
-        createdResources: Int = 1,
         vararg resource: AuroraResource
     ): List<AuroraResource> {
-        return generateResources(app, resource.toMutableSet(), createdResources = createdResources)
+        return generateResources(app, resource.toMutableSet(), createdResources = 0)
     }
 
     fun generateResources(

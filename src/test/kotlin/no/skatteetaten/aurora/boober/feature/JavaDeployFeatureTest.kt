@@ -13,15 +13,13 @@ class JavaDeployFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should generate resource for java application`() {
 
-        val resources = generateResources(
+        val (adResource, dcResource, serviceResource, isResource) = generateResources(
             """{
           "version" : "1",
           "groupId" : "org.test"
-      }""", resource = createEmptyApplicationDeployment()
+      }""", resource = createEmptyApplicationDeployment(),
+            createdResources = 3
         )
-
-        assertThat(resources.size).isEqualTo(4)
-        val (adResource, dcResource, serviceResource, isResource) = resources.toList()
 
         assertThat(adResource).auroraResourceModifiedByThisFeatureWithComment("Added application name and id")
         val ad = adResource.resource as ApplicationDeployment
@@ -36,7 +34,7 @@ class JavaDeployFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should generate resource for java application with adaptions`() {
 
-        val resources = generateResources(
+        val (adResource, dcResource, serviceResource, isResource) = generateResources(
             """{
           "artifactId" : "simple",
           "version" : "1",
@@ -50,11 +48,10 @@ class JavaDeployFeatureTest : AbstractFeatureTest() {
             "type" : "recreate"
           },
           "prometheus" : false
-      }""", resource = createEmptyApplicationDeployment()
+      }""",
+            resource = createEmptyApplicationDeployment(),
+            createdResources = 3
         )
-
-        assertThat(resources.size).isEqualTo(4)
-        val (adResource, dcResource, serviceResource, isResource) = resources.toList()
 
         assertThat(adResource).auroraResourceModifiedByThisFeatureWithComment("Added application name and id")
         val ad = adResource.resource as ApplicationDeployment

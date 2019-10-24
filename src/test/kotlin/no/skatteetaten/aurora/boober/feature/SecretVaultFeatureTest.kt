@@ -26,13 +26,14 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
         mockVault(tooLongName)
         assertThat {
             createAuroraDeploymentContext(
-            """{
+                """{
               "secretVaults" : {
                   "$tooLongName" : {
                     "enabled" : true
                   }
               }
-             }""")
+             }"""
+            )
         }.singleApplicationError("The name of the secretVault=simple-this-secret-name-is-really-way-way-way-too-long-long-long-long is too long. Max 63 characters. Note that we ensure that the name starts with @name@-")
     }
 
@@ -42,16 +43,18 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
         mockVault("foo")
         every { vaultProvider.findVaultKeys("paas", "foo", "latest.properties") } returns setOf("FOO")
         assertThat {
-            createAuroraDeploymentContext("""{
+            createAuroraDeploymentContext(
+                """{
               "secretVaults" : {
                   "foo" : {
                     "keys" : ["FOO"],
                     "keyMappings" : { "BAR" : "BAZ" }
                   }
               }
-             }""")
+             }"""
+            )
         }.singleApplicationError(
-                "The secretVault keyMappings [BAR] were not found in keys"
+            "The secretVault keyMappings [BAR] were not found in keys"
         )
     }
 
@@ -62,18 +65,19 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
 
         assertThat {
             createAuroraDeploymentContext(
-                    """{
+                """{
               "secretVault" : "simple",
               "secretVaults" : {
                 "simple" : {
                   "enabled" : "true"
                 } 
               }
-             }""")
+             }"""
+            )
         }.applicationErrors(
-                "File with name=latest.properties is not present in vault=simple in collection=paas",
-                "File with name=latest.properties is not present in vault=simple in collection=paas",
-                "SecretVaults does not have unique names=[simple, simple]"
+            "File with name=latest.properties is not present in vault=simple in collection=paas",
+            "File with name=latest.properties is not present in vault=simple in collection=paas",
+            "SecretVaults does not have unique names=[simple, simple]"
         )
     }
 
@@ -86,7 +90,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
 
         assertThat {
             createAuroraDeploymentContext(
-                    """{
+                """{
               "secretVault" : {
                 "name" :"foo",
                 "keys" : ["MISSING"]
@@ -94,9 +98,10 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
              }"""
             )
         }.applicationErrors(
-                "The keys [MISSING] were not found in the secret vault=foo in collection=paas"
+            "The keys [MISSING] were not found in the secret vault=foo in collection=paas"
         )
     }
+
     @Test
     fun `should get error if vault does not exist`() {
 
@@ -207,7 +212,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
         mockVault("foo")
         mockVault("bar")
 
-        val resource = generateResources(
+        val (dcResource, fooResource, barResource) = generateResources(
             """{
               "secretVaults" : {
                 "foo" : {
@@ -217,11 +222,9 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
                    "enabled" : true
                  }
               }
-             }""", createEmptyDeploymentConfig()
+             }""", createdResources = 2, resource = createEmptyDeploymentConfig()
         )
-        assertThat(resource.size).isEqualTo(3)
 
-        val (dcResource, fooResource, barResource) = resource.toList()
         assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added env vars")
         val dc = dcResource.resource as DeploymentConfig
         val env = dc.spec.template.spec.containers.first().env
@@ -238,7 +241,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
         mockVault("foo")
         mockVault("bar")
 
-        val resource = generateResources(
+        val (dcResource, fooResource, barResource) = generateResources(
             """{
               "secretVault" : "bar",
               "secretVaults" : {
@@ -246,11 +249,9 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
                    "enabled" : true
                  }
               }
-             }""", createEmptyDeploymentConfig()
+             }""", createdResources = 2, resource = createEmptyDeploymentConfig()
         )
-        assertThat(resource.size).isEqualTo(3)
 
-        val (dcResource, fooResource, barResource) = resource.toList()
         assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added env vars")
         val dc = dcResource.resource as DeploymentConfig
 

@@ -21,9 +21,7 @@ class CommonLabelFeatureTest : AbstractFeatureTest() {
 
         every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "token")
 
-        val resources = generateResources("{}", createEmptyImageStream(), createEmptyDeploymentConfig())
-
-        assertThat(resources.size).isEqualTo(2)
+        val resources = modifyResources("{}", createEmptyImageStream(), createEmptyDeploymentConfig())
 
         val labels = mapOf(
             "app" to "simple",

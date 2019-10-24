@@ -14,7 +14,7 @@ class ConfigFeatureTest : AbstractFeatureTest() {
     @Test
     fun `modify dc and add config`() {
 
-        val resources = generateResources(
+        val resources = modifyResources(
             """{ 
                "config": {
                  "FOO": "BAR"
@@ -22,7 +22,6 @@ class ConfigFeatureTest : AbstractFeatureTest() {
            }""", createEmptyDeploymentConfig()
         )
 
-        assertThat(resources.size).isEqualTo(1)
         val dcResource = resources.first()
 
         assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added env vars, volume mount, volume")
@@ -39,7 +38,7 @@ class ConfigFeatureTest : AbstractFeatureTest() {
     @Test
     fun `create configmap for nested configuration and mount it`() {
 
-        val resources = generateResources(
+        val (dcResource, configMapResource) = generateResources(
             """{ 
                "config": {
                  "latest": {
@@ -49,9 +48,6 @@ class ConfigFeatureTest : AbstractFeatureTest() {
            }""", createEmptyDeploymentConfig()
         )
 
-        assertThat(resources.size).isEqualTo(2)
-        val dcResource = resources.first()
-        val configMapResource = resources.last()
         assertThat(configMapResource).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("configMap.json")
         assertThat(dcResource).auroraResourceMountsAttachment(configMapResource.resource)

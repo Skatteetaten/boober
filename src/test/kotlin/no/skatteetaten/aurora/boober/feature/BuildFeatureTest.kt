@@ -80,16 +80,13 @@ class BuildFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should generate build and modify imageStream with default values`() {
 
-        val resources = generateResources(
+        val (dcResources, isResource, bcResource) = generateResources(
             """{
            "type": "development", 
            "groupId": "org.test",
            "version" : "1"
         }""", createEmptyDeploymentConfig(), createEmptyImageStream()
         )
-
-        assertThat(resources.size).isEqualTo(3)
-        val (dcResources, isResource, bcResource) = resources.toList()
 
         assertThat(bcResource).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("bc.json")

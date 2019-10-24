@@ -15,15 +15,11 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
     @Test
     fun `modify dc and ad for default parameters`() {
 
-        val resources = generateResources(
+        val (dcResource, adResource) = modifyResources(
             """{ 
                 "version" : "1"
            }""", createEmptyDeploymentConfig(), createEmptyApplicationDeployment()
         )
-
-        assertThat(resources.size).isEqualTo(2)
-        val dcResource = resources.first()
-        val adResource = resources.last()
 
         assertThat(adResource).auroraResourceModifiedByThisFeatureWithComment("Added information from deployment")
         assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added labels, annotations, shared env vars and request limits")
@@ -40,7 +36,7 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
     @Test
     fun `modify dc and ad for changed parameters`() {
 
-        val resources = generateResources(
+        val (dcResource, adResource) = generateResources(
             app = """{ 
                 
                 "version" : "1",
@@ -50,12 +46,9 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
                 
            }""",
             resources = mutableSetOf(createEmptyDeploymentConfig(), createEmptyApplicationDeployment()),
-            files = listOf(AuroraConfigFile("simple.json", """{ "pause" : true }""", override = true))
+            files = listOf(AuroraConfigFile("simple.json", """{ "pause" : true }""", override = true)),
+            createdResources = 0
         )
-
-        assertThat(resources.size).isEqualTo(2)
-        val dcResource = resources.first()
-        val adResource = resources.last()
 
         assertThat(adResource).auroraResourceModifiedByThisFeatureWithComment("Added information from deployment")
         assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added labels, annotations, shared env vars and request limits")

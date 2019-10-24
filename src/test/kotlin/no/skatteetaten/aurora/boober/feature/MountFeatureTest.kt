@@ -135,7 +135,6 @@ class MountFeatureTest : AbstractFeatureTest() {
     fun `should generate configMap`() {
 
         val resources = generateResources(configMapJson)
-        assertThat(resources.size).isEqualTo(1)
 
         val configMap = resources.first().resource as ConfigMap
         assertThat(configMap.metadata.name).isEqualTo("simple-mount")
@@ -146,14 +145,11 @@ class MountFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should modify deploymentConfig and add configMap`() {
 
-        val resource = generateResources(
+        val (dcResource, attachmentResource) = generateResources(
             configMapJson,
             createEmptyDeploymentConfig()
         )
 
-        assertThat(resource.size).isEqualTo(2)
-        val dcResource = resource.first()
-        val attachmentResource = resource.last()
         assertThat(attachmentResource).auroraResourceCreatedByThisFeature()
 
         assertThat(dcResource).auroraResourceMountsAttachment(attachmentResource.resource)
@@ -167,13 +163,9 @@ class MountFeatureTest : AbstractFeatureTest() {
         every { vaultProvider.findVaultData(listOf(VaultRequest("paas", "foo"))) } returns
             VaultResults(mapOf("foo" to mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray())))
 
-        val resource = generateResources(secretVaultJson, createEmptyDeploymentConfig())
-        assertThat(resource.size).isEqualTo(2)
+        val (dcResource, attachmentResource) = generateResources(secretVaultJson, createEmptyDeploymentConfig())
 
-        val attachmentResource = resource.last()
         assertThat(attachmentResource).auroraResourceCreatedByThisFeature()
-
-        val dcResource = resource.first()
         assertThat(dcResource).auroraResourceMountsAttachment(attachmentResource.resource)
     }
 
@@ -183,9 +175,8 @@ class MountFeatureTest : AbstractFeatureTest() {
         every { openShiftClient.resourceExists("secret", "paas-utv", "mount") } returns true
 
         val resource =
-            generateResources(existingSecretJson, createEmptyDeploymentConfig())
+            modifyResources(existingSecretJson, createEmptyDeploymentConfig())
 
-        assertThat(resource.size).isEqualTo(1)
         val dcResource = resource.first()
         val secret = newSecret {
             metadata {
@@ -202,9 +193,8 @@ class MountFeatureTest : AbstractFeatureTest() {
 
         every { openShiftClient.resourceExists("persistentvolumeclaim", "paas-utv", "mount") } returns true
 
-        val resource = generateResources(existingPVCJson, createEmptyDeploymentConfig())
+        val resource = modifyResources(existingPVCJson, createEmptyDeploymentConfig())
 
-        assertThat(resource.size).isEqualTo(1)
         val auroraResource = resource.first()
         val secret = newPersistentVolumeClaim {
             metadata {

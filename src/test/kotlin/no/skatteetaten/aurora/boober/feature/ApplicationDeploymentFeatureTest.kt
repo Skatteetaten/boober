@@ -15,14 +15,11 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
 
         // Right now this method only takes the app file and a single "empty" resource
         // how should we model this to allow adding more AuroraConfigFiles and more empty resources
-        val resources = generateResources(
+        val (dc, ad) = generateResources(
             """{ "message" : "This is a note", 
                 "ttl" : "1d" }""", createEmptyDeploymentConfig()
         )
 
-        assertThat(resources.size).isEqualTo(2)
-        val ad = resources.last()
-        val dc = resources.first()
         assertThat(ad).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("ad.json")
 

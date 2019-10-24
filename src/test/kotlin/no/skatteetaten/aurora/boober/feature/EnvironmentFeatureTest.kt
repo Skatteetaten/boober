@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.feature
 
 import assertk.assertThat
-import assertk.assertions.isEqualTo
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.User
@@ -21,8 +20,11 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should fail validation if current user is not in admin group`() {
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf(
-                "APP_PaaS_utv" to listOf("luke")))
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(
+            mapOf(
+                "APP_PaaS_utv" to listOf("luke")
+            )
+        )
 
         every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "token", "Jayne Cobb")
 
@@ -34,41 +36,56 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should fail validation if specified admin groups are empty`() {
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf(
-                "APP_PaaS_utv" to emptyList()))
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(
+            mapOf(
+                "APP_PaaS_utv" to emptyList()
+            )
+        )
 
         every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "token", "Jayne Cobb")
 
         assertThat {
             createAuroraDeploymentContext()
         }.applicationErrors(
-                "All groups=[APP_PaaS_utv] are empty",
-                "User=Jayne Cobb does not have access to admin this environment from the groups=[APP_PaaS_utv]"
+            "All groups=[APP_PaaS_utv] are empty",
+            "User=Jayne Cobb does not have access to admin this environment from the groups=[APP_PaaS_utv]"
         )
     }
 
     @Test
     fun `should fail validation if admin group is empty`() {
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf(
-                "APP_PaaS_utv" to listOf("luke")))
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(
+            mapOf(
+                "APP_PaaS_utv" to listOf("luke")
+            )
+        )
 
         every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "token", "Jayne Cobb")
 
         assertThat {
-            createAuroraDeploymentContext(files = listOf(AuroraConfigFile("utv/about.json", contents = """{
+            createAuroraDeploymentContext(
+                files = listOf(
+                    AuroraConfigFile(
+                        "utv/about.json", contents = """{
                   "permissions": {
                     "admin" : ""
                    }
-                }""")))
+                }"""
+                    )
+                )
+            )
         }.singleApplicationError("permissions.admin cannot be empty")
     }
 
     @Test
     fun `should fail validation if admin group does not exist`() {
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf(
-                "APP_PaaS_test" to listOf("luke")))
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(
+            mapOf(
+                "APP_PaaS_test" to listOf("luke")
+            )
+        )
 
         every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "token", "Jayne Cobb")
 
@@ -79,14 +96,23 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `should generate environment resources`() {
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(mapOf(
-                "APP_PaaS_utv" to listOf("hero"), "APP_PaaS_test" to listOf()))
-
-        every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "token", "Jayne Cobb", grantedAuthorities = listOf(
-                SimpleGrantedAuthority("APP_PaaS_utv"))
+        every { openShiftClient.getGroups() } returns OpenShiftGroups(
+            mapOf(
+                "APP_PaaS_utv" to listOf("hero"), "APP_PaaS_test" to listOf()
+            )
         )
 
-        val resources = generateResources(files = listOf(AuroraConfigFile("utv/about.json", """{
+        every { userDetailsProvider.getAuthenticatedUser() } returns User(
+            "hero", "token", "Jayne Cobb", grantedAuthorities = listOf(
+                SimpleGrantedAuthority("APP_PaaS_utv")
+            )
+        )
+
+        val (projectResource, namespaceResource, rolebindingResource, viewRolebindingResource) =
+            generateResources(
+                files = listOf(
+                    AuroraConfigFile(
+                        "utv/about.json", """{
               "permissions" : {
                 "view" : "APP_PaaS_test",
                 "adminServiceAccount" : "foo:bar:baz"
@@ -94,14 +120,17 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
                 "env" : {
                   "ttl" : "1d"
                 }
-            }""")))
-
-        assertThat(resources.size).isEqualTo(4)
-        val (projectResource, namespaceResource, rolebindingResource, viewRolebindingResource) = resources.toList()
+            }"""
+                    )
+                ),
+                createdResources = 4
+            )
 
         assertThat(projectResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("project.json")
         assertThat(namespaceResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("namespace.json")
-        assertThat(rolebindingResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("rolebinding.json")
-        assertThat(viewRolebindingResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("rolebinding-view.json")
+        assertThat(rolebindingResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("rolebinding.json")
+        assertThat(viewRolebindingResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("rolebinding-view.json")
     }
 }
