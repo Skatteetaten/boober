@@ -19,6 +19,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultSecretEnv
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterProperties
+import no.skatteetaten.aurora.boober.utils.normalizeKubernetesName
 import no.skatteetaten.aurora.boober.utils.takeIfNotEmpty
 import org.apache.commons.codec.binary.Base64
 import org.springframework.stereotype.Service
