@@ -1,0 +1,140 @@
+{
+  "apiVersion": "v1",
+  "kind": "DeploymentConfig",
+  "metadata": {
+    "labels": {
+      "name": "simple"
+    },
+    "name": "simple",
+    "namespace": "paas-utv"
+  },
+  "spec": {
+    "replicas": 1,
+    "selector": {
+      "name": "simple"
+    },
+    "strategy": {
+      "resources": {},
+      "rollingParams": {
+        "intervalSeconds": 1,
+        "maxSurge": "25%",
+        "maxUnavailable": 0,
+        "timeoutSeconds": 120,
+        "updatePeriodSeconds": 1
+      },
+      "type": "Rolling"
+    },
+    "template": {
+      "metadata": {
+        "labels": {
+          "name": "simple"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "env": [
+              {
+                "name": "SPLUNK_INDEX",
+                "value": "${SPLUNK_INDEX}"
+              },
+              {
+                "name": "POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              },
+              {
+                "name": "POD_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "JAVA_OPTS",
+                "value": "-Xmx4g -Xms2g"
+              },
+              {
+                "name": "splunk_config_stanzas",
+                "value": "# --- start/stanza STDOUT\n[monitor://./logs/*.log]\ndisabled = false\nfollowTail = 0\nsourcetype = log4j\nindex = INDEX-PLACEHOLDER\n_meta = environment::NAMESPACE-PLACEHOLDER application::simple nodetype::openshift\nhost = openshift-host\n# --- end/stanza\n\n# --- start/stanza ACCESS_LOG\n[monitor://./logs/*.access]\ndisabled = false\nfollowTail = 0\nsourcetype = access_combined\nindex = INDEX-PLACEHOLDER\n_meta = environment::NAMESPACE-PLACEHOLDER application::simple nodetype::openshift\nhost = openshift-host\n# --- end/stanza\n\n# --- start/stanza GC LOG\n[monitor://./logs/*.gc]\ndisabled = false\nfollowTail = 0\nsourcetype = gc_log\nindex = INDEX-PLACEHOLDER\n_meta = environment::NAMESPACE-PLACEHOLDER application::simple nodetype::openshift\nhost = openshift-host\n# --- end/stanza\n\n"
+              },
+              {
+                "name": "FEED_NAME",
+                "value": "simple"
+              },
+              {
+                "name": "DB_NAME",
+                "value": "simple"
+              },
+              {
+                "name": "HOST_NAME",
+                "value": "simple"
+              },
+              {
+                "name": "SCHEME",
+                "value": "http"
+              }
+            ],
+            "image": "simple",
+            "imagePullPolicy": "IfNotPresent",
+            "name": "simple",
+            "ports": [
+              {
+                "containerPort": 8080,
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8778,
+                "name": "jolokia"
+              }
+            ],
+            "securityContext": {
+              "capabilities": {},
+              "privileged": false
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "volumeMounts": [
+              {
+                "mountPath": "/u01/logs",
+                "name": "application-log-volume"
+              }
+            ],
+            "capabilities": {}
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "restartPolicy": "Always",
+        "serviceAccount": "",
+        "serviceAccountName": "",
+        "volumes": [
+          {
+            "emptyDir": {},
+            "name": "application-log-volume"
+          }
+        ]
+      }
+    },
+    "triggers": [
+      {
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "simple"
+          ],
+          "from": {
+            "kind": "ImageStreamTag",
+            "name": "simple:default"
+          },
+          "lastTriggeredImage": ""
+        },
+        "type": "ImageChange"
+      }
+    ]
+  }
+}

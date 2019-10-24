@@ -75,7 +75,8 @@ abstract class AbstractTemplateFeature : Feature {
 
         val errorMessages = validateTemplateParameters(templateJson, findParameters(adc))
         if (errorMessages.isNotEmpty()) {
-            return listOf(AuroraDeploymentSpecValidationException(errorMessages.joinToString { " " }.trim()))
+            val message = errorMessages.joinToString(" ").trim()
+            return listOf(AuroraDeploymentSpecValidationException(message))
         }
 
         return emptyList()

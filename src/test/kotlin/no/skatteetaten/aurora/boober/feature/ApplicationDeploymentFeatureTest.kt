@@ -13,11 +13,11 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
     @Test
     fun `geneate application deployment`() {
 
-        // Right now this method only takes the app file and a single "empty" resource
-        // how should we model this to allow adding more AuroraConfigFiles and more empty resources
         val (dc, ad) = generateResources(
-            """{ "message" : "This is a note", 
-                "ttl" : "1d" }""", createEmptyDeploymentConfig()
+            """{ 
+            "message" : "This is a note", 
+                "ttl" : "1d" 
+                }""", createEmptyDeploymentConfig()
         )
 
         assertThat(ad).auroraResourceCreatedByThisFeature()
@@ -32,7 +32,7 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
         })
     }
 
-    // TODO:Is this a good error message?
+    // TODO:Is this a good error message? remember that the field it is for is included in the final error message
     @Test
     fun `get error if ttl duration string is wrong`() {
         assertThat {
