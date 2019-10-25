@@ -15,7 +15,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 
-// TODO: test header mapper validation here
 class EnvironmentFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
         get() = EnvironmentFeature(openShiftClient, userDetailsProvider)

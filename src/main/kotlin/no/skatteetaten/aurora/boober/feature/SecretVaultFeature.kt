@@ -93,7 +93,6 @@ class SecretVaultFeature(
             }
     }
 
-    // TODO: this can be done without full validation
     fun validateSecretNames(secrets: List<AuroraSecret>): List<AuroraDeploymentSpecValidationException> {
         return secrets.mapNotNull { secret ->
             if (secret.name.length > 63) {

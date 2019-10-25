@@ -48,7 +48,6 @@ class BuildFeatureTest : AbstractFeatureTest() {
         }.singleApplicationError("GroupId must be set and be shorter then 200 characters.")
     }
 
-    // TODO: Where should we test gav handlers? I would say in a seperate test or?
     @Test
     fun `should get error if version is not set`() {
 

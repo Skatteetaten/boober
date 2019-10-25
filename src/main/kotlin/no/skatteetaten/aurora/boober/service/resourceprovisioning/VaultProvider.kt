@@ -23,7 +23,6 @@ class VaultResults(val vaultIndex: VaultIndex) {
     }
 }
 
-// TODO: Why provider and service here?
 @Service
 class VaultProvider(private val vaultService: VaultService) {
 

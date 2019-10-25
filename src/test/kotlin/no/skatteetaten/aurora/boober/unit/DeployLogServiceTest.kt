@@ -38,7 +38,6 @@ import java.nio.charset.Charset
 
 class DeployLogServiceTest : AbstractAuroraConfigTest() {
 
-    // TODO: Fix
     private val bitbucketService = mockk<BitbucketService>()
     private val deployId = "12e456"
     private val fileName = "test/$deployId.json"

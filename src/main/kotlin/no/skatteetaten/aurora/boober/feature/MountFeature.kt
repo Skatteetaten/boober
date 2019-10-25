@@ -202,7 +202,6 @@ class MountFeature(
 
     private fun getMounts(auroraDeploymentSpec: AuroraDeploymentSpec, cmd: AuroraContextCommand): List<Mount> {
 
-        // TODO: review to not use handlers
         val mountHandlers = handlers(auroraDeploymentSpec, cmd)
 
         if (mountHandlers.isEmpty()) {
@@ -271,7 +270,6 @@ enum class MountType(val kind: String) {
     PVC("persistentvolumeclaim")
 }
 
-// TODO: Do we need the mount abstraction?
 data class Mount(
     val path: String,
     val type: MountType,
