@@ -131,7 +131,6 @@ fun <K, V> Map<K, V>?.takeIfNotEmpty(): Map<K, V>? {
     return this.takeIf { it?.isEmpty() == false }
 }
 
-// TODO: Hvor man vi bruke denne?
 fun <A, B> Iterable<A>.parallelMap(f: suspend (A) -> B): List<B> {
     val iter = this
     return runBlocking(

@@ -4,7 +4,7 @@ import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
 
 class ResourceMergerTest : AbstractAuroraConfigTest() {
 
-    /* TODO: Reimplement
+    /*
     val ENVIRONMENT = "utv"
 
     val auroraConfigJson = mutableMapOf(
@@ -80,7 +80,6 @@ class ResourceMergerTest : AbstractAuroraConfigTest() {
         test.fields.forEach {
             assertThat(merged.at(it)).isEqualTo(oldResource.at(it))
         }
-    }
+    } */
 
-     */
 }
