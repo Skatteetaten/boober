@@ -189,7 +189,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
                     "utv/this-name-is-stupid-stupid-stupidly-long-for-no-reason.json" to
                             """{ "version" : "1" }"""
             )
-        }.singleApplicationError("ArtifactId must be set and be shorter then 50 characters")
+        }.singleApplicationError("Name must be alphanumeric and no more than 40 characters")
     }
 
     enum class PermissionsTestData(val values: String) {

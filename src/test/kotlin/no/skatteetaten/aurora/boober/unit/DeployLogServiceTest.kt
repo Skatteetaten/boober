@@ -11,8 +11,21 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.model.*
-import no.skatteetaten.aurora.boober.service.*
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraConfigField
+import no.skatteetaten.aurora.boober.model.AuroraConfigFieldSource
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeployCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.service.AuroraConfigRef
+import no.skatteetaten.aurora.boober.service.AuroraDeployResult
+import no.skatteetaten.aurora.boober.service.BitbucketService
+import no.skatteetaten.aurora.boober.service.DeployLogService
+import no.skatteetaten.aurora.boober.service.DeployLogServiceException
+import no.skatteetaten.aurora.boober.service.Deployer
 import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import org.apache.commons.text.StringSubstitutor
@@ -70,7 +83,7 @@ class DeployLogServiceTest : AbstractAuroraConfigTest() {
 
         assertThat(answer.bitbucketStoreResult).isEqualTo("Some really bad stuff happened")
         assertThat(answer.reason).isEqualTo("DONE Failed to store deploy result.")
-        assertThat(answer.deployId).isEqualTo("failed")
+        assertThat(answer.deployId).isEqualTo(deployId)
     }
 
     @Test
