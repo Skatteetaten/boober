@@ -11,7 +11,6 @@ import io.fabric8.kubernetes.api.model.Namespace
 import io.fabric8.kubernetes.api.model.ObjectReference
 import io.fabric8.openshift.api.model.OpenshiftRoleBinding
 import io.fabric8.openshift.api.model.ProjectRequest
-import java.time.Duration
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -23,6 +22,7 @@ import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.springframework.boot.convert.DurationStyle
 import org.springframework.stereotype.Service
+import java.time.Duration
 
 val AuroraDeploymentSpec.envTTL: Duration?
     get() = this.getOrNull<String>("env/ttl")?.let {
@@ -117,7 +117,6 @@ class EnvironmentFeature(
         return listOf(admin).addIfNotNull(view)
     }
 
-    // TODO: Validate that admin service account exist
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,

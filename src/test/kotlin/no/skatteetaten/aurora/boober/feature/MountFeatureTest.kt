@@ -34,7 +34,7 @@ class MountFeatureTest : AbstractFeatureTest() {
                    }
                 }
               }  
-             }""".trimIndent()
+             }"""
 
     val secretVaultJson = """{
               "mounts": {
@@ -44,7 +44,7 @@ class MountFeatureTest : AbstractFeatureTest() {
                   "secretVault" : "foo"
                 }
               }  
-             }""".trimIndent()
+             }"""
 
     val existingSecretJson = """{
               "mounts": {
@@ -54,7 +54,7 @@ class MountFeatureTest : AbstractFeatureTest() {
                   "exist" : true
                 }
               }  
-             }""".trimIndent()
+             }"""
 
     val existingPVCJson = """{
               "mounts": {
@@ -64,7 +64,7 @@ class MountFeatureTest : AbstractFeatureTest() {
                   "exist" : true
                 }
               }  
-             }""".trimIndent()
+             }"""
 
     @Test
     fun `Should generate handlers`() {
@@ -88,6 +88,14 @@ class MountFeatureTest : AbstractFeatureTest() {
         val errorMessage: String
     ) {
 
+        PVC_MUST_EXIST(
+            """ "type" : "PVC", "path": "/u01/foo" """,
+            "PVC mount=mount must have exist set. We do not support generating mounts for now"
+        ),
+        SECRET_WITH_VAULT_EXIST(
+            """ "path": "/u01/foo", "type" : "Secret", "secretVault" : "foo", "exist" : true """,
+            "Secret mount=mount with vaultName set cannot be marked as existing"
+        ),
         PATH_REQUIRED(""" "type" : "ConfigMap" """, "Path is required for mount"),
         WRONG_MOUNT_TYPE(""" "type" : "Foo" """, "Must be one of [ConfigMap, Secret, PVC]"),
         CONFIGMAP_MOUNT_REQUIRES_CONTENT(

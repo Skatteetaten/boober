@@ -13,7 +13,16 @@ import io.mockk.mockk
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.*
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseEngine
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaInstance
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhUser
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResult
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResults
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaRequestDetails
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaUser
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.junit.jupiter.api.Test
@@ -66,8 +75,8 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
     fun `should get error if schema with id does not exist`() {
 
         every {
-            provisioner.findSchemaById("123456", any())
-        } throws IllegalArgumentException("Not found")
+            provisioner.provisionSchema(any())
+        } throws IllegalArgumentException("Database schema with id=123456 and affiliation=paas does not exist")
 
         assertThat {
             createAuroraDeploymentContext(
@@ -78,6 +87,26 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
            }"""
             )
         }.singleApplicationError("Database schema with id=123456 and affiliation=paas does not exist")
+    }
+
+    @Test
+    fun `should get error if schema with generate false does not exist`() {
+
+        every {
+            provisioner.provisionSchema(any())
+        } throws IllegalArgumentException("Could not find schema with labels")
+
+        assertThat {
+            createAuroraDeploymentContext(
+                """{ 
+               "database" : {
+                 "foo" : {
+                   "generate" : false
+                  }
+               }
+           }"""
+            )
+        }.singleApplicationError("Could not find schema with labels")
     }
 
 

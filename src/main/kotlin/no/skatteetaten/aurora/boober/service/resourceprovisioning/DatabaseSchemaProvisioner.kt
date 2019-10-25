@@ -12,7 +12,6 @@ import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.feature.DatabaseInstance
 import no.skatteetaten.aurora.boober.service.ProvisioningException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
-import no.skatteetaten.aurora.boober.utils.logger
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -152,7 +151,10 @@ class DatabaseSchemaProvisioner(
                 roleString
             )
         } catch (e: Exception) {
-            throw createProvisioningException("Unable to get information on schema with id $id", e)
+            throw createProvisioningException(
+                "Unable to get information on schema with id=$id and affiliation=${details.affiliation}",
+                e
+            )
         }
 
         return parseResponseFailIfEmpty(response)

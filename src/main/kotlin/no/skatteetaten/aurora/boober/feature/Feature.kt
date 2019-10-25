@@ -1,13 +1,17 @@
 package no.skatteetaten.aurora.boober.feature
 
 import io.fabric8.kubernetes.api.model.HasMetadata
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.AuroraResourceSource
 import no.skatteetaten.aurora.boober.utils.durationString
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.pattern
 
-// TODO: Bør passe på at validering utenfor cluster er rett. Mulig litt for mye ble slettet her.
 interface Feature {
 
     fun generateResource(content: HasMetadata, header: Boolean = false) =
@@ -24,8 +28,6 @@ interface Feature {
 
       If you look at BuildFeature you will see that it reacts on the Application.type to only enable
       itself if the type is development
-      TODO: bør bare ha type og applicationPlatform
-
 
      */
     fun enable(header: AuroraDeploymentSpec): Boolean = true
@@ -81,7 +83,6 @@ enum class TemplateType(val groupAndVersionRequired: Boolean) {
 
 val AuroraDeploymentSpec.applicationPlatform: ApplicationPlatform get() = this["applicationPlatform"]
 
-// TODO: validering av disse må testes
 val ApplicationDeploymentRef.headerHandlers: Set<AuroraConfigFieldHandler>
     get() {
 

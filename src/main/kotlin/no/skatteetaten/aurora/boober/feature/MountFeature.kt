@@ -135,8 +135,6 @@ class MountFeature(
         }
     }
 
-    // TODO: Validate that PVC must have existing
-    // TODO: validate that existing and secretVault together will not work for Secret
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
@@ -144,11 +142,27 @@ class MountFeature(
     ): List<Exception> {
         val mounts = getMounts(adc, cmd)
         val errors = validateConfigMapMountHasContent(mounts, adc)
+            .addIfNotNull(validatePVCMounts(mounts))
+            .addIfNotNull(validateExistinAndSecretVault(mounts))
         if (!fullValidation || adc.cluster != cluster) {
             return errors
         }
         return errors.addIfNotNull(validateExistingMounts(mounts, adc))
             .addIfNotNull(validateVaultExistence(mounts, adc))
+    }
+
+    private fun validateExistinAndSecretVault(mounts: List<Mount>): List<AuroraDeploymentSpecValidationException>? {
+        return mounts.filter { it.exist && it.secretVaultName != null }.map {
+            AuroraDeploymentSpecValidationException("Secret mount=${it.volumeName} with vaultName set cannot be marked as existing")
+        }
+    }
+
+    private fun validatePVCMounts(
+        mounts: List<Mount>
+    ): List<AuroraDeploymentSpecValidationException>? {
+        return mounts.filter { !it.exist && it.type == MountType.PVC }.map {
+            AuroraDeploymentSpecValidationException("PVC mount=${it.volumeName} must have exist set. We do not support generating mounts for now")
+        }
     }
 
     fun validateConfigMapMountHasContent(
