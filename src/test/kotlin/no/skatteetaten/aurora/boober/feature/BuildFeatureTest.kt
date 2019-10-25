@@ -86,4 +86,19 @@ class BuildFeatureTest : AbstractFeatureTest() {
 
         assertThat(imageStream.spec).isNull()
     }
+
+    @Test
+    fun `test render spec for minimal build`() {
+
+        val spec = createAuroraDeploymentSpecForFeature(
+            """{
+           "type": "development", 
+           "groupId": "org.test",
+           "version" : "1"
+        }"""
+        )
+
+        assertThat(spec).auroraRendersSpec()
+    }
 }
+

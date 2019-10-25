@@ -151,7 +151,7 @@ class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTes
             json
         }
         generatedObjects.forEach {
-            val key = getKey(it)
+            val key: String = getKey(it)
             assertThat(keys).contains(key)
             if (it.openshiftKind == "secret") {
                 val data = it["data"] as ObjectNode

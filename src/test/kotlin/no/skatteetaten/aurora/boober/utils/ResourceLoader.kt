@@ -5,9 +5,9 @@ import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import java.net.URL
 import okio.Buffer
 import org.springframework.util.ResourceUtils
+import java.net.URL
 
 open class ResourceLoader {
 
@@ -31,11 +31,11 @@ open class ResourceLoader {
         return Buffer().readFrom(getResourceUrl(resourceName, folder).openStream())
     }
 
-    fun compareJson(expected: JsonNode, actual: JsonNode): Boolean {
+    fun compareJson(expected: JsonNode, actual: JsonNode, name: String? = null): Boolean {
         val writer = jsonMapper().writerWithDefaultPrettyPrinter()
         val targetString = writer.writeValueAsString(actual)
         val nodeString = writer.writeValueAsString(expected)
-        assertThat(targetString).isEqualTo(nodeString)
+        assertThat(targetString, name).isEqualTo(nodeString)
         return true
     }
 }

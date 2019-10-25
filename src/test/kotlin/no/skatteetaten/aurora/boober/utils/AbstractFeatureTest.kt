@@ -12,8 +12,27 @@ import assertk.assertions.support.show
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fkorotkov.kubernetes.*
-import com.fkorotkov.openshift.*
+import com.fkorotkov.kubernetes.metadata
+import com.fkorotkov.kubernetes.newContainer
+import com.fkorotkov.kubernetes.newEnvVar
+import com.fkorotkov.kubernetes.newObjectMeta
+import com.fkorotkov.kubernetes.newService
+import com.fkorotkov.kubernetes.newServicePort
+import com.fkorotkov.kubernetes.spec
+import com.fkorotkov.openshift.customStrategy
+import com.fkorotkov.openshift.from
+import com.fkorotkov.openshift.imageChangeParams
+import com.fkorotkov.openshift.metadata
+import com.fkorotkov.openshift.newBuildConfig
+import com.fkorotkov.openshift.newDeploymentConfig
+import com.fkorotkov.openshift.newDeploymentTriggerPolicy
+import com.fkorotkov.openshift.newImageStream
+import com.fkorotkov.openshift.output
+import com.fkorotkov.openshift.rollingParams
+import com.fkorotkov.openshift.spec
+import com.fkorotkov.openshift.strategy
+import com.fkorotkov.openshift.template
+import com.fkorotkov.openshift.to
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.openshift.api.model.DeploymentConfig
@@ -21,13 +40,24 @@ import io.mockk.clearAllMocks
 import io.mockk.mockk
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.Feature
-import no.skatteetaten.aurora.boober.model.*
+import no.skatteetaten.aurora.boober.feature.headerHandlers
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.AuroraResourceSource
+import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
+import no.skatteetaten.aurora.boober.service.renderSpecAsJson
 import org.junit.jupiter.api.BeforeEach
 import java.time.Instant
 
@@ -140,7 +170,8 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
                     }
                 }
             }
-        }, createdSource = AuroraResourceSource(TestDefaultFeature::class.java))
+        }, createdSource = AuroraResourceSource(TestDefaultFeature::class.java)
+    )
 
     fun createEmptyApplicationDeployment() = AuroraResource(
         ApplicationDeployment(
@@ -250,20 +281,21 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
     }
 
     fun createCustomAuroraDeploymentContext(
-            adr: ApplicationDeploymentRef,
-            vararg file: Pair<String, String>
+        adr: ApplicationDeploymentRef,
+        vararg file: Pair<String, String>
     ): AuroraDeploymentContext {
         val service = AuroraDeploymentContextService(featuers = listOf(feature))
         val auroraConfig = createAuroraConfig(file.toMap())
 
         val deployCommand = AuroraContextCommand(
-                auroraConfig = auroraConfig,
-                applicationDeploymentRef = adr,
-                auroraConfigRef = AuroraConfigRef("test", "master", "123abb"),
-                overrides = emptyList()
+            auroraConfig = auroraConfig,
+            applicationDeploymentRef = adr,
+            auroraConfigRef = AuroraConfigRef("test", "master", "123abb"),
+            overrides = emptyList()
         )
         return service.createValidatedAuroraDeploymentContexts(listOf(deployCommand), true).first()
     }
+
     /*
       CreateDeploymentContext for the feature in test
      */
@@ -283,6 +315,24 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
             overrides = files.filter { it.override }
         )
         return service.createValidatedAuroraDeploymentContexts(listOf(deployCommand), fullValidation).first()
+    }
+
+    fun createAuroraDeploymentSpecForFeature(
+        app: String = """{}""",
+        fullValidation: Boolean = true,
+        files: List<AuroraConfigFile> = emptyList()
+    ): AuroraDeploymentSpec {
+
+        val ctx = createAuroraDeploymentContext(app, fullValidation, files)
+
+        val headers = ctx.cmd.applicationDeploymentRef.headerHandlers.map {
+            it.name
+        }
+        val fields = ctx.spec.fields.filterNot {
+            headers.contains(it.key)
+        }.filterNot { it.key in listOf("applicationDeploymentRef", "configVersion") }
+
+        return ctx.spec.copy(fields = fields)
     }
 
     fun generateResources(
@@ -390,6 +440,46 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
         compareJson(expectedJson, actualJson)
         ar
     }
+
+    //TODO: test with this method in all feature tests
+    fun Assert<AuroraDeploymentSpec>.auroraRendersSpec(s: String = ""): Assert<AuroraDeploymentSpec> =
+        transform { spec ->
+
+            val prefix = if (s.isEmpty()) {
+                "spec"
+            } else {
+                s.ensureStartWith("spec", "-")
+            }
+            val jsonName = "$prefix.json"
+            val txtDefaultName = "$prefix-default.txt"
+            val jsonDefaultName = "$prefix-default.json"
+            val txtName = "$prefix.txt"
+
+            assertThat(
+                renderJsonForAuroraDeploymentSpecPointers(spec, true),
+                txtDefaultName
+            ).isEqualTo(loadResource(txtDefaultName))
+
+            assertThat(renderJsonForAuroraDeploymentSpecPointers(spec, false), txtName).isEqualTo(
+                loadResource(
+                    txtName
+                )
+            )
+
+            compareJson(
+                loadJsonResource(jsonDefaultName),
+                mapper.readTree(mapper.writeValueAsString(renderSpecAsJson(spec, true))),
+                jsonDefaultName
+            )
+
+            compareJson(
+                loadJsonResource(jsonName),
+                mapper.readTree(mapper.writeValueAsString(renderSpecAsJson(spec, false))),
+                jsonName
+            )
+
+            spec
+        }
 
     fun Assert<AuroraResource>.auroraResourceModifiedByThisFeatureWithComment(comment: String) = transform { ar ->
         val actual = ar.sources.first()
