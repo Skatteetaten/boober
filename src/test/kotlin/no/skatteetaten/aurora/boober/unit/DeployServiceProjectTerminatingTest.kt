@@ -1,12 +1,21 @@
 package no.skatteetaten.aurora.boober.unit
 
-class DeployServiceProjectTerminatingTest {
-    /* TODO: Fix
-    val ENV_NAME = "booberdev"
-    val APP_NAME = "aos-simple"
-    val ref = AuroraConfigRef("aos", "master", "123")
+import assertk.all
+import assertk.assertThat
+import assertk.assertions.isFailure
+import assertk.assertions.isInstanceOf
+import io.mockk.every
+import io.mockk.mockk
+import no.skatteetaten.aurora.boober.controller.security.User
+import no.skatteetaten.aurora.boober.service.DeployService
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 
-    val aid = ApplicationDeploymentRef(ENV_NAME, APP_NAME)
+class DeployServiceProjectTerminatingTest {
+
 
     val openShiftClient: OpenShiftClient = mockk()
     val userDetailsProvider: UserDetailsProvider = mockk()
@@ -15,12 +24,14 @@ class DeployServiceProjectTerminatingTest {
         auroraConfigService = mockk(),
         openShiftCommandBuilder = mockk(),
         openShiftClient = openShiftClient,
-        dockerService = mockk(),
+        cantusService = mockk(),
         redeployService = mockk(),
         userDetailsProvider = userDetailsProvider,
         deployLogService = mockk(),
         cluster = "utv",
-        dockerRegistry = "docker.registry"
+        dockerRegistry = "docker.registry",
+        releaseDockerRegistry = "docker.registry.release",
+        auroraDeploymentContextService = mockk()
     )
 
     val group = "APP_demo_drift"
@@ -39,20 +50,11 @@ class DeployServiceProjectTerminatingTest {
     @Test
     fun `Should return with error if project is terminating`() {
 
-        val env = AuroraDeployEnvironment(
-            affiliation = "demo",
-            envName = "foo",
-            permissions = Permissions(
-                admin = Permission(setOf(group))
-            ), ttl = null
-        )
-
         assertThat {
-            deployService.prepareDeployEnvironment(env)
+            deployService.prepareDeployEnvironment("demo-foo", emptySet())
         }.isFailure().all {
             isInstanceOf(IllegalStateException::class)
         }
     }
 
-     */
 }
