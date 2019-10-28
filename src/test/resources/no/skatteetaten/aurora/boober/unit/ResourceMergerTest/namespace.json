@@ -1,0 +1,14 @@
+{
+  "apiVersion": "v1",
+  "kind": "Namespace",
+  "metadata": {
+    "labels": {
+      "affiliation": "paas",
+      "removeAfter": "86400"
+    },
+    "annotations": {
+      "foo": "bar"
+    },
+    "name": "paas-utv"
+  }
+}

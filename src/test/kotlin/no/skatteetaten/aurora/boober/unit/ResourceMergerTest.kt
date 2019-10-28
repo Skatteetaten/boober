@@ -1,58 +1,14 @@
 package no.skatteetaten.aurora.boober.unit
 
-import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import no.skatteetaten.aurora.boober.service.openshift.mergeWithExistingResource
+import no.skatteetaten.aurora.boober.utils.ResourceLoader
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 
-// TODO: fix test
-class ResourceMergerTest : AbstractAuroraConfigTest() {
+class ResourceMergerTest : ResourceLoader() {
 
-    /*
-    val ENVIRONMENT = "utv"
-
-    val auroraConfigJson = mutableMapOf(
-        "about.json" to DEFAULT_ABOUT,
-        "utv/about.json" to DEFAULT_UTV_ABOUT,
-        "webleveranse.json" to WEB_LEVERANSE,
-        "utv/webleveranse.json" to """{ "type" : "development", "version" : "dev-SNAPSHOT" }"""
-    )
-
-    val userDetailsProvider = mockk<UserDetailsProvider>()
-
-
-    @BeforeEach
-    fun setup() {
-        clearAllMocks()
-        every { userDetailsProvider.getAuthenticatedUser() } returns User("username", "token")
-    }
-
-    @Test
-    fun `Merge DeploymentConfig`() {
-
-        val existing = loadJsonResource("dc-webleveranse.json")
-
-
-        val merged = mergeWithExistingResource(newResource, existing)
-
-        val lastTriggeredImagePath = "/spec/triggers/0/imageChangeParams/lastTriggeredImage"
-
-        assertThat(newResource.at(lastTriggeredImagePath).isMissingNode).isTrue()
-        assertThat(existing.at(lastTriggeredImagePath).textValue()).isNotNull()
-        assertThat(merged.at(lastTriggeredImagePath).textValue()).isEqualTo(existing.at(lastTriggeredImagePath).textValue())
-
-        listOf(0, 1).forEach {
-            val imagePath = "/spec/template/spec/containers/$it/image"
-            assertThat(newResource.at(imagePath).isMissingNode).isTrue()
-            assertThat(existing.at(imagePath).textValue()).isNotNull()
-            assertThat(merged.at(imagePath).textValue()).isEqualTo(existing.at(imagePath).textValue())
-        }
-    }
-
-    @Test
-    fun `Merge namespace`() {
-        val existing = loadJsonResource("namespace-aos-utv.json")
-        val newResource = objectGenerator.generateNamespace(deploymentSpec.environment)
-        val merged = mergeWithExistingResource(newResource, existing)
-        assertThat(existing.at("/metadata/annotations")).isEqualTo(merged.at("/metadata/annotations"))
-    }
 
     enum class OpenShiftResourceTypeTestData(
         val fields: List<String>
@@ -67,7 +23,8 @@ class ResourceMergerTest : AbstractAuroraConfigTest() {
                 "/spec/triggers/1/imageChange/lastTriggeredImageID"
             )
         ),
-        CONFIGMAP(listOf("/metadata/resourceVersion"))
+        CONFIGMAP(listOf("/metadata/resourceVersion")),
+        NAMESPACE(listOf("/metadata/annotations"))
     }
 
     @ParameterizedTest
@@ -75,11 +32,11 @@ class ResourceMergerTest : AbstractAuroraConfigTest() {
     fun `Should update`(test: OpenShiftResourceTypeTestData) {
 
         val type = test.name.toLowerCase()
-        val oldResource = loadJsonResource("openshift-objects/$type.json")
-        val newResource = loadJsonResource("openshift-objects/$type-new.json")
+        val oldResource = loadJsonResource("$type.json")
+        val newResource = loadJsonResource("$type-new.json")
         val merged = mergeWithExistingResource(newResource, oldResource)
         test.fields.forEach {
             assertThat(merged.at(it)).isEqualTo(oldResource.at(it))
         }
-    } */
+    }
 }

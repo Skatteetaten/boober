@@ -10,7 +10,6 @@ import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
@@ -35,6 +34,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.web.client.HttpClientErrorException
+import java.nio.charset.Charset
 
 class DeployLogServiceTest : AbstractAuroraConfigTest() {
 
@@ -117,7 +117,6 @@ class DeployLogServiceTest : AbstractAuroraConfigTest() {
         }.isNotNull().isFailure().isInstanceOf(HttpClientErrorException::class)
     }
 
-    /* need to rethink how we do this */
     private fun createDeployResult(): List<AuroraDeployResult> {
         val aboutFile = AuroraConfigFile("about.json", "{}")
         return listOf(
