@@ -2,11 +2,11 @@ package no.skatteetaten.aurora.boober.controller.v1
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.model.toAdr
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.util.UriUtils
+import java.nio.charset.Charset
 
 @RestController
 @RequestMapping("/v1/auroradeployspec/{auroraConfigName}")
@@ -39,7 +40,7 @@ class AuroraDeploymentSpecControllerV1(
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
-        val specs = adrList.map(ApplicationDeploymentRef.Companion::fromString)
+        val specs = adrList.map { it.toAdr() }
             .let { auroraDeploymentContextService.getAuroraDeploymentContexts(auroraConfig, it, ref) }
         return Response(items = specs.map {
             renderSpecAsJson(
@@ -78,7 +79,7 @@ class AuroraDeploymentSpecControllerV1(
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         val cmd = AuroraContextCommand(
             auroraConfig = auroraConfig,
-            applicationDeploymentRef = ApplicationDeploymentRef.adr(environment, application),
+            applicationDeploymentRef = ApplicationDeploymentRef(environment, application),
             auroraConfigRef = ref,
             overrides = overrideFiles
         )
@@ -112,7 +113,7 @@ class AuroraDeploymentSpecControllerV1(
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
 
-        val applicationDeploymentRef = ApplicationDeploymentRef.adr(environment, application)
+        val applicationDeploymentRef = ApplicationDeploymentRef(environment, application)
 
         val spec = auroraDeploymentContextService.createAuroraDeploymentContext(
             AuroraContextCommand(

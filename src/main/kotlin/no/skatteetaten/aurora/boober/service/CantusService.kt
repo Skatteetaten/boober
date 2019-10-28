@@ -13,7 +13,7 @@ private val logger = KotlinLogging.logger {}
 
 data class TagResult(val cmd: TagCommand, val response: JsonNode?, val success: Boolean)
 
-data class TagCommand @JvmOverloads constructor(
+data class TagCommand(
     val name: String,
     val from: String,
     val to: String,

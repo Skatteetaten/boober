@@ -170,7 +170,6 @@ class OpenShiftCommandService(
         "ImageStream"
     )
 
-    @JvmOverloads
     fun createOpenShiftDeleteCommands(
         name: String,
         namespace: String,

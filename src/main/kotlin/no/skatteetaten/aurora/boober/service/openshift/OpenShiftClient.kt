@@ -26,7 +26,7 @@ private val logger = KotlinLogging.logger {}
 
 enum class OperationType { GET, CREATE, UPDATE, DELETE, NOOP }
 
-data class OpenshiftCommand @JvmOverloads constructor(
+data class OpenshiftCommand(
     val operationType: OperationType,
     val url: String,
     val payload: JsonNode = NullNode.getInstance(),
@@ -42,7 +42,7 @@ data class OpenshiftCommand @JvmOverloads constructor(
     }
 }
 
-data class OpenShiftResponse @JvmOverloads constructor(
+data class OpenShiftResponse(
     val command: OpenshiftCommand,
     val responseBody: JsonNode? = null,
     val success: Boolean = true,

@@ -1,13 +1,13 @@
 package no.skatteetaten.aurora.boober.service
 
-import java.time.Instant
 import no.skatteetaten.aurora.boober.model.AuroraDeployCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
+import java.time.Instant
 
 // TODO: test
-data class AuroraEnvironmentResult @JvmOverloads constructor(
+data class AuroraEnvironmentResult(
     val openShiftResponses: List<OpenShiftResponse> = listOf(),
     val success: Boolean = true,
     val reason: String? = null,
@@ -15,7 +15,7 @@ data class AuroraEnvironmentResult @JvmOverloads constructor(
 )
 
 // TODO: assert on deploy command
-data class AuroraDeployResult @JvmOverloads constructor(
+data class AuroraDeployResult(
     val openShiftResponses: List<OpenShiftResponse> = listOf(),
     val success: Boolean = true,
     val reason: String? = null,

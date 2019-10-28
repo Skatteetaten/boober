@@ -27,8 +27,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OperationType
 
 object OpenShiftTestDataBuilders {
 
-    @JvmStatic
-    @JvmOverloads
     fun deploymentConfig(triggerType: String? = "ImageChange", dcReplicas: Int = 1): OpenShiftResponse {
 
         val deploymentConfig = newDeploymentConfig {
@@ -63,8 +61,6 @@ object OpenShiftTestDataBuilders {
         return OpenShiftResponse(command = command, responseBody = dc, success = true)
     }
 
-    @JvmOverloads
-    @JvmStatic
     fun imageStream(
         dockerImageUrl: String = "dockerImageUrl",
         operationType: OperationType = OperationType.UPDATE,
@@ -139,8 +135,6 @@ object OpenShiftTestDataBuilders {
         return isi
     }
 
-    @JvmStatic
-    @JvmOverloads
     fun imageStreamImportResponse(imageHash: String = "123"): OpenShiftResponse {
 
         val imageStreamImport = imageStreamImport(imageHash)

@@ -26,7 +26,7 @@ class RedeployService(
     val openShiftClient: OpenShiftClient
 ) {
 
-    data class RedeployResult @JvmOverloads constructor(
+    data class RedeployResult(
         val openShiftResponses: List<OpenShiftResponse> = listOf(),
         val success: Boolean = true,
         val message: String? = null

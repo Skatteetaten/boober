@@ -3,13 +3,13 @@ package no.skatteetaten.aurora.boober.service.vault
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import java.io.File
 import no.skatteetaten.aurora.boober.model.PreconditionFailureException
 import org.apache.commons.io.FileUtils
 import org.springframework.util.DigestUtils
+import java.io.File
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class AuroraPermissions @JvmOverloads constructor(
+data class AuroraPermissions(
     val groups: List<String>? = listOf()
 )
 
@@ -68,8 +68,6 @@ class EncryptedFileVault private constructor(
     companion object {
         private val PERMISSION_FILE = ".permissions"
 
-        @JvmStatic
-        @JvmOverloads
         fun createFromFolder(
             vaultFolder: File,
             encryptor: Encryptor = { String(it) },
@@ -111,7 +109,6 @@ class EncryptedFileVault private constructor(
         return secrets.getOrElse(fileName, { throw IllegalArgumentException("No such file $fileName in vault $name") })
     }
 
-    @JvmOverloads
     fun updateFile(fileName: String, fileContents: ByteArray, previousSignature: String? = null) {
 
         validateSignature(fileName, previousSignature)

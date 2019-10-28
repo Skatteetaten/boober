@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.service.openshift
 
 import com.fasterxml.jackson.databind.JsonNode
-import java.net.URI
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.token.TokenProvider
@@ -15,6 +14,7 @@ import org.springframework.http.MediaType
 import org.springframework.http.RequestEntity
 import org.springframework.http.ResponseEntity
 import org.springframework.web.client.HttpClientErrorException
+import java.net.URI
 
 private val logger = KotlinLogging.logger {}
 
@@ -85,8 +85,6 @@ open class OpenShiftResourceClient(
     }
 
     companion object {
-        @JvmStatic
-        @JvmOverloads
         fun generateUrl(kind: String, namespace: String? = null, name: String? = null): String {
 
             val kinds = kind.toLowerCase() + "s"

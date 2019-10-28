@@ -6,7 +6,6 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import com.fasterxml.jackson.databind.JsonNode
-import java.net.URI
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftRestTemplateWrapper
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import no.skatteetaten.aurora.boober.utils.RetryLogger
@@ -19,6 +18,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.RequestEntity
 import org.springframework.http.ResponseEntity
 import org.springframework.web.client.HttpClientErrorException
+import java.net.URI
 
 class OpenShiftRestTemplateWrapperTest : ResourceLoader() {
     private val server = MockWebServer()
@@ -32,7 +32,7 @@ class OpenShiftRestTemplateWrapperTest : ResourceLoader() {
     @Test
     fun `Succeeds even if the request fails a couple of times`() {
 
-        val resource = loadJsonResource("dc-webleveranse.json", ResourceMergerTest::class.simpleName!!)
+        val resource = loadJsonResource("deploymentconfig.json", ResourceMergerTest::class.simpleName!!)
 
         server.execute(
             400 to "",

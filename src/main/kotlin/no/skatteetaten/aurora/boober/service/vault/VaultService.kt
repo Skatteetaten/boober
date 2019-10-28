@@ -12,7 +12,7 @@ import org.springframework.core.io.ByteArrayResource
 import org.springframework.core.io.support.PropertiesLoaderUtils
 import org.springframework.stereotype.Service
 
-data class VaultWithAccess @JvmOverloads constructor(
+data class VaultWithAccess(
     val vault: EncryptedFileVault?, // Will be null if the user does not have access
     val vaultName: String,
     val hasAccess: Boolean = true
@@ -72,7 +72,6 @@ class VaultService(
         }
     }
 
-    @JvmOverloads
     fun createOrUpdateFileInVault(
         vaultCollectionName: String,
         vaultName: String,
@@ -204,7 +203,6 @@ class VaultService(
         val re = Regex(rePattern)
 
         // Note that a properties file can be delimitered by space and =, very few people know this so we check for it
-        @JvmStatic
         fun assertSecretKeysAreValid(secrets: Map<String, ByteArray>) {
             val filesToKeys = secrets.filter { it.key.endsWith(".properties") }
                 .mapValues {

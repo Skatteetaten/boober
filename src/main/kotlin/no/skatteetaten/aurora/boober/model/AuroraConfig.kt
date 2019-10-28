@@ -1,11 +1,11 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.github.fge.jsonpatch.JsonPatch
-import java.io.File
-import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.removeExtension
+import java.io.File
+import java.nio.charset.Charset
 
 data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val version: String) {
 
@@ -14,14 +14,12 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
         val yamlMapper = jacksonYamlObjectMapper()
         val jsonMapper = jsonMapper()
 
-        @JvmStatic
         fun fromFolder(folderName: String, version: String): AuroraConfig {
 
             val folder = File(folderName)
             return fromFolder(folder, version)
         }
 
-        @JvmStatic
         fun fromFolder(folder: File, version: String): AuroraConfig {
             val files = folder.walkBottomUp()
                 .onEnter { !setOf(".secret", ".git").contains(it.name) }
@@ -77,7 +75,6 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
 
     fun findFile(filename: String): AuroraConfigFile? = files.find { it.name == filename }
 
-    @JvmOverloads
     fun updateFile(
         name: String,
         contents: String,

@@ -3,8 +3,6 @@ package no.skatteetaten.aurora.boober.utils
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import java.net.URI
-import kotlin.reflect.KClass
 import mu.KotlinLogging
 import org.slf4j.Logger
 import org.springframework.http.HttpHeaders
@@ -21,6 +19,8 @@ import org.springframework.web.client.HttpServerErrorException
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestClientResponseException
 import org.springframework.web.client.RestTemplate
+import java.net.URI
+import kotlin.reflect.KClass
 
 private val logger = KotlinLogging.logger {}
 
@@ -160,7 +160,6 @@ class RetryLogger(val logger: Logger) : RetryListenerSupport() {
     }
 
     companion object {
-        @JvmStatic
         fun getTokenSnippetFromAuthHeader(headers: HttpHeaders) =
             headers.get(HttpHeaders.AUTHORIZATION)
                 ?.firstOrNull()
