@@ -29,7 +29,6 @@ class BitbucketServiceTest {
             val response = service.uploadFile(project, repo, "filename.json", "message", "foobar")
             assertThat(response).isEqualTo("true")
         }
-
     }
 
     @Test

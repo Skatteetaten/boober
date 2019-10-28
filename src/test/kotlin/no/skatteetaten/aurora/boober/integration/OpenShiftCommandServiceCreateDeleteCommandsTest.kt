@@ -14,16 +14,16 @@ import no.skatteetaten.aurora.boober.service.OpenShiftCommandService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
+import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.getResultFiles
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 
-class OpenShiftCommandServiceCreateDeleteCommandsTest {
+class OpenShiftCommandServiceCreateDeleteCommandsTest : AbstractAuroraConfigTest() {
 
     val userClient: OpenShiftResourceClient = mockk()
     val saClient: OpenShiftResourceClient = mockk()
