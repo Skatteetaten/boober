@@ -9,13 +9,13 @@ import org.junit.jupiter.params.provider.EnumSource
 
 class ResourceMergerTest : ResourceLoader() {
 
-
     enum class OpenShiftResourceTypeTestData(
         val fields: List<String>
     ) {
 
         SERVICE(listOf("/metadata/resourceVersion", "/spec/clusterIP")),
         DEPLOYMENTCONFIG(listOf("/metadata/resourceVersion", "/spec/template/spec/containers/0/image")),
+        PVC(listOf("/spec/volumeName")),
         BUILDCONFIG(
             listOf(
                 "/metadata/resourceVersion",

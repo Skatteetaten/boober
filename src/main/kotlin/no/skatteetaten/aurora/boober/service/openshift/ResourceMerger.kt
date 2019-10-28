@@ -7,8 +7,6 @@ import no.skatteetaten.aurora.boober.utils.mergeField
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.updateField
 
-// TODO: test
-
 /**
  * When generating OpenShift objects that is an update or a replacement for existing object, we sometimes need to
  * preserve some information from the existing objects that has been set by OpenShift. This method will make sure that
