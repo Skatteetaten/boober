@@ -86,6 +86,7 @@ class AuroraConfigService(
         return saveFile(newFile, auroraConfig, ref)
     }
 
+    // TODO test this
     fun patchAuroraConfigFile(
         ref: AuroraConfigRef,
         filename: String,
@@ -158,6 +159,7 @@ class AuroraConfigService(
         return auroraConfig
     }
 
+    // todo test this
     fun validateAuroraConfig(
         auroraConfig: AuroraConfig,
         overrideFiles: List<AuroraConfigFile> = listOf(),
@@ -187,6 +189,7 @@ class AuroraConfigService(
         } catch (e: InvalidRemoteException) {
             throw IllegalArgumentException("No such AuroraConfig ${ref.name}")
         } catch (e: Exception) {
+            // TODO test this
             throw AuroraConfigServiceException(
                 "An unexpected error occurred when checking out AuroraConfig with name ${ref.name} (${e.message})",
                 e

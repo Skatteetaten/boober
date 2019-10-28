@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.unit
 
 import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
 
+// TODO: fix test
 class ResourceMergerTest : AbstractAuroraConfigTest() {
 
     /*

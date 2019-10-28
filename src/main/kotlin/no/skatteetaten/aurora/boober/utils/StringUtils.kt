@@ -63,3 +63,5 @@ fun convertValueToString(value: Any): String {
         else -> jacksonObjectMapper().writeValueAsString(value)
     }
 }
+
+fun String.dockerGroupSafeName() = this.replace(".", "_")

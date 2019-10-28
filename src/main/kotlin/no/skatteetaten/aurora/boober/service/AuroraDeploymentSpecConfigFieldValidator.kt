@@ -13,6 +13,8 @@ import no.skatteetaten.aurora.boober.utils.findAllPointers
 
 private val logger = KotlinLogging.logger {}
 
+// TODO: does this need to be a class AuroraDeploymentSpec has all fields here
+// Move to extension method on ADS?
 class AuroraDeploymentSpecConfigFieldValidator(
     val applicationDeploymentRef: ApplicationDeploymentRef,
     val applicationFiles: List<AuroraConfigFile>,
@@ -68,6 +70,7 @@ class AuroraDeploymentSpecConfigFieldValidator(
             }
         }
 
+        // TODO test unmapped
         val unmappedErrors = if (fullValidation) {
             getUnmappedPointers().flatMap { pointerError ->
                 pointerError.value.map { ConfigFieldErrorDetail.invalid(pointerError.key, it) }

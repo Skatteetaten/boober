@@ -33,6 +33,7 @@ data class OpenshiftCommand @JvmOverloads constructor(
     val previous: JsonNode? = null,
     val generated: JsonNode? = null
 ) {
+    // TODO: test
     fun isType(operationType: OperationType, kind: String): Boolean {
 
         if (payload.openshiftKind != kind) return false
@@ -109,6 +110,7 @@ class OpenShiftClient(
     val mapper: ObjectMapper
 ) {
 
+    // TODO test update and NOOP
     fun performOpenShiftCommand(namespace: String, command: OpenshiftCommand): OpenShiftResponse {
 
         val kind = command.payload.openshiftKind
@@ -129,6 +131,7 @@ class OpenShiftClient(
         }
     }
 
+    // TODO test
     fun findCurrentUser(token: String): JsonNode? {
 
         val url = generateUrl(kind = "user", name = "~")
@@ -138,6 +141,7 @@ class OpenShiftClient(
         return currentUser?.body
     }
 
+    // todo test
     @Cacheable("templates")
     fun getTemplate(template: String): JsonNode {
 
@@ -169,11 +173,13 @@ class OpenShiftClient(
         return OpenShiftGroups(getAllDeclaredUserGroups() + getAllImplicitUserGroups())
     }
 
+    // todo test
     fun resourceExists(kind: String, namespace: String, name: String): Boolean {
         val response = getClientForKind(kind).get(kind, namespace, name, false)
         return response?.statusCode?.is2xxSuccessful ?: false
     }
 
+    // todo test
     fun projectExists(name: String): Boolean {
         val url = generateUrl("project", name = name)
         serviceAccountClient.get(url, retry = false)?.body?.let {
@@ -187,6 +193,7 @@ class OpenShiftClient(
         return false
     }
 
+    // todo test
     fun get(kind: String, url: String, retry: Boolean = true): ResponseEntity<JsonNode>? {
         return getClientForKind(kind).get(url, retry = retry)
     }

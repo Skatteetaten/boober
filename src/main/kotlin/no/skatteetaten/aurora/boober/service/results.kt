@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 
+// TODO: test
 data class AuroraEnvironmentResult @JvmOverloads constructor(
     val openShiftResponses: List<OpenShiftResponse> = listOf(),
     val success: Boolean = true,
@@ -13,6 +14,7 @@ data class AuroraEnvironmentResult @JvmOverloads constructor(
     val projectExist: Boolean = false
 )
 
+// TODO: assert on deploy command
 data class AuroraDeployResult @JvmOverloads constructor(
     val openShiftResponses: List<OpenShiftResponse> = listOf(),
     val success: Boolean = true,

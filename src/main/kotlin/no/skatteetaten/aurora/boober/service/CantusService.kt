@@ -21,6 +21,7 @@ data class TagCommand @JvmOverloads constructor(
     val toRegistry: String = fromRegistry
 )
 
+// TODO can this just be a map?
 data class CantusTagCommand(
     val from: String,
     val to: String
@@ -45,5 +46,3 @@ class CantusService(
         return TagResult(cmd, resultEntity.body, resultEntity.statusCode.is2xxSuccessful)
     }
 }
-
-fun String.dockerGroupSafeName() = this.replace(".", "_")

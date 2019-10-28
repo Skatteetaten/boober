@@ -25,6 +25,7 @@ class AuroraDeploymentContextService(
     val featuers: List<Feature>
 ) {
 
+    // TODO: test this
     fun expandDeploymentRefToApplicationRef(
         auroraConfig: AuroraConfig,
         adr: List<ApplicationDeploymentRef>,
@@ -125,6 +126,7 @@ class AuroraDeploymentContextService(
         )
     }
 
+    // TODO: test this
     fun getAuroraDeploymentContexts(
         auroraConfig: AuroraConfig,
         applicationDeploymentRefs: List<ApplicationDeploymentRef>,

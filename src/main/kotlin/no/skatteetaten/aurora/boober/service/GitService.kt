@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Primary
 
 private val logger = KotlinLogging.logger {}
 
+// TODO: Move to same place as Configuration?
 @Configuration
 class GitServices(
     val userDetails: UserDetailsProvider,
@@ -86,6 +87,7 @@ open class GitService(
             val git: Git? = repoPath.takeIf(File::exists).let {
                 try {
                     updateRepository(repoPath, deleteUnpushedCommits, refName)
+                    // TODO: test error
                 } catch (e: GitReferenceException) {
                     throw e
                 } catch (e: Exception) {
@@ -134,6 +136,7 @@ open class GitService(
             if (failOnUnpushedCommits) {
                 val trackingStatus = BranchTrackingStatus.of(git.repository, git.repository.fullBranch)
                 if (trackingStatus.aheadCount != 0 || trackingStatus.behindCount != 0) {
+                    // TODO: test error
                     throw IllegalStateException("We are ${trackingStatus.aheadCount} commit(s) ahead and ${trackingStatus.behindCount} behind ${trackingStatus.remoteTrackingBranch}")
                 }
             }
@@ -147,6 +150,8 @@ open class GitService(
 
         return ref ?: git.repository.findRef("origin/$refName")
         ?: throw GitReferenceException("No git reference with refName=$refName")
+
+        // TODO: test error
     }
 
     private fun cloneAndCheckout(
@@ -196,12 +201,14 @@ open class GitService(
                 .add("refs/heads/master")
                 .call()
         } catch (e: EmtpyCommitException) {
+            // TODO: test error
             // Ignore empty commits. It's ok.
         } catch (e: Exception) {
             throw e
         }
     }
 
+    // TODO: test
     fun getTagHistory(git: Git): List<RevTag> {
         val tags = git.tagList().call()
         return tags.mapNotNull {

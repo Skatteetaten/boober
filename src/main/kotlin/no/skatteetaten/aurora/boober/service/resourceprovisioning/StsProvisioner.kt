@@ -47,6 +47,7 @@ class StsProvisioner(
     @Value("\${openshift.cluster}") val cluster: String
 ) {
 
+    // TODO: test
     fun generateCertificate(cn: String, name: String, envName: String): StsProvisioningResult {
 
         val builder = UriComponentsBuilder.fromPath("/certificate")
@@ -79,7 +80,6 @@ class StsProvisioner(
 
     companion object {
 
-        @JvmStatic
         fun createStsCert(
             body: InputStream,
             keyPassword: String,

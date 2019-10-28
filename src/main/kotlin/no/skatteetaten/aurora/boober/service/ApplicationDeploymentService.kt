@@ -46,6 +46,7 @@ class ApplicationDeploymentService(
             val applicationDeploymentExists = openshiftResponse.responseBody != null
 
             if (!openshiftResponse.success) {
+                // TODO test this
                 logger.error(openshiftResponse.exception)
                 DeleteApplicationDeploymentResponse(
                     applicationRef = it.applicationRef,
@@ -80,6 +81,7 @@ class ApplicationDeploymentService(
             } ?: false
 
             if (forbidden) {
+                // TODO test this
                 GetApplicationDeploymentResponse(
                     applicationRef = it.applicationRef,
                     exists = false,
@@ -94,6 +96,7 @@ class ApplicationDeploymentService(
                     success = false,
                     message = openshiftResponse.exception
                         ?: "An error occured when checking if ApplicationDeployment exists"
+                    // TODO test this error
                 )
             } else {
 

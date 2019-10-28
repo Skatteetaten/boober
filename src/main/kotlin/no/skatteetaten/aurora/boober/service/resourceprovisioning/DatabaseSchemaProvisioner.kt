@@ -108,6 +108,7 @@ data class DbhSchema(
         get() = jdbcUrl.split("/").last()
 }
 
+// TODO: test
 @Service
 @ConditionalOnProperty("integrations.dbh.url")
 class DatabaseSchemaProvisioner(

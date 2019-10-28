@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.core.env.Environment
 
+// TODO: Move to the same place as other configuration?
 @Configuration
 class OpenShiftResourceClientConfig(
     val restTemplateWrapper: OpenShiftRestTemplateWrapper,

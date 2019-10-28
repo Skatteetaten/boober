@@ -5,7 +5,6 @@ import assertk.assertions.isEqualTo
 import no.skatteetaten.aurora.boober.service.BitbucketRestTemplateWrapper
 import no.skatteetaten.aurora.boober.service.BitbucketService
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
-import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.execute
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.jupiter.api.Test
@@ -18,7 +17,6 @@ class BitbucketServiceTest : ResourceLoader() {
     private val restTemplate = RestTemplateBuilder().rootUri(baseUrl.toString()).build()
 
     val service = BitbucketService(
-        mapper = jsonMapper(),
         restTemplateWrapper = BitbucketRestTemplateWrapper(restTemplate)
     )
 

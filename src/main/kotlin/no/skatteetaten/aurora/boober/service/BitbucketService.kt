@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
@@ -21,8 +20,7 @@ private val logger = KotlinLogging.logger {}
 
 @Service
 class BitbucketService(
-    val restTemplateWrapper: BitbucketRestTemplateWrapper,
-    val mapper: ObjectMapper
+    val restTemplateWrapper: BitbucketRestTemplateWrapper
 ) {
 
     fun uploadFile(project: String, repo: String, fileName: String, message: String, content: String): String? {

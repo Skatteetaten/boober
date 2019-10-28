@@ -21,6 +21,7 @@ data class RenewRequest(
     val ownerReference: OwnerReference
 )
 
+// TODO: test
 @Service
 class StsRenewService(
     val provsioner: Optional<StsProvisioner>,
