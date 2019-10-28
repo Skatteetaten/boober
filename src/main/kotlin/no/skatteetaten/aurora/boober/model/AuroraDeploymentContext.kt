@@ -2,13 +2,18 @@ package no.skatteetaten.aurora.boober.model
 
 import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.service.ContextErrors
+import no.skatteetaten.aurora.boober.service.ExceptionList
 
 fun AuroraDeploymentContext.validate(fullValidation: Boolean): Map<Feature, List<java.lang.Exception>> {
     return features.mapValues {
         try {
             it.key.validate(it.value, fullValidation, this.cmd)
         } catch (e: Exception) {
-            listOf(e)
+            if (e is ExceptionList) {
+                e.exceptions
+            } else {
+                listOf(e)
+            }
         }
     }
 }
@@ -19,7 +24,11 @@ fun AuroraDeploymentContext.createResources(): Pair<List<ContextErrors>, Set<Aur
         try {
             null to it.key.generate(it.value, this.cmd)
         } catch (e: Throwable) {
-            ContextErrors(this.cmd, listOf(e)) to null
+            if (e is ExceptionList) {
+                ContextErrors(this.cmd, e.exceptions) to null
+            } else {
+                ContextErrors(this.cmd, listOf(e)) to null
+            }
         }
     }
 
@@ -37,7 +46,11 @@ fun AuroraDeploymentContext.createResources(): Pair<List<ContextErrors>, Set<Aur
             it.key.modify(it.value, featureResources, this.cmd)
             null
         } catch (e: Throwable) {
-            ContextErrors(this.cmd, listOf(e))
+            if (e is ExceptionList) {
+                ContextErrors(this.cmd, e.exceptions)
+            } else {
+                ContextErrors(this.cmd, listOf(e))
+            }
         }
     }
 

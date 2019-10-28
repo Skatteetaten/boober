@@ -5,9 +5,9 @@ import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import java.net.URL
 import okio.Buffer
 import org.springframework.util.ResourceUtils
-import java.net.URL
 
 open class ResourceLoader {
 
@@ -31,7 +31,7 @@ open class ResourceLoader {
         return Buffer().readFrom(getResourceUrl(resourceName, folder).openStream())
     }
 
-    // This is done as text comparison and not jsonNode equals to get easier diff when they differ
+    // This is done as text comparison and not jsonNode equals to get easier diff when they dif
     fun compareJson(expected: JsonNode, actual: JsonNode, name: String? = null): Boolean {
         val writer = jsonMapper().writerWithDefaultPrettyPrinter()
         val targetString = writer.writeValueAsString(actual)

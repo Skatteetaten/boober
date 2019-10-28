@@ -17,6 +17,8 @@ class AuroraDeploymentSpecValidationException(message: String, cause: Throwable?
 
 class UnauthorizedAccessException(message: String) : ServiceException(message)
 
+class ExceptionList(val exceptions: List<Exception>) : RuntimeException()
+
 data class ContextErrors(val command: AuroraContextCommand, val errors: List<Throwable>)
 
 class MultiApplicationValidationException(

@@ -47,6 +47,8 @@ interface Feature {
         If any feature has thrown an error the process will stop
 
         use the generateResource method in this interface as a helper to add the correct source
+
+        If you have more then one error throw an ExceptionList
      */
     fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> = emptySet()
 
@@ -60,13 +62,15 @@ interface Feature {
         If any feature has thrown an error the process will stop
 
         use the modifyResource method in this interface as a helper to add a source to your modification
+
+        If you have more then one error throw an ExceptionList
      */
     fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) = Unit
 
     /*
     Perform validation of this feature.
 
-    If this method throws it will be handled as a single error
+    If this method throws it will be handled as a single error or multiple errors if ExceptionList
     */
     fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraContextCommand): List<Exception> =
             emptyList()
