@@ -117,6 +117,13 @@ class DatabaseSchemaProvisioner(
     val userDetailsProvider: UserDetailsProvider,
     @Value("\${integrations.dbh.url}") val dbhUrl: String
 ) {
+
+    /*
+      TODO: Error handling, right now provision schema is called in validation for id schemas and schemas with generate false
+      This method will fail on the first error and not collect errors. Should we collect up the errors in a correct way?
+
+      How do we pass state from one step of a feature to another? Because this is actually a use case for it.
+     */
     fun provisionSchemas(schemaProvisionRequests: List<SchemaProvisionRequest>): SchemaProvisionResults {
 
         if (schemaProvisionRequests.isEmpty()) throw IllegalArgumentException("SchemaProvisionRequest cannot be empty")

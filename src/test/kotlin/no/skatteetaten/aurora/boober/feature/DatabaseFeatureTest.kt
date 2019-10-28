@@ -114,6 +114,9 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
 
         every { provisioner.provisionSchemas(any()) } returns createDatabaseResult("simple", "utv")
 
+        //This is the validation query
+        every { provisioner.provisionSchema(any()) } returns createDatabaseResult("simple", "utv").results.first()
+
         val (adResource, dcResource, secretResource) = generateResources(
                 """{ 
                "database" : true,
@@ -149,6 +152,9 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
         } returns (schema to "Ok")
 
         every { provisioner.provisionSchemas(any()) } returns createDatabaseResult("simple", "utv")
+
+        //This is the validation query
+        every { provisioner.provisionSchema(any()) } returns createDatabaseResult("simple", "utv").results.first()
 
         val (adResource, dcResource, secretResource) = generateResources(
                 """{ 
