@@ -81,5 +81,4 @@ class ResourceMergerTest : AbstractAuroraConfigTest() {
             assertThat(merged.at(it)).isEqualTo(oldResource.at(it))
         }
     } */
-
 }

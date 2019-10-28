@@ -1,12 +1,11 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.github.fge.jsonpatch.JsonPatch
-import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.*
+import java.io.File
+import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.removeExtension
-import java.io.File
-import java.nio.charset.Charset
 
 data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val version: String) {
 
@@ -145,10 +144,12 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
         }
 
         return setOf(
-            AuroraConfigFileSpec("about", GLOBAL),
-            AuroraConfigFileSpec(baseFile, BASE),
-            AuroraConfigFileSpec("${applicationDeploymentRef.environment}/$envFile", ENV),
-            AuroraConfigFileSpec("${applicationDeploymentRef.environment}/${applicationDeploymentRef.application}", APP)
+            AuroraConfigFileSpec("about", AuroraConfigFileType.GLOBAL),
+            AuroraConfigFileSpec(baseFile, AuroraConfigFileType.BASE),
+            AuroraConfigFileSpec("${applicationDeploymentRef.environment}/$envFile", AuroraConfigFileType.ENV),
+            AuroraConfigFileSpec("${applicationDeploymentRef.environment}/${applicationDeploymentRef.application}",
+                AuroraConfigFileType.APP
+            )
         )
     }
 }

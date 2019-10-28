@@ -104,6 +104,4 @@ class JavaDeployFeatureTest : AbstractFeatureTest() {
             }""")
         }.singleApplicationError("envFile must start with about")
     }
-
-
 }

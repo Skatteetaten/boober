@@ -98,7 +98,6 @@ class BuildFeatureTest : AbstractFeatureTest() {
         }"""
         )
 
-        assertThat(spec).auroraRendersSpec()
+        assertThat(spec).auroraDeploymentSpecMatchesSpecFiles("spec")
     }
 }
-

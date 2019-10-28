@@ -109,7 +109,6 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
         }.singleApplicationError("Could not find schema with labels")
     }
 
-
     @Test
     fun `create database secret with instance defaults`() {
 
@@ -142,10 +141,8 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
         assertThat(adResource).auroraDatabaseIdsAdded(listOf(secretResource))
     }
 
-
     @Test
     fun `create database secret from id`() {
-
 
         every {
             provisioner.findSchemaById("123456", any())
@@ -176,7 +173,6 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
 
         assertThat(result).isEmpty()
     }
-
 
     @Test
     fun `ignore false databases`() {
@@ -261,7 +257,7 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
     }
 
     fun Assert<AuroraResource>.auroraDatabaseIdsAdded(
-            databases: List<AuroraResource>
+        databases: List<AuroraResource>
     ): Assert<AuroraResource> = transform { actual ->
 
         assertThat(actual).auroraResourceModifiedByThisFeatureWithComment("Added databaseId")
@@ -276,7 +272,7 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
     }
 
     fun Assert<AuroraResource>.auroraDatabaseMounted(
-            databases: List<AuroraResource>
+        databases: List<AuroraResource>
     ): Assert<AuroraResource> = transform { actual ->
 
         assertThat(actual.resource).isInstanceOf(DeploymentConfig::class.java)
@@ -303,7 +299,6 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
             }
             createDbEnv(name)
         }.addIfNotNull(firstEnv).toMap()
-
 
         databases.forEachIndexed { index, it ->
 

@@ -1,10 +1,20 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fkorotkov.kubernetes.*
+import com.fkorotkov.kubernetes.metadata
+import com.fkorotkov.kubernetes.newSecret
+import com.fkorotkov.kubernetes.newVolume
+import com.fkorotkov.kubernetes.newVolumeMount
+import com.fkorotkov.kubernetes.secret
 import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.kubernetes.api.model.Secret
-import no.skatteetaten.aurora.boober.model.*
+import java.io.ByteArrayOutputStream
+import java.util.Properties
+import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.Paths.secretsPath
+import no.skatteetaten.aurora.boober.model.addVolumesAndMounts
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
@@ -12,8 +22,6 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.apache.commons.codec.binary.Base64
 import org.springframework.stereotype.Service
-import java.io.ByteArrayOutputStream
-import java.util.*
 
 val AuroraDeploymentSpec.certificateCommonName: String?
     get() {
@@ -45,9 +53,9 @@ class StsFeature(val sts: StsProvisioner) : Feature {
     }
 
     override fun validate(
-            adc: AuroraDeploymentSpec,
-            fullValidation: Boolean,
-            cmd: AuroraContextCommand
+        adc: AuroraDeploymentSpec,
+        fullValidation: Boolean,
+        cmd: AuroraContextCommand
     ): List<Exception> {
 
         val template = adc.type == TemplateType.localTemplate || adc.type == TemplateType.template
@@ -100,9 +108,9 @@ object StsSecretGenerator {
     const val COMMON_NAME_ANNOTATION = "gillis.skatteetaten.no/commonName"
 
     fun create(
-            appName: String,
-            stsProvisionResults: StsProvisioningResult,
-            secretNamespace: String
+        appName: String,
+        stsProvisionResults: StsProvisioningResult,
+        secretNamespace: String
     ): Secret {
 
         val secretName = "$appName-cert"
@@ -134,11 +142,11 @@ object StsSecretGenerator {
     }
 
     fun create(
-            appName: String,
-            stsProvisionResults: StsProvisioningResult,
-            labels: Map<String, String>,
-            ownerReference: OwnerReference,
-            namespace: String
+        appName: String,
+        stsProvisionResults: StsProvisioningResult,
+        labels: Map<String, String>,
+        ownerReference: OwnerReference,
+        namespace: String
     ): Secret {
 
         val secret = create(appName, stsProvisionResults, namespace)
@@ -148,10 +156,10 @@ object StsSecretGenerator {
     }
 
     fun createDescriptorFile(
-            jksPath: String,
-            alias: String,
-            storePassword: String,
-            keyPassword: String
+        jksPath: String,
+        alias: String,
+        storePassword: String,
+        keyPassword: String
     ): ByteArray {
         return Properties().run {
             put("keystore-file", jksPath)

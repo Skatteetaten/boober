@@ -38,6 +38,7 @@ import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.clearAllMocks
 import io.mockk.mockk
+import java.time.Instant
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.feature.headerHandlers
@@ -59,7 +60,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
 import no.skatteetaten.aurora.boober.service.renderSpecAsJson
 import org.junit.jupiter.api.BeforeEach
-import java.time.Instant
 
 /*
   Abstract class to test a single feature
@@ -441,15 +441,10 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
         ar
     }
 
-    //TODO: test with this method in all feature tests
-    fun Assert<AuroraDeploymentSpec>.auroraRendersSpec(s: String = ""): Assert<AuroraDeploymentSpec> =
+    // TODO: test with this method in all feature tests
+    fun Assert<AuroraDeploymentSpec>.auroraDeploymentSpecMatchesSpecFiles(prefix: String): Assert<AuroraDeploymentSpec> =
         transform { spec ->
 
-            val prefix = if (s.isEmpty()) {
-                "spec"
-            } else {
-                s.ensureStartWith("spec", "-")
-            }
             val jsonName = "$prefix.json"
             val txtDefaultName = "$prefix-default.txt"
             val jsonDefaultName = "$prefix-default.json"

@@ -16,7 +16,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 
 class DeployServiceProjectTerminatingTest {
 
-
     val openShiftClient: OpenShiftClient = mockk()
     val userDetailsProvider: UserDetailsProvider = mockk()
 
@@ -56,5 +55,4 @@ class DeployServiceProjectTerminatingTest {
             isInstanceOf(IllegalStateException::class)
         }
     }
-
 }
