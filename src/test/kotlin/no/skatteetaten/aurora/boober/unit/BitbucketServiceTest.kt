@@ -4,13 +4,12 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import no.skatteetaten.aurora.boober.service.BitbucketRestTemplateWrapper
 import no.skatteetaten.aurora.boober.service.BitbucketService
-import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.execute
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.jupiter.api.Test
 import org.springframework.boot.web.client.RestTemplateBuilder
 
-class BitbucketServiceTest : ResourceLoader() {
+class BitbucketServiceTest {
 
     private val server = MockWebServer()
     private val baseUrl = server.url("/")
@@ -31,17 +30,6 @@ class BitbucketServiceTest : ResourceLoader() {
             assertThat(response).isEqualTo("true")
         }
 
-        /*
-        TODO: Her føler jeg at vi mister noe i testen.
-        def url = "https://git.aurora.skead.no/rest/api/1.0/projects/ao/repos/auroradeploymenttags/browse/filename.json"
-        mockServer.expect(requestTo(url))
-            .andExpect(method(HttpMethod.PUT))
-            .andExpect(header(HttpHeaders.CONTENT_TYPE, startsWith("multipart/form-data;charset=UTF-8;boundary=")))
-            .andExpect(content().string(StringContains.containsString("name="message"")))
-            .andExpect(content().string(StringContains.containsString("name="content"")))
-
-            .andRespond(withSuccess("""true""", TEXT_PLAIN))
-            */
     }
 
     @Test

@@ -130,11 +130,13 @@ class AuroraConfigTest : AbstractAuroraConfigTest() {
     fun `Patch file`() {
 
         val filename = "${aid.environment}/${aid.application}.json"
-        val auroraConfig = createAuroraConfig(
-            modify(defaultAuroraConfig(), filename) {
-                it["version"] = "1.0.0"
-            }
+
+        val auroraConfigJson = mutableMapOf(
+            "about.json" to DEFAULT_ABOUT,
+            "utv/about.json" to DEFAULT_UTV_ABOUT,
+            filename to """{ "version" : "1.0.0" }}"""
         )
+        val auroraConfig = createAuroraConfig(auroraConfigJson)
 
         val jsonOp = """[{
   "op": "replace",

@@ -66,13 +66,6 @@ class ApplicationDeploymentServiceTest {
         }
         assertThat(requests.size).isEqualTo(2)
     }
-    // TODO: introduce test for token when springcleaning is in master
-    /*fun Assert<RecordedRequest>.containsBearerToken() = given { request ->
-        request.headers[HttpHeaders.AUTHORIZATION]?.let {
-            if (it.startsWith("Bearer")) return
-        }
-        expected("Authorization header to contain Bearer token")
-    }*/
 
     @Test
     fun `get ApplicationDeployments given two ApplicationRefs return true for all`() {

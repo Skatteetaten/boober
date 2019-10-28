@@ -7,10 +7,9 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
-import java.io.ByteArrayInputStream
-import java.time.Instant
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.feature.ApplicationDeploymentFeature
 import no.skatteetaten.aurora.boober.feature.BuildFeature
@@ -37,21 +36,44 @@ import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.createResources
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultResults
-import no.skatteetaten.aurora.boober.utils.AbstractOpenShiftObjectGeneratorTest
+import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import java.io.ByteArrayInputStream
+import java.time.Instant
 
-// TODO: Bør vi lage en "feit" test her som tester kombinasjonen av mange forskjellige features og kun det?
-class OpenShiftObjectResourceGeneratorTest : AbstractOpenShiftObjectGeneratorTest() {
+// TODO: create one or two "fat" tests here and remove the rest
+class OpenShiftObjectResourceGeneratorTest : AbstractAuroraConfigTest() {
+
+    val userDetailsProvider = mockk<UserDetailsProvider>()
+
+    @BeforeEach
+    fun setup() {
+        clearAllMocks()
+    }
+
+    fun getKey(it: JsonNode): String {
+        val kind = it.get("kind").asText().toLowerCase()
+        val metadata = it.get("metadata")
+
+        val name = if (metadata == null) {
+            it.get("name").asText().toLowerCase()
+        } else {
+            metadata.get("name").asText().toLowerCase()
+        }
+
+        return "$kind/$name"
+    }
 
     lateinit var service: AuroraDeploymentContextService
 
