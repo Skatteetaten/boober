@@ -6,6 +6,7 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import com.fasterxml.jackson.databind.JsonNode
+import java.net.URI
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftRestTemplateWrapper
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import no.skatteetaten.aurora.boober.utils.RetryLogger
@@ -18,7 +19,6 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.RequestEntity
 import org.springframework.http.ResponseEntity
 import org.springframework.web.client.HttpClientErrorException
-import java.net.URI
 
 class OpenShiftRestTemplateWrapperTest : ResourceLoader() {
     private val server = MockWebServer()

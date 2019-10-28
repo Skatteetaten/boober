@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
+import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 import mu.KotlinLogging
 import no.skatteetaten.aurora.AuroraMetrics
 import org.eclipse.jgit.api.CreateBranchCommand
@@ -15,8 +17,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
-import java.io.File
-import java.util.concurrent.ConcurrentHashMap
 
 private val logger = KotlinLogging.logger {}
 

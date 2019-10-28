@@ -144,7 +144,8 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
             AuroraConfigFileSpec("about", AuroraConfigFileType.GLOBAL),
             AuroraConfigFileSpec(baseFile, AuroraConfigFileType.BASE),
             AuroraConfigFileSpec("${applicationDeploymentRef.environment}/$envFile", AuroraConfigFileType.ENV),
-            AuroraConfigFileSpec("${applicationDeploymentRef.environment}/${applicationDeploymentRef.application}",
+            AuroraConfigFileSpec(
+                "${applicationDeploymentRef.environment}/${applicationDeploymentRef.application}",
                 AuroraConfigFileType.APP
             )
         )
