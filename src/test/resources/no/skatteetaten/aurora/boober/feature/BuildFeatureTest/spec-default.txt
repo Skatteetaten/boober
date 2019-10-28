@@ -1,0 +1,13 @@
+{
+  artifactId: "simple"    // fileName
+  groupId:    "org.test"  // utv/simple.json
+  version:    "1"         // utv/simple.json
+  builder: {
+    name:     "architect" // default
+    version:  "1"         // default
+  }
+  baseImage: {
+    name:     "wingnut8"  // default
+    version:  1           // default
+  }
+}
