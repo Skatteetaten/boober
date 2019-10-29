@@ -12,7 +12,6 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
-import java.io.File
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.AuroraConfigException
@@ -27,6 +26,7 @@ import no.skatteetaten.aurora.boober.utils.recreateFolder
 import no.skatteetaten.aurora.boober.utils.recreateRepo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.io.File
 
 class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
 
@@ -97,7 +97,7 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
         val auroraConfig = createAuroraConfig(defaultAuroraConfig())
         auroraConfigService.save(auroraConfig)
 
-        val fileToChange = "utv/aos-simple.json"
+        val fileToChange = "utv/simple.json"
         val theFileToChange = auroraConfig.files.find { it.name == fileToChange }
 
         assertThat {
@@ -124,7 +124,7 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
         val auroraConfig = createAuroraConfig(defaultAuroraConfig())
         auroraConfigService.save(auroraConfig)
 
-        val fileToChange = "utv/aos-simple.json"
+        val fileToChange = "utv/simple.json"
         val theFileToChange = auroraConfig.files.find { it.name == fileToChange }
 
         auroraConfigService.updateAuroraConfigFile(
@@ -156,8 +156,8 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
         assertThat(auroraConfig.files.map { it.name }).containsAll(
             "about.json",
             "utv/about.json",
-            "utv/aos-simple.json",
-            "aos-simple.json"
+            "utv/simple.json",
+            "simple.json"
         )
     }
 
@@ -170,8 +170,8 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
         val fooYaml = """certificate: true
         groupId: ske.aurora.openshift
         #this is a comment
-        artifactId: aos-simple
-        name: aos-simple
+        artifactId: simple
+        name: simple
         version: 1.0.3
         route: true
         type: deploy

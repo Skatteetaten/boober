@@ -36,7 +36,7 @@ class ApplicationDeploymentServiceTest {
 
     private val applicationDeploymentDeleteService = ApplicationDeploymentService(openShiftClient)
 
-    private val applicationRef = ApplicationRef("release", "aos-simple")
+    private val applicationRef = ApplicationRef("utv", "simple")
     private val applicationRefs = listOf(applicationRef, applicationRef)
 
     @Test

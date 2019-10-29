@@ -18,6 +18,7 @@ import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 
+// TODO: Read the success responses from the generator test?
 class OpenShiftCommandServiceTest : ResourceLoader() {
 
     private val namespace = "fragleberget"

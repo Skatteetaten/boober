@@ -1,11 +1,11 @@
 package no.skatteetaten.aurora.boober.utils
 
 import com.fasterxml.jackson.databind.JsonNode
-import java.io.File
-import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import java.io.File
+import java.nio.charset.Charset
 
 // TODO: Kan vi lese denne auroraConfigen fra noen filer? Vi har jo noen filer vi bruker i andre tester
 abstract class AbstractAuroraConfigTest : ResourceLoader() {
@@ -25,22 +25,23 @@ abstract class AbstractAuroraConfigTest : ResourceLoader() {
     "cluster": "utv"
 }"""
 
+    // TODO read this from files
     fun defaultAuroraConfig(): MutableMap<String, String> = mutableMapOf(
         "about.json" to DEFAULT_ABOUT,
         "utv/about.json" to DEFAULT_UTV_ABOUT,
-        "aos-simple.json" to """{
+        "simple.json" to """{
     "certificate": true,
     "groupId": "ske.aurora.openshift",
-    "artifactId": "aos-simple",
-    "name": "aos-simple",
+    "artifactId": "simple",
+    "name": "simple",
     "version": "1.0.3",
     "route": true,
     "type": "deploy"
     }""",
-        "utv/aos-simple.json" to """{ }"""
+        "utv/simple.json" to """{ }"""
     )
 
-    val DEFAULT_AID = ApplicationDeploymentRef("utv", "aos-simple")
+    val DEFAULT_AID = ApplicationDeploymentRef("utv", "simple")
 
     fun createAuroraConfig(
         aid: ApplicationDeploymentRef,

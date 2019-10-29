@@ -1,7 +1,0 @@
-{
-  "type": "deploy",
-  "database": true,
-  "management": {
-    "port": 8082
-  }
-}

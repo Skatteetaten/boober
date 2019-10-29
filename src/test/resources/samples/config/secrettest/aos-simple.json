@@ -1,7 +1,0 @@
-{
-  "certificate": {
-    "commonName": "tullball"
-  },
-  "version": "1.0.3-SNAPSHOT",
-  "secretVault": "foo"
-}

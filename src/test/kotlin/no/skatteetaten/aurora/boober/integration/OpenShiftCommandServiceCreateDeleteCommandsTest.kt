@@ -8,7 +8,6 @@ import com.fkorotkov.kubernetes.newConfigMapList
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
-import java.time.Instant
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.service.OpenShiftCommandService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -22,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
+import java.time.Instant
 
 class OpenShiftCommandServiceCreateDeleteCommandsTest : AbstractAuroraConfigTest() {
 
@@ -47,8 +47,8 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest : AbstractAuroraConfigTest
     @Test
     fun `Should create delete command for all resources with given deployId`() {
 
-        val name = "aos-simple"
-        val namespace = "secretmount"
+        val name = "complex"
+        val namespace = "utv"
         val deployId = "abc123"
         val adr = ApplicationDeploymentRef(namespace, name)
         val configMapList = newConfigMapList { }
