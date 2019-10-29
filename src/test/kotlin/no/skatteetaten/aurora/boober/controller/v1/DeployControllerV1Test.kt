@@ -1,17 +1,17 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
+import com.ninjasquad.springmockk.MockkBean
 import no.skatteetaten.aurora.boober.facade.DeployFacade
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.web.servlet.MockMvc
 
 @AutoConfigureRestDocs
 @WebMvcTest(controllers = [DeployControllerV1::class], secure = false)
 class DeployControllerV1Test(@Autowired private val mockMvc: MockMvc) {
 
-    @MockBean
+    @MockkBean
     private lateinit var deployFacade: DeployFacade
 
     /*
