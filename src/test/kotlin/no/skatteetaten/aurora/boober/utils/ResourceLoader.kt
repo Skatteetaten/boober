@@ -5,9 +5,9 @@ import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import java.net.URL
 import okio.Buffer
 import org.springframework.util.ResourceUtils
+import java.net.URL
 
 open class ResourceLoader {
 
@@ -19,6 +19,9 @@ open class ResourceLoader {
         val path = "src/test/resources/$pck/$folder/$resourceName"
         return ResourceUtils.getURL(path)
     }
+
+    inline fun <reified T> load(resourceName: String, folder: String = this.javaClass.simpleName): T =
+            jacksonObjectMapper().readValue(loadResource(resourceName, folder))
 
     fun loadJsonResource(resourceName: String, folder: String = this.javaClass.simpleName): JsonNode =
         jacksonObjectMapper().readValue(loadResource(resourceName, folder))
