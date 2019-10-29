@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
+/*
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.mockmvc.extensions.Path
 import no.skatteetaten.aurora.mockmvc.extensions.get
@@ -14,7 +15,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.web.servlet.MockMvc
 
-/*
 @AutoConfigureRestDocs
 @WebMvcTest(controllers = [AuroraConfigNamesControllerV1::class], secure = false)
 class AuroraConfigNamesControllerV1Test(@Autowired private val mockMvc: MockMvc) {
