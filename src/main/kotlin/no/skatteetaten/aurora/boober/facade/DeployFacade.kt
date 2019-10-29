@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.facade
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import java.util.UUID
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.cluster
 import no.skatteetaten.aurora.boober.feature.dockerImagePath
@@ -42,6 +41,7 @@ import no.skatteetaten.aurora.boober.utils.parallelMap
 import no.skatteetaten.aurora.boober.utils.whenFalse
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
@@ -191,7 +191,7 @@ class DeployFacade(
         }
     }
 
-    fun prepareDeployEnvironment(namespace: String, resources: Set<AuroraResource>): AuroraEnvironmentResult {
+    private fun prepareDeployEnvironment(namespace: String, resources: Set<AuroraResource>): AuroraEnvironmentResult {
 
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
 
@@ -233,7 +233,7 @@ class DeployFacade(
         )
     }
 
-    fun deployFromSpec(
+    private fun deployFromSpec(
         cmd: AuroraDeployCommand,
         env: AuroraEnvironmentResult
     ): AuroraDeployResult {

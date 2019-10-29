@@ -1,8 +1,6 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
 import com.fasterxml.jackson.annotation.JsonRawValue
-import javax.servlet.http.HttpServletRequest
-import javax.validation.Valid
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.controller.NoSuchResourceException
 import no.skatteetaten.aurora.boober.controller.internal.Response
@@ -26,6 +24,8 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import javax.servlet.http.HttpServletRequest
+import javax.validation.Valid
 
 private val logger = KotlinLogging.logger {}
 
@@ -36,8 +36,21 @@ class AuroraConfigControllerV1(
     private val auroraConfigFacade: AuroraConfigFacade
 ) {
 
-    // TODO: refactor this method after it is tested into a single call into facade and remove direct return of AuoraConfig
-    // TODO: rewrite this so that it is one call the the fasade that retuns a
+    @GetMapping("/{environment}/{application}")
+    fun getAdr(
+        @PathVariable name: String,
+        @PathVariable environment: String,
+        @PathVariable application: String
+    ): Response {
+        val ref = AuroraConfigRef(name, getRefNameFromRequest())
+        val adr = ApplicationDeploymentRef(environment, application)
+        val files = auroraConfigFacade.findAuroraConfigFilesForApplicationDeployment(ref, adr)
+
+        return Response(items = files.map {
+            AuroraConfigFileResource(it.name, it.contents, it.type)
+        })
+    }
+
     @GetMapping
     fun get(
         @PathVariable name: String,
@@ -46,6 +59,7 @@ class AuroraConfigControllerV1(
     ): Response {
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
 
+        // This if should be GONE once mokey is changed.
         if (application != null && environment != null) {
             val adr = ApplicationDeploymentRef(environment, application)
             val files = auroraConfigFacade.findAuroraConfigFilesForApplicationDeployment(ref, adr)
@@ -57,7 +71,9 @@ class AuroraConfigControllerV1(
         if (application != null || environment != null) {
             throw IllegalArgumentException("Either both application and environment must be set or none of them")
         }
-        return Response(items = listOf(auroraConfigFacade.findAuroraConfig(ref)).map { fromAuroraConfig(it) })
+
+        // TODO: remove all the above and the request param when mokey is changed
+        return Response(items = listOf(fromAuroraConfig(name, auroraConfigFacade.findAuroraConfigFiles(ref))))
     }
 
     @GetMapping("/filenames")
@@ -82,7 +98,7 @@ class AuroraConfigControllerV1(
             resourceValidation = resourceValidation,
             auroraConfigRef = ref
         )
-        return Response(items = listOf(auroraConfig).map { fromAuroraConfig(it) })
+        return Response(items = listOf(auroraConfig).map { fromAuroraConfig(it.name, it.files) })
     }
 
     @GetMapping("/**")
@@ -150,10 +166,8 @@ data class AuroraConfigResource(
     }
 
     companion object {
-        fun fromAuroraConfig(auroraConfig: AuroraConfig): AuroraConfigResource {
-            return AuroraConfigResource(
-                auroraConfig.name,
-                auroraConfig.files.map { AuroraConfigFileResource(it.name, it.contents, it.type) })
+        fun fromAuroraConfig(name: String, files: List<AuroraConfigFile>): AuroraConfigResource {
+            return AuroraConfigResource(name, files.map { AuroraConfigFileResource(it.name, it.contents, it.type) })
         }
     }
 }
