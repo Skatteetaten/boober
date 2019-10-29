@@ -1,0 +1,45 @@
+{
+  "apiVersion": "v1",
+  "kind": "Service",
+  "metadata": {
+    "annotations": {
+      "prometheus.io/scheme": "http",
+      "prometheus.io/scrape": "true",
+      "prometheus.io/path": "/prometheus",
+      "prometheus.io/port": "8081"
+    },
+    "labels": {
+      "app": "web",
+      "updatedBy": "hero",
+      "affiliation": "paas",
+      "updateInBoober": "true",
+      "name": "web"
+    },
+    "name": "web",
+    "namespace": "paas-utv",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "web",
+        "uid": "123-123"
+      }
+    ]
+  },
+  "spec": {
+    "ports": [
+      {
+        "name": "http",
+        "nodePort": 0,
+        "port": 80,
+        "protocol": "TCP",
+        "targetPort": 8090
+      }
+    ],
+    "selector": {
+      "name": "web"
+    },
+    "sessionAffinity": "None",
+    "type": "ClusterIP"
+  }
+}

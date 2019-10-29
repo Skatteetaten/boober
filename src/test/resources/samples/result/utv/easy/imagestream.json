@@ -1,0 +1,39 @@
+{
+  "apiVersion": "image.openshift.io/v1",
+  "kind": "ImageStream",
+  "metadata": {
+    "labels": {
+      "releasedVersion": "1",
+      "app": "easy",
+      "updatedBy": "hero",
+      "affiliation": "paas",
+      "updateInBoober": "true",
+      "name": "easy"
+    },
+    "name": "easy",
+    "namespace": "paas-utv",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "easy",
+        "uid": "123-123"
+      }
+    ]
+  },
+  "spec": {
+    "dockerImageRepository": "docker.registry:5000/org_test/simple",
+    "tags": [
+      {
+        "from": {
+          "kind": "DockerImage",
+          "name": "docker.registry:5000/org_test/simple:1"
+        },
+        "importPolicy": {
+          "scheduled": true
+        },
+        "name": "default"
+      }
+    ]
+  }
+}

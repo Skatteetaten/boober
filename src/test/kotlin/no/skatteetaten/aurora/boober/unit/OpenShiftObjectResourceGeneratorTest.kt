@@ -10,8 +10,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
-import java.io.ByteArrayInputStream
-import java.time.Instant
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.feature.ApplicationDeploymentFeature
 import no.skatteetaten.aurora.boober.feature.BuildFeature
@@ -51,6 +49,8 @@ import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import java.io.ByteArrayInputStream
+import java.time.Instant
 
 // TODO: create one or two "fat" tests here and remove the rest
 class OpenShiftObjectResourceGeneratorTest : AbstractAuroraConfigTest() {
@@ -84,11 +84,11 @@ class OpenShiftObjectResourceGeneratorTest : AbstractAuroraConfigTest() {
     val databaseSchemaProvisioner: DatabaseSchemaProvisioner = mockk()
     val features: List<Feature> = listOf(
         ToxiproxySidecarFeature(),
-        JavaDeployFeature("docker-registry.aurora.sits.no:5000"),
-        WebDeployFeature("docker-registry.aurora.sits.no:5000"),
+        JavaDeployFeature("docker.registry:5000"),
+        WebDeployFeature("docker.registry:5000"),
         CommonLabelFeature(userDetailsProvider),
         DeploymentConfigFeature(),
-        RouteFeature(".utv.paas.skead.no"),
+        RouteFeature(".test.paas"),
         LocalTemplateFeature(),
         TemplateFeature(openShiftClient),
         BuildFeature(),
@@ -127,24 +127,19 @@ class OpenShiftObjectResourceGeneratorTest : AbstractAuroraConfigTest() {
         val additionalFile: String? = null,
         val overrides: List<AuroraConfigFile> = emptyList()
     ) {
-        BOOBERDEV_CONSOLE("booberdev", "console", "openshift-console-api"),
-        MOUNTS_SIMPLE("mounts", "aos-simple"),
-        BOOBERDEV_TVINN("booberdev", "tvinn", additionalFile = "templates/atomhopper.json"),
-        BOOBERDEV_SIMPLE(
-            "booberdev", "aos-simple", overrides = listOf(
+        SIMPLE_UTV("utv", "simple"),
+        EASY_UTV("utv", "easy", additionalFile = "simple.json"),
+        COMPLEX_UTV(
+            "utv", "complex", dbName = "foo,complex", overrides = listOf(
                 AuroraConfigFile(
-                    name = "booberdev/aos-simple.json",
+                    name = "utv/complex.json",
                     contents = """{ "version": "1.0.4"}""",
                     override = true
                 )
-            )
+            ), additionalFile = "utv/about-alternate.json"
         ),
-        BOOBERDEV_REFERANSE("booberdev", "reference"),
-        WEBSEAL_SPROCKET("webseal", "sprocket", "sprocket,reference"),
-        BOOBERDEV_REFERANSE_WEB("booberdev", "reference-web"),
-        SECRETTEST_SIMPLE("secrettest", "aos-simple"),
-        RELEASE_SIMPLE("release", "aos-simple"),
-        SECRETMOUNT_SIMPLE("secretmount", "aos-simple"),
+        AH_UTV("utv", "ah", additionalFile = "templates/atomhopper.json"),
+        WEB("utv", "web")
     }
 
     @ParameterizedTest
@@ -161,6 +156,7 @@ class OpenShiftObjectResourceGeneratorTest : AbstractAuroraConfigTest() {
             overrides = test.overrides,
             auroraConfigRef = AuroraConfigRef("test", "master", "123abb")
         )
+        //burde denne validere slik feature testene gjør?
         val ctx = service.createAuroraDeploymentContext(deployCommand)
         val resourceResult = ctx.createResources()
 

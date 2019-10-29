@@ -1,0 +1,34 @@
+{
+  "apiVersion": "route.openshift.io/v1",
+  "kind": "Route",
+  "metadata": {
+    "labels": {
+      "app": "komplex",
+      "updatedBy": "hero",
+      "affiliation": "paas",
+      "updateInBoober": "true",
+      "name": "komplex"
+    },
+    "name": "komplex",
+    "namespace": "paas-utv",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "komplex",
+        "uid": "123-123"
+      }
+    ]
+  },
+  "spec": {
+    "host": "komplex-paas-utv.test.paas",
+    "tls": {
+      "insecureEdgeTerminationPolicy": "Allow",
+      "termination": "edge"
+    },
+    "to": {
+      "kind": "Service",
+      "name": "komplex"
+    }
+  }
+}

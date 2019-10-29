@@ -1,0 +1,48 @@
+{
+  "apiVersion": "skatteetaten.no/v1",
+  "kind": "ApplicationDeployment",
+  "metadata": {
+    "labels": {
+      "id": "74a691b9358d168e305df7a1ae175a5eefda6754",
+      "removeAfter": "86400",
+      "app": "komplex",
+      "updatedBy": "hero",
+      "affiliation": "paas",
+      "updateInBoober": "true",
+      "name": "komplex"
+    },
+    "name": "komplex",
+    "namespace": "paas-utv"
+  },
+  "spec": {
+    "applicationId": "feddc97db98af8c60b495fb62231c98c65d7225b",
+    "selector": {
+      "name": "komplex"
+    },
+    "applicationDeploymentId": "74a691b9358d168e305df7a1ae175a5eefda6754",
+    "applicationName": "complex",
+    "applicationDeploymentName": "komplex",
+    "databases": [
+      "123",
+      "123"
+    ],
+    "splunkIndex": "test-index",
+    "managementPath": ":8081/foobar",
+    "deployTag": "1.0.4",
+    "command": {
+      "overrideFiles": {
+        "utv/complex.json": "{ \"version\": \"1.0.4\"}"
+      },
+      "applicationDeploymentRef": {
+        "environment": "utv",
+        "application": "complex"
+      },
+      "auroraConfig": {
+        "name": "test",
+        "refName": "master",
+        "resolvedRef": "123abb"
+      }
+    },
+    "message": "Aurora <3"
+  }
+}

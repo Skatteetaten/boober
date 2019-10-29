@@ -3,7 +3,7 @@
   "kind": "RoleBinding",
   "metadata": {
     "name": "view",
-    "namespace": "aos-booberdev"
+    "namespace": "paas-booberdev"
   },
   "groupNames": [
     "APP_PaaS_drift",

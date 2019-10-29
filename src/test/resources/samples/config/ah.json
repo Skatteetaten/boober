@@ -1,0 +1,13 @@
+{
+  "type": "localTemplate",
+  "templateFile": "templates/atomhopper.json",
+  "database": true,
+  "parameters": {
+    "FEED_NAME": "feed",
+    "DOMAIN_NAME": "localhost",
+    "DB_NAME": "feed"
+  },
+  "config": {
+    "FOO": "bar"
+  }
+}

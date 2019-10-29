@@ -12,12 +12,12 @@
     "labels": {
       "app": "openshift-console-api",
       "updatedBy": "hero",
-      "affiliation": "aos",
+      "affiliation": "paas",
       "updateInBoober": "true",
       "name": "openshift-console-api"
     },
     "name": "openshift-console-api",
-    "namespace": "aos-booberdev",
+    "namespace": "paas-booberdev",
     "ownerReferences": [
       {
         "apiVersion": "skatteetaten.no/v1",

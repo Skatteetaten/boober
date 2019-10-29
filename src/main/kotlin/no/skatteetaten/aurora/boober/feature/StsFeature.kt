@@ -7,8 +7,6 @@ import com.fkorotkov.kubernetes.newVolumeMount
 import com.fkorotkov.kubernetes.secret
 import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.kubernetes.api.model.Secret
-import java.io.ByteArrayOutputStream
-import java.util.Properties
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -22,6 +20,8 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.apache.commons.codec.binary.Base64
 import org.springframework.stereotype.Service
+import java.io.ByteArrayOutputStream
+import java.util.Properties
 
 val AuroraDeploymentSpec.certificateCommonName: String?
     get() {
@@ -76,7 +76,7 @@ class StsFeature(val sts: StsProvisioner) : Feature {
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
-        if (adc["certificate"]) {
+        adc.certificateCommonName?.let {
             val baseUrl = "$secretsPath/${adc.name}-cert"
             val stsVars = mapOf(
                     "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",

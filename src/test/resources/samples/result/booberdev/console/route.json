@@ -5,12 +5,12 @@
     "labels": {
       "app": "openshift-console-api",
       "updatedBy": "hero",
-      "affiliation": "aos",
+      "affiliation": "paas",
       "updateInBoober": "true",
       "name": "openshift-console-api"
     },
     "name": "openshift-console-api",
-    "namespace": "aos-booberdev",
+    "namespace": "paas-booberdev",
     "ownerReferences": [
       {
         "apiVersion": "skatteetaten.no/v1",
@@ -21,7 +21,7 @@
     ]
   },
   "spec": {
-    "host": "openshift-console-api-aos-booberdev.utv.paas.skead.no",
+    "host": "openshift-console-api-paas-booberdev.test.paas",
     "to": {
       "kind": "Service",
       "name": "openshift-console-api"

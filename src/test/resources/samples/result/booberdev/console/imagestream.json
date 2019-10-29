@@ -6,12 +6,12 @@
       "releasedVersion": "3",
       "app": "openshift-console-api",
       "updatedBy": "hero",
-      "affiliation": "aos",
+      "affiliation": "paas",
       "updateInBoober": "true",
       "name": "openshift-console-api"
     },
     "name": "openshift-console-api",
-    "namespace": "aos-booberdev",
+    "namespace": "paas-booberdev",
     "ownerReferences": [
       {
         "apiVersion": "skatteetaten.no/v1",
@@ -22,12 +22,12 @@
     ]
   },
   "spec": {
-    "dockerImageRepository": "docker-registry.aurora.sits.no:5000/ske_openshift_aurora/openshift-console-api",
+    "dockerImageRepository": "docker.registry:5000/ske_openshift_aurora/openshift-console-api",
     "tags": [
       {
         "from": {
           "kind": "DockerImage",
-          "name": "docker-registry.aurora.sits.no:5000/ske_openshift_aurora/openshift-console-api:3"
+          "name": "docker.registry:5000/ske_openshift_aurora/openshift-console-api:3"
         },
         "importPolicy": {
           "scheduled": true

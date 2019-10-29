@@ -216,6 +216,8 @@ class MountFeature(
         return mountNames.map { mount ->
             val type: MountType = auroraDeploymentSpec["mounts/$mount/type"]
 
+            // TODO: bug duplicate configmap name is possible in combination with config nested config
+            // TODO: bug here if content is not map
             val content: Map<String, String>? = if (type == MountType.ConfigMap) {
                 auroraDeploymentSpec.getOrNull("mounts/$mount/content")
             } else {

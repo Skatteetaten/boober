@@ -2,6 +2,6 @@
   "apiVersion": "project.openshift.io/v1",
   "kind": "ProjectRequest",
   "metadata": {
-    "name": "aos-booberdev"
+    "name": "paas-booberdev"
   }
 }

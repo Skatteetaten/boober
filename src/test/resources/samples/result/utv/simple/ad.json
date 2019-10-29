@@ -1,0 +1,40 @@
+{
+  "apiVersion": "skatteetaten.no/v1",
+  "kind": "ApplicationDeployment",
+  "metadata": {
+    "labels": {
+      "id": "1d5da0b933ade4bfd6773579b9fb5cc2afb57378",
+      "app": "simple",
+      "updatedBy": "hero",
+      "affiliation": "paas",
+      "updateInBoober": "true",
+      "name": "simple"
+    },
+    "name": "simple",
+    "namespace": "paas-utv"
+  },
+  "spec": {
+    "applicationId": "665c8f8518c18e8fc6b28a458496ce19bf9e7645",
+    "selector": {
+      "name": "simple"
+    },
+    "applicationDeploymentId": "1d5da0b933ade4bfd6773579b9fb5cc2afb57378",
+    "applicationName": "simple",
+    "applicationDeploymentName": "simple",
+    "databases": [],
+    "managementPath": ":8081/actuator",
+    "deployTag": "1",
+    "command": {
+      "overrideFiles": {},
+      "applicationDeploymentRef": {
+        "environment": "utv",
+        "application": "simple"
+      },
+      "auroraConfig": {
+        "name": "test",
+        "refName": "master",
+        "resolvedRef": "123abb"
+      }
+    }
+  }
+}

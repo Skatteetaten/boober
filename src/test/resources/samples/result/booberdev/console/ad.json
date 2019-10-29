@@ -3,22 +3,22 @@
   "kind": "ApplicationDeployment",
   "metadata": {
     "labels": {
-      "id": "d5fd695843e850eddc9dc32792997d109b0c5b77",
+      "id": "612f42ee8ad713a85c91ee4581a38b79d50b24b6",
       "app": "openshift-console-api",
       "updatedBy": "hero",
-      "affiliation": "aos",
+      "affiliation": "paas",
       "updateInBoober": "true",
       "name": "openshift-console-api"
     },
     "name": "openshift-console-api",
-    "namespace": "aos-booberdev"
+    "namespace": "paas-booberdev"
   },
   "spec": {
     "applicationId": "1d8c6374126c0a5f2e0592eb3d44cbc681a42c8a",
     "selector": {
       "name": "openshift-console-api"
     },
-    "applicationDeploymentId": "d5fd695843e850eddc9dc32792997d109b0c5b77",
+    "applicationDeploymentId": "612f42ee8ad713a85c91ee4581a38b79d50b24b6",
     "applicationName": "openshift-console-api",
     "applicationDeploymentName": "openshift-console-api",
     "databases": [

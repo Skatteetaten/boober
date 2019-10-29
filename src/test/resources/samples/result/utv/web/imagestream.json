@@ -1,0 +1,24 @@
+{
+  "apiVersion": "image.openshift.io/v1",
+  "kind": "ImageStream",
+  "metadata": {
+    "labels": {
+      "releasedVersion": "develop-SNAPSHOT",
+      "app": "web",
+      "updatedBy": "hero",
+      "affiliation": "paas",
+      "updateInBoober": "true",
+      "name": "web"
+    },
+    "name": "web",
+    "namespace": "paas-utv",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "web",
+        "uid": "123-123"
+      }
+    ]
+  }
+}

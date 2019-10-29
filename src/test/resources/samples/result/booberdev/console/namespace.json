@@ -3,9 +3,9 @@
   "kind": "Namespace",
   "metadata": {
     "labels": {
-      "affiliation": "aos",
+      "affiliation": "paas",
       "removeAfter": "86400"
     },
-    "name": "aos-booberdev"
+    "name": "paas-booberdev"
   }
 }

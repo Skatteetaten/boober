@@ -1,0 +1,11 @@
+{
+  "applicationPlatform": "web",
+  "groupId": "org.test",
+  "version": "develop-SNAPSHOT",
+  "type": "development",
+  "route": true,
+  "config": {
+    "foo2": "baz"
+  },
+  "toxiproxy": true
+}
