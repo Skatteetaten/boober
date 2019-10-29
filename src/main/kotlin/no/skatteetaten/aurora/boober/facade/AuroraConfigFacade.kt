@@ -22,7 +22,9 @@ class AuroraConfigFacade(
         adrList: List<ApplicationDeploymentRef>
     ): List<AuroraDeploymentContext> {
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
-        return auroraDeploymentContextService.getAuroraDeploymentContexts(auroraConfig, adrList, ref)
+        return adrList.map {
+            auroraDeploymentContextService.createAuroraDeploymentContext(AuroraContextCommand(auroraConfig, it, ref))
+        }
     }
 
     fun findAuroraDeploymentContextForEnvironment(
@@ -32,7 +34,11 @@ class AuroraConfigFacade(
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         return auroraConfig.getApplicationDeploymentRefs()
             .filter { it.environment == environment }
-            .let { auroraDeploymentContextService.getAuroraDeploymentContexts(auroraConfig, it, ref) }
+            .map {
+                auroraDeploymentContextService.createAuroraDeploymentContext(
+                    AuroraContextCommand(auroraConfig, it, ref)
+                )
+            }
     }
 
     fun findAuroraConfigFilesForApplicationDeployment(

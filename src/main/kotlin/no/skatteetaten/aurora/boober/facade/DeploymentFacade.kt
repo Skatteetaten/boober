@@ -5,6 +5,7 @@ import no.skatteetaten.aurora.boober.feature.name
 import no.skatteetaten.aurora.boober.feature.namespace
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.ApplicationRef
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.createApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.service.ApplicationDeploymentService
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
@@ -107,7 +108,15 @@ class DeploymentFacade(
     ): List<GetApplicationDeploymentResponse> {
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         val applicationRefs =
-            auroraDeploymentContextService.getAuroraDeploymentContexts(auroraConfig, adr, ref).map {
+            adr.map {
+                auroraDeploymentContextService.createAuroraDeploymentContext(
+                    AuroraContextCommand(
+                        auroraConfig,
+                        it,
+                        ref
+                    )
+                )
+            }.map {
                 ApplicationRef(it.spec.namespace, it.spec.name)
             }
         return checkApplicationDeploymentsExists(applicationRefs)

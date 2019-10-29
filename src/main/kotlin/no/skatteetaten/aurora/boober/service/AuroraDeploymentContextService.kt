@@ -4,9 +4,6 @@ import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.feature.extractPlaceHolders
 import no.skatteetaten.aurora.boober.feature.headerHandlers
-import no.skatteetaten.aurora.boober.feature.name
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
-import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
@@ -111,22 +108,5 @@ class AuroraDeploymentContextService(
             features = featureAdc,
             featureHandlers = featureHandlers
         )
-    }
-
-    // TODO: test this
-    fun getAuroraDeploymentContexts(
-        auroraConfig: AuroraConfig,
-        applicationDeploymentRefs: List<ApplicationDeploymentRef>,
-        ref: AuroraConfigRef
-    ): List<AuroraDeploymentContext> {
-        return applicationDeploymentRefs.map {
-            createAuroraDeploymentContext(
-                AuroraContextCommand(
-                    auroraConfig,
-                    it,
-                    ref
-                )
-            )
-        }
     }
 }
