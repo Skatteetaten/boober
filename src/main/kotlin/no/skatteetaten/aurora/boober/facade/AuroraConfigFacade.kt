@@ -48,9 +48,8 @@ class AuroraConfigFacade(
         return auroraConfigService.findAuroraConfig(ref).getFilesForApplication(adr)
     }
 
-    // TODO: We really should not expose this out to the controller
-    fun findAuroraConfig(ref: AuroraConfigRef): AuroraConfig {
-        return auroraConfigService.findAuroraConfig(ref)
+    fun findAuroraConfigFiles(ref: AuroraConfigRef): List<AuroraConfigFile> {
+        return auroraConfigService.findAuroraConfig(ref).files
     }
 
     fun findAuroraConfigFileNames(ref: AuroraConfigRef): List<String> {
@@ -85,7 +84,7 @@ class AuroraConfigFacade(
         previousVersion: String? = null
     ): AuroraConfig {
 
-        val oldAuroraConfig = findAuroraConfig(ref)
+        val oldAuroraConfig = auroraConfigService.findAuroraConfig(ref)
         val (newFile, auroraConfig) = oldAuroraConfig.updateFile(fileName, contents, previousVersion)
 
         return auroraConfigService.saveFile(newFile, auroraConfig, ref)
@@ -99,7 +98,7 @@ class AuroraConfigFacade(
         previousVersion: String? = null
     ): AuroraConfig {
 
-        val auroraConfig = findAuroraConfig(ref)
+        val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         val (newFile, updatedAuroraConfig) = auroraConfig.patchFile(filename, jsonPatchOp, previousVersion)
 
         return auroraConfigService.saveFile(newFile, updatedAuroraConfig, ref)
