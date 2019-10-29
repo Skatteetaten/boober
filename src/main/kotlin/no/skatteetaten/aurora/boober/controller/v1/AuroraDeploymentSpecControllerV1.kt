@@ -4,13 +4,11 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.controller.internal.Response
+import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.toAdr
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
-import no.skatteetaten.aurora.boober.service.AuroraConfigService
-import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
 import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
 import no.skatteetaten.aurora.boober.service.renderSpecAsJson
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
@@ -24,8 +22,7 @@ import org.springframework.web.util.UriUtils
 @RestController
 @RequestMapping("/v1/auroradeployspec/{auroraConfigName}")
 class AuroraDeploymentSpecControllerV1(
-    val auroraDeploymentContextService: AuroraDeploymentContextService,
-    val auroraConfigService: AuroraConfigService
+    val facade: AuroraConfigFacade
 ) {
 
     @GetMapping
@@ -33,19 +30,15 @@ class AuroraDeploymentSpecControllerV1(
         @PathVariable auroraConfigName: String,
         @RequestParam aid: List<String>?,
         @RequestParam adr: List<String>?,
-        @RequestParam includeDefaults: Boolean?
+        @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
     ): Response {
 
-        val adrList = listOf<String>().addIfNotNull(aid).addIfNotNull(adr)
-
+        val adrList = listOf<String>().addIfNotNull(aid).addIfNotNull(adr).map { it.toAdr() }
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
-        val auroraConfig = auroraConfigService.findAuroraConfig(ref)
-        val specs = adrList.map { it.toAdr() }
-            .let { auroraDeploymentContextService.getAuroraDeploymentContexts(auroraConfig, it, ref) }
-        return Response(items = specs.map {
-            renderSpecAsJson(
-                it.spec, includeDefaults ?: true
-            )
+        val contexts = facade.findAuroraDeploymentContext(ref, adrList)
+
+        return Response(items = contexts.map {
+            renderSpecAsJson(it.spec, includeDefaults)
         })
     }
 
@@ -57,10 +50,7 @@ class AuroraDeploymentSpecControllerV1(
     ): Response {
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
-        val auroraConfig = auroraConfigService.findAuroraConfig(ref)
-        val specs = auroraConfig.getApplicationDeploymentRefs()
-            .filter { it.environment == environment }
-            .let { auroraDeploymentContextService.getAuroraDeploymentContexts(auroraConfig, it, ref) }
+        val specs = facade.findAuroraDeploymentContextForEnvironment(ref, environment)
         return Response(items = specs.map { renderSpecAsJson(it.spec, includeDefaults) })
     }
 
@@ -74,31 +64,10 @@ class AuroraDeploymentSpecControllerV1(
     ): Response {
 
         val overrideFiles: List<AuroraConfigFile> = extractOverrides(overrides)
-
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
-        val auroraConfig = auroraConfigService.findAuroraConfig(ref)
-        val cmd = AuroraContextCommand(
-            auroraConfig = auroraConfig,
-            applicationDeploymentRef = ApplicationDeploymentRef(environment, application),
-            auroraConfigRef = ref,
-            overrides = overrideFiles
-        )
-        return Response(items = listOf(auroraDeploymentContextService.createAuroraDeploymentContext(cmd)).map {
-            renderSpecAsJson(
-                it.spec,
-                true
-            )
-        })
-    }
-
-    fun extractOverrides(overrides: String?): List<AuroraConfigFile> {
-        if (overrides.isNullOrBlank()) {
-            return emptyList()
-        }
-        val files: Map<String, String> = jacksonObjectMapper()
-            .readValue(UriUtils.decode(overrides, Charset.defaultCharset().toString()))
-
-        return files.map { AuroraConfigFile(it.key, it.value, true) }
+        val adr = ApplicationDeploymentRef(environment, application)
+        val context = facade.createAuroraDeploymentContext(ref, adr, overrideFiles)
+        return Response(items = listOf(context).map { renderSpecAsJson(it.spec, includeDefaults) })
     }
 
     @GetMapping("/{environment}/{application}/formatted")
@@ -111,19 +80,19 @@ class AuroraDeploymentSpecControllerV1(
     ): Response {
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
-        val auroraConfig = auroraConfigService.findAuroraConfig(ref)
+        val adr = ApplicationDeploymentRef(environment, application)
+        val overrideFiles = extractOverrides(overrides)
+        val context = facade.createAuroraDeploymentContext(ref, adr, overrideFiles)
+        return Response(items = listOf(renderJsonForAuroraDeploymentSpecPointers(context.spec, includeDefaults)))
+    }
 
-        val applicationDeploymentRef = ApplicationDeploymentRef(environment, application)
+    fun extractOverrides(overrides: String?): List<AuroraConfigFile> {
+        if (overrides.isNullOrBlank()) {
+            return emptyList()
+        }
+        val files: Map<String, String> = jacksonObjectMapper()
+            .readValue(UriUtils.decode(overrides, Charset.defaultCharset().toString()))
 
-        val spec = auroraDeploymentContextService.createAuroraDeploymentContext(
-            AuroraContextCommand(
-                auroraConfig = auroraConfig,
-                applicationDeploymentRef = applicationDeploymentRef,
-                auroraConfigRef = ref,
-                overrides = extractOverrides(overrides)
-            )
-        ).spec
-
-        return Response(items = listOf(renderJsonForAuroraDeploymentSpecPointers(spec, includeDefaults)))
+        return files.map { AuroraConfigFile(it.key, it.value, true) }
     }
 }

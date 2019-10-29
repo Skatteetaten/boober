@@ -10,10 +10,4 @@ private val logger = KotlinLogging.logger {}
 @Service
 class ApplicationDeploymentService(
     val openShiftClient: OpenShiftClient
-) {
-
-
-
-
-
-}
+)

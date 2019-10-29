@@ -5,9 +5,7 @@ import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.feature.extractPlaceHolders
 import no.skatteetaten.aurora.boober.feature.headerHandlers
 import no.skatteetaten.aurora.boober.feature.name
-import no.skatteetaten.aurora.boober.feature.namespace
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
-import no.skatteetaten.aurora.boober.model.ApplicationRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
@@ -24,17 +22,6 @@ private val logger = KotlinLogging.logger {}
 class AuroraDeploymentContextService(
     val featuers: List<Feature>
 ) {
-
-    // TODO: test this, refactor to fasade
-    fun expandDeploymentRefToApplicationRef(
-        auroraConfig: AuroraConfig,
-        adr: List<ApplicationDeploymentRef>,
-        ref: AuroraConfigRef
-    ): List<ApplicationRef> {
-        return getAuroraDeploymentContexts(auroraConfig, adr, ref).map {
-            ApplicationRef(it.spec.namespace, it.spec.name)
-        }
-    }
 
     fun createValidatedAuroraDeploymentContexts(
         commands: List<AuroraContextCommand>,

@@ -7,7 +7,6 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotNull
-import assertk.assertions.message
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.clearAllMocks
 import io.mockk.every
@@ -15,8 +14,6 @@ import io.mockk.mockk
 import java.io.File
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.model.AuroraConfigException
-import no.skatteetaten.aurora.boober.model.AuroraVersioningException
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
@@ -91,6 +88,7 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
         assertThat(auroraConfig.files.size).isEqualTo(0)
     }
 
+    /* TODO: move to facade
     @Test
     fun `Should fail to update invalid json file`() {
 
@@ -141,6 +139,23 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
         assertThat(gitLog.fullMessage).isEqualTo("Added: 0, Modified: 1, Deleted: 0")
     }
 
+
+    @Test
+    fun `Should not update one file in AuroraConfig if version is wrong`() {
+
+        val fileToChange = "${aid.environment}/${aid.application}.json"
+        val auroraConfig = createAuroraConfig(defaultAuroraConfig())
+        auroraConfigService.save(auroraConfig)
+        var count = 0
+
+        assertThat {
+            auroraConfigService.updateAuroraConfigFile(ref, fileToChange, """{"version": "1.0.0"}""", "incorrect hash")
+                as AuroraVersioningException
+        }.isNotNull().isFailure()
+            .message().all { count++ }
+        assertThat(count).isEqualTo(1)
+    }
+     */
     @Test
     fun `Save AuroraConfig`() {
 
@@ -217,21 +232,5 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
             "about.json",
             "utv/about.json"
         )
-    }
-
-    @Test
-    fun `Should not update one file in AuroraConfig if version is wrong`() {
-
-        val fileToChange = "${aid.environment}/${aid.application}.json"
-        val auroraConfig = createAuroraConfig(defaultAuroraConfig())
-        auroraConfigService.save(auroraConfig)
-        var count = 0
-
-        assertThat {
-            auroraConfigService.updateAuroraConfigFile(ref, fileToChange, """{"version": "1.0.0"}""", "incorrect hash")
-                as AuroraVersioningException
-        }.isNotNull().isFailure()
-            .message().all { count++ }
-        assertThat(count).isEqualTo(1)
     }
 }

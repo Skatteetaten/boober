@@ -21,13 +21,13 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/v1/applicationdeployment")
-class ApplicationDeploymentController(val facade: DeploymentFacade) {
+class ApplicationDeploymentController(private val deploymenFacade: DeploymentFacade) {
 
     @PostMapping("/delete")
     fun delete(@RequestBody applicationDeploymentPayload: ApplicationDeploymentPayload): Response {
 
         val applicationDeploymentDeleteResponse =
-            facade.executeDelete(applicationDeploymentPayload.applicationRefs)
+            deploymenFacade.executeDelete(applicationDeploymentPayload.applicationRefs)
 
         val deleteResponses = applicationDeploymentDeleteResponse.map {
             DeleteResponse(applicationRef = it.applicationRef, success = it.success, reason = it.message)
@@ -48,7 +48,7 @@ class ApplicationDeploymentController(val facade: DeploymentFacade) {
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
 
-        val applicationDeploymentResponse = facade.deploymentExist(ref, adrPayload.adr)
+        val applicationDeploymentResponse = deploymenFacade.deploymentExist(ref, adrPayload.adr)
 
         val existsResponse = applicationDeploymentResponse.map {
             ExistsResponse(

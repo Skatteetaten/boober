@@ -8,7 +8,7 @@ import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.service.UserAnnotationService
+import no.skatteetaten.aurora.boober.facade.UserAnnotationFacade
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.utils.base64Prefix
@@ -18,14 +18,14 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.ResponseEntity
 
-class UserAnnotationServiceTest {
+class UserAnnotationFacadeTest {
 
     private val userDetailsProvider = mockk<UserDetailsProvider>().apply {
         every { getAuthenticatedUser() } returns User("username", "token")
     }
     private val openShiftResourceClient = mockk<OpenShiftResourceClient>()
     private val userAnnotationService =
-        UserAnnotationService(userDetailsProvider, openShiftResourceClient)
+        UserAnnotationFacade(userDetailsProvider, openShiftResourceClient)
 
     @AfterEach
     fun tearDown() {

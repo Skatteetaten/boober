@@ -7,19 +7,19 @@ import assertk.assertions.isInstanceOf
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.service.DeployService
+import no.skatteetaten.aurora.boober.facade.DeployFacade
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 
-class DeployServiceProjectTerminatingTest {
+class DeployFacadeProjectTerminatingTest {
 
     val openShiftClient: OpenShiftClient = mockk()
     val userDetailsProvider: UserDetailsProvider = mockk()
 
-    val deployService = DeployService(
+    val deployService = DeployFacade(
         auroraConfigService = mockk(),
         openShiftCommandBuilder = mockk(),
         openShiftClient = openShiftClient,

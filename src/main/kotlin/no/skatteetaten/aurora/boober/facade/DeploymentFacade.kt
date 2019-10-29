@@ -1,15 +1,16 @@
 package no.skatteetaten.aurora.boober.facade
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.feature.name
+import no.skatteetaten.aurora.boober.feature.namespace
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.ApplicationRef
+import no.skatteetaten.aurora.boober.model.createApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.service.ApplicationDeploymentService
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import org.apache.http.HttpStatus
@@ -26,7 +27,7 @@ class DeploymentFacade(
 ) {
 
     fun executeDelete(applicationRefs: List<ApplicationRef>): List<DeleteApplicationDeploymentResponse> {
-        val deleteCommands = createOpenshiftApplicationDeploymentCommands(applicationRefs, OperationType.DELETE)
+        val deleteCommands = applicationRefs.createApplicationDeploymentCommand(OperationType.DELETE)
 
         return deleteCommands.map {
             val openshiftResponse =
@@ -57,27 +58,8 @@ class DeploymentFacade(
         }
     }
 
-    private fun createOpenshiftApplicationDeploymentCommands(
-        applicationRefs: List<ApplicationRef>,
-        operationType: OperationType
-    ) =
-        applicationRefs.map {
-            val url = OpenShiftResourceClient.generateUrl(
-                kind = "ApplicationDeployment",
-                name = it.name,
-                namespace = it.namespace
-            )
-            val jsonNode = jacksonObjectMapper().readTree("""{"kind":"applicationdeployment"}""")
-
-            ApplicationDeploymentCommand(
-                cmd = OpenshiftCommand(operationType, url = url, payload = jsonNode),
-                applicationRef = it
-            )
-        }
-
     fun checkApplicationDeploymentsExists(applicationrefs: List<ApplicationRef>): List<GetApplicationDeploymentResponse> {
-        val applicationdeploymentGetCommand =
-            createOpenshiftApplicationDeploymentCommands(applicationrefs, OperationType.GET)
+        val applicationdeploymentGetCommand = applicationrefs.createApplicationDeploymentCommand(OperationType.GET)
 
         return applicationdeploymentGetCommand.map {
             val openshiftResponse =
@@ -125,7 +107,9 @@ class DeploymentFacade(
     ): List<GetApplicationDeploymentResponse> {
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         val applicationRefs =
-            auroraDeploymentContextService.expandDeploymentRefToApplicationRef(auroraConfig, adr, ref)
+            auroraDeploymentContextService.getAuroraDeploymentContexts(auroraConfig, adr, ref).map {
+                ApplicationRef(it.spec.namespace, it.spec.name)
+            }
         return checkApplicationDeploymentsExists(applicationRefs)
     }
 }

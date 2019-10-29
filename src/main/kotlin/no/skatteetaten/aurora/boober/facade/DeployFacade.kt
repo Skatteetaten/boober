@@ -1,8 +1,9 @@
-package no.skatteetaten.aurora.boober.service
+package no.skatteetaten.aurora.boober.facade
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import java.util.UUID
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.cluster
 import no.skatteetaten.aurora.boober.feature.dockerImagePath
@@ -19,6 +20,20 @@ import no.skatteetaten.aurora.boober.model.AuroraDeployCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.createResources
+import no.skatteetaten.aurora.boober.service.AuroraConfigRef
+import no.skatteetaten.aurora.boober.service.AuroraConfigService
+import no.skatteetaten.aurora.boober.service.AuroraDeployResult
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
+import no.skatteetaten.aurora.boober.service.AuroraEnvironmentResult
+import no.skatteetaten.aurora.boober.service.CantusService
+import no.skatteetaten.aurora.boober.service.ContextErrors
+import no.skatteetaten.aurora.boober.service.DeployLogService
+import no.skatteetaten.aurora.boober.service.Deployer
+import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
+import no.skatteetaten.aurora.boober.service.OpenShiftCommandService
+import no.skatteetaten.aurora.boober.service.RedeployService
+import no.skatteetaten.aurora.boober.service.TagCommand
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.describeString
@@ -27,13 +42,12 @@ import no.skatteetaten.aurora.boober.utils.parallelMap
 import no.skatteetaten.aurora.boober.utils.whenFalse
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
 // TODO: test fasade
 @Service
-class DeployService(
+class DeployFacade(
     val auroraConfigService: AuroraConfigService,
     val auroraDeploymentContextService: AuroraDeploymentContextService,
     val openShiftCommandBuilder: OpenShiftCommandService,
@@ -138,7 +152,10 @@ class DeployService(
 
         if (invalidContexts.isNotEmpty()) {
             val errors = invalidContexts.map {
-                ContextErrors(it.cmd, listOf(java.lang.IllegalArgumentException("Not valid in this cluster")))
+                ContextErrors(
+                    it.cmd,
+                    listOf(java.lang.IllegalArgumentException("Not valid in this cluster"))
+                )
             }
             throw MultiApplicationValidationException(errors)
         }

@@ -1,8 +1,8 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
 import no.skatteetaten.aurora.boober.controller.internal.Response
-import no.skatteetaten.aurora.boober.service.RenewRequest
-import no.skatteetaten.aurora.boober.service.StsRenewService
+import no.skatteetaten.aurora.boober.facade.RenewRequest
+import no.skatteetaten.aurora.boober.facade.StsRenewFacade
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -16,12 +16,12 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/v1/sts")
 @ConditionalOnProperty("integrations.skap.url")
 class StsControllerV1(
-    private val service: StsRenewService
+    private val facade: StsRenewFacade
 ) {
 
     @PostMapping
     fun apply(@RequestBody payload: RenewRequest): Response {
-        val items = service.renew(payload)
+        val items = facade.renew(payload)
         val failed = items.firstOrNull { !it.success }
         failed?.let {
             val cmd = it.command.payload

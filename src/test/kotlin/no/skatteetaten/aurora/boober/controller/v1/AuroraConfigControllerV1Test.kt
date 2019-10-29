@@ -1,26 +1,8 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
-import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.anyOrNull
-import no.skatteetaten.aurora.boober.service.AuroraConfigService
-import no.skatteetaten.aurora.mockmvc.extensions.Path
-import no.skatteetaten.aurora.mockmvc.extensions.contentType
 import no.skatteetaten.aurora.mockmvc.extensions.get
-import no.skatteetaten.aurora.mockmvc.extensions.mock.withContractResponse
-import no.skatteetaten.aurora.mockmvc.extensions.mock.withNullableContractResponse
-import no.skatteetaten.aurora.mockmvc.extensions.patch
-import no.skatteetaten.aurora.mockmvc.extensions.put
-import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
-import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
-import org.junit.jupiter.api.Test
-import org.mockito.BDDMockito.given
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.http.HttpHeaders
-import org.springframework.test.web.servlet.MockMvc
 
+/*
 @AutoConfigureRestDocs
 @WebMvcTest(controllers = [AuroraConfigControllerV1::class], secure = false)
 class AuroraConfigControllerV1Test(@Autowired private val mockMvc: MockMvc) {
@@ -114,3 +96,4 @@ class AuroraConfigControllerV1Test(@Autowired private val mockMvc: MockMvc) {
         }
     }
 }
+*/

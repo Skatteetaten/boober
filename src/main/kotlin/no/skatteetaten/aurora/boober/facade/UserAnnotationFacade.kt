@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.service
+package no.skatteetaten.aurora.boober.facade
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.MissingNode
@@ -7,6 +7,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.treeToValue
 import com.fkorotkov.kubernetes.newObjectMeta
 import io.fabric8.kubernetes.api.model.ObjectMeta
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource
@@ -15,21 +16,8 @@ import no.skatteetaten.aurora.boober.utils.toBase64
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 
-private data class UserAnnotation(val metadata: ObjectMeta) {
-    companion object {
-        fun create(key: String, annotation: String?) =
-            UserAnnotation(metadata = newObjectMeta {
-                annotations = mapOf(key to annotation)
-            })
-
-        fun emptyAnnotation(key: String) = UserAnnotation.create(key, null)
-    }
-
-    fun toJsonNode(): JsonNode = jacksonObjectMapper().convertValue(this)
-}
-
 @Service
-class UserAnnotationService(
+class UserAnnotationFacade(
     private val userDetailsProvider: UserDetailsProvider,
     @ClientType(TokenSource.SERVICE_ACCOUNT) private val serviceAccountClient: OpenShiftResourceClient
 ) {
@@ -59,7 +47,9 @@ class UserAnnotationService(
         return getResponseAnnotations(response)
     }
 
-    fun createRemovePatch(key: String): JsonNode = UserAnnotation.emptyAnnotation(key).toJsonNode()
+    fun createRemovePatch(key: String): JsonNode = UserAnnotation.emptyAnnotation(
+        key
+    ).toJsonNode()
 
     private fun getResponseAnnotations(response: ResponseEntity<JsonNode>?): Map<String, JsonNode> {
         val annotations = response?.body?.at("/metadata/annotations") ?: return emptyMap()
@@ -70,4 +60,17 @@ class UserAnnotationService(
         val entries = jacksonObjectMapper().treeToValue<Map<String, String>>(annotations)
         return entries.mapValues { it.value.base64ToJsonNode() }
     }
+}
+
+private data class UserAnnotation(val metadata: ObjectMeta) {
+    companion object {
+        fun create(key: String, annotation: String?) =
+            UserAnnotation(metadata = newObjectMeta {
+                annotations = mapOf(key to annotation)
+            })
+
+        fun emptyAnnotation(key: String) = UserAnnotation.create(key, null)
+    }
+
+    fun toJsonNode(): JsonNode = jacksonObjectMapper().convertValue(this)
 }

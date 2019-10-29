@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
-import no.skatteetaten.aurora.boober.service.StsRenewService
+import no.skatteetaten.aurora.boober.facade.StsRenewFacade
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -12,7 +12,7 @@ import org.springframework.test.web.servlet.MockMvc
 class StsControllerV1Test(@Autowired private val mockMvc: MockMvc) {
 
     @MockBean
-    private lateinit var stsRenewService: StsRenewService
+    private lateinit var stsRenewFacade: StsRenewFacade
 
     /*
     TODO: fix

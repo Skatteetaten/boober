@@ -1,8 +1,8 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import java.io.File
 import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
@@ -14,7 +14,6 @@ import org.eclipse.jgit.api.errors.InvalidRemoteException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
-import java.io.File
 
 private val logger = KotlinLogging.logger {}
 
@@ -47,57 +46,10 @@ class AuroraConfigService(
         return exactRef?.let { ref.copy(resolvedRef = it) } ?: ref
     }
 
-    fun findAuroraConfigFilesForApplicationDeployment(
-        ref: AuroraConfigRef,
-        adr: ApplicationDeploymentRef
-    ): List<AuroraConfigFile> {
-        return findAuroraConfig(ref).getFilesForApplication(adr)
-    }
-
     fun findAuroraConfig(ref: AuroraConfigRef): AuroraConfig {
 
         updateLocalFilesFromGit(ref)
         return AuroraConfig.fromFolder("${gitService.checkoutPath}/${ref.name}", ref.refName)
-    }
-
-    fun findAuroraConfigFileNames(ref: AuroraConfigRef): List<String> {
-
-        val auroraConfig = findAuroraConfig(ref)
-        return auroraConfig.files.map { it.name }
-    }
-
-    fun findAuroraConfigFile(ref: AuroraConfigRef, fileName: String): AuroraConfigFile? {
-
-        val auroraConfig = findAuroraConfig(ref)
-        return auroraConfig.findFile(fileName)
-            ?: throw IllegalArgumentException("No such file $fileName in AuroraConfig ${ref.name}")
-    }
-
-    fun updateAuroraConfigFile(
-        ref: AuroraConfigRef,
-        fileName: String,
-        contents: String,
-        previousVersion: String? = null
-    ): AuroraConfig {
-
-        val oldAuroraConfig = findAuroraConfig(ref)
-        val (newFile, auroraConfig) = oldAuroraConfig.updateFile(fileName, contents, previousVersion)
-
-        return saveFile(newFile, auroraConfig, ref)
-    }
-
-    // TODO test this
-    fun patchAuroraConfigFile(
-        ref: AuroraConfigRef,
-        filename: String,
-        jsonPatchOp: String,
-        previousVersion: String? = null
-    ): AuroraConfig {
-
-        val auroraConfig = findAuroraConfig(ref)
-        val (newFile, updatedAuroraConfig) = auroraConfig.patchFile(filename, jsonPatchOp, previousVersion)
-
-        return saveFile(newFile, updatedAuroraConfig, ref)
     }
 
     // TODO move to test?
@@ -124,7 +76,7 @@ class AuroraConfigService(
         return auroraConfig
     }
 
-    private fun saveFile(newFile: AuroraConfigFile, auroraConfig: AuroraConfig, ref: AuroraConfigRef): AuroraConfig {
+    fun saveFile(newFile: AuroraConfigFile, auroraConfig: AuroraConfig, ref: AuroraConfigRef): AuroraConfig {
 
         val watch = StopWatch()
         watch.start("find affected adr")
@@ -158,19 +110,6 @@ class AuroraConfigService(
 
         logger.debug(watch.prettyPrint())
         return auroraConfig
-    }
-
-    // todo test this
-    fun validateAuroraConfig(
-        auroraConfig: AuroraConfig,
-        overrideFiles: List<AuroraConfigFile> = listOf(),
-        resourceValidation: Boolean = true,
-        auroraConfigRef: AuroraConfigRef
-    ) {
-        val commands = auroraConfig.getApplicationDeploymentRefs().map {
-            AuroraContextCommand(auroraConfig, it, auroraConfigRef, overrideFiles)
-        }
-        auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(commands, resourceValidation)
     }
 
     private fun getAuroraConfigFolder(name: String) = File(gitService.checkoutPath, name)

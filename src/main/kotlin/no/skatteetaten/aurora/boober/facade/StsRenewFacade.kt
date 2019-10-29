@@ -1,10 +1,14 @@
-package no.skatteetaten.aurora.boober.service
+package no.skatteetaten.aurora.boober.facade
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.OwnerReference
+import java.util.Optional
 import no.skatteetaten.aurora.boober.feature.StsSecretGenerator
+import no.skatteetaten.aurora.boober.service.OpenShiftCommandService
+import no.skatteetaten.aurora.boober.service.RedeployService
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
@@ -12,20 +16,11 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.whenTrue
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
-import java.util.Optional
-
-data class RenewRequest(
-    val name: String,
-    val namespace: String,
-    val affiliation: String,
-    val commonName: String,
-    val ownerReference: OwnerReference
-)
 
 // TODO: test
 @Service
 @ConditionalOnProperty("integrations.skap.url")
-class StsRenewService(
+class StsRenewFacade(
     val provsioner: Optional<StsProvisioner>,
     val commandService: OpenShiftCommandService,
     val openshiftClient: OpenShiftClient,
@@ -35,7 +30,7 @@ class StsRenewService(
 
     fun renew(request: RenewRequest): List<OpenShiftResponse> {
 
-        //will aldri være her hvis ikke skap.url er satt.
+        // will aldri være her hvis ikke skap.url er satt.
         val sts = provsioner.orElseThrow { IllegalArgumentException("Sts service not available") }
 
         val stsResult = sts.generateCertificate(
@@ -57,7 +52,8 @@ class StsRenewService(
             ownerReference = request.ownerReference,
             namespace = request.namespace
         )
-        val json = jacksonObjectMapper().convertValue<JsonNode>(secret)
+        val json = jacksonObjectMapper()
+            .convertValue<JsonNode>(secret)
         val command = commandService.createOpenShiftCommand(request.namespace, json)
 
         val response = openshiftClient.performOpenShiftCommand(request.namespace, command)
@@ -68,3 +64,11 @@ class StsRenewService(
         return listOf(response).addIfNotNull(deployResult)
     }
 }
+
+data class RenewRequest(
+    val name: String,
+    val namespace: String,
+    val affiliation: String,
+    val commonName: String,
+    val ownerReference: OwnerReference
+)

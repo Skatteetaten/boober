@@ -1,16 +1,18 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
 import com.fasterxml.jackson.annotation.JsonRawValue
+import javax.servlet.http.HttpServletRequest
+import javax.validation.Valid
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.controller.NoSuchResourceException
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigResource.Companion.fromAuroraConfig
+import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
-import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -24,8 +26,6 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import javax.servlet.http.HttpServletRequest
-import javax.validation.Valid
 
 private val logger = KotlinLogging.logger {}
 
@@ -33,9 +33,11 @@ private val logger = KotlinLogging.logger {}
 @RestController
 @RequestMapping("/v1/auroraconfig/{name}")
 class AuroraConfigControllerV1(
-    private val auroraConfigService: AuroraConfigService
+    private val auroraConfigFacade: AuroraConfigFacade
 ) {
 
+    // TODO: refactor this method after it is tested into a single call into facade and remove direct return of AuoraConfig
+    // TODO: rewrite this so that it is one call the the fasade that retuns a
     @GetMapping
     fun get(
         @PathVariable name: String,
@@ -46,17 +48,16 @@ class AuroraConfigControllerV1(
 
         if (application != null && environment != null) {
             val adr = ApplicationDeploymentRef(environment, application)
-            val files = auroraConfigService.findAuroraConfigFilesForApplicationDeployment(ref, adr)
+            val files = auroraConfigFacade.findAuroraConfigFilesForApplicationDeployment(ref, adr)
 
             return Response(items = files.map {
                 AuroraConfigFileResource(it.name, it.contents, it.type)
             })
         }
-        // TODO: better error message
         if (application != null || environment != null) {
             throw IllegalArgumentException("Either both application and environment must be set or none of them")
         }
-        return Response(items = listOf(auroraConfigService.findAuroraConfig(ref)).map { fromAuroraConfig(it) })
+        return Response(items = listOf(auroraConfigFacade.findAuroraConfig(ref)).map { fromAuroraConfig(it) })
     }
 
     @GetMapping("/filenames")
@@ -64,7 +65,7 @@ class AuroraConfigControllerV1(
         @PathVariable name: String
     ): Response {
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
-        return Response(items = auroraConfigService.findAuroraConfigFileNames(ref))
+        return Response(items = auroraConfigFacade.findAuroraConfigFileNames(ref))
     }
 
     @PutMapping("/validate")
@@ -76,7 +77,7 @@ class AuroraConfigControllerV1(
 
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         val auroraConfig = payload.toAuroraConfig(ref)
-        auroraConfigService.validateAuroraConfig(
+        auroraConfigFacade.validateAuroraConfig(
             auroraConfig,
             resourceValidation = resourceValidation,
             auroraConfigRef = ref
@@ -89,7 +90,7 @@ class AuroraConfigControllerV1(
 
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         val fileName = extractFileName(name, request)
-        val auroraConfigFile = auroraConfigService.findAuroraConfigFile(ref, fileName)
+        val auroraConfigFile = auroraConfigFacade.findAuroraConfigFile(ref, fileName)
             ?: throw NoSuchResourceException("No such file $fileName in AuroraConfig $name")
         return createAuroraConfigFileResponse(auroraConfigFile)
     }
@@ -105,7 +106,7 @@ class AuroraConfigControllerV1(
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         val fileName = extractFileName(name, request)
         val auroraConfig: AuroraConfig =
-            auroraConfigService.updateAuroraConfigFile(ref, fileName, payload.content, clearQuotes(ifMatchHeader))
+            auroraConfigFacade.updateAuroraConfigFile(ref, fileName, payload.content, clearQuotes(ifMatchHeader))
         val auroraConfigFile = auroraConfig.findFile(fileName)!!
         return createAuroraConfigFileResponse(auroraConfigFile)
     }
@@ -120,7 +121,7 @@ class AuroraConfigControllerV1(
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         val fileName = extractFileName(name, request)
 
-        val auroraConfig = auroraConfigService.patchAuroraConfigFile(ref, fileName, payload.content)
+        val auroraConfig = auroraConfigFacade.patchAuroraConfigFile(ref, fileName, payload.content)
         val auroraConfigFile = auroraConfig.findFile(fileName)!!
         return createAuroraConfigFileResponse(auroraConfigFile)
     }
@@ -167,4 +168,3 @@ data class ContentPayload(
     @JsonRawValue
     val content: String
 )
-

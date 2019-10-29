@@ -1,23 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
-import assertk.assertThat
-import assertk.assertions.isEmpty
-import assertk.assertions.isEqualTo
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.mockk.every
-import io.mockk.mockk
-import no.skatteetaten.aurora.boober.model.ApplicationRef
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftRestTemplateWrapper
-import no.skatteetaten.aurora.boober.service.openshift.token.TokenProvider
-import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.execute
-import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.setJsonFileAsBody
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
-import org.junit.jupiter.api.Test
-import org.springframework.boot.web.client.RestTemplateBuilder
-
+/*
+TODO: move to facade
 class ApplicationDeploymentServiceTest {
 
     private val server = MockWebServer()
@@ -97,3 +81,4 @@ class ApplicationDeploymentServiceTest {
         assertThat(requests.size).isEqualTo(2)
     }
 }
+*/

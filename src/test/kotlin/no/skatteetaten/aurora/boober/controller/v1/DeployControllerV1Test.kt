@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
-import no.skatteetaten.aurora.boober.service.DeployService
+import no.skatteetaten.aurora.boober.facade.DeployFacade
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -12,7 +12,7 @@ import org.springframework.test.web.servlet.MockMvc
 class DeployControllerV1Test(@Autowired private val mockMvc: MockMvc) {
 
     @MockBean
-    private lateinit var deployService: DeployService
+    private lateinit var deployFacade: DeployFacade
 
     /*
     TODO: Fix
