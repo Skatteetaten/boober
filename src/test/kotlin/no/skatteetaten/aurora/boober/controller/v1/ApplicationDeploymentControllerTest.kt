@@ -1,31 +1,33 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
-/*
-@AutoConfigureRestDocs
-@WebMvcTest(
-    value = [ApplicationDeploymentController::class],
-    secure = false
-)
-class ApplicationDeploymentControllerTest(@Autowired private val mockMvc: MockMvc) {
+import com.ninjasquad.springmockk.MockkBean
+import io.mockk.every
+import no.skatteetaten.aurora.boober.facade.DeleteApplicationDeploymentResponse
+import no.skatteetaten.aurora.boober.facade.DeploymentFacade
+import no.skatteetaten.aurora.boober.model.ApplicationRef
+import no.skatteetaten.aurora.mockmvc.extensions.Path
+import no.skatteetaten.aurora.mockmvc.extensions.contentTypeJson
+import no.skatteetaten.aurora.mockmvc.extensions.post
+import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
+import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
+import org.junit.jupiter.api.Test
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.http.HttpHeaders
 
-    @MockBean
-    private lateinit var applicationDeploymentService: ApplicationDeploymentService
+@WebMvcTest(value = [ApplicationDeploymentController::class, DeploymentFacade::class])
+class ApplicationDeploymentControllerTest : AbstractControllerTest() {
 
-    @MockBean
-    private lateinit var auroraDeploymentContextService: AuroraDeploymentContextService
-    @MockBean
-    private lateinit var auroraConfigService: AuroraConfigService
+    @MockkBean
+    private lateinit var deploymentFacade: DeploymentFacade
 
     @Test
     fun `delete ApplicationRef`() {
         val applicationRef = ApplicationRef("demo-deploy", "test")
         val payload = ApplicationDeploymentPayload(listOf(applicationRef))
 
-        given(
-            applicationDeploymentService.executeDelete(payload.applicationRefs)
-        ).withContractResponse("applicationdeployment/delete") {
-            willReturn(content)
-        }
+        every { deploymentFacade.executeDelete(any()) } returns listOf(
+            DeleteApplicationDeploymentResponse(ApplicationRef("namespace", "name"), true, "")
+        )
 
         mockMvc.post(
             path = Path("/v1/applicationdeployment/delete"),
@@ -33,9 +35,9 @@ class ApplicationDeploymentControllerTest(@Autowired private val mockMvc: MockMv
             body = payload
         ) {
             statusIsOk()
-                .responseJsonPath("$.success").isTrue()
-                .responseJsonPath("$.items[0].reason").equalsValue("Application was successfully deleted")
-                .responseJsonPath("$.items[0].applicationRef").equalsObject(applicationRef)
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.count").equalsValue(1)
+            responseJsonPath("$.items.length()").equalsValue(1)
         }
     }
 
@@ -68,4 +70,4 @@ class ApplicationDeploymentControllerTest(@Autowired private val mockMvc: MockMv
         }
     } */
 }
-*/
+

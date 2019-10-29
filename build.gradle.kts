@@ -47,7 +47,8 @@ dependencies {
     testImplementation("io.mockk:mockk:1.9.3")
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.19")
     testImplementation("com.nhaarman:mockito-kotlin:1.6.0")
-    testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:1.0.0")
+    testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:1.0.2")
+    testImplementation("com.ninja-squad:springmockk:1.1.3")
 }
 
 testlogger {
