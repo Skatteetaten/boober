@@ -94,7 +94,6 @@ data class DbhSchema(
     val affiliation: String
         get() = labels.get("affiliation")!!
 
-    // TOOD: support multiple users with different roles
     val username: String
         get() = users.firstOrNull()?.username ?: ""
 

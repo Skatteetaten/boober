@@ -36,7 +36,7 @@ class DeployLogService(
                 val result = filterDeployInformation(auroraDeployResult)
                 val deployHistory = DeployHistoryEntry(
                     command = result.command,
-                    deployer = deployer,
+                    deployer = deployer, // kan hentes fra comando
                     time = now,
                     deploymentSpec = result.auroraDeploymentSpecInternal.let {
                         renderSpecAsJson(it, true)
@@ -74,14 +74,14 @@ class DeployLogService(
         return result.copy(openShiftResponses = filteredResponses)
     }
 
-    // TODO: test
+    // TODO: test extract to fasade
     fun deployHistory(ref: AuroraConfigRef): List<JsonNode> {
         val files = bitbucketService.getFiles(project, repo, ref.name)
         return files.mapNotNull { bitbucketService.getFile(project, repo, "${ref.name}/$it") }
             .map { mapper.readValue<JsonNode>(it) }
     }
 
-    // TODO: test getting actual file
+    // TODO: test getting actual file extract to fasade
     fun findDeployResultById(ref: AuroraConfigRef, deployId: String): JsonNode? {
         return try {
             bitbucketService.getFile(project, repo, "${ref.name}/$deployId.json")?.let {

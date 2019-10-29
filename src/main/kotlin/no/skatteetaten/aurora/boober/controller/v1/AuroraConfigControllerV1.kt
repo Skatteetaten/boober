@@ -1,8 +1,6 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
 import com.fasterxml.jackson.annotation.JsonRawValue
-import javax.servlet.http.HttpServletRequest
-import javax.validation.Valid
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.controller.NoSuchResourceException
 import no.skatteetaten.aurora.boober.controller.internal.Response
@@ -16,7 +14,6 @@ import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Component
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -27,43 +24,16 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import javax.servlet.http.HttpServletRequest
+import javax.validation.Valid
 
 private val logger = KotlinLogging.logger {}
 
-data class AuroraConfigResource(
-    val name: String,
-    val files: List<AuroraConfigFileResource> = listOf()
-) {
-    fun toAuroraConfig(ref: AuroraConfigRef): AuroraConfig {
-        val auroraConfigFiles = files.map { AuroraConfigFile(it.name, it.contents) }
-        return AuroraConfig(auroraConfigFiles, ref.name, ref.refName)
-    }
-
-    companion object {
-        fun fromAuroraConfig(auroraConfig: AuroraConfig): AuroraConfigResource {
-            return AuroraConfigResource(
-                auroraConfig.name,
-                auroraConfig.files.map { AuroraConfigFileResource(it.name, it.contents, it.type) })
-        }
-    }
-}
-
-data class AuroraConfigFileResource(
-    val name: String,
-    val contents: String,
-    val type: AuroraConfigFileType? = null
-)
-
-data class ContentPayload(
-    @JsonRawValue
-    val content: String
-)
-
+// Split auroraConfigServcie i fasade og service
 @RestController
 @RequestMapping("/v1/auroraconfig/{name}")
 class AuroraConfigControllerV1(
-    private val auroraConfigService: AuroraConfigService,
-    private val responder: AuroraConfigResponder
+    private val auroraConfigService: AuroraConfigService
 ) {
 
     @GetMapping
@@ -82,10 +52,11 @@ class AuroraConfigControllerV1(
                 AuroraConfigFileResource(it.name, it.contents, it.type)
             })
         }
+        // TODO: better error message
         if (application != null || environment != null) {
             throw IllegalArgumentException("Either both application and environment must be set or none of them")
         }
-        return responder.create(auroraConfigService.findAuroraConfig(ref))
+        return Response(items = listOf(auroraConfigService.findAuroraConfig(ref)).map { fromAuroraConfig(it) })
     }
 
     @GetMapping("/filenames")
@@ -110,7 +81,7 @@ class AuroraConfigControllerV1(
             resourceValidation = resourceValidation,
             auroraConfigRef = ref
         )
-        return responder.create(auroraConfig)
+        return Response(items = listOf(auroraConfig).map { fromAuroraConfig(it) })
     }
 
     @GetMapping("/**")
@@ -160,19 +131,40 @@ class AuroraConfigControllerV1(
     }
 
     private fun createAuroraConfigFileResponse(auroraConfigFile: AuroraConfigFile): ResponseEntity<Response> {
-        val response = responder.create(auroraConfigFile)
+        val configFiles = auroraConfigFile
+            .let { listOf(AuroraConfigFileResource(it.name, it.contents, it.type)) }
+        val response = Response(items = configFiles)
         val headers = HttpHeaders().apply { eTag = "\"${auroraConfigFile.version}\"" }
         return ResponseEntity(response, headers, HttpStatus.OK)
     }
 }
 
-@Component
-class AuroraConfigResponder {
-    fun create(auroraConfig: AuroraConfig) = Response(items = listOf(auroraConfig).map { fromAuroraConfig(it) })
+data class AuroraConfigResource(
+    val name: String,
+    val files: List<AuroraConfigFileResource> = listOf()
+) {
+    fun toAuroraConfig(ref: AuroraConfigRef): AuroraConfig {
+        val auroraConfigFiles = files.map { AuroraConfigFile(it.name, it.contents) }
+        return AuroraConfig(auroraConfigFiles, ref.name, ref.refName)
+    }
 
-    fun create(auroraConfigFile: AuroraConfigFile): Response {
-        val configFiles = auroraConfigFile
-            .let { listOf(AuroraConfigFileResource(it.name, it.contents, it.type)) }
-        return Response(items = configFiles)
+    companion object {
+        fun fromAuroraConfig(auroraConfig: AuroraConfig): AuroraConfigResource {
+            return AuroraConfigResource(
+                auroraConfig.name,
+                auroraConfig.files.map { AuroraConfigFileResource(it.name, it.contents, it.type) })
+        }
     }
 }
+
+data class AuroraConfigFileResource(
+    val name: String,
+    val contents: String,
+    val type: AuroraConfigFileType? = null
+)
+
+data class ContentPayload(
+    @JsonRawValue
+    val content: String
+)
+

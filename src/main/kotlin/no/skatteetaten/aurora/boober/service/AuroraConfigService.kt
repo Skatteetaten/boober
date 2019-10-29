@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import java.io.File
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
@@ -15,6 +14,7 @@ import org.eclipse.jgit.api.errors.InvalidRemoteException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
+import java.io.File
 
 private val logger = KotlinLogging.logger {}
 
@@ -100,6 +100,7 @@ class AuroraConfigService(
         return saveFile(newFile, updatedAuroraConfig, ref)
     }
 
+    // TODO move to test?
     fun save(auroraConfig: AuroraConfig): AuroraConfig {
         val checkoutDir = getAuroraConfigFolder(auroraConfig.name)
 

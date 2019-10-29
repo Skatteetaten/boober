@@ -22,7 +22,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.test.web.servlet.MockMvc
 
 @AutoConfigureRestDocs
-@WebMvcTest(controllers = [AuroraConfigControllerV1::class, AuroraConfigResponder::class], secure = false)
+@WebMvcTest(controllers = [AuroraConfigControllerV1::class], secure = false)
 class AuroraConfigControllerV1Test(@Autowired private val mockMvc: MockMvc) {
 
     @MockBean

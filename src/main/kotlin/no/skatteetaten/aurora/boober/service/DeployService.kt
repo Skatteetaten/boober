@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import java.util.UUID
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.cluster
 import no.skatteetaten.aurora.boober.feature.dockerImagePath
@@ -28,10 +27,11 @@ import no.skatteetaten.aurora.boober.utils.parallelMap
 import no.skatteetaten.aurora.boober.utils.whenFalse
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
-// TODO: test
+// TODO: test fasade
 @Service
 class DeployService(
     val auroraConfigService: AuroraConfigService,
@@ -54,6 +54,7 @@ class DeployService(
         deploy: Boolean = true
     ): List<AuroraDeployResult> {
 
+        // to controller
         if (applicationDeploymentRefs.isEmpty()) {
             throw IllegalArgumentException("Specify applicationDeploymentRef")
         }

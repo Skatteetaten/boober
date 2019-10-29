@@ -4,14 +4,15 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.OwnerReference
-import java.util.Optional
 import no.skatteetaten.aurora.boober.feature.StsSecretGenerator
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.whenTrue
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
+import java.util.Optional
 
 data class RenewRequest(
     val name: String,
@@ -23,6 +24,7 @@ data class RenewRequest(
 
 // TODO: test
 @Service
+@ConditionalOnProperty("integrations.skap.url")
 class StsRenewService(
     val provsioner: Optional<StsProvisioner>,
     val commandService: OpenShiftCommandService,
@@ -33,6 +35,7 @@ class StsRenewService(
 
     fun renew(request: RenewRequest): List<OpenShiftResponse> {
 
+        //will aldri være her hvis ikke skap.url er satt.
         val sts = provsioner.orElseThrow { IllegalArgumentException("Sts service not available") }
 
         val stsResult = sts.generateCertificate(

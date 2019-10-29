@@ -1,10 +1,10 @@
 package no.skatteetaten.aurora.boober.service
 
-import java.time.Instant
 import no.skatteetaten.aurora.boober.model.AuroraDeployCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
+import java.time.Instant
 
 // TODO: test
 data class AuroraEnvironmentResult(
@@ -14,6 +14,7 @@ data class AuroraEnvironmentResult(
     val projectExist: Boolean = false
 )
 
+// TODO: Strukturen her kan kanskje være bedre, EnvironmentResult f.eks? Idag blir alle responsene for environment result kopiert inn overalt.
 // TODO: assert on deploy command
 data class AuroraDeployResult(
     val openShiftResponses: List<OpenShiftResponse> = listOf(),

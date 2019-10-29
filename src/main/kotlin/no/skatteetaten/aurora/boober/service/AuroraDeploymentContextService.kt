@@ -25,7 +25,7 @@ class AuroraDeploymentContextService(
     val featuers: List<Feature>
 ) {
 
-    // TODO: test this
+    // TODO: test this, refactor to fasade
     fun expandDeploymentRefToApplicationRef(
         auroraConfig: AuroraConfig,
         adr: List<ApplicationDeploymentRef>,

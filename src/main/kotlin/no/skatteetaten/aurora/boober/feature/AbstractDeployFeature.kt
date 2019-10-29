@@ -133,8 +133,7 @@ val AuroraDeploymentSpec.groupIdHandler: AuroraConfigFieldHandler
 fun gavHandlers(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand) =
     setOf(
         AuroraConfigFieldHandler("artifactId",
-            defaultValue = cmd.applicationFiles.find { it.type == AuroraConfigFileType.BASE }?.name?.removeExtension()
-                ?: cmd.applicationDeploymentRef.application,
+            defaultValue = cmd.applicationFiles.find { it.type == AuroraConfigFileType.BASE }?.name?.removeExtension(),
             defaultSource = "fileName",
             validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
 

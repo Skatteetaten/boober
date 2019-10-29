@@ -5,13 +5,16 @@ import no.skatteetaten.aurora.boober.service.RenewRequest
 import no.skatteetaten.aurora.boober.service.StsRenewService
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
+// TODO: test error if skap url is not set
 @RestController
 @RequestMapping("/v1/sts")
+@ConditionalOnProperty("integrations.skap.url")
 class StsControllerV1(
     private val service: StsRenewService
 ) {

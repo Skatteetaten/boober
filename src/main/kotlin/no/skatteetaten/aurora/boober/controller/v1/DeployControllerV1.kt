@@ -1,7 +1,10 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
-import no.skatteetaten.aurora.boober.controller.internal.ApplyPayload
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 import no.skatteetaten.aurora.boober.controller.internal.Response
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.DeployService
 import no.skatteetaten.aurora.boober.service.TagResult
@@ -45,22 +48,28 @@ class DeployControllerV1(private val deployService: DeployService) {
             ?.let { Response(items = auroraDeployResults, success = false, message = it.reason ?: "Deploy failed") }
             ?: Response(items = auroraDeployResults)
     }
-
-    data class DeployResponse(
-        val deploymentSpec: Map<String, Any>?,
-        val deployId: String,
-        val openShiftResponses: List<OpenShiftResponse>,
-        val success: Boolean = true,
-        val reason: String? = null,
-        val tagResponse: TagResult? = null,
-        val projectExist: Boolean = false
-    )
-
-    data class Deploy(
-        val version: String
-    )
-
-    data class Environment(
-        val namespace: String
-    )
 }
+
+data class DeployResponse(
+    val deploymentSpec: Map<String, Any>?,
+    val deployId: String,
+    val openShiftResponses: List<OpenShiftResponse>,
+    val success: Boolean = true,
+    val reason: String? = null,
+    val tagResponse: TagResult? = null,
+    val projectExist: Boolean = false
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class ApplyPayload(
+    val applicationDeploymentRefs: List<ApplicationDeploymentRef> = emptyList(),
+    val overrides: Map<String, String> = mapOf(),
+    val deploy: Boolean = true
+) {
+    fun overridesToAuroraConfigFiles(): List<AuroraConfigFile> {
+        return overrides.map { AuroraConfigFile(it.key, it.value, true) }
+    }
+}
+
+

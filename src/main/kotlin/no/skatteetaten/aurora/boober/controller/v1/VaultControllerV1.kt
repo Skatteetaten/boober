@@ -2,10 +2,6 @@ package no.skatteetaten.aurora.boober.controller.v1
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import java.util.Base64
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
-import javax.validation.Valid
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.v1.VaultOperation.reencrypt
 import no.skatteetaten.aurora.boober.controller.v1.VaultWithAccessResource.Companion.fromEncryptedFileVault
@@ -28,86 +24,12 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.util.Base64
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
+import javax.validation.Valid
 
-object B64 {
-    private val decoder = Base64.getDecoder()
-    private val encoder = Base64.getEncoder()
-
-    fun encode(value: ByteArray): String {
-        return encoder.encodeToString(value)
-    }
-
-    fun decode(value: String): ByteArray {
-        return try {
-            decoder.decode(value)
-        } catch (e: Exception) {
-            throw IllegalArgumentException("Provided content does not appear to be Base64 encoded.")
-        }
-    }
-}
-
-/*
-  @param secrets: A map of fileNames to Base64 encoded content
- */
-data class AuroraSecretVaultPayload(
-    val name: String,
-    val permissions: List<String>,
-    val secrets: Map<String, String>?
-) {
-    val secretsDecoded: Map<String, ByteArray>?
-        @JsonIgnore
-        get() = secrets?.map { Pair(it.key, B64.decode(it.value)) }?.toMap()
-}
-
-/*
-  @param secrets: A map of fileNames to Base64 encoded content
- */
-data class VaultWithAccessResource(
-    val name: String,
-    val hasAccess: Boolean,
-    val secrets: Map<String, String>?,
-    val permissions: List<String>?
-) {
-    companion object {
-        fun fromEncryptedFileVault(it: EncryptedFileVault): VaultWithAccessResource {
-            return VaultWithAccessResource(it.name, true, encodeSecrets(it.secrets), it.permissions)
-        }
-
-        fun fromVaultWithAccess(it: VaultWithAccess): VaultWithAccessResource {
-            return VaultWithAccessResource(
-                name = it.vaultName,
-                hasAccess = it.hasAccess,
-                secrets = encodeSecrets(it.vault?.secrets),
-                permissions = it.vault?.permissions
-            )
-        }
-
-        private fun encodeSecrets(secrets: Map<String, ByteArray>?): Map<String, String>? {
-            return secrets?.map { Pair(it.key, B64.encode(it.value)) }?.toMap()
-        }
-    }
-}
-
-data class VaultFileResource(val contents: String) {
-
-    val decodedContents: ByteArray
-        @JsonIgnore
-        get() = B64.decode(contents)
-
-    companion object {
-        fun fromDecodedBytes(decodedBytes: ByteArray): VaultFileResource {
-            return VaultFileResource(B64.encode(decodedBytes))
-        }
-    }
-}
-
-enum class VaultOperation {
-    reencrypt
-}
-
-data class VaultOperationPayload(val operationName: VaultOperation, val parameters: Map<String, Any>)
-
-// TODO: Flytt data klasser til model/vault?
+// TODO: test extract fasade
 @RestController
 @RequestMapping("/v1/vault/{vaultCollection}")
 class VaultControllerV1(
@@ -236,3 +158,82 @@ class VaultControllerV1(
         response.writer.close()
     }
 }
+
+object B64 {
+    private val decoder = Base64.getDecoder()
+    private val encoder = Base64.getEncoder()
+
+    fun encode(value: ByteArray): String {
+        return encoder.encodeToString(value)
+    }
+
+    fun decode(value: String): ByteArray {
+        return try {
+            decoder.decode(value)
+        } catch (e: Exception) {
+            throw IllegalArgumentException("Provided content does not appear to be Base64 encoded.")
+        }
+    }
+}
+
+/*
+  @param secrets: A map of fileNames to Base64 encoded content
+ */
+data class AuroraSecretVaultPayload(
+    val name: String,
+    val permissions: List<String>,
+    val secrets: Map<String, String>?
+) {
+    val secretsDecoded: Map<String, ByteArray>?
+        @JsonIgnore
+        get() = secrets?.map { Pair(it.key, B64.decode(it.value)) }?.toMap()
+}
+
+/*
+  @param secrets: A map of fileNames to Base64 encoded content
+ */
+data class VaultWithAccessResource(
+    val name: String,
+    val hasAccess: Boolean,
+    val secrets: Map<String, String>?,
+    val permissions: List<String>?
+) {
+    companion object {
+        fun fromEncryptedFileVault(it: EncryptedFileVault): VaultWithAccessResource {
+            return VaultWithAccessResource(it.name, true, encodeSecrets(it.secrets), it.permissions)
+        }
+
+        fun fromVaultWithAccess(it: VaultWithAccess): VaultWithAccessResource {
+            return VaultWithAccessResource(
+                name = it.vaultName,
+                hasAccess = it.hasAccess,
+                secrets = encodeSecrets(it.vault?.secrets),
+                permissions = it.vault?.permissions
+            )
+        }
+
+        private fun encodeSecrets(secrets: Map<String, ByteArray>?): Map<String, String>? {
+            return secrets?.map { Pair(it.key, B64.encode(it.value)) }?.toMap()
+        }
+    }
+}
+
+data class VaultFileResource(val contents: String) {
+
+    val decodedContents: ByteArray
+        @JsonIgnore
+        get() = B64.decode(contents)
+
+    companion object {
+        fun fromDecodedBytes(decodedBytes: ByteArray): VaultFileResource {
+            return VaultFileResource(B64.encode(decodedBytes))
+        }
+    }
+}
+
+enum class VaultOperation {
+    reencrypt
+}
+
+data class VaultOperationPayload(val operationName: VaultOperation, val parameters: Map<String, Any>)
+
