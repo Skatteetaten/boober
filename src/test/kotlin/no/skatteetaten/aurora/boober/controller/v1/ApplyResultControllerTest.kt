@@ -3,10 +3,13 @@ package no.skatteetaten.aurora.boober.controller.v1
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import no.skatteetaten.aurora.boober.controller.internal.Response
-import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.DeployLogService
 import no.skatteetaten.aurora.boober.service.DeployLogServiceException
-import no.skatteetaten.aurora.mockmvc.extensions.*
+import no.skatteetaten.aurora.mockmvc.extensions.Path
+import no.skatteetaten.aurora.mockmvc.extensions.get
+import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
+import no.skatteetaten.aurora.mockmvc.extensions.status
+import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.HttpStatus
@@ -16,8 +19,6 @@ class ApplyResultControllerTest : AbstractControllerTest() {
 
     @MockkBean
     private lateinit var deployLogService: DeployLogService
-
-    val auroraConfigRef = AuroraConfigRef("paas", "master")
     val items = listOf(loadJsonResource("deployhistory.json"))
 
     @Test
@@ -28,7 +29,7 @@ class ApplyResultControllerTest : AbstractControllerTest() {
         } returns items
 
 
-        mockMvc.get(Path("/v1/apply-result/{auroraConfigName}/", auroraConfigRef.name)) {
+        mockMvc.get(Path("/v1/apply-result/{auroraConfigName}", auroraConfigRef.name)) {
             statusIsOk().responseJsonPath("$").equalsObject(Response(items = items))
         }
     }

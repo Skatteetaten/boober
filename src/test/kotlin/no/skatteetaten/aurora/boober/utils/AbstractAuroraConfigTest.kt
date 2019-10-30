@@ -1,11 +1,11 @@
 package no.skatteetaten.aurora.boober.utils
 
 import com.fasterxml.jackson.databind.JsonNode
-import java.io.File
-import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import java.io.File
+import java.nio.charset.Charset
 
 // TODO: Kan vi lese denne auroraConfigen fra noen filer? Vi har jo noen filer vi bruker i andre tester
 abstract class AbstractAuroraConfigTest : ResourceLoader() {
@@ -115,7 +115,7 @@ abstract class AbstractAuroraConfigTest : ResourceLoader() {
                 it.value,
                 false
             )
-        }, "aos", "master")
+        }, "paas", "master")
     }
 
     fun getSampleFiles(aid: ApplicationDeploymentRef, additionalFile: String? = null): Map<String, String> {

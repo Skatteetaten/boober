@@ -5,10 +5,12 @@ import io.mockk.every
 import no.skatteetaten.aurora.boober.facade.DeleteApplicationDeploymentResponse
 import no.skatteetaten.aurora.boober.facade.DeploymentFacade
 import no.skatteetaten.aurora.boober.facade.GetApplicationDeploymentResponse
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.ApplicationRef
-import no.skatteetaten.aurora.boober.service.AuroraConfigRef
-import no.skatteetaten.aurora.mockmvc.extensions.*
+import no.skatteetaten.aurora.mockmvc.extensions.Path
+import no.skatteetaten.aurora.mockmvc.extensions.contentTypeJson
+import no.skatteetaten.aurora.mockmvc.extensions.post
+import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
+import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.HttpHeaders
@@ -42,11 +44,7 @@ class ApplicationDeploymentControllerTest : AbstractControllerTest() {
 
     @Test
     fun `list applicationRef given applicationDeploymentRef`() {
-        val adr = ApplicationDeploymentRef("utv", "simple")
         val payload = ApplicationDeploymentRefPayload(listOf(adr))
-        val auroraConfigRef = AuroraConfigRef("paas", "test")
-
-
 
         every { deploymentFacade.deploymentExist(auroraConfigRef, payload.adr) } returns listOf(
                 GetApplicationDeploymentResponse(
@@ -58,7 +56,7 @@ class ApplicationDeploymentControllerTest : AbstractControllerTest() {
         )
 
         mockMvc.post(
-                path = Path("/v1/applicationdeployment/{auroraConfig}?reference={reference}", auroraConfigRef.name, auroraConfigRef.refName),
+            path = Path("/v1/applicationdeployment/{auroraConfig}", auroraConfigRef.name),
                 headers = HttpHeaders().contentTypeJson(),
                 body = payload
         ) {

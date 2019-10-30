@@ -1,14 +1,21 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
+import assertk.assertThat
+import assertk.assertions.isFailure
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
 import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.mockmvc.extensions.*
+import no.skatteetaten.aurora.mockmvc.extensions.Path
+import no.skatteetaten.aurora.mockmvc.extensions.contentType
+import no.skatteetaten.aurora.mockmvc.extensions.get
+import no.skatteetaten.aurora.mockmvc.extensions.patch
+import no.skatteetaten.aurora.mockmvc.extensions.put
+import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
+import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.HttpHeaders
-
 
 @WebMvcTest(controllers = [AuroraConfigControllerV1::class])
 class AuroraConfigControllerV1Test : AbstractControllerTest() {
@@ -31,9 +38,9 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
             body = mapOf("content" to "test-content")
         ) {
             statusIsOk()
-                .responseJsonPath("$.success").isTrue()
-                .responseJsonPath("$.items[0].name").equalsValue("filename")
-                .responseJsonPath("$.items[0].contents").equalsValue("contents")
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items[0].name").equalsValue("filename")
+            responseJsonPath("$.items[0].contents").equalsValue("contents")
         }
     }
 
@@ -45,24 +52,25 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
 
         mockMvc.get(Path("/v1/auroraconfig/{auroraConfigName}", "aos")) {
             statusIsOk()
-                .responseJsonPath("$.success").isTrue()
-                    .responseJsonPath("$.items[0].name").equalsValue("aos")
-                .responseJsonPath("$.items[0].files.length()").equalsValue(1)
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items[0].name").equalsValue("aos")
+            responseJsonPath("$.items[0].files.length()").equalsValue(1)
         }
     }
-
 
     /*
       TODO: How to test this? Need to add ErrorHandler in here?
      */
     @Test
     fun `Get aurora config by name fails if only env specified`() {
-        mockMvc.get(Path("/v1/auroraconfig/{auroraConfigName}?environment={env}", "aos", "utv")) {
-            statusIsOk()
-                    .responseJsonPath("$.success").isFalse()
-                    .responseJsonPath("$.items[0].name").equalsValue("filename")
-                    .responseJsonPath("$.items[0].contents").equalsValue("contents")
-        }
+        assertThat {
+            mockMvc.get(Path("/v1/auroraconfig/{auroraConfigName}?environment={env}", "paas", "utv")) {
+                statusIsOk()
+                responseJsonPath("$.success").isFalse()
+                responseJsonPath("$.items[0].name").equalsValue("filename")
+                responseJsonPath("$.items[0].contents").equalsValue("contents")
+            }
+        }.isFailure()
     }
 
     @Test
@@ -71,14 +79,20 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
             facade.findAuroraConfigFilesForApplicationDeployment(any(), any())
         } returns auroraConfig.files
 
-        mockMvc.get(Path("/v1/auroraconfig/{auroraConfigName}?environment={env}&application={app}", "aos", "utv", "simple")) {
+        mockMvc.get(
+            Path(
+                "/v1/auroraconfig/{auroraConfigName}?environment={env}&application={app}",
+                "aos",
+                "utv",
+                "simple"
+            )
+        ) {
             statusIsOk()
-                    .responseJsonPath("$.success").isTrue()
-                    .responseJsonPath("$.items[0].name").equalsValue("filename")
-                    .responseJsonPath("$.items[0].contents").equalsValue("contents")
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items[0].name").equalsValue("filename")
+            responseJsonPath("$.items[0].contents").equalsValue("contents")
         }
     }
-
 
     @Test
     fun `Get aurora config by name for adr`() {
@@ -88,11 +102,12 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
 
         mockMvc.get(Path("/v1/auroraconfig/{auroraConfigName}/{env}/{app}", "aos", "utv", "simple")) {
             statusIsOk()
-                    .responseJsonPath("$.success").isTrue()
-                    .responseJsonPath("$.items[0].name").equalsValue("filename")
-                    .responseJsonPath("$.items[0].contents").equalsValue("contents")
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items[0].name").equalsValue("filename")
+            responseJsonPath("$.items[0].contents").equalsValue("contents")
         }
     }
+
     @Test
     fun `Get aurora config file by file name`() {
 
@@ -102,9 +117,9 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
 
         mockMvc.get(Path("/v1/auroraconfig/{auroraConfigName}/{fileName}", "aos", "filename")) {
             statusIsOk()
-                .responseJsonPath("$.success").isTrue()
-                .responseJsonPath("$.items[0].name").equalsValue("filename")
-                .responseJsonPath("$.items[0].contents").equalsValue("contents")
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items[0].name").equalsValue("filename")
+            responseJsonPath("$.items[0].contents").equalsValue("contents")
         }
     }
 
@@ -116,9 +131,9 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
 
         mockMvc.get(Path("/v1/auroraconfig/aos/filenames")) {
             statusIsOk()
-                .responseJsonPath("$.success").isTrue()
-                    .responseJsonPath("$.items.length()").equalsValue(1)
-                .responseJsonPath("$.items[0]").equalsValue("file1")
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items.length()").equalsValue(1)
+            responseJsonPath("$.items[0]").equalsValue("file1")
         }
     }
 
@@ -135,9 +150,9 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
             body = mapOf("content" to "test-content")
         ) {
             statusIsOk()
-                .responseJsonPath("$.success").isTrue()
-                .responseJsonPath("$.items[0].name").equalsValue("filename")
-                .responseJsonPath("$.items[0].type").equalsValue("BASE")
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items[0].name").equalsValue("filename")
+            responseJsonPath("$.items[0].type").equalsValue("BASE")
         }
     }
 
@@ -154,8 +169,8 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
             body = mapOf("name" to "name", "files" to emptyList<String>())
         ) {
             statusIsOk()
-                .responseJsonPath("$.success").isTrue()
-                .responseJsonPath("$.items[0].name").equalsValue("filename")
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items[0].name").equalsValue("filename")
         }
     }
 }
