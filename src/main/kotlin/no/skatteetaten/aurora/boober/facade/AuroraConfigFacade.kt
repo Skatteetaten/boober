@@ -70,7 +70,7 @@ class AuroraConfigFacade(
         auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(commands, resourceValidation)
     }
 
-    fun findAuroraConfigFile(ref: AuroraConfigRef, fileName: String): AuroraConfigFile? {
+    fun findAuroraConfigFile(ref: AuroraConfigRef, fileName: String): AuroraConfigFile {
 
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         return auroraConfig.findFile(fileName)
