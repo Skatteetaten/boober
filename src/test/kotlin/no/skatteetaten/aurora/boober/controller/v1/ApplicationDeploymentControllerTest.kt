@@ -7,6 +7,7 @@ import no.skatteetaten.aurora.boober.facade.DeploymentFacade
 import no.skatteetaten.aurora.boober.facade.GetApplicationDeploymentResponse
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.ApplicationRef
+import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.mockmvc.extensions.*
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -20,11 +21,11 @@ class ApplicationDeploymentControllerTest : AbstractControllerTest() {
 
     @Test
     fun `delete ApplicationRef`() {
-        val applicationRef = ApplicationRef("demo-deploy", "test")
+        val applicationRef = ApplicationRef("paas-utv", "simple")
         val payload = ApplicationDeploymentPayload(listOf(applicationRef))
 
-        every { deploymentFacade.executeDelete(any()) } returns listOf(
-            DeleteApplicationDeploymentResponse(ApplicationRef("namespace", "name"), true, "")
+        every { deploymentFacade.executeDelete(payload.applicationRefs) } returns listOf(
+                DeleteApplicationDeploymentResponse(applicationRef, true, "Application was successfully deleted.")
         )
 
         mockMvc.post(
@@ -41,13 +42,15 @@ class ApplicationDeploymentControllerTest : AbstractControllerTest() {
 
     @Test
     fun `list applicationRef given applicationDeploymentRef`() {
-        val adr = ApplicationDeploymentRef("deploy", "reference")
+        val adr = ApplicationDeploymentRef("utv", "simple")
         val payload = ApplicationDeploymentRefPayload(listOf(adr))
+        val auroraConfigRef = AuroraConfigRef("paas", "test")
 
 
-        every { deploymentFacade.deploymentExist(any(), any()) } returns listOf(
+
+        every { deploymentFacade.deploymentExist(auroraConfigRef, payload.adr) } returns listOf(
                 GetApplicationDeploymentResponse(
-                        applicationRef = ApplicationRef("demo-deploy", "reference"),
+                        applicationRef = ApplicationRef("paas-utv", "simple"),
                         success = true,
                         exists = true,
                         message = "Application exists"
@@ -55,7 +58,7 @@ class ApplicationDeploymentControllerTest : AbstractControllerTest() {
         )
 
         mockMvc.post(
-                path = Path("/v1/applicationdeployment/demo?reference=test"),
+                path = Path("/v1/applicationdeployment/{auroraConfig}?reference={reference}", auroraConfigRef.name, auroraConfigRef.refName),
                 headers = HttpHeaders().contentTypeJson(),
                 body = payload
         ) {
@@ -63,7 +66,7 @@ class ApplicationDeploymentControllerTest : AbstractControllerTest() {
                     .responseJsonPath("$.success").isTrue()
                     .responseJsonPath("$.items[0].message").equalsValue("Application exists")
                     .responseJsonPath("$.items[0].exists").equalsValue(true)
-                    .responseJsonPath("$.items[0].applicationRef").equalsObject(ApplicationRef("demo-deploy", "reference"))
+                    .responseJsonPath("$.items[0].applicationRef").equalsObject(ApplicationRef("paas-utv", "simple"))
         }
     }
 }

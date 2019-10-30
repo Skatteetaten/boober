@@ -17,17 +17,18 @@ class ApplyResultControllerTest : AbstractControllerTest() {
     @MockkBean
     private lateinit var deployLogService: DeployLogService
 
+    val auroraConfigRef = AuroraConfigRef("paas", "master")
     val items = listOf(loadJsonResource("deployhistory.json"))
 
     @Test
     fun `Get deploy history`() {
 
         every {
-            deployLogService.deployHistory(AuroraConfigRef("aos", "master"))
+            deployLogService.deployHistory(auroraConfigRef)
         } returns items
 
 
-        mockMvc.get(Path("/v1/apply-result/{auroraConfigName}/", "aos")) {
+        mockMvc.get(Path("/v1/apply-result/{auroraConfigName}/", auroraConfigRef.name)) {
             statusIsOk().responseJsonPath("$").equalsObject(Response(items = items))
         }
     }
@@ -35,23 +36,25 @@ class ApplyResultControllerTest : AbstractControllerTest() {
     @Test
     fun `Get deploy history by id`() {
 
+        val deployId = "123"
         every {
-            deployLogService.findDeployResultById(any(), any())
+            deployLogService.findDeployResultById(auroraConfigRef, deployId)
         } returns items.first()
 
 
-        mockMvc.get(Path("/v1/apply-result/aos/{deployId}", "123")) {
+        mockMvc.get(Path("/v1/apply-result/{auroraConfigName}/{deployId}", auroraConfigRef.name, deployId)) {
             statusIsOk().responseJsonPath("$").equalsObject(Response(item = items.first()))
         }
     }
 
     @Test
     fun `Get deploy history by id return not found when no DeployResult`() {
+        val deployId = "invalid-id"
         every {
-            deployLogService.findDeployResultById(any(), any())
+            deployLogService.findDeployResultById(auroraConfigRef, deployId)
         } returns null
 
-        mockMvc.get(Path("/v1/apply-result/aos/invalid-id")) {
+        mockMvc.get(Path("/v1/apply-result/{auroraConfigName}/{deployId}", auroraConfigRef.name, deployId)) {
             status(HttpStatus.NOT_FOUND)
         }
     }
@@ -59,15 +62,16 @@ class ApplyResultControllerTest : AbstractControllerTest() {
     @Test
     fun `Get error response when findDeployResultById throws HttpClientErrorException`() {
 
+        val deployId = "1235"
         every {
-            deployLogService.findDeployResultById(any(), any())
-        } throws DeployLogServiceException("DeployId abc123 was not found for affiliation aos")
+            deployLogService.findDeployResultById(auroraConfigRef, deployId)
+        } throws DeployLogServiceException("DeployId $deployId was not found for affiliation ${auroraConfigRef.name}")
 
 
-        mockMvc.get(Path("/v1/apply-result/aos/abc123")) {
+        mockMvc.get(Path("/v1/apply-result/{auroraConfigName}/{deployId}", auroraConfigRef.name, deployId)) {
             status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .responseJsonPath("$.message").contains("abc123")
-                    .responseJsonPath("$.message").contains("aos")
+                    .responseJsonPath("$.message").contains(deployId)
+                    .responseJsonPath("$.message").contains(auroraConfigRef.name)
         }
     }
 }
