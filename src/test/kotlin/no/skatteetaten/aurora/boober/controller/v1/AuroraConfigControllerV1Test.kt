@@ -5,7 +5,8 @@ import assertk.assertions.isFailure
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
-import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.mockmvc.extensions.Path
 import no.skatteetaten.aurora.mockmvc.extensions.contentType
 import no.skatteetaten.aurora.mockmvc.extensions.get
@@ -23,24 +24,29 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
     @MockkBean
     private lateinit var facade: AuroraConfigFacade
 
-    val auroraConfig: AuroraConfig = load("auroraconfig.json")
 
     @Test
     fun `Patch aurora config`() {
 
+        val fileName = "utv/simple.json"
+
+        val content = """{ "version" : "test" }"""
+        val files = auroraConfig.files.filter { it.name != fileName }.addIfNotNull(AuroraConfigFile(fileName, content))
+        val modifiedAuroraConfig = auroraConfig.copy(files = files)
+
         every {
             facade.patchAuroraConfigFile(any(), any(), any(), any())
-        } returns auroraConfig
+        } returns modifiedAuroraConfig
 
         mockMvc.patch(
-            path = Path("/v1/auroraconfig/{auroraConfigName}/{fileName}", "paas", "filename"),
+            path = Path("/v1/auroraconfig/{auroraConfigName}/{fileName}", auroraConfigRef.name, fileName),
             headers = HttpHeaders().contentType(),
-            body = mapOf("content" to "test-content")
+            body = mapOf("content" to content)
         ) {
             statusIsOk()
             responseJsonPath("$.success").isTrue()
-            responseJsonPath("$.items[0].name").equalsValue("filename")
-            responseJsonPath("$.items[0].contents").equalsValue("contents")
+            responseJsonPath("$.items[0].name").equalsValue(fileName)
+            responseJsonPath("$.items[0].contents").equalsValue(content)
         }
     }
 

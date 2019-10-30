@@ -55,7 +55,10 @@ class ApplyResultControllerTest : AbstractControllerTest() {
             deployLogService.findDeployResultById(auroraConfigRef, deployId)
         } returns null
 
-        mockMvc.get(Path("/v1/apply-result/{auroraConfigName}/{deployId}", auroraConfigRef.name, deployId)) {
+        mockMvc.get(
+            Path("/v1/apply-result/{auroraConfigName}/{deployId}", auroraConfigRef.name, deployId),
+            docsIdentifier = "get-v1-apply-result-auroraConfigName-deployId-failure"
+        ) {
             status(HttpStatus.NOT_FOUND)
         }
     }
@@ -69,10 +72,14 @@ class ApplyResultControllerTest : AbstractControllerTest() {
         } throws DeployLogServiceException("DeployId $deployId was not found for affiliation ${auroraConfigRef.name}")
 
 
-        mockMvc.get(Path("/v1/apply-result/{auroraConfigName}/{deployId}", auroraConfigRef.name, deployId)) {
+        mockMvc.get(
+            Path("/v1/apply-result/{auroraConfigName}/{deployId}", auroraConfigRef.name, deployId),
+            docsIdentifier = "get-v1-apply-result-auroraConfigName-deployId-failure-not-found-http"
+        )
+        {
             status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .responseJsonPath("$.message").contains(deployId)
-                    .responseJsonPath("$.message").contains(auroraConfigRef.name)
+                .responseJsonPath("$.message").contains(deployId)
+                .responseJsonPath("$.message").contains(auroraConfigRef.name)
         }
     }
 }
