@@ -28,7 +28,6 @@ class ApplyResultControllerTest : AbstractControllerTest() {
             deployLogService.deployHistory(auroraConfigRef)
         } returns items
 
-
         mockMvc.get(Path("/v1/apply-result/{auroraConfigName}", auroraConfigRef.name)) {
             statusIsOk().responseJsonPath("$").equalsObject(Response(items = items))
         }
@@ -41,7 +40,6 @@ class ApplyResultControllerTest : AbstractControllerTest() {
         every {
             deployLogService.findDeployResultById(auroraConfigRef, deployId)
         } returns items.first()
-
 
         mockMvc.get(Path("/v1/apply-result/{auroraConfigName}/{deployId}", auroraConfigRef.name, deployId)) {
             statusIsOk().responseJsonPath("$").equalsObject(Response(item = items.first()))
@@ -71,12 +69,10 @@ class ApplyResultControllerTest : AbstractControllerTest() {
             deployLogService.findDeployResultById(auroraConfigRef, deployId)
         } throws DeployLogServiceException("DeployId $deployId was not found for affiliation ${auroraConfigRef.name}")
 
-
         mockMvc.get(
             Path("/v1/apply-result/{auroraConfigName}/{deployId}", auroraConfigRef.name, deployId),
             docsIdentifier = "get-v1-apply-result-auroraConfigName-deployId-failure-not-found-http"
-        )
-        {
+        ) {
             status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .responseJsonPath("$.message").contains(deployId)
                 .responseJsonPath("$.message").contains(auroraConfigRef.name)

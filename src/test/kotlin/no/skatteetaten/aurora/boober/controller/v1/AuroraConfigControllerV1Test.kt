@@ -26,7 +26,7 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
     @Test
     fun `Patch aurora config`() {
 
-        val fileName = "utv/simple.json"
+        val fileName = "simple.json"
 
         val patch = """[{
             "op": "add",
@@ -127,7 +127,7 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
     @Test
     fun `Get aurora config file by file name`() {
 
-        val fileName="about.json"
+        val fileName = "about.json"
         val fileContent = auroraConfig.files.find { it.name == fileName }
         every {
             facade.findAuroraConfigFile(auroraConfigRef, fileName)
@@ -145,7 +145,7 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
     fun `Get file names`() {
         every {
             facade.findAuroraConfigFileNames(auroraConfigRef)
-        } returns auroraConfig.files.map{ it.name}
+        } returns auroraConfig.files.map { it.name }
 
         mockMvc.get(Path("/v1/auroraconfig/{auroraConfig}/filenames", auroraConfigRef.name)) {
             statusIsOk()
@@ -157,7 +157,8 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
     @Test
     fun `Update aurora config file`() {
 
-        val fileName="utv/simple.json"
+        // This cannot contain a /, the wiremock test framework we use here will not support it
+        val fileName = "simple.json"
         val content = """{ "version" : "test" }"""
 
         every {
@@ -184,7 +185,7 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
         } returns Unit
 
         mockMvc.put(
-            path = Path("/v1/auroraconfig/{auroraConfig}/validate",auroraConfigRef.name),
+            path = Path("/v1/auroraconfig/{auroraConfig}/validate", auroraConfigRef.name),
             headers = HttpHeaders().contentType(),
             body = jacksonObjectMapper().writeValueAsString(auroraConfig)
         ) {

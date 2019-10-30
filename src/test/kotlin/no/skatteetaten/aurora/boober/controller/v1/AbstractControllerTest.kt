@@ -35,9 +35,7 @@ abstract class AbstractControllerTest : AbstractAuroraConfigTest() {
     val adr = ApplicationDeploymentRef("utv", "simple")
     val auroraConfigRef = AuroraConfigRef("paas", "master")
     val auroraConfig = getAuroraConfigSamples()
-
 }
 
-fun AuroraConfig.modifyFile(fileName:String, content:String) =
-    this.copy(files = this.files.filter { it.name != fileName }.addIfNotNull( AuroraConfigFile(fileName, content)))
-
+fun AuroraConfig.modifyFile(fileName: String, content: String) =
+    this.copy(files = this.files.filter { it.name != fileName }.addIfNotNull(AuroraConfigFile(fileName, content)))
