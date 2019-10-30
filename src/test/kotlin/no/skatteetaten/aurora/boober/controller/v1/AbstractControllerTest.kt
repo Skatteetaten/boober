@@ -4,8 +4,11 @@ import com.ninjasquad.springmockk.MockkBean
 import io.mockk.clearAllMocks
 import no.skatteetaten.aurora.boober.controller.security.BearerAuthenticationManager
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.junit.jupiter.api.AfterEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs
@@ -32,4 +35,9 @@ abstract class AbstractControllerTest : AbstractAuroraConfigTest() {
     val adr = ApplicationDeploymentRef("utv", "simple")
     val auroraConfigRef = AuroraConfigRef("paas", "master")
     val auroraConfig = getAuroraConfigSamples()
+
 }
+
+fun AuroraConfig.modifyFile(fileName:String, content:String) =
+    this.copy(files = this.files.filter { it.name != fileName }.addIfNotNull( AuroraConfigFile(fileName, content)))
+
