@@ -135,7 +135,7 @@ class VaultService(
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName) { vaultCollection, repo ->
             vaultCollection.createVault(vaultName).let { vault ->
                 vault.clear()
-                secrets.forEach({ name, contents -> vault.updateFile(name, contents) })
+                secrets.forEach { (name, contents) -> vault.updateFile(name, contents) }
                 vault.permissions = permissions
                 gitService.commitAndPushChanges(repo)
                 vault

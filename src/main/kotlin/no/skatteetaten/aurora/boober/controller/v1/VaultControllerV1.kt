@@ -2,10 +2,6 @@ package no.skatteetaten.aurora.boober.controller.v1
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import java.util.Base64
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
-import javax.validation.Valid
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.v1.VaultOperation.reencrypt
 import no.skatteetaten.aurora.boober.controller.v1.VaultWithAccessResource.Companion.fromEncryptedFileVault
@@ -28,14 +24,19 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.util.Base64
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
+import javax.validation.Valid
 
-// TODO: test , do not want to touch this code more then I have to really
+// TODO: test, some things are missing here
 @RestController
 @RequestMapping("/v1/vault/{vaultCollection}")
 class VaultControllerV1(
     private val vaultService: VaultService,
     @Value("\${vault.operations.enabled:false}") private val operationsEnabled: Boolean
 ) {
+    // TODO vault operations is not checked for everywhere
 
     @PostMapping("/")
     fun vaultOperation(@PathVariable vaultCollection: String, @RequestBody @Valid operationPayload: VaultOperationPayload) {
@@ -65,7 +66,6 @@ class VaultControllerV1(
 
         val vault = vaultService.import(
             vaultCollection, vaultPayload.name, vaultPayload.permissions, vaultPayload.secretsDecoded
-                ?: emptyMap()
         )
         return Response(items = listOf(vault).map(::fromEncryptedFileVault))
     }
@@ -184,9 +184,9 @@ data class AuroraSecretVaultPayload(
     val permissions: List<String>,
     val secrets: Map<String, String>?
 ) {
-    val secretsDecoded: Map<String, ByteArray>?
+    val secretsDecoded: Map<String, ByteArray>
         @JsonIgnore
-        get() = secrets?.map { Pair(it.key, B64.decode(it.value)) }?.toMap()
+        get() = secrets?.map { Pair(it.key, B64.decode(it.value)) }?.toMap() ?: emptyMap()
 }
 
 /*
@@ -236,3 +236,4 @@ enum class VaultOperation {
 }
 
 data class VaultOperationPayload(val operationName: VaultOperation, val parameters: Map<String, Any>)
+
