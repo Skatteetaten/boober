@@ -21,7 +21,10 @@ import org.springframework.web.bind.annotation.RestController
 class DeployControllerV1(private val deployFacade: DeployFacade) {
 
     @PutMapping
-    fun apply(@PathVariable auroraConfigName: String, @RequestBody payload: ApplyPayload): Response {
+    fun apply(
+        @PathVariable auroraConfigName: String,
+        @RequestBody payload: ApplyPayload
+    ): Response {
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
 

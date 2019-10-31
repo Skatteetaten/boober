@@ -5,36 +5,23 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotNull
-import com.fasterxml.jackson.databind.node.TextNode
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import java.nio.charset.Charset
-import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
-import no.skatteetaten.aurora.boober.model.AuroraConfig
-import no.skatteetaten.aurora.boober.model.AuroraConfigField
-import no.skatteetaten.aurora.boober.model.AuroraConfigFieldSource
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraContextCommand
-import no.skatteetaten.aurora.boober.model.AuroraDeployCommand
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
-import no.skatteetaten.aurora.boober.service.AuroraDeployResult
 import no.skatteetaten.aurora.boober.service.BitbucketService
 import no.skatteetaten.aurora.boober.service.DeployLogService
 import no.skatteetaten.aurora.boober.service.DeployLogServiceException
 import no.skatteetaten.aurora.boober.service.Deployer
 import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
 import no.skatteetaten.aurora.boober.utils.jsonMapper
-import org.apache.commons.text.StringSubstitutor
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.web.client.HttpClientErrorException
+import java.nio.charset.Charset
 
 class DeployLogServiceTest : AbstractAuroraConfigTest() {
 
@@ -60,7 +47,7 @@ class DeployLogServiceTest : AbstractAuroraConfigTest() {
             bitbucketService.uploadFile("ao", "auroradeploymenttags", fileName, "DEPLOY/utv-foo/bar", any())
         } returns "Success"
 
-        val response = service.markRelease(createDeployResult(), deployer)
+        val response = service.markRelease(createDeployResult(deployId), deployer)
 
         verify(exactly = 1) {
             bitbucketService.uploadFile("ao", "auroradeploymenttags", fileName, "DEPLOY/utv-foo/bar", any())
@@ -75,7 +62,7 @@ class DeployLogServiceTest : AbstractAuroraConfigTest() {
             bitbucketService.uploadFile("ao", "auroradeploymenttags", fileName, "DEPLOY/utv-foo/bar", any())
         } throws RuntimeException("Some really bad stuff happened")
 
-        val response = service.markRelease(createDeployResult(), deployer)
+        val response = service.markRelease(createDeployResult(deployId), deployer)
 
         assertThat(response.size).isEqualTo(1)
         val answer = response.first()
@@ -117,43 +104,5 @@ class DeployLogServiceTest : AbstractAuroraConfigTest() {
         }.isNotNull().isFailure().isInstanceOf(HttpClientErrorException::class)
     }
 
-    private fun createDeployResult(): List<AuroraDeployResult> {
-        val aboutFile = AuroraConfigFile("about.json", "{}")
-        return listOf(
-                AuroraDeployResult(
-                        reason = "DONE",
-                        deployCommand = AuroraDeployCommand(
-                                headerResources = emptySet(),
-                                resources = emptySet(),
-                                user = User("hero", "token"),
-                                deployId = deployId,
-                                shouldDeploy = true,
-                                context = AuroraDeploymentContext(
-                                        spec = AuroraDeploymentSpec(
-                                                fields = mapOf("cluster" to AuroraConfigField(sources = setOf(
-                                                        AuroraConfigFieldSource(aboutFile, TextNode("utv"))))),
-                                                replacer = StringSubstitutor()
-                                        ),
-                                        cmd = AuroraContextCommand(
-                                                auroraConfig = AuroraConfig(
-                                                        files = listOf(
-                                                                aboutFile,
-                                                                AuroraConfigFile("foo/about.json", "{}"),
-                                                                AuroraConfigFile("bar.json", "{}"),
-                                                                AuroraConfigFile("foo/bar.json", "{}")
-                                                        ),
-                                                        name = "paas",
-                                                        version = "1"
-                                                ),
-                                                applicationDeploymentRef = ApplicationDeploymentRef("foo", "bar"),
-                                                auroraConfigRef = AuroraConfigRef("test", "master", "123")
-                                        ),
-                                        features = emptyMap(),
-                                        featureHandlers = emptyMap()
 
-                                )
-                        )
-                )
-        )
-    }
 }

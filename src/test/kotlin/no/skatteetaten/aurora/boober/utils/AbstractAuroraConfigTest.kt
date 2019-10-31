@@ -1,11 +1,22 @@
 package no.skatteetaten.aurora.boober.utils
 
 import com.fasterxml.jackson.databind.JsonNode
-import java.io.File
-import java.nio.charset.Charset
+import com.fasterxml.jackson.databind.node.TextNode
+import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraConfigField
+import no.skatteetaten.aurora.boober.model.AuroraConfigFieldSource
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeployCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.service.AuroraConfigRef
+import no.skatteetaten.aurora.boober.service.AuroraDeployResult
+import org.apache.commons.text.StringSubstitutor
+import java.io.File
+import java.nio.charset.Charset
 
 // TODO: Kan vi lese denne auroraConfigen fra noen filer? Vi har jo noen filer vi bruker i andre tester
 abstract class AbstractAuroraConfigTest : ResourceLoader() {
@@ -129,6 +140,52 @@ abstract class AbstractAuroraConfigTest : ResourceLoader() {
             "${aid.environment}/about.json",
             "${aid.environment}/${aid.application}.json",
             additionalFile?.let { it } ?: ""
+        )
+    }
+
+    fun createDeployResult(deployId: String, success: Boolean = true): List<AuroraDeployResult> {
+        val aboutFile = AuroraConfigFile("about.json", "{}")
+        return listOf(
+            AuroraDeployResult(
+                success = success,
+                reason = if (success) "DONE" else "Failed",
+                deployCommand = AuroraDeployCommand(
+                    headerResources = emptySet(),
+                    resources = emptySet(),
+                    user = User("hero", "token"),
+                    deployId = deployId,
+                    shouldDeploy = true,
+                    context = AuroraDeploymentContext(
+                        spec = AuroraDeploymentSpec(
+                            fields = mapOf(
+                                "cluster" to AuroraConfigField(
+                                    sources = setOf(
+                                        AuroraConfigFieldSource(aboutFile, TextNode("utv"))
+                                    )
+                                )
+                            ),
+                            replacer = StringSubstitutor()
+                        ),
+                        cmd = AuroraContextCommand(
+                            auroraConfig = AuroraConfig(
+                                files = listOf(
+                                    aboutFile,
+                                    AuroraConfigFile("utv/about.json", "{}"),
+                                    AuroraConfigFile("simple.json", "{}"),
+                                    AuroraConfigFile("utv/simple.json", "{}")
+                                ),
+                                name = "paas",
+                                version = "1"
+                            ),
+                            applicationDeploymentRef = ApplicationDeploymentRef("utv", "simple"),
+                            auroraConfigRef = AuroraConfigRef("test", "master", "123")
+                        ),
+                        features = emptyMap(),
+                        featureHandlers = emptyMap()
+
+                    )
+                )
+            )
         )
     }
 }
