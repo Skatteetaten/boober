@@ -35,7 +35,6 @@ class DeployControllerV1Test : AbstractControllerTest() {
             )
         } returns response
 
-
         mockMvc.put(
             path = Path("/v1/apply/{affiliation}", auroraConfigRef.name),
             headers = HttpHeaders().contentTypeJson(),
@@ -62,7 +61,6 @@ class DeployControllerV1Test : AbstractControllerTest() {
                 payload.deploy
             )
         } returns response
-
 
         mockMvc.put(
             path = Path("/v1/apply/{affiliation}", auroraConfigRef.name),

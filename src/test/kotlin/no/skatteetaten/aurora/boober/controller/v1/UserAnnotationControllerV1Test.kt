@@ -88,4 +88,3 @@ class UserAnnotationControllerV1Test : AbstractControllerTest() {
         }
     }
 }
-

@@ -29,4 +29,3 @@ class AuroraConfigNamesControllerV1Test : AbstractControllerTest() {
         }
     }
 }
-

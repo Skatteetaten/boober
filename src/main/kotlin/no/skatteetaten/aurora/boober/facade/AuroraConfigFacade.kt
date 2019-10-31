@@ -122,5 +122,4 @@ class AuroraConfigFacade(
     }
 
     fun findAllAuroraConfigNames() = auroraConfigService.findAllAuroraConfigNames()
-
 }

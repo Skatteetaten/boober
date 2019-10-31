@@ -96,5 +96,4 @@ class StsControllerV1Test : AbstractControllerTest() {
             responseJsonPath("$.message").equalsValue("Failed renewing certificate")
         }
     }
-
 }

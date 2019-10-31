@@ -45,7 +45,6 @@ class VaultControllerV1Test : AbstractControllerTest() {
 
         every { service.findAllVaultsWithUserAccessInVaultCollection(collectionKey) } returns allVaults
 
-
         mockMvc.get(Path("/v1/vault/{vaultCollection}", collectionKey)) {
             statusIsOk()
             responseJsonPath("$.success").isTrue()
@@ -85,7 +84,7 @@ class VaultControllerV1Test : AbstractControllerTest() {
         ) {
             statusIsOk()
             responseJsonPath("$").equalsObject(vaults)
-            //TODO should this have quotes?
+            // TODO should this have quotes?
             responseHeader("Etag").equals("\"792f98952392f2d201c82154f5b18dd8\"")
         }
     }
@@ -100,7 +99,6 @@ class VaultControllerV1Test : AbstractControllerTest() {
         )
 
         every { service.import(collectionKey, payload.name, emptyList(), any()) } returns vault1.vault!!
-
 
         mockMvc.put(
             path = Path("/v1/vault/{vaultCollection}", collectionKey),

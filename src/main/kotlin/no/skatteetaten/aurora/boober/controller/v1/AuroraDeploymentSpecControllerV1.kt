@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.controller.v1
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
@@ -17,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.util.UriUtils
-import java.nio.charset.Charset
 
 @RestController
 @RequestMapping("/v1/auroradeployspec/{auroraConfigName}")
