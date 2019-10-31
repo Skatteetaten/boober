@@ -24,7 +24,7 @@ class DeployControllerV1Test : AbstractControllerTest() {
 
         val payload = ApplyPayload(applicationDeploymentRefs = listOf(adr))
 
-        val response = createDeployResult("123")
+        val response = stubDeployResult("123")
 
         every {
             facade.executeDeploy(
@@ -51,7 +51,7 @@ class DeployControllerV1Test : AbstractControllerTest() {
 
         val payload = ApplyPayload(applicationDeploymentRefs = listOf(adr))
 
-        val response = createDeployResult("123", false)
+        val response = stubDeployResult("123", false)
 
         every {
             facade.executeDeploy(

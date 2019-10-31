@@ -2,8 +2,6 @@ package no.skatteetaten.aurora.boober.utils
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
-import java.io.File
-import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
@@ -17,6 +15,8 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeployResult
 import org.apache.commons.text.StringSubstitutor
+import java.io.File
+import java.nio.charset.Charset
 
 // TODO: Kan vi lese denne auroraConfigen fra noen filer? Vi har jo noen filer vi bruker i andre tester
 abstract class AbstractAuroraConfigTest : ResourceLoader() {
@@ -144,7 +144,7 @@ abstract class AbstractAuroraConfigTest : ResourceLoader() {
         )
     }
 
-    fun createDeployResult(deployId: String, success: Boolean = true): List<AuroraDeployResult> {
+    fun stubDeployResult(deployId: String, success: Boolean = true): List<AuroraDeployResult> {
         return listOf(
             AuroraDeployResult(
                 success = success,
@@ -155,15 +155,15 @@ abstract class AbstractAuroraConfigTest : ResourceLoader() {
                     user = User("hero", "token"),
                     deployId = deployId,
                     shouldDeploy = true,
-                    context = createAuroraDeploymentContext()
+                    context = stubAuroraDeploymentContext()
                 )
             )
         )
     }
 
-    fun createAuroraDeploymentContext(): AuroraDeploymentContext {
+    fun stubAuroraDeploymentContext(): AuroraDeploymentContext {
         return AuroraDeploymentContext(
-            spec = createAuroraDeploymentSpec(),
+            spec = stubAuroraDeploymentSpec(),
             cmd = AuroraContextCommand(
                 auroraConfig = AuroraConfig(
                     files = listOf(
@@ -184,7 +184,7 @@ abstract class AbstractAuroraConfigTest : ResourceLoader() {
         )
     }
 
-    fun createAuroraDeploymentSpec(): AuroraDeploymentSpec {
+    fun stubAuroraDeploymentSpec(): AuroraDeploymentSpec {
         return AuroraDeploymentSpec(
             fields = mapOf(
                 "cluster" to AuroraConfigField(

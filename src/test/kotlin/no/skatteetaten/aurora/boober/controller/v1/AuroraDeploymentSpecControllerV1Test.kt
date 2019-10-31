@@ -18,7 +18,7 @@ class AuroraDeploymentSpecControllerV1Test : AbstractControllerTest() {
     @MockkBean
     private lateinit var facade: AuroraConfigFacade
 
-    val specs: List<AuroraDeploymentSpec> = listOf(createAuroraDeploymentSpec())
+    val specs: List<AuroraDeploymentSpec> = listOf(stubAuroraDeploymentSpec())
 
     @Test
     fun `Return all deployment specs`() {
@@ -84,19 +84,4 @@ class AuroraDeploymentSpecControllerV1Test : AbstractControllerTest() {
             responseJsonPath("$.items[0]").equalsValue("{\n  cluster: \"utv\" // about.json\n}")
         }
     }
-
-    /*
-    @Test
-    fun `Return deployment specs for env`() {
-        given(auroraDeploymentContextService.getAuroraDeploymentSpecsForEnvironment(any(), any())).willReturn(emptyList())
-
-        val auroraDeploymentSpec = given(responder.create(any<List<AuroraDeploymentSpec>>(), any()))
-            .withContractResponse("auroradeploymentspec/deploymentspec") { willReturn(content) }.mockResponse
-
-        mockMvc.get(Path("/v1/auroradeployspec/{name}/{env}/", "auroraconfigname", "environment")) {
-            statusIsOk()
-                .responseJsonPath("$").equalsObject(auroraDeploymentSpec)
-        }
-    }
-     */
 }

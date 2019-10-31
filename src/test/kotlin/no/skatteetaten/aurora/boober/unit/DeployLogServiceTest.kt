@@ -9,7 +9,6 @@ import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.BitbucketService
 import no.skatteetaten.aurora.boober.service.DeployLogService
@@ -22,6 +21,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.web.client.HttpClientErrorException
+import java.nio.charset.Charset
 
 class DeployLogServiceTest : AbstractAuroraConfigTest() {
 
@@ -44,13 +44,13 @@ class DeployLogServiceTest : AbstractAuroraConfigTest() {
     @Test
     fun `Should mark release`() {
         every {
-            bitbucketService.uploadFile("ao", "auroradeploymenttags", fileName, "DEPLOY/utv-foo/bar", any())
+            bitbucketService.uploadFile("ao", "auroradeploymenttags", fileName, "DEPLOY/utv-utv/simple", any())
         } returns "Success"
 
-        val response = service.markRelease(createDeployResult(deployId), deployer)
+        val response = service.markRelease(stubDeployResult(deployId), deployer)
 
         verify(exactly = 1) {
-            bitbucketService.uploadFile("ao", "auroradeploymenttags", fileName, "DEPLOY/utv-foo/bar", any())
+            bitbucketService.uploadFile("ao", "auroradeploymenttags", fileName, "DEPLOY/utv-utv/simple", any())
         }
         assertThat(response.size).isEqualTo(1)
         assertThat(actual = response.first().bitbucketStoreResult).isEqualTo("Success")
@@ -59,10 +59,10 @@ class DeployLogServiceTest : AbstractAuroraConfigTest() {
     @Test
     fun `Should mark failed release`() {
         every {
-            bitbucketService.uploadFile("ao", "auroradeploymenttags", fileName, "DEPLOY/utv-foo/bar", any())
+            bitbucketService.uploadFile("ao", "auroradeploymenttags", fileName, "DEPLOY/utv-utv/simple", any())
         } throws RuntimeException("Some really bad stuff happened")
 
-        val response = service.markRelease(createDeployResult(deployId), deployer)
+        val response = service.markRelease(stubDeployResult(deployId), deployer)
 
         assertThat(response.size).isEqualTo(1)
         val answer = response.first()
