@@ -12,39 +12,44 @@ integrations:
     bitbucket:
         username: "foo"
         password: "bar"
-        url: "https://git.aurora.skead.no/"
+        url: "http://localhost:8086"
+    deployLog:
+        git:
+            project: "ao"
+            repo: "auroradeploymenttags"
     aurora:
         config:
             git:
                 project: "ac"
                 urlPattern: "file:///tmp/boobertest/%s"
                 checkoutPath: "build/boobercheckout"
-        deployLog:
-            git:
-                project: "ao"
-                repo: "auroradeploymenttags"
+
         vault:
             git:
                 urlPattern: "file:///tmp/vaulttest/%s"
                 checkoutPath: "build/vaultcheckout"
     openshift:
-        url: https://${openshift.cluster}-master.paas.skead.no:8443
+        url: "http://localhost:8083"
     dbh:
-        url: "http://localhost:8080"
+        url: "http://localhost:8084"
     skap:
         url: "http://localhost:8082"
+    cantus:
+        url: "http://localhost:8085"
+        token: "token"
     docker:
-        registry: "docker-registry.aurora.sits.no:5000"
-        releases: "docker-registry.aurora.sits.no:5000"
+        registry: "docker.registry:5000"
+        releases: "docker.release.registry:5000"
 
 
 boober:
     encrypt:
         key: "komogsyngensang"
-        releases: "docker-registry.aurora.sits.no:5000"
         token: "test"
     openshift:
         token: foo
+    route:
+        suffix: ".test"
 
 vault:
     operations:
@@ -60,4 +65,3 @@ management:
 
 openshift:
     cluster: utv
-    url: https://${openshift.cluster}-master.paas.skead.no:8443

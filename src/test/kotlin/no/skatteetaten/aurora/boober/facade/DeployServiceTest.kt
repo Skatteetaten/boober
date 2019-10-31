@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.integration
+package no.skatteetaten.aurora.boober.facade
 
 /*
 TODO: Rething entire concept

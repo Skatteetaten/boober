@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.integration
+package no.skatteetaten.aurora.boober.unit
 
 import com.fasterxml.jackson.databind.node.TextNode
 import io.mockk.clearMocks

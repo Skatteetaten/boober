@@ -6,14 +6,14 @@ import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.every
 import io.mockk.mockk
-import java.io.ByteArrayInputStream
-import java.time.Duration
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.Paths.secretsPath
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import org.junit.jupiter.api.Test
+import java.io.ByteArrayInputStream
+import java.time.Duration
 
 class StsFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -39,7 +39,6 @@ class StsFeatureTest : AbstractFeatureTest() {
     fun `should provision sts certificate`() {
 
         val cn = "org.test.simple"
-
         val cert = StsProvisioner.createStsCert(ByteArrayInputStream(loadByteResource("keystore.jks")), "ca", "")
         val provisioningResult = StsProvisioningResult(cn, cert, cert.notAfter - Duration.ofDays(14))
         every { stsProvisioner.generateCertificate("org.test.simple", "simple", "utv") } returns

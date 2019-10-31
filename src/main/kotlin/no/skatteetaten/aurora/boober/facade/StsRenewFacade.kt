@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.OwnerReference
-import java.util.Optional
 import no.skatteetaten.aurora.boober.feature.StsSecretGenerator
 import no.skatteetaten.aurora.boober.service.OpenShiftCommandService
 import no.skatteetaten.aurora.boober.service.RedeployService
@@ -21,7 +20,7 @@ import org.springframework.stereotype.Service
 @Service
 @ConditionalOnProperty("integrations.skap.url")
 class StsRenewFacade(
-    val provsioner: Optional<StsProvisioner>,
+    val sts: StsProvisioner,
     val commandService: OpenShiftCommandService,
     val openshiftClient: OpenShiftClient,
     val redeployer: RedeployService,
@@ -29,9 +28,6 @@ class StsRenewFacade(
 ) {
 
     fun renew(request: RenewRequest): List<OpenShiftResponse> {
-
-        // will aldri være her hvis ikke skap.url er satt.
-        val sts = provsioner.orElseThrow { IllegalArgumentException("Sts service not available") }
 
         val stsResult = sts.generateCertificate(
             cn = request.commonName,
