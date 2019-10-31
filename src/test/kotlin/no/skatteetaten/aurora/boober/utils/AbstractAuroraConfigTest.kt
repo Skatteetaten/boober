@@ -2,6 +2,8 @@ package no.skatteetaten.aurora.boober.utils
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
+import java.io.File
+import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
@@ -15,8 +17,6 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeployResult
 import org.apache.commons.text.StringSubstitutor
-import java.io.File
-import java.nio.charset.Charset
 
 // TODO: Kan vi lese denne auroraConfigen fra noen filer? Vi har jo noen filer vi bruker i andre tester
 abstract class AbstractAuroraConfigTest : ResourceLoader() {
