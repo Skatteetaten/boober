@@ -24,8 +24,8 @@ class AuroraConfigNamesControllerV1Test : AbstractControllerTest() {
 
         mockMvc.get(Path("/v1/auroraconfignames")) {
             statusIsOk()
-                .responseJsonPath("$.success").isTrue()
-                .responseJsonPath("$.items.length()").equalsValue(1)
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items.length()").equalsValue(1)
         }
     }
 }

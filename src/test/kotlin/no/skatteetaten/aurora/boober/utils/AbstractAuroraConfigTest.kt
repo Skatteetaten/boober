@@ -132,7 +132,8 @@ abstract class AbstractAuroraConfigTest : ResourceLoader() {
     fun getSampleFiles(aid: ApplicationDeploymentRef, additionalFile: String? = null): Map<String, String> {
         fun collectFiles(vararg fileNames: String): Map<String, String> {
 
-            return fileNames.filter { !it.isBlank() }.associateWith { File(folder, it).readText(Charset.defaultCharset()) }
+            return fileNames.filter { !it.isBlank() }
+                .associateWith { File(folder, it).readText(Charset.defaultCharset()) }
         }
         return collectFiles(
             "about.json",
@@ -144,7 +145,6 @@ abstract class AbstractAuroraConfigTest : ResourceLoader() {
     }
 
     fun createDeployResult(deployId: String, success: Boolean = true): List<AuroraDeployResult> {
-        val aboutFile = AuroraConfigFile("about.json", "{}")
         return listOf(
             AuroraDeployResult(
                 success = success,
@@ -155,37 +155,48 @@ abstract class AbstractAuroraConfigTest : ResourceLoader() {
                     user = User("hero", "token"),
                     deployId = deployId,
                     shouldDeploy = true,
-                    context = AuroraDeploymentContext(
-                        spec = AuroraDeploymentSpec(
-                            fields = mapOf(
-                                "cluster" to AuroraConfigField(
-                                    sources = setOf(
-                                        AuroraConfigFieldSource(aboutFile, TextNode("utv"))
-                                    )
-                                )
-                            ),
-                            replacer = StringSubstitutor()
-                        ),
-                        cmd = AuroraContextCommand(
-                            auroraConfig = AuroraConfig(
-                                files = listOf(
-                                    aboutFile,
-                                    AuroraConfigFile("utv/about.json", "{}"),
-                                    AuroraConfigFile("simple.json", "{}"),
-                                    AuroraConfigFile("utv/simple.json", "{}")
-                                ),
-                                name = "paas",
-                                version = "1"
-                            ),
-                            applicationDeploymentRef = ApplicationDeploymentRef("utv", "simple"),
-                            auroraConfigRef = AuroraConfigRef("test", "master", "123")
-                        ),
-                        features = emptyMap(),
-                        featureHandlers = emptyMap()
-
-                    )
+                    context = createAuroraDeploymentContext()
                 )
             )
+        )
+    }
+
+    fun createAuroraDeploymentContext(): AuroraDeploymentContext {
+        return AuroraDeploymentContext(
+            spec = createAuroraDeploymentSpec(),
+            cmd = AuroraContextCommand(
+                auroraConfig = AuroraConfig(
+                    files = listOf(
+                        AuroraConfigFile("about.json", "{}"),
+                        AuroraConfigFile("utv/about.json", "{}"),
+                        AuroraConfigFile("simple.json", "{}"),
+                        AuroraConfigFile("utv/simple.json", "{}")
+                    ),
+                    name = "paas",
+                    version = "1"
+                ),
+                applicationDeploymentRef = ApplicationDeploymentRef("utv", "simple"),
+                auroraConfigRef = AuroraConfigRef("test", "master", "123")
+            ),
+            features = emptyMap(),
+            featureHandlers = emptyMap()
+
+        )
+    }
+
+    fun createAuroraDeploymentSpec(): AuroraDeploymentSpec {
+        return AuroraDeploymentSpec(
+            fields = mapOf(
+                "cluster" to AuroraConfigField(
+                    sources = setOf(
+                        AuroraConfigFieldSource(
+                            AuroraConfigFile("about.json", "{}"),
+                            TextNode("utv")
+                        )
+                    )
+                )
+            ),
+            replacer = StringSubstitutor()
         )
     }
 }

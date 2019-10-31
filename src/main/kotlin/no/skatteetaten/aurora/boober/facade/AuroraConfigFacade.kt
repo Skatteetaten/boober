@@ -4,7 +4,7 @@ import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
@@ -17,28 +17,45 @@ class AuroraConfigFacade(
 
 ) {
 
-    fun findAuroraDeploymentContext(
+    fun findAuroraDeploymentSpec(
         ref: AuroraConfigRef,
         adrList: List<ApplicationDeploymentRef>
-    ): List<AuroraDeploymentContext> {
+    ): List<AuroraDeploymentSpec> {
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         return adrList.map {
             auroraDeploymentContextService.createAuroraDeploymentContext(AuroraContextCommand(auroraConfig, it, ref))
+                .spec
         }
     }
 
-    fun findAuroraDeploymentContextForEnvironment(
+    fun findAuroraDeploymentSpecForEnvironment(
         ref: AuroraConfigRef,
         environment: String
-    ): List<AuroraDeploymentContext> {
+    ): List<AuroraDeploymentSpec> {
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         return auroraConfig.getApplicationDeploymentRefs()
             .filter { it.environment == environment }
             .map {
                 auroraDeploymentContextService.createAuroraDeploymentContext(
                     AuroraContextCommand(auroraConfig, it, ref)
-                )
+                ).spec
             }
+    }
+
+    fun findAuroraDeploymentSpecSingle(
+        ref: AuroraConfigRef,
+        adr: ApplicationDeploymentRef,
+        overrideFiles: List<AuroraConfigFile>
+    ): AuroraDeploymentSpec {
+
+        val auroraConfig = auroraConfigService.findAuroraConfig(ref)
+        val cmd = AuroraContextCommand(
+            auroraConfig = auroraConfig,
+            applicationDeploymentRef = adr,
+            auroraConfigRef = ref,
+            overrides = overrideFiles
+        )
+        return auroraDeploymentContextService.createAuroraDeploymentContext(cmd).spec
     }
 
     fun findAuroraConfigFilesForApplicationDeployment(
@@ -105,19 +122,5 @@ class AuroraConfigFacade(
     }
 
     fun findAllAuroraConfigNames() = auroraConfigService.findAllAuroraConfigNames()
-    fun createAuroraDeploymentContext(
-        ref: AuroraConfigRef,
-        adr: ApplicationDeploymentRef,
-        overrideFiles: List<AuroraConfigFile>
-    ): AuroraDeploymentContext {
 
-        val auroraConfig = auroraConfigService.findAuroraConfig(ref)
-        val cmd = AuroraContextCommand(
-            auroraConfig = auroraConfig,
-            applicationDeploymentRef = adr,
-            auroraConfigRef = ref,
-            overrides = overrideFiles
-        )
-        return auroraDeploymentContextService.createAuroraDeploymentContext(cmd)
-    }
 }
