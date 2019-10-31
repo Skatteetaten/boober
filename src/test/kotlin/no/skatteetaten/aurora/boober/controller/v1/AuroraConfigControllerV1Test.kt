@@ -24,6 +24,57 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
     private lateinit var facade: AuroraConfigFacade
 
     @Test
+    fun `Get aurora config by name`() {
+        every {
+            facade.findAuroraConfigFiles(auroraConfigRef)
+        } returns auroraConfig.files
+
+        mockMvc.get(Path("/v1/auroraconfig/{auroraConfigName}", auroraConfigRef.name)) {
+            statusIsOk()
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items[0].name").equalsValue(auroraConfigRef.name)
+            responseJsonPath("$.items[0].files.length()").equalsValue(14)
+        }
+    }
+
+    @Test
+    fun `Get aurora config by name for another branch with queryparam`() {
+        every {
+            facade.findAuroraConfigFiles(auroraConfigRef.copy(refName = "dev"))
+        } returns auroraConfig.files
+
+        mockMvc.get(
+            path = Path("/v1/auroraconfig/{auroraConfigName}?reference={reference}", auroraConfigRef.name, "dev"),
+            docsIdentifier = "reference-queryparam"
+        ) {
+            statusIsOk()
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items[0].name").equalsValue(auroraConfigRef.name)
+            responseJsonPath("$.items[0].files.length()").equalsValue(14)
+        }
+    }
+
+    @Test
+    fun `Get aurora config by name for another branch with header`() {
+        every {
+            facade.findAuroraConfigFiles(auroraConfigRef.copy(refName = "dev"))
+        } returns auroraConfig.files
+
+        mockMvc.get(
+            path = Path("/v1/auroraconfig/{auroraConfigName}", auroraConfigRef.name),
+            headers = HttpHeaders().apply {
+                set("Ref-Name", "dev")
+            },
+            docsIdentifier = "reference-header"
+        ) {
+            statusIsOk()
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items[0].name").equalsValue(auroraConfigRef.name)
+            responseJsonPath("$.items[0].files.length()").equalsValue(14)
+        }
+    }
+
+    @Test
     fun `Patch aurora config`() {
 
         val fileName = "simple.json"
@@ -48,20 +99,6 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
             responseJsonPath("$.success").isTrue()
             responseJsonPath("$.items[0].name").equalsValue(fileName)
             responseJsonPath("$.items[0].contents").equalsValue(content)
-        }
-    }
-
-    @Test
-    fun `Get aurora config by name`() {
-        every {
-            facade.findAuroraConfigFiles(any())
-        } returns auroraConfig.files
-
-        mockMvc.get(Path("/v1/auroraconfig/{auroraConfigName}", auroraConfigRef.name)) {
-            statusIsOk()
-            responseJsonPath("$.success").isTrue()
-            responseJsonPath("$.items[0].name").equalsValue(auroraConfigRef.name)
-            responseJsonPath("$.items[0].files.length()").equalsValue(14)
         }
     }
 
@@ -128,7 +165,7 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
     fun `Get aurora config file by file name`() {
 
         val fileName = "about.json"
-        val fileContent = auroraConfig.files.find { it.name == fileName }
+        val fileContent = auroraConfig.files.find { it.name == fileName }!!
         every {
             facade.findAuroraConfigFile(auroraConfigRef, fileName)
         } returns fileContent
@@ -137,7 +174,7 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
             statusIsOk()
             responseJsonPath("$.success").isTrue()
             responseJsonPath("$.items[0].name").equalsValue(fileName)
-            responseJsonPath("$.items[0].contents").equalsValue(fileContent?.contents ?: "")
+            responseJsonPath("$.items[0].contents").equalsValue(fileContent.contents)
         }
     }
 

@@ -5,18 +5,13 @@ import no.skatteetaten.aurora.mockmvc.extensions.get
 import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
 import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.test.web.servlet.MockMvc
 
-@AutoConfigureRestDocs
 @WebMvcTest(
     controllers = [ClientConfigControllerV1::class],
-    properties = ["integrations.aurora.config.git.urlPattern=abc", "openshift.cluster=test", "integrations.openshift.url=test"],
-    secure = false
+    properties = ["integrations.aurora.config.git.urlPattern=abc", "openshift.cluster=test", "integrations.openshift.url=test"]
 )
-class ClientConfigControllerV1Test(@Autowired private val mockMvc: MockMvc) {
+class ClientConfigControllerV1Test : AbstractControllerTest() {
 
     @Test
     fun `Return client config`() {

@@ -155,6 +155,7 @@ class AuroraConfigControllerV1(
     }
 }
 
+// TODO: should this include the ref used to fetch the AuroraConfig?
 data class AuroraConfigResource(
     val name: String,
     val files: List<AuroraConfigFileResource> = listOf()

@@ -7,7 +7,6 @@ import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.ApplicationRef
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.createApplicationDeploymentCommand
-import no.skatteetaten.aurora.boober.service.ApplicationDeploymentService
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
@@ -21,7 +20,6 @@ private val logger = KotlinLogging.logger { }
 
 @Service
 class DeploymentFacade(
-    val applicationDeploymentService: ApplicationDeploymentService,
     val auroraDeploymentContextService: AuroraDeploymentContextService,
     val auroraConfigService: AuroraConfigService,
     val openShiftClient: OpenShiftClient
