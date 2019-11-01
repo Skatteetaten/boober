@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.facade
 
 import assertk.assertThat
+import assertk.assertions.isEqualTo
 import assertk.assertions.isNotEmpty
 import com.fkorotkov.kubernetes.newOwnerReference
 import com.ninjasquad.springmockk.MockkBean
@@ -20,8 +21,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE
 
-// TODO: are these webServers shut down correctly.
-// TODO: can we inject the port numbers from config?
 private val logger = KotlinLogging.logger {}
 
 @SpringBootTest(
@@ -51,8 +50,6 @@ class StsRenewFacadeTest(
     lateinit var userDetailsProvider: UserDetailsProvider
 
     val ocp = MockWebServer().apply {
-        //check if secret exist
-
         dispatcher = object : Dispatcher() {
             override fun dispatch(request: RecordedRequest): MockResponse {
                 logger.info { "Mocked http request: $request" }
@@ -93,5 +90,6 @@ class StsRenewFacadeTest(
 
         val result = facade.renew(renewRequest)
         assertThat(result).isNotEmpty()
+        assertThat(result.size).isEqualTo(2)
     }
 }
