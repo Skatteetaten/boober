@@ -13,6 +13,7 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 
 typealias MockRule = (RecordedRequest) -> MockResponse?
 
@@ -30,6 +31,9 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
     @Value("\${integrations.cantus.port}")
     lateinit var cantusPort: String
 
+    @Value("\${integrations.bitbucket.port}")
+    lateinit var bitbucketPort: String
+
     data class MockRules(
         val check: (RecordedRequest) -> Boolean,
         val fn: MockRule
@@ -43,7 +47,7 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
             return MockWebServer().apply {
                 dispatcher = object : Dispatcher() {
                     override fun dispatch(request: RecordedRequest): MockResponse {
-                        return mockRules.toList().mapNotNull {
+                        return mockRules.asSequence().mapNotNull {
                             if (it.check(request)) {
                                 it.fn(request)
                             } else null
@@ -91,6 +95,10 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
         return mockWebServer(skapPort.toInt(), block)
     }
 
+    fun bitbucketMock(block: HttpMock.() -> Unit = {}): MockWebServer {
+        return mockWebServer(bitbucketPort.toInt(), block)
+    }
+
     fun cantuMock(block: HttpMock.() -> Unit = {}): MockWebServer {
         return mockWebServer(cantusPort.toInt(), block)
     }
@@ -114,8 +122,10 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
 
     @BeforeEach
     fun before() {
-        every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "hero")
+        every { userDetailsProvider.getAuthenticatedUser() } returns User(
+            "hero", "token", "Jayne Cobb", grantedAuthorities = listOf(
+                SimpleGrantedAuthority("APP_PaaS_utv"), SimpleGrantedAuthority("APP_PaaS_drift")
+            ))
         every { serviceAccountTokenProvider.getToken() } returns "auth token"
     }
-
 }

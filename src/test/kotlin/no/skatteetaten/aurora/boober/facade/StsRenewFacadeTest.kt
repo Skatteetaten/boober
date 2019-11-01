@@ -13,7 +13,6 @@ import org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE
 
 private val logger = KotlinLogging.logger {}
 
-
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.NONE
 )

@@ -12,7 +12,8 @@ integrations:
     bitbucket:
         username: "foo"
         password: "bar"
-        url: "http://localhost:8086"
+        url: "http://localhost:${integrations.bitbucket.port}"
+        port: 8086
     deployLog:
         git:
             project: "ao"
