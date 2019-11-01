@@ -16,7 +16,6 @@ import no.skatteetaten.aurora.boober.utils.whenTrue
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 
-// TODO: test
 @Service
 @ConditionalOnProperty("integrations.skap.url")
 class StsRenewFacade(

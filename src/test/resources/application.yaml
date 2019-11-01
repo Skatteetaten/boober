@@ -29,13 +29,17 @@ integrations:
                 urlPattern: "file:///tmp/vaulttest/%s"
                 checkoutPath: "build/vaultcheckout"
     openshift:
-        url: "http://localhost:8083"
+        url: "http://localhost:${integrations.openshift.port}"
+        port: 8083
     dbh:
-        url: "http://localhost:8084"
+        url: "http://localhost:${integrations.dbh.port}"
+        port: 8084
     skap:
-        url: "http://localhost:8082"
+        url: "http://localhost:${integrations.skap.port}"
+        port: 8082
     cantus:
-        url: "http://localhost:8085"
+        url: "http://localhost:${integrations.cantus.port}"
+        port: 8085
         token: "token"
     docker:
         registry: "docker.registry:5000"
@@ -47,7 +51,7 @@ boober:
         key: "komogsyngensang"
         token: "test"
     openshift:
-        token: foo
+        tokenLocation: /tmp/boober-token
     route:
         suffix: ".test"
 

@@ -2,26 +2,35 @@ package no.skatteetaten.aurora.boober.facade
 
 import assertk.assertThat
 import assertk.assertions.isNotEmpty
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newOwnerReference
-import com.fkorotkov.kubernetes.newSecret
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
+import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import okhttp3.mockwebserver.RecordedRequest
+import org.junit.After
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE
 
-// TODO: limit the number of classes load here?
+// TODO: are these webServers shut down correctly.
+// TODO: can we inject the port numbers from config?
+private val logger = KotlinLogging.logger {}
+
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.NONE
 )
-class StsRenewFacadeTest : ResourceLoader() {
+class StsRenewFacadeTest(
+    @Value("\${integrations.openshift.port}") val ocpPort: Int,
+    @Value("\${integrations.skap.port}") val skapPort: Int
+) : ResourceLoader() {
 
     @Autowired
     lateinit var facade: StsRenewFacade
@@ -35,7 +44,7 @@ class StsRenewFacadeTest : ResourceLoader() {
                 .setHeader("key-password", "ca")
                 .setHeader("store-password", "")
         )
-        start(8082)
+        start(skapPort)
     }
 
     @MockkBean
@@ -43,26 +52,32 @@ class StsRenewFacadeTest : ResourceLoader() {
 
     val ocp = MockWebServer().apply {
         //check if secret exist
-        enqueue(MockResponse().setResponseCode(404))
 
-        //save secret,TODO: replace this with just returning what is sent in?
-        enqueue(MockResponse().setBody(jacksonObjectMapper().writeValueAsString(
-            newSecret {
-                metadata {
-                    name = "simple-cert"
-                    namespace = "paas-utv"
+        dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                logger.info { "Mocked http request: $request" }
+                return if (request.method == "GET") {
+                    MockResponse().setResponseCode(404)
+                } else {
+                    MockResponse().setResponseCode(200)
+                        .setBody(request.body)
+                        .setHeader("Content-Type", APPLICATION_JSON_UTF8_VALUE)
                 }
             }
-        )))
+        }
 
-        //deploy request
-        enqueue(MockResponse().setBody(""" { "success" : "true" }"""))
+        start(ocpPort)
+    }
 
-        start(8083)
+    @After
+    fun after() {
+
+        ocp.shutdown()
+        skap.shutdown()
     }
 
     @Test
-    fun `foo`() {
+    fun `Should renew sts token`() {
 
         every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "hero")
         val renewRequest = RenewRequest(
