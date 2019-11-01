@@ -6,19 +6,10 @@ import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.openshift.metadata
 import com.fkorotkov.openshift.newUser
-import com.ninjasquad.springmockk.MockkBean
-import io.mockk.every
 import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.service.UserDetailsProvider
-import no.skatteetaten.aurora.boober.service.openshift.token.ServiceAccountTokenProvider
-import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE
 
@@ -27,49 +18,30 @@ private val logger = KotlinLogging.logger {}
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.NONE
 )
-class UserAnnotationFacadeTest(
-    @Value("\${integrations.openshift.port}") val ocpPort: Int
-) : ResourceLoader() {
+class UserAnnotationFacadeTest : AbstractSpringBootTest() {
 
     @Autowired
     lateinit var facade: UserAnnotationFacade
 
-    @MockkBean
-    lateinit var userDetailsProvider: UserDetailsProvider
-
-    @MockkBean
-    lateinit var serviceAccountTokenProvider: ServiceAccountTokenProvider
-    lateinit var ocp: MockWebServer
-
-    @AfterEach
-    fun afterEach() {
-
-        ocp.shutdown()
-    }
-
-    fun ocpMockUserAnnotations(annotationMap: Map<String, String>) {
-        ocp = MockWebServer().apply {
-
-            enqueue(
-                MockResponse().setBody(jacksonObjectMapper().writeValueAsString(
-                    newUser {
-                        metadata {
-                            name = "hero"
-                            annotations = annotationMap
-                        }
-                    }
-                )).setHeader("Content-Type", APPLICATION_JSON_UTF8_VALUE)
-            )
-            start(ocpPort)
-        }
+    fun ocpMockUserAnnotations(annotationMap: Map<String, String>): MockResponse {
+        return MockResponse().setBody(jacksonObjectMapper().writeValueAsString(
+            newUser {
+                metadata {
+                    name = "hero"
+                    annotations = annotationMap
+                }
+            }
+        )).setHeader("Content-Type", APPLICATION_JSON_UTF8_VALUE)
     }
 
     @Test
     fun `get user annotations`() {
 
-        every { serviceAccountTokenProvider.getToken() } returns "auth token"
-        every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "hero")
-        ocpMockUserAnnotations(mapOf("favorite" to "R2D2"))
+        openShiftMock {
+            rule {
+                ocpMockUserAnnotations(mapOf("favorite" to "R2D2"))
+            }
+        }
 
         val annotations = facade.getAnnotations()
         assertThat(annotations.size).isEqualTo(1)
@@ -78,13 +50,39 @@ class UserAnnotationFacadeTest(
 
     @Test
     fun `update annotations`() {
+        openShiftMock {
+            rule({ it.method == "GET" }) {
+                ocpMockUserAnnotations(mapOf("favorite" to "R2D2"))
+            }
+            rule({ it.method == "PATCH" }) {
+                ocpMockUserAnnotations(mapOf("favorite" to "C3PO"))
+            }
+        }
+        val before = facade.getAnnotations()
+        assertThat(before.size).isEqualTo(1)
+        assertThat(before["favorite"]).isEqualTo(TextNode("R2D2"))
 
-        every { serviceAccountTokenProvider.getToken() } returns "auth token"
-        every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "hero")
-        ocpMockUserAnnotations(mapOf("favorite" to "C3PO"))
-    
         val annotations = facade.updateAnnotations("favorite", TextNode("C3PO"))
         assertThat(annotations.size).isEqualTo(1)
         assertThat(annotations["favorite"]).isEqualTo(TextNode("C3PO"))
+    }
+
+    @Test
+    fun `delete annotations`() {
+
+        openShiftMock {
+            rule({ it.method == "GET" }) {
+                ocpMockUserAnnotations(mapOf("favorite" to "C3PO", "master" to "obi wan"))
+            }
+            rule({ it.method == "PATCH" }) {
+                ocpMockUserAnnotations(mapOf("favorite" to "C3PO"))
+            }
+        }
+        val before = facade.getAnnotations()
+        assertThat(before.size).isEqualTo(2)
+
+        val after = facade.deleteAnnotations("master")
+        assertThat(after.size).isEqualTo(1)
+        assertThat(after["favorite"]).isEqualTo(TextNode("C3PO"))
     }
 }

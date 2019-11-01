@@ -4,9 +4,7 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotEmpty
 import com.fkorotkov.kubernetes.newOwnerReference
-import io.mockk.every
 import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.controller.security.User
 import okhttp3.mockwebserver.MockResponse
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,8 +35,8 @@ class StsRenewFacadeTest : AbstractSpringBootTest() {
         }
 
         openShiftMock {
-            rule {
-                if (it.method == "GET") MockResponse().setResponseCode(404) else null
+            rule({ it.method == "GET" }) {
+                MockResponse().setResponseCode(404)
             }
             rule {
                 MockResponse().setResponseCode(200)
@@ -47,7 +45,6 @@ class StsRenewFacadeTest : AbstractSpringBootTest() {
             }
         }
 
-        every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "hero")
         val renewRequest = RenewRequest(
             name = "simple",
             namespace = "paas-utv",

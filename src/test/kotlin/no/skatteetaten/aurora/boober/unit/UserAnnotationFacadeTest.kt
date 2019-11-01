@@ -18,6 +18,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.ResponseEntity
 
+// TODO: Do we need this and the test in facade package?
 class UserAnnotationFacadeTest {
 
     private val userDetailsProvider = mockk<UserDetailsProvider>().apply {
