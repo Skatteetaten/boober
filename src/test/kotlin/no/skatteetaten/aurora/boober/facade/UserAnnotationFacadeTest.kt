@@ -15,7 +15,7 @@ import no.skatteetaten.aurora.boober.service.openshift.token.ServiceAccountToken
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -41,10 +41,27 @@ class UserAnnotationFacadeTest(
     lateinit var serviceAccountTokenProvider: ServiceAccountTokenProvider
     lateinit var ocp: MockWebServer
 
-    @After
+    @AfterEach
     fun afterEach() {
 
         ocp.shutdown()
+    }
+
+    fun ocpMockUserAnnotations(annotationMap: Map<String, String>) {
+        ocp = MockWebServer().apply {
+
+            enqueue(
+                MockResponse().setBody(jacksonObjectMapper().writeValueAsString(
+                    newUser {
+                        metadata {
+                            name = "hero"
+                            annotations = annotationMap
+                        }
+                    }
+                )).setHeader("Content-Type", APPLICATION_JSON_UTF8_VALUE)
+            )
+            start(ocpPort)
+        }
     }
 
     @Test
@@ -52,57 +69,20 @@ class UserAnnotationFacadeTest(
 
         every { serviceAccountTokenProvider.getToken() } returns "auth token"
         every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "hero")
-        val ocp = MockWebServer().apply {
-
-            enqueue(
-                MockResponse().setBody(jacksonObjectMapper().writeValueAsString(
-                    newUser {
-                        metadata {
-                            name = "hero"
-                            annotations = mapOf(
-                                "favorite" to "R2D2"
-                            )
-                        }
-
-                    }
-                ))
-                    .setHeader("Content-Type", APPLICATION_JSON_UTF8_VALUE)
-            )
-
-            start(ocpPort)
-        }
+        ocpMockUserAnnotations(mapOf("favorite" to "R2D2"))
 
         val annotations = facade.getAnnotations()
         assertThat(annotations.size).isEqualTo(1)
         assertThat(annotations["favorite"]).isEqualTo(TextNode("R2D2"))
     }
 
-    // TODO: Address already in use when running both tests
     @Test
     fun `update annotations`() {
 
         every { serviceAccountTokenProvider.getToken() } returns "auth token"
         every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "hero")
-        val ocp = MockWebServer().apply {
-
-            enqueue(
-                MockResponse().setBody(jacksonObjectMapper().writeValueAsString(
-                    newUser {
-                        metadata {
-                            name = "hero"
-                            annotations = mapOf(
-                                "favorite" to "C3PO"
-                            )
-                        }
-
-                    }
-                ))
-                    .setHeader("Content-Type", APPLICATION_JSON_UTF8_VALUE)
-            )
-
-            start(ocpPort)
-        }
-
+        ocpMockUserAnnotations(mapOf("favorite" to "C3PO"))
+    
         val annotations = facade.updateAnnotations("favorite", TextNode("C3PO"))
         assertThat(annotations.size).isEqualTo(1)
         assertThat(annotations["favorite"]).isEqualTo(TextNode("C3PO"))
