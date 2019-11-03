@@ -1,11 +1,15 @@
 package no.skatteetaten.aurora.boober.facade
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.token.ServiceAccountTokenProvider
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
+import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.bodyAsString
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -13,6 +17,7 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 
 typealias MockRule = (RecordedRequest) -> MockResponse?
@@ -34,8 +39,17 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
     @Value("\${integrations.bitbucket.port}")
     lateinit var bitbucketPort: String
 
+    fun RecordedRequest.modifyJsonNodeResponse(rootPath: String, key: String, node: JsonNode): MockResponse {
+        val ad: JsonNode = jacksonObjectMapper().readTree(this.bodyAsString())
+        (ad.at(rootPath) as ObjectNode).set(key, node)
+        return MockResponse()
+            .setResponseCode(200)
+            .setBody(jacksonObjectMapper().writeValueAsString(ad))
+            .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
+    }
+
     data class MockRules(
-        val check: (RecordedRequest) -> Boolean,
+        val check: RecordedRequest.() -> Boolean?,
         val fn: MockRule
     )
     class HttpMock {
@@ -48,7 +62,7 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
                 dispatcher = object : Dispatcher() {
                     override fun dispatch(request: RecordedRequest): MockResponse {
                         return mockRules.asSequence().mapNotNull {
-                            if (it.check(request)) {
+                            if (it.check(request) == true) {
                                 it.fn(request)
                             } else null
                         }.firstOrNull() ?: throw IllegalArgumentException("No function matches request=$request")
@@ -77,30 +91,43 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
             mockRules.add(MockRules({ true }, fn))
             return this
         }
+
+        fun rule2(fn: RecordedRequest.() -> MockResponse?): HttpMock {
+            mockRules.add(MockRules({ true }, fn))
+            return this
+        }
+
+        fun rule2(check: RecordedRequest.() -> Boolean? = { true }, fn: RecordedRequest.() -> MockResponse?): HttpMock {
+            mockRules.add(MockRules(check, fn))
+            return this
+        }
     }
 
     fun mockWebServer(port: Int, block: HttpMock.() -> Unit = {}): MockWebServer {
         val instance = HttpMock()
         instance.block()
         val server = instance.start(port)
-        httpMocks.add(server)
         return server
     }
 
     fun openShiftMock(block: HttpMock.() -> Unit = {}): MockWebServer {
         return mockWebServer(ocpPort.toInt(), block)
+            .apply { httpMocks.add(this) }
     }
 
     fun skapMock(block: HttpMock.() -> Unit = {}): MockWebServer {
         return mockWebServer(skapPort.toInt(), block)
+            .apply { httpMocks.add(this) }
     }
 
     fun bitbucketMock(block: HttpMock.() -> Unit = {}): MockWebServer {
         return mockWebServer(bitbucketPort.toInt(), block)
+            .apply { httpMocks.add(this) }
     }
 
     fun cantuMock(block: HttpMock.() -> Unit = {}): MockWebServer {
         return mockWebServer(cantusPort.toInt(), block)
+            .apply { httpMocks.add(this) }
     }
 
     fun dbhMock(block: HttpMock.() -> Unit = {}): MockWebServer {
