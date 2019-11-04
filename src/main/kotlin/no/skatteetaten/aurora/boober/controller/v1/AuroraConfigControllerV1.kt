@@ -67,7 +67,7 @@ class AuroraConfigControllerV1(
             throw IllegalArgumentException("Either both application and environment must be set or none of them")
         }
 
-        // TODO: Fremove all the above and the request param when mokey is changed
+        // TODO: remove all the above and the request param when mokey is changed
         return Response(items = listOf(fromAuroraConfig(name, auroraConfigFacade.findAuroraConfigFiles(ref))))
     }
 

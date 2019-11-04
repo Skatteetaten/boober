@@ -79,6 +79,7 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
         }
     }
 
+
     @Test
     fun `Finds existing AuroraConfig by name`() {
 

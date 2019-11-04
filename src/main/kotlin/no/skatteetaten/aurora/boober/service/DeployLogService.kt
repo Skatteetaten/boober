@@ -26,7 +26,6 @@ class DeployLogService(
 
     private val FAILED_PREFIX = "FAILED"
 
-    // TODO: could this method and the one below be in deployFacade?
     fun markRelease(
         deployResult: List<AuroraDeployResult>,
         deployer: Deployer

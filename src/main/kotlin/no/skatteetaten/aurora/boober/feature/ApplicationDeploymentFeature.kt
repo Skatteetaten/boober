@@ -52,9 +52,9 @@ class ApplicationDeploymentFeature : Feature {
             _metadata = newObjectMeta {
                 name = adc.name
                 namespace = adc.namespace
-                // TODO: applicationId is missing here?
                 labels = mapOf("id" to applicationDeploymentId).addIfNotNull(ttl)
             }
+        // TODO: add annotation with updatedAt iso time format
         )
         return setOf(generateResource(resource))
     }
