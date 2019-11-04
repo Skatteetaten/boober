@@ -7,8 +7,6 @@ import com.fkorotkov.kubernetes.newVolumeMount
 import com.fkorotkov.kubernetes.secret
 import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.kubernetes.api.model.Secret
-import java.io.ByteArrayOutputStream
-import java.util.Properties
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -23,6 +21,8 @@ import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.apache.commons.codec.binary.Base64
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
+import java.io.ByteArrayOutputStream
+import java.util.Properties
 
 val AuroraDeploymentSpec.certificateCommonName: String?
     get() {
@@ -62,7 +62,7 @@ class StsFeature(val sts: StsProvisioner) : Feature {
 
         val template = adc.type == TemplateType.localTemplate || adc.type == TemplateType.template
         val groupIdNullOrEmpty = adc.getOrNull<String>("groupId").isNullOrEmpty()
-        if (template && adc.isSimplifiedConfig("certificate") && groupIdNullOrEmpty) {
+        if (template && adc.isSimplifiedAndEnabled("certificate") && groupIdNullOrEmpty) {
             return listOf(AuroraDeploymentSpecValidationException("groupId is required for type=template/localtemplate if certificate/commonName is not set"))
         }
         return emptyList()

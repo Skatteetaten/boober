@@ -19,12 +19,14 @@ import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
+import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
 import no.skatteetaten.aurora.boober.utils.recreateFolder
 import no.skatteetaten.aurora.boober.utils.recreateRepo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.File
 
+// TODO: Remove this test, everything is covered in Facade test.
 class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
 
     val REMOTE_REPO_FOLDER = File("build/gitrepos_auroraconfig_bare").absoluteFile.absolutePath
@@ -79,7 +81,6 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
         }
     }
 
-
     @Test
     fun `Finds existing AuroraConfig by name`() {
 
@@ -88,7 +89,6 @@ class AuroraConfigServiceTest : AbstractAuroraConfigTest() {
         assertThat(auroraConfig).isNotNull()
         assertThat(auroraConfig.files.size).isEqualTo(0)
     }
-
 
     @Test
     fun `Save AuroraConfig`() {

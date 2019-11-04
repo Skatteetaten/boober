@@ -2,8 +2,6 @@ package no.skatteetaten.aurora.boober.utils
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
-import java.io.File
-import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
@@ -16,8 +14,9 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeployResult
-import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getSampleFiles
 import org.apache.commons.text.StringSubstitutor
+import java.io.File
+import java.nio.charset.Charset
 
 // TODO: Kan vi lese denne auroraConfigen fra noen filer? Vi har jo noen filer vi bruker i andre tester
 abstract class AbstractAuroraConfigTest : ResourceLoader() {
@@ -55,40 +54,7 @@ abstract class AbstractAuroraConfigTest : ResourceLoader() {
 
     val DEFAULT_AID = ApplicationDeploymentRef("utv", "simple")
 
-    fun createAuroraConfig(
-        aid: ApplicationDeploymentRef,
-        affiliation: String = "aos",
-        additionalFile: String? = null,
-        refName: String = "master"
-    ): AuroraConfig {
-        val files = getSampleFiles(aid, additionalFile)
 
-        return AuroraConfig(files.map {
-            AuroraConfigFile(
-                it.key,
-                it.value,
-                false
-            )
-        }, affiliation, refName)
-    }
-
-    fun createAuroraConfig(
-        auroraConfigJson: Map<String, String>,
-        manualFiles: List<AuroraConfigFile> = emptyList()
-    ): AuroraConfig {
-
-        val auroraConfigFiles = auroraConfigJson.map {
-            AuroraConfigFile(
-                it.key,
-                it.value
-            )
-        }
-
-        val manualNames: List<String> = manualFiles.map { it.configName }
-        val files = auroraConfigFiles.filterNot { manualNames.contains(it.configName) }
-
-        return AuroraConfig(files + manualFiles, "aos", "master")
-    }
 
     fun stubDeployResult(deployId: String, success: Boolean = true): List<AuroraDeployResult> {
         return listOf(
@@ -150,6 +116,41 @@ abstract class AbstractAuroraConfigTest : ResourceLoader() {
 class AuroraConfigSamples {
     companion object {
         val folder = File(AuroraConfigSamples::class.java.getResource("/samples/config").file)
+
+        fun createAuroraConfig(
+            auroraConfigJson: Map<String, String>,
+            manualFiles: List<AuroraConfigFile> = emptyList()
+        ): AuroraConfig {
+
+            val auroraConfigFiles = auroraConfigJson.map {
+                AuroraConfigFile(
+                    it.key,
+                    it.value
+                )
+            }
+
+            val manualNames: List<String> = manualFiles.map { it.configName }
+            val files = auroraConfigFiles.filterNot { manualNames.contains(it.configName) }
+
+            return AuroraConfig(files + manualFiles, "aos", "master")
+        }
+
+        fun createAuroraConfig(
+            aid: ApplicationDeploymentRef,
+            affiliation: String = "aos",
+            additionalFile: String? = null,
+            refName: String = "master"
+        ): AuroraConfig {
+            val files = getSampleFiles(aid, additionalFile)
+
+            return AuroraConfig(files.map {
+                AuroraConfigFile(
+                    it.key,
+                    it.value,
+                    false
+                )
+            }, affiliation, refName)
+        }
 
         fun getAuroraConfigSamples(): AuroraConfig {
             val files = folder.walkBottomUp()

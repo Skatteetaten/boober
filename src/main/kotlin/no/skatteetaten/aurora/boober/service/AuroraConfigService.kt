@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import java.io.File
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -14,6 +13,7 @@ import org.eclipse.jgit.api.errors.InvalidRemoteException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
+import java.io.File
 
 private val logger = KotlinLogging.logger {}
 
@@ -23,7 +23,6 @@ data class AuroraConfigRef(
     val resolvedRef: String? = null
 )
 
-// TODO: test
 @Service
 class AuroraConfigService(
     @TargetDomain(AURORA_CONFIG) val gitService: GitService,
@@ -52,7 +51,6 @@ class AuroraConfigService(
         return AuroraConfig.fromFolder("${gitService.checkoutPath}/${ref.name}", ref.refName)
     }
 
-    // TODO move to test?
     fun save(auroraConfig: AuroraConfig): AuroraConfig {
         val checkoutDir = getAuroraConfigFolder(auroraConfig.name)
 
@@ -61,6 +59,7 @@ class AuroraConfigService(
         val repo = getUpdatedRepo(ref)
         val existing = AuroraConfig.fromFolder(checkoutDir, refName)
 
+        // These lines are never called, since save is only called in tests they can probably be removed.
         existing.files.forEach {
             val outputFile = File(checkoutDir, it.name)
             FileUtils.deleteQuietly(outputFile)

@@ -70,6 +70,7 @@
       "path": "/path"
     },
     "foobar": {
+      "host": "foobar",
       "annotations": {
         "haproxy.router.openshift.io|timeout": "30s"
       }

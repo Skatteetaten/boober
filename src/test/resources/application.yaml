@@ -22,12 +22,13 @@ integrations:
         config:
             git:
                 project: "ac"
-                urlPattern: "file:///tmp/boobertest/%s"
-                checkoutPath: "build/boobercheckout"
-
+                repoPath: "build/gitrepos_auroraconfig_bare"
+                urlPattern: "${integrations.aurora.config.git.repoPath}/%s"
+                checkoutPath: "build/auroraconconfigs"
         vault:
             git:
-                urlPattern: "file:///tmp/vaulttest/%s"
+                repoPath: "build/gitrepos_vault_bare"
+                urlPattern: "${integrations.aurora.vault.git.repoPath}/%s"
                 checkoutPath: "build/vaultcheckout"
     openshift:
         url: "http://localhost:${integrations.openshift.port}"

@@ -34,6 +34,7 @@ class DeployFacadeTest : AbstractSpringBootTest() {
     @Autowired
     lateinit var facade: DeployFacade
 
+    // TOOD: do not mock this, see AuroraConfigFacade
     @MockkBean
     lateinit var auroraConfigService: AuroraConfigService
 

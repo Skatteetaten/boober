@@ -1,23 +1,29 @@
 package no.skatteetaten.aurora.boober.facade
 
 import assertk.assertThat
-import assertk.assertions.hasMessage
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isNotNull
-import com.ninjasquad.springmockk.MockkBean
-import io.mockk.every
+import assertk.assertions.messageContains
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
+import no.skatteetaten.aurora.boober.service.GitService
+import no.skatteetaten.aurora.boober.service.GitServices.Domain.AURORA_CONFIG
+import no.skatteetaten.aurora.boober.service.GitServices.TargetDomain
+import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
+import no.skatteetaten.aurora.boober.utils.recreateFolder
+import no.skatteetaten.aurora.boober.utils.recreateRepo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
+import java.io.File
 
 private val logger = KotlinLogging.logger {}
 
@@ -26,21 +32,30 @@ private val logger = KotlinLogging.logger {}
 )
 class AuroraConfigFacadeTest : AbstractSpringBootTest() {
 
+    @Value("\${integrations.aurora.config.git.repoPath}")
+    lateinit var repoPath: String
+
+    @Value("\${integrations.aurora.config.git.checkoutPath}")
+    lateinit var checkoutPath: String
+
     @Autowired
     lateinit var facade: AuroraConfigFacade
 
-    @MockkBean
-    lateinit var auroraConfigService: AuroraConfigService
+    @Autowired
+    lateinit var service: AuroraConfigService
 
-    val auroraConfigRef = AuroraConfigRef("paas", "master", "123abb")
-    val auroraConfig = getAuroraConfigSamples()
+    @Autowired
+    @TargetDomain(AURORA_CONFIG)
+    lateinit var gitService: GitService
 
     @BeforeEach
     fun beforeEach() {
-        every { auroraConfigService.findAuroraConfig(auroraConfigRef) } returns auroraConfig
-        every { auroraConfigService.resolveToExactRef(auroraConfigRef) } returns auroraConfigRef
+        recreateRepo(File(repoPath, "${auroraConfigRef.name}.git"))
+        recreateFolder(File(checkoutPath))
+        service.save(getAuroraConfigSamples())
     }
 
+    val auroraConfigRef = AuroraConfigRef("paas", "master", "123abb")
     val adr = ApplicationDeploymentRef("utv", "simple")
 
     @Test
@@ -97,8 +112,6 @@ class AuroraConfigFacadeTest : AbstractSpringBootTest() {
         assertThat(file).isNotNull()
     }
 
-    // TODO: fix this test
-    /*
     @Test
     fun `validate aurora config`() {
 
@@ -113,75 +126,75 @@ class AuroraConfigFacadeTest : AbstractSpringBootTest() {
             }
         }
 
+        val auroraConfig = createAuroraConfig(adr, "paas")
+
         val validated=facade.validateAuroraConfig(auroraConfig,
             resourceValidation = false,
             auroraConfigRef = auroraConfigRef )
-        assertThat(validated.size).isEqualTo(5)
+        assertThat(validated.size).isEqualTo(1)
 
     }
-     */
 
     @Test
     fun `Should fail to update invalid json file`() {
 
         val fileToChange = "utv/simple.json"
-        val theFileToChange = auroraConfig.files.find { it.name == fileToChange }
+        val theFileToChange = facade.findAuroraConfigFile(auroraConfigRef, fileToChange)
 
         assertThat {
             facade.updateAuroraConfigFile(
                 auroraConfigRef,
                 fileToChange,
                 """foo {"version": "1.0.0"}""",
-                theFileToChange?.version
+                theFileToChange.version
             )
-        }.isFailure().hasMessage("asdf")
+        }.isFailure().messageContains("utv/simple.json is not valid")
     }
 
-    /* TODO FEATURE : move to facade
     @Test
     fun `Should update one file in AuroraConfig`() {
 
-        every {
-            auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(
-                any(),
-                any()
-            )
-        } returns emptyList()
-        val auroraConfig = createAuroraConfig(defaultAuroraConfig())
-        auroraConfigService.save(auroraConfig)
+        openShiftMock {
+
+            rule({ path?.endsWith("/groups") }) {
+                mockJsonFromFile("groups.json")
+            }
+
+            rule({ path?.endsWith("/users") }) {
+                mockJsonFromFile("users.json")
+            }
+        }
 
         val fileToChange = "utv/simple.json"
-        val theFileToChange = auroraConfig.files.find { it.name == fileToChange }
+        val theFileToChange = facade.findAuroraConfigFile(auroraConfigRef, fileToChange)
 
-        auroraConfigService.updateAuroraConfigFile(
-            ref,
+        facade.updateAuroraConfigFile(
+            auroraConfigRef,
             fileToChange,
             """{"version": "1.0.0"}""",
-            theFileToChange?.version
+            theFileToChange.version
         )
 
-        val git = gitService.checkoutRepository(ref.name, ref.refName)
+        val git = gitService.checkoutRepository(auroraConfigRef.name, auroraConfigRef.refName)
         val gitLog = git.log().call().toList().first()
         git.close()
-        assertThat(gitLog.authorIdent.name).isEqualTo("Aurora Test User")
+        assertThat(gitLog.authorIdent.name).isEqualTo("Jayne Cobb")
         assertThat(gitLog.fullMessage).isEqualTo("Added: 0, Modified: 1, Deleted: 0")
     }
-
 
     @Test
     fun `Should not update one file in AuroraConfig if version is wrong`() {
 
-        val fileToChange = "${aid.environment}/${aid.application}.json"
-        val auroraConfig = createAuroraConfig(defaultAuroraConfig())
-        auroraConfigService.save(auroraConfig)
-        var count = 0
+        val fileToChange = "utv/simple.json"
 
         assertThat {
-            auroraConfigService.updateAuroraConfigFile(ref, fileToChange, """{"version": "1.0.0"}""", "incorrect hash")
-                as AuroraVersioningException
+            facade.updateAuroraConfigFile(
+                auroraConfigRef,
+                fileToChange,
+                """{"version": "1.0.0"}""",
+                "incorrect hash"
+            )
         }.isNotNull().isFailure()
-            .message().all { count++ }
-        assertThat(count).isEqualTo(1)
+            .messageContains("The provided version of the current file (incorrect hash) in AuroraConfig paas is not correct")
     }
-     */
 }
