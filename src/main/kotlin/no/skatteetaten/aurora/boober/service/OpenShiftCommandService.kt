@@ -160,6 +160,7 @@ class OpenShiftCommandService(
         }
     }
 
+    // TODO: Should pvc be deletable?
     val deletableResources = listOf(
         "BuildConfig",
         "DeploymentConfig",
@@ -238,6 +239,7 @@ class OpenShiftCommandService(
         }
     }
 
+    // TODO: Better error messages here.
     fun findErrorMessage(response: OpenShiftResponse): String? {
         if (!response.success) {
             return response.exception
