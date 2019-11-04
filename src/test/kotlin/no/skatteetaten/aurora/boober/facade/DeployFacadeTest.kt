@@ -55,28 +55,32 @@ class DeployFacadeTest : AbstractSpringBootTest() {
 
         openShiftMock {
 
-            rule({ it.path?.endsWith("/groups") ?: false }) {
+            rule({ path?.endsWith("/groups") }) {
                 mockJsonFromFile("groups.json")
             }
 
-            rule({ it.path?.endsWith("/users") ?: false }) {
+            rule({ path?.endsWith("/users") }) {
                 mockJsonFromFile("users.json")
             }
 
             // This is a empty environment so no resources exist
-            rule({ it.method == "GET" }) {
+            rule({ method == "GET" }) {
                 MockResponse().setResponseCode(404)
             }
 
             // need to add uid to applicationDeployment for owner reference
-            rule2({ path?.endsWith("/applicationdeployments") }) {
-                modifyJsonNodeResponse("/metadata", "uid", TextNode("123-123"))
+            rule({ path?.endsWith("/applicationdeployments") }) {
+                replayRequestJsonWithModification(
+                    rootPath = "/metadata",
+                    key = "uid",
+                    newValue = TextNode("123-123")
+                )
             }
 
             // All post/put/delete request just send the result back and assume OK.
             rule {
                 MockResponse().setResponseCode(200)
-                    .setBody(it.body)
+                    .setBody(body)
                     .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
             }
         }

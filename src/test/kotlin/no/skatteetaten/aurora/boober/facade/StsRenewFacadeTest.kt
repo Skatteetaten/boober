@@ -34,12 +34,13 @@ class StsRenewFacadeTest : AbstractSpringBootTest() {
         }
 
         openShiftMock {
-            rule({ it.method == "GET" }) {
+            rule({ method == "GET" }) {
                 MockResponse().setResponseCode(404)
             }
+
             rule {
                 MockResponse().setResponseCode(200)
-                    .setBody(it.body)
+                    .setBody(body)
                     .setHeader("Content-Type", APPLICATION_JSON_UTF8_VALUE)
             }
         }

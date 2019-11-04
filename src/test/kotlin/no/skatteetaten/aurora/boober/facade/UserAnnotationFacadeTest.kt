@@ -51,10 +51,10 @@ class UserAnnotationFacadeTest : AbstractSpringBootTest() {
     @Test
     fun `update annotations`() {
         openShiftMock {
-            rule({ it.method == "GET" }) {
+            rule({ method == "GET" }) {
                 ocpMockUserAnnotations(mapOf("favorite" to "R2D2"))
             }
-            rule({ it.method == "PATCH" }) {
+            rule({ method == "PATCH" }) {
                 ocpMockUserAnnotations(mapOf("favorite" to "C3PO"))
             }
         }
@@ -71,10 +71,10 @@ class UserAnnotationFacadeTest : AbstractSpringBootTest() {
     fun `delete annotations`() {
 
         openShiftMock {
-            rule({ it.method == "GET" }) {
+            rule({ method == "GET" }) {
                 ocpMockUserAnnotations(mapOf("favorite" to "C3PO", "master" to "obi wan"))
             }
-            rule({ it.method == "PATCH" }) {
+            rule({ method == "PATCH" }) {
                 ocpMockUserAnnotations(mapOf("favorite" to "C3PO"))
             }
         }

@@ -20,7 +20,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 
-typealias MockRule = (RecordedRequest) -> MockResponse?
+typealias MockRule = RecordedRequest.() -> MockResponse?
+typealias MockFlag = RecordedRequest.() -> Boolean?
 
 abstract class AbstractSpringBootTest : ResourceLoader() {
 
@@ -39,9 +40,13 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
     @Value("\${integrations.bitbucket.port}")
     lateinit var bitbucketPort: String
 
-    fun RecordedRequest.modifyJsonNodeResponse(rootPath: String, key: String, node: JsonNode): MockResponse {
+    fun RecordedRequest.replayRequestJsonWithModification(
+        rootPath: String,
+        key: String,
+        newValue: JsonNode
+    ): MockResponse {
         val ad: JsonNode = jacksonObjectMapper().readTree(this.bodyAsString())
-        (ad.at(rootPath) as ObjectNode).set(key, node)
+        (ad.at(rootPath) as ObjectNode).set(key, newValue)
         return MockResponse()
             .setResponseCode(200)
             .setBody(jacksonObjectMapper().writeValueAsString(ad))
@@ -49,7 +54,7 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
     }
 
     data class MockRules(
-        val check: RecordedRequest.() -> Boolean?,
+        val check: MockFlag,
         val fn: MockRule
     )
     class HttpMock {
@@ -72,17 +77,7 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
             }
         }
 
-        /*
-          Record a rule in the mock. Add an optional check as the first parameter
 
-          If the body of the rule returns null it will be ignored.
-
-          The ordering of the rules matter, the first one that matches will be returned
-         */
-        fun rule(check: (RecordedRequest) -> Boolean = { true }, fn: MockRule): HttpMock {
-            mockRules.add(MockRules(check, fn))
-            return this
-        }
 
         /*
         Add a rule to this mock. If fn returns null the rule will be ignored
@@ -92,46 +87,54 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
             return this
         }
 
-        fun rule2(fn: RecordedRequest.() -> MockResponse?): HttpMock {
-            mockRules.add(MockRules({ true }, fn))
-            return this
-        }
+        /*
+                  Record a rule in the mock. Add an optional check as the first parameter
 
-        fun rule2(check: RecordedRequest.() -> Boolean? = { true }, fn: RecordedRequest.() -> MockResponse?): HttpMock {
+                  If the body of the rule returns null it will be ignored.
+
+                  The ordering of the rules matter, the first one that matches will be returned
+                 */
+        fun rule(check: MockFlag = { true }, fn: MockRule): HttpMock {
             mockRules.add(MockRules(check, fn))
             return this
         }
+
+        companion object {
+            var httpMocks: MutableList<MockWebServer> = mutableListOf()
+
+            fun clearAllHttpMocks() = httpMocks.forEach { it.shutdown() }
+        }
     }
 
-    fun mockWebServer(port: Int, block: HttpMock.() -> Unit = {}): MockWebServer {
+    fun httpMockServer(port: String, block: HttpMock.() -> Unit = {}): MockWebServer =
+        httpMockServer(port.toInt(), block)
+
+    fun httpMockServer(port: Int, block: HttpMock.() -> Unit = {}): MockWebServer {
         val instance = HttpMock()
         instance.block()
         val server = instance.start(port)
+        HttpMock.httpMocks.add(server)
         return server
     }
 
     fun openShiftMock(block: HttpMock.() -> Unit = {}): MockWebServer {
-        return mockWebServer(ocpPort.toInt(), block)
-            .apply { httpMocks.add(this) }
+        return httpMockServer(ocpPort.toInt(), block)
     }
 
     fun skapMock(block: HttpMock.() -> Unit = {}): MockWebServer {
-        return mockWebServer(skapPort.toInt(), block)
-            .apply { httpMocks.add(this) }
+        return httpMockServer(skapPort.toInt(), block)
     }
 
     fun bitbucketMock(block: HttpMock.() -> Unit = {}): MockWebServer {
-        return mockWebServer(bitbucketPort.toInt(), block)
-            .apply { httpMocks.add(this) }
+        return httpMockServer(bitbucketPort.toInt(), block)
     }
 
     fun cantuMock(block: HttpMock.() -> Unit = {}): MockWebServer {
-        return mockWebServer(cantusPort.toInt(), block)
-            .apply { httpMocks.add(this) }
+        return httpMockServer(cantusPort.toInt(), block)
     }
 
     fun dbhMock(block: HttpMock.() -> Unit = {}): MockWebServer {
-        return mockWebServer(dbhPort.toInt(), block)
+        return httpMockServer(dbhPort.toInt(), block)
     }
 
     @MockkBean
@@ -140,11 +143,10 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
     @MockkBean
     lateinit var serviceAccountTokenProvider: ServiceAccountTokenProvider
 
-    var httpMocks: MutableList<MockWebServer> = mutableListOf()
 
     @AfterEach
     fun after() {
-        httpMocks.forEach { it.shutdown() }
+        HttpMock.clearAllHttpMocks()
     }
 
     @BeforeEach

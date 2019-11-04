@@ -146,6 +146,7 @@ class DeploymentConfigFeature : Feature {
             return content.takeIf { it != "{}" }
         }
 
+        // TODO: Burde disse være i ApplicationDeployment, de av dem vi fortsatt trenger
         return mapOf(
             "boober.skatteetaten.no/applicationFile" to cmd.applicationFile.name,
             "console.skatteetaten.no/alarm" to adc["alarm"],
