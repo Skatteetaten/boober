@@ -115,10 +115,4 @@ class DeployFacadeTest : AbstractSpringBootTest() {
         }
         assertThat(generatedObjects.map { it.getKey() }.toSortedSet()).isEqualTo(resultFiles.keys.toSortedSet())
     }
-
-    private fun mockJsonFromFile(fileName: String): MockResponse {
-        return MockResponse()
-            .setBody(loadBufferResource(fileName))
-            .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
-    }
 }

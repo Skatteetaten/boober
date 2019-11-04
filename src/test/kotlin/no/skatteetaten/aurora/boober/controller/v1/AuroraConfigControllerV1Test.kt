@@ -219,7 +219,7 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
 
         every {
             facade.validateAuroraConfig(auroraConfig, emptyList(), false, auroraConfigRef)
-        } returns Unit
+        } returns listOf()
 
         mockMvc.put(
             path = Path("/v1/auroraconfig/{auroraConfig}/validate", auroraConfigRef.name),

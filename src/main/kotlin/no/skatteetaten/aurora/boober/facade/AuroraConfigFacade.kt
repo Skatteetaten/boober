@@ -4,6 +4,7 @@ import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
@@ -80,11 +81,11 @@ class AuroraConfigFacade(
         overrideFiles: List<AuroraConfigFile> = listOf(),
         resourceValidation: Boolean = true,
         auroraConfigRef: AuroraConfigRef
-    ) {
+    ): List<AuroraDeploymentContext> {
         val commands = auroraConfig.getApplicationDeploymentRefs().map {
             AuroraContextCommand(auroraConfig, it, auroraConfigRef, overrideFiles)
         }
-        auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(commands, resourceValidation)
+        return auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(commands, resourceValidation)
     }
 
     fun findAuroraConfigFile(ref: AuroraConfigRef, fileName: String): AuroraConfigFile {

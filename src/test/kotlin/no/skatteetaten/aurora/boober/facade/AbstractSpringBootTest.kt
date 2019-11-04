@@ -146,6 +146,12 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
         HttpMock.clearAllHttpMocks()
     }
 
+    fun mockJsonFromFile(fileName: String): MockResponse {
+        return MockResponse()
+            .setBody(loadBufferResource(fileName, DeployFacadeTest::class.java.simpleName))
+            .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
+    }
+
     @BeforeEach
     fun before() {
         every { userDetailsProvider.getAuthenticatedUser() } returns User(
