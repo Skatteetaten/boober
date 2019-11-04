@@ -5,9 +5,9 @@ import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import java.net.URL
 import okio.Buffer
 import org.springframework.util.ResourceUtils
-import java.net.URL
 
 open class ResourceLoader {
 

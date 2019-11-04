@@ -77,8 +77,6 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
             }
         }
 
-
-
         /*
         Add a rule to this mock. If fn returns null the rule will be ignored
          */
@@ -142,7 +140,6 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
 
     @MockkBean
     lateinit var serviceAccountTokenProvider: ServiceAccountTokenProvider
-
 
     @AfterEach
     fun after() {

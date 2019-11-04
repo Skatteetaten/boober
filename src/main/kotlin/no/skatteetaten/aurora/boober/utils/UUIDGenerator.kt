@@ -10,5 +10,3 @@ object UUIDGenerator {
     val deployId: String
         get() = generateId().substring(0, 7)
 }
-
-
