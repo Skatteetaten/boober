@@ -3,8 +3,8 @@ package no.skatteetaten.aurora.boober.facade
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import java.util.UUID
 import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.feature.ApplicationDeploymentFeature
 import no.skatteetaten.aurora.boober.feature.cluster
 import no.skatteetaten.aurora.boober.feature.dockerImagePath
 import no.skatteetaten.aurora.boober.feature.name
@@ -37,6 +37,7 @@ import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.describeString
+import no.skatteetaten.aurora.boober.utils.UUIDGenerator
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.parallelMap
 import no.skatteetaten.aurora.boober.utils.whenFalse
@@ -128,7 +129,7 @@ class DeployFacade(
                         headerResources = header.toSet(),
                         resources = normal.toSet(),
                         context = context,
-                        deployId = UUID.randomUUID().toString().substring(0, 7),
+                        deployId = UUIDGenerator.deployId,
                         shouldDeploy = deploy,
                         user = userDetailsProvider.getAuthenticatedUser()
                     )
@@ -243,7 +244,7 @@ class DeployFacade(
         val application = resources.first {
             it.resource.kind == "ApplicationDeployment"
         }.resource
-
+        application.metadata.labels = application.metadata.labels.addIfNotNull("booberDeployId" to cmd.deployId)
         val applicationCommand = openShiftCommandBuilder.createOpenShiftCommand(context.spec.namespace, application)
         val applicationResult = openShiftClient.performOpenShiftCommand(context.spec.namespace, applicationCommand)
         val appResponse = applicationResult.responseBody
@@ -338,7 +339,9 @@ class DeployFacade(
         val namespace = context.spec.namespace
         val name = context.spec.name
 
-        val jsonResources = deployCommand.resources.map { resource ->
+        val jsonResources = deployCommand.resources.filter {
+            it.createdSource.feature != ApplicationDeploymentFeature::class.java
+        }.map { resource ->
             resource.resource.metadata.labels =
                 resource.resource.metadata.labels.addIfNotNull("booberDeployId" to deployCommand.deployId)
             resource.resource.metadata.ownerReferences.find {

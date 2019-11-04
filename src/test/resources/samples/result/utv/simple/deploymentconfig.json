@@ -13,7 +13,8 @@
       "affiliation": "paas",
       "updateInBoober": "true",
       "name": "simple",
-      "deployTag": "1"
+      "deployTag": "1",
+      "booberDeployId": "deploy1"
     },
     "name": "simple",
     "namespace": "paas-utv",

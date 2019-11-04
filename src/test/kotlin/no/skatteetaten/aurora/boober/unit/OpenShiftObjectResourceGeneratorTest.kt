@@ -10,8 +10,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
-import java.io.ByteArrayInputStream
-import java.time.Instant
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.feature.ApplicationDeploymentFeature
 import no.skatteetaten.aurora.boober.feature.BuildFeature
@@ -47,10 +45,13 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultResults
 import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
 import no.skatteetaten.aurora.boober.utils.Instants
+import no.skatteetaten.aurora.boober.utils.getResultFiles
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import java.io.ByteArrayInputStream
+import java.time.Instant
 
 // TODO: create one or two "fat" tests here and remove the rest
 class OpenShiftObjectResourceGeneratorTest : AbstractAuroraConfigTest() {
@@ -62,18 +63,6 @@ class OpenShiftObjectResourceGeneratorTest : AbstractAuroraConfigTest() {
         clearAllMocks()
     }
 
-    fun getKey(it: JsonNode): String {
-        val kind = it.get("kind").asText().toLowerCase()
-        val metadata = it.get("metadata")
-
-        val name = if (metadata == null) {
-            it.get("name").asText().toLowerCase()
-        } else {
-            metadata.get("name").asText().toLowerCase()
-        }
-
-        return "$kind/$name"
-    }
 
     lateinit var service: AuroraDeploymentContextService
 
@@ -127,7 +116,7 @@ class OpenShiftObjectResourceGeneratorTest : AbstractAuroraConfigTest() {
         val additionalFile: String? = null,
         val overrides: List<AuroraConfigFile> = emptyList()
     ) {
-        SIMPLE_UTV("utv", "simple"),
+        //  SIMPLE_UTV("utv", "simple"), // See DeployFacadeTest
         EASY_UTV("utv", "easy", additionalFile = "simple.json"),
         COMPLEX_UTV(
             "utv", "complex", dbName = "foo,complex", overrides = listOf(
@@ -161,14 +150,14 @@ class OpenShiftObjectResourceGeneratorTest : AbstractAuroraConfigTest() {
         val resourceResult = ctx.createResources()
 
         val resources = resourceResult.second!!
-        val resultFiles = getResultFiles(aid)
+        val resultFiles = aid.getResultFiles()
         val keys = resultFiles.keys
         val generatedObjects = resources.map {
             val json: JsonNode = jacksonObjectMapper().convertValue(it.resource)
             json
         }
         generatedObjects.forEach {
-            val key: String = getKey(it)
+            val key: String = it.getKey()
             assertThat(keys).contains(key)
             if (it.openshiftKind == "secret") {
                 val data = it["data"] as ObjectNode
@@ -178,6 +167,19 @@ class OpenShiftObjectResourceGeneratorTest : AbstractAuroraConfigTest() {
             }
             compareJson(resultFiles[key]!!, it)
         }
-        assertThat(generatedObjects.map { getKey(it) }.toSortedSet()).isEqualTo(resultFiles.keys.toSortedSet())
+        assertThat(generatedObjects.map { it.getKey() }.toSortedSet()).isEqualTo(resultFiles.keys.toSortedSet())
     }
+}
+
+fun JsonNode.getKey(): String {
+    val kind = this.get("kind").asText().toLowerCase()
+    val metadata = this.get("metadata")
+
+    val name = if (metadata == null) {
+        this.get("name").asText().toLowerCase()
+    } else {
+        metadata.get("name").asText().toLowerCase()
+    }
+
+    return "$kind/$name"
 }

@@ -2,8 +2,6 @@ package no.skatteetaten.aurora.boober.utils
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
-import java.io.File
-import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
@@ -18,6 +16,8 @@ import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeployResult
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getSampleFiles
 import org.apache.commons.text.StringSubstitutor
+import java.io.File
+import java.nio.charset.Charset
 
 // TODO: Kan vi lese denne auroraConfigen fra noen filer? Vi har jo noen filer vi bruker i andre tester
 abstract class AbstractAuroraConfigTest : ResourceLoader() {
@@ -88,25 +88,6 @@ abstract class AbstractAuroraConfigTest : ResourceLoader() {
         val files = auroraConfigFiles.filterNot { manualNames.contains(it.configName) }
 
         return AuroraConfig(files + manualFiles, "aos", "master")
-    }
-
-    fun getResultFiles(aid: ApplicationDeploymentRef): Map<String, JsonNode?> {
-        val baseFolder = File(
-            AbstractAuroraConfigTest::class.java
-                .getResource("/samples/result/${aid.environment}/${aid.application}").file
-        )
-
-        return baseFolder.listFiles().toHashSet().associate {
-            val json = jsonMapper().readTree(it)
-
-            var appName = json.at("/metadata/name").textValue()
-            if ("".isNotBlank()) {
-                appName = ""
-            }
-
-            val file = json.at("/kind").textValue() + "/" + appName
-            file.toLowerCase() to json
-        }
     }
 
     fun stubDeployResult(deployId: String, success: Boolean = true): List<AuroraDeployResult> {
@@ -203,5 +184,24 @@ class AuroraConfigSamples {
                 additionalFile?.let { it } ?: ""
             )
         }
+    }
+}
+
+fun ApplicationDeploymentRef.getResultFiles(): Map<String, JsonNode?> {
+    val baseFolder = File(
+        AbstractAuroraConfigTest::class.java
+            .getResource("/samples/result/${this.environment}/${this.application}").file
+    )
+
+    return baseFolder.listFiles().toHashSet().associate {
+        val json = jsonMapper().readTree(it)
+
+        var appName = json.at("/metadata/name").textValue()
+        if ("".isNotBlank()) {
+            appName = ""
+        }
+
+        val file = json.at("/kind").textValue() + "/" + appName
+        file.toLowerCase() to json
     }
 }

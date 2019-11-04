@@ -92,6 +92,7 @@ class MountFeature(
             }
     }
 
+    // TODO: The names here should end with a fixed suffix to avoid conflicts with secretVault
     private fun generateSecrets(mounts: List<Mount>, adc: AuroraDeploymentSpec): List<Secret> {
         val secretVaults = mounts.filter { !it.exist && it.type == MountType.Secret && it.secretVaultName != null }
 

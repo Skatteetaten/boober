@@ -32,6 +32,7 @@ fun AuroraDeploymentContext.createResources(): Pair<List<ContextErrors>, Set<Aur
         }
     }
 
+    // TODO: ensure that there are not conflicting names for resources.
     // There was some errors when generating so we gather then up and return them and no resources
     val errors = eitherErrorsOrFeatures.mapNotNull { it.first }
     if (errors.isNotEmpty()) {

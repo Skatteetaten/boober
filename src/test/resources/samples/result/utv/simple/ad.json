@@ -8,10 +8,12 @@
       "updatedBy": "hero",
       "affiliation": "paas",
       "updateInBoober": "true",
-      "name": "simple"
+      "name": "simple",
+      "booberDeployId": "deploy1"
     },
     "name": "simple",
-    "namespace": "paas-utv"
+    "namespace": "paas-utv",
+    "uid": "123-123"
   },
   "spec": {
     "applicationId": "665c8f8518c18e8fc6b28a458496ce19bf9e7645",
@@ -31,7 +33,7 @@
         "application": "simple"
       },
       "auroraConfig": {
-        "name": "test",
+        "name": "paas",
         "refName": "master",
         "resolvedRef": "123abb"
       }

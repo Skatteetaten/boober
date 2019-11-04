@@ -8,7 +8,6 @@ import com.fkorotkov.kubernetes.newConfigMapList
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
-import java.time.Instant
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.service.OpenShiftCommandService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -17,11 +16,13 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.getResultFiles
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
+import java.time.Instant
 
 class OpenShiftCommandServiceCreateDeleteCommandsTest : AbstractAuroraConfigTest() {
 
@@ -78,7 +79,7 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest : AbstractAuroraConfigTest
 
     fun createResponsesFromResultFiles(adr: ApplicationDeploymentRef): Map<String, JsonNode> {
 
-        return getResultFiles(adr).map {
+        return adr.getResultFiles().map {
             val responseBody = jsonMapper().createObjectNode()
             val items = jsonMapper().createArrayNode()
 

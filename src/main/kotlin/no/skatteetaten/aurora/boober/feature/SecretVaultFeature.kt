@@ -183,6 +183,7 @@ class SecretVaultFeature(
         } else null
     }
 
+    // TODO: The names here should end with a fixed suffix to avoid conflicts with mounts
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         val secretEnvResult = handleSecretEnv(adc, cmd)
