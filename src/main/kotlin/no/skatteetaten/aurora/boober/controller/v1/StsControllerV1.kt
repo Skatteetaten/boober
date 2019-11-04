@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
+// TODO: Should we have a conditional on missing property that just returns an error message here?
+
 // TODO: FEATURE test error if skap url is not set
 @RestController
 @RequestMapping("/v1/sts")

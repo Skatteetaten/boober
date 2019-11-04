@@ -238,7 +238,7 @@ class DeployFacade(
         cmd: AuroraDeployCommand,
         env: AuroraEnvironmentResult
     ): AuroraDeployResult {
-        val namespaceCreated = !env.projectExist
+        val projectExist = env.projectExist
         val context = cmd.context
         val resources = cmd.resources
         val application = resources.first {
@@ -290,7 +290,7 @@ class DeployFacade(
         logger.debug("Apply objects")
         val openShiftResponses: List<OpenShiftResponse> = listOf(applicationResult) +
             applyOpenShiftApplicationObjects(
-                cmd, namespaceCreated, ownerReferenceUid
+                cmd, projectExist, ownerReferenceUid
             )
 
         logger.debug("done applying objects")
