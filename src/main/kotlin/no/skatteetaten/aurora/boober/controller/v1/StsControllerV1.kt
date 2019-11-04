@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
-// TODO: test error if skap url is not set
+// TODO: FEATURE test error if skap url is not set
 @RestController
 @RequestMapping("/v1/sts")
 @ConditionalOnProperty("integrations.skap.url")

@@ -74,7 +74,7 @@ class AuroraConfigFacade(
         return auroraConfig.files.map { it.name }
     }
 
-    // todo test this
+    // TODO FEATURE test this
     fun validateAuroraConfig(
         auroraConfig: AuroraConfig,
         overrideFiles: List<AuroraConfigFile> = listOf(),
@@ -107,7 +107,7 @@ class AuroraConfigFacade(
         return auroraConfigService.saveFile(newFile, auroraConfig, ref)
     }
 
-    // TODO test this
+    // TODO FEATURE test this
     fun patchAuroraConfigFile(
         ref: AuroraConfigRef,
         filename: String,

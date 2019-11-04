@@ -65,7 +65,7 @@ class SecretVaultFeature(
             .toSet()
     }
 
-    // TODO: Room for lots of better refactorings here.
+    // TODO FEATURE: Room for lots of better refactorings here.
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,

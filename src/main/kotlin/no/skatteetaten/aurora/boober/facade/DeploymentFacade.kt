@@ -35,7 +35,7 @@ class DeploymentFacade(
             val applicationDeploymentExists = openshiftResponse.responseBody != null
 
             if (!openshiftResponse.success) {
-                // TODO test this
+                // TODO FEATURE test this
                 logger.error(openshiftResponse.exception)
                 DeleteApplicationDeploymentResponse(
                     applicationRef = it.applicationRef,
@@ -69,7 +69,7 @@ class DeploymentFacade(
             } ?: false
 
             if (forbidden) {
-                // TODO test this
+                // TODO FEATURE test this
                 GetApplicationDeploymentResponse(
                     applicationRef = it.applicationRef,
                     exists = false,
@@ -84,7 +84,7 @@ class DeploymentFacade(
                     success = false,
                     message = openshiftResponse.exception
                         ?: "An error occured when checking if ApplicationDeployment exists"
-                    // TODO test this error
+                    // TODO FEATURE test this error
                 )
             } else {
 

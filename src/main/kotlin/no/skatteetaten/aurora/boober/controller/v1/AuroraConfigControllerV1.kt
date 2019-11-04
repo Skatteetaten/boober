@@ -1,8 +1,6 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
 import com.fasterxml.jackson.annotation.JsonRawValue
-import javax.servlet.http.HttpServletRequest
-import javax.validation.Valid
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigResource.Companion.fromAuroraConfig
 import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
@@ -24,6 +22,8 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import javax.servlet.http.HttpServletRequest
+import javax.validation.Valid
 
 @RestController
 @RequestMapping("/v1/auroraconfig/{name}")
@@ -67,7 +67,7 @@ class AuroraConfigControllerV1(
             throw IllegalArgumentException("Either both application and environment must be set or none of them")
         }
 
-        // TODO: remove all the above and the request param when mokey is changed
+        // TODO: Fremove all the above and the request param when mokey is changed
         return Response(items = listOf(fromAuroraConfig(name, auroraConfigFacade.findAuroraConfigFiles(ref))))
     }
 
@@ -151,7 +151,7 @@ class AuroraConfigControllerV1(
     }
 }
 
-// TODO: should this include the ref used to fetch the AuroraConfig?
+// TODO: FEATURE should this include the ref used to fetch the AuroraConfig?
 data class AuroraConfigResource(
     val name: String,
     val files: List<AuroraConfigFileResource> = listOf()

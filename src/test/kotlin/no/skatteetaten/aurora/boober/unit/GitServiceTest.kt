@@ -7,7 +7,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.every
 import io.mockk.mockk
-import java.io.File
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.service.GitService
@@ -19,6 +18,7 @@ import no.skatteetaten.aurora.boober.utils.recreateFolder
 import no.skatteetaten.aurora.boober.utils.recreateRepo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.io.File
 
 class GitServiceTest : ResourceLoader() {
 
@@ -40,7 +40,7 @@ class GitServiceTest : ResourceLoader() {
         every { userDetailsProvider.getAuthenticatedUser() } returns User("aurora", "token", "Aurora Test User")
     }
 
-    // TODO: jeg får ikke denne til å funke på ubuntuen min hjemme heller
+    // TODO: FEATURE jeg får ikke denne til å funke på ubuntuen min hjemme heller
     /*
     @DisabledOnOs(OS.MAC)
     @Test

@@ -92,7 +92,7 @@ class MountFeature(
             }
     }
 
-    // TODO: The names here should end with a fixed suffix to avoid conflicts with secretVault
+    // TODO: FEATURE The names here should end with a fixed suffix to avoid conflicts with secretVault
     private fun generateSecrets(mounts: List<Mount>, adc: AuroraDeploymentSpec): List<Secret> {
         val secretVaults = mounts.filter { !it.exist && it.type == MountType.Secret && it.secretVaultName != null }
 
@@ -217,8 +217,8 @@ class MountFeature(
         return mountNames.map { mount ->
             val type: MountType = auroraDeploymentSpec["mounts/$mount/type"]
 
-            // TODO: bug duplicate configmap name is possible in combination with config nested config
-            // TODO: bug here if content is not map
+            // TODO FEATURE: bug duplicate configmap name is possible in combination with config nested config
+            // TODO FEATURE : bug here if content is not map
             val content: Map<String, String>? = if (type == MountType.ConfigMap) {
                 auroraDeploymentSpec.getOrNull("mounts/$mount/content")
             } else {

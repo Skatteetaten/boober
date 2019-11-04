@@ -73,7 +73,6 @@ class VaultControllerV1Test : AbstractControllerTest() {
 
         val vaults = Response(items = listOf(VaultFileResource.fromDecodedBytes(fileContents)))
 
-        // TODO assert header Etag
         mockMvc.get(
             Path(
                 "/v1/vault/{vaultCollection}/{vaultKey}/{fileName}",
@@ -84,7 +83,7 @@ class VaultControllerV1Test : AbstractControllerTest() {
         ) {
             statusIsOk()
             responseJsonPath("$").equalsObject(vaults)
-            // TODO should this have quotes?
+            // TODO FEATURE should this have quotes?
             responseHeader("Etag").equals("\"792f98952392f2d201c82154f5b18dd8\"")
         }
     }
