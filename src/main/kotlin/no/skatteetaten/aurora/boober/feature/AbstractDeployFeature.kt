@@ -212,10 +212,12 @@ abstract class AbstractDeployFeature(
         val id = DigestUtils.sha1Hex("${adc.groupId}/$name")
         resources.forEach {
             if (it.resource.kind == "ApplicationDeployment") {
+                val labels = mapOf("applicationId" to id)
                 modifyResource(it, "Added application name and id")
                 val ad: ApplicationDeployment = jacksonObjectMapper().convertValue(it.resource)
                 ad.spec.applicationName = name
                 ad.spec.applicationId = id
+                ad.metadata.labels = ad.metadata.labels?.addIfNotNull(labels) ?: labels
             }
         }
     }

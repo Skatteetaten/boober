@@ -14,6 +14,7 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.filterNullValues
 import no.skatteetaten.aurora.boober.utils.getBoolean
 import no.skatteetaten.aurora.boober.utils.openshiftName
@@ -53,9 +54,11 @@ abstract class AbstractTemplateFeature : Feature {
         val id = DigestUtils.sha1Hex("${type.name.toLowerCase()}-$name")
         resources.forEach {
             if (it.resource.kind == "ApplicationDeployment") {
+                val labels = mapOf("applicationId" to id)
                 modifyResource(it, "Added application name and id")
                 val ad: ApplicationDeployment = jacksonObjectMapper().convertValue(it.resource)
                 ad.spec.applicationName = name
+                ad.metadata.labels = ad.metadata.labels?.addIfNotNull(labels) ?: labels
                 ad.spec.applicationId = id
             }
         }

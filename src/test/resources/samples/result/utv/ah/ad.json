@@ -8,7 +8,8 @@
       "updatedBy": "hero",
       "affiliation": "paas",
       "updateInBoober": "true",
-      "name": "ah"
+      "name": "ah",
+      "applicationId" : "81e9586fcc0718312784c585bb94421ee89075ee"
     },
     "name": "ah",
     "namespace": "paas-utv"
