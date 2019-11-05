@@ -102,9 +102,6 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
         }
     }
 
-    /*
-      TODO: FEATURE How to test this? Need to add ErrorHandler in here?
-     */
     @Test
     fun `Get aurora config by name fails if only env specified`() {
         assertThat {

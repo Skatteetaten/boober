@@ -5,14 +5,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
-import java.io.File
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.token.ServiceAccountTokenProvider
-import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import no.skatteetaten.aurora.boober.utils.recreateFolder
@@ -28,13 +26,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
+import java.io.File
 
 typealias MockRule = RecordedRequest.() -> MockResponse?
 typealias MockFlag = RecordedRequest.() -> Boolean?
 
 /*
 
-  If your tests needs access to auroraConfig use the method
+  If your tests needs access to auroraConfig use the method in BeforeEach
    - prepareTestAuroraConfig to setup an AuroraConfig repo
    - use the auroraConfigRef variable to point to this AuroraConfig
 
@@ -46,6 +45,7 @@ typealias MockFlag = RecordedRequest.() -> Boolean?
    - bitbucketMock
    - cantusMock
  */
+// TODO: Create two abstract classes, one for auroraConfig and another for not
 abstract class AbstractSpringBootTest : ResourceLoader() {
 
     val auroraConfigRef = AuroraConfigRef("paas", "master", "123abb")
@@ -68,7 +68,7 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
     fun prepareTestAuroraConfig(config: AuroraConfig = getAuroraConfigSamples()) {
         recreateRepo(File(auroraConfigCrepoPath, "${config.name}.git"))
         recreateFolder(File(auroraConfigCheckoutPath))
-        service.save(AuroraConfigSamples.getAuroraConfigSamples())
+        service.save(config)
     }
 
     @Value("\${integrations.openshift.port}")

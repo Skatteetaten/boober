@@ -12,7 +12,6 @@ import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
-import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
 import okhttp3.mockwebserver.MockResponse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -32,7 +31,7 @@ class AuroraConfigFacadeTest : AbstractSpringBootTest() {
 
     @BeforeEach
     fun beforeEach() {
-        prepareTestAuroraConfig(getAuroraConfigSamples())
+        prepareTestAuroraConfig()
     }
 
     val adr = ApplicationDeploymentRef("utv", "simple")

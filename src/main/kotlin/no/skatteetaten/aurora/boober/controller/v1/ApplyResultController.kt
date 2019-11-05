@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
-// TODO: FEATURE Not sure on structure here, DeployLogService is a little bit weird
 @RestController
 @RequestMapping("/v1/apply-result/{auroraConfigName}")
 class ApplyResultController(private val deployLogService: DeployLogService) {

@@ -146,7 +146,7 @@ class DeploymentConfigFeature : Feature {
             return content.takeIf { it != "{}" }
         }
 
-        // TODO: FEATURE Burde disse være i ApplicationDeployment, de av dem vi fortsatt trenger
+        // TODO: None of these are needed anymore. They are in AD file
         return mapOf(
             "boober.skatteetaten.no/applicationFile" to cmd.applicationFile.name,
             "console.skatteetaten.no/alarm" to adc["alarm"],
