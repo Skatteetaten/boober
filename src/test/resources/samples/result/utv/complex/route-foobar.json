@@ -24,7 +24,7 @@
     ]
   },
   "spec": {
-    "host": "komplex-paas-utv.test.paas",
+    "host": "foobar.test.paas",
     "to": {
       "kind": "Service",
       "name": "komplex"

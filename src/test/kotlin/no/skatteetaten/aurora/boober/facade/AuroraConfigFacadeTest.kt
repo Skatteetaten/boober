@@ -27,7 +27,6 @@ private val logger = KotlinLogging.logger {}
 )
 class AuroraConfigFacadeTest : AbstractSpringBootTest() {
 
-
     @Autowired
     lateinit var facade: AuroraConfigFacade
 
@@ -46,7 +45,7 @@ class AuroraConfigFacadeTest : AbstractSpringBootTest() {
         assertThat(specList.size).isEqualTo(1)
         val spec = specList.first()
         assertThat(spec).isNotNull()
-        //TODO What to assert here?
+        // TODO What to assert here?
     }
 
     @Test
@@ -116,9 +115,9 @@ class AuroraConfigFacadeTest : AbstractSpringBootTest() {
 
         val auroraConfig = createAuroraConfig(adr, "paas")
 
-        val validated=facade.validateAuroraConfig(auroraConfig,
+        val validated = facade.validateAuroraConfig(auroraConfig,
             resourceValidation = false,
-            auroraConfigRef = auroraConfigRef )
+            auroraConfigRef = auroraConfigRef)
         assertThat(validated.size).isEqualTo(1)
     }
 
@@ -166,7 +165,6 @@ class AuroraConfigFacadeTest : AbstractSpringBootTest() {
         assertThat(file).isNotNull()
         val json: JsonNode = jacksonObjectMapper().readTree(file?.contents)
         assertThat(json.at("/version").textValue()).isEqualTo("1.0.0")
-
     }
 
     @Test

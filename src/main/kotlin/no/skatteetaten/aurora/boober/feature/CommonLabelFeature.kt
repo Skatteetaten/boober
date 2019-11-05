@@ -26,10 +26,10 @@ class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature
             "app" to adc.name,
             "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
             "affiliation" to adc.affiliation,
-            "updateInBoober" to "true", //TODO: this can be removed
+            "updateInBoober" to "true", // TODO: this can be removed
             "name" to adc.name
         )
-         //TODO: Add updatedTimestamp
+        // TODO: Add updatedTimestamp
 
         return labels.normalizeLabels()
     }
