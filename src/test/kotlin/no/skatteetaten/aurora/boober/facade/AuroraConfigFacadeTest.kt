@@ -5,25 +5,20 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isNotNull
 import assertk.assertions.messageContains
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.service.AuroraConfigRef
-import no.skatteetaten.aurora.boober.service.AuroraConfigService
-import no.skatteetaten.aurora.boober.service.GitService
-import no.skatteetaten.aurora.boober.service.GitServices.Domain.AURORA_CONFIG
-import no.skatteetaten.aurora.boober.service.GitServices.TargetDomain
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
-import no.skatteetaten.aurora.boober.utils.recreateFolder
-import no.skatteetaten.aurora.boober.utils.recreateRepo
+import okhttp3.mockwebserver.MockResponse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
-import java.io.File
+import org.springframework.http.MediaType
 
 private val logger = KotlinLogging.logger {}
 
@@ -32,30 +27,15 @@ private val logger = KotlinLogging.logger {}
 )
 class AuroraConfigFacadeTest : AbstractSpringBootTest() {
 
-    @Value("\${integrations.aurora.config.git.repoPath}")
-    lateinit var repoPath: String
-
-    @Value("\${integrations.aurora.config.git.checkoutPath}")
-    lateinit var checkoutPath: String
 
     @Autowired
     lateinit var facade: AuroraConfigFacade
 
-    @Autowired
-    lateinit var service: AuroraConfigService
-
-    @Autowired
-    @TargetDomain(AURORA_CONFIG)
-    lateinit var gitService: GitService
-
     @BeforeEach
     fun beforeEach() {
-        recreateRepo(File(repoPath, "${auroraConfigRef.name}.git"))
-        recreateFolder(File(checkoutPath))
-        service.save(getAuroraConfigSamples())
+        prepareTestAuroraConfig(getAuroraConfigSamples())
     }
 
-    val auroraConfigRef = AuroraConfigRef("paas", "master", "123abb")
     val adr = ApplicationDeploymentRef("utv", "simple")
 
     @Test
@@ -107,11 +87,19 @@ class AuroraConfigFacadeTest : AbstractSpringBootTest() {
     }
 
     @Test
+    fun `should get error if auroraconfig file is not found`() {
+        assertThat {
+            facade.findAuroraConfigFile(auroraConfigRef, "utv/simple2.json")
+        }.isFailure().messageContains("No such file")
+    }
+
+    @Test
     fun `find auroraconfig file`() {
         val file = facade.findAuroraConfigFile(auroraConfigRef, "utv/simple.json")
         assertThat(file).isNotNull()
     }
 
+    // TODO: What should we validate here?
     @Test
     fun `validate aurora config`() {
 
@@ -132,7 +120,6 @@ class AuroraConfigFacadeTest : AbstractSpringBootTest() {
             resourceValidation = false,
             auroraConfigRef = auroraConfigRef )
         assertThat(validated.size).isEqualTo(1)
-
     }
 
     @Test
@@ -168,18 +155,18 @@ class AuroraConfigFacadeTest : AbstractSpringBootTest() {
         val fileToChange = "utv/simple.json"
         val theFileToChange = facade.findAuroraConfigFile(auroraConfigRef, fileToChange)
 
-        facade.updateAuroraConfigFile(
+        val result = facade.updateAuroraConfigFile(
             auroraConfigRef,
             fileToChange,
             """{"version": "1.0.0"}""",
             theFileToChange.version
         )
 
-        val git = gitService.checkoutRepository(auroraConfigRef.name, auroraConfigRef.refName)
-        val gitLog = git.log().call().toList().first()
-        git.close()
-        assertThat(gitLog.authorIdent.name).isEqualTo("Jayne Cobb")
-        assertThat(gitLog.fullMessage).isEqualTo("Added: 0, Modified: 1, Deleted: 0")
+        val file = result.files.find { it.name == fileToChange }
+        assertThat(file).isNotNull()
+        val json: JsonNode = jacksonObjectMapper().readTree(file?.contents)
+        assertThat(json.at("/version").textValue()).isEqualTo("1.0.0")
+
     }
 
     @Test
@@ -196,5 +183,57 @@ class AuroraConfigFacadeTest : AbstractSpringBootTest() {
             )
         }.isNotNull().isFailure()
             .messageContains("The provided version of the current file (incorrect hash) in AuroraConfig paas is not correct")
+    }
+
+    @Test
+    fun `Should patch auroraConfigFile`() {
+        openShiftMock {
+
+            rule({ path?.endsWith("/groups") }) {
+                mockJsonFromFile("groups.json")
+            }
+
+            rule({ path?.endsWith("/users") }) {
+                mockJsonFromFile("users.json")
+            }
+        }
+
+        val patch = """[{
+            "op": "add",
+            "path": "/version",
+            "value": "test"
+        }]"""
+
+        val filename = "utv/simple.json"
+        val result = facade.patchAuroraConfigFile(
+            ref = auroraConfigRef,
+            filename = filename,
+            jsonPatchOp = patch
+        )
+
+        val file = result.files.find { it.name == filename }
+        assertThat(file).isNotNull()
+        val json: JsonNode = jacksonObjectMapper().readTree(file?.contents)
+        assertThat(json.at("/version").textValue()).isEqualTo("test")
+    }
+
+    @Test
+    fun `find all auroraConfig names`() {
+
+        bitbucketMock {
+            rule {
+
+                val json = mapOf("values" to listOf(mapOf("slug" to "paas")))
+                MockResponse()
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
+                    .setResponseCode(200)
+                    .setBody(
+                        jacksonObjectMapper()
+                            .writeValueAsString(json)
+                    )
+            }
+        }
+        val names = facade.findAllAuroraConfigNames()
+        assertThat(names.first()).isEqualTo("paas")
     }
 }

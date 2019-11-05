@@ -51,6 +51,7 @@ class AuroraConfigService(
         return AuroraConfig.fromFolder("${gitService.checkoutPath}/${ref.name}", ref.refName)
     }
 
+    // This is called from tests to create AuroraConfig for integration tests
     fun save(auroraConfig: AuroraConfig): AuroraConfig {
         val checkoutDir = getAuroraConfigFolder(auroraConfig.name)
 
@@ -128,7 +129,6 @@ class AuroraConfigService(
         } catch (e: InvalidRemoteException) {
             throw IllegalArgumentException("No such AuroraConfig ${ref.name}")
         } catch (e: Exception) {
-            // TODO test this
             throw AuroraConfigServiceException(
                 "An unexpected error occurred when checking out AuroraConfig with name ${ref.name} (${e.message})",
                 e

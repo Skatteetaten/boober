@@ -10,7 +10,6 @@ import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
-import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.unit.getKey
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
@@ -38,7 +37,6 @@ class DeployFacadeTest : AbstractSpringBootTest() {
     @MockkBean
     lateinit var auroraConfigService: AuroraConfigService
 
-    val auroraConfigRef = AuroraConfigRef("paas", "master", "123abb")
     val auroraConfig = getAuroraConfigSamples()
 
     @BeforeEach
