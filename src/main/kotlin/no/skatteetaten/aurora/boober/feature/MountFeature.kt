@@ -23,6 +23,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.required
@@ -92,7 +93,6 @@ class MountFeature(
             }
     }
 
-    // TODO: FEATURE The names here should end with a fixed suffix to avoid conflicts with secretVault
     private fun generateSecrets(mounts: List<Mount>, adc: AuroraDeploymentSpec): List<Secret> {
         val secretVaults = mounts.filter { !it.exist && it.type == MountType.Secret && it.secretVaultName != null }
 
@@ -217,19 +217,21 @@ class MountFeature(
         return mountNames.map { mount ->
             val type: MountType = auroraDeploymentSpec["mounts/$mount/type"]
 
-            // TODO FEATURE: bug duplicate configmap name is possible in combination with config nested config
-            // TODO FEATURE : bug here if content is not map
+            // TODO : bug here if content is not map
             val content: Map<String, String>? = if (type == MountType.ConfigMap) {
                 auroraDeploymentSpec.getOrNull("mounts/$mount/content")
             } else {
                 null
             }
             val secretVaultName = auroraDeploymentSpec.getOrNull<String?>("mounts/$mount/secretVault")
+
+            val mountName: String = auroraDeploymentSpec["mounts/$mount/mountName"]
+            val volumeName: String = auroraDeploymentSpec["mounts/$mount/volumeName"]
             Mount(
                 path = auroraDeploymentSpec["mounts/$mount/path"],
                 type = type,
-                mountName = auroraDeploymentSpec["mounts/$mount/mountName"],
-                volumeName = auroraDeploymentSpec["mounts/$mount/volumeName"],
+                mountName = mountName.ensureEndsWith("mount", "-"),
+                volumeName = volumeName.ensureEndsWith("mount", "-"),
                 exist = auroraDeploymentSpec["mounts/$mount/exist"],
                 content = content,
                 secretVaultName = secretVaultName

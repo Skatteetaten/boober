@@ -46,7 +46,7 @@ import org.springframework.stereotype.Service
 
 private val logger = KotlinLogging.logger {}
 
-// TODO: FEATURE test fasade
+// FEATURE test fasade
 @Service
 class DeployFacade(
     val auroraConfigService: AuroraConfigService,

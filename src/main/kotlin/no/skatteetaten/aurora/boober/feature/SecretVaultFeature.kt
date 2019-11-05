@@ -17,6 +17,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultSecretEnvResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterProperties
 import no.skatteetaten.aurora.boober.utils.normalizeKubernetesName
@@ -118,7 +119,7 @@ class SecretVaultFeature(
      * Validates that any secretVaultKeys specified actually exist in the vault.
      * Note that this method always uses the latest.properties file regardless of the version of the application and
      * the contents of the vault.
-     *  TODO: FEATURE Note that this should really allow rewriting a key even if you do not specify it in the keys array.
+     *  TODO: Note that this should really allow rewriting a key even if you do not specify it in the keys array.
      */
     private fun validateSecretVaultKeys(
         secrets: List<AuroraSecret>,
@@ -183,7 +184,6 @@ class SecretVaultFeature(
         } else null
     }
 
-    // TODO: FEATURE The names here should end with a fixed suffix to avoid conflicts with mounts
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         val secretEnvResult = handleSecretEnv(adc, cmd)
@@ -208,14 +208,17 @@ class SecretVaultFeature(
                 name = secret.secretVaultName
             )
             vaultProvider.findVaultDataSingle(request)[secret.file]?.let { file ->
-                // TODO: FEATURE Do we need to do this in the properties file? We can just do it afterwards where we map?
-                // TODO: FEATURE Do the rewriting of the keys in the DC and keep the secret keys the same as in the vault?
+                // TODO: Do we need to do this in the properties file? We can just do it afterwards where we map?
+                // TODO: Do the rewriting of the keys in the DC and keep the secret keys the same as in the vault?
                 val properties = filterProperties(file, secret.secretVaultKeys, secret.keyMappings)
                 properties.map {
                     it.key.toString() to it.value.toString().toByteArray()
                 }
             }?.let {
-                VaultSecretEnvResult(secret.secretVaultName.ensureStartWith(adc.name, "-"), it.toMap())
+                VaultSecretEnvResult(
+                    secret.secretVaultName.ensureStartWith(adc.name, "-").ensureEndsWith("vault", "-"),
+                    it.toMap()
+                )
             }
         }
     }

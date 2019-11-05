@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
@@ -31,13 +32,14 @@ import java.io.File
 typealias MockRule = RecordedRequest.() -> MockResponse?
 typealias MockFlag = RecordedRequest.() -> Boolean?
 
+private val logger = KotlinLogging.logger { }
 /*
 
   If your tests needs access to auroraConfig use the method in BeforeEach
    - prepareTestAuroraConfig to setup an AuroraConfig repo
    - use the auroraConfigRef variable to point to this AuroraConfig
 
-   //TODO: make the same for vault
+   / FEATURES: make the same for vault
 
   In order to mock http call use one of the mock methods
    - openShiftMock
@@ -45,7 +47,7 @@ typealias MockFlag = RecordedRequest.() -> Boolean?
    - bitbucketMock
    - cantusMock
  */
-// TODO: Create two abstract classes, one for auroraConfig and another for not
+// FEATURES: Create two abstract classes, one for auroraConfig and another for not
 abstract class AbstractSpringBootTest : ResourceLoader() {
 
     val auroraConfigRef = AuroraConfigRef("paas", "master", "123abb")
@@ -113,11 +115,19 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
             return MockWebServer().apply {
                 dispatcher = object : Dispatcher() {
                     override fun dispatch(request: RecordedRequest): MockResponse {
-                        return mockRules.asSequence().mapNotNull {
+                        val matchingRule = mockRules.asSequence().mapNotNull {
                             if (it.check(request) == true) {
                                 it.fn(request)
                             } else null
-                        }.firstOrNull() ?: throw IllegalArgumentException("No function matches request=$request")
+                        }.firstOrNull()
+
+                        if (matchingRule == null) {
+                            logger.debug("No matching rules matches request=;request")
+                            throw IllegalArgumentException("No function matches request=$request")
+                        }
+
+
+                        return matchingRule
                     }
                 }
                 start(port)
@@ -204,7 +214,8 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
         every { userDetailsProvider.getAuthenticatedUser() } returns User(
             "hero", "token", "Jayne Cobb", grantedAuthorities = listOf(
                 SimpleGrantedAuthority("APP_PaaS_utv"), SimpleGrantedAuthority("APP_PaaS_drift")
-            ))
+            )
+        )
         every { serviceAccountTokenProvider.getToken() } returns "auth token"
     }
 }

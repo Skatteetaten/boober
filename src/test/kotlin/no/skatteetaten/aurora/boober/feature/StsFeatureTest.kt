@@ -21,7 +21,6 @@ class StsFeatureTest : AbstractFeatureTest() {
 
     val stsProvisioner: StsProvisioner = mockk()
 
-    // TODO: FEATURE Do we need to test that the cert is created succesfully better?
     @Test
     fun `should not validate if template type without groupId and commonName`() {
 

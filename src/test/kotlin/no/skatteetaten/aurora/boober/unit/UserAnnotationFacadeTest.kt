@@ -18,15 +18,13 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.ResponseEntity
 
-// TODO: Do we need this and the test in facade package?
 class UserAnnotationFacadeTest {
 
     private val userDetailsProvider = mockk<UserDetailsProvider>().apply {
         every { getAuthenticatedUser() } returns User("username", "token")
     }
     private val openShiftResourceClient = mockk<OpenShiftResourceClient>()
-    private val userAnnotationService =
-        UserAnnotationFacade(userDetailsProvider, openShiftResourceClient)
+    private val facade = UserAnnotationFacade(userDetailsProvider, openShiftResourceClient)
 
     @AfterEach
     fun tearDown() {
@@ -35,13 +33,13 @@ class UserAnnotationFacadeTest {
 
     @Test
     fun `Given filters map return valid json patch for adding user annotations`() {
-        val json = userAnnotationService.createUpdatePatch("filters", """{"key":{"nested-key":"value"}}""".toJson())
+        val json = facade.createUpdatePatch("filters", """{"key":{"nested-key":"value"}}""".toJson())
         assertThat(json.at("/metadata/annotations/filters").textValue()).startsWith(base64Prefix)
     }
 
     @Test
     fun `Given key create valid json patch for removing user annotations`() {
-        val json = userAnnotationService.createRemovePatch("filters")
+        val json = facade.createRemovePatch("filters")
         assertThat(json.at("/metadata/annotations/filters").isNull).isTrue()
     }
 
@@ -53,7 +51,7 @@ class UserAnnotationFacadeTest {
             openShiftResourceClient.get("user", name = "username")
         } returns ResponseEntity.ok("""{"metadata":{"annotations":{"key":"$entry"}}}""".toJson())
 
-        val response = userAnnotationService.getAnnotations()
+        val response = facade.getAnnotations()
         assertThat(response["key"]?.at("/key1")?.textValue()).isEqualTo("value1")
     }
 
@@ -65,7 +63,7 @@ class UserAnnotationFacadeTest {
             openShiftResourceClient.get("user", name = "username")
         } returns ResponseEntity.ok("""{"metadata":{"annotations":{"key":"$entry"}}}""".toJson())
 
-        val response = userAnnotationService.getAnnotations()
+        val response = facade.getAnnotations()
         assertThat(response["key"]?.textValue()).isEqualTo("test value")
     }
 
@@ -75,7 +73,7 @@ class UserAnnotationFacadeTest {
             openShiftResourceClient.get("user", name = "username")
         } returns ResponseEntity.ok("""{"metadata":{"annotations":{"key":"value"}}}""".toJson())
 
-        val response = userAnnotationService.getAnnotations()
+        val response = facade.getAnnotations()
         assertThat(response["key"]?.textValue()).isEqualTo("value")
     }
 
@@ -85,7 +83,7 @@ class UserAnnotationFacadeTest {
             openShiftResourceClient.strategicMergePatch("user", "username", any())
         } returns ResponseEntity.ok("""{"metadata":{"annotations":{"key":"value"}}}""".toJson())
 
-        val response = userAnnotationService.deleteAnnotations("filters")
+        val response = facade.deleteAnnotations("filters")
         assertThat(response["key"]?.textValue()).isEqualTo("value")
     }
 
@@ -95,7 +93,7 @@ class UserAnnotationFacadeTest {
             openShiftResourceClient.strategicMergePatch("user", "username", any())
         } returns ResponseEntity.ok("""{}""".toJson())
 
-        val response = userAnnotationService.deleteAnnotations("filters")
+        val response = facade.deleteAnnotations("filters")
         assertThat(response.isEmpty()).isTrue()
     }
 }

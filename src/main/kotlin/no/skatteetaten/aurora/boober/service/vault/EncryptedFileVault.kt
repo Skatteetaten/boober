@@ -3,10 +3,10 @@ package no.skatteetaten.aurora.boober.service.vault
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import java.io.File
 import no.skatteetaten.aurora.boober.model.PreconditionFailureException
 import org.apache.commons.io.FileUtils
 import org.springframework.util.DigestUtils
+import java.io.File
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class AuroraPermissions(
@@ -55,7 +55,6 @@ class VaultCollection private constructor(
     }
 }
 
-// TODO: Det er uheldig at denne klassen som er helt ut i controlleren har avhengighet til filsystetem.
 class EncryptedFileVault private constructor(
     val vaultFolder: File,
     private val encryptor: Encryptor,
@@ -109,7 +108,6 @@ class EncryptedFileVault private constructor(
         return secrets.getOrElse(fileName, { throw IllegalArgumentException("No such file $fileName in vault $name") })
     }
 
-    // TODO: test with previous signature
     fun updateFile(fileName: String, fileContents: ByteArray, previousSignature: String? = null) {
 
         validateSignature(fileName, previousSignature)

@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.service.openshift
 
 import com.fasterxml.jackson.databind.JsonNode
-import java.net.URI
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.token.TokenProvider
@@ -15,6 +14,7 @@ import org.springframework.http.MediaType
 import org.springframework.http.RequestEntity
 import org.springframework.http.ResponseEntity
 import org.springframework.web.client.HttpClientErrorException
+import java.net.URI
 
 private val logger = KotlinLogging.logger {}
 
@@ -23,13 +23,11 @@ open class OpenShiftResourceClient(
     val restTemplateWrapper: OpenShiftRestTemplateWrapper
 ) {
 
-    // TODO: test
     fun put(url: String, payload: JsonNode): ResponseEntity<JsonNode> {
         val headers: HttpHeaders = getAuthorizationHeaders()
         return restTemplateWrapper.exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.PUT, URI(url)))
     }
 
-    // TODO: test
     open fun get(
         kind: String,
         namespace: String? = null,
@@ -44,7 +42,6 @@ open class OpenShiftResourceClient(
     open fun get(url: String, headers: HttpHeaders = getAuthorizationHeaders(), retry: Boolean = true) =
         exchange<JsonNode>(RequestEntity(headers, HttpMethod.GET, URI(url)), retry)
 
-    // TODO: test
     open fun post(url: String, payload: JsonNode): ResponseEntity<JsonNode> {
         val headers: HttpHeaders = getAuthorizationHeaders()
         return exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.POST, URI(url)))!!
@@ -55,7 +52,6 @@ open class OpenShiftResourceClient(
         return exchange(RequestEntity<JsonNode>(headers, HttpMethod.DELETE, URI(url)), retry = false)
     }
 
-    // TODO: test
     fun strategicMergePatch(kind: String, name: String? = null, payload: JsonNode): ResponseEntity<JsonNode> {
         val url = generateUrl(kind, name = name)
         val headers = getAuthorizationHeaders().apply {

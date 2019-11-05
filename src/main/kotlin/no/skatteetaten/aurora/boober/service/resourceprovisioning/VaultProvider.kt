@@ -23,7 +23,6 @@ class VaultResults(val vaultIndex: VaultIndex) {
     }
 }
 
-// TODO: test
 @Service
 class VaultProvider(private val vaultService: VaultService) {
 

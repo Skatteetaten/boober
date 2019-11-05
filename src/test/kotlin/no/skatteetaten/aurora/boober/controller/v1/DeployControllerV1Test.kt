@@ -18,7 +18,7 @@ class DeployControllerV1Test : AbstractControllerTest() {
     @MockkBean
     private lateinit var facade: DeployFacade
 
-    // TODO FEATURE should the response here be better? Test with joining this with Facade test.
+    // FEATURE Test with joining this with Facade test.
     @Test
     fun `Execute deploy`() {
 
@@ -26,6 +26,7 @@ class DeployControllerV1Test : AbstractControllerTest() {
 
         val response = stubDeployResult("123")
 
+        // Test simple with http/config mocks
         every {
             facade.executeDeploy(
                 auroraConfigRef,
@@ -49,6 +50,7 @@ class DeployControllerV1Test : AbstractControllerTest() {
     @Test
     fun `Execute deploy fails`() {
 
+        // Test simple with http/config mocks
         val payload = ApplyPayload(applicationDeploymentRefs = listOf(adr))
 
         val response = stubDeployResult("123", false)

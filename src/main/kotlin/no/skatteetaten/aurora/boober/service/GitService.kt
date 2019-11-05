@@ -1,7 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import java.io.File
-import java.util.concurrent.ConcurrentHashMap
 import mu.KotlinLogging
 import no.skatteetaten.aurora.AuroraMetrics
 import org.eclipse.jgit.api.CreateBranchCommand
@@ -17,6 +15,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
+import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 
 private val logger = KotlinLogging.logger {}
 
@@ -86,7 +86,6 @@ open class GitService(
             val git: Git? = repoPath.takeIf(File::exists).let {
                 try {
                     updateRepository(repoPath, deleteUnpushedCommits, refName)
-                    // TODO: test error
                 } catch (e: GitReferenceException) {
                     throw e
                 } catch (e: Exception) {
@@ -135,7 +134,6 @@ open class GitService(
             if (failOnUnpushedCommits) {
                 val trackingStatus = BranchTrackingStatus.of(git.repository, git.repository.fullBranch)
                 if (trackingStatus.aheadCount != 0 || trackingStatus.behindCount != 0) {
-                    // TODO: test error
                     throw IllegalStateException("We are ${trackingStatus.aheadCount} commit(s) ahead and ${trackingStatus.behindCount} behind ${trackingStatus.remoteTrackingBranch}")
                 }
             }
@@ -150,7 +148,6 @@ open class GitService(
         return ref ?: git.repository.findRef("origin/$refName")
         ?: throw GitReferenceException("No git reference with refName=$refName")
 
-        // TODO: test error
     }
 
     private fun cloneAndCheckout(
@@ -204,14 +201,12 @@ open class GitService(
                 .add("refs/heads/master")
                 .call()
         } catch (e: EmtpyCommitException) {
-            // TODO: test error
             // Ignore empty commits. It's ok.
         } catch (e: Exception) {
             throw e
         }
     }
 
-    // TODO: test
     fun getTagHistory(git: Git): List<RevTag> {
         val tags = git.tagList().call()
         return tags.mapNotNull {

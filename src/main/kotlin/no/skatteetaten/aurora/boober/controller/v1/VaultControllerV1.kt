@@ -29,16 +29,13 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.validation.Valid
 
-// TODO: FEATURE Should we have a seperate controller that handles the case where vault is turned off?
-// TODO: FEATURE test, some things are missing here
+// TODO: Should we have a seperate controller that handles the case where vault is turned off?
 @RestController
 @RequestMapping("/v1/vault/{vaultCollection}")
 class VaultControllerV1(
     private val vaultService: VaultService,
     @Value("\${vault.operations.enabled:false}") private val operationsEnabled: Boolean
 ) {
-    // TODO FEATURE vault operations is not checked for everywhere
-
     @PostMapping("/")
     fun vaultOperation(@PathVariable vaultCollection: String, @RequestBody @Valid operationPayload: VaultOperationPayload) {
 

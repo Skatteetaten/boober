@@ -93,6 +93,46 @@
               {
                 "name": "APP_NAME",
                 "value": "easy"
+              },
+              {
+                "name": "ROUTE_NAME",
+                "value": "easy-paas-utv.test.paas"
+              },
+              {
+                "name": "ROUTE_URL",
+                "value": "http://easy-paas-utv.test.paas"
+              },
+              {
+                "name": "EASY_DB",
+                "value": "/u01/secrets/app/easy-db/info"
+              },
+              {
+                "name": "EASY_DB_PROPERTIES",
+                "value": "/u01/secrets/app/easy-db/db.properties"
+              },
+              {
+                "name": "DB",
+                "value": "/u01/secrets/app/easy-db/info"
+              },
+              {
+                "name": "DB_PROPERTIES",
+                "value": "/u01/secrets/app/easy-db/db.properties"
+              },
+              {
+                "name": "STS_CERTIFICATE_URL",
+                "value": "/u01/secrets/app/easy-cert/certificate.crt"
+              },
+              {
+                "name": "STS_PRIVATE_KEY_URL",
+                "value": "/u01/secrets/app/easy-cert/privatekey.key"
+              },
+              {
+                "name": "STS_KEYSTORE_DESCRIPTOR",
+                "value": "/u01/secrets/app/easy-cert/descriptor.properties"
+              },
+              {
+                "name": "VOLUME_EASY_CERT",
+                "value": "/u01/secrets/app/easy-cert"
               }
             ],
             "imagePullPolicy": "IfNotPresent",
@@ -139,6 +179,14 @@
               {
                 "mountPath": "/u01/logs",
                 "name": "application-log-volume"
+              },
+              {
+                "mountPath": "/u01/secrets/app/easy-db",
+                "name": "easy-db"
+              },
+              {
+                "mountPath": "/u01/secrets/app/easy-cert",
+                "name": "easy-cert"
               }
             ]
           }
@@ -149,6 +197,18 @@
           {
             "emptyDir": {},
             "name": "application-log-volume"
+          },
+          {
+            "name": "easy-db",
+            "secret": {
+              "secretName": "easy-db"
+          }
+          },
+          {
+            "name": "easy-cert",
+            "secret": {
+              "secretName": "easy-cert"
+            }
           }
         ]
       }

@@ -38,13 +38,10 @@ class AuroraConfigFacadeTest : AbstractSpringBootTest() {
 
     @Test
     fun `get spec for applications deployment refs`() {
-
         val specList = facade.findAuroraDeploymentSpec(auroraConfigRef, listOf(adr))
-
         assertThat(specList.size).isEqualTo(1)
         val spec = specList.first()
         assertThat(spec).isNotNull()
-        // TODO What to assert here?
     }
 
     @Test
@@ -97,7 +94,6 @@ class AuroraConfigFacadeTest : AbstractSpringBootTest() {
         assertThat(file).isNotNull()
     }
 
-    // TODO: What should we validate here?
     @Test
     fun `validate aurora config`() {
 
@@ -112,6 +108,7 @@ class AuroraConfigFacadeTest : AbstractSpringBootTest() {
             }
         }
 
+        // FEATURE: validate entire aurora config deep and normal. 2 tests
         val auroraConfig = createAuroraConfig(adr, "paas")
 
         val validated = facade.validateAuroraConfig(auroraConfig,

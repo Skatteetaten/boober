@@ -39,7 +39,15 @@ fun AuroraDeploymentContext.createResources(): Pair<List<ContextErrors>, Set<Aur
     }
 
     val featureResources = eitherErrorsOrFeatures.mapNotNull { it.second }.flatten().toSet()
-    // TODO FEATURE: ensure that there are not conflicting names for resources.
+    val uniqueNames = featureResources.map { "${it.resource.kind}/${it.resource.metadata.name}" }
+
+    val namesSet = uniqueNames.toSet()
+    val namesString = uniqueNames.joinToString(",")
+    if (namesSet.size != uniqueNames.size) {
+        val error: List<ContextErrors> =
+            listOf(ContextErrors(this.cmd, listOf(RuntimeException("Resource with duplicate kind/name=$namesString"))))
+        return error to featureResources
+    }
 
     // Mutation!
     val modifyErrors = this.features.mapNotNull {

@@ -48,7 +48,7 @@ class DeployFacadeTest : AbstractSpringBootTest() {
 
     val adr = ApplicationDeploymentRef("utv", "simple")
 
-    // TOOD: How can we structure code to avoid retrying in this test. It makes it really slow.
+    // FEATURE: test everything but simple from OpenShiftObjectResourceGeneratorTest
     @Test
     fun `deploy simple application`() {
 

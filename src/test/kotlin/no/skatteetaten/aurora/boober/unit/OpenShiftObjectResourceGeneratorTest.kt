@@ -10,8 +10,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
-import java.io.ByteArrayInputStream
-import java.time.Instant
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.feature.ApplicationDeploymentFeature
 import no.skatteetaten.aurora.boober.feature.BuildFeature
@@ -53,8 +51,9 @@ import no.skatteetaten.aurora.boober.utils.openshiftKind
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import java.io.ByteArrayInputStream
+import java.time.Instant
 
-// TODO: create one or two "fat" tests here and remove the rest
 class OpenShiftObjectResourceGeneratorTest : AbstractAuroraConfigTest() {
 
     val userDetailsProvider = mockk<UserDetailsProvider>()
@@ -131,7 +130,7 @@ class OpenShiftObjectResourceGeneratorTest : AbstractAuroraConfigTest() {
         WEB("utv", "web")
     }
 
-    // TODO: This test should be removed and moved to integration test
+    // FEATURE This test should be removed and moved to integration test
     @ParameterizedTest
     @EnumSource(ResourceCreationTestData::class)
     fun `generate resources for deploy`(test: ResourceCreationTestData) {

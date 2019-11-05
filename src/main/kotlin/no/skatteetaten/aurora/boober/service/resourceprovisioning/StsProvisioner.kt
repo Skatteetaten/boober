@@ -1,15 +1,5 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
-import java.io.ByteArrayOutputStream
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
-import java.nio.charset.Charset
-import java.security.KeyStore
-import java.security.cert.X509Certificate
-import java.time.Duration
-import java.time.Instant
-import java.util.Base64
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
@@ -20,6 +10,16 @@ import org.springframework.core.io.Resource
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriComponentsBuilder
+import java.io.ByteArrayOutputStream
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
+import java.nio.charset.Charset
+import java.security.KeyStore
+import java.security.cert.X509Certificate
+import java.time.Duration
+import java.time.Instant
+import java.util.Base64
 
 private val logger = KotlinLogging.logger {}
 
@@ -47,7 +47,6 @@ class StsProvisioner(
     @Value("\${openshift.cluster}") val cluster: String
 ) {
 
-    // TODO: test
     fun generateCertificate(cn: String, name: String, envName: String): StsProvisioningResult {
 
         val builder = UriComponentsBuilder.fromPath("/certificate")

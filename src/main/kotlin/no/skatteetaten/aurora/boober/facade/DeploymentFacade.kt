@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service
 
 private val logger = KotlinLogging.logger { }
 
+// FEATURES test this
 @Service
 class DeploymentFacade(
     val auroraDeploymentContextService: AuroraDeploymentContextService,
@@ -35,7 +36,6 @@ class DeploymentFacade(
             val applicationDeploymentExists = openshiftResponse.responseBody != null
 
             if (!openshiftResponse.success) {
-                // TODO FEATURE test this
                 logger.error(openshiftResponse.exception)
                 DeleteApplicationDeploymentResponse(
                     applicationRef = it.applicationRef,
@@ -69,7 +69,6 @@ class DeploymentFacade(
             } ?: false
 
             if (forbidden) {
-                // TODO FEATURE test this
                 GetApplicationDeploymentResponse(
                     applicationRef = it.applicationRef,
                     exists = false,
@@ -84,7 +83,6 @@ class DeploymentFacade(
                     success = false,
                     message = openshiftResponse.exception
                         ?: "An error occured when checking if ApplicationDeployment exists"
-                    // TODO FEATURE test this error
                 )
             } else {
 
@@ -121,7 +119,6 @@ class DeploymentFacade(
     }
 }
 
-// TOOD: This is duplicated
 data class ApplicationDeploymentCommand(
     val cmd: OpenshiftCommand,
     val applicationRef: ApplicationRef

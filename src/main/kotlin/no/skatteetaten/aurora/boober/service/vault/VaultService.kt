@@ -39,7 +39,6 @@ class VaultService(
         return PropertiesLoaderUtils.loadProperties(ByteArrayResource(content)).stringPropertyNames()
     }
 
-    // TODO: test
     fun findFileInVault(
         vaultCollectionName: String,
         vaultName: String,
@@ -67,7 +66,6 @@ class VaultService(
         (findVaultByNameIfAllowed(vaultCollection, vaultName)
             ?: throw IllegalArgumentException("Vault not found name=$vaultName"))
 
-    // TODO: test
     fun vaultExists(vaultCollectionName: String, vaultName: String): Boolean {
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName) { vaultCollection, _ ->
             vaultCollection.findVaultByName(vaultName) != null
@@ -121,7 +119,6 @@ class VaultService(
         }
     }
 
-    // TODO: test
     fun import(
         vaultCollectionName: String,
         vaultName: String,
@@ -143,7 +140,6 @@ class VaultService(
         }
     }
 
-    // TODO: test
     fun reencryptVaultCollection(vaultCollectionName: String, newKey: String) {
 
         val vaults = findAllVaultsInVaultCollection(vaultCollectionName)

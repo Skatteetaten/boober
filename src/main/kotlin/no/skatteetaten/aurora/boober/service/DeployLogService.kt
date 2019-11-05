@@ -74,14 +74,12 @@ class DeployLogService(
         return result.copy(openShiftResponses = filteredResponses)
     }
 
-    // TODO: FEATURE: test
     fun deployHistory(ref: AuroraConfigRef): List<JsonNode> {
         val files = bitbucketService.getFiles(project, repo, ref.name)
         return files.mapNotNull { bitbucketService.getFile(project, repo, "${ref.name}/$it") }
             .map { mapper.readValue<JsonNode>(it) }
     }
 
-    // TODO: FEATURE: TEST
     fun findDeployResultById(ref: AuroraConfigRef, deployId: String): JsonNode? {
         return try {
             bitbucketService.getFile(project, repo, "${ref.name}/$deployId.json")?.let {

@@ -74,9 +74,6 @@
       "annotations": {
         "haproxy.router.openshift.io|timeout": "30s"
       }
-    },
-    "disable": {
-      "enabled": false
     }
   },
   "liveness": true,
@@ -87,13 +84,10 @@
   "pause": true,
   "message": "Aurora <3",
   "database": {
-    "complex": "auto",
-    "foo": "123-456",
-    "test": "false",
-    "test3": false,
-    "test2": {
-      "enabled": false
-    }
+    "complex": {
+      "enabled": true
+    },
+    "foo": "123-456"
   },
   "certificate": {
     "commonName": "komplex"

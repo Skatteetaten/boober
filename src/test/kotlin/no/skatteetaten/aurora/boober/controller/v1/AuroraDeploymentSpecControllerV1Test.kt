@@ -11,7 +11,7 @@ import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 
-// TODO: FEATURE test overrides
+// TODO: test overrides
 @WebMvcTest(controllers = [AuroraDeploymentSpecControllerV1::class])
 class AuroraDeploymentSpecControllerV1Test : AbstractControllerTest() {
 
