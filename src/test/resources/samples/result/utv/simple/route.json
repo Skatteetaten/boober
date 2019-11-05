@@ -1,26 +1,31 @@
 {
-  "apiVersion": "v1",
-  "kind": "Secret",
+  "apiVersion": "route.openshift.io/v1",
+  "kind": "Route",
   "metadata": {
     "labels": {
-      "app": "komplex",
+      "app": "simple",
       "updatedBy": "hero",
       "affiliation": "paas",
       "updateInBoober": "true",
-      "name": "komplex"
+      "name": "simple",
+      "booberDeployId": "deploy1"
     },
-    "name": "komplex-foo",
+    "name": "simple",
     "namespace": "paas-utv",
     "ownerReferences": [
       {
         "apiVersion": "skatteetaten.no/v1",
         "kind": "ApplicationDeployment",
-        "name": "komplex",
+        "name": "simple",
         "uid": "123-123"
       }
     ]
   },
-  "data": {
-    "FOO": "REMOVED_IN_TEST"
+  "spec": {
+    "host": "simple-paas-utv.test",
+    "to": {
+      "kind": "Service",
+      "name": "simple"
+    }
   }
 }

@@ -142,7 +142,7 @@
                 "valueFrom": {
                   "secretKeyRef": {
                     "key": "FOO",
-                    "name": "komplex-foo",
+                    "name": "komplex-foo-vault",
                     "optional": false
                   }
                 }
@@ -172,7 +172,7 @@
                 "value": "/u01/secrets/app/komplex-cert"
               },
               {
-                "name": "VOLUME_AURORA_TOKEN",
+                "name": "VOLUME_AURORA_TOKEN_MOUNT",
                 "value": "/u01/secrets/app/aurora-token"
               },
               {
@@ -180,7 +180,7 @@
                 "value": "/u01/foo"
               },
               {
-                "name": "VOLUME_PVC",
+                "name": "VOLUME_PVC_MOUNT",
                 "value": "/foo"
               },
               {
@@ -258,7 +258,7 @@
               },
               {
                 "mountPath": "/u01/secrets/app/aurora-token",
-                "name": "aurora-token"
+                "name": "aurora-token-mount"
               },
               {
                 "mountPath": "/u01/foo",
@@ -266,7 +266,7 @@
               },
               {
                 "mountPath": "/foo",
-                "name": "pvc"
+                "name": "pvc-mount"
               },
               {
                 "mountPath": "/content",
@@ -308,9 +308,9 @@
             }
           },
           {
-            "name": "aurora-token",
+            "name": "aurora-token-mount",
             "secret": {
-              "secretName": "aurora-token"
+              "secretName": "aurora-token-mount"
             }
           },
           {
@@ -320,9 +320,9 @@
             }
           },
           {
-            "name": "pvc",
+            "name": "pvc-mount",
             "persistentVolumeClaim": {
-              "claimName": "pvc"
+              "claimName": "pvc-mount"
             }
           },
           {

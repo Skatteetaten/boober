@@ -336,25 +336,32 @@ val schema = DbhSchema(
 )
 
 fun createDatabaseResult(databaseNames: String, env: String): SchemaProvisionResults {
-    val databaseInstance = DatabaseInstance(fallback = true, labels = mapOf("affiliation" to "aos"))
 
     val databases = databaseNames.split((",")).map { appName ->
-        SchemaProvisionResult(
-            request = SchemaForAppRequest(
-                environment = env,
-                application = appName,
-                generate = true,
-                details = SchemaRequestDetails(
-                    schemaName = appName,
-                    users = listOf(SchemaUser("SCHEMA", "a", "aos")),
-                    engine = DatabaseEngine.ORACLE,
-                    affiliation = "aos",
-                    databaseInstance = databaseInstance
-                )
-            ),
-            dbhSchema = schema,
-            responseText = "OK"
-        )
+        createSchemaProvisionResult(env, appName)
     }
     return SchemaProvisionResults(databases)
+}
+
+fun createSchemaProvisionResult(
+    env: String,
+    appName: String
+): SchemaProvisionResult {
+    val databaseInstance = DatabaseInstance(fallback = true, labels = mapOf("affiliation" to "aos"))
+    return SchemaProvisionResult(
+        request = SchemaForAppRequest(
+            environment = env,
+            application = appName,
+            generate = true,
+            details = SchemaRequestDetails(
+                schemaName = appName,
+                users = listOf(SchemaUser("SCHEMA", "a", "aos")),
+                engine = DatabaseEngine.ORACLE,
+                affiliation = "aos",
+                databaseInstance = databaseInstance
+            )
+        ),
+        dbhSchema = schema,
+        responseText = "OK"
+    )
 }

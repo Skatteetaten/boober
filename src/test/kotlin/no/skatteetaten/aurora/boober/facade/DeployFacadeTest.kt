@@ -52,6 +52,24 @@ class DeployFacadeTest : AbstractSpringBootTest() {
     @Test
     fun `deploy simple application`() {
 
+        skapMock {
+            rule {
+                MockResponse()
+                    .setBody(loadBufferResource("keystore.jks"))
+                    .setHeader("key-password", "ca")
+                    .setHeader("store-password", "")
+            }
+        }
+
+        dbhMock {
+            rule {
+                MockResponse()
+                    .setBody(loadBufferResource("dbhResponse.json"))
+                    .setResponseCode(200)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
+            }
+        }
+
         openShiftMock {
 
             rule({ path?.endsWith("/groups") }) {

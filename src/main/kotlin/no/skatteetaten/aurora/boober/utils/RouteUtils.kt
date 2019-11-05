@@ -3,7 +3,7 @@ package no.skatteetaten.aurora.boober.utils
 import io.fabric8.openshift.api.model.Route
 
 fun Route.findErrorMessage(): String? {
-    val ingress = this.status.ingress
+    val ingress = this.status?.ingress
     if (ingress.isNullOrEmpty()) {
         return null
     }

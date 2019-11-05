@@ -223,6 +223,7 @@ class SecretVaultFeature(
         }
     }
 
+    // TODO: This modify step must run after config, because secret env should override config env.
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
 
         val secretEnv: List<EnvVar> = handleSecretEnv(adc, cmd).flatMap { result ->

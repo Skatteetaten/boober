@@ -88,12 +88,52 @@
                 "value": "8778"
               },
               {
+                "name": "SIMPLE_DB",
+                "value": "/u01/secrets/app/simple-db/info"
+              },
+              {
+                "name": "SIMPLE_DB_PROPERTIES",
+                "value": "/u01/secrets/app/simple-db/db.properties"
+              },
+              {
+                "name": "DB",
+                "value": "/u01/secrets/app/simple-db/info"
+              },
+              {
+                "name": "DB_PROPERTIES",
+                "value": "/u01/secrets/app/simple-db/db.properties"
+              },
+              {
                 "name": "OPENSHIFT_CLUSTER",
                 "value": "utv"
               },
               {
                 "name": "APP_NAME",
                 "value": "simple"
+              },
+              {
+                "name": "ROUTE_NAME",
+                "value": "simple-paas-utv.test"
+              },
+              {
+                "name": "ROUTE_URL",
+                "value": "http://simple-paas-utv.test"
+              },
+              {
+                "name": "STS_CERTIFICATE_URL",
+                "value": "/u01/secrets/app/simple-cert/certificate.crt"
+              },
+              {
+                "name": "STS_PRIVATE_KEY_URL",
+                "value": "/u01/secrets/app/simple-cert/privatekey.key"
+              },
+              {
+                "name": "STS_KEYSTORE_DESCRIPTOR",
+                "value": "/u01/secrets/app/simple-cert/descriptor.properties"
+              },
+              {
+                "name": "VOLUME_SIMPLE_CERT",
+                "value": "/u01/secrets/app/simple-cert"
               }
             ],
             "imagePullPolicy": "IfNotPresent",
@@ -140,6 +180,14 @@
               {
                 "mountPath": "/u01/logs",
                 "name": "application-log-volume"
+              },
+              {
+                "mountPath": "/u01/secrets/app/simple-db",
+                "name": "simple-db"
+              },
+              {
+                "mountPath": "/u01/secrets/app/simple-cert",
+                "name": "simple-cert"
               }
             ]
           }
@@ -150,6 +198,18 @@
           {
             "emptyDir": {},
             "name": "application-log-volume"
+          },
+          {
+            "name": "simple-db",
+            "secret": {
+              "secretName": "simple-db"
+          }
+          },
+          {
+            "name": "simple-cert",
+            "secret": {
+              "secretName": "simple-cert"
+            }
           }
         ]
       }

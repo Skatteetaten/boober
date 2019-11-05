@@ -139,6 +139,12 @@ class DeployFacade(
 
         val resourceErrors = result.flatMap { it.first }
         if (resourceErrors.isNotEmpty()) {
+
+            val errorMessages = resourceErrors.flatMap { err ->
+                err.errors.map { it.localizedMessage }
+            }
+            logger.debug("Validation errors: ${errorMessages.joinToString("\n", prefix = "\n")}")
+
             throw MultiApplicationValidationException(resourceErrors)
         }
 
@@ -158,6 +164,12 @@ class DeployFacade(
                     listOf(java.lang.IllegalArgumentException("Not valid in this cluster"))
                 )
             }
+
+            val errorMessages = errors.flatMap { err ->
+                err.errors.map { it.localizedMessage }
+            }
+            logger.debug("Validation errors: ${errorMessages.joinToString("\n", prefix = "\n")}")
+
             throw MultiApplicationValidationException(errors)
         }
         return validContexts

@@ -24,7 +24,9 @@
     "applicationDeploymentId": "1d5da0b933ade4bfd6773579b9fb5cc2afb57378",
     "applicationName": "simple",
     "applicationDeploymentName": "simple",
-    "databases": [],
+    "databases": [
+      "fd59dba9-7d67-4ea2-bb98-081a5df8c387"
+    ],
     "managementPath": ":8081/actuator",
     "deployTag": "1",
     "command": {
