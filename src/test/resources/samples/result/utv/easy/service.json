@@ -13,7 +13,8 @@
       "updatedBy": "hero",
       "affiliation": "paas",
       "updateInBoober": "true",
-      "name": "easy"
+      "name": "easy",
+      "booberDeployId": "deploy1"
     },
     "name": "easy",
     "namespace": "paas-utv",

@@ -4,15 +4,17 @@
   "metadata": {
     "labels": {
       "id": "1379fcff48d53f89f9b0979d3977afbf8151fed4",
-      "applicationId" : "65b695616e4f3f8b4d7b775284833e6a29d07c51",
       "app": "web",
       "updatedBy": "hero",
       "affiliation": "paas",
       "updateInBoober": "true",
-      "name": "web"
+      "name": "web",
+      "applicationId": "65b695616e4f3f8b4d7b775284833e6a29d07c51",
+      "booberDeployId": "deploy1"
     },
     "name": "web",
-    "namespace": "paas-utv"
+    "namespace": "paas-utv",
+    "uid": "123-123"
   },
   "spec": {
     "applicationId": "65b695616e4f3f8b4d7b775284833e6a29d07c51",
@@ -32,7 +34,7 @@
         "application": "web"
       },
       "auroraConfig": {
-        "name": "test",
+        "name": "paas",
         "refName": "master",
         "resolvedRef": "123abb"
       }

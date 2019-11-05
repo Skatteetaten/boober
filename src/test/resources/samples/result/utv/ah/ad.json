@@ -9,10 +9,12 @@
       "affiliation": "paas",
       "updateInBoober": "true",
       "name": "ah",
-      "applicationId" : "81e9586fcc0718312784c585bb94421ee89075ee"
+      "applicationId": "81e9586fcc0718312784c585bb94421ee89075ee",
+      "booberDeployId": "deploy1"
     },
     "name": "ah",
-    "namespace": "paas-utv"
+    "namespace": "paas-utv",
+    "uid": "123-123"
   },
   "spec": {
     "applicationId": "81e9586fcc0718312784c585bb94421ee89075ee",
@@ -23,8 +25,10 @@
     "applicationName": "aurora-atomhopper",
     "applicationDeploymentName": "ah",
     "databases": [
-      "123"
+      "fd59dba9-7d67-4ea2-bb98-081a5df8c387"
     ],
+    "managementPath": ":8081/actuator",
+    "deployTag": "1.3.4",
     "command": {
       "overrideFiles": {},
       "applicationDeploymentRef": {
@@ -32,7 +36,7 @@
         "application": "ah"
       },
       "auroraConfig": {
-        "name": "test",
+        "name": "paas",
         "refName": "master",
         "resolvedRef": "123abb"
       }

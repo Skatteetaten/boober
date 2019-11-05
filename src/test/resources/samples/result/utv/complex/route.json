@@ -7,7 +7,8 @@
       "updatedBy": "hero",
       "affiliation": "paas",
       "updateInBoober": "true",
-      "name": "komplex"
+      "name": "komplex",
+      "booberDeployId": "deploy1"
     },
     "name": "komplex",
     "namespace": "paas-utv",
@@ -21,7 +22,7 @@
     ]
   },
   "spec": {
-    "host": "komplex-paas-utv.test.paas",
+    "host": "komplex-paas-utv.test",
     "tls": {
       "insecureEdgeTerminationPolicy": "Allow",
       "termination": "edge"

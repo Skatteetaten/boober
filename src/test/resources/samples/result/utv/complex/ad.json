@@ -5,15 +5,17 @@
     "labels": {
       "id": "74a691b9358d168e305df7a1ae175a5eefda6754",
       "removeAfter": "86400",
-      "applicationId" : "feddc97db98af8c60b495fb62231c98c65d7225b",
       "app": "komplex",
       "updatedBy": "hero",
       "affiliation": "paas",
       "updateInBoober": "true",
-      "name": "komplex"
+      "name": "komplex",
+      "applicationId": "feddc97db98af8c60b495fb62231c98c65d7225b",
+      "booberDeployId": "deploy1"
     },
     "name": "komplex",
-    "namespace": "paas-utv"
+    "namespace": "paas-utv",
+    "uid": "123-123"
   },
   "spec": {
     "applicationId": "feddc97db98af8c60b495fb62231c98c65d7225b",
@@ -24,22 +26,20 @@
     "applicationName": "complex",
     "applicationDeploymentName": "komplex",
     "databases": [
-      "123",
-      "123"
+      "fd59dba9-7d67-4ea2-bb98-081a5df8c387",
+      "fd59dba9-7d67-4ea2-bb98-081a5df8c387"
     ],
     "splunkIndex": "test-index",
     "managementPath": ":8081/foobar",
-    "deployTag": "1.0.4",
+    "deployTag": "1",
     "command": {
-      "overrideFiles": {
-        "utv/complex.json": "{ \"version\": \"1.0.4\"}"
-      },
+      "overrideFiles": {},
       "applicationDeploymentRef": {
         "environment": "utv",
         "application": "complex"
       },
       "auroraConfig": {
-        "name": "test",
+        "name": "paas",
         "refName": "master",
         "resolvedRef": "123abb"
       }

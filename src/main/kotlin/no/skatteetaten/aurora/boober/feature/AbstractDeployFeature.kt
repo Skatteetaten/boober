@@ -76,6 +76,8 @@ val AuroraDeploymentSpec.dockerGroup get() = groupId.replace(".", "_")
 
 val AuroraDeploymentSpec.dockerImagePath: String get() = "$dockerGroup/${this.artifactId}"
 
+// TODO: This version/deployTag can be empty if template and version is not set in auroraConfig, can we just enforce
+// TODO: everybody to have version for template and say it is required?
 val AuroraDeploymentSpec.version: String get() = this["version"]
 val AuroraDeploymentSpec.dockerTag: String get() = releaseTo ?: version
 

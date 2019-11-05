@@ -7,7 +7,8 @@
       "updatedBy": "hero",
       "affiliation": "paas",
       "updateInBoober": "true",
-      "name": "komplex"
+      "name": "komplex",
+      "booberDeployId": "deploy1"
     },
     "name": "komplex-path",
     "namespace": "paas-utv",
@@ -21,7 +22,7 @@
     ]
   },
   "spec": {
-    "host": "pathroute.test.paas",
+    "host": "pathroute.test",
     "path": "/path",
     "to": {
       "kind": "Service",

@@ -13,7 +13,8 @@
       "affiliation": "paas",
       "updateInBoober": "true",
       "name": "easy",
-      "deployTag": "1"
+      "deployTag": "1",
+      "booberDeployId": "deploy1"
     },
     "name": "easy",
     "namespace": "paas-utv",
@@ -87,22 +88,6 @@
                 "value": "8778"
               },
               {
-                "name": "OPENSHIFT_CLUSTER",
-                "value": "utv"
-              },
-              {
-                "name": "APP_NAME",
-                "value": "easy"
-              },
-              {
-                "name": "ROUTE_NAME",
-                "value": "easy-paas-utv.test.paas"
-              },
-              {
-                "name": "ROUTE_URL",
-                "value": "http://easy-paas-utv.test.paas"
-              },
-              {
                 "name": "EASY_DB",
                 "value": "/u01/secrets/app/easy-db/info"
               },
@@ -117,6 +102,22 @@
               {
                 "name": "DB_PROPERTIES",
                 "value": "/u01/secrets/app/easy-db/db.properties"
+              },
+              {
+                "name": "OPENSHIFT_CLUSTER",
+                "value": "utv"
+              },
+              {
+                "name": "APP_NAME",
+                "value": "easy"
+              },
+              {
+                "name": "ROUTE_NAME",
+                "value": "easy-paas-utv.test"
+              },
+              {
+                "name": "ROUTE_URL",
+                "value": "http://easy-paas-utv.test"
               },
               {
                 "name": "STS_CERTIFICATE_URL",

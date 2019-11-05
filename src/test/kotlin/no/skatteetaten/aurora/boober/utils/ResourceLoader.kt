@@ -34,13 +34,13 @@ open class ResourceLoader {
     fun loadBufferResource(resourceName: String, folder: String = this.javaClass.simpleName): Buffer {
         return Buffer().readFrom(getResourceUrl(resourceName, folder).openStream())
     }
+}
 
-    // This is done as text comparison and not jsonNode equals to get easier diff when they dif
-    fun compareJson(expected: JsonNode, actual: JsonNode, name: String? = null): Boolean {
-        val writer = jsonMapper().writerWithDefaultPrettyPrinter()
-        val targetString = writer.writeValueAsString(actual)
-        val nodeString = writer.writeValueAsString(expected)
-        assertThat(targetString, name).isEqualTo(nodeString)
-        return true
-    }
+// This is done as text comparison and not jsonNode equals to get easier diff when they dif
+fun compareJson(expected: JsonNode, actual: JsonNode, name: String? = null): Boolean {
+    val writer = jsonMapper().writerWithDefaultPrettyPrinter()
+    val targetString = writer.writeValueAsString(actual)
+    val nodeString = writer.writeValueAsString(expected)
+    assertThat(targetString, name).isEqualTo(nodeString)
+    return true
 }

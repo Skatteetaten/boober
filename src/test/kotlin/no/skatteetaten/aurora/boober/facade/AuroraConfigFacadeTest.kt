@@ -13,7 +13,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
 import okhttp3.mockwebserver.MockResponse
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -24,15 +23,11 @@ private val logger = KotlinLogging.logger {}
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.NONE
 )
-class AuroraConfigFacadeTest : AbstractSpringBootTest() {
+class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
     @Autowired
     lateinit var facade: AuroraConfigFacade
 
-    @BeforeEach
-    fun beforeEach() {
-        prepareTestAuroraConfig()
-    }
 
     val adr = ApplicationDeploymentRef("utv", "simple")
 

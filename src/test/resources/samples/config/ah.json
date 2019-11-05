@@ -2,6 +2,7 @@
   "type": "localTemplate",
   "templateFile": "templates/atomhopper.json",
   "database": true,
+  "version": "1.3.4",
   "parameters": {
     "FEED_NAME": "feed",
     "DOMAIN_NAME": "localhost",

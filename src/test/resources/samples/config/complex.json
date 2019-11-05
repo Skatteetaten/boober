@@ -95,6 +95,7 @@
   "secretVaults": {
     "foo": {
       "keys": [
+        "BAR",
         "FOO"
       ],
       "keyMappings": {

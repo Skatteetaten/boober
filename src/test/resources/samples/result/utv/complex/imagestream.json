@@ -3,12 +3,13 @@
   "kind": "ImageStream",
   "metadata": {
     "labels": {
-      "releasedVersion": "1.0.4",
+      "releasedVersion": "1",
       "app": "komplex",
       "updatedBy": "hero",
       "affiliation": "paas",
       "updateInBoober": "true",
-      "name": "komplex"
+      "name": "komplex",
+      "booberDeployId": "deploy1"
     },
     "name": "komplex",
     "namespace": "paas-utv",

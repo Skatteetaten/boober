@@ -13,7 +13,8 @@
       "affiliation": "paas",
       "updateInBoober": "true",
       "name": "web",
-      "deployTag": "develop-SNAPSHOT"
+      "deployTag": "develop-SNAPSHOT",
+      "booberDeployId": "deploy1"
     },
     "name": "web",
     "namespace": "paas-utv",
@@ -86,6 +87,10 @@
                 "value": "8081"
               },
               {
+                "name": "foo2",
+                "value": "baz"
+              },
+              {
                 "name": "OPENSHIFT_CLUSTER",
                 "value": "utv"
               },
@@ -95,15 +100,11 @@
               },
               {
                 "name": "ROUTE_NAME",
-                "value": "web-paas-utv.test.paas"
+                "value": "web-paas-utv.test"
               },
               {
                 "name": "ROUTE_URL",
-                "value": "http://web-paas-utv.test.paas"
-              },
-              {
-                "name": "foo2",
-                "value": "baz"
+                "value": "http://web-paas-utv.test"
               }
             ],
             "imagePullPolicy": "IfNotPresent",
@@ -176,6 +177,10 @@
                 "value": "8080"
               },
               {
+                "name": "foo2",
+                "value": "baz"
+              },
+              {
                 "name": "OPENSHIFT_CLUSTER",
                 "value": "utv"
               },
@@ -185,15 +190,11 @@
               },
               {
                 "name": "ROUTE_NAME",
-                "value": "web-paas-utv.test.paas"
+                "value": "web-paas-utv.test"
               },
               {
                 "name": "ROUTE_URL",
-                "value": "http://web-paas-utv.test.paas"
-              },
-              {
-                "name": "foo2",
-                "value": "baz"
+                "value": "http://web-paas-utv.test"
               }
             ],
             "imagePullPolicy": "IfNotPresent",

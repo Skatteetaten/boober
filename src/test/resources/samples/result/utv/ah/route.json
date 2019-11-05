@@ -7,7 +7,8 @@
       "updatedBy": "hero",
       "affiliation": "paas",
       "updateInBoober": "true",
-      "name": "ah"
+      "name": "ah",
+      "booberDeployId": "deploy1"
     },
     "name": "ah",
     "namespace": "paas-utv",

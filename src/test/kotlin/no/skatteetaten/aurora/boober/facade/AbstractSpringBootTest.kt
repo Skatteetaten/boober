@@ -7,15 +7,11 @@ import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
-import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.token.ServiceAccountTokenProvider
-import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
+import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
-import no.skatteetaten.aurora.boober.utils.recreateFolder
-import no.skatteetaten.aurora.boober.utils.recreateRepo
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.bodyAsString
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
@@ -23,23 +19,17 @@ import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
-import java.io.File
+import java.time.Instant
 
 typealias MockRule = RecordedRequest.() -> MockResponse?
 typealias MockFlag = RecordedRequest.() -> Boolean?
 
 private val logger = KotlinLogging.logger { }
+
 /*
-
-  If your tests needs access to auroraConfig use the method in BeforeEach
-   - prepareTestAuroraConfig to setup an AuroraConfig repo
-   - use the auroraConfigRef variable to point to this AuroraConfig
-
-   / FEATURES: make the same for vault
 
   In order to mock http call use one of the mock methods
    - openShiftMock
@@ -47,31 +37,9 @@ private val logger = KotlinLogging.logger { }
    - bitbucketMock
    - cantusMock
  */
-// FEATURES: Create two abstract classes, one for auroraConfig and another for not
 abstract class AbstractSpringBootTest : ResourceLoader() {
 
     val auroraConfigRef = AuroraConfigRef("paas", "master", "123abb")
-
-    @Value("\${integrations.aurora.config.git.repoPath}")
-    lateinit var auroraConfigCrepoPath: String
-
-    @Value("\${integrations.aurora.config.git.checkoutPath}")
-    lateinit var auroraConfigCheckoutPath: String
-
-    @Value("\${integrations.aurora.vault.git.repoPath}")
-    lateinit var vaultRepoPath: String
-
-    @Value("\${integrations.aurora.vault.git.checkoutPath}")
-    lateinit var vaultCheckoutPath: String
-
-    @Autowired
-    lateinit var service: AuroraConfigService
-
-    fun prepareTestAuroraConfig(config: AuroraConfig = getAuroraConfigSamples()) {
-        recreateRepo(File(auroraConfigCrepoPath, "${config.name}.git"))
-        recreateFolder(File(auroraConfigCheckoutPath))
-        service.save(config)
-    }
 
     @Value("\${integrations.openshift.port}")
     lateinit var ocpPort: String
@@ -132,6 +100,11 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
                 }
                 start(port)
             }
+        }
+
+        fun rule(r: MockRules): HttpMock {
+            mockRules.add(r)
+            return this
         }
 
         /*
@@ -211,6 +184,7 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
 
     @BeforeEach
     fun before() {
+        Instants.determineNow = { Instant.EPOCH }
         every { userDetailsProvider.getAuthenticatedUser() } returns User(
             "hero", "token", "Jayne Cobb", grantedAuthorities = listOf(
                 SimpleGrantedAuthority("APP_PaaS_utv"), SimpleGrantedAuthority("APP_PaaS_drift")
@@ -219,3 +193,4 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
         every { serviceAccountTokenProvider.getToken() } returns "auth token"
     }
 }
+

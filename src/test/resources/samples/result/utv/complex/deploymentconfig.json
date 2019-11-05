@@ -5,7 +5,6 @@
     "annotations": {
       "boober.skatteetaten.no/applicationFile": "utv/complex.json",
       "console.skatteetaten.no/alarm": "true",
-      "boober.skatteetaten.no/overrides": "{\"utv/complex.json\":{\"version\":\"1.0.4\"}}",
       "console.skatteetaten.no/management-path": ":8081/foobar"
     },
     "labels": {
@@ -14,8 +13,9 @@
       "affiliation": "paas",
       "updateInBoober": "true",
       "name": "komplex",
-      "deployTag": "1.0.4",
-      "paused": "true"
+      "deployTag": "1",
+      "paused": "true",
+      "booberDeployId": "deploy1"
     },
     "name": "komplex",
     "namespace": "paas-utv",
@@ -47,7 +47,7 @@
           "affiliation": "paas",
           "updateInBoober": "true",
           "name": "komplex",
-          "deployTag": "1.0.4",
+          "deployTag": "1",
           "paused": "true"
         }
       },
@@ -86,32 +86,12 @@
                 "value": "8778"
               },
               {
-                "name": "OPENSHIFT_CLUSTER",
-                "value": "utv"
+                "name": "FOO",
+                "value": "BAR"
               },
               {
-                "name": "APP_NAME",
-                "value": "komplex"
-              },
-              {
-                "name": "SPLUNK_INDEX",
-                "value": "test-index"
-              },
-              {
-                "name": "ENABLE_REMOTE_DEBUG",
-                "value": "true"
-              },
-              {
-                "name": "DEBUG_PORT",
-                "value": "5005"
-              },
-              {
-                "name": "ROUTE_NAME",
-                "value": "komplex-paas-utv.test.paas"
-              },
-              {
-                "name": "ROUTE_URL",
-                "value": "https://komplex-paas-utv.test.paas"
+                "name": "VOLUME_CONFIG",
+                "value": "/u01/config/configmap"
               },
               {
                 "name": "COMPLEX_DB",
@@ -138,6 +118,50 @@
                 "value": "/u01/secrets/app/complex-db/db.properties"
               },
               {
+                "name": "OPENSHIFT_CLUSTER",
+                "value": "utv"
+              },
+              {
+                "name": "APP_NAME",
+                "value": "komplex"
+              },
+              {
+                "name": "SPLUNK_INDEX",
+                "value": "test-index"
+              },
+              {
+                "name": "ENABLE_REMOTE_DEBUG",
+                "value": "true"
+              },
+              {
+                "name": "DEBUG_PORT",
+                "value": "5005"
+              },
+              {
+                "name": "VOLUME_AURORA_TOKEN",
+                "value": "/u01/secrets/app/aurora-token"
+              },
+              {
+                "name": "VOLUME_SECRET_MOUNT",
+                "value": "/u01/foo"
+              },
+              {
+                "name": "VOLUME_PVC",
+                "value": "/foo"
+              },
+              {
+                "name": "VOLUME_CONFIG_MOUNT",
+                "value": "/content"
+              },
+              {
+                "name": "ROUTE_NAME",
+                "value": "komplex-paas-utv.test"
+              },
+              {
+                "name": "ROUTE_URL",
+                "value": "https://komplex-paas-utv.test"
+              },
+              {
                 "name": "FOO",
                 "valueFrom": {
                   "secretKeyRef": {
@@ -148,12 +172,14 @@
                 }
               },
               {
-                "name": "FOO",
-                "value": "BAR"
-              },
-              {
-                "name": "VOLUME_CONFIG",
-                "value": "/u01/config/configmap"
+                "name": "BAZ",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "BAZ",
+                    "name": "komplex-foo-vault",
+                    "optional": false
+                  }
+                }
               },
               {
                 "name": "STS_CERTIFICATE_URL",
@@ -170,22 +196,6 @@
               {
                 "name": "VOLUME_KOMPLEX_CERT",
                 "value": "/u01/secrets/app/komplex-cert"
-              },
-              {
-                "name": "VOLUME_AURORA_TOKEN_MOUNT",
-                "value": "/u01/secrets/app/aurora-token"
-              },
-              {
-                "name": "VOLUME_SECRET_MOUNT",
-                "value": "/u01/foo"
-              },
-              {
-                "name": "VOLUME_PVC_MOUNT",
-                "value": "/foo"
-              },
-              {
-                "name": "VOLUME_CONFIG_MOUNT",
-                "value": "/content"
               }
             ],
             "imagePullPolicy": "IfNotPresent",
@@ -241,20 +251,16 @@
                 "name": "application-log-volume"
               },
               {
+                "mountPath": "/u01/config/configmap",
+                "name": "config"
+              },
+              {
                 "mountPath": "/u01/secrets/app/complex-db",
                 "name": "komplex-complex-db"
               },
               {
                 "mountPath": "/u01/secrets/app/foo-db",
                 "name": "komplex-foo-db"
-              },
-              {
-                "mountPath": "/u01/config/configmap",
-                "name": "config"
-              },
-              {
-                "mountPath": "/u01/secrets/app/komplex-cert",
-                "name": "komplex-cert"
               },
               {
                 "mountPath": "/u01/secrets/app/aurora-token",
@@ -271,6 +277,10 @@
               {
                 "mountPath": "/content",
                 "name": "config-mount"
+              },
+              {
+                "mountPath": "/u01/secrets/app/komplex-cert",
+                "name": "komplex-cert"
               }
             ]
           }
@@ -282,6 +292,12 @@
           {
             "emptyDir": {},
             "name": "application-log-volume"
+          },
+          {
+            "configMap": {
+              "name": "komplex"
+          },
+            "name": "config"
           },
           {
             "name": "komplex-complex-db",
@@ -296,21 +312,9 @@
             }
           },
           {
-            "configMap": {
-              "name": "komplex"
-            },
-            "name": "config"
-          },
-          {
-            "name": "komplex-cert",
-            "secret": {
-              "secretName": "komplex-cert"
-            }
-          },
-          {
             "name": "aurora-token-mount",
             "secret": {
-              "secretName": "aurora-token-mount"
+              "secretName": "aurora-token"
             }
           },
           {
@@ -322,7 +326,7 @@
           {
             "name": "pvc-mount",
             "persistentVolumeClaim": {
-              "claimName": "pvc-mount"
+              "claimName": "pvc"
             }
           },
           {
@@ -330,6 +334,12 @@
               "name": "komplex-config-mount"
             },
             "name": "config-mount"
+          },
+          {
+            "name": "komplex-cert",
+            "secret": {
+              "secretName": "komplex-cert"
+          }
           }
         ]
       }

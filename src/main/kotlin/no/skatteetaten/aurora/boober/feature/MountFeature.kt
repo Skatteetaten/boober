@@ -227,12 +227,13 @@ class MountFeature(
 
             val mountName: String = auroraDeploymentSpec["mounts/$mount/mountName"]
             val volumeName: String = auroraDeploymentSpec["mounts/$mount/volumeName"]
+            val exist: Boolean = auroraDeploymentSpec["mounts/$mount/exist"]
             Mount(
                 path = auroraDeploymentSpec["mounts/$mount/path"],
                 type = type,
                 mountName = mountName.ensureEndsWith("mount", "-"),
-                volumeName = volumeName.ensureEndsWith("mount", "-"),
-                exist = auroraDeploymentSpec["mounts/$mount/exist"],
+                volumeName = if (exist) volumeName else volumeName.ensureEndsWith("mount", "-"),
+                exist = exist,
                 content = content,
                 secretVaultName = secretVaultName
             )

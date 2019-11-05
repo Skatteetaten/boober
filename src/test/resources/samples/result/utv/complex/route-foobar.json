@@ -10,7 +10,8 @@
       "updatedBy": "hero",
       "affiliation": "paas",
       "updateInBoober": "true",
-      "name": "komplex"
+      "name": "komplex",
+      "booberDeployId": "deploy1"
     },
     "name": "komplex-foobar",
     "namespace": "paas-utv",
@@ -24,7 +25,7 @@
     ]
   },
   "spec": {
-    "host": "foobar.test.paas",
+    "host": "foobar.test",
     "to": {
       "kind": "Service",
       "name": "komplex"
