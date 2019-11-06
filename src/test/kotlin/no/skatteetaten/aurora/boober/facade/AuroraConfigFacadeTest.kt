@@ -11,8 +11,9 @@ import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
+import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
 import okhttp3.mockwebserver.MockResponse
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -28,6 +29,10 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
     @Autowired
     lateinit var facade: AuroraConfigFacade
 
+    @BeforeEach
+    fun beforeDeploy() {
+        preprateTestVault("foo", mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray()))
+    }
 
     val adr = ApplicationDeploymentRef("utv", "simple")
 
@@ -90,7 +95,7 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
     }
 
     @Test
-    fun `validate aurora config`() {
+    fun `validate sample aurora config `() {
 
         openShiftMock {
 
@@ -103,13 +108,46 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
             }
         }
 
-        // FEATURE: validate entire aurora config deep and normal. 2 tests
-        val auroraConfig = createAuroraConfig(adr, "paas")
-
-        val validated = facade.validateAuroraConfig(auroraConfig,
+        val validated = facade.validateAuroraConfig(
+            getAuroraConfigSamples(),
             resourceValidation = false,
             auroraConfigRef = auroraConfigRef)
-        assertThat(validated.size).isEqualTo(1)
+        assertThat(validated.size).isEqualTo(5)
+    }
+
+    @Test
+    fun `validate sample aurora config full`() {
+
+        openShiftMock {
+
+            rule({ path?.endsWith("/groups") }) {
+                mockJsonFromFile("groups.json")
+            }
+
+            rule({ path?.endsWith("/users") }) {
+                mockJsonFromFile("users.json")
+            }
+
+            rule({ method == "GET" && path!!.endsWith("aurora-token") || path!!.endsWith("pvc") }) {
+                MockResponse().setResponseCode(200)
+            }
+        }
+
+        dbhMock {
+            rule {
+                MockResponse()
+                    .setBody(loadBufferResource("dbhResponse.json", "DeployFacadeTest"))
+                    .setResponseCode(200)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
+            }
+        }
+
+        val validated = facade.validateAuroraConfig(
+            getAuroraConfigSamples(),
+            resourceValidation = true,
+            auroraConfigRef = auroraConfigRef
+        )
+        assertThat(validated.size).isEqualTo(5)
     }
 
     @Test
