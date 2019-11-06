@@ -26,6 +26,26 @@ class DeploymentFacade(
     val openShiftClient: OpenShiftClient
 ) {
 
+    fun deploymentExist(
+        ref: AuroraConfigRef,
+        adr: List<ApplicationDeploymentRef>
+    ): List<GetApplicationDeploymentResponse> {
+        val auroraConfig = auroraConfigService.findAuroraConfig(ref)
+        val applicationRefs =
+            adr.map {
+                auroraDeploymentContextService.createAuroraDeploymentContext(
+                    AuroraContextCommand(
+                        auroraConfig,
+                        it,
+                        ref
+                    )
+                )
+            }.map {
+                ApplicationRef(it.spec.namespace, it.spec.name)
+            }
+        return checkApplicationDeploymentsExists(applicationRefs)
+    }
+
     fun executeDelete(applicationRefs: List<ApplicationRef>): List<DeleteApplicationDeploymentResponse> {
         val deleteCommands = applicationRefs.createApplicationDeploymentCommand(OperationType.DELETE)
 
@@ -57,7 +77,7 @@ class DeploymentFacade(
         }
     }
 
-    fun checkApplicationDeploymentsExists(applicationrefs: List<ApplicationRef>): List<GetApplicationDeploymentResponse> {
+    private fun checkApplicationDeploymentsExists(applicationrefs: List<ApplicationRef>): List<GetApplicationDeploymentResponse> {
         val applicationdeploymentGetCommand = applicationrefs.createApplicationDeploymentCommand(OperationType.GET)
 
         return applicationdeploymentGetCommand.map {
@@ -98,25 +118,6 @@ class DeploymentFacade(
         }
     }
 
-    fun deploymentExist(
-        ref: AuroraConfigRef,
-        adr: List<ApplicationDeploymentRef>
-    ): List<GetApplicationDeploymentResponse> {
-        val auroraConfig = auroraConfigService.findAuroraConfig(ref)
-        val applicationRefs =
-            adr.map {
-                auroraDeploymentContextService.createAuroraDeploymentContext(
-                    AuroraContextCommand(
-                        auroraConfig,
-                        it,
-                        ref
-                    )
-                )
-            }.map {
-                ApplicationRef(it.spec.namespace, it.spec.name)
-            }
-        return checkApplicationDeploymentsExists(applicationRefs)
-    }
 }
 
 data class ApplicationDeploymentCommand(
