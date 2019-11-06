@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service
 
 private val logger = KotlinLogging.logger { }
 
-// FEATURE test this
 @Service
 class DeploymentFacade(
     val auroraDeploymentContextService: AuroraDeploymentContextService,

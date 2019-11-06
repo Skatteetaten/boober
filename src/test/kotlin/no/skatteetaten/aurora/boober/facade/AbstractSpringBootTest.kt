@@ -129,7 +129,11 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
         companion object {
             var httpMocks: MutableList<MockWebServer> = mutableListOf()
 
-            fun clearAllHttpMocks() = httpMocks.forEach { it.shutdown() }
+            fun clearAllHttpMocks() {
+                httpMocks.forEach {
+                    it.shutdown()
+                }
+            }
         }
     }
 
@@ -190,6 +194,7 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
             )
         )
         every { serviceAccountTokenProvider.getToken() } returns "auth token"
+        HttpMock.clearAllHttpMocks()
     }
 }
 
