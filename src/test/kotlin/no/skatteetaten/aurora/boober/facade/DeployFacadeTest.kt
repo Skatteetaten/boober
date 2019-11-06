@@ -62,7 +62,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
                 mockJsonFromFile("groups.json")
             }
 
-            //Should it be able to reuse rules?
+            // Should it be able to reuse rules?
             rule(mockOpenShiftUsers)
 
             rule({ method == "GET" && path!!.endsWith("aurora-token") || path!!.endsWith("pvc") }) {
@@ -72,7 +72,6 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
             rule({ method == "GET" }) {
                 MockResponse().setResponseCode(404)
             }
-
 
             // need to add uid to applicationDeployment for owner reference
             rule({ path?.endsWith("/applicationdeployments") }) {
@@ -102,4 +101,3 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
         assertThat(result).auroraDeployResultMatchesFiles()
     }
 }
-

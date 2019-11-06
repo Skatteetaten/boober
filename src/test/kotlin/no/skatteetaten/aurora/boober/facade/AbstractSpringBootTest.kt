@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
+import java.time.Instant
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
@@ -22,7 +23,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
-import java.time.Instant
 
 typealias MockRule = RecordedRequest.() -> MockResponse?
 typealias MockFlag = RecordedRequest.() -> Boolean?
@@ -93,7 +93,6 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
                             logger.debug("No matching rules matches request=;request")
                             throw IllegalArgumentException("No function matches request=$request")
                         }
-
 
                         return matchingRule
                     }
@@ -193,4 +192,3 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
         every { serviceAccountTokenProvider.getToken() } returns "auth token"
     }
 }
-

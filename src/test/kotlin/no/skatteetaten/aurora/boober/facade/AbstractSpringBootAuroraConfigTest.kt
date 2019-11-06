@@ -7,6 +7,7 @@ import assertk.assertions.isTrue
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
+import java.io.File
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
@@ -22,7 +23,6 @@ import no.skatteetaten.aurora.boober.utils.recreateRepo
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import java.io.File
 
 private val logger = KotlinLogging.logger { }
 

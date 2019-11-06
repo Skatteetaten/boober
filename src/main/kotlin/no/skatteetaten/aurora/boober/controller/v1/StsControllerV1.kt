@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController
 // TODO: Should we have a conditional on missing property that just returns an error message here?
 @RestController
 @RequestMapping("/v1/sts")
-@ConditionalOnProperty("integrations.skap.url") //Need to disable this is property is blank.
+@ConditionalOnProperty("integrations.skap.url") // Need to disable this is property is blank.
 class StsControllerV1(
     private val facade: StsRenewFacade
 ) {
