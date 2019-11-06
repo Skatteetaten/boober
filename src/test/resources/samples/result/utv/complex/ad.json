@@ -31,7 +31,8 @@
     ],
     "splunkIndex": "test-index",
     "managementPath": ":8081/foobar",
-    "deployTag": "1",
+    "releaseTo": "komplex",
+    "deployTag": "komplex",
     "command": {
       "overrideFiles": {},
       "applicationDeploymentRef": {

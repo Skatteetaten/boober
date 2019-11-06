@@ -33,6 +33,8 @@ integrations:
     openshift:
         url: "http://localhost:${integrations.openshift.port}"
         port: 8083
+        retries: 3
+        backoff: 100
     dbh:
         url: "http://localhost:${integrations.dbh.port}"
         port: 8084

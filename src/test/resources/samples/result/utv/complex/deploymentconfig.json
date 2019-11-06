@@ -5,7 +5,8 @@
     "annotations": {
       "boober.skatteetaten.no/applicationFile": "utv/complex.json",
       "console.skatteetaten.no/alarm": "true",
-      "console.skatteetaten.no/management-path": ":8081/foobar"
+      "console.skatteetaten.no/management-path": ":8081/foobar",
+      "boober.skatteetaten.no/releaseTo": "komplex"
     },
     "labels": {
       "app": "komplex",
@@ -13,7 +14,7 @@
       "affiliation": "paas",
       "updateInBoober": "true",
       "name": "komplex",
-      "deployTag": "1",
+      "deployTag": "komplex",
       "paused": "true",
       "booberDeployId": "deploy1"
     },
@@ -47,7 +48,7 @@
           "affiliation": "paas",
           "updateInBoober": "true",
           "name": "komplex",
-          "deployTag": "1",
+          "deployTag": "komplex",
           "paused": "true"
         }
       },

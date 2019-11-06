@@ -12,7 +12,8 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 
 @SpringBootTest(
-    webEnvironment = SpringBootTest.WebEnvironment.NONE
+    webEnvironment = SpringBootTest.WebEnvironment.NONE,
+    properties = ["integrations.openshift.retries=0"]
 )
 class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
@@ -41,6 +42,15 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
             rule {
                 MockResponse()
                     .setBody(loadBufferResource("dbhResponse.json"))
+                    .setResponseCode(200)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
+            }
+        }
+
+        cantuMock {
+            rule {
+                MockResponse()
+                    .setBody(""" { "success" : true }""")
                     .setResponseCode(200)
                     .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
             }

@@ -39,6 +39,8 @@ integrations:
     openshift:
         port: 8443
         url: https://${openshift.cluster}-master.paas.skead.no:${integrations.openshift.port}
+        retries: 3
+        backoff: 500
     docker:
         registry: "docker-registry.aurora.sits.no:5000"
 

@@ -77,6 +77,7 @@
     }
   },
   "liveness": true,
+  "releaseTo": "komplex",
   "deployStrategy": {
     "type": "recreate"
   },

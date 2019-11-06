@@ -3,8 +3,6 @@ package no.skatteetaten.aurora.boober.utils
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import java.net.URI
-import kotlin.reflect.KClass
 import mu.KotlinLogging
 import org.slf4j.Logger
 import org.springframework.http.HttpHeaders
@@ -15,18 +13,22 @@ import org.springframework.retry.RetryCallback
 import org.springframework.retry.RetryContext
 import org.springframework.retry.backoff.FixedBackOffPolicy
 import org.springframework.retry.listener.RetryListenerSupport
+import org.springframework.retry.policy.NeverRetryPolicy
 import org.springframework.retry.policy.SimpleRetryPolicy
 import org.springframework.retry.support.RetryTemplate
 import org.springframework.web.client.HttpServerErrorException
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestClientResponseException
 import org.springframework.web.client.RestTemplate
+import java.net.URI
+import kotlin.reflect.KClass
 
 private val logger = KotlinLogging.logger {}
 
 private const val REQUEST_ENTITY = "requestEntity"
 
-open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate) {
+// TODO: make it possible to configure retrying, for some tests it makes sense to disable it
+open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate, val retries: Int = 3, val backoff: Long = 500) {
 
     private val retryTemplate = retryTemplate(logger)
 
@@ -90,10 +92,14 @@ open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate) {
     private fun retryTemplate(logger: Logger): RetryTemplate {
 
         val template = RetryTemplate().apply {
-            setRetryPolicy(SimpleRetryPolicy(3))
-            setBackOffPolicy(FixedBackOffPolicy().apply {
-                backOffPeriod = 500
-            })
+            if (retries == 0) {
+                setRetryPolicy(NeverRetryPolicy())
+            } else {
+                setRetryPolicy(SimpleRetryPolicy(retries))
+                setBackOffPolicy(FixedBackOffPolicy().apply {
+                    backOffPeriod = backoff
+                })
+            }
         }
 
         template.registerListener(RetryLogger(logger))
