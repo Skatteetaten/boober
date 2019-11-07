@@ -74,15 +74,20 @@ class DeployFacade(
             throw IllegalArgumentException("Specify applicationDeploymentRef")
         }
 
+        //auroraConfigService,
+        // TODO: Should we put the user in here?
         val commands = createContextCommands(ref, applicationDeploymentRefs, overrides)
 
+        //auroraDeploymentContextService
         val validContexts = createAuroraDeploymentContexts(commands)
 
+        //Ingen
         val deployCommands = createDeployCommands(validContexts, deploy)
 
         val envDeploys: Map<String, List<AuroraDeployCommand>> = deployCommands.groupBy { it.context.spec.namespace }
 
         val deployResults: Map<String, List<AuroraDeployResult>> = envDeploys.mapValues { (ns, commands) ->
+            //userDetails, openShiftCommand, OpenShiftClient, den første kan trekkes ut og sendes inn som param
             val env = prepareDeployEnvironment(ns, commands.first().headerResources)
 
             if (!env.success) {
@@ -97,6 +102,7 @@ class DeployFacade(
                 }
             } else {
                 commands.map {
+                    //userDetails, openShiftCommand, OpenShiftClient
                     val result = deployFromSpec(it, env)
                     result.copy(openShiftResponses = env.openShiftResponses.addIfNotNull(result.openShiftResponses))
                 }
@@ -106,6 +112,59 @@ class DeployFacade(
             Deployer(it.fullName ?: it.username, "${it.username}@skatteetaten.no")
         }
         return deployLogService.markRelease(deployResults.flatMap { it.value }, deployer)
+    }
+
+    private fun createContextCommands(
+        ref: AuroraConfigRef,
+        applicationDeploymentRefs: List<ApplicationDeploymentRef>,
+        overrides: List<AuroraConfigFile>
+    ): List<AuroraContextCommand> {
+        val auroraConfigRefExact = auroraConfigService.resolveToExactRef(ref)
+        val auroraConfig = auroraConfigService.findAuroraConfig(auroraConfigRefExact)
+
+        return applicationDeploymentRefs.parallelMap {
+            AuroraContextCommand(auroraConfig, it, auroraConfigRefExact, overrides)
+        }
+    }
+
+    private fun createAuroraDeploymentContexts(commands: List<AuroraContextCommand>): List<AuroraDeploymentContext> {
+        val deploymentCtx = auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(commands)
+        validateUnusedOverrideFiles(deploymentCtx)
+
+        val (validContexts, invalidContexts) = deploymentCtx.partition { it.spec.cluster == cluster }
+
+        if (invalidContexts.isNotEmpty()) {
+            val errors = invalidContexts.map {
+                ContextErrors(
+                    it.cmd,
+                    listOf(java.lang.IllegalArgumentException("Not valid in this cluster"))
+                )
+            }
+
+            val errorMessages = errors.flatMap { err ->
+                err.errors.map { it.localizedMessage }
+            }
+            logger.debug("Validation errors: ${errorMessages.joinToString("\n", prefix = "\n")}")
+
+            throw MultiApplicationValidationException(errors)
+        }
+        return validContexts
+    }
+
+    private fun validateUnusedOverrideFiles(deploymentCtx: List<AuroraDeploymentContext>) {
+        val overrides = deploymentCtx.first().cmd.overrides
+        val usedOverrideNames: List<String> =
+            deploymentCtx.flatMap { ctx -> ctx.cmd.applicationFiles.filter { it.override } }.map { it.configName }
+
+        val applicationDeploymentRefs = deploymentCtx.map { it.cmd.applicationDeploymentRef }
+        val unusedOverrides = overrides.filter { !usedOverrideNames.contains(it.configName) }
+        if (unusedOverrides.isNotEmpty()) {
+            val overrideString = unusedOverrides.joinToString(",") { it.name }
+            val refString = applicationDeploymentRefs.joinToString(",")
+            throw IllegalArgumentException(
+                "Overrides files '$overrideString' does not apply to any deploymentReference ($refString)"
+            )
+        }
     }
 
     private fun createDeployCommands(
@@ -151,58 +210,6 @@ class DeployFacade(
         return result.mapNotNull { it.second }
     }
 
-    private fun createAuroraDeploymentContexts(commands: List<AuroraContextCommand>): List<AuroraDeploymentContext> {
-        val deploymentCtx = auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(commands)
-        validateUnusedOverrideFiles(deploymentCtx)
-
-        val (validContexts, invalidContexts) = deploymentCtx.partition { it.spec.cluster == cluster }
-
-        if (invalidContexts.isNotEmpty()) {
-            val errors = invalidContexts.map {
-                ContextErrors(
-                    it.cmd,
-                    listOf(java.lang.IllegalArgumentException("Not valid in this cluster"))
-                )
-            }
-
-            val errorMessages = errors.flatMap { err ->
-                err.errors.map { it.localizedMessage }
-            }
-            logger.debug("Validation errors: ${errorMessages.joinToString("\n", prefix = "\n")}")
-
-            throw MultiApplicationValidationException(errors)
-        }
-        return validContexts
-    }
-
-    private fun createContextCommands(
-        ref: AuroraConfigRef,
-        applicationDeploymentRefs: List<ApplicationDeploymentRef>,
-        overrides: List<AuroraConfigFile>
-    ): List<AuroraContextCommand> {
-        val auroraConfigRefExact = auroraConfigService.resolveToExactRef(ref)
-        val auroraConfig = auroraConfigService.findAuroraConfig(auroraConfigRefExact)
-
-        return applicationDeploymentRefs.parallelMap {
-            AuroraContextCommand(auroraConfig, it, auroraConfigRefExact, overrides)
-        }
-    }
-
-    private fun validateUnusedOverrideFiles(deploymentCtx: List<AuroraDeploymentContext>) {
-        val overrides = deploymentCtx.first().cmd.overrides
-        val usedOverrideNames: List<String> =
-            deploymentCtx.flatMap { ctx -> ctx.cmd.applicationFiles.filter { it.override } }.map { it.configName }
-
-        val applicationDeploymentRefs = deploymentCtx.map { it.cmd.applicationDeploymentRef }
-        val unusedOverrides = overrides.filter { !usedOverrideNames.contains(it.configName) }
-        if (unusedOverrides.isNotEmpty()) {
-            val overrideString = unusedOverrides.joinToString(",") { it.name }
-            val refString = applicationDeploymentRefs.joinToString(",")
-            throw IllegalArgumentException(
-                "Overrides files '$overrideString' does not apply to any deploymentReference ($refString)"
-            )
-        }
-    }
 
     private fun prepareDeployEnvironment(namespace: String, resources: Set<AuroraResource>): AuroraEnvironmentResult {
 

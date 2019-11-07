@@ -1,0 +1,92 @@
+{
+  "config": {
+    "JSON_ARRAY": {
+      "source": "utv/simple.json",
+      "value": "[ { uri: \"http://tsl0part-fk1-s-adm01:20000/registry\", urn: [\"urn:skatteetaten:part:identifikasjon:partsidentifikasjon:root\"], segment: \"part\" }, { uri: \"http://tsl0part-fk1-s-adm01:20000/registry\", urn: [\"urn:skatteetaten:part:partsregister:feed:*\"], segment: \"part\" } , { uri: \"http://tsl0part-fk1-s-adm01:20000/registry\", urn: [\"urn:skatteetaten:part:partsregister:hendelselager:*\"], segment: \"part\" } , { uri: \"http://tsl0part-fk1-s-adm01:20000/registry\", urn: [\"no:skatteetaten:sikkerhet:tilgangskontroll:ats:v1\"], segment: \"part\" } ]",
+      "sources": [
+        {
+          "name": "utv/simple.json",
+          "value": "[ { uri: \"http://tsl0part-fk1-s-adm01:20000/registry\", urn: [\"urn:skatteetaten:part:identifikasjon:partsidentifikasjon:root\"], segment: \"part\" }, { uri: \"http://tsl0part-fk1-s-adm01:20000/registry\", urn: [\"urn:skatteetaten:part:partsregister:feed:*\"], segment: \"part\" } , { uri: \"http://tsl0part-fk1-s-adm01:20000/registry\", urn: [\"urn:skatteetaten:part:partsregister:hendelselager:*\"], segment: \"part\" } , { uri: \"http://tsl0part-fk1-s-adm01:20000/registry\", urn: [\"no:skatteetaten:sikkerhet:tilgangskontroll:ats:v1\"], segment: \"part\" } ]"
+        }
+      ]
+    },
+    "STRING": {
+      "source": "utv/simple.json",
+      "value": "Hello",
+      "sources": [
+        {
+          "name": "utv/simple.json",
+          "value": "Hello"
+        }
+      ]
+    },
+    "BOOL": {
+      "source": "utv/simple.json",
+      "value": false,
+      "sources": [
+        {
+          "name": "utv/simple.json",
+          "value": false
+        }
+      ]
+    },
+    "INT": {
+      "source": "utv/simple.json",
+      "value": 42,
+      "sources": [
+        {
+          "name": "utv/simple.json",
+          "value": 42
+        }
+      ]
+    },
+    "FLOAT": {
+      "source": "utv/simple.json",
+      "value": 4.2,
+      "sources": [
+        {
+          "name": "utv/simple.json",
+          "value": 4.2
+        }
+      ]
+    },
+    "ARRAY": {
+      "source": "utv/simple.json",
+      "value": [
+        4.2,
+        "STRING",
+        true
+      ],
+      "sources": [
+        {
+          "name": "utv/simple.json",
+          "value": [
+            4.2,
+            "STRING",
+            true
+          ]
+        }
+      ]
+    },
+    "URL": {
+      "source": "utv/simple.json",
+      "value": "https://int-at.skead.no:13110/felles/sikkerhet/stsSikkerhet/v1/validerSaml",
+      "sources": [
+        {
+          "name": "utv/simple.json",
+          "value": "https://int-at.skead.no:13110/felles/sikkerhet/stsSikkerhet/v1/validerSaml"
+        }
+      ]
+    },
+    "JSON_STRING": {
+      "source": "utv/simple.json",
+      "value": "{\"key\": \"value\"}",
+      "sources": [
+        {
+          "name": "utv/simple.json",
+          "value": "{\"key\": \"value\"}"
+        }
+      ]
+    }
+  }
+}

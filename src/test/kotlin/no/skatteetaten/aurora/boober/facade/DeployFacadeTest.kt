@@ -98,6 +98,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
         val result = facade.executeDeploy(auroraConfigRef, listOf(ApplicationDeploymentRef("utv", app)))
 
+        // TODO: Should we assert on spec here aswell?
         assertThat(result).auroraDeployResultMatchesFiles()
     }
 }
