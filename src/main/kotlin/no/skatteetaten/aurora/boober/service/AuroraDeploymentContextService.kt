@@ -52,6 +52,7 @@ class AuroraDeploymentContextService(
         return result.mapNotNull { it.first }
     }
 
+    // TODO: Kan denne være private hvis vi har en metode for å hente spec og en for å hente ApplicationRef?
     fun createAuroraDeploymentContext(
         deployCommand: AuroraContextCommand
     ): AuroraDeploymentContext {

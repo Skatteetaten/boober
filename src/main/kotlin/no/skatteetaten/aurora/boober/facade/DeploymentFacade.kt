@@ -40,6 +40,7 @@ class DeploymentFacade(
                     )
                 )
             }.map {
+                // TODO: Burde det være en metode i auroraDeploymentContextService på å hente ut disse to? Vi trenger jo ikke gå gjennom alle featurene for å gjøre det?
                 ApplicationRef(it.spec.namespace, it.spec.name)
             }
         return checkApplicationDeploymentsExists(applicationRefs)
