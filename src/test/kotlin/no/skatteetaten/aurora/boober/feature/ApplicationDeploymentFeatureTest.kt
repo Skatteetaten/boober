@@ -32,7 +32,6 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
         })
     }
 
-    // TODO:Is this a good error message? remember that the field it is for is included in the final error message
     @Test
     fun `get error if ttl duration string is wrong`() {
         assertThat {

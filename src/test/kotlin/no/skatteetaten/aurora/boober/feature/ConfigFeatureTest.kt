@@ -10,11 +10,7 @@ class ConfigFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
         get() = ConfigFeature()
 
-    @Test
-    fun `modify dc and add config`() {
-
-        val resources = modifyResources(
-            """{ 
+    val auroraConfigAppFile = """{ 
                "config": {
                  "JSON_ARRAY" : "[ { uri: \"http://tsl0part-fk1-s-adm01:20000/registry\", urn: [\"urn:skatteetaten:part:identifikasjon:partsidentifikasjon:root\"], segment: \"part\" }, { uri: \"http://tsl0part-fk1-s-adm01:20000/registry\", urn: [\"urn:skatteetaten:part:partsregister:feed:*\"], segment: \"part\" } , { uri: \"http://tsl0part-fk1-s-adm01:20000/registry\", urn: [\"urn:skatteetaten:part:partsregister:hendelselager:*\"], segment: \"part\" } , { uri: \"http://tsl0part-fk1-s-adm01:20000/registry\", urn: [\"no:skatteetaten:sikkerhet:tilgangskontroll:ats:v1\"], segment: \"part\" } ]",
                  "STRING": "Hello",
@@ -25,7 +21,13 @@ class ConfigFeatureTest : AbstractFeatureTest() {
                  "URL": "https://int-at.skead.no:13110/felles/sikkerhet/stsSikkerhet/v1/validerSaml",
                  "JSON_STRING": "{\"key\": \"value\"}"                   
                 }
-           }""", createEmptyDeploymentConfig()
+           }"""
+
+    @Test
+    fun `modify dc and add config`() {
+
+        val resources = modifyResources(
+            auroraConfigAppFile, createEmptyDeploymentConfig()
         )
 
         val dcResource = resources.first()
@@ -68,5 +70,13 @@ class ConfigFeatureTest : AbstractFeatureTest() {
         assertThat(configMapResource).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("configMap.json")
         assertThat(dcResource).auroraResourceMountsAttachment(configMapResource.resource)
+    }
+
+    @Test
+    fun `test render spec`() {
+
+        val spec = createAuroraDeploymentSpecForFeature(auroraConfigAppFile)
+
+        assertThat(spec).auroraDeploymentSpecMatchesSpecFiles("spec")
     }
 }
