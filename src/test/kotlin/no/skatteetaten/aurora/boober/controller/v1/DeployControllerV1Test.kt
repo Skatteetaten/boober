@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.controller.v1
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import no.skatteetaten.aurora.boober.facade.DeployFacade
+import no.skatteetaten.aurora.boober.utils.stubDeployResult
 import no.skatteetaten.aurora.mockmvc.extensions.Path
 import no.skatteetaten.aurora.mockmvc.extensions.contentTypeJson
 import no.skatteetaten.aurora.mockmvc.extensions.put

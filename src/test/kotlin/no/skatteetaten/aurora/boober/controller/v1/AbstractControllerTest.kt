@@ -7,8 +7,8 @@ import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
-import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
+import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.junit.jupiter.api.AfterEach
 import org.springframework.beans.factory.annotation.Autowired
@@ -18,7 +18,7 @@ import org.springframework.test.web.servlet.MockMvc
 
 @WithMockUser
 @AutoConfigureRestDocs
-abstract class AbstractControllerTest : AbstractAuroraConfigTest() {
+abstract class AbstractControllerTest : ResourceLoader() {
 
     @Autowired
     lateinit var mockMvc: MockMvc

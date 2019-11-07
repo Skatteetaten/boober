@@ -5,7 +5,10 @@
     "name" : "admin",
     "namespace" : "paas-utv"
   },
-  "groupNames" : [ "APP_PaaS_utv" ],
+  "groupNames": [
+    "APP_PaaS_drift",
+    "APP_PaaS_utv"
+  ],
   "roleRef" : {
     "name" : "admin"
   },
@@ -13,6 +16,10 @@
     "kind": "User",
     "name": "foo:bar:baz"
   },
+    {
+      "kind": "Group",
+      "name": "APP_PaaS_drift"
+    },
     {
     "kind" : "Group",
     "name" : "APP_PaaS_utv"

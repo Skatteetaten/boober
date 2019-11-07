@@ -11,12 +11,12 @@ import assertk.assertions.isTrue
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
+import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import org.junit.jupiter.api.Test
 
-class AuroraConfigTest : AbstractAuroraConfigTest() {
+class AuroraConfigTest : ResourceLoader() {
 
     val aid = ApplicationDeploymentRef("utv", "simple")
 
@@ -128,53 +128,23 @@ class AuroraConfigTest : AbstractAuroraConfigTest() {
     }
 
     @Test
-    fun `Patch file`() {
-
-        val filename = "${aid.environment}/${aid.application}.json"
-
-        val auroraConfigJson = mutableMapOf(
-            "about.json" to DEFAULT_ABOUT,
-            "utv/about.json" to DEFAULT_UTV_ABOUT,
-            filename to """{ "version" : "1.0.0" }}"""
-        )
-        val auroraConfig = createAuroraConfig(auroraConfigJson)
-
-        val jsonOp = """[{
-  "op": "replace",
-  "path": "/version",
-  "value": "3"
-}]
-"""
-
-        val version = auroraConfig.files.find { it.name == filename }?.version
-        val patchFileResponse = auroraConfig.patchFile(filename, jsonOp, version)
-        val patchedAuroraConfig = patchFileResponse.second
-
-        val patchedFile = patchedAuroraConfig.files.find { it.name == filename }
-        assertThat(patchedFile?.asJsonNode?.at("/version")?.textValue()).isEqualTo("3")
-    }
-
-    @Test
     fun `Throw error if baseFile is missing`() {
 
-        val auroraConfigJson = mutableMapOf(
-            "about.json" to DEFAULT_ABOUT,
-            "utv/about.json" to DEFAULT_UTV_ABOUT,
-            "utv/test.json" to """{ "webseal" : { "roles" : "foobar" }}"""
-        )
-        val auroraConfig = createAuroraConfig(auroraConfigJson)
+        val files = createMockFiles("about.json", "utv/simple.json", "utv/about.json")
+        val auroraConfig = AuroraConfig(files, "aos", "master")
+
 
         assertThat {
 
             auroraConfig.getFilesForApplication(
                 ApplicationDeploymentRef(
                     "utv",
-                    "test"
+                    "simple"
                 )
             )
         }.isFailure().all {
             isInstanceOf(IllegalArgumentException::class)
-            hasMessage("Some required AuroraConfig (json|yaml) files missing. BASE file with name test.")
+            hasMessage("Some required AuroraConfig (json|yaml) files missing. BASE file with name simple.")
         }
     }
 

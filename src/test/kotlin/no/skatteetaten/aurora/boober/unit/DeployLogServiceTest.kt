@@ -9,21 +9,22 @@ import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.BitbucketService
 import no.skatteetaten.aurora.boober.service.DeployLogService
 import no.skatteetaten.aurora.boober.service.DeployLogServiceException
 import no.skatteetaten.aurora.boober.service.Deployer
-import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
+import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import no.skatteetaten.aurora.boober.utils.jsonMapper
+import no.skatteetaten.aurora.boober.utils.stubDeployResult
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.web.client.HttpClientErrorException
+import java.nio.charset.Charset
 
-class DeployLogServiceTest : AbstractAuroraConfigTest() {
+class DeployLogServiceTest : ResourceLoader() {
 
     private val bitbucketService = mockk<BitbucketService>()
     private val deployId = "12e456"

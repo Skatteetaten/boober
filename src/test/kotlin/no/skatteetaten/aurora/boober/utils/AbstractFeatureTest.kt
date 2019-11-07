@@ -38,7 +38,6 @@ import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.clearAllMocks
 import io.mockk.mockk
-import java.time.Instant
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.feature.headerHandlers
@@ -60,7 +59,9 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
 import no.skatteetaten.aurora.boober.service.renderSpecAsJson
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
+import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
 import org.junit.jupiter.api.BeforeEach
+import java.time.Instant
 
 /*
   Abstract class to test a single feature
@@ -78,7 +79,7 @@ class TestDefaultFeature : Feature {
     }
 }
 
-abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
+abstract class AbstractFeatureTest : ResourceLoader() {
 
     abstract val feature: Feature
 
@@ -87,17 +88,9 @@ abstract class AbstractFeatureTest : AbstractAuroraConfigTest() {
 
     val openShiftClient: OpenShiftClient = mockk()
 
-    // TODO: this is now standard in config
-    val FEATURE_ABOUT = """{
-  "schemaVersion": "v1",
-  "permissions": {
-    "admin": "APP_PaaS_utv"
-  },
-  "segment" : "aurora",
-  "affiliation" : "$affiliation",
-  "type": "deploy",
-  "cluster": "utv"
-}"""
+    //TODO: rewrite when resources are not loaded with package
+    val FEATURE_ABOUT = getAuroraConfigSamples().files.find { it.name == "about.json" }?.contents
+        ?: throw RuntimeException("Could not find about.json")
 
     fun createEmptyImageStream() =
         AuroraResource(newImageStream {
