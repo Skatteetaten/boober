@@ -133,6 +133,7 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
                 httpMocks.forEach {
                     it.shutdown()
                 }
+                httpMocks = mutableListOf()
             }
         }
     }
@@ -194,7 +195,6 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
             )
         )
         every { serviceAccountTokenProvider.getToken() } returns "auth token"
-        HttpMock.clearAllHttpMocks()
     }
 }
 
