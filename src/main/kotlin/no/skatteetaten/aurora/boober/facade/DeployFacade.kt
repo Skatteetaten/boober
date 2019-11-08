@@ -46,13 +46,13 @@ class DeployFacade(
             throw IllegalArgumentException("Specify applicationDeploymentRef")
         }
 
-        //auroraConfigService,
+        // auroraConfigService,
         val commands = createContextCommands(ref, applicationDeploymentRefs, overrides)
 
-        //auroraDeploymentContextService
+        // auroraDeploymentContextService
         val validContexts = createAuroraDeploymentContexts(commands)
 
-        //Ingen
+        // Ingen
         val deployCommands = validContexts.createDeployCommand(deploy)
 
         val deployResults = openShiftDeployer.performDeployCommaands(deployCommands)

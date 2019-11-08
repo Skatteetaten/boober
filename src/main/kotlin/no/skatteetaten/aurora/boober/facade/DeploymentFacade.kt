@@ -117,7 +117,6 @@ class DeploymentFacade(
             }
         }
     }
-
 }
 
 data class ApplicationDeploymentCommand(

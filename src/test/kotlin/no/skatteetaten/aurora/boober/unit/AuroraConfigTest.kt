@@ -133,7 +133,6 @@ class AuroraConfigTest : ResourceLoader() {
         val files = createMockFiles("about.json", "utv/simple.json", "utv/about.json")
         val auroraConfig = AuroraConfig(files, "aos", "master")
 
-
         assertThat {
 
             auroraConfig.getFilesForApplication(

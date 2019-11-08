@@ -126,7 +126,6 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
             // Should it be able to reuse rules?
             rule(mockOpenShiftUsers)
-
         }
 
         assertThat {
@@ -154,7 +153,6 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
             // Should it be able to reuse rules?
             rule(mockOpenShiftUsers)
-
         }
 
         assertThat {

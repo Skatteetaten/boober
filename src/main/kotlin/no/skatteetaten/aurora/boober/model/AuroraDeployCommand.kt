@@ -7,4 +7,3 @@ data class AuroraDeployCommand(
     val deployId: String,
     val shouldDeploy: Boolean = true
 )
-

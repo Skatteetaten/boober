@@ -30,16 +30,15 @@ class DeploymentFacadeDeleteApplicationDeploymentTest : AbstractSpringBootTest()
 
         openShiftMock {
 
-            //AD exist
+            // AD exist
             rule({ method == "GET" }) {
                 json("""{ "success" : "true" }""")
             }
 
-            //Delete command success
+            // Delete command success
             rule({ method == "DELETE" }) {
                 json("""{ "success" : "true" }""")
             }
-
         }
 
         val resultList = facade.executeDelete(listOf(ApplicationRef("paas-utv", "simple")))
@@ -54,12 +53,12 @@ class DeploymentFacadeDeleteApplicationDeploymentTest : AbstractSpringBootTest()
     fun `should handle bad request when deleting application`() {
 
         openShiftMock {
-            //AD exist
+            // AD exist
             rule({ method == "GET" }) {
                 json("""{ "success" : "true" }""")
             }
 
-            //Delete command success
+            // Delete command success
             rule({ method == "DELETE" }) {
                 MockResponse().setResponseCode(400).setBody("Could not delete app")
             }
@@ -78,12 +77,12 @@ class DeploymentFacadeDeleteApplicationDeploymentTest : AbstractSpringBootTest()
     fun `should handle error when deleting application`() {
 
         openShiftMock {
-            //AD exist
+            // AD exist
             rule({ method == "GET" }) {
                 json("""{ "success" : "true" }""")
             }
 
-            //Delete command success
+            // Delete command success
             rule({ method == "DELETE" }) {
                 MockResponse().setResponseCode(404)
             }
@@ -97,4 +96,3 @@ class DeploymentFacadeDeleteApplicationDeploymentTest : AbstractSpringBootTest()
         // TODO: Is this right?
     }
 }
-

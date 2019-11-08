@@ -19,7 +19,6 @@ class DeploymentFacadeTest : AbstractSpringBootTest() {
     @Autowired
     lateinit var facade: DeploymentFacade
 
-
     @Test
     fun `deployment should exist`() {
 
@@ -88,4 +87,3 @@ class DeploymentFacadeTest : AbstractSpringBootTest() {
         assertThat(result.success).isFalse()
     }
 }
-

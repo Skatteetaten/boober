@@ -35,6 +35,7 @@ import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.clearAllMocks
 import io.mockk.mockk
+import java.time.Instant
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.feature.headerHandlers
@@ -57,7 +58,6 @@ import no.skatteetaten.aurora.boober.service.renderSpecAsJson
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
 import org.junit.jupiter.api.BeforeEach
-import java.time.Instant
 
 /*
   Abstract class to test a single feature
@@ -84,7 +84,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
 
     val openShiftClient: OpenShiftClient = mockk()
 
-    //TODO: rewrite when resources are not loaded with package
+    // TODO: rewrite when resources are not loaded with package
     val FEATURE_ABOUT = getAuroraConfigSamples().files.find { it.name == "about.json" }?.contents
         ?: throw RuntimeException("Could not find about.json")
 
@@ -236,7 +236,6 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         Instants.determineNow = { Instant.EPOCH }
         clearAllMocks()
     }
-
 
     fun createCustomAuroraDeploymentContext(
         adr: ApplicationDeploymentRef,

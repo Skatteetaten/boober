@@ -9,6 +9,7 @@ import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.BitbucketService
 import no.skatteetaten.aurora.boober.service.DeployLogService
@@ -22,7 +23,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.web.client.HttpClientErrorException
-import java.nio.charset.Charset
 
 class DeployLogServiceTest : ResourceLoader() {
 
