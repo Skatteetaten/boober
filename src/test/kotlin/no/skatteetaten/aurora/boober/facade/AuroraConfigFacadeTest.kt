@@ -7,7 +7,6 @@ import assertk.assertions.isNotNull
 import assertk.assertions.messageContains
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -15,15 +14,17 @@ import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuro
 import okhttp3.mockwebserver.MockResponse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
-
-private val logger = KotlinLogging.logger {}
+import org.springframework.test.annotation.DirtiesContext
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.NONE
 )
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
     @Autowired
@@ -111,7 +112,8 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
         val validated = facade.validateAuroraConfig(
             getAuroraConfigSamples(),
             resourceValidation = false,
-            auroraConfigRef = auroraConfigRef)
+            auroraConfigRef = auroraConfigRef
+        )
         assertThat(validated.size).isEqualTo(5)
     }
 

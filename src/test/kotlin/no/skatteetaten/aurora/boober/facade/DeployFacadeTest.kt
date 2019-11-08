@@ -11,16 +11,20 @@ import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import okhttp3.mockwebserver.MockResponse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
+import org.springframework.test.annotation.DirtiesContext
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.NONE,
     properties = ["integrations.openshift.retries=0"]
 )
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
     @Autowired

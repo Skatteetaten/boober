@@ -24,8 +24,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 
-private val logger = KotlinLogging.logger { }
-
 /*
 
   If your tests needs access to auroraConfig use the method in BeforeEach
