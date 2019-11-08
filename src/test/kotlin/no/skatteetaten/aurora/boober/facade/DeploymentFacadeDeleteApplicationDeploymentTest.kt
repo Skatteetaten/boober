@@ -5,25 +5,19 @@ import assertk.assertions.contains
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.mockk.every
-import io.mockk.mockk
 import no.skatteetaten.aurora.boober.model.ApplicationRef
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftRestTemplateWrapper
-import no.skatteetaten.aurora.boober.service.openshift.token.TokenProvider
 import okhttp3.mockwebserver.MockResponse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.web.client.RestTemplateBuilder
+import org.springframework.test.annotation.DirtiesContext
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.NONE,
     properties = ["integrations.openshift.retries=0"]
 )
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class DeploymentFacadeDeleteApplicationDeploymentTest : AbstractSpringBootTest() {
 
@@ -68,7 +62,7 @@ class DeploymentFacadeDeleteApplicationDeploymentTest : AbstractSpringBootTest()
             }
         }
 
-        val resultList = deploymentFacade().executeDelete(listOf(ApplicationRef("paas-utv", "simple")))
+        val resultList = facade.executeDelete(listOf(ApplicationRef("paas-utv", "simple")))
         assertThat(resultList.size).isEqualTo(1)
         val result = resultList.first()
         assertThat(result.success).isFalse()
@@ -91,24 +85,11 @@ class DeploymentFacadeDeleteApplicationDeploymentTest : AbstractSpringBootTest()
             }
         }
 
-        val resultList = deploymentFacade().executeDelete(listOf(ApplicationRef("paas-utv", "simple")))
+        val resultList = facade.executeDelete(listOf(ApplicationRef("paas-utv", "simple")))
         assertThat(resultList.size).isEqualTo(1)
         val result = resultList.first()
         assertThat(result.success).isFalse()
         assertThat(result.message).contains("ApplicationDeployment does not exist")
         // TODO: Is this right?
-    }
-
-    private fun deploymentFacade(): DeploymentFacade {
-        val tokenProvider = mockk<TokenProvider>().apply {
-            every { getToken() } returns "test-token"
-        }
-        val restTemplate = RestTemplateBuilder().rootUri("http://localhost:$ocpPort").build()
-        val client = OpenShiftResourceClient(tokenProvider, OpenShiftRestTemplateWrapper(restTemplate))
-        return DeploymentFacade(
-            mockk(),
-            mockk(),
-            OpenShiftClient(client, client, jacksonObjectMapper())
-        )
     }
 }
