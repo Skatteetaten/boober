@@ -23,8 +23,6 @@ fun AuroraDeploymentContext.validate(fullValidation: Boolean): Map<Feature, List
     }
 }
 
-// FEATURE: Should this be in model Or in service somewhere?
-// FEATURE: Unit test errors here
 fun List<AuroraDeploymentContext>.createDeployCommand(deploy: Boolean): List<AuroraDeployCommand> {
     val result: List<Pair<List<ContextErrors>, AuroraDeployCommand?>> = this.map { context ->
         val (errors, resourceResults) = context.createResources()
