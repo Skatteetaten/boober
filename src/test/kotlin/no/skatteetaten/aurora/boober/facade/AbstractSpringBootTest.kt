@@ -203,7 +203,7 @@ fun json(body: String) =
         .setBody(body)
         .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
 
-fun json(body: Object) =
+fun json(body: Any) =
     MockResponse().setResponseCode(200)
         .setBody(jacksonObjectMapper().writeValueAsString(body))
         .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
