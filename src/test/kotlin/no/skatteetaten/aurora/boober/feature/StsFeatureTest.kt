@@ -13,7 +13,6 @@ import no.skatteetaten.aurora.boober.model.Paths.secretsPath
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
-import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import org.junit.jupiter.api.Test
 
 class StsFeatureTest : AbstractFeatureTest() {
@@ -21,19 +20,6 @@ class StsFeatureTest : AbstractFeatureTest() {
         get() = StsFeature(stsProvisioner)
 
     val stsProvisioner: StsProvisioner = mockk()
-
-    @Test
-    fun `should not validate if template type without groupId and commonName`() {
-
-        assertThat {
-            createAuroraDeploymentContext(
-                """{
-                "type" : "template",
-                "certificate" : true
-            }"""
-            )
-        }.singleApplicationError("groupId is required for type=template/localtemplate if certificate/commonName is not set")
-    }
 
     @Test
     fun `should provision sts certificate`() {

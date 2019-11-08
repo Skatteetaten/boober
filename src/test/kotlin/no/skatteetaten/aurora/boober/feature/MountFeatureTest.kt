@@ -89,10 +89,11 @@ class MountFeatureTest : AbstractFeatureTest() {
         val errorMessage: String
     ) {
 
-        PVC_MUST_EXIST(
-            """ "type" : "PVC", "path": "/u01/foo" """,
-            "PVC mount=mount must have exist set. We do not support generating mounts for now"
-        ),
+        /*  PVC_MUST_EXIST(
+              """ "type" : "PVC", "path": "/u01/foo" """,
+              "PVC mount=mount must have exist set. We do not support generating mounts for now"
+          ),
+         */
         SECRET_WITH_VAULT_EXIST(
             """ "path": "/u01/foo", "type" : "Secret", "secretVault" : "foo", "exist" : true """,
             "Secret mount=mount with vaultName set cannot be marked as existing"

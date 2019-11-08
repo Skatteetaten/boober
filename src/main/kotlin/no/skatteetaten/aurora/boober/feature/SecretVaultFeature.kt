@@ -72,8 +72,12 @@ class SecretVaultFeature(
         fullValidation: Boolean,
         cmd: AuroraContextCommand
     ): List<Exception> {
+
         val secrets = getSecretVaults(adc, cmd)
-        return validateSecretNames(secrets)
+        val shallowValidation = validateSecretNames(secrets)
+        if (!fullValidation) return emptyList()
+
+        return shallowValidation
                 .addIfNotNull(validateVaultExistence(secrets, adc.affiliation))
                 .addIfNotNull(validateKeyMappings(secrets))
                 .addIfNotNull(validateSecretVaultKeys(secrets, adc.affiliation))

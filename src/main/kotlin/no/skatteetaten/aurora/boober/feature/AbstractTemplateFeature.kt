@@ -73,7 +73,7 @@ abstract class AbstractTemplateFeature : Feature {
         val templateJson = try {
             findTemplate(adc, cmd)
         } catch (e: Exception) {
-            return listOf(AuroraDeploymentSpecValidationException("Could not find template", e))
+            return listOf(e)
         }
 
         val errorMessages = validateTemplateParameters(templateJson, adc.getParameters().filterNullValues(), findParametersFromAuroraConfig(adc))

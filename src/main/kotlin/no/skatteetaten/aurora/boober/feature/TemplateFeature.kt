@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import org.springframework.stereotype.Service
 
@@ -30,6 +31,11 @@ class TemplateFeature(val openShiftClient: OpenShiftClient) : AbstractTemplateFe
     }
 
     override fun findTemplate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): JsonNode {
-        return openShiftClient.getTemplate(adc["template"])
+        val templateName: String = adc["template"]
+        return try {
+            openShiftClient.getTemplate(templateName)
+        } catch (e: Exception) {
+            throw AuroraDeploymentSpecValidationException("Could not find template=$templateName")
+        }
     }
 }

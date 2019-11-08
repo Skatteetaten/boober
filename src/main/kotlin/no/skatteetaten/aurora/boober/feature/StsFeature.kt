@@ -17,7 +17,6 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.Paths.secretsPath
 import no.skatteetaten.aurora.boober.model.addVolumesAndMounts
-import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
 import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
@@ -48,7 +47,6 @@ private val logger = KotlinLogging.logger { }
 @Service
 class StsDisabledFeature : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-        logger.info("STS_DISABLED")
         return setOf(
             AuroraConfigFieldHandler(
                 "certificate",
@@ -78,7 +76,6 @@ class StsDisabledFeature : Feature {
 @ConditionalOnProperty("integrations.skap.url")
 class StsFeature(val sts: StsProvisioner) : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-        logger.info("STS_ENABLED")
         return setOf(
             AuroraConfigFieldHandler(
                 "certificate",
@@ -88,20 +85,6 @@ class StsFeature(val sts: StsProvisioner) : Feature {
             AuroraConfigFieldHandler("certificate/commonName"),
             header.groupIdHandler
         )
-    }
-
-    override fun validate(
-        adc: AuroraDeploymentSpec,
-        fullValidation: Boolean,
-        cmd: AuroraContextCommand
-    ): List<Exception> {
-
-        val template = adc.type == TemplateType.localTemplate || adc.type == TemplateType.template
-        val groupIdNullOrEmpty = adc.getOrNull<String>("groupId").isNullOrEmpty()
-        if (template && adc.isSimplifiedAndEnabled("certificate") && groupIdNullOrEmpty) {
-            return listOf(AuroraDeploymentSpecValidationException("groupId is required for type=template/localtemplate if certificate/commonName is not set"))
-        }
-        return emptyList()
     }
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {

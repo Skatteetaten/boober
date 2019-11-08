@@ -143,7 +143,7 @@ class MountFeature(
     ): List<Exception> {
         val mounts = getMounts(adc, cmd)
         val errors = validateConfigMapMountHasContent(mounts, adc)
-            .addIfNotNull(validatePVCMounts(mounts))
+            // .addIfNotNull(validatePVCMounts(mounts))
             .addIfNotNull(validateExistinAndSecretVault(mounts))
         if (!fullValidation || adc.cluster != cluster) {
             return errors
@@ -158,6 +158,8 @@ class MountFeature(
         }
     }
 
+    /*
+      TODO: Uncomment this once config is updated
     private fun validatePVCMounts(
         mounts: List<Mount>
     ): List<AuroraDeploymentSpecValidationException>? {
@@ -165,6 +167,7 @@ class MountFeature(
             AuroraDeploymentSpecValidationException("PVC mount=${it.volumeName} must have exist set. We do not support generating mounts for now")
         }
     }
+     */
 
     fun validateConfigMapMountHasContent(
         mounts: List<Mount>,

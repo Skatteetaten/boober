@@ -54,7 +54,8 @@ class TemplateFeatureTest : AbstractFeatureTest() {
             "template" : "atomhopper"
             }"""
             )
-        }.singleApplicationError("Could not find template")
+        }.singleApplicationError("Could not find template=atomhopper")
+        // TODO: Better error message, tell what template is missing
     }
 
     @Test

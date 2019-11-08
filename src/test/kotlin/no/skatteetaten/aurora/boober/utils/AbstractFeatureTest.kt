@@ -241,7 +241,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         adr: ApplicationDeploymentRef,
         vararg file: Pair<String, String>
     ): AuroraDeploymentContext {
-        val service = AuroraDeploymentContextService(featuers = listOf(feature))
+        val service = AuroraDeploymentContextService(features = listOf(feature))
         val auroraConfig = createAuroraConfig(file.toMap())
 
         val deployCommand = AuroraContextCommand(
@@ -261,7 +261,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         fullValidation: Boolean = true,
         files: List<AuroraConfigFile> = emptyList()
     ): AuroraDeploymentContext {
-        val service = AuroraDeploymentContextService(featuers = listOf(feature))
+        val service = AuroraDeploymentContextService(features = listOf(feature))
         val auroraConfig =
             createAuroraConfig(config.addIfNotNull("utv/simple.json" to app), files)
 

@@ -17,7 +17,7 @@ private val logger = KotlinLogging.logger {}
 
 @Service
 class AuroraDeploymentContextService(
-    val featuers: List<Feature>
+    val features: List<Feature>
 ) {
 
     fun createValidatedAuroraDeploymentContexts(
@@ -73,7 +73,7 @@ class AuroraDeploymentContextService(
             fields = headerSpec.fields
         ).validate(false)
 
-        val activeFeatures = featuers.filter { it.enable(headerSpec) }
+        val activeFeatures = features.filter { it.enable(headerSpec) }
 
         val featureHandlers: Map<Feature, Set<AuroraConfigFieldHandler>> = activeFeatures.associateWith {
             it.handlers(headerSpec, deployCommand) + headerHandlers
