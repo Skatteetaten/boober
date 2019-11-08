@@ -13,6 +13,8 @@ import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
 import java.io.ByteArrayOutputStream
 import java.util.Properties
+import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.model.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
@@ -34,6 +36,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisio
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResult
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaRequestDetails
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaUser
+import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
@@ -42,27 +45,33 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 
+private val logger = KotlinLogging.logger { }
+
+@ConditionalOnPropertyMissingOrEmpty("integrations.dbh.url")
+@Service
+class DatabaseDisabledFeature(
+    @Value("\${openshift.cluster}") cluster: String
+) : DatabaseFeatureTemplate(cluster) {
+
+    override fun validate(
+        adc: AuroraDeploymentSpec,
+        fullValidation: Boolean,
+        cmd: AuroraContextCommand
+    ): List<Exception> {
+        val databases = findDatabases(adc, cmd)
+        if (databases.isNotEmpty()) {
+            return listOf(AuroraConfigException("Databases are not supported in this cluster"))
+        }
+        return emptyList()
+    }
+}
+
 @Service
 @ConditionalOnProperty("integrations.dbh.url")
 class DatabaseFeature(
     val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
-    @Value("\${openshift.cluster}") val cluster: String
-) : Feature {
-    val databaseDefaultsKey = "databaseDefaults"
-
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-        val dbHandlers = findDbHandlers(cmd.applicationFiles)
-
-        val dbDefaultsHandlers = findDbDefaultHandlers(cmd.applicationFiles)
-
-        return (dbDefaultsHandlers + dbHandlers + listOf(
-            AuroraConfigFieldHandler(
-                "database",
-                defaultValue = false,
-                canBeSimplifiedConfig = true
-            )
-        )).toSet()
-    }
+    @Value("\${openshift.cluster}") cluster: String
+) : DatabaseFeatureTemplate(cluster) {
 
     override fun validate(
         adc: AuroraDeploymentSpec,
@@ -173,8 +182,27 @@ class DatabaseFeature(
             }
         }
     }
+}
 
-    private fun findDatabases(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): List<Database> {
+abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
+
+    val databaseDefaultsKey = "databaseDefaults"
+
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
+        val dbHandlers = findDbHandlers(cmd.applicationFiles)
+
+        val dbDefaultsHandlers = findDbDefaultHandlers(cmd.applicationFiles)
+
+        return (dbDefaultsHandlers + dbHandlers + listOf(
+            AuroraConfigFieldHandler(
+                "database",
+                defaultValue = false,
+                canBeSimplifiedConfig = true
+            )
+        )).toSet()
+    }
+
+    fun findDatabases(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): List<Database> {
         val defaultFlavor: DatabaseFlavor = adc["$databaseDefaultsKey/flavor"]
         val defaultInstance = findInstance(adc, cmd, "$databaseDefaultsKey/instance", defaultFlavor.defaultFallback)
             ?: DatabaseInstance(fallback = defaultFlavor.defaultFallback)

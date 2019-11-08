@@ -9,6 +9,8 @@ import io.fabric8.kubernetes.api.model.OwnerReference
 import io.fabric8.kubernetes.api.model.Secret
 import java.io.ByteArrayOutputStream
 import java.util.Properties
+import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.model.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -18,6 +20,7 @@ import no.skatteetaten.aurora.boober.model.addVolumesAndMounts
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
+import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.apache.commons.codec.binary.Base64
@@ -39,18 +42,51 @@ val AuroraDeploymentSpec.certificateCommonName: String?
         return "$groupId.${this.name}"
     }
 
+private val logger = KotlinLogging.logger { }
+
+@ConditionalOnPropertyMissingOrEmpty("integrations.skap.url")
+@Service
+class StsDisabledFeature : Feature {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
+        logger.info("STS_DISABLED")
+        return setOf(
+            AuroraConfigFieldHandler(
+                "certificate",
+                defaultValue = false,
+                canBeSimplifiedConfig = true
+            ),
+            AuroraConfigFieldHandler("certificate/commonName"),
+            header.groupIdHandler
+        )
+    }
+
+    override fun validate(
+        adc: AuroraDeploymentSpec,
+        fullValidation: Boolean,
+        cmd: AuroraContextCommand
+    ): List<Exception> {
+        adc.certificateCommonName?.let {
+            if (it.isNotEmpty()) {
+                return listOf(AuroraConfigException("STS is not supported."))
+            }
+        }
+        return emptyList()
+    }
+}
+
 @Service
 @ConditionalOnProperty("integrations.skap.url")
 class StsFeature(val sts: StsProvisioner) : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
+        logger.info("STS_ENABLED")
         return setOf(
-                AuroraConfigFieldHandler(
-                        "certificate",
-                        defaultValue = false,
-                        canBeSimplifiedConfig = true
-                ),
-                AuroraConfigFieldHandler("certificate/commonName"),
-                header.groupIdHandler
+            AuroraConfigFieldHandler(
+                "certificate",
+                defaultValue = false,
+                canBeSimplifiedConfig = true
+            ),
+            AuroraConfigFieldHandler("certificate/commonName"),
+            header.groupIdHandler
         )
     }
 
@@ -81,10 +117,10 @@ class StsFeature(val sts: StsProvisioner) : Feature {
         adc.certificateCommonName?.let {
             val baseUrl = "$secretsPath/${adc.name}-cert"
             val stsVars = mapOf(
-                    "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
-                    "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
-                    "STS_KEYSTORE_DESCRIPTOR" to "$baseUrl/descriptor.properties",
-                    "VOLUME_${adc.name}_CERT".toUpperCase() to baseUrl
+                "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
+                "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
+                "STS_KEYSTORE_DESCRIPTOR" to "$baseUrl/descriptor.properties",
+                "VOLUME_${adc.name}_CERT".toUpperCase() to baseUrl
             ).toEnvVars()
 
             val mount = newVolumeMount {
@@ -121,24 +157,24 @@ object StsSecretGenerator {
         return newSecret {
             metadata {
                 labels =
-                        mapOf(StsSecretGenerator.RENEW_AFTER_LABEL to stsProvisionResults.renewAt.epochSecond.toString()).normalizeLabels()
+                    mapOf(StsSecretGenerator.RENEW_AFTER_LABEL to stsProvisionResults.renewAt.epochSecond.toString()).normalizeLabels()
                 name = secretName
                 namespace = secretNamespace
                 annotations = mapOf(
-                        StsSecretGenerator.APP_ANNOTATION to appName,
-                        StsSecretGenerator.COMMON_NAME_ANNOTATION to stsProvisionResults.cn
+                    StsSecretGenerator.APP_ANNOTATION to appName,
+                    StsSecretGenerator.COMMON_NAME_ANNOTATION to stsProvisionResults.cn
                 )
             }
             data = mapOf(
-                    "privatekey.key" to cert.key,
-                    "keystore.jks" to cert.keystore,
-                    "certificate.crt" to cert.crt,
-                    "descriptor.properties" to createDescriptorFile(
-                            jksPath = baseUrl,
-                            alias = "ca",
-                            storePassword = cert.storePassword,
-                            keyPassword = cert.keyPassword
-                    )
+                "privatekey.key" to cert.key,
+                "keystore.jks" to cert.keystore,
+                "certificate.crt" to cert.crt,
+                "descriptor.properties" to createDescriptorFile(
+                    jksPath = baseUrl,
+                    alias = "ca",
+                    storePassword = cert.storePassword,
+                    keyPassword = cert.keyPassword
+                )
             ).mapValues { Base64.encodeBase64String(it.value) }
         }
     }

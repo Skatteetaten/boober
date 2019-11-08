@@ -76,7 +76,7 @@ abstract class AbstractTemplateFeature : Feature {
             return listOf(AuroraDeploymentSpecValidationException("Could not find template", e))
         }
 
-        val errorMessages = validateTemplateParameters(templateJson, findParameters(adc))
+        val errorMessages = validateTemplateParameters(templateJson, adc.getParameters().filterNullValues(), findParametersFromAuroraConfig(adc))
         if (errorMessages.isNotEmpty()) {
             val message = errorMessages.joinToString(" ").trim()
             return listOf(AuroraDeploymentSpecValidationException(message))
@@ -87,7 +87,7 @@ abstract class AbstractTemplateFeature : Feature {
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
-        val parameters = findParameters(adc)
+        val parameters = findParametersFromAuroraConfig(adc) + adc.getParameters().filterNullValues()
 
         val templateJson = findTemplate(adc, cmd)
         val templateResult = processTemplate(templateJson, parameters)
@@ -99,14 +99,13 @@ abstract class AbstractTemplateFeature : Feature {
         }.toSet()
     }
 
-    fun findParameters(adc: AuroraDeploymentSpec): Map<String, String> {
-        val parameters = mapOf(
+    fun findParametersFromAuroraConfig(adc: AuroraDeploymentSpec): Map<String, String> {
+        return mapOf(
             "SPLUNK_INDEX" to adc.splunkIndex,
             "VERSION" to adc.getOrNull<String>("version"),
             "REPLICAS" to adc.getOrNull<String>("replicas"),
             "NAME" to adc.name
-        ) + adc.getParameters()
-        return parameters.filterNullValues()
+        ).filterNullValues()
     }
 
     /*
@@ -129,7 +128,11 @@ abstract class AbstractTemplateFeature : Feature {
         return result.at("/objects").toSet()
     }
 
-    fun validateTemplateParameters(templateJson: JsonNode, parameters: Map<String, String>): List<String> {
+    fun validateTemplateParameters(
+        templateJson: JsonNode,
+        parameters: Map<String, String>,
+        optionalParameters: Map<String, String>
+    ): List<String> {
 
         val templateParameters = templateJson[PARAMETERS_ATTRIBUTE] as ArrayNode
 
@@ -147,6 +150,8 @@ abstract class AbstractTemplateFeature : Feature {
             !populatedParameters.contains(it)
         }.filter {
             !parameters.containsKey(it)
+        }.filter {
+            !optionalParameters.containsKey(it)
         }
 
         val notMappedParameterNames = parameters.keys - templateParameterNames

@@ -111,10 +111,6 @@
                 "capabilities": {},
                 "env": [
                   {
-                    "name": "SPLUNK_INDEX",
-                    "value": "${SPLUNK_INDEX}"
-                  },
-                  {
                     "name": "POD_NAME",
                     "valueFrom": {
                       "fieldRef": {
@@ -243,10 +239,6 @@
       "name": "SCHEME",
       "description": "Scheme used in links in the feed. http/https",
       "value": "http"
-    },
-    {
-      "name": "SPLUNK_INDEX",
-      "description": "Hvilken index i splunk skal brukes? Sett til tom for å ikke logge til splunk. Dette er standard."
     },
     {
       "name": "AFFILIATION",

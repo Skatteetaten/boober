@@ -59,10 +59,6 @@
           {
             "env": [
               {
-                "name": "SPLUNK_INDEX",
-                "value": "${SPLUNK_INDEX}"
-              },
-              {
                 "name": "POD_NAME",
                 "valueFrom": {
                   "fieldRef": {

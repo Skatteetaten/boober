@@ -47,6 +47,7 @@ class LocalTemplateFeatureTest : AbstractFeatureTest() {
             """{
             "type" : "localTemplate", 
             "templateFile" : "templates/atomhopper.json",
+            "splunkIndex" : "foo",
             "parameters" : {
               "FEED_NAME" : "simple", 
               "DB_NAME" : "simple", 
