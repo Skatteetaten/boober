@@ -38,7 +38,7 @@ class OpenShiftDeployer(
     @Value("\${integrations.docker.registry}") val dockerRegistry: String,
     @Value("\${integrations.docker.releases}") val releaseDockerRegistry: String
 ) {
-    fun performDeployCommaands(deployCommands: List<AuroraDeployCommand>): Map<String, List<AuroraDeployResult>> {
+    fun performDeployCommands(deployCommands: List<AuroraDeployCommand>): Map<String, List<AuroraDeployResult>> {
 
         val envDeploys: Map<String, List<AuroraDeployCommand>> = deployCommands.groupBy { it.context.spec.namespace }
 

@@ -55,7 +55,7 @@ class DeployFacade(
         // Ingen
         val deployCommands = validContexts.createDeployCommand(deploy)
 
-        val deployResults = openShiftDeployer.performDeployCommaands(deployCommands)
+        val deployResults = openShiftDeployer.performDeployCommands(deployCommands)
 
         val deployer = userDetailsProvider.getAuthenticatedUser().let {
             Deployer(it.fullName ?: it.username, "${it.username}@skatteetaten.no")

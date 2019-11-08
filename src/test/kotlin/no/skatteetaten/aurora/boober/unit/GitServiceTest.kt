@@ -40,6 +40,7 @@ class GitServiceTest : ResourceLoader() {
         every { userDetailsProvider.getAuthenticatedUser() } returns User("aurora", "token", "Aurora Test User")
     }
 
+    // TODO: do we have to use a zipfile here? We cannot commit to the repo with AuroraConfig and check it out afterwards?
     @Test
     fun `Verify checking out repository with refName`() {
         val TEST_REPO_NAME = "boober-test"

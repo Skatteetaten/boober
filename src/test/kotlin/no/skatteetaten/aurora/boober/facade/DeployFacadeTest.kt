@@ -4,9 +4,15 @@ import assertk.assertThat
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.messageContains
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
+import com.fkorotkov.openshift.metadata
+import com.fkorotkov.openshift.newProject
+import com.fkorotkov.openshift.status
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.utils.getResultFiles
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import okhttp3.mockwebserver.MockResponse
 import org.junit.jupiter.api.BeforeEach
@@ -18,6 +24,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.annotation.DirtiesContext
+
+private val logger = KotlinLogging.logger { }
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.NONE,
@@ -35,8 +43,100 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
         preprateTestVault("foo", mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray()))
     }
 
+    @Test
+    fun `deploy application when another exist`() {
+
+        val adr = ApplicationDeploymentRef("utv", "easy")
+        val resultFiles = adr.getResultFiles()
+
+        skapMock {
+            rule {
+                MockResponse()
+                    .setBody(loadBufferResource("keystore.jks"))
+                    .setHeader("key-password", "ca")
+                    .setHeader("store-password", "")
+            }
+        }
+
+        dbhMock {
+            rule {
+                MockResponse()
+                    .setBody(loadBufferResource("dbhResponse.json"))
+                    .setResponseCode(200)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
+            }
+        }
+
+        openShiftMock {
+
+            rule({ path?.endsWith("/groups") }) {
+                mockJsonFromFile("groups.json")
+            }
+
+            // Should it be able to reuse rules?
+            rule(mockOpenShiftUsers)
+
+            rule({ method == "GET" && path!!.endsWith("aurora-token") || path!!.endsWith("pvc") }) {
+                MockResponse().setResponseCode(200)
+            }
+
+            // This is a empty environment so no resources exist
+            rule({ method == "GET" }) {
+                path?.let { it ->
+                    if (it.endsWith("/projects/paas-utv")) {
+                        json(newProject {
+                            metadata {
+                                name = "paas-utv"
+                                labels = mapOf("affiliation" to "paas")
+                            }
+                            status {
+                                phase = "Active"
+                            }
+                        })
+                    } else if (it.endsWith("/applicationdeployments/easy")) {
+                        val ad = resultFiles["applicationdeployment/easy"]!!
+                        (ad.at("/metadata") as ObjectNode).set("uid", TextNode("old-124"))
+                        json(ad)
+                    } else {
+                        val fileName = it.split("/").takeLast(2).joinToString("/").replace("s/", "/")
+                        resultFiles[fileName]?.let { name ->
+                            json(name)
+                        } ?: MockResponse().setResponseCode(200)
+                    }
+                }
+            }
+
+            // need to add uid to applicationDeployment for owner reference
+            rule({ path?.endsWith("/applicationdeployments/easy") }) {
+                replayRequestJsonWithModification(
+                    rootPath = "/metadata",
+                    key = "uid",
+                    newValue = TextNode("123-123")
+                )
+            }
+
+            // All post/put/delete request just send the result back and assume OK.
+            rule {
+                MockResponse().setResponseCode(200)
+                    .setBody(body)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
+            }
+        }
+
+        bitbucketMock {
+            rule {
+                MockResponse().setResponseCode(200).setBody("OK!")
+            }
+        }
+
+        val result = facade.executeDeploy(auroraConfigRef, listOf(adr))
+
+        assertThat(result.first().auroraDeploymentSpecInternal)
+        assertThat(result).auroraDeployResultMatchesFiles()
+    }
+
     @ParameterizedTest
-    @CsvSource(value = ["simple", "easy", "web", "ah", "complex"])
+    @CsvSource(value = ["simple", "web", "ah", "complex"])
     fun `deploy application`(app: String) {
 
         skapMock {

@@ -63,6 +63,7 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
     ): MockResponse {
         val ad: JsonNode = jacksonObjectMapper().readTree(this.bodyAsString())
         (ad.at(rootPath) as ObjectNode).set(key, newValue)
+
         return MockResponse()
             .setResponseCode(200)
             .setBody(jacksonObjectMapper().writeValueAsString(ad))
