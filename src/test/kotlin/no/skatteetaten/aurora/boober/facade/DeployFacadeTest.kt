@@ -1,10 +1,16 @@
 package no.skatteetaten.aurora.boober.facade
 
 import assertk.assertThat
+import assertk.assertions.isFailure
+import assertk.assertions.isInstanceOf
+import assertk.assertions.messageContains
 import com.fasterxml.jackson.databind.node.TextNode
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import okhttp3.mockwebserver.MockResponse
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.beans.factory.annotation.Autowired
@@ -101,5 +107,68 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
         assertThat(result.first().auroraDeploymentSpecInternal)
         // TODO: Should we assert on spec here aswell?
         assertThat(result).auroraDeployResultMatchesFiles()
+    }
+
+    @Test
+    fun `fail if no application deployment ref`() {
+        assertThat { facade.executeDeploy(auroraConfigRef, emptyList()) }.isFailure()
+            .isInstanceOf(IllegalArgumentException::class.java)
+    }
+
+    @Test
+    fun `fail deploy of application in different cluster`() {
+
+        openShiftMock {
+
+            rule({ path?.endsWith("/groups") }) {
+                mockJsonFromFile("groups.json")
+            }
+
+            // Should it be able to reuse rules?
+            rule(mockOpenShiftUsers)
+
+        }
+
+        assertThat {
+            facade.executeDeploy(
+                auroraConfigRef, listOf(ApplicationDeploymentRef("utv", "simple")),
+                overrides = listOf(
+                    AuroraConfigFile(
+                        "utv/about.json",
+                        contents = """{ "cluster" : "test" }""",
+                        override = true
+                    )
+                )
+            )
+        }.singleApplicationError("Not valid in this cluster")
+    }
+
+    @Test
+    fun `fail deploy of application if unused override file`() {
+
+        openShiftMock {
+
+            rule({ path?.endsWith("/groups") }) {
+                mockJsonFromFile("groups.json")
+            }
+
+            // Should it be able to reuse rules?
+            rule(mockOpenShiftUsers)
+
+        }
+
+        assertThat {
+            facade.executeDeploy(
+                auroraConfigRef, listOf(ApplicationDeploymentRef("utv", "simple")),
+                overrides = listOf(
+                    AuroraConfigFile(
+                        "utv/foobar.json",
+                        contents = """{ "version" : "test" }""",
+                        override = true
+                    )
+                )
+            )
+        }.isFailure()
+            .messageContains("Overrides files 'utv/foobar.json' does not apply to any deploymentReference (utv/simple)")
     }
 }

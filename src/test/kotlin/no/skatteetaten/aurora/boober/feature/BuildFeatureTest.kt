@@ -6,6 +6,7 @@ import assertk.assertions.isNull
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
+import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import org.apache.commons.lang3.RandomStringUtils
 import org.junit.jupiter.api.Test
 

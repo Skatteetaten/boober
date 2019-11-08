@@ -25,6 +25,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaRequestD
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaUser
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import org.junit.jupiter.api.Test
 
 private val logger = KotlinLogging.logger { }

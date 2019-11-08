@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigField
@@ -69,7 +68,6 @@ fun stubDeployResult(deployId: String, success: Boolean = true): List<AuroraDepl
             deployCommand = AuroraDeployCommand(
                 headerResources = emptySet(),
                 resources = emptySet(),
-                user = User("hero", "token"),
                 deployId = deployId,
                 shouldDeploy = true,
                 context = stubAuroraDeploymentContext()

@@ -1,8 +1,13 @@
 package no.skatteetaten.aurora.boober.model
 
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.service.ContextErrors
 import no.skatteetaten.aurora.boober.service.ExceptionList
+import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
+import no.skatteetaten.aurora.boober.utils.UUIDGenerator
+
+private val logger = KotlinLogging.logger { }
 
 fun AuroraDeploymentContext.validate(fullValidation: Boolean): Map<Feature, List<java.lang.Exception>> {
     return features.mapValues {
@@ -16,6 +21,47 @@ fun AuroraDeploymentContext.validate(fullValidation: Boolean): Map<Feature, List
             }
         }
     }
+}
+
+// FEATURE: Should this be in model Or in service somewhere?
+// FEATURE: Unit test errors here
+fun List<AuroraDeploymentContext>.createDeployCommand(deploy: Boolean): List<AuroraDeployCommand> {
+    val result: List<Pair<List<ContextErrors>, AuroraDeployCommand?>> = this.map { context ->
+        val (errors, resourceResults) = context.createResources()
+        when {
+            errors.isNotEmpty() -> errors to null
+            resourceResults == null -> listOf(
+                ContextErrors(
+                    context.cmd,
+                    listOf(RuntimeException("No resources generated"))
+                )
+            ) to null
+            else -> {
+
+                val (header, normal) = resourceResults.partition { it.header }
+                emptyList<ContextErrors>() to AuroraDeployCommand(
+                    headerResources = header.toSet(),
+                    resources = normal.toSet(),
+                    context = context,
+                    deployId = UUIDGenerator.deployId,
+                    shouldDeploy = deploy
+                )
+            }
+        }
+    }
+
+    val resourceErrors = result.flatMap { it.first }
+    if (resourceErrors.isNotEmpty()) {
+
+        val errorMessages = resourceErrors.flatMap { err ->
+            err.errors.map { it.localizedMessage }
+        }
+        logger.debug("Validation errors: ${errorMessages.joinToString("\n", prefix = "\n")}")
+
+        throw MultiApplicationValidationException(resourceErrors)
+    }
+
+    return result.mapNotNull { it.second }
 }
 
 fun AuroraDeploymentContext.createResources(): Pair<List<ContextErrors>, Set<AuroraResource>?> {
