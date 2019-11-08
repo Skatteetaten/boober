@@ -79,6 +79,7 @@ class AuroraConfigControllerV1(
         return Response(items = auroraConfigFacade.findAuroraConfigFileNames(ref))
     }
 
+    // TODO: bruker litt mer tid en master, men ikke mye
     @PutMapping("/validate")
     fun validateAuroraConfig(
         @PathVariable name: String,

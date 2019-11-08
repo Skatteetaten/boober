@@ -83,15 +83,23 @@ fun AuroraDeploymentContext.createResources(): Pair<List<ContextErrors>, Set<Aur
     }
 
     val featureResources = eitherErrorsOrFeatures.mapNotNull { it.second }.flatten().toSet()
-    val uniqueNames = featureResources.map { "${it.resource.kind}/${it.resource.metadata.name}" }
+    val names = featureResources.map { "${it.resource.kind}/${it.resource.metadata.name}" }
 
-    val namesSet = uniqueNames.toSet()
-    val namesString = uniqueNames.joinToString(",")
-    if (namesSet.size != uniqueNames.size) {
+    val uniqueNames = names.toSet()
+
+    val duplicatedNames = uniqueNames.filter { uniqueName ->
+        names.count { uniqueName == it } != 1
+    }
+
+    // TODO: This failed Test this
+    if (duplicatedNames.isNotEmpty()) {
+        val namesString = duplicatedNames.joinToString(", ").toLowerCase()
         val error: List<ContextErrors> =
-            listOf(ContextErrors(this.cmd, listOf(RuntimeException("Resource with duplicate kind/name=$namesString"))))
+            listOf(ContextErrors(this.cmd, listOf(RuntimeException("The following resources are generated more then once $namesString"))))
         return error to featureResources
     }
+
+    // TODO: Message:     Resource with duplicate kind/name=Service/activemq-3-native,Service/activemq-3-admin,Route/activemq-3,ImageStream/amq-classic-single,DeploymentConfig/activemq-3,Secret/activemq-3-cert,Route/activemq-3,ApplicationDeployment/activemq-3,ProjectRequest/paas-m89870,Namespace/paas-m89870,RoleBinding/admin
 
     // Mutation!
     val modifyErrors = this.features.mapNotNull {

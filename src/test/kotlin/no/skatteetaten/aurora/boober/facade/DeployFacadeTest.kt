@@ -273,4 +273,40 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
         }.isFailure()
             .messageContains("Overrides files 'utv/foobar.json' does not apply to any deploymentReference (utv/simple)")
     }
+
+    @Test
+    fun `fail deploy if there are duplicate resources generated`() {
+
+        dbhMock {
+            rule {
+                MockResponse()
+                    .setBody(loadBufferResource("dbhResponse.json"))
+                    .setResponseCode(200)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
+            }
+        }
+
+        openShiftMock {
+
+            rule({ path?.endsWith("/groups") }) {
+                mockJsonFromFile("groups.json")
+            }
+
+            // Should it be able to reuse rules?
+            rule(mockOpenShiftUsers)
+        }
+
+        assertThat {
+            facade.executeDeploy(
+                auroraConfigRef, listOf(ApplicationDeploymentRef("utv", "ah")),
+                overrides = listOf(
+                    AuroraConfigFile(
+                        "utv/ah.json",
+                        contents = """{ "route" : "true" }""",
+                        override = true
+                    )
+                )
+            )
+        }.singleApplicationError("The following resources are generated more then once route/ah")
+    }
 }
