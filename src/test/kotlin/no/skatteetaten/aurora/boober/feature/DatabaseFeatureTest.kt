@@ -30,6 +30,8 @@ import org.junit.jupiter.api.Test
 
 private val logger = KotlinLogging.logger { }
 
+// TODO: how does reading auroraConfig in relay where DBH is not enabled work now? Test and assert
+
 // TODO: Should teh provisionSchemas mock be better here?
 class DatabaseFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
