@@ -16,7 +16,7 @@ import no.skatteetaten.aurora.boober.service.DeployLogService
 import no.skatteetaten.aurora.boober.service.Deployer
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceCreator
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftDeployer
 import no.skatteetaten.aurora.boober.utils.parallelMap
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -28,7 +28,7 @@ private val logger = KotlinLogging.logger {}
 class DeployFacade(
     val auroraConfigService: AuroraConfigService,
     val auroraDeploymentContextService: AuroraDeploymentContextService,
-    val openShiftResourceCreator: OpenShiftResourceCreator,
+    val openShiftDeployer: OpenShiftDeployer,
     val userDetailsProvider: UserDetailsProvider,
     val deployLogService: DeployLogService,
     @Value("\${openshift.cluster}") val cluster: String
@@ -55,7 +55,7 @@ class DeployFacade(
         //Ingen
         val deployCommands = validContexts.createDeployCommand(deploy)
 
-        val deployResults = openShiftResourceCreator.performDeployCommaands(deployCommands)
+        val deployResults = openShiftDeployer.performDeployCommaands(deployCommands)
 
         val deployer = userDetailsProvider.getAuthenticatedUser().let {
             Deployer(it.fullName ?: it.username, "${it.username}@skatteetaten.no")

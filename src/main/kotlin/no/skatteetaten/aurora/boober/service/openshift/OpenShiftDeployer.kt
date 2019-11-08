@@ -29,7 +29,7 @@ import org.springframework.stereotype.Service
 private val logger = KotlinLogging.logger { }
 
 @Service
-class OpenShiftResourceCreator(
+class OpenShiftDeployer(
     val openShiftCommandBuilder: OpenShiftCommandService,
     val openShiftClient: OpenShiftClient,
     val cantusService: CantusService,
@@ -43,7 +43,6 @@ class OpenShiftResourceCreator(
         val envDeploys: Map<String, List<AuroraDeployCommand>> = deployCommands.groupBy { it.context.spec.namespace }
 
         return envDeploys.mapValues { (ns, commands) ->
-            //userDetails, openShiftCommand, OpenShiftClient, den første kan trekkes ut og sendes inn som param
             val env = prepareDeployEnvironment(ns, commands.first().headerResources)
 
             if (!env.success) {
@@ -58,7 +57,6 @@ class OpenShiftResourceCreator(
                 }
             } else {
                 commands.map {
-                    //userDetails, openShiftCommand, OpenShiftClient
                     val result = deployFromSpec(it, env)
                     result.copy(openShiftResponses = env.openShiftResponses.addIfNotNull(result.openShiftResponses))
                 }

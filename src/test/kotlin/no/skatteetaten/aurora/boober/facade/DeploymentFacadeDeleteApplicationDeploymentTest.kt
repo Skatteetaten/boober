@@ -25,6 +25,7 @@ class DeploymentFacadeDeleteApplicationDeploymentTest : AbstractSpringBootTest()
     lateinit var facade: DeploymentFacade
 
     @Test
+    @DirtiesContext
     fun `should delete application`() {
 
         openShiftMock {
@@ -49,6 +50,7 @@ class DeploymentFacadeDeleteApplicationDeploymentTest : AbstractSpringBootTest()
     }
 
     @Test
+    @DirtiesContext
     fun `should handle bad request when deleting application`() {
 
         openShiftMock {
@@ -72,6 +74,7 @@ class DeploymentFacadeDeleteApplicationDeploymentTest : AbstractSpringBootTest()
     }
 
     @Test
+    @DirtiesContext
     fun `should handle error when deleting application`() {
 
         openShiftMock {
