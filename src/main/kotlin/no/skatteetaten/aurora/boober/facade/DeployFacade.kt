@@ -20,6 +20,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftDeployer
 import no.skatteetaten.aurora.boober.utils.parallelMap
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import org.springframework.util.StopWatch
 
 private val logger = KotlinLogging.logger {}
 
@@ -45,19 +46,32 @@ class DeployFacade(
         if (applicationDeploymentRefs.isEmpty()) {
             throw IllegalArgumentException("Specify applicationDeploymentRef")
         }
+        val watch = StopWatch("deploy")
 
+        watch.start("contextCommand")
         val commands = createContextCommands(ref, applicationDeploymentRefs, overrides)
+        watch.stop()
 
+        watch.start("ADC")
         val validContexts = createAuroraDeploymentContexts(commands)
+        watch.stop()
 
+        watch.start("deployCommand")
         val deployCommands = validContexts.createDeployCommand(deploy)
+        watch.stop()
 
+        watch.start("deploy")
         val deployResults = openShiftDeployer.performDeployCommands(deployCommands)
+        watch.stop()
 
+        watch.start("store result")
         val deployer = userDetailsProvider.getAuthenticatedUser().let {
             Deployer(it.fullName ?: it.username, "${it.username}@skatteetaten.no")
         }
-        return deployLogService.markRelease(deployResults.flatMap { it.value }, deployer)
+        return deployLogService.markRelease(deployResults.flatMap { it.value }, deployer).also {
+            watch.stop()
+            logger.info("Deploy: ${watch.prettyPrint()}")
+        }
     }
 
     private fun createContextCommands(
