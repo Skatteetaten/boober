@@ -38,7 +38,7 @@ class LocalTemplateFeatureTest : AbstractFeatureTest() {
             "templateFile" : "templates/atomhopper.json"
             }""", files = templateFile
             )
-        }.singleApplicationError("Required template parameters [FEED_NAME, DB_NAME, DOMAIN_NAME] not set")
+        }.singleApplicationError("Required template parameters [FEED_NAME, DB_NAME] not set")
     }
 
     @Test
@@ -50,8 +50,7 @@ class LocalTemplateFeatureTest : AbstractFeatureTest() {
             "splunkIndex" : "foo",
             "parameters" : {
               "FEED_NAME" : "simple", 
-              "DB_NAME" : "simple", 
-              "DOMAIN_NAME" : "simple"
+              "DB_NAME" : "simple"
              }
            }""", files = templateFile,
             resource = createEmptyApplicationDeployment(),

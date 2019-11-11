@@ -39,7 +39,7 @@ class TemplateFeatureTest : AbstractFeatureTest() {
             "template" : "atomhopper"
             }"""
             )
-        }.singleApplicationError("Required template parameters [FEED_NAME, DB_NAME, DOMAIN_NAME] not set")
+        }.singleApplicationError("Required template parameters [FEED_NAME, DB_NAME] not set")
     }
 
     @Test

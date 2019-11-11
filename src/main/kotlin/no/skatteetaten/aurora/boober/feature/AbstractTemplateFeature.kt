@@ -76,7 +76,11 @@ abstract class AbstractTemplateFeature : Feature {
             return listOf(e)
         }
 
-        val errorMessages = validateTemplateParameters(templateJson, adc.getParameters().filterNullValues(), findParametersFromAuroraConfig(adc))
+        val errorMessages = validateTemplateParameters(
+            templateJson,
+            adc.getParameters().filterNullValues(),
+            findParametersFromAuroraConfig(adc)
+        )
         if (errorMessages.isNotEmpty()) {
             val message = errorMessages.joinToString(" ").trim()
             return listOf(AuroraDeploymentSpecValidationException(message))
@@ -119,7 +123,11 @@ abstract class AbstractTemplateFeature : Feature {
         val parameters = templateJson.at("/parameters")
 
         val valueParameters: Map<String, String> =
-            parameters.filter { it["value"] != null }.associate { it["name"].asText() to it["value"].asText() }
+            parameters.associate {
+                val name: String = it["name"].asText()
+                val value: String = it["value"]?.asText() ?: ""
+                name to value
+            }
 
         val replacer: StringSubstitutor = StringSubstitutor(valueParameters + input, "\${", "}")
         val replacedText = replacer.replace(mapper.writeValueAsString(templateJson))

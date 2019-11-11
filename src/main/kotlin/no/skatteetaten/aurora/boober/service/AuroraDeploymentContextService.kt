@@ -10,8 +10,10 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.validate
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.parallelMap
 import org.apache.commons.text.StringSubstitutor
 import org.springframework.stereotype.Service
+import org.springframework.util.StopWatch
 
 private val logger = KotlinLogging.logger {}
 
@@ -25,8 +27,12 @@ class AuroraDeploymentContextService(
         resourceValidation: Boolean = true
     ): List<AuroraDeploymentContext> {
 
-        val result: List<Pair<AuroraDeploymentContext?, ContextErrors?>> = commands.map { cmd ->
+        val watch = StopWatch()
+
+        val result: List<Pair<AuroraDeploymentContext?, ContextErrors?>> = commands.parallelMap { cmd ->
             try {
+                watch.start(cmd.applicationDeploymentRef.toString())
+                logger.debug("Create ADC for app=${cmd.applicationDeploymentRef}")
                 val context = createAuroraDeploymentContext(cmd)
 
                 val errors = context.validate(resourceValidation).flatMap { it.value }
@@ -38,8 +44,11 @@ class AuroraDeploymentContextService(
                 }
             } catch (e: Throwable) {
                 null to ContextErrors(cmd, listOf(e))
+            } finally {
+                watch.stop()
             }
         }
+        logger.debug("Create ADC ${watch.prettyPrint()}")
 
         val errors = result.mapNotNull { it.second }
         if (errors.isNotEmpty()) {

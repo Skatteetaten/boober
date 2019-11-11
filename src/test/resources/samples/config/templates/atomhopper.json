@@ -232,8 +232,7 @@
     },
     {
       "name": "DOMAIN_NAME",
-      "description": "Domain name to appear in the links in the feed",
-      "required": true
+      "description": "Domain name to appear in the links in the feed"
     },
     {
       "name": "SCHEME",

@@ -9,7 +9,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OperationType
 data class ApplicationRef(val namespace: String, val name: String)
 
 data class ApplicationDeploymentRef(val environment: String, val application: String) {
-    // TODO: do we really need this here?
     override fun toString() = "$environment/$application"
 }
 
