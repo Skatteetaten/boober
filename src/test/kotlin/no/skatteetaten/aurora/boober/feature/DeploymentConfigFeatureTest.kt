@@ -13,6 +13,17 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
         get() = DeploymentConfigFeature()
 
     @Test
+    fun `template type should not have default resource requirements`() {
+        val spec = createAuroraDeploymentSpecForFeature(
+            """{
+           "type": "template"
+        }"""
+        )
+
+        assertThat(spec).auroraDeploymentSpecMatchesSpecFiles("template-spec")
+    }
+
+    @Test
     fun `modify dc and ad for default parameters`() {
 
         val (dcResource, adResource) = modifyResources(

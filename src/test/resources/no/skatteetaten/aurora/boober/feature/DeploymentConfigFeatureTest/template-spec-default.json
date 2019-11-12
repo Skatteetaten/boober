@@ -1,0 +1,76 @@
+{
+  "artifactId": {
+    "source": "fileName",
+    "value": "simple",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "simple"
+      }
+    ]
+  },
+  "groupId": {
+    "source": "utv/simple.json",
+    "value": "org.test",
+    "sources": [
+      {
+        "name": "utv/simple.json",
+        "value": "org.test"
+      }
+    ]
+  },
+  "version": {
+    "source": "utv/simple.json",
+    "value": "1",
+    "sources": [
+      {
+        "name": "utv/simple.json",
+        "value": "1"
+      }
+    ]
+  },
+  "builder": {
+    "name": {
+      "source": "default",
+      "value": "architect",
+      "sources": [
+        {
+          "name": "default",
+          "value": "architect"
+        }
+      ]
+    },
+    "version": {
+      "source": "default",
+      "value": "1",
+      "sources": [
+        {
+          "name": "default",
+          "value": "1"
+        }
+      ]
+    }
+  },
+  "baseImage": {
+    "name": {
+      "source": "default",
+      "value": "wingnut8",
+      "sources": [
+        {
+          "name": "default",
+          "value": "wingnut8"
+        }
+      ]
+    },
+    "version": {
+      "source": "default",
+      "value": 1,
+      "sources": [
+        {
+          "name": "default",
+          "value": 1
+        }
+      ]
+    }
+  }
+}

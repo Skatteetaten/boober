@@ -1,0 +1,5 @@
+{
+  artifactId: "simple"   // fileName
+  groupId:    "org.test" // utv/simple.json
+  version:    "1"        // utv/simple.json
+}

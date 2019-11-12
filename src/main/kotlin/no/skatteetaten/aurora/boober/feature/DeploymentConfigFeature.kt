@@ -22,8 +22,13 @@ import no.skatteetaten.aurora.boober.utils.filterNullValues
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.springframework.stereotype.Service
 
-fun AuroraDeploymentSpec.quantity(resource: String, classifier: String): Pair<String, Quantity> =
-    resource to QuantityBuilder().withAmount(this["resources/$resource/$classifier"]).build()
+fun AuroraDeploymentSpec.quantity(resource: String, classifier: String): Pair<String, Quantity?> {
+    val field = this.getOrNull<String>("resources/$resource/$classifier")
+
+    return resource to field?.let {
+        QuantityBuilder().withAmount(it).build()
+    }
+}
 
 val AuroraDeploymentSpec.splunkIndex: String? get() = this.getOrNull<String>("splunkIndex")
 
@@ -46,31 +51,34 @@ val AuroraDeploymentSpec.managementPath
 class DeploymentConfigFeature : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
+        val templateSpecificHeaders = if (header.type.completelyGenerated) {
+            setOf(
+                header.versionHandler,
+                AuroraConfigFieldHandler("resources/cpu/min", defaultValue = "10m"),
+                AuroraConfigFieldHandler("resources/cpu/max", defaultValue = "2000m"),
+                AuroraConfigFieldHandler("resources/memory/min", defaultValue = "128Mi"),
+                AuroraConfigFieldHandler("resources/memory/max", defaultValue = "512Mi")
+            )
+        } else {
+            setOf(
+                header.versionHandler,
+                AuroraConfigFieldHandler("resources/cpu/min"),
+                AuroraConfigFieldHandler("resources/cpu/max"),
+                AuroraConfigFieldHandler("resources/memory/min"),
+                AuroraConfigFieldHandler("resources/memory/max")
+            )
+        }
         return setOf(
-            AuroraConfigFieldHandler(
-                "management",
-                defaultValue = true,
-                canBeSimplifiedConfig = true
-            ),
+            AuroraConfigFieldHandler("management", defaultValue = true, canBeSimplifiedConfig = true),
             AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
             AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
             AuroraConfigFieldHandler("releaseTo"),
             AuroraConfigFieldHandler("alarm", defaultValue = true),
             AuroraConfigFieldHandler("pause", defaultValue = false),
-            AuroraConfigFieldHandler("resources/cpu/min", defaultValue = "10m"),
-            AuroraConfigFieldHandler("resources/cpu/max", defaultValue = "2000m"),
-            AuroraConfigFieldHandler(
-                "resources/memory/min",
-                defaultValue = "128Mi"
-            ),
-            AuroraConfigFieldHandler(
-                "resources/memory/max",
-                defaultValue = "512Mi"
-            ),
             AuroraConfigFieldHandler("splunkIndex"),
-            AuroraConfigFieldHandler("debug", defaultValue = false),
-            header.versionHandler
-        )
+            AuroraConfigFieldHandler("debug", defaultValue = false)
+        ).addIfNotNull(templateSpecificHeaders)
+
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
@@ -104,8 +112,8 @@ class DeploymentConfigFeature : Feature {
                 dc.allNonSideCarContainers.forEach { container ->
                     container.env.addAll(envVars)
                     container.resources {
-                        requests = mapOf(adc.quantity("cpu", "min"), adc.quantity("memory", "min"))
-                        limits = mapOf(adc.quantity("cpu", "max"), adc.quantity("memory", "max"))
+                        requests = mapOf(adc.quantity("cpu", "min"), adc.quantity("memory", "min")).filterNullValues()
+                        limits = mapOf(adc.quantity("cpu", "max"), adc.quantity("memory", "max")).filterNullValues()
                     }
                 }
             }

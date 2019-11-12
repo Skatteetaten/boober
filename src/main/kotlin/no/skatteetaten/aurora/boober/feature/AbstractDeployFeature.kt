@@ -123,14 +123,20 @@ val AuroraDeploymentSpec.versionHandler: AuroraConfigFieldHandler
             it.pattern(
                 "^[\\w][\\w.-]{0,127}$",
                 "Version must be a 128 characters or less, alphanumeric and can contain dots and dashes",
-                this.type.groupAndVersionRequired
+                this.type.completelyGenerated
             )
         })
 
 val AuroraDeploymentSpec.groupIdHandler: AuroraConfigFieldHandler
     get() = AuroraConfigFieldHandler(
         "groupId",
-        validator = { it.length(200, "GroupId must be set and be shorter then 200 characters", this.type.groupAndVersionRequired) })
+        validator = {
+            it.length(
+                200,
+                "GroupId must be set and be shorter then 200 characters",
+                this.type.completelyGenerated
+            )
+        })
 
 fun gavHandlers(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand) =
     setOf(

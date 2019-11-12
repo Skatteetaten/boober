@@ -81,8 +81,13 @@ enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: 
     web("wrench8", 1, "Redirect")
 }
 
-enum class TemplateType(val groupAndVersionRequired: Boolean) {
-    deploy(true), development(true), localTemplate(false), template(false)
+enum class TemplateType(
+    val completelyGenerated: Boolean
+) {
+    deploy(true),
+    development(true),
+    localTemplate(false),
+    template(false)
 }
 
 val AuroraDeploymentSpec.applicationPlatform: ApplicationPlatform get() = this["applicationPlatform"]
