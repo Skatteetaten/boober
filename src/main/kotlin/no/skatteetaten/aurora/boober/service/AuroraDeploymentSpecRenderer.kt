@@ -1,47 +1,53 @@
 package no.skatteetaten.aurora.boober.service
 
-import java.lang.Integer.max
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import java.lang.Integer.max
 
+data class SpecLine(val source: String, val indent: Int, val content: String)
 fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean): String {
 
-    val fields = renderSpecAsJsonOld(includeDefaults, deploymentSpec)
+    val fields = renderSpecAsJson(deploymentSpec, includeDefaults)
 
-    val defaultKeys = listOf("source", "value")
+    val defaultKeys = listOf("source", "value", "sources")
     val indent = 2
 
-    val keyMaxLength = findMaxKeyLength(fields, indent)
-    val valueMaxLength = findMaxValueLength(fields)
-
-    fun renderJson(level: Int, result: String, entry: Map.Entry<String, Map<String, Any?>>): String {
+    fun renderJson(level: Int, entry: Map.Entry<String, Map<String, Any?>>): List<SpecLine> {
 
         val key = entry.key
         val value = entry.value["value"].toString()
         val source = entry.value["source"].toString()
-        val indents = " ".repeat(level * indent)
 
-        return if (entry.value.keys.all { defaultKeys.indexOf(it) != -1 }) {
-            val keySpaces = " ".repeat(keyMaxLength + 2 - key.length - level * 2)
-            val valueLength = valueMaxLength + 1 - value.length
-            val valueSpaces = " ".repeat(valueLength)
-
-            "$result$indents$key:$keySpaces$value$valueSpaces// $source\n"
+        return if (entry.value.keys.contains("value")) {
+            listOf(SpecLine(source, level, "$key: $value"))
         } else {
-            val nextObject = indents + "$key: {\n"
+
+            val nextObject = SpecLine("", level, "$key:")
+
             val nextObjectResult = entry.value
                 .entries
                 .filter { defaultKeys.indexOf(it.key) == -1 }
-                .fold(nextObject) { res, e ->
-                    res + renderJson(level + 1, "", e as Map.Entry<String, Map<String, Any?>>)
+                .flatMap {
+                    renderJson(level + indent, it as Map.Entry<String, Map<String, Any?>>)
                 }
-            result + nextObjectResult + indents + "}\n"
+            listOf(nextObject).addIfNotNull(nextObjectResult)
         }
     }
 
-    return fields.entries
-        .fold("{\n") { result, entry ->
-            renderJson(1, result, entry as Map.Entry<String, Map<String, Any?>>)
-        } + "}"
+    val sources: List<SpecLine> = fields.flatMap { it ->
+        renderJson(0, it as Map.Entry<String, Map<String, Any?>>)
+
+    }
+
+    val maxSource: Int = sources.map { it.source.length }.max() ?: 0
+
+    val lines = sources.map { line ->
+        val whitespace = "".padStart(line.indent)
+        "${line.source.padStart(maxSource)} | ${whitespace}${line.content}"
+    }
+
+
+    return lines.joinToString("\n")
 }
 
 fun renderSpecAsJson(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean): Map<String, Any> {
