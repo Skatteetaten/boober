@@ -1,0 +1,118 @@
+{
+  "management": {
+    "source": "default",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": true
+      }
+    ],
+    "path": {
+      "source": "default",
+      "value": "actuator",
+      "sources": [
+        {
+          "name": "default",
+          "value": "actuator"
+        }
+      ]
+    },
+    "port": {
+      "source": "default",
+      "value": "8081",
+      "sources": [
+        {
+          "name": "default",
+          "value": "8081"
+        }
+      ]
+    }
+  },
+  "alarm": {
+    "source": "default",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": true
+      }
+    ]
+  },
+  "pause": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "debug": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "version": {
+    "source": "utv/simple.json",
+    "value": "1",
+    "sources": [
+      {
+        "name": "utv/simple.json",
+        "value": "1"
+      }
+    ]
+  },
+  "resources": {
+    "cpu": {
+      "min": {
+        "source": "default",
+        "value": "10m",
+        "sources": [
+          {
+            "name": "default",
+            "value": "10m"
+          }
+        ]
+      },
+      "max": {
+        "source": "default",
+        "value": "2000m",
+        "sources": [
+          {
+            "name": "default",
+            "value": "2000m"
+          }
+        ]
+      }
+    },
+    "memory": {
+      "min": {
+        "source": "default",
+        "value": "128Mi",
+        "sources": [
+          {
+            "name": "default",
+            "value": "128Mi"
+          }
+        ]
+      },
+      "max": {
+        "source": "default",
+        "value": "512Mi",
+        "sources": [
+          {
+            "name": "default",
+            "value": "512Mi"
+          }
+        ]
+      }
+    }
+  }
+}

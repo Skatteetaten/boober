@@ -52,7 +52,7 @@ fun List<AuroraDeploymentContext>.createDeployCommand(deploy: Boolean): List<Aur
             watch.stop()
         }
     }
-    logger.debug("Create Resources ${watch.prettyPrint()}")
+    logger.info("Create Resources ${watch.prettyPrint()}")
 
     val resourceErrors = result.flatMap { it.first }
     if (resourceErrors.isNotEmpty()) {

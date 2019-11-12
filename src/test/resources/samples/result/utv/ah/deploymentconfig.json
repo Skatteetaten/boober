@@ -143,14 +143,8 @@
               }
             ],
             "resources": {
-              "limits": {
-                "cpu": "2000m",
-                "memory": "512Mi"
-              },
-              "requests": {
-                "cpu": "10m",
-                "memory": "128Mi"
-              }
+              "limits": {},
+              "requests": {}
             },
             "securityContext": {
               "capabilities": {},

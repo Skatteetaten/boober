@@ -68,7 +68,7 @@ class OpenShiftDeployer(
                 }
             }
         }.also {
-            logger.debug("Perform deploy ${watch.prettyPrint()}")
+            logger.info("Perform deploy ${watch.prettyPrint()}")
         }
     }
 

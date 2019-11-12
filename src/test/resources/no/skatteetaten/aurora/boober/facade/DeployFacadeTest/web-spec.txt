@@ -1,0 +1,23 @@
+{
+  applicationDeploymentRef: "utv/web"                     // static
+  configVersion:            "master"                      // static
+  schemaVersion:            "v1"                          // about.json
+  type:                     "development"                 // web.json
+  applicationPlatform:      "web"                         // web.json
+  affiliation:              "paas"                        // about.json
+  segment:                  "aurora"                      // about.json
+  cluster:                  "utv"                         // utv/about.json
+  permissions: {
+    admin:                  "APP_PaaS_drift APP_PaaS_utv" // about.json
+  }
+  envName:                  "utv"                         // folderName
+  name:                     "web"                         // fileName
+  artifactId:               "web"                         // fileName
+  groupId:                  "org.test"                    // web.json
+  version:                  "develop-SNAPSHOT"            // web.json
+  config: {
+    foo2:                   "baz"                         // web.json
+  }
+  route:                    true                          // web.json
+  toxiproxy:                true                          // web.json
+}

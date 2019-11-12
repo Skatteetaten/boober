@@ -99,6 +99,6 @@ class BuildFeatureTest : AbstractFeatureTest() {
         }"""
         )
 
-        assertThat(spec).auroraDeploymentSpecMatchesSpecFiles("spec")
+        assertThat(spec).auroraDeploymentSpecMatches("spec-default.json")
     }
 }

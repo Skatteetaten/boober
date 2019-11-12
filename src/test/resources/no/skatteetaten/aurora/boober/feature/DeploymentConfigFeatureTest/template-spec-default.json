@@ -1,76 +1,62 @@
 {
-  "artifactId": {
-    "source": "fileName",
-    "value": "simple",
+  "management": {
+    "source": "default",
+    "value": true,
     "sources": [
       {
-        "name": "fileName",
-        "value": "simple"
+        "name": "default",
+        "value": true
       }
-    ]
-  },
-  "groupId": {
-    "source": "utv/simple.json",
-    "value": "org.test",
-    "sources": [
-      {
-        "name": "utv/simple.json",
-        "value": "org.test"
-      }
-    ]
-  },
-  "version": {
-    "source": "utv/simple.json",
-    "value": "1",
-    "sources": [
-      {
-        "name": "utv/simple.json",
-        "value": "1"
-      }
-    ]
-  },
-  "builder": {
-    "name": {
+    ],
+    "path": {
       "source": "default",
-      "value": "architect",
+      "value": "actuator",
       "sources": [
         {
           "name": "default",
-          "value": "architect"
+          "value": "actuator"
         }
       ]
     },
-    "version": {
+    "port": {
       "source": "default",
-      "value": "1",
+      "value": "8081",
       "sources": [
         {
           "name": "default",
-          "value": "1"
+          "value": "8081"
         }
       ]
     }
   },
-  "baseImage": {
-    "name": {
-      "source": "default",
-      "value": "wingnut8",
-      "sources": [
-        {
-          "name": "default",
-          "value": "wingnut8"
-        }
-      ]
-    },
-    "version": {
-      "source": "default",
-      "value": 1,
-      "sources": [
-        {
-          "name": "default",
-          "value": 1
-        }
-      ]
-    }
+  "alarm": {
+    "source": "default",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": true
+      }
+    ]
+  },
+  "pause": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "debug": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
   }
 }

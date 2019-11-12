@@ -1,0 +1,20 @@
+{
+  applicationDeploymentRef: "utv/simple"                  // static
+  configVersion:            "master"                      // static
+  schemaVersion:            "v1"                          // about.json
+  type:                     "deploy"                      // about.json
+  affiliation:              "paas"                        // about.json
+  segment:                  "aurora"                      // about.json
+  cluster:                  "utv"                         // utv/about.json
+  permissions: {
+    admin:                  "APP_PaaS_drift APP_PaaS_utv" // about.json
+  }
+  envName:                  "utv"                         // folderName
+  name:                     "simple"                      // fileName
+  database:                 true                          // simple.json
+  version:                  "1"                           // simple.json
+  artifactId:               "simple"                      // fileName
+  groupId:                  "org.test"                    // simple.json
+  route:                    true                          // simple.json
+  certificate:              true                          // simple.json
+}

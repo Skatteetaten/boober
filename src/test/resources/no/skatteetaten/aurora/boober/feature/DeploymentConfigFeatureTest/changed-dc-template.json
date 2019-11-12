@@ -1,0 +1,90 @@
+{
+  "apiVersion": "apps.openshift.io/v1",
+  "kind": "DeploymentConfig",
+  "metadata": {
+    "annotations": {
+      "boober.skatteetaten.no/applicationFile": "utv/simple.json",
+      "console.skatteetaten.no/alarm": "true",
+      "console.skatteetaten.no/management-path": ":8081/actuator",
+      "boober.skatteetaten.no/releaseTo": "test"
+    },
+    "labels": {
+      "deployTag": "test"
+    },
+    "name": "simple",
+    "namespace": "paas-utv"
+  },
+  "spec": {
+    "replicas": 1,
+    "selector": {
+      "name": "simple"
+    },
+    "strategy": {
+      "rollingParams": {
+        "intervalSeconds": 1,
+        "maxSurge": "25%",
+        "maxUnavailable": 0,
+        "timeoutSeconds": 180,
+        "updatePeriodSeconds": 1
+      },
+      "type": "Rolling"
+    },
+    "template": {
+      "metadata": {
+        "labels": {
+          "deployTag": "test"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "env": [
+              {
+                "name": "OPENSHIFT_CLUSTER",
+                "value": "utv"
+              },
+              {
+                "name": "APP_NAME",
+                "value": "simple"
+              },
+              {
+                "name": "SPLUNK_INDEX",
+                "value": "test"
+              },
+              {
+                "name": "ENABLE_REMOTE_DEBUG",
+                "value": "true"
+              },
+              {
+                "name": "DEBUG_PORT",
+                "value": "5005"
+              }
+            ],
+            "name": "simple",
+            "resources": {
+              "limits": {},
+              "requests": {}
+            }
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "restartPolicy": "Always"
+      }
+    },
+    "triggers": [
+      {
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "simple"
+          ],
+          "from": {
+            "kind": "ImageStreamTag",
+            "name": "simple:default"
+          }
+        },
+        "type": "ImageChange"
+      }
+    ]
+  }
+}

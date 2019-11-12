@@ -77,6 +77,6 @@ class ConfigFeatureTest : AbstractFeatureTest() {
 
         val spec = createAuroraDeploymentSpecForFeature(auroraConfigAppFile)
 
-        assertThat(spec).auroraDeploymentSpecMatchesSpecFiles("spec")
+        assertThat(spec).auroraDeploymentSpecMatches("spec-default.json")
     }
 }

@@ -1,14 +1,13 @@
 package no.skatteetaten.aurora.boober.utils
 
+import assertk.Assert
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
+import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import java.io.File
-import java.net.URL
-import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigField
@@ -18,13 +17,21 @@ import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeployCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeployResult
+import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
+import no.skatteetaten.aurora.boober.service.renderSpecAsJson
 import okio.Buffer
 import org.apache.commons.text.StringSubstitutor
 import org.springframework.util.ResourceUtils
+import java.io.File
+import java.net.URL
+import java.nio.charset.Charset
 
 open class ResourceLoader {
+
+    val mapper = jsonMapper()
 
     fun loadResource(resourceName: String, folder: String = this.javaClass.simpleName): String =
         getResourceUrl(resourceName, folder).readText()
@@ -49,6 +56,60 @@ open class ResourceLoader {
     fun loadBufferResource(resourceName: String, folder: String = this.javaClass.simpleName): Buffer {
         return Buffer().readFrom(getResourceUrl(resourceName, folder).openStream())
     }
+
+    // TODO: test with this method in facade test
+    fun Assert<AuroraDeploymentSpec>.auroraDeploymentSpecMatchesSpecFiles(prefix: String): Assert<AuroraDeploymentSpec> =
+        transform { spec ->
+
+            val jsonName = "$prefix.json"
+            val txtDefaultName = "$prefix-default.txt"
+            val jsonDefaultName = "$prefix-default.json"
+            val txtName = "$prefix.txt"
+
+            assertThat(
+                renderJsonForAuroraDeploymentSpecPointers(spec, true),
+                txtDefaultName
+            ).isEqualTo(loadResource(txtDefaultName))
+
+            assertThat(renderJsonForAuroraDeploymentSpecPointers(spec, false), txtName).isEqualTo(
+                loadResource(
+                    txtName
+                )
+            )
+
+            compareJson(
+                loadJsonResource(jsonDefaultName),
+                mapper.readTree(mapper.writeValueAsString(renderSpecAsJson(spec, true))),
+                jsonDefaultName
+            )
+
+            compareJson(
+                loadJsonResource(jsonName),
+                mapper.readTree(mapper.writeValueAsString(renderSpecAsJson(spec, false))),
+                jsonName
+            )
+
+            spec
+        }
+
+    fun Assert<AuroraResource>.auroraResourceMatchesFile(fileName: String): Assert<AuroraResource> = transform { ar ->
+        val actualJson: JsonNode = jacksonObjectMapper().convertValue(ar.resource)
+        val expectedJson = loadJsonResource(fileName)
+        compareJson(expectedJson, actualJson)
+        ar
+    }
+
+    // TODO: test with this method in all feature tests
+    fun Assert<AuroraDeploymentSpec>.auroraDeploymentSpecMatches(jsonDefaultName: String): Assert<AuroraDeploymentSpec> =
+        transform { spec ->
+            compareJson(
+                loadJsonResource(jsonDefaultName),
+                mapper.readTree(mapper.writeValueAsString(renderSpecAsJson(spec, true))),
+                jsonDefaultName
+            )
+            spec
+        }
+
 }
 
 // This is done as text comparison and not jsonNode equals to get easier diff when they dif

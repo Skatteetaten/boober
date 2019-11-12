@@ -1,0 +1,68 @@
+{
+  applicationDeploymentRef: "utv/simple"                  // static
+  configVersion:            "master"                      // static
+  schemaVersion:            "v1"                          // about.json
+  type:                     "deploy"                      // about.json
+  applicationPlatform:      "java"                        // default
+  affiliation:              "paas"                        // about.json
+  segment:                  "aurora"                      // about.json
+  cluster:                  "utv"                         // utv/about.json
+  permissions: {
+    admin:                  "APP_PaaS_drift APP_PaaS_utv" // about.json
+  }
+  envName:                  "utv"                         // folderName
+  name:                     "simple"                      // fileName
+  databaseDefaults: {
+    flavor:                 "ORACLE_MANAGED"              // default
+    generate:               true                          // default
+    name:                   "@name@"                      // default
+  }
+  database:                 true                          // simple.json
+  management: {
+    path:                   "actuator"                    // default
+    port:                   "8081"                        // default
+  }
+  alarm:                    true                          // default
+  pause:                    false                         // default
+  debug:                    false                         // default
+  version:                  "1"                           // simple.json
+  resources: {
+    cpu: {
+      min:                  "10m"                         // default
+      max:                  "2000m"                       // default
+    }
+    memory: {
+      min:                  "128Mi"                       // default
+      max:                  "512Mi"                       // default
+    }
+  }
+  artifactId:               "simple"                      // fileName
+  groupId:                  "org.test"                    // simple.json
+  deployStrategy: {
+    type:                   "rolling"                     // default
+    timeout:                180                           // default
+  }
+  replicas:                 1                             // default
+  prometheus: {
+    path:                   "/prometheus"                 // default
+    port:                   8081                          // default
+  }
+  readiness: {
+    port:                   8080                          // default
+    delay:                  10                            // default
+    timeout:                1                             // default
+  }
+  liveness:                 false                         // default
+  route:                    true                          // simple.json
+  routeDefaults: {
+    host:                   "@name@-@affiliation@-@env@"  // default
+    tls: {
+      enabled:              false                         // default
+      insecurePolicy:       "None"                        // default
+      termination:          "edge"                        // default
+    }
+  }
+  certificate:              true                          // simple.json
+  toxiproxy:                false                         // default
+  webseal:                  false                         // default
+}

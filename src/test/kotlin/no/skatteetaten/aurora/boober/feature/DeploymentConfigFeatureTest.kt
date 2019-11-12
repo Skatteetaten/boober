@@ -20,7 +20,19 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
         }"""
         )
 
-        assertThat(spec).auroraDeploymentSpecMatchesSpecFiles("template-spec")
+        assertThat(spec).auroraDeploymentSpecMatches("template-spec-default.json")
+    }
+
+    @Test
+    fun `deploy type should have default resource requirements`() {
+        val spec = createAuroraDeploymentSpecForFeature(
+            """{
+           "type": "deploy", 
+           "version" : "1"
+        }"""
+        )
+
+        assertThat(spec).auroraDeploymentSpecMatches("deploy-spec-default.json")
     }
 
     @Test
@@ -71,5 +83,24 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
         assertThat(ad.spec.releaseTo).isEqualTo("test")
 
         assertThat(dcResource).auroraResourceMatchesFile("changed-dc.json")
+    }
+
+    @Test
+    fun `modify dc and ad for template application should not add resources`() {
+
+        val (dcResource, _) = generateResources(
+            app = """{ 
+                "type" : "template",
+                "releaseTo" : "test", 
+                "splunkIndex" : "test",
+                "debug" : true
+                
+           }""",
+            resources = mutableSetOf(createEmptyDeploymentConfig(), createEmptyApplicationDeployment()),
+            createdResources = 0
+        )
+
+
+        assertThat(dcResource).auroraResourceMatchesFile("changed-dc-template.json")
     }
 }

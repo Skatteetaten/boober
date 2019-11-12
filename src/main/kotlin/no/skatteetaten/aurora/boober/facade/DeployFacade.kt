@@ -24,6 +24,7 @@ import org.springframework.util.StopWatch
 
 private val logger = KotlinLogging.logger {}
 
+// TODO: validere at serivceAccount til DC finnes?
 // TODo test errors
 @Service
 class DeployFacade(

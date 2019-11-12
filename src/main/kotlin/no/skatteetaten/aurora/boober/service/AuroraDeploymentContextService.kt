@@ -48,7 +48,7 @@ class AuroraDeploymentContextService(
                 watch.stop()
             }
         }
-        logger.debug("Create ADC ${watch.prettyPrint()}")
+        logger.info("Create ADC ${watch.prettyPrint()}")
 
         val errors = result.mapNotNull { it.second }
         if (errors.isNotEmpty()) {

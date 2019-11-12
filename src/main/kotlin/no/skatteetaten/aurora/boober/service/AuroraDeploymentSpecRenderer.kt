@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import java.lang.Integer.max
 
 fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean): String {
 
@@ -78,15 +79,14 @@ fun findMaxKeyLength(fields: Map<String, Any>, indent: Int, accumulated: Int = 0
 }
 
 fun findMaxValueLength(fields: Map<String, Any>): Int {
-    return fields.map {
-        val value = it.value as Map<String, Any>
+    return fields.map { field ->
+        val value = field.value as Map<String, Any>
         val valueLength = if (value.containsKey("value")) {
             value["value"].toString().length
         } else 0
 
-        val subKeylength = value.filterNot { it.key in ("source", "value") }
-        {
-            findMaxValueLength(value)
-        }
+        val subFields = value.filterNot { it.key == "source" || it.key == "value" }
+        val subKeyLength = findMaxValueLength(subFields)
+        max(valueLength, subKeyLength)
     }.max() ?: 0
 }

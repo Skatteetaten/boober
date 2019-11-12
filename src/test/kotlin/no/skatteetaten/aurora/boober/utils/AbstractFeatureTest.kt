@@ -6,9 +6,6 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.convertValue
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newContainer
 import com.fkorotkov.kubernetes.newEnvVar
@@ -35,7 +32,6 @@ import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.clearAllMocks
 import io.mockk.mockk
-import java.time.Instant
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.feature.headerHandlers
@@ -53,11 +49,10 @@ import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
-import no.skatteetaten.aurora.boober.service.renderSpecAsJson
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
 import org.junit.jupiter.api.BeforeEach
+import java.time.Instant
 
 /*
   Abstract class to test a single feature
@@ -222,7 +217,6 @@ abstract class AbstractFeatureTest : ResourceLoader() {
             }
         }, createdSource = AuroraResourceSource(TestDefaultFeature::class.java))
 
-    val mapper = jsonMapper()
     val config = mutableMapOf(
         "about.json" to FEATURE_ABOUT,
         "utv/about.json" to """{ }""",
@@ -391,47 +385,6 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         }
     }
 
-    fun Assert<AuroraResource>.auroraResourceMatchesFile(fileName: String): Assert<AuroraResource> = transform { ar ->
-        val actualJson: JsonNode = jacksonObjectMapper().convertValue(ar.resource)
-        val expectedJson = loadJsonResource(fileName)
-        compareJson(expectedJson, actualJson)
-        ar
-    }
-
-    // TODO: test with this method in all feature tests
-    fun Assert<AuroraDeploymentSpec>.auroraDeploymentSpecMatchesSpecFiles(prefix: String): Assert<AuroraDeploymentSpec> =
-        transform { spec ->
-
-            val jsonName = "$prefix.json"
-            val txtDefaultName = "$prefix-default.txt"
-            val jsonDefaultName = "$prefix-default.json"
-            val txtName = "$prefix.txt"
-
-            assertThat(
-                renderJsonForAuroraDeploymentSpecPointers(spec, true),
-                txtDefaultName
-            ).isEqualTo(loadResource(txtDefaultName))
-
-            assertThat(renderJsonForAuroraDeploymentSpecPointers(spec, false), txtName).isEqualTo(
-                loadResource(
-                    txtName
-                )
-            )
-
-            compareJson(
-                loadJsonResource(jsonDefaultName),
-                mapper.readTree(mapper.writeValueAsString(renderSpecAsJson(spec, true))),
-                jsonDefaultName
-            )
-
-            compareJson(
-                loadJsonResource(jsonName),
-                mapper.readTree(mapper.writeValueAsString(renderSpecAsJson(spec, false))),
-                jsonName
-            )
-
-            spec
-        }
 
     fun Assert<AuroraResource>.auroraResourceModifiedByThisFeatureWithComment(comment: String) = transform { ar ->
         val actual = ar.sources.first()
