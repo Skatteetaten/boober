@@ -11,6 +11,7 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
@@ -26,7 +27,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.OK
 import org.springframework.http.ResponseEntity
 import org.springframework.web.client.HttpClientErrorException
-import java.nio.charset.Charset
 
 private val userClient = mockk<OpenShiftResourceClient>()
 private val serviceAccountClient = mockk<OpenShiftResourceClient>()
@@ -37,7 +37,6 @@ class OpenShiftClientTest : ResourceLoader() {
     fun setup() {
         clearAllMocks()
     }
-
 
     val emptyNode = mapper.readValue<JsonNode>("{}")
     val openShiftClient = OpenShiftClient(

@@ -100,7 +100,6 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
             createdResources = 0
         )
 
-
         assertThat(dcResource).auroraResourceMatchesFile("changed-dc-template.json")
     }
 }

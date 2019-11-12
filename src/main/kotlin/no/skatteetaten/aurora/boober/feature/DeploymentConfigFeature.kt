@@ -78,7 +78,6 @@ class DeploymentConfigFeature : Feature {
             AuroraConfigFieldHandler("splunkIndex"),
             AuroraConfigFieldHandler("debug", defaultValue = false)
         ).addIfNotNull(templateSpecificHeaders)
-
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
