@@ -3,7 +3,8 @@
   "kind": "DeploymentConfig",
   "metadata": {
     "labels": {
-      "name": "simple"
+      "name": "simple",
+      "app": "simple-keep"
     },
     "name": "simple",
     "namespace": "paas-utv"

@@ -57,7 +57,10 @@ class DeploymentConfigFeature : Feature {
                 AuroraConfigFieldHandler("resources/cpu/min", defaultValue = "10m"),
                 AuroraConfigFieldHandler("resources/cpu/max", defaultValue = "2000m"),
                 AuroraConfigFieldHandler("resources/memory/min", defaultValue = "128Mi"),
-                AuroraConfigFieldHandler("resources/memory/max", defaultValue = "512Mi")
+                AuroraConfigFieldHandler("resources/memory/max", defaultValue = "512Mi"),
+                AuroraConfigFieldHandler("management", defaultValue = true, canBeSimplifiedConfig = true),
+                AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
+                AuroraConfigFieldHandler("management/port", defaultValue = "8081")
             )
         } else {
             setOf(
@@ -65,11 +68,12 @@ class DeploymentConfigFeature : Feature {
                 AuroraConfigFieldHandler("resources/cpu/min"),
                 AuroraConfigFieldHandler("resources/cpu/max"),
                 AuroraConfigFieldHandler("resources/memory/min"),
-                AuroraConfigFieldHandler("resources/memory/max")
+                AuroraConfigFieldHandler("resources/memory/max"),
+                AuroraConfigFieldHandler("management", defaultValue = false, canBeSimplifiedConfig = true)
             )
         }
         return setOf(
-            AuroraConfigFieldHandler("management", defaultValue = true, canBeSimplifiedConfig = true),
+
             AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
             AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
             AuroraConfigFieldHandler("releaseTo"),
@@ -111,8 +115,20 @@ class DeploymentConfigFeature : Feature {
                 dc.allNonSideCarContainers.forEach { container ->
                     container.env.addAll(envVars)
                     container.resources {
-                        requests = mapOf(adc.quantity("cpu", "min"), adc.quantity("memory", "min")).filterNullValues()
-                        limits = mapOf(adc.quantity("cpu", "max"), adc.quantity("memory", "max")).filterNullValues()
+                        val existingRequest = requests ?: emptyMap()
+                        val existingLimit = limits ?: emptyMap()
+                        requests = existingRequest.addIfNotNull(
+                            mapOf(
+                                adc.quantity("cpu", "min"),
+                                adc.quantity("memory", "min")
+                            ).filterNullValues()
+                        )
+                        limits = existingLimit.addIfNotNull(
+                            mapOf(
+                                adc.quantity("cpu", "max"),
+                                adc.quantity("memory", "max")
+                            ).filterNullValues()
+                        )
                     }
                 }
             }

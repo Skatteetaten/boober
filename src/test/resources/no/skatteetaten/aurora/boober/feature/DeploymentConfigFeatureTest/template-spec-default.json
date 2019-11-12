@@ -1,34 +1,4 @@
 {
-  "management": {
-    "source": "default",
-    "value": true,
-    "sources": [
-      {
-        "name": "default",
-        "value": true
-      }
-    ],
-    "path": {
-      "source": "default",
-      "value": "actuator",
-      "sources": [
-        {
-          "name": "default",
-          "value": "actuator"
-        }
-      ]
-    },
-    "port": {
-      "source": "default",
-      "value": "8081",
-      "sources": [
-        {
-          "name": "default",
-          "value": "8081"
-        }
-      ]
-    }
-  },
   "alarm": {
     "source": "default",
     "value": true,
@@ -50,6 +20,16 @@
     ]
   },
   "debug": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "management": {
     "source": "default",
     "value": false,
     "sources": [

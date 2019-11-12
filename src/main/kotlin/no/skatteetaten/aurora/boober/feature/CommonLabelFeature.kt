@@ -39,7 +39,8 @@ class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature
 
         resources.forEach {
             if (it.resource.metadata.namespace != null && !it.header) {
-                it.resource.metadata.labels = it.resource.metadata.labels?.addIfNotNull(commonLabels) ?: commonLabels
+
+                it.resource.metadata.labels = commonLabels.addIfNotNull(it.resource.metadata.labels)
 
                 modifyResource(it, "Added common labels to metadata")
             }
@@ -49,8 +50,7 @@ class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature
                 if (dc.spec.template.metadata == null) {
                     dc.spec.template.metadata = ObjectMeta()
                 }
-                dc.spec.template.metadata.labels = dc.spec.template.metadata.labels?.addIfNotNull(commonLabels)
-                    ?: commonLabels
+                dc.spec.template.metadata.labels = commonLabels.addIfNotNull(dc.spec.template.metadata.labels)
             }
         }
     }

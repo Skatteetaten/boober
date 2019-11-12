@@ -4,15 +4,14 @@
   "metadata": {
     "annotations": {
       "boober.skatteetaten.no/applicationFile": "utv/ah.json",
-      "console.skatteetaten.no/alarm": "true",
-      "console.skatteetaten.no/management-path": ":8081/actuator"
+      "console.skatteetaten.no/alarm": "true"
     },
     "labels": {
-      "name": "ah",
-      "app": "ah",
+      "app": "ah-keep",
       "updatedBy": "hero",
       "affiliation": "paas",
       "updateInBoober": "true",
+      "name": "ah",
       "deployTag": "1.3.4",
       "booberDeployId": "deploy1"
     },
@@ -46,11 +45,11 @@
     "template": {
       "metadata": {
         "labels": {
-          "name": "ah",
           "app": "ah",
           "updatedBy": "hero",
           "affiliation": "paas",
           "updateInBoober": "true",
+          "name": "ah",
           "deployTag": "1.3.4"
         }
       },

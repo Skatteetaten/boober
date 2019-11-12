@@ -21,14 +21,11 @@
     name:                   "@name@"                      // default
   }
   database:                 true                          // ah.json
-  management: {
-    path:                   "actuator"                    // default
-    port:                   "8081"                        // default
-  }
   alarm:                    true                          // default
   pause:                    false                         // default
   debug:                    false                         // default
   version:                  "1.3.4"                       // ah.json
+  management:               false                         // default
   parameters: {
     FEED_NAME:              "feed"                        // ah.json
     DOMAIN_NAME:            "localhost"                   // ah.json

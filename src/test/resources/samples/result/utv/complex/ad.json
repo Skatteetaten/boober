@@ -3,13 +3,13 @@
   "kind": "ApplicationDeployment",
   "metadata": {
     "labels": {
-      "id": "74a691b9358d168e305df7a1ae175a5eefda6754",
-      "removeAfter": "86400",
       "app": "komplex",
       "updatedBy": "hero",
       "affiliation": "paas",
       "updateInBoober": "true",
       "name": "komplex",
+      "id": "74a691b9358d168e305df7a1ae175a5eefda6754",
+      "removeAfter": "86400",
       "applicationId": "feddc97db98af8c60b495fb62231c98c65d7225b",
       "booberDeployId": "deploy1"
     },

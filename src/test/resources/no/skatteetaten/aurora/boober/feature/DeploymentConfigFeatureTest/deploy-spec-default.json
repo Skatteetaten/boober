@@ -1,13 +1,5 @@
 {
   "management": {
-    "source": "default",
-    "value": true,
-    "sources": [
-      {
-        "name": "default",
-        "value": true
-      }
-    ],
     "path": {
       "source": "default",
       "value": "actuator",
@@ -27,7 +19,15 @@
           "value": "8081"
         }
       ]
-    }
+    },
+    "source": "default",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": true
+      }
+    ]
   },
   "alarm": {
     "source": "default",

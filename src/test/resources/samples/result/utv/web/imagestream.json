@@ -3,12 +3,12 @@
   "kind": "ImageStream",
   "metadata": {
     "labels": {
-      "releasedVersion": "develop-SNAPSHOT",
       "app": "web",
       "updatedBy": "hero",
       "affiliation": "paas",
       "updateInBoober": "true",
       "name": "web",
+      "releasedVersion": "develop-SNAPSHOT",
       "booberDeployId": "deploy1"
     },
     "name": "web",
