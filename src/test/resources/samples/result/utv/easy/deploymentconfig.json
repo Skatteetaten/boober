@@ -2,11 +2,6 @@
   "apiVersion": "apps.openshift.io/v1",
   "kind": "DeploymentConfig",
   "metadata": {
-    "annotations": {
-      "boober.skatteetaten.no/applicationFile": "utv/easy.json",
-      "console.skatteetaten.no/alarm": "true",
-      "console.skatteetaten.no/management-path": ":8081/actuator"
-    },
     "labels": {
       "app": "easy",
       "updatedBy": "hero",

@@ -2,12 +2,6 @@
   "apiVersion": "apps.openshift.io/v1",
   "kind": "DeploymentConfig",
   "metadata": {
-    "annotations": {
-      "boober.skatteetaten.no/applicationFile": "utv/complex.json",
-      "console.skatteetaten.no/alarm": "true",
-      "console.skatteetaten.no/management-path": ":8081/foobar",
-      "boober.skatteetaten.no/releaseTo": "komplex"
-    },
     "labels": {
       "app": "komplex",
       "updatedBy": "hero",
