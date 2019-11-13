@@ -6,7 +6,6 @@
       "app": "simple",
       "updatedBy": "hero",
       "affiliation": "paas",
-      "updateInBoober": "true",
       "name": "simple",
       "releasedVersion": "1",
       "booberDeployId": "deploy1"

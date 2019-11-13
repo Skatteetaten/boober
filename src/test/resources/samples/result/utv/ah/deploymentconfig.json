@@ -10,7 +10,6 @@
       "app": "ah-keep",
       "updatedBy": "hero",
       "affiliation": "paas",
-      "updateInBoober": "true",
       "name": "ah",
       "deployTag": "1.3.4",
       "booberDeployId": "deploy1"
@@ -48,7 +47,6 @@
           "app": "ah",
           "updatedBy": "hero",
           "affiliation": "paas",
-          "updateInBoober": "true",
           "name": "ah",
           "deployTag": "1.3.4"
         }

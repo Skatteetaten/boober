@@ -27,7 +27,6 @@ class CommonLabelFeatureTest : AbstractFeatureTest() {
             "app" to "simple",
             "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
             "affiliation" to "paas",
-            "updateInBoober" to "true",
             "name" to "simple"
         )
         resources.forEach {

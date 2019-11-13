@@ -12,7 +12,6 @@
       "app": "komplex",
       "updatedBy": "hero",
       "affiliation": "paas",
-      "updateInBoober": "true",
       "name": "komplex",
       "deployTag": "komplex",
       "paused": "true",
@@ -46,7 +45,6 @@
           "app": "komplex",
           "updatedBy": "hero",
           "affiliation": "paas",
-          "updateInBoober": "true",
           "name": "komplex",
           "deployTag": "komplex",
           "paused": "true"

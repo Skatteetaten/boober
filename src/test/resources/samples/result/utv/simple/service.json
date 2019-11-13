@@ -12,7 +12,6 @@
       "app": "simple",
       "updatedBy": "hero",
       "affiliation": "paas",
-      "updateInBoober": "true",
       "name": "simple",
       "booberDeployId": "deploy1"
     },

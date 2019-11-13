@@ -11,7 +11,6 @@
       "app": "simple",
       "updatedBy": "hero",
       "affiliation": "paas",
-      "updateInBoober": "true",
       "name": "simple",
       "deployTag": "1",
       "booberDeployId": "deploy1"
@@ -48,7 +47,6 @@
           "app": "simple",
           "updatedBy": "hero",
           "affiliation": "paas",
-          "updateInBoober": "true",
           "name": "simple",
           "deployTag": "1"
         }
