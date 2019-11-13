@@ -11,7 +11,6 @@ import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
 import org.springframework.stereotype.Service
 
-// TODO: Hvor mye vits er denne og AuroraConfigService?
 @Service
 class AuroraConfigFacade(
     private val auroraConfigService: AuroraConfigService,
@@ -19,16 +18,13 @@ class AuroraConfigFacade(
 
 ) {
 
-    // TODO: Burde denne hente validertSpec? Eller skal man se specs flag selv om noe er ugyldig? Det er kanskje greit for debug formål?
-    // TODO: Evt burde det være en metode for å hente kun spec som er eksponert, slik at man ikke kan hente ADC uten at den er validert?
     fun findAuroraDeploymentSpec(
         ref: AuroraConfigRef,
         adrList: List<ApplicationDeploymentRef>
     ): List<AuroraDeploymentSpec> {
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         return adrList.map {
-            auroraDeploymentContextService.createAuroraDeploymentContext(AuroraContextCommand(auroraConfig, it, ref))
-                .spec
+            auroraDeploymentContextService.findApplicationDeploymentSpec(AuroraContextCommand(auroraConfig, it, ref))
         }
     }
 
@@ -40,9 +36,9 @@ class AuroraConfigFacade(
         return auroraConfig.getApplicationDeploymentRefs()
             .filter { it.environment == environment }
             .map {
-                auroraDeploymentContextService.createAuroraDeploymentContext(
+                auroraDeploymentContextService.findApplicationDeploymentSpec(
                     AuroraContextCommand(auroraConfig, it, ref)
-                ).spec
+                )
             }
     }
 
@@ -59,7 +55,7 @@ class AuroraConfigFacade(
             auroraConfigRef = ref,
             overrides = overrideFiles
         )
-        return auroraDeploymentContextService.createAuroraDeploymentContext(cmd).spec
+        return auroraDeploymentContextService.findApplicationDeploymentSpec(cmd)
     }
 
     fun findAuroraConfigFilesForApplicationDeployment(
