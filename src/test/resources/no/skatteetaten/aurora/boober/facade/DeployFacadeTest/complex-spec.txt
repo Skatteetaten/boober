@@ -22,9 +22,6 @@
   version:                                      "1"                             // complex.json
   config: {
     FOO:                                        "BAR"                           // complex.json
-    latest: {
-      BAR:                                      "BAZ"                           // complex.json
-    }
   }
   database: {
     complex: {

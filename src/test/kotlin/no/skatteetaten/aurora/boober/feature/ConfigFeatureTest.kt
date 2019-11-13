@@ -19,7 +19,7 @@ class ConfigFeatureTest : AbstractFeatureTest() {
                  "FLOAT": 4.2,
                  "ARRAY": [4.2, "STRING", true],
                  "URL": "https://int-at.skead.no:13110/felles/sikkerhet/stsSikkerhet/v1/validerSaml",
-                 "JSON_STRING": "{\"key\": \"value\"}"                   
+                 "JSON_STRING": "{\"key\": \"value\"}"                  
                 }
            }"""
 
@@ -32,7 +32,7 @@ class ConfigFeatureTest : AbstractFeatureTest() {
 
         val dcResource = resources.first()
 
-        assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added env vars, volume mount, volume")
+        assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added env vars")
         val dc = dcResource.resource as DeploymentConfig
 
         val env = dc.spec.template.spec.containers.first().env.associate { it.name to it.value }
@@ -47,30 +47,6 @@ class ConfigFeatureTest : AbstractFeatureTest() {
         assertThat(env["URL"]).isEqualTo("""https://int-at.skead.no:13110/felles/sikkerhet/stsSikkerhet/v1/validerSaml""")
     }
 
-    @Test
-    fun `create configmap for nested configuration and mount it`() {
-
-        val (dcResource, configMapResource) = generateResources(
-            """{ 
-               "config": {
-                 "latest": {
-                    "STRING": "Hello",
-                    "BOOL": false,
-                    "INT": 42,
-                    "FLOAT": 4.2,
-                    "ARRAY": [4.2, "STRING", true],
-                    "URL": "https://int-at.skead.no:13110/felles/sikkerhet/stsSikkerhet/v1/validerSaml",
-                    "JSON_STRING": "{\"key\": \"value\"}",
-                    "JSON_ARRAY" : "[ { uri: \"http://tsl0part-fk1-s-adm01:20000/registry\", urn: [\"urn:skatteetaten:part:identifikasjon:partsidentifikasjon:root\"], segment: \"part\" }, { uri: \"http://tsl0part-fk1-s-adm01:20000/registry\", urn: [\"urn:skatteetaten:part:partsregister:feed:*\"], segment: \"part\" } , { uri: \"http://tsl0part-fk1-s-adm01:20000/registry\", urn: [\"urn:skatteetaten:part:partsregister:hendelselager:*\"], segment: \"part\" } , { uri: \"http://tsl0part-fk1-s-adm01:20000/registry\", urn: [\"no:skatteetaten:sikkerhet:tilgangskontroll:ats:v1\"], segment: \"part\" } ]"
-                 }
-                }
-           }""", createEmptyDeploymentConfig()
-        )
-
-        assertThat(configMapResource).auroraResourceCreatedByThisFeature()
-            .auroraResourceMatchesFile("configMap.json")
-        assertThat(dcResource).auroraResourceMountsAttachment(configMapResource.resource)
-    }
 
     @Test
     fun `test render spec`() {

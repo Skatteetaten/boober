@@ -31,9 +31,6 @@
   }
   config: {
     FOO:                                        "BAR"                           // complex.json
-    latest: {
-      BAR:                                      "BAZ"                           // complex.json
-    }
   }
   databaseDefaults: {
     flavor:                                     "ORACLE_MANAGED"                // default

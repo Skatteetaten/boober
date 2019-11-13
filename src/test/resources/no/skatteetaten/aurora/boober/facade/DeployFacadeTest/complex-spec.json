@@ -195,18 +195,6 @@
           "value": "BAR"
         }
       ]
-    },
-    "latest": {
-      "BAR": {
-        "source": "complex.json",
-        "value": "BAZ",
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": "BAZ"
-          }
-        ]
-      }
     }
   },
   "database": {

@@ -45,10 +45,7 @@
     "roles": "admin dev @name@"
   },
   "config": {
-    "FOO": "BAR",
-    "latest": {
-      "BAR": "BAZ"
-    }
+    "FOO": "BAR"
   },
   "debug": true,
   "route": {

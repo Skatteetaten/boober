@@ -83,10 +83,6 @@
                 "value": "BAR"
               },
               {
-                "name": "VOLUME_CONFIG",
-                "value": "/u01/config/configmap"
-              },
-              {
                 "name": "COMPLEX_DB",
                 "value": "/u01/secrets/app/complex-db/info"
               },
@@ -240,10 +236,6 @@
                 "name": "application-log-volume"
               },
               {
-                "mountPath": "/u01/config/configmap",
-                "name": "config"
-              },
-              {
                 "mountPath": "/u01/secrets/app/complex-db",
                 "name": "komplex-complex-db"
               },
@@ -277,12 +269,6 @@
           {
             "emptyDir": {},
             "name": "application-log-volume"
-          },
-          {
-            "configMap": {
-              "name": "komplex"
-          },
-            "name": "config"
           },
           {
             "name": "komplex-complex-db",

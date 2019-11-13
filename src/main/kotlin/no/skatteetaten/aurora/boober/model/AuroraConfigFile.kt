@@ -129,6 +129,7 @@ fun List<AuroraConfigFile>.findConfigFieldHandlers(): List<AuroraConfigFieldHand
     val name = "config"
     val keysStartingWithConfig = this.findSubKeys(name)
 
+
     val configKeys: Map<String, Set<String>> = keysStartingWithConfig.associateWith { findSubKeys("$name/$it") }
 
     return configKeys.flatMap { configFile ->
@@ -136,9 +137,7 @@ fun List<AuroraConfigFile>.findConfigFieldHandlers(): List<AuroraConfigFieldHand
         if (value.isEmpty()) {
             listOf(AuroraConfigFieldHandler("$name/${configFile.key}"))
         } else {
-            value.map { field ->
-                AuroraConfigFieldHandler("$name/${configFile.key}/$field")
-            }
+            listOf()
         }
     }
 }
