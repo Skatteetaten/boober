@@ -18,6 +18,7 @@
   },
   "spec": {
     "applicationId": "65b695616e4f3f8b4d7b775284833e6a29d07c51",
+    "updatedAt": "1970-01-01T00:00:00Z",
     "selector": {
       "name": "web"
     },
