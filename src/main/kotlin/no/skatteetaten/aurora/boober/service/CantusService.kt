@@ -21,7 +21,6 @@ data class TagCommand(
     val toRegistry: String = fromRegistry
 )
 
-// TODO can this just be a map?
 data class CantusTagCommand(
     val from: String,
     val to: String
