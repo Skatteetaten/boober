@@ -95,7 +95,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
                         })
                     } else if (it.endsWith("/applicationdeployments/easy")) {
                         val ad = resultFiles["applicationdeployment/easy"]!!
-                        (ad.at("/metadata") as ObjectNode).set("uid", TextNode("old-124"))
+                        (ad.at("/metadata") as ObjectNode).replace("uid", TextNode("old-124"))
                         json(ad)
                     } else {
                         val fileName = it.split("/").takeLast(2).joinToString("/").replace("s/", "/")

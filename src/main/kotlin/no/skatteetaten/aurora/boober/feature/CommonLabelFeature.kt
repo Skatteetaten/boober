@@ -1,7 +1,5 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fasterxml.jackson.module.kotlin.convertValue
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.ObjectMeta
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
@@ -46,7 +44,7 @@ class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature
             }
             if (it.resource.kind == "DeploymentConfig") {
                 modifyResource(it, "Added common labels to podSpec")
-                val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
+                val dc: DeploymentConfig = it.resource as DeploymentConfig
                 if (dc.spec.template.metadata == null) {
                     dc.spec.template.metadata = ObjectMeta()
                 }

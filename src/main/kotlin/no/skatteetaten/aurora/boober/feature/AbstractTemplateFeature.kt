@@ -56,7 +56,7 @@ abstract class AbstractTemplateFeature : Feature {
             if (it.resource.kind == "ApplicationDeployment") {
                 val labels = mapOf("applicationId" to id)
                 modifyResource(it, "Added application name and id")
-                val ad: ApplicationDeployment = jacksonObjectMapper().convertValue(it.resource)
+                val ad: ApplicationDeployment = it.resource as ApplicationDeployment
                 ad.spec.applicationName = name
                 ad.metadata.labels = ad.metadata.labels?.addIfNotNull(labels) ?: labels
                 ad.spec.applicationId = id

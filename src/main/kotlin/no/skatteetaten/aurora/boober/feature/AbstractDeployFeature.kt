@@ -1,7 +1,5 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fasterxml.jackson.module.kotlin.convertValue
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.emptyDir
 import com.fkorotkov.kubernetes.fieldRef
 import com.fkorotkov.kubernetes.httpGet
@@ -222,7 +220,7 @@ abstract class AbstractDeployFeature(
             if (it.resource.kind == "ApplicationDeployment") {
                 val labels = mapOf("applicationId" to id)
                 modifyResource(it, "Added application name and id")
-                val ad: ApplicationDeployment = jacksonObjectMapper().convertValue(it.resource)
+                val ad: ApplicationDeployment = it.resource as ApplicationDeployment
                 ad.spec.applicationName = name
                 ad.spec.applicationId = id
                 ad.metadata.labels = ad.metadata.labels?.addIfNotNull(labels) ?: labels
