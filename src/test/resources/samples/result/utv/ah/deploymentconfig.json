@@ -5,6 +5,7 @@
     "labels": {
       "app": "ah-keep",
       "updatedBy": "hero",
+      "updatedAt": "0",
       "affiliation": "paas",
       "name": "ah",
       "deployTag": "1.3.4",
@@ -42,6 +43,7 @@
         "labels": {
           "app": "ah",
           "updatedBy": "hero",
+          "updatedAt": "0",
           "affiliation": "paas",
           "name": "ah",
           "deployTag": "1.3.4"

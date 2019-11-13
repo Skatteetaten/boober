@@ -5,6 +5,7 @@
     "labels": {
       "app": "simple",
       "updatedBy": "hero",
+      "updatedAt": "0",
       "affiliation": "paas",
       "name": "simple",
       "deployTag": "1",
@@ -41,6 +42,7 @@
         "labels": {
           "app": "simple",
           "updatedBy": "hero",
+          "updatedAt": "0",
           "affiliation": "paas",
           "name": "simple",
           "deployTag": "1"

@@ -5,6 +5,7 @@
     "labels": {
       "app": "web",
       "updatedBy": "hero",
+      "updatedAt": "0",
       "affiliation": "paas",
       "name": "web",
       "deployTag": "develop-SNAPSHOT",
@@ -41,6 +42,7 @@
         "labels": {
           "app": "web",
           "updatedBy": "hero",
+          "updatedAt": "0",
           "affiliation": "paas",
           "name": "web",
           "deployTag": "develop-SNAPSHOT"

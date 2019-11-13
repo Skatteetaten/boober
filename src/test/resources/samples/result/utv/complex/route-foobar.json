@@ -8,6 +8,7 @@
     "labels": {
       "app": "komplex",
       "updatedBy": "hero",
+      "updatedAt": "0",
       "affiliation": "paas",
       "name": "komplex",
       "booberDeployId": "deploy1"

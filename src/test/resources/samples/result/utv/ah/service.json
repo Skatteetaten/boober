@@ -10,6 +10,7 @@
     "labels": {
       "app": "ah",
       "updatedBy": "hero",
+      "updatedAt": "0",
       "affiliation": "paas",
       "name": "ah",
       "booberDeployId": "deploy1"

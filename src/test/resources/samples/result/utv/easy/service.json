@@ -11,6 +11,7 @@
     "labels": {
       "app": "easy",
       "updatedBy": "hero",
+      "updatedAt": "0",
       "affiliation": "paas",
       "name": "easy",
       "booberDeployId": "deploy1"

@@ -9,6 +9,7 @@ import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
+import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.springframework.stereotype.Service
@@ -25,10 +26,10 @@ class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature
         val labels = mapOf(
             "app" to adc.name,
             "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
+            "updatedAt" to Instants.now.epochSecond.toString(),
             "affiliation" to adc.affiliation,
             "name" to adc.name
         )
-        // TODO: Add updatedTimestamp
 
         return labels.normalizeLabels()
     }

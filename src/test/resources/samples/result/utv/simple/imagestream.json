@@ -5,6 +5,7 @@
     "labels": {
       "app": "simple",
       "updatedBy": "hero",
+      "updatedAt": "0",
       "affiliation": "paas",
       "name": "simple",
       "releasedVersion": "1",
