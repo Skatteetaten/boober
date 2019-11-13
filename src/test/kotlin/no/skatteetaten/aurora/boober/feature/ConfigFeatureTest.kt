@@ -47,7 +47,6 @@ class ConfigFeatureTest : AbstractFeatureTest() {
         assertThat(env["URL"]).isEqualTo("""https://int-at.skead.no:13110/felles/sikkerhet/stsSikkerhet/v1/validerSaml""")
     }
 
-
     @Test
     fun `test render spec`() {
 

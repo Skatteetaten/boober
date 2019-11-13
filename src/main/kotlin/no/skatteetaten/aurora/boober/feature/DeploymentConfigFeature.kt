@@ -156,5 +156,4 @@ class DeploymentConfigFeature : Feature {
 
         return mapOf("deployTag" to adc.dockerTag).addIfNotNull(pauseLabel).normalizeLabels()
     }
-
 }

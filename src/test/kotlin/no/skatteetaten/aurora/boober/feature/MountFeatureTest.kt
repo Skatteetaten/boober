@@ -127,7 +127,6 @@ class MountFeatureTest : AbstractFeatureTest() {
             .singleApplicationError("Referenced Vault foo in Vault Collection paas does not exist")
     }
 
-
     @Test
     fun `should modify deploymentConfig and add auroraVaultSecret`() {
 
