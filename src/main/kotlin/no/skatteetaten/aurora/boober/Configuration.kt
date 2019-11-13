@@ -1,10 +1,12 @@
 package no.skatteetaten.aurora.boober
 
-import java.io.FileInputStream
-import java.security.KeyStore
-import java.security.cert.CertificateFactory
-import java.security.cert.X509Certificate
-import java.util.UUID
+import no.skatteetaten.aurora.AuroraMetrics
+import no.skatteetaten.aurora.boober.service.GitService
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftRestTemplateWrapper
+import no.skatteetaten.aurora.boober.service.openshift.token.ServiceAccountTokenProvider
+import no.skatteetaten.aurora.boober.service.openshift.token.UserDetailsTokenProvider
 import no.skatteetaten.aurora.boober.utils.SharedSecretReader
 import no.skatteetaten.aurora.filter.logging.AuroraHeaderFilter
 import no.skatteetaten.aurora.filter.logging.RequestKorrelasjon
@@ -29,19 +31,35 @@ import org.springframework.http.client.ClientHttpRequestInterceptor
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory
 import org.springframework.retry.annotation.EnableRetry
 import org.springframework.web.client.RestTemplate
-
-enum class ServiceTypes {
-    BITBUCKET, GENERAL, AURORA, SKAP, OPENSHIFT, CANTUS
-}
-
-@Target(AnnotationTarget.TYPE, AnnotationTarget.FUNCTION, AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
-@Retention(AnnotationRetention.RUNTIME)
-@Qualifier
-annotation class TargetService(val value: ServiceTypes)
+import java.io.FileInputStream
+import java.security.KeyStore
+import java.security.cert.CertificateFactory
+import java.security.cert.X509Certificate
+import java.util.UUID
 
 @Configuration
 @EnableRetry
 class Configuration {
+
+    @Bean
+    @ClientType(TokenSource.API_USER)
+    @Primary
+    fun createUserDetailsOpenShiftResourceClient(
+        userDetailsTokenProvider: UserDetailsTokenProvider,
+        restTemplateWrapper: OpenShiftRestTemplateWrapper
+    ): OpenShiftResourceClient = OpenShiftResourceClient(
+        userDetailsTokenProvider,
+        restTemplateWrapper
+    )
+
+    @Bean
+    @ClientType(TokenSource.SERVICE_ACCOUNT)
+    fun createServiceAccountOpenShiftResourceClient(
+        serviceAccountTokenProvider: ServiceAccountTokenProvider,
+        restTemplateWrapper: OpenShiftRestTemplateWrapper
+    ): OpenShiftResourceClient {
+        return OpenShiftResourceClient(serviceAccountTokenProvider, restTemplateWrapper)
+    }
 
     @Bean
     fun keyFactory(): KeyFactory = object : AbsKeyFactory("AES", 128) {}
@@ -68,6 +86,33 @@ class Configuration {
         return restTemplateBuilder
             .rootUri(baseUrl)
             .requestFactory { clientHttpRequestFactory }.build()
+    }
+
+    @Bean
+    @TargetDomain(Domain.AURORA_CONFIG)
+    @Primary
+    fun auroraConfigGitService(
+        userDetails: UserDetailsProvider,
+        metrics: AuroraMetrics,
+        @Value("\${integrations.bitbucket.username}") username: String,
+        @Value("\${integrations.bitbucket.password}") password: String,
+        @Value("\${integrations.aurora.config.git.urlPattern}") urlPattern: String,
+        @Value("\${integrations.aurora.config.git.checkoutPath}") checkoutPath: String
+    ): GitService {
+        return GitService(userDetails, urlPattern, checkoutPath, username, password, metrics)
+    }
+
+    @Bean
+    @TargetDomain(Domain.VAULT)
+    fun vaultGitService(
+        userDetails: UserDetailsProvider,
+        metrics: AuroraMetrics,
+        @Value("\${integrations.bitbucket.username}") username: String,
+        @Value("\${integrations.bitbucket.password}") password: String,
+        @Value("\${integrations.aurora.vault.git.urlPattern}") urlPattern: String,
+        @Value("\${integrations.aurora.vault.git.checkoutPath}") checkoutPath: String
+    ): GitService {
+        return GitService(userDetails, urlPattern, checkoutPath, username, password, metrics)
     }
 
     @Bean
@@ -212,3 +257,33 @@ class Configuration {
             ks
         }
 }
+
+enum class ServiceTypes {
+    BITBUCKET, GENERAL, AURORA, SKAP, OPENSHIFT, CANTUS
+}
+
+@Target(AnnotationTarget.TYPE, AnnotationTarget.FUNCTION, AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
+@Retention(AnnotationRetention.RUNTIME)
+@Qualifier
+annotation class TargetService(val value: ServiceTypes)
+
+enum class TokenSource {
+    SERVICE_ACCOUNT,
+    API_USER
+}
+
+@Target(AnnotationTarget.TYPE, AnnotationTarget.FUNCTION, AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
+@Retention(AnnotationRetention.RUNTIME)
+@Qualifier
+annotation class ClientType(val value: TokenSource)
+
+enum class Domain {
+    AURORA_CONFIG,
+    VAULT
+}
+
+@Target(AnnotationTarget.TYPE, AnnotationTarget.FUNCTION, AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
+@Retention(AnnotationRetention.RUNTIME)
+@Qualifier
+annotation class TargetDomain(val value: Domain)
+

@@ -1,10 +1,10 @@
 package no.skatteetaten.aurora.boober.service.vault
 
+import no.skatteetaten.aurora.boober.Domain.VAULT
+import no.skatteetaten.aurora.boober.TargetDomain
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
-import no.skatteetaten.aurora.boober.service.GitServices.Domain.VAULT
-import no.skatteetaten.aurora.boober.service.GitServices.TargetDomain
 import no.skatteetaten.aurora.boober.service.UnauthorizedAccessException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import org.eclipse.jgit.api.Git

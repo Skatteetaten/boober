@@ -9,11 +9,11 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.ClientType
+import no.skatteetaten.aurora.boober.TokenSource.API_USER
+import no.skatteetaten.aurora.boober.TokenSource.SERVICE_ACCOUNT
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient.Companion.generateUrl
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.API_USER
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.springframework.cache.annotation.Cacheable
