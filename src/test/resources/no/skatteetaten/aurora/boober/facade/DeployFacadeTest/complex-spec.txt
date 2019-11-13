@@ -75,11 +75,6 @@
       type:                                     "PVC"                           // complex.json
       exist:                                    true                            // complex.json
     }
-    config-mount: {
-      path:                                     "/content"                      // complex.json
-      type:                                     "ConfigMap"                     // complex.json
-      content:                                  {"foo":"bar"}                   // complex.json
-    }
   }
   route: {
     @name@: {

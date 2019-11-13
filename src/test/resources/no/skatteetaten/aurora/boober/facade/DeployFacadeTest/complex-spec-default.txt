@@ -108,14 +108,6 @@
       volumeName:                               "pvc"                           // default
       exist:                                    true                            // complex.json
     }
-    config-mount: {
-      path:                                     "/content"                      // complex.json
-      type:                                     "ConfigMap"                     // complex.json
-      mountName:                                "config-mount"                  // default
-      volumeName:                               "config-mount"                  // default
-      exist:                                    false                           // default
-      content:                                  {"foo":"bar"}                   // complex.json
-    }
   }
   route: {
     @name@: {

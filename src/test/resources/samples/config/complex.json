@@ -28,13 +28,6 @@
       "type": "PVC",
       "exist": true,
       "path": "/foo"
-    },
-    "config-mount": {
-      "type": "ConfigMap",
-      "content": {
-        "foo": "bar"
-      },
-      "path": "/content"
     }
   },
   "resources": {

@@ -143,10 +143,6 @@
                 "value": "/foo"
               },
               {
-                "name": "VOLUME_CONFIG_MOUNT",
-                "value": "/content"
-              },
-              {
                 "name": "ROUTE_NAME",
                 "value": "komplex-paas-utv.test"
               },
@@ -268,10 +264,6 @@
                 "name": "pvc-mount"
               },
               {
-                "mountPath": "/content",
-                "name": "config-mount"
-              },
-              {
                 "mountPath": "/u01/secrets/app/komplex-cert",
                 "name": "komplex-cert"
               }
@@ -321,12 +313,6 @@
             "persistentVolumeClaim": {
               "claimName": "pvc"
             }
-          },
-          {
-            "configMap": {
-              "name": "komplex-config-mount"
-            },
-            "name": "config-mount"
           },
           {
             "name": "komplex-cert",

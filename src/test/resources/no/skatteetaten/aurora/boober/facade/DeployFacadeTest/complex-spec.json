@@ -551,42 +551,6 @@
           }
         ]
       }
-    },
-    "config-mount": {
-      "path": {
-        "source": "complex.json",
-        "value": "/content",
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": "/content"
-          }
-        ]
-      },
-      "type": {
-        "source": "complex.json",
-        "value": "ConfigMap",
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": "ConfigMap"
-          }
-        ]
-      },
-      "content": {
-        "source": "complex.json",
-        "value": {
-          "foo": "bar"
-        },
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": {
-              "foo": "bar"
-            }
-          }
-        ]
-      }
     }
   },
   "route": {

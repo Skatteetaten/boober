@@ -1,14 +1,11 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fkorotkov.kubernetes.configMap
 import com.fkorotkov.kubernetes.metadata
-import com.fkorotkov.kubernetes.newConfigMap
 import com.fkorotkov.kubernetes.newSecret
 import com.fkorotkov.kubernetes.newVolume
 import com.fkorotkov.kubernetes.newVolumeMount
 import com.fkorotkov.kubernetes.persistentVolumeClaim
 import com.fkorotkov.kubernetes.secret
-import io.fabric8.kubernetes.api.model.ConfigMap
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
@@ -60,7 +57,6 @@ class MountFeature(
                     "mounts/$mountName/exist",
                     defaultValue = false
                 ),
-                AuroraConfigFieldHandler("mounts/$mountName/content"),
                 AuroraConfigFieldHandler("mounts/$mountName/secretVault")
             )
         }.toSet()
@@ -69,28 +65,12 @@ class MountFeature(
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         val mounts = getMounts(adc, cmd)
-        val configMounts = mounts.filter { !it.exist && it.type == MountType.ConfigMap && it.content != null }
 
         val secrets = generateSecrets(mounts, adc)
-        val configMaps = generateConfigMaps(configMounts, adc)
 
-        return configMaps.addIfNotNull(secrets).map {
+        return secrets.map {
             generateResource(it)
         }.toSet()
-    }
-
-    private fun generateConfigMaps(configMounts: List<Mount>, adc: AuroraDeploymentSpec): List<ConfigMap> {
-        return configMounts.filter { it.type == MountType.ConfigMap }
-            .filter { it.content != null }
-            .map {
-                newConfigMap {
-                    metadata {
-                        name = it.volumeName.ensureStartWith(adc.name, "-")
-                        namespace = adc.namespace
-                    }
-                    data = it.content
-                }
-            }
     }
 
     private fun generateSecrets(mounts: List<Mount>, adc: AuroraDeploymentSpec): List<Secret> {
@@ -142,17 +122,18 @@ class MountFeature(
         cmd: AuroraContextCommand
     ): List<Exception> {
         val mounts = getMounts(adc, cmd)
-        val errors = validateConfigMapMountHasContent(mounts, adc)
-            // .addIfNotNull(validatePVCMounts(mounts))
-            .addIfNotNull(validateExistinAndSecretVault(mounts))
+
+        val errors = validateExistinAndSecretVault(mounts)
+        // .addIfNotNull(validatePVCMounts(mounts))
         if (!fullValidation || adc.cluster != cluster) {
             return errors
         }
-        return errors.addIfNotNull(validateExistingMounts(mounts, adc))
+        return errors
+            .addIfNotNull(validateExistingMounts(mounts, adc))
             .addIfNotNull(validateVaultExistence(mounts, adc))
     }
 
-    private fun validateExistinAndSecretVault(mounts: List<Mount>): List<AuroraDeploymentSpecValidationException>? {
+    private fun validateExistinAndSecretVault(mounts: List<Mount>): List<Exception> {
         return mounts.filter { it.exist && it.secretVaultName != null }.map {
             AuroraDeploymentSpecValidationException("Secret mount=${it.volumeName} with vaultName set cannot be marked as existing")
         }
@@ -168,15 +149,6 @@ class MountFeature(
         }
     }
      */
-
-    fun validateConfigMapMountHasContent(
-        mounts: List<Mount>,
-        adc: AuroraDeploymentSpec
-    ): List<AuroraDeploymentSpecValidationException> {
-        return mounts.filter { it.type == MountType.ConfigMap && it.content == null }.map {
-            AuroraDeploymentSpecValidationException("Mount with type=${it.type} namespace=${adc.namespace} name=${it.volumeName} does not have required content block")
-        }
-    }
 
     fun validateVaultExistence(
         mounts: List<Mount>,
@@ -220,12 +192,6 @@ class MountFeature(
         return mountNames.map { mount ->
             val type: MountType = auroraDeploymentSpec["mounts/$mount/type"]
 
-            // TODO : bug here if content is not map
-            val content: Map<String, String>? = if (type == MountType.ConfigMap) {
-                auroraDeploymentSpec.getOrNull("mounts/$mount/content")
-            } else {
-                null
-            }
             val secretVaultName = auroraDeploymentSpec.getOrNull<String?>("mounts/$mount/secretVault")
 
             val mountName: String = auroraDeploymentSpec["mounts/$mount/mountName"]
@@ -237,7 +203,6 @@ class MountFeature(
                 mountName = mountName.ensureEndsWith("mount", "-"),
                 volumeName = if (exist) volumeName else volumeName.ensureEndsWith("mount", "-"),
                 exist = exist,
-                content = content,
                 secretVaultName = secretVaultName
             )
         }
@@ -259,9 +224,6 @@ fun List<Mount>.podVolumes(appName: String): List<Volume> {
         newVolume {
             name = it.normalizeMountName()
             when (it.type) {
-                MountType.ConfigMap -> configMap {
-                    name = volumeName
-                }
                 MountType.Secret -> secret {
                     secretName = volumeName
                 }
@@ -274,7 +236,6 @@ fun List<Mount>.podVolumes(appName: String): List<Volume> {
 }
 
 enum class MountType(val kind: String) {
-    ConfigMap("configmap"),
     Secret("secret"),
     PVC("persistentvolumeclaim")
 }
@@ -285,7 +246,6 @@ data class Mount(
     val mountName: String,
     val volumeName: String,
     val exist: Boolean,
-    val content: Map<String, String>? = null,
     val secretVaultName: String? = null,
     val targetContainer: String? = null
 ) {
