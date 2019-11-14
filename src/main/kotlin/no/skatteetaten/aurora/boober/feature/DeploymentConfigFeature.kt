@@ -84,7 +84,7 @@ class DeploymentConfigFeature : Feature {
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
-        val dcLabels = createDcLabels(adc)
+        val dcLabels = createDcLabels(adc).normalizeLabels()
         val dcAnnotations = createDcAnnotations(adc, cmd)
         val envVars = createEnvVars(adc).toEnvVars()
         resources.forEach {

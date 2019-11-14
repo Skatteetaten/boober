@@ -17,6 +17,7 @@ import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationExcep
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.filterNullValues
 import no.skatteetaten.aurora.boober.utils.getBoolean
+import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.text.StringSubstitutor
@@ -54,7 +55,7 @@ abstract class AbstractTemplateFeature : Feature {
         val id = DigestUtils.sha1Hex("${type.name.toLowerCase()}-$name")
         resources.forEach {
             if (it.resource.kind == "ApplicationDeployment") {
-                val labels = mapOf("applicationId" to id)
+                val labels = mapOf("applicationId" to id).normalizeLabels()
                 modifyResource(it, "Added application name and id")
                 val ad: ApplicationDeployment = it.resource as ApplicationDeployment
                 ad.spec.applicationName = name
