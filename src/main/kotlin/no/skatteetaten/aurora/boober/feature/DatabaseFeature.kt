@@ -148,8 +148,11 @@ class DatabaseFeature(
         val volumes = volumeAndMounts.map { it.first }
         val volumeMounts = volumeAndMounts.map { it.second }
 
+            //TODO: I get NPE here, better tests here?
         val databaseId =
-            resources.filter { it.resource.kind == "Secret" }.mapNotNull { it.resource.metadata.labels["dbhId"] }
+            resources.filter { it.resource.kind == "Secret" }.mapNotNull {
+                it.resource.metadata?.labels?.get("dbhId")
+            }
 
         resources.forEach {
             if (it.resource.kind == "ApplicationDeployment") {

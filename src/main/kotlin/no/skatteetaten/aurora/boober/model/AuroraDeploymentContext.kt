@@ -57,6 +57,11 @@ fun List<AuroraDeploymentContext>.createDeployCommand(deploy: Boolean): List<Aur
     val resourceErrors = result.flatMap { it.first }
     if (resourceErrors.isNotEmpty()) {
 
+        /* just throw the exception...
+        resourceErrors.forEach { it.errors.forEach { err ->
+            throw err
+        } }
+         */
         val errorMessages = resourceErrors.flatMap { err ->
             err.errors.map { it.localizedMessage }
         }
