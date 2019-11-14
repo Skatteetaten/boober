@@ -10,8 +10,6 @@ import com.fkorotkov.kubernetes.secret
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
-import java.io.ByteArrayOutputStream
-import java.util.Properties
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
@@ -43,6 +41,8 @@ import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
+import java.io.ByteArrayOutputStream
+import java.util.Properties
 
 private val logger = KotlinLogging.logger { }
 
@@ -148,11 +148,9 @@ class DatabaseFeature(
         val volumes = volumeAndMounts.map { it.first }
         val volumeMounts = volumeAndMounts.map { it.second }
 
-            //TODO: I get NPE here, better tests here?
-        val databaseId =
-            resources.filter { it.resource.kind == "Secret" }.mapNotNull {
-                it.resource.metadata?.labels?.get("dbhId")
-            }
+        val databaseId = resources.filter { it.resource.kind == "Secret" }.mapNotNull {
+            it.resource.metadata?.labels?.get("dbhId")
+        }
 
         resources.forEach {
             if (it.resource.kind == "ApplicationDeployment") {
