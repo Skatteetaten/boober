@@ -6,7 +6,6 @@ import no.skatteetaten.aurora.boober.service.ContextErrors
 import no.skatteetaten.aurora.boober.service.ExceptionList
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.utils.UUIDGenerator
-import org.springframework.util.StopWatch
 
 private val logger = KotlinLogging.logger { }
 
@@ -25,9 +24,7 @@ fun AuroraDeploymentContext.validate(fullValidation: Boolean): Map<Feature, List
 }
 
 fun List<AuroraDeploymentContext>.createDeployCommand(deploy: Boolean): List<AuroraDeployCommand> {
-    val watch = StopWatch()
     val result: List<Pair<List<ContextErrors>, AuroraDeployCommand?>> = this.map { context ->
-        watch.start(context.cmd.applicationDeploymentRef.toString())
         val (errors, resourceResults) = context.createResources()
         when {
             errors.isNotEmpty() -> errors to null
@@ -48,12 +45,8 @@ fun List<AuroraDeploymentContext>.createDeployCommand(deploy: Boolean): List<Aur
                     shouldDeploy = deploy
                 )
             }
-        }.also {
-            watch.stop()
         }
     }
-    logger.info("Create Resources ${watch.prettyPrint()}")
-
     val resourceErrors = result.flatMap { it.first }
     if (resourceErrors.isNotEmpty()) {
 

@@ -25,7 +25,6 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.whenFalse
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import org.springframework.util.StopWatch
 
 private val logger = KotlinLogging.logger { }
 
@@ -41,13 +40,10 @@ class OpenShiftDeployer(
 ) {
     fun performDeployCommands(deployCommands: List<AuroraDeployCommand>): Map<String, List<AuroraDeployResult>> {
 
-        val watch = StopWatch()
         val envDeploys: Map<String, List<AuroraDeployCommand>> = deployCommands.groupBy { it.context.spec.namespace }
 
         return envDeploys.mapValues { (ns, commands) ->
-            watch.start("env-$ns")
             val env = prepareDeployEnvironment(ns, commands.first().headerResources)
-            watch.stop()
 
             if (!env.success) {
                 commands.map {
@@ -61,14 +57,10 @@ class OpenShiftDeployer(
                 }
             } else {
                 commands.map {
-                    watch.start("apply-${it.context.cmd.applicationDeploymentRef}")
                     val result = deployFromSpec(it, env)
-                    watch.stop()
                     result.copy(openShiftResponses = env.openShiftResponses.addIfNotNull(result.openShiftResponses))
                 }
             }
-        }.also {
-            logger.info("Perform deploy ${watch.prettyPrint()}")
         }
     }
 

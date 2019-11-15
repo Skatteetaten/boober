@@ -13,7 +13,6 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.parallelMap
 import org.apache.commons.text.StringSubstitutor
 import org.springframework.stereotype.Service
-import org.springframework.util.StopWatch
 
 private val logger = KotlinLogging.logger {}
 
@@ -27,11 +26,9 @@ class AuroraDeploymentContextService(
         resourceValidation: Boolean = true
     ): List<AuroraDeploymentContext> {
 
-        val watch = StopWatch()
 
         val result: List<Pair<AuroraDeploymentContext?, ContextErrors?>> = commands.parallelMap { cmd ->
             try {
-                watch.start(cmd.applicationDeploymentRef.toString())
                 logger.debug("Create ADC for app=${cmd.applicationDeploymentRef}")
                 val context = createAuroraDeploymentContext(cmd)
 
@@ -44,12 +41,8 @@ class AuroraDeploymentContextService(
                 }
             } catch (e: Throwable) {
                 null to ContextErrors(cmd, listOf(e))
-            } finally {
-                watch.stop()
             }
         }
-        logger.info("Create ADC ${watch.prettyPrint()}")
-
         val errors = result.mapNotNull { it.second }
         if (errors.isNotEmpty()) {
             val errorMessages = errors.flatMap { err ->
