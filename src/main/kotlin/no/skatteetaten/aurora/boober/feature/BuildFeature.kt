@@ -20,7 +20,6 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import org.springframework.stereotype.Service
 
-// TODO time="2019-11-08T15:23:15+01:00" level=warning msg="Failed to find a specified url for InternalPullRegistry. Using https://docker-registry.aurora.sits.no:5000"
 @Service
 class BuildFeature : Feature {
     override fun enable(header: AuroraDeploymentSpec): Boolean {

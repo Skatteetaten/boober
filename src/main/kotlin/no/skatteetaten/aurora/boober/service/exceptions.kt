@@ -25,7 +25,6 @@ class MultiApplicationValidationException(
     val errors: List<ContextErrors> = listOf()
 ) : ServiceException("An error occurred for one or more applications") {
 
-    // TODO: test, this is in the controller advice, how do we test that?
     fun toValidationErrors(): List<ApplicationError> {
         return this.errors.flatMap {
             it.errors.map { t ->
