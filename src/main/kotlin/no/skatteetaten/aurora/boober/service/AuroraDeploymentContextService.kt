@@ -26,7 +26,6 @@ class AuroraDeploymentContextService(
         resourceValidation: Boolean = true
     ): List<AuroraDeploymentContext> {
 
-
         val result: List<Pair<AuroraDeploymentContext?, ContextErrors?>> = commands.parallelMap { cmd ->
             try {
                 logger.debug("Create ADC for app=${cmd.applicationDeploymentRef}")

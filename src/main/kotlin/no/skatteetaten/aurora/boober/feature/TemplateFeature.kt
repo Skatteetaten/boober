@@ -8,10 +8,14 @@ import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class TemplateFeature(val openShiftClient: OpenShiftClient) : AbstractTemplateFeature() {
+class TemplateFeature(
+    val openShiftClient: OpenShiftClient,
+    @Value("\${openshift.cluster}") c: String
+) : AbstractTemplateFeature(c) {
     override fun enable(header: AuroraDeploymentSpec) = header.type == TemplateType.template
 
     override fun templateHandlers(

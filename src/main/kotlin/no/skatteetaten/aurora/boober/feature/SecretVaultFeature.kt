@@ -169,6 +169,7 @@ class SecretVaultFeature(
             )
             null
         } catch (e: Exception) {
+            // TODO: Add error message if user does not have access to vault
             AuroraDeploymentSpecValidationException("File with name=${secret.file} is not present in vault=${secret.secretVaultName} in collection=$vaultCollectionName")
         }
     }

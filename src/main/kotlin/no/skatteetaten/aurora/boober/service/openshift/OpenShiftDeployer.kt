@@ -22,6 +22,7 @@ import no.skatteetaten.aurora.boober.service.RedeployService
 import no.skatteetaten.aurora.boober.service.TagCommand
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.parallelMap
 import no.skatteetaten.aurora.boober.utils.whenFalse
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -56,7 +57,7 @@ class OpenShiftDeployer(
                     )
                 }
             } else {
-                commands.map {
+                commands.parallelMap {
                     val result = deployFromSpec(it, env)
                     result.copy(openShiftResponses = env.openShiftResponses.addIfNotNull(result.openShiftResponses))
                 }
@@ -66,6 +67,7 @@ class OpenShiftDeployer(
 
     private fun prepareDeployEnvironment(namespace: String, resources: Set<AuroraResource>): AuroraEnvironmentResult {
 
+        logger.debug { "Create env with name $namespace" }
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
 
         val projectExist = openShiftClient.projectExists(namespace)
@@ -110,6 +112,8 @@ class OpenShiftDeployer(
         cmd: AuroraDeployCommand,
         env: AuroraEnvironmentResult
     ): AuroraDeployResult {
+
+        logger.debug { "Apply application ${cmd.context.cmd.applicationDeploymentRef}" }
         val projectExist = env.projectExist
         val context = cmd.context
         val resources = cmd.resources

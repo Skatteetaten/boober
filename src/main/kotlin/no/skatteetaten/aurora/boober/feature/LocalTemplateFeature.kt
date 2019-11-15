@@ -6,10 +6,13 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class LocalTemplateFeature : AbstractTemplateFeature() {
+class LocalTemplateFeature(
+    @Value("\${openshift.cluster}") c: String
+) : AbstractTemplateFeature(c) {
 
     override fun enable(header: AuroraDeploymentSpec) = header.type == TemplateType.localTemplate
 
