@@ -1,7 +1,5 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fasterxml.jackson.module.kotlin.convertValue
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.newEnvVar
 import com.fkorotkov.openshift.customStrategy
 import com.fkorotkov.openshift.from
@@ -51,14 +49,14 @@ class BuildFeature : Feature {
         resources.forEach {
             if (it.resource.kind == "ImageStream") {
                 modifyResource(it, "Remove spec from imagestream")
-                val imageStream: ImageStream = jacksonObjectMapper().convertValue(it.resource)
+                val imageStream: ImageStream = it.resource as ImageStream
                 imageStream.spec = null
             }
 
             if (it.resource.kind == "DeploymentConfig") {
 
                 modifyResource(it, "Change imageChangeTrigger to follow latest")
-                val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
+                val dc: DeploymentConfig = it.resource as DeploymentConfig
                 dc.spec.triggers.forEach { dtp ->
                     if (dtp.type == "ImageChange") {
                         dtp.imageChangeParams.from.name = "${adc.name}:latest"

@@ -110,7 +110,7 @@ fun Assert<List<AuroraDeployResult>>.auroraDeployResultMatchesFiles() = transfor
             }
         } else if (it.openshiftKind == "applicationdeployment") {
             val auroraConfigField = it.at("/spec/command/auroraConfig") as ObjectNode
-            auroraConfigField.set("resolvedRef", TextNode("123abb"))
+            auroraConfigField.replace("resolvedRef", TextNode("123abb"))
         }
         compareJson(resultFiles[key]!!, it)
     }

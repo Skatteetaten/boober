@@ -70,7 +70,7 @@ data class OpenShiftResponse(
                 command,
                 response,
                 success = false,
-                exception = e.message,
+                exception = e.message, // TODO If we create a better exception here we can remove some code in the resourceClient
                 httpErrorCode = httpCode
             )
         }

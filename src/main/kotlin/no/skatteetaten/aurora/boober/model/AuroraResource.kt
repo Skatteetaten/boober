@@ -1,18 +1,18 @@
 package no.skatteetaten.aurora.boober.model
 
-import com.fasterxml.jackson.module.kotlin.convertValue
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
 import io.fabric8.openshift.api.model.DeploymentConfig
 import java.time.Instant
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 
+private val logger = KotlinLogging.logger {}
 /*
   An dataclass to hold a HasMetadata resource that will be mutated in the generation process
 
@@ -39,7 +39,7 @@ fun Set<AuroraResource>.addEnvVar(
 ) {
     this.filter { it.resource.kind == "DeploymentConfig" }.forEach {
         it.sources.add(AuroraResourceSource(feature = clazz, comment = "Added env vars"))
-        val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
+        val dc: DeploymentConfig = it.resource as DeploymentConfig
         dc.allNonSideCarContainers.forEach { container ->
             container.env.addAll(envVars)
         }
@@ -54,7 +54,7 @@ fun Set<AuroraResource>.addVolumesAndMounts(
 ) {
     this.filter { it.resource.kind == "DeploymentConfig" }.forEach {
         it.sources.add(AuroraResourceSource(feature = clazz, comment = "Added env vars, volume mount, volume"))
-        val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
+        val dc: DeploymentConfig = it.resource as DeploymentConfig
         dc.spec.template.spec.volumes = dc.spec.template.spec.volumes.addIfNotNull(volumes)
         dc.allNonSideCarContainers.forEach { container ->
             container.volumeMounts = container.volumeMounts.addIfNotNull(volumeMounts)

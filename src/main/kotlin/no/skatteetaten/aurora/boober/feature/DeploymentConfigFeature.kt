@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.feature
 
 import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.resources
 import io.fabric8.kubernetes.api.model.EnvVar
@@ -84,19 +85,19 @@ class DeploymentConfigFeature : Feature {
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
-        val dcLabels = createDcLabels(adc)
+        val dcLabels = createDcLabels(adc).normalizeLabels()
         val envVars = createEnvVars(adc).toEnvVars()
         resources.forEach {
             if (it.resource.kind == "ApplicationDeployment") {
                 modifyResource(it, "Added information from deployment")
-                val ad: ApplicationDeployment = jacksonObjectMapper().convertValue(it.resource)
+                val ad: ApplicationDeployment = it.resource as ApplicationDeployment
                 val spec = ad.spec
                 spec.splunkIndex = adc.splunkIndex
                 spec.releaseTo = adc.releaseTo
                 spec.deployTag = adc.dockerTag
                 spec.managementPath = adc.managementPath
             } else if (it.resource.kind == "DeploymentConfig") {
-                val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
+                val dc: DeploymentConfig = it.resource as DeploymentConfig
 
                 modifyResource(it, "Added labels, annotations, shared env vars and request limits")
                 if (dc.spec.template.metadata == null) {

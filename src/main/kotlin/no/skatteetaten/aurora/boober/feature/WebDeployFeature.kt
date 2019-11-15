@@ -1,7 +1,5 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fasterxml.jackson.module.kotlin.convertValue
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.newEnvVar
 import com.fkorotkov.openshift.customStrategy
 import io.fabric8.kubernetes.api.model.Container
@@ -46,7 +44,7 @@ class WebDeployFeature(@Value("\${integrations.docker.registry}") val registry: 
             if (it.resource.kind == "BuildConfig") {
 
                 modifyResource(it, "Set applicationType in build")
-                val bc: BuildConfig = jacksonObjectMapper().convertValue(it.resource)
+                val bc: BuildConfig = it.resource as BuildConfig
                 bc.spec.strategy.customStrategy {
                     env.add(
                         newEnvVar {

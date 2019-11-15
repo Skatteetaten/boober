@@ -18,7 +18,7 @@ class JavaDeployFeatureTest : AbstractFeatureTest() {
 
         val (adResource, dcResource, serviceResource, isResource) = generateResources(
             """{
-          "version" : "1",
+          "version" : "SNAPSHOT-feature_FOO_1001_FIX_STUPID_STUFF_20190402.113042-26-b1.18.1-wingnut8-1.3.0",
           "groupId" : "org.test"
       }""", resource = createEmptyApplicationDeployment(),
             createdResources = 3
@@ -64,7 +64,7 @@ class JavaDeployFeatureTest : AbstractFeatureTest() {
         assertThat(dcResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("dc-expanded.json")
         assertThat(serviceResource).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("service-no-prometheus.json")
-        assertThat(isResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("is.json")
+        assertThat(isResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("is-1.json")
     }
 
     @Test

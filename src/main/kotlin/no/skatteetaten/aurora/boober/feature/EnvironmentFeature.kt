@@ -21,6 +21,7 @@ import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.springframework.boot.convert.DurationStyle
 import org.springframework.stereotype.Service
 
@@ -76,7 +77,7 @@ class EnvironmentFeature(
 
         return newNamespace {
             metadata {
-                labels = mapOf("affiliation" to adc.affiliation).addIfNotNull(ttl)
+                labels = mapOf("affiliation" to adc.affiliation).addIfNotNull(ttl).normalizeLabels()
                 name = adc.namespace
             }
         }

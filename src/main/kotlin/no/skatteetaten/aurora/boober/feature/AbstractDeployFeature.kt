@@ -1,7 +1,5 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fasterxml.jackson.module.kotlin.convertValue
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.emptyDir
 import com.fkorotkov.kubernetes.fieldRef
 import com.fkorotkov.kubernetes.httpGet
@@ -50,6 +48,7 @@ import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.length
+import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.pattern
 import no.skatteetaten.aurora.boober.utils.removeExtension
@@ -220,9 +219,9 @@ abstract class AbstractDeployFeature(
         val id = DigestUtils.sha1Hex("${adc.groupId}/$name")
         resources.forEach {
             if (it.resource.kind == "ApplicationDeployment") {
-                val labels = mapOf("applicationId" to id)
+                val labels = mapOf("applicationId" to id).normalizeLabels()
                 modifyResource(it, "Added application name and id")
-                val ad: ApplicationDeployment = jacksonObjectMapper().convertValue(it.resource)
+                val ad: ApplicationDeployment = it.resource as ApplicationDeployment
                 ad.spec.applicationName = name
                 ad.spec.applicationId = id
                 ad.metadata.labels = ad.metadata.labels?.addIfNotNull(labels) ?: labels
@@ -274,7 +273,7 @@ abstract class AbstractDeployFeature(
         metadata {
             name = adc.name
             namespace = adc.namespace
-            labels = mapOf("releasedVersion" to adc.version)
+            labels = mapOf("releasedVersion" to adc.version).normalizeLabels()
         }
         spec {
             dockerImageRepository = "$dockerRegistry/${adc.dockerImagePath}"
