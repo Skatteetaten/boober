@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 
 class LocalTemplateFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = LocalTemplateFeature()
+        get() = LocalTemplateFeature("utv")
 
     val template: String = this.javaClass.getResource("/samples/config/templates/atomhopper.json").readText()
     val templateFile = listOf(AuroraConfigFile("templates/atomhopper.json", contents = template))
