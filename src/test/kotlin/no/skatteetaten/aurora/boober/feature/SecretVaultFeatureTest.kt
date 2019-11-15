@@ -143,6 +143,28 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
+    fun `should modify deploymentConfig and add auroraVaultSecret-with-uppercase`() {
+
+        mockVault("Foo")
+        val resource = generateResources(
+            """{
+              "secretVault" : "Foo" 
+             }""", createEmptyDeploymentConfig()
+        )
+        assertThat(resource.size).isEqualTo(2)
+        val dcResource = resource.first()
+        assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added env vars")
+        val dc = dcResource.resource as DeploymentConfig
+        val env = dc.spec.template.spec.containers.first().env
+        assertThat(env.size).isEqualTo(1)
+        val foo = env.first()
+
+        val attachmentResource = resource.last()
+        assertThat(attachmentResource.resource.metadata.name).isEqualTo(attachmentResource.resource.metadata.name.toLowerCase())
+        assertEnvVarMounted(attachmentResource, "FOO", foo)
+    }
+
+    @Test
     fun `should modify deploymentConfig and add auroraVaultSecret and ignore key`() {
 
         every { vaultProvider.findVaultKeys("paas", "foo", "latest.properties") } returns setOf("FOO", "BAR")

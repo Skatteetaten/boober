@@ -120,7 +120,7 @@ fun JsonNode.updateField(source: JsonNode, root: String, field: String, required
         }
     }
 
-    (targetRoot as ObjectNode).set(field, sourceField)
+    (targetRoot as ObjectNode).replace(field, sourceField)
 }
 
 fun JsonNode.mergeField(source: ObjectNode, root: String, field: String) {
@@ -128,11 +128,14 @@ fun JsonNode.mergeField(source: ObjectNode, root: String, field: String) {
     val sourceObject = source.at(jsonPtrExpr) as ObjectNode
 
     val mergedObject = sourceObject.deepCopy()
-    this.at(jsonPtrExpr)
-        .takeIf { it is ObjectNode }
-        ?.also { mergedObject.setAll(it as ObjectNode) }
 
-    (this.at(root) as ObjectNode).set(field, mergedObject)
+    val fieldNode = this.at(jsonPtrExpr)
+    if (fieldNode is ObjectNode) {
+        mergedObject.setAll<ObjectNode>(fieldNode)
+    }
+
+    val rootNode = this.at(root) as ObjectNode
+    rootNode.replace(field, mergedObject)
 }
 
 fun JsonNode?.startsWith(pattern: String, message: String): Exception? {

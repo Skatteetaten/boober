@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.configMap
 import com.fkorotkov.kubernetes.metadata
@@ -75,12 +74,12 @@ class ToxiproxySidecarFeature : Feature {
         resources.forEach {
             if (it.resource.kind == "DeploymentConfig") {
                 modifyResource(it, "Added toxiproxy volume and sidecar container")
-                val dc: DeploymentConfig = jacksonObjectMapper().convertValue(it.resource)
+                val dc: DeploymentConfig = it.resource as DeploymentConfig
                 val podSpec = dc.spec.template.spec
                 podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
                 podSpec.containers = podSpec.containers.addIfNotNull(container)
             } else if (it.resource.kind == "Service") {
-                val service: Service = jacksonObjectMapper().convertValue(it.resource)
+                val service: Service = it.resource as Service
                 service.spec.ports.filter { p -> p.name == "http" }.forEach { port ->
                     port.targetPort = IntOrString(PortNumbers.TOXIPROXY_HTTP_PORT)
                 }

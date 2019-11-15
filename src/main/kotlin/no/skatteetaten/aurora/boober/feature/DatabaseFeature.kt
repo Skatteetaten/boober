@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.feature
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newSecret
@@ -149,13 +148,14 @@ class DatabaseFeature(
         val volumes = volumeAndMounts.map { it.first }
         val volumeMounts = volumeAndMounts.map { it.second }
 
-        val databaseId =
-            resources.filter { it.resource.kind == "Secret" }.mapNotNull { it.resource.metadata.labels["dbhId"] }
+        val databaseId = resources.filter { it.resource.kind == "Secret" }.mapNotNull {
+            it.resource.metadata?.labels?.get("dbhId")
+        }
 
         resources.forEach {
             if (it.resource.kind == "ApplicationDeployment") {
                 modifyResource(it, "Added databaseId")
-                val ad: ApplicationDeployment = jacksonObjectMapper().convertValue(it.resource)
+                val ad: ApplicationDeployment = it.resource as ApplicationDeployment
                 ad.spec.databases = databaseId
             }
         }

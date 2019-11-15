@@ -171,7 +171,7 @@ object StsSecretGenerator {
     ): Secret {
 
         val secret = create(appName, stsProvisionResults, namespace)
-        secret.metadata.labels = secret.metadata.labels.addIfNotNull(labels)
+        secret.metadata.labels = labels.addIfNotNull(secret.metadata?.labels).normalizeLabels()
         secret.metadata.ownerReferences = listOf(ownerReference)
         return secret
     }

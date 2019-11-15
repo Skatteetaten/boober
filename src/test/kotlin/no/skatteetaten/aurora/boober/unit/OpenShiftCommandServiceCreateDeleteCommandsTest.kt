@@ -88,7 +88,7 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest : ResourceLoader() {
 
             items.add(it.value)
             responseBody.put("kind", kindList)
-            responseBody.set("items", items)
+            responseBody.replace("items", items)
 
             kind to responseBody
         }.toMap()

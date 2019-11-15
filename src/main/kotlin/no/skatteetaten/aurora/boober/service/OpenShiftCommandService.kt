@@ -239,7 +239,7 @@ class OpenShiftCommandService(
         }
     }
 
-    // TODO: Better error messages here.
+    // TODO: How we handle errors here is pretty complicated, Clean this up when we move to WebClient?
     fun findErrorMessage(response: OpenShiftResponse): String? {
         if (!response.success) {
             return response.exception

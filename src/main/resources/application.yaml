@@ -60,12 +60,17 @@ aurora:
 logging:
     level:
         no.skatteetaten: INFO
-        no.skatteetaten.aurora.boober: INFO
+        no.skatteetaten.aurora.boober: DEBUG
         org:
             jboss: WARN
             hibernate: WARN
             springframework: WARN
             apache: WARN
+server:
+    tomcat:
+        mbeanregistry:
+            enabled: true
+
 ---
 spring:
     profiles: local
@@ -74,6 +79,9 @@ openshift:
     cluster: utv
 
 integrations:
+    bitbucket:
+        username: test
+        password: test
     dbh:
         url: http://dbh-aurora.${openshift.cluster}.paas.skead.no
     cantus:
@@ -88,6 +96,8 @@ integrations:
         releases: "container-registry-internal-release.aurora.skead.no:443"
         registry: "container-registry-internal-private-pull.aurora.skead.no:443"
 boober:
+    encrypt:
+        key: test
     openshift:
         tokenLocation: /tmp/boober-token
 

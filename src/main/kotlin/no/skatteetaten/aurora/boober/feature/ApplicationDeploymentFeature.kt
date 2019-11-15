@@ -13,6 +13,7 @@ import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.durationString
+import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.boot.convert.DurationStyle.SIMPLE
 import org.springframework.stereotype.Service
@@ -52,7 +53,7 @@ class ApplicationDeploymentFeature : Feature {
             _metadata = newObjectMeta {
                 name = adc.name
                 namespace = adc.namespace
-                labels = mapOf("id" to applicationDeploymentId).addIfNotNull(ttl)
+                labels = mapOf("id" to applicationDeploymentId).addIfNotNull(ttl).normalizeLabels()
             }
         // TODO: add annotation with updatedAt iso time format
         )
