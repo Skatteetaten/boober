@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.boober.service.ContextErrors
 import no.skatteetaten.aurora.boober.service.ExceptionList
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.utils.UUIDGenerator
+import no.skatteetaten.aurora.boober.utils.parallelMap
 
 private val logger = KotlinLogging.logger { }
 
@@ -24,7 +25,7 @@ fun AuroraDeploymentContext.validate(fullValidation: Boolean): Map<Feature, List
 }
 
 fun List<AuroraDeploymentContext>.createDeployCommand(deploy: Boolean): List<AuroraDeployCommand> {
-    val result: List<Pair<List<ContextErrors>, AuroraDeployCommand?>> = this.map { context ->
+    val result: List<Pair<List<ContextErrors>, AuroraDeployCommand?>> = this.parallelMap { context ->
         val (errors, resourceResults) = context.createResources()
         when {
             errors.isNotEmpty() -> errors to null

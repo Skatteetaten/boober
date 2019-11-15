@@ -22,7 +22,9 @@ import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.text.StringSubstitutor
 
-abstract class AbstractTemplateFeature : Feature {
+abstract class AbstractTemplateFeature(
+    val cluster: String
+) : Feature {
 
     abstract fun templateHandlers(
         files: List<AuroraConfigFile>,
@@ -70,6 +72,11 @@ abstract class AbstractTemplateFeature : Feature {
         fullValidation: Boolean,
         cmd: AuroraContextCommand
     ): List<Exception> {
+
+        // TODO: LocalTemplate could be in normal validation, but very few people us it.
+        if (!fullValidation || adc.cluster != cluster) {
+            return emptyList()
+        }
 
         val templateJson = try {
             findTemplate(adc, cmd)
