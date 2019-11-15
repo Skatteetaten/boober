@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test
 
 class TemplateFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = TemplateFeature(openShiftClient)
+        get() = TemplateFeature(openShiftClient, "utv")
 
     val template: String = this.javaClass.getResource("/samples/config/templates/atomhopper.json").readText()
 
