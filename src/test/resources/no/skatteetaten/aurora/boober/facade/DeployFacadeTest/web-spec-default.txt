@@ -1,81 +1,56 @@
-{
-  applicationDeploymentRef: "utv/web"                     // static
-  configVersion:            "master"                      // static
-  schemaVersion:            "v1"                          // about.json
-  type:                     "development"                 // web.json
-  applicationPlatform:      "web"                         // web.json
-  affiliation:              "paas"                        // about.json
-  segment:                  "aurora"                      // about.json
-  cluster:                  "utv"                         // utv/about.json
-  permissions: {
-    admin:                  "APP_PaaS_drift APP_PaaS_utv" // about.json
-  }
-  envName:                  "utv"                         // folderName
-  name:                     "web"                         // fileName
-  artifactId:               "web"                         // fileName
-  groupId:                  "org.test"                    // web.json
-  version:                  "develop-SNAPSHOT"            // web.json
-  builder: {
-    name:                   "architect"                   // default
-    version:                "1"                           // default
-  }
-  baseImage: {
-    name:                   "wrench8"                     // default
-    version:                1                             // default
-  }
-  config: {
-    foo2:                   "baz"                         // web.json
-  }
-  databaseDefaults: {
-    flavor:                 "ORACLE_MANAGED"              // default
-    generate:               true                          // default
-    name:                   "@name@"                      // default
-  }
-  database:                 false                         // default
-  management: {
-    path:                   "actuator"                    // default
-    port:                   "8081"                        // default
-  }
-  alarm:                    true                          // default
-  pause:                    false                         // default
-  debug:                    false                         // default
-  resources: {
-    cpu: {
-      min:                  "10m"                         // default
-      max:                  "2000m"                       // default
-    }
-    memory: {
-      min:                  "128Mi"                       // default
-      max:                  "512Mi"                       // default
-    }
-  }
-  route:                    true                          // web.json
-  routeDefaults: {
-    host:                   "@name@-@affiliation@-@env@"  // default
-    tls: {
-      enabled:              false                         // default
-      insecurePolicy:       "Redirect"                    // default
-      termination:          "edge"                        // default
-    }
-  }
-  certificate:              false                         // default
-  toxiproxy: {
-    version:                "2.1.3"                       // default
-  }
-  deployStrategy: {
-    type:                   "rolling"                     // default
-    timeout:                180                           // default
-  }
-  replicas:                 1                             // default
-  prometheus: {
-    path:                   "/prometheus"                 // default
-    port:                   8081                          // default
-  }
-  readiness: {
-    port:                   8080                          // default
-    delay:                  10                            // default
-    timeout:                1                             // default
-  }
-  liveness:                 false                         // default
-  webseal:                  false                         // default
-}
+        static | applicationDeploymentRef: "utv/web"
+        static | configVersion: "master"
+    about.json | schemaVersion: "v1"
+      web.json | type: "development"
+      web.json | applicationPlatform: "web"
+    about.json | affiliation: "paas"
+    about.json | segment: "aurora"
+utv/about.json | cluster: "utv"
+               | permissions:
+    about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
+    folderName | envName: "utv"
+      fileName | name: "web"
+      fileName | artifactId: "web"
+      web.json | groupId: "org.test"
+      web.json | version: "develop-SNAPSHOT"
+               | builder:
+       default |   name: "architect"
+       default |   version: "1"
+               | baseImage:
+       default |   name: "wrench8"
+       default |   version: 1
+               | config:
+      web.json |   foo2: "baz"
+               | databaseDefaults:
+       default |   flavor: "ORACLE_MANAGED"
+       default |   generate: true
+       default |   name: "@name@"
+       default | database: false
+       default | management: true
+       default | alarm: true
+       default | pause: false
+       default | debug: false
+               | resources:
+               |   cpu:
+       default |     min: "10m"
+       default |     max: "2000m"
+               |   memory:
+       default |     min: "128Mi"
+       default |     max: "512Mi"
+      web.json | route: true
+               | routeDefaults:
+       default |   host: "@name@-@affiliation@-@env@"
+               |   tls:
+       default |     enabled: false
+       default |     insecurePolicy: "Redirect"
+       default |     termination: "edge"
+       default | certificate: false
+      web.json | toxiproxy: true
+               | deployStrategy:
+       default |   type: "rolling"
+       default |   timeout: 180
+       default | replicas: 1
+       default | prometheus: true
+       default | readiness: true
+       default | liveness: false
+       default | webseal: false
