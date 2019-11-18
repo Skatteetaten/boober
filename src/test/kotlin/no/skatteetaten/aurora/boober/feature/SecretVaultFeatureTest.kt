@@ -8,6 +8,7 @@ import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.service.UnauthorizedAccessException
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
@@ -57,6 +58,30 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
             )
         }.singleApplicationError(
             "The secretVault keyMappings [BAR] were not found in keys"
+        )
+    }
+
+    @Test
+    fun `should get error if user does not have access to vault`() {
+
+        every { vaultProvider.vaultExists("paas", "simple") } returns true
+
+        every {
+            vaultProvider.findFileInVault(
+                "paas",
+                "simple",
+                "latest.properties"
+            )
+        } throws UnauthorizedAccessException("Your user does not have access")
+
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+              "secretVault" : "simple"
+             }"""
+            )
+        }.singleApplicationError(
+            "Your user does not have access"
         )
     }
 

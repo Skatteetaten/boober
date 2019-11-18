@@ -22,7 +22,9 @@ import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.text.StringSubstitutor
 
-abstract class AbstractTemplateFeature : Feature {
+abstract class AbstractTemplateFeature(
+    val cluster: String
+) : Feature {
 
     abstract fun templateHandlers(
         files: List<AuroraConfigFile>,
@@ -44,7 +46,10 @@ abstract class AbstractTemplateFeature : Feature {
         return findParameters() + templateHandlers(cmd.applicationFiles, cmd.auroraConfig) + setOf(
             header.versionHandler,
             AuroraConfigFieldHandler("replicas"),
-            AuroraConfigFieldHandler("splunkIndex")
+            AuroraConfigFieldHandler("splunkIndex"),
+            AuroraConfigFieldHandler("prometheus/path"),
+            AuroraConfigFieldHandler("prometheus/port")
+        // TODO: Part har konfigurert applikasjonene sine slik at de har prometheus/path i about filen.
         )
     }
 
@@ -70,6 +75,11 @@ abstract class AbstractTemplateFeature : Feature {
         fullValidation: Boolean,
         cmd: AuroraContextCommand
     ): List<Exception> {
+
+        // TODO: LocalTemplate could be in normal validation, but very few people us it.
+        if (!fullValidation || adc.cluster != cluster) {
+            return emptyList()
+        }
 
         val templateJson = try {
             findTemplate(adc, cmd)

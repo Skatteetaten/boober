@@ -104,7 +104,6 @@ class EncryptedFileVault private constructor(
         get() = vaultFolder.listFiles()?.filter { it.isFile } ?: emptyList()
 
     fun getFile(fileName: String): ByteArray {
-
         return secrets.getOrElse(fileName, { throw IllegalArgumentException("No such file $fileName in vault $name") })
     }
 

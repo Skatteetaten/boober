@@ -13,6 +13,7 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.addEnvVar
 import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
+import no.skatteetaten.aurora.boober.service.UnauthorizedAccessException
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultSecretEnvResult
@@ -168,8 +169,13 @@ class SecretVaultFeature(
                 fileName = secret.file
             )
             null
+        } catch (e: UnauthorizedAccessException) {
+            AuroraDeploymentSpecValidationException(e.localizedMessage, e)
         } catch (e: Exception) {
-            AuroraDeploymentSpecValidationException("File with name=${secret.file} is not present in vault=${secret.secretVaultName} in collection=$vaultCollectionName")
+            AuroraDeploymentSpecValidationException(
+                "File with name=${secret.file} is not present in vault=${secret.secretVaultName} in collection=$vaultCollectionName",
+                e
+            )
         }
     }
 
@@ -227,7 +233,6 @@ class SecretVaultFeature(
         }
     }
 
-    // TODO: This modify step must run after config, because secret env should override config env.
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
 
         val secretEnv: List<EnvVar> = handleSecretEnv(adc, cmd).flatMap { result ->

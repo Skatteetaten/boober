@@ -26,16 +26,16 @@ class SharedSecretReader(
         }
     }
 
-    val secret: String
-        get() {
-            return secretValue.takeIf { it.isNullOrBlank() }?.let {
-                val secretFile = File(secretLocation).absoluteFile
-                try {
-                    logger.debug("Reading token from file {}", secretFile.absolutePath)
-                    String(Files.readAllBytes(Paths.get(secretLocation)), Charsets.UTF_8)
-                } catch (e: IOException) {
-                    throw IllegalStateException("Unable to read shared secret from specified location [${secretFile.absolutePath}]")
-                }
-            } ?: secretValue!!
-        }
+    // use byLazy on this one?
+    val secret: String by lazy {
+        secretValue.takeIf { it.isNullOrBlank() }?.let {
+            val secretFile = File(secretLocation).absoluteFile
+            try {
+                logger.debug("Reading token from file {}", secretFile.absolutePath)
+                String(Files.readAllBytes(Paths.get(secretLocation)), Charsets.UTF_8)
+            } catch (e: IOException) {
+                throw IllegalStateException("Unable to read shared secret from specified location [${secretFile.absolutePath}]")
+            }
+        } ?: secretValue!!
+    }
 }

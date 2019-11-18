@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.utils
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.slf4j.MDCContext
 import no.skatteetaten.aurora.boober.controller.security.SpringSecurityThreadContextElement
@@ -134,11 +135,13 @@ fun <K, V> Map<K, V>?.takeIfNotEmpty(): Map<K, V>? {
 fun <A, B> Iterable<A>.parallelMap(f: suspend (A) -> B): List<B> {
     val iter = this
     return runBlocking(
-        MDCContext() + SpringSecurityThreadContextElement()
+        threadPool + MDCContext() + SpringSecurityThreadContextElement()
     ) {
         iter.pmap(f)
     }
 }
+
+val threadPool = newFixedThreadPoolContext(6, "boober")
 
 // https://jivimberg.io/blog/2018/05/04/parallel-map-in-kotlin/
 suspend fun <A, B> Iterable<A>.pmap(f: suspend (A) -> B): List<B> = coroutineScope {
