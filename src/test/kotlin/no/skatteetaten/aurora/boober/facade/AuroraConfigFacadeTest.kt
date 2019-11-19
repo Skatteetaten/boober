@@ -73,13 +73,13 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
     @Test
     fun `get all config files`() {
         val files = facade.findAuroraConfigFiles(auroraConfigRef)
-        assertThat(files.size).isEqualTo(14)
+        assertThat(files.size).isEqualTo(16)
     }
 
     @Test
     fun `get all config filenames`() {
         val files = facade.findAuroraConfigFileNames(auroraConfigRef)
-        assertThat(files.size).isEqualTo(14)
+        assertThat(files.size).isEqualTo(16)
     }
 
     @Test
@@ -114,7 +114,7 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
             resourceValidation = false,
             auroraConfigRef = auroraConfigRef
         )
-        assertThat(validated.size).isEqualTo(5)
+        assertThat(validated.size).isEqualTo(6)
     }
 
     @Test
@@ -149,7 +149,7 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
             resourceValidation = true,
             auroraConfigRef = auroraConfigRef
         )
-        assertThat(validated.size).isEqualTo(5)
+        assertThat(validated.size).isEqualTo(6)
     }
 
     @Test
