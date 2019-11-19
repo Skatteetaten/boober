@@ -1,8 +1,8 @@
 package no.skatteetaten.aurora.boober.service
 
+import java.lang.Integer.max
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import java.lang.Integer.max
 
 data class SpecLine(val source: String, val indent: Int, val content: String)
 fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean): String {
@@ -36,7 +36,6 @@ fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSp
 
     val sources: List<SpecLine> = fields.flatMap { it ->
         renderJson(0, it as Map.Entry<String, Map<String, Any?>>)
-
     }
 
     val maxSource: Int = sources.map { it.source.length }.max() ?: 0
@@ -45,7 +44,6 @@ fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSp
         val whitespace = "".padStart(line.indent)
         "${line.source.padStart(maxSource)} | ${whitespace}${line.content}"
     }
-
 
     return lines.joinToString("\n")
 }
