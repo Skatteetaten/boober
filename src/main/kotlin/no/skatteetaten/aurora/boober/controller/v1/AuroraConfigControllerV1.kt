@@ -25,13 +25,15 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
+// TODO: Hvordan skal vi bygge opp path her? Skal vi ha /file prefix for alt som bare jobber på 1 fil?
 @RestController
 @RequestMapping("/v1/auroraconfig/{name}")
 class AuroraConfigControllerV1(
     private val auroraConfigFacade: AuroraConfigFacade
 ) {
 
-    @GetMapping("/{environment}/{application}")
+    // TODO: Hva skal denne hete? Det mangler tester på denne. Får se på denne i wintercleaning
+    @GetMapping("/files/{environment}/{application}")
     fun getAdr(
         @PathVariable name: String,
         @PathVariable environment: String,
@@ -79,7 +81,6 @@ class AuroraConfigControllerV1(
         return Response(items = auroraConfigFacade.findAuroraConfigFileNames(ref))
     }
 
-    // TODO: bruker litt mer tid en master, men ikke mye
     @PutMapping("/validate")
     fun validateAuroraConfig(
         @PathVariable name: String,
