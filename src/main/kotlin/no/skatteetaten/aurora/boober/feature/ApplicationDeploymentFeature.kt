@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.feature
 
 import com.fkorotkov.kubernetes.newObjectMeta
 import com.fkorotkov.kubernetes.newOwnerReference
+import java.time.Duration
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -16,7 +17,6 @@ import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.boot.convert.DurationStyle.SIMPLE
 import org.springframework.stereotype.Service
-import java.time.Duration
 
 val AuroraDeploymentSpec.ttl: Duration? get() = this.getOrNull<String>("ttl")?.let { SIMPLE.parse(it) }
 

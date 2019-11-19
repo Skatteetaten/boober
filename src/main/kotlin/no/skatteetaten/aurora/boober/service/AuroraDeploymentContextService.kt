@@ -62,7 +62,7 @@ class AuroraDeploymentContextService(
         return ApplicationRef(adc.spec.namespace, adc.spec.name)
     }
 
-    //Do not want to expose createADC without it beeing validated
+    // Do not want to expose createADC without it beeing validated
     fun findApplicationDeploymentSpec(deployCommand: AuroraContextCommand) =
         createAuroraDeploymentContext(deployCommand).spec
 
